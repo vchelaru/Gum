@@ -1,0 +1,302 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{121AC5A5-8F6A-42B2-8863-DEBC45B052BC}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Gum</RootNamespace>
+    <AssemblyName>Gum</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'DebugGlam|x86' ">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'UnitTest|x86'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x86\UnitTest\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;TEST</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisIgnoreBuiltInRules>false</CodeAnalysisIgnoreBuiltInRules>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.Xna.Framework, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86" />
+    <Reference Include="Microsoft.Xna.Framework.Graphics, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86" />
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.Composition" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Design" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+    <Reference Include="TargaImage, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Libraries\TargaImage.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Converters\UnitConverter.cs" />
+    <Compile Include="DataTypes\ComponentSaveExtensionMethods.cs" />
+    <Compile Include="DataTypes\ElementSaveExtensionMethods.cs" />
+    <Compile Include="DataTypes\GumProjectSaveExtensionMethods.cs" />
+    <Compile Include="DataTypes\InstanceSaveExtensionMethods.cs" />
+    <Compile Include="DataTypes\PluginSettingsSave.cs" />
+    <Compile Include="DataTypes\RecursiveVariableFinder.cs" />
+    <Compile Include="DataTypes\StateSaveExtensionMethods.cs" />
+    <Compile Include="DataTypes\VariableListSaveExtensionMethods.cs" />
+    <Compile Include="DataTypes\VariableSaveExtensionMethods.cs" />
+    <Compile Include="Debug\ProjectVerifier.cs" />
+    <Compile Include="Gui\Controls\GuideListDisplay.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Gui\Controls\GuideListDisplay.Designer.cs">
+      <DependentUpon>GuideListDisplay.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Gui\Forms\UndoList.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Gui\Forms\UndoList.Designer.cs">
+      <DependentUpon>UndoList.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Gui\Controls\WireframeEditControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Gui\Controls\WireframeEditControl.designer.cs">
+      <DependentUpon>WireframeEditControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Gui\Forms\DeleteOptionsWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Gui\Forms\DeleteOptionsWindow.Designer.cs">
+      <DependentUpon>DeleteOptionsWindow.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Gui\Forms\PluginsWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Gui\Forms\PluginsWindow.designer.cs">
+      <DependentUpon>PluginsWindow.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Gui\Forms\ProjectPropertyGridWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Gui\Forms\ProjectPropertyGridWindow.Designer.cs">
+      <DependentUpon>ProjectPropertyGridWindow.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Gui\Plugins\DeleteObjectPlugin.cs" />
+    <Compile Include="Gui\Plugins\MainWindowPlugin.cs" />
+    <Compile Include="Managers\FileLocations.cs" />
+    <Compile Include="Managers\NameVerifier.cs" />
+    <Compile Include="Managers\RenameManager.cs" />
+    <Compile Include="Plugins\BaseClasses\InternalPlugin.cs" />
+    <Compile Include="PropertyGridHelpers\Converters\AvailableGuidesTypeConverter.cs" />
+    <Compile Include="Input\CursorExtensionMethods.cs" />
+    <Compile Include="Managers\DragDropManager.cs" />
+    <Compile Include="Managers\ElementTreeViewManager.cs" />
+    <Compile Include="Managers\ElementTreeViewManager.RightClick.cs" />
+    <Compile Include="Managers\MenuStripManager.cs" />
+    <Compile Include="Managers\ObjectFinder.cs" />
+    <Compile Include="Managers\PropertyGridManager.cs" />
+    <Compile Include="Managers\StandardElementsManager.cs" />
+    <Compile Include="Managers\StateTreeViewManager.cs" />
+    <Compile Include="MainWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="MainWindow.Designer.cs">
+      <DependentUpon>MainWindow.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Managers\StateTreeViewManager.RightClick.cs" />
+    <Compile Include="Plugins\BaseClasses\PluginBase.cs" />
+    <Compile Include="Plugins\IPlugin.cs" />
+    <Compile Include="Plugins\PluginContainer.cs" />
+    <Compile Include="Plugins\PluginManager.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Managers\ProjectManager.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="PropertyGridHelpers\Converters\AvailableBaseTypeConverter.cs" />
+    <Compile Include="PropertyGridHelpers\Converters\FileListWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="PropertyGridHelpers\Converters\FileListWindow.Designer.cs">
+      <DependentUpon>FileListWindow.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PropertyGridHelpers\Converters\FontTypeConverter.cs" />
+    <Compile Include="PropertyGridHelpers\Converters\RestrictiveEnumConverter.cs" />
+    <Compile Include="PropertyGridHelpers\Converters\VariableListConverter.cs" />
+    <Compile Include="PropertyGridHelpers\ElementSaveDisplayer.cs" />
+    <Compile Include="PropertyGridHelpers\GumProjectSavePropertyGridDisplayer.cs" />
+    <Compile Include="PropertyGridHelpers\InstanceSavePropertyDescriptor.cs" />
+    <Compile Include="PropertyGridHelpers\GuideRectanglePropertyGridDisplayer.cs" />
+    <Compile Include="PropertyGridHelpers\PropertyDescriptorHelper.cs" />
+    <Compile Include="PropertyGridHelpers\PropertyGridDisplayer.cs" />
+    <Compile Include="PropertyGridHelpers\ReflectingParameterDescriptor.cs" />
+    <Compile Include="PropertyGridHelpers\ReflectingPropertyDescriptorHelper.cs" />
+    <Compile Include="PropertyGridHelpers\UiTypeConverters\ModalTypeConverter.cs" />
+    <Compile Include="Reflection\LateBinder.cs" />
+    <Compile Include="Reflection\TypeManager.cs" />
+    <Compile Include="RenderingLibrary\IPositionedSizedObjectExtensionMethods.cs" />
+    <Compile Include="Settings\GeneralSettingsFile.cs" />
+    <Compile Include="ToolCommands\ElementCommands.cs" />
+    <Compile Include="ToolCommands\GuiCommands.cs" />
+    <Compile Include="ToolCommands\ProjectCommands.cs" />
+    <Compile Include="ToolStates\ISelectedState.cs" />
+    <Compile Include="ToolStates\ProjectState.cs" />
+    <Compile Include="ToolStates\SelectedState.cs" />
+    <Compile Include="Undo\UndoManager.cs" />
+    <Compile Include="Undo\StateSaveMemento.cs" />
+    <Compile Include="Undo\UndoObject.cs" />
+    <Compile Include="Undo\UndoPlugin.cs" />
+    <Compile Include="Wireframe\EditingManager.cs" />
+    <Compile Include="Wireframe\EditingManager.RightClick.cs" />
+    <Compile Include="Wireframe\InterpolatingColor.cs" />
+    <Compile Include="Wireframe\PlatformDetails.cs" />
+    <Compile Include="Wireframe\ResizeHandles.cs" />
+    <Compile Include="Wireframe\SelectionManager.cs" />
+    <Compile Include="Wireframe\TimeManager.cs" />
+    <Compile Include="Wireframe\WireframeControl.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Wireframe\WireframeObjectManager.cs" />
+    <Compile Include="Wireframe\WireframeObjectManager.Guide.cs" />
+    <Compile Include="Wireframe\WireframeObjectManager.RepresentationCreation.cs" />
+    <EmbeddedResource Include="Gui\Controls\GuideListDisplay.resx">
+      <DependentUpon>GuideListDisplay.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Gui\Controls\WireframeEditControl.resx">
+      <DependentUpon>WireframeEditControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Gui\Forms\DeleteOptionsWindow.resx">
+      <DependentUpon>DeleteOptionsWindow.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Gui\Forms\PluginsWindow.resx">
+      <DependentUpon>PluginsWindow.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Gui\Forms\ProjectPropertyGridWindow.resx">
+      <DependentUpon>ProjectPropertyGridWindow.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Gui\Forms\UndoList.resx">
+      <DependentUpon>UndoList.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MainWindow.resx">
+      <DependentUpon>MainWindow.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <EmbeddedResource Include="PropertyGridHelpers\Converters\FileListWindow.resx">
+      <DependentUpon>FileListWindow.cs</DependentUpon>
+    </EmbeddedResource>
+    <None Include="app.config" />
+    <None Include="Content\TestFont.fnt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <Compile Include="Managers\PropertyGridManager.RightClick.cs" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CommonFormsAndControls\CommonFormsAndControls.csproj">
+      <Project>{54bfe18a-84b4-48ab-92e0-0774ea019202}</Project>
+      <Name>CommonFormsAndControls</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ContentLibrary\ContentLibrary.csproj">
+      <Project>{6E3DECA0-B292-4FBA-B585-7460A329DE2E}</Project>
+      <Name>ContentLibrary</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\GumDataTypes\GumDataTypes.csproj">
+      <Project>{5971A187-F6B2-4D65-A277-5613DED1F50F}</Project>
+      <Name>GumDataTypes</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\InputLibrary\InputLibrary.csproj">
+      <Project>{938D9A00-8529-4CE8-9077-E0A3994A73EA}</Project>
+      <Name>InputLibrary</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\RenderingLibrary\RenderingLibrary.csproj">
+      <Project>{A86EE399-7C93-42E1-80ED-CA4CBF4CA573}</Project>
+      <Name>RenderingLibrary</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ToolsUtilities\ToolsUtilities.csproj">
+      <Project>{b941a93f-6093-4dc6-ad11-91a058b6c2cc}</Project>
+      <Name>ToolsUtilities</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\XnaAndWinforms\XnaAndWinforms.csproj">
+      <Project>{C39A973C-66D6-4A6C-82B5-AE0042F210F8}</Project>
+      <Name>XnaAndWinforms</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Libraries\TargaImage.dll" />
+    <Content Include="Libraries\TargaImage.xml" />
+    <None Include="Content\InvalidTexture.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\TestFont_0.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <Content Include="gum_icon2.png" />
+    <None Include="Plugins\readme.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Content\Icons\" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

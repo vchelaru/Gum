@@ -1,0 +1,882 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>TargaImage</name>
+    </assembly>
+    <members>
+        <member name="T:TargaImage.Resource1">
+            <summary>
+              A strongly-typed resource class, for looking up localized strings, etc.
+            </summary>
+        </member>
+        <member name="P:TargaImage.Resource1.ResourceManager">
+            <summary>
+              Returns the cached ResourceManager instance used by this class.
+            </summary>
+        </member>
+        <member name="P:TargaImage.Resource1.Culture">
+            <summary>
+              Overrides the current thread's CurrentUICulture property for all
+              resource lookups using this strongly typed resource class.
+            </summary>
+        </member>
+        <member name="T:Paloma.TGAFormat">
+            <summary>
+            The Targa format of the file.
+            </summary>
+        </member>
+        <member name="F:Paloma.TGAFormat.UNKNOWN">
+            <summary>
+            Unknown Targa Image format.
+            </summary>
+        </member>
+        <member name="F:Paloma.TGAFormat.ORIGINAL_TGA">
+            <summary>
+            Original Targa Image format.
+            </summary>
+            <remarks>Targa Image does not have a Signature of ""TRUEVISION-XFILE"".</remarks>
+        </member>
+        <member name="F:Paloma.TGAFormat.NEW_TGA">
+            <summary>
+            New Targa Image format
+            </summary>
+            <remarks>Targa Image has a TargaFooter with a Signature of ""TRUEVISION-XFILE"".</remarks>
+        </member>
+        <member name="T:Paloma.ColorMapType">
+            <summary>
+            Indicates the type of color map, if any, included with the image file. 
+            </summary>
+        </member>
+        <member name="F:Paloma.ColorMapType.NO_COLOR_MAP">
+            <summary>
+            No color map was included in the file.
+            </summary>
+        </member>
+        <member name="F:Paloma.ColorMapType.COLOR_MAP_INCLUDED">
+            <summary>
+            Color map was included in the file.
+            </summary>
+        </member>
+        <member name="T:Paloma.ImageType">
+            <summary>
+            The type of image read from the file.
+            </summary>
+        </member>
+        <member name="F:Paloma.ImageType.NO_IMAGE_DATA">
+            <summary>
+            No image data was found in file.
+            </summary>
+        </member>
+        <member name="F:Paloma.ImageType.UNCOMPRESSED_COLOR_MAPPED">
+            <summary>
+            Image is an uncompressed, indexed color-mapped image.
+            </summary>
+        </member>
+        <member name="F:Paloma.ImageType.UNCOMPRESSED_TRUE_COLOR">
+            <summary>
+            Image is an uncompressed, RGB image.
+            </summary>
+        </member>
+        <member name="F:Paloma.ImageType.UNCOMPRESSED_BLACK_AND_WHITE">
+            <summary>
+            Image is an uncompressed, Greyscale image.
+            </summary>
+        </member>
+        <member name="F:Paloma.ImageType.RUN_LENGTH_ENCODED_COLOR_MAPPED">
+            <summary>
+            Image is a compressed, indexed color-mapped image.
+            </summary>
+        </member>
+        <member name="F:Paloma.ImageType.RUN_LENGTH_ENCODED_TRUE_COLOR">
+            <summary>
+            Image is a compressed, RGB image.
+            </summary>
+        </member>
+        <member name="F:Paloma.ImageType.RUN_LENGTH_ENCODED_BLACK_AND_WHITE">
+            <summary>
+            Image is a compressed, Greyscale image.
+            </summary>
+        </member>
+        <member name="T:Paloma.VerticalTransferOrder">
+            <summary>
+            The top-to-bottom ordering in which pixel data is transferred from the file to the screen.
+            </summary>
+        </member>
+        <member name="F:Paloma.VerticalTransferOrder.UNKNOWN">
+            <summary>
+            Unknown transfer order.
+            </summary>
+        </member>
+        <member name="F:Paloma.VerticalTransferOrder.BOTTOM">
+            <summary>
+            Transfer order of pixels is from the bottom to top.
+            </summary>
+        </member>
+        <member name="F:Paloma.VerticalTransferOrder.TOP">
+            <summary>
+            Transfer order of pixels is from the top to bottom.
+            </summary>
+        </member>
+        <member name="T:Paloma.HorizontalTransferOrder">
+            <summary>
+            The left-to-right ordering in which pixel data is transferred from the file to the screen.
+            </summary>
+        </member>
+        <member name="F:Paloma.HorizontalTransferOrder.UNKNOWN">
+            <summary>
+            Unknown transfer order.
+            </summary>
+        </member>
+        <member name="F:Paloma.HorizontalTransferOrder.RIGHT">
+            <summary>
+            Transfer order of pixels is from the right to left.
+            </summary>
+        </member>
+        <member name="F:Paloma.HorizontalTransferOrder.LEFT">
+            <summary>
+            Transfer order of pixels is from the left to right.
+            </summary>
+        </member>
+        <member name="T:Paloma.FirstPixelDestination">
+            <summary>
+            Screen destination of first pixel based on the VerticalTransferOrder and HorizontalTransferOrder.
+            </summary>
+        </member>
+        <member name="F:Paloma.FirstPixelDestination.UNKNOWN">
+            <summary>
+            Unknown first pixel destination.
+            </summary>
+        </member>
+        <member name="F:Paloma.FirstPixelDestination.TOP_LEFT">
+            <summary>
+            First pixel destination is the top-left corner of the image.
+            </summary>
+        </member>
+        <member name="F:Paloma.FirstPixelDestination.TOP_RIGHT">
+            <summary>
+            First pixel destination is the top-right corner of the image.
+            </summary>
+        </member>
+        <member name="F:Paloma.FirstPixelDestination.BOTTOM_LEFT">
+            <summary>
+            First pixel destination is the bottom-left corner of the image.
+            </summary>
+        </member>
+        <member name="F:Paloma.FirstPixelDestination.BOTTOM_RIGHT">
+            <summary>
+            First pixel destination is the bottom-right corner of the image.
+            </summary>
+        </member>
+        <member name="T:Paloma.RLEPacketType">
+            <summary>
+            The RLE packet type used in a RLE compressed image.
+            </summary>
+        </member>
+        <member name="F:Paloma.RLEPacketType.RAW">
+            <summary>
+            A raw RLE packet type.
+            </summary>
+        </member>
+        <member name="F:Paloma.RLEPacketType.RUN_LENGTH">
+            <summary>
+            A run-length RLE packet type.
+            </summary>
+        </member>
+        <member name="T:Paloma.TargaImage">
+            <summary>
+            Reads and loads a Truevision TGA Format image file.
+            </summary>
+        </member>
+        <member name="M:Paloma.TargaImage.#ctor">
+            <summary>
+            Creates a new instance of the TargaImage object.
+            </summary>
+        </member>
+        <member name="M:Paloma.TargaImage.Finalize">
+            <summary>
+            TargaImage deconstructor.
+            </summary>
+        </member>
+        <member name="M:Paloma.TargaImage.#ctor(System.String)">
+            <summary>
+            Creates a new instance of the TargaImage object with strFileName as the image loaded.
+            </summary>
+        </member>
+        <member name="M:Paloma.TargaImage.LoadTGAFooterInfo(System.IO.BinaryReader)">
+            <summary>
+            Loads the Targa Footer information from the file.
+            </summary>
+            <param name="binReader">A BinaryReader that points the loaded file byte stream.</param>
+        </member>
+        <member name="M:Paloma.TargaImage.LoadTGAHeaderInfo(System.IO.BinaryReader)">
+            <summary>
+            Loads the Targa Header information from the file.
+            </summary>
+            <param name="binReader">A BinaryReader that points the loaded file byte stream.</param>
+        </member>
+        <member name="M:Paloma.TargaImage.LoadTGAExtensionArea(System.IO.BinaryReader)">
+            <summary>
+            Loads the Targa Extension Area from the file, if it exists.
+            </summary>
+            <param name="binReader">A BinaryReader that points the loaded file byte stream.</param>
+        </member>
+        <member name="M:Paloma.TargaImage.LoadImageBytes(System.IO.BinaryReader)">
+            <summary>
+            Reads the image data bytes from the file. Handles Uncompressed and RLE Compressed image data. 
+            Uses FirstPixelDestination to properly align the image.
+            </summary>
+            <param name="binReader">A BinaryReader that points the loaded file byte stream.</param>
+            <returns>An array of bytes representing the image data in the proper alignment.</returns>
+        </member>
+        <member name="M:Paloma.TargaImage.LoadTGAImage(System.IO.BinaryReader)">
+            <summary>
+            Reads the image data bytes from the file and loads them into the Image Bitmap object.
+            Also loads the color map, if any, into the Image Bitmap.
+            </summary>
+            <param name="binReader">A BinaryReader that points the loaded file byte stream.</param>
+        </member>
+        <member name="M:Paloma.TargaImage.GetPixelFormat">
+            <summary>
+            Gets the PixelFormat to be used by the Image based on the Targa file's attributes
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Paloma.TargaImage.LoadThumbnail(System.IO.BinaryReader,System.Drawing.Imaging.PixelFormat)">
+            <summary>
+            Loads the thumbnail of the loaded image file, if any.
+            </summary>
+            <param name="binReader">A BinaryReader that points the loaded file byte stream.</param>
+            <param name="pfPixelFormat">A PixelFormat value indicating what pixel format to use when loading the thumbnail.</param>
+        </member>
+        <member name="M:Paloma.TargaImage.ClearAll">
+            <summary>
+            Clears out all objects and resources.
+            </summary>
+        </member>
+        <member name="M:Paloma.TargaImage.LoadTargaImage(System.String)">
+            <summary>
+            Loads a Targa image file into a Bitmap object.
+            </summary>
+            <param name="sFileName">The Targa image filename</param>
+            <returns>A Bitmap object with the Targa image loaded into it.</returns>
+        </member>
+        <member name="M:Paloma.TargaImage.Dispose">
+            <summary>
+            Disposes all resources used by this instance of the TargaImage class.
+            </summary>
+        </member>
+        <member name="M:Paloma.TargaImage.Dispose(System.Boolean)">
+            <summary>
+            Dispose(bool disposing) executes in two distinct scenarios.
+            If disposing equals true, the method has been called directly
+            or indirectly by a user's code. Managed and unmanaged resources
+            can be disposed.
+            If disposing equals false, the method has been called by the 
+            runtime from inside the finalizer and you should not reference 
+            other objects. Only unmanaged resources can be disposed.
+            </summary>
+            <param name="disposing">If true dispose all resources, else dispose only release unmanaged resources.</param>
+        </member>
+        <member name="P:Paloma.TargaImage.Header">
+            <summary>
+            Gets a TargaHeader object that holds the Targa Header information of the loaded file.
+            </summary>
+        </member>
+        <member name="P:Paloma.TargaImage.ExtensionArea">
+            <summary>
+            Gets a TargaExtensionArea object that holds the Targa Extension Area information of the loaded file.
+            </summary>
+        </member>
+        <member name="P:Paloma.TargaImage.Footer">
+            <summary>
+            Gets a TargaExtensionArea object that holds the Targa Footer information of the loaded file.
+            </summary>
+        </member>
+        <member name="P:Paloma.TargaImage.Format">
+            <summary>
+            Gets the Targa format of the loaded file.
+            </summary>
+        </member>
+        <member name="P:Paloma.TargaImage.Image">
+            <summary>
+            Gets a Bitmap representation of the loaded file.
+            </summary>
+        </member>
+        <member name="P:Paloma.TargaImage.Thumbnail">
+            <summary>
+            Gets the thumbnail of the loaded file if there is one in the file.
+            </summary>
+        </member>
+        <member name="P:Paloma.TargaImage.FileName">
+            <summary>
+            Gets the full path and filename of the loaded file.
+            </summary>
+        </member>
+        <member name="P:Paloma.TargaImage.Stride">
+            <summary>
+            Gets the byte offset between the beginning of one scan line and the next. Used when loading the image into the Image Bitmap.
+            </summary>
+            <remarks>
+            The memory allocated for Microsoft Bitmaps must be aligned on a 32bit boundary.
+            The stride refers to the number of bytes allocated for one scanline of the bitmap.
+            </remarks>
+        </member>
+        <member name="P:Paloma.TargaImage.Padding">
+            <summary>
+            Gets the number of bytes used to pad each scan line to meet the Stride value. Used when loading the image into the Image Bitmap.
+            </summary>
+            <remarks>
+            The memory allocated for Microsoft Bitmaps must be aligned on a 32bit boundary.
+            The stride refers to the number of bytes allocated for one scanline of the bitmap.
+            In your loop, you copy the pixels one scanline at a time and take into 
+            consideration the amount of padding that occurs due to memory alignment.
+            </remarks>
+        </member>
+        <member name="T:Paloma.TargaHeader">
+            <summary>
+            This class holds all of the header properties of a Targa image. 
+            This includes the TGA File Header section the ImageID and the Color Map.
+            </summary>
+        </member>
+        <member name="M:Paloma.TargaHeader.SetImageIDLength(System.Byte)">
+            <summary>
+            Sets the ImageIDLength property, available only to objects in the same assembly as TargaHeader.
+            </summary>
+            <param name="bImageIDLength">The Image ID Length value read from the file.</param>
+        </member>
+        <member name="M:Paloma.TargaHeader.SetColorMapType(Paloma.ColorMapType)">
+            <summary>
+            Sets the ColorMapType property, available only to objects in the same assembly as TargaHeader.
+            </summary>
+            <param name="eColorMapType">One of the ColorMapType enumeration values.</param>
+        </member>
+        <member name="M:Paloma.TargaHeader.SetImageType(Paloma.ImageType)">
+            <summary>
+            Sets the ImageType property, available only to objects in the same assembly as TargaHeader.
+            </summary>
+            <param name="eImageType">One of the ImageType enumeration values.</param>
+        </member>
+        <member name="M:Paloma.TargaHeader.SetColorMapFirstEntryIndex(System.Int16)">
+            <summary>
+            Sets the ColorMapFirstEntryIndex property, available only to objects in the same assembly as TargaHeader.
+            </summary>
+            <param name="sColorMapFirstEntryIndex">The First Entry Index value read from the file.</param>
+        </member>
+        <member name="M:Paloma.TargaHeader.SetColorMapLength(System.Int16)">
+            <summary>
+            Sets the ColorMapLength property, available only to objects in the same assembly as TargaHeader.
+            </summary>
+            <param name="sColorMapLength">The Color Map Length value read from the file.</param>
+        </member>
+        <member name="M:Paloma.TargaHeader.SetColorMapEntrySize(System.Byte)">
+            <summary>
+            Sets the ColorMapEntrySize property, available only to objects in the same assembly as TargaHeader.
+            </summary>
+            <param name="bColorMapEntrySize">The Color Map Entry Size value read from the file.</param>
+        </member>
+        <member name="M:Paloma.TargaHeader.SetXOrigin(System.Int16)">
+            <summary>
+            Sets the XOrigin property, available only to objects in the same assembly as TargaHeader.
+            </summary>
+            <param name="sXOrigin">The X Origin value read from the file.</param>
+        </member>
+        <member name="M:Paloma.TargaHeader.SetYOrigin(System.Int16)">
+            <summary>
+            Sets the YOrigin property, available only to objects in the same assembly as TargaHeader.
+            </summary>
+            <param name="sYOrigin">The Y Origin value read from the file.</param>
+        </member>
+        <member name="M:Paloma.TargaHeader.SetWidth(System.Int16)">
+            <summary>
+            Sets the Width property, available only to objects in the same assembly as TargaHeader.
+            </summary>
+            <param name="sWidth">The Width value read from the file.</param>
+        </member>
+        <member name="M:Paloma.TargaHeader.SetHeight(System.Int16)">
+            <summary>
+            Sets the Height property, available only to objects in the same assembly as TargaHeader.
+            </summary>
+            <param name="sHeight">The Height value read from the file.</param>
+        </member>
+        <member name="M:Paloma.TargaHeader.SetPixelDepth(System.Byte)">
+            <summary>
+            Sets the PixelDepth property, available only to objects in the same assembly as TargaHeader.
+            </summary>
+            <param name="bPixelDepth">The Pixel Depth value read from the file.</param>
+        </member>
+        <member name="M:Paloma.TargaHeader.SetVerticalTransferOrder(Paloma.VerticalTransferOrder)">
+            <summary>
+            Sets the VerticalTransferOrder property, available only to objects in the same assembly as TargaHeader.
+            </summary>
+            <param name="eVerticalTransferOrder">One of the VerticalTransferOrder enumeration values.</param>
+        </member>
+        <member name="M:Paloma.TargaHeader.SetHorizontalTransferOrder(Paloma.HorizontalTransferOrder)">
+            <summary>
+            Sets the HorizontalTransferOrder property, available only to objects in the same assembly as TargaHeader.
+            </summary>
+            <param name="eHorizontalTransferOrder">One of the HorizontalTransferOrder enumeration values.</param>
+        </member>
+        <member name="M:Paloma.TargaHeader.SetAttributeBits(System.Byte)">
+            <summary>
+            Sets the AttributeBits property, available only to objects in the same assembly as TargaHeader.
+            </summary>
+            <param name="bAttributeBits">The Attribute Bits value read from the file.</param>
+        </member>
+        <member name="M:Paloma.TargaHeader.SetImageIDValue(System.String)">
+            <summary>
+            Sets the ImageIDValue property, available only to objects in the same assembly as TargaHeader.
+            </summary>
+            <param name="strImageIDValue">The Image ID value read from the file.</param>
+        </member>
+        <member name="P:Paloma.TargaHeader.ImageIDLength">
+            <summary>
+            Gets the number of bytes contained the ImageIDValue property. The maximum
+            number of characters is 255. A value of zero indicates that no ImageIDValue is included with the
+            image.
+            </summary>
+        </member>
+        <member name="P:Paloma.TargaHeader.ColorMapType">
+            <summary>
+            Gets the type of color map (if any) included with the image. There are currently 2
+            defined values for this field:
+            NO_COLOR_MAP - indicates that no color-map data is included with this image.
+            COLOR_MAP_INCLUDED - indicates that a color-map is included with this image.
+            </summary>
+        </member>
+        <member name="P:Paloma.TargaHeader.ImageType">
+            <summary>
+            Gets one of the ImageType enumeration values indicating the type of Targa image read from the file.
+            </summary>
+        </member>
+        <member name="P:Paloma.TargaHeader.ColorMapFirstEntryIndex">
+            <summary>
+            Gets the index of the first color map entry. ColorMapFirstEntryIndex refers to the starting entry in loading the color map.
+            </summary>
+        </member>
+        <member name="P:Paloma.TargaHeader.ColorMapLength">
+            <summary>
+            Gets total number of color map entries included.
+            </summary>
+        </member>
+        <member name="P:Paloma.TargaHeader.ColorMapEntrySize">
+            <summary>
+            Gets the number of bits per entry in the Color Map. Typically 15, 16, 24 or 32-bit values are used.
+            </summary>
+        </member>
+        <member name="P:Paloma.TargaHeader.XOrigin">
+            <summary>
+            Gets the absolute horizontal coordinate for the lower
+            left corner of the image as it is positioned on a display device having
+            an origin at the lower left of the screen (e.g., the TARGA series).
+            </summary>
+        </member>
+        <member name="P:Paloma.TargaHeader.YOrigin">
+            <summary>
+            These bytes specify the absolute vertical coordinate for the lower left
+            corner of the image as it is positioned on a display device having an
+            origin at the lower left of the screen (e.g., the TARGA series).
+            </summary>
+        </member>
+        <member name="P:Paloma.TargaHeader.Width">
+            <summary>
+            Gets the width of the image in pixels.
+            </summary>
+        </member>
+        <member name="P:Paloma.TargaHeader.Height">
+            <summary>
+            Gets the height of the image in pixels.
+            </summary>
+        </member>
+        <member name="P:Paloma.TargaHeader.PixelDepth">
+            <summary>
+            Gets the number of bits per pixel. This number includes
+            the Attribute or Alpha channel bits. Common values are 8, 16, 24 and 32.
+            </summary>
+        </member>
+        <member name="P:Paloma.TargaHeader.ImageDescriptor">
+            <summary>
+            Gets or Sets the ImageDescriptor property. The ImageDescriptor is the byte that holds the 
+            Image Origin and Attribute Bits values.
+            Available only to objects in the same assembly as TargaHeader.
+            </summary>
+        </member>
+        <member name="P:Paloma.TargaHeader.FirstPixelDestination">
+            <summary>
+            Gets one of the FirstPixelDestination enumeration values specifying the screen destination of first pixel based on VerticalTransferOrder and HorizontalTransferOrder
+            </summary>
+        </member>
+        <member name="P:Paloma.TargaHeader.VerticalTransferOrder">
+            <summary>
+            Gets one of the VerticalTransferOrder enumeration values specifying the top-to-bottom ordering in which pixel data is transferred from the file to the screen.
+            </summary>
+        </member>
+        <member name="P:Paloma.TargaHeader.HorizontalTransferOrder">
+            <summary>
+            Gets one of the HorizontalTransferOrder enumeration values specifying the left-to-right ordering in which pixel data is transferred from the file to the screen.
+            </summary>
+        </member>
+        <member name="P:Paloma.TargaHeader.AttributeBits">
+            <summary>
+            Gets the number of attribute bits per pixel.
+            </summary>
+        </member>
+        <member name="P:Paloma.TargaHeader.ImageIDValue">
+            <summary>
+            Gets identifying information about the image. 
+            A value of zero in ImageIDLength indicates that no ImageIDValue is included with the image.
+            </summary>
+        </member>
+        <member name="P:Paloma.TargaHeader.ColorMap">
+            <summary>
+            Gets the Color Map of the image, if any. The Color Map is represented by a list of System.Drawing.Color objects.
+            </summary>
+        </member>
+        <member name="P:Paloma.TargaHeader.ImageDataOffset">
+            <summary>
+            Gets the offset from the beginning of the file to the Image Data.
+            </summary>
+        </member>
+        <member name="P:Paloma.TargaHeader.BytesPerPixel">
+            <summary>
+            Gets the number of bytes per pixel.
+            </summary>
+        </member>
+        <member name="T:Paloma.TargaFooter">
+            <summary>
+            Holds Footer infomation read from the image file.
+            </summary>
+        </member>
+        <member name="M:Paloma.TargaFooter.SetExtensionAreaOffset(System.Int32)">
+            <summary>
+            Sets the ExtensionAreaOffset property, available only to objects in the same assembly as TargaFooter.
+            </summary>
+            <param name="intExtensionAreaOffset">The Extension Area Offset value read from the file.</param>
+        </member>
+        <member name="M:Paloma.TargaFooter.SetDeveloperDirectoryOffset(System.Int32)">
+            <summary>
+            Sets the DeveloperDirectoryOffset property, available only to objects in the same assembly as TargaFooter.
+            </summary>
+            <param name="intDeveloperDirectoryOffset">The Developer Directory Offset value read from the file.</param>
+        </member>
+        <member name="M:Paloma.TargaFooter.SetSignature(System.String)">
+            <summary>
+            Sets the Signature property, available only to objects in the same assembly as TargaFooter.
+            </summary>
+            <param name="strSignature">The Signature value read from the file.</param>
+        </member>
+        <member name="M:Paloma.TargaFooter.SetReservedCharacter(System.String)">
+            <summary>
+            Sets the ReservedCharacter property, available only to objects in the same assembly as TargaFooter.
+            </summary>
+            <param name="strReservedCharacter">The ReservedCharacter value read from the file.</param>
+        </member>
+        <member name="M:Paloma.TargaFooter.#ctor">
+            <summary>
+            Creates a new instance of the TargaFooter class.
+            </summary>
+        </member>
+        <member name="P:Paloma.TargaFooter.ExtensionAreaOffset">
+            <summary>
+            Gets the offset from the beginning of the file to the start of the Extension Area. 
+            If the ExtensionAreaOffset is zero, no Extension Area exists in the file.
+            </summary>
+        </member>
+        <member name="P:Paloma.TargaFooter.DeveloperDirectoryOffset">
+            <summary>
+            Gets the offset from the beginning of the file to the start of the Developer Area.
+            If the DeveloperDirectoryOffset is zero, then the Developer Area does not exist
+            </summary>
+        </member>
+        <member name="P:Paloma.TargaFooter.Signature">
+            <summary>
+            This string is formatted exactly as "TRUEVISION-XFILE" (no quotes). If the
+            signature is detected, the file is assumed to be a New TGA format and MAY,
+            therefore, contain the Developer Area and/or the Extension Areas. If the
+            signature is not found, then the file is assumed to be an Original TGA format.
+            </summary>
+        </member>
+        <member name="P:Paloma.TargaFooter.ReservedCharacter">
+            <summary>
+            A New Targa format reserved character "." (period)
+            </summary>
+        </member>
+        <member name="T:Paloma.TargaExtensionArea">
+            <summary>
+            This class holds all of the Extension Area properties of the Targa image. If an Extension Area exists in the file.
+            </summary>
+        </member>
+        <member name="M:Paloma.TargaExtensionArea.SetExtensionSize(System.Int32)">
+            <summary>
+            Sets the ExtensionSize property, available only to objects in the same assembly as TargaExtensionArea.
+            </summary>
+            <param name="intExtensionSize">The Extension Size value read from the file.</param>
+        </member>
+        <member name="M:Paloma.TargaExtensionArea.SetAuthorName(System.String)">
+            <summary>
+            Sets the AuthorName property, available only to objects in the same assembly as TargaExtensionArea.
+            </summary>
+            <param name="strAuthorName">The Author Name value read from the file.</param>
+        </member>
+        <member name="M:Paloma.TargaExtensionArea.SetAuthorComments(System.String)">
+            <summary>
+            Sets the AuthorComments property, available only to objects in the same assembly as TargaExtensionArea.
+            </summary>
+            <param name="strAuthorComments">The Author Comments value read from the file.</param>
+        </member>
+        <member name="M:Paloma.TargaExtensionArea.SetDateTimeStamp(System.DateTime)">
+            <summary>
+            Sets the DateTimeStamp property, available only to objects in the same assembly as TargaExtensionArea.
+            </summary>
+            <param name="dtDateTimeStamp">The Date Time Stamp value read from the file.</param>
+        </member>
+        <member name="M:Paloma.TargaExtensionArea.SetJobName(System.String)">
+            <summary>
+            Sets the JobName property, available only to objects in the same assembly as TargaExtensionArea.
+            </summary>
+            <param name="strJobName">The Job Name value read from the file.</param>
+        </member>
+        <member name="M:Paloma.TargaExtensionArea.SetJobTime(System.TimeSpan)">
+            <summary>
+            Sets the JobTime property, available only to objects in the same assembly as TargaExtensionArea.
+            </summary>
+            <param name="dtJobTime">The Job Time value read from the file.</param>
+        </member>
+        <member name="M:Paloma.TargaExtensionArea.SetSoftwareID(System.String)">
+            <summary>
+            Sets the SoftwareID property, available only to objects in the same assembly as TargaExtensionArea.
+            </summary>
+            <param name="strSoftwareID">The Software ID value read from the file.</param>
+        </member>
+        <member name="M:Paloma.TargaExtensionArea.SetSoftwareVersion(System.String)">
+            <summary>
+            Sets the SoftwareVersion property, available only to objects in the same assembly as TargaExtensionArea.
+            </summary>
+            <param name="strSoftwareVersion">The Software Version value read from the file.</param>
+        </member>
+        <member name="M:Paloma.TargaExtensionArea.SetKeyColor(System.Drawing.Color)">
+            <summary>
+            Sets the KeyColor property, available only to objects in the same assembly as TargaExtensionArea.
+            </summary>
+            <param name="cKeyColor">The Key Color value read from the file.</param>
+        </member>
+        <member name="M:Paloma.TargaExtensionArea.SetPixelAspectRatioNumerator(System.Int32)">
+            <summary>
+            Sets the PixelAspectRatioNumerator property, available only to objects in the same assembly as TargaExtensionArea.
+            </summary>
+            <param name="intPixelAspectRatioNumerator">The Pixel Aspect Ratio Numerator value read from the file.</param>
+        </member>
+        <member name="M:Paloma.TargaExtensionArea.SetPixelAspectRatioDenominator(System.Int32)">
+            <summary>
+            Sets the PixelAspectRatioDenominator property, available only to objects in the same assembly as TargaExtensionArea.
+            </summary>
+            <param name="intPixelAspectRatioDenominator">The Pixel Aspect Ratio Denominator value read from the file.</param>
+        </member>
+        <member name="M:Paloma.TargaExtensionArea.SetGammaNumerator(System.Int32)">
+            <summary>
+            Sets the GammaNumerator property, available only to objects in the same assembly as TargaExtensionArea.
+            </summary>
+            <param name="intGammaNumerator">The Gamma Numerator value read from the file.</param>
+        </member>
+        <member name="M:Paloma.TargaExtensionArea.SetGammaDenominator(System.Int32)">
+            <summary>
+            Sets the GammaDenominator property, available only to objects in the same assembly as TargaExtensionArea.
+            </summary>
+            <param name="intGammaDenominator">The Gamma Denominator value read from the file.</param>
+        </member>
+        <member name="M:Paloma.TargaExtensionArea.SetColorCorrectionOffset(System.Int32)">
+            <summary>
+            Sets the ColorCorrectionOffset property, available only to objects in the same assembly as TargaExtensionArea.
+            </summary>
+            <param name="intColorCorrectionOffset">The Color Correction Offset value read from the file.</param>
+        </member>
+        <member name="M:Paloma.TargaExtensionArea.SetPostageStampOffset(System.Int32)">
+            <summary>
+            Sets the PostageStampOffset property, available only to objects in the same assembly as TargaExtensionArea.
+            </summary>
+            <param name="intPostageStampOffset">The Postage Stamp Offset value read from the file.</param>
+        </member>
+        <member name="M:Paloma.TargaExtensionArea.SetScanLineOffset(System.Int32)">
+            <summary>
+            Sets the ScanLineOffset property, available only to objects in the same assembly as TargaExtensionArea.
+            </summary>
+            <param name="intScanLineOffset">The Scan Line Offset value read from the file.</param>
+        </member>
+        <member name="M:Paloma.TargaExtensionArea.SetAttributesType(System.Int32)">
+            <summary>
+            Sets the AttributesType property, available only to objects in the same assembly as TargaExtensionArea.
+            </summary>
+            <param name="intAttributesType">The Attributes Type value read from the file.</param>
+        </member>
+        <member name="P:Paloma.TargaExtensionArea.ExtensionSize">
+            <summary>
+            Gets the number of Bytes in the fixed-length portion of the ExtensionArea. 
+            For Version 2.0 of the TGA File Format, this number should be set to 495
+            </summary>
+        </member>
+        <member name="P:Paloma.TargaExtensionArea.AuthorName">
+            <summary>
+            Gets the name of the person who created the image.
+            </summary>
+        </member>
+        <member name="P:Paloma.TargaExtensionArea.AuthorComments">
+            <summary>
+            Gets the comments from the author who created the image.
+            </summary>
+        </member>
+        <member name="P:Paloma.TargaExtensionArea.DateTimeStamp">
+            <summary>
+            Gets the date and time that the image was saved.
+            </summary>
+        </member>
+        <member name="P:Paloma.TargaExtensionArea.JobName">
+            <summary>
+            Gets the name or id tag which refers to the job with which the image was associated.
+            </summary>
+        </member>
+        <member name="P:Paloma.TargaExtensionArea.JobTime">
+            <summary>
+            Gets the job elapsed time when the image was saved.
+            </summary>
+        </member>
+        <member name="P:Paloma.TargaExtensionArea.SoftwareID">
+            <summary>
+            Gets the Software ID. Usually used to determine and record with what program a particular image was created.
+            </summary>
+        </member>
+        <member name="P:Paloma.TargaExtensionArea.SoftwareVersion">
+            <summary>
+            Gets the version of software defined by the SoftwareID.
+            </summary>
+        </member>
+        <member name="P:Paloma.TargaExtensionArea.KeyColor">
+            <summary>
+            Gets the key color in effect at the time the image is saved.
+            The Key Color can be thought of as the "background color" or "transparent color".
+            </summary>
+        </member>
+        <member name="P:Paloma.TargaExtensionArea.PixelAspectRatioNumerator">
+            <summary>
+            Gets the Pixel Ratio Numerator.
+            </summary>
+        </member>
+        <member name="P:Paloma.TargaExtensionArea.PixelAspectRatioDenominator">
+            <summary>
+            Gets the Pixel Ratio Denominator.
+            </summary>
+        </member>
+        <member name="P:Paloma.TargaExtensionArea.PixelAspectRatio">
+            <summary>
+            Gets the Pixel Aspect Ratio.
+            </summary>
+        </member>
+        <member name="P:Paloma.TargaExtensionArea.GammaNumerator">
+            <summary>
+            Gets the Gamma Numerator.
+            </summary>
+        </member>
+        <member name="P:Paloma.TargaExtensionArea.GammaDenominator">
+            <summary>
+            Gets the Gamma Denominator.
+            </summary>
+        </member>
+        <member name="P:Paloma.TargaExtensionArea.GammaRatio">
+            <summary>
+            Gets the Gamma Ratio.
+            </summary>
+        </member>
+        <member name="P:Paloma.TargaExtensionArea.ColorCorrectionOffset">
+            <summary>
+            Gets the offset from the beginning of the file to the start of the Color Correction table.
+            </summary>
+        </member>
+        <member name="P:Paloma.TargaExtensionArea.PostageStampOffset">
+            <summary>
+            Gets the offset from the beginning of the file to the start of the Postage Stamp image data.
+            </summary>
+        </member>
+        <member name="P:Paloma.TargaExtensionArea.ScanLineOffset">
+            <summary>
+            Gets the offset from the beginning of the file to the start of the Scan Line table.
+            </summary>
+        </member>
+        <member name="P:Paloma.TargaExtensionArea.AttributesType">
+            <summary>
+            Gets the type of Alpha channel data contained in the file.
+            0: No Alpha data included.
+            1: Undefined data in the Alpha field, can be ignored
+            2: Undefined data in the Alpha field, but should be retained
+            3: Useful Alpha channel data is present
+            4: Pre-multiplied Alpha (see description below)
+            5-127: RESERVED
+            128-255: Un-assigned
+            </summary>
+        </member>
+        <member name="P:Paloma.TargaExtensionArea.ScanLineTable">
+            <summary>
+            Gets a list of offsets from the beginning of the file that point to the start of the next scan line, 
+            in the order that the image was saved 
+            </summary>
+        </member>
+        <member name="P:Paloma.TargaExtensionArea.ColorCorrectionTable">
+            <summary>
+            Gets a list of Colors where each Color value is the desired Color correction for that entry.
+            This allows the user to store a correction table for image remapping or LUT driving.
+            </summary>
+        </member>
+        <member name="T:Paloma.Utilities">
+            <summary>
+            Utilities functions used by the TargaImage class.
+            </summary>
+        </member>
+        <member name="M:Paloma.Utilities.GetBits(System.Byte,System.Int32,System.Int32)">
+            <summary>
+            Gets an int value representing the subset of bits from a single Byte.
+            </summary>
+            <param name="b">The Byte used to get the subset of bits from.</param>
+            <param name="offset">The offset of bits starting from the right.</param>
+            <param name="count">The number of bits to read.</param>
+            <returns>
+            An int value representing the subset of bits.
+            </returns>
+            <remarks>
+            Given -> b = 00110101 
+            A call to GetBits(b, 2, 4)
+            GetBits looks at the following bits in the byte -> 00{1101}00
+            Returns 1101 as an int (13)
+            </remarks>
+        </member>
+        <member name="M:Paloma.Utilities.GetColorFrom2Bytes(System.Byte,System.Byte)">
+            <summary>
+            Reads ARGB values from the 16 bits of two given Bytes in a 1555 format.
+            </summary>
+            <param name="one">The first Byte.</param>
+            <param name="two">The Second Byte.</param>
+            <returns>A System.Drawing.Color with a ARGB values read from the two given Bytes</returns>
+            <remarks>
+            Gets the ARGB values from the 16 bits in the two bytes based on the below diagram
+            |   BYTE 1   |  BYTE 2   |
+            | A RRRRR GG | GGG BBBBB |
+            </remarks>
+        </member>
+        <member name="M:Paloma.Utilities.GetIntBinaryString(System.Int32)">
+            <summary>
+            Gets a 32 character binary string of the specified Int32 value.
+            </summary>
+            <param name="n">The value to get a binary string for.</param>
+            <returns>A string with the resulting binary for the supplied value.</returns>
+            <remarks>
+            This method was used during debugging and is left here just for fun.
+            </remarks>
+        </member>
+        <member name="M:Paloma.Utilities.GetInt16BinaryString(System.Int16)">
+            <summary>
+            Gets a 16 character binary string of the specified Int16 value.
+            </summary>
+            <param name="n">The value to get a binary string for.</param>
+            <returns>A string with the resulting binary for the supplied value.</returns>
+            <remarks>
+            This method was used during debugging and is left here just for fun.
+            </remarks>
+        </member>
+    </members>
+</doc>

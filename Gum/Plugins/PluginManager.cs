@@ -1,0 +1,829 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.ComponentModel.Composition;
+using System.Reflection;
+using System.ComponentModel.Composition.Hosting;
+using System.CodeDom.Compiler;
+using System.IO;
+using System.Windows.Forms;
+using Gum.Plugins.BaseClasses;
+using Gum.DataTypes;
+using Gum.DataTypes.Variables;
+using Gum.Gui.Plugins;
+using Gum.Gui.Forms;
+using ToolsUtilities;
+
+namespace Gum.Plugins
+{
+    #region PluginCategories enum
+
+    internal enum PluginCategories
+    {
+        Global = 1,
+        ProjectSpecific = 2,
+        All = Global | ProjectSpecific
+    }
+
+    #endregion
+
+    class PluginManager
+    {
+        #region Fields
+
+        static PluginSettingsSave mPluginSettingsSave = new PluginSettingsSave();
+
+        private List<Assembly> mExternalAssemblies = new List<Assembly>();
+        private List<string> mReferenceListInternal = new List<string>();
+        private List<string> mReferenceListLoaded = new List<string>();
+        private List<string> mReferenceListExternal = new List<string>();
+
+        private Dictionary<IPlugin, PluginContainer> mPluginContainers = new Dictionary<IPlugin, PluginContainer>();
+
+        private const String ReferenceFileName = "References.txt";
+        private const String CompatibilityFileName = "Compatibility.txt";
+        private bool mError = false;
+        
+        static PluginManager mGlobalInstance;
+        static PluginManager mProjectInstance;
+        static List<PluginManager> mInstances = new List<PluginManager>();
+        private bool mGlobal;
+
+        public static string PluginFolder
+        {
+            get
+            {
+                return FileManager.GetDirectory(Application.ExecutablePath) + "Plugins\\";
+            }
+        }
+
+        #endregion
+
+        #region Interface Lists
+
+
+        [ImportMany(AllowRecomposition = true)]
+        public IEnumerable<PluginBase> Plugins { get; set; }
+
+        
+
+        #endregion
+
+        #region Properties
+
+        public static PluginManager Self
+        {
+            get
+            {
+                if (mGlobalInstance == null)
+                {
+                    mGlobalInstance = new PluginManager();
+                }
+                return mGlobalInstance;
+            }
+        }
+
+        static string PluginSettingsSaveFileName
+        {
+            get
+            {
+                return FileManager.UserApplicationDataForThisApplication + "GumPluginSettings.xml";
+            }
+        }
+
+
+        #endregion
+
+        #region Exported objects
+
+        public static PluginManager GetGlobal()
+        {
+            return mGlobalInstance;
+        }
+
+        public static PluginManager GetProject()
+        {
+            return mProjectInstance;
+        }
+
+
+        public static List<PluginManager> GetInstances()
+        {
+            return mInstances;
+        }
+
+        #endregion
+
+        internal static List<PluginContainer> AllPluginContainers
+        {
+            get
+            {
+                List<PluginContainer> returnList = new List<PluginContainer>();
+
+                foreach (PluginManager pluginManager in mInstances)
+                {
+                    returnList.AddRange(pluginManager.mPluginContainers.Values);
+                }
+
+                return returnList;
+            }
+        }
+
+        public Dictionary<IPlugin, PluginContainer> PluginContainers
+        {
+            get { return mPluginContainers; }
+        }
+
+        #region Methods
+
+
+        public void Initialize(MainWindow mainWindow)
+        {
+            LoadPluginSettings();
+            LoadPlugins(this);
+            AssignReferences(mainWindow);
+            mInstances.Add(this);
+        }
+
+        private void AssignReferences(MainWindow mainWindow)
+        {
+            foreach (PluginBase pluginBase in this.Plugins)
+            {
+                if (pluginBase is MainWindowPlugin)
+                {
+                    ((MainWindowPlugin)pluginBase).MainWindow = mainWindow;
+                }
+
+                pluginBase.MenuStrip = mainWindow.MainMenuStrip;
+            }
+        }
+
+        private void LoadPluginSettings()
+        {
+            
+            if (System.IO.File.Exists(PluginSettingsSaveFileName))
+            {
+                mPluginSettingsSave = PluginSettingsSave.Load(PluginSettingsSaveFileName);
+            }
+            else
+            {
+                mPluginSettingsSave = new PluginSettingsSave();
+            }
+        }
+
+        public void SavePluginSettings()
+        {
+            FileManager.XmlSerialize(mPluginSettingsSave, PluginSettingsSaveFileName);
+        }
+
+        private void LoadReferenceLists()
+        {
+            // We use absolute paths for some of the .dlls and .exes
+            // because if we don't, then Glue looks for them in the Startup
+            // path, which could depend on whether Glue is launched from a shortcut
+            // or not - this is really common for released versions.
+            string executablePath = FileManager.GetDirectory(System.Windows.Forms.Application.ExecutablePath);
+
+            //Load Internal List
+            mReferenceListInternal.Add(executablePath + "Ionic.Zip.dll");
+            mReferenceListExternal.Add(executablePath + "CsvLibrary.dll");
+            mReferenceListExternal.Add(executablePath + "RenderingLibrary.dll");
+
+            mReferenceListExternal.Add(executablePath + "ToolsUtilities.dll");
+            mReferenceListExternal.Add(executablePath + "Gum.exe");
+
+            mReferenceListInternal.Add("Microsoft.CSharp.dll");
+            mReferenceListInternal.Add("System.dll");
+            mReferenceListInternal.Add("System.ComponentModel.Composition.dll");
+            mReferenceListInternal.Add("System.Core.dll");
+            mReferenceListInternal.Add("System.Data.dll");
+            mReferenceListInternal.Add("System.Data.DataSetExtensions.dll");
+            mReferenceListInternal.Add("System.Drawing.dll");
+            mReferenceListInternal.Add("System.Windows.Forms.dll");
+            mReferenceListInternal.Add("System.Xml.dll");
+            mReferenceListInternal.Add("System.Xml.Linq.dll");
+        }
+
+        private void LoadExternalReferenceList(string filePath)
+        {
+            string ReferenceFilePath = filePath + "\\" + ReferenceFileName;
+            mReferenceListExternal = new List<string>();
+
+            if (File.Exists(ReferenceFilePath))
+            {
+                using (StreamReader file = new StreamReader(ReferenceFilePath))
+                {
+                    string line;
+
+                    while ((line = file.ReadLine()) != null)
+                    {
+                        if (!String.IsNullOrEmpty(line) &&
+                           !String.IsNullOrEmpty(line.Trim()))
+                        {
+                            if (FileManager.FileExists(line.Trim()))
+                            {
+                                string absolute = FileManager.MakeAbsolute(line.Trim());
+
+                                if (!mReferenceListInternal.Contains(absolute))
+                                {
+                                    mReferenceListExternal.Add(absolute);
+                                    mExternalAssemblies.Add(Assembly.LoadFrom(absolute));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+
+        private static void LoadPlugins(PluginManager instance)
+        {
+            #region Get the Catalog
+
+            instance.mError = false;
+
+            ResolveEventHandler reh = new ResolveEventHandler(instance.currentDomain_AssemblyResolve);
+
+            try
+            {
+                AppDomain currentDomain = AppDomain.CurrentDomain;
+                currentDomain.AssemblyResolve += reh;
+                AggregateCatalog catalog = instance.CreateCatalog();
+
+
+
+                var container = new CompositionContainer(catalog);
+                container.ComposeParts(instance);
+            }
+            catch (Exception e)
+            {
+                //MessageBox.Show("Error trying to load plugins: \r\n\r\n" + e.ToString(), "Error trying to load plugins");
+                //instance.TreeViewPlugins = new List<ITreeViewRightClick>();
+                //instance.PropertyGridRightClickPlugins = new List<IPropertyGridRightClick>();
+                //instance.NewObjectPlugins = new List<INewObject>();
+                //instance.OpenVisualStudioPlugins = new List<IOpenVisualStudio>();
+                //instance.TreeItemSelectPlugins = new List<ITreeItemSelect>();
+                //instance.NewFilePlugins = new List<INewFile>();
+                //instance.MenuStripPlugins = new List<IMenuStripPlugin>();
+                //instance.TopTabPlugins = new List<ITopTab>();
+                //instance.LeftTabPlugins = new List<ILeftTab>();
+                //instance.BottomTabPlugins = new List<IBottomTab>();
+                //instance.RightTabPlugins = new List<IRightTab>();
+                //instance.CenterTabPlugins = new List<ICenterTab>();
+                //instance.GluxLoadPlugins = new List<IGluxLoad>();
+                //instance.NamedObjectsPlugins = new List<INamedObject>();
+                //instance.CurrentElementPlugins = new List<ICurrentElement>();
+                //instance.PropertyChangePlugins = new List<IPropertyChange>();
+                //instance.CodeGeneratorPlugins = new List<ICodeGeneratorPlugin>();
+                //instance.ContentFileChangePlugins = new List<IContentFileChange>();
+                //instance.OutputReceiverPlugins = new List<IOutputReceiver>();
+                return;
+            }
+            finally
+            {
+                AppDomain.CurrentDomain.AssemblyResolve -= reh;
+            }
+
+            #endregion
+
+            #region Start all plugins
+            
+            foreach (PluginBase plugin in instance.Plugins)
+            {
+                StartupPlugin(plugin, instance);
+            }
+            
+            #endregion
+        }
+
+        private Assembly currentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
+        {
+            foreach (Assembly item in mExternalAssemblies)
+            {
+                if (item.FullName == args.Name)
+                {
+                    return item;
+                }
+            }
+
+            return null;
+        }
+
+        //internal static void Initialize()
+        //{
+        //    if (mGlobalInstance == null)
+        //    {
+        //        mGlobalInstance = new PluginManager(true);
+        //        LoadPlugins(mGlobalInstance);
+        //    }
+
+        //    if (mProjectInstance != null)
+        //    {
+        //        foreach (IPlugin plugin in mProjectInstance.mPluginContainers.Keys)
+        //        {
+        //            ShutDownPlugin(plugin, PluginShutDownReason.GlueShutDown);
+        //        }
+        //    }
+
+        //    mProjectInstance = new PluginManager(false);
+
+        //    mInstances.Clear();
+        //    mInstances.Add(mGlobalInstance);
+        //    mInstances.Add(mProjectInstance);
+
+
+        //    LoadPlugins(mProjectInstance);
+        //}
+
+        internal static void StartupPlugin(IPlugin plugin, PluginManager instance)
+        {
+
+            // See if the plugin already exists - it may implement multiple interfaces
+            if (!instance.mPluginContainers.ContainsKey(plugin))
+            {
+                PluginContainer pluginContainer = new PluginContainer(plugin);
+                instance.mPluginContainers.Add(plugin, pluginContainer);
+
+                try
+                {
+                    plugin.UniqueId = plugin.GetType().FullName;
+
+                    if (!mPluginSettingsSave.DisabledPlugins.Contains(plugin.UniqueId))
+                    {
+
+                        plugin.StartUp();
+                    }
+                    else
+                    {
+                        pluginContainer.IsEnabled = false;
+                    }
+                }
+                catch (Exception e)
+                {
+#if DEBUG
+                    MessageBox.Show("Plugin failed to start up:\n\n" + e.ToString());
+#endif
+                    pluginContainer.Fail(e, "Plugin failed in StartUp");
+                }
+            }
+        }
+
+
+
+        private AggregateCatalog CreateCatalog()
+        {
+            mExternalAssemblies.Clear();
+            LoadReferenceLists();
+
+            var returnValue = new AggregateCatalog();
+
+            var pluginDirectories = new List<string>();
+
+            // For now we have just a global plugin manager
+            //if (mGlobal)
+            {
+                pluginDirectories.Add(PluginFolder);
+                //var paths = new List<string>
+                //                         {
+                //                             FileManager.GetDirectory(Application.ExecutablePath) + "Plugins"
+                //                             //,FileManager.UserApplicationData + @"FRBDK\Plugins"
+                //                         };
+
+                //pluginDirectories.AddRange(paths.Where(Directory.Exists).SelectMany(Directory.GetDirectories));
+            }
+            //else
+            //{
+            //    //if (ProjectManager.GlueProjectFileName != null && Directory.Exists(FileManager.GetDirectory(ProjectManager.GlueProjectFileName) + "Plugins"))
+            //    //{
+            //    //    pluginDirectories.AddRange(Directory.GetDirectories(FileManager.GetDirectory(ProjectManager.GlueProjectFileName) + "Plugins"));
+            //    //}
+            //}
+
+            foreach (var directory in pluginDirectories)
+            {
+                List<string> dllFiles = FileManager.GetAllFilesInDirectory(directory, "dll");
+                string executablePath = FileManager.GetDirectory(System.Windows.Forms.Application.ExecutablePath);
+
+                dllFiles.Add(executablePath + "Gum.exe");
+                foreach (string dll in dllFiles)
+                {
+                    Assembly loadedAssembly = Assembly.LoadFrom(dll);
+
+                    returnValue.Catalogs.Add(new AssemblyCatalog(loadedAssembly));
+                }
+
+                //try
+                //{
+                //    var result = CompilePlugin(plugin);
+
+                //    if (result != null)
+                //    {
+                //        if (result.Errors.HasErrors)
+                //        {
+                //            var errors = new StringBuilder();
+                //            var filename = Path.GetFileName(plugin);
+                //            foreach (CompilerError err in result.Errors)
+                //            {
+                //                errors.Append(string.Format("\r\n{0}({1},{2}): {3}: {4}",
+                //                            filename, err.Line, err.Column,
+                //                            err.ErrorNumber, err.ErrorText));
+                //            }
+                //            var str = "Error loading script " + plugin + "\r\n" + errors.ToString();
+                //            MessageBox.Show(str, @"Error compiling plugin");
+                //        }
+                //        else
+                //        {
+                //            var newCatalog = new AssemblyCatalog(result.CompiledAssembly);
+
+                //            returnValue.Catalogs.Add(newCatalog);
+
+                //            //foreach (string assm in mReferenceListExternal)
+                //            //{
+                //            //    Assembly ass = Assembly.LoadFrom(assm);
+                //            //    var assemblies = AppDomain.CurrentDomain.GetAssemblies().Where(a => !a.IsDynamic).Select(a => a.Location);
+
+                //            //    returnValue.Catalogs.Add(newCatalog);
+                //            //}
+                //        }
+                //    }
+                //}
+                //catch (Exception ex)
+                //{
+                //    var str = "Error loading plugin at " + plugin + "\r\n\r\n" + ex;
+                //    MessageBox.Show(str, @"Error loading plugin");
+                //}
+            }
+
+            if (mGlobal)
+            {
+                returnValue.Catalogs.Add(new AssemblyCatalog(System.Reflection.Assembly.GetExecutingAssembly()));
+            }
+
+            return returnValue;
+        }
+
+        // Eventually we may add support for this but not on the first pass
+        //private CompilerResults CompilePlugin(string filepath)
+        //{
+        //    using (new ZipFile()) { }
+
+        //    texture.ToString();// We do this to eliminate "is never used" warnings
+
+        //    if (IsCompatible(filepath))
+        //    {
+        //        LoadExternalReferenceList(filepath);
+
+        //        return PluginCompiler.Compiler.CompilePlugin(filepath, mReferenceListInternal, mReferenceListLoaded, mReferenceListExternal);
+        //    }
+
+        //    return null;
+        //}
+
+        private static bool IsCompatible(string filepath)
+        {
+            var compatibilityFilePath = filepath + @"\" + CompatibilityFileName;
+
+            //Check for compatibility file
+            if (File.Exists(compatibilityFilePath))
+            {
+                string value;
+
+                //Get compatibility timestamp
+                using (var file = new StreamReader(compatibilityFilePath))
+                {
+                    value = file.ReadToEnd();
+                }
+
+                DateTime compatibilityTime;
+
+                if (DateTime.TryParse(value, out compatibilityTime))
+                {
+                    //If compatibility timestamp is newer than current Glue's timestamp, then don't compile plugin
+                    if (new FileInfo(Assembly.GetExecutingAssembly().Location).LastWriteTime < compatibilityTime)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        private static void ExportFile(ElementSave elementSave)
+        {
+            PluginManager pluginManager = mGlobalInstance;
+
+            foreach (PluginBase plugin in pluginManager.Plugins)
+            {
+                PluginContainer container = pluginManager.mPluginContainers[plugin];
+
+                if (container.IsEnabled)
+                {
+                    try
+                    {
+                        plugin.CallExport(elementSave);
+                    }
+                    catch (Exception e)
+                    {
+                        container.Fail(e, "Failed in ReactToRightClick");
+                    }
+                }
+            }
+
+        }
+
+
+        private static bool ShouldProcessPluginManager(PluginCategories pluginCategories, PluginManager pluginManager)
+        {
+            return (pluginManager.mGlobal && (pluginCategories & PluginCategories.Global) == PluginCategories.Global) ||
+                                (!pluginManager.mGlobal && (pluginCategories & PluginCategories.ProjectSpecific) == PluginCategories.ProjectSpecific);
+        }
+
+        
+        public static bool ShutDownPlugin(IPlugin pluginToShutDown)
+        {
+            return ShutDownPlugin(pluginToShutDown, PluginShutDownReason.PluginInitiated);
+        }
+
+        internal static bool ShutDownPlugin(IPlugin pluginToShutDown,
+            PluginShutDownReason shutDownReason)
+        {
+            bool doesPluginWantToShutDown = true;
+            PluginContainer container;
+
+            if (mGlobalInstance.mPluginContainers.ContainsKey(pluginToShutDown))
+            {
+                container = mGlobalInstance.mPluginContainers[pluginToShutDown];
+            }
+            else
+            {
+                container = mProjectInstance.mPluginContainers[pluginToShutDown];
+            }
+
+            try
+            {
+                doesPluginWantToShutDown =
+                    container.Plugin.ShutDown(shutDownReason);
+            }
+            catch (Exception exception)
+            {
+                doesPluginWantToShutDown = true;
+            }
+
+
+
+            if (doesPluginWantToShutDown)
+            {
+                container.IsEnabled = false;
+            }
+
+            if (shutDownReason == PluginShutDownReason.UserDisabled)
+            {
+                mPluginSettingsSave.DisabledPlugins.Add(pluginToShutDown.UniqueId);
+                StringFunctions.RemoveDuplicates(mPluginSettingsSave.DisabledPlugins);
+                mPluginSettingsSave.Save(PluginSettingsSaveFileName);
+            }
+
+            return doesPluginWantToShutDown;
+
+        }
+
+        internal static void ReenablePlugin(IPlugin pluginToReenable)
+        {
+            if (mPluginSettingsSave.DisabledPlugins.Contains(pluginToReenable.UniqueId))
+            {
+                mPluginSettingsSave.DisabledPlugins.Remove(pluginToReenable.UniqueId);
+            }
+            mPluginSettingsSave.Save(PluginSettingsSaveFileName);
+
+        }
+
+        internal static void AddInternalPlugins()
+        {
+
+        }
+
+
+        #endregion
+
+        #region Methods called by Gum when certain events happen
+
+
+        void CallMethodOnPlugin(Action<PluginBase> methodToCall, string methodName)
+        {
+
+#if !TEST
+
+            foreach (var plugin in this.Plugins)
+            {
+                PluginContainer container = this.PluginContainers[plugin];
+
+                if (container.IsEnabled)
+                {
+                    try
+                    {
+                        methodToCall(plugin);
+                    }
+                    catch (Exception e)
+                    {
+#if DEBUG
+                        MessageBox.Show("Error in plugin " + plugin.FriendlyName + ":\n\n" + e.ToString());
+#endif
+                        container.Fail(e, "Failed in " + methodName);
+                    }
+                }
+            }      
+
+#endif
+        }
+
+        internal void Export(ElementSave elementToExport)
+        {
+            foreach (PluginBase plugin in this.Plugins)
+            {
+                PluginContainer container = this.mPluginContainers[plugin];
+
+                if (container.IsEnabled)
+                {
+                    try
+                    {
+                        plugin.CallExport(elementToExport);
+                    }
+                    catch (Exception e)
+                    {
+#if DEBUG
+                        MessageBox.Show("Error in plugin " + plugin.FriendlyName + ":\n\n" + e.ToString());
+#endif
+                        container.Fail(e, "Failed in ReactToRightClick");
+                    }
+                }
+            }
+        }
+
+        internal void ModifyDefaultStandardState(string type, StateSave stateSave)
+        {
+            CallMethodOnPlugin(
+                delegate(PluginBase plugin)
+                {
+                    plugin.CallAddAndRemoveVariablesForType(type, stateSave);
+
+                },
+                "ModifyDefaultStandardState"
+                );
+        }
+
+        internal void ShowDeleteDialog(DeleteOptionsWindow window, object objectToDelete)
+        {
+            CallMethodOnPlugin(
+                delegate(PluginBase plugin)
+                {
+                    plugin.CallDeleteOptionsWindowShow(window, objectToDelete);
+                    
+                },
+                "ShowDeleteDialog"
+                );
+        }
+
+        internal void DeleteConfirm(DeleteOptionsWindow window, object objectToDelete)
+        {
+            CallMethodOnPlugin(
+                delegate(PluginBase plugin)
+                {
+                    plugin.CallDeleteConfirm(window, objectToDelete);
+                },
+                "ConfirmDelete"
+                );
+        }
+
+        internal void ElementRename(ElementSave elementSave, string oldName)
+        {
+            CallMethodOnPlugin(
+                delegate(PluginBase plugin)
+                {
+                    plugin.CallElementRename(elementSave, oldName);
+                },
+                "ElementRename"
+                );
+        }
+
+        internal void GuidesChanged()
+        {
+            CallMethodOnPlugin(
+                delegate(PluginBase plugin)
+                {
+                    plugin.CallGuidesChanged();
+                },
+                "GuidesChanged"
+            );
+        }
+
+        internal void ProjectLoad(GumProjectSave newlyLoadedProject)
+        {
+
+            foreach (var plugin in this.Plugins)
+            {
+                PluginContainer container = this.PluginContainers[plugin];
+
+                if (container.IsEnabled)
+                {
+                    try
+                    {
+                        plugin.CallProjectLoad(newlyLoadedProject);
+                    }
+                    catch (Exception e)
+                    {
+#if DEBUG
+                        MessageBox.Show("Error in plugin " + plugin.FriendlyName + ":\n\n" + e.ToString());
+#endif
+                        container.Fail(e, "Failed in ReactToRightClick");
+                    }
+                }
+            }
+        }
+
+        internal List<Attribute> GetAttributesFor(VariableSave variableSave)
+        {
+            List<Attribute> listToFill = new List<Attribute>();
+
+            CallMethodOnPlugin(
+                delegate(PluginBase plugin)
+                {
+                    plugin.CallFillVariableAttributes(variableSave, listToFill);
+                },
+                "GetAttributesFor"
+            );
+
+            return listToFill;
+        }
+
+        internal void VariableSet(ElementSave parentElement, string changedMember, object oldValue)
+        {
+            CallMethodOnPlugin(
+                delegate(PluginBase plugin)
+                {
+                    plugin.CallVariableSet(parentElement, changedMember, oldValue);
+                },
+                "GetAttributesFor"
+            );
+
+        }
+
+        internal void ElementSelected(ElementSave elementSave)
+        {
+            CallMethodOnPlugin(
+                delegate(PluginBase plugin)
+                {
+                    plugin.CallElementSelected(elementSave);
+                },
+                "ElementSelected"
+            );
+
+        }
+
+        internal void InstanceSelected(ElementSave elementSave, InstanceSave instance)
+        {
+            CallMethodOnPlugin(
+                delegate(PluginBase plugin)
+                {
+                    plugin.CallInstanceSelected(elementSave, instance);
+                },
+                "InstanceSelected"
+            );
+
+        }
+
+        internal void InstanceAdd(ElementSave elementSave, InstanceSave instance)
+        {
+
+            CallMethodOnPlugin(
+                delegate(PluginBase plugin)
+                {
+                    plugin.CallInstanceAdd(elementSave, instance);
+                },
+                "InstanceAdd"
+            );
+        }
+
+        internal void InstanceDelete(ElementSave elementSave, InstanceSave instance)
+        {
+            CallMethodOnPlugin(
+                delegate(PluginBase plugin)
+                {
+                    plugin.CallInstanceDelete(elementSave, instance);
+                },
+                "InstanceDelete"
+            );
+
+
+        }
+
+        #endregion
+
+
+
+
+
+    }
+}
