@@ -8,6 +8,13 @@ using RenderingLibrary.Graphics;
 
 namespace RenderingLibrary
 {
+    public enum CameraCenterOnScreen
+    {
+        Center,
+        TopLeft
+    }
+
+
     public class Camera
     {
         #region Fields
@@ -120,6 +127,12 @@ namespace RenderingLibrary
             set;
         }
 
+        public CameraCenterOnScreen CameraCenterOnScreen
+        {
+            get;
+            set;
+        }
+
         #endregion
 
         #region Methods
@@ -134,12 +147,22 @@ namespace RenderingLibrary
 
         public Matrix GetTransformationMatrix()
         {
-            return Camera.GetTransformationMatirx(X, Y, Zoom, ClientWidth, ClientHeight);
+            if (CameraCenterOnScreen == RenderingLibrary.CameraCenterOnScreen.Center)
+            {
+                return Camera.GetTransformationMatirx(X, Y, Zoom, ClientWidth, ClientHeight);
+            }
+            else
+            {
+                return Matrix.CreateTranslation(-X,-Y,0) *
+                                         Matrix.CreateScale(new Vector3(Zoom, Zoom, 1));
+            }
         }
 
         public static Matrix GetTransformationMatirx(float x, float y, float zoom, int clientWidth, int clientHeight)
         {
-            Matrix matrix =       
+            Matrix matrix;
+            
+            matrix =       
               Matrix.CreateTranslation(new Vector3(-x, -y, 0)) *
                                          Matrix.CreateScale(new Vector3(zoom, zoom, 1)) *
                                          Matrix.CreateTranslation(new Vector3(clientWidth * 0.5f, clientHeight * 0.5f, 0));
