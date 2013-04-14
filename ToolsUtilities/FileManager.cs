@@ -1190,7 +1190,15 @@ namespace ToolsUtilities
             }
             else
             {
-                XmlSerializer newSerializer = new XmlSerializer(type);
+
+                // For info on this block, see:
+                // http://stackoverflow.com/questions/1127431/xmlserializer-giving-filenotfoundexception-at-constructor
+#if DEBUG
+                XmlSerializer newSerializer = XmlSerializer.FromTypes(new[] { type })[0];
+#else
+                XmlSerializer newSerializer = null;
+                newSerializer = new XmlSerializer(type);
+#endif
                 mXmlSerializers.Add(type, newSerializer);
                 return newSerializer;
             }

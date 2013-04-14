@@ -44,6 +44,8 @@ namespace XnaAndWinforms
 
         string mRenderError = null;
 
+        bool mIsInitialized = false;
+
         #endregion
 
         #region Properties
@@ -132,6 +134,8 @@ namespace XnaAndWinforms
             }
 
             base.OnCreateControl();
+
+            mIsInitialized = true;
         }
 
 
@@ -196,8 +200,11 @@ namespace XnaAndWinforms
                         XnaUpdate();
                     }
                     // Draw the control using the GraphicsDevice.
-                    Draw();
-                    EndDraw();
+                    lock (this)
+                    {
+                        Draw();
+                        EndDraw();
+                    }
                 }
                 catch (Exception exception)
                 {

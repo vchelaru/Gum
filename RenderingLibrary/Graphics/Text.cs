@@ -269,7 +269,7 @@ namespace RenderingLibrary.Graphics
 
             mRawText = text;
             UpdateWrappedText();
-            mBounds = new LinePrimitive(Renderer.SinglePixelTexture);
+            mBounds = new LinePrimitive(this.Renderer.SinglePixelTexture);
             mBounds.Color = Color.LightGreen;
             
             mBounds.Add(0, 0);
@@ -496,59 +496,62 @@ namespace RenderingLibrary.Graphics
         private void RenderUsingSpriteFont(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
         {
 
-            Vector2 offset = new Vector2(Renderer.Self.Camera.RenderingXOffset, Renderer.Self.Camera.RenderingYOffset);
+            Vector2 offset = new Vector2(this.Renderer.Camera.RenderingXOffset, Renderer.Camera.RenderingYOffset);
 
             float leftSide = offset.X + this.GetAbsoluteX();
             float topSide = offset.Y + this.GetAbsoluteY();
 
             SpriteFont font = LoaderManager.Self.DefaultFont;
-
-            switch (this.VerticalAlignment)
+            // Maybe this hasn't been loaded yet?
+            if (font != null)
             {
-                case Graphics.VerticalAlignment.Top:
-                    offset.Y = topSide;
-                    break;
-                case Graphics.VerticalAlignment.Bottom:
-                    {
-                        float requiredHeight = (this.mWrappedText.Count) * font.LineSpacing;
-
-                        offset.Y = topSide + (this.Height - requiredHeight);
-
-                        break;
-                    }
-                case Graphics.VerticalAlignment.Center:
-                    {
-                        float requiredHeight = (this.mWrappedText.Count) * font.LineSpacing;
-
-                        offset.Y = topSide + (this.Height - requiredHeight) / 2.0f;
-                        break;
-                    }
-            }
-
-
-
-            float offsetY = offset.Y;
-
-            for (int i = 0; i < mWrappedText.Count; i++)
-            {
-                offset.X = leftSide;
-                offset.Y = (int)offsetY;
-
-                string line = mWrappedText[i];
-
-                if (HorizontalAlignment == Graphics.HorizontalAlignment.Right)
+                switch (this.VerticalAlignment)
                 {
-                    offset.X = leftSide + (Width - font.MeasureString(line).X);
-                }
-                else if (HorizontalAlignment == Graphics.HorizontalAlignment.Center)
-                {
-                    offset.X = leftSide + (Width - font.MeasureString(line).X) / 2.0f;
+                    case Graphics.VerticalAlignment.Top:
+                        offset.Y = topSide;
+                        break;
+                    case Graphics.VerticalAlignment.Bottom:
+                        {
+                            float requiredHeight = (this.mWrappedText.Count) * font.LineSpacing;
+
+                            offset.Y = topSide + (this.Height - requiredHeight);
+
+                            break;
+                        }
+                    case Graphics.VerticalAlignment.Center:
+                        {
+                            float requiredHeight = (this.mWrappedText.Count) * font.LineSpacing;
+
+                            offset.Y = topSide + (this.Height - requiredHeight) / 2.0f;
+                            break;
+                        }
                 }
 
-                offset.X = (int)offset.X; // so we don't have half-pixels that render weird
 
-                spriteBatch.DrawString(font, line, offset, Color);
-                offsetY += LoaderManager.Self.DefaultFont.LineSpacing;
+
+                float offsetY = offset.Y;
+
+                for (int i = 0; i < mWrappedText.Count; i++)
+                {
+                    offset.X = leftSide;
+                    offset.Y = (int)offsetY;
+
+                    string line = mWrappedText[i];
+
+                    if (HorizontalAlignment == Graphics.HorizontalAlignment.Right)
+                    {
+                        offset.X = leftSide + (Width - font.MeasureString(line).X);
+                    }
+                    else if (HorizontalAlignment == Graphics.HorizontalAlignment.Center)
+                    {
+                        offset.X = leftSide + (Width - font.MeasureString(line).X) / 2.0f;
+                    }
+
+                    offset.X = (int)offset.X; // so we don't have half-pixels that render weird
+
+                    spriteBatch.DrawString(font, line, offset, Color);
+                    offsetY += LoaderManager.Self.DefaultFont.LineSpacing;
+                }
             }
         }
 
