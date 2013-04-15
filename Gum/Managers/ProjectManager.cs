@@ -169,6 +169,14 @@ namespace Gum
             }
         }
 
+        public string MakeAbsoluteIfNecessary(string textureAsString)
+        {
+            if (!string.IsNullOrEmpty(textureAsString) && FileManager.IsRelative(textureAsString))
+            {
+                textureAsString = FileManager.RemoveDotDotSlash(FileManager.RelativeDirectory + textureAsString);
+            }
+            return textureAsString;
+        }
 
         public bool AskUserForProjectNameIfNecessary(out bool isProjectNew)
         {

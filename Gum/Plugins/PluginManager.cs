@@ -141,24 +141,10 @@ namespace Gum.Plugins
         public void Initialize(MainWindow mainWindow)
         {
             LoadPluginSettings();
-            LoadPlugins(this);
-            AssignReferences(mainWindow);
+            LoadPlugins(this, mainWindow);
             mInstances.Add(this);
         }
-
-        private void AssignReferences(MainWindow mainWindow)
-        {
-            foreach (PluginBase pluginBase in this.Plugins)
-            {
-                if (pluginBase is MainWindowPlugin)
-                {
-                    ((MainWindowPlugin)pluginBase).MainWindow = mainWindow;
-                }
-
-                pluginBase.MenuStrip = mainWindow.MainMenuStrip;
-            }
-        }
-
+        
         private void LoadPluginSettings()
         {
             
@@ -238,7 +224,7 @@ namespace Gum.Plugins
         }
 
 
-        private static void LoadPlugins(PluginManager instance)
+        private static void LoadPlugins(PluginManager instance, MainWindow mainWindow)
         {
             #region Get the Catalog
 
@@ -292,6 +278,17 @@ namespace Gum.Plugins
             
             foreach (PluginBase plugin in instance.Plugins)
             {
+
+                // We used to do this all in an assign references method,
+                // but we now do it here so that the Startup function can have
+                // access to these references.
+                if (plugin is MainWindowPlugin)
+                {
+                    ((MainWindowPlugin)plugin).MainWindow = mainWindow;
+                }
+
+                plugin.MenuStrip = mainWindow.MainMenuStrip;
+
                 StartupPlugin(plugin, instance);
             }
             
@@ -349,6 +346,7 @@ namespace Gum.Plugins
                 try
                 {
                     plugin.UniqueId = plugin.GetType().FullName;
+
 
                     if (!mPluginSettingsSave.DisabledPlugins.Contains(plugin.UniqueId))
                     {
@@ -758,12 +756,12 @@ namespace Gum.Plugins
             return listToFill;
         }
 
-        internal void VariableSet(ElementSave parentElement, string changedMember, object oldValue)
+        internal void VariableSet(ElementSave parentElement, InstanceSave instance, string changedMember, object oldValue)
         {
             CallMethodOnPlugin(
                 delegate(PluginBase plugin)
                 {
-                    plugin.CallVariableSet(parentElement, changedMember, oldValue);
+                    plugin.CallVariableSet(parentElement, instance, changedMember, oldValue);
                 },
                 "GetAttributesFor"
             );

@@ -21,7 +21,14 @@ namespace Gum.Plugins.BaseClasses
         public event Action<ElementSave, string> ElementRename;
         public event Action<VariableSave, List<Attribute>> FillVariableAttributes;
         public event Action<string, StateSave> AddAndRemoveVariablesForType;
-        public event Action<ElementSave, string, object> VariableSet;
+
+        /// <summary>
+        /// Event which is raised when an ElementSave's variable is set.
+        /// ElementSave is the current ElementSave (like the Screen)
+        /// string is the name of the variable set
+        /// object is the value of the variable.
+        /// </summary>
+        public event Action<ElementSave, InstanceSave, string, object> VariableSet;
         public event Action<ElementSave> ElementSelected;
         public event Action<ElementSave, InstanceSave> InstanceSelected;
         public event Action<ElementSave, InstanceSave> InstanceAdd;
@@ -34,6 +41,7 @@ namespace Gum.Plugins.BaseClasses
             get;
             set;
         }
+        public MenuStrip MenuStrip { get; set; }
 
         public abstract string FriendlyName { get; }
 
@@ -42,7 +50,7 @@ namespace Gum.Plugins.BaseClasses
         public abstract void StartUp();
         public abstract bool ShutDown(PluginShutDownReason shutDownReason);
 
-        public void AddMenuItem(IEnumerable<string> menuAndSubmenus)
+        public ToolStripMenuItem AddMenuItem(IEnumerable<string> menuAndSubmenus)
         {
             string menuName = menuAndSubmenus.Last();
 
@@ -54,6 +62,16 @@ namespace Gum.Plugins.BaseClasses
                 MenuStrip.Items.Cast<ToolStripMenuItem>().FirstOrDefault(
                     item=>item.Text == menuNameToAddTo);
                 //true);
+
+            if (menuToAddTo == null)
+            {
+                menuToAddTo = new ToolStripMenuItem(menuNameToAddTo);
+                MenuStrip.Items.Add(menuToAddTo);
+            }
+
+
+            menuToAddTo.DropDownItems.Add(menuItem);
+            return menuItem;
 
         }
 
@@ -116,11 +134,11 @@ namespace Gum.Plugins.BaseClasses
             }
         }
 
-        public void CallVariableSet(ElementSave parentElement, string changedMember, object oldValue)
+        public void CallVariableSet(ElementSave parentElement, InstanceSave instance, string changedMember, object oldValue)
         {
             if (VariableSet != null)
             {
-                VariableSet(parentElement, changedMember, oldValue);
+                VariableSet(parentElement, instance, changedMember, oldValue);
             }
         }
 
@@ -167,6 +185,5 @@ namespace Gum.Plugins.BaseClasses
 
         #endregion
 
-        public MenuStrip MenuStrip { get; set; }
     }
 }

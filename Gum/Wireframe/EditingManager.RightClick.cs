@@ -10,6 +10,7 @@ using Gum.DataTypes.Variables;
 using Gum.Plugins;
 using Gum.ToolCommands;
 using ToolsUtilities;
+using Gum.Debug;
 
 namespace Gum.Wireframe
 {
@@ -377,7 +378,11 @@ namespace Gum.Wireframe
 
             ElementTreeViewManager.Self.RefreshUI();
 
+
             WireframeObjectManager.Self.RefreshAll(true);
+
+            SelectionManager.Self.Refresh();
+
         }
 
 

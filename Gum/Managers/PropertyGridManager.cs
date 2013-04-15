@@ -115,7 +115,7 @@ namespace Gum.Managers
 
                 ReactIfChangedMemberIsTexture(parentElement, changedMember, oldValue);
 
-                PluginManager.Self.VariableSet(parentElement, changedMember, oldValue);
+                PluginManager.Self.VariableSet(parentElement, instance, changedMember, oldValue);
 
 
 

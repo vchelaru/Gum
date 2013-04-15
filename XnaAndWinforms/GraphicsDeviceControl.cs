@@ -300,14 +300,8 @@ namespace XnaAndWinforms
             {
                 case GraphicsDeviceStatus.Lost:
                     // If the graphics device is lost, we cannot use it at all.
-                    //deviceNeedsReset = true;
-                    graphicsDeviceService.Release(true);
-                    
-                    graphicsDeviceService = GraphicsDeviceService.AddRef(Handle,
-                                                     ClientSize.Width,
-                                                     ClientSize.Height);
+                    return "Graphics device lost";
 
-                    break;
                 case GraphicsDeviceStatus.NotReset:
                     // If device is in the not-reset state, we should try to reset it.
                     deviceNeedsReset = true;

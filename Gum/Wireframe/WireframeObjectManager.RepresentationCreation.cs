@@ -186,14 +186,7 @@ namespace Gum.Wireframe
 
 
 
-        private static string MakeAbsoluteIfNecessary(string textureAsString)
-        {
-            if (!string.IsNullOrEmpty(textureAsString) && FileManager.IsRelative(textureAsString))
-            {
-                textureAsString = FileManager.RemoveDotDotSlash(FileManager.RelativeDirectory + textureAsString);
-            }
-            return textureAsString;
-        }
+
         private IPositionedSizedObject CreateSpriteFor(ElementSave elementSave)
         {
             RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(elementSave.DefaultState);
@@ -743,13 +736,13 @@ namespace Gum.Wireframe
 
             sprite.Animate = animate;
 
-            textureName = MakeAbsoluteIfNecessary(textureName);
+            textureName = ProjectManager.Self.MakeAbsoluteIfNecessary(textureName);
 
             if (animations != null && animations.Count != 0)
             {
                 for (int i = 0; i < animations.Count; i++)
                 {
-                    animations[i] = MakeAbsoluteIfNecessary(animations[i]);
+                    animations[i] = ProjectManager.Self.MakeAbsoluteIfNecessary(animations[i]);
                 }
 
                 TextureFlipAnimation tfa = TextureFlipAnimation.FromStringList(animations, null);
