@@ -114,35 +114,7 @@ namespace Gum.PropertyGridHelpers
             {
                 VariableSave defaultVariable = defaultState.Variables[i];
 
-                bool shouldInclude = GetIfShouldInclude(defaultVariable, elementSave, instanceSave, ses);
-
-                shouldInclude &= (string.IsNullOrEmpty(defaultVariable.SourceObject) || amountToDisplay == AmountToDisplay.AllVariables || !string.IsNullOrEmpty(defaultVariable.ExposedAsName));
-
-                if (shouldInclude)
-                {
-
-                    TypeConverter typeConverter = defaultVariable.GetTypeConverter();
-
-                    Attribute[] customAttributes = GetAttributesForVariable(defaultVariable);
-
-
-                    Type type = typeof(string);
-
-                    string name = defaultVariable.Name;
-
-                    if(!string.IsNullOrEmpty(defaultVariable.ExposedAsName))
-                    {
-                        name = defaultVariable.ExposedAsName;
-                    }
-
-                    pdc = mHelper.AddProperty(pdc,
-                        name,
-                        type,
-                        typeConverter,
-                        //,
-                        customAttributes
-                        );
-                }
+                pdc = TryDisplayVariableSave(pdc, elementSave, instanceSave, amountToDisplay, ses, defaultVariable);
             }
 
             #endregion
@@ -191,6 +163,40 @@ namespace Gum.PropertyGridHelpers
 
 
 
+            return pdc;
+        }
+
+        private PropertyDescriptorCollection TryDisplayVariableSave(PropertyDescriptorCollection pdc, ElementSave elementSave, InstanceSave instanceSave, AmountToDisplay amountToDisplay, StandardElementSave ses, VariableSave defaultVariable)
+        {
+            bool shouldInclude = GetIfShouldInclude(defaultVariable, elementSave, instanceSave, ses);
+
+            shouldInclude &= (string.IsNullOrEmpty(defaultVariable.SourceObject) || amountToDisplay == AmountToDisplay.AllVariables || !string.IsNullOrEmpty(defaultVariable.ExposedAsName));
+
+            if (shouldInclude)
+            {
+
+                TypeConverter typeConverter = defaultVariable.GetTypeConverter();
+
+                Attribute[] customAttributes = GetAttributesForVariable(defaultVariable);
+
+
+                Type type = typeof(string);
+
+                string name = defaultVariable.Name;
+
+                if (!string.IsNullOrEmpty(defaultVariable.ExposedAsName))
+                {
+                    name = defaultVariable.ExposedAsName;
+                }
+
+                pdc = mHelper.AddProperty(pdc,
+                    name,
+                    type,
+                    typeConverter,
+                    //,
+                    customAttributes
+                    );
+            }
             return pdc;
         }
 

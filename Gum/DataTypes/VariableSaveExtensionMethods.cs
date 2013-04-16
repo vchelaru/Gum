@@ -77,7 +77,11 @@ namespace Gum.DataTypes
 
         public static TypeConverter GetTypeConverter(this VariableSave variableSave)
         {
-            if (variableSave.IsFont)
+            if (variableSave.CustomTypeConverter != null)
+            {
+                return variableSave.CustomTypeConverter;
+            }
+            else if (variableSave.IsFont)
             {
                 return new FontTypeConverter();
             }

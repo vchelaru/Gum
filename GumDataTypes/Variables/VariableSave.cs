@@ -131,6 +131,13 @@ namespace Gum.DataTypes.Variables
             ExcludedValuesForEnum = new List<object>();
         }
 
+        [XmlIgnore]
+        public TypeConverter CustomTypeConverter
+        {
+            get;
+            set;
+        }
+
 
     }
 }

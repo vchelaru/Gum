@@ -707,7 +707,8 @@ namespace Gum.Managers
 
             }
 
-            node.Nodes.SortByName();
+            // Why do we do this?  Shouldn't we do it by order in the list?
+            //node.Nodes.SortByName();
         }
         
         internal void OnSelect(TreeNode selectedTreeNode, TreeNode releasedTreeNode)
