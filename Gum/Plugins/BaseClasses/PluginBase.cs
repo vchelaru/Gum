@@ -26,7 +26,7 @@ namespace Gum.Plugins.BaseClasses
         /// Event which is raised when an ElementSave's variable is set.
         /// ElementSave is the current ElementSave (like the Screen)
         /// string is the name of the variable set
-        /// object is the value of the variable.
+        /// object is the OLD value of the variable.  New value must be obtained through the InstanceSave
         /// </summary>
         public event Action<ElementSave, InstanceSave, string, object> VariableSet;
         public event Action<ElementSave> ElementSelected;
