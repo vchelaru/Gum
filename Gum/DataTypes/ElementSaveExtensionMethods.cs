@@ -76,6 +76,7 @@ namespace Gum.DataTypes
                     else
                     {
                         existingVariable.Category = variableSave.Category;
+                        existingVariable.CustomTypeConverter = variableSave.CustomTypeConverter;
                         existingVariable.ExcludedValuesForEnum.Clear();
                         existingVariable.ExcludedValuesForEnum.AddRange(variableSave.ExcludedValuesForEnum);
                     }

@@ -57,7 +57,9 @@ namespace RenderingLibrary.Graphics
         {
             get
             {
-                if (Width != 0 && Height != 0)
+                // I think we want to treat these individually so a 
+                // width could be set but height could be default
+                if (Width != 0)
                 {
                     return Width;
                 }
@@ -83,7 +85,8 @@ namespace RenderingLibrary.Graphics
         {
             get
             {
-                if (Width != 0 && Height != 0)
+                // See comment in Width
+                if (Height != 0)
                 {
                     return Height;
                 }
@@ -284,12 +287,6 @@ namespace RenderingLibrary.Graphics
 
             if (ipso.Width > 0 && ipso.Height > 0)
             {
-                //Rectangle destinationRectangle = new Rectangle(
-                //    (int)(ipso.GetAbsoluteX()), 
-                //    (int)(ipso.GetAbsoluteY()),
-                //    (int)ipso.Width, 
-                //    (int)ipso.Height);
-
                 Vector2 scale = Vector2.One;
 
                 if (textureToUse == null)
@@ -302,9 +299,11 @@ namespace RenderingLibrary.Graphics
                     float ratioHeight = 1;
                     if (sourceRectangle.HasValue)
                     {
+                        
                         ratioWidth = sourceRectangle.Value.Width / (float)textureToUse.Width;
                         ratioHeight = sourceRectangle.Value.Height / (float)textureToUse.Height;
                     }
+
 
                     scale = new Vector2(ipso.Width / (ratioWidth * textureToUse.Width), 
                         ipso.Height / (ratioHeight * textureToUse.Height));

@@ -158,6 +158,7 @@
     </Compile>
     <Compile Include="PropertyGridHelpers\Converters\FontTypeConverter.cs" />
     <Compile Include="PropertyGridHelpers\Converters\RestrictiveEnumConverter.cs" />
+    <Compile Include="PropertyGridHelpers\Converters\StringOptionsTypeConverter.cs" />
     <Compile Include="PropertyGridHelpers\Converters\VariableListConverter.cs" />
     <Compile Include="PropertyGridHelpers\ElementSaveDisplayer.cs" />
     <Compile Include="PropertyGridHelpers\GumProjectSavePropertyGridDisplayer.cs" />

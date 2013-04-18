@@ -107,9 +107,19 @@ namespace Gum.DataTypes.Variables
             set;
         }
 
+        [XmlIgnore]
+        public TypeConverter CustomTypeConverter
+        {
+            get;
+            set;
+        }
+        // If adding stuff here, make sure to add to the Clone method!
+
         public VariableSave Clone()
         {
-            return (VariableSave)this.MemberwiseClone();
+            VariableSave toReturn = (VariableSave)this.MemberwiseClone();
+            toReturn.CustomTypeConverter = this.CustomTypeConverter;
+            return toReturn;
         }
 
         public string GetRootName()
@@ -131,12 +141,7 @@ namespace Gum.DataTypes.Variables
             ExcludedValuesForEnum = new List<object>();
         }
 
-        [XmlIgnore]
-        public TypeConverter CustomTypeConverter
-        {
-            get;
-            set;
-        }
+
 
 
     }
