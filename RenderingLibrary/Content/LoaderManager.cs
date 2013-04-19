@@ -82,6 +82,7 @@ namespace RenderingLibrary.Content
 
         #endregion
 
+        #region Methods
 
         public void Initialize(string invalidTextureLocation, string defaultFontLocation, IServiceProvider serviceProvider, SystemManagers managers)
         {
@@ -202,5 +203,7 @@ namespace RenderingLibrary.Content
             return mContentManager.Load<SpriteFont>(fileName);
 
         }
+
+        #endregion
     }
 }

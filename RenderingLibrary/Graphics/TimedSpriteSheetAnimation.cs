@@ -59,6 +59,8 @@ namespace RenderingLibrary.Graphics
                 }
                 else if (this.Frames.Count > 1)
                 {
+                    bool is0Length = this.AnimationLength == 0;
+
                     while (timeIntoAnimation >= 0)
                     {
                         double frameTime = Frames[frameIndex].FrameTime;
@@ -73,6 +75,11 @@ namespace RenderingLibrary.Graphics
                             timeIntoAnimation -= frameTime;
 
                             frameIndex = (frameIndex + 1) % Frames.Count;
+
+                            if (is0Length)
+                            {
+                                break;
+                            }
                         }
                     }
                 }

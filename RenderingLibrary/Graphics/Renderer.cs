@@ -27,7 +27,7 @@ namespace RenderingLibrary.Graphics
 
         Texture2D mSinglePixelTexture;
 
-        static object mLockObject = new object();
+        public static object LockObject = new object();
         #endregion
 
         #region Properties
@@ -139,7 +139,7 @@ namespace RenderingLibrary.Graphics
         public void Draw(SystemManagers managers)
         {
             // So that 2 controls don't render at the same time.
-            lock (mLockObject)
+            lock (LockObject)
             {
                 mCamera.UpdateClient();
 

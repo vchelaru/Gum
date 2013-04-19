@@ -309,6 +309,11 @@ namespace RenderingLibrary.Graphics
                         ipso.Height / (ratioHeight * textureToUse.Height));
                 }
 
+                if (textureToUse.IsDisposed)
+                {
+                    throw new ObjectDisposedException("Texture is disposed.  Texture name: " + textureToUse.Name + ", sprite scale: " + scale);
+                }
+
                 spriteBatch.Draw(textureToUse, 
                     new Vector2(ipso.GetAbsoluteX(), ipso.GetAbsoluteY()),
                     sourceRectangle,
