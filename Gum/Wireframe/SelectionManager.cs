@@ -517,13 +517,17 @@ namespace Gum.Wireframe
 
             Layer layer = Renderer.Self.Layers[0];
 
+            // Let's try to get visible ones first, then if we don't find anything, look at invisible ones
             for (int i = indexToStartAt; i > indexToEndAt; i--)
             {
                 if (layer.Renderables[i] is IPositionedSizedObject)
                 {
                     IPositionedSizedObject ipso = layer.Renderables[i] as IPositionedSizedObject;
 
-                    if (ipso.HasCursorOver(x, y) && (WireframeObjectManager.Self.IsRepresentation(ipso)))
+                    bool visible = IsIpsoVisible(ipso);
+                    
+
+                    if (visible && ipso.HasCursorOver(x, y) && (WireframeObjectManager.Self.IsRepresentation(ipso)))
                     {
                         // hold on, even though this is a valid IPSO and the cursor is over it, we gotta see if
                         // it's an instance that is locked.  If so, we shouldn't select it!
@@ -537,7 +541,49 @@ namespace Gum.Wireframe
 
                 }
             }
+
+
+            // now invisible
+            for (int i = indexToStartAt; i > indexToEndAt; i--)
+            {
+                if (layer.Renderables[i] is IPositionedSizedObject)
+                {
+                    IPositionedSizedObject ipso = layer.Renderables[i] as IPositionedSizedObject;
+                    bool visible = IsIpsoVisible(ipso);
+
+                    if (!visible && ipso.HasCursorOver(x, y) && (WireframeObjectManager.Self.IsRepresentation(ipso)))
+                    {
+                        // hold on, even though this is a valid IPSO and the cursor is over it, we gotta see if
+                        // it's an instance that is locked.  If so, we shouldn't select it!
+                        InstanceSave instanceSave = WireframeObjectManager.Self.GetInstance(ipso, InstanceFetchType.InstanceInCurrentElement);
+                        if (instanceSave == null || instanceSave.Locked == false)
+                        {
+                            ipsoOver = ipso;
+                            break;
+                        }
+                    }
+
+                }
+            }
+
+
+
             return ipsoOver;
+        }
+
+        private static bool IsIpsoVisible(IPositionedSizedObject ipso)
+        {
+            bool isVisible = true;
+            if (ipso is Sprite)
+            {
+                isVisible = ((Sprite)ipso).AbsoluteVisible;
+            }
+            if (ipso is Text)
+            {
+                isVisible = ((Text)ipso).AbsoluteVisible;
+            }
+
+            return isVisible;
         }
 
 

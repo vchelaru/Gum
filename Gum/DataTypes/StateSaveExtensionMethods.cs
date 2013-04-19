@@ -29,11 +29,22 @@ namespace Gum.DataTypes.Variables
                 // Is this thing the default?
                 ElementSave parent = stateSave.ParentContainer;
 
-                if (parent != null && stateSave != parent.DefaultState)
-                {
-                    throw new NotImplementedException();
-                }
-                else if (parent != null)
+                // I don't know if we need this code
+                // because if we got in here, then the non-default failed to find a value
+                //// Let's see if we can get something from the non-default first
+                //bool wasFound = false;
+                //if (parent != null && stateSave != parent.DefaultState)
+                //{
+                //    // try to get it from the stateSave
+                //    var foundVariable = stateSave.GetVariableRecursive(variableName);
+                //    if (foundVariable != null)
+                //    {
+                //        return foundVariable.Value;
+                //        wasFound = true;
+                //    }
+                //}
+                
+                if (parent != null)
                 {
                     ElementSave baseElement = GetBaseElementFromVariable(variableName, parent);
                     

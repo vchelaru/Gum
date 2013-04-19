@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
+using Gum.ToolStates;
 
 namespace Gum.DataTypes
 {
@@ -27,9 +28,25 @@ namespace Gum.DataTypes
         {
             ElementSave instanceBase = ObjectFinder.Self.GetElementSave(instance.BaseType);
 
-            VariableSave variableSave = parentContainer.DefaultState.GetVariableSave(instance.Name + "." + variable);
+            StateSave stateToPullFrom = parentContainer.DefaultState;
+            StateSave defaultState = parentContainer.DefaultState;
+            if (parentContainer == SelectedState.Self.SelectedElement && 
+                SelectedState.Self.SelectedStateSave != null)
+            {
+                stateToPullFrom = SelectedState.Self.SelectedStateSave;
+            }
+
+            VariableSave variableSave = stateToPullFrom.GetVariableSave(instance.Name + "." + variable);
+            // non-default states can override the default state, so first
+            // let's see if the selected state is non-default and has a value
+            // for a given variable.  If not, we'll fall back to the default.
+            if (variableSave == null && defaultState != stateToPullFrom)
+            {
+                variableSave = defaultState.GetVariableSave(instance.Name + "." + variable);
+            }
             if (variableSave == null)
             {
+                // Eventually use the instanceBase's current state value
                 variableSave = instanceBase.DefaultState.GetVariableSave(variable);
             }
 

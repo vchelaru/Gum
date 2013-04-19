@@ -18,6 +18,8 @@ namespace Gum.Managers
 
         MultiSelectTreeView mTreeView;
 
+        ElementSave mLastElementRefreshedTo;
+
         #endregion
 
         #region Properties
@@ -77,6 +79,12 @@ namespace Gum.Managers
             if (selectedObject == null)
             {
                 // What do we do?  This is invalid.  A State should always be selected...
+                // What we do is select the first one if it exists
+                if (mTreeView.Nodes.Count != 0)
+                {
+                    selectedObject = mTreeView.Nodes[0].Tag;
+                    mTreeView.SelectedNode = mTreeView.Nodes[0];
+                }
             }
 
             SelectedState.Self.UpdateToSelectedStateSave();
@@ -106,28 +114,39 @@ namespace Gum.Managers
 
         public void RefreshUI(ElementSave element)
         {
+            bool changed = element != mLastElementRefreshedTo;
+
+            mLastElementRefreshedTo = element;
+
+            StateSave lastStateSave = SelectedState.Self.SelectedStateSave;
+
             mTreeView.Nodes.Clear();
 
             if (element != null)
             {
+                bool wasAnythingSelected = false;
                 foreach (StateSave state in element.States)
                 {
                     TreeNode treeNode = new TreeNode();
                     treeNode.Text = state.Name;
                     treeNode.Tag = state;
                     mTreeView.Nodes.Add(treeNode);
+
+                    if (state == lastStateSave)
+                    {
+                        SelectedState.Self.SelectedStateSave = state;
+
+                        wasAnythingSelected = true;
+                    }
                 }
 
-                if (SelectedState.Self.SelectedStateSave == null)
+                if (wasAnythingSelected == false)
                 {
                     SelectedState.Self.SelectedStateSave = element.States[0];
 
                 }
-                else // We refreshed the tree node so let's update to selected state
-                {
-                    SelectedState.Self.SelectedStateSave = SelectedState.Self.SelectedStateSave;
-                }
             }
+
 
 
         }
