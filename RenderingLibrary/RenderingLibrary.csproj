@@ -96,6 +96,7 @@
     <Compile Include="Graphics\IVisible.cs" />
     <Compile Include="Graphics\Layer.cs" />
     <Compile Include="Graphics\LayerCameraSettings.cs" />
+    <Compile Include="Graphics\NineSlice.cs" />
     <Compile Include="Graphics\Renderer.cs" />
     <Compile Include="Graphics\TimedSpriteSheetAnimation.cs" />
     <Compile Include="Math\Geometry\Line.cs" />

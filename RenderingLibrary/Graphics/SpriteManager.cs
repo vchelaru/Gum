@@ -13,6 +13,7 @@ namespace RenderingLibrary.Graphics
         static SpriteManager mSelf;
 
         List<Sprite> mSprites = new List<Sprite>();
+        List<NineSlice> mNineSlices = new List<NineSlice>();
 
         #endregion
 
@@ -72,7 +73,7 @@ namespace RenderingLibrary.Graphics
         {
             mSprites.Add(sprite);
 #if !TEST
-                        
+
             if (layer == null)
             {
                 layer = Renderer.LayersWritable[0];
@@ -82,11 +83,30 @@ namespace RenderingLibrary.Graphics
 #endif
         }
 
+        public void Add(NineSlice nineSlice, Layer layer = null)
+        {
+            mNineSlices.Add(nineSlice);
+
+#if !TEST
+            if (layer == null)
+            {
+                layer = Renderer.LayersWritable[0];
+            }
+            layer.Add(nineSlice);
+#endif
+        }
+
         
         public void Remove(Sprite sprite)
         {
             mSprites.Remove(sprite);
             Renderer.RemoveRenderable(sprite);
+        }
+
+        void Remove(NineSlice nineSlice)
+        {
+            mNineSlices.Remove(nineSlice);
+            Renderer.RemoveRenderable(nineSlice);
         }
 
         public void Activity(double currentTime)
@@ -99,6 +119,7 @@ namespace RenderingLibrary.Graphics
                     s.Texture = s.Animation.CurrentTexture;
                 }
             }
+            // maybe we need to support nine-slice animation at some point?
         }
     }
 }

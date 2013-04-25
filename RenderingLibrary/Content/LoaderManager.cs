@@ -18,6 +18,7 @@ namespace RenderingLibrary.Content
 
         static LoaderManager mSelf;
         Texture2D mInvalidTexture;
+        
         SpriteFont mDefaultSpriteFont;
         BitmapFont mDefaultBitmapFont;
 
@@ -88,24 +89,8 @@ namespace RenderingLibrary.Content
         {
             if (mContentManager == null)
             {
-                if (!string.IsNullOrEmpty(invalidTextureLocation) &&
-                    System.IO.File.Exists(invalidTextureLocation))
-                {
+                CreateInvalidTextureGraphic(invalidTextureLocation, managers);
 
-                    mInvalidTexture = Load(invalidTextureLocation, managers);
-                }
-                else
-                {
-                    ImageData imageData = new ImageData(16, 16, managers);
-                    imageData.Fill(Microsoft.Xna.Framework.Color.White);
-                    for (int i = 0; i < 16; i++)
-                    {
-                        imageData.SetPixel(i,i, Microsoft.Xna.Framework.Color.Red);
-                        imageData.SetPixel(15 - i, i, Microsoft.Xna.Framework.Color.Red);
-
-                    }
-                    mInvalidTexture = imageData.ToTexture2D(false);
-                }
                 mContentManager = new ContentManager(serviceProvider, "ContentProject");
 
                 if(defaultFontLocation == null)
@@ -121,6 +106,28 @@ namespace RenderingLibrary.Content
                 {
                     mDefaultSpriteFont = mContentManager.Load<SpriteFont>(defaultFontLocation);
                 }
+            }
+        }
+
+        private void CreateInvalidTextureGraphic(string invalidTextureLocation, SystemManagers managers)
+        {
+            if (!string.IsNullOrEmpty(invalidTextureLocation) &&
+                System.IO.File.Exists(invalidTextureLocation))
+            {
+
+                mInvalidTexture = Load(invalidTextureLocation, managers);
+            }
+            else
+            {
+                ImageData imageData = new ImageData(16, 16, managers);
+                imageData.Fill(Microsoft.Xna.Framework.Color.White);
+                for (int i = 0; i < 16; i++)
+                {
+                    imageData.SetPixel(i, i, Microsoft.Xna.Framework.Color.Red);
+                    imageData.SetPixel(15 - i, i, Microsoft.Xna.Framework.Color.Red);
+
+                }
+                mInvalidTexture = imageData.ToTexture2D(false);
             }
         }
 
