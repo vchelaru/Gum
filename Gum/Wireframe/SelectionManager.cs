@@ -542,27 +542,29 @@ namespace Gum.Wireframe
                 }
             }
 
-
-            // now invisible
-            for (int i = indexToStartAt; i > indexToEndAt; i--)
+            if (ipsoOver == null)
             {
-                if (layer.Renderables[i] is IPositionedSizedObject)
+                // now invisible
+                for (int i = indexToStartAt; i > indexToEndAt; i--)
                 {
-                    IPositionedSizedObject ipso = layer.Renderables[i] as IPositionedSizedObject;
-                    bool visible = IsIpsoVisible(ipso);
-
-                    if (!visible && ipso.HasCursorOver(x, y) && (WireframeObjectManager.Self.IsRepresentation(ipso)))
+                    if (layer.Renderables[i] is IPositionedSizedObject)
                     {
-                        // hold on, even though this is a valid IPSO and the cursor is over it, we gotta see if
-                        // it's an instance that is locked.  If so, we shouldn't select it!
-                        InstanceSave instanceSave = WireframeObjectManager.Self.GetInstance(ipso, InstanceFetchType.InstanceInCurrentElement);
-                        if (instanceSave == null || instanceSave.Locked == false)
-                        {
-                            ipsoOver = ipso;
-                            break;
-                        }
-                    }
+                        IPositionedSizedObject ipso = layer.Renderables[i] as IPositionedSizedObject;
+                        bool visible = IsIpsoVisible(ipso);
 
+                        if (!visible && ipso.HasCursorOver(x, y) && (WireframeObjectManager.Self.IsRepresentation(ipso)))
+                        {
+                            // hold on, even though this is a valid IPSO and the cursor is over it, we gotta see if
+                            // it's an instance that is locked.  If so, we shouldn't select it!
+                            InstanceSave instanceSave = WireframeObjectManager.Self.GetInstance(ipso, InstanceFetchType.InstanceInCurrentElement);
+                            if (instanceSave == null || instanceSave.Locked == false)
+                            {
+                                ipsoOver = ipso;
+                                break;
+                            }
+                        }
+
+                    }
                 }
             }
 
