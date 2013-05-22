@@ -103,7 +103,7 @@ namespace RenderingLibrary.Graphics
             Renderer.RemoveRenderable(sprite);
         }
 
-        void Remove(NineSlice nineSlice)
+        public void Remove(NineSlice nineSlice)
         {
             mNineSlices.Remove(nineSlice);
             Renderer.RemoveRenderable(nineSlice);

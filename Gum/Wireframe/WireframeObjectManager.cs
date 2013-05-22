@@ -40,6 +40,7 @@ namespace Gum.Wireframe
         List<Sprite> mSprites = new List<Sprite>();
         List<Text> mTexts = new List<Text>();
         List<SolidRectangle> mSolidRectangles = new List<SolidRectangle>();
+        List<NineSlice> mNineSlices = new List<NineSlice>();
 
         WireframeEditControl mEditControl;
 
@@ -68,6 +69,10 @@ namespace Gum.Wireframe
                 foreach (SolidRectangle solidRectangle in mSolidRectangles)
                 {
                     yield return solidRectangle;
+                }
+                foreach (NineSlice nineSlice in mNineSlices)
+                {
+                    yield return nineSlice;
                 }
             }
 
@@ -129,6 +134,12 @@ namespace Gum.Wireframe
                 ShapeManager.Self.Remove(solidRectangle);
             }
             mSolidRectangles.Clear();
+
+            foreach (NineSlice nineSlice in mNineSlices)
+            {
+                SpriteManager.Self.Remove(nineSlice);
+            }
+            mNineSlices.Clear();
         }
 
         public void RefreshAll(bool force)
@@ -357,7 +368,9 @@ namespace Gum.Wireframe
 
         public bool IsRepresentation(IPositionedSizedObject ipso)
         {
-            return mLineRectangles.Contains(ipso) || mSprites.Contains(ipso) || mTexts.Contains(ipso) || mSolidRectangles.Contains(ipso);
+            return mLineRectangles.Contains(ipso) || mSprites.Contains(ipso) || 
+                mTexts.Contains(ipso) || mSolidRectangles.Contains(ipso) ||
+                mNineSlices.Contains(ipso) ;
         }
 
         public ElementSave GetElement(IPositionedSizedObject representation)

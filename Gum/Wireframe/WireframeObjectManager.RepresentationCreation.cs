@@ -52,6 +52,20 @@ namespace Gum.Wireframe
             "Blue"
         };
 
+
+        Dictionary<NineSliceSections, string> PossibleNineSliceEndings = new Dictionary<NineSliceSections, string>()
+        {
+            {NineSliceSections.Center, "_center"},
+            {NineSliceSections.Left, "_left"},
+            {NineSliceSections.Right, "_right"},
+            {NineSliceSections.TopLeft, "_topLeft"},
+            {NineSliceSections.Top, "_topCenter"},
+            {NineSliceSections.TopRight, "_topRight"},
+            {NineSliceSections.BottomLeft, "_bottomLeft"},
+            {NineSliceSections.Bottom, "_bottomCenter"},
+            {NineSliceSections.BottomRight, "_bottomRight"}
+        };
+
         #endregion
 
 
@@ -75,6 +89,10 @@ namespace Gum.Wireframe
                 else if (instance.BaseType == "ColoredRectangle")
                 {
                     toReturn = CreateSolidRectangleFor(instance, elementStack.Last(), parentIpso, exposedVariables);
+                }
+                else if (instance.BaseType == "NineSlice")
+                {
+                    toReturn = CreateNineSliceFor(instance, elementStack.Last(), parentIpso, exposedVariables);
                 }
                 else if (instance.IsComponent())
                 {
@@ -232,6 +250,55 @@ namespace Gum.Wireframe
                 throw e;
             }
         }
+
+        private IPositionedSizedObject CreateNineSliceFor(InstanceSave instance, ElementSave parent, IPositionedSizedObject parentRepresentation, List<VariableSave> exposedVariables)
+        {
+
+            RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(instance, parent);
+            StateSave stateSave;
+            NineSlice nineSlice = CreateNineSliceInternal(instance, instance.Name, rvf, parentRepresentation, out stateSave);
+                
+            foreach (VariableSave variableSave in exposedVariables)
+            {
+                stateSave.SetValue(variableSave.Name, variableSave.Value);
+            }
+
+
+            InitializeNineSlice(nineSlice, stateSave);
+
+            // Sprite may be dependent on the texture for its location, so set the dimensions and positions *after* texture
+            SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(nineSlice, parent, stateSave);
+
+
+
+            return nineSlice;
+        }
+
+        private NineSlice CreateNineSliceInternal(object tag, string name, RecursiveVariableFinder rvf, IPositionedSizedObject parentIpso, out StateSave stateSave)
+        {
+            NineSlice nineSlice = new NineSlice();
+
+            // Add it to the manager first because the positioning code may need to access the source element/instance
+            SpriteManager.Self.Add(nineSlice);
+            nineSlice.Name = name;
+            nineSlice.Tag = tag;
+
+            mNineSlices.Add(nineSlice);
+
+            stateSave = new StateSave();
+            stateSave.SetValue("SourceFile", rvf.GetValue<string>("SourceFile"));
+            stateSave.SetValue("Visible", rvf.GetValue("Visible"));
+
+            SetParent(parentIpso, nineSlice, rvf.GetValue<string>("Guide"));
+
+            // Sprite may be dependent on the texture for its location, so set the dimensions and positions *after* texture
+            FillStateWithVariables(rvf, stateSave, WireframeObjectManager.Self.PositionAndSizeVariables);
+
+            return nineSlice;
+        }
+        
+
+
 
         private Sprite CreateSpriteInternal(object tag, string name, RecursiveVariableFinder rvf, IPositionedSizedObject parentIpso, out StateSave stateSave)
         {
@@ -771,6 +838,67 @@ namespace Gum.Wireframe
 
             sprite.Visible = (bool)stateSave.GetValue("Visible");
 
+        }
+
+        private void InitializeNineSlice(NineSlice nineSlice, StateSave stateSave)
+        {
+            string textureName = (string)stateSave.GetValue("SourceFile");
+            string absoluteTexture = ProjectManager.Self.MakeAbsoluteIfNecessary(textureName);
+
+            string extension = FileManager.GetExtension(absoluteTexture);
+
+            string bareTexture = GetBareTextureForNineSliceTexture(absoluteTexture);
+            string error;
+
+            nineSlice.TopLeftTexture = LoaderManager.Self.LoadOrInvalid(
+                bareTexture + PossibleNineSliceEndings[NineSliceSections.TopLeft] + "." + extension, null, out error);
+            nineSlice.TopTexture = LoaderManager.Self.LoadOrInvalid(
+                bareTexture + PossibleNineSliceEndings[NineSliceSections.Top] + "." + extension, null, out error);
+            nineSlice.TopRightTexture = LoaderManager.Self.LoadOrInvalid(
+                bareTexture + PossibleNineSliceEndings[NineSliceSections.TopRight] + "." + extension, null, out error);
+
+            nineSlice.LeftTexture = LoaderManager.Self.LoadOrInvalid(
+                bareTexture + PossibleNineSliceEndings[NineSliceSections.Left] + "." + extension, null, out error);
+            nineSlice.CenterTexture = LoaderManager.Self.LoadOrInvalid(
+                bareTexture + PossibleNineSliceEndings[NineSliceSections.Center] + "." + extension, null, out error);
+            nineSlice.RightTexture = LoaderManager.Self.LoadOrInvalid(
+                bareTexture + PossibleNineSliceEndings[NineSliceSections.Right] + "." + extension, null, out error);
+
+            nineSlice.BottomLeftTexture = LoaderManager.Self.LoadOrInvalid(
+                bareTexture + PossibleNineSliceEndings[NineSliceSections.BottomLeft] + "." + extension, null, out error);
+            nineSlice.BottomTexture = LoaderManager.Self.LoadOrInvalid(
+                bareTexture + PossibleNineSliceEndings[NineSliceSections.Bottom] + "." + extension, null, out error);
+            nineSlice.BottomRightTexture = LoaderManager.Self.LoadOrInvalid(
+                bareTexture + PossibleNineSliceEndings[NineSliceSections.BottomRight] + "." + extension, null, out error);
+
+
+
+
+            nineSlice.Visible = (bool)stateSave.GetValue("Visible");
+
+        }
+
+        private string GetBareTextureForNineSliceTexture(string absoluteTexture)
+        {
+            string extension = FileManager.GetExtension(absoluteTexture);
+
+            string withoutExtension = FileManager.RemoveExtension(absoluteTexture);
+
+            string toReturn = withoutExtension;
+
+            foreach (var kvp in PossibleNineSliceEndings)
+            {
+                if (withoutExtension.ToLower().EndsWith(kvp.Value.ToLower()))
+                {
+                    toReturn = withoutExtension.Substring(0, withoutExtension.Length - kvp.Value.Length);
+                    break;
+                }
+            }
+
+            // No extensions, because we'll need to append that
+            //toReturn += "." + extension;
+
+            return toReturn;
         }
 
     }

@@ -7,6 +7,21 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace RenderingLibrary.Graphics
 {
+
+    public enum NineSliceSections
+    {
+        TopLeft,
+        Top,
+        TopRight,
+        Left,
+        Center,
+        Right,
+        BottomLeft,
+        Bottom,
+        BottomRight
+    }
+
+
     public class NineSlice : IPositionedSizedObject, IRenderable, IVisible
     {
         #region Fields
@@ -219,6 +234,17 @@ namespace RenderingLibrary.Graphics
         {
             if (this.AbsoluteVisible)
             {
+                float desiredMiddleWidth = this.Width - mTopLeftSprite.EffectiveWidth - mTopRightSprite.EffectiveWidth;
+                float desiredMiddleHeight = this.Height - this.mTopLeftSprite.EffectiveHeight - this.mBottomLeftSprite.EffectiveHeight;
+
+                this.mTopSprite.Width = desiredMiddleWidth;
+                this.mCenterSprite.Width = desiredMiddleWidth;
+                this.mBottomSprite.Width = desiredMiddleWidth;
+
+                this.mLeftSprite.Height = desiredMiddleHeight;
+                this.mCenterSprite.Height = desiredMiddleHeight;
+                this.mRightSprite.Height = desiredMiddleHeight;
+
                 float y = this.Y;
 
                 mTopLeftSprite.X = this.X;

@@ -174,6 +174,18 @@ namespace Gum.Managers
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            //                                                    NineSlice                                                         //
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            stateSave = new StateSave();
+            stateSave.Name = "Default";
+            AddPositioningVariables(stateSave);
+            AddDimensionsVariables(stateSave);
+            stateSave.Variables.Add(new VariableSave { Type = "string", Value = "", Name = "SourceFile", IsFile = true });
+            stateSave.Variables.Add(new VariableSave { Type = "bool", Value = true, Name = "Visible" });
+            PluginManager.Self.ModifyDefaultStandardState("NineSlice", stateSave);
+            mDefaults.Add("NineSlice", stateSave);
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
