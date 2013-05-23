@@ -184,6 +184,10 @@ namespace Gum.Wireframe
             {
                 rootIpso = CreateSolidRectangleFor(instance, elementStack.Last(), parentIpso, exposedVariables);
             }
+            else if (ses.Name == "NineSlice")
+            {
+                rootIpso = CreateNineSliceFor(instance, elementStack.Last(), parentIpso, exposedVariables);
+            }
             else
             {
                 rootIpso = CreateRectangleFor(instance, elementStack.Last(), parentIpso, exposedVariables);
@@ -219,6 +223,7 @@ namespace Gum.Wireframe
             
             return sprite;
         }
+
 
 
         private IPositionedSizedObject CreateSpriteFor(InstanceSave instance, ElementSave parent, IPositionedSizedObject parentRepresentation, List<VariableSave> exposedVariables)
@@ -266,10 +271,25 @@ namespace Gum.Wireframe
 
             InitializeNineSlice(nineSlice, stateSave);
 
-            // Sprite may be dependent on the texture for its location, so set the dimensions and positions *after* texture
+            // NineSlice may be dependent on the texture for its location, so set the dimensions and positions *after* texture
             SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(nineSlice, parent, stateSave);
 
 
+
+            return nineSlice;
+        }
+
+        private IPositionedSizedObject CreateNineSliceFor(ElementSave elementSave)
+        {
+            RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(elementSave.DefaultState);
+            StateSave stateSave;
+
+            NineSlice nineSlice = CreateNineSliceInternal(elementSave, elementSave.Name, rvf, null, out stateSave);
+
+
+            InitializeNineSlice(nineSlice, stateSave);
+
+            SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(nineSlice, elementSave, stateSave);
 
             return nineSlice;
         }
@@ -849,28 +869,29 @@ namespace Gum.Wireframe
 
             string bareTexture = GetBareTextureForNineSliceTexture(absoluteTexture);
             string error;
+            if (!string.IsNullOrEmpty(bareTexture))
+            {
+                nineSlice.TopLeftTexture = LoaderManager.Self.LoadOrInvalid(
+                    bareTexture + PossibleNineSliceEndings[NineSliceSections.TopLeft] + "." + extension, null, out error);
+                nineSlice.TopTexture = LoaderManager.Self.LoadOrInvalid(
+                    bareTexture + PossibleNineSliceEndings[NineSliceSections.Top] + "." + extension, null, out error);
+                nineSlice.TopRightTexture = LoaderManager.Self.LoadOrInvalid(
+                    bareTexture + PossibleNineSliceEndings[NineSliceSections.TopRight] + "." + extension, null, out error);
 
-            nineSlice.TopLeftTexture = LoaderManager.Self.LoadOrInvalid(
-                bareTexture + PossibleNineSliceEndings[NineSliceSections.TopLeft] + "." + extension, null, out error);
-            nineSlice.TopTexture = LoaderManager.Self.LoadOrInvalid(
-                bareTexture + PossibleNineSliceEndings[NineSliceSections.Top] + "." + extension, null, out error);
-            nineSlice.TopRightTexture = LoaderManager.Self.LoadOrInvalid(
-                bareTexture + PossibleNineSliceEndings[NineSliceSections.TopRight] + "." + extension, null, out error);
+                nineSlice.LeftTexture = LoaderManager.Self.LoadOrInvalid(
+                    bareTexture + PossibleNineSliceEndings[NineSliceSections.Left] + "." + extension, null, out error);
+                nineSlice.CenterTexture = LoaderManager.Self.LoadOrInvalid(
+                    bareTexture + PossibleNineSliceEndings[NineSliceSections.Center] + "." + extension, null, out error);
+                nineSlice.RightTexture = LoaderManager.Self.LoadOrInvalid(
+                    bareTexture + PossibleNineSliceEndings[NineSliceSections.Right] + "." + extension, null, out error);
 
-            nineSlice.LeftTexture = LoaderManager.Self.LoadOrInvalid(
-                bareTexture + PossibleNineSliceEndings[NineSliceSections.Left] + "." + extension, null, out error);
-            nineSlice.CenterTexture = LoaderManager.Self.LoadOrInvalid(
-                bareTexture + PossibleNineSliceEndings[NineSliceSections.Center] + "." + extension, null, out error);
-            nineSlice.RightTexture = LoaderManager.Self.LoadOrInvalid(
-                bareTexture + PossibleNineSliceEndings[NineSliceSections.Right] + "." + extension, null, out error);
-
-            nineSlice.BottomLeftTexture = LoaderManager.Self.LoadOrInvalid(
-                bareTexture + PossibleNineSliceEndings[NineSliceSections.BottomLeft] + "." + extension, null, out error);
-            nineSlice.BottomTexture = LoaderManager.Self.LoadOrInvalid(
-                bareTexture + PossibleNineSliceEndings[NineSliceSections.Bottom] + "." + extension, null, out error);
-            nineSlice.BottomRightTexture = LoaderManager.Self.LoadOrInvalid(
-                bareTexture + PossibleNineSliceEndings[NineSliceSections.BottomRight] + "." + extension, null, out error);
-
+                nineSlice.BottomLeftTexture = LoaderManager.Self.LoadOrInvalid(
+                    bareTexture + PossibleNineSliceEndings[NineSliceSections.BottomLeft] + "." + extension, null, out error);
+                nineSlice.BottomTexture = LoaderManager.Self.LoadOrInvalid(
+                    bareTexture + PossibleNineSliceEndings[NineSliceSections.Bottom] + "." + extension, null, out error);
+                nineSlice.BottomRightTexture = LoaderManager.Self.LoadOrInvalid(
+                    bareTexture + PossibleNineSliceEndings[NineSliceSections.BottomRight] + "." + extension, null, out error);
+            }
 
 
 
@@ -878,7 +899,7 @@ namespace Gum.Wireframe
 
         }
 
-        private string GetBareTextureForNineSliceTexture(string absoluteTexture)
+        public string GetBareTextureForNineSliceTexture(string absoluteTexture)
         {
             string extension = FileManager.GetExtension(absoluteTexture);
 

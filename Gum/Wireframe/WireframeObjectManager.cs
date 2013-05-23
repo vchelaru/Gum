@@ -176,6 +176,10 @@ namespace Gum.Wireframe
                     {
                         rootIpso = CreateTextFor(elementSave);
                     }
+                    else if (elementSave.BaseType == "NineSlice" || elementSave.Name == "NineSlice")
+                    {
+                        rootIpso = CreateNineSliceFor(elementSave);
+                    }
                     else if (elementSave.BaseType == "ColoredRectangle" || elementSave.Name == "ColoredRectangle")
                     {
                         rootIpso = CreateSolidRectangleFor(elementSave);

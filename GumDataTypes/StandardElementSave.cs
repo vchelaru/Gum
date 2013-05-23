@@ -12,7 +12,8 @@ namespace Gum.DataTypes
     {
         Text,
         Sprite,
-        Container
+        Container,
+        NineSlice
     }
 
     public class StandardElementSave : ElementSave
