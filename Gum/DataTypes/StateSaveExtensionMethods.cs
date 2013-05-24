@@ -449,7 +449,11 @@ namespace Gum.DataTypes.Variables
                 if (instanceSave != null)
                 {
                     VariableSave baseVariableSave = ObjectFinder.Self.GetRootStandardElementSave(instanceSave).DefaultState.GetVariableSave(rootName);
-                    variableSave.IsFile = baseVariableSave.IsFile;
+                    if (baseVariableSave != null)
+                    {
+                        variableSave.IsFile = baseVariableSave.IsFile;
+                    }
+                    
                 }
                 variableSave.SourceObject = sourceObjectName;
             }
