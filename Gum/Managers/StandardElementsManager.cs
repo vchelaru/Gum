@@ -123,6 +123,11 @@ namespace Gum.Managers
             stateSave.Variables.Add(new VariableSave { Type = "string", Value = "", Name = "SourceFile", IsFile = true});
             stateSave.Variables.Add(new VariableSave { Type = "bool", Value = true, Name = "Visible" });
             stateSave.Variables.Add(new VariableSave { Type = "bool", Value = false, Category = "Animation", Name = "Animate" });
+
+            stateSave.Variables.Add(new VariableSave { Type = "bool", Value = false, Category = "Flip", Name = "FlipHorizontal" });
+            stateSave.Variables.Add(new VariableSave { Type = "bool", Value = false, Category = "Flip", Name = "FlipVertical" });
+
+
             List<string> list = new List<string>();
             stateSave.VariableLists.Add(new VariableListSave<string> { Type = "string", Value = list, Category = "Animation", Name = "AnimationFrames"});
             PluginManager.Self.ModifyDefaultStandardState("Sprite", stateSave);

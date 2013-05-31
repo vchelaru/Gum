@@ -335,7 +335,8 @@ namespace Gum.Wireframe
             FillStateSaveWithFileBasedSpriteVariables(rvf, stateSave);
 
             stateSave.SetValue("Visible", rvf.GetValue("Visible"));
-
+            stateSave.SetValue("FlipHorizontal", rvf.GetValue("FlipHorizontal"));
+            stateSave.SetValue("FlipVertical", rvf.GetValue("FlipVertical"));
             SetParent(parentIpso, sprite, rvf.GetValue<string>("Guide"));
 
             // Sprite may be dependent on the texture for its location, so set the dimensions and positions *after* texture
@@ -857,6 +858,15 @@ namespace Gum.Wireframe
             }
 
             sprite.Visible = (bool)stateSave.GetValue("Visible");
+
+            if (stateSave.GetValue("FlipHorizontal") != null)
+            {
+                sprite.FlipHorizontal = (bool)stateSave.GetValue("FlipHorizontal");
+            }
+            if (stateSave.GetValue("FlipVertical") != null)
+            {
+                sprite.FlipVertical = (bool)stateSave.GetValue("FlipVertical");
+            }
 
         }
 

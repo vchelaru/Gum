@@ -151,18 +151,21 @@ namespace Gum.DataTypes.Variables
                 ElementSave elementSave = ParentContainer;
                 InstanceSave instanceSave = elementSave.GetInstance(instanceName);
 
-                // This is a variable on an instance
-                if (variableName.EndsWith(".Name"))
+                if (instanceSave != null)
                 {
-                    return instanceSave.Name;
-                }
-                else if (variableName.EndsWith(".Base Type"))
-                {
-                    return instanceSave.BaseType;
-                }
-                else if (variableName.EndsWith(".Locked"))
-                {
-                    return instanceSave.Locked;
+                    // This is a variable on an instance
+                    if (variableName.EndsWith(".Name"))
+                    {
+                        return instanceSave.Name;
+                    }
+                    else if (variableName.EndsWith(".Base Type"))
+                    {
+                        return instanceSave.BaseType;
+                    }
+                    else if (variableName.EndsWith(".Locked"))
+                    {
+                        return instanceSave.Locked;
+                    }
                 }
 
             }
