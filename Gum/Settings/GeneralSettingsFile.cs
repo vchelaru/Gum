@@ -9,7 +9,15 @@ namespace Gum.Settings
 {
     public class GeneralSettingsFile
     {
+        #region Properties
+
         public string LastProject
+        {
+            get;
+            set;
+        }
+
+        public bool ShowTextOutlines
         {
             get;
             set;
@@ -22,6 +30,14 @@ namespace Gum.Settings
             {
                 return FileManager.UserApplicationDataForThisApplication + "GeneralSettings.xml";
             }
+        }
+
+        #endregion
+
+        public GeneralSettingsFile()
+        {
+            ShowTextOutlines = false;
+
         }
 
 

@@ -584,6 +584,8 @@ namespace Gum.Wireframe
             text.Tag = tag;
             text.Name = name;
 
+            text.RenderBoundary = ProjectManager.Self.GeneralSettingsFile.ShowTextOutlines;
+
             // Add it to the manager first because the positioning code may need to access the source element/instance
             TextManager.Self.Add(text);
             mTexts.Add(text);
