@@ -15,6 +15,7 @@ namespace Gum.Managers
     {
         PixelsFromSmall,
         PixelsFromLarge,
+        PixelsFromMiddle,
         Percentage
     }
 
@@ -25,7 +26,9 @@ namespace Gum.Managers
         PercentageWidth,
         PercentageHeight,
         PixelsFromRight,
-        PixelsFromBottom
+        PixelsFromBottom,
+        PixelsFromCenterX
+
     }
 
 
@@ -246,6 +249,7 @@ namespace Gum.Managers
 
             List<object> yUnitsExclusions = new List<object>();
             yUnitsExclusions.Add(PositionUnitType.PixelsFromLeft);
+            yUnitsExclusions.Add(PositionUnitType.PixelsFromCenterX);
             yUnitsExclusions.Add(PositionUnitType.PercentageWidth);
             yUnitsExclusions.Add(PositionUnitType.PixelsFromRight);
 

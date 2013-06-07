@@ -47,6 +47,10 @@ namespace Gum.Converters
                 {
                     absoluteX = parentWidth * relativeX / 100.0f;
                 }
+                else if (generalX == GeneralUnitType.PixelsFromMiddle)
+                {
+                    absoluteX = parentWidth / 2.0f + relativeX;
+                }
                 else if (generalX == GeneralUnitType.PixelsFromLarge)
                 {
                     absoluteX = parentWidth + relativeX;
@@ -56,6 +60,10 @@ namespace Gum.Converters
                 if (generalY == GeneralUnitType.Percentage)
                 {
                     absoluteY = parentHeight * relativeY / 100.0f;
+                }
+                else if (generalY == GeneralUnitType.PixelsFromMiddle)
+                {
+                    absoluteY = parentHeight / 2.0f + relativeY;
                 }
                 else if (generalY == GeneralUnitType.PixelsFromLarge)
                 {
@@ -90,6 +98,10 @@ namespace Gum.Converters
             {
                 relativeX = 100 * absoluteX / parentWidth;
             }
+            else if (generalX == GeneralUnitType.PixelsFromMiddle)
+            {
+                relativeX = absoluteX - parentWidth / 2.0f;
+            }
             else if (generalX == GeneralUnitType.PixelsFromLarge)
             {
                 relativeX = absoluteX - parentWidth;
@@ -98,6 +110,10 @@ namespace Gum.Converters
             if (generalY == GeneralUnitType.Percentage)
             {
                 relativeY = 100 * absoluteY / parentHeight;
+            }
+            else if (generalY == GeneralUnitType.PixelsFromMiddle)
+            {
+                relativeY = absoluteY - parentHeight / 2.0f;
             }
             else if (generalY == GeneralUnitType.PixelsFromLarge)
             {
@@ -124,6 +140,8 @@ namespace Gum.Converters
                     case PositionUnitType.PixelsFromRight:
                     case PositionUnitType.PixelsFromBottom:
                         return GeneralUnitType.PixelsFromLarge;
+                    case PositionUnitType.PixelsFromCenterX:
+                        return GeneralUnitType.PixelsFromMiddle;
                     default:
                         throw new NotImplementedException();
                 }
