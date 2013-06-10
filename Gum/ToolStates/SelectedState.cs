@@ -394,6 +394,7 @@ namespace Gum.ToolStates
 
             MenuStripManager.Self.RefreshUI();
 
+            PropertyGridManager.Self.RefreshUI();
 
             PluginManager.Self.InstanceSelected(SelectedElement, SelectedInstance);
         }
