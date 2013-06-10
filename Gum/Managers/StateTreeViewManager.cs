@@ -114,23 +114,38 @@ namespace Gum.Managers
 
         public void RefreshUI(ElementSave element)
         {
+
             bool changed = element != mLastElementRefreshedTo;
 
             mLastElementRefreshedTo = element;
 
             StateSave lastStateSave = SelectedState.Self.SelectedStateSave;
 
-            mTreeView.Nodes.Clear();
 
             if (element != null)
             {
-                bool wasAnythingSelected = false;
-                foreach (StateSave state in element.States)
+                while (mTreeView.Nodes.Count > element.States.Count)
                 {
-                    TreeNode treeNode = new TreeNode();
-                    treeNode.Text = state.Name;
-                    treeNode.Tag = state;
-                    mTreeView.Nodes.Add(treeNode);
+                    mTreeView.Nodes.RemoveAt(mTreeView.Nodes.Count - 1);
+                }
+                while (mTreeView.Nodes.Count < element.States.Count)
+                {
+                    mTreeView.Nodes.Add(new TreeNode());
+                }
+
+                bool wasAnythingSelected = false;
+                for(int i = 0; i < element.States.Count; i++)
+                {
+                    StateSave state = element.States[i];
+
+                    if (mTreeView.Nodes[i].Text != state.Name)
+                    {
+                        mTreeView.Nodes[i].Text = state.Name;
+                    }
+                    if (mTreeView.Nodes[i].Tag != state)
+                    {
+                        mTreeView.Nodes[i].Tag = state;
+                    }
 
                     if (state == lastStateSave)
                     {
@@ -146,7 +161,10 @@ namespace Gum.Managers
 
                 }
             }
-
+            else
+            {
+                mTreeView.Nodes.Clear();
+            }
 
 
         }
