@@ -568,7 +568,7 @@ namespace Gum.Wireframe
                 SetParent(parentRepresentation, text, (string)stateSave.GetValue("Guide"));
 
                 WireframeObjectManager.Self.SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(text, parent, stateSave);
-
+                InitializeText(text, stateSave);
                 return text;
             }
             catch (Exception e)
@@ -870,6 +870,14 @@ namespace Gum.Wireframe
                 sprite.FlipVertical = (bool)stateSave.GetValue("FlipVertical");
             }
 
+        }
+
+        private void InitializeText(Text text, StateSave stateSave)
+        {
+            // todo:  Add more variables here to support exposed variables
+            // I'm only adding Text for now to make sure it works and to establish
+            // the pattern for the Text object
+            text.RawText = (string)stateSave.GetValue("Text");
         }
 
         private void InitializeNineSlice(NineSlice nineSlice, StateSave stateSave)
