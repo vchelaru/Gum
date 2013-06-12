@@ -24,14 +24,16 @@ namespace Gum.DataTypes
 
         }
 
-        public static VariableSave GetVariableFromThisOrBase(this InstanceSave instance, ElementSave parentContainer, string variable)
+        public static VariableSave GetVariableFromThisOrBase(this InstanceSave instance, 
+            ElementSave parentContainer, string variable, bool forceDefault = false)
         {
             ElementSave instanceBase = ObjectFinder.Self.GetElementSave(instance.BaseType);
 
             StateSave stateToPullFrom = parentContainer.DefaultState;
             StateSave defaultState = parentContainer.DefaultState;
             if (parentContainer == SelectedState.Self.SelectedElement && 
-                SelectedState.Self.SelectedStateSave != null)
+                SelectedState.Self.SelectedStateSave != null &&
+                !forceDefault)
             {
                 stateToPullFrom = SelectedState.Self.SelectedStateSave;
             }
@@ -88,9 +90,10 @@ namespace Gum.DataTypes
 
         }
 
-        public static object GetValueFromThisOrBase(this InstanceSave instance, ElementSave parentContainer, string variable)
+        public static object GetValueFromThisOrBase(this InstanceSave instance, ElementSave parentContainer, string variable,
+            bool forceDefault = false)
         {
-            VariableSave variableSave = instance.GetVariableFromThisOrBase(parentContainer, variable);
+            VariableSave variableSave = instance.GetVariableFromThisOrBase(parentContainer, variable, forceDefault);
 
 
             if (variableSave != null)
