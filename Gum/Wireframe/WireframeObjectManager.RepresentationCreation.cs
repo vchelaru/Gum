@@ -337,7 +337,10 @@ namespace Gum.Wireframe
             stateSave.SetValue("FlipHorizontal", rvf.GetValue("FlipHorizontal"));
             stateSave.SetValue("FlipVertical", rvf.GetValue("FlipVertical"));
             stateSave.SetValue("Alpha", rvf.GetValue("Alpha"));
+            stateSave.SetValue("Blend", rvf.GetValue("Blend"));
+
             SetParent(parentIpso, sprite, rvf.GetValue<string>("Guide"));
+
 
             // Sprite may be dependent on the texture for its location, so set the dimensions and positions *after* texture
             FillStateWithVariables(rvf, stateSave, WireframeObjectManager.Self.PositionAndSizeVariables);
@@ -873,6 +876,23 @@ namespace Gum.Wireframe
             if (stateSave.GetValue("Alpha") != null)
             {
                 sprite.Color = new Color(255, 255, 255, (int)stateSave.GetValue("Alpha"));
+            }
+
+            if (stateSave.GetValue("Blend") != null)
+            {
+                var blend = (Blend)stateSave.GetValue("Blend");
+                if (blend == Blend.Normal)
+                {
+                    // do nothing?
+                }
+                else if (blend == Blend.Additive)
+                {
+                    sprite.BlendState = Microsoft.Xna.Framework.Graphics.BlendState.Additive;
+                }
+                else
+                {
+                    throw new Exception("This blend mode is not supported");
+                }
             }
 
         }

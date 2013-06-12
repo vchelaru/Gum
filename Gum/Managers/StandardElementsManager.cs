@@ -6,6 +6,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using RenderingLibrary.Graphics;
 using Gum.Plugins;
+using Gum.RenderingLibrary;
 
 namespace Gum.Managers
 {
@@ -131,6 +132,7 @@ namespace Gum.Managers
             stateSave.Variables.Add(new VariableSave { Type = "bool", Value = false, Category = "Flip", Name = "FlipVertical" });
 
             stateSave.Variables.Add(new VariableSave { Type = "int", Value = 255, Category = "Rendering", Name = "Alpha" });
+            stateSave.Variables.Add(new VariableSave { Type = "Blend", Value = Blend.Normal, Name = "Blend", Category = "Rendering" });
 
             List<string> list = new List<string>();
             stateSave.VariableLists.Add(new VariableListSave<string> { Type = "string", Value = list, Category = "Animation", Name = "AnimationFrames"});
@@ -221,11 +223,11 @@ namespace Gum.Managers
         {
             if (includeAlpha)
             {
-                stateSave.Variables.Add(new VariableSave { Type = "float", Value = 1.0f, Name = "Alpha", Category="Color" });
+                stateSave.Variables.Add(new VariableSave { Type = "int", Value = 255, Name = "Alpha", Category="Color" });
             }
-            stateSave.Variables.Add(new VariableSave { Type = "float", Value = 1.0f, Name = "Red", Category = "Color" });
-            stateSave.Variables.Add(new VariableSave { Type = "float", Value = 1.0f, Name = "Green", Category = "Color" });
-            stateSave.Variables.Add(new VariableSave { Type = "float", Value = 1.0f, Name = "Blue", Category = "Color" });
+            stateSave.Variables.Add(new VariableSave { Type = "int", Value = 255, Name = "Red", Category = "Color" });
+            stateSave.Variables.Add(new VariableSave { Type = "int", Value = 255, Name = "Green", Category = "Color" });
+            stateSave.Variables.Add(new VariableSave { Type = "int", Value = 255, Name = "Blue", Category = "Color" });
         }
 
         private static void AddDimensionsVariables(StateSave stateSave)

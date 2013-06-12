@@ -171,6 +171,7 @@
     <Compile Include="PropertyGridHelpers\UiTypeConverters\ModalTypeConverter.cs" />
     <Compile Include="Reflection\LateBinder.cs" />
     <Compile Include="Reflection\TypeManager.cs" />
+    <Compile Include="RenderingLibrary\Blend.cs" />
     <Compile Include="RenderingLibrary\IPositionedSizedObjectExtensionMethods.cs" />
     <Compile Include="Settings\GeneralSettingsFile.cs" />
     <Compile Include="ToolCommands\ElementCommands.cs" />
