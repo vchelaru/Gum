@@ -130,6 +130,7 @@ namespace Gum.Managers
             stateSave.Variables.Add(new VariableSave { Type = "bool", Value = false, Category = "Flip", Name = "FlipHorizontal" });
             stateSave.Variables.Add(new VariableSave { Type = "bool", Value = false, Category = "Flip", Name = "FlipVertical" });
 
+            stateSave.Variables.Add(new VariableSave { Type = "int", Value = 255, Category = "Rendering", Name = "Alpha" });
 
             List<string> list = new List<string>();
             stateSave.VariableLists.Add(new VariableListSave<string> { Type = "string", Value = list, Category = "Animation", Name = "AnimationFrames"});

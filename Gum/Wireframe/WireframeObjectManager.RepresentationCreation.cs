@@ -15,6 +15,7 @@ using Gum.ToolStates;
 using RenderingLibrary.Graphics.Fonts;
 using System.Collections;
 using ToolsUtilities;
+using Microsoft.Xna.Framework;
 
 namespace Gum.Wireframe
 {
@@ -245,8 +246,6 @@ namespace Gum.Wireframe
                 // Sprite may be dependent on the texture for its location, so set the dimensions and positions *after* texture
                 SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(sprite, parent, stateSave);
 
-
-
                 return sprite;
             }
             catch (Exception e)
@@ -337,6 +336,7 @@ namespace Gum.Wireframe
             stateSave.SetValue("Visible", rvf.GetValue("Visible"));
             stateSave.SetValue("FlipHorizontal", rvf.GetValue("FlipHorizontal"));
             stateSave.SetValue("FlipVertical", rvf.GetValue("FlipVertical"));
+            stateSave.SetValue("Alpha", rvf.GetValue("Alpha"));
             SetParent(parentIpso, sprite, rvf.GetValue<string>("Guide"));
 
             // Sprite may be dependent on the texture for its location, so set the dimensions and positions *after* texture
@@ -868,6 +868,11 @@ namespace Gum.Wireframe
             if (stateSave.GetValue("FlipVertical") != null)
             {
                 sprite.FlipVertical = (bool)stateSave.GetValue("FlipVertical");
+            }
+
+            if (stateSave.GetValue("Alpha") != null)
+            {
+                sprite.Color = new Color(255, 255, 255, (int)stateSave.GetValue("Alpha"));
             }
 
         }
