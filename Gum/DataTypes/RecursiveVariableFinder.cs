@@ -69,8 +69,14 @@ namespace Gum.DataTypes
         public T GetValue<T>(string variableName)
         {
             object valueAsObject = GetValue(variableName);
-
-            return (T)valueAsObject;
+            if (valueAsObject is T)
+            {
+                return (T)valueAsObject;
+            }
+            else
+            {
+                return default(T);
+            }
         }
 
         public VariableSave GetVariable(string variableName)

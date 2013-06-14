@@ -74,8 +74,7 @@ namespace Gum.Wireframe
         {
             IPositionedSizedObject toReturn = null;
 
-            try
-            {
+
                 List<VariableSave> exposedVariables = GetExposedVariablesForThisInstance(instance, parentInstance, elementStack);
 
 
@@ -122,12 +121,6 @@ namespace Gum.Wireframe
                 //    toReturn.Name = prefixName + toReturn.Name;
 
                 //}
-            }
-            catch (Exception e)
-            {
-                int m = 3;
-                throw e;
-            }
             return toReturn;
         }
 
@@ -547,8 +540,6 @@ namespace Gum.Wireframe
         }
         private IPositionedSizedObject CreateTextFor(InstanceSave instance, ElementSave parent, IPositionedSizedObject parentRepresentation, List<VariableSave> exposedVariables)
         {
-            try
-            {
                 ElementSave instanceBase = ObjectFinder.Self.GetElementSave(instance.BaseType);
                 RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(instance, parent);
 
@@ -573,11 +564,6 @@ namespace Gum.Wireframe
                 WireframeObjectManager.Self.SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(text, parent, stateSave);
                 InitializeText(text, stateSave);
                 return text;
-            }
-            catch (Exception e)
-            {
-                throw e;
-            }
         }
 
         private Text CreateTextInternal(object tag, string name, RecursiveVariableFinder rvf)
