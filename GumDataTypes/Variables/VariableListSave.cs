@@ -59,6 +59,14 @@ namespace Gum.DataTypes.Variables
             }
         }
 
+        public bool IsHiddenInPropertyGrid
+        {
+            get;
+            set;
+        }
+
+
+
         [XmlIgnore]
         public abstract IList ValueAsIList
         {

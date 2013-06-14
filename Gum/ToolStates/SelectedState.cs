@@ -354,6 +354,7 @@ namespace Gum.ToolStates
 
         public void UpdateToSelectedStateSave()
         {
+
             WireframeObjectManager.Self.RefreshAll(true);
 
             SelectionManager.Self.Refresh();

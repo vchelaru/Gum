@@ -67,6 +67,7 @@ namespace Gum.Managers
 
         internal void OnSelect()
         {
+
             TreeNode treeNode = mTreeView.SelectedNode;
 
             object selectedObject = null;

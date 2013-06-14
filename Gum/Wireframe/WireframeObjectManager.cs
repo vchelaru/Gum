@@ -15,6 +15,7 @@ using System.Collections;
 using Gum.RenderingLibrary;
 using Microsoft.Xna.Framework;
 using FlatRedBall.AnimationEditorForms.Controls;
+using System.Threading.Tasks;
 
 namespace Gum.Wireframe
 {
@@ -151,6 +152,7 @@ namespace Gum.Wireframe
 
         public void RefreshAll(bool force, ElementSave elementSave)
         {
+
             if (elementSave == null)
             {
                 ClearAll();
@@ -194,15 +196,14 @@ namespace Gum.Wireframe
 
                 elementStack.Add(elementSave);
 
-                foreach (InstanceSave instance in elementSave.Instances)
-                {
-                    IPositionedSizedObject child = CreateRepresentationForInstance(instance, null, elementStack, rootIpso);
-                }
+                Parallel.ForEach(elementSave.Instances, instance =>
+                    {
+                        IPositionedSizedObject child = CreateRepresentationForInstance(instance, null, elementStack, rootIpso);
+                    });
 
                 elementStack.Remove(elementSave);
 
             }
-
             ElementShowing = elementSave;
         }
 

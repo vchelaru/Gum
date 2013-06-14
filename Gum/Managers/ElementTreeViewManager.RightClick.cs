@@ -440,36 +440,24 @@ namespace Gum.Managers
 
         public void AddInstance(string name, string type, ElementSave elementToAddTo)
         {
-#if DEBUG
-            try
-            {
-#endif
-                InstanceSave instanceSave = ElementCommands.Self.AddInstance(elementToAddTo, name);
-                instanceSave.BaseType = type;
 
-                TreeNode treeNodeForElement = GetTreeNodeFor(elementToAddTo);
-                RefreshUI(treeNodeForElement);
+            InstanceSave instanceSave = ElementCommands.Self.AddInstance(elementToAddTo, name);
+            instanceSave.BaseType = type;
 
-                Wireframe.WireframeObjectManager.Self.RefreshAll(true);
-                //SelectedState.Self.SelectedInstance = instanceSave;
+            TreeNode treeNodeForElement = GetTreeNodeFor(elementToAddTo);
+            RefreshUI(treeNodeForElement);
 
-                // We need to call InstanceAdd before we select the new object - the Undo manager expects it
-                PluginManager.Self.InstanceAdd(elementToAddTo, instanceSave);
+            Wireframe.WireframeObjectManager.Self.RefreshAll(true);
+            //SelectedState.Self.SelectedInstance = instanceSave;
 
-                Select(instanceSave, elementToAddTo);
+            // We need to call InstanceAdd before we select the new object - the Undo manager expects it
+            PluginManager.Self.InstanceAdd(elementToAddTo, instanceSave);
+
+            Select(instanceSave, elementToAddTo);
 
 
-                ProjectManager.Self.SaveElement(elementToAddTo);
-                ProjectManager.Self.SaveProject();
-
-#if DEBUG
-            }
-            catch(Exception e)
-            {
-                int m = 3;
-                throw e;
-            }
-#endif
+            ProjectManager.Self.SaveElement(elementToAddTo);
+            ProjectManager.Self.SaveProject();
 
         }
 

@@ -62,6 +62,8 @@ namespace RenderingLibrary.Graphics
 
         SystemManagers mManagers;
 
+        bool mNeedsBitmapFontRefresh = false;
+
         #endregion
 
         #region Properties
@@ -82,8 +84,9 @@ namespace RenderingLibrary.Graphics
             {
                 mRawText = value;
                 UpdateWrappedText();
+                mNeedsBitmapFontRefresh = true;
 
-                UpdateTextureToRender();
+                //UpdateTextureToRender();
             }
         }
 
@@ -195,7 +198,9 @@ namespace RenderingLibrary.Graphics
                 mBitmapFont = value;
 
                 UpdateWrappedText();
-                UpdateTextureToRender();
+
+                mNeedsBitmapFontRefresh = true;
+                //UpdateTextureToRender();
             }
         }
 
@@ -268,7 +273,7 @@ namespace RenderingLibrary.Graphics
             mChildren = new List<IPositionedSizedObject>();
 
             mRawText = text;
-            UpdateWrappedText();
+            mNeedsBitmapFontRefresh = true;
             mBounds = new LinePrimitive(this.Renderer.SinglePixelTexture);
             mBounds.Color = Color.LightGreen;
             
@@ -371,8 +376,15 @@ namespace RenderingLibrary.Graphics
             }
             mWrappedText.Add(line);
 
-            UpdateTextureToRender();
 
+            //if (mManagers == null || mManagers.IsCurrentThreadPrimary)
+            //{
+            //    UpdateTextureToRender();
+            //}
+            //else
+            {
+                mNeedsBitmapFontRefresh = true;
+            }
         }
 
         private float MeasureString(string whatToMeasure)
@@ -438,6 +450,10 @@ namespace RenderingLibrary.Graphics
         {
             if (AbsoluteVisible)
             {
+                if(mNeedsBitmapFontRefresh)
+                {
+                    UpdateTextureToRender();
+                }
                 if (RenderBoundary)
                 {
                     LineRectangle.RenderLinePrimitive(mBounds, spriteBatch, this, managers);
@@ -568,7 +584,8 @@ namespace RenderingLibrary.Graphics
         public void EnableTextureCreation()
         {
             mIsTextureCreationSuppressed = false;
-            UpdateTextureToRender();
+            mNeedsBitmapFontRefresh = true;
+            //UpdateTextureToRender();
         }
         #endregion
 

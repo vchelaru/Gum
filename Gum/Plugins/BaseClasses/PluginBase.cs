@@ -22,6 +22,7 @@ namespace Gum.Plugins.BaseClasses
         public event Action<VariableSave, List<Attribute>> FillVariableAttributes;
         public event Action<string, StateSave> AddAndRemoveVariablesForType;
 
+
         /// <summary>
         /// Event which is raised when an ElementSave's variable is set.
         /// ElementSave is the current ElementSave (like the Screen)

@@ -153,53 +153,56 @@ namespace RenderingLibrary.Content
         public Texture2D Load(string fileName, SystemManagers managers)
         {
             string fileNameStandardized = FileManager.Standardize(fileName, false, false);
-            if (CacheTextures)
-            {
-
-                if (mCachedTextures.ContainsKey(fileNameStandardized))
-                {
-                    return mCachedTextures[fileNameStandardized];
-                }
-            }
-
-            string extension = FileManager.GetExtension(fileName);
             Texture2D toReturn = null;
-            Renderer renderer = null;
-            if (managers == null)
+            lock (mCachedTextures)
             {
-                renderer = Renderer.Self;
-            }
-            else
-            {
-                renderer = managers.Renderer;
-            }
-            if (extension == "tga")
-            {
-
-                Paloma.TargaImage tgaImage = new Paloma.TargaImage(fileName);
-                using (MemoryStream stream = new MemoryStream())
+                if (CacheTextures)
                 {
-                    tgaImage.Image.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
-                    stream.Seek(0, SeekOrigin.Begin); //must do this, or error is thrown in next line
-                    toReturn = Texture2D.FromStream(renderer.GraphicsDevice, stream);
-                }
-            }
-            else
-            {
-                using (FileStream stream = System.IO.File.OpenRead(fileName))
-                {
-                    Texture2D texture = Texture2D.FromStream(renderer.GraphicsDevice,
-                        stream);
 
-                    texture.Name = fileName;
-
-                    if (CacheTextures)
+                    if (mCachedTextures.ContainsKey(fileNameStandardized))
                     {
-                        mCachedTextures.Add(fileNameStandardized, texture);
+                        return mCachedTextures[fileNameStandardized];
                     }
+                }
 
-                    toReturn = texture;
+                string extension = FileManager.GetExtension(fileName);
+                Renderer renderer = null;
+                if (managers == null)
+                {
+                    renderer = Renderer.Self;
+                }
+                else
+                {
+                    renderer = managers.Renderer;
+                }
+                if (extension == "tga")
+                {
 
+                    Paloma.TargaImage tgaImage = new Paloma.TargaImage(fileName);
+                    using (MemoryStream stream = new MemoryStream())
+                    {
+                        tgaImage.Image.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
+                        stream.Seek(0, SeekOrigin.Begin); //must do this, or error is thrown in next line
+                        toReturn = Texture2D.FromStream(renderer.GraphicsDevice, stream);
+                    }
+                }
+                else
+                {
+                    using (FileStream stream = System.IO.File.OpenRead(fileName))
+                    {
+                        Texture2D texture = Texture2D.FromStream(renderer.GraphicsDevice,
+                            stream);
+
+                        texture.Name = fileName;
+
+                        if (CacheTextures)
+                        {
+                            mCachedTextures.Add(fileNameStandardized, texture);
+                        }
+
+                        toReturn = texture;
+
+                    }
                 }
             }
             return toReturn;

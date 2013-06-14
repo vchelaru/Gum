@@ -83,6 +83,12 @@ namespace Gum.DataTypes.Variables
             set;
         }
 
+        public bool IsHiddenInPropertyGrid
+        {
+            get;
+            set;
+        }
+
         public override string ToString()
         {
             string returnValue = Type + " " + Name;

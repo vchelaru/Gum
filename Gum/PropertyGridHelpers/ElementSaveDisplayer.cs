@@ -311,6 +311,11 @@ namespace Gum.PropertyGridHelpers
                 mListOfAttributes.Add(mFileWindowAttribute);
             }
 
+            if (defaultVariable.IsHiddenInPropertyGrid)
+            {
+                mListOfAttributes.Add(new BrowsableAttribute(false));
+            }
+
             List<Attribute> attributesFromPlugins = PluginManager.Self.GetAttributesFor(defaultVariable);
 
             if(attributesFromPlugins.Count != 0)
@@ -346,6 +351,12 @@ namespace Gum.PropertyGridHelpers
             {
                 mListOfAttributes.Add(new CategoryAttribute(variableList.Category));
             }
+
+            if (variableList.IsHiddenInPropertyGrid)
+            {
+                mListOfAttributes.Add(new BrowsableAttribute(false));
+            }
+
 
             return mListOfAttributes.ToArray();
         }

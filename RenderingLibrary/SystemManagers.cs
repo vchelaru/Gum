@@ -10,6 +10,8 @@ namespace RenderingLibrary
 {
     public class SystemManagers
     {
+        int mPrimaryThreadId;
+
         public Renderer Renderer
         {
             get;
@@ -40,8 +42,20 @@ namespace RenderingLibrary
             set;
         }
 
+        public bool IsCurrentThreadPrimary
+        {
+            get
+            {
+                int threadId = System.Threading.Thread.CurrentThread.ManagedThreadId;
+                return threadId == mPrimaryThreadId;
+            }
+        }
+
         public void Initialize(GraphicsDevice graphicsDevice)
         {
+
+            mPrimaryThreadId = System.Threading.Thread.CurrentThread.ManagedThreadId;
+
             Renderer = new Renderer();
             Renderer.Initialize(graphicsDevice, this);
 

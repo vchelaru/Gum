@@ -51,7 +51,10 @@ namespace RenderingLibrary.Graphics
 
         internal void Add(IRenderable renderable)
         {
-            mRenderables.Add(renderable);
+            lock (mRenderables)
+            {
+                mRenderables.Add(renderable);
+            }
         }
 
         internal void Remove(IRenderable renderable)
