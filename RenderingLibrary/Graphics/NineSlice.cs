@@ -245,9 +245,9 @@ namespace RenderingLibrary.Graphics
                 this.mCenterSprite.Height = desiredMiddleHeight;
                 this.mRightSprite.Height = desiredMiddleHeight;
 
-                float y = this.Y;
+                float y = this.GetAbsoluteY();
 
-                mTopLeftSprite.X = this.X;
+                mTopLeftSprite.X = this.GetAbsoluteX() ;
                 mTopLeftSprite.Y = y;
 
                 mTopSprite.X = mTopLeftSprite.X + mTopLeftSprite.EffectiveWidth;
@@ -258,7 +258,7 @@ namespace RenderingLibrary.Graphics
 
                 y = mTopLeftSprite.Y + mTopLeftSprite.EffectiveHeight;
 
-                mLeftSprite.X = this.X;
+                mLeftSprite.X = this.GetAbsoluteX();
                 mLeftSprite.Y = y;
 
                 mCenterSprite.X = mLeftSprite.X + mLeftSprite.EffectiveWidth;
@@ -269,7 +269,7 @@ namespace RenderingLibrary.Graphics
 
                 y = mLeftSprite.Y + mLeftSprite.EffectiveHeight;
 
-                mBottomLeftSprite.X = this.X;
+                mBottomLeftSprite.X = this.GetAbsoluteX();
                 mBottomLeftSprite.Y = y;
 
                 mBottomSprite.X = mBottomLeftSprite.X + mBottomLeftSprite.EffectiveWidth;
