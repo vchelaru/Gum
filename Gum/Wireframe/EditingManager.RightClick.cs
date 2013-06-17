@@ -206,7 +206,9 @@ namespace Gum.Wireframe
                     ElementTreeViewManager.Self.RefreshUI();
                     WireframeObjectManager.Self.RefreshAll(true);
 
-                    
+                    SelectionManager.Self.Refresh();
+
+                    ProjectVerifier.Self.AssertSelectedIpsosArePartOfRenderer();
                 }
             }
 
@@ -290,19 +292,33 @@ namespace Gum.Wireframe
 
                 StateSave stateSave = copiedState;
 
+                // Why do we reverse loop here?
                 for (int i = stateSave.Variables.Count - 1; i > -1; i--)
                 {
                     VariableSave sourceVariable = stateSave.Variables[i];
 
                     VariableSave copiedVariable = sourceVariable.Clone();
-                    copiedVariable.Name = targetInstance.Name + "." + copiedVariable.GetRootName();
-                    copiedVariable.SourceObject = targetInstance.Name;
-                    targetElement.DefaultState.Variables.Add(copiedVariable);
+                    // Only copy over the variables that apply to the object that was dropped
+                    if (sourceVariable.SourceObject == sourceInstance.Name)
+                    {
+                        copiedVariable.Name = targetInstance.Name + "." + copiedVariable.GetRootName();
+                        copiedVariable.SourceObject = targetInstance.Name;
+                        targetElement.DefaultState.Variables.Add(copiedVariable);
+                    }
                 }
 
-                if (stateSave.VariableLists.Count != 0)
+                for(int i = 0; i < stateSave.VariableLists.Count; i++)
                 {
-                    throw new NotImplementedException();
+                    var sourceVariableList = stateSave.VariableLists[i];
+
+                    var copiedVariableList = sourceVariableList.Clone();
+                    // Only copy over the variables that apply to the object that was dropped
+                    if (sourceVariableList.SourceObject == sourceInstance.Name)
+                    {
+                        copiedVariableList.Name = targetInstance.Name + "." + copiedVariableList.GetRootName();
+                        copiedVariableList.SourceObject = targetInstance.Name;
+                        targetElement.DefaultState.VariableLists.Add(copiedVariableList);
+                    }
                 }
             
             }

@@ -106,27 +106,32 @@ namespace Gum.Managers
                 }
                 else if (draggedObject is InstanceSave)
                 {
-                    InstanceSave draggedAsInstanceSave = draggedObject as InstanceSave;
-
-                    bool handled;
-
-                    ElementSave targetElementSave = targetTag as ElementSave;
-                    if (targetElementSave == null && targetTag is InstanceSave)
-                    {
-                        targetElementSave = ((InstanceSave)targetTag).ParentContainer;
-                    }
-
-                    // We aren't going to allow drag+drop within the same element - that may cause
-                    // unexpected copy/paste if the user didn't mean to drag, and we may want to support
-                    // reordering.
-                    if(targetElementSave != null && targetElementSave != draggedAsInstanceSave.ParentContainer)
-                    {
-                        EditingManager.Self.PasteInstanceSave(draggedAsInstanceSave,
-                            draggedAsInstanceSave.ParentContainer.DefaultState.Clone(),
-                            targetElementSave);
-                    }
+                    HandleDroppedInstance(draggedObject, targetTag);
 
                 }
+            }
+        }
+
+        private static void HandleDroppedInstance(object draggedObject, object targetTag)
+        {
+            InstanceSave draggedAsInstanceSave = draggedObject as InstanceSave;
+
+            bool handled;
+
+            ElementSave targetElementSave = targetTag as ElementSave;
+            if (targetElementSave == null && targetTag is InstanceSave)
+            {
+                targetElementSave = ((InstanceSave)targetTag).ParentContainer;
+            }
+
+            // We aren't going to allow drag+drop within the same element - that may cause
+            // unexpected copy/paste if the user didn't mean to drag, and we may want to support
+            // reordering.
+            if (targetElementSave != null && targetElementSave != draggedAsInstanceSave.ParentContainer)
+            {
+                EditingManager.Self.PasteInstanceSave(draggedAsInstanceSave,
+                    draggedAsInstanceSave.ParentContainer.DefaultState.Clone(),
+                    targetElementSave);
             }
         }
 
