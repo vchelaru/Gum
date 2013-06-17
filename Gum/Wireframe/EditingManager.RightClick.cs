@@ -459,7 +459,8 @@ namespace Gum.Wireframe
             element.Instances.Insert(whereToInsert, whatToInsert);
 
             RefreshInResponseToReorder();
-            
+
+            ProjectManager.Self.SaveElement(element);
         }
 
 

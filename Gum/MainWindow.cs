@@ -14,6 +14,7 @@ using Gum.Reflection;
 using Gum.Wireframe;
 using Gum.Gui.Forms;
 using Gum.Undo;
+using Gum.Debug;
 
 namespace Gum
 {
@@ -104,6 +105,9 @@ namespace Gum
             StateTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedElement);
             PropertyGridManager.Self.RefreshUI();
             WireframeObjectManager.Self.RefreshAll(true);
+            SelectionManager.Self.Refresh();
+
+            ProjectVerifier.Self.AssertSelectedIpsosArePartOfRenderer();
         }
 
         private void ObjectTreeView_MouseClick(object sender, MouseEventArgs e)
