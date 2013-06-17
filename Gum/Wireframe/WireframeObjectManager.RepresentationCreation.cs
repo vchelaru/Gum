@@ -75,52 +75,66 @@ namespace Gum.Wireframe
             IPositionedSizedObject toReturn = null;
 
 
-                List<VariableSave> exposedVariables = GetExposedVariablesForThisInstance(instance, parentInstance, elementStack);
+            List<VariableSave> exposedVariables = GetExposedVariablesForThisInstance(instance, parentInstance, elementStack);
 
 
-                if (instance.BaseType == "Sprite")
-                {
-                    toReturn = CreateSpriteFor(instance, elementStack.Last(), parentIpso, exposedVariables);
-                }
-                else if (instance.BaseType == "Text")
-                {
-                    toReturn = CreateTextFor(instance, elementStack.Last(), parentIpso, exposedVariables);
-                }
-                else if (instance.BaseType == "ColoredRectangle")
-                {
-                    toReturn = CreateSolidRectangleFor(instance, elementStack.Last(), parentIpso, exposedVariables);
-                }
-                else if (instance.BaseType == "NineSlice")
-                {
-                    toReturn = CreateNineSliceFor(instance, elementStack.Last(), parentIpso, exposedVariables);
-                }
-                else if (instance.IsComponent())
-                {
-                    // Here we need to prefix the name before going any deeper, so we won't won't prefix the name at the end of the method
-                    //shouldPrefixParentName = false;
+            if (instance.BaseType == "Sprite")
+            {
+                toReturn = CreateSpriteFor(instance, elementStack.Last(), parentIpso, exposedVariables);
+            }
+            else if (instance.BaseType == "Text")
+            {
+                toReturn = CreateTextFor(instance, elementStack.Last(), parentIpso, exposedVariables);
+            }
+            else if (instance.BaseType == "ColoredRectangle")
+            {
+                toReturn = CreateSolidRectangleFor(instance, elementStack.Last(), parentIpso, exposedVariables);
+            }
+            else if (instance.BaseType == "NineSlice")
+            {
+                toReturn = CreateNineSliceFor(instance, elementStack.Last(), parentIpso, exposedVariables);
+            }
+            else if (instance.IsComponent())
+            {
+                // Here we need to prefix the name before going any deeper, so we won't won't prefix the name at the end of the method
+                //shouldPrefixParentName = false;
 
-                    //string prefixName = null;
-                    //if (parentIpso != null)
-                    //{
-                    //prefixName = parentIpso.Name + ".";
-                    //}
-                    toReturn = CreateRepresentationsForInstanceFromComponent(instance, elementStack, parentInstance, parentIpso, ObjectFinder.Self.GetComponent(instance.BaseType));
-                }
-                else
-                {
-                    toReturn = CreateRectangleFor(instance, elementStack.Last(), parentIpso, exposedVariables);
-                }
-                //if (shouldPrefixParentName)
+                //string prefixName = null;
+                //if (parentIpso != null)
                 //{
-                //    string prefixName = null;
-                //    if (parentIpso != null)
-                //    {
-                //        prefixName = parentIpso.Name + ".";
-                //    }
-
-                //    toReturn.Name = prefixName + toReturn.Name;
-
+                //prefixName = parentIpso.Name + ".";
                 //}
+                toReturn = CreateRepresentationsForInstanceFromComponent(instance, elementStack, parentInstance, parentIpso, ObjectFinder.Self.GetComponent(instance.BaseType));
+            }
+            else
+            {
+                toReturn = CreateRectangleFor(instance, elementStack.Last(), parentIpso, exposedVariables);
+            }
+            //if (shouldPrefixParentName)
+            //{
+            //    string prefixName = null;
+            //    if (parentIpso != null)
+            //    {
+            //        prefixName = parentIpso.Name + ".";
+            //    }
+
+            //    toReturn.Name = prefixName + toReturn.Name;
+
+            //}
+
+            if (toReturn != null)
+            {
+                if(parentInstance == null)
+                {
+                    var parent = instance.ParentContainer;
+
+                    if(parent != null)
+                    {
+                        toReturn.Z = parent.Instances.IndexOf(instance);
+                    }
+                }
+            }
+
             return toReturn;
         }
 
@@ -158,7 +172,9 @@ namespace Gum.Wireframe
             return exposedVariables;
         }
 
-        private IPositionedSizedObject CreateRepresentationsForInstanceFromComponent(InstanceSave instance, List<ElementSave> elementStack, InstanceSave parentInstance, IPositionedSizedObject parentIpso, ComponentSave baseComponentSave)
+        private IPositionedSizedObject CreateRepresentationsForInstanceFromComponent(InstanceSave instance, 
+            List<ElementSave> elementStack, InstanceSave parentInstance, IPositionedSizedObject parentIpso, 
+            ComponentSave baseComponentSave)
         {
             StandardElementSave ses = ObjectFinder.Self.GetRootStandardElementSave(instance);
 

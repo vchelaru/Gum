@@ -26,6 +26,8 @@ namespace Gum.Wireframe
         ToolStripMenuItem mMoveForward;
         ToolStripMenuItem mMoveBackward;
 
+        ToolStripMenuItem mMoveInFrontOf;
+
         Object mCopiedObject = null;
         StateSave mCopiedState = new StateSave();
 
@@ -59,6 +61,17 @@ namespace Gum.Wireframe
             mMoveBackward.Text = "Move Backward";
             mMoveBackward.Click += new EventHandler(OnMoveBackward);
 
+            mMoveInFrontOf = new ToolStripMenuItem();
+            mMoveInFrontOf.Text = "Move In Front Of";
+
+            contextMenuStrip.VisibleChanged += HandleVisibleChange;
+
+        }
+
+        private void HandleVisibleChange(object sender, EventArgs e)
+        {
+
+            PopulateMoveInFrontOfMenuItem();
         }
 
         void OnMoveForward(object sender, EventArgs e)
@@ -402,12 +415,51 @@ namespace Gum.Wireframe
             {
                 mContextMenuStrip.Items.Add(mBringToFront);
                 mContextMenuStrip.Items.Add(mMoveForward);
+                mContextMenuStrip.Items.Add(mMoveInFrontOf);
                 mContextMenuStrip.Items.Add(mMoveBackward);
                 mContextMenuStrip.Items.Add(mSendToBack);
+
+                PopulateMoveInFrontOfMenuItem();
             }
 
 
 
+        }
+
+        private void PopulateMoveInFrontOfMenuItem()
+        {
+            mMoveInFrontOf.DropDownItems.Clear();
+
+            foreach (var instance in SelectedState.Self.SelectedElement.Instances)
+            {
+                var selectedInstance = SelectedState.Self.SelectedInstance;
+                // Ignore the current instance
+                if (instance != selectedInstance)
+                {
+                    ToolStripMenuItem item = new ToolStripMenuItem(instance.Name);
+
+                    item.Tag = instance;
+                    mMoveInFrontOf.DropDownItems.Add(item);
+
+                    item.Click += HandleMoveInFrontOfClick;
+                }
+                
+            }
+        }
+
+        private void HandleMoveInFrontOfClick(object sender, EventArgs e)
+        {
+            InstanceSave instance = ((ToolStripMenuItem)sender).Tag as InstanceSave;
+
+            var element = SelectedState.Self.SelectedElement;
+            var whatToInsert = SelectedState.Self.SelectedInstance;
+            element.Instances.Remove(SelectedState.Self.SelectedInstance);
+            int whereToInsert = element.Instances.IndexOf(instance) + 1;
+
+            element.Instances.Insert(whereToInsert, whatToInsert);
+
+            RefreshInResponseToReorder();
+            
         }
 
 
