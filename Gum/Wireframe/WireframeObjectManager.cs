@@ -196,10 +196,17 @@ namespace Gum.Wireframe
 
                 elementStack.Add(elementSave);
 
-                Parallel.ForEach(elementSave.Instances, instance =>
+                // parallel screws up the ordering of objects, so we'll do it on the primary thread for now
+                // and parallelize it later:
+                //Parallel.ForEach(elementSave.Instances, instance =>
+                foreach(var instance in elementSave.Instances)
+
                     {
                         IPositionedSizedObject child = CreateRepresentationForInstance(instance, null, elementStack, rootIpso);
-                    });
+                    }
+                //);
+
+
 
                 elementStack.Remove(elementSave);
 

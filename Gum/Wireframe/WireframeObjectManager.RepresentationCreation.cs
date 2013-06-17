@@ -122,18 +122,19 @@ namespace Gum.Wireframe
 
             //}
 
-            if (toReturn != null)
-            {
-                if(parentInstance == null)
-                {
-                    var parent = instance.ParentContainer;
+            // This was an attempt to fix sorting when parallelized
+            //if (toReturn != null)
+            //{
+            //    if(parentInstance == null)
+            //    {
+            //        var parent = instance.ParentContainer;
 
-                    if(parent != null)
-                    {
-                        toReturn.Z = parent.Instances.IndexOf(instance);
-                    }
-                }
-            }
+            //        if(parent != null)
+            //        {
+            //            toReturn.Z = parent.Instances.IndexOf(instance);
+            //        }
+            //    }
+            //}
 
             return toReturn;
         }
