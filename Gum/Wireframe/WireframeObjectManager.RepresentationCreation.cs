@@ -413,10 +413,10 @@ namespace Gum.Wireframe
         private void SetAlphaAndColorValues(SolidRectangle solidRectangle, StateSave stateSave)
         {
             Microsoft.Xna.Framework.Color color = new Microsoft.Xna.Framework.Color(
-                (float)stateSave.GetValue("Red"),
-                (float)stateSave.GetValue("Green"),
-                (float)stateSave.GetValue("Blue"),
-                (float)stateSave.GetValue("Alpha")
+                (int)stateSave.GetValue("Red"),
+                (int)stateSave.GetValue("Green"),
+                (int)stateSave.GetValue("Blue"),
+                (int)stateSave.GetValue("Alpha")
                 
                 );
             solidRectangle.Color = color;
@@ -580,9 +580,9 @@ namespace Gum.Wireframe
             mTexts.Add(text);
 
                 //text.Alpha = (float)stateSave.GetValue("Alpha");
-            text.Red = rvf.GetValue<float>("Red");
-            text.Green = rvf.GetValue<float>("Green");
-            text.Blue = rvf.GetValue<float>("Blue");
+            text.Red = rvf.GetValue<int>("Red")/255.0f;
+            text.Green = rvf.GetValue<int>("Green") / 255.0f;
+            text.Blue = rvf.GetValue<int>("Blue") / 255.0f;
 
             text.Visible = rvf.GetValue<bool>("Visible");
 

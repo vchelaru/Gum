@@ -10,6 +10,9 @@ using Gum.Wireframe;
 using Gum.Settings;
 using Gum.Undo;
 using ToolsUtilities;
+using System.IO;
+using CommonFormsAndControls.Forms;
+using System.Diagnostics;
 
 namespace Gum
 {
@@ -151,6 +154,8 @@ namespace Gum
 
         public void SaveProject()
         {
+            bool succeeded = false;
+
             if (mHaveErrorsOccurred)
             {
                 MessageBox.Show("Can't save project because errors occurred when the project was last loaded");
@@ -162,11 +167,41 @@ namespace Gum
 
                 if (shouldSave)
                 {
-                    GumProjectSave.Save(GumProjectSave.FullFileName);
+                    try
+                    {
+                        GumProjectSave.Save(GumProjectSave.FullFileName);
+                        succeeded = true;
+                    }
+                    catch(UnauthorizedAccessException exception)
+                    {
+                        string fileName = GetFileNameFromException(exception);
+
+                        bool isReadOnly = GetIfFileIsReadOnly(fileName);
+
+                        if (isReadOnly)
+                        {
+                            ShowReadOnlyDialog(fileName);
+                        }
+                        else
+                        {
+                            MessageBox.Show("Unknown error trying to save the file\n\n" +
+                                fileName + "\n\n" + exception.ToString());
+                        }
+                    }
                     // This may be the first time the file is being saved.  If so, we should make it relative
                     FileManager.RelativeDirectory = FileManager.GetDirectory(GumProjectSave.FullFileName);
                 }
             }
+        }
+
+        private static string GetFileNameFromException(UnauthorizedAccessException exception)
+        {
+            string fileName = exception.Message;
+
+            int start = exception.Message.IndexOf('\'') + 1;
+            int end = exception.Message.IndexOf('\'', start);
+
+            return exception.Message.Substring(start, end - start);
         }
 
         public string MakeAbsoluteIfNecessary(string textureAsString)
@@ -222,10 +257,52 @@ namespace Gum
             {
                 string fileName = elementSave.GetFullPathXmlFile();
 
-                elementSave.Save(fileName);
+                // if it's readonly, let's warn the user
+                bool isReadOnly = GetIfFileIsReadOnly(fileName);
+
+                if (isReadOnly)
+                {
+                    ShowReadOnlyDialog(fileName);
+                }
+                else
+                {
+                    try
+                    {
+                        elementSave.Save(fileName);
+                    }
+                    catch (Exception e)
+                    {
+                        MessageBox.Show("Unknown error trying to save the file\n\n" + fileName + "\n\n" + e.ToString());
+                    }
+                }
             }
 
             PluginManager.Self.Export(elementSave);
+        }
+
+        private static void ShowReadOnlyDialog(string fileName)
+        {
+            MultiButtonMessageBox mbmb = new MultiButtonMessageBox();
+            mbmb.MessageText = "Could not save the file\n\n" + fileName + "\n\nbecause it is read-only." +
+                "What would you like to do?";
+
+            mbmb.AddButton("Nothing (file will not save, Gum will continue to work normally)", DialogResult.Cancel);
+            mbmb.AddButton("Open folder containing file", DialogResult.OK);
+
+            var dialogResult = mbmb.ShowDialog();
+
+            if (dialogResult == DialogResult.OK)
+            {
+                string folder = FileManager.GetDirectory(fileName);
+
+                Process.Start(folder);
+            }
+        }
+
+        private static bool GetIfFileIsReadOnly(string fileName)
+        {
+            bool isReadOnly = System.IO.File.Exists(fileName) && new FileInfo(fileName).IsReadOnly;
+            return isReadOnly;
         }
         #endregion
 

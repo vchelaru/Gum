@@ -339,8 +339,8 @@ namespace Gum.ToolStates
             {
                 SelectedStateSave = null;
 
-                PropertyGridManager.Self.RefreshUI();
             }
+            PropertyGridManager.Self.RefreshUI();
 
             WireframeObjectManager.Self.RefreshAll(false);
 
