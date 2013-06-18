@@ -108,7 +108,16 @@ namespace Gum.Wireframe
             }
             else
             {
-                toReturn = CreateRectangleFor(instance, elementStack.Last(), parentIpso, exposedVariables);
+                // Make sure the base type is valid.
+                // This could be null if a base type changed
+                // its name but the derived wasn't updated, or 
+                // if someone screwed with the XML files.  Who knows...
+                var baseElement = ObjectFinder.Self.GetElementSave(instance.BaseType);
+
+                if (baseElement != null)
+                {
+                    toReturn = CreateRectangleFor(instance, elementStack.Last(), parentIpso, exposedVariables);
+                }
             }
             //if (shouldPrefixParentName)
             //{

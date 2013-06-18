@@ -118,6 +118,11 @@ namespace Gum.Managers
 
         public StandardElementSave GetRootStandardElementSave(ElementSave elementSave)
         {
+            if (elementSave == null)
+            {
+                return null;
+            }
+
             if (elementSave is ScreenSave)
             {
                 // This will be null at the time of this writing, but may change in the future so we'll leave it here to do a proper check.

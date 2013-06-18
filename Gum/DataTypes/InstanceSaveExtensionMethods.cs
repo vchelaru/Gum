@@ -108,7 +108,10 @@ namespace Gum.DataTypes
                 {
                     ElementSave instanceBase = ObjectFinder.Self.GetElementSave(instance.BaseType);
 
-                    variableListSave = instanceBase.DefaultState.GetVariableListSave(variable);
+                    if (instanceBase != null)
+                    {
+                        variableListSave = instanceBase.DefaultState.GetVariableListSave(variable);
+                    }
                 }
 
                 if (variableListSave != null)

@@ -62,7 +62,18 @@ namespace Gum.PropertyGridHelpers
         {
             ElementSave elementSave = instanceSave.GetBaseElementSave();
 
-            pdc = DisplayCurrentElement(pdc, elementSave, instanceSave, elementSave.States[0], instanceSave.Name, AmountToDisplay.ElementAndExposedOnly);
+            StateSave stateToDisplay;
+
+            if (elementSave != null)
+            {
+                stateToDisplay = elementSave.States[0];
+            }
+            else
+            {
+                stateToDisplay = new StateSave();
+            }
+
+            pdc = DisplayCurrentElement(pdc, elementSave, instanceSave, stateToDisplay, instanceSave.Name, AmountToDisplay.ElementAndExposedOnly);
 
             return pdc;
 
