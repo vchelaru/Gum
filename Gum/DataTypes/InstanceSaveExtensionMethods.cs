@@ -46,13 +46,13 @@ namespace Gum.DataTypes
             {
                 variableSave = defaultState.GetVariableSave(instance.Name + "." + variable);
             }
-            if (variableSave == null)
+            if (variableSave == null && instanceBase != null)
             {
                 // Eventually use the instanceBase's current state value
                 variableSave = instanceBase.DefaultState.GetVariableSave(variable);
             }
 
-            if (variableSave != null && variableSave.Value == null)
+            if (variableSave != null && variableSave.Value == null && instanceBase != null)
             {
                 // This can happen if there is a tunneled variable that is null
                 VariableSave possibleVariable = instanceBase.DefaultState.GetVariableSave(variable);
