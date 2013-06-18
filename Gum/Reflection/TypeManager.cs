@@ -10,7 +10,7 @@ namespace Gum.Reflection
 {
     public class TypeManager
     {
-        Type[] mTypes;
+        List<Type> mTypes;
 
         static TypeManager mSelf;
 
@@ -26,6 +26,11 @@ namespace Gum.Reflection
             }
         }
 
+        public void AddType(Type type)
+        {
+            mTypes.Add(type);
+        }
+
         public void Initialize()
         {
             List<Type> allTypes = new List<Type>();
@@ -36,7 +41,7 @@ namespace Gum.Reflection
 
             allTypes.AddRange(Assembly.GetAssembly(typeof(DimensionUnitType)).GetTypes());
 
-            mTypes = allTypes.ToArray();
+            mTypes = allTypes;
         }
 
 
