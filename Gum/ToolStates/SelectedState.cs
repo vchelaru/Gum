@@ -20,7 +20,9 @@ namespace Gum.ToolStates
         static ISelectedState mSelf;
         ReadOnlyCollection<InstanceSave> mSelectedInstancesReadOnly;
         List<InstanceSave> mSelectedInstances = new List<InstanceSave>();
+
         
+
         #endregion
 
         #region Properties
@@ -191,12 +193,21 @@ namespace Gum.ToolStates
             }
         }
 
+        public StateSave CustomCurrentStateSave
+        {
+            get;
+            set;
+        }
+
         public StateSave SelectedStateSave
         {
             get
             {
-                
-                if (StateTreeViewManager.Self.SelectedNode != null)
+                if (CustomCurrentStateSave != null)
+                {
+                    return CustomCurrentStateSave;
+                }
+                else if (StateTreeViewManager.Self.SelectedNode != null)
                 {
                     return StateTreeViewManager.Self.SelectedNode.Tag as StateSave;
                 }
@@ -399,6 +410,7 @@ namespace Gum.ToolStates
 
             PluginManager.Self.InstanceSelected(SelectedElement, SelectedInstance);
         }
+
     }
 
     public static class IEnumerableExtensionMethods

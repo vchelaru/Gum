@@ -24,6 +24,13 @@ namespace GumUnitTests.ToolStates
             set;
         }
 
+        public Gum.DataTypes.Variables.StateSave CustomCurrentStateSave
+        {
+
+            get;
+            set;
+        }
+
         public Gum.DataTypes.Variables.StateSave SelectedStateSave
         {
 

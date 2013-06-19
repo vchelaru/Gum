@@ -199,5 +199,24 @@ namespace Gum.DataTypes.Variables
             return this.Name + " in " + ParentContainer;
         }
 
+        public void MergeIntoThis(StateSave other)
+        {
+            foreach (var variableSave in other.Variables)
+            {
+                VariableSave whatToSet = Variables.FirstOrDefault(item => item.Name == variableSave.Name);
+
+                if (whatToSet == null)
+                {
+                    whatToSet = variableSave.Clone();
+                    this.Variables.Add(whatToSet);
+                }
+
+                whatToSet.Value = variableSave.Value;                
+            }
+
+            // todo:  Handle lists?
+
+        }
+
     }
 }

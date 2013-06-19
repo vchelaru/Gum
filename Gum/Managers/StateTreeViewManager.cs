@@ -87,7 +87,7 @@ namespace Gum.Managers
                     mTreeView.SelectedNode = mTreeView.Nodes[0];
                 }
             }
-
+            SelectedState.Self.CustomCurrentStateSave = null;
             SelectedState.Self.UpdateToSelectedStateSave();
 
         }

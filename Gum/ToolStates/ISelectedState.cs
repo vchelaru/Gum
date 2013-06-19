@@ -13,6 +13,7 @@ namespace Gum.ToolStates
     {
         ScreenSave SelectedScreen { get; set; }
         ElementSave SelectedElement { get; set; }
+        StateSave CustomCurrentStateSave{ get; set; }
         StateSave SelectedStateSave { get; set; }
         ComponentSave SelectedComponent { get; set; }
         InstanceSave SelectedInstance { get; set; }
