@@ -109,6 +109,15 @@ namespace Gum.PropertyGridHelpers
                     pdc = TryDisplayVariableSave(pdc, elementSave, instanceSave, amountToDisplay, null, item);
                 }
             }
+            // else if screen
+            else if (instanceSave == null && elementSave as ScreenSave != null)
+            {
+                foreach (var item in StandardElementsManager.Self.GetDefaultStateFor("Screen").Variables)
+                {
+
+                    pdc = TryDisplayVariableSave(pdc, elementSave, instanceSave, amountToDisplay, null, item);
+                }
+            }
 
             #region Get the StandardElementSave for the instance/element (depending on what's selected)
 
