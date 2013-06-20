@@ -60,23 +60,29 @@ namespace Gum.DataTypes.Variables
                             nameInBase = variableName.Substring(nameInBase.IndexOf('.') + 1);
                         }
 
-                        return baseElement.DefaultState.GetValueRecursive(nameInBase);
-                    }
-                    else
-                    {
-                        return null;
+                        value = baseElement.DefaultState.GetValueRecursive(nameInBase);
+
+
                     }
 
+
+                    if (value == null && parent is ComponentSave)
+                    {
+                        StateSave defaultStateForComponent = StandardElementsManager.Self.GetDefaultStateFor("Component");
+                        if (defaultStateForComponent != null)
+                        {
+                            value = defaultStateForComponent.GetValueRecursive(variableName);
+                        }
+                    }
                 }
                 else
                 {
                     return null;
                 }
             }
-            else
-            {
-                return value;
-            }
+
+
+            return value;
         }
 
         private static ElementSave GetBaseElementFromVariable(string variableName, ElementSave parent)

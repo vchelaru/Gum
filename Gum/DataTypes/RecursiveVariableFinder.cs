@@ -26,7 +26,7 @@ namespace Gum.DataTypes
         #endregion
 
         InstanceSave mInstanceSave;
-        ElementSave mInstanceContainer;
+        List<ElementSave> mElementStack;
         StateSave mStateSave;
 
         VariableContainerType ContainerType
@@ -35,13 +35,21 @@ namespace Gum.DataTypes
             set;
         }
 
-
         public RecursiveVariableFinder(InstanceSave instanceSave, ElementSave container)
         {
             ContainerType = VariableContainerType.InstanceSave;
 
             mInstanceSave = instanceSave;
-            mInstanceContainer = container;
+
+            mElementStack = new List<ElementSave>(){ container };
+        }
+
+        public RecursiveVariableFinder(InstanceSave instanceSave, List<ElementSave> elementStack)
+        {
+            ContainerType = VariableContainerType.InstanceSave;
+
+            mInstanceSave = instanceSave;
+            mElementStack = elementStack;
         }
 
         public RecursiveVariableFinder(StateSave stateSave)
@@ -56,7 +64,7 @@ namespace Gum.DataTypes
             {
                 case VariableContainerType.InstanceSave:
 
-                    return mInstanceSave.GetValueFromThisOrBase(mInstanceContainer, variableName);
+                    return mInstanceSave.GetValueFromThisOrBase(mElementStack.Last(), variableName);
                     //break;
                 case VariableContainerType.StateSave:
                     return mStateSave.GetValueRecursive(variableName);
@@ -84,7 +92,7 @@ namespace Gum.DataTypes
             switch (ContainerType)
             {
                 case VariableContainerType.InstanceSave:
-                    return mInstanceSave.GetVariableFromThisOrBase(mInstanceContainer, variableName);
+                    return mInstanceSave.GetVariableFromThisOrBase(mElementStack, variableName);
                 case VariableContainerType.StateSave:
                     return mStateSave.GetVariableRecursive(variableName);
                     //break;
@@ -97,7 +105,7 @@ namespace Gum.DataTypes
             switch (ContainerType)
             {
                 case VariableContainerType.InstanceSave:
-                    return mInstanceSave.GetVariableListFromThisOrBase(mInstanceContainer, variableName);
+                    return mInstanceSave.GetVariableListFromThisOrBase(mElementStack.Last(), variableName);
                 case VariableContainerType.StateSave:
                     return mStateSave.GetVariableListRecursive(variableName);
                 //break;

@@ -80,19 +80,19 @@ namespace Gum.Wireframe
 
             if (instance.BaseType == "Sprite")
             {
-                toReturn = CreateSpriteFor(instance, elementStack.Last(), parentIpso, exposedVariables);
+                toReturn = CreateSpriteFor(instance, elementStack, parentIpso, exposedVariables);
             }
             else if (instance.BaseType == "Text")
             {
-                toReturn = CreateTextFor(instance, elementStack.Last(), parentIpso, exposedVariables);
+                toReturn = CreateTextFor(instance, elementStack, parentIpso, exposedVariables);
             }
             else if (instance.BaseType == "ColoredRectangle")
             {
-                toReturn = CreateSolidRectangleFor(instance, elementStack.Last(), parentIpso, exposedVariables);
+                toReturn = CreateSolidRectangleFor(instance, elementStack, parentIpso, exposedVariables);
             }
             else if (instance.BaseType == "NineSlice")
             {
-                toReturn = CreateNineSliceFor(instance, elementStack.Last(), parentIpso, exposedVariables);
+                toReturn = CreateNineSliceFor(instance, elementStack, parentIpso, exposedVariables);
             }
             else if (instance.IsComponent())
             {
@@ -116,7 +116,7 @@ namespace Gum.Wireframe
 
                 if (baseElement != null)
                 {
-                    toReturn = CreateRectangleFor(instance, elementStack.Last(), parentIpso, exposedVariables);
+                    toReturn = CreateRectangleFor(instance, elementStack, parentIpso, exposedVariables);
                 }
             }
             //if (shouldPrefixParentName)
@@ -194,23 +194,23 @@ namespace Gum.Wireframe
 
             if (ses.Name == "Sprite")
             {
-                rootIpso = CreateSpriteFor(instance, elementStack.Last(), parentIpso, exposedVariables);
+                rootIpso = CreateSpriteFor(instance, elementStack, parentIpso, exposedVariables);
             }
             else if (ses.Name == "Text")
             {
-                rootIpso = CreateTextFor(instance, elementStack.Last(), parentIpso, exposedVariables);
+                rootIpso = CreateTextFor(instance, elementStack, parentIpso, exposedVariables);
             }
             else if (ses.Name == "ColoredRectangle")
             {
-                rootIpso = CreateSolidRectangleFor(instance, elementStack.Last(), parentIpso, exposedVariables);
+                rootIpso = CreateSolidRectangleFor(instance, elementStack, parentIpso, exposedVariables);
             }
             else if (ses.Name == "NineSlice")
             {
-                rootIpso = CreateNineSliceFor(instance, elementStack.Last(), parentIpso, exposedVariables);
+                rootIpso = CreateNineSliceFor(instance, elementStack, parentIpso, exposedVariables);
             }
             else
             {
-                rootIpso = CreateRectangleFor(instance, elementStack.Last(), parentIpso, exposedVariables);
+                rootIpso = CreateRectangleFor(instance, elementStack, parentIpso, exposedVariables);
             }
 
             elementStack.Add(baseComponentSave);
@@ -246,11 +246,12 @@ namespace Gum.Wireframe
 
 
 
-        private IPositionedSizedObject CreateSpriteFor(InstanceSave instance, ElementSave parent, IPositionedSizedObject parentRepresentation, List<VariableSave> exposedVariables)
+        private IPositionedSizedObject CreateSpriteFor(InstanceSave instance, List<ElementSave> elementStack, IPositionedSizedObject parentRepresentation, List<VariableSave> exposedVariables)
         {
+            ElementSave parent = elementStack.Last();
             try
             {
-                RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(instance, parent);
+                RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(instance, elementStack);
                 StateSave stateSave;
                 Sprite sprite = CreateSpriteInternal(instance, instance.Name, rvf, parentRepresentation, out stateSave);
                 
@@ -274,10 +275,10 @@ namespace Gum.Wireframe
             }
         }
 
-        private IPositionedSizedObject CreateNineSliceFor(InstanceSave instance, ElementSave parent, IPositionedSizedObject parentRepresentation, List<VariableSave> exposedVariables)
+        private IPositionedSizedObject CreateNineSliceFor(InstanceSave instance, List<ElementSave> elementStack, IPositionedSizedObject parentRepresentation, List<VariableSave> exposedVariables)
         {
-
-            RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(instance, parent);
+            ElementSave parent = elementStack.Last();
+            RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(instance, elementStack);
             StateSave stateSave;
             NineSlice nineSlice = CreateNineSliceInternal(instance, instance.Name, rvf, parentRepresentation, out stateSave);
                 
@@ -393,14 +394,14 @@ namespace Gum.Wireframe
 
             return solidRectangle;           
         }
-        private IPositionedSizedObject CreateSolidRectangleFor(InstanceSave instance, ElementSave parent, List<VariableSave> exposedVariables)
+        private IPositionedSizedObject CreateSolidRectangleFor(InstanceSave instance, List<ElementSave> elementStack, List<VariableSave> exposedVariables)
         {
 
-            IPositionedSizedObject parentIpso = GetRepresentation(parent);
+            IPositionedSizedObject parentIpso = GetRepresentation(elementStack.Last());
 
-            return CreateSolidRectangleFor(instance, parent, parentIpso, exposedVariables);
+            return CreateSolidRectangleFor(instance, elementStack, parentIpso, exposedVariables);
         }
-        private IPositionedSizedObject CreateSolidRectangleFor(InstanceSave instance, ElementSave parent, IPositionedSizedObject parentIpso, List<VariableSave> exposedVariables)
+        private IPositionedSizedObject CreateSolidRectangleFor(InstanceSave instance, List<ElementSave> elementStack, IPositionedSizedObject parentIpso, List<VariableSave> exposedVariables)
         {
             if (exposedVariables == null)
             {
@@ -415,7 +416,7 @@ namespace Gum.Wireframe
 
             StateSave stateSave = new StateSave();
 
-            RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(instance, parent);
+            RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(instance, elementStack);
 
             WireframeObjectManager.Self.FillStateWithVariables(rvf, stateSave, WireframeObjectManager.Self.PositionAndSizeVariables);
             WireframeObjectManager.Self.FillStateWithVariables(rvf, stateSave, WireframeObjectManager.Self.ColorAndAlpha);
@@ -432,7 +433,7 @@ namespace Gum.Wireframe
 
 
             SetAlphaAndColorValues(solidRectangle, stateSave);
-            WireframeObjectManager.Self.SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(solidRectangle, parent, stateSave);
+            WireframeObjectManager.Self.SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(solidRectangle, elementStack.Last(), stateSave);
 
             return solidRectangle;
         }
@@ -479,7 +480,7 @@ namespace Gum.Wireframe
 
             return lineRectangle;
         }
-        private IPositionedSizedObject CreateRectangleFor(InstanceSave instance, ElementSave parent, IPositionedSizedObject parentIpso, List<VariableSave> exposedVariables)
+        private IPositionedSizedObject CreateRectangleFor(InstanceSave instance, List<ElementSave> elementStack, IPositionedSizedObject parentIpso, List<VariableSave> exposedVariables)
         {
             if (exposedVariables == null)
             {
@@ -494,7 +495,7 @@ namespace Gum.Wireframe
             StateSave stateSave = new StateSave();
             // Get the variables before attaching to the guide
 
-            RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(instance, parent);
+            RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(instance, elementStack);
 
             WireframeObjectManager.Self.FillStateWithVariables(rvf, stateSave, WireframeObjectManager.Self.PositionAndSizeVariables);
 
@@ -512,7 +513,7 @@ namespace Gum.Wireframe
             }
 
 
-            WireframeObjectManager.Self.SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(lineRectangle, parent, stateSave);
+            WireframeObjectManager.Self.SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(lineRectangle, elementStack.Last(), stateSave);
             
             return lineRectangle;
         }
@@ -564,32 +565,33 @@ namespace Gum.Wireframe
 
             return text;
         }
-        private IPositionedSizedObject CreateTextFor(InstanceSave instance, ElementSave parent, IPositionedSizedObject parentRepresentation, List<VariableSave> exposedVariables)
+        private IPositionedSizedObject CreateTextFor(InstanceSave instance, List<ElementSave> elementStack, IPositionedSizedObject parentRepresentation, List<VariableSave> exposedVariables)
         {
-                ElementSave instanceBase = ObjectFinder.Self.GetElementSave(instance.BaseType);
-                RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(instance, parent);
+            ElementSave parent = elementStack.Last();
+            ElementSave instanceBase = ObjectFinder.Self.GetElementSave(instance.BaseType);
+            RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(instance, elementStack);
 
-                Text text = CreateTextInternal(instance, instance.Name, rvf);
+            Text text = CreateTextInternal(instance, instance.Name, rvf);
 
-                // First we get the values from the base type
-                StateSave stateSave = GetStateSaveForTextVariables(instance, parent);
+            // First we get the values from the base type
+            StateSave stateSave = GetStateSaveForTextVariables(instance, elementStack);
 
-                if (exposedVariables == null)
-                {
-                    throw new ArgumentException("The exposedVariable argument is null.  It needs to be non-null");
-                }
+            if (exposedVariables == null)
+            {
+                throw new ArgumentException("The exposedVariable argument is null.  It needs to be non-null");
+            }
 
-                // Then see if they're overridden by the exposed variables
-                foreach (VariableSave variable in exposedVariables)
-                {
-                    stateSave.SetValue(variable.Name, variable.Value);
-                }
+            // Then see if they're overridden by the exposed variables
+            foreach (VariableSave variable in exposedVariables)
+            {
+                stateSave.SetValue(variable.Name, variable.Value);
+            }
 
-                SetParent(parentRepresentation, text, (string)stateSave.GetValue("Guide"));
+            SetParent(parentRepresentation, text, (string)stateSave.GetValue("Guide"));
 
-                WireframeObjectManager.Self.SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(text, parent, stateSave);
-                InitializeText(text, stateSave);
-                return text;
+            WireframeObjectManager.Self.SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(text, parent, stateSave);
+            InitializeText(text, stateSave);
+            return text;
         }
 
         private Text CreateTextInternal(object tag, string name, RecursiveVariableFinder rvf)
@@ -633,11 +635,11 @@ namespace Gum.Wireframe
 
 
 
-        private static StateSave GetStateSaveForTextVariables(InstanceSave instance, ElementSave parent)
+        private static StateSave GetStateSaveForTextVariables(InstanceSave instance, List<ElementSave> elementStack)
         {
             StateSave stateSave = new StateSave();
 
-            AddToStateFromInstance(stateSave, instance, parent, "Text",
+            AddToStateFromInstance(stateSave, instance, elementStack.Last(), "Text",
                 "HorizontalAlignment",
                 "VerticalAlignment",
                 "Font",
@@ -647,7 +649,7 @@ namespace Gum.Wireframe
                 "Green",
                 "Blue");
 
-            RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(instance, parent);
+            RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(instance, elementStack);
             WireframeObjectManager.Self.FillStateWithVariables(rvf, stateSave, WireframeObjectManager.Self.PositionAndSizeVariables);
             return stateSave;
         }

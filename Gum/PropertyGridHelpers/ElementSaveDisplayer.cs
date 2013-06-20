@@ -96,8 +96,18 @@ namespace Gum.PropertyGridHelpers
 
             if (instanceSave != null)
             {
-                pdc = mHelper.AddProperty(pdc,
-                    "Locked", typeof(bool));
+                pdc = mHelper.AddProperty(pdc, "Locked", typeof(bool));
+                pdc = mHelper.AddProperty(pdc, "State", typeof(string), new AvailableStatesConverter(), null);
+            }
+
+            // if component
+            if (instanceSave == null && elementSave as ComponentSave != null)
+            {
+                foreach(var item in StandardElementsManager.Self.GetDefaultStateFor("Component").Variables)
+                {
+
+                    pdc = TryDisplayVariableSave(pdc, elementSave, instanceSave, amountToDisplay, null, item);
+                }
             }
 
             #region Get the StandardElementSave for the instance/element (depending on what's selected)
@@ -266,20 +276,30 @@ namespace Gum.PropertyGridHelpers
 
         private static bool GetShouldIncludeBasedOnBaseType(VariableSave defaultVariable, ElementSave container, StandardElementSave rootElementSave)
         {
-            bool shouldInclude = true;
+            bool shouldInclude = false;
 
             if (string.IsNullOrEmpty(defaultVariable.SourceObject))
             {
-                if (container is ScreenSave)
+                if (container is ScreenSave )
                 {
                     // If it's a Screen, then the answer is "yes" because
                     // Screens don't have a base type that they can switch,
                     // so any variable that's part of the Screen is always part
                     // of the Screen.
                     // do nothing to shouldInclude
+
+                    shouldInclude = true;
                 }
                 else
                 {
+                    if (container is ComponentSave)
+                    {
+                        // See if it's defined in the standards list
+                        var foundInstance = StandardElementsManager.Self.GetDefaultStateFor("Component").Variables.FirstOrDefault(
+                            item => item.Name == defaultVariable.Name);
+
+                        shouldInclude = foundInstance != null;
+                    }
                     // If the defaultVariable's
                     // source object is null then
                     // that means that the variable
@@ -291,7 +311,10 @@ namespace Gum.PropertyGridHelpers
                     // that the variable is valid given the type of object
                     // that "this" currently is by checking the default state
                     // on the rootElementSave
-                    shouldInclude = rootElementSave.DefaultState.GetVariableSave(defaultVariable.Name) != null;
+                    if (!shouldInclude && rootElementSave != null)
+                    {
+                        shouldInclude = rootElementSave.DefaultState.GetVariableSave(defaultVariable.Name) != null;
+                    }
                 }
             }
 

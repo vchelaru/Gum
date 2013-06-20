@@ -33,6 +33,7 @@
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.loadProjectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.saveProjectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.addToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.screenToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -61,7 +62,6 @@
             this.WireframeContextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.WireframeEditControl = new FlatRedBall.AnimationEditorForms.Controls.WireframeEditControl();
             this.panel2 = new System.Windows.Forms.Panel();
-            this.saveProjectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.LeftAndEverythingContainer)).BeginInit();
             this.LeftAndEverythingContainer.Panel1.SuspendLayout();
@@ -107,9 +107,16 @@
             // loadProjectToolStripMenuItem
             // 
             this.loadProjectToolStripMenuItem.Name = "loadProjectToolStripMenuItem";
-            this.loadProjectToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.loadProjectToolStripMenuItem.Size = new System.Drawing.Size(149, 22);
             this.loadProjectToolStripMenuItem.Text = "Load Project...";
             this.loadProjectToolStripMenuItem.Click += new System.EventHandler(this.loadProjectToolStripMenuItem_Click);
+            // 
+            // saveProjectToolStripMenuItem
+            // 
+            this.saveProjectToolStripMenuItem.Name = "saveProjectToolStripMenuItem";
+            this.saveProjectToolStripMenuItem.Size = new System.Drawing.Size(149, 22);
+            this.saveProjectToolStripMenuItem.Text = "Save Project";
+            this.saveProjectToolStripMenuItem.Click += new System.EventHandler(this.saveProjectToolStripMenuItem_Click);
             // 
             // editToolStripMenuItem
             // 
@@ -227,7 +234,7 @@
             // 
             this.LeftAndEverythingContainer.Panel2.Controls.Add(this.VariablesAndEverythingElse);
             this.LeftAndEverythingContainer.Size = new System.Drawing.Size(1076, 621);
-            this.LeftAndEverythingContainer.SplitterDistance = 142;
+            this.LeftAndEverythingContainer.SplitterDistance = 196;
             this.LeftAndEverythingContainer.TabIndex = 1;
             // 
             // ObjectTreeView
@@ -243,7 +250,7 @@
             this.ObjectTreeView.Name = "ObjectTreeView";
             this.ObjectTreeView.SelectedImageIndex = 0;
             this.ObjectTreeView.SelectedNodes = ((System.Collections.Generic.List<System.Windows.Forms.TreeNode>)(resources.GetObject("ObjectTreeView.SelectedNodes")));
-            this.ObjectTreeView.Size = new System.Drawing.Size(138, 617);
+            this.ObjectTreeView.Size = new System.Drawing.Size(192, 617);
             this.ObjectTreeView.TabIndex = 0;
             this.ObjectTreeView.AfterClickSelect += new System.Windows.Forms.TreeViewEventHandler(this.ObjectTreeView_AfterSelect);
             this.ObjectTreeView.ItemDrag += new System.Windows.Forms.ItemDragEventHandler(this.ObjectTreeView_ItemDrag);
@@ -280,8 +287,8 @@
             // VariablesAndEverythingElse.Panel2
             // 
             this.VariablesAndEverythingElse.Panel2.Controls.Add(this.PreviewSplitContainer);
-            this.VariablesAndEverythingElse.Size = new System.Drawing.Size(926, 617);
-            this.VariablesAndEverythingElse.SplitterDistance = 195;
+            this.VariablesAndEverythingElse.Size = new System.Drawing.Size(872, 617);
+            this.VariablesAndEverythingElse.SplitterDistance = 242;
             this.VariablesAndEverythingElse.TabIndex = 0;
             this.VariablesAndEverythingElse.SplitterMoved += new System.Windows.Forms.SplitterEventHandler(this.VariablesAndEverythingElse_SplitterMoved);
             // 
@@ -300,7 +307,7 @@
             // StatesAndVariablesContainer.Panel2
             // 
             this.StatesAndVariablesContainer.Panel2.Controls.Add(this.VariablePropertyGrid);
-            this.StatesAndVariablesContainer.Size = new System.Drawing.Size(195, 617);
+            this.StatesAndVariablesContainer.Size = new System.Drawing.Size(242, 617);
             this.StatesAndVariablesContainer.SplitterDistance = 120;
             this.StatesAndVariablesContainer.TabIndex = 0;
             // 
@@ -312,7 +319,7 @@
             this.StateTreeView.MultiSelectBehavior = CommonFormsAndControls.MultiSelectBehavior.CtrlDown;
             this.StateTreeView.Name = "StateTreeView";
             this.StateTreeView.SelectedNodes = ((System.Collections.Generic.List<System.Windows.Forms.TreeNode>)(resources.GetObject("StateTreeView.SelectedNodes")));
-            this.StateTreeView.Size = new System.Drawing.Size(191, 116);
+            this.StateTreeView.Size = new System.Drawing.Size(238, 116);
             this.StateTreeView.TabIndex = 0;
             this.StateTreeView.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.StateTreeView_AfterSelect);
             // 
@@ -323,7 +330,7 @@
             this.VariablePropertyGrid.Location = new System.Drawing.Point(0, 0);
             this.VariablePropertyGrid.Margin = new System.Windows.Forms.Padding(0, 3, 3, 3);
             this.VariablePropertyGrid.Name = "VariablePropertyGrid";
-            this.VariablePropertyGrid.Size = new System.Drawing.Size(191, 489);
+            this.VariablePropertyGrid.Size = new System.Drawing.Size(238, 489);
             this.VariablePropertyGrid.TabIndex = 2;
             this.VariablePropertyGrid.ToolbarVisible = false;
             this.VariablePropertyGrid.PropertyValueChanged += new System.Windows.Forms.PropertyValueChangedEventHandler(this.VariablePropertyGrid_PropertyValueChanged);
@@ -349,7 +356,7 @@
             // PreviewSplitContainer.Panel2
             // 
             this.PreviewSplitContainer.Panel2.Controls.Add(this.panel2);
-            this.PreviewSplitContainer.Size = new System.Drawing.Size(727, 617);
+            this.PreviewSplitContainer.Size = new System.Drawing.Size(626, 617);
             this.PreviewSplitContainer.SplitterDistance = 505;
             this.PreviewSplitContainer.TabIndex = 0;
             // 
@@ -361,7 +368,7 @@
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(723, 501);
+            this.panel1.Size = new System.Drawing.Size(622, 501);
             this.panel1.TabIndex = 0;
             // 
             // wireframeControl1
@@ -372,7 +379,7 @@
             this.wireframeControl1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.wireframeControl1.Location = new System.Drawing.Point(0, 20);
             this.wireframeControl1.Name = "wireframeControl1";
-            this.wireframeControl1.Size = new System.Drawing.Size(719, 477);
+            this.wireframeControl1.Size = new System.Drawing.Size(618, 477);
             this.wireframeControl1.TabIndex = 0;
             this.wireframeControl1.Text = "wireframeControl1";
             this.wireframeControl1.MouseClick += new System.Windows.Forms.MouseEventHandler(this.wireframeControl1_MouseClick);
@@ -388,7 +395,7 @@
             this.WireframeEditControl.Location = new System.Drawing.Point(0, 0);
             this.WireframeEditControl.Name = "WireframeEditControl";
             this.WireframeEditControl.PercentageValue = 100;
-            this.WireframeEditControl.Size = new System.Drawing.Size(719, 20);
+            this.WireframeEditControl.Size = new System.Drawing.Size(618, 20);
             this.WireframeEditControl.TabIndex = 1;
             // 
             // panel2
@@ -397,15 +404,8 @@
             this.panel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel2.Location = new System.Drawing.Point(0, 0);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(723, 104);
+            this.panel2.Size = new System.Drawing.Size(622, 104);
             this.panel2.TabIndex = 0;
-            // 
-            // saveProjectToolStripMenuItem
-            // 
-            this.saveProjectToolStripMenuItem.Name = "saveProjectToolStripMenuItem";
-            this.saveProjectToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.saveProjectToolStripMenuItem.Text = "Save Project";
-            this.saveProjectToolStripMenuItem.Click += new System.EventHandler(this.saveProjectToolStripMenuItem_Click);
             // 
             // MainWindow
             // 

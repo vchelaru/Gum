@@ -442,7 +442,7 @@ namespace Gum.Wireframe
                 }
 
                 StateSave stateSave = new StateSave();
-                RecursiveVariableFinder rvf = new RecursiveVariableFinder(childInstance, selectedElement);
+                RecursiveVariableFinder rvf = new RecursiveVariableFinder(childInstance, elementStack);
                 FillStateWithVariables(rvf, stateSave, WireframeObjectManager.Self.PositionAndSizeVariables);
 
                 List<VariableSave> exposedVariables = GetExposedVariablesForThisInstance(childInstance, instanceSave, elementStack);

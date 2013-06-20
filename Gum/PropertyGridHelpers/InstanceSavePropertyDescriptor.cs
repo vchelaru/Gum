@@ -25,7 +25,6 @@ namespace Gum.DataTypes.ComponentModel
 
         #region Properties
 
-
         public TypeConverter TypeConverter
         {
             get { return Converter; }

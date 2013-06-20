@@ -24,19 +24,26 @@ namespace Gum.DataTypes
 
         }
 
+        public static VariableSave GetVariableFromThisOrBase(this InstanceSave instance,
+            ElementSave parent, string variable, bool forceDefault = false)
+        {
+            return GetVariableFromThisOrBase(instance, new List<ElementSave> { parent }, variable, forceDefault);
+        }
+
         public static VariableSave GetVariableFromThisOrBase(this InstanceSave instance, 
-            ElementSave parentContainer, string variable, bool forceDefault = false)
+            List<ElementSave> elementStack, string variable, bool forceDefault = false)
         {
             ElementSave instanceBase = ObjectFinder.Self.GetElementSave(instance.BaseType);
 
-            StateSave stateToPullFrom = parentContainer.DefaultState;
-            StateSave defaultState = parentContainer.DefaultState;
-            if (parentContainer == SelectedState.Self.SelectedElement && 
+            StateSave stateToPullFrom = elementStack.Last().DefaultState;
+            StateSave defaultState = elementStack.Last().DefaultState;
+            if (elementStack.Last() == SelectedState.Self.SelectedElement && 
                 SelectedState.Self.SelectedStateSave != null &&
                 !forceDefault)
             {
                 stateToPullFrom = SelectedState.Self.SelectedStateSave;
             }
+
 
             VariableSave variableSave = stateToPullFrom.GetVariableSave(instance.Name + "." + variable);
             // non-default states can override the default state, so first
