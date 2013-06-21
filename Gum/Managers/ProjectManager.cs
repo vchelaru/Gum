@@ -280,7 +280,7 @@ namespace Gum
             PluginManager.Self.Export(elementSave);
         }
 
-        private static void ShowReadOnlyDialog(string fileName)
+        public static void ShowReadOnlyDialog(string fileName)
         {
             MultiButtonMessageBox mbmb = new MultiButtonMessageBox();
             mbmb.MessageText = "Could not save the file\n\n" + fileName + "\n\nbecause it is read-only." +
@@ -299,7 +299,7 @@ namespace Gum
             }
         }
 
-        private static bool GetIfFileIsReadOnly(string fileName)
+        public static bool GetIfFileIsReadOnly(string fileName)
         {
             bool isReadOnly = System.IO.File.Exists(fileName) && new FileInfo(fileName).IsReadOnly;
             return isReadOnly;
