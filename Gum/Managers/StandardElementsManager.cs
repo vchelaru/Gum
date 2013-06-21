@@ -194,6 +194,11 @@ namespace Gum.Managers
             AddDimensionsVariables(stateSave);
             stateSave.Variables.Add(new VariableSave { Type = "string", Value = "", Name = "SourceFile", IsFile = true });
             stateSave.Variables.Add(new VariableSave { Type = "bool", Value = true, Name = "Visible" });
+
+
+            stateSave.Variables.Add(new VariableSave { Type = "int", Value = 255, Category = "Rendering", Name = "Alpha" });
+            stateSave.Variables.Add(new VariableSave { Type = "Blend", Value = Blend.Normal, Name = "Blend", Category = "Rendering" });
+
             PluginManager.Self.ModifyDefaultStandardState("NineSlice", stateSave);
             mDefaults.Add("NineSlice", stateSave);
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

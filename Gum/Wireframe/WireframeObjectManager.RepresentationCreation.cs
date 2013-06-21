@@ -328,6 +328,10 @@ namespace Gum.Wireframe
             stateSave.SetValue("SourceFile", rvf.GetValue<string>("SourceFile"));
             stateSave.SetValue("Visible", rvf.GetValue("Visible"));
 
+            stateSave.SetValue("Alpha", rvf.GetValue("Alpha"));
+            stateSave.SetValue("Blend", rvf.GetValue("Blend"));
+
+
             SetParent(parentIpso, nineSlice, rvf.GetValue<string>("Guide"));
 
             // Sprite may be dependent on the texture for its location, so set the dimensions and positions *after* texture
@@ -952,6 +956,28 @@ namespace Gum.Wireframe
                     bareTexture + PossibleNineSliceEndings[NineSliceSections.BottomRight] + "." + extension, null, out error);
             }
 
+
+            if (stateSave.GetValue("Alpha") != null)
+            {
+                nineSlice.Color = new Color(255, 255, 255, (int)stateSave.GetValue("Alpha"));
+            }
+
+            if (stateSave.GetValue("Blend") != null)
+            {
+                var blend = (Blend)stateSave.GetValue("Blend");
+                if (blend == Blend.Normal)
+                {
+                    // do nothing?
+                }
+                else if (blend == Blend.Additive)
+                {
+                    nineSlice.BlendState = Microsoft.Xna.Framework.Graphics.BlendState.Additive;
+                }
+                else
+                {
+                    throw new Exception("This blend mode is not supported");
+                }
+            }
 
 
             nineSlice.Visible = (bool)stateSave.GetValue("Visible");

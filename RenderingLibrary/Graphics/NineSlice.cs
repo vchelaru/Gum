@@ -177,11 +177,6 @@ namespace RenderingLibrary.Graphics
             set { mCenterSprite.Texture = value; }
         }
 
-        public BlendState BlendState
-        {
-            get;
-            set;
-        }
 
         public float X
         {
@@ -220,6 +215,47 @@ namespace RenderingLibrary.Graphics
                 }
             }
         }
+
+        public Color Color
+        {
+            get
+            {
+                return mCenterSprite.Color;
+            }
+            set
+            {
+                mTopLeftSprite.Color = value;
+                mTopSprite.Color = value;
+                mTopRightSprite.Color = value;
+                mRightSprite.Color = value;
+                mBottomRightSprite.Color = value;
+                mBottomSprite.Color = value;
+                mBottomLeftSprite.Color = value;
+                mLeftSprite.Color = value;
+                mCenterSprite.Color = value;
+            }
+        }
+
+        public BlendState BlendState
+        {
+            get
+            {
+                return mCenterSprite.BlendState;
+            }
+            set
+            {
+                mTopLeftSprite.BlendState = value;
+                mTopSprite.BlendState = value;
+                mTopRightSprite.BlendState = value;
+                mRightSprite.BlendState = value;
+                mBottomRightSprite.BlendState = value;
+                mBottomSprite.BlendState = value;
+                mBottomLeftSprite.BlendState = value;
+                mLeftSprite.BlendState = value;
+                mCenterSprite.BlendState = value;
+            }
+        }
+
 
 
         public ICollection<IPositionedSizedObject> Children
