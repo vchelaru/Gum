@@ -97,9 +97,16 @@ namespace Gum.DataTypes
 
         }
 
-        public static object GetValueFromThisOrBase(this InstanceSave instance, ElementSave parentContainer, string variable,
+        public static object GetValueFromThisOrBase(this InstanceSave instance, ElementSave parent, string variable,
             bool forceDefault = false)
         {
+            return GetValueFromThisOrBase(instance, new List < ElementSave >(){ parent }, variable, forceDefault);
+        }
+
+        public static object GetValueFromThisOrBase(this InstanceSave instance, List<ElementSave> elementStack, string variable,
+            bool forceDefault = false)
+        {
+            ElementSave parentContainer = elementStack.Last();
             VariableSave variableSave = instance.GetVariableFromThisOrBase(parentContainer, variable, forceDefault);
 
 

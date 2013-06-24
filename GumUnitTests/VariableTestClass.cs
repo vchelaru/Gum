@@ -71,7 +71,9 @@ namespace GumUnitTests
                 throw new Exception("Getting the prefix for variables in the element inside a standard element should be null but isn't");
             }
 
-            object value = mElementSaveCollection.ButtonInstanceInScreen.GetValueFromThisOrBase(mElementSaveCollection.Screen, "ButtonText");
+
+            object value = mElementSaveCollection.ButtonInstanceInScreen.GetValueFromThisOrBase(
+                new List<ElementSave>(){mElementSaveCollection.Screen}, "ButtonText");
 
             if (value == null)
             {

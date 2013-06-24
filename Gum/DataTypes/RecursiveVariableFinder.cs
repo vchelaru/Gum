@@ -64,7 +64,7 @@ namespace Gum.DataTypes
             {
                 case VariableContainerType.InstanceSave:
 
-                    return mInstanceSave.GetValueFromThisOrBase(mElementStack.Last(), variableName);
+                    return mInstanceSave.GetValueFromThisOrBase(mElementStack, variableName);
                     //break;
                 case VariableContainerType.StateSave:
                     return mStateSave.GetValueRecursive(variableName);

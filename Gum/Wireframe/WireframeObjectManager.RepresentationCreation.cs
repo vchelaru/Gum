@@ -643,7 +643,7 @@ namespace Gum.Wireframe
         {
             StateSave stateSave = new StateSave();
 
-            AddToStateFromInstance(stateSave, instance, elementStack.Last(), "Text",
+            AddToStateFromInstance(stateSave, instance, elementStack, "Text",
                 "HorizontalAlignment",
                 "VerticalAlignment",
                 "Font",
@@ -658,11 +658,11 @@ namespace Gum.Wireframe
             return stateSave;
         }
 
-        static void AddToStateFromInstance(StateSave stateSave, InstanceSave instance, ElementSave parent, params string[] variables)
+        static void AddToStateFromInstance(StateSave stateSave, InstanceSave instance, List<ElementSave> elementStack, params string[] variables)
         {
             foreach (string variable in variables)
             {
-                var value = instance.GetValueFromThisOrBase(parent, variable);
+                var value = instance.GetValueFromThisOrBase(elementStack, variable);
 
                 stateSave.SetValue(variable, value);
             }
