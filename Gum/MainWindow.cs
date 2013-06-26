@@ -101,13 +101,7 @@ namespace Gum
 
         private void RemoveStateMenuItem_Click(object sender, EventArgs e)
         {
-            ElementCommands.Self.RemoveState(SelectedState.Self.SelectedStateSave, SelectedState.Self.SelectedElement);
-            StateTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedElement);
-            PropertyGridManager.Self.RefreshUI();
-            WireframeObjectManager.Self.RefreshAll(true);
-            SelectionManager.Self.Refresh();
-
-            ProjectVerifier.Self.AssertSelectedIpsosArePartOfRenderer();
+            ObjectRemover.Self.Remove(SelectedState.Self.SelectedStateSave);
         }
 
         private void ObjectTreeView_MouseClick(object sender, MouseEventArgs e)

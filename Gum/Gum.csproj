@@ -123,7 +123,9 @@
     <Compile Include="Gui\Plugins\MainWindowPlugin.cs" />
     <Compile Include="Managers\FileLocations.cs" />
     <Compile Include="Managers\NameVerifier.cs" />
+    <Compile Include="Managers\ObjectRemover.cs" />
     <Compile Include="Managers\RenameManager.cs" />
+    <Compile Include="Managers\Singleton.cs" />
     <Compile Include="Plugins\BaseClasses\InternalPlugin.cs" />
     <Compile Include="PropertyGridHelpers\Converters\AvailableGuidesTypeConverter.cs" />
     <Compile Include="Input\CursorExtensionMethods.cs" />

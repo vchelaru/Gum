@@ -149,7 +149,7 @@ namespace Gum.Managers
         /// </summary>
         /// <param name="elementSave">The ElementSave to search for.</param>
         /// <returns>A List containing all Elements</returns>
-        public List<ElementSave> GetElementsReferencing(ElementSave elementSave, List<ElementSave> list = null)
+        public List<ElementSave> GetElementsReferencing(ElementSave elementSave, List<ElementSave> list = null, List<InstanceSave> foundInstances = null)
         {
             if (list == null)
             {
@@ -165,7 +165,19 @@ namespace Gum.Managers
                     if (elementForInstance != null && elementForInstance.IsOfType(elementSave.Name))
                     {
                         list.Add(screen);
-                        break;
+
+                        // If we want a list of instances
+                        // then we don't want to break on a
+                        // found instance - we want to continue
+                        // to find all of them.
+                        if (foundInstances != null)
+                        {
+                            foundInstances.Add(instanceSave);
+                        }
+                        else
+                        {
+                            break;
+                        }
                     }
                 }
             }
@@ -179,7 +191,19 @@ namespace Gum.Managers
                     if (elementForInstance != null && elementForInstance.IsOfType(elementSave.Name))
                     {
                         list.Add(component);
-                        break;
+
+                        // If we want a list of instances
+                        // then we don't want to break on a
+                        // found instance - we want to continue
+                        // to find all of them.
+                        if (foundInstances != null)
+                        {
+                            foundInstances.Add(instanceSave);
+                        }
+                        else
+                        {
+                            break;
+                        }
                     }
                 }
             }
@@ -231,6 +255,7 @@ namespace Gum.Managers
             StringFunctions.RemoveDuplicates(toReturn);
             return toReturn;
         }
+
 
         void FillListWithReferencedFiles<T>(List<string> files, IList<T> elements) where T : ElementSave
         {
