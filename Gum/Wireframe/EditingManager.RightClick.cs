@@ -287,8 +287,10 @@ namespace Gum.Wireframe
             // We now have to copy over the states
             if (targetElement != sourceElement)
             {
-                
-                MessageBox.Show("Only the default state variables will be copied since the source and target elements differ.");
+                if (sourceElement.States.Count != 1)
+                {
+                    MessageBox.Show("Only the default state variables will be copied since the source and target elements differ.");
+                }
 
                 StateSave stateSave = copiedState;
 

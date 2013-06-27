@@ -120,17 +120,33 @@ namespace Gum.Wireframe
             {
                 bool hasChangeOccurred = false;
 
-                foreach (InstanceSave instance in SelectedState.Self.SelectedInstances)
+                if (SelectedState.Self.SelectedInstances.Count() == 0 && SelectedState.Self.SelectedComponent != null)
                 {
                     if (xToMoveBy != 0)
                     {
                         hasChangeOccurred = true;
-                        float value = ModifyVariable("X", xToMoveBy, instance);
+                        float value = ModifyVariable("X", xToMoveBy, SelectedState.Self.SelectedComponent);
                     }
                     if (yToMoveBy != 0)
                     {
                         hasChangeOccurred = true;
-                        float value = ModifyVariable("Y", yToMoveBy, instance);
+                        float value = ModifyVariable("Y", yToMoveBy, SelectedState.Self.SelectedComponent);
+                    }
+                }
+                else
+                {
+                    foreach (InstanceSave instance in SelectedState.Self.SelectedInstances)
+                    {
+                        if (xToMoveBy != 0)
+                        {
+                            hasChangeOccurred = true;
+                            float value = ModifyVariable("X", xToMoveBy, instance);
+                        }
+                        if (yToMoveBy != 0)
+                        {
+                            hasChangeOccurred = true;
+                            float value = ModifyVariable("Y", yToMoveBy, instance);
+                        }
                     }
                 }
 
@@ -429,6 +445,25 @@ namespace Gum.Wireframe
             return newValue;
         }
 
+        private float ModifyVariable(string baseVariableName, float modificationAmount, ComponentSave componentSave)
+        {
+            object currentValueAsObject;
+            currentValueAsObject = GetCurrentValueForVariable(baseVariableName, null);
+
+
+            float currentValue = (float)currentValueAsObject;
+            string unitsVariableName = baseVariableName + " Units";
+            string unitsNameWithInstance;
+            object unitsVariableAsObject;
+            GetCurrentValueForVariable(unitsVariableName, null, out unitsNameWithInstance, out unitsVariableAsObject);
+
+            modificationAmount = AdjustAmountAccordingToUnitType(baseVariableName, modificationAmount, unitsVariableAsObject);
+
+            float newValue = currentValue + modificationAmount;
+            SelectedState.Self.SelectedStateSave.SetValue(baseVariableName, newValue, null);
+            return newValue;
+        }
+
         /// <summary>
         /// This method gets the actual width/height value of an object if the stored value is 0.  This is used for Sprites
         /// which have width/height of 0 if they let the Texture determine their size.
@@ -538,7 +573,7 @@ namespace Gum.Wireframe
             return currentValueAsObject;
         }
 
-        private static void GetCurrentValueForVariable(string baseVariableName, InstanceSave instanceSave, out string nameWithInstance, out object currentValue)
+        private static object GetCurrentValueForVariable(string baseVariableName, InstanceSave instanceSave, out string nameWithInstance, out object currentValue)
         {
             nameWithInstance = baseVariableName;
 
@@ -552,6 +587,8 @@ namespace Gum.Wireframe
             {
                 currentValue = SelectedState.Self.SelectedStateSave.GetValueRecursive(nameWithInstance);
             }
+
+            return currentValue;
         }
 
         #endregion
