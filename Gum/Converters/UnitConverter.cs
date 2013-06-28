@@ -142,6 +142,8 @@ namespace Gum.Converters
                         return GeneralUnitType.PixelsFromLarge;
                     case PositionUnitType.PixelsFromCenterX:
                         return GeneralUnitType.PixelsFromMiddle;
+                    case PositionUnitType.PixelsFromCenterY:
+                        return GeneralUnitType.PixelsFromMiddle;
                     default:
                         throw new NotImplementedException();
                 }
