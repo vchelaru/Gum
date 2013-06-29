@@ -131,8 +131,11 @@ namespace Gum.Managers
             {
                 ProjectManager.Self.SaveElement(SelectedState.Self.SelectedElement);
             }
-                
-            ProjectManager.Self.SaveProject();
+
+            // Why do we save the project?  
+            // We save the element above, so
+            // we can probably just leave it at that.
+            //ProjectManager.Self.SaveProject();
 
 
             // Inefficient but let's do this for now - we can make it more efficient later
