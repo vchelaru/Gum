@@ -169,7 +169,8 @@ namespace Gum
                 {
                     try
                     {
-                        GumProjectSave.Save(GumProjectSave.FullFileName);
+                        bool saveContainedElements = false;
+                        GumProjectSave.Save(GumProjectSave.FullFileName, false);
                         succeeded = true;
                     }
                     catch(UnauthorizedAccessException exception)

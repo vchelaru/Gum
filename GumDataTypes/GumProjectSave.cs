@@ -185,28 +185,28 @@ namespace Gum.DataTypes
             }
         }
 
-        public void Save(string fileName)
+        public void Save(string fileName, bool saveElements)
         {
             FileManager.XmlSerialize(this, fileName);
 
             string directory = FileManager.GetDirectory(fileName);
 
 
-
-
-            foreach (var screenSave in Screens)
+            if (saveElements)
             {
-                screenSave.Save(directory + ElementReference.ScreenSubfolder + "/" + screenSave.Name + "." + ScreenExtension);
+                foreach (var screenSave in Screens)
+                {
+                    screenSave.Save(directory + ElementReference.ScreenSubfolder + "/" + screenSave.Name + "." + ScreenExtension);
+                }
+                foreach (var componentSave in Components)
+                {
+                    componentSave.Save(directory + ElementReference.ComponentSubfolder + "/" + componentSave.Name + "." + ComponentExtension);
+                }
+                foreach (var standardElement in StandardElements)
+                {
+                    standardElement.Save(directory + ElementReference.StandardSubfolder + "/" + standardElement.Name + "." + StandardExtension);
+                }
             }
-            foreach (var componentSave in Components)
-            {
-                componentSave.Save(directory + ElementReference.ComponentSubfolder + "/" + componentSave.Name + "." + ComponentExtension);
-            }
-            foreach (var standardElement in StandardElements)
-            {
-                standardElement.Save(directory + ElementReference.StandardSubfolder + "/" + standardElement.Name + "." + StandardExtension);
-            }
-
         }
 
 
