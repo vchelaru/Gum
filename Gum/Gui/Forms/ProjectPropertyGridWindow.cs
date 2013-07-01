@@ -46,6 +46,7 @@ namespace Gum.Gui.Forms
             WireframeObjectManager.Self.UpdateGuides();
             WireframeObjectManager.Self.RefreshAll(true);
             PluginManager.Self.GuidesChanged();
+            //EditingManager.Self.UpdateSelectedObjectsPositionAndDimensions();
         }
 
         private void propertyGrid1_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
@@ -54,6 +55,8 @@ namespace Gum.Gui.Forms
             ProjectCommands.Self.SaveProject();
 
             GuiCommands.Self.RefreshWireframeDisplay();
+
+            EditingManager.Self.UpdateSelectedObjectsPositionAndDimensions();
         }
     }
 }

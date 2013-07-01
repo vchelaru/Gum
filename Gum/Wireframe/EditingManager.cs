@@ -162,19 +162,14 @@ namespace Gum.Wireframe
             }
         }
 
-        private static void UpdateSelectedObjectsPositionAndDimensions()
+        public void UpdateSelectedObjectsPositionAndDimensions()
         {
 
             if (SelectedState.Self.SelectedInstances.GetCount() != 0)
             {
                 foreach (var instance in SelectedState.Self.SelectedInstances)
                 {
-                    IPositionedSizedObject ipso = WireframeObjectManager.Self.GetRepresentation(instance);
-                    StateSave stateSave = new StateSave();
-
-                    RecursiveVariableFinder rvf = new RecursiveVariableFinder(instance, SelectedState.Self.SelectedElement);
-                    WireframeObjectManager.Self.FillStateWithVariables(rvf, stateSave, WireframeObjectManager.Self.PositionAndSizeVariables);
-                    WireframeObjectManager.Self.SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(ipso, SelectedState.Self.SelectedElement, stateSave);
+                    RefreshPositionsAndScalesForInstance(instance);
 
                     //WireframeObjectManager.Self.SetInstanceIpsoDimensionsAndPositions(ipso,
                     //    SelectedState.Self.SelectedInstance,
@@ -186,16 +181,23 @@ namespace Gum.Wireframe
             {
                 IPositionedSizedObject ipso = WireframeObjectManager.Self.GetSelectedRepresentation();
 
-                ElementSave elementSave = SelectedState.Self.SelectedElement;
+                if (ipso != null)
+                {
+                    ElementSave elementSave = SelectedState.Self.SelectedElement;
 
-                StateSave stateSave = new StateSave();
-                RecursiveVariableFinder rvf = new RecursiveVariableFinder(elementSave.DefaultState);
-                WireframeObjectManager.Self.FillStateWithVariables(rvf, stateSave, WireframeObjectManager.Self.PositionAndSizeVariables);
+                    StateSave stateSave = new StateSave();
+                    RecursiveVariableFinder rvf = new RecursiveVariableFinder(elementSave.DefaultState);
+                    WireframeObjectManager.Self.FillStateWithVariables(rvf, stateSave, WireframeObjectManager.Self.PositionAndSizeVariables);
 
-                WireframeObjectManager.Self.SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(ipso, elementSave, stateSave);
-
-
-
+                    WireframeObjectManager.Self.SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(ipso, elementSave, stateSave);
+                }
+                else if(SelectedState.Self.SelectedElement != null)
+                {
+                    foreach (var instance in SelectedState.Self.SelectedElement.Instances)
+                    {
+                        RefreshPositionsAndScalesForInstance(instance);
+                    }
+                }
                 //WireframeObjectManager.Self.SetElementIpsoDimensionsAndPositions(
                 //    ipso,
                 //    SelectedState.Self.SelectedElement);
@@ -203,6 +205,16 @@ namespace Gum.Wireframe
 
 
             WireframeObjectManager.Self.UpdateScalesAndPositionsForSelectedChildren();
+        }
+
+        public void RefreshPositionsAndScalesForInstance(InstanceSave instance)
+        {
+            IPositionedSizedObject ipso = WireframeObjectManager.Self.GetRepresentation(instance);
+            StateSave stateSave = new StateSave();
+
+            RecursiveVariableFinder rvf = new RecursiveVariableFinder(instance, SelectedState.Self.SelectedElement);
+            WireframeObjectManager.Self.FillStateWithVariables(rvf, stateSave, WireframeObjectManager.Self.PositionAndSizeVariables);
+            WireframeObjectManager.Self.SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(ipso, SelectedState.Self.SelectedElement, stateSave);
         }
 
         private void HandlesActivity()
