@@ -142,8 +142,8 @@ namespace Gum.Wireframe
             {
                 float minX = ipsoList[0].GetAbsoluteX();
                 float minY = ipsoList[0].GetAbsoluteY();
-                float maxX = ipsoList[0].X + ipsoList[0].Width;
-                float maxY = ipsoList[0].Y + ipsoList[0].Height;
+                float maxX = ipsoList[0].GetAbsoluteX() + ipsoList[0].Width;
+                float maxY = ipsoList[0].GetAbsoluteY() + ipsoList[0].Height;
 
                 if (InputLibrary.Cursor.Self.PrimaryClick)
                 {
@@ -154,11 +154,11 @@ namespace Gum.Wireframe
                 {
                     var item = ipsoList[i];
 
-                    minX = Math.Min(minX, item.X);
-                    minY = Math.Min(minY, item.Y);
+                    minX = Math.Min(minX, item.GetAbsoluteX());
+                    minY = Math.Min(minY, item.GetAbsoluteY());
 
-                    maxX = Math.Max(maxX, item.X + item.Width);
-                    maxY = Math.Max(maxY, item.Y + item.Height);
+                    maxX = Math.Max(maxX, item.GetAbsoluteX() + item.Width);
+                    maxY = Math.Max(maxY, item.GetAbsoluteY() + item.Height);
                 }
 
                 mX = minX;
