@@ -699,8 +699,11 @@ namespace Gum.Wireframe
 
         public void SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(IPositionedSizedObject ipso, ElementSave containerElement, StateSave stateSave)
         {
-            object xUnits = stateSave.GetValue("X Units");
+            object widthAsObjects = stateSave.GetValue("Width");
+            object heightAsObjects = stateSave.GetValue("Height");
             object widthUnits = stateSave.GetValue("Width Units");
+
+            object xUnits = stateSave.GetValue("X Units");
 #if DEBUG
             if (xUnits is int)
             {
@@ -717,9 +720,9 @@ namespace Gum.Wireframe
             SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(
                 ipso,
                 containerElement,
-                (float)stateSave.GetValue("Width"),
-                (float)stateSave.GetValue("Height"),
-                stateSave.GetValue("Width Units"),
+                (float)widthAsObjects,
+                (float)heightAsObjects,
+                widthUnits,
                 stateSave.GetValue("Height Units"),
                 (HorizontalAlignment)stateSave.GetValue("X Origin"),
                 (VerticalAlignment)stateSave.GetValue("Y Origin"),

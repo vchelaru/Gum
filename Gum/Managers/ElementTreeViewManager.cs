@@ -233,15 +233,17 @@ namespace Gum.Managers
 
             foreach (StandardElementSave standardSave in ProjectManager.Self.GumProjectSave.StandardElements)
             {
-                if (GetTreeNodeFor(standardSave) == null)
+                if (standardSave.Name != "Component")
                 {
-                    TreeNode treeNode = new TreeNode();
-                    treeNode.ImageIndex = StandardElementImageIndex;
-                    treeNode.Tag = standardSave;
+                    if (GetTreeNodeFor(standardSave) == null)
+                    {
+                        TreeNode treeNode = new TreeNode();
+                        treeNode.ImageIndex = StandardElementImageIndex;
+                        treeNode.Tag = standardSave;
 
-                    mStandardElementsTreeNode.Nodes.Add(treeNode);
+                        mStandardElementsTreeNode.Nodes.Add(treeNode);
+                    }
                 }
-
             }
 
             #endregion

@@ -196,6 +196,8 @@ namespace RenderingLibrary.Math.Geometry
             mLinePrimitive.Add(0, 0);
 
             UpdatePoints();
+
+            IsDotted = true;
         }
 
         private void UpdatePoints()

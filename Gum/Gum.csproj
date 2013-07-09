@@ -72,6 +72,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Commands\FileCommands.cs" />
+    <Compile Include="Commands\GuiCommands.cs" />
     <Compile Include="Converters\UnitConverter.cs" />
     <Compile Include="DataTypes\ComponentSaveExtensionMethods.cs" />
     <Compile Include="DataTypes\ElementSaveExtensionMethods.cs" />
@@ -121,6 +123,7 @@
     </Compile>
     <Compile Include="Gui\Plugins\DeleteObjectPlugin.cs" />
     <Compile Include="Gui\Plugins\MainWindowPlugin.cs" />
+    <Compile Include="Commands\GumCommands.cs" />
     <Compile Include="Managers\FileLocations.cs" />
     <Compile Include="Managers\NameVerifier.cs" />
     <Compile Include="Managers\ObjectRemover.cs" />

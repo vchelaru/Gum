@@ -26,6 +26,8 @@ namespace Gum
         {
             InitializeComponent();
 
+            GumCommands.Self.Initialize(this);
+
             TypeManager.Self.Initialize();
             PluginManager.Self.Initialize(this);
             ElementTreeViewManager.Self.Initialize(this.ObjectTreeView);

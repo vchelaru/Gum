@@ -148,6 +148,8 @@ namespace Gum.Wireframe
             ElementSave elementSave = SelectedState.Self.SelectedElement;
 
             RefreshAll(force, elementSave);
+
+            SelectionManager.Self.Refresh();
         }
 
         public void RefreshAll(bool force, ElementSave elementSave)
