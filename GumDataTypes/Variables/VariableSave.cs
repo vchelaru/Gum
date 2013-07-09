@@ -17,11 +17,19 @@ namespace Gum.DataTypes.Variables
             get;
             set;
         }
+        public bool ShouldSerializeIsFile()
+        {
+            return IsFile == true;
+        }
 
         public bool IsFont
         {
             get;
             set;
+        }
+        public bool ShouldSerializeIsFont()
+        {
+            return IsFont == true;
         }
 
         public string Type
@@ -87,6 +95,10 @@ namespace Gum.DataTypes.Variables
         {
             get;
             set;
+        }
+        public bool ShouldSerializeIsHiddenInPropertyGrid()
+        {
+            return IsHiddenInPropertyGrid == true;
         }
 
         public override string ToString()

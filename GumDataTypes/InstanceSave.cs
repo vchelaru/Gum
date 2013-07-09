@@ -18,6 +18,10 @@ namespace Gum.DataTypes
             get;
             set;
         }
+        public bool ShouldSerializeLocked()
+        {
+            return Locked == true;
+        }
 
         [XmlIgnore]
         public ElementSave ParentContainer

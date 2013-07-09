@@ -435,9 +435,13 @@ namespace Gum.Wireframe
 
             SetParent(parentIpso, solidRectangle, (string)stateSave.GetValue("Guide"));
 
+            stateSave.SetValue("Visible", rvf.GetValue("Visible"));
+
 
             SetAlphaAndColorValues(solidRectangle, stateSave);
             WireframeObjectManager.Self.SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(solidRectangle, elementStack.Last(), stateSave);
+
+            solidRectangle.Visible = (bool)stateSave.GetValue("Visible");
 
             return solidRectangle;
         }
