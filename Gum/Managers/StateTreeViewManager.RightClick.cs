@@ -28,8 +28,10 @@ namespace Gum.Managers
                 RefreshUI(SelectedState.Self.SelectedElement);
 
                 SelectedState.Self.SelectedStateSave = stateSave;
-
-                ProjectManager.Self.SaveElement(SelectedState.Self.SelectedElement);
+                if (ProjectManager.Self.GeneralSettingsFile.AutoSave)
+                {
+                    ProjectManager.Self.SaveElement(SelectedState.Self.SelectedElement);
+                }
             }
         }
 

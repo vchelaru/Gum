@@ -23,6 +23,11 @@ namespace Gum.Settings
             set;
         }
 
+        public bool AutoSave
+        {
+            get;
+            set;
+        }
 
         static string GeneralSettingsFileName
         {
@@ -34,12 +39,13 @@ namespace Gum.Settings
 
         #endregion
 
+        #region Methods
+
         public GeneralSettingsFile()
         {
             ShowTextOutlines = false;
-
+            AutoSave = true;
         }
-
 
         public static GeneralSettingsFile LoadOrCreateNew()
         {
@@ -68,5 +74,7 @@ namespace Gum.Settings
         {
             FileManager.XmlSerialize(this, GeneralSettingsFileName);
         }
+
+        #endregion
     }
 }

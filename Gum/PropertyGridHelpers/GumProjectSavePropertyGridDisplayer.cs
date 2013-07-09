@@ -6,6 +6,7 @@ using Gum.DataTypes;
 using Gum.ToolStates;
 using System.ComponentModel;
 using Gum.DataTypes.ComponentModel;
+using Gum.Settings;
 
 namespace Gum.PropertyGridHelpers
 {
@@ -19,6 +20,12 @@ namespace Gum.PropertyGridHelpers
             set;
         }
 
+        public GeneralSettingsFile GeneralSettings
+        {
+            get;
+            set;
+        }
+
         public override System.ComponentModel.PropertyDescriptorCollection GetProperties(Attribute[] attributes)
         {
             PropertyDescriptorCollection pdc = mHelper.GetEmpty();
@@ -27,7 +34,6 @@ namespace Gum.PropertyGridHelpers
 
             mHelper.Include(GumProjectSave, "DefaultCanvasHeight", ref pdc);
             mHelper.Include(GumProjectSave, "DefaultCanvasWidth", ref pdc);
-
 
 
 

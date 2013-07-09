@@ -23,10 +23,14 @@ namespace Gum.Gui.Forms
             
             InitializeComponent();
 
+            AutoSaveCheckBox.Checked = ProjectManager.Self.GeneralSettingsFile.AutoSave;
+
             this.GuideListDisplay.GumProjectSave = ProjectState.Self.GumProjectSave;
 
             mDisplayer = new GumProjectSavePropertyGridDisplayer();
             mDisplayer.GumProjectSave = ProjectState.Self.GumProjectSave;
+            mDisplayer.GeneralSettings = ProjectManager.Self.GeneralSettingsFile;
+
             this.propertyGrid1.SelectedObject = mDisplayer;
 
             this.GuideListDisplay.PropertyGridChanged += new EventHandler(OnPropertyGridChanged);
@@ -57,6 +61,16 @@ namespace Gum.Gui.Forms
             GuiCommands.Self.RefreshWireframeDisplay();
 
             EditingManager.Self.UpdateSelectedObjectsPositionAndDimensions();
+        }
+
+        private void AutoSaveCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            ProjectManager.Self.GeneralSettingsFile.AutoSave = AutoSaveCheckBox.Checked;
+        }
+
+        private void ProjectPropertyGridWindow_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            ProjectManager.Self.GeneralSettingsFile.Save();
         }
     }
 }

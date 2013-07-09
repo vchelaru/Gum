@@ -79,7 +79,7 @@ namespace Gum.Wireframe
         {
             Cursor cursor = InputLibrary.Cursor.Self;
 
-            if (cursor.PrimaryClick && mHasChangedAnythingSinceLastPush)
+            if (cursor.PrimaryClick && mHasChangedAnythingSinceLastPush && ProjectManager.Self.GeneralSettingsFile.AutoSave)
             {
                 ProjectManager.Self.SaveElement(SelectedState.Self.SelectedElement);
                 mHasChangedAnythingSinceLastPush = false;

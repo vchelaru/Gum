@@ -55,8 +55,10 @@ namespace Gum.Managers
                 // Even though this gets called from the PropertyGrid methods which eventually
                 // save this object, we want to force a save here to make sure it worked.  If it
                 // does, then we're safe to delete the old files.
-
-                ProjectManager.Self.SaveElement(elementSave);
+                if (ProjectManager.Self.GeneralSettingsFile.AutoSave)
+                {
+                    ProjectManager.Self.SaveElement(elementSave);
+                }
 
                 // If the instance isn't null, it means we renamed an instance
                 // and not an ElementSave, so no need to save it.

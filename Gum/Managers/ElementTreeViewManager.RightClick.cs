@@ -376,9 +376,11 @@ namespace Gum.Managers
 
                     SelectedState.Self.SelectedScreen = screenSave;
 
-
-                    ProjectManager.Self.SaveElement(screenSave);
-                    ProjectManager.Self.SaveProject();
+                    if (ProjectManager.Self.GeneralSettingsFile.AutoSave)
+                    {
+                        ProjectManager.Self.SaveElement(screenSave);
+                        ProjectManager.Self.SaveProject();
+                    }
                 }
             }
 
@@ -410,8 +412,11 @@ namespace Gum.Managers
 
                     SelectedState.Self.SelectedComponent = componentSave;
 
-                    ProjectManager.Self.SaveElement(componentSave);
-                    ProjectManager.Self.SaveProject();
+                    if (ProjectManager.Self.GeneralSettingsFile.AutoSave)
+                    {
+                        ProjectManager.Self.SaveElement(componentSave);
+                        ProjectManager.Self.SaveProject();
+                    }
                 }
             }
         }
@@ -455,10 +460,11 @@ namespace Gum.Managers
 
             Select(instanceSave, elementToAddTo);
 
-
-            ProjectManager.Self.SaveElement(elementToAddTo);
-            ProjectManager.Self.SaveProject();
-
+            if (ProjectManager.Self.GeneralSettingsFile.AutoSave)
+            {
+                ProjectManager.Self.SaveElement(elementToAddTo);
+                ProjectManager.Self.SaveProject();
+            }
         }
 
 
@@ -500,7 +506,11 @@ namespace Gum.Managers
             StateTreeViewManager.Self.RefreshUI(null);
             PropertyGridManager.Self.RefreshUI();
             Wireframe.WireframeObjectManager.Self.RefreshAll(true);
-            ProjectManager.Self.SaveProject();
+
+            if (ProjectManager.Self.GeneralSettingsFile.AutoSave)
+            {
+                ProjectManager.Self.SaveProject();
+            }
         }
 
 

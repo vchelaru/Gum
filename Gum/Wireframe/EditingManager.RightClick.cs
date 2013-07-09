@@ -149,8 +149,10 @@ namespace Gum.Wireframe
                 //sourceElement.Instances.Remove(sourceInstance);
 
                 ElementCommands.Self.RemoveInstance(sourceInstance, sourceElement);
-                ProjectManager.Self.SaveElement(sourceElement);
-
+                if( ProjectManager.Self.GeneralSettingsFile.AutoSave)
+                {
+                    ProjectManager.Self.SaveElement(sourceElement);
+                }
                 WireframeObjectManager.Self.RefreshAll(true);
                 PropertyGridManager.Self.RefreshUI();
                 ElementTreeViewManager.Self.RefreshUI();
@@ -191,9 +193,10 @@ namespace Gum.Wireframe
                     Gum.ToolCommands.ElementCommands.Self.RemoveInstance(SelectedState.Self.SelectedInstance,
                         selectedElement);
 
-
-                    ProjectManager.Self.SaveElement(selectedElement);
-
+                    if( ProjectManager.Self.GeneralSettingsFile.AutoSave)
+                    {
+                        ProjectManager.Self.SaveElement(selectedElement);
+                    }
                     ElementSave elementToReselect = selectedElement;
                     // Deselect before selecting the new
                     // selected element and before refreshing everything
@@ -380,8 +383,10 @@ namespace Gum.Wireframe
 
             SelectedState.Self.SelectedInstance = targetInstance;
 
-            ProjectManager.Self.SaveElement(targetElement);
-
+            if (ProjectManager.Self.GeneralSettingsFile.AutoSave)
+            {
+                ProjectManager.Self.SaveElement(targetElement);
+            }
         }
 
         
@@ -478,7 +483,10 @@ namespace Gum.Wireframe
 
             RefreshInResponseToReorder();
 
-            ProjectManager.Self.SaveElement(element);
+            if( ProjectManager.Self.GeneralSettingsFile.AutoSave)
+            {
+                ProjectManager.Self.SaveElement(element);
+            }
         }
 
 

@@ -127,7 +127,7 @@ namespace Gum.Managers
 
 
             // Save the change
-            if (SelectedState.Self.SelectedElement != null)
+            if (SelectedState.Self.SelectedElement != null &&  ProjectManager.Self.GeneralSettingsFile.AutoSave)
             {
                 ProjectManager.Self.SaveElement(SelectedState.Self.SelectedElement);
             }
@@ -370,7 +370,10 @@ namespace Gum.Managers
                     RefreshUI();
                     WireframeObjectManager.Self.RefreshAll(true);
                     SelectionManager.Self.Refresh();
-                    ProjectManager.Self.SaveElement(SelectedState.Self.SelectedElement);
+                    if( ProjectManager.Self.GeneralSettingsFile.AutoSave)
+                    {
+                        ProjectManager.Self.SaveElement(SelectedState.Self.SelectedElement);
+                    }
                 }
             }
         }
