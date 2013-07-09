@@ -10,6 +10,12 @@ using System.Collections.ObjectModel;
 
 namespace RenderingLibrary.Graphics
 {
+    class RenderStateVariables
+    {
+        public BlendState BlendState;
+        public bool Filtering;
+    }
+
     public class Renderer
     {
         #region Fields
@@ -18,6 +24,7 @@ namespace RenderingLibrary.Graphics
         ReadOnlyCollection<Layer> mLayersReadOnly;
 
         protected SpriteBatch mSpriteBatch;
+        RenderStateVariables mRenderStateVariables = new RenderStateVariables();
 
         GraphicsDevice mGraphicsDevice;
 
@@ -26,6 +33,7 @@ namespace RenderingLibrary.Graphics
         Camera mCamera;
 
         Texture2D mSinglePixelTexture;
+        Texture2D mDottedLineTexture;
 
         public static object LockObject = new object();
         #endregion
@@ -71,6 +79,22 @@ namespace RenderingLibrary.Graphics
             }
         }
 
+        public Texture2D DottedLineTexture
+        {
+            get
+            {
+#if DEBUG && !TEST
+                // This should always be available
+                if (mDottedLineTexture == null)
+                {
+                    throw new InvalidOperationException("The dotted line texture is not set yet.  You must call Renderer.Initialize before accessing this property." + 
+                        "If running unit tests, be sure to run in UnitTest configuration");
+                }
+#endif
+                return mDottedLineTexture;
+            }
+        }
+
         public GraphicsDevice GraphicsDevice
         {
             get
@@ -108,6 +132,8 @@ namespace RenderingLibrary.Graphics
 
         #endregion
 
+        #region Methods
+
         public void Initialize(GraphicsDevice graphicsDevice, SystemManagers managers)
         {
             SamplerState = SamplerState.LinearClamp;
@@ -126,7 +152,11 @@ namespace RenderingLibrary.Graphics
             pixels[0] = Color.White;
             mSinglePixelTexture.SetData<Color>(pixels);
 
-            
+            mDottedLineTexture = new Texture2D(mGraphicsDevice, 2, 1, false, SurfaceFormat.Color);
+            pixels = new Color[2];
+            pixels[0] = Color.White;
+            pixels[1] = Color.Transparent;
+            mDottedLineTexture.SetData<Color>(pixels);
         }
 
         public Layer AddLayer()
@@ -138,35 +168,26 @@ namespace RenderingLibrary.Graphics
 
         public void Draw(SystemManagers managers)
         {
+            
+
             // So that 2 controls don't render at the same time.
             lock (LockObject)
             {
                 mCamera.UpdateClient();
 
-                BlendState blendState = BlendState.NonPremultiplied;
+                mRenderStateVariables.BlendState = BlendState.NonPremultiplied;
 
 
 
                 foreach (Layer layer in mLayers)
                 {
-                    BeginSpriteBatch(blendState, layer);
+                    BeginSpriteBatch(mRenderStateVariables, layer);
 
                     layer.SortRenderables();
 
                     foreach (IRenderable renderable in layer.Renderables)
                     {
-                        BlendState renderBlendState = renderable.BlendState;
-                        if (renderBlendState == null)
-                        {
-                            renderBlendState = BlendState.NonPremultiplied;
-                        }
-                        if (blendState != renderBlendState)
-                        {
-                            blendState = renderable.BlendState;
-                            mSpriteBatch.End();
-                            BeginSpriteBatch(blendState, layer);
-
-                        }
+                        AdjustRenderStates(mRenderStateVariables, layer, renderable);
                         renderable.Render(mSpriteBatch, managers);
                     }
                     mSpriteBatch.End();
@@ -175,8 +196,28 @@ namespace RenderingLibrary.Graphics
             }
         }
 
-        private void BeginSpriteBatch(BlendState blendState, Layer layer)
+        private void AdjustRenderStates(RenderStateVariables renderState, Layer layer, IRenderable renderable)
         {
+            BlendState renderBlendState = renderable.BlendState;
+            if (renderBlendState == null)
+            {
+                renderBlendState = BlendState.NonPremultiplied;
+            }
+            if (renderState.BlendState != renderBlendState)
+            {
+                renderState.BlendState = renderable.BlendState;
+                mSpriteBatch.End();
+                BeginSpriteBatch(renderState, layer);
+
+            }
+
+            
+
+        }
+
+        private void BeginSpriteBatch(RenderStateVariables renderStates, Layer layer)
+        {
+
             Matrix matrix;
 
             if (layer.LayerCameraSettings != null)
@@ -208,7 +249,8 @@ namespace RenderingLibrary.Graphics
                 CurrentZoom = Camera.Zoom;
             }
 
-            mSpriteBatch.Begin(SpriteSortMode.Immediate, blendState, SamplerState, DepthStencilState.Default, RasterizerState.CullNone,
+            mSpriteBatch.Begin(SpriteSortMode.Immediate, renderStates.BlendState, SamplerState, 
+                DepthStencilState.Default, RasterizerState.CullNone,
                 null, matrix);
         }
 
@@ -222,6 +264,8 @@ namespace RenderingLibrary.Graphics
                 }
             }
         }
+
+        #endregion
 
     }
 }

@@ -10,6 +10,8 @@ namespace RenderingLibrary.Math.Geometry
 {
     public class Line : IRenderable, IPositionedSizedObject
     {
+        #region Fields
+
         LinePrimitive mLinePrimitive;
 
         public Vector2 RelativePoint;
@@ -18,6 +20,11 @@ namespace RenderingLibrary.Math.Geometry
         IPositionedSizedObject mParent;
 
         List<IPositionedSizedObject> mChildren;
+        SystemManagers mManagers;
+
+        #endregion
+
+        #region Properties
 
         public string Name
         {
@@ -66,46 +73,6 @@ namespace RenderingLibrary.Math.Geometry
             get { return BlendState.NonPremultiplied; }
         }
 
-
-        public Line(SystemManagers managers)
-        {
-            Visible = true;
-            if (managers != null)
-            {
-                mLinePrimitive = new LinePrimitive(managers.Renderer.SinglePixelTexture);
-            }
-            else
-            {
-                mLinePrimitive = new LinePrimitive(Renderer.Self.SinglePixelTexture);
-            }
-
-            mChildren = new List<IPositionedSizedObject>();
-            UpdatePoints();
-        }
-
-        private void UpdatePoints()
-        {
-            while (mLinePrimitive.VectorCount < 2)
-            {
-                mLinePrimitive.Add(0, 0);
-            }
-
-            mLinePrimitive.Replace(1, this.RelativePoint);
-
-            mLinePrimitive.Position.X = this.GetAbsoluteX();
-            mLinePrimitive.Position.Y = this.GetAbsoluteY() ;
-        }
-
-        void IRenderable.Render(SpriteBatch spriteBatch, SystemManagers managers)
-        {
-            UpdatePoints();
-            if (Visible)
-            {
-                mLinePrimitive.Render(spriteBatch, managers);
-            }
-        }
-
-
         public float Width
         {
             get;
@@ -148,5 +115,78 @@ namespace RenderingLibrary.Math.Geometry
             get;
             set;
         }
+
+        private Renderer AssociatedRenderer
+        {
+            get
+            {
+                if (mManagers != null)
+                {
+                    return mManagers.Renderer;
+                }
+                else
+                {
+                    return Renderer.Self;
+                }
+            }
+        }
+
+        public bool IsDotted
+        {
+            get;
+            set;
+        }
+
+        #endregion
+
+
+        public Line(SystemManagers managers)
+        {
+            mManagers = managers;
+
+            Visible = true;
+            if (mManagers != null)
+            {
+                mLinePrimitive = new LinePrimitive(mManagers.Renderer.SinglePixelTexture);
+            }
+            else
+            {
+                mLinePrimitive = new LinePrimitive(Renderer.Self.SinglePixelTexture);
+            }
+
+            mChildren = new List<IPositionedSizedObject>();
+            UpdatePoints();
+        }
+
+        private void UpdatePoints()
+        {
+            while (mLinePrimitive.VectorCount < 2)
+            {
+                mLinePrimitive.Add(0, 0);
+            }
+
+            mLinePrimitive.Replace(1, this.RelativePoint);
+
+            mLinePrimitive.Position.X = this.GetAbsoluteX();
+            mLinePrimitive.Position.Y = this.GetAbsoluteY() ;
+        }
+
+        void IRenderable.Render(SpriteBatch spriteBatch, SystemManagers managers)
+        {
+            UpdatePoints();
+            if (Visible)
+            {
+
+                Texture2D textureToUse = AssociatedRenderer.SinglePixelTexture;
+
+                if (IsDotted)
+                {
+                    textureToUse = AssociatedRenderer.DottedLineTexture;
+                }
+
+                mLinePrimitive.Render(spriteBatch, managers, textureToUse, .2f * AssociatedRenderer.Camera.Zoom);
+            }
+        }
+
     }
 }

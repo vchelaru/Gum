@@ -18,6 +18,7 @@ using Gum.ToolCommands;
 using System.ComponentModel.Composition;
 using FlatRedBall.AnimationEditorForms.Controls;
 using Gum.Debug;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace Gum.Wireframe
 {
@@ -215,6 +216,8 @@ namespace Gum.Wireframe
                 mWireframeEditControl = wireframeEditControl;
 
                 Renderer.Self.Initialize(GraphicsDevice, null);
+
+                Renderer.Self.SamplerState = SamplerState.PointWrap;
 
                 LoaderManager.Self.Initialize(null, "content/TestFont.fnt", Services, null);
 

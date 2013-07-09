@@ -24,7 +24,7 @@ namespace RenderingLibrary.Math.Geometry
             set;
         }
 
-        Texture2D mPixel;
+        Texture2D mTexture;
         List<Vector2> mVectors;
 
         /// <summary>
@@ -62,7 +62,7 @@ namespace RenderingLibrary.Math.Geometry
         public LinePrimitive(Texture2D singlePixelTexture)
         {
             // create pixels
-            mPixel = singlePixelTexture;
+            mTexture = singlePixelTexture;
 
             Color = Color.White;
             Position = new Vector2(0, 0);
@@ -142,6 +142,14 @@ namespace RenderingLibrary.Math.Geometry
         /// <param name="spriteBatch">The sprite batch to use to render the primitive line object.</param>
         public void Render(SpriteBatch spriteBatch, SystemManagers managers)
         {
+            Render(spriteBatch, managers, mTexture, .2f);
+
+        }
+
+
+        public void Render(SpriteBatch spriteBatch, SystemManagers managers, Texture2D textureToUse, float repetitionsPerLength)
+        {
+
             if (mVectors.Count < 2)
                 return;
 
@@ -175,18 +183,33 @@ namespace RenderingLibrary.Math.Geometry
                 // calculate the distance between the two vectors
                 float distance = Vector2.Distance(vector1, vector2);
 
+                int repetitions = (int)(distance * repetitionsPerLength);
+
+                if (repetitions < 1)
+                {
+                    repetitions = 1;
+                }
+
+                //repetitions = 128;
+
                 // calculate the angle between the two vectors
                 float angle = (float)System.Math.Atan2((double)(vector2.Y - vector1.Y),
                     (double)(vector2.X - vector1.X));
 
+                Rectangle sourceRectangle = new Rectangle(
+                    0, 
+                    0, 
+                    textureToUse.Width * repetitions, 
+                    textureToUse.Height);
+
                 // stretch the pixel between the two vectors
-                spriteBatch.Draw(mPixel,
+                spriteBatch.Draw(textureToUse,
                     offset + Position + vector1,
-                    null,
+                    sourceRectangle,
                     Color,
                     angle,
                     Vector2.Zero,
-                    new Vector2(distance, 1/renderer.CurrentZoom),
+                    new Vector2(distance / ((float)repetitions * textureToUse.Width), 1/renderer.CurrentZoom),
                     SpriteEffects.None,
                     Depth);
 

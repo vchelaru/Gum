@@ -25,6 +25,9 @@ namespace RenderingLibrary.Math.Geometry
 
 
         IPositionedSizedObject mParent;
+
+
+        SystemManagers mManagers;
         
         #endregion
 
@@ -133,6 +136,27 @@ namespace RenderingLibrary.Math.Geometry
         {
             get { return BlendState.NonPremultiplied; }
         }
+
+        private Renderer AssociatedRenderer
+        {
+            get
+            {
+                if (mManagers != null)
+                {
+                    return mManagers.Renderer;
+                }
+                else
+                {
+                    return Renderer.Self;
+                }
+            }
+        }
+
+        public bool IsDotted
+        {
+            get;
+            set;
+        }
         #endregion
 
         #region Methods
@@ -144,13 +168,16 @@ namespace RenderingLibrary.Math.Geometry
 
         public LineRectangle(SystemManagers managers)
         {
+
+            mManagers = managers;
+
             mChildren = new List<IPositionedSizedObject>();
 
             Visible = true;
             Renderer renderer = null;
-            if (managers != null)
+            if (mManagers != null)
             {
-                renderer = managers.Renderer;
+                renderer = mManagers.Renderer;
             }
             else
             {
@@ -186,15 +213,33 @@ namespace RenderingLibrary.Math.Geometry
         {
             if (Visible)
             {
-                RenderLinePrimitive(mLinePrimitive, spriteBatch, this, managers);
+                RenderLinePrimitive(mLinePrimitive, spriteBatch, this, managers, IsDotted);
             }
         }
 
-        public static void RenderLinePrimitive(LinePrimitive linePrimitive, SpriteBatch spriteBatch, IPositionedSizedObject ipso, SystemManagers managers)
+        public static void RenderLinePrimitive(LinePrimitive linePrimitive, SpriteBatch spriteBatch, IPositionedSizedObject ipso, SystemManagers managers, bool isDotted)
         {
             linePrimitive.Position.X = ipso.GetAbsoluteX();
             linePrimitive.Position.Y = ipso.GetAbsoluteY();
-            linePrimitive.Render(spriteBatch, managers);
+
+            Renderer renderer;
+            if (managers != null)
+            {
+                renderer = managers.Renderer;
+            }
+            else
+            {
+                renderer = Renderer.Self;
+            }
+
+            Texture2D textureToUse = renderer.SinglePixelTexture;
+
+            if (isDotted)
+            {
+                textureToUse = renderer.DottedLineTexture;
+            }
+
+            linePrimitive.Render(spriteBatch, managers, textureToUse, .2f * renderer.Camera.Zoom);
         }
 
         #endregion

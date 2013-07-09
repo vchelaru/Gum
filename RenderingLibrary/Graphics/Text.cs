@@ -456,7 +456,7 @@ namespace RenderingLibrary.Graphics
                 }
                 if (RenderBoundary)
                 {
-                    LineRectangle.RenderLinePrimitive(mBounds, spriteBatch, this, managers);
+                    LineRectangle.RenderLinePrimitive(mBounds, spriteBatch, this, managers, false);
                 }
 
                 if (mTextureToRender == null)
