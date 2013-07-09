@@ -157,6 +157,11 @@ namespace RenderingLibrary.Math.Geometry
             get;
             set;
         }
+
+        public bool Wrap
+        {
+            get { return true; }
+        }
         #endregion
 
         #region Methods

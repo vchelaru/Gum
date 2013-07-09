@@ -14,6 +14,7 @@ namespace RenderingLibrary.Graphics
     {
         public BlendState BlendState;
         public bool Filtering;
+        public bool Wrap;
     }
 
     public class Renderer
@@ -176,7 +177,7 @@ namespace RenderingLibrary.Graphics
                 mCamera.UpdateClient();
 
                 mRenderStateVariables.BlendState = BlendState.NonPremultiplied;
-
+                mRenderStateVariables.Wrap = false;
 
 
                 foreach (Layer layer in mLayers)
@@ -199,6 +200,9 @@ namespace RenderingLibrary.Graphics
         private void AdjustRenderStates(RenderStateVariables renderState, Layer layer, IRenderable renderable)
         {
             BlendState renderBlendState = renderable.BlendState;
+            bool wrap = renderable.Wrap;
+            bool shouldResetStates = false;
+
             if (renderBlendState == null)
             {
                 renderBlendState = BlendState.NonPremultiplied;
@@ -206,13 +210,21 @@ namespace RenderingLibrary.Graphics
             if (renderState.BlendState != renderBlendState)
             {
                 renderState.BlendState = renderable.BlendState;
-                mSpriteBatch.End();
-                BeginSpriteBatch(renderState, layer);
+                shouldResetStates = true;
 
             }
 
-            
+            if (renderState.Wrap != wrap)
+            {
+                renderState.Wrap = wrap;
+                shouldResetStates = true;
+            }
 
+            if (shouldResetStates)
+            {
+                mSpriteBatch.End();
+                BeginSpriteBatch(renderState, layer);
+            }
         }
 
         private void BeginSpriteBatch(RenderStateVariables renderStates, Layer layer)
@@ -249,7 +261,18 @@ namespace RenderingLibrary.Graphics
                 CurrentZoom = Camera.Zoom;
             }
 
-            mSpriteBatch.Begin(SpriteSortMode.Immediate, renderStates.BlendState, SamplerState, 
+            SamplerState samplerState;
+
+            if (renderStates.Wrap)
+            {
+                samplerState = SamplerState.PointWrap;
+            }
+            else
+            {
+                samplerState = SamplerState.PointClamp;
+            }
+
+            mSpriteBatch.Begin(SpriteSortMode.Immediate, renderStates.BlendState, samplerState, 
                 DepthStencilState.Default, RasterizerState.CullNone,
                 null, matrix);
         }

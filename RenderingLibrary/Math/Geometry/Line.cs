@@ -137,6 +137,10 @@ namespace RenderingLibrary.Math.Geometry
             set;
         }
 
+        public bool Wrap
+        {
+            get { return true; }
+        }
         #endregion
 
 

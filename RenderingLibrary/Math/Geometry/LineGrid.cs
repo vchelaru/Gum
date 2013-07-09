@@ -22,6 +22,8 @@ namespace RenderingLibrary.Math.Geometry
 
         #endregion
 
+        #region Properties
+
         public float RowWidth
         {
             get { return mRowWidth; }
@@ -88,6 +90,15 @@ namespace RenderingLibrary.Math.Geometry
             get;
             set;
         }
+
+        public bool Wrap
+        {
+            get { return true; }
+        }
+
+        #endregion
+
+
         public LineGrid(SystemManagers managers)
         {
             Visible = true;

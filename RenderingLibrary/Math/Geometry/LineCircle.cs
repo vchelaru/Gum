@@ -90,6 +90,11 @@ namespace RenderingLibrary.Math.Geometry
         {
             get { return BlendState.NonPremultiplied; }
         }
+
+        public bool Wrap
+        {
+            get { return true; }
+        }
         #endregion
 
         #region Methods

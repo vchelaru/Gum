@@ -21,6 +21,10 @@ namespace RenderingLibrary.Graphics
 
         #region Properties
 
+        public bool Wrap
+        {
+            get { return false; }
+        }
 
         public string Name
         {

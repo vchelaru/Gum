@@ -10,6 +10,8 @@ namespace RenderingLibrary.Graphics
     {
         BlendState BlendState { get; }
 
+        bool Wrap { get; }
+
         void Render(SpriteBatch spriteBatch, SystemManagers managers);
 
         float Z { get; set; }

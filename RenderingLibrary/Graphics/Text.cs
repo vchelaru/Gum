@@ -260,6 +260,11 @@ namespace RenderingLibrary.Graphics
             get;
             set;
         }
+
+        public bool Wrap
+        {
+            get { return false; }
+        }
         #endregion
 
         #region Methods

@@ -177,6 +177,10 @@ namespace RenderingLibrary.Graphics
             set { mCenterSprite.Texture = value; }
         }
 
+        public bool Wrap
+        {
+            get { return false; }
+        }
 
         public float X
         {
