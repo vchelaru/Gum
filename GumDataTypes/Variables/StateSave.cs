@@ -218,5 +218,49 @@ namespace Gum.DataTypes.Variables
 
         }
 
+        public void InterpolateFromState(StateSave beginningState, float percent)
+        {
+            foreach (var variableSave in beginningState.Variables)
+            {
+                VariableSave whatToSet = Variables.FirstOrDefault(item => item.Name == variableSave.Name);
+
+                if (whatToSet == null)
+                {
+                    VariableSave defaultSetValue = Variables.FirstOrDefault(item => item.Name == "Default");
+                    if (defaultSetValue != null)
+                    {
+                        whatToSet = defaultSetValue.Clone();
+                    }
+                    else
+                    {
+                        whatToSet = variableSave.Clone();
+                    }
+                    this.Variables.Add(whatToSet);
+                }
+                whatToSet.GetRuntimeType();
+                if (whatToSet.Type == "int")
+                {
+                    whatToSet.Value = ((int)variableSave.Value) +
+                        ((((int)whatToSet.Value) - ((int)variableSave.Value)) * percent);
+                }
+                else if (whatToSet.Type == "float")
+                {
+                    whatToSet.Value = ((float)variableSave.Value) +
+                        ((((float)whatToSet.Value) - ((float)variableSave.Value)) * percent);
+                }
+                else if (whatToSet.Type == "double")
+                {
+                    whatToSet.Value = ((double)variableSave.Value) +
+                        ((((double)whatToSet.Value) - ((double)variableSave.Value)) * percent);
+                }
+                else
+                {
+                    whatToSet.Value = variableSave.Value;
+                }
+                
+            }
+
+        }
+
     }
 }
