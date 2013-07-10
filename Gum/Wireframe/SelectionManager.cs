@@ -51,6 +51,7 @@ namespace Gum.Wireframe
         List<LineRectangle> mHighlightRectangles = new List<LineRectangle>();
         SolidRectangle mOverlaySolidRectangle;
         Sprite mOverlaySprite;
+        NineSlice mOverlayNineSlice;
 
 
         ResizeHandles mResizeHandles;
@@ -197,6 +198,10 @@ namespace Gum.Wireframe
             {
                 mOverlaySprite.Visible = false;
             }
+            else if (highlightedIpso is NineSlice)
+            {
+                mOverlayNineSlice.Visible = false;
+            }
             else if (highlightedIpso is LineRectangle)
             {
                 mOverlaySolidRectangle.Visible = false;
@@ -208,6 +213,14 @@ namespace Gum.Wireframe
             get
             {
                 return HighlightedIpso as Sprite;
+            }
+        }
+
+        public NineSlice HighlightedNineSlice
+        {
+            get
+            {
+                return HighlightedIpso as NineSlice;
             }
         }
 
@@ -267,6 +280,11 @@ namespace Gum.Wireframe
             mOverlaySprite.BlendState = BlendState.Additive;
             mOverlaySprite.Visible = false;
             SpriteManager.Self.Add(mOverlaySprite, mUiLayer);
+
+            mOverlayNineSlice = new NineSlice();
+            mOverlayNineSlice.BlendState = BlendState.Additive;
+            mOverlayNineSlice.Visible = false;
+            SpriteManager.Self.Add(mOverlayNineSlice, mUiLayer);
 
             mResizeHandles = new ResizeHandles(mUiLayer);
             mResizeHandles.Visible = false;
@@ -412,6 +430,27 @@ namespace Gum.Wireframe
 
                 mOverlaySprite.FlipHorizontal = HighlightedSprite.FlipHorizontal;
                 mOverlaySprite.FlipVertical = HighlightedSprite.FlipVertical;
+            }
+            else if (HighlightedNineSlice != null)
+            {
+                mOverlayNineSlice.Visible = true;
+                mOverlayNineSlice.X = HighlightedNineSlice.GetAbsoluteX();
+                mOverlayNineSlice.Y = HighlightedNineSlice.GetAbsoluteY();
+
+                mOverlayNineSlice.Width = HighlightedNineSlice.Width;
+                mOverlayNineSlice.Height = HighlightedNineSlice.Height;
+                mOverlayNineSlice.TopLeftTexture = HighlightedNineSlice.TopLeftTexture;
+                mOverlayNineSlice.TopTexture = HighlightedNineSlice.TopTexture;
+                mOverlayNineSlice.TopRightTexture = HighlightedNineSlice.TopRightTexture;
+
+                mOverlayNineSlice.LeftTexture = HighlightedNineSlice.LeftTexture;
+                mOverlayNineSlice.CenterTexture = HighlightedNineSlice.CenterTexture;
+                mOverlayNineSlice.RightTexture = HighlightedNineSlice.RightTexture;
+
+                mOverlayNineSlice.BottomLeftTexture = HighlightedNineSlice.BottomLeftTexture;
+                mOverlayNineSlice.BottomTexture = HighlightedNineSlice.BottomTexture;
+                mOverlayNineSlice.BottomRightTexture = HighlightedNineSlice.BottomRightTexture;
+
             }
             else if (HighlightedLineRectangle != null)
             {
