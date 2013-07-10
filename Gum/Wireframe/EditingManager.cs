@@ -249,6 +249,12 @@ namespace Gum.Wireframe
 
             bool hasChangeOccurred = false;
 
+            if (SelectionManager.Self.HasSelection && SelectedState.Self.SelectedInstances.Count() == 0)
+            {
+                // That means we have the entire component selected
+                hasChangeOccurred |= SideGrabbingActivityForInstanceSave(cursorXChange, cursorYChange, null);
+            }
+
             foreach (InstanceSave save in SelectedState.Self.SelectedInstances)
             {
                 hasChangeOccurred |= SideGrabbingActivityForInstanceSave(cursorXChange, cursorYChange, save);
@@ -277,6 +283,10 @@ namespace Gum.Wireframe
             float heightMultiplier = 0;
 
             IPositionedSizedObject ipso = WireframeObjectManager.Self.GetRepresentation(instanceSave);
+            if (ipso == null)
+            {
+                ipso = WireframeObjectManager.Self.GetRepresentation(SelectedState.Self.SelectedElement);
+            }
 
             switch (this.mSideGrabbed)
             {
@@ -357,7 +367,7 @@ namespace Gum.Wireframe
             float handleLeft = SelectionManager.Self.ResizeHandles.X;
             float handleWidth = SelectionManager.Self.ResizeHandles.Width;
 
-            float ipsoXToUse = ipso.X;
+            float ipsoXToUse = ipso.GetAbsoluteX();
 
             if (horizontalAlignment == HorizontalAlignment.Center)
             {
@@ -375,7 +385,7 @@ namespace Gum.Wireframe
         {
             float handleTop = SelectionManager.Self.ResizeHandles.Y;
             float handleHeight = SelectionManager.Self.ResizeHandles.Height;
-            float ipsoYToUse = ipso.Y;
+            float ipsoYToUse = ipso.GetAbsoluteY();
             if (verticalAlignment == VerticalAlignment.Center)
             {
                 ipsoYToUse += ipso.Height / 2.0f;
