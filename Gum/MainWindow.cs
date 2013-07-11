@@ -36,7 +36,7 @@ namespace Gum
             StandardElementsManager.Self.Initialize();
             MenuStripManager.Self.Initialize(RemoveElementMenuItem, RemoveStateMenuItem);
             GuiCommands.Self.Initialize(wireframeControl1);
-            Wireframe.WireframeObjectManager.Self.Initialize(WireframeEditControl);
+            Wireframe.WireframeObjectManager.Self.Initialize(WireframeEditControl, wireframeControl1);
             wireframeControl1.XnaInitialize += new Action(HandleXnaInitialize);
             // ProjectManager.Initialize used to happen here, but I 
             // moved it down to the Load event for MainWindow because
@@ -48,7 +48,6 @@ namespace Gum
         void HandleXnaInitialize()
         {
             this.wireframeControl1.Initialize(WireframeEditControl);
-            EditingManager.Self.Initialize(WireframeContextMenuStrip);
         }
 
         private void VariableCenterAndEverythingRight_SplitterMoved(object sender, SplitterEventArgs e)

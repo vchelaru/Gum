@@ -44,6 +44,7 @@ namespace Gum.Wireframe
         List<NineSlice> mNineSlices = new List<NineSlice>();
 
         WireframeEditControl mEditControl;
+        WireframeControl mWireframeControl;
 
 
         #endregion
@@ -99,11 +100,26 @@ namespace Gum.Wireframe
 
         #endregion
 
-        public void Initialize(WireframeEditControl editControl)
+        public void Initialize(WireframeEditControl editControl, WireframeControl wireframeControl)
         {
+            mWireframeControl = wireframeControl;
+            mWireframeControl.AfterXnaInitialize += HandleAfterXnaIntiailize;
+            mWireframeControl.XnaUpdate += HandleXnaUpdate;
+
             mEditControl = editControl;
             mEditControl.ZoomChanged += new EventHandler(HandleControlZoomChange);
         }
+
+        private void HandleAfterXnaIntiailize(object sender, EventArgs e)
+        {
+
+        }
+
+        private void HandleXnaUpdate()
+        {
+        }
+
+
 
         void HandleControlZoomChange(object sender, EventArgs e)
         {

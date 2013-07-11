@@ -340,7 +340,7 @@ namespace Gum.Wireframe
                 float worldXAt = Cursor.GetWorldX();
                 float worldYAt = Cursor.GetWorldY();
 
-                if (EditingManager.Self.ContextMenuStrip.Visible)
+                if (EditingManager.Self.ContextMenuStrip != null && EditingManager.Self.ContextMenuStrip.Visible)
                 {
                     // do nothing!
                 }
@@ -395,11 +395,9 @@ namespace Gum.Wireframe
                     #endregion
                 }
 
-                if (WinCursor.Current != cursorToSet)
-                {
-                    WinCursor.Current = cursorToSet;
-                    container.Cursor = cursorToSet;
-                }
+
+
+                Cursor.SetWinformsCursor(cursorToSet);
             }
             else if(InputLibrary.Cursor.Self.PrimaryDown)
             {
@@ -689,7 +687,8 @@ namespace Gum.Wireframe
 
         void SelectionActivity()
         {
-            if (!EditingManager.Self.ContextMenuStrip.Visible)
+            if (EditingManager.Self.ContextMenuStrip != null &&
+                !EditingManager.Self.ContextMenuStrip.Visible)
             {
                 if (Cursor.PrimaryPush || Cursor.SecondaryPush || Cursor.PrimaryDoubleClick)
                 {

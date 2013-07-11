@@ -5,6 +5,7 @@ using System.Text;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Graphics;
 using System.Windows.Forms;
+using WinCursor = System.Windows.Forms.Cursor;
 
 namespace InputLibrary
 {
@@ -21,6 +22,11 @@ namespace InputLibrary
 
         public const float MaximumSecondsBetweenClickForDoubleClick = .25f;
         double mLastClickTime;
+
+        bool mHasBeenSet = false;
+
+        WinCursor mSetCursor = Cursors.Arrow;
+        WinCursor mLastSet = Cursors.Arrow;
 
         #endregion
 
@@ -143,6 +149,13 @@ namespace InputLibrary
             }
         }
 
+        public bool HasBeenSet
+        {
+            get
+            {
+                return mHasBeenSet;
+            }
+        }
 
         public static Cursor Self
         {
@@ -205,6 +218,36 @@ namespace InputLibrary
             //Microsoft.Xna.Framework.Input.Mouse.WindowHandle = control.Handle;
         }
 
+        public void StartCursorSettingFrameStart()
+        {
+            mHasBeenSet = false;
 
+        }
+
+        public void SetWinformsCursor(WinCursor cursor)
+        {
+            if (!mHasBeenSet)
+            {
+                mSetCursor = cursor;
+                mHasBeenSet = true;
+            }
+        }
+
+
+        public void EndCursorSettingFrameStart()
+        {
+            if (mHasBeenSet)
+            {
+                mControl.Cursor = mSetCursor;
+                WinCursor.Current = mSetCursor;
+                Application.DoEvents();
+            }
+            else if (mControl.Cursor != Cursors.Arrow)
+            {
+                mControl.Cursor = Cursors.Arrow;
+                WinCursor.Current = Cursors.Arrow;
+                Application.DoEvents();
+            }
+        }
     }
 }

@@ -195,6 +195,7 @@
     <Compile Include="Wireframe\InterpolatingColor.cs" />
     <Compile Include="Wireframe\PlatformDetails.cs" />
     <Compile Include="Wireframe\ResizeHandles.cs" />
+    <Compile Include="Wireframe\Ruler.cs" />
     <Compile Include="Wireframe\SelectionManager.cs" />
     <Compile Include="Wireframe\TimeManager.cs" />
     <Compile Include="Wireframe\WireframeControl.cs">
