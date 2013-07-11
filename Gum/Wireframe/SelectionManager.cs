@@ -43,9 +43,7 @@ namespace Gum.Wireframe
 
 
         #region Fields
-
-        const int SelectionBorder = 2;
-
+        
         static SelectionManager mSelf;
 
         List<LineRectangle> mHighlightRectangles = new List<LineRectangle>();
@@ -66,6 +64,12 @@ namespace Gum.Wireframe
 
         #region Properties
 
+
+        public int SelectionBorder
+        {
+            get;
+            set;
+        }
 
         InputLibrary.Cursor Cursor
         {
@@ -261,6 +265,8 @@ namespace Gum.Wireframe
         public SelectionManager()
         {
 
+            // We used to have this set to 2, but now that we have dotted lines, I just do a value of 0
+            SelectionBorder = 0;
             mUiLayer = Renderer.Self.AddLayer();
             mUiLayer.Name = "UI Layer";
 
@@ -687,7 +693,7 @@ namespace Gum.Wireframe
 
         void SelectionActivity()
         {
-            if (EditingManager.Self.ContextMenuStrip != null &&
+            if (EditingManager.Self.ContextMenuStrip == null ||
                 !EditingManager.Self.ContextMenuStrip.Visible)
             {
                 if (Cursor.PrimaryPush || Cursor.SecondaryPush || Cursor.PrimaryDoubleClick)
@@ -891,7 +897,7 @@ namespace Gum.Wireframe
             SelectedIpsos = representations;
         }
 
-        private static void SetLineRectangleAroundIpso(LineRectangle rectangle, IPositionedSizedObject pso )
+        private void SetLineRectangleAroundIpso(LineRectangle rectangle, IPositionedSizedObject pso )
         {
             float adjustedSelectionBorder = SelectionBorder / Renderer.Self.Camera.Zoom;
 

@@ -237,7 +237,6 @@ namespace Gum.DataTypes.Variables
                     }
                     this.Variables.Add(whatToSet);
                 }
-                whatToSet.GetRuntimeType();
                 if (whatToSet.Type == "int")
                 {
                     whatToSet.Value = ((int)variableSave.Value) +
