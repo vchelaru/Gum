@@ -21,7 +21,7 @@ namespace Gum.Wireframe
         static EditingManager mSelf;
 
         ResizeSide mSideGrabbed = ResizeSide.None;
-
+        bool mHasGrabbed = false;
         bool mHasChangedAnythingSinceLastPush = false;
 
         Text mDebugText;
@@ -79,6 +79,11 @@ namespace Gum.Wireframe
         {
             Cursor cursor = InputLibrary.Cursor.Self;
 
+            if (cursor.PrimaryClick)
+            {
+                mHasGrabbed = false;
+            }
+
             if (cursor.PrimaryClick && mHasChangedAnythingSinceLastPush && ProjectManager.Self.GeneralSettingsFile.AutoSave)
             {
                 ProjectManager.Self.SaveElement(SelectedState.Self.SelectedElement);
@@ -94,13 +99,14 @@ namespace Gum.Wireframe
             if (cursor.PrimaryPush)
             {
                 mHasChangedAnythingSinceLastPush = false;
+                mHasGrabbed = SelectionManager.Self.HasSelection;
             }
         }
 
         private void BodyGrabbingActivity()
         {
             Cursor cursor = InputLibrary.Cursor.Self;
-            if (SelectionManager.Self.IsOverBody && cursor.PrimaryDown)
+            if (SelectionManager.Self.IsOverBody && cursor.PrimaryDown && mHasGrabbed)
             {
                 float xToMoveBy = Cursor.Self.XChange / Renderer.Self.Camera.Zoom;
                 float yToMoveBy = Cursor.Self.YChange / Renderer.Self.Camera.Zoom;

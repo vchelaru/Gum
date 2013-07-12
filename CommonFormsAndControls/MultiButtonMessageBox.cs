@@ -45,16 +45,15 @@ namespace CommonFormsAndControls.Forms
         public void AddButton(string text, DialogResult result)
         {
             Button button = new Button();
-            button.Location = new System.Drawing.Point(12, 116 + 53 * mButtons.Count);
-            button.Size = new System.Drawing.Size(this.Size.Width - 30, 47);
+            button.Size = new System.Drawing.Size(FlowLayoutPanel.Width, 40);
             button.TabIndex = mButtons.Count;
             button.Text = text;
             button.DialogResult = result;
             button.UseVisualStyleBackColor = true;
-
+            button.Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top;
             mButtons.Add(button);
 
-            this.Controls.Add(button);
+            this.FlowLayoutPanel.Controls.Add(button);
 
             this.Size = new Size(
                 this.Size.Width, System.Math.Max(Size.Height, button.Location.Y + button.Size.Height + 30));

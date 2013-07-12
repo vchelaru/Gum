@@ -71,7 +71,7 @@ namespace Gum.Wireframe
             set;
         }
 
-        InputLibrary.Cursor Cursor
+        public InputLibrary.Cursor Cursor
         {
             get
             {

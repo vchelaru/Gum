@@ -81,6 +81,17 @@ namespace RenderingLibrary.Content
             }
         }
 
+        public IEnumerable<string> ValidTextureExtensions
+        {
+            get
+            {
+                yield return "png";
+                yield return "jpg";
+                yield return "tga";
+                yield return "gif";
+            }
+        }
+
         #endregion
 
         #region Methods
@@ -149,7 +160,15 @@ namespace RenderingLibrary.Content
             return toReturn;
         }
 
-
+        /// <summary>
+        /// Loads a Texture2D from a file name.  Supports
+        /// .tga, png, jpg, and .gif.
+        /// </summary>
+        /// <param name="fileName">The name of the file (full file name) to load from.</param>
+        /// <param name="managers">The SystemManagers to pull the GraphicsDevice for.  A valid
+        /// GraphicsDevice is needed to load Texture2D's.  If "null" is passed, then the singleton
+        /// Renderer will be used.  </param>
+        /// <returns></returns>
         public Texture2D Load(string fileName, SystemManagers managers)
         {
             string fileNameStandardized = FileManager.Standardize(fileName, false, false);

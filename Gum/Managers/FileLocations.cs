@@ -42,5 +42,15 @@ namespace Gum.Managers
         }
 
 
+
+        public string ProjectFolder 
+        {
+            get
+            {
+                return FileManager.GetDirectory(
+                    ObjectFinder.Self.GumProjectSave.FullFileName);
+            }
+
+        }
     }
 }

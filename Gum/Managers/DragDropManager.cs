@@ -7,14 +7,27 @@ using Gum.DataTypes;
 using System.Windows.Forms;
 using Gum.Wireframe;
 using ToolsUtilities;
+using RenderingLibrary.Content;
+using RenderingLibrary;
+using Gum.Input;
+using CommonFormsAndControls.Forms;
+using Gum.ToolStates;
+using Gum.DataTypes.Variables;
+using Gum.ToolCommands;
 
 namespace Gum.Managers
 {
     public class DragDropManager
     {
+        #region Fields
+
         static DragDropManager mSelf;
 
         object mDraggedItem;
+
+        #endregion
+
+        #region Properties
 
         public InputLibrary.Cursor Cursor
         {
@@ -33,6 +46,7 @@ namespace Gum.Managers
             }
         }
 
+        #endregion
 
 
         public void OnItemDrag(object item)
@@ -206,6 +220,139 @@ namespace Gum.Managers
             }
             name = StringFunctions.MakeStringUnique(name, existingNames);
             return name;
+        }
+
+        internal void HandleFileDragDrop(object sender, DragEventArgs e)
+        {
+            string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+            string firstFile = null;
+            if(files.Length != 0)
+            {
+                firstFile = files[0];
+            }
+
+            if (!string.IsNullOrEmpty(firstFile))
+            {
+                string extension = FileManager.GetExtension(firstFile);
+
+                if (LoaderManager.Self.ValidTextureExtensions.Contains(extension))
+                {
+                    HandleTextureFileDragDrop(firstFile);
+
+                }
+            }
+        }
+
+        private void HandleTextureFileDragDrop(string fileName)
+        {
+            // Make the filename relative:
+
+            fileName = FileManager.MakeRelative(fileName,
+                FileLocations.Self.ProjectFolder);
+
+
+
+            // See if we're over representation that can take a file
+            float worldX = SelectionManager.Self.Cursor.GetWorldX();
+            float worldY = SelectionManager.Self.Cursor.GetWorldY();
+
+            IPositionedSizedObject ipsoOver = 
+                SelectionManager.Self.GetRepresentationAt(worldX, worldY, false);
+
+            MultiButtonMessageBox mbmb = new MultiButtonMessageBox();
+
+            mbmb.MessageText = "What do you want to do with the file " + fileName;
+            if (ipsoOver != null && ipsoOver.Tag is InstanceSave)
+            {
+                var baseStandardElement = ObjectFinder.Self.GetRootStandardElementSave(ipsoOver.Tag as InstanceSave);
+                if (baseStandardElement.DefaultState.Variables.Any(item => item.Name == "SourceFile"))
+                {
+                    mbmb.AddButton("Set source file on " + ipsoOver.Name, DialogResult.OK);
+                }
+            }
+
+            mbmb.AddButton("Add new Sprite", DialogResult.Yes);
+            mbmb.AddButton("Nothing", DialogResult.Cancel);
+
+            var result = mbmb.ShowDialog();
+            bool shouldUpdate = false;
+
+            if (result == DialogResult.OK)
+            {
+                InstanceSave instance = ipsoOver.Tag as InstanceSave;
+                if (instance != null)
+                {
+                    // Need to make the file relative to the project:
+
+                    SelectedState.Self.SelectedStateSave.SetValue(
+                        instance.Name + ".SourceFile", fileName);
+                    shouldUpdate = true;
+
+                }
+            }
+            else if (result == DialogResult.Yes)
+            {
+                string nameToAdd = FileManager.RemovePath(FileManager.RemoveExtension(fileName));
+
+
+                List<string> existingNames = new List<string>();
+                foreach (InstanceSave existingInstance in SelectedState.Self.SelectedElement.Instances)
+                {
+                    existingNames.Add(existingInstance.Name);
+                }
+                nameToAdd = StringFunctions.MakeStringUnique(nameToAdd, existingNames);
+
+                InstanceSave instance = 
+                    ElementCommands.Self.AddInstance(SelectedState.Self.SelectedElement, nameToAdd);
+                instance.BaseType = "Sprite";
+
+                float parentX = 0;
+                float parentY = 0;
+                if (SelectedState.Self.SelectedComponent != null)
+                {
+                    parentX = (float)SelectedState.Self.SelectedStateSave.GetValueRecursive("X");
+                    parentY = (float)SelectedState.Self.SelectedStateSave.GetValueRecursive("Y");
+                }
+
+                SelectedState.Self.SelectedStateSave.SetValue(
+                        instance.Name + ".X", worldX - parentX);
+
+                SelectedState.Self.SelectedStateSave.SetValue(
+                        instance.Name + ".Y", worldY - parentY);
+
+
+
+                SelectedState.Self.SelectedStateSave.SetValue(
+                        instance.Name + ".SourceFile", fileName);
+
+
+                shouldUpdate = true;
+
+
+            }
+
+            if (shouldUpdate)
+            {
+                GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+                PropertyGridManager.Self.RefreshUI();
+                ElementTreeViewManager.Self.RefreshUI();
+                WireframeObjectManager.Self.RefreshAll(true);
+
+            }
+
+            int m = 3;
+
+        }
+
+        internal void HandleFileDragEnter(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                e.Effect = DragDropEffects.Copy;
+            }
+
+
+
         }
     }
 }

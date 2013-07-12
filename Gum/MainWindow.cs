@@ -183,5 +183,16 @@ namespace Gum
         {
             ProjectManager.Self.SaveProject();
         }
+
+        private void wireframeControl1_DragEnter(object sender, DragEventArgs e)
+        {
+            DragDropManager.Self.HandleFileDragEnter(sender, e);
+    
+        }
+
+        private void wireframeControl1_DragDrop(object sender, DragEventArgs e)
+        {
+            DragDropManager.Self.HandleFileDragDrop(sender, e);
+        }
     }
 }
