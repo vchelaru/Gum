@@ -24,7 +24,6 @@ namespace Gum.Wireframe
         bool mHasGrabbed = false;
         bool mHasChangedAnythingSinceLastPush = false;
 
-        Text mDebugText;
 
         #endregion
 
@@ -48,13 +47,6 @@ namespace Gum.Wireframe
 
         public void Initialize(System.Windows.Forms.ContextMenuStrip contextMenuStrip)
         {
-
-            mDebugText = new Text(null, "0, 0");
-            TextManager.Self.Add(mDebugText);
-            mDebugText.Y = -20;
-
-            mDebugText.Visible = false;
-
             RightClickInitialize(contextMenuStrip);
         }
 

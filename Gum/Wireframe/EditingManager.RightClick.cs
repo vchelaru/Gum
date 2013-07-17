@@ -434,7 +434,7 @@ namespace Gum.Wireframe
             // a mouse push (even on a right-push).
             // The click will happen *after* so the object
             // should already be selected.
-            if (SelectedState.Self.SelectedInstance != null)
+            if (SelectedState.Self.SelectedInstance != null && mContextMenuStrip != null)
             {
                 mContextMenuStrip.Items.Add(mBringToFront);
                 mContextMenuStrip.Items.Add(mMoveForward);
