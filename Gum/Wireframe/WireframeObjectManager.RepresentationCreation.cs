@@ -506,7 +506,7 @@ namespace Gum.Wireframe
             RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(instance, elementStack);
 
             WireframeObjectManager.Self.FillStateWithVariables(rvf, stateSave, WireframeObjectManager.Self.PositionAndSizeVariables);
-
+            stateSave.SetValue("Visible", rvf.GetValue("Visible"));
 
             SetParent(parentIpso, lineRectangle, (string)stateSave.GetValue("Guide"));
 
@@ -522,7 +522,9 @@ namespace Gum.Wireframe
 
 
             WireframeObjectManager.Self.SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(lineRectangle, elementStack.Last(), stateSave);
-            
+
+            lineRectangle.Visible = stateSave.GetValueOrDefault<bool>("Visible");
+
             return lineRectangle;
         }
         private LineRectangle InstantiateAndNameRectangle(string name)

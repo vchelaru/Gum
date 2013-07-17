@@ -10,7 +10,7 @@ using System.Collections.ObjectModel;
 
 namespace RenderingLibrary.Math.Geometry
 {
-    public class LineRectangle : IPositionedSizedObject, IRenderable
+    public class LineRectangle : IVisible, IPositionedSizedObject, IRenderable
     {
         #region Fields
 
@@ -247,6 +247,34 @@ namespace RenderingLibrary.Math.Geometry
             }
 
             linePrimitive.Render(spriteBatch, managers, textureToUse, .2f * renderer.Camera.Zoom);
+        }
+
+        #endregion
+
+        #region IVisible Members
+
+
+        public bool AbsoluteVisible
+        {
+            get
+            {
+                if (((IVisible)this).Parent == null)
+                {
+                    return Visible;
+                }
+                else
+                {
+                    return Visible && ((IVisible)this).Parent.AbsoluteVisible;
+                }
+            }
+        }
+
+        IVisible IVisible.Parent
+        {
+            get
+            {
+                return ((IPositionedSizedObject)this).Parent as IVisible;
+            }
         }
 
         #endregion

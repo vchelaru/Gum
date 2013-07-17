@@ -292,43 +292,7 @@ namespace Gum.Managers
             }
             else if (result == DialogResult.Yes)
             {
-                string nameToAdd = FileManager.RemovePath(FileManager.RemoveExtension(fileName));
-
-
-                List<string> existingNames = new List<string>();
-                foreach (InstanceSave existingInstance in SelectedState.Self.SelectedElement.Instances)
-                {
-                    existingNames.Add(existingInstance.Name);
-                }
-                nameToAdd = StringFunctions.MakeStringUnique(nameToAdd, existingNames);
-
-                InstanceSave instance = 
-                    ElementCommands.Self.AddInstance(SelectedState.Self.SelectedElement, nameToAdd);
-                instance.BaseType = "Sprite";
-
-                float parentX = 0;
-                float parentY = 0;
-                if (SelectedState.Self.SelectedComponent != null)
-                {
-                    parentX = (float)SelectedState.Self.SelectedStateSave.GetValueRecursive("X");
-                    parentY = (float)SelectedState.Self.SelectedStateSave.GetValueRecursive("Y");
-                }
-
-                SelectedState.Self.SelectedStateSave.SetValue(
-                        instance.Name + ".X", worldX - parentX);
-
-                SelectedState.Self.SelectedStateSave.SetValue(
-                        instance.Name + ".Y", worldY - parentY);
-
-
-
-                SelectedState.Self.SelectedStateSave.SetValue(
-                        instance.Name + ".SourceFile", fileName);
-
-
-                shouldUpdate = true;
-
-
+                shouldUpdate = AddNewInstanceForDrop(fileName, worldX, worldY);
             }
 
             if (shouldUpdate)
@@ -342,6 +306,49 @@ namespace Gum.Managers
 
             int m = 3;
 
+        }
+
+        private static bool AddNewInstanceForDrop(string fileName, float worldX, float worldY)
+        {
+            bool shouldUpdate = true;
+            string nameToAdd = FileManager.RemovePath(FileManager.RemoveExtension(fileName));
+
+
+            List<string> existingNames = new List<string>();
+            foreach (InstanceSave existingInstance in SelectedState.Self.SelectedElement.Instances)
+            {
+                existingNames.Add(existingInstance.Name);
+            }
+            nameToAdd = StringFunctions.MakeStringUnique(nameToAdd, existingNames);
+
+            InstanceSave instance =
+                ElementCommands.Self.AddInstance(SelectedState.Self.SelectedElement, nameToAdd);
+            instance.BaseType = "Sprite";
+
+            float parentX = 0;
+            float parentY = 0;
+            if (SelectedState.Self.SelectedComponent != null)
+            {
+                parentX = (float)SelectedState.Self.SelectedStateSave.GetValueRecursive("X");
+                parentY = (float)SelectedState.Self.SelectedStateSave.GetValueRecursive("Y");
+            }
+
+            // This thing may be left or center aligned so we should account for that
+
+            SelectedState.Self.SelectedStateSave.SetValue(
+                    instance.Name + ".X", worldX - parentX);
+
+            SelectedState.Self.SelectedStateSave.SetValue(
+                    instance.Name + ".Y", worldY - parentY);
+
+
+
+            SelectedState.Self.SelectedStateSave.SetValue(
+                    instance.Name + ".SourceFile", fileName);
+
+
+            shouldUpdate = true;
+            return shouldUpdate;
         }
 
         internal void HandleFileDragEnter(object sender, DragEventArgs e)

@@ -31,20 +31,24 @@ namespace Gum.DataTypes.Variables
 
                 // I don't know if we need this code
                 // because if we got in here, then the non-default failed to find a value
-                //// Let's see if we can get something from the non-default first
-                //bool wasFound = false;
-                //if (parent != null && stateSave != parent.DefaultState)
-                //{
-                //    // try to get it from the stateSave
-                //    var foundVariable = stateSave.GetVariableRecursive(variableName);
-                //    if (foundVariable != null)
-                //    {
-                //        return foundVariable.Value;
-                //        wasFound = true;
-                //    }
-                //}
+                // Update July 12, 2013
+                // Not sure why I commented this code out.  This code lets us check a non-default
+                // state, and if it doesn't contain a value, then we look at the default state in this 
+                // element.  Then if that failes, we can climb up the inheritance tree.
+                // Let's see if we can get something from the non-default first
+                bool wasFound = false;
+                if (parent != null && stateSave != parent.DefaultState)
+                {
+                    // try to get it from the stateSave
+                    var foundVariable = stateSave.GetVariableRecursive(variableName);
+                    if (foundVariable != null)
+                    {
+                        return foundVariable.Value;
+                        wasFound = true;
+                    }
+                }
                 
-                if (parent != null)
+                if (!wasFound && parent != null)
                 {
                     ElementSave baseElement = GetBaseElementFromVariable(variableName, parent);
                     
@@ -74,10 +78,6 @@ namespace Gum.DataTypes.Variables
                             value = defaultStateForComponent.GetValueRecursive(variableName);
                         }
                     }
-                }
-                else
-                {
-                    return null;
                 }
             }
 

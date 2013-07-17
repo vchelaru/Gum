@@ -6,6 +6,7 @@ using Gum.DataTypes.Variables;
 using Gum.Managers;
 using System.Windows.Forms;
 using ToolsUtilities;
+using Gum.ToolStates;
 
 namespace Gum.DataTypes
 {
@@ -185,6 +186,42 @@ namespace Gum.DataTypes
 
             PropertyGridManager.Self.RefreshUI();
             StateTreeViewManager.Self.RefreshUI(asElementSave);
+        }
+
+        public static VariableSave GetVariableFromThisOrBase(this ElementSave element, string variable, bool forceDefault = false)
+        {
+            StateSave stateToPullFrom = element.DefaultState;
+
+            if (element == SelectedState.Self.SelectedElement &&
+                SelectedState.Self.SelectedStateSave != null &&
+                !forceDefault)
+            {
+                stateToPullFrom = SelectedState.Self.SelectedStateSave;
+            }
+
+            return stateToPullFrom.GetVariableRecursive(variable);
+        }
+
+        public static object GetValueFromThisOrBase(this ElementSave element, string variable, bool forceDefault = false)
+        {
+            StateSave stateToPullFrom = element.DefaultState;
+
+            if (element == SelectedState.Self.SelectedElement &&
+                SelectedState.Self.SelectedStateSave != null &&
+                !forceDefault)
+            {
+                stateToPullFrom = SelectedState.Self.SelectedStateSave;
+            }
+
+            VariableSave variableSave = stateToPullFrom.GetVariableRecursive(variable);
+            if(variableSave != null)
+            {
+                return variableSave.Value;
+            }
+            else
+            {
+                return null;
+            }
         }
     }
 }
