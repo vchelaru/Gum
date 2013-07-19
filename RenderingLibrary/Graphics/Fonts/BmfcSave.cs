@@ -30,7 +30,7 @@ namespace RenderingLibrary.Graphics.Fonts
                 BmfcSave bmfcSave = new BmfcSave();
                 bmfcSave.FontSize = fontSize;
                 bmfcSave.FontName = fontName;
-                bmfcSave.CreateBitmapFontFilesIfNecessary("Font" + bmfcSave.FontSize + bmfcSave.FontName + ".fnt");
+                bmfcSave.CreateBitmapFontFilesIfNecessary("FontCache/Font" + bmfcSave.FontSize + bmfcSave.FontName + ".fnt");
         }
 
         public void CreateBitmapFontFilesIfNecessary(string fileName)

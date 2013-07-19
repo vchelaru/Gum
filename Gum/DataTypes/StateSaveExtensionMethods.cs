@@ -119,9 +119,15 @@ namespace Gum.DataTypes.Variables
 
                 if (parent != null && stateSave != parent.DefaultState)
                 {
-                    throw new NotImplementedException();
+                    variableSave = stateSave.GetVariableSave(variableName);
+
+                    if (variableSave == null)
+                    {
+                        variableSave = parent.DefaultState.GetVariableSave(variableName);
+                    }
                 }
-                else if (parent != null)
+                
+                if (variableSave == null && parent != null)
                 {
                     ElementSave baseElement = GetBaseElementFromVariable(variableName, parent);
 
@@ -141,7 +147,7 @@ namespace Gum.DataTypes.Variables
                     }
                 }
                     
-                return null;
+                return variableSave;
             }
             else
             {
