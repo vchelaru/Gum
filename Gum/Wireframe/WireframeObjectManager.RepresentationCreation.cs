@@ -676,7 +676,7 @@ namespace Gum.Wireframe
 
         private BitmapFont GetBitmapFontFor(string fontName, int fontSize)
         {
-            string fileName = FileManager.RelativeDirectory + "Font" + fontSize + fontName + ".fnt";
+            string fileName = FileManager.RelativeDirectory + "FontCache/Font" + fontSize + fontName + ".fnt";
 
             if (System.IO.File.Exists(fileName))
             {

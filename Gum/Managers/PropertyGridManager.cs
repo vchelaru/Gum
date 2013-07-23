@@ -81,6 +81,20 @@ namespace Gum.Managers
 
                 mPropertyGrid.SelectedObject = mPropertyGridDisplayer;
                 mPropertyGrid.Refresh();
+
+                var element = SelectedState.Self.SelectedElement;
+                var state = SelectedState.Self.SelectedStateSave;
+
+                bool shouldMakeYellow = element != null && state != element.DefaultState;
+
+                if (shouldMakeYellow)
+                {
+                    mPropertyGrid.LineColor = System.Drawing.Color.Orange;
+                }
+                else
+                {
+                    mPropertyGrid.LineColor = System.Drawing.Color.FromArgb(244, 247, 252);
+                }
             }
         }
 
@@ -332,6 +346,13 @@ namespace Gum.Managers
             {
                 variableName = SelectedState.Self.SelectedInstance.Name + "." + variableName;
 
+                shouldReset = true;
+            }
+            else if (SelectedState.Self.SelectedElement != null &&
+                // Don't let the user reset standard element variables, they have to have some actual value
+                (SelectedState.Self.SelectedElement is StandardElementSave) == false)
+            {
+                variableName = variableName;
                 shouldReset = true;
             }
 

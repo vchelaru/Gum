@@ -68,7 +68,7 @@ namespace Gum
 
         private void ObjectTreeView_AfterSelect(object sender, TreeViewEventArgs e)
         {
-            ElementTreeViewManager.Self.OnSelect(ObjectTreeView.SelectedNode, e.Node);
+            ElementTreeViewManager.Self.OnSelect(ObjectTreeView.SelectedNode);
         }
 
         private void instanceToolStripMenuItem_Click(object sender, EventArgs e)
@@ -127,6 +127,11 @@ namespace Gum
             this.wireframeControl1.HandleCopyCutPaste(e);
 
             this.wireframeControl1.HandleDelete(e);
+
+            if (e.KeyCode == Keys.Up || e.KeyCode == Keys.Down)
+            {
+                ElementTreeViewManager.Self.OnSelect(ObjectTreeView.SelectedNode);
+            }
         }
 
         private void ObjectTreeView_ItemDrag(object sender, ItemDragEventArgs e)
@@ -194,6 +199,11 @@ namespace Gum
         private void wireframeControl1_DragDrop(object sender, DragEventArgs e)
         {
             DragDropManager.Self.HandleFileDragDrop(sender, e);
+        }
+
+        private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("Version 1.0");
         }
     }
 }

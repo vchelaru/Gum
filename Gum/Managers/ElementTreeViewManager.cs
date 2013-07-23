@@ -713,7 +713,7 @@ namespace Gum.Managers
             //node.Nodes.SortByName();
         }
         
-        internal void OnSelect(TreeNode selectedTreeNode, TreeNode releasedTreeNode)
+        internal void OnSelect(TreeNode selectedTreeNode)
         {
             TreeNode treeNode = mTreeView.SelectedNode;
 
