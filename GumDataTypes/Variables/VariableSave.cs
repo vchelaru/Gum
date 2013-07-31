@@ -131,7 +131,12 @@ namespace Gum.DataTypes.Variables
             get;
             set;
         }
+
+        [XmlIgnore]
+        public bool CanOnlyBeSetInDefaultState { get; set; }
+
         // If adding stuff here, make sure to add to the Clone method!
+
 
         public VariableSave Clone()
         {

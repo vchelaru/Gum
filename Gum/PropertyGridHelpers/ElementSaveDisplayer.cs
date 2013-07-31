@@ -200,7 +200,10 @@ namespace Gum.PropertyGridHelpers
         {
             bool shouldInclude = GetIfShouldInclude(defaultVariable, elementSave, instanceSave, ses);
 
-            shouldInclude &= (string.IsNullOrEmpty(defaultVariable.SourceObject) || amountToDisplay == AmountToDisplay.AllVariables || !string.IsNullOrEmpty(defaultVariable.ExposedAsName));
+            shouldInclude &= (
+                string.IsNullOrEmpty(defaultVariable.SourceObject) || 
+                amountToDisplay == AmountToDisplay.AllVariables || 
+                !string.IsNullOrEmpty(defaultVariable.ExposedAsName));
 
             if (shouldInclude)
             {
@@ -258,8 +261,17 @@ namespace Gum.PropertyGridHelpers
         {
             bool shouldInclude = true;
 
+            bool isDefault = SelectedState.Self.SelectedStateSave == SelectedState.Self.SelectedElement.DefaultState;
 
-            shouldInclude = GetShouldIncludeBasedOnAttachments(defaultVariable, container, currentInstance);
+            if (!isDefault && defaultVariable.CanOnlyBeSetInDefaultState)
+            {
+                shouldInclude = false;
+            }
+
+            if (shouldInclude)
+            {
+                shouldInclude = GetShouldIncludeBasedOnAttachments(defaultVariable, container, currentInstance);
+            }
 
             if (shouldInclude)
             {

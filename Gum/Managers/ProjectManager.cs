@@ -142,6 +142,7 @@ namespace Gum
             mGumProjectSave.AddNewStandardElementTypes();
 
             FileManager.RelativeDirectory = FileManager.GetDirectory(fileName);
+            mGumProjectSave.RemoveDuplicateVariables();
 
 
             // Now that a new project is loaded, refresh the UI!

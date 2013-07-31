@@ -475,7 +475,13 @@ namespace Gum.Wireframe
             lineRectangle.Tag = elementSave;
             StateSave stateSave = new StateSave();
 
-            RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(elementSave.DefaultState);
+            StateSave sourceStateSave = elementSave.DefaultState;
+            if (elementSave == SelectedState.Self.SelectedElement)
+            {
+                sourceStateSave = SelectedState.Self.SelectedStateSave;
+            }
+
+            RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(sourceStateSave);
 
             FillStateWithVariables(rvf, stateSave, WireframeObjectManager.Self.PositionAndSizeVariables);
 

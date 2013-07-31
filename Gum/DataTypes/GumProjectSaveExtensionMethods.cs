@@ -76,6 +76,46 @@ namespace Gum.DataTypes
 
         }
 
+        public static void RemoveDuplicateVariables(this GumProjectSave gumProjectSave)
+        {
+            foreach (var component in gumProjectSave.Components)
+            {
+                RemoveDuplicateVariables(component);
+            }
+            foreach (var screen in gumProjectSave.Screens)
+            {
+                RemoveDuplicateVariables(screen);
+            }
+            foreach (var element in gumProjectSave.StandardElements)
+            {
+                RemoveDuplicateVariables(element);
+            }
 
+
+        }
+
+        private static void RemoveDuplicateVariables(ElementSave element)
+        {
+            foreach (var state in element.States)
+            {
+                List<string> alreadyVisitedVariables = new List<string>();
+
+                for (int i = 0; i < state.Variables.Count; i++)
+                {
+                    string variableName = state.Variables[i].Name;
+
+                    if (alreadyVisitedVariables.Contains(variableName))
+                    {
+                        state.Variables.RemoveAt(i);
+                        i--;
+                    }
+                    else
+                    {
+                        alreadyVisitedVariables.Add(variableName);
+                    }
+                }
+
+            }
+        }
     }
 }
