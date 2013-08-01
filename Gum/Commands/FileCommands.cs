@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Gum.ToolStates;
+using Gum.Managers;
+using Gum.Wireframe;
 
 namespace Gum.Commands
 {
@@ -17,6 +19,22 @@ namespace Gum.Commands
 
             }
 
+        }
+
+        internal void NewProject()
+        {
+            ProjectManager.Self.CreateNewProject();
+
+            ElementTreeViewManager.Self.RefreshUI();
+            StateTreeViewManager.Self.RefreshUI(null);
+            PropertyGridManager.Self.RefreshUI();
+            WireframeObjectManager.Self.RefreshAll(true);
+
+        }
+
+        internal void SaveProject()
+        {
+            ProjectManager.Self.SaveProject();
         }
     }
 }

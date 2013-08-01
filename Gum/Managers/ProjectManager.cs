@@ -75,16 +75,21 @@ namespace Gum
             }
             else
             {
-                mGumProjectSave = new GumProjectSave();
-                ObjectFinder.Self.GumProjectSave = mGumProjectSave;
-
-                StandardElementsManager.Self.PopulateProjectWithDefaultStandards(mGumProjectSave);
-                // Now that a new project is created, refresh the UI!
-                ElementTreeViewManager.Self.RefreshUI();
+                CreateNewProject();
             }
 
 
 
+        }
+
+        public void CreateNewProject()
+        {
+            mGumProjectSave = new GumProjectSave();
+            ObjectFinder.Self.GumProjectSave = mGumProjectSave;
+
+            StandardElementsManager.Self.PopulateProjectWithDefaultStandards(mGumProjectSave);
+            // Now that a new project is created, refresh the UI!
+            ElementTreeViewManager.Self.RefreshUI();
         }
 
         public bool LoadProject()
@@ -163,15 +168,16 @@ namespace Gum
             }
             else
             {
-                bool throwaway;
-                bool shouldSave = AskUserForProjectNameIfNecessary(out throwaway);
+                bool isNewProject;
+                bool shouldSave = AskUserForProjectNameIfNecessary(out isNewProject);
 
                 if (shouldSave)
                 {
                     try
                     {
-                        bool saveContainedElements = false;
-                        GumProjectSave.Save(GumProjectSave.FullFileName, false);
+                        bool saveContainedElements = isNewProject;
+
+                        GumProjectSave.Save(GumProjectSave.FullFileName, saveContainedElements);
                         succeeded = true;
                     }
                     catch(UnauthorizedAccessException exception)
@@ -192,6 +198,11 @@ namespace Gum
                     }
                     // This may be the first time the file is being saved.  If so, we should make it relative
                     FileManager.RelativeDirectory = FileManager.GetDirectory(GumProjectSave.FullFileName);
+
+                    if (succeeded)
+                    {
+                        PluginManager.Self.ProjectSave(GumProjectSave);
+                    }
                 }
             }
         }

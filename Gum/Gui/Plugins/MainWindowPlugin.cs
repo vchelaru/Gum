@@ -35,6 +35,7 @@ namespace Gum.Gui.Plugins
         public override void StartUp()
         {
             ProjectLoad += new Action<DataTypes.GumProjectSave>(OnProjectLoad);
+            ProjectSave += new Action<DataTypes.GumProjectSave>(OnProjectLoad);
         }
 
         void OnProjectLoad(DataTypes.GumProjectSave obj)

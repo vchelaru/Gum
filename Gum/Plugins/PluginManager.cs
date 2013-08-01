@@ -735,7 +735,30 @@ namespace Gum.Plugins
 #if DEBUG
                         MessageBox.Show("Error in plugin " + plugin.FriendlyName + ":\n\n" + e.ToString());
 #endif
-                        container.Fail(e, "Failed in ReactToRightClick");
+                        container.Fail(e, "Failed in ProjectLoad");
+                    }
+                }
+            }
+        }
+
+        internal void ProjectSave(GumProjectSave savedProject)
+        {
+            foreach (var plugin in this.Plugins)
+            {
+                PluginContainer container = this.PluginContainers[plugin];
+
+                if (container.IsEnabled)
+                {
+                    try
+                    {
+                        plugin.CallProjectSave(savedProject);
+                    }
+                    catch (Exception e)
+                    {
+#if DEBUG
+                        MessageBox.Show("Error in plugin " + plugin.FriendlyName + ":\n\n" + e.ToString());
+#endif
+                        container.Fail(e, "Failed in ProjectSave");
                     }
                 }
             }

@@ -14,6 +14,8 @@ namespace Gum.Plugins.BaseClasses
         #region Events
 
         public event Action<GumProjectSave> ProjectLoad;
+        public event Action<GumProjectSave> ProjectSave;
+
         public event Action GuidesChanged;
         public event Action<ElementSave> Export;
         public event Action<DeleteOptionsWindow, object> DeleteOptionsWindowShow;
@@ -83,6 +85,14 @@ namespace Gum.Plugins.BaseClasses
             if (ProjectLoad != null)
             {
                 ProjectLoad(newlyLoadedProject);
+            }
+        }
+
+        public void CallProjectSave(GumProjectSave savedProject)
+        {
+            if (ProjectSave != null)
+            {
+                ProjectSave(savedProject);
             }
         }
 

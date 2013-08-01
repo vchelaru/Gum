@@ -187,7 +187,7 @@ namespace Gum
 
         private void saveProjectToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            ProjectManager.Self.SaveProject();
+            GumCommands.Self.FileCommands.SaveProject();
         }
 
         private void wireframeControl1_DragEnter(object sender, DragEventArgs e)
@@ -204,6 +204,11 @@ namespace Gum
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
             MessageBox.Show("Version 1.0");
+        }
+
+        private void newProjectToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            GumCommands.Self.FileCommands.NewProject();
         }
     }
 }
