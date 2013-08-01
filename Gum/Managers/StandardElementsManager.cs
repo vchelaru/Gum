@@ -100,7 +100,7 @@ namespace Gum.Managers
             StateSave stateSave = new StateSave();
             stateSave.Name = "Default";
             AddPositioningVariables(stateSave);
-            AddDimensionsVariables(stateSave);
+            AddDimensionsVariables(stateSave, 100, 50);
             stateSave.Variables.Add(new VariableSave { Type = "bool", Value = true, Name = "Visible" });
             stateSave.Variables.Add(new VariableSave { Type = "string", Value = "Hello", Name = "Text", Category = "Text" });
             stateSave.Variables.Add(new VariableSave { Type = "VerticalAlignment", Value = VerticalAlignment.Top, Name = "VerticalAlignment", Category = "Text" });
@@ -124,7 +124,7 @@ namespace Gum.Managers
             stateSave = new StateSave();
             stateSave.Name = "Default";
             AddPositioningVariables(stateSave);
-            AddDimensionsVariables(stateSave);
+            AddDimensionsVariables(stateSave, 0, 0);
             stateSave.Variables.Add(new VariableSave { Type = "string", Value = "", Name = "SourceFile", IsFile = true});
             stateSave.Variables.Add(new VariableSave { Type = "bool", Value = true, Name = "Visible" });
             stateSave.Variables.Add(new VariableSave { Type = "bool", Value = false, Category = "Animation", Name = "Animate" });
@@ -156,7 +156,7 @@ namespace Gum.Managers
 
             AddPositioningVariables(stateSave);
 
-            AddDimensionsVariables(stateSave);
+            AddDimensionsVariables(stateSave, 150, 150);
 
             stateSave.Variables.Add(new VariableSave { Type = "bool", Value = true, Name = "Visible" });
             PluginManager.Self.ModifyDefaultStandardState("Container", stateSave);
@@ -177,7 +177,7 @@ namespace Gum.Managers
 
             AddPositioningVariables(stateSave);
 
-            AddDimensionsVariables(stateSave);
+            AddDimensionsVariables(stateSave, 50, 50);
 
             stateSave.Variables.Add(new VariableSave { Type = "bool", Value = true, Name = "Visible" });
             AddColorVariables(stateSave, true);
@@ -192,7 +192,7 @@ namespace Gum.Managers
             stateSave = new StateSave();
             stateSave.Name = "Default";
             AddPositioningVariables(stateSave);
-            AddDimensionsVariables(stateSave);
+            AddDimensionsVariables(stateSave, 64,64);
             stateSave.Variables.Add(new VariableSave { Type = "string", Value = "", Name = "SourceFile", IsFile = true });
             stateSave.Variables.Add(new VariableSave { Type = "bool", Value = true, Name = "Visible" });
 
@@ -245,16 +245,16 @@ namespace Gum.Managers
             stateSave.Variables.Add(new VariableSave { Type = "int", Value = 255, Name = "Blue", Category = "Color" });
         }
 
-        private static void AddDimensionsVariables(StateSave stateSave)
+        private static void AddDimensionsVariables(StateSave stateSave, float defaultWidth, float defaultHeight)
         {
 
 
-            stateSave.Variables.Add(new VariableSave { Type = "float", Value = 100.0f, Name = "Width", Category = "Dimensions" });
+            stateSave.Variables.Add(new VariableSave { Type = "float", Value = defaultWidth, Name = "Width", Category = "Dimensions" });
             stateSave.Variables.Add(new VariableSave { Type = typeof(DimensionUnitType).Name, Value = DimensionUnitType.Absolute, Name = "Width Units", Category = "Dimensions" });
 
 
 
-            stateSave.Variables.Add(new VariableSave { Type = "float", Value = 50.0f, Name = "Height", Category = "Dimensions" });
+            stateSave.Variables.Add(new VariableSave { Type = "float", Value = defaultHeight, Name = "Height", Category = "Dimensions" });
             stateSave.Variables.Add(new VariableSave { Type = typeof(DimensionUnitType).Name, Value = DimensionUnitType.Absolute, Name = "Height Units", Category = "Dimensions" });
         }
 
