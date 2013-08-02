@@ -46,7 +46,6 @@ namespace Gum.Wireframe
         
         static SelectionManager mSelf;
 
-        List<LineRectangle> mHighlightRectangles = new List<LineRectangle>();
         SolidRectangle mOverlaySolidRectangle;
         Sprite mOverlaySprite;
         NineSlice mOverlayNineSlice;
@@ -57,7 +56,7 @@ namespace Gum.Wireframe
         List<IPositionedSizedObject> mSelectedIpsos = new List<IPositionedSizedObject>();
         IPositionedSizedObject mHighlightedIpso;
 
-
+        GraphicalOutline mGraphicalOutline;
         Layer mUiLayer;
 
         #endregion
@@ -65,11 +64,6 @@ namespace Gum.Wireframe
         #region Properties
 
 
-        public int SelectionBorder
-        {
-            get;
-            set;
-        }
 
         public InputLibrary.Cursor Cursor
         {
@@ -184,14 +178,8 @@ namespace Gum.Wireframe
 
                     mHighlightedIpso = value;
 
-                    if (mHighlightedIpso != null)
-                    {
-                        SetLineRectangleAroundIpso(mHighlightRectangles[0], mHighlightedIpso);
-                    }
-                    else
-                    {
-                        mHighlightRectangles[0].Visible = false;
-                    }
+                    mGraphicalOutline.HighlightedIpso = mHighlightedIpso;
+
                 }
             }
         }
@@ -266,15 +254,10 @@ namespace Gum.Wireframe
         {
 
             // We used to have this set to 2, but now that we have dotted lines, I just do a value of 0
-            SelectionBorder = 0;
             mUiLayer = Renderer.Self.AddLayer();
             mUiLayer.Name = "UI Layer";
 
-            LineRectangle selection = new LineRectangle();
-            selection.Color = Color.Yellow;
-            selection.Visible = false;
-            mHighlightRectangles.Add(selection);
-            ShapeManager.Self.Add(selection, mUiLayer);
+            mGraphicalOutline = new GraphicalOutline(mUiLayer);
 
             mOverlaySolidRectangle = new SolidRectangle();
             mOverlaySolidRectangle.Color = Color.LightGreen;
@@ -893,28 +876,7 @@ namespace Gum.Wireframe
             SelectedIpsos = representations;
         }
 
-        private void SetLineRectangleAroundIpso(LineRectangle rectangle, IPositionedSizedObject pso )
-        {
-            float adjustedSelectionBorder = SelectionBorder / Renderer.Self.Camera.Zoom;
 
-            rectangle.Visible = true;
-            rectangle.X = pso.GetAbsoluteX() - adjustedSelectionBorder;
-            rectangle.Y = pso.GetAbsoluteY() - adjustedSelectionBorder;
-
-
-            if ((pso.Width == 0 || pso.Height == 0) && pso is Sprite)
-            {
-                Sprite asSprite = pso as Sprite;
-
-                rectangle.Width = asSprite.EffectiveWidth + adjustedSelectionBorder * 2;
-                rectangle.Height = asSprite.EffectiveHeight + adjustedSelectionBorder * 2;
-            }
-            else
-            {
-                rectangle.Width = pso.Width + adjustedSelectionBorder * 2;
-                rectangle.Height = pso.Height + adjustedSelectionBorder * 2;
-            }
-        }
 
         private void Clear()
         {

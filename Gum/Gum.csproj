@@ -184,6 +184,7 @@
     <Compile Include="Undo\UndoPlugin.cs" />
     <Compile Include="Wireframe\EditingManager.cs" />
     <Compile Include="Wireframe\EditingManager.RightClick.cs" />
+    <Compile Include="Wireframe\GraphicalOutline.cs" />
     <Compile Include="Wireframe\InterpolatingColor.cs" />
     <Compile Include="Wireframe\PlatformDetails.cs" />
     <Compile Include="Wireframe\ResizeHandles.cs" />
