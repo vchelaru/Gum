@@ -261,7 +261,9 @@ namespace Gum.DataTypes.Variables
                 !FileManager.IsRelative((string)value))
             {
                 string directoryToMakeRelativeTo = FileManager.GetDirectory(ObjectFinder.Self.GumProjectSave.FullFileName);
-                value = FileManager.MakeRelative((string)value, directoryToMakeRelativeTo);
+
+                const bool preserveCase = true;
+                value = FileManager.MakeRelative((string)value, directoryToMakeRelativeTo, preserveCase);
             }
 
 

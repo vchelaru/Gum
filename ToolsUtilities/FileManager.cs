@@ -665,7 +665,7 @@ namespace ToolsUtilities
 				pathToMakeRelativeTo = FileManager.Standardize(pathToMakeRelativeTo, preserveCase);
 
 				// Use the old method if we can
-				if (pathToMakeRelative.StartsWith(pathToMakeRelativeTo))
+                if (pathToMakeRelative.ToLowerInvariant().StartsWith(pathToMakeRelativeTo.ToLowerInvariant()))
 				{
 					pathToMakeRelative = pathToMakeRelative.Substring(pathToMakeRelativeTo.Length);
 				}
@@ -681,7 +681,7 @@ namespace ToolsUtilities
 
 					// build the new path
 					int start = 0;
-					while (start < path.Length && start < relpath.Length && path[start] == relpath[start] )
+                    while (start < path.Length && start < relpath.Length && path[start].ToLower() == relpath[start].ToLower())
 					{
 						start++;
 					}
