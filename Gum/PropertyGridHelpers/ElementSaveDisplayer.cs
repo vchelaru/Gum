@@ -196,7 +196,8 @@ namespace Gum.PropertyGridHelpers
             return pdc;
         }
 
-        private PropertyDescriptorCollection TryDisplayVariableSave(PropertyDescriptorCollection pdc, ElementSave elementSave, InstanceSave instanceSave, AmountToDisplay amountToDisplay, StandardElementSave ses, VariableSave defaultVariable)
+        private PropertyDescriptorCollection TryDisplayVariableSave(PropertyDescriptorCollection pdc, ElementSave elementSave, InstanceSave instanceSave, 
+            AmountToDisplay amountToDisplay, StandardElementSave ses, VariableSave defaultVariable)
         {
             bool shouldInclude = GetIfShouldInclude(defaultVariable, elementSave, instanceSave, ses);
 
@@ -208,7 +209,7 @@ namespace Gum.PropertyGridHelpers
             if (shouldInclude)
             {
 
-                TypeConverter typeConverter = defaultVariable.GetTypeConverter();
+                TypeConverter typeConverter = defaultVariable.GetTypeConverter(elementSave);
 
                 Attribute[] customAttributes = GetAttributesForVariable(defaultVariable);
 

@@ -75,7 +75,7 @@ namespace Gum.DataTypes
             return foundType;
         }
 
-        public static TypeConverter GetTypeConverter(this VariableSave variableSave)
+        public static TypeConverter GetTypeConverter(this VariableSave variableSave, ElementSave container = null)
         {
             if (variableSave.CustomTypeConverter != null)
             {
@@ -94,9 +94,33 @@ namespace Gum.DataTypes
             }
             else
             {
-                Type type = variableSave.GetRuntimeType();
-                return variableSave.GetTypeConverter(type);
+                // We should see if it's an exposed variable, and if so, let's look to the source object's type converters
+                bool foundInRoot = false;
+                if (!string.IsNullOrEmpty(variableSave.SourceObject) && container != null)
+                {
+                    InstanceSave instance = container.GetInstance(variableSave.SourceObject);
+
+                    if (instance != null)
+                    {
+                        // see if the instance has a variable
+                        var foundElementSave = ObjectFinder.Self.GetRootStandardElementSave(instance);
+
+                        if (foundElementSave != null)
+                        {
+                            VariableSave rootVariableSave = foundElementSave.DefaultState.GetVariableSave(variableSave.GetRootName());
+
+                            if (variableSave != null)
+                            {
+                                return rootVariableSave.GetTypeConverter((ElementSave)null);
+                            }
+                        }
+                    }
+                }
+
             }
+            Type type = variableSave.GetRuntimeType();
+            return variableSave.GetTypeConverter(type);
+            
         }
 
         static TypeConverter GetTypeConverter(this VariableSave variableSave, Type type)
