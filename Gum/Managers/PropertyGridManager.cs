@@ -364,8 +364,16 @@ namespace Gum.Managers
                 VariableSave variable = state.GetVariableSave(variableName);
                 if (variable != null)
                 {
-                    state.Variables.Remove(variable);
-
+                    // Don't remove the variable if it's part of an element - we still want it there
+                    // so it can be set, we just don't want it to set a value
+                    if (SelectedState.Self.SelectedInstance != null)
+                    {
+                        state.Variables.Remove(variable);
+                    }
+                    else
+                    {
+                        variable.Value = null;
+                    }
                     variable.SetsValue = false; // just to be safe
 
                     wasChangeMade = true;
