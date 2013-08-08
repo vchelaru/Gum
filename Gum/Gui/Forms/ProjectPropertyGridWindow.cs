@@ -59,8 +59,8 @@ namespace Gum.Gui.Forms
             ProjectCommands.Self.SaveProject();
 
             GuiCommands.Self.RefreshWireframeDisplay();
-
-            EditingManager.Self.UpdateSelectedObjectsPositionAndDimensions();
+            WireframeObjectManager.Self.RefreshAll(true);
+            //EditingManager.Self.UpdateSelectedObjectsPositionAndDimensions();
         }
 
         private void AutoSaveCheckBox_CheckedChanged(object sender, EventArgs e)
