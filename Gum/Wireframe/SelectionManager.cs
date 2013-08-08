@@ -63,7 +63,13 @@ namespace Gum.Wireframe
 
         #region Properties
 
-
+        public Layer UiLayer
+        {
+            get
+            {
+                return mUiLayer;
+            }
+        }
 
         public InputLibrary.Cursor Cursor
         {

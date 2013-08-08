@@ -38,6 +38,7 @@ namespace Gum
             GuiCommands.Self.Initialize(wireframeControl1);
             Wireframe.WireframeObjectManager.Self.Initialize(WireframeEditControl, wireframeControl1);
             wireframeControl1.XnaInitialize += new Action(HandleXnaInitialize);
+            //wireframeControl1.AfterXnaInitialize += HandleXnaInitialize;
             EditingManager.Self.Initialize(this.WireframeContextMenuStrip);
             // ProjectManager.Initialize used to happen here, but I 
             // moved it down to the Load event for MainWindow because
@@ -46,6 +47,7 @@ namespace Gum
             // are set up properly before that happens.
         }
 
+        //void HandleXnaInitialize(object sender, EventArgs e)
         void HandleXnaInitialize()
         {
             this.wireframeControl1.Initialize(WireframeEditControl);

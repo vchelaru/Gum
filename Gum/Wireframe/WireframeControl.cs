@@ -53,6 +53,7 @@ namespace Gum.Wireframe
 
         public Color BackgroundColor = Color.DimGray;
 
+        bool mHasInitialized = false;
 
         Ruler mTopRuler;
         Ruler mLeftRuler;
@@ -238,8 +239,8 @@ namespace Gum.Wireframe
                 mScreenBounds = new LineRectangle();
                 mScreenBounds.Width = 800;
                 mScreenBounds.Height = 600;
-
-                ShapeManager.Self.Add(mScreenBounds);
+                mScreenBounds.Color = Color.Orange;
+                ShapeManager.Self.Add(mScreenBounds, SelectionManager.Self.UiLayer);
 
 
                 Renderer.Self.Camera.X = Renderer.Self.GraphicsDevice.Viewport.Width / 2 - 30;
@@ -258,6 +259,10 @@ namespace Gum.Wireframe
                 {
                     AfterXnaInitialize(this, null);
                 }
+
+                UpdateWireframeToProject();
+
+                mHasInitialized = true;
             }
             catch(Exception exception)
             {
@@ -366,9 +371,11 @@ namespace Gum.Wireframe
 
         public void UpdateWireframeToProject()
         {
-            mScreenBounds.Width = ProjectManager.Self.GumProjectSave.DefaultCanvasWidth;
-            mScreenBounds.Height = ProjectManager.Self.GumProjectSave.DefaultCanvasHeight;
-
+            if (mScreenBounds != null && ProjectManager.Self.GumProjectSave != null)
+            {
+                mScreenBounds.Width = ProjectManager.Self.GumProjectSave.DefaultCanvasWidth;
+                mScreenBounds.Height = ProjectManager.Self.GumProjectSave.DefaultCanvasHeight;
+            }
         }
 
 
@@ -391,11 +398,14 @@ namespace Gum.Wireframe
         {
             try
             {
-                Activity();
+                if (mHasInitialized)
+                {
+                    Activity();
 
-                GraphicsDevice.Clear(BackgroundColor);
+                    GraphicsDevice.Clear(BackgroundColor);
 
-                Renderer.Self.Draw(null);
+                    Renderer.Self.Draw(null);
+                }
             }
             catch (Exception e)
             {

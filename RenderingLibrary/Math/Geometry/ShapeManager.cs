@@ -62,7 +62,13 @@ namespace RenderingLibrary.Math.Geometry
 
         public void Add(LineRectangle lineRectangle, Layer layer)
         {
+            if (layer == null)
+            {
+                layer = Renderer.LayersWritable[0];
+            }
+
             mRectangles.Add(lineRectangle);
+            
             layer.Add(lineRectangle);
         }
 
