@@ -8,7 +8,8 @@ namespace Gum.DataTypes
     public enum DimensionUnitType
     {
         Absolute,
-        Percentage
+        Percentage,
+        RelativeToContainer
     }
     
     public class GuideRectangle : NamedRectangle

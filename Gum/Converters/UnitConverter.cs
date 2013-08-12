@@ -159,6 +159,8 @@ namespace Gum.Converters
                         return GeneralUnitType.PixelsFromSmall;
                     case DimensionUnitType.Percentage:
                         return GeneralUnitType.Percentage;
+                    case DimensionUnitType.RelativeToContainer:
+                        return GeneralUnitType.PixelsFromLarge;
                     default:
                         throw new NotImplementedException();
                 }
