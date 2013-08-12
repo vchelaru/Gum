@@ -51,6 +51,21 @@ namespace Gum.ToolCommands
         {
             ComponentSave componentSave = new ComponentSave();
             componentSave.Initialize(StandardElementsManager.Self.GetDefaultStateFor("Container"));
+
+            // components shouldn't set their positions to 0 by default, so if the
+            // default state sets those values, we should null them out:
+            var xVariable = componentSave.DefaultState.GetVariableSave("X");
+            var yVariable = componentSave.DefaultState.GetVariableSave("Y");
+
+            if (xVariable != null)
+            {
+                xVariable.Value = null;
+            }
+            if (yVariable != null)
+            {
+                yVariable.Value = null;
+            }
+
             componentSave.BaseType = "Container";
             componentSave.Name = componentName;
 

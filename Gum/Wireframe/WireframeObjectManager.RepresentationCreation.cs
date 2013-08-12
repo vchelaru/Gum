@@ -731,7 +731,7 @@ namespace Gum.Wireframe
                 xAsFloat = (float)xAsObject;
             }
             float yAsFloat = 0;
-            if (xAsObject != null)
+            if (yAsObject != null)
             {
                 yAsFloat = (float)yAsObject;
             }
