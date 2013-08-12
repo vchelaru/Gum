@@ -711,6 +711,9 @@ namespace Gum.Wireframe
             object heightAsObjects = stateSave.GetValue("Height");
             object widthUnits = stateSave.GetValue("Width Units");
 
+            object xAsObject = stateSave.GetValue("X");
+            object yAsObject = stateSave.GetValue("Y");
+
             object xUnits = stateSave.GetValue("X Units");
 #if DEBUG
             if (xUnits is int)
@@ -722,7 +725,16 @@ namespace Gum.Wireframe
                 throw new Exception("Width Units must not be an int - must be an enum");
             }
 #endif
-
+            float xAsFloat = 0;
+            if (xAsObject != null)
+            {
+                xAsFloat = (float)xAsObject;
+            }
+            float yAsFloat = 0;
+            if (xAsObject != null)
+            {
+                yAsFloat = (float)yAsObject;
+            }
 
 
             SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(
@@ -734,8 +746,8 @@ namespace Gum.Wireframe
                 stateSave.GetValue("Height Units"),
                 (HorizontalAlignment)stateSave.GetValue("X Origin"),
                 (VerticalAlignment)stateSave.GetValue("Y Origin"),
-                (float)stateSave.GetValue("X"),
-                (float)stateSave.GetValue("Y"),
+                xAsFloat,
+                yAsFloat,
                 xUnits,
                 stateSave.GetValue("Y Units")
                 
