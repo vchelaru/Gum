@@ -82,6 +82,7 @@ namespace Gum.PropertyGridHelpers
         private PropertyDescriptorCollection DisplayCurrentElement(PropertyDescriptorCollection pdc, ElementSave elementSave, 
             InstanceSave instanceSave, StateSave defaultState, string prependedVariable, AmountToDisplay amountToDisplay = AmountToDisplay.AllVariables)
         {
+            bool isDefault = SelectedState.Self.SelectedStateSave == SelectedState.Self.SelectedElement.DefaultState;
 
             if (!string.IsNullOrEmpty(prependedVariable))
             {
@@ -89,14 +90,17 @@ namespace Gum.PropertyGridHelpers
             }
 
             bool isCustomType = (elementSave is StandardElementSave) == false;
-            if (isCustomType || instanceSave != null)
+            if (isDefault && ( isCustomType || instanceSave != null))
             {
                 pdc = AddNameAndBaseTypeProperties(pdc);
             }
 
             if (instanceSave != null)
             {
-                pdc = mHelper.AddProperty(pdc, "Locked", typeof(bool));
+                if (isDefault)
+                {
+                    pdc = mHelper.AddProperty(pdc, "Locked", typeof(bool));
+                }
                 pdc = mHelper.AddProperty(pdc, "State", typeof(string), new AvailableStatesConverter(), null);
             }
 
@@ -260,11 +264,29 @@ namespace Gum.PropertyGridHelpers
 
         private static bool GetIfShouldInclude(VariableSave defaultVariable, ElementSave container, InstanceSave currentInstance, StandardElementSave rootElementSave)
         {
+            bool canOnlyBeSetInDefaultState = defaultVariable.CanOnlyBeSetInDefaultState;
+            if (currentInstance != null)
+            {
+                var root = ObjectFinder.Self.GetRootStandardElementSave(currentInstance);
+                if (root != null && root.GetVariableFromThisOrBase(defaultVariable.Name, true) != null)
+                {
+                    var foundVariable = root.GetVariableFromThisOrBase(defaultVariable.Name, true);
+                    canOnlyBeSetInDefaultState = foundVariable.CanOnlyBeSetInDefaultState;
+                }
+            }
+            else if (container != null)
+            {
+                var root = ObjectFinder.Self.GetRootStandardElementSave(container);
+                if (root != null && root.GetVariableFromThisOrBase(defaultVariable.Name, true) != null)
+                {
+                    canOnlyBeSetInDefaultState = root.GetVariableFromThisOrBase(defaultVariable.Name, true).CanOnlyBeSetInDefaultState;
+                }
+            }
             bool shouldInclude = true;
 
             bool isDefault = SelectedState.Self.SelectedStateSave == SelectedState.Self.SelectedElement.DefaultState;
 
-            if (!isDefault && defaultVariable.CanOnlyBeSetInDefaultState)
+            if (!isDefault && canOnlyBeSetInDefaultState)
             {
                 shouldInclude = false;
             }

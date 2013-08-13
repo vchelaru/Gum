@@ -117,5 +117,20 @@ namespace Gum.DataTypes
 
             }
         }
+
+        public static void FixStandardVariables(this GumProjectSave gumProjectSave)
+        {
+            foreach (var element in gumProjectSave.StandardElements)
+            {
+                var defaultState = StandardElementsManager.Self.GetDefaultStateFor(element.Name);
+
+                foreach (var variable in defaultState.Variables)
+                {
+                    element.DefaultState.GetVariableSave(variable.Name).CanOnlyBeSetInDefaultState = variable.CanOnlyBeSetInDefaultState;
+                }
+            }
+
+
+        }
     }
 }

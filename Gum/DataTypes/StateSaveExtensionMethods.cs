@@ -98,7 +98,10 @@ namespace Gum.DataTypes.Variables
 
                 InstanceSave instanceSave = parent.GetInstance(instanceToSearchFor);
 
-                baseElement = ObjectFinder.Self.GetElementSave(instanceSave.BaseType);
+                if (instanceSave != null)
+                {
+                    baseElement = ObjectFinder.Self.GetElementSave(instanceSave.BaseType);
+                }
             }
             else
             {

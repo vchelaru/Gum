@@ -145,6 +145,7 @@ namespace Gum
 
             mGumProjectSave.Initialize();
             mGumProjectSave.AddNewStandardElementTypes();
+            mGumProjectSave.FixStandardVariables();
 
             FileManager.RelativeDirectory = FileManager.GetDirectory(fileName);
             mGumProjectSave.RemoveDuplicateVariables();

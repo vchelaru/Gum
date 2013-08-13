@@ -366,7 +366,11 @@ namespace Gum.Managers
                 {
                     // Don't remove the variable if it's part of an element - we still want it there
                     // so it can be set, we just don't want it to set a value
-                    if (SelectedState.Self.SelectedInstance != null)
+                    // Update August 13, 2013
+                    // Actually, we do want to remove it if it's part of an element but not the
+                    // default state
+                    if (SelectedState.Self.SelectedInstance != null || 
+                        SelectedState.Self.SelectedStateSave != SelectedState.Self.SelectedElement.DefaultState)
                     {
                         state.Variables.Remove(variable);
                     }
