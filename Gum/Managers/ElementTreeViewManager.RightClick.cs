@@ -463,7 +463,10 @@ namespace Gum.Managers
             if (ProjectManager.Self.GeneralSettingsFile.AutoSave)
             {
                 ProjectManager.Self.SaveElement(elementToAddTo);
-                ProjectManager.Self.SaveProject();
+                // I don't think we need to save the entire project
+                // if we add a new instance, only the element.  I'm going
+                // to take this out:
+                //ProjectManager.Self.SaveProject();
             }
         }
 

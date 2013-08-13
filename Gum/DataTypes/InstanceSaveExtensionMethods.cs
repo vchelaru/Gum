@@ -25,13 +25,13 @@ namespace Gum.DataTypes
         }
 
         public static VariableSave GetVariableFromThisOrBase(this InstanceSave instance,
-            ElementSave parent, string variable, bool forceDefault = false)
+            ElementSave parent, string variable, bool forceDefault = false, bool onlyIfSetsValue = false)
         {
-            return GetVariableFromThisOrBase(instance, new List<ElementSave> { parent }, variable, forceDefault);
+            return GetVariableFromThisOrBase(instance, new List<ElementSave> { parent }, variable, forceDefault, onlyIfSetsValue);
         }
 
         public static VariableSave GetVariableFromThisOrBase(this InstanceSave instance, 
-            List<ElementSave> elementStack, string variable, bool forceDefault = false)
+            List<ElementSave> elementStack, string variable, bool forceDefault = false, bool onlyIfSetsValue = false)
         {
             ElementSave instanceBase = ObjectFinder.Self.GetElementSave(instance.BaseType);
 
@@ -49,11 +49,11 @@ namespace Gum.DataTypes
             // non-default states can override the default state, so first
             // let's see if the selected state is non-default and has a value
             // for a given variable.  If not, we'll fall back to the default.
-            if (variableSave == null && defaultState != stateToPullFrom)
+            if ((variableSave == null || (onlyIfSetsValue && variableSave.SetsValue == false))&& defaultState != stateToPullFrom)
             {
                 variableSave = defaultState.GetVariableSave(instance.Name + "." + variable);
             }
-            if (variableSave == null && instanceBase != null)
+            if ( (variableSave == null  || (onlyIfSetsValue && variableSave.SetsValue == false)) && instanceBase != null)
             {
                 // Eventually use the instanceBase's current state value
                 variableSave = instanceBase.DefaultState.GetVariableSave(variable);
@@ -63,9 +63,18 @@ namespace Gum.DataTypes
             {
                 // This can happen if there is a tunneled variable that is null
                 VariableSave possibleVariable = instanceBase.DefaultState.GetVariableSave(variable);
-                if (possibleVariable != null && possibleVariable.Value != null)
+                if (possibleVariable != null && possibleVariable.Value != null && (!onlyIfSetsValue || possibleVariable.SetsValue))
                 {
                     variableSave = possibleVariable;
+                }
+                else if(!string.IsNullOrEmpty(instanceBase.BaseType))
+                {
+                    ElementSave element = ObjectFinder.Self.GetElementSave(instanceBase.BaseType);
+
+                    if (element != null)
+                    {
+                        variableSave = element.GetVariableFromThisOrBase(variable, forceDefault);
+                    }
                 }
             }
 
@@ -107,11 +116,12 @@ namespace Gum.DataTypes
             bool forceDefault = false)
         {
             ElementSave parentContainer = elementStack.Last();
-            VariableSave variableSave = instance.GetVariableFromThisOrBase(parentContainer, variable, forceDefault);
+            VariableSave variableSave = instance.GetVariableFromThisOrBase(parentContainer, variable, forceDefault, true);
 
 
             if (variableSave != null)
             {
+
                 return variableSave.Value;
             }
             else

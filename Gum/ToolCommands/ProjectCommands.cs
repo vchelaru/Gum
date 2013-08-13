@@ -60,10 +60,12 @@ namespace Gum.ToolCommands
             if (xVariable != null)
             {
                 xVariable.Value = null;
+                xVariable.SetsValue = false;
             }
             if (yVariable != null)
             {
                 yVariable.Value = null;
+                yVariable.SetsValue = false;
             }
 
             componentSave.BaseType = "Container";

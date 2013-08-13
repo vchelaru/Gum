@@ -132,7 +132,8 @@ namespace Gum.Managers
             stateSave.Variables.Add(new VariableSave { Type = "bool", Value = false, Category = "Flip", Name = "FlipHorizontal" });
             stateSave.Variables.Add(new VariableSave { Type = "bool", Value = false, Category = "Flip", Name = "FlipVertical" });
 
-            stateSave.Variables.Add(new VariableSave { Type = "int", Value = 255, Category = "Rendering", Name = "Alpha" });
+            AddColorVariables(stateSave);
+
             stateSave.Variables.Add(new VariableSave { Type = "Blend", Value = Blend.Normal, Name = "Blend", Category = "Rendering" });
 
             List<string> list = new List<string>();
@@ -196,8 +197,7 @@ namespace Gum.Managers
             stateSave.Variables.Add(new VariableSave { Type = "string", Value = "", Name = "SourceFile", IsFile = true });
             stateSave.Variables.Add(new VariableSave { Type = "bool", Value = true, Name = "Visible" });
 
-
-            stateSave.Variables.Add(new VariableSave { Type = "int", Value = 255, Category = "Rendering", Name = "Alpha" });
+            AddColorVariables(stateSave);
             stateSave.Variables.Add(new VariableSave { Type = "Blend", Value = Blend.Normal, Name = "Blend", Category = "Rendering" });
 
             PluginManager.Self.ModifyDefaultStandardState("NineSlice", stateSave);
@@ -234,15 +234,15 @@ namespace Gum.Managers
 
         }
 
-        private static void AddColorVariables(StateSave stateSave, bool includeAlpha)
+        private static void AddColorVariables(StateSave stateSave, bool includeAlpha = true)
         {
             if (includeAlpha)
             {
-                stateSave.Variables.Add(new VariableSave { Type = "int", Value = 255, Name = "Alpha", Category="Color" });
+                stateSave.Variables.Add(new VariableSave { Type = "int", Value = 255, Name = "Alpha", Category="Rendering" });
             }
-            stateSave.Variables.Add(new VariableSave { Type = "int", Value = 255, Name = "Red", Category = "Color" });
-            stateSave.Variables.Add(new VariableSave { Type = "int", Value = 255, Name = "Green", Category = "Color" });
-            stateSave.Variables.Add(new VariableSave { Type = "int", Value = 255, Name = "Blue", Category = "Color" });
+            stateSave.Variables.Add(new VariableSave { Type = "int", Value = 255, Name = "Red", Category = "Rendering" });
+            stateSave.Variables.Add(new VariableSave { Type = "int", Value = 255, Name = "Green", Category = "Rendering" });
+            stateSave.Variables.Add(new VariableSave { Type = "int", Value = 255, Name = "Blue", Category = "Rendering" });
         }
 
         private static void AddDimensionsVariables(StateSave stateSave, float defaultWidth, float defaultHeight)

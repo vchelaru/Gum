@@ -329,6 +329,9 @@ namespace Gum.Wireframe
             stateSave.SetValue("Visible", rvf.GetValue("Visible"));
 
             stateSave.SetValue("Alpha", rvf.GetValue("Alpha"));
+            stateSave.SetValue("Red", rvf.GetValue("Red"));
+            stateSave.SetValue("Green", rvf.GetValue("Green"));
+            stateSave.SetValue("Blue", rvf.GetValue("Blue"));
             stateSave.SetValue("Blend", rvf.GetValue("Blend"));
 
 
@@ -361,6 +364,9 @@ namespace Gum.Wireframe
             stateSave.SetValue("FlipHorizontal", rvf.GetValue("FlipHorizontal"));
             stateSave.SetValue("FlipVertical", rvf.GetValue("FlipVertical"));
             stateSave.SetValue("Alpha", rvf.GetValue("Alpha"));
+            stateSave.SetValue("Red", rvf.GetValue("Red"));
+            stateSave.SetValue("Green", rvf.GetValue("Green"));
+            stateSave.SetValue("Blue", rvf.GetValue("Blue"));
             stateSave.SetValue("Blend", rvf.GetValue("Blend"));
 
             SetParent(parentIpso, sprite, rvf.GetValue<string>("Guide"));
@@ -918,10 +924,9 @@ namespace Gum.Wireframe
                 sprite.FlipVertical = (bool)stateSave.GetValue("FlipVertical");
             }
 
-            if (stateSave.GetValue("Alpha") != null)
-            {
-                sprite.Color = new Color(255, 255, 255, (int)stateSave.GetValue("Alpha"));
-            }
+            var color = GetColorFromState(stateSave);
+
+            sprite.Color = color;
 
             if (stateSave.GetValue("Blend") != null)
             {
@@ -940,6 +945,34 @@ namespace Gum.Wireframe
                 }
             }
 
+        }
+
+        private static Microsoft.Xna.Framework.Color GetColorFromState(StateSave stateSave)
+        {
+            int alpha = 255;
+            int red = 255;
+            int green = 255;
+            int blue = 255;
+
+            if (stateSave.GetValue("Alpha") != null)
+            {
+                alpha = (int)stateSave.GetValue("Alpha");
+            }
+            if (stateSave.GetValue("Red") != null)
+            {
+                red = (int)stateSave.GetValue("Red");
+            }
+            if (stateSave.GetValue("Green") != null)
+            {
+                green = (int)stateSave.GetValue("Green");
+            }
+            if (stateSave.GetValue("Blue") != null)
+            {
+                blue = (int)stateSave.GetValue("Blue");
+            }
+
+            var color = new Color(red, green, blue, alpha);
+            return color;
         }
 
         private void InitializeText(Text text, StateSave stateSave)
@@ -983,11 +1016,8 @@ namespace Gum.Wireframe
                     bareTexture + PossibleNineSliceEndings[NineSliceSections.BottomRight] + "." + extension, null, out error);
             }
 
-
-            if (stateSave.GetValue("Alpha") != null)
-            {
-                nineSlice.Color = new Color(255, 255, 255, (int)stateSave.GetValue("Alpha"));
-            }
+            var color = GetColorFromState(stateSave);
+            nineSlice.Color = color;
 
             if (stateSave.GetValue("Blend") != null)
             {
