@@ -101,11 +101,28 @@ namespace Gum.DataTypes.Variables
             return null;
         }
 
+        public bool TryGetValue<T>(string variableName, out T result)
+        {
+            object value = GetValue(variableName);
+            bool toReturn = false;
+
+            if (value != null && value is T)
+            {
+                result = (T)value;
+                value = true;
+            }
+            else
+            {
+                result = default(T);
+            }
+            return toReturn;
+        }
+
         public T GetValueOrDefault<T>(string variableName)
         {
             object toReturn = GetValue(variableName);
 
-            if (toReturn == null)
+            if (toReturn == null || (toReturn is T) == false)
             {
                 return default(T);
             }

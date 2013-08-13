@@ -954,22 +954,10 @@ namespace Gum.Wireframe
             int green = 255;
             int blue = 255;
 
-            if (stateSave.GetValue("Alpha") != null)
-            {
-                alpha = (int)stateSave.GetValue("Alpha");
-            }
-            if (stateSave.GetValue("Red") != null)
-            {
-                red = (int)stateSave.GetValue("Red");
-            }
-            if (stateSave.GetValue("Green") != null)
-            {
-                green = (int)stateSave.GetValue("Green");
-            }
-            if (stateSave.GetValue("Blue") != null)
-            {
-                blue = (int)stateSave.GetValue("Blue");
-            }
+            stateSave.TryGetValue<int>("Alpha", out alpha);
+            stateSave.TryGetValue<int>("Red", out red);
+            stateSave.TryGetValue<int>("Green", out green);
+            stateSave.TryGetValue<int>("Blue", out blue);
 
             var color = new Color(red, green, blue, alpha);
             return color;
