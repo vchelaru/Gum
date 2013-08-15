@@ -18,6 +18,8 @@ namespace Gum.DataTypes.Variables
             {
                 variable.FixEnumerations();
             }
+
+            stateSave.Variables.Sort((a, b) => a.Name.CompareTo(b.Name));
         }
 
         public static object GetValueRecursive(this StateSave stateSave, string variableName)
