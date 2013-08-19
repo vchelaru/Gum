@@ -132,7 +132,7 @@ namespace Gum.ToolCommands
             }
         }
 
-        internal void SaveProject()
+        public void SaveProject()
         {
             ProjectManager.Self.SaveProject();
         }

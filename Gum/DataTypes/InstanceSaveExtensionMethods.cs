@@ -56,8 +56,15 @@ namespace Gum.DataTypes
             if ( (variableSave == null  || (onlyIfSetsValue && variableSave.SetsValue == false)) && instanceBase != null)
             {
                 // Eventually use the instanceBase's current state value
-                variableSave = instanceBase.DefaultState.GetVariableSave(variable);
+                variableSave = instanceBase.DefaultState.GetVariableRecursive(variable);
             }
+
+            // I don't think we have to do this because we're going to copy over
+            // the variables to all components on load.
+            //if (variableSave == null && instanceBase != null && instanceBase is ComponentSave)
+            //{
+            //    variableSave = StandardElementsManager.Self.DefaultStates["Component"].GetVariableSave(variable);
+            //}
 
             if (variableSave != null && variableSave.Value == null && instanceBase != null)
             {

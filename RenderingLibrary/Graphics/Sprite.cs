@@ -212,7 +212,8 @@ namespace RenderingLibrary.Graphics
 
         public bool Wrap
         {
-            get { return false; }
+            get;
+            set;
         }
         #endregion
 

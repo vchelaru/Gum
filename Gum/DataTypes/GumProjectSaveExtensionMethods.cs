@@ -53,6 +53,8 @@ namespace Gum.DataTypes
                 }
 
                 componentSave.Initialize(defaultStateSave);
+
+                componentSave.Initialize(StandardElementsManager.Self.DefaultStates["Component"]);
             }
 
 

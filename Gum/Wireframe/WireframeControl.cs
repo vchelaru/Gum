@@ -52,6 +52,7 @@ namespace Gum.Wireframe
         LineRectangle mScreenBounds;
 
         public Color BackgroundColor = Color.DimGray;
+        public Color ScreenBoundsColor = Color.LightBlue;
 
         bool mHasInitialized = false;
 
@@ -239,7 +240,7 @@ namespace Gum.Wireframe
                 mScreenBounds = new LineRectangle();
                 mScreenBounds.Width = 800;
                 mScreenBounds.Height = 600;
-                mScreenBounds.Color = Color.Orange;
+                mScreenBounds.Color = ScreenBoundsColor;
                 ShapeManager.Self.Add(mScreenBounds, SelectionManager.Self.UiLayer);
 
 

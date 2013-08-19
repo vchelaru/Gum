@@ -46,6 +46,11 @@ namespace Gum.Wireframe
         WireframeEditControl mEditControl;
         WireframeControl mWireframeControl;
 
+        Sprite mBackgroundSprite;
+
+        const int left = -4096;
+        const int width = 8192;
+
 
         #endregion
 
@@ -112,7 +117,45 @@ namespace Gum.Wireframe
 
         private void HandleAfterXnaIntiailize(object sender, EventArgs e)
         {
+            // Create the Texture2D here
+            ImageData imageData = new ImageData(2, 2, null);
 
+            int lightColor = 150;
+            int darkColor = 170;
+            Color darkGray = new Color(lightColor, lightColor, lightColor);
+            Color lightGray = new Color(darkColor, darkColor, darkColor);
+
+            for (int y = 0; y < 2; y++)
+            {
+                for (int x = 0; x < 2; x++)
+                {
+                    bool isDark = ((x + y) % 2 == 0);
+                    if (isDark)
+                    {
+                        imageData.SetPixel(x, y, darkGray);
+
+                    }
+                    else
+                    {
+                        imageData.SetPixel(x, y, lightGray);
+                    }
+                }
+            }
+
+            Texture2D texture = imageData.ToTexture2D(false);
+            mBackgroundSprite = new Sprite(texture);
+
+            mBackgroundSprite.Wrap = true;
+            mBackgroundSprite.X = -4096;
+            mBackgroundSprite.Y = -4096;
+            mBackgroundSprite.Width = 8192;
+            mBackgroundSprite.Height = 8192;
+
+            mBackgroundSprite.Wrap = true;
+            int timesToRepeat = 256;
+            mBackgroundSprite.SourceRectangle = new Rectangle(0, 0, timesToRepeat * texture.Width, timesToRepeat * texture.Height);
+
+            SpriteManager.Self.Add(mBackgroundSprite);
         }
 
         private void HandleXnaUpdate()

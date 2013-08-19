@@ -80,6 +80,14 @@ namespace Gum.Managers
             }
         }
 
+        public Dictionary<string, StateSave> DefaultStates
+        {
+            get
+            {
+                return mDefaults;
+            }
+        }
+
         #endregion
 
 

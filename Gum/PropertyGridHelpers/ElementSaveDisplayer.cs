@@ -123,6 +123,8 @@ namespace Gum.PropertyGridHelpers
                 }
             }
 
+
+
             #region Get the StandardElementSave for the instance/element (depending on what's selected)
 
             StandardElementSave ses = null;

@@ -103,7 +103,7 @@ namespace Gum.DataTypes.Variables
 
         public override string ToString()
         {
-            string returnValue = Type + " " + Name;
+            string returnValue = Name + " (" + Type + ")";
 
             if (Value != null)
             {
