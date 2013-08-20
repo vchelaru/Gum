@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Gum.DataTypes.Variables;
+using Gum.Wireframe;
 
 namespace Gum.DataTypes
 {
@@ -26,7 +27,7 @@ namespace Gum.DataTypes
         #endregion
 
         InstanceSave mInstanceSave;
-        List<ElementSave> mElementStack;
+        List<ElementWithState> mElementStack;
         StateSave mStateSave;
 
         VariableContainerType ContainerType
@@ -41,16 +42,19 @@ namespace Gum.DataTypes
 
             mInstanceSave = instanceSave;
 
-            mElementStack = new List<ElementSave>(){ container };
+            mElementStack = new List<ElementWithState>() { new ElementWithState( container )};
         }
 
-        public RecursiveVariableFinder(InstanceSave instanceSave, List<ElementSave> elementStack)
+        public RecursiveVariableFinder(InstanceSave instanceSave, List<ElementWithState> elementStack)
         {
             ContainerType = VariableContainerType.InstanceSave;
 
             mInstanceSave = instanceSave;
             mElementStack = elementStack;
         }
+
+
+
 
         public RecursiveVariableFinder(StateSave stateSave)
         {
@@ -105,7 +109,7 @@ namespace Gum.DataTypes
             switch (ContainerType)
             {
                 case VariableContainerType.InstanceSave:
-                    return mInstanceSave.GetVariableListFromThisOrBase(mElementStack.Last(), variableName);
+                    return mInstanceSave.GetVariableListFromThisOrBase(mElementStack.Last().Element, variableName);
                 case VariableContainerType.StateSave:
                     return mStateSave.GetVariableListRecursive(variableName);
                 //break;

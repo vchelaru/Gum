@@ -7,6 +7,7 @@ using Gum.Managers;
 using System.Collections;
 using Gum.Reflection;
 using ToolsUtilities;
+using Gum.Wireframe;
 
 namespace Gum.DataTypes.Variables
 {
@@ -249,7 +250,7 @@ namespace Gum.DataTypes.Variables
             // instanceSave may (probably will be) null.
             if (instanceSave != null)
             {
-                VariableSave tempVariable = instanceSave.GetVariableFromThisOrBase(stateSave.ParentContainer, rootName);
+                VariableSave tempVariable = instanceSave.GetVariableFromThisOrBase(new ElementWithState( stateSave.ParentContainer ), rootName);
 
                 if (tempVariable != null)
                 {

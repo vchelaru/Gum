@@ -5,6 +5,7 @@ using System.Text;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.ToolStates;
+using Gum.Wireframe;
 
 namespace Gum.DataTypes
 {
@@ -25,19 +26,19 @@ namespace Gum.DataTypes
         }
 
         public static VariableSave GetVariableFromThisOrBase(this InstanceSave instance,
-            ElementSave parent, string variable, bool forceDefault = false, bool onlyIfSetsValue = false)
+            ElementWithState parent, string variable, bool forceDefault = false, bool onlyIfSetsValue = false)
         {
-            return GetVariableFromThisOrBase(instance, new List<ElementSave> { parent }, variable, forceDefault, onlyIfSetsValue);
+            return GetVariableFromThisOrBase(instance, new List<ElementWithState> { parent }, variable, forceDefault, onlyIfSetsValue);
         }
 
         public static VariableSave GetVariableFromThisOrBase(this InstanceSave instance, 
-            List<ElementSave> elementStack, string variable, bool forceDefault = false, bool onlyIfSetsValue = false)
+            List<ElementWithState> elementStack, string variable, bool forceDefault = false, bool onlyIfSetsValue = false)
         {
             ElementSave instanceBase = ObjectFinder.Self.GetElementSave(instance.BaseType);
 
-            StateSave stateToPullFrom = elementStack.Last().DefaultState;
-            StateSave defaultState = elementStack.Last().DefaultState;
-            if (elementStack.Last() == SelectedState.Self.SelectedElement && 
+            StateSave stateToPullFrom = elementStack.Last().StateSave;
+            StateSave defaultState = elementStack.Last().Element.DefaultState;
+            if (elementStack.Last().Element == SelectedState.Self.SelectedElement && 
                 SelectedState.Self.SelectedStateSave != null &&
                 !forceDefault)
             {
@@ -116,13 +117,13 @@ namespace Gum.DataTypes
         public static object GetValueFromThisOrBase(this InstanceSave instance, ElementSave parent, string variable,
             bool forceDefault = false)
         {
-            return GetValueFromThisOrBase(instance, new List < ElementSave >(){ parent }, variable, forceDefault);
+            return GetValueFromThisOrBase(instance, new List < ElementWithState >(){ new ElementWithState( parent )}, variable, forceDefault);
         }
 
-        public static object GetValueFromThisOrBase(this InstanceSave instance, List<ElementSave> elementStack, string variable,
+        public static object GetValueFromThisOrBase(this InstanceSave instance, List<ElementWithState> elementStack, string variable,
             bool forceDefault = false)
         {
-            ElementSave parentContainer = elementStack.Last();
+            ElementWithState parentContainer = elementStack.Last();
             VariableSave variableSave = instance.GetVariableFromThisOrBase(parentContainer, variable, forceDefault, true);
 
 
@@ -133,7 +134,7 @@ namespace Gum.DataTypes
             }
             else
             {
-                VariableListSave variableListSave = parentContainer.DefaultState.GetVariableListSave(instance.Name + "." + variable);
+                VariableListSave variableListSave = parentContainer.Element.DefaultState.GetVariableListSave(instance.Name + "." + variable);
 
                 if (variableListSave == null)
                 {

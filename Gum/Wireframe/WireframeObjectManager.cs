@@ -255,9 +255,15 @@ namespace Gum.Wireframe
                     }
                 }
 
-                List<ElementSave> elementStack = new List<ElementSave>();
+                List<ElementWithState> elementStack = new List<ElementWithState>();
 
-                elementStack.Add(elementSave);
+                ElementWithState elementWithState = new ElementWithState(elementSave);
+                if (elementSave == SelectedState.Self.SelectedElement)
+                {
+                    elementWithState.StateName = SelectedState.Self.SelectedStateSave.Name;
+                }
+
+                elementStack.Add(elementWithState);
 
                 // parallel screws up the ordering of objects, so we'll do it on the primary thread for now
                 // and parallelize it later:
@@ -271,7 +277,7 @@ namespace Gum.Wireframe
 
 
 
-                elementStack.Remove(elementSave);
+                elementStack.Remove( elementStack.FirstOrDefault(item=>item.Element == elementSave));
 
             }
             ElementShowing = elementSave;
@@ -474,27 +480,31 @@ namespace Gum.Wireframe
 
         internal void UpdateScalesAndPositionsForSelectedChildren()
         {
-            List<ElementSave> elementStack = new List<ElementSave>();
-            elementStack.Add(SelectedState.Self.SelectedElement);
+            List<ElementWithState> elementStack = new List<ElementWithState>();
+            elementStack.Add( new ElementWithState( SelectedState.Self.SelectedElement ));
             foreach (IPositionedSizedObject selectedIpso in SelectionManager.Self.SelectedIpsos)
             {
                 UpdateScalesAndPositionsForSelectedChildren(selectedIpso, selectedIpso.Tag as InstanceSave, elementStack);
             }
         }
 
-        void UpdateScalesAndPositionsForSelectedChildren(IPositionedSizedObject ipso, InstanceSave instanceSave, List<ElementSave> elementStack)
+        void UpdateScalesAndPositionsForSelectedChildren(IPositionedSizedObject ipso, InstanceSave instanceSave, List<ElementWithState> elementStack)
         {
             ElementSave selectedElement = null;
 
             if (instanceSave == null)
             {
-                selectedElement = elementStack.Last();
+                selectedElement = elementStack.Last().Element;
             }
             else
             {
                 selectedElement = ObjectFinder.Self.GetElementSave(instanceSave.BaseType);
 
-                elementStack.Add(selectedElement);
+                ElementWithState elementWithState = new ElementWithState(selectedElement);
+                var state = new DataTypes.RecursiveVariableFinder(instanceSave, elementStack).GetValue("State") as string;
+                elementWithState.StateName = state;
+                //elementWithState.StateName 
+                elementStack.Add( elementWithState);
             }
             foreach (IPositionedSizedObject child in ipso.Children)
             {

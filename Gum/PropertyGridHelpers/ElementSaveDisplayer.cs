@@ -101,7 +101,6 @@ namespace Gum.PropertyGridHelpers
                 {
                     pdc = mHelper.AddProperty(pdc, "Locked", typeof(bool));
                 }
-                pdc = mHelper.AddProperty(pdc, "State", typeof(string), new AvailableStatesConverter(), null);
             }
 
             // if component

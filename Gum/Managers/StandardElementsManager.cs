@@ -7,6 +7,7 @@ using Gum.DataTypes.Variables;
 using RenderingLibrary.Graphics;
 using Gum.Plugins;
 using Gum.RenderingLibrary;
+using Gum.PropertyGridHelpers.Converters;
 
 namespace Gum.Managers
 {
@@ -220,6 +221,9 @@ namespace Gum.Managers
             stateSave = new StateSave();
             stateSave.Name = "Default";
             PluginManager.Self.ModifyDefaultStandardState("Component", stateSave);
+
+            stateSave.Variables.Add(new VariableSave { Type = "string", Value = "Default", Name = "State", CustomTypeConverter = new AvailableStatesConverter()});
+
 
             mDefaults.Add("Component", stateSave);
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
