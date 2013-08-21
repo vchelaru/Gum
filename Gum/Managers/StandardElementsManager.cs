@@ -116,7 +116,8 @@ namespace Gum.Managers
             stateSave.Variables.Add(new VariableSave { Type = "HorizontalAlignment", Value = HorizontalAlignment.Left, Name = "HorizontalAlignment", Category = "Text" });
             stateSave.Variables.Add(new VariableSave { Type = "string", Value = "Arial", Name = "Font", IsFont = true, Category = "Font" });
             stateSave.Variables.Add(new VariableSave { Type = "int", Value = 18, Name = "FontSize", Category = "Font" });
-            AddColorVariables(stateSave, false);
+
+            AddColorVariables(stateSave, includeAlpha:true);
 
             PluginManager.Self.ModifyDefaultStandardState("Text", stateSave);
             mDefaults.Add("Text", stateSave);

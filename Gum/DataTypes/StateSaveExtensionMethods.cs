@@ -544,5 +544,118 @@ namespace Gum.DataTypes.Variables
 
 
         }
+
+        // I wrote this for animation but it turns out it isn't going to work how I expected
+        //public static StateSave CombineBaseValuesAndClone(this StateSave stateSave)
+        //{
+        //    StateSave cloned = new StateSave();
+
+        //    if (stateSave.ParentContainer == null)
+        //    {
+        //        // This thing doesn't have a parent container so we have no idea how to get the default and follow inheritance
+        //        cloned = stateSave.Clone();
+        //    }
+        //    else
+        //    {
+        //        ElementSave parent = stateSave.ParentContainer;
+        //        if (parent.DefaultState == stateSave)
+        //        {
+        //            if (string.IsNullOrEmpty(parent.BaseType))
+        //            {
+        //                cloned = stateSave.Clone();
+        //            }
+        //            else
+        //            {
+        //                ElementSave baseOfParent = ObjectFinder.Self.GetElementSave(parent.BaseType);
+
+        //                if (baseOfParent == null)
+        //                {
+        //                    cloned = stateSave.Clone();
+        //                }
+        //                else
+        //                {
+        //                    cloned = baseOfParent.DefaultState.CombineBaseValuesAndClone();
+
+        //                    cloned.MergeIntoThis(stateSave);
+
+        //                }
+        //            }
+        //        }
+        //        else
+        //        {
+        //            cloned = parent.DefaultState.CombineBaseValuesAndClone();
+
+        //            cloned.MergeIntoThis(stateSave);
+        //        }
+        //    }
+
+
+        //    return cloned;
+
+        //}
+
+        public static void MergeIntoThis(this StateSave thisState, StateSave other, float ratio = 1)
+        {
+            foreach (var variableSave in other.Variables)
+            {
+                // The first will use its default if one doesn't exist
+                VariableSave whatToSet = thisState.GetVariableSave(variableSave.Name);
+
+                bool needsValueFromBase = whatToSet == null || whatToSet.SetsValue == false;
+                if (whatToSet == null)
+                {
+                    whatToSet = variableSave.Clone();
+
+                    // Get the value recursively before adding it to the list
+                    if (needsValueFromBase)
+                    {
+                        whatToSet.Value = thisState.GetValueRecursive(variableSave.Name);
+                    }
+
+                    thisState.Variables.Add(whatToSet);
+                }
+
+
+
+                whatToSet.Value = GetValueConsideringInterpolation(whatToSet, variableSave, ratio);
+            }
+
+            // todo:  Handle lists?
+
+        }
+
+        private static object GetValueConsideringInterpolation(VariableSave firstVariable, VariableSave secondVariable, float interpolationValue)
+        {
+            if (firstVariable.Value == null || secondVariable.Value == null)
+            {
+                return secondVariable.Value;
+            }
+            else if (firstVariable.Value is float && secondVariable.Value is float)
+            {
+                float firstFloat = (float)firstVariable.Value;
+                float secondFloat = (float)secondVariable.Value;
+
+                return firstFloat + (secondFloat - firstFloat) * interpolationValue;
+            }
+            else if (firstVariable.Value is double && secondVariable.Value is double)
+            {
+                double firstFloat = (double)firstVariable.Value;
+                double secondFloat = (double)secondVariable.Value;
+
+                return firstFloat + (secondFloat - firstFloat) * interpolationValue;
+            }
+
+            else if (firstVariable.Value is int)
+            {
+                int firstFloat = (int)firstVariable.Value;
+                int secondFloat = (int)secondVariable.Value;
+
+                return (int)(.5f + firstFloat + (secondFloat - firstFloat) * interpolationValue);
+            }
+            else
+            {
+                return secondVariable.Value;
+            }
+        }
     }
 }

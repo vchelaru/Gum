@@ -161,13 +161,7 @@ namespace Gum.PropertyGridHelpers
             {
                 VariableListSave variableList = defaultState.VariableLists[i];
 
-                bool shouldInclude = true;
-                // Eventually will want to implement this:
-                shouldInclude = (string.IsNullOrEmpty(variableList.SourceObject)
-                    // Not sure what this amountToDisplay is all about...
-                    //|| amountToDisplay == AmountToDisplay.AllVariables
-                    //|| !string.IsNullOrEmpty(variableList.ExposedAsName))
-                );
+                bool shouldInclude = GetIfShouldInclude(variableList, elementSave, instanceSave, null);
 
                 if (shouldInclude)
                 {
@@ -263,6 +257,18 @@ namespace Gum.PropertyGridHelpers
             return pdc;
         }
 
+        private static bool GetIfShouldInclude(VariableListSave variableList, ElementSave container, InstanceSave currentInstance, StandardElementSave rootElementSave)
+        {
+            bool toReturn = (string.IsNullOrEmpty(variableList.SourceObject));
+
+            if (toReturn)
+            {
+                toReturn = GetShouldIncludeBasedOnBaseType(variableList, container, rootElementSave);
+            }
+
+            return toReturn;
+        }
+            
         private static bool GetIfShouldInclude(VariableSave defaultVariable, ElementSave container, InstanceSave currentInstance, StandardElementSave rootElementSave)
         {
             bool canOnlyBeSetInDefaultState = defaultVariable.CanOnlyBeSetInDefaultState;
@@ -317,6 +323,59 @@ namespace Gum.PropertyGridHelpers
             }
 
             return toReturn;
+        }
+
+        private static bool GetShouldIncludeBasedOnBaseType(VariableListSave variableList, ElementSave container, StandardElementSave rootElementSave)
+        {
+            bool shouldInclude = false;
+
+            if (string.IsNullOrEmpty(variableList.SourceObject))
+            {
+                if (container is ScreenSave)
+                {
+                    // If it's a Screen, then the answer is "yes" because
+                    // Screens don't have a base type that they can switch,
+                    // so any variable that's part of the Screen is always part
+                    // of the Screen.
+                    shouldInclude = true;
+                }
+                else
+                {
+                    if (container is ComponentSave)
+                    {
+                        // See if it's defined in the standards list
+                        var foundInstance = StandardElementsManager.Self.GetDefaultStateFor("Component").VariableLists.FirstOrDefault(
+                            item => item.Name == variableList.Name);
+
+                        shouldInclude = foundInstance != null;
+                    }
+                    // If the defaultVariable's
+                    // source object is null then
+                    // that means that the variable
+                    // is being set on "this".  However,
+                    // variables that are set on "this" may
+                    // not actually be valid for the type, but
+                    // they may still exist because the object type
+                    // was switched.  Therefore, we want to make sure
+                    // that the variable is valid given the type of object
+                    // that "this" currently is by checking the default state
+                    // on the rootElementSave
+                    if (!shouldInclude && rootElementSave != null)
+                    {
+                        shouldInclude = rootElementSave.DefaultState.GetVariableListRecursive(variableList.Name) != null;
+                    }
+                }
+            }
+
+            else
+            {
+
+                shouldInclude = SelectedState.Self.SelectedInstance != null
+                    // VariableLists cannot be exposed (currently)
+                    //|| !string.IsNullOrEmpty(variableList.ExposedAsName);
+                    ;
+            }
+            return shouldInclude;
         }
 
         private static bool GetShouldIncludeBasedOnBaseType(VariableSave defaultVariable, ElementSave container, StandardElementSave rootElementSave)

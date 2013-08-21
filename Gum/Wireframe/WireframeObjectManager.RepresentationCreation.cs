@@ -632,7 +632,7 @@ namespace Gum.Wireframe
             TextManager.Self.Add(text);
             mTexts.Add(text);
 
-                //text.Alpha = (float)stateSave.GetValue("Alpha");
+            text.Alpha = rvf.GetValue<int>("Alpha") / 255.0f;
             text.Red = rvf.GetValue<int>("Red")/255.0f;
             text.Green = rvf.GetValue<int>("Green") / 255.0f;
             text.Blue = rvf.GetValue<int>("Blue") / 255.0f;
@@ -669,7 +669,7 @@ namespace Gum.Wireframe
                 "VerticalAlignment",
                 "Font",
                 "FontSize",
-                //"Alpha",
+                "Alpha",
                 "Red",
                 "Green",
                 "Blue");

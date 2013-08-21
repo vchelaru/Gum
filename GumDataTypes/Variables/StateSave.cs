@@ -216,67 +216,48 @@ namespace Gum.DataTypes.Variables
             return this.Name + " in " + ParentContainer;
         }
 
-        public void MergeIntoThis(StateSave other)
-        {
-            foreach (var variableSave in other.Variables)
-            {
-                VariableSave whatToSet = Variables.FirstOrDefault(item => item.Name == variableSave.Name);
+        //public void InterpolateFromState(StateSave beginningState, float percent)
+        //{
+        //    foreach (var variableSave in beginningState.Variables)
+        //    {
+        //        VariableSave whatToSet = Variables.FirstOrDefault(item => item.Name == variableSave.Name);
 
-                if (whatToSet == null)
-                {
-                    whatToSet = variableSave.Clone();
-                    this.Variables.Add(whatToSet);
-                }
-
-                whatToSet.Value = variableSave.Value;                
-            }
-
-            // todo:  Handle lists?
-
-        }
-
-        public void InterpolateFromState(StateSave beginningState, float percent)
-        {
-            foreach (var variableSave in beginningState.Variables)
-            {
-                VariableSave whatToSet = Variables.FirstOrDefault(item => item.Name == variableSave.Name);
-
-                if (whatToSet == null)
-                {
-                    VariableSave defaultSetValue = Variables.FirstOrDefault(item => item.Name == "Default");
-                    if (defaultSetValue != null)
-                    {
-                        whatToSet = defaultSetValue.Clone();
-                    }
-                    else
-                    {
-                        whatToSet = variableSave.Clone();
-                    }
-                    this.Variables.Add(whatToSet);
-                }
-                if (whatToSet.Type == "int")
-                {
-                    whatToSet.Value = ((int)variableSave.Value) +
-                        ((((int)whatToSet.Value) - ((int)variableSave.Value)) * percent);
-                }
-                else if (whatToSet.Type == "float")
-                {
-                    whatToSet.Value = ((float)variableSave.Value) +
-                        ((((float)whatToSet.Value) - ((float)variableSave.Value)) * percent);
-                }
-                else if (whatToSet.Type == "double")
-                {
-                    whatToSet.Value = ((double)variableSave.Value) +
-                        ((((double)whatToSet.Value) - ((double)variableSave.Value)) * percent);
-                }
-                else
-                {
-                    whatToSet.Value = variableSave.Value;
-                }
+        //        if (whatToSet == null)
+        //        {
+        //            VariableSave defaultSetValue = Variables.FirstOrDefault(item => item.Name == "Default");
+        //            if (defaultSetValue != null)
+        //            {
+        //                whatToSet = defaultSetValue.Clone();
+        //            }
+        //            else
+        //            {
+        //                whatToSet = variableSave.Clone();
+        //            }
+        //            this.Variables.Add(whatToSet);
+        //        }
+        //        if (whatToSet.Type == "int")
+        //        {
+        //            whatToSet.Value = ((int)variableSave.Value) +
+        //                ((((int)whatToSet.Value) - ((int)variableSave.Value)) * percent);
+        //        }
+        //        else if (whatToSet.Type == "float")
+        //        {
+        //            whatToSet.Value = ((float)variableSave.Value) +
+        //                ((((float)whatToSet.Value) - ((float)variableSave.Value)) * percent);
+        //        }
+        //        else if (whatToSet.Type == "double")
+        //        {
+        //            whatToSet.Value = ((double)variableSave.Value) +
+        //                ((((double)whatToSet.Value) - ((double)variableSave.Value)) * percent);
+        //        }
+        //        else
+        //        {
+        //            whatToSet.Value = variableSave.Value;
+        //        }
                 
-            }
+        //    }
 
-        }
+        //}
 
     }
 }
