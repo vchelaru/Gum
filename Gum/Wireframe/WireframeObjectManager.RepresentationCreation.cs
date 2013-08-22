@@ -153,16 +153,16 @@ namespace Gum.Wireframe
             List<VariableSave> exposedVariables = new List<VariableSave>();
             if (elementStack.Count > 1)
             {
-                ElementSave containerOfVariables = elementStack[elementStack.Count - 2].Element;
-                ElementSave definerOfVariables = elementStack[elementStack.Count - 1].Element;
+                ElementWithState containerOfVariables = elementStack[elementStack.Count - 2];
+                ElementWithState definerOfVariables = elementStack[elementStack.Count - 1];
 
-                foreach (VariableSave variable in definerOfVariables.DefaultState.Variables)
+                foreach (VariableSave variable in definerOfVariables.Element.DefaultState.Variables)
                 {
                     if (!string.IsNullOrEmpty(variable.ExposedAsName) && variable.SourceObject == instance.Name)
                     {
                         // This variable is exposed, let's see if the container does anything with it
 
-                        VariableSave foundVariable = containerOfVariables.DefaultState.GetVariableSave(parentInstance.Name + "." + variable.ExposedAsName);
+                        VariableSave foundVariable = containerOfVariables.StateSave.GetVariableSave(parentInstance.Name + "." + variable.ExposedAsName);
 
                         if (foundVariable != null)
                         {
