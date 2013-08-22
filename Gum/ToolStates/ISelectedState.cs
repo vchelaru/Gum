@@ -18,7 +18,7 @@ namespace Gum.ToolStates
         ComponentSave SelectedComponent { get; set; }
         InstanceSave SelectedInstance { get; set; }
         IEnumerable<InstanceSave> SelectedInstances { get; set;  }
-
+        string SelectedVariableName { get; }
         StandardElementSave SelectedStandardElement { get; set; }
         VariableSave SelectedVariableSave { get; }
         TreeNode SelectedTreeNode { get; }

@@ -290,14 +290,16 @@ namespace Gum.ToolStates
         {
             get
             {
-                if (SelectedStateSave != null)
+                string selectedName = SelectedVariableName;
+
+                
+                if (!string.IsNullOrEmpty(selectedName))
                 {
-                    string variableName = PropertyGridManager.Self.SelectedLabel;
                     if (SelectedInstance != null)
                     {
-                        variableName = SelectedInstance.Name + "." + variableName;
+                        selectedName = SelectedInstance.Name + "." + selectedName;
                     }
-                    return SelectedStateSave.GetVariableSave(variableName);
+                    return SelectedStateSave.GetVariableSave(selectedName);
                 }
                 else
                 {
@@ -305,6 +307,26 @@ namespace Gum.ToolStates
                 }
             }
 
+        }
+
+        /// <summary>
+        /// Returns the name of the selected entry in the property grid.
+        /// There may not be a VariableSave backing the selection as the 
+        /// value may be null in the StateSave
+        /// </summary>
+        public string SelectedVariableName
+        {
+            get
+            {
+                if (SelectedStateSave != null)
+                {
+                    return PropertyGridManager.Self.SelectedLabel;
+                }
+                else
+                {
+                    return null;
+                }
+            }
         }
 
         public TreeNode SelectedTreeNode

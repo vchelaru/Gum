@@ -162,7 +162,7 @@ namespace Gum.Wireframe
                     {
                         // This variable is exposed, let's see if the container does anything with it
 
-                        VariableSave foundVariable = containerOfVariables.StateSave.GetVariableSave(parentInstance.Name + "." + variable.ExposedAsName);
+                        VariableSave foundVariable = containerOfVariables.StateSave.GetVariableRecursive(parentInstance.Name + "." + variable.ExposedAsName);
 
                         if (foundVariable != null)
                         {
