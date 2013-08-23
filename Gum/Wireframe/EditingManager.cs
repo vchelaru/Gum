@@ -55,6 +55,7 @@ namespace Gum.Wireframe
         {
             if (SelectedState.Self.SelectedElement != null)
             {
+
                 PushActivity();
 
                 ClickActivity();
@@ -332,9 +333,15 @@ namespace Gum.Wireframe
                     break;
             }
 
-            widthMultiplier *= (ipso.Width / SelectionManager.Self.ResizeHandles.Width);
-            heightMultiplier *= (ipso.Height / SelectionManager.Self.ResizeHandles.Height);
+            if (SelectionManager.Self.ResizeHandles.Width != 0)
+            {
+                widthMultiplier *= (ipso.Width / SelectionManager.Self.ResizeHandles.Width);
+            }
 
+            if (SelectionManager.Self.ResizeHandles.Height != 0)
+            {
+                heightMultiplier *= (ipso.Height / SelectionManager.Self.ResizeHandles.Height);
+            }
 
 
             if (changeXMultiplier != 0 && cursorXChange != 0)

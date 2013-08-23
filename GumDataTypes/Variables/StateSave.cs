@@ -166,7 +166,12 @@ namespace Gum.DataTypes.Variables
                 string instanceName = variableName.Substring(0, variableName.IndexOf('.'));
 
                 ElementSave elementSave = ParentContainer;
-                InstanceSave instanceSave = elementSave.GetInstance(instanceName);
+                InstanceSave instanceSave = null;
+
+                if (elementSave != null)
+                {
+                    instanceSave = elementSave.GetInstance(instanceName);
+                }
 
                 if (instanceSave != null)
                 {
