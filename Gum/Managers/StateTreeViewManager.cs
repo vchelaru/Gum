@@ -174,19 +174,6 @@ namespace Gum.Managers
 
 
 
-        internal void PopulateMenuStrip()
-        {
-            mMenuStrip.Items.Clear();
 
-            var tsmi = new ToolStripMenuItem();
-            tsmi.Text = "Add State";
-            tsmi.Click += ( (obj, arg) =>
-                {
-                    
-                    GumCommands.Self.Edit.AddState();
-                });
-            mMenuStrip.Items.Add(tsmi);
-
-        }
     }
 }

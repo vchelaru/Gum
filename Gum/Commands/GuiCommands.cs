@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Gum.Managers;
+using Gum.ToolStates;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -17,6 +19,12 @@ namespace Gum.Commands
         public void AddControl(Control control)
         {
             mFlowLayoutPanel.Controls.Add(control);
+        }
+
+        internal void RefreshStateTreeView()
+        {
+            StateTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedElement);
+            
         }
     }
 }
