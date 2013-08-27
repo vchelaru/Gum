@@ -31,7 +31,7 @@ namespace Gum
             TypeManager.Self.Initialize();
             PluginManager.Self.Initialize(this);
             ElementTreeViewManager.Self.Initialize(this.ObjectTreeView);
-            StateTreeViewManager.Self.Initialize(this.StateTreeView);
+            StateTreeViewManager.Self.Initialize(this.StateTreeView, StateContextMenuStrip);
             PropertyGridManager.Self.Initialize(this.VariablePropertyGrid);
             StandardElementsManager.Self.Initialize();
             MenuStripManager.Self.Initialize(RemoveElementMenuItem, RemoveStateMenuItem);
@@ -211,6 +211,14 @@ namespace Gum
         private void newProjectToolStripMenuItem_Click(object sender, EventArgs e)
         {
             GumCommands.Self.FileCommands.NewProject();
+        }
+
+        private void StateTreeView_MouseClick(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Right)
+            {
+                StateTreeViewManager.Self.PopulateMenuStrip();
+            }
         }
     }
 }

@@ -324,11 +324,14 @@ namespace Gum.Wireframe
 
         public IPositionedSizedObject GetRepresentation(InstanceSave instanceSave)
         {
-            foreach (IPositionedSizedObject ipso in AllIpsos)
+            if (instanceSave != null)
             {
-                if (ipso.Tag == instanceSave)
+                foreach (IPositionedSizedObject ipso in AllIpsos)
                 {
-                    return ipso;
+                    if (ipso.Tag == instanceSave)
+                    {
+                        return ipso;
+                    }
                 }
             }
             return null;

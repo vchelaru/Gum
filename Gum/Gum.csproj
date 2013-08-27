@@ -64,6 +64,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Commands\EditCommands.cs" />
     <Compile Include="Commands\FileCommands.cs" />
     <Compile Include="Commands\GuiCommands.cs" />
     <Compile Include="Converters\UnitConverter.cs" />

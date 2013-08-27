@@ -19,6 +19,7 @@ namespace Gum.Managers
         MultiSelectTreeView mTreeView;
 
         ElementSave mLastElementRefreshedTo;
+        ContextMenuStrip mMenuStrip;
 
         #endregion
 
@@ -60,8 +61,9 @@ namespace Gum.Managers
             return null;
         }
 
-        public void Initialize(MultiSelectTreeView treeView)
+        public void Initialize(MultiSelectTreeView treeView, ContextMenuStrip menuStrip)
         {
+            mMenuStrip = menuStrip;
             mTreeView = treeView;
         }
 
@@ -171,5 +173,20 @@ namespace Gum.Managers
         }
 
 
+
+        internal void PopulateMenuStrip()
+        {
+            mMenuStrip.Items.Clear();
+
+            var tsmi = new ToolStripMenuItem();
+            tsmi.Text = "Add State";
+            tsmi.Click += ( (obj, arg) =>
+                {
+                    
+                    GumCommands.Self.Edit.AddState();
+                });
+            mMenuStrip.Items.Add(tsmi);
+
+        }
     }
 }

@@ -21,11 +21,18 @@ namespace Gum
             private set;
         }
 
+        public EditCommands Edit
+        {
+            get;
+            private set;
+        }
+
 
         public GumCommands()
         {
             GuiCommands = new GuiCommands();
             FileCommands = new FileCommands();
+            Edit = new EditCommands();
         }
 
         public void Initialize(MainWindow mainWindow)
