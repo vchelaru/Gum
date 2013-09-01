@@ -181,40 +181,46 @@ namespace XnaAndWinforms
         /// </summary>
         protected override void OnPaint(PaintEventArgs e)
         {
-            if (string.IsNullOrEmpty(mRenderError))
-            {
-                string beginDrawError = BeginDraw();
+            int clientWidth = ClientSize.Width;
+            int clientHeight = ClientSize.Height;
 
-                if (!string.IsNullOrEmpty(beginDrawError))
-                {
-                    mRenderError = beginDrawError;
-                }
-            }
-
-            if(string.IsNullOrEmpty(mRenderError))
+            if (clientWidth > 0 && clientHeight > 0)
             {
-                try
+                if (string.IsNullOrEmpty(mRenderError))
                 {
-                    if (XnaUpdate != null)
+                    string beginDrawError = BeginDraw();
+
+                    if (!string.IsNullOrEmpty(beginDrawError))
                     {
-                        XnaUpdate();
-                    }
-                    // Draw the control using the GraphicsDevice.
-                    lock (this)
-                    {
-                        Draw();
-                        EndDraw();
+                        mRenderError = beginDrawError;
                     }
                 }
-                catch (Exception exception)
+
+                if (string.IsNullOrEmpty(mRenderError))
                 {
-                    mRenderError = exception.ToString();
+                    try
+                    {
+                        if (XnaUpdate != null)
+                        {
+                            XnaUpdate();
+                        }
+                        // Draw the control using the GraphicsDevice.
+                        lock (this)
+                        {
+                            Draw();
+                            EndDraw();
+                        }
+                    }
+                    catch (Exception exception)
+                    {
+                        mRenderError = exception.ToString();
+                    }
                 }
-            }
-            else
-            {
-                // If BeginDraw failed, show an error message using System.Drawing.
-                PaintUsingSystemDrawing(e.Graphics, mRenderError);
+                else
+                {
+                    // If BeginDraw failed, show an error message using System.Drawing.
+                    PaintUsingSystemDrawing(e.Graphics, mRenderError);
+                }
             }
         }
 
