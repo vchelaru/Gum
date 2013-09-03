@@ -265,6 +265,18 @@ namespace Gum.Plugins
                 //instance.CodeGeneratorPlugins = new List<ICodeGeneratorPlugin>();
                 //instance.ContentFileChangePlugins = new List<IContentFileChange>();
                 //instance.OutputReceiverPlugins = new List<IOutputReceiver>();
+
+                string error = "Error loading plugins";
+                if (e is ReflectionTypeLoadException)
+                {
+                    var loaderExceptions = (e as ReflectionTypeLoadException).LoaderExceptions;
+                    if (loaderExceptions.Length != 0)
+                    {
+                        error += "\n" + loaderExceptions[0].ToString();
+                    }
+                }
+                MessageBox.Show(error);
+
                 return;
             }
             finally
