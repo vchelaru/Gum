@@ -67,8 +67,17 @@ namespace Gum.DataTypes
             switch (ContainerType)
             {
                 case VariableContainerType.InstanceSave:
+                    VariableSave variable = GetVariable(variableName);
+                    if (variable != null)
+                    {
+                        return variable.Value;
+                    }
+                    else
+                    {
+                        return null;
+                    }
 
-                    return mInstanceSave.GetValueFromThisOrBase(mElementStack, variableName);
+                    //return mInstanceSave.GetValueFromThisOrBase(mElementStack, variableName);
                     //break;
                 case VariableContainerType.StateSave:
                     return mStateSave.GetValueRecursive(variableName);
@@ -96,7 +105,20 @@ namespace Gum.DataTypes
             switch (ContainerType)
             {
                 case VariableContainerType.InstanceSave:
-                    return mInstanceSave.GetVariableFromThisOrBase(mElementStack, variableName);
+
+                    var allExposed = WireframeObjectManager.Self.GetExposedVariablesForThisInstance(mInstanceSave, mElementStack.Last().InstanceName, mElementStack);
+
+                    var found = mInstanceSave.GetVariableFromThisOrBase(mElementStack, variableName);
+                    if (found != null && !string.IsNullOrEmpty(found.ExposedAsName))
+                    {
+                        var exposed = allExposed.FirstOrDefault(item => item.Name == variableName);
+
+                        if (exposed != null && exposed.Value != null)
+                        {
+                            found = exposed;
+                        }
+                    }
+                    return found;
                 case VariableContainerType.StateSave:
                     return mStateSave.GetVariableRecursive(variableName);
                     //break;

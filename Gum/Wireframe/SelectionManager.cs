@@ -805,7 +805,23 @@ namespace Gum.Wireframe
             selectedInstance = null;
             selectedElement = null;
 
-            IPositionedSizedObject topParent = representation.GetTopParent();
+            bool shouldGetParent = false;
+            if (representation.Tag is InstanceSave)
+            {
+                // Eventually we'll need to support a true element stack if Parent is to be changed by states:
+                List<ElementWithState> elementStack = new List<ElementWithState>();
+                ElementWithState elementWithState = new ElementWithState( SelectedState.Self.SelectedElement);
+                elementWithState.StateName = SelectedState.Self.SelectedStateSave.Name;
+                elementStack.Add(elementWithState);
+
+                shouldGetParent = ((representation.Tag as InstanceSave).IsParentASibling(elementStack)) == false;
+            }
+            IPositionedSizedObject topParent = representation;
+
+            if (shouldGetParent)
+            {
+                topParent = representation.GetTopParent();
+            }
 
 
             InstanceSave topParentInstanceSave = WireframeObjectManager.Self.GetInstance(topParent, InstanceFetchType.InstanceInCurrentElement);

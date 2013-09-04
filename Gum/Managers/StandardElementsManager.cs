@@ -296,6 +296,17 @@ namespace Gum.Managers
             stateSave.Variables.Add(new VariableSave { Type = "VerticalAlignment", Value = VerticalAlignment.Top, Name = "Y Origin", Category = "Position" });
 
             stateSave.Variables.Add(new VariableSave { Type = "string", Value = null, Name = "Guide", Category = "Position" });
+
+            AddParentVariables(stateSave);
+        }
+
+        private static void AddParentVariables(StateSave variables)
+        {
+            VariableSave variableSave = new VariableSave();
+            variableSave.Type = "string";
+            variableSave.Name = "Parent";
+            variableSave.CanOnlyBeSetInDefaultState = true;
+            variables.Variables.Add(variableSave);
         }
 
         public StateSave GetDefaultStateFor(string type)

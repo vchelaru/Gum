@@ -229,59 +229,13 @@ namespace Gum.Wireframe
                 LoaderManager.Self.CacheTextures = false;
                 LoaderManager.Self.CacheTextures = true;
 
-                IPositionedSizedObject rootIpso = null;
-
-                if ((elementSave is ScreenSave) == false)
-                {
-                    if (elementSave.BaseType == "Sprite" || elementSave.Name == "Sprite")
-                    {
-                        rootIpso = CreateSpriteFor(elementSave);
-                    }
-                    else if (elementSave.BaseType == "Text" || elementSave.Name == "Text")
-                    {
-                        rootIpso = CreateTextFor(elementSave);
-                    }
-                    else if (elementSave.BaseType == "NineSlice" || elementSave.Name == "NineSlice")
-                    {
-                        rootIpso = CreateNineSliceFor(elementSave);
-                    }
-                    else if (elementSave.BaseType == "ColoredRectangle" || elementSave.Name == "ColoredRectangle")
-                    {
-                        rootIpso = CreateSolidRectangleFor(elementSave);
-                    }
-                    else
-                    {
-                        rootIpso = CreateRectangleFor(elementSave);
-                    }
-                }
-
-                List<ElementWithState> elementStack = new List<ElementWithState>();
-
-                ElementWithState elementWithState = new ElementWithState(elementSave);
-                if (elementSave == SelectedState.Self.SelectedElement)
-                {
-                    elementWithState.StateName = SelectedState.Self.SelectedStateSave.Name;
-                }
-
-                elementStack.Add(elementWithState);
-
-                // parallel screws up the ordering of objects, so we'll do it on the primary thread for now
-                // and parallelize it later:
-                //Parallel.ForEach(elementSave.Instances, instance =>
-                foreach(var instance in elementSave.Instances)
-
-                    {
-                        IPositionedSizedObject child = CreateRepresentationForInstance(instance, null, elementStack, rootIpso);
-                    }
-                //);
-
-
-
-                elementStack.Remove( elementStack.FirstOrDefault(item=>item.Element == elementSave));
+                CreateIpsoForElement(elementSave);
 
             }
             ElementShowing = elementSave;
         }
+
+
 
         public IPositionedSizedObject GetSelectedRepresentation()
         {
@@ -394,10 +348,11 @@ namespace Gum.Wireframe
 
             InstanceSave toReturn = null;
 
+            
             string qualifiedName = representation.GetAttachmentQualifiedName();
 
             // strip off the guide name if it starts with a guide
-            qualifiedName = StripGuideName(qualifiedName);
+            qualifiedName = StripGuideOrParentNameIfNecessaryName(qualifiedName, representation);
             
 
             foreach (InstanceSave instanceSave in instanceContainer.Instances)
@@ -436,13 +391,29 @@ namespace Gum.Wireframe
             return toReturn;
         }
 
-        private string StripGuideName(string qualifiedName)
+        private string StripGuideOrParentNameIfNecessaryName(string qualifiedName, IPositionedSizedObject representation)
         {
+            bool wasStripped = false;
             foreach (NamedRectangle rectangle in ObjectFinder.Self.GumProjectSave.Guides)
             {
                 if (qualifiedName.StartsWith(rectangle.Name + "."))
                 {
                     return qualifiedName.Substring(rectangle.Name.Length + 1);
+                }
+            }
+
+            if (representation.Parent != null && representation.Parent.Tag is InstanceSave && representation.Tag is InstanceSave)
+            {
+                // strip this off!
+                if ((representation.Parent.Tag as InstanceSave).ParentContainer == (representation.Tag as InstanceSave).ParentContainer)
+                {
+                    string whatToTakeOff = (representation.Parent.Tag as InstanceSave).Name + ".";
+
+                    int index = qualifiedName.IndexOf(whatToTakeOff);
+
+                    return qualifiedName.Replace(whatToTakeOff, "");
+
+                    //return qualifiedName.Substring((representation.Parent.Tag as InstanceSave).Name.Length + 1);
                 }
             }
 
@@ -509,31 +480,39 @@ namespace Gum.Wireframe
                 //elementWithState.StateName 
                 elementStack.Add( elementWithState);
             }
+
+            // Let's do children of the instance first
             foreach (IPositionedSizedObject child in ipso.Children)
             {
                 InstanceSave childInstance = GetInstance(child, InstanceFetchType.DeepInstance);
-                if (childInstance == null)
+
+                // ignore siblings:
+                if (childInstance == null || childInstance.ParentContainer != elementStack.Last().Element)
                 {
                     continue;
                 }
-
-                StateSave stateSave = new StateSave();
                 RecursiveVariableFinder rvf = new RecursiveVariableFinder(childInstance, elementStack);
-                FillStateWithVariables(rvf, stateSave, WireframeObjectManager.Self.PositionAndSizeVariables);
-
-                List<VariableSave> exposedVariables = GetExposedVariablesForThisInstance(childInstance, instanceSave, elementStack);
-                foreach (VariableSave variable in exposedVariables)
-                {
-                    stateSave.SetValue(variable.Name, variable.Value);
-                }
-
-                SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(child, selectedElement, stateSave);
-
-
-
+                SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(child, selectedElement, rvf);
                 UpdateScalesAndPositionsForSelectedChildren(child, childInstance, elementStack);
             }
+            
+            // pop the stack, then do siblings
             elementStack.Remove(selectedElement);
+
+            foreach (IPositionedSizedObject child in ipso.Children)
+            {
+                InstanceSave childInstance = GetInstance(child, InstanceFetchType.DeepInstance);
+
+                // ignore siblings:
+                if (childInstance == null || childInstance.ParentContainer != elementStack.Last().Element)
+                {
+                    continue;
+                }
+                RecursiveVariableFinder rvf = new RecursiveVariableFinder(childInstance, elementStack);
+                SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(child, selectedElement, rvf);
+                UpdateScalesAndPositionsForSelectedChildren(child, childInstance, elementStack);
+            }
+
         }
     }
 }

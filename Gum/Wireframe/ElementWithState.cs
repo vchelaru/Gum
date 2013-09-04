@@ -20,6 +20,12 @@ namespace Gum.Wireframe
             set;
         }
 
+        public string InstanceName
+        {
+            get;
+            set;
+        }
+
         public ElementWithState(ElementSave elementSave)
         {
             Element = elementSave;

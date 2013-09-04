@@ -11,6 +11,22 @@ namespace Gum.DataTypes
 {
     public static class InstanceSaveExtensionMethods
     {
+        public static bool IsParentASibling(this InstanceSave instanceSave, List<ElementWithState> elementStack)
+        {
+            RecursiveVariableFinder rvf = new RecursiveVariableFinder(instanceSave, elementStack);
+
+            string parent = rvf.GetValue<string>("Parent");
+            bool found = false;
+            if (!string.IsNullOrEmpty(parent))
+            {
+                ElementSave parentElement = instanceSave.ParentContainer;
+
+                found = parentElement.Instances.Any(item => item.Name == parent);
+            }
+
+            return found;
+        }
+
         public static void Initialize(this InstanceSave instanceSave)
         {
             // nothing to do currently?

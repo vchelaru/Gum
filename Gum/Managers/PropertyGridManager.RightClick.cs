@@ -24,7 +24,8 @@ namespace Gum.Managers
             if (variableSave != null)
             {
                 variableSave.ExposedAsName = null;
-                ProjectCommands.Self.SaveProject();
+                GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+
             }
 
             RefreshUI();
@@ -74,7 +75,7 @@ namespace Gum.Managers
             {
                 SelectedState.Self.SelectedVariableSave.ExposedAsName = tiw.Result;
 
-                ProjectCommands.Self.SaveProject();
+                GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
             }
             else
             {
