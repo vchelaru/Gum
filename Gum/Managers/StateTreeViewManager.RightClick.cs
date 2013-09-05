@@ -64,7 +64,8 @@ namespace Gum.Managers
                     {
                         SelectedState.Self.SelectedStateSave.Name = tiw.Result;
                         GumCommands.Self.GuiCommands.RefreshStateTreeView();
-                        GumCommands.Self.FileCommands.SaveProject();
+                        GumCommands.Self.FileCommands.TryAutoSaveProject();
+
                         GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
                     }
                 });

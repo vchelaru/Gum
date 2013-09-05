@@ -144,13 +144,16 @@ namespace Gum.DataTypes
                 ScreenSave toAdd = null;
                 try
                 {
-                    toAdd = reference.ToElementSave<ScreenSave>(projectRootDirectory, ScreenExtension);
+                    toAdd = reference.ToElementSave<ScreenSave>(projectRootDirectory, ScreenExtension, ref errors);
                 }
                 catch (Exception e)
                 {
                     errors += "\nError loading " + reference.Name + ":\n" + e.Message;
                 }
-                Screens.Add(toAdd);
+                if (toAdd != null)
+                {
+                    Screens.Add(toAdd);
+                }
             }
 
             foreach (ElementReference reference in ComponentReferences)
@@ -159,14 +162,16 @@ namespace Gum.DataTypes
                                 
                 try
                 {
-                    toAdd = reference.ToElementSave<ComponentSave>(projectRootDirectory, ComponentExtension);
+                    toAdd = reference.ToElementSave<ComponentSave>(projectRootDirectory, ComponentExtension, ref errors);
                 }
                 catch (Exception e)
                 {
                     errors += "\nError loading " + reference.Name + ":\n" + e.Message;
                 }
-
-                Components.Add(toAdd);
+                if (toAdd != null)
+                {
+                    Components.Add(toAdd);
+                }
             }
 
             foreach (ElementReference reference in StandardElementReferences)
@@ -174,14 +179,16 @@ namespace Gum.DataTypes
                 StandardElementSave toAdd = null;
                 try
                 {
-                    toAdd = reference.ToElementSave<StandardElementSave>(projectRootDirectory, StandardExtension);
+                    toAdd = reference.ToElementSave<StandardElementSave>(projectRootDirectory, StandardExtension, ref errors);
                 }
                 catch (Exception e)
                 {
                     errors += "\nError loading " + reference.Name + ":\n" + e.Message;
                 }
-
-                StandardElements.Add(toAdd);
+                if (toAdd != null)
+                {
+                    StandardElements.Add(toAdd);
+                }
             }
         }
 

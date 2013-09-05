@@ -98,8 +98,7 @@ namespace XnaAndWinforms
         public GraphicsDeviceControl()
             : base()
         {
-
-
+            InitializeComponent();
         }
 
         /// <summary>
@@ -222,6 +221,8 @@ namespace XnaAndWinforms
                     PaintUsingSystemDrawing(e.Graphics, mRenderError);
                 }
             }
+
+            base.OnPaint(e);
         }
 
 
@@ -425,6 +426,13 @@ namespace XnaAndWinforms
             this.Focus();
             this.Select();
             base.OnMouseDown(e);
+        }
+
+        private void InitializeComponent()
+        {
+            this.SuspendLayout();
+            this.ResumeLayout(false);
+
         }
     }
 }

@@ -106,7 +106,12 @@ namespace Gum.DataTypes
             {
                 case VariableContainerType.InstanceSave:
 
-                    var allExposed = WireframeObjectManager.Self.GetExposedVariablesForThisInstance(mInstanceSave, mElementStack.Last().InstanceName, mElementStack);
+                    string instanceName = null;
+                    if (mElementStack.Count != 0)
+                    {
+                        instanceName = mElementStack.Last().InstanceName;
+                    }
+                    var allExposed = WireframeObjectManager.Self.GetExposedVariablesForThisInstance(mInstanceSave, instanceName, mElementStack);
 
                     var found = mInstanceSave.GetVariableFromThisOrBase(mElementStack, variableName);
                     if (found != null && !string.IsNullOrEmpty(found.ExposedAsName))

@@ -52,9 +52,15 @@ namespace Gum.DataTypes
         {
             ElementSave instanceBase = ObjectFinder.Self.GetElementSave(instance.BaseType);
 
-            StateSave stateToPullFrom = elementStack.Last().StateSave;
-            StateSave defaultState = elementStack.Last().Element.DefaultState;
-            if (elementStack.Last().Element == SelectedState.Self.SelectedElement && 
+            StateSave stateToPullFrom = SelectedState.Self.SelectedElement.DefaultState; 
+            StateSave defaultState = SelectedState.Self.SelectedElement.DefaultState;
+            if (elementStack.Count != 0)
+            {
+                stateToPullFrom = elementStack.Last().StateSave;
+                defaultState = elementStack.Last().Element.DefaultState;
+            }
+
+            if (elementStack.Count != 0 && elementStack.Last().Element == SelectedState.Self.SelectedElement && 
                 SelectedState.Self.SelectedStateSave != null &&
                 !forceDefault)
             {

@@ -167,10 +167,7 @@ namespace Gum.Managers
             Wireframe.WireframeObjectManager.Self.RefreshAll(true);
             RefreshUI();
 
-            if (ProjectManager.Self.GeneralSettingsFile.AutoSave)
-            {
-                ProjectManager.Self.SaveProject();
-            }
+            GumCommands.Self.FileCommands.TryAutoSaveProject();
         }
     }
 }

@@ -504,7 +504,7 @@ namespace Gum.Wireframe
                 InstanceSave childInstance = GetInstance(child, InstanceFetchType.DeepInstance);
 
                 // ignore siblings:
-                if (childInstance == null || childInstance.ParentContainer != elementStack.Last().Element)
+                if (childInstance == null || !childInstance.IsParentASibling(elementStack))
                 {
                     continue;
                 }

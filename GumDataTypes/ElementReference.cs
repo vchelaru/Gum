@@ -54,15 +54,23 @@ namespace Gum.DataTypes
         }
 
 
-        public T ToElementSave<T>(string projectroot, string extension) where T : ElementSave
+        public T ToElementSave<T>(string projectroot, string extension, ref string errors) where T : ElementSave
         {
             string fullName = projectroot + Subfolder + "/" + Name + "." + extension;
 
+            if (System.IO.File.Exists(fullName))
+            {
 
 
-            T elementSave = FileManager.XmlDeserialize<T>(fullName);
+                T elementSave = FileManager.XmlDeserialize<T>(fullName);
 
-            return elementSave;
+                return elementSave;
+            }
+            else
+            {
+                errors += "\nCould not find the file name " + fullName;
+                return null;
+            }
         }
 
         public override string ToString()

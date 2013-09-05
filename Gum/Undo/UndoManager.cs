@@ -179,7 +179,8 @@ namespace Gum.Undo
                     SelectedState.Self.SelectedElement = lastSelectedElementSave;
                 }
 
-                ProjectCommands.Self.SaveProject();
+                GumCommands.Self.FileCommands.TryAutoSaveProject();
+
 
                 ElementTreeViewManager.Self.VerifyComponentsAreInTreeView(ProjectManager.Self.GumProjectSave);
             }

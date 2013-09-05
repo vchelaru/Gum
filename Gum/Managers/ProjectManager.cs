@@ -55,6 +55,14 @@ namespace Gum
             get;
             private set;
         }
+
+        public bool HaveErrorsOccurred
+        {
+            get
+            {
+                return mHaveErrorsOccurred;
+            }
+        }
         #endregion
 
         #region Methods
@@ -134,7 +142,10 @@ namespace Gum
                 {
                     mHaveErrorsOccurred = true;
                 }
-                mGumProjectSave = new GumProjectSave();
+
+                // We used to not load the project, but maybe we still should, just disable autosaving
+                //
+                //mGumProjectSave = new GumProjectSave();
             }
             else
             {
@@ -159,7 +170,7 @@ namespace Gum
             PluginManager.Self.ProjectLoad(mGumProjectSave);
         }
 
-        public void SaveProject()
+        internal void SaveProject()
         {
             bool succeeded = false;
 

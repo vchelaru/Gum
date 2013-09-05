@@ -40,13 +40,14 @@ namespace Gum.Gui.Forms
 
         void OnNewGuideAdded(object sender, EventArgs e)
         {
-            ProjectCommands.Self.SaveProject();
+            GumCommands.Self.FileCommands.TryAutoSaveProject();
             WireframeObjectManager.Self.UpdateGuides();
         }
 
         void OnPropertyGridChanged(object sender, EventArgs e)
         {
-            ProjectCommands.Self.SaveProject();
+            GumCommands.Self.FileCommands.TryAutoSaveProject();
+
             WireframeObjectManager.Self.UpdateGuides();
             WireframeObjectManager.Self.RefreshAll(true);
             PluginManager.Self.GuidesChanged();
@@ -56,7 +57,8 @@ namespace Gum.Gui.Forms
         private void propertyGrid1_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
         {
 
-            ProjectCommands.Self.SaveProject();
+            GumCommands.Self.FileCommands.TryAutoSaveProject();
+
 
             GuiCommands.Self.RefreshWireframeDisplay();
             WireframeObjectManager.Self.RefreshAll(true);

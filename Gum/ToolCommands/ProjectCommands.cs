@@ -131,12 +131,5 @@ namespace Gum.ToolCommands
                 }
             }
         }
-
-        public void SaveProject()
-        {
-            ProjectManager.Self.SaveProject();
-        }
-
-
     }
 }

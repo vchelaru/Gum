@@ -189,7 +189,8 @@ namespace Gum
 
         private void saveProjectToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            GumCommands.Self.FileCommands.SaveProject();
+            // Don't do an auto save, force it!
+            GumCommands.Self.FileCommands.ForceSaveProject();
         }
 
         private void wireframeControl1_DragEnter(object sender, DragEventArgs e)

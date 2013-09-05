@@ -5,6 +5,8 @@ using System.Text;
 using Gum.ToolStates;
 using Gum.Managers;
 using Gum.Wireframe;
+using Gum.DataTypes;
+using System.Windows.Forms;
 
 namespace Gum.Commands
 {
@@ -12,13 +14,16 @@ namespace Gum.Commands
     {
         public void TryAutoSaveCurrentElement()
         {
-            if (ProjectManager.Self.GeneralSettingsFile.AutoSave && SelectedState.Self.SelectedElement != null)
+            TryAutoSaveElement(SelectedState.Self.SelectedElement);
+        }
+
+
+        public void TryAutoSaveElement(ElementSave elementSave)
+        {
+            if (ProjectManager.Self.GeneralSettingsFile.AutoSave && elementSave != null)
             {
-                ProjectManager.Self.SaveElement(SelectedState.Self.SelectedElement);
-
-
+                ProjectManager.Self.SaveElement(elementSave);
             }
-
         }
 
         internal void NewProject()
@@ -32,9 +37,24 @@ namespace Gum.Commands
 
         }
 
-        internal void SaveProject()
+        public void TryAutoSaveProject()
         {
-            ProjectManager.Self.SaveProject();
+            if (ProjectManager.Self.GeneralSettingsFile.AutoSave && !ProjectManager.Self.HaveErrorsOccurred)
+            {
+                ForceSaveProject();
+            }
+        }
+
+        internal void ForceSaveProject()
+        {
+            if (!ProjectManager.Self.HaveErrorsOccurred)
+            {
+                ProjectManager.Self.SaveProject();
+            }
+            else
+            {
+                MessageBox.Show("Cannot save project because of earlier errors");
+            }
         }
     }
 }

@@ -9,6 +9,13 @@ namespace Gum.Settings
 {
     public class GeneralSettingsFile
     {
+        #region Fields
+
+        bool mAutoSave;
+
+        #endregion
+
+
         #region Properties
 
         public string LastProject
@@ -25,8 +32,8 @@ namespace Gum.Settings
 
         public bool AutoSave
         {
-            get;
-            set;
+            get { return mAutoSave; }
+            set { mAutoSave = value; }
         }
 
         static string GeneralSettingsFileName
@@ -44,7 +51,7 @@ namespace Gum.Settings
         public GeneralSettingsFile()
         {
             ShowTextOutlines = false;
-            AutoSave = true;
+            mAutoSave = true;
         }
 
         public static GeneralSettingsFile LoadOrCreateNew()
