@@ -98,7 +98,6 @@ namespace XnaAndWinforms
         public GraphicsDeviceControl()
             : base()
         {
-            InitializeComponent();
         }
 
         /// <summary>
@@ -413,26 +412,6 @@ namespace XnaAndWinforms
 
         #endregion
 
-        protected override bool IsInputKey(Keys keyData)
-        {
-            return true;
 
-        }
-        protected override void OnMouseDown(MouseEventArgs e)
-        {
-            this.SetStyle(ControlStyles.Selectable, true);
-
-            this.TabStop = true;
-            this.Focus();
-            this.Select();
-            base.OnMouseDown(e);
-        }
-
-        private void InitializeComponent()
-        {
-            this.SuspendLayout();
-            this.ResumeLayout(false);
-
-        }
     }
 }

@@ -74,9 +74,6 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Content\Font18Arial.fnt" />
-    <EmbeddedResource Include="GraphicsDeviceControl.resx">
-      <DependentUpon>GraphicsDeviceControl.cs</DependentUpon>
-    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Content\Font18Arial_0.png" />

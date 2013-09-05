@@ -80,6 +80,7 @@ namespace Gum.DataTypes
             {
                 // Eventually use the instanceBase's current state value
                 variableSave = instanceBase.DefaultState.GetVariableRecursive(variable);
+
             }
 
             // I don't think we have to do this because we're going to copy over
