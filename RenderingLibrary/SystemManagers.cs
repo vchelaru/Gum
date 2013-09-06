@@ -70,6 +70,9 @@ namespace RenderingLibrary
             TextManager.Managers = this;
         }
 
-
+        public override string ToString()
+        {
+            return Name;
+        }
     }
 }

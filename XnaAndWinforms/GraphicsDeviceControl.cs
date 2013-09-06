@@ -53,9 +53,9 @@ namespace XnaAndWinforms
         public float DesiredFramesPerSecond
         {
             get { return mDesiredFramesPerSecond; }
-            set 
-            { 
-                
+            set
+            {
+
                 mDesiredFramesPerSecond = value;
                 // If this is not null, then we're post-initialize
                 // so set the timer right away.  If it is null then
@@ -77,7 +77,7 @@ namespace XnaAndWinforms
             get { return graphicsDeviceService.GraphicsDevice; }
         }
 
-        
+
 
         /// <summary>
         /// Gets an IServiceProvider containing our IGraphicsDeviceService.
@@ -386,7 +386,7 @@ namespace XnaAndWinforms
             if (XnaInitialize != null)
             {
                 XnaInitialize();
-            }        
+            }
         }
 
 
@@ -406,12 +406,25 @@ namespace XnaAndWinforms
             {
                 this.mRenderError = e.ToString();
             }
-        
+
         }
 
 
         #endregion
+        protected override bool IsInputKey(Keys keyData)
+        {
+            return true;
 
+        }
+        protected override void OnMouseDown(MouseEventArgs e)
+        {
+            this.SetStyle(ControlStyles.Selectable, true);
+
+            this.TabStop = true;
+            this.Focus();
+            this.Select();
+            base.OnMouseDown(e);
+        }
 
     }
 }
