@@ -52,8 +52,14 @@ namespace Gum.DataTypes
         {
             ElementSave instanceBase = ObjectFinder.Self.GetElementSave(instance.BaseType);
 
-            StateSave stateToPullFrom = SelectedState.Self.SelectedElement.DefaultState; 
-            StateSave defaultState = SelectedState.Self.SelectedElement.DefaultState;
+            StateSave stateToPullFrom = null;
+            StateSave defaultState = null;
+            if (SelectedState.Self.SelectedElement != null)
+            {
+                stateToPullFrom = SelectedState.Self.SelectedElement.DefaultState;
+                defaultState = SelectedState.Self.SelectedElement.DefaultState;
+            }
+            
             if (elementStack.Count != 0)
             {
                 stateToPullFrom = elementStack.Last().StateSave;

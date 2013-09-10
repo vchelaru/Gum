@@ -482,37 +482,37 @@ namespace Gum.Wireframe
             }
 
             // Let's do children of the instance first
-            foreach (IPositionedSizedObject child in ipso.Children)
-            {
-                InstanceSave childInstance = GetInstance(child, InstanceFetchType.DeepInstance);
 
-                // ignore siblings:
-                if (childInstance == null || childInstance.ParentContainer != elementStack.Last().Element)
-                {
-                    continue;
-                }
-                RecursiveVariableFinder rvf = new RecursiveVariableFinder(childInstance, elementStack);
-                SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(child, selectedElement, rvf);
-                UpdateScalesAndPositionsForSelectedChildren(child, childInstance, elementStack);
-            }
+            Predicate<InstanceSave> predicate = (childInstance) => childInstance != null && !childInstance.IsParentASibling(elementStack);
+            SetWidthPositionOnIpsoChildren(ipso, elementStack, selectedElement, predicate);
             
             // pop the stack, then do siblings
             elementStack.Remove(selectedElement);
 
+            predicate = (childInstance) => childInstance != null && childInstance.IsParentASibling(elementStack);
+            SetWidthPositionOnIpsoChildren(ipso, elementStack, selectedElement, predicate);
+
+
+            // Now we can calculate the width/height of this thing
+            finish here!
+
+        }
+
+        private void SetWidthPositionOnIpsoChildren(IPositionedSizedObject ipso, List<ElementWithState> elementStack, ElementSave selectedElement, Predicate<InstanceSave> predicate)
+        {
             foreach (IPositionedSizedObject child in ipso.Children)
             {
                 InstanceSave childInstance = GetInstance(child, InstanceFetchType.DeepInstance);
 
                 // ignore siblings:
-                if (childInstance == null || !childInstance.IsParentASibling(elementStack))
+                if (predicate(childInstance))
                 {
-                    continue;
+                    RecursiveVariableFinder rvf = new RecursiveVariableFinder(childInstance, elementStack);
+                    SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(child, selectedElement, rvf);
+                    UpdateScalesAndPositionsForSelectedChildren(child, childInstance, elementStack);
                 }
-                RecursiveVariableFinder rvf = new RecursiveVariableFinder(childInstance, elementStack);
-                SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(child, selectedElement, rvf);
-                UpdateScalesAndPositionsForSelectedChildren(child, childInstance, elementStack);
-            }
 
+            }
         }
     }
 }

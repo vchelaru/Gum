@@ -149,6 +149,61 @@ namespace RenderingLibrary.Graphics
             }
         }
 
+        public float EffectiveWidth
+        {
+            get
+            {
+                // I think we want to treat these individually so a 
+                // width could be set but height could be default
+                if (Width != 0)
+                {
+                    return Width;
+                }
+                else if (mTextureToRender != null)
+                {
+                    if (mTextureToRender.Width == 0)
+                    {
+                        return 10;
+                    }
+                    else
+                    {
+                        return mTextureToRender.Width;
+                    }
+                }
+                else
+                {
+                    return 32;
+                }
+            }
+        }
+
+        public float EffectiveHeight
+        {
+            get
+            {
+                // See comment in Width
+                if (Height != 0)
+                {
+                    return Height;
+                }
+                else if (mTextureToRender != null)
+                {
+                    if (mTextureToRender.Height == 0)
+                    {
+                        return 10;
+                    }
+                    else
+                    {
+                        return mTextureToRender.Height;
+                    }
+                }
+                else
+                {
+                    return 32;
+                }
+            }
+        }
+
         public HorizontalAlignment HorizontalAlignment
         {
             get;
@@ -265,6 +320,31 @@ namespace RenderingLibrary.Graphics
         {
             get { return false; }
         }
+
+        float IPositionedSizedObject.Width
+        {
+            get
+            {
+                return EffectiveWidth;
+            }
+            set
+            {
+                Width = value;
+            }
+        }
+
+        float IPositionedSizedObject.Height
+        {
+            get
+            {
+                return EffectiveHeight;
+            }
+            set
+            {
+                Height = value;
+            }
+        }
+
         #endregion
 
         #region Methods
@@ -308,6 +388,12 @@ namespace RenderingLibrary.Graphics
         {
             mWrappedText.Clear();
 
+            float wrappingWidth = mWidth;
+            if (mWidth == 0)
+            {
+                wrappingWidth = float.PositiveInfinity;
+            }
+
             // This allocates like crazy but we're
             // on the PC and prob won't be calling this
             // very frequently so let's 
@@ -344,7 +430,7 @@ namespace RenderingLibrary.Graphics
 
                 float lineWidth = MeasureString(whatToMeasure);
 
-                if (lineWidth > mWidth)
+                if (lineWidth > wrappingWidth)
                 {
                     while (line.EndsWith(" "))
                     {
@@ -413,7 +499,8 @@ namespace RenderingLibrary.Graphics
             }
         }
 
-        void UpdateTextureToRender()
+        // made public so that objects that need to position based off of the texture can force call this
+        public void UpdateTextureToRender()
         {
             if (!mIsTextureCreationSuppressed)
             {
@@ -488,7 +575,7 @@ namespace RenderingLibrary.Graphics
             mTempForRendering.Height = this.mTextureToRender.Height;
             mTempForRendering.Parent = this.Parent;
 
-            float widthDifference = this.mWidth - mTempForRendering.Width;
+            float widthDifference = this.EffectiveWidth - mTempForRendering.Width;
 
             if (this.HorizontalAlignment == Graphics.HorizontalAlignment.Center)
             {
@@ -501,11 +588,11 @@ namespace RenderingLibrary.Graphics
 
             if (this.VerticalAlignment == Graphics.VerticalAlignment.Center)
             {
-                mTempForRendering.Y += (this.Height - mTextureToRender.Height) / 2.0f;
+                mTempForRendering.Y += (this.EffectiveHeight - mTextureToRender.Height) / 2.0f;
             }
             else if (this.VerticalAlignment == Graphics.VerticalAlignment.Bottom)
             {
-                mTempForRendering.Y += this.Height - mTempForRendering.Height;
+                mTempForRendering.Y += this.EffectiveHeight - mTempForRendering.Height;
             }
 
             Sprite.Render(managers, spriteBatch, mTempForRendering, mTextureToRender, 

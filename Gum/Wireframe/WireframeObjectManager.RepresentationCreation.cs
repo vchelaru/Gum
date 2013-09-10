@@ -839,6 +839,12 @@ namespace Gum.Wireframe
                 ipso.Width = widthAfterPercentage;
                 ipso.Height = heightAfterPercentage;
 
+                // This updates the texture in case the values are 0 so that the element can be positioned correctly
+                if (ipso is Text)
+                {
+                    ((Text)ipso).UpdateTextureToRender();
+                }
+
                 float multiplierX;
                 float multiplierY;
                 GetMultipliersFromAlignment(horizontalAlignment, verticalAlignment, out multiplierX, out multiplierY);
