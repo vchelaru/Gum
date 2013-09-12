@@ -166,7 +166,7 @@ namespace Gum.Wireframe
 
         void HandleControlZoomChange(object sender, EventArgs e)
         {
-            Renderer.Self.Camera.Zoom = mEditControl.PercentageValue/100.0f;
+            Renderer.Self.Camera.Zoom = mEditControl.PercentageValue / 100.0f;
         }
 
         private void ClearAll()
@@ -290,7 +290,7 @@ namespace Gum.Wireframe
             }
             return null;
         }
-        
+
         public Text GetText(InstanceSave instanceSave)
         {
             foreach (Text text in mTexts)
@@ -316,7 +316,7 @@ namespace Gum.Wireframe
             }
             return null;
         }
-        
+
 
         /// <summary>
         /// Returns the InstanceSave that uses this representation or the
@@ -348,12 +348,12 @@ namespace Gum.Wireframe
 
             InstanceSave toReturn = null;
 
-            
+
             string qualifiedName = representation.GetAttachmentQualifiedName();
 
             // strip off the guide name if it starts with a guide
             qualifiedName = StripGuideOrParentNameIfNecessaryName(qualifiedName, representation);
-            
+
 
             foreach (InstanceSave instanceSave in instanceContainer.Instances)
             {
@@ -362,7 +362,7 @@ namespace Gum.Wireframe
                     toReturn = instanceSave;
                     break;
                 }
-            }            
+            }
 
 
             if (toReturn == null)
@@ -423,14 +423,14 @@ namespace Gum.Wireframe
 
         public bool IsRepresentation(IPositionedSizedObject ipso)
         {
-            return mLineRectangles.Contains(ipso) || mSprites.Contains(ipso) || 
+            return mLineRectangles.Contains(ipso) || mSprites.Contains(ipso) ||
                 mTexts.Contains(ipso) || mSolidRectangles.Contains(ipso) ||
-                mNineSlices.Contains(ipso) ;
+                mNineSlices.Contains(ipso);
         }
 
         public ElementSave GetElement(IPositionedSizedObject representation)
         {
-            if (SelectedState.Self.SelectedElement != null && 
+            if (SelectedState.Self.SelectedElement != null &&
                 SelectedState.Self.SelectedElement.Name == representation.Name)
             {
                 return SelectedState.Self.SelectedElement;
@@ -441,7 +441,7 @@ namespace Gum.Wireframe
 
         public T GetIpsoAt<T>(float x, float y, IList<T> list) where T : IPositionedSizedObject
         {
-            foreach(T ipso in list)
+            foreach (T ipso in list)
             {
                 if (ipso.HasCursorOver(x, y))
                 {
@@ -455,7 +455,7 @@ namespace Gum.Wireframe
         internal void UpdateScalesAndPositionsForSelectedChildren()
         {
             List<ElementWithState> elementStack = new List<ElementWithState>();
-            elementStack.Add( new ElementWithState( SelectedState.Self.SelectedElement ));
+            elementStack.Add(new ElementWithState(SelectedState.Self.SelectedElement));
             foreach (IPositionedSizedObject selectedIpso in SelectionManager.Self.SelectedIpsos)
             {
                 UpdateScalesAndPositionsForSelectedChildren(selectedIpso, selectedIpso.Tag as InstanceSave, elementStack);
@@ -464,8 +464,77 @@ namespace Gum.Wireframe
 
         void UpdateScalesAndPositionsForSelectedChildren(IPositionedSizedObject ipso, InstanceSave instanceSave, List<ElementWithState> elementStack)
         {
+
+            float width = ipso.Width;
+            float height = ipso.Height;
+            if ((width == 0 || height == 0))
+            {
+                int m = 3;
+            }
+
+
+
+
             ElementSave selectedElement = null;
 
+            bool wasAdded = TryAddToElementStack(instanceSave, elementStack, out selectedElement);
+
+            // Let's do children of the instance first
+            Predicate<InstanceSave> predicate = (childInstance) => childInstance != null && !childInstance.IsParentASibling(elementStack);
+            SetWidthPositionOnIpsoChildren(ipso, elementStack, selectedElement, predicate);
+
+            
+            // pop the stack, then do siblings
+            if (wasAdded)
+            {
+                elementStack.Remove(selectedElement);
+            }
+
+            predicate = (childInstance) => childInstance != null && childInstance.IsParentASibling(elementStack);
+            SetWidthPositionOnIpsoChildren(ipso, elementStack, selectedElement, predicate);
+
+
+            // Now we can calculate the width/height of this thing
+            width = ipso.Width;
+            height = ipso.Height;
+            if ((width == 0 || height == 0) && (ipso is Sprite == false && ipso is Text == false))
+            {
+                float requiredWidth;
+                float requiredHeight;
+
+                GetRequiredDimensionsFromContents(ipso, out requiredWidth, out requiredHeight);
+
+                if (ipso.Width == 0)
+                {
+                    ipso.Width = requiredWidth;
+                }
+                if (ipso.Height == 0)
+                {
+                    ipso.Height = requiredHeight;
+                }
+
+                wasAdded = TryAddToElementStack(instanceSave, elementStack, out selectedElement);
+
+                // Let's do children of the instance first
+                predicate = (childInstance) => childInstance != null && !childInstance.IsParentASibling(elementStack);
+                SetWidthPositionOnIpsoChildren(ipso, elementStack, selectedElement, predicate);
+
+                // pop the stack, then do siblings
+                if (wasAdded)
+                {
+                    elementStack.Remove(selectedElement);
+                }
+
+                predicate = (childInstance) => childInstance != null && childInstance.IsParentASibling(elementStack);
+                SetWidthPositionOnIpsoChildren(ipso, elementStack, selectedElement, predicate);
+
+            }
+
+        }
+
+        private static bool TryAddToElementStack(InstanceSave instanceSave, List<ElementWithState> elementStack, out ElementSave selectedElement)
+        {
+            bool toReturn = false;
             if (instanceSave == null)
             {
                 selectedElement = elementStack.Last().Element;
@@ -478,24 +547,21 @@ namespace Gum.Wireframe
                 var state = new DataTypes.RecursiveVariableFinder(instanceSave, elementStack).GetValue("State") as string;
                 elementWithState.StateName = state;
                 //elementWithState.StateName 
-                elementStack.Add( elementWithState);
+                elementStack.Add(elementWithState);
+                toReturn = true;
             }
+            return toReturn;
+        }
 
-            // Let's do children of the instance first
-
-            Predicate<InstanceSave> predicate = (childInstance) => childInstance != null && !childInstance.IsParentASibling(elementStack);
-            SetWidthPositionOnIpsoChildren(ipso, elementStack, selectedElement, predicate);
-            
-            // pop the stack, then do siblings
-            elementStack.Remove(selectedElement);
-
-            predicate = (childInstance) => childInstance != null && childInstance.IsParentASibling(elementStack);
-            SetWidthPositionOnIpsoChildren(ipso, elementStack, selectedElement, predicate);
-
-
-            // Now we can calculate the width/height of this thing
-            finish here!
-
+        private void GetRequiredDimensionsFromContents(IPositionedSizedObject parentIpso, out float requiredWidth, out float requiredHeight)
+        {
+            requiredWidth = 0;
+            requiredHeight = 0;
+            foreach (var child in parentIpso.Children)
+            {
+                requiredWidth = System.Math.Max(requiredWidth, child.X + child.Width);
+                requiredHeight = System.Math.Max(requiredHeight, child.Y + child.Height);
+            }
         }
 
         private void SetWidthPositionOnIpsoChildren(IPositionedSizedObject ipso, List<ElementWithState> elementStack, ElementSave selectedElement, Predicate<InstanceSave> predicate)

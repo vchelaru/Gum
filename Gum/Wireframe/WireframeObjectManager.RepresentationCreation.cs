@@ -120,6 +120,13 @@ namespace Gum.Wireframe
 
                 
             SetUpParentRelationship(null, elementStack, elementSave.Instances);
+
+            if (rootIpso != null)
+            {
+                SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(rootIpso, elementStack.LastOrDefault().Element, new RecursiveVariableFinder(SelectedState.Self.SelectedStateSave));
+                UpdateScalesAndPositionsForSelectedChildren(rootIpso, null, elementStack);
+            }
+
             //);
             elementStack.Remove(elementStack.FirstOrDefault(item => item.Element == elementSave));
         }
@@ -282,6 +289,8 @@ namespace Gum.Wireframe
             SetUpParentRelationship(instance, elementStack, baseComponentSave.Instances);
 
 
+            SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(rootIpso, elementStack.LastOrDefault().Element, new RecursiveVariableFinder(instance, elementStack));
+            UpdateScalesAndPositionsForSelectedChildren(rootIpso, instance, elementStack);
             elementStack.Remove( elementStack.FirstOrDefault(item=>item.Element == baseComponentSave));
 
             return rootIpso;
