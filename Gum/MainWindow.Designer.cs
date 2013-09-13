@@ -56,6 +56,7 @@
             this.VariablesAndEverythingElse = new System.Windows.Forms.SplitContainer();
             this.StatesAndVariablesContainer = new System.Windows.Forms.SplitContainer();
             this.StateTreeView = new CommonFormsAndControls.MultiSelectTreeView();
+            this.StateContextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.VariablePropertyGrid = new System.Windows.Forms.PropertyGrid();
             this.PropertyGridMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.PreviewSplitContainer = new System.Windows.Forms.SplitContainer();
@@ -65,7 +66,6 @@
             this.WireframeContextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.WireframeEditControl = new FlatRedBall.AnimationEditorForms.Controls.WireframeEditControl();
             this.panel2 = new System.Windows.Forms.Panel();
-            this.StateContextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.LeftAndEverythingContainer)).BeginInit();
             this.LeftAndEverythingContainer.Panel1.SuspendLayout();
@@ -344,7 +344,13 @@
             this.StateTreeView.Size = new System.Drawing.Size(238, 116);
             this.StateTreeView.TabIndex = 0;
             this.StateTreeView.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.StateTreeView_AfterSelect);
+            this.StateTreeView.KeyDown += new System.Windows.Forms.KeyEventHandler(this.StateTreeView_KeyDown);
             this.StateTreeView.MouseClick += new System.Windows.Forms.MouseEventHandler(this.StateTreeView_MouseClick);
+            // 
+            // StateContextMenuStrip
+            // 
+            this.StateContextMenuStrip.Name = "StateContextMenuStrip";
+            this.StateContextMenuStrip.Size = new System.Drawing.Size(61, 4);
             // 
             // VariablePropertyGrid
             // 
@@ -445,11 +451,6 @@
             this.panel2.Name = "panel2";
             this.panel2.Size = new System.Drawing.Size(622, 25);
             this.panel2.TabIndex = 0;
-            // 
-            // StateContextMenuStrip
-            // 
-            this.StateContextMenuStrip.Name = "StateContextMenuStrip";
-            this.StateContextMenuStrip.Size = new System.Drawing.Size(61, 4);
             // 
             // MainWindow
             // 

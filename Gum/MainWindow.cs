@@ -221,5 +221,10 @@ namespace Gum
                 StateTreeViewManager.Self.PopulateMenuStrip();
             }
         }
+
+        private void StateTreeView_KeyDown(object sender, KeyEventArgs e)
+        {
+            StateTreeViewManager.Self.HandleKeyDown(e);
+        }
     }
 }

@@ -193,21 +193,21 @@ namespace Gum.Wireframe
                 // copy, ctrl c, ctrl + c
                 if (e.KeyCode == Keys.C)
                 {
-                    EditingManager.Self.OnCopy();
+                    EditingManager.Self.OnCopy(CopyType.Instance);
                     e.Handled = true;
                     e.SuppressKeyPress = true;
                 }
                 // paste, ctrl v, ctrl + v
                 else if (e.KeyCode == Keys.V)
                 {
-                    EditingManager.Self.OnPaste();
+                    EditingManager.Self.OnPaste(CopyType.Instance);
                     e.Handled = true;
                     e.SuppressKeyPress = true;
                 }
                 // cut, ctrl x, ctrl + x
                 else if (e.KeyCode == Keys.X)
                 {
-                    EditingManager.Self.OnCut();
+                    EditingManager.Self.OnCut(CopyType.Instance);
                     e.Handled = true;
                     e.SuppressKeyPress = true;
                 }

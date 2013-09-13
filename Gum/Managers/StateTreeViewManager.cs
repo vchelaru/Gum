@@ -7,6 +7,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using System.Windows.Forms;
 using Gum.ToolStates;
+using Gum.Wireframe;
 
 namespace Gum.Managers
 {
@@ -164,7 +165,7 @@ namespace Gum.Managers
 
                         wasAnythingSelected = true;
                     }
-                    else if(!mTreeView.Nodes[i].IsSelected)
+                    else if(!mTreeView.Nodes[i].IsSelected && mTreeView.SelectedNode != mTreeView.Nodes[i])
                     {
                         System.Drawing.Color desiredColor = System.Drawing.Color.White;
                         if (instance != null && state.Variables.Any(item => item.Name.StartsWith(instance.Name + ".")))
@@ -196,5 +197,38 @@ namespace Gum.Managers
 
 
 
+
+        internal void HandleKeyDown(KeyEventArgs e)
+        {
+            HandleCopyCutPaste(e);
+        }
+
+        private void HandleCopyCutPaste(KeyEventArgs e)
+        {
+            if ((e.Modifiers & Keys.Control) == Keys.Control)
+            {
+                // copy, ctrl c, ctrl + c
+                if (e.KeyCode == Keys.C)
+                {
+                    EditingManager.Self.OnCopy(CopyType.State);
+                    e.Handled = true;
+                    e.SuppressKeyPress = true;
+                }
+                // paste, ctrl v, ctrl + v
+                else if (e.KeyCode == Keys.V)
+                {
+                    EditingManager.Self.OnPaste(CopyType.State);
+                    e.Handled = true;
+                    e.SuppressKeyPress = true;
+                }
+                //// cut, ctrl x, ctrl + x
+                //else if (e.KeyCode == Keys.X)
+                //{
+                //    EditingManager.Self.OnCut(CopyType.Instance);
+                //    e.Handled = true;
+                //    e.SuppressKeyPress = true;
+                //}
+            }
+        }
     }
 }

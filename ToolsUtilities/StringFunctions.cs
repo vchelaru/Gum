@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Linq;
 
 namespace ToolsUtilities
 {
@@ -257,16 +258,17 @@ namespace ToolsUtilities
             return false;
         }
 
-        public static string MakeStringUnique(string stringToMakeUnique, List<string> stringList)
+        public static string MakeStringUnique(string stringToMakeUnique, IEnumerable<string> strings)
         {
-            return MakeStringUnique(stringToMakeUnique, stringList, 1);
+            return MakeStringUnique(stringToMakeUnique, strings, 1);
         }
 
-        public static string MakeStringUnique(string stringToMakeUnique, List<string> stringList, int numberToStartAt)
+        public static string MakeStringUnique(string stringToMakeUnique, IEnumerable<string> strings, int numberToStartAt)
         {
-            for (int i = 0; i < stringList.Count; i++)
+            List<string> list = strings.ToList();
+            for (int i = 0; i < list.Count; i++)
             {
-                if (stringToMakeUnique == stringList[i])
+                if (stringToMakeUnique == list[i])
                 {
                     // the name matches an item in the list that isn't the same reference, so increment the number.
                     stringToMakeUnique = IncrementNumberAtEnd(stringToMakeUnique);

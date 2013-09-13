@@ -14,6 +14,12 @@ using Gum.Debug;
 
 namespace Gum.Wireframe
 {
+    public enum CopyType
+    {
+        Instance,
+        State
+    }
+
     public partial class EditingManager
     {
         #region Fields
@@ -30,6 +36,8 @@ namespace Gum.Wireframe
 
         Object mCopiedObject = null;
         StateSave mCopiedState = new StateSave();
+        
+        CopyType mCopyType;
 
         #endregion
 
@@ -129,14 +137,14 @@ namespace Gum.Wireframe
             }
         }
 
-        public void OnCopy()
+        public void OnCopy(CopyType copyType)
         {
-            StoreCopiedObject();
+            StoreCopiedObject(copyType);
         }
 
-        public void OnCut()
+        public void OnCut(CopyType copyType)
         {
-            StoreCopiedObject();
+            StoreCopiedObject(copyType);
 
             ElementSave sourceElement = SelectedState.Self.SelectedElement;
             InstanceSave sourceInstance = SelectedState.Self.SelectedInstance;
@@ -161,23 +169,37 @@ namespace Gum.Wireframe
 
         }
         
-        public void OnPaste()
+        public void OnPaste(CopyType copyType)
         {
-            // We need to both duplicate the InstanceSave, but we also need to duplicate all of the variables
-            // that use the copied InstanceSave.
-
-
-            if (mCopiedObject == null)
+            // To make sure we didn't copy one type and paste another
+            if (mCopyType == copyType)
             {
-                // do nothing
-            }
-            else if (mCopiedObject is InstanceSave)
-            {
-                PasteCopiedInstanceSave();
+                if (mCopyType == CopyType.Instance)
+                {
+                    // We need to both duplicate the InstanceSave, but we also need to duplicate all of the variables
+                    // that use the copied InstanceSave.
+                    if (mCopiedObject == null)
+                    {
+                        // do nothing
+                    }
+                    else if (mCopiedObject is InstanceSave)
+                    {
+                        PasteCopiedInstanceSave();
+                    }
+                }
+                else if (mCopyType == CopyType.State)
+                {
+                    if (mCopiedState != null)
+                    {
+                        PastedCopiedState();
+
+                    }
+                }
             }
 
         }
 
+        
 
         public void OnDelete()
         {
@@ -220,27 +242,52 @@ namespace Gum.Wireframe
 
 
 
-        private void StoreCopiedObject()
+        private void StoreCopiedObject(CopyType copyType)
         {
+            mCopyType = copyType;
 
             mCopiedObject = null;
             mCopiedState.Variables.Clear();
             mCopiedState.VariableLists.Clear();
+
+            if (copyType == CopyType.Instance)
+            {
+                StoreCopiedInstance();
+            }
+            else if (copyType == CopyType.State)
+            {
+                StoreCopiedState();
+            }
+        }
+
+        private void StoreCopiedState()
+        {
+            if (SelectedState.Self.SelectedStateSave != null)
+            {
+                mCopiedState = SelectedState.Self.SelectedStateSave.Clone();
+            }
+        }
+
+        private void StoreCopiedInstance()
+        {
+
 
             if (SelectedState.Self.SelectedInstance != null)
             {
                 mCopiedObject = SelectedState.Self.SelectedInstance.Clone();
                 mCopiedState = SelectedState.Self.SelectedStateSave.Clone();
 
-                for(int i = mCopiedState.Variables.Count  - 1; i > -1; i--)
+                // Clear out any variables that don't pertain to the selected instance:
+                for (int i = mCopiedState.Variables.Count - 1; i > -1; i--)
                 {
                     if (mCopiedState.Variables[i].SourceObject != SelectedState.Self.SelectedInstance.Name)
                     {
                         mCopiedState.Variables.RemoveAt(i);
                     }
-                    
+
                 }
 
+                // And also any VariableLists:
                 for (int i = mCopiedState.VariableLists.Count - 1; i > -1; i--)
                 {
                     if (mCopiedState.VariableLists[i].SourceObject != SelectedState.Self.SelectedInstance.Name)
@@ -249,8 +296,6 @@ namespace Gum.Wireframe
                     }
 
                 }
-
-
             }
         }
 
@@ -260,6 +305,43 @@ namespace Gum.Wireframe
         {
             PasteInstanceSave(mCopiedObject as InstanceSave, mCopiedState, SelectedState.Self.SelectedElement);
         }
+
+        private void PastedCopiedState()
+        {
+            ElementSave container = SelectedState.Self.SelectedElement;
+            /////////////////////Early Out//////////////////
+            if (container == null)
+            {
+                return;
+            }
+            //////////////////End Early Out////////////////
+
+
+            StateSave newStateSave = mCopiedState.Clone();
+
+            newStateSave.Variables.RemoveAll(item => item.CanOnlyBeSetInDefaultState);
+
+
+            newStateSave.ParentContainer = container;
+
+            string name = mCopiedState.Name + "Copy";
+
+            name = StringFunctions.MakeStringUnique(name, container.States.Select(item => item.Name));
+
+            newStateSave.Name = name;
+
+            container.States.Add(newStateSave);
+
+            StateTreeViewManager.Self.RefreshUI(container);
+
+
+
+            //SelectedState.Self.SelectedInstance = targetInstance;
+            SelectedState.Self.SelectedStateSave = newStateSave;
+
+            GumCommands.Self.FileCommands.TryAutoSaveElement(container);
+        }
+
 
         public void PasteInstanceSave(InstanceSave copiedInstance, StateSave copiedState, ElementSave targetElement)
         {
@@ -383,10 +465,7 @@ namespace Gum.Wireframe
 
             SelectedState.Self.SelectedInstance = targetInstance;
 
-            if (ProjectManager.Self.GeneralSettingsFile.AutoSave)
-            {
-                ProjectManager.Self.SaveElement(targetElement);
-            }
+            GumCommands.Self.FileCommands.TryAutoSaveElement(targetElement);
         }
 
         
