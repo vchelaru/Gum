@@ -91,7 +91,8 @@ namespace Gum.Managers
             }
             SelectedState.Self.CustomCurrentStateSave = null;
             SelectedState.Self.UpdateToSelectedStateSave();
-
+            // refreshes the yellow highlights
+            StateTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedElement);
         }
 
         public void Select(StateSave stateSave)
@@ -123,6 +124,7 @@ namespace Gum.Managers
             mLastElementRefreshedTo = element;
 
             StateSave lastStateSave = SelectedState.Self.SelectedStateSave;
+            InstanceSave instance = SelectedState.Self.SelectedInstance;
 
 
             if (element != null)
@@ -140,10 +142,15 @@ namespace Gum.Managers
                 for(int i = 0; i < element.States.Count; i++)
                 {
                     StateSave state = element.States[i];
-
-                    if (mTreeView.Nodes[i].Text != state.Name)
+                    string stateName = state.Name;
+                    if (string.IsNullOrEmpty(stateName))
                     {
-                        mTreeView.Nodes[i].Text = state.Name;
+                        stateName = "Default";
+                    }
+
+                    if (mTreeView.Nodes[i].Text != stateName)
+                    {
+                        mTreeView.Nodes[i].Text = stateName;
                     }
                     if (mTreeView.Nodes[i].Tag != state)
                     {
@@ -152,9 +159,23 @@ namespace Gum.Managers
 
                     if (state == lastStateSave)
                     {
+
                         SelectedState.Self.SelectedStateSave = state;
 
                         wasAnythingSelected = true;
+                    }
+                    else if(!mTreeView.Nodes[i].IsSelected)
+                    {
+                        System.Drawing.Color desiredColor = System.Drawing.Color.White;
+                        if (instance != null && state.Variables.Any(item => item.Name.StartsWith(instance.Name + ".")))
+                        {
+                            desiredColor = System.Drawing.Color.Yellow;
+                        }
+
+                        if (mTreeView.Nodes[i].BackColor != desiredColor)
+                        {
+                            mTreeView.Nodes[i].BackColor = desiredColor;
+                        }
                     }
                 }
 

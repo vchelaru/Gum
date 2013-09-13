@@ -288,8 +288,11 @@ namespace Gum.Wireframe
 
             SetUpParentRelationship(instance, elementStack, baseComponentSave.Instances);
 
-
-            SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(rootIpso, elementStack.LastOrDefault().Element, new RecursiveVariableFinder(instance, elementStack));
+            // This pulls from the Instance's state, which if set can override hard values
+            // set on the instance.  States should take a backseat to explicit values set.  So
+            // instead, we want this funciton to be called inside the creation of the object instead
+            // of after.
+            //SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(rootIpso, elementStack.LastOrDefault().Element, new RecursiveVariableFinder(instance, elementStack));
             UpdateScalesAndPositionsForSelectedChildren(rootIpso, instance, elementStack);
             elementStack.Remove( elementStack.FirstOrDefault(item=>item.Element == baseComponentSave));
 
@@ -575,30 +578,18 @@ namespace Gum.Wireframe
             LineRectangle lineRectangle = InstantiateAndNameRectangle(instance.Name);
             lineRectangle.Tag = instance;
 
-            StateSave stateSave = new StateSave();
-            // Get the variables before attaching to the guide
-
             RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(instance, elementStack);
 
-            WireframeObjectManager.Self.FillStateWithVariables(rvf, stateSave, WireframeObjectManager.Self.PositionAndSizeVariables);
-            stateSave.SetValue("Visible", rvf.GetValue("Visible"));
-
-            SetGuideParent(parentIpso, lineRectangle, (string)stateSave.GetValue("Guide"));
+            SetGuideParent(parentIpso, lineRectangle, rvf.GetValue<string>("Guide"));
 
             if (exposedVariables == null)
             {
                 int m = 3;
             }
-
-            foreach (VariableSave exposed in exposedVariables)
-            {
-                stateSave.SetValue(exposed.Name, exposed.Value);
-            }
-
-
+            
             WireframeObjectManager.Self.SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(lineRectangle, elementStack.Last().Element, rvf);
 
-            lineRectangle.Visible = stateSave.GetValueOrDefault<bool>("Visible");
+            lineRectangle.Visible = rvf.GetValue<bool>("Visible");
 
             return lineRectangle;
         }
@@ -782,6 +773,7 @@ namespace Gum.Wireframe
             object yAsObject = rvf.GetValue("Y");
 
             object xUnits = rvf.GetValue("X Units");
+            object yUnits = rvf.GetValue("Y Units");
 #if DEBUG
             if (xUnits is int)
             {
@@ -816,7 +808,7 @@ namespace Gum.Wireframe
                 xAsFloat,
                 yAsFloat,
                 xUnits,
-                rvf.GetValue("Y Units")
+                yUnits
                 
                 
                 );
