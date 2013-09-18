@@ -562,11 +562,11 @@ namespace Gum.Managers
             }
         }
 
-        public void Select(List<InstanceSave> list)
+        public void Select(IEnumerable<InstanceSave> list)
         {
-            if (list.Count != 0)
+            if (list.Count() != 0)
             {
-                TreeNode parentContainer = GetTreeNodeFor(list[0].ParentContainer);
+                TreeNode parentContainer = GetTreeNodeFor(list.First().ParentContainer);
 
                 List<TreeNode> treeNodeList = new List<TreeNode>();
 
@@ -669,6 +669,15 @@ namespace Gum.Managers
             ProjectVerifier.Self.AssertSelectedIpsosArePartOfRenderer();
         }
 
+        public void RefreshUI(ElementSave elementSave)
+        {
+            var foundNode = GetTreeNodeFor(elementSave);
+
+            if (foundNode != null)
+            {
+                RefreshUI(foundNode);
+            }
+        }
 
         void RefreshUI(TreeNode node)
         {

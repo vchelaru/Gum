@@ -55,7 +55,7 @@ namespace Gum.Wireframe
         };
 
 
-        Dictionary<NineSliceSections, string> PossibleNineSliceEndings = new Dictionary<NineSliceSections, string>()
+        Dictionary<NineSliceSections, string> mPossibleNineSliceEndings = new Dictionary<NineSliceSections, string>()
         {
             {NineSliceSections.Center, "_center"},
             {NineSliceSections.Left, "_left"},
@@ -69,6 +69,11 @@ namespace Gum.Wireframe
         };
 
         #endregion
+
+        public Dictionary<NineSliceSections, string> PossibleNineSliceEndings
+        {
+            get { return mPossibleNineSliceEndings; }
+        }
 
         private void CreateIpsoForElement(ElementSave elementSave)
         {
@@ -1034,25 +1039,25 @@ namespace Gum.Wireframe
             if (!string.IsNullOrEmpty(bareTexture))
             {
                 nineSlice.TopLeftTexture = LoaderManager.Self.LoadOrInvalid(
-                    bareTexture + PossibleNineSliceEndings[NineSliceSections.TopLeft] + "." + extension, null, out error);
+                    bareTexture + mPossibleNineSliceEndings[NineSliceSections.TopLeft] + "." + extension, null, out error);
                 nineSlice.TopTexture = LoaderManager.Self.LoadOrInvalid(
-                    bareTexture + PossibleNineSliceEndings[NineSliceSections.Top] + "." + extension, null, out error);
+                    bareTexture + mPossibleNineSliceEndings[NineSliceSections.Top] + "." + extension, null, out error);
                 nineSlice.TopRightTexture = LoaderManager.Self.LoadOrInvalid(
-                    bareTexture + PossibleNineSliceEndings[NineSliceSections.TopRight] + "." + extension, null, out error);
+                    bareTexture + mPossibleNineSliceEndings[NineSliceSections.TopRight] + "." + extension, null, out error);
 
                 nineSlice.LeftTexture = LoaderManager.Self.LoadOrInvalid(
-                    bareTexture + PossibleNineSliceEndings[NineSliceSections.Left] + "." + extension, null, out error);
+                    bareTexture + mPossibleNineSliceEndings[NineSliceSections.Left] + "." + extension, null, out error);
                 nineSlice.CenterTexture = LoaderManager.Self.LoadOrInvalid(
-                    bareTexture + PossibleNineSliceEndings[NineSliceSections.Center] + "." + extension, null, out error);
+                    bareTexture + mPossibleNineSliceEndings[NineSliceSections.Center] + "." + extension, null, out error);
                 nineSlice.RightTexture = LoaderManager.Self.LoadOrInvalid(
-                    bareTexture + PossibleNineSliceEndings[NineSliceSections.Right] + "." + extension, null, out error);
+                    bareTexture + mPossibleNineSliceEndings[NineSliceSections.Right] + "." + extension, null, out error);
 
                 nineSlice.BottomLeftTexture = LoaderManager.Self.LoadOrInvalid(
-                    bareTexture + PossibleNineSliceEndings[NineSliceSections.BottomLeft] + "." + extension, null, out error);
+                    bareTexture + mPossibleNineSliceEndings[NineSliceSections.BottomLeft] + "." + extension, null, out error);
                 nineSlice.BottomTexture = LoaderManager.Self.LoadOrInvalid(
-                    bareTexture + PossibleNineSliceEndings[NineSliceSections.Bottom] + "." + extension, null, out error);
+                    bareTexture + mPossibleNineSliceEndings[NineSliceSections.Bottom] + "." + extension, null, out error);
                 nineSlice.BottomRightTexture = LoaderManager.Self.LoadOrInvalid(
-                    bareTexture + PossibleNineSliceEndings[NineSliceSections.BottomRight] + "." + extension, null, out error);
+                    bareTexture + mPossibleNineSliceEndings[NineSliceSections.BottomRight] + "." + extension, null, out error);
             }
 
             var color = GetColorFromRvf(rvf);
@@ -1088,7 +1093,7 @@ namespace Gum.Wireframe
 
             string toReturn = withoutExtension;
 
-            foreach (var kvp in PossibleNineSliceEndings)
+            foreach (var kvp in mPossibleNineSliceEndings)
             {
                 if (withoutExtension.ToLower().EndsWith(kvp.Value.ToLower()))
                 {

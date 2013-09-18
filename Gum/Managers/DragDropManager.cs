@@ -143,7 +143,8 @@ namespace Gum.Managers
             // reordering.
             if (targetElementSave != null && targetElementSave != draggedAsInstanceSave.ParentContainer)
             {
-                EditingManager.Self.PasteInstanceSave(draggedAsInstanceSave,
+                List<InstanceSave> instances = new List<InstanceSave>() { draggedAsInstanceSave };
+                EditingManager.Self.PasteInstanceSaves(instances,
                     draggedAsInstanceSave.ParentContainer.DefaultState.Clone(),
                     targetElementSave);
             }

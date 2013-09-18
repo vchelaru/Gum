@@ -34,7 +34,7 @@ namespace Gum.Wireframe
 
         ToolStripMenuItem mMoveInFrontOf;
 
-        Object mCopiedObject = null;
+        List<InstanceSave> mCopiedInstances = new List<InstanceSave>();
         StateSave mCopiedState = new StateSave();
         
         CopyType mCopyType;
@@ -178,11 +178,11 @@ namespace Gum.Wireframe
                 {
                     // We need to both duplicate the InstanceSave, but we also need to duplicate all of the variables
                     // that use the copied InstanceSave.
-                    if (mCopiedObject == null)
+                    if (mCopiedInstances.Count == 0)
                     {
                         // do nothing
                     }
-                    else if (mCopiedObject is InstanceSave)
+                    else
                     {
                         PasteCopiedInstanceSave();
                     }
@@ -228,7 +228,7 @@ namespace Gum.Wireframe
                     SelectedState.Self.SelectedElement = elementToReselect;
 
 
-                    ElementTreeViewManager.Self.RefreshUI();
+                    ElementTreeViewManager.Self.RefreshUI(selectedElement);
                     WireframeObjectManager.Self.RefreshAll(true);
 
                     SelectionManager.Self.Refresh();
@@ -246,7 +246,7 @@ namespace Gum.Wireframe
         {
             mCopyType = copyType;
 
-            mCopiedObject = null;
+            mCopiedInstances.Clear();
             mCopiedState.Variables.Clear();
             mCopiedState.VariableLists.Clear();
 
@@ -274,13 +274,16 @@ namespace Gum.Wireframe
 
             if (SelectedState.Self.SelectedInstance != null)
             {
-                mCopiedObject = SelectedState.Self.SelectedInstance.Clone();
+                foreach (var instance in SelectedState.Self.SelectedInstances)
+                {
+                    mCopiedInstances.Add(instance.Clone());
+                }
                 mCopiedState = SelectedState.Self.SelectedStateSave.Clone();
 
                 // Clear out any variables that don't pertain to the selected instance:
                 for (int i = mCopiedState.Variables.Count - 1; i > -1; i--)
                 {
-                    if (mCopiedState.Variables[i].SourceObject != SelectedState.Self.SelectedInstance.Name)
+                    if (mCopiedInstances.Any(item=>item.Name == mCopiedState.Variables[i].SourceObject) == false)
                     {
                         mCopiedState.Variables.RemoveAt(i);
                     }
@@ -290,7 +293,7 @@ namespace Gum.Wireframe
                 // And also any VariableLists:
                 for (int i = mCopiedState.VariableLists.Count - 1; i > -1; i--)
                 {
-                    if (mCopiedState.VariableLists[i].SourceObject != SelectedState.Self.SelectedInstance.Name)
+                    if (mCopiedInstances.Any(item=>item.Name == mCopiedState.VariableLists[i].SourceObject) == false)
                     {
                         mCopiedState.VariableLists.RemoveAt(i);
                     }
@@ -303,7 +306,8 @@ namespace Gum.Wireframe
 
         private void PasteCopiedInstanceSave()
         {
-            PasteInstanceSave(mCopiedObject as InstanceSave, mCopiedState, SelectedState.Self.SelectedElement);
+            PasteInstanceSaves(mCopiedInstances, mCopiedState, SelectedState.Self.SelectedElement);
+
         }
 
         private void PastedCopiedState()
@@ -343,29 +347,35 @@ namespace Gum.Wireframe
         }
 
 
-        public void PasteInstanceSave(InstanceSave copiedInstance, StateSave copiedState, ElementSave targetElement)
+        public void PasteInstanceSaves(List<InstanceSave> copiedInstances, StateSave copiedState, ElementSave targetElement)
         {
-            InstanceSave sourceInstance = copiedInstance;
-            ElementSave sourceElement = sourceInstance.ParentContainer;
-
-            InstanceSave targetInstance = sourceInstance.Clone();
-
-            if (targetElement != null)
+            List<InstanceSave> newInstances = new List<InstanceSave>();
+            foreach (var instanceAsObject in copiedInstances)
             {
-                PastedCopiedInstance(sourceInstance, sourceElement, targetElement, targetInstance, copiedState);
+                InstanceSave sourceInstance = instanceAsObject as InstanceSave;
+                ElementSave sourceElement = sourceInstance.ParentContainer;
 
+                InstanceSave targetInstance = sourceInstance.Clone();
+                newInstances.Add(targetInstance);
+
+                if (targetElement != null)
+                {
+                    PastedCopiedInstance(sourceInstance, sourceElement, targetElement, targetInstance, copiedState);
+
+                }
             }
+
+            if (newInstances.Count > 1)
+            {
+                SelectedState.Self.SelectedInstances = newInstances;
+            }
+
+        
         }
 
         private void PastedCopiedInstance(InstanceSave sourceInstance, ElementSave sourceElement, ElementSave targetElement, InstanceSave targetInstance, StateSave copiedState)
         {
-            List<string> existingNames = new List<string>();
-            foreach (InstanceSave instance in targetElement.Instances)
-            {
-                existingNames.Add(instance.Name);
-            }
-
-            targetInstance.Name = StringFunctions.MakeStringUnique(targetInstance.Name, existingNames);
+            targetInstance.Name = StringFunctions.MakeStringUnique(targetInstance.Name, targetElement.Instances.Select(item=>item.Name));
 
             targetElement.Instances.Add(targetInstance);
 
@@ -415,22 +425,32 @@ namespace Gum.Wireframe
 
                 for (int i = stateSave.Variables.Count - 1; i > -1; i--)
                 {
+                    // We may have copied over a group of instances.  If so
+                    // the copied state may have variables for multiple instances.
+                    // We only want to apply the variables that work for the selected
+                    // object.
                     VariableSave sourceVariable = stateSave.Variables[i];
+                    if (sourceVariable.SourceObject == sourceInstance.Name)
+                    {
 
                         VariableSave copiedVariable = sourceVariable.Clone();
                         copiedVariable.Name = targetInstance.Name + "." + copiedVariable.GetRootName();
                         copiedVariable.SourceObject = targetInstance.Name;
                         SelectedState.Self.SelectedStateSave.Variables.Add(copiedVariable);
+                    }
                 }
                 // Copy over the VariableLists too
                 for (int i = stateSave.VariableLists.Count - 1; i > -1; i--)
                 {
-                    VariableListSave sourceList = stateSave.VariableLists[i];
 
+                    VariableListSave sourceList = stateSave.VariableLists[i];
+                    if (sourceList.SourceObject == sourceInstance.Name)
+                    {
                         VariableListSave copiedList = sourceList.Clone();
                         copiedList.Name = targetInstance.Name + "." + copiedList.GetRootName();
                         copiedList.SourceObject = targetInstance.Name;
                         SelectedState.Self.SelectedStateSave.VariableLists.Add(copiedList);
+                    }
                 }
             }
 
@@ -460,7 +480,7 @@ namespace Gum.Wireframe
 
 
 
-            ElementTreeViewManager.Self.RefreshUI();
+            ElementTreeViewManager.Self.RefreshUI(targetElement);
 
 
             SelectedState.Self.SelectedInstance = targetInstance;
