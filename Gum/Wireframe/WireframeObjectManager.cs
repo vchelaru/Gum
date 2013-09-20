@@ -226,7 +226,13 @@ namespace Gum.Wireframe
 
                 ClearAll();
 
-                LoaderManager.Self.CacheTextures = false;
+                // If it's the same element, let's not refresh the textures
+                bool didElementChange = elementSave != ElementShowing;
+
+                if (didElementChange)
+                {
+                    LoaderManager.Self.CacheTextures = false;
+                }
                 LoaderManager.Self.CacheTextures = true;
 
                 CreateIpsoForElement(elementSave);
@@ -543,12 +549,16 @@ namespace Gum.Wireframe
             {
                 selectedElement = ObjectFinder.Self.GetElementSave(instanceSave.BaseType);
 
-                ElementWithState elementWithState = new ElementWithState(selectedElement);
-                var state = new DataTypes.RecursiveVariableFinder(instanceSave, elementStack).GetValue("State") as string;
-                elementWithState.StateName = state;
-                //elementWithState.StateName 
-                elementStack.Add(elementWithState);
-                toReturn = true;
+                if (elementStack.Count == 0 || elementStack.Last().Element != selectedElement)
+                {
+
+                    ElementWithState elementWithState = new ElementWithState(selectedElement);
+                    var state = new DataTypes.RecursiveVariableFinder(instanceSave, elementStack).GetValue("State") as string;
+                    elementWithState.StateName = state;
+                    //elementWithState.StateName 
+                    elementStack.Add(elementWithState);
+                    toReturn = true;
+                }
             }
             return toReturn;
         }

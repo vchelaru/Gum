@@ -11,7 +11,7 @@ using ToolsUtilities;
 
 namespace RenderingLibrary.Graphics
 {
-    public class BitmapFont
+    public class BitmapFont : IDisposable
     {
         #region Fields
 
@@ -369,13 +369,24 @@ namespace RenderingLibrary.Graphics
             return RenderToTexture2D(lines, horizontalAlignment, managers);
         }
 
+        // To help out the GC, we're going to just use a Color that's 2048x2048
+        static Color[] mColorBuffer = new Color[2048*2048];
+
         public Texture2D RenderToTexture2D(IEnumerable lines, HorizontalAlignment horizontalAlignment, SystemManagers managers)
         {
-            ImageData[] imageDatas = new ImageData[this.mTextures.Length];
+            
 
+            ImageData[] imageDatas = new ImageData[this.mTextures.Length];
+            
             for (int i = 0; i < imageDatas.Length; i++)
             {
-                imageDatas[i] = ImageData.FromTexture2D(this.mTextures[i], managers);
+                // Only use the existing buffer on one-page fonts
+                var bufferToUse = mColorBuffer;
+                if (i > 0)
+                {
+                    bufferToUse = null;
+                }
+                imageDatas[i] = ImageData.FromTexture2D(this.mTextures[i], managers, bufferToUse);
             }
 
             Point point = new Point();
@@ -543,5 +554,10 @@ namespace RenderingLibrary.Graphics
 
         #endregion
 
+
+        public void Dispose()
+        {
+            // Do nothing, the loader will handle disposing the texture.
+        }
     }
 }

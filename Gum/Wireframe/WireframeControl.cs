@@ -166,6 +166,12 @@ namespace Gum.Wireframe
                 nudgeX = -1;
             }
 
+            if (e.Shift)
+            {
+                nudgeX *= 5;
+                nudgeY *= 5;
+            }
+
             if (nudgeX != 0 || nudgeY != 0)
             {
                 EditingManager.Self.MoveSelectedObjectsBy(nudgeX, nudgeY);

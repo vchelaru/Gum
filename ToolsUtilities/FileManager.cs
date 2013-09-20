@@ -249,6 +249,11 @@ namespace ToolsUtilities
 #else
 			string containedText = "";
 
+            if (IsRelative(fileName))
+            {
+                fileName = RelativeDirectory + fileName;
+            }
+
 			// Creating a filestream then using that enables us to open files that are open by other apps.
 			using (FileStream fileStream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
 			{

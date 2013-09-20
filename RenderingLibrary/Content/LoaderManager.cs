@@ -22,7 +22,7 @@ namespace RenderingLibrary.Content
         SpriteFont mDefaultSpriteFont;
         BitmapFont mDefaultBitmapFont;
 
-        Dictionary<string, Texture2D> mCachedTextures = new Dictionary<string, Texture2D>();
+        Dictionary<string, IDisposable> mCachedDisposables = new Dictionary<string, IDisposable>();
 
         ContentManager mContentManager;
 
@@ -40,12 +40,12 @@ namespace RenderingLibrary.Content
 
                 if (!mCacheTextures)
                 {
-                    foreach (KeyValuePair<string, Texture2D> kvp in mCachedTextures)
+                    foreach (KeyValuePair<string, IDisposable> kvp in mCachedDisposables)
                     {
                         kvp.Value.Dispose();
                     }
 
-                    mCachedTextures.Clear();
+                    mCachedDisposables.Clear();
 
                 }
             }
@@ -95,6 +95,23 @@ namespace RenderingLibrary.Content
         #endregion
 
         #region Methods
+
+        public void AddDisposable(string name, IDisposable disposable)
+        {
+            mCachedDisposables.Add(name, disposable);
+        }
+
+        public IDisposable GetDisposable(string name)
+        {
+            if (mCachedDisposables.ContainsKey(name))
+            {
+                return mCachedDisposables[name];
+            }
+            else
+            {
+                return null;
+            }
+        }
 
         public void Initialize(string invalidTextureLocation, string defaultFontLocation, IServiceProvider serviceProvider, SystemManagers managers)
         {
@@ -172,15 +189,22 @@ namespace RenderingLibrary.Content
         public Texture2D Load(string fileName, SystemManagers managers)
         {
             string fileNameStandardized = FileManager.Standardize(fileName, false, false);
+
+            if (FileManager.IsRelative(fileNameStandardized))
+            {
+                fileNameStandardized = FileManager.RelativeDirectory + fileNameStandardized;
+            }
+
+
             Texture2D toReturn = null;
-            lock (mCachedTextures)
+            lock (mCachedDisposables)
             {
                 if (CacheTextures)
                 {
 
-                    if (mCachedTextures.ContainsKey(fileNameStandardized))
+                    if (mCachedDisposables.ContainsKey(fileNameStandardized))
                     {
-                        return mCachedTextures[fileNameStandardized];
+                        return (Texture2D)mCachedDisposables[fileNameStandardized];
                     }
                 }
 
@@ -207,21 +231,22 @@ namespace RenderingLibrary.Content
                 }
                 else
                 {
-                    using (FileStream stream = System.IO.File.OpenRead(fileName))
+                    using (FileStream stream = System.IO.File.OpenRead(fileNameStandardized))
                     {
                         Texture2D texture = Texture2D.FromStream(renderer.GraphicsDevice,
                             stream);
 
-                        texture.Name = fileName;
+                        texture.Name = fileNameStandardized;
 
-                        if (CacheTextures)
-                        {
-                            mCachedTextures.Add(fileNameStandardized, texture);
-                        }
+
 
                         toReturn = texture;
 
                     }
+                }
+                if (CacheTextures)
+                {
+                    mCachedDisposables.Add(fileNameStandardized, toReturn);
                 }
             }
             return toReturn;

@@ -744,7 +744,13 @@ namespace Gum.Wireframe
             {
                 try
                 {
-                    BitmapFont bitmapFont = new BitmapFont(fileName, (SystemManagers)null);
+
+                    BitmapFont bitmapFont = (BitmapFont)LoaderManager.Self.GetDisposable(fileName);
+                    if (bitmapFont == null)
+                    {
+                        bitmapFont = new BitmapFont(fileName, (SystemManagers)null);
+                        LoaderManager.Self.AddDisposable(fileName, bitmapFont);
+                    }
 
                     return bitmapFont;
                 }

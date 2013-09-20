@@ -85,7 +85,8 @@ namespace RenderingLibrary.Graphics
         #region Public Static Methods
 
 
-        public static ImageData FromTexture2D(Texture2D texture2D, SystemManagers managers)
+
+        public static ImageData FromTexture2D(Texture2D texture2D, SystemManagers managers, Color[] colorBuffer = null)
         {
             ImageData imageData = null;
         
@@ -94,11 +95,20 @@ namespace RenderingLibrary.Graphics
             {
                 case SurfaceFormat.Color:
                     {
-                        Color[] data = new Color[texture2D.Width * texture2D.Height];
-                        texture2D.GetData<Color>(data);
+                        if (colorBuffer == null)
+                        {
+                            colorBuffer = new Color[texture2D.Width * texture2D.Height];
+                        }
 
-                        imageData = new ImageData(
-                            texture2D.Width, texture2D.Height, data, managers);
+                        lock (colorBuffer)
+                        {
+
+
+                            texture2D.GetData<Color>(colorBuffer, 0, texture2D.Width * texture2D.Height);
+
+                            imageData = new ImageData(
+                                texture2D.Width, texture2D.Height, colorBuffer, managers);
+                        }
                     }
                     break;
                 case SurfaceFormat.Dxt3:
