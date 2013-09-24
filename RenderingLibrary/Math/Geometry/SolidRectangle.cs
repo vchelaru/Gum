@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace RenderingLibrary.Graphics
 {
-    public class SolidRectangle : IPositionedSizedObject, IRenderable
+    public class SolidRectangle : IPositionedSizedObject, IRenderable, IVisible
     {
         #region Fields
         
@@ -82,12 +82,6 @@ namespace RenderingLibrary.Graphics
         }
 
 
-        public bool Visible
-        {
-            get;
-            set;
-        }
-
         public ICollection<IPositionedSizedObject> Children
         {
             get { return mChildren; }
@@ -112,7 +106,7 @@ namespace RenderingLibrary.Graphics
 
         void IRenderable.Render(SpriteBatch spriteBatch, SystemManagers managers)
         {
-            if (Visible)
+            if (this.AbsoluteVisible)
             {
                 Renderer renderer = null;
                 if (managers == null)
@@ -129,6 +123,37 @@ namespace RenderingLibrary.Graphics
                     this.Color);
 
             }
+        }
+
+
+        public bool AbsoluteVisible
+        {
+            get
+            {
+                if (((IVisible)this).Parent == null)
+                {
+                    return Visible;
+                }
+                else
+                {
+                    return Visible && ((IVisible)this).Parent.AbsoluteVisible;
+                }
+            }
+        }
+
+        IVisible IVisible.Parent
+        {
+            get
+            {
+                return ((IPositionedSizedObject)this).Parent as IVisible;
+            }
+        }
+
+
+        public bool Visible
+        {
+            get;
+            set;
         }
     }
 }

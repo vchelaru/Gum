@@ -460,17 +460,13 @@ namespace Gum.Wireframe
         {
             SolidRectangle solidRectangle = InstantiateAndNameSolidRectangle(elementSave.Name);
             solidRectangle.Tag = elementSave;
-            StateSave stateSave = new StateSave();
 
             RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(elementSave.DefaultState);
 
-            FillStateWithVariables(rvf, stateSave, WireframeObjectManager.Self.PositionAndSizeVariables);
-            FillStateWithVariables(rvf, stateSave, WireframeObjectManager.Self.ColorAndAlpha);
+            
+            SetGuideParent(null, solidRectangle, (string)rvf.GetValue("Guide"));
 
-
-            SetGuideParent(null, solidRectangle, (string)stateSave.GetValue("Guide"));
-
-            SetAlphaAndColorValues(solidRectangle, stateSave);
+            SetAlphaAndColorValues(solidRectangle, rvf);
             SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(solidRectangle, elementSave, rvf);
 
             return solidRectangle;           
@@ -494,41 +490,24 @@ namespace Gum.Wireframe
             SolidRectangle solidRectangle = InstantiateAndNameSolidRectangle(instance.Name);
             solidRectangle.Tag = instance;
 
-
-            StateSave stateSave = new StateSave();
-
             RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(instance, elementStack);
 
-            WireframeObjectManager.Self.FillStateWithVariables(rvf, stateSave, WireframeObjectManager.Self.PositionAndSizeVariables);
-            WireframeObjectManager.Self.FillStateWithVariables(rvf, stateSave, WireframeObjectManager.Self.ColorAndAlpha);
+            SetGuideParent(parentIpso, solidRectangle, (string)rvf.GetValue("Guide"));
 
-
-            foreach (VariableSave exposed in exposedVariables)
-            {
-                stateSave.SetValue(exposed.Name, exposed.Value);
-            }
-
-
-
-            SetGuideParent(parentIpso, solidRectangle, (string)stateSave.GetValue("Guide"));
-
-            stateSave.SetValue("Visible", rvf.GetValue("Visible"));
-
-
-            SetAlphaAndColorValues(solidRectangle, stateSave);
+            SetAlphaAndColorValues(solidRectangle, rvf);
             WireframeObjectManager.Self.SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(solidRectangle, elementStack.Last().Element, rvf);
 
-            solidRectangle.Visible = (bool)stateSave.GetValue("Visible");
+            solidRectangle.Visible = (bool)rvf.GetValue("Visible");
 
             return solidRectangle;
         }
-        private void SetAlphaAndColorValues(SolidRectangle solidRectangle, StateSave stateSave)
+        private void SetAlphaAndColorValues(SolidRectangle solidRectangle, RecursiveVariableFinder rvf)
         {
             Microsoft.Xna.Framework.Color color = new Microsoft.Xna.Framework.Color(
-                (int)stateSave.GetValue("Red"),
-                (int)stateSave.GetValue("Green"),
-                (int)stateSave.GetValue("Blue"),
-                (int)stateSave.GetValue("Alpha")
+                (int)rvf.GetValue("Red"),
+                (int)rvf.GetValue("Green"),
+                (int)rvf.GetValue("Blue"),
+                (int)rvf.GetValue("Alpha")
                 
                 );
             solidRectangle.Color = color;

@@ -15,7 +15,11 @@ namespace RenderingLibrary.Graphics.Fonts
 
         public void Save(string fileName)
         {
-            string template = FileManager.FromFileText("Content/BmfcTemplate.bmfc");
+            var assembly2 = Assembly.GetEntryAssembly();
+
+            string directory = FileManager.GetDirectory(assembly2.Location);
+
+            string template = FileManager.FromFileText(directory + "Content/BmfcTemplate.bmfc");
 
             template = template.Replace("FontNameVariable", FontName);
             template = template.Replace("FontSizeVariable", FontSize.ToString());
