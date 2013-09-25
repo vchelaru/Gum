@@ -10,6 +10,8 @@ using Gum.Wireframe;
 using Gum.Plugins;
 using Gum.Debug;
 using System.Collections.ObjectModel;
+using Gum.Events;
+using RenderingLibrary;
 
 namespace Gum.ToolStates
 {
@@ -253,6 +255,7 @@ namespace Gum.ToolStates
 
                         SelectedElement = selected;
                     }
+
                 }
             }
         }
@@ -351,6 +354,19 @@ namespace Gum.ToolStates
                 }
             }
         }
+
+        public IPositionedSizedObject SelectedIpso
+        {
+            get
+            {
+                return SelectionManager.Self.SelectedIpso;
+            }
+            set
+            {
+                SelectionManager.Self.SelectedIpso = value;
+            }
+        }
+
 
         #endregion
 

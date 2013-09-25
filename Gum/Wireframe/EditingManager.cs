@@ -11,6 +11,7 @@ using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using Gum.DataTypes.Variables;
 using Gum.Converters;
+using Gum.Events;
 
 namespace Gum.Wireframe
 {
@@ -24,7 +25,11 @@ namespace Gum.Wireframe
         bool mHasGrabbed = false;
         bool mHasChangedAnythingSinceLastPush = false;
 
+        bool mHasMovedEnoughSincePush = false;
+        float mXPush = 0;
+        float mYPush = 0;
 
+        float mAspectRatioOnGrab;
         #endregion
 
         #region Properties
@@ -48,6 +53,26 @@ namespace Gum.Wireframe
         public void Initialize(System.Windows.Forms.ContextMenuStrip contextMenuStrip)
         {
             RightClickInitialize(contextMenuStrip);
+
+            GumEvents.Self.InstanceSelected += HandleInstanceSelected;
+        }
+
+        private void HandleInstanceSelected()
+        {
+            if (SelectedState.Self.SelectedInstance != null &&
+                SelectedState.Self.SelectedIpso != null
+                )
+            {
+                IPositionedSizedObject ipso = SelectedState.Self.SelectedIpso;
+
+                float width = ipso.Width;
+                float height = ipso.Height;
+
+                if (height != 0)
+                {
+                    mAspectRatioOnGrab = width / height;
+                }
+            }
         }
 
 
@@ -60,11 +85,28 @@ namespace Gum.Wireframe
 
                 ClickActivity();
 
+                CheckIfHasMovedEnough();
+
                 HandlesActivity();
 
                 BodyGrabbingActivity();
 
                 
+            }
+        }
+
+        private void CheckIfHasMovedEnough()
+        {
+            float pixelsToMoveBeforeApplying = 6;
+            Cursor cursor = InputLibrary.Cursor.Self;
+
+            if (cursor.PrimaryDown)
+            {
+                mHasMovedEnoughSincePush |=
+                    Math.Abs(cursor.X - mXPush) > pixelsToMoveBeforeApplying ||
+                    Math.Abs(cursor.Y - mYPush) > pixelsToMoveBeforeApplying;
+
+
             }
         }
 
@@ -92,6 +134,9 @@ namespace Gum.Wireframe
             if (cursor.PrimaryPush)
             {
                 mHasChangedAnythingSinceLastPush = false;
+                mXPush = cursor.X;
+                mYPush = cursor.Y;
+                mHasMovedEnoughSincePush = false;
                 mHasGrabbed = SelectionManager.Self.HasSelection;
             }
         }
@@ -99,7 +144,7 @@ namespace Gum.Wireframe
         private void BodyGrabbingActivity()
         {
             Cursor cursor = InputLibrary.Cursor.Self;
-            if (SelectionManager.Self.IsOverBody && cursor.PrimaryDown && mHasGrabbed)
+            if (SelectionManager.Self.IsOverBody && cursor.PrimaryDown && mHasGrabbed && mHasMovedEnoughSincePush)
             {
                 float xToMoveBy = Cursor.Self.XChange / Renderer.Self.Camera.Zoom;
                 float yToMoveBy = Cursor.Self.YChange / Renderer.Self.Camera.Zoom;
@@ -220,7 +265,7 @@ namespace Gum.Wireframe
             {
                 mSideGrabbed = SelectionManager.Self.SideOver;
             }
-            if (cursor.PrimaryDown)
+            if (cursor.PrimaryDown && mHasMovedEnoughSincePush)
             {
                 SideGrabbingActivity();
             }

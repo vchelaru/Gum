@@ -10,6 +10,7 @@ using Gum.DataTypes.Variables;
 using System.IO;
 using Gum.Debug;
 using ToolsUtilities;
+using Gum.Events;
 
 namespace Gum.Managers
 {
@@ -23,6 +24,7 @@ namespace Gum.Managers
         const int InstanceImageIndex = 3;
         const int ScreenImageIndex = 4;
         const int StandardElementImageIndex = 5;
+        const int ExclamationIndex = 6;
 
 
         static ElementTreeViewManager mSelf;
@@ -204,7 +206,14 @@ namespace Gum.Managers
                 if (GetTreeNodeFor(screenSave) == null)
                 {
                     TreeNode treeNode = new TreeNode();
-                    treeNode.ImageIndex = ScreenImageIndex;
+                    if (screenSave.IsSourceFileMissing)
+                    {
+                        treeNode.ImageIndex = ExclamationIndex;
+                    }
+                    else
+                    {
+                        treeNode.ImageIndex = ScreenImageIndex;
+                    }
                     treeNode.Tag = screenSave;
 
                     string fullPath = FileLocations.Self.ScreensFolder + FileManager.GetDirectory(screenSave.Name);
@@ -220,7 +229,14 @@ namespace Gum.Managers
                 if (GetTreeNodeFor(componentSave) == null)
                 {
                     TreeNode treeNode = new TreeNode();
-                    treeNode.ImageIndex = ComponentImageIndex;
+                    if (componentSave.IsSourceFileMissing)
+                    {
+                        treeNode.ImageIndex = ExclamationIndex;
+                    }
+                    else
+                    {
+                        treeNode.ImageIndex = ComponentImageIndex;
+                    }
                     treeNode.Tag = componentSave;
 
                     string fullPath = FileLocations.Self.ComponentsFolder + FileManager.GetDirectory(componentSave.Name);
@@ -238,7 +254,14 @@ namespace Gum.Managers
                     if (GetTreeNodeFor(standardSave) == null)
                     {
                         TreeNode treeNode = new TreeNode();
-                        treeNode.ImageIndex = StandardElementImageIndex;
+                        if (standardSave.IsSourceFileMissing)
+                        {
+                            treeNode.ImageIndex = ExclamationIndex;
+                        }
+                        else
+                        {
+                            treeNode.ImageIndex = StandardElementImageIndex;
+                        }
                         treeNode.Tag = standardSave;
 
                         mStandardElementsTreeNode.Nodes.Add(treeNode);
@@ -653,6 +676,8 @@ namespace Gum.Managers
                 }
 
                 mTreeView.CallAfterClickSelect(null, new TreeViewEventArgs(treeNode));
+
+
             }
             ProjectVerifier.Self.AssertSelectedIpsosArePartOfRenderer();
         }
@@ -746,6 +771,9 @@ namespace Gum.Managers
             else if (selectedObject is InstanceSave)
             {
                 SelectedState.Self.UpdateToSelectedInstanceSave();
+
+
+                GumEvents.Self.CallInstanceSelected();
             }
             
 

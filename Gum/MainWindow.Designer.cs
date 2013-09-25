@@ -293,6 +293,7 @@
             this.ElementTreeImages.Images.SetKeyName(3, "Instance.png");
             this.ElementTreeImages.Images.SetKeyName(4, "screen.png");
             this.ElementTreeImages.Images.SetKeyName(5, "StandardElement.png");
+            this.ElementTreeImages.Images.SetKeyName(6, "redExclamation.png");
             // 
             // VariablesAndEverythingElse
             // 

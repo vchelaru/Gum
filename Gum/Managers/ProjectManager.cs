@@ -268,41 +268,48 @@ namespace Gum
 
         internal void SaveElement(ElementSave elementSave)
         {
-            UndoManager.Self.RecordUndo();
-
-            bool doesProjectNeedToSave = false;
-            bool shouldSave = AskUserForProjectNameIfNecessary(out doesProjectNeedToSave);
-
-            if (doesProjectNeedToSave)
+            if (elementSave.IsSourceFileMissing)
             {
-                SaveProject();
+                MessageBox.Show("Cannot save " + elementSave + " because its source file is missing");
             }
-
-            if (shouldSave)
+            else
             {
-                string fileName = elementSave.GetFullPathXmlFile();
+                UndoManager.Self.RecordUndo();
 
-                // if it's readonly, let's warn the user
-                bool isReadOnly = GetIfFileIsReadOnly(fileName);
+                bool doesProjectNeedToSave = false;
+                bool shouldSave = AskUserForProjectNameIfNecessary(out doesProjectNeedToSave);
 
-                if (isReadOnly)
+                if (doesProjectNeedToSave)
                 {
-                    ShowReadOnlyDialog(fileName);
+                    SaveProject();
                 }
-                else
+
+                if (shouldSave)
                 {
-                    try
+                    string fileName = elementSave.GetFullPathXmlFile();
+
+                    // if it's readonly, let's warn the user
+                    bool isReadOnly = GetIfFileIsReadOnly(fileName);
+
+                    if (isReadOnly)
                     {
-                        elementSave.Save(fileName);
+                        ShowReadOnlyDialog(fileName);
                     }
-                    catch (Exception e)
+                    else
                     {
-                        MessageBox.Show("Unknown error trying to save the file\n\n" + fileName + "\n\n" + e.ToString());
+                        try
+                        {
+                            elementSave.Save(fileName);
+                        }
+                        catch (Exception e)
+                        {
+                            MessageBox.Show("Unknown error trying to save the file\n\n" + fileName + "\n\n" + e.ToString());
+                        }
                     }
                 }
+
+                PluginManager.Self.Export(elementSave);
             }
-
-            PluginManager.Self.Export(elementSave);
         }
 
         public static void ShowReadOnlyDialog(string fileName)

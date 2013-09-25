@@ -54,7 +54,7 @@ namespace Gum.DataTypes
         }
 
 
-        public T ToElementSave<T>(string projectroot, string extension, ref string errors) where T : ElementSave
+        public T ToElementSave<T>(string projectroot, string extension, ref string errors) where T : ElementSave, new()
         {
             string fullName = projectroot + Subfolder + "/" + Name + "." + extension;
 
@@ -69,7 +69,13 @@ namespace Gum.DataTypes
             else
             {
                 errors += "\nCould not find the file name " + fullName;
-                return null;
+
+                T elementSave = new T();
+
+                elementSave.Name = Name;
+                elementSave.IsSourceFileMissing = true;
+
+                return elementSave;
             }
         }
 

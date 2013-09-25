@@ -216,7 +216,7 @@ namespace Gum.Wireframe
         public void RefreshAll(bool force, ElementSave elementSave)
         {
 
-            if (elementSave == null)
+            if (elementSave == null || elementSave.IsSourceFileMissing)
             {
                 ClearAll();
             }

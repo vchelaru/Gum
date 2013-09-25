@@ -72,6 +72,13 @@ namespace Gum.DataTypes
             }
         }
 
+        [XmlIgnore]
+        public bool IsSourceFileMissing
+        {
+            get;
+            set;
+        }
+
         #endregion
 
         public ElementSave()

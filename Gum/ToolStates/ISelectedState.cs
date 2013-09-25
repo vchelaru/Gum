@@ -6,6 +6,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using System.Windows.Forms;
 using System.Collections.ObjectModel;
+using RenderingLibrary;
 
 namespace Gum.ToolStates
 {
@@ -17,6 +18,7 @@ namespace Gum.ToolStates
         StateSave SelectedStateSave { get; set; }
         ComponentSave SelectedComponent { get; set; }
         InstanceSave SelectedInstance { get; set; }
+        IPositionedSizedObject SelectedIpso { get; set; }
         IEnumerable<InstanceSave> SelectedInstances { get; set;  }
         string SelectedVariableName { get; }
         StandardElementSave SelectedStandardElement { get; set; }

@@ -78,6 +78,7 @@
     <Compile Include="DataTypes\VariableListSaveExtensionMethods.cs" />
     <Compile Include="DataTypes\VariableSaveExtensionMethods.cs" />
     <Compile Include="Debug\ProjectVerifier.cs" />
+    <Compile Include="Events\GumEvents.cs" />
     <Compile Include="Gui\Controls\GuideListDisplay.cs">
       <SubType>UserControl</SubType>
     </Compile>
