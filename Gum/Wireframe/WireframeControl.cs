@@ -241,7 +241,7 @@ namespace Gum.Wireframe
                 LoaderManager.Self.Initialize(null, "content/TestFont.fnt", Services, null);
 
                 InputLibrary.Cursor.Self.Initialize(this);
-
+                InputLibrary.Keyboard.Self.Initialize(this);
 
                 mScreenBounds = new LineRectangle();
                 mScreenBounds.Width = 800;
@@ -341,6 +341,7 @@ namespace Gum.Wireframe
                 DragDropManager.Self.Activity();
 
                 InputLibrary.Cursor.Self.Activity(TimeManager.Self.CurrentTime);
+                InputLibrary.Keyboard.Self.Activity();
                 CameraMovementAndZoomActivity();
                 if (Cursor.PrimaryPush)
                 {

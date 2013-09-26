@@ -44,6 +44,25 @@ namespace RenderingLibrary
             }
         }
 
+        public static float GetAbsoluteLeft(this IPositionedSizedObject ipso)
+        {
+            return ipso.GetAbsoluteX();
+        }
+
+        public static float GetAbsoluteTop(this IPositionedSizedObject ipso)
+        {
+            return ipso.GetAbsoluteY();
+        }
+
+        public static float GetAbsoluteRight(this IPositionedSizedObject ipso)
+        {
+            return ipso.GetAbsoluteX() + ipso.Width;
+        }
+
+        public static float GetAbsoluteBottom(this IPositionedSizedObject ipso)
+        {
+            return ipso.GetAbsoluteY() + ipso.Height;
+        }
 
         public static bool HasCursorOver(this IPositionedSizedObject ipso, float x, float y)
         {

@@ -41,6 +41,10 @@ namespace InputLibrary
         
         public void Initialize(Control control)
         {
+            if (control == null)
+            {
+                throw new ArgumentException("Control must not be null", "control");
+            }
             mControl = control;
 
         }
@@ -59,6 +63,10 @@ namespace InputLibrary
 
         public bool KeyDown(Microsoft.Xna.Framework.Input.Keys key)
         {
+            if (mControl == null)
+            {
+                throw new Exception("The Keyboard must be initialized before calling KeyDown");
+            }
             if (mControl.Focused)
             {
                 return mKeyboardState.IsKeyDown(key);

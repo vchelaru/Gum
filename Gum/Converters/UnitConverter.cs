@@ -24,7 +24,8 @@ namespace Gum.Converters
         }
 
 
-        public void ConvertToPixelCoordinates(float relativeX, float relativeY, object xUnitType, object yUnitType, float parentWidth, float parentHeight, out float absoluteX, out float absoluteY)
+        public void ConvertToPixelCoordinates(float relativeX, float relativeY, object xUnitType, object yUnitType, float parentWidth, float parentHeight, 
+            float fileWidth, float fileHeight, out float absoluteX, out float absoluteY)
         {
             try
             {
@@ -55,6 +56,10 @@ namespace Gum.Converters
                 {
                     absoluteX = parentWidth + relativeX;
                 }
+                else if (generalX == GeneralUnitType.PercentageOfFile)
+                {
+                    absoluteX = fileWidth * relativeX / 100.0f;
+                }
 
 
                 if (generalY == GeneralUnitType.Percentage)
@@ -69,6 +74,10 @@ namespace Gum.Converters
                 {
                     absoluteY = parentHeight + relativeY;
                 }
+                else if (generalY == GeneralUnitType.PercentageOfFile)
+                {
+                    absoluteY = fileHeight * relativeY / 100.0f;
+                }
             }
             catch (Exception e)
             {
@@ -77,7 +86,7 @@ namespace Gum.Converters
         }
 
 
-        public void ConvertToUnitTypeCoordinates(float absoluteX, float absoluteY, object xUnitType, object yUnitType, float parentWidth, float parentHeight, out float relativeX, out float relativeY)
+        public void ConvertToUnitTypeCoordinates(float absoluteX, float absoluteY, object xUnitType, object yUnitType, float parentWidth, float parentHeight, float fileWidth, float fileHeight, out float relativeX, out float relativeY)
         {
             GeneralUnitType generalX = GeneralUnitType.PixelsFromSmall;
             if (xUnitType != null)
@@ -106,6 +115,10 @@ namespace Gum.Converters
             {
                 relativeX = absoluteX - parentWidth;
             }
+            else if (generalX == GeneralUnitType.PercentageOfFile)
+            {
+                relativeX = 100 * absoluteX / fileWidth;
+            }
 
             if (generalY == GeneralUnitType.Percentage)
             {
@@ -118,6 +131,10 @@ namespace Gum.Converters
             else if (generalY == GeneralUnitType.PixelsFromLarge)
             {
                 relativeY = absoluteY - parentHeight;
+            }
+            else if (generalY == GeneralUnitType.PercentageOfFile)
+            {
+                relativeY = 100 * absoluteY / fileHeight;
             }
 
         }
@@ -161,6 +178,8 @@ namespace Gum.Converters
                         return GeneralUnitType.Percentage;
                     case DimensionUnitType.RelativeToContainer:
                         return GeneralUnitType.PixelsFromLarge;
+                    case DimensionUnitType.PercentageOfSourceFile:
+                        return GeneralUnitType.PercentageOfFile;
                     default:
                         throw new NotImplementedException();
                 }

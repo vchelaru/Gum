@@ -14,6 +14,7 @@ using Gum.ToolCommands;
 using RenderingLibrary;
 using Gum.Converters;
 using Gum.Plugins;
+using Gum.RenderingLibrary;
 
 namespace Gum.Managers
 {
@@ -167,16 +168,26 @@ namespace Gum.Managers
             float parentWidth = ObjectFinder.Self.GumProjectSave.DefaultCanvasWidth;
             float parentHeight = ObjectFinder.Self.GumProjectSave.DefaultCanvasHeight;
 
-            if (currentIpso != null && currentIpso.Parent != null)
+            float fileWidth = 0;
+            float fileHeight = 0;
+
+            if (currentIpso != null)
             {
-                parentWidth = currentIpso.Parent.Width;
-                parentHeight = currentIpso.Parent.Height;
+                currentIpso.GetFileWidthAndHeight(out fileWidth, out fileHeight);
+                if (currentIpso.Parent != null)
+                {
+                    parentWidth = currentIpso.Parent.Width;
+                    parentHeight = currentIpso.Parent.Height;
+                }
             }
+
 
             float outX = 0;
             float outY = 0;
             float valueToSet = 0;
             string variableToSet = null;
+
+            bool isWidthOrHeight = false;
 
             bool wasAnythingSet = false;
 
@@ -197,12 +208,14 @@ namespace Gum.Managers
                 else if (changedMember == "Width Units")
                 {
                     variableToSet = "Width";
+                    isWidthOrHeight = true;
                     xOrY = XOrY.X;
 
                 }
                 else if (changedMember == "Height Units")
                 {
                     variableToSet = "Height";
+                    isWidthOrHeight = true;
                     xOrY = XOrY.Y;
                 }
 
@@ -213,18 +226,28 @@ namespace Gum.Managers
                 if (xOrY == XOrY.X)
                 {
                     UnitConverter.Self.ConvertToPixelCoordinates(
-                        valueOnObject, 0, oldValue, null, parentWidth, parentHeight, out outX, out outY);
+                        valueOnObject, 0, oldValue, null, parentWidth, parentHeight, fileWidth, fileHeight, out outX, out outY);
+
+                    if (isWidthOrHeight && outX == 0)
+                    {
+                        outX = fileWidth;
+                    }
 
                     UnitConverter.Self.ConvertToUnitTypeCoordinates(
-                        outX, outY, unitType, null, parentWidth, parentHeight, out valueToSet, out outY);
+                        outX, outY, unitType, null, parentWidth, parentHeight, fileWidth, fileHeight, out valueToSet, out outY);
                 }
                 else
                 {
                     UnitConverter.Self.ConvertToPixelCoordinates(
-                        0, valueOnObject, null, oldValue, parentWidth, parentHeight, out outX, out outY);
+                        0, valueOnObject, null, oldValue, parentWidth, parentHeight, fileWidth, fileHeight, out outX, out outY);
+
+                    if (isWidthOrHeight && outY == 0)
+                    {
+                        outY = fileHeight;
+                    }
 
                     UnitConverter.Self.ConvertToUnitTypeCoordinates(
-                        outX, outY, null, unitType, parentWidth, parentHeight, out outX, out valueToSet);
+                        outX, outY, null, unitType, parentWidth, parentHeight, fileWidth, fileHeight, out outX, out valueToSet);
                 }
                 wasAnythingSet = true;
 

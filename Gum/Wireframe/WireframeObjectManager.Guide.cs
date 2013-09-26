@@ -35,6 +35,7 @@ namespace Gum.Wireframe
                     guideRectangle.YUnitType,
                     ObjectFinder.Self.GumProjectSave.DefaultCanvasWidth,
                     ObjectFinder.Self.GumProjectSave.DefaultCanvasHeight,
+                    0,0,
                     out absoluteX,
                     out absoluteY);
 
@@ -50,6 +51,7 @@ namespace Gum.Wireframe
                     guideRectangle.HeightUnitType,
                     ObjectFinder.Self.GumProjectSave.DefaultCanvasWidth,
                     ObjectFinder.Self.GumProjectSave.DefaultCanvasHeight,
+                    0,0,
                     out absoluteWidth,
                     out absoluteHeight);
 

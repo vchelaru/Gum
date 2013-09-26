@@ -7,6 +7,7 @@ using Gum.DataTypes;
 using Gum.Wireframe;
 using Gum.Managers;
 using Gum.Converters;
+using RenderingLibrary.Graphics;
 
 namespace Gum.RenderingLibrary
 {
@@ -27,12 +28,15 @@ namespace Gum.RenderingLibrary
             float parentHeight;
             GetParentWidthAndHeight(ipso, canvasWidth, canvasHeight, out parentWidth, out parentHeight);
 
+            float fileWidth;
+            float fileHeight;
+            GetFileWidthAndHeight(ipso, out fileWidth, out fileHeight);
 
-            UnitConverter.Self.ConvertToPixelCoordinates(unmodifiedX, unmodifiedY, xUnitType, yUnitType, parentWidth, parentHeight, out x, out y);
+            UnitConverter.Self.ConvertToPixelCoordinates(unmodifiedX, unmodifiedY, xUnitType, yUnitType, parentWidth, parentHeight, fileWidth, fileHeight,  out x, out y);
 
         }
 
-        private static void GetParentWidthAndHeight(IPositionedSizedObject ipso, float canvasWidth, float canvasHeight, out float parentWidth, out float parentHeight)
+        public static void GetParentWidthAndHeight(this IPositionedSizedObject ipso, float canvasWidth, float canvasHeight, out float parentWidth, out float parentHeight)
         {
 
 
@@ -45,6 +49,18 @@ namespace Gum.RenderingLibrary
             {
                 parentWidth = ipso.Parent.Width;
                 parentHeight = ipso.Parent.Height;
+            }
+        }
+
+        public static void GetFileWidthAndHeight(this IPositionedSizedObject ipso, out float fileWidth, out float fileHeight)
+        {
+            fileWidth = 0;
+            fileHeight = 0;
+
+            if (ipso is Sprite)
+            {
+                fileWidth = ((Sprite)ipso).Texture.Width;
+                fileHeight = ((Sprite)ipso).Texture.Height;
             }
         }
 

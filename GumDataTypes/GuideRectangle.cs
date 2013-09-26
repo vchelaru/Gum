@@ -9,7 +9,8 @@ namespace Gum.DataTypes
     {
         Absolute,
         Percentage,
-        RelativeToContainer
+        RelativeToContainer,
+        PercentageOfSourceFile
     }
     
     public class GuideRectangle : NamedRectangle

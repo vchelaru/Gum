@@ -193,7 +193,11 @@ namespace Gum.Managers
                         canAdd = false;
                     }
                 }
-
+                if (target.IsSourceFileMissing)
+                {
+                    MessageBox.Show("The source file for " + target.Name + " is missing, so it cannot be edited");
+                    canAdd = false;
+                }
 
                 if (canAdd)
                 {

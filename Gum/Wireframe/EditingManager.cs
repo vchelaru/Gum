@@ -12,6 +12,8 @@ using RenderingLibrary.Graphics;
 using Gum.DataTypes.Variables;
 using Gum.Converters;
 using Gum.Events;
+using Gum.Input;
+using Gum.RenderingLibrary;
 
 namespace Gum.Wireframe
 {
@@ -54,10 +56,10 @@ namespace Gum.Wireframe
         {
             RightClickInitialize(contextMenuStrip);
 
-            GumEvents.Self.InstanceSelected += HandleInstanceSelected;
+            GumEvents.Self.InstanceSelected += UpdateAspectRatioForGrabbedIpso;
         }
 
-        private void HandleInstanceSelected()
+        private void UpdateAspectRatioForGrabbedIpso()
         {
             if (SelectedState.Self.SelectedInstance != null &&
                 SelectedState.Self.SelectedIpso != null
@@ -138,6 +140,11 @@ namespace Gum.Wireframe
                 mYPush = cursor.Y;
                 mHasMovedEnoughSincePush = false;
                 mHasGrabbed = SelectionManager.Self.HasSelection;
+
+                if (mHasGrabbed)
+                {
+                    UpdateAspectRatioForGrabbedIpso();
+                }
             }
         }
 
@@ -315,12 +322,158 @@ namespace Gum.Wireframe
 
         private bool SideGrabbingActivityForInstanceSave(float cursorXChange, float cursorYChange, InstanceSave instanceSave)
         {
+            float changeXMultiplier;
+            float changeYMultiplier;
+            float widthMultiplier;
+            float heightMultiplier;
+            CalculateMultipliers(instanceSave, out changeXMultiplier, out changeYMultiplier, out widthMultiplier, out heightMultiplier);
+
+            AdjustCursorChangeValuesForShiftDrag(ref cursorXChange, ref cursorYChange, instanceSave);
+
             bool hasChangeOccurred = false;
 
-            float changeXMultiplier = 0;
-            float changeYMultiplier = 0;
-            float widthMultiplier = 0;
-            float heightMultiplier = 0;
+            if (changeXMultiplier != 0 && cursorXChange != 0)
+            {
+                hasChangeOccurred = true;
+                float value = ModifyVariable("X", cursorXChange * changeXMultiplier, instanceSave);
+            }
+            if (changeYMultiplier != 0 && cursorYChange != 0)
+            {
+                hasChangeOccurred = true;
+                float value = ModifyVariable("Y", cursorYChange * changeYMultiplier, instanceSave);
+            }
+            if (heightMultiplier != 0 && cursorYChange != 0)
+            {
+                hasChangeOccurred = true;
+                float value = ModifyVariable("Height", cursorYChange * heightMultiplier, instanceSave);
+            }
+            if (widthMultiplier != 0 && cursorXChange != 0)
+            {
+                hasChangeOccurred = true;
+                float value = ModifyVariable("Width", cursorXChange * widthMultiplier, instanceSave);
+            }
+            return hasChangeOccurred;
+        }
+
+        private void AdjustCursorChangeValuesForShiftDrag(ref float cursorXChange, ref float cursorYChange, InstanceSave instanceSave)
+        {
+            
+            if (InputLibrary.Keyboard.Self.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift) ||
+                InputLibrary.Keyboard.Self.KeyDown(Microsoft.Xna.Framework.Input.Keys.RightShift))
+            {
+                bool supportsShift = 
+                    mSideGrabbed == ResizeSide.TopLeft || mSideGrabbed == ResizeSide.TopRight ||
+                    mSideGrabbed == ResizeSide.BottomLeft || mSideGrabbed == ResizeSide.BottomRight;
+
+                if (supportsShift && instanceSave != null)
+                {
+                    IPositionedSizedObject ipso = WireframeObjectManager.Self.GetRepresentation(instanceSave);
+
+                    Cursor cursor = Cursor.Self;
+                    float cursorX = cursor.GetWorldX();
+                    float cursorY = cursor.GetWorldY();
+
+                    float top = ipso.GetAbsoluteTop();
+                    float bottom = ipso.GetAbsoluteBottom();
+                    float left = ipso.GetAbsoluteLeft();
+                    float right = ipso.GetAbsoluteRight();
+
+                    float absoluteXDifference = 1;
+                    float absoluteYDifference = 1;
+
+                    switch (mSideGrabbed)
+                    {
+                        case ResizeSide.BottomRight:
+                            absoluteXDifference = System.Math.Abs(left - cursorX);
+                            absoluteYDifference = System.Math.Abs(top - cursorY);
+                            break;
+                        case ResizeSide.BottomLeft:
+                            absoluteXDifference = System.Math.Abs(right - cursorX);
+                            absoluteYDifference = System.Math.Abs(top - cursorY);
+                            break;
+                        case ResizeSide.TopLeft:
+                            absoluteXDifference = System.Math.Abs(right - cursorX);
+                            absoluteYDifference = System.Math.Abs(bottom - cursorY);
+                            break;
+                        case ResizeSide.TopRight:
+                            absoluteXDifference = System.Math.Abs(left - cursorX);
+                            absoluteYDifference = System.Math.Abs(bottom - cursorY);
+                            break;
+
+                    }
+
+                    float aspectRatio = absoluteXDifference / absoluteYDifference;
+
+
+
+                    if (aspectRatio > mAspectRatioOnGrab)
+                    {
+                        float yToUse = 0;
+                        // We use the X, but adjust the Y
+                        switch (mSideGrabbed)
+                        {
+                            case ResizeSide.BottomRight:
+                                cursorXChange = cursorX - right;
+                                yToUse = top + absoluteXDifference / mAspectRatioOnGrab;
+                                cursorYChange = yToUse - bottom;
+                                break;
+                            case ResizeSide.BottomLeft:
+                                cursorXChange = cursorX - left;
+                                yToUse = top + absoluteXDifference / mAspectRatioOnGrab;
+                                cursorYChange = yToUse - bottom;
+                                break;
+                            case ResizeSide.TopRight:
+                                cursorXChange = cursorX - right;
+                                yToUse = bottom - absoluteXDifference / mAspectRatioOnGrab;
+                                cursorYChange = yToUse - top;
+                                break;
+                            case ResizeSide.TopLeft:
+                                cursorXChange = cursorX - left;
+                                yToUse = bottom - absoluteXDifference / mAspectRatioOnGrab;
+                                cursorYChange = yToUse - top;
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        float xToUse;
+                        // We use the Y, but adjust the X
+                        switch (mSideGrabbed)
+                        {
+                            case ResizeSide.BottomRight:
+                                cursorYChange = cursorY - bottom;
+                                xToUse = left + absoluteYDifference * mAspectRatioOnGrab;
+                                cursorXChange = xToUse - right;
+                                break;
+                            case ResizeSide.BottomLeft:
+                                cursorYChange = cursorY - bottom;
+                                xToUse = right - absoluteYDifference * mAspectRatioOnGrab;
+                                cursorXChange = xToUse - left;
+                                break;
+                            case ResizeSide.TopRight:
+                                cursorYChange = cursorY - top;
+                                xToUse = left + absoluteYDifference * mAspectRatioOnGrab;
+                                cursorXChange = xToUse - right;
+                                break;
+                            case ResizeSide.TopLeft:
+                                cursorYChange = cursorY - top;
+                                xToUse = right - absoluteYDifference * mAspectRatioOnGrab;
+                                cursorXChange = xToUse - left;
+                                break;
+                        }
+                    }
+
+                    
+                }
+            }
+        }
+
+        private void CalculateMultipliers(InstanceSave instanceSave, out float changeXMultiplier, out float changeYMultiplier, out float widthMultiplier, out float heightMultiplier)
+        {
+            changeXMultiplier = 0;
+            changeYMultiplier = 0;
+            widthMultiplier = 0;
+            heightMultiplier = 0;
 
             IPositionedSizedObject ipso = WireframeObjectManager.Self.GetRepresentation(instanceSave);
             if (ipso == null)
@@ -383,29 +536,6 @@ namespace Gum.Wireframe
             {
                 heightMultiplier *= (ipso.Height / SelectionManager.Self.ResizeHandles.Height);
             }
-
-
-            if (changeXMultiplier != 0 && cursorXChange != 0)
-            {
-                hasChangeOccurred = true;
-                float value = ModifyVariable("X", cursorXChange * changeXMultiplier, instanceSave);
-            }
-            if (changeYMultiplier != 0 && cursorYChange != 0)
-            {
-                hasChangeOccurred = true;
-                float value = ModifyVariable("Y", cursorYChange * changeYMultiplier, instanceSave);
-            }
-            if (heightMultiplier != 0 && cursorYChange != 0)
-            {
-                hasChangeOccurred = true;
-                float value = ModifyVariable("Height", cursorYChange * heightMultiplier, instanceSave);
-            }
-            if (widthMultiplier != 0 && cursorXChange != 0)
-            {
-                hasChangeOccurred = true;
-                float value = ModifyVariable("Width", cursorXChange * widthMultiplier, instanceSave);
-            }
-            return hasChangeOccurred;
         }
 
         private static float GetRatioXOverInSelection(IPositionedSizedObject ipso, HorizontalAlignment horizontalAlignment)
@@ -558,10 +688,29 @@ namespace Gum.Wireframe
                         currentValue = selectedIpso.Height;
                     }
                 }
+                else if ((DimensionUnitType)unitsValue == DimensionUnitType.PercentageOfSourceFile)
+                {
+                    if (selectedIpso is Sprite)
+                    {
+                        Microsoft.Xna.Framework.Graphics.Texture2D texture = (selectedIpso as Sprite).Texture;
+
+                        if(texture != null)
+                        {
+                            if (baseVariableName == "Width")
+                            {
+                                currentValue = 100 * selectedIpso.Width / texture.Width;
+                            }
+                            else
+                            {
+                                currentValue = 100 * selectedIpso.Height / texture.Height;
+                            }
+                        }
+                    }
+                }
                 else
                 {
                     float parentValue;
-                    
+
                     // need to support percentage based width
                     if (baseVariableName == "Width")
                     {
@@ -573,7 +722,7 @@ namespace Gum.Wireframe
                         {
                             parentValue = selectedIpso.Parent.Width;
                         }
-                        currentValue = 100 * selectedIpso.Width/parentValue;
+                        currentValue = 100 * selectedIpso.Width / parentValue;
                     }
                     else
                     {
@@ -599,38 +748,45 @@ namespace Gum.Wireframe
         {
             GeneralUnitType generalUnitType = UnitConverter.Self.ConvertToGeneralUnit(unitsVariableAsObject);
 
-            if (generalUnitType == GeneralUnitType.Percentage)
+            float xAmount;
+            float yAmount;
+
+            if(baseVariableName == "X" || baseVariableName == "Width")
             {
-                IPositionedSizedObject ipso = WireframeObjectManager.Self.GetSelectedRepresentation();
-                float parentDimension = 0;
-
-                if (ipso.Parent != null)
-                {
-                    if (baseVariableName == "X" || baseVariableName == "Width")
-                    {
-                        parentDimension = ipso.Parent.Width;
-                    }
-                    else
-                    {
-                        parentDimension = ipso.Parent.Height;
-                    }
-                }
-                else
-                {
-                    if (baseVariableName == "X" || baseVariableName == "Width")
-                    {
-                        parentDimension = ProjectManager.Self.GumProjectSave.DefaultCanvasWidth;
-                    }
-                    else
-                    {
-                        parentDimension = ProjectManager.Self.GumProjectSave.DefaultCanvasHeight;
-                    }
-                }
-
-                amount = 100 * amount / parentDimension;
-
+                xAmount = amount;
+                yAmount = 0;
             }
-            return amount;
+            else
+            {
+                xAmount = 0;
+                yAmount = amount;
+            }
+
+            float parentWidth;
+            float parentHeight;
+            float fileWidth;
+            float fileHeight;
+            float outX;
+            float outY;
+
+
+            IPositionedSizedObject ipso = WireframeObjectManager.Self.GetSelectedRepresentation();
+            ipso.GetFileWidthAndHeight(out fileWidth, out fileHeight);
+            ipso.GetParentWidthAndHeight(
+                ProjectManager.Self.GumProjectSave.DefaultCanvasWidth, ProjectManager.Self.GumProjectSave.DefaultCanvasHeight, 
+                out parentWidth, out parentHeight);
+
+            UnitConverter.Self.ConvertToUnitTypeCoordinates(xAmount, yAmount, unitsVariableAsObject, unitsVariableAsObject, parentWidth, parentHeight, fileWidth, fileHeight,
+                out outX, out outY);
+
+            if (baseVariableName == "X" || baseVariableName == "Width")
+            {
+                return outX;
+            }
+            else
+            {
+                return outY;
+            }
         }
 
         public static object GetCurrentValueForVariable(string baseVariableName, InstanceSave instanceSave)

@@ -18,7 +18,8 @@ namespace Gum.Managers
         PixelsFromSmall,
         PixelsFromLarge,
         PixelsFromMiddle,
-        Percentage
+        Percentage,
+        PercentageOfFile
     }
 
     public enum PositionUnitType
@@ -109,7 +110,7 @@ namespace Gum.Managers
             StateSave stateSave = new StateSave();
             stateSave.Name = "Default";
             AddPositioningVariables(stateSave);
-            AddDimensionsVariables(stateSave, 100, 50);
+            AddDimensionsVariables(stateSave, 100, 50, false);
             stateSave.Variables.Add(new VariableSave { Type = "bool", Value = true, Name = "Visible" });
             stateSave.Variables.Add(new VariableSave { Type = "string", Value = "Hello", Name = "Text", Category = "Text" });
             stateSave.Variables.Add(new VariableSave { Type = "VerticalAlignment", Value = VerticalAlignment.Top, Name = "VerticalAlignment", Category = "Text" });
@@ -134,7 +135,7 @@ namespace Gum.Managers
             stateSave = new StateSave();
             stateSave.Name = "Default";
             AddPositioningVariables(stateSave);
-            AddDimensionsVariables(stateSave, 0, 0);
+            AddDimensionsVariables(stateSave, 0, 0, true);
             stateSave.Variables.Add(new VariableSave { Type = "string", Value = "", Name = "SourceFile", IsFile = true});
             stateSave.Variables.Add(new VariableSave { Type = "bool", Value = true, Name = "Visible" });
             stateSave.Variables.Add(new VariableSave { Type = "bool", Value = false, Category = "Animation", Name = "Animate" });
@@ -167,7 +168,7 @@ namespace Gum.Managers
 
             AddPositioningVariables(stateSave);
 
-            AddDimensionsVariables(stateSave, 150, 150);
+            AddDimensionsVariables(stateSave, 150, 150, false);
 
             stateSave.Variables.Add(new VariableSave { Type = "bool", Value = true, Name = "Visible" });
             PluginManager.Self.ModifyDefaultStandardState("Container", stateSave);
@@ -188,7 +189,7 @@ namespace Gum.Managers
 
             AddPositioningVariables(stateSave);
 
-            AddDimensionsVariables(stateSave, 50, 50);
+            AddDimensionsVariables(stateSave, 50, 50, false);
 
             stateSave.Variables.Add(new VariableSave { Type = "bool", Value = true, Name = "Visible" });
             AddColorVariables(stateSave, true);
@@ -203,7 +204,7 @@ namespace Gum.Managers
             stateSave = new StateSave();
             stateSave.Name = "Default";
             AddPositioningVariables(stateSave);
-            AddDimensionsVariables(stateSave, 64,64);
+            AddDimensionsVariables(stateSave, 64, 64, false);
             stateSave.Variables.Add(new VariableSave { Type = "string", Value = "", Name = "SourceFile", IsFile = true });
             stateSave.Variables.Add(new VariableSave { Type = "bool", Value = true, Name = "Visible" });
 
@@ -258,17 +259,30 @@ namespace Gum.Managers
             stateSave.Variables.Add(new VariableSave { Type = "int", Value = 255, Name = "Blue", Category = "Rendering" });
         }
 
-        private static void AddDimensionsVariables(StateSave stateSave, float defaultWidth, float defaultHeight)
+        private static void AddDimensionsVariables(StateSave stateSave, float defaultWidth, float defaultHeight, bool allowFromFile)
         {
 
 
             stateSave.Variables.Add(new VariableSave { Type = "float", Value = defaultWidth, Name = "Width", Category = "Dimensions" });
-            stateSave.Variables.Add(new VariableSave { Type = typeof(DimensionUnitType).Name, Value = DimensionUnitType.Absolute, Name = "Width Units", Category = "Dimensions" });
+
+            VariableSave variableSave =
+                new VariableSave { Type = typeof(DimensionUnitType).Name, Value = DimensionUnitType.Absolute, Name = "Width Units", Category = "Dimensions" };
+            if (!allowFromFile)
+            {
+                variableSave.ExcludedValuesForEnum.Add(DimensionUnitType.PercentageOfSourceFile);
+            }
+            stateSave.Variables.Add(variableSave);
 
 
 
             stateSave.Variables.Add(new VariableSave { Type = "float", Value = defaultHeight, Name = "Height", Category = "Dimensions" });
-            stateSave.Variables.Add(new VariableSave { Type = typeof(DimensionUnitType).Name, Value = DimensionUnitType.Absolute, Name = "Height Units", Category = "Dimensions" });
+            variableSave =
+                new VariableSave { Type = typeof(DimensionUnitType).Name, Value = DimensionUnitType.Absolute, Name = "Height Units", Category = "Dimensions" };
+            if (!allowFromFile)
+            {
+                variableSave.ExcludedValuesForEnum.Add(DimensionUnitType.PercentageOfSourceFile);
+            }
+            stateSave.Variables.Add(variableSave);
         }
 
         private static void AddPositioningVariables(StateSave stateSave)

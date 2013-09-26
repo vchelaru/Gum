@@ -68,7 +68,13 @@ namespace Gum.DataTypes
             }
             else
             {
-                errors += "\nCould not find the file name " + fullName;
+                // I don't think we want to consider this an error anymore
+                // because Gum can handle it - it doesn't allow saving that 
+                // individual element and it shows a red ! next to the element.
+                // We should just tolerate this and let the user deal with it.
+                // If we do treat this as an error, then Gum goes into a state 
+                // where it can't save anything.
+                //errors += "\nCould not find the file name " + fullName;
 
                 T elementSave = new T();
 

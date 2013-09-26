@@ -37,7 +37,7 @@ namespace Gum.DataTypes.Variables
                 // Update July 12, 2013
                 // Not sure why I commented this code out.  This code lets us check a non-default
                 // state, and if it doesn't contain a value, then we look at the default state in this 
-                // element.  Then if that failes, we can climb up the inheritance tree.
+                // element.  Then if that fails, we can climb up the inheritance tree.
                 // Let's see if we can get something from the non-default first
                 bool wasFound = false;
                 if (parent != null && stateSave != parent.DefaultState)
@@ -283,7 +283,9 @@ namespace Gum.DataTypes.Variables
                 {
 
                     stateSave.AssignVariableSave(variableName, value, instanceSave, variableType );
+                    stateSave.Variables.Sort((first, second) => first.Name.CompareTo(second.Name));
                 }
+
             }
 
         }
