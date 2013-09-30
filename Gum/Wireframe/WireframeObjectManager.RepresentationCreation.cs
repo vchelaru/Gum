@@ -753,8 +753,8 @@ namespace Gum.Wireframe
             object heightUnits = rvf.GetValue("Height Units");
             object widthUnits = rvf.GetValue("Width Units");
 
-            var horizontalAlignment = (HorizontalAlignment)rvf.GetValue("X Origin");
-            var verticalAlignment = (VerticalAlignment)rvf.GetValue("Y Origin");
+            var horizontalAlignment = rvf.GetValue<HorizontalAlignment>("X Origin");
+            var verticalAlignment = rvf.GetValue<VerticalAlignment>("Y Origin");
 
 
 

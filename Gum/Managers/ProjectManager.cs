@@ -13,6 +13,7 @@ using ToolsUtilities;
 using System.IO;
 using CommonFormsAndControls.Forms;
 using System.Diagnostics;
+using Gum.ToolStates;
 
 namespace Gum
 {
@@ -114,6 +115,9 @@ namespace Gum
             if (result == DialogResult.OK)
             {
                 string fileName = openFileDialog.FileName;
+
+                SelectedState.Self.SelectedInstance = null;
+                SelectedState.Self.SelectedElement = null;
 
                 LoadProject(fileName);
 
