@@ -364,7 +364,14 @@ namespace Gum.Managers
                 }
                 else
                 {
-                    string path = ElementTreeViewManager.Self.SelectedNode.GetFullFilePath();
+                    TreeNode nodeToAddTo = ElementTreeViewManager.Self.SelectedNode;
+
+                    while (nodeToAddTo != null && nodeToAddTo.Tag is ScreenSave && nodeToAddTo.Parent != null)
+                    {
+                        nodeToAddTo = nodeToAddTo.Parent;
+                    }
+
+                    string path = nodeToAddTo.GetFullFilePath();
 
                     string relativeToScreens = FileManager.MakeRelative(path,
                         FileLocations.Self.ScreensFolder);

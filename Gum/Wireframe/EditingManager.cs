@@ -762,30 +762,39 @@ namespace Gum.Wireframe
                 yAmount = amount;
             }
 
-            float parentWidth;
-            float parentHeight;
-            float fileWidth;
-            float fileHeight;
-            float outX;
-            float outY;
 
-
-            IPositionedSizedObject ipso = WireframeObjectManager.Self.GetSelectedRepresentation();
-            ipso.GetFileWidthAndHeight(out fileWidth, out fileHeight);
-            ipso.GetParentWidthAndHeight(
-                ProjectManager.Self.GumProjectSave.DefaultCanvasWidth, ProjectManager.Self.GumProjectSave.DefaultCanvasHeight, 
-                out parentWidth, out parentHeight);
-
-            UnitConverter.Self.ConvertToUnitTypeCoordinates(xAmount, yAmount, unitsVariableAsObject, unitsVariableAsObject, parentWidth, parentHeight, fileWidth, fileHeight,
-                out outX, out outY);
-
-            if (baseVariableName == "X" || baseVariableName == "Width")
+            if (generalUnitType != GeneralUnitType.PixelsFromLarge && generalUnitType != GeneralUnitType.PixelsFromMiddle && generalUnitType != GeneralUnitType.PixelsFromSmall)
             {
-                return outX;
+
+                float parentWidth;
+                float parentHeight;
+                float fileWidth;
+                float fileHeight;
+                float outX;
+                float outY;
+
+
+                IPositionedSizedObject ipso = WireframeObjectManager.Self.GetSelectedRepresentation();
+                ipso.GetFileWidthAndHeight(out fileWidth, out fileHeight);
+                ipso.GetParentWidthAndHeight(
+                    ProjectManager.Self.GumProjectSave.DefaultCanvasWidth, ProjectManager.Self.GumProjectSave.DefaultCanvasHeight,
+                    out parentWidth, out parentHeight);
+
+                UnitConverter.Self.ConvertToUnitTypeCoordinates(xAmount, yAmount, unitsVariableAsObject, unitsVariableAsObject, parentWidth, parentHeight, fileWidth, fileHeight,
+                    out outX, out outY);
+
+                if (baseVariableName == "X" || baseVariableName == "Width")
+                {
+                    return outX;
+                }
+                else
+                {
+                    return outY;
+                }
             }
             else
             {
-                return outY;
+                return amount;
             }
         }
 
