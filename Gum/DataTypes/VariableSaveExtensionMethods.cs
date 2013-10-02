@@ -160,6 +160,54 @@ namespace Gum.DataTypes
             toReturn.FixEnumerations();
             return toReturn;
         }
+
+        public static bool GetIsFileFromRoot(this VariableSave variable, InstanceSave instance)
+        {
+            if (string.IsNullOrEmpty(variable.SourceObject))
+            {
+                ElementSave root = ObjectFinder.Self.GetRootStandardElementSave(instance);
+
+                var variableInRoot = root.DefaultState.Variables.FirstOrDefault(item => item.Name == variable.GetRootName());
+
+                if (variableInRoot != null)
+                {
+                    return variableInRoot.IsFile;
+                }
+            }
+            else
+            {
+                ElementSave elementForInstance = ObjectFinder.Self.GetElementSave(instance.BaseType);
+
+                string rootName = variable.GetRootName();
+                VariableSave exposedVariable = elementForInstance.DefaultState.Variables.FirstOrDefault(item => item.ExposedAsName == rootName);
+
+                if (exposedVariable != null)
+                {
+                    InstanceSave subInstance = elementForInstance.Instances.FirstOrDefault(item => item.Name == exposedVariable.SourceObject);
+
+                    if (subInstance != null)
+                    {
+                        return exposedVariable.GetIsFileFromRoot(subInstance);
+                    }
+                }
+                else
+                {
+                    // it's not exposed, so let's just get to the root of it:
+
+                    ElementSave root = ObjectFinder.Self.GetRootStandardElementSave(instance);
+
+                    var variableInRoot = root.DefaultState.Variables.FirstOrDefault(item => item.Name == variable.GetRootName());
+
+                    if (variableInRoot != null)
+                    {
+                        return variableInRoot.IsFile;
+                    }
+                }
+
+            }
+            return false;
+
+        }
     }
 
     public static class VariableSaveListExtensionMethods

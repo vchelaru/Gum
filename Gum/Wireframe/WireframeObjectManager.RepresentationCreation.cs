@@ -254,52 +254,55 @@ namespace Gum.Wireframe
         {
             StandardElementSave ses = ObjectFinder.Self.GetRootStandardElementSave(instance);
 
-            List<VariableSave> exposedVariables = GetExposedVariablesForThisInstance(instance, elementStack.Last().InstanceName, elementStack);
-
             IPositionedSizedObject rootIpso = null;
-
-            if (ses.Name == "Sprite")
+            if (ses != null)
             {
-                rootIpso = CreateSpriteFor(instance, elementStack, parentIpso, exposedVariables);
-            }
-            else if (ses.Name == "Text")
-            {
-                rootIpso = CreateTextFor(instance, elementStack, parentIpso, exposedVariables);
-            }
-            else if (ses.Name == "ColoredRectangle")
-            {
-                rootIpso = CreateSolidRectangleFor(instance, elementStack, parentIpso, exposedVariables);
-            }
-            else if (ses.Name == "NineSlice")
-            {
-                rootIpso = CreateNineSliceFor(instance, elementStack, parentIpso, exposedVariables);
-            }
-            else
-            {
-                rootIpso = CreateRectangleFor(instance, elementStack, parentIpso, exposedVariables);
-            }
+                List<VariableSave> exposedVariables = GetExposedVariablesForThisInstance(instance, elementStack.Last().InstanceName, elementStack);
 
-            ElementWithState elementWithState = new ElementWithState(baseComponentSave);
-            var state = new DataTypes.RecursiveVariableFinder(instance, elementStack).GetValue("State") as string;
-            elementWithState.StateName = state;
-            elementWithState.InstanceName = instance.Name;
-            elementStack.Add( elementWithState );
 
-            foreach (InstanceSave internalInstance in baseComponentSave.Instances)
-            {
-                IPositionedSizedObject createdIpso = CreateRepresentationForInstance(internalInstance, instance, elementStack, rootIpso);
+                if (ses.Name == "Sprite")
+                {
+                    rootIpso = CreateSpriteFor(instance, elementStack, parentIpso, exposedVariables);
+                }
+                else if (ses.Name == "Text")
+                {
+                    rootIpso = CreateTextFor(instance, elementStack, parentIpso, exposedVariables);
+                }
+                else if (ses.Name == "ColoredRectangle")
+                {
+                    rootIpso = CreateSolidRectangleFor(instance, elementStack, parentIpso, exposedVariables);
+                }
+                else if (ses.Name == "NineSlice")
+                {
+                    rootIpso = CreateNineSliceFor(instance, elementStack, parentIpso, exposedVariables);
+                }
+                else
+                {
+                    rootIpso = CreateRectangleFor(instance, elementStack, parentIpso, exposedVariables);
+                }
 
+                ElementWithState elementWithState = new ElementWithState(baseComponentSave);
+                var state = new DataTypes.RecursiveVariableFinder(instance, elementStack).GetValue("State") as string;
+                elementWithState.StateName = state;
+                elementWithState.InstanceName = instance.Name;
+                elementStack.Add(elementWithState);
+
+                foreach (InstanceSave internalInstance in baseComponentSave.Instances)
+                {
+                    IPositionedSizedObject createdIpso = CreateRepresentationForInstance(internalInstance, instance, elementStack, rootIpso);
+
+                }
+
+                SetUpParentRelationship(instance, elementStack, baseComponentSave.Instances);
+
+                // This pulls from the Instance's state, which if set can override hard values
+                // set on the instance.  States should take a backseat to explicit values set.  So
+                // instead, we want this funciton to be called inside the creation of the object instead
+                // of after.
+                //SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(rootIpso, elementStack.LastOrDefault().Element, new RecursiveVariableFinder(instance, elementStack));
+                UpdateScalesAndPositionsForSelectedChildren(rootIpso, instance, elementStack);
+                elementStack.Remove(elementStack.FirstOrDefault(item => item.Element == baseComponentSave));
             }
-
-            SetUpParentRelationship(instance, elementStack, baseComponentSave.Instances);
-
-            // This pulls from the Instance's state, which if set can override hard values
-            // set on the instance.  States should take a backseat to explicit values set.  So
-            // instead, we want this funciton to be called inside the creation of the object instead
-            // of after.
-            //SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(rootIpso, elementStack.LastOrDefault().Element, new RecursiveVariableFinder(instance, elementStack));
-            UpdateScalesAndPositionsForSelectedChildren(rootIpso, instance, elementStack);
-            elementStack.Remove( elementStack.FirstOrDefault(item=>item.Element == baseComponentSave));
 
             return rootIpso;
         }

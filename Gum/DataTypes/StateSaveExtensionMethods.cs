@@ -250,12 +250,7 @@ namespace Gum.DataTypes.Variables
             // instanceSave may (probably will be) null.
             if (instanceSave != null)
             {
-                VariableSave tempVariable = instanceSave.GetVariableFromThisOrBase(new ElementWithState( stateSave.ParentContainer ), rootName);
-
-                if (tempVariable != null)
-                {
-                    isFile = tempVariable.IsFile;
-                }
+                isFile = variableSave.GetIsFileFromRoot(instanceSave);
             }
             else if (variableSave != null)
             {

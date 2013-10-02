@@ -66,6 +66,7 @@
             this.WireframeContextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.WireframeEditControl = new FlatRedBall.AnimationEditorForms.Controls.WireframeEditControl();
             this.panel2 = new System.Windows.Forms.Panel();
+            this.OutputTextBox = new System.Windows.Forms.RichTextBox();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.LeftAndEverythingContainer)).BeginInit();
             this.LeftAndEverythingContainer.Panel1.SuspendLayout();
@@ -84,6 +85,7 @@
             this.PreviewSplitContainer.Panel2.SuspendLayout();
             this.PreviewSplitContainer.SuspendLayout();
             this.panel1.SuspendLayout();
+            this.panel2.SuspendLayout();
             this.SuspendLayout();
             // 
             // menuStrip1
@@ -387,7 +389,7 @@
             // 
             this.PreviewSplitContainer.Panel2.Controls.Add(this.panel2);
             this.PreviewSplitContainer.Size = new System.Drawing.Size(626, 617);
-            this.PreviewSplitContainer.SplitterDistance = 584;
+            this.PreviewSplitContainer.SplitterDistance = 556;
             this.PreviewSplitContainer.TabIndex = 0;
             // 
             // panel1
@@ -399,7 +401,7 @@
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(622, 580);
+            this.panel1.Size = new System.Drawing.Size(622, 552);
             this.panel1.TabIndex = 0;
             // 
             // ToolbarPanel
@@ -422,7 +424,7 @@
             this.wireframeControl1.DesiredFramesPerSecond = 30F;
             this.wireframeControl1.Location = new System.Drawing.Point(0, 52);
             this.wireframeControl1.Name = "wireframeControl1";
-            this.wireframeControl1.Size = new System.Drawing.Size(618, 524);
+            this.wireframeControl1.Size = new System.Drawing.Size(618, 496);
             this.wireframeControl1.TabIndex = 0;
             this.wireframeControl1.Text = "wireframeControl1";
             this.wireframeControl1.DragDrop += new System.Windows.Forms.DragEventHandler(this.wireframeControl1_DragDrop);
@@ -447,11 +449,21 @@
             // panel2
             // 
             this.panel2.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.panel2.Controls.Add(this.OutputTextBox);
             this.panel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel2.Location = new System.Drawing.Point(0, 0);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(622, 25);
+            this.panel2.Size = new System.Drawing.Size(622, 53);
             this.panel2.TabIndex = 0;
+            // 
+            // OutputTextBox
+            // 
+            this.OutputTextBox.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.OutputTextBox.Location = new System.Drawing.Point(0, 0);
+            this.OutputTextBox.Name = "OutputTextBox";
+            this.OutputTextBox.Size = new System.Drawing.Size(618, 49);
+            this.OutputTextBox.TabIndex = 0;
+            this.OutputTextBox.Text = "";
             // 
             // MainWindow
             // 
@@ -483,6 +495,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.PreviewSplitContainer)).EndInit();
             this.PreviewSplitContainer.ResumeLayout(false);
             this.panel1.ResumeLayout(false);
+            this.panel2.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -526,6 +539,7 @@
         private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem newProjectToolStripMenuItem;
         private System.Windows.Forms.ContextMenuStrip StateContextMenuStrip;
+        private System.Windows.Forms.RichTextBox OutputTextBox;
     }
 }
 

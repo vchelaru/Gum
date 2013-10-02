@@ -278,6 +278,8 @@ namespace Gum
             }
             else
             {
+                bool succeeded = true;
+
                 UndoManager.Self.RecordUndo();
 
                 bool doesProjectNeedToSave = false;
@@ -308,9 +310,15 @@ namespace Gum
                         catch (Exception e)
                         {
                             MessageBox.Show("Unknown error trying to save the file\n\n" + fileName + "\n\n" + e.ToString());
+                            succeeded = false;
                         }
                     }
+                    if (succeeded)
+                    {
+                        OutputManager.Self.AddOutput("Saved " + elementSave + " to " + fileName);
+                    }
                 }
+
 
                 PluginManager.Self.Export(elementSave);
             }

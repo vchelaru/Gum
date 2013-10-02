@@ -40,6 +40,7 @@ namespace Gum
             wireframeControl1.XnaInitialize += new Action(HandleXnaInitialize);
             //wireframeControl1.AfterXnaInitialize += HandleXnaInitialize;
             EditingManager.Self.Initialize(this.WireframeContextMenuStrip);
+            OutputManager.Self.Initialize(this.OutputTextBox);
             // ProjectManager.Initialize used to happen here, but I 
             // moved it down to the Load event for MainWindow because
             // ProjectManager.Initialize may load a project, and if it
