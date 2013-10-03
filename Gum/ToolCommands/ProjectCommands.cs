@@ -41,7 +41,9 @@ namespace Gum.ToolCommands
             screenSave.Name = screenName;
 
             ProjectManager.Self.GumProjectSave.ScreenReferences.Add(new ElementReference { Name = screenName, ElementType = ElementType.Screen });
+            ProjectManager.Self.GumProjectSave.ScreenReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
             ProjectManager.Self.GumProjectSave.Screens.Add(screenSave);
+            
 
             return screenSave;
         }
@@ -72,6 +74,7 @@ namespace Gum.ToolCommands
             componentSave.Name = componentName;
 
             ProjectManager.Self.GumProjectSave.ComponentReferences.Add(new ElementReference { Name = componentName, ElementType = ElementType.Component });
+            ProjectManager.Self.GumProjectSave.ComponentReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
             ProjectManager.Self.GumProjectSave.Components.Add(componentSave);
 
             return componentSave;

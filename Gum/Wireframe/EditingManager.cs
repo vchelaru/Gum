@@ -184,6 +184,19 @@ namespace Gum.Wireframe
                         float value = ModifyVariable("Y", yToMoveBy, SelectedState.Self.SelectedComponent);
                     }
                 }
+                else if (SelectedState.Self.SelectedInstances.Count() == 0 && SelectedState.Self.SelectedStandardElement != null)
+                {
+                    if (xToMoveBy != 0)
+                    {
+                        hasChangeOccurred = true;
+                        float value = ModifyVariable("X", xToMoveBy, SelectedState.Self.SelectedStandardElement);
+                    }
+                    if (yToMoveBy != 0)
+                    {
+                        hasChangeOccurred = true;
+                        float value = ModifyVariable("Y", yToMoveBy, SelectedState.Self.SelectedStandardElement);
+                    }
+                }
                 else
                 {
                     foreach (InstanceSave instance in SelectedState.Self.SelectedInstances)
@@ -643,7 +656,7 @@ namespace Gum.Wireframe
             return newValue;
         }
 
-        private float ModifyVariable(string baseVariableName, float modificationAmount, ComponentSave componentSave)
+        private float ModifyVariable(string baseVariableName, float modificationAmount, ElementSave elementSave)
         {
             object currentValueAsObject;
             currentValueAsObject = GetCurrentValueForVariable(baseVariableName, null);

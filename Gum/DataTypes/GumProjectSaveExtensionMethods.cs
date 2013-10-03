@@ -11,6 +11,15 @@ namespace Gum.DataTypes
     {
         public static void Initialize(this GumProjectSave gumProjectSave)
         {
+            gumProjectSave.ComponentReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
+            gumProjectSave.ScreenReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
+            gumProjectSave.StandardElementReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
+
+            gumProjectSave.StandardElements.Sort((first, second) => first.Name.CompareTo(second.Name));
+            gumProjectSave.Screens.Sort((first, second) => first.Name.CompareTo(second.Name));
+            gumProjectSave.Components.Sort((first, second) => first.Name.CompareTo(second.Name));
+
+
             // Do StandardElements first
             // because the values here are
             // used by components to set their
