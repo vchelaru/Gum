@@ -220,6 +220,7 @@ namespace RenderingLibrary.Graphics
                 shouldResetStates = true;
             }
 
+
             if (shouldResetStates)
             {
                 mSpriteBatch.End();

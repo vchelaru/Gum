@@ -994,6 +994,17 @@ namespace Gum.Wireframe
                 }
             }
 
+            bool useCustomSource = rvf.GetValue<bool>("Custom Texture Coordinates");
+            if (useCustomSource)
+            {
+                sprite.SourceRectangle = new Rectangle(
+                    rvf.GetValue<int>("Texture Left"),
+                    rvf.GetValue<int>("Texture Top"),
+                    rvf.GetValue<int>("Texture Width"),
+                    rvf.GetValue<int>("Texture Height"));
+
+                sprite.Wrap = rvf.GetValue<bool>("Wrap");
+            }
         }
 
         private static Microsoft.Xna.Framework.Color GetColorFromRvf(RecursiveVariableFinder rvf)

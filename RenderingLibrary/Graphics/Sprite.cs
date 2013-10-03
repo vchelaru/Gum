@@ -210,6 +210,18 @@ namespace RenderingLibrary.Graphics
             set;
         }
 
+        bool IRenderable.Wrap
+        {
+            get
+            {
+                return this.Wrap && mTexture != null &&
+                    Math.MathFunctions.IsPowerOfTwo(mTexture.Width) &&
+                    Math.MathFunctions.IsPowerOfTwo(mTexture.Height);
+
+            }
+
+        }
+
         public bool Wrap
         {
             get;

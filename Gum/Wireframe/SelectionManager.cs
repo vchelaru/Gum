@@ -421,6 +421,11 @@ namespace Gum.Wireframe
                 mOverlaySprite.Height = HighlightedSprite.Height;
                 mOverlaySprite.Texture = HighlightedSprite.Texture;
 
+
+                mOverlaySprite.Wrap = HighlightedSprite.Wrap;
+
+                mOverlaySprite.SourceRectangle = HighlightedSprite.SourceRectangle;
+
                 mOverlaySprite.FlipHorizontal = HighlightedSprite.FlipHorizontal;
                 mOverlaySprite.FlipVertical = HighlightedSprite.FlipVertical;
             }

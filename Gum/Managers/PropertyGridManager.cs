@@ -15,6 +15,7 @@ using RenderingLibrary;
 using Gum.Converters;
 using Gum.Plugins;
 using Gum.RenderingLibrary;
+using RenderingLibrary.Content;
 
 namespace Gum.Managers
 {
@@ -130,6 +131,8 @@ namespace Gum.Managers
 
                 ReactIfChangedMemberIsTexture(parentElement, changedMember, oldValue);
 
+                ReactIfChangedMemberIsCustomTextureCoordinates(parentElement, changedMember, oldValue);
+
                 PluginManager.Self.VariableSet(parentElement, instance, changedMember, oldValue);
 
 
@@ -156,6 +159,50 @@ namespace Gum.Managers
             // Inefficient but let's do this for now - we can make it more efficient later
             WireframeObjectManager.Self.RefreshAll(true);
             SelectionManager.Self.Refresh();
+        }
+
+        private void ReactIfChangedMemberIsCustomTextureCoordinates(ElementSave parentElement, string changedMember, object oldValue)
+        {
+            if (changedMember == "Custom Texture Coordinates")
+            {
+                RecursiveVariableFinder rvf;
+
+                var instance = SelectedState.Self.SelectedInstance;
+                if (instance != null)
+                {
+                    rvf = new RecursiveVariableFinder(SelectedState.Self.SelectedInstance, parentElement);
+                }
+                else
+                {
+                    rvf = new RecursiveVariableFinder(parentElement.DefaultState);
+                }
+
+                if(rvf.GetValue<bool>("Custom Texture Coordinates"))
+                {
+                    string sourceFile = rvf.GetValue<string>("SourceFile");
+
+                    if (!string.IsNullOrEmpty(sourceFile))
+                    {
+                        string absolute = ProjectManager.Self.MakeAbsoluteIfNecessary(sourceFile);
+
+                        if (System.IO.File.Exists(absolute))
+                        {
+                            var texture = LoaderManager.Self.Load(absolute, null);
+
+                            if (texture != null)
+                            {
+                                if (instance != null)
+                                {
+                                    parentElement.DefaultState.SetValue(instance.Name + ".Texture Top", 0);
+                                    parentElement.DefaultState.SetValue(instance.Name + ".Texture Left", 0);
+                                    parentElement.DefaultState.SetValue(instance.Name + ".Texture Width", texture.Width);
+                                    parentElement.DefaultState.SetValue(instance.Name + ".Texture Height", texture.Height);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         private void ReactIfChangedMemberIsUnitType(ElementSave parentElement, string changedMember, object oldValue)

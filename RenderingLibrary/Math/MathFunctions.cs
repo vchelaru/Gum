@@ -7,6 +7,15 @@ namespace RenderingLibrary.Math
 {
     public class MathFunctions
     {
+
+        public static bool IsPowerOfTwo(int numberToCheck)
+        {
+            return numberToCheck == 1 ||
+                numberToCheck == 2 ||
+                ((numberToCheck & (numberToCheck - 1)) == 0);
+        }
+
+
         public static int RoundToInt(float floatToRound)
         {
             // System.Math.Round should give us a number very close to the decimal

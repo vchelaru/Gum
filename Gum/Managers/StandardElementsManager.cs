@@ -8,6 +8,7 @@ using RenderingLibrary.Graphics;
 using Gum.Plugins;
 using Gum.RenderingLibrary;
 using Gum.PropertyGridHelpers.Converters;
+using Microsoft.Xna.Framework;
 
 namespace Gum.Managers
 {
@@ -142,6 +143,13 @@ namespace Gum.Managers
 
             stateSave.Variables.Add(new VariableSave { Type = "bool", Value = false, Category = "Flip", Name = "FlipHorizontal" });
             stateSave.Variables.Add(new VariableSave { Type = "bool", Value = false, Category = "Flip", Name = "FlipVertical" });
+
+            stateSave.Variables.Add(new VariableSave { Type = "bool", Value = false, Name = "Custom Texture Coordinates", Category="Source" });
+            stateSave.Variables.Add(new VariableSave { Type = "int", Value = 0, Name = "Texture Top", Category = "Source" });
+            stateSave.Variables.Add(new VariableSave { Type = "int", Value = 0, Name = "Texture Left", Category = "Source" });
+            stateSave.Variables.Add(new VariableSave { Type = "int", Value = 0, Name = "Texture Width", Category = "Source" });
+            stateSave.Variables.Add(new VariableSave { Type = "int", Value = 0, Name = "Texture Height", Category = "Source" });
+            stateSave.Variables.Add(new VariableSave { Type = "bool", Value = false, Name = "Wrap", Category = "Source" });
 
             AddColorVariables(stateSave);
 

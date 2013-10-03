@@ -229,6 +229,13 @@ namespace Gum.Managers
 
         internal void HandleFileDragDrop(object sender, DragEventArgs e)
         {
+            /////////////////////////////Early Out///////////////////////
+            if (SelectedState.Self.SelectedStandardElement != null)
+            {
+                return;
+            }
+            ///////////////////////////End Early Out/////////////////////
+
             string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
             string firstFile = null;
             if(files.Length != 0)
