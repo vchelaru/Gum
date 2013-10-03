@@ -96,7 +96,7 @@ namespace Gum.DataTypes
             //    variableSave = StandardElementsManager.Self.DefaultStates["Component"].GetVariableSave(variable);
             //}
 
-            if (variableSave != null && variableSave.Value == null && instanceBase != null)
+            if (variableSave != null && variableSave.Value == null && instanceBase != null && onlyIfSetsValue)
             {
                 // This can happen if there is a tunneled variable that is null
                 VariableSave possibleVariable = instanceBase.DefaultState.GetVariableSave(variable);
