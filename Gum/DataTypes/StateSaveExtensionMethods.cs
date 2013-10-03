@@ -251,8 +251,10 @@ namespace Gum.DataTypes.Variables
 
                     stateSave.AssignVariableSave(variableName, value, instanceSave, variableType);
                     stateSave.Variables.Sort((first, second) => first.Name.CompareTo(second.Name));
-                }
 
+
+                }
+                variableSave = stateSave.GetVariableSave(variableName);
 
                 bool isFile = false;
 

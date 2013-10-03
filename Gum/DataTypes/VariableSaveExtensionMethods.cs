@@ -163,6 +163,11 @@ namespace Gum.DataTypes
 
         public static bool GetIsFileFromRoot(this VariableSave variable, InstanceSave instance)
         {
+            if (variable == null)
+            {
+                int m = 3;
+            }
+
             if (string.IsNullOrEmpty(variable.SourceObject))
             {
                 ElementSave root = ObjectFinder.Self.GetRootStandardElementSave(instance);
