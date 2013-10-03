@@ -532,7 +532,6 @@ namespace Gum.Wireframe
         {
             LineRectangle lineRectangle = InstantiateAndNameRectangle(elementSave.Name);
             lineRectangle.Tag = elementSave;
-            StateSave stateSave = new StateSave();
 
             StateSave sourceStateSave = elementSave.DefaultState;
             if (elementSave == SelectedState.Self.SelectedElement)
@@ -542,10 +541,8 @@ namespace Gum.Wireframe
 
             RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(sourceStateSave);
 
-            FillStateWithVariables(rvf, stateSave, WireframeObjectManager.Self.PositionAndSizeVariables);
 
-
-            SetGuideParent(null, lineRectangle, (string)stateSave.GetValue("Guide"));
+            SetGuideParent(null, lineRectangle, (string)rvf.GetValue("Guide"));
 
             SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(lineRectangle, elementSave, rvf);
 

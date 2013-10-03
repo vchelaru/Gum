@@ -240,34 +240,6 @@ namespace Gum.DataTypes.Variables
                 rootName = variableName.Substring(variableName.IndexOf('.') + 1);
             }
 
-            bool isFile = false;
-
-            // Why might instanceSave be null?
-            // The reason is because StateSaves
-            // are used both for actual game data
-            // as well as temporary variable containers.
-            // If a StateSave is a temporary container then
-            // instanceSave may (probably will be) null.
-            if (instanceSave != null)
-            {
-                isFile = variableSave.GetIsFileFromRoot(instanceSave);
-            }
-            else if (variableSave != null)
-            {
-                isFile = variableSave.IsFile;
-            }
-
-            if (isFile && 
-                value is string &&
-                !FileManager.IsRelative((string)value))
-            {
-                string directoryToMakeRelativeTo = FileManager.GetDirectory(ObjectFinder.Self.GumProjectSave.FullFileName);
-
-                const bool preserveCase = true;
-                value = FileManager.MakeRelative((string)value, directoryToMakeRelativeTo, preserveCase);
-            }
-
-
             if (!isReservedName)
             {
                 if (value != null && value is IList)
@@ -277,10 +249,40 @@ namespace Gum.DataTypes.Variables
                 else
                 {
 
-                    stateSave.AssignVariableSave(variableName, value, instanceSave, variableType );
+                    stateSave.AssignVariableSave(variableName, value, instanceSave, variableType);
                     stateSave.Variables.Sort((first, second) => first.Name.CompareTo(second.Name));
                 }
 
+
+                bool isFile = false;
+
+                // Why might instanceSave be null?
+                // The reason is because StateSaves
+                // are used both for actual game data
+                // as well as temporary variable containers.
+                // If a StateSave is a temporary container then
+                // instanceSave may (probably will be) null.
+                if (instanceSave != null)
+                {
+                    isFile = variableSave.GetIsFileFromRoot(instanceSave);
+                }
+                else if (variableSave != null)
+                {
+                    isFile = variableSave.IsFile;
+                }
+
+                if (isFile &&
+                    value is string &&
+                    !FileManager.IsRelative((string)value))
+                {
+                    string directoryToMakeRelativeTo = FileManager.GetDirectory(ObjectFinder.Self.GumProjectSave.FullFileName);
+
+                    const bool preserveCase = true;
+                    value = FileManager.MakeRelative((string)value, directoryToMakeRelativeTo, preserveCase);
+
+                    // re-assign the value using the relative name now
+                    stateSave.AssignVariableSave(variableName, value, instanceSave, variableType);
+                }
             }
 
         }
