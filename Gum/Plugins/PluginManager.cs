@@ -858,5 +858,28 @@ namespace Gum.Plugins
 
 
 
+
+        internal bool ShouldExclude(VariableSave defaultVariable, RecursiveVariableFinder rvf)
+        {
+            bool shouldExclude = false;
+            foreach (var plugin in this.Plugins)
+            {
+                PluginContainer container = this.PluginContainers[plugin];
+
+                if (container.IsEnabled && container.Plugin is PluginBase)
+                {
+
+                    try
+                    {
+                        shouldExclude |= ((PluginBase)container.Plugin).GetIfVariableIsExcluded(defaultVariable, rvf);
+                    }
+                    catch (Exception e)
+                    {
+                        container.Fail(e, "Failed in GetIfVariableIsExcluded");
+                    }
+                }
+            }
+            return shouldExclude;
+        }
     }
 }

@@ -271,6 +271,39 @@ namespace Gum.PropertyGridHelpers
             
         private static bool GetIfShouldInclude(VariableSave defaultVariable, ElementSave container, InstanceSave currentInstance, StandardElementSave rootElementSave)
         {
+            bool shouldInclude = GetIfShouldIncludeAccordingToDefaultState(defaultVariable, container, currentInstance);
+
+            if (shouldInclude)
+            {
+                shouldInclude = GetShouldIncludeBasedOnAttachments(defaultVariable, container, currentInstance);
+            }
+
+            if (shouldInclude)
+            {
+                shouldInclude = GetShouldIncludeBasedOnBaseType(defaultVariable, container, rootElementSave);
+            }
+
+            if (shouldInclude)
+            {
+                RecursiveVariableFinder rvf;
+                if (currentInstance != null)
+                {
+                    rvf = new RecursiveVariableFinder(currentInstance, container);
+                }
+                else
+                {
+                    rvf = new RecursiveVariableFinder(container.DefaultState);
+                }
+
+                // todo: Add ability to exclude variables through plugins
+                shouldInclude = !PluginManager.Self.ShouldExclude(defaultVariable, rvf);
+            }
+
+            return shouldInclude;
+        }
+
+        private static bool GetIfShouldIncludeAccordingToDefaultState(VariableSave defaultVariable, ElementSave container, InstanceSave currentInstance)
+        {
             bool canOnlyBeSetInDefaultState = defaultVariable.CanOnlyBeSetInDefaultState;
             if (currentInstance != null)
             {
@@ -297,17 +330,6 @@ namespace Gum.PropertyGridHelpers
             {
                 shouldInclude = false;
             }
-
-            if (shouldInclude)
-            {
-                shouldInclude = GetShouldIncludeBasedOnAttachments(defaultVariable, container, currentInstance);
-            }
-
-            if (shouldInclude)
-            {
-                shouldInclude = GetShouldIncludeBasedOnBaseType(defaultVariable, container, rootElementSave);
-            }
-
             return shouldInclude;
         }
 

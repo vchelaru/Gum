@@ -23,6 +23,7 @@ namespace Gum.Plugins.BaseClasses
         public event Action<ElementSave, string> ElementRename;
         public event Action<VariableSave, List<Attribute>> FillVariableAttributes;
         public event Action<string, StateSave> AddAndRemoveVariablesForType;
+        public event Func<VariableSave, RecursiveVariableFinder, bool> VariableExcluded;
 
 
         /// <summary>
@@ -194,7 +195,21 @@ namespace Gum.Plugins.BaseClasses
             }
         }
 
-        #endregion
 
+
+
+        internal bool GetIfVariableIsExcluded(VariableSave defaultVariable, RecursiveVariableFinder rvf)
+        {
+            if (VariableExcluded == null)
+            {
+                return false;
+            }
+            else
+            {
+                return VariableExcluded(defaultVariable, rvf);
+            }
+        }
+        
+        #endregion
     }
 }
