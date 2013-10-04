@@ -468,9 +468,16 @@ namespace Gum.Wireframe
             }
         }
 
+        internal void UpdateScalesAndPositionsForChildren(List<IPositionedSizedObject> children, List<ElementWithState> elementStack)
+        {
+            foreach (IPositionedSizedObject selectedIpso in children)
+            {
+                UpdateScalesAndPositionsForSelectedChildren(selectedIpso, selectedIpso.Tag as InstanceSave, elementStack);
+            }
+        }
+
         void UpdateScalesAndPositionsForSelectedChildren(IPositionedSizedObject ipso, InstanceSave instanceSave, List<ElementWithState> elementStack)
         {
-
             float width = ipso.Width;
             float height = ipso.Height;
             if ((width == 0 || height == 0))
@@ -499,41 +506,43 @@ namespace Gum.Wireframe
             predicate = (childInstance) => childInstance != null && childInstance.IsParentASibling(elementStack);
             SetWidthPositionOnIpsoChildren(ipso, elementStack, selectedElement, predicate);
 
-
-            // Now we can calculate the width/height of this thing
-            width = ipso.Width;
-            height = ipso.Height;
-            if ((width == 0 || height == 0) && (ipso is Sprite == false && ipso is Text == false))
+            if (ipso != null)
             {
-                float requiredWidth;
-                float requiredHeight;
-
-                GetRequiredDimensionsFromContents(ipso, out requiredWidth, out requiredHeight);
-
-                if (ipso.Width == 0)
+                // Now we can calculate the width/height of this thing
+                width = ipso.Width;
+                height = ipso.Height;
+                if ((width == 0 || height == 0) && (ipso is Sprite == false && ipso is Text == false))
                 {
-                    ipso.Width = requiredWidth;
+                    float requiredWidth;
+                    float requiredHeight;
+
+                    GetRequiredDimensionsFromContents(ipso, out requiredWidth, out requiredHeight);
+
+                    if (ipso.Width == 0)
+                    {
+                        ipso.Width = requiredWidth;
+                    }
+                    if (ipso.Height == 0)
+                    {
+                        ipso.Height = requiredHeight;
+                    }
+
+                    wasAdded = TryAddToElementStack(instanceSave, elementStack, out selectedElement);
+
+                    // Let's do children of the instance first
+                    predicate = (childInstance) => childInstance != null && !childInstance.IsParentASibling(elementStack);
+                    SetWidthPositionOnIpsoChildren(ipso, elementStack, selectedElement, predicate);
+
+                    // pop the stack, then do siblings
+                    if (wasAdded)
+                    {
+                        elementStack.Remove(selectedElement);
+                    }
+
+                    predicate = (childInstance) => childInstance != null && childInstance.IsParentASibling(elementStack);
+                    SetWidthPositionOnIpsoChildren(ipso, elementStack, selectedElement, predicate);
+
                 }
-                if (ipso.Height == 0)
-                {
-                    ipso.Height = requiredHeight;
-                }
-
-                wasAdded = TryAddToElementStack(instanceSave, elementStack, out selectedElement);
-
-                // Let's do children of the instance first
-                predicate = (childInstance) => childInstance != null && !childInstance.IsParentASibling(elementStack);
-                SetWidthPositionOnIpsoChildren(ipso, elementStack, selectedElement, predicate);
-
-                // pop the stack, then do siblings
-                if (wasAdded)
-                {
-                    elementStack.Remove(selectedElement);
-                }
-
-                predicate = (childInstance) => childInstance != null && childInstance.IsParentASibling(elementStack);
-                SetWidthPositionOnIpsoChildren(ipso, elementStack, selectedElement, predicate);
-
             }
 
         }
@@ -576,7 +585,12 @@ namespace Gum.Wireframe
 
         private void SetWidthPositionOnIpsoChildren(IPositionedSizedObject ipso, List<ElementWithState> elementStack, ElementSave selectedElement, Predicate<InstanceSave> predicate)
         {
-            foreach (IPositionedSizedObject child in ipso.Children)
+            SetWidthPositionOnIpsoChildren(ipso.Children, elementStack, selectedElement, predicate);
+        }
+
+        private void SetWidthPositionOnIpsoChildren(ICollection<IPositionedSizedObject> children, List<ElementWithState> elementStack, ElementSave selectedElement, Predicate<InstanceSave> predicate)
+        {
+            foreach (IPositionedSizedObject child in children)
             {
                 InstanceSave childInstance = GetInstance(child, InstanceFetchType.DeepInstance);
 

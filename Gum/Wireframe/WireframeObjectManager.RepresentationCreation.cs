@@ -104,6 +104,8 @@ namespace Gum.Wireframe
                     rootIpso = CreateRectangleFor(elementSave);
                 }
             }
+            List<IPositionedSizedObject> newlyAdded = new List<IPositionedSizedObject>();
+
 
             List<ElementWithState> elementStack = new List<ElementWithState>();
 
@@ -121,6 +123,7 @@ namespace Gum.Wireframe
             foreach (var instance in elementSave.Instances)
             {
                 IPositionedSizedObject child = CreateRepresentationForInstance(instance, null, elementStack, rootIpso);
+                newlyAdded.Add(child);
             }
 
                 
@@ -129,7 +132,13 @@ namespace Gum.Wireframe
             if (rootIpso != null)
             {
                 SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(rootIpso, elementStack.LastOrDefault().Element, new RecursiveVariableFinder(SelectedState.Self.SelectedStateSave));
-                UpdateScalesAndPositionsForSelectedChildren(rootIpso, null, elementStack);
+                UpdateScalesAndPositionsForChildren(newlyAdded, elementStack);
+            }
+            else
+            {
+                SetWidthPositionOnIpsoChildren(newlyAdded, elementStack, elementSave, (var) => true);
+        
+
             }
 
             //);
