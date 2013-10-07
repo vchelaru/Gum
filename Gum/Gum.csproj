@@ -150,6 +150,7 @@
     <Compile Include="Managers\ProjectManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PropertyGridHelpers\Converters\AvailableBaseTypeConverter.cs" />
+    <Compile Include="PropertyGridHelpers\Converters\AvailableInstancesConverter.cs" />
     <Compile Include="PropertyGridHelpers\Converters\AvailableStatesConverter.cs" />
     <Compile Include="PropertyGridHelpers\Converters\FileListWindow.cs">
       <SubType>Form</SubType>

@@ -84,8 +84,15 @@ namespace Gum.DataTypes
             }
             if ( (variableSave == null  || (onlyIfSetsValue && variableSave.SetsValue == false)) && instanceBase != null)
             {
+                RecursiveVariableFinder rvf = new RecursiveVariableFinder(instance, elementStack);
+                string thisState = stateToPullFrom.GetValue(instance.Name + ".State") as string;
+                StateSave instanceStateToPullFrom = instanceBase.DefaultState;
+                if (!string.IsNullOrEmpty(thisState) && instanceBase.States.Any(item => item.Name == thisState))
+                {
+                    instanceStateToPullFrom = instanceBase.States.First(item => item.Name == thisState);
+                }
                 // Eventually use the instanceBase's current state value
-                variableSave = instanceBase.DefaultState.GetVariableRecursive(variable);
+                variableSave = instanceStateToPullFrom.GetVariableRecursive(variable);
 
             }
 

@@ -119,6 +119,9 @@ namespace Gum.Managers
             stateSave.Variables.Add(new VariableSave { Type = "string", Value = "Arial", Name = "Font", IsFont = true, Category = "Font" });
             stateSave.Variables.Add(new VariableSave { Type = "int", Value = 18, Name = "FontSize", Category = "Font" });
 
+
+            stateSave.Variables.Add(new VariableSave { Type = "string", Value = "Default", Name = "State", CustomTypeConverter = new AvailableStatesConverter() });
+
             AddColorVariables(stateSave, includeAlpha:true);
 
             PluginManager.Self.ModifyDefaultStandardState("Text", stateSave);

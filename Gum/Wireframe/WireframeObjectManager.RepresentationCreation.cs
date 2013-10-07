@@ -366,7 +366,8 @@ namespace Gum.Wireframe
 
         private IPositionedSizedObject CreateSpriteFor(ElementSave elementSave)
         {
-            RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(elementSave.DefaultState);
+
+            RecursiveVariableFinder rvf = GetRvfForCurrentElementState(elementSave);
 
             Sprite sprite = CreateSpriteInternal(elementSave, elementSave.Name, rvf, null);
       
@@ -429,7 +430,8 @@ namespace Gum.Wireframe
         }
         private IPositionedSizedObject CreateNineSliceFor(ElementSave elementSave)
         {
-            RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(elementSave.DefaultState);
+
+            RecursiveVariableFinder rvf = GetRvfForCurrentElementState(elementSave);
 
             NineSlice nineSlice = CreateNineSliceInternal(elementSave, elementSave.Name, rvf, null);
 
@@ -462,7 +464,8 @@ namespace Gum.Wireframe
             SolidRectangle solidRectangle = InstantiateAndNameSolidRectangle(elementSave.Name);
             solidRectangle.Tag = elementSave;
 
-            RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(elementSave.DefaultState);
+
+            RecursiveVariableFinder rvf = GetRvfForCurrentElementState(elementSave);
 
             
             SetGuideParent(null, solidRectangle, (string)rvf.GetValue("Guide"));
@@ -525,13 +528,7 @@ namespace Gum.Wireframe
             LineRectangle lineRectangle = InstantiateAndNameRectangle(elementSave.Name);
             lineRectangle.Tag = elementSave;
 
-            StateSave sourceStateSave = elementSave.DefaultState;
-            if (elementSave == SelectedState.Self.SelectedElement)
-            {
-                sourceStateSave = SelectedState.Self.SelectedStateSave;
-            }
-
-            RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(sourceStateSave);
+            RecursiveVariableFinder rvf = GetRvfForCurrentElementState(elementSave);
 
 
             SetGuideParent(null, lineRectangle, (string)rvf.GetValue("Guide"));
@@ -541,6 +538,18 @@ namespace Gum.Wireframe
 
 
             return lineRectangle;
+        }
+
+        private static DataTypes.RecursiveVariableFinder GetRvfForCurrentElementState(ElementSave elementSave)
+        {
+            StateSave sourceStateSave = elementSave.DefaultState;
+            if (elementSave == SelectedState.Self.SelectedElement)
+            {
+                sourceStateSave = SelectedState.Self.SelectedStateSave;
+            }
+
+            RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(sourceStateSave);
+            return rvf;
         }
         private IPositionedSizedObject CreateRectangleFor(InstanceSave instance, List<ElementWithState> elementStack, IPositionedSizedObject parentIpso)
         {
@@ -590,7 +599,8 @@ namespace Gum.Wireframe
 
         private IPositionedSizedObject CreateTextFor(ElementSave elementSave)
         {
-            RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(elementSave.DefaultState);
+
+            RecursiveVariableFinder rvf = GetRvfForCurrentElementState(elementSave);
 
             Text text = CreateTextInternal(elementSave, elementSave.Name, rvf);
 
