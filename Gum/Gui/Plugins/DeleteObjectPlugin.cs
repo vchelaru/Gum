@@ -53,6 +53,10 @@ namespace Gum.Gui.Plugins
 
                 return asElement.GetFullPathXmlFile();
             }
+            else if (deletedObject is InstanceSave)
+            {
+                return null;
+            }
             else
             {
                 throw new NotImplementedException();

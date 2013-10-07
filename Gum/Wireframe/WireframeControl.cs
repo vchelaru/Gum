@@ -85,9 +85,9 @@ namespace Gum.Wireframe
 
         void OnKeyDown(object sender, KeyEventArgs e)
         {
-            HandleCopyCutPaste(e);
+            ElementTreeViewManager.Self.HandleCopyCutPaste(e);
 
-            HandleDelete(e);
+            ElementTreeViewManager.Self.HandleDelete(e);
 
             HandleNudge(e);
         }
@@ -179,47 +179,7 @@ namespace Gum.Wireframe
                 e.SuppressKeyPress = true;
             }
             
-        }
-
-        public void HandleDelete(KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.Delete)
-            {
-                EditingManager.Self.OnDelete();
-
-                e.Handled = true;
-                e.SuppressKeyPress = true;
-            }
-        }
-
-        public void HandleCopyCutPaste(KeyEventArgs e)
-        {
-            if ((e.Modifiers & Keys.Control) == Keys.Control)
-            {
-                // copy, ctrl c, ctrl + c
-                if (e.KeyCode == Keys.C)
-                {
-                    EditingManager.Self.OnCopy(CopyType.Instance);
-                    e.Handled = true;
-                    e.SuppressKeyPress = true;
-                }
-                // paste, ctrl v, ctrl + v
-                else if (e.KeyCode == Keys.V)
-                {
-                    EditingManager.Self.OnPaste(CopyType.Instance);
-                    e.Handled = true;
-                    e.SuppressKeyPress = true;
-                }
-                // cut, ctrl x, ctrl + x
-                else if (e.KeyCode == Keys.X)
-                {
-                    EditingManager.Self.OnCut(CopyType.Instance);
-                    e.Handled = true;
-                    e.SuppressKeyPress = true;
-                }
-            }
-        }
-        
+        }     
 
         #endregion
 

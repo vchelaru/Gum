@@ -123,7 +123,19 @@ namespace Gum.Wireframe
             foreach (var instance in elementSave.Instances)
             {
                 IPositionedSizedObject child = CreateRepresentationForInstance(instance, null, elementStack, rootIpso);
-                newlyAdded.Add(child);
+
+                if (child == null)
+                {
+                    // This can occur
+                    // if an instance references
+                    // a component that doesn't exist.
+                    // I don't think we need to do anything
+                    // here.
+                }
+                else
+                {
+                    newlyAdded.Add(child);
+                }
             }
 
                 
@@ -149,25 +161,21 @@ namespace Gum.Wireframe
         {
             IPositionedSizedObject toReturn = null;
 
-
-            List<VariableSave> exposedVariables = GetExposedVariablesForThisInstance(instance, elementStack.Last().InstanceName, elementStack);
-
-
             if (instance.BaseType == "Sprite")
             {
-                toReturn = CreateSpriteFor(instance, elementStack, parentIpso, exposedVariables);
+                toReturn = CreateSpriteFor(instance, elementStack, parentIpso);
             }
             else if (instance.BaseType == "Text")
             {
-                toReturn = CreateTextFor(instance, elementStack, parentIpso, exposedVariables);
+                toReturn = CreateTextFor(instance, elementStack, parentIpso);
             }
             else if (instance.BaseType == "ColoredRectangle")
             {
-                toReturn = CreateSolidRectangleFor(instance, elementStack, parentIpso, exposedVariables);
+                toReturn = CreateSolidRectangleFor(instance, elementStack, parentIpso);
             }
             else if (instance.BaseType == "NineSlice")
             {
-                toReturn = CreateNineSliceFor(instance, elementStack, parentIpso, exposedVariables);
+                toReturn = CreateNineSliceFor(instance, elementStack, parentIpso);
             }
             else if (instance.IsComponent())
             {
@@ -191,7 +199,7 @@ namespace Gum.Wireframe
 
                 if (baseElement != null)
                 {
-                    toReturn = CreateRectangleFor(instance, elementStack, parentIpso, exposedVariables);
+                    toReturn = CreateRectangleFor(instance, elementStack, parentIpso);
                 }
             }
             //if (shouldPrefixParentName)
@@ -266,28 +274,25 @@ namespace Gum.Wireframe
             IPositionedSizedObject rootIpso = null;
             if (ses != null)
             {
-                List<VariableSave> exposedVariables = GetExposedVariablesForThisInstance(instance, elementStack.Last().InstanceName, elementStack);
-
-
                 if (ses.Name == "Sprite")
                 {
-                    rootIpso = CreateSpriteFor(instance, elementStack, parentIpso, exposedVariables);
+                    rootIpso = CreateSpriteFor(instance, elementStack, parentIpso);
                 }
                 else if (ses.Name == "Text")
                 {
-                    rootIpso = CreateTextFor(instance, elementStack, parentIpso, exposedVariables);
+                    rootIpso = CreateTextFor(instance, elementStack, parentIpso);
                 }
                 else if (ses.Name == "ColoredRectangle")
                 {
-                    rootIpso = CreateSolidRectangleFor(instance, elementStack, parentIpso, exposedVariables);
+                    rootIpso = CreateSolidRectangleFor(instance, elementStack, parentIpso);
                 }
                 else if (ses.Name == "NineSlice")
                 {
-                    rootIpso = CreateNineSliceFor(instance, elementStack, parentIpso, exposedVariables);
+                    rootIpso = CreateNineSliceFor(instance, elementStack, parentIpso);
                 }
                 else
                 {
-                    rootIpso = CreateRectangleFor(instance, elementStack, parentIpso, exposedVariables);
+                    rootIpso = CreateRectangleFor(instance, elementStack, parentIpso);
                 }
 
                 ElementWithState elementWithState = new ElementWithState(baseComponentSave);
@@ -372,85 +377,22 @@ namespace Gum.Wireframe
             
             return sprite;
         }
-
-
-
-        private IPositionedSizedObject CreateSpriteFor(InstanceSave instance, List<ElementWithState> elementStack, IPositionedSizedObject parentRepresentation, List<VariableSave> exposedVariables)
+        private IPositionedSizedObject CreateSpriteFor(InstanceSave instance, List<ElementWithState> elementStack, IPositionedSizedObject parentRepresentation)
         {
             ElementSave parent = elementStack.Last().Element;
-            try
-            {
-                RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(instance, elementStack);
 
-                Sprite sprite = CreateSpriteInternal(instance, instance.Name, rvf, parentRepresentation);
-                
-                
-                InitializeSprite(sprite, rvf);
-
-                // Sprite may be dependent on the texture for its location, so set the dimensions and positions *after* texture
-                SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(sprite, parent, rvf);
-
-                return sprite;
-            }
-            catch (Exception e)
-            {
-                int m = 3;
-                throw e;
-            }
-        }
-
-        private IPositionedSizedObject CreateNineSliceFor(InstanceSave instance, List<ElementWithState> elementStack, IPositionedSizedObject parentRepresentation, List<VariableSave> exposedVariables)
-        {
-            ElementSave parent = elementStack.Last().Element;
             RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(instance, elementStack);
 
-            NineSlice nineSlice = CreateNineSliceInternal(instance, instance.Name, rvf, parentRepresentation);
-            
+            Sprite sprite = CreateSpriteInternal(instance, instance.Name, rvf, parentRepresentation);
+                
+                
+            InitializeSprite(sprite, rvf);
 
-            InitializeNineSlice(nineSlice, rvf);
+            // Sprite may be dependent on the texture for its location, so set the dimensions and positions *after* texture
+            SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(sprite, parent, rvf);
 
-            // NineSlice may be dependent on the texture for its location, so set the dimensions and positions *after* texture
-            SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(nineSlice, parent, rvf);
-
-
-
-            return nineSlice;
+            return sprite;
         }
-
-        private IPositionedSizedObject CreateNineSliceFor(ElementSave elementSave)
-        {
-            RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(elementSave.DefaultState);
-
-            NineSlice nineSlice = CreateNineSliceInternal(elementSave, elementSave.Name, rvf, null);
-
-
-            InitializeNineSlice(nineSlice, rvf);
-
-            SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(nineSlice, elementSave, rvf);
-
-            return nineSlice;
-        }
-
-        private NineSlice CreateNineSliceInternal(object tag, string name, RecursiveVariableFinder rvf, IPositionedSizedObject parentIpso)
-        {
-            NineSlice nineSlice = new NineSlice();
-
-            // Add it to the manager first because the positioning code may need to access the source element/instance
-            SpriteManager.Self.Add(nineSlice);
-            nineSlice.Name = name;
-            nineSlice.Tag = tag;
-
-            mNineSlices.Add(nineSlice);
-
-            string guide = rvf.GetValue<string>("Guide");
-            SetGuideParent(parentIpso, nineSlice, guide);
-
-            return nineSlice;
-        }
-        
-
-
-
         private Sprite CreateSpriteInternal(object tag, string name, RecursiveVariableFinder rvf, IPositionedSizedObject parentIpso)
         {
             Sprite sprite = new Sprite(LoaderManager.Self.InvalidTexture);
@@ -468,6 +410,53 @@ namespace Gum.Wireframe
             return sprite;
         }
 
+        private IPositionedSizedObject CreateNineSliceFor(InstanceSave instance, List<ElementWithState> elementStack, IPositionedSizedObject parentRepresentation)
+        {
+            ElementSave parent = elementStack.Last().Element;
+            RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(instance, elementStack);
+
+            NineSlice nineSlice = CreateNineSliceInternal(instance, instance.Name, rvf, parentRepresentation);
+            
+
+            InitializeNineSlice(nineSlice, rvf);
+
+            // NineSlice may be dependent on the texture for its location, so set the dimensions and positions *after* texture
+            SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(nineSlice, parent, rvf);
+
+
+
+            return nineSlice;
+        }
+        private IPositionedSizedObject CreateNineSliceFor(ElementSave elementSave)
+        {
+            RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(elementSave.DefaultState);
+
+            NineSlice nineSlice = CreateNineSliceInternal(elementSave, elementSave.Name, rvf, null);
+
+
+            InitializeNineSlice(nineSlice, rvf);
+
+            SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(nineSlice, elementSave, rvf);
+
+            return nineSlice;
+        }
+        private NineSlice CreateNineSliceInternal(object tag, string name, RecursiveVariableFinder rvf, IPositionedSizedObject parentIpso)
+        {
+            NineSlice nineSlice = new NineSlice();
+
+            // Add it to the manager first because the positioning code may need to access the source element/instance
+            SpriteManager.Self.Add(nineSlice);
+            nineSlice.Name = name;
+            nineSlice.Tag = tag;
+
+            mNineSlices.Add(nineSlice);
+
+            string guide = rvf.GetValue<string>("Guide");
+            SetGuideParent(parentIpso, nineSlice, guide);
+
+            return nineSlice;
+        }
+        
         private IPositionedSizedObject CreateSolidRectangleFor(ElementSave elementSave)
         {
             SolidRectangle solidRectangle = InstantiateAndNameSolidRectangle(elementSave.Name);
@@ -483,20 +472,15 @@ namespace Gum.Wireframe
 
             return solidRectangle;           
         }
-        private IPositionedSizedObject CreateSolidRectangleFor(InstanceSave instance, List<ElementWithState> elementStack, List<VariableSave> exposedVariables)
+        private IPositionedSizedObject CreateSolidRectangleFor(InstanceSave instance, List<ElementWithState> elementStack)
         {
 
             IPositionedSizedObject parentIpso = GetRepresentation(elementStack.Last().Element);
 
-            return CreateSolidRectangleFor(instance, elementStack, parentIpso, exposedVariables);
+            return CreateSolidRectangleFor(instance, elementStack, parentIpso);
         }
-        private IPositionedSizedObject CreateSolidRectangleFor(InstanceSave instance, List<ElementWithState> elementStack, IPositionedSizedObject parentIpso, List<VariableSave> exposedVariables)
+        private IPositionedSizedObject CreateSolidRectangleFor(InstanceSave instance, List<ElementWithState> elementStack, IPositionedSizedObject parentIpso)
         {
-            if (exposedVariables == null)
-            {
-                throw new Exception("The exposedVariables argument is null when trying to create a Rectangle.  It shouldn't be.");
-            }
-
             ElementSave instanceBase = ObjectFinder.Self.GetElementSave(instance.BaseType);
 
             SolidRectangle solidRectangle = InstantiateAndNameSolidRectangle(instance.Name);
@@ -536,7 +520,6 @@ namespace Gum.Wireframe
         }
 
 
-
         private IPositionedSizedObject CreateRectangleFor(ElementSave elementSave)
         {
             LineRectangle lineRectangle = InstantiateAndNameRectangle(elementSave.Name);
@@ -559,12 +542,8 @@ namespace Gum.Wireframe
 
             return lineRectangle;
         }
-        private IPositionedSizedObject CreateRectangleFor(InstanceSave instance, List<ElementWithState> elementStack, IPositionedSizedObject parentIpso, List<VariableSave> exposedVariables)
+        private IPositionedSizedObject CreateRectangleFor(InstanceSave instance, List<ElementWithState> elementStack, IPositionedSizedObject parentIpso)
         {
-            if (exposedVariables == null)
-            {
-                throw new Exception("The exposedVariables argument is null when trying to create a Rectangle.  It shouldn't be.");
-            }
 
             ElementSave instanceBase = ObjectFinder.Self.GetElementSave(instance.BaseType);
 
@@ -575,10 +554,6 @@ namespace Gum.Wireframe
 
             SetGuideParent(parentIpso, lineRectangle, rvf.GetValue<string>("Guide"));
 
-            if (exposedVariables == null)
-            {
-                int m = 3;
-            }
             
             WireframeObjectManager.Self.SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(lineRectangle, elementStack.Last().Element, rvf);
 
@@ -613,18 +588,13 @@ namespace Gum.Wireframe
         }
 
 
-
         private IPositionedSizedObject CreateTextFor(ElementSave elementSave)
         {
             RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(elementSave.DefaultState);
 
             Text text = CreateTextInternal(elementSave, elementSave.Name, rvf);
 
-            StateSave stateSave = new StateSave();
-
-            FillStateWithVariables(rvf, stateSave, WireframeObjectManager.Self.PositionAndSizeVariables);
-
-            SetGuideParent(null, text, (string)stateSave.GetValue("Guide"));
+            SetGuideParent(null, text, (string)rvf.GetValue("Guide"));
 
             SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(text, elementSave, rvf);
 
@@ -634,18 +604,13 @@ namespace Gum.Wireframe
 
             return text;
         }
-        private IPositionedSizedObject CreateTextFor(InstanceSave instance, List<ElementWithState> elementStack, IPositionedSizedObject parentRepresentation, List<VariableSave> exposedVariables)
+        private IPositionedSizedObject CreateTextFor(InstanceSave instance, List<ElementWithState> elementStack, IPositionedSizedObject parentRepresentation)
         {
             ElementSave parent = elementStack.Last().Element;
-            ElementSave instanceBase = ObjectFinder.Self.GetElementSave(instance.BaseType);
             RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(instance, elementStack);
 
             Text text = CreateTextInternal(instance, instance.Name, rvf);
             
-            if (exposedVariables == null)
-            {
-                throw new ArgumentException("The exposedVariable argument is null.  It needs to be non-null");
-            }
 
             SetGuideParent(parentRepresentation, text, (string)rvf.GetValue("Guide"));
 
@@ -653,7 +618,6 @@ namespace Gum.Wireframe
 
             return text;
         }
-
         private Text CreateTextInternal(object tag, string name, RecursiveVariableFinder rvf)
         {
             Text text = new Text(null);
@@ -693,37 +657,6 @@ namespace Gum.Wireframe
             return text;
         }
 
-
-
-        private static StateSave GetStateSaveForTextVariables(InstanceSave instance, List<ElementWithState> elementStack)
-        {
-            StateSave stateSave = new StateSave();
-
-            AddToStateFromInstance(stateSave, instance, elementStack, "Text",
-                "HorizontalAlignment",
-                "VerticalAlignment",
-                "Font",
-                "FontSize",
-                "Alpha",
-                "Red",
-                "Green",
-                "Blue");
-
-            RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(instance, elementStack);
-            WireframeObjectManager.Self.FillStateWithVariables(rvf, stateSave, WireframeObjectManager.Self.PositionAndSizeVariables);
-            return stateSave;
-        }
-
-        static void AddToStateFromInstance(StateSave stateSave, InstanceSave instance, List<ElementWithState> elementStack, params string[] variables)
-        {
-            foreach (string variable in variables)
-            {
-                var value = instance.GetValueFromThisOrBase(elementStack, variable);
-
-                stateSave.SetValue(variable, value);
-            }
-        }
-
         private BitmapFont GetBitmapFontFor(string fontName, int fontSize)
         {
             string fileName = FileManager.RelativeDirectory + "FontCache/Font" + fontSize + fontName + ".fnt";
@@ -752,8 +685,6 @@ namespace Gum.Wireframe
                 return null;
             }
         }
-
-
 
         public void SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(IPositionedSizedObject ipso, ElementSave containerElement, RecursiveVariableFinder rvf)
         {

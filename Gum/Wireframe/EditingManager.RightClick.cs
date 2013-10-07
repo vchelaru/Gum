@@ -11,6 +11,7 @@ using Gum.Plugins;
 using Gum.ToolCommands;
 using ToolsUtilities;
 using Gum.Debug;
+using Gum.Gui.Forms;
 
 namespace Gum.Wireframe
 {
@@ -201,43 +202,116 @@ namespace Gum.Wireframe
 
         
 
-        public void OnDelete()
+        public void HandleDelete()
         {
+            object objectDeleted = null;
+            DeleteOptionsWindow optionsWindow = null;
+
             if (SelectedState.Self.SelectedInstance != null)
             {
-                DialogResult result = 
-                    MessageBox.Show("Are you sure you'd like to delete " + SelectedState.Self.SelectedInstance.Name + "?", "Delete object?", MessageBoxButtons.YesNo);
+                objectDeleted = SelectedState.Self.SelectedInstance;
+                AskToDeleteInstance(SelectedState.Self.SelectedInstance);
+            }
+            else if (SelectedState.Self.SelectedComponent != null)
+            {
 
-                if (result == DialogResult.Yes)
+                DialogResult result = ShowDeleteDialog(SelectedState.Self.SelectedComponent, out optionsWindow);
+
+                if (result == DialogResult.Yes || result == DialogResult.OK)
                 {
-                    ElementSave selectedElement = SelectedState.Self.SelectedElement;
+                    objectDeleted = SelectedState.Self.SelectedComponent;
+                    // We need to remove the reference
+                    EditingManager.Self.RemoveSelectedElement();
 
-                    Gum.ToolCommands.ElementCommands.Self.RemoveInstance(SelectedState.Self.SelectedInstance,
-                        selectedElement);
-
-                    if( ProjectManager.Self.GeneralSettingsFile.AutoSave)
-                    {
-                        ProjectManager.Self.SaveElement(selectedElement);
-                    }
-                    ElementSave elementToReselect = selectedElement;
-                    // Deselect before selecting the new
-                    // selected element and before refreshing everything
-                    SelectionManager.Self.Deselect();
-
-                    SelectedState.Self.SelectedInstance = null;
-                    SelectedState.Self.SelectedElement = elementToReselect;
-
-
-                    ElementTreeViewManager.Self.RefreshUI(selectedElement);
-                    WireframeObjectManager.Self.RefreshAll(true);
-
-                    SelectionManager.Self.Refresh();
-
-                    ProjectVerifier.Self.AssertSelectedIpsosArePartOfRenderer();
                 }
             }
+            else if (SelectedState.Self.SelectedScreen != null)
+            {
 
 
+                DialogResult result = ShowDeleteDialog(SelectedState.Self.SelectedScreen, out optionsWindow);
+
+                if (result == DialogResult.Yes || result == DialogResult.OK)
+                {
+                    objectDeleted = SelectedState.Self.SelectedScreen;
+                    // We need to remove the reference
+                    EditingManager.Self.RemoveSelectedElement();
+                }
+
+            }
+
+            if (objectDeleted != null)
+            {
+                PluginManager.Self.DeleteConfirm(optionsWindow, objectDeleted);
+            }
+        }
+
+        DialogResult ShowDeleteDialog(object objectToDelete, out DeleteOptionsWindow optionsWindow)
+        {
+            string titleText;
+            if (objectToDelete is ComponentSave)
+            {
+                titleText = "Delete Component?";
+            }
+            else if (objectToDelete is ScreenSave)
+            {
+                titleText = "Delete Screen?";
+            }
+            else if (objectToDelete is InstanceSave)
+            {
+                titleText = "Delete Instance?";
+            }
+            else
+            {
+                titleText = "Delete?";
+            }
+
+            optionsWindow = new DeleteOptionsWindow();
+            optionsWindow.Text = titleText;
+            optionsWindow.Message = "Are you sure you want to delete:\n" + objectToDelete.ToString();
+            optionsWindow.ObjectToDelete = objectToDelete;
+
+            PluginManager.Self.ShowDeleteDialog(optionsWindow, objectToDelete);
+
+            DialogResult result = optionsWindow.ShowDialog();
+
+
+
+            return result;
+        }
+
+        private static void AskToDeleteInstance(InstanceSave instance)
+        {
+            DialogResult result =
+                MessageBox.Show("Are you sure you'd like to delete " + instance.Name + "?", "Delete object?", MessageBoxButtons.YesNo);
+
+            if (result == DialogResult.Yes)
+            {
+                ElementSave selectedElement = SelectedState.Self.SelectedElement;
+
+                Gum.ToolCommands.ElementCommands.Self.RemoveInstance(instance,
+                    selectedElement);
+
+                if (ProjectManager.Self.GeneralSettingsFile.AutoSave)
+                {
+                    ProjectManager.Self.SaveElement(selectedElement);
+                }
+                ElementSave elementToReselect = selectedElement;
+                // Deselect before selecting the new
+                // selected element and before refreshing everything
+                SelectionManager.Self.Deselect();
+
+                SelectedState.Self.SelectedInstance = null;
+                SelectedState.Self.SelectedElement = elementToReselect;
+
+
+                ElementTreeViewManager.Self.RefreshUI(selectedElement);
+                WireframeObjectManager.Self.RefreshAll(true);
+
+                SelectionManager.Self.Refresh();
+
+                ProjectVerifier.Self.AssertSelectedIpsosArePartOfRenderer();
+            }
         }
 
 
@@ -589,5 +663,34 @@ namespace Gum.Wireframe
         }
 
 
+        public void RemoveSelectedElement()
+        {
+            ElementSave elementToRemove = SelectedState.Self.SelectedElement;
+
+            RemoveElement(elementToRemove);
+        }
+
+        private void RemoveElement(ElementSave elementToRemove)
+        {
+            ScreenSave asScreenSave = elementToRemove as ScreenSave;
+            ComponentSave asComponentSave = elementToRemove as ComponentSave;
+
+
+            if (asScreenSave != null)
+            {
+                ProjectCommands.Self.RemoveScreen(asScreenSave);
+            }
+            else if (asComponentSave != null)
+            {
+                ProjectCommands.Self.RemoveComponent(asComponentSave);
+            }
+
+            ElementTreeViewManager.Self.RefreshUI();
+            StateTreeViewManager.Self.RefreshUI(null);
+            PropertyGridManager.Self.RefreshUI();
+            Wireframe.WireframeObjectManager.Self.RefreshAll(true);
+
+            GumCommands.Self.FileCommands.TryAutoSaveProject();
+        }
     }
 }

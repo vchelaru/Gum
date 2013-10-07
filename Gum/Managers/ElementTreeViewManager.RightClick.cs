@@ -12,6 +12,7 @@ using Gum.Plugins;
 using System.Diagnostics;
 using System.IO;
 using ToolsUtilities;
+using Gum.Wireframe;
 
 namespace Gum.Managers
 {
@@ -69,79 +70,7 @@ namespace Gum.Managers
 
         void HandleDeleteObjectClick(object sender, EventArgs e)
         {
-            object objectDeleted = null;
-            DeleteOptionsWindow optionsWindow = null;
-
-            if (SelectedState.Self.SelectedInstance != null)
-            {
-
-            }
-            else if (SelectedState.Self.SelectedComponent != null)
-            {
-
-                DialogResult result = ShowDeleteDialog(SelectedState.Self.SelectedComponent, out optionsWindow);
-
-                if (result == DialogResult.Yes || result == DialogResult.OK)
-                {
-                    objectDeleted = SelectedState.Self.SelectedComponent;
-                    // We need to remove the reference
-                    RemoveSelectedElement();
-
-                }
-            }
-            else if (SelectedState.Self.SelectedScreen != null)
-            {
-
-
-                DialogResult result = ShowDeleteDialog(SelectedState.Self.SelectedScreen, out optionsWindow);
-
-                if (result == DialogResult.Yes || result == DialogResult.OK)
-                {
-                    objectDeleted = SelectedState.Self.SelectedScreen;
-                    // We need to remove the reference
-                    RemoveSelectedElement();
-                }
-
-            }
-
-            if (objectDeleted != null)
-            {
-                PluginManager.Self.DeleteConfirm(optionsWindow, objectDeleted);
-            }
-        }
-
-        DialogResult ShowDeleteDialog(object objectToDelete, out DeleteOptionsWindow optionsWindow)
-        {
-            string titleText;
-            if (objectToDelete is ComponentSave)
-            {
-                titleText = "Delete Component?";
-            }
-            else if (objectToDelete is ScreenSave)
-            {
-                titleText = "Delete Screen?";
-            }
-            else if (objectToDelete is InstanceSave)
-            {
-                titleText = "Delete Instance?";
-            }
-            else
-            {
-                titleText = "Delete?";
-            }
-
-            optionsWindow = new DeleteOptionsWindow();
-            optionsWindow.Text = titleText;
-            optionsWindow.Message = "Are you sure you want to delete:\n" + objectToDelete.ToString();
-            optionsWindow.ObjectToDelete = objectToDelete;
-
-            PluginManager.Self.ShowDeleteDialog(optionsWindow, objectToDelete);
-
-            DialogResult result = optionsWindow.ShowDialog();
-
-
-
-            return result;
+            EditingManager.Self.HandleDelete();
         }
 
         void OnGoToDefinitionClick(object sender, EventArgs e)
@@ -471,50 +400,6 @@ namespace Gum.Managers
                 //ProjectManager.Self.SaveProject();
             }
         }
-
-
-
-        public void RemoveSelectedElementOrInstance()
-        {
-            if (SelectedState.Self.SelectedInstance != null)
-            {
-
-
-            }
-            else if (SelectedState.Self.SelectedElement != null)
-            {
-                RemoveSelectedElement();
-
-            }
-
-
-        }
-
-        public void RemoveSelectedElement()
-        {
-            ElementSave elementToRemove = SelectedState.Self.SelectedElement;
-
-            ScreenSave asScreenSave = elementToRemove as ScreenSave;
-            ComponentSave asComponentSave = elementToRemove as ComponentSave;
-
-
-            if (asScreenSave != null)
-            {
-                ProjectCommands.Self.RemoveScreen(asScreenSave);
-            }
-            else if (asComponentSave != null)
-            {
-                ProjectCommands.Self.RemoveComponent(asComponentSave);
-            }
-
-            ElementTreeViewManager.Self.RefreshUI();
-            StateTreeViewManager.Self.RefreshUI(null);
-            PropertyGridManager.Self.RefreshUI();
-            Wireframe.WireframeObjectManager.Self.RefreshAll(true);
-
-            GumCommands.Self.FileCommands.TryAutoSaveProject();
-        }
-
 
     }
 }

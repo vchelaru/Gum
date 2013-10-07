@@ -101,7 +101,7 @@ namespace Gum
 
         private void RemoveElementMenuItem_Click(object sender, EventArgs e)
         {
-            ElementTreeViewManager.Self.RemoveSelectedElement();
+            EditingManager.Self.RemoveSelectedElement();
         }
 
         private void RemoveStateMenuItem_Click(object sender, EventArgs e)
@@ -127,15 +127,9 @@ namespace Gum
 
         private void ObjectTreeView_KeyDown(object sender, KeyEventArgs e)
         {
-            this.wireframeControl1.HandleCopyCutPaste(e);
-
-            this.wireframeControl1.HandleDelete(e);
-
-            if (e.KeyCode == Keys.Up || e.KeyCode == Keys.Down)
-            {
-                ElementTreeViewManager.Self.OnSelect(ObjectTreeView.SelectedNode);
-            }
+            ElementTreeViewManager.Self.HandleKeyDown(e);
         }
+
 
         private void ObjectTreeView_ItemDrag(object sender, ItemDragEventArgs e)
         {
