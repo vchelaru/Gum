@@ -614,9 +614,9 @@ namespace Gum.Wireframe
                 throw new Exception("All GraphicalUiElement children should also be GraphicalUiElements");
             }
             // Make sure we only look at IPSOs that actually represent a Gum element/instance
-            foreach (GraphicalUiElement child in children.Where(item=>item.Tag != null))
+            foreach (GraphicalUiElement child in children.Where(item=>item.Tag != null && item.Tag is InstanceSave))
             {
-                InstanceSave childInstance = GetInstance(child, InstanceFetchType.DeepInstance, elementStack);
+                InstanceSave childInstance = child.Tag as InstanceSave;
 
                 // ignore siblings:
                 if (predicate(childInstance))
