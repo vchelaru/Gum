@@ -251,6 +251,11 @@ namespace RenderingLibrary.Math.Geometry
 
         #endregion
 
+        void IPositionedSizedObject.SetParentDirect(IPositionedSizedObject parent)
+        {
+            mParent = parent;
+        }
+
         #region IVisible Members
 
 

@@ -43,6 +43,8 @@ namespace Gum.Wireframe
         List<SolidRectangle> mSolidRectangles = new List<SolidRectangle>();
         List<NineSlice> mNineSlices = new List<NineSlice>();
 
+        List<GraphicalUiElement> mGraphicalElements = new List<GraphicalUiElement>();
+
         WireframeEditControl mEditControl;
         WireframeControl mWireframeControl;
 
@@ -56,31 +58,32 @@ namespace Gum.Wireframe
 
         #region Properties
 
-        IEnumerable<IPositionedSizedObject> AllIpsos
+        public List<GraphicalUiElement> AllIpsos
         {
             get
             {
-                foreach (Sprite sprite in mSprites)
-                {
-                    yield return sprite;
-                }
+                return mGraphicalElements;
+                //foreach (Sprite sprite in mSprites)
+                //{
+                //    yield return sprite;
+                //}
 
-                foreach (Text text in mTexts)
-                {
-                    yield return text;
-                }
-                foreach (LineRectangle rectangle in mLineRectangles)
-                {
-                    yield return rectangle;
-                }
-                foreach (SolidRectangle solidRectangle in mSolidRectangles)
-                {
-                    yield return solidRectangle;
-                }
-                foreach (NineSlice nineSlice in mNineSlices)
-                {
-                    yield return nineSlice;
-                }
+                //foreach (Text text in mTexts)
+                //{
+                //    yield return text;
+                //}
+                //foreach (LineRectangle rectangle in mLineRectangles)
+                //{
+                //    yield return rectangle;
+                //}
+                //foreach (SolidRectangle solidRectangle in mSolidRectangles)
+                //{
+                //    yield return solidRectangle;
+                //}
+                //foreach (NineSlice nineSlice in mNineSlices)
+                //{
+                //    yield return nineSlice;
+                //}
             }
 
         }
@@ -200,6 +203,8 @@ namespace Gum.Wireframe
                 SpriteManager.Self.Remove(nineSlice);
             }
             mNineSlices.Clear();
+
+            mGraphicalElements.Clear();
         }
 
         public void RefreshAll(bool force)
@@ -243,7 +248,7 @@ namespace Gum.Wireframe
 
 
 
-        public IPositionedSizedObject GetSelectedRepresentation()
+        public GraphicalUiElement GetSelectedRepresentation()
         {
             if (!SelectionManager.Self.HasSelection)
             {
@@ -251,7 +256,7 @@ namespace Gum.Wireframe
             }
             else if (SelectedState.Self.SelectedInstance != null)
             {
-                return GetRepresentation(SelectedState.Self.SelectedInstance);
+                return GetRepresentation(SelectedState.Self.SelectedInstance, SelectedState.Self.GetTopLevelElementStack());
             }
             else if (SelectedState.Self.SelectedElement != null)
             {
@@ -263,7 +268,7 @@ namespace Gum.Wireframe
             }
         }
 
-        public IPositionedSizedObject GetRepresentation(ElementSave elementSave)
+        public GraphicalUiElement GetRepresentation(ElementSave elementSave)
         {
 #if DEBUG
             if (elementSave == null)
@@ -271,7 +276,7 @@ namespace Gum.Wireframe
                 throw new NullReferenceException("The argument elementSave is null");
             }
 #endif
-            foreach (IPositionedSizedObject ipso in AllIpsos)
+            foreach (GraphicalUiElement ipso in AllIpsos)
             {
                 if (ipso.Tag == elementSave)
                 {
@@ -282,16 +287,21 @@ namespace Gum.Wireframe
             return null;
         }
 
-        public IPositionedSizedObject GetRepresentation(InstanceSave instanceSave)
+        public GraphicalUiElement GetRepresentation(InstanceSave instanceSave, List<ElementWithState> elementStack)
         {
             if (instanceSave != null)
             {
-                foreach (IPositionedSizedObject ipso in AllIpsos)
+                if (elementStack == null)
                 {
-                    if (ipso.Tag == instanceSave)
-                    {
-                        return ipso;
-                    }
+                    return AllIpsos.FirstOrDefault(item => item.Tag == instanceSave);
+                }
+                else
+                {
+                    IEnumerable<IPositionedSizedObject> currentChildren = WireframeObjectManager.Self.AllIpsos.Where(item => item.Parent == null);
+
+                    return AllIpsos.FirstOrDefault(item => item.Tag == instanceSave);
+                            
+
                 }
             }
             return null;
@@ -330,7 +340,7 @@ namespace Gum.Wireframe
         /// </summary>
         /// <param name="representation">The representation in question.</param>
         /// <returns>The InstanceSave or null if one isn't found.</returns>
-        public InstanceSave GetInstance(IPositionedSizedObject representation, InstanceFetchType fetchType)
+        public InstanceSave GetInstance(IPositionedSizedObject representation, InstanceFetchType fetchType, List<ElementWithState> elementStack)
         {
             ElementSave selectedElement = SelectedState.Self.SelectedElement;
 
@@ -341,11 +351,11 @@ namespace Gum.Wireframe
                 prefix = "";
             }
 
-            return GetInstance(representation, selectedElement, prefix, fetchType);
+            return GetInstance(representation, selectedElement, prefix, fetchType, elementStack);
 
         }
 
-        public InstanceSave GetInstance(IPositionedSizedObject representation, ElementSave instanceContainer, string prefix, InstanceFetchType fetchType)
+        public InstanceSave GetInstance(IPositionedSizedObject representation, ElementSave instanceContainer, string prefix, InstanceFetchType fetchType, List<ElementWithState> elementStack)
         {
             if (instanceContainer == null)
             {
@@ -355,7 +365,7 @@ namespace Gum.Wireframe
             InstanceSave toReturn = null;
 
 
-            string qualifiedName = representation.GetAttachmentQualifiedName();
+            string qualifiedName = representation.GetAttachmentQualifiedName(elementStack);
 
             // strip off the guide name if it starts with a guide
             qualifiedName = StripGuideOrParentNameIfNecessaryName(qualifiedName, representation);
@@ -377,7 +387,7 @@ namespace Gum.Wireframe
                 {
                     ElementSave instanceElement = instanceSave.GetBaseElementSave();
 
-                    toReturn = GetInstance(representation, instanceElement, prefix + instanceSave.Name + ".", fetchType);
+                    toReturn = GetInstance(representation, instanceElement, prefix + instanceSave.Name + ".", fetchType, elementStack);
 
                     if (toReturn != null)
                     {
@@ -431,7 +441,7 @@ namespace Gum.Wireframe
         {
             return mLineRectangles.Contains(ipso) || mSprites.Contains(ipso) ||
                 mTexts.Contains(ipso) || mSolidRectangles.Contains(ipso) ||
-                mNineSlices.Contains(ipso);
+                mNineSlices.Contains(ipso) || mLineRectangles.Contains(ipso) || mGraphicalElements.Contains(ipso);
         }
 
         public ElementSave GetElement(IPositionedSizedObject representation)
@@ -464,22 +474,31 @@ namespace Gum.Wireframe
             elementStack.Add(new ElementWithState(SelectedState.Self.SelectedElement));
             foreach (IPositionedSizedObject selectedIpso in SelectionManager.Self.SelectedIpsos)
             {
-                UpdateScalesAndPositionsForSelectedChildren(selectedIpso, selectedIpso.Tag as InstanceSave, elementStack);
+                UpdateScalesAndPositionsForSelectedChildren(selectedIpso as GraphicalUiElement, selectedIpso.Tag as InstanceSave, elementStack);
             }
         }
 
-        internal void UpdateScalesAndPositionsForChildren(List<IPositionedSizedObject> children, List<ElementWithState> elementStack)
+        internal void UpdateScalesAndPositionsForChildren(List<GraphicalUiElement> children, List<ElementWithState> elementStack)
         {
             foreach (IPositionedSizedObject selectedIpso in children)
             {
-                UpdateScalesAndPositionsForSelectedChildren(selectedIpso, selectedIpso.Tag as InstanceSave, elementStack);
+                UpdateScalesAndPositionsForSelectedChildren(selectedIpso as GraphicalUiElement, selectedIpso.Tag as InstanceSave, elementStack);
             }
         }
 
-        void UpdateScalesAndPositionsForSelectedChildren(IPositionedSizedObject ipso, InstanceSave instanceSave, List<ElementWithState> elementStack)
+        void UpdateScalesAndPositionsForSelectedChildren(GraphicalUiElement ipso, InstanceSave instanceSave, List<ElementWithState> elementStack)
         {
-            float width = ipso.Width;
-            float height = ipso.Height;
+            if (ipso == null)
+            {
+                throw new ArgumentException("ipso must not be null");
+            }
+            if (ipso.Children.Count() != 0 && ipso.Children.Any(item => item is GraphicalUiElement) == false)
+            {
+                throw new Exception("All GraphicalUiElement children should also be GraphicalUiElements");
+            }
+
+            float width = ((IPositionedSizedObject)ipso).Width;
+            float height = ((IPositionedSizedObject)ipso).Height;
             if ((width == 0 || height == 0))
             {
                 int m = 3;
@@ -509,22 +528,22 @@ namespace Gum.Wireframe
             if (ipso != null)
             {
                 // Now we can calculate the width/height of this thing
-                width = ipso.Width;
-                height = ipso.Height;
-                if ((width == 0 || height == 0) && (ipso is Sprite == false && ipso is Text == false))
+                width = ((IPositionedSizedObject)ipso).Width;
+                height = ((IPositionedSizedObject)ipso).Height;
+                if ((width == 0 || height == 0) && (ipso.Component is Sprite == false && ipso.Component is Text == false))
                 {
                     float requiredWidth;
                     float requiredHeight;
 
                     GetRequiredDimensionsFromContents(ipso, out requiredWidth, out requiredHeight);
 
-                    if (ipso.Width == 0)
+                    if (((IPositionedSizedObject)ipso).Width == 0)
                     {
-                        ipso.Width = requiredWidth;
+                        ((IPositionedSizedObject)ipso).Width = requiredWidth;
                     }
-                    if (ipso.Height == 0)
+                    if (((IPositionedSizedObject)ipso).Height == 0)
                     {
-                        ipso.Height = requiredHeight;
+                        ((IPositionedSizedObject)ipso).Height = requiredHeight;
                     }
 
                     wasAdded = TryAddToElementStack(instanceSave, elementStack, out selectedElement);
@@ -583,16 +602,21 @@ namespace Gum.Wireframe
             }
         }
 
-        private void SetWidthPositionOnIpsoChildren(IPositionedSizedObject ipso, List<ElementWithState> elementStack, ElementSave selectedElement, Predicate<InstanceSave> predicate)
+        private void SetWidthPositionOnIpsoChildren(GraphicalUiElement ipso, List<ElementWithState> elementStack, ElementSave selectedElement, Predicate<InstanceSave> predicate)
         {
             SetWidthPositionOnIpsoChildren(ipso.Children, elementStack, selectedElement, predicate);
         }
 
-        private void SetWidthPositionOnIpsoChildren(ICollection<IPositionedSizedObject> children, List<ElementWithState> elementStack, ElementSave selectedElement, Predicate<InstanceSave> predicate)
+        private void SetWidthPositionOnIpsoChildren(IEnumerable<IPositionedSizedObject> children, List<ElementWithState> elementStack, ElementSave selectedElement, Predicate<InstanceSave> predicate)
         {
-            foreach (IPositionedSizedObject child in children)
+            if (children.Count() != 0 && children.Any(item => item is GraphicalUiElement) == false)
             {
-                InstanceSave childInstance = GetInstance(child, InstanceFetchType.DeepInstance);
+                throw new Exception("All GraphicalUiElement children should also be GraphicalUiElements");
+            }
+            // Make sure we only look at IPSOs that actually represent a Gum element/instance
+            foreach (GraphicalUiElement child in children.Where(item=>item.Tag != null))
+            {
+                InstanceSave childInstance = GetInstance(child, InstanceFetchType.DeepInstance, elementStack);
 
                 // ignore siblings:
                 if (predicate(childInstance))

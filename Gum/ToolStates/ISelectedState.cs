@@ -7,6 +7,7 @@ using Gum.DataTypes.Variables;
 using System.Windows.Forms;
 using System.Collections.ObjectModel;
 using RenderingLibrary;
+using Gum.Wireframe;
 
 namespace Gum.ToolStates
 {
@@ -26,6 +27,7 @@ namespace Gum.ToolStates
         TreeNode SelectedTreeNode { get; }
         RecursiveVariableFinder SelectedRecursiveVariableFinder { get; }
         void UpdateToSelectedStateSave();
+        List<ElementWithState> GetTopLevelElementStack();
 
         void UpdateToSelectedElement();
         void UpdateToSelectedInstanceSave();

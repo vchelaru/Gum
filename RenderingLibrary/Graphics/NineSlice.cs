@@ -332,6 +332,10 @@ namespace RenderingLibrary.Graphics
             }
         }
 
+        void IPositionedSizedObject.SetParentDirect(IPositionedSizedObject parent)
+        {
+            mParent = parent;
+        }
 
         #region IVisible Implementation
 

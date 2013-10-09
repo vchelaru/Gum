@@ -591,7 +591,7 @@ namespace Gum.Wireframe
             WireframeObjectManager.Self.RefreshAll(true);
 
             SelectionManager.Self.Refresh();
-
+            GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
         }
 
 

@@ -449,6 +449,23 @@ namespace Gum.ToolStates
             PluginManager.Self.InstanceSelected(SelectedElement, SelectedInstance);
         }
 
+        public List<ElementWithState> GetTopLevelElementStack()
+        {
+            List<ElementWithState> toReturn = new List<ElementWithState>();
+
+            if (SelectedElement != null)
+            {
+                ElementWithState item = new ElementWithState(SelectedElement);
+
+
+                toReturn.Add(item);
+
+
+            }
+
+            return toReturn;
+        }
+
     }
 
     public static class IEnumerableExtensionMethods

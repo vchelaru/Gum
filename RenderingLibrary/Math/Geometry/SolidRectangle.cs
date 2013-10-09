@@ -149,6 +149,10 @@ namespace RenderingLibrary.Graphics
             }
         }
 
+        void IPositionedSizedObject.SetParentDirect(IPositionedSizedObject parent)
+        {
+            mParent = parent;
+        }
 
         public bool Visible
         {

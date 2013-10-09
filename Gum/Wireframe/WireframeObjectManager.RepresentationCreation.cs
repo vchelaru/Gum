@@ -77,34 +77,42 @@ namespace Gum.Wireframe
 
         private void CreateIpsoForElement(ElementSave elementSave)
         {
-            IPositionedSizedObject rootIpso = null;
+            GraphicalUiElement rootIpso = null;
 
             bool isScreen = elementSave is ScreenSave;
 
             if (isScreen == false)
             {
+                IPositionedSizedObject created = null;
+
                 if (elementSave.BaseType == "Sprite" || elementSave.Name == "Sprite")
                 {
-                    rootIpso = CreateSpriteFor(elementSave);
+                    created = CreateSpriteFor(elementSave);
                 }
                 else if (elementSave.BaseType == "Text" || elementSave.Name == "Text")
                 {
-                    rootIpso = CreateTextFor(elementSave);
+                    created = CreateTextFor(elementSave);
                 }
                 else if (elementSave.BaseType == "NineSlice" || elementSave.Name == "NineSlice")
                 {
-                    rootIpso = CreateNineSliceFor(elementSave);
+                    created = CreateNineSliceFor(elementSave);
                 }
                 else if (elementSave.BaseType == "ColoredRectangle" || elementSave.Name == "ColoredRectangle")
                 {
-                    rootIpso = CreateSolidRectangleFor(elementSave);
+                    created = CreateSolidRectangleFor(elementSave);
                 }
                 else
                 {
-                    rootIpso = CreateRectangleFor(elementSave);
+                    created = CreateRectangleFor(elementSave);
                 }
+
+                rootIpso = new GraphicalUiElement(created as IRenderable, null);
+                RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(SelectedState.Self.SelectedStateSave);
+
+                string guide = rvf.GetValue<string>("Guide");
+                SetGuideParent(null, rootIpso, guide);
             }
-            List<IPositionedSizedObject> newlyAdded = new List<IPositionedSizedObject>();
+            List<GraphicalUiElement> newlyAdded = new List<GraphicalUiElement>();
 
 
             List<ElementWithState> elementStack = new List<ElementWithState>();
@@ -122,7 +130,7 @@ namespace Gum.Wireframe
             //Parallel.ForEach(elementSave.Instances, instance =>
             foreach (var instance in elementSave.Instances)
             {
-                IPositionedSizedObject child = CreateRepresentationForInstance(instance, null, elementStack, rootIpso);
+                GraphicalUiElement child = CreateRepresentationForInstance(instance, null, elementStack, rootIpso);
 
                 if (child == null)
                 {
@@ -135,11 +143,12 @@ namespace Gum.Wireframe
                 else
                 {
                     newlyAdded.Add(child);
+                    mGraphicalElements.Add(child);
                 }
             }
 
                 
-            SetUpParentRelationship(null, elementStack, elementSave.Instances);
+            SetUpParentRelationship(newlyAdded, elementStack, elementSave.Instances);
 
             if (rootIpso != null)
             {
@@ -157,25 +166,25 @@ namespace Gum.Wireframe
             elementStack.Remove(elementStack.FirstOrDefault(item => item.Element == elementSave));
         }
 
-        private IPositionedSizedObject CreateRepresentationForInstance(InstanceSave instance, InstanceSave parentInstance, List<ElementWithState> elementStack, IPositionedSizedObject parentIpso)
+        private GraphicalUiElement CreateRepresentationForInstance(InstanceSave instance, InstanceSave parentInstance, List<ElementWithState> elementStack, GraphicalUiElement container)
         {
-            IPositionedSizedObject toReturn = null;
+            IPositionedSizedObject newIpso = null;
 
             if (instance.BaseType == "Sprite")
             {
-                toReturn = CreateSpriteFor(instance, elementStack, parentIpso);
+                newIpso = CreateSpriteFor(instance, elementStack, container);
             }
             else if (instance.BaseType == "Text")
             {
-                toReturn = CreateTextFor(instance, elementStack, parentIpso);
+                newIpso = CreateTextFor(instance, elementStack, container);
             }
             else if (instance.BaseType == "ColoredRectangle")
             {
-                toReturn = CreateSolidRectangleFor(instance, elementStack, parentIpso);
+                newIpso = CreateSolidRectangleFor(instance, elementStack, container);
             }
             else if (instance.BaseType == "NineSlice")
             {
-                toReturn = CreateNineSliceFor(instance, elementStack, parentIpso);
+                newIpso = CreateNineSliceFor(instance, elementStack, container);
             }
             else if (instance.IsComponent())
             {
@@ -187,7 +196,7 @@ namespace Gum.Wireframe
                 //{
                 //prefixName = parentIpso.Name + ".";
                 //}
-                toReturn = CreateRepresentationsForInstanceFromComponent(instance, elementStack, parentInstance, parentIpso, ObjectFinder.Self.GetComponent(instance.BaseType));
+                newIpso = CreateRepresentationsForInstanceFromComponent(instance, elementStack, parentInstance, container, ObjectFinder.Self.GetComponent(instance.BaseType));
             }
             else
             {
@@ -199,7 +208,7 @@ namespace Gum.Wireframe
 
                 if (baseElement != null)
                 {
-                    toReturn = CreateRectangleFor(instance, elementStack, parentIpso);
+                    newIpso = CreateRectangleFor(instance, elementStack, container);
                 }
             }
             //if (shouldPrefixParentName)
@@ -228,7 +237,22 @@ namespace Gum.Wireframe
             //    }
             //}
 
-            return toReturn;
+
+            GraphicalUiElement element = newIpso as GraphicalUiElement;
+
+            if (newIpso != null && (newIpso is GraphicalUiElement) == false)
+            {
+                element = new GraphicalUiElement(newIpso as IRenderable, container);
+
+                RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(SelectedState.Self.SelectedStateSave);
+
+                string guide = rvf.GetValue<string>("Guide");
+                SetGuideParent(container, element, guide);
+            }
+
+
+
+            return element;
         }
 
         public List<VariableSave> GetExposedVariablesForThisInstance(DataTypes.InstanceSave instance, string parentInstanceName, List<ElementWithState> elementStack)
@@ -252,6 +276,7 @@ namespace Gum.Wireframe
                             VariableSave variableToAdd = new VariableSave();
                             variableToAdd.Type = variable.Type;
                             variableToAdd.Value = foundVariable.Value;
+                            variableToAdd.SetsValue = foundVariable.SetsValue;
                             variableToAdd.Name = variable.Name.Substring(variable.Name.IndexOf('.') + 1);
                             exposedVariables.Add(variableToAdd);
                         }
@@ -266,34 +291,45 @@ namespace Gum.Wireframe
         }
 
         private IPositionedSizedObject CreateRepresentationsForInstanceFromComponent(InstanceSave instance, 
-            List<ElementWithState> elementStack, InstanceSave parentInstance, IPositionedSizedObject parentIpso, 
+            List<ElementWithState> elementStack, InstanceSave parentInstance, GraphicalUiElement parentIpso, 
             ComponentSave baseComponentSave)
         {
             StandardElementSave ses = ObjectFinder.Self.GetRootStandardElementSave(instance);
 
-            IPositionedSizedObject rootIpso = null;
+            GraphicalUiElement rootIpso = null;
             if (ses != null)
             {
+                IPositionedSizedObject graphicalComponent = null;
+
                 if (ses.Name == "Sprite")
                 {
-                    rootIpso = CreateSpriteFor(instance, elementStack, parentIpso);
+                    graphicalComponent = CreateSpriteFor(instance, elementStack, parentIpso);
                 }
                 else if (ses.Name == "Text")
                 {
-                    rootIpso = CreateTextFor(instance, elementStack, parentIpso);
+                    graphicalComponent = CreateTextFor(instance, elementStack, parentIpso);
                 }
                 else if (ses.Name == "ColoredRectangle")
                 {
-                    rootIpso = CreateSolidRectangleFor(instance, elementStack, parentIpso);
+                    graphicalComponent = CreateSolidRectangleFor(instance, elementStack, parentIpso);
                 }
                 else if (ses.Name == "NineSlice")
                 {
-                    rootIpso = CreateNineSliceFor(instance, elementStack, parentIpso);
+                    graphicalComponent = CreateNineSliceFor(instance, elementStack, parentIpso);
                 }
                 else
                 {
-                    rootIpso = CreateRectangleFor(instance, elementStack, parentIpso);
+                    graphicalComponent = CreateRectangleFor(instance, elementStack, parentIpso);
                 }
+
+                rootIpso = new GraphicalUiElement(graphicalComponent as IRenderable, parentIpso);
+
+
+
+                RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(SelectedState.Self.SelectedStateSave);
+
+                string guide = rvf.GetValue<string>("Guide");
+                SetGuideParent(parentIpso, rootIpso, guide);
 
                 ElementWithState elementWithState = new ElementWithState(baseComponentSave);
                 var state = new DataTypes.RecursiveVariableFinder(instance, elementStack).GetValue("State") as string;
@@ -303,11 +339,14 @@ namespace Gum.Wireframe
 
                 foreach (InstanceSave internalInstance in baseComponentSave.Instances)
                 {
-                    IPositionedSizedObject createdIpso = CreateRepresentationForInstance(internalInstance, instance, elementStack, rootIpso);
+                    GraphicalUiElement createdIpso = CreateRepresentationForInstance(internalInstance, instance, elementStack, rootIpso);
 
                 }
-
-                SetUpParentRelationship(instance, elementStack, baseComponentSave.Instances);
+                if (rootIpso.Children.Count() != 0 && rootIpso.Children.Any(item => item is GraphicalUiElement) == false)
+                {
+                    throw new Exception("All GraphicalUiElement children should also be GraphicalUiElements");
+                }
+                SetUpParentRelationship(rootIpso.ContainedElements, elementStack, baseComponentSave.Instances);
 
                 // This pulls from the Instance's state, which if set can override hard values
                 // set on the instance.  States should take a backseat to explicit values set.  So
@@ -321,41 +360,32 @@ namespace Gum.Wireframe
             return rootIpso;
         }
 
-        private void SetUpParentRelationship(InstanceSave containerInstance, List<ElementWithState> elementStack, IEnumerable<InstanceSave> childrenInstances)
+        private void SetUpParentRelationship(IEnumerable<GraphicalUiElement> siblings, List<ElementWithState> elementStack, IEnumerable<InstanceSave> childrenInstances)
         {
             // Now that we have created all instances, we can establish parent relationships
-            foreach(var childInstanceSave in childrenInstances)
+
+            foreach (GraphicalUiElement contained in siblings)
             {
-                List<VariableSave> childExposedVariables = null;
-
-                if (childInstanceSave != null)
+                if (contained.Tag is InstanceSave)
                 {
-                    childExposedVariables = GetExposedVariablesForThisInstance(childInstanceSave, elementStack.Last().InstanceName, elementStack);
-                }
+                    InstanceSave childInstanceSave = contained.Tag as InstanceSave;
+                    RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(childInstanceSave, elementStack);
 
-                RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(childInstanceSave, elementStack);
+                    string parentName = rvf.GetValue<string>("Parent");
 
-                string parentName = rvf.GetValue<string>("Parent");
-
-                if (!string.IsNullOrEmpty(parentName))
-                {
-                    InstanceSave parentInstanceSave = childrenInstances.FirstOrDefault(item => item.Name == parentName);
-
-                    IPositionedSizedObject childIpso = WireframeObjectManager.Self.GetRepresentation(childInstanceSave);
-                    IPositionedSizedObject parentIpso = WireframeObjectManager.Self.GetRepresentation(parentInstanceSave);
-
-                    if (childIpso != null)
+                    if (!string.IsNullOrEmpty(parentName))
                     {
-                        childIpso.Parent = parentIpso;
+                        IPositionedSizedObject newParent = siblings.FirstOrDefault(item => item.Name == parentName);
 
-
-                        SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(childIpso, elementStack.LastOrDefault().Element, rvf);
-
-
-
-                        UpdateScalesAndPositionsForSelectedChildren(childIpso, childInstanceSave, elementStack);
+                        contained.Parent = newParent;
 
                     }
+
+                    SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(contained, elementStack.LastOrDefault().Element, rvf);
+
+
+
+                    UpdateScalesAndPositionsForSelectedChildren(contained, childInstanceSave, elementStack);
                 }
 
             }
@@ -405,20 +435,17 @@ namespace Gum.Wireframe
 
             mSprites.Add(sprite);
 
-            SetGuideParent(parentIpso, sprite, rvf.GetValue<string>("Guide"));
-
-
             return sprite;
         }
 
-        private IPositionedSizedObject CreateNineSliceFor(InstanceSave instance, List<ElementWithState> elementStack, IPositionedSizedObject parentRepresentation)
+        private IPositionedSizedObject CreateNineSliceFor(InstanceSave instance, List<ElementWithState> elementStack, GraphicalUiElement container)
         {
             ElementSave parent = elementStack.Last().Element;
             RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(instance, elementStack);
 
-            NineSlice nineSlice = CreateNineSliceInternal(instance, instance.Name, rvf, parentRepresentation);
             
-
+            NineSlice nineSlice = CreateNineSliceInternal(instance, instance.Name, rvf, container);
+            
             InitializeNineSlice(nineSlice, rvf);
 
             // NineSlice may be dependent on the texture for its location, so set the dimensions and positions *after* texture
@@ -453,8 +480,6 @@ namespace Gum.Wireframe
 
             mNineSlices.Add(nineSlice);
 
-            string guide = rvf.GetValue<string>("Guide");
-            SetGuideParent(parentIpso, nineSlice, guide);
 
             return nineSlice;
         }
@@ -466,9 +491,6 @@ namespace Gum.Wireframe
 
 
             RecursiveVariableFinder rvf = GetRvfForCurrentElementState(elementSave);
-
-            
-            SetGuideParent(null, solidRectangle, (string)rvf.GetValue("Guide"));
 
             SetAlphaAndColorValues(solidRectangle, rvf);
             SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(solidRectangle, elementSave, rvf);
@@ -491,8 +513,6 @@ namespace Gum.Wireframe
 
             RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(instance, elementStack);
 
-            SetGuideParent(parentIpso, solidRectangle, (string)rvf.GetValue("Guide"));
-
             SetAlphaAndColorValues(solidRectangle, rvf);
             WireframeObjectManager.Self.SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(solidRectangle, elementStack.Last().Element, rvf);
 
@@ -503,10 +523,10 @@ namespace Gum.Wireframe
         private void SetAlphaAndColorValues(SolidRectangle solidRectangle, RecursiveVariableFinder rvf)
         {
             Microsoft.Xna.Framework.Color color = new Microsoft.Xna.Framework.Color(
-                (int)rvf.GetValue("Red"),
-                (int)rvf.GetValue("Green"),
-                (int)rvf.GetValue("Blue"),
-                (int)rvf.GetValue("Alpha")
+                rvf.GetValue<int>("Red"),
+                rvf.GetValue<int>("Green"),
+                rvf.GetValue<int>("Blue"),
+                rvf.GetValue<int>("Alpha")
                 
                 );
             solidRectangle.Color = color;
@@ -531,11 +551,7 @@ namespace Gum.Wireframe
             RecursiveVariableFinder rvf = GetRvfForCurrentElementState(elementSave);
 
 
-            SetGuideParent(null, lineRectangle, (string)rvf.GetValue("Guide"));
-
             SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(lineRectangle, elementSave, rvf);
-
-
 
             return lineRectangle;
         }
@@ -561,9 +577,6 @@ namespace Gum.Wireframe
 
             RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(instance, elementStack);
 
-            SetGuideParent(parentIpso, lineRectangle, rvf.GetValue<string>("Guide"));
-
-            
             WireframeObjectManager.Self.SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(lineRectangle, elementStack.Last().Element, rvf);
 
             lineRectangle.Visible = rvf.GetValue<bool>("Visible");
@@ -581,8 +594,9 @@ namespace Gum.Wireframe
             return lineRectangle;
         }
 
-        private void SetGuideParent(IPositionedSizedObject parentIpso, IPositionedSizedObject ipso, string guideName)
+        private void SetGuideParent(IPositionedSizedObject parentIpso, GraphicalUiElement ipso, string guideName)
         {
+            // I dont't think we want to do this anymore because it should be handled by the GraphicalUiElement
             ipso.Parent = parentIpso;
 
             if (!string.IsNullOrEmpty(guideName))
@@ -604,11 +618,7 @@ namespace Gum.Wireframe
 
             Text text = CreateTextInternal(elementSave, elementSave.Name, rvf);
 
-            SetGuideParent(null, text, (string)rvf.GetValue("Guide"));
-
             SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(text, elementSave, rvf);
-
-
 
             text.EnableTextureCreation();
 
@@ -621,9 +631,6 @@ namespace Gum.Wireframe
 
             Text text = CreateTextInternal(instance, instance.Name, rvf);
             
-
-            SetGuideParent(parentRepresentation, text, (string)rvf.GetValue("Guide"));
-
             WireframeObjectManager.Self.SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(text, parent, rvf);
 
             return text;
@@ -777,13 +784,13 @@ namespace Gum.Wireframe
                     gumProjectSave.DefaultCanvasHeight,
                     out widthAfterPercentage, out heightAfterPercentage);
 
-                ipso.Width = widthAfterPercentage;
-                ipso.Height = heightAfterPercentage;
+                ((IPositionedSizedObject)ipso).Width = widthAfterPercentage;
+                ((IPositionedSizedObject)ipso).Height = heightAfterPercentage;
 
                 // This updates the texture in case the values are 0 so that the element can be positioned correctly
                 if (ipso is Text)
                 {
-                    ((Text)ipso).UpdateTextureToRender();
+                    (ipso as Text).UpdateTextureToRender();
                 }
 
                 float multiplierX;
@@ -802,8 +809,8 @@ namespace Gum.Wireframe
                     gumProjectSave.DefaultCanvasHeight,
                     out xAfterPercentage, out yAfterPercentage);
 
-                ipso.X = xAfterPercentage + multiplierX * ipso.Width;
-                ipso.Y = yAfterPercentage + multiplierY * ipso.Height;
+                ((IPositionedSizedObject)ipso).X = xAfterPercentage + multiplierX * ((IPositionedSizedObject)ipso).Width;
+                ((IPositionedSizedObject)ipso).Y = yAfterPercentage + multiplierY * ((IPositionedSizedObject)ipso).Height;
             }
             catch (Exception e)
             {

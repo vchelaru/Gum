@@ -175,6 +175,11 @@ namespace RenderingLibrary.Math.Geometry
             mLinePrimitive.Position.Y = this.GetAbsoluteY() ;
         }
 
+        void IPositionedSizedObject.SetParentDirect(IPositionedSizedObject parent)
+        {
+            mParent = parent;
+        }
+
         void IRenderable.Render(SpriteBatch spriteBatch, SystemManagers managers)
         {
             UpdatePoints();

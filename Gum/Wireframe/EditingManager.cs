@@ -228,12 +228,12 @@ namespace Gum.Wireframe
 
         public void UpdateSelectedObjectsPositionAndDimensions()
         {
-
+            var elementStack = SelectedState.Self.GetTopLevelElementStack();
             if (SelectedState.Self.SelectedInstances.GetCount() != 0)
             {
                 foreach (var instance in SelectedState.Self.SelectedInstances)
                 {
-                    RefreshPositionsAndScalesForInstance(instance);
+                    RefreshPositionsAndScalesForInstance(instance, elementStack);
 
                     //WireframeObjectManager.Self.SetInstanceIpsoDimensionsAndPositions(ipso,
                     //    SelectedState.Self.SelectedInstance,
@@ -243,7 +243,7 @@ namespace Gum.Wireframe
             }
             else
             {
-                IPositionedSizedObject ipso = WireframeObjectManager.Self.GetSelectedRepresentation();
+                GraphicalUiElement ipso = WireframeObjectManager.Self.GetSelectedRepresentation();
 
                 if (ipso != null)
                 {
@@ -257,7 +257,7 @@ namespace Gum.Wireframe
                 {
                     foreach (var instance in SelectedState.Self.SelectedElement.Instances)
                     {
-                        RefreshPositionsAndScalesForInstance(instance);
+                        RefreshPositionsAndScalesForInstance(instance, elementStack);
                     }
                 }
                 //WireframeObjectManager.Self.SetElementIpsoDimensionsAndPositions(
@@ -269,9 +269,9 @@ namespace Gum.Wireframe
             WireframeObjectManager.Self.UpdateScalesAndPositionsForSelectedChildren();
         }
 
-        public void RefreshPositionsAndScalesForInstance(InstanceSave instance)
+        public void RefreshPositionsAndScalesForInstance(InstanceSave instance, List<ElementWithState> elementStack)
         {
-            IPositionedSizedObject ipso = WireframeObjectManager.Self.GetRepresentation(instance);
+            IPositionedSizedObject ipso = WireframeObjectManager.Self.GetRepresentation(instance, elementStack);
 
             RecursiveVariableFinder rvf = new RecursiveVariableFinder(instance, SelectedState.Self.SelectedElement);
             WireframeObjectManager.Self.SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(ipso, SelectedState.Self.SelectedElement, rvf);
@@ -308,16 +308,16 @@ namespace Gum.Wireframe
             //////////////////////////////END EARLY OUT////////////////////////////////////
 
             bool hasChangeOccurred = false;
-
+            var elementStack = SelectedState.Self.GetTopLevelElementStack();
             if (SelectionManager.Self.HasSelection && SelectedState.Self.SelectedInstances.Count() == 0)
             {
                 // That means we have the entire component selected
-                hasChangeOccurred |= SideGrabbingActivityForInstanceSave(cursorXChange, cursorYChange, null);
+                hasChangeOccurred |= SideGrabbingActivityForInstanceSave(cursorXChange, cursorYChange, null, elementStack);
             }
 
             foreach (InstanceSave save in SelectedState.Self.SelectedInstances)
             {
-                hasChangeOccurred |= SideGrabbingActivityForInstanceSave(cursorXChange, cursorYChange, save);
+                hasChangeOccurred |= SideGrabbingActivityForInstanceSave(cursorXChange, cursorYChange, save, elementStack);
             }
 
             if (hasChangeOccurred)
@@ -333,15 +333,15 @@ namespace Gum.Wireframe
             }
         }
 
-        private bool SideGrabbingActivityForInstanceSave(float cursorXChange, float cursorYChange, InstanceSave instanceSave)
+        private bool SideGrabbingActivityForInstanceSave(float cursorXChange, float cursorYChange, InstanceSave instanceSave, List<ElementWithState> elementStack)
         {
             float changeXMultiplier;
             float changeYMultiplier;
             float widthMultiplier;
             float heightMultiplier;
-            CalculateMultipliers(instanceSave, out changeXMultiplier, out changeYMultiplier, out widthMultiplier, out heightMultiplier);
+            CalculateMultipliers(instanceSave, elementStack, out changeXMultiplier, out changeYMultiplier, out widthMultiplier, out heightMultiplier);
 
-            AdjustCursorChangeValuesForShiftDrag(ref cursorXChange, ref cursorYChange, instanceSave);
+            AdjustCursorChangeValuesForShiftDrag(ref cursorXChange, ref cursorYChange, instanceSave, elementStack);
 
             bool hasChangeOccurred = false;
 
@@ -368,7 +368,7 @@ namespace Gum.Wireframe
             return hasChangeOccurred;
         }
 
-        private void AdjustCursorChangeValuesForShiftDrag(ref float cursorXChange, ref float cursorYChange, InstanceSave instanceSave)
+        private void AdjustCursorChangeValuesForShiftDrag(ref float cursorXChange, ref float cursorYChange, InstanceSave instanceSave, List<ElementWithState> elementStack)
         {
             
             if (InputLibrary.Keyboard.Self.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift) ||
@@ -380,7 +380,7 @@ namespace Gum.Wireframe
 
                 if (supportsShift && instanceSave != null)
                 {
-                    IPositionedSizedObject ipso = WireframeObjectManager.Self.GetRepresentation(instanceSave);
+                    IPositionedSizedObject ipso = WireframeObjectManager.Self.GetRepresentation(instanceSave, elementStack);
 
                     Cursor cursor = Cursor.Self;
                     float cursorX = cursor.GetWorldX();
@@ -481,14 +481,14 @@ namespace Gum.Wireframe
             }
         }
 
-        private void CalculateMultipliers(InstanceSave instanceSave, out float changeXMultiplier, out float changeYMultiplier, out float widthMultiplier, out float heightMultiplier)
+        private void CalculateMultipliers(InstanceSave instanceSave, List<ElementWithState> elementStack, out float changeXMultiplier, out float changeYMultiplier, out float widthMultiplier, out float heightMultiplier)
         {
             changeXMultiplier = 0;
             changeYMultiplier = 0;
             widthMultiplier = 0;
             heightMultiplier = 0;
 
-            IPositionedSizedObject ipso = WireframeObjectManager.Self.GetRepresentation(instanceSave);
+            IPositionedSizedObject ipso = WireframeObjectManager.Self.GetRepresentation(instanceSave, elementStack);
             if (ipso == null)
             {
                 ipso = WireframeObjectManager.Self.GetRepresentation(SelectedState.Self.SelectedElement);

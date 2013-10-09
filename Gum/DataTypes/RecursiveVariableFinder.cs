@@ -38,8 +38,13 @@ namespace Gum.DataTypes
 
         public RecursiveVariableFinder(InstanceSave instanceSave, ElementSave container)
         {
-            ContainerType = VariableContainerType.InstanceSave;
+            if (instanceSave == null)
+            {
+                throw new ArgumentException("InstanceSave must not be null", "instanceSave");
+            }
 
+            ContainerType = VariableContainerType.InstanceSave;
+            
             mInstanceSave = instanceSave;
 
             mElementStack = new List<ElementWithState>() { new ElementWithState( container )};
@@ -47,6 +52,11 @@ namespace Gum.DataTypes
 
         public RecursiveVariableFinder(InstanceSave instanceSave, List<ElementWithState> elementStack)
         {
+            if (instanceSave == null)
+            {
+                throw new ArgumentException("InstanceSave must not be null", "instanceSave");
+            }
+
             ContainerType = VariableContainerType.InstanceSave;
 
             mInstanceSave = instanceSave;
@@ -113,7 +123,8 @@ namespace Gum.DataTypes
                     }
                     var allExposed = WireframeObjectManager.Self.GetExposedVariablesForThisInstance(mInstanceSave, instanceName, mElementStack);
 
-                    var found = mInstanceSave.GetVariableFromThisOrBase(mElementStack, variableName);
+                    bool onlyIfSetsValue = false;
+                    var found = mInstanceSave.GetVariableFromThisOrBase(mElementStack, variableName, false, onlyIfSetsValue);
                     if (found != null && !string.IsNullOrEmpty(found.ExposedAsName))
                     {
                         var exposed = allExposed.FirstOrDefault(item => item.Name == variableName);
@@ -123,6 +134,13 @@ namespace Gum.DataTypes
                             found = exposed;
                         }
                     }
+
+                    if (found == null || found.SetsValue == false || found.Value == null)
+                    {
+                        onlyIfSetsValue = true;
+                        found = mInstanceSave.GetVariableFromThisOrBase(mElementStack, variableName, false, true);
+                    }
+
                     return found;
                 case VariableContainerType.StateSave:
                     return mStateSave.GetVariableRecursive(variableName);

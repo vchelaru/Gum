@@ -71,10 +71,7 @@ namespace Gum.Debug
         {
             foreach (IPositionedSizedObject ipso in SelectionManager.Self.SelectedIpsos)
             {
-                if (!Renderer.Self.Layers[0].Renderables.Contains(ipso as IRenderable))
-                {
-                    throw new Exception("There are IPSOs that are part of the selected IPSOs which aren't being rendered");
-                }
+                AssertIsPartOfRenderer(ipso);
             }
         }
 
@@ -82,7 +79,12 @@ namespace Gum.Debug
         {
             if (ipso != null)
             {
-                if (!Renderer.Self.Layers[0].Renderables.Contains(ipso as IRenderable))
+                var whatToTest = ipso as IRenderable;
+                if (whatToTest is GraphicalUiElement)
+                {
+                    whatToTest = ((GraphicalUiElement)whatToTest).RenderableComponent;
+                }
+                if (!Renderer.Self.Layers[0].Renderables.Contains(whatToTest as IRenderable))
                 {
                     throw new Exception("Argument is not part of Renderer");
                 }

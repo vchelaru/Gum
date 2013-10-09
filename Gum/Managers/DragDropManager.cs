@@ -268,8 +268,12 @@ namespace Gum.Managers
             float worldX = SelectionManager.Self.Cursor.GetWorldX();
             float worldY = SelectionManager.Self.Cursor.GetWorldY();
 
+            List<ElementWithState> elementStack = new List<ElementWithState>();
+            elementStack.Add(new ElementWithState(SelectedState.Self.SelectedElement) { StateName = SelectedState.Self.SelectedStateSave.Name });
+
+
             IPositionedSizedObject ipsoOver = 
-                SelectionManager.Self.GetRepresentationAt(worldX, worldY, false);
+                SelectionManager.Self.GetRepresentationAt(worldX, worldY, false, elementStack);
 
             MultiButtonMessageBox mbmb = new MultiButtonMessageBox();
 

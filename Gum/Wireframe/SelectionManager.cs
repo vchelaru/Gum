@@ -361,8 +361,12 @@ namespace Gum.Wireframe
                         }
                         else
                         {
+                            List<ElementWithState> elementStack = new List<ElementWithState>();
+                            elementStack.Add(new ElementWithState(SelectedState.Self.SelectedElement));
+
+
                             representation =
-                                GetRepresentationAt(worldXAt, worldYAt, false);
+                                GetRepresentationAt(worldXAt, worldYAt, false, elementStack);
 
                             if (representation != null)
                             {
@@ -466,7 +470,7 @@ namespace Gum.Wireframe
 
 
 
-        public IPositionedSizedObject GetRepresentationAt(float x, float y, bool skipSelected)
+        public IPositionedSizedObject GetRepresentationAt(float x, float y, bool skipSelected, List<ElementWithState> elementStack)
         {
 
             IPositionedSizedObject ipsoOver = null;
@@ -476,14 +480,17 @@ namespace Gum.Wireframe
                 int m = 3;
             }
             // First check if we're over the current
-            IPositionedSizedObject selectedRepresentation = WireframeObjectManager.Self.GetSelectedRepresentation();
-
+            GraphicalUiElement selectedRepresentation = WireframeObjectManager.Self.GetSelectedRepresentation();
+            if (InputLibrary.Keyboard.Self.KeyDown(Microsoft.Xna.Framework.Input.Keys.Space))
+            {
+                int m = 3;
+            }
             int indexToStartAt = -1;
             if (skipSelected)
             {
                 if (selectedRepresentation != null)
                 {
-                    indexToStartAt = Renderer.Self.Layers[0].Renderables.IndexOf(selectedRepresentation as IRenderable);
+                    indexToStartAt = WireframeObjectManager.Self.AllIpsos.IndexOf(selectedRepresentation);
                 }
             }
             else
@@ -506,19 +513,17 @@ namespace Gum.Wireframe
                 // lists, and if so, check collision.
 
                 
-
-                Layer layer = Renderer.Self.Layers[0];
                 if (indexToStartAt == -1)
                 {
-                    indexToStartAt = layer.Renderables.Count;
+                    indexToStartAt = WireframeObjectManager.Self.AllIpsos.Count;
                 }
 
                 #region First check only visible objects
-                ipsoOver = ReverseLoopToFindIpso(x, y, indexToStartAt - 1, -1, true);
+                ipsoOver = ReverseLoopToFindIpso(x, y, indexToStartAt - 1, -1, true, elementStack);
 
-                if (ipsoOver == null && indexToStartAt != layer.Renderables.Count - 1)
+                if (ipsoOver == null && indexToStartAt != WireframeObjectManager.Self.AllIpsos.Count - 1)
                 {
-                    ipsoOver = ReverseLoopToFindIpso(x, y, layer.Renderables.Count - 1, indexToStartAt, true);
+                    ipsoOver = ReverseLoopToFindIpso(x, y, WireframeObjectManager.Self.AllIpsos.Count - 1, indexToStartAt, true, elementStack);
                 }
                 #endregion
 
@@ -526,11 +531,11 @@ namespace Gum.Wireframe
 
                 if (ipsoOver == null)
                 {
-                    ipsoOver = ReverseLoopToFindIpso(x, y, indexToStartAt - 1, -1, false);
+                    ipsoOver = ReverseLoopToFindIpso(x, y, indexToStartAt - 1, -1, false, elementStack);
 
-                    if (ipsoOver == null && indexToStartAt != layer.Renderables.Count - 1)
+                    if (ipsoOver == null && indexToStartAt != WireframeObjectManager.Self.AllIpsos.Count - 1)
                     {
-                        ipsoOver = ReverseLoopToFindIpso(x, y, layer.Renderables.Count - 1, indexToStartAt, false);
+                        ipsoOver = ReverseLoopToFindIpso(x, y, WireframeObjectManager.Self.AllIpsos.Count - 1, indexToStartAt, false, elementStack);
                     }
 
 
@@ -547,11 +552,11 @@ namespace Gum.Wireframe
                 InstanceSave instance;
                 ElementSave element;
 
-                GetElementOrInstanceForIpso(ipsoOver, out instance, out element);
+                GetElementOrInstanceForIpso(ipsoOver, elementStack, out instance, out element);
 
                 if (instance != null)
                 {
-                    ipsoOver = WireframeObjectManager.Self.GetRepresentation(instance);
+                    ipsoOver = WireframeObjectManager.Self.GetRepresentation(instance, elementStack);
                 }
                 else if(element != null) // both may be null if the user drag+dropped onto the wireframe window
                 {
@@ -571,35 +576,41 @@ namespace Gum.Wireframe
             return ipsoOver;
         }
 
-        private IPositionedSizedObject ReverseLoopToFindIpso(float x, float y, int indexToStartAt, int indexToEndAt, bool visibleToCheck)
+        private IPositionedSizedObject ReverseLoopToFindIpso(float x, float y, int indexToStartAt, int indexToEndAt, bool visibleToCheck, List<ElementWithState> elementStack)
         {
             IPositionedSizedObject ipsoOver = null;
 
-            Layer layer = Renderer.Self.Layers[0];
+            if (indexToEndAt < -1)
+            {
+                throw new Exception("Index cannot be less than -1");
+            }
+            if (indexToStartAt >= WireframeObjectManager.Self.AllIpsos.Count)
+            {
+                throw new Exception("Index must be less than the AllIpsos Count");
+            }
 
             // Let's try to get visible ones first, then if we don't find anything, look at invisible ones
             for (int i = indexToStartAt; i > indexToEndAt; i--)
             {
-                if (layer.Renderables[i] is IPositionedSizedObject)
+                
+                GraphicalUiElement ipso = WireframeObjectManager.Self.AllIpsos[i];
+
+                bool visible = IsIpsoVisible(ipso);
+
+
+                if (visible == visibleToCheck && ipso.HasCursorOver(x, y) && (WireframeObjectManager.Self.IsRepresentation(ipso)))
                 {
-                    IPositionedSizedObject ipso = layer.Renderables[i] as IPositionedSizedObject;
 
-                    bool visible = IsIpsoVisible(ipso);
-
-
-                    if (visible == visibleToCheck && ipso.HasCursorOver(x, y) && (WireframeObjectManager.Self.IsRepresentation(ipso)))
+                    // hold on, even though this is a valid IPSO and the cursor is over it, we gotta see if
+                    // it's an instance that is locked.  If so, we shouldn't select it!
+                    InstanceSave instanceSave = ipso.Tag as InstanceSave;
+                    if (instanceSave == null || instanceSave.Locked == false)
                     {
-                        // hold on, even though this is a valid IPSO and the cursor is over it, we gotta see if
-                        // it's an instance that is locked.  If so, we shouldn't select it!
-                        InstanceSave instanceSave = WireframeObjectManager.Self.GetInstance(ipso, InstanceFetchType.InstanceInCurrentElement);
-                        if (instanceSave == null || instanceSave.Locked == false)
-                        {
-                            ipsoOver = ipso;
-                            break;
-                        }
+                        ipsoOver = ipso;
+                        break;
                     }
-
                 }
+
             }
 
             return ipsoOver;
@@ -711,8 +722,12 @@ namespace Gum.Wireframe
                     float x = Cursor.GetWorldX();
                     float y = Cursor.GetWorldY();
 
+                    List<ElementWithState> elementStack = new List<ElementWithState>();
+                    elementStack.Add(new ElementWithState(SelectedState.Self.SelectedElement));
+
+
                     IPositionedSizedObject representation =
-                        GetRepresentationAt(x, y, Cursor.PrimaryDoubleClick);
+                        GetRepresentationAt(x, y, Cursor.PrimaryDoubleClick, elementStack);
                     ProjectVerifier.Self.AssertIsPartOfRenderer(representation);
                     bool hasChanged = true;
 
@@ -720,8 +735,12 @@ namespace Gum.Wireframe
                     {
                         InstanceSave selectedInstance;
                         ElementSave selectedElement;
-                        GetElementOrInstanceForIpso(representation, out selectedInstance, out selectedElement);
+                        GetElementOrInstanceForIpso(representation, elementStack, out selectedInstance, out selectedElement);
 
+                        if (selectedInstance == null && selectedElement == null)
+                        {
+                            throw new Exception("Either the selected element or instance should not be null");
+                        }
                         // The representation 
                         // will become invalid
                         // in the following if/else
@@ -753,7 +772,7 @@ namespace Gum.Wireframe
                                     SelectedState.Self.SelectedInstance = selectedInstance;
                                 }
                                 // See comment above on why we do this
-                                representation = WireframeObjectManager.Self.GetRepresentation(selectedInstance);
+                                representation = WireframeObjectManager.Self.GetRepresentation(selectedInstance, elementStack);
                             }
                         }
                         else
@@ -784,7 +803,7 @@ namespace Gum.Wireframe
                             List<IPositionedSizedObject> selectedIpsos = new List<IPositionedSizedObject>();
                             foreach (var instance in SelectedState.Self.SelectedInstances)
                             {
-                                selectedIpsos.Add(WireframeObjectManager.Self.GetRepresentation(instance));
+                                selectedIpsos.Add(WireframeObjectManager.Self.GetRepresentation(instance, elementStack));
                             }
                             SelectedIpsos = selectedIpsos;
                         }
@@ -805,63 +824,37 @@ namespace Gum.Wireframe
 
         }
 
-        private static void GetElementOrInstanceForIpso(IPositionedSizedObject representation, out InstanceSave selectedInstance, out ElementSave selectedElement)
+        private static void GetElementOrInstanceForIpso(IPositionedSizedObject representation, List<ElementWithState> elementStack, out InstanceSave selectedInstance, out ElementSave selectedElement)
         {
             selectedInstance = null;
             selectedElement = null;
 
-            bool shouldGetParent = false;
-            if (representation.Tag is InstanceSave)
-            {
-                // Eventually we'll need to support a true element stack if Parent is to be changed by states:
-                List<ElementWithState> elementStack = new List<ElementWithState>();
-                ElementWithState elementWithState = new ElementWithState( SelectedState.Self.SelectedElement);
-                elementWithState.StateName = SelectedState.Self.SelectedStateSave.Name;
-                elementStack.Add(elementWithState);
+            IPositionedSizedObject ipsoToUse = representation;
 
-                shouldGetParent = ((representation.Tag as InstanceSave).IsParentASibling(elementStack)) == false;
-            }
-            IPositionedSizedObject topParent = representation;
-
-            if (shouldGetParent)
+            while (ipsoToUse != null && ipsoToUse.Parent != null && WireframeObjectManager.Self.AllIpsos.Contains(ipsoToUse) == false)
             {
-                topParent = representation.GetTopParent();
+                ipsoToUse = ipsoToUse.Parent;
             }
 
-
-            InstanceSave topParentInstanceSave = WireframeObjectManager.Self.GetInstance(topParent, InstanceFetchType.InstanceInCurrentElement);
-
-            if (topParentInstanceSave == null)
+            if (ipsoToUse != null)
             {
-                // We're inside a Component
-                if (representation.Name == SelectedState.Self.SelectedElement.Name)
+                if (ipsoToUse.Tag is InstanceSave)
                 {
-                    selectedElement = SelectedState.Self.SelectedElement;
+                    selectedInstance = ipsoToUse.Tag as InstanceSave;
+                }
+                else if (ipsoToUse.Tag is ElementSave)
+                {
+                    selectedElement = ipsoToUse.Tag as ElementSave;
                 }
                 else
                 {
-                    InstanceSave representationInstance = WireframeObjectManager.Self.GetInstance(representation, InstanceFetchType.InstanceInCurrentElement);
-                    selectedInstance = representationInstance;
+                    throw new Exception("This should never happen");
                 }
             }
-            else
+
+            if (selectedInstance == null && selectedElement == null)
             {
-                // We're inside a Screen
-                if (representation.Parent == topParent || representation == topParent)
-                {
-                    selectedInstance = topParentInstanceSave;
-                }
-                else
-                {
-                    ElementSave elementSave = WireframeObjectManager.Self.GetElement(representation);
-
-                    if (elementSave != null)
-                    {
-                        selectedInstance = null;
-                        selectedElement = elementSave;
-                    }
-
-                }
+                throw new Exception("Either the selected element or instance should not be null");
             }
         }
 
@@ -877,12 +870,14 @@ namespace Gum.Wireframe
 
             List<IPositionedSizedObject> representations = new List<IPositionedSizedObject>();
 
+            var elementStack = SelectedState.Self.GetTopLevelElementStack();
             if (SelectedState.Self.SelectedInstances.GetCount() != 0)
             {
+                
                 foreach (var instance in SelectedState.Self.SelectedInstances)
                 {
                     IPositionedSizedObject toAdd = 
-                        WireframeObjectManager.Self.GetRepresentation(instance);
+                        WireframeObjectManager.Self.GetRepresentation(instance, elementStack);
                     if (toAdd != null)
                     {
                         representations.Add(toAdd);

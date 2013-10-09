@@ -681,6 +681,11 @@ namespace RenderingLibrary.Graphics
         }
         #endregion
 
+        void IPositionedSizedObject.SetParentDirect(IPositionedSizedObject parent)
+        {
+            mParent = parent;
+        }
+
         #region IVisible Implementation
 
         public bool Visible

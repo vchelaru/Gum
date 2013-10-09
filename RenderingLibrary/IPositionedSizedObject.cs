@@ -15,6 +15,7 @@ namespace RenderingLibrary
         string Name { get; set; }
         IPositionedSizedObject Parent { get; set; }
         ICollection<IPositionedSizedObject> Children{ get; }
+        void SetParentDirect(IPositionedSizedObject newParent);
         object Tag { get; set; }
     }
 
@@ -73,18 +74,6 @@ namespace RenderingLibrary
                 x > absoluteX && y > absoluteY && x < absoluteX + ipso.Width && y < absoluteY + ipso.Height;
         }
 
-        public static string GetAttachmentQualifiedName(this IPositionedSizedObject ipso)
-        {
-            if (ipso.Parent == null)
-            {
-                return ipso.Name;
-            }
-            else
-            {
-                return ipso.Parent.GetAttachmentQualifiedName() + "." + ipso.Name;
-            }
-
-        }
 
         public static IPositionedSizedObject GetTopParent(this IPositionedSizedObject ipso)
         {

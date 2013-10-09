@@ -117,7 +117,47 @@ namespace Gum.RenderingLibrary
             return qualifiedVariablePrefixWithDot;
         }
 
+                
+        public static string GetAttachmentQualifiedName(this IPositionedSizedObject ipso, List<ElementWithState> elementStack)
+        {
+            IPositionedSizedObject parent = ipso.Parent;
+            IPositionedSizedObject child = ipso;
 
+            while (parent != null)
+            {
+                if (parent.Tag is ElementSave)
+                {
+                    // we found it, so break!
+                    break;
+                }
+                else
+                {
+                    InstanceSave thisInstance = child.Tag as InstanceSave;
+
+                    if (thisInstance.IsParentASibling(elementStack))
+                    {
+                        child = parent;
+                        parent = parent.Parent;
+                    }
+                    else
+                    {
+                        // we found it, so break;
+                        break;
+                    }
+                }
+            }
+
+
+            if (parent == null)
+            {
+                return ipso.Name;
+            }
+            else
+            {
+                return parent.GetAttachmentQualifiedName(elementStack) + "." + ipso.Name;
+            }
+
+        }
 
 
     }

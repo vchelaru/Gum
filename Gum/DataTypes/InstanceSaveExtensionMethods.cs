@@ -13,6 +13,11 @@ namespace Gum.DataTypes
     {
         public static bool IsParentASibling(this InstanceSave instanceSave, List<ElementWithState> elementStack)
         {
+            if (instanceSave == null)
+            {
+                throw new ArgumentException("InstanceSave must not be null");
+            }
+
             RecursiveVariableFinder rvf = new RecursiveVariableFinder(instanceSave, elementStack);
 
             string parent = rvf.GetValue<string>("Parent");
@@ -82,7 +87,7 @@ namespace Gum.DataTypes
             {
                 variableSave = defaultState.GetVariableSave(instance.Name + "." + variable);
             }
-            if ( (variableSave == null  || (onlyIfSetsValue && variableSave.SetsValue == false)) && instanceBase != null)
+            if ( (variableSave == null  || (onlyIfSetsValue && (variableSave.SetsValue == false || variableSave.Value == null))) && instanceBase != null)
             {
                 RecursiveVariableFinder rvf = new RecursiveVariableFinder(instance, elementStack);
                 string thisState = stateToPullFrom.GetValue(instance.Name + ".State") as string;
