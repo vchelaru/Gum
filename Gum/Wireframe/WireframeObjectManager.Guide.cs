@@ -19,52 +19,54 @@ namespace Gum.Wireframe
         {
             ClearGuideRectangles();
 
-            for (int i = 0; i < ObjectFinder.Self.GumProjectSave.Guides.Count; i++)
+            if(ObjectFinder.Self.GumProjectSave != null)
             {
-                GuideRectangle guideRectangle = ObjectFinder.Self.GumProjectSave.Guides[i];
+                for (int i = 0; i < ObjectFinder.Self.GumProjectSave.Guides.Count; i++)
+                {
+                    GuideRectangle guideRectangle = ObjectFinder.Self.GumProjectSave.Guides[i];
 
-                LineRectangle rectangle = new LineRectangle();
+                    LineRectangle rectangle = new LineRectangle();
 
-                float absoluteX;
-                float absoluteY;
+                    float absoluteX;
+                    float absoluteY;
 
-                UnitConverter.Self.ConvertToPixelCoordinates(
-                    guideRectangle.X,
-                    guideRectangle.Y,
-                    guideRectangle.XUnitType,
-                    guideRectangle.YUnitType,
-                    ObjectFinder.Self.GumProjectSave.DefaultCanvasWidth,
-                    ObjectFinder.Self.GumProjectSave.DefaultCanvasHeight,
-                    0,0,
-                    out absoluteX,
-                    out absoluteY);
+                    UnitConverter.Self.ConvertToPixelCoordinates(
+                        guideRectangle.X,
+                        guideRectangle.Y,
+                        guideRectangle.XUnitType,
+                        guideRectangle.YUnitType,
+                        ObjectFinder.Self.GumProjectSave.DefaultCanvasWidth,
+                        ObjectFinder.Self.GumProjectSave.DefaultCanvasHeight,
+                        0, 0,
+                        out absoluteX,
+                        out absoluteY);
 
-                rectangle.X = absoluteX;
-                rectangle.Y = absoluteY;
+                    rectangle.X = absoluteX;
+                    rectangle.Y = absoluteY;
 
-                float absoluteWidth;
-                float absoluteHeight;
-                UnitConverter.Self.ConvertToPixelCoordinates(
-                    guideRectangle.Width,
-                    guideRectangle.Height,
-                    guideRectangle.WidthUnitType,
-                    guideRectangle.HeightUnitType,
-                    ObjectFinder.Self.GumProjectSave.DefaultCanvasWidth,
-                    ObjectFinder.Self.GumProjectSave.DefaultCanvasHeight,
-                    0,0,
-                    out absoluteWidth,
-                    out absoluteHeight);
+                    float absoluteWidth;
+                    float absoluteHeight;
+                    UnitConverter.Self.ConvertToPixelCoordinates(
+                        guideRectangle.Width,
+                        guideRectangle.Height,
+                        guideRectangle.WidthUnitType,
+                        guideRectangle.HeightUnitType,
+                        ObjectFinder.Self.GumProjectSave.DefaultCanvasWidth,
+                        ObjectFinder.Self.GumProjectSave.DefaultCanvasHeight,
+                        0, 0,
+                        out absoluteWidth,
+                        out absoluteHeight);
 
 
-                rectangle.Width = absoluteWidth;
-                rectangle.Height = absoluteHeight;
+                    rectangle.Width = absoluteWidth;
+                    rectangle.Height = absoluteHeight;
 
-                rectangle.Name = guideRectangle.Name;
-                rectangle.Color = new Microsoft.Xna.Framework.Color(1.0f, 1.0f, 1.0f, .5f);
+                    rectangle.Name = guideRectangle.Name;
+                    rectangle.Color = new Microsoft.Xna.Framework.Color(1.0f, 1.0f, 1.0f, .5f);
 
-                mGuideRectangles.Add(rectangle);
-                ShapeManager.Self.Add(rectangle);
-                
+                    mGuideRectangles.Add(rectangle);
+                    ShapeManager.Self.Add(rectangle);
+                }
 
             }
         }

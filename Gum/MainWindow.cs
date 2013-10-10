@@ -184,8 +184,15 @@ namespace Gum
 
         private void saveProjectToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            // Don't do an auto save, force it!
-            GumCommands.Self.FileCommands.ForceSaveProject();
+            if (ObjectFinder.Self.GumProjectSave == null)
+            {
+                MessageBox.Show("There is no project loaded.  Either load a project or create a new project before saving");
+            }
+            else
+            {
+                // Don't do an auto save, force it!
+                GumCommands.Self.FileCommands.ForceSaveProject();
+            }
         }
 
         private void wireframeControl1_DragEnter(object sender, DragEventArgs e)

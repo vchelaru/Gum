@@ -158,13 +158,15 @@ namespace Gum
 
             ObjectFinder.Self.GumProjectSave = mGumProjectSave;
 
-            mGumProjectSave.Initialize();
-            mGumProjectSave.AddNewStandardElementTypes();
-            mGumProjectSave.FixStandardVariables();
+            if (mGumProjectSave != null)
+            {
+                mGumProjectSave.Initialize();
+                mGumProjectSave.AddNewStandardElementTypes();
+                mGumProjectSave.FixStandardVariables();
 
-            FileManager.RelativeDirectory = FileManager.GetDirectory(fileName);
-            mGumProjectSave.RemoveDuplicateVariables();
-
+                FileManager.RelativeDirectory = FileManager.GetDirectory(fileName);
+                mGumProjectSave.RemoveDuplicateVariables();
+            }
 
             // Now that a new project is loaded, refresh the UI!
             ElementTreeViewManager.Self.RefreshUI();

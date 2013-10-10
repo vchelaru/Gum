@@ -195,7 +195,7 @@ namespace Gum.Managers
 
                     else
                     {
-                        DialogResult result = MessageBox.Show("Delete folder " + treeNode.Text + "?", "Delete", MessageBoxButtons.YesNo  );
+                        DialogResult result = MessageBox.Show("Delete folder " + treeNode.Text + "?", "Delete", MessageBoxButtons.YesNo);
 
                         if (result == DialogResult.Yes)
                         {
@@ -278,76 +278,89 @@ namespace Gum.Managers
 
         public void AddScreenClick()
         {
-            TextInputWindow tiw = new TextInputWindow();
-            tiw.Message = "Enter new Screen name:";
-
-            if (tiw.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            if (ObjectFinder.Self.GumProjectSave == null || string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave.FullFileName))
             {
-                string name = tiw.Result;
+                MessageBox.Show("You must first save a project before adding Screens");
+            }
+            else
+            {
+                TextInputWindow tiw = new TextInputWindow();
+                tiw.Message = "Enter new Screen name:";
 
-                string whyNotValid;
-
-                if (!NameVerifier.Self.IsScreenNameValid(name, out whyNotValid))
+                if (tiw.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                 {
-                    MessageBox.Show(whyNotValid);
-                }
-                else
-                {
-                    TreeNode nodeToAddTo = ElementTreeViewManager.Self.SelectedNode;
+                    string name = tiw.Result;
 
-                    while (nodeToAddTo != null && nodeToAddTo.Tag is ScreenSave && nodeToAddTo.Parent != null)
+                    string whyNotValid;
+
+                    if (!NameVerifier.Self.IsScreenNameValid(name, out whyNotValid))
                     {
-                        nodeToAddTo = nodeToAddTo.Parent;
+                        MessageBox.Show(whyNotValid);
                     }
+                    else
+                    {
+                        TreeNode nodeToAddTo = ElementTreeViewManager.Self.SelectedNode;
 
-                    string path = nodeToAddTo.GetFullFilePath();
+                        while (nodeToAddTo != null && nodeToAddTo.Tag is ScreenSave && nodeToAddTo.Parent != null)
+                        {
+                            nodeToAddTo = nodeToAddTo.Parent;
+                        }
 
-                    string relativeToScreens = FileManager.MakeRelative(path,
-                        FileLocations.Self.ScreensFolder);
+                        string path = nodeToAddTo.GetFullFilePath();
 
-                    ScreenSave screenSave = ProjectCommands.Self.AddScreen(relativeToScreens + name);
+                        string relativeToScreens = FileManager.MakeRelative(path,
+                            FileLocations.Self.ScreensFolder);
+
+                        ScreenSave screenSave = ProjectCommands.Self.AddScreen(relativeToScreens + name);
 
 
-                    RefreshUI();
+                        RefreshUI();
 
-                    SelectedState.Self.SelectedScreen = screenSave;
+                        SelectedState.Self.SelectedScreen = screenSave;
 
-                    GumCommands.Self.FileCommands.TryAutoSaveElement(screenSave);
-                    GumCommands.Self.FileCommands.TryAutoSaveProject();
+                        GumCommands.Self.FileCommands.TryAutoSaveElement(screenSave);
+                        GumCommands.Self.FileCommands.TryAutoSaveProject();
 
+                    }
                 }
             }
-
         }
 
         public void AddComponentClick()
         {
-            TextInputWindow tiw = new TextInputWindow();
-            tiw.Message = "Enter new Component name:";
-
-            if (tiw.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            if (ObjectFinder.Self.GumProjectSave == null || string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave.FullFileName))
             {
-                string name = tiw.Result;
+                MessageBox.Show("You must first save the project before adding a new component");
+            }
+            else
+            {
+                TextInputWindow tiw = new TextInputWindow();
+                tiw.Message = "Enter new Component name:";
 
-                string whyNotValid;
-
-                if (!NameVerifier.Self.IsComponentNameValid(name, out whyNotValid))
+                if (tiw.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                 {
-                    MessageBox.Show(whyNotValid);
-                }
-                else
-                {
+                    string name = tiw.Result;
+
+                    string whyNotValid;
+
+                    if (!NameVerifier.Self.IsComponentNameValid(name, out whyNotValid))
+                    {
+                        MessageBox.Show(whyNotValid);
+                    }
+                    else
+                    {
 
 
-                    ComponentSave componentSave = ProjectCommands.Self.AddComponent(name);
+                        ComponentSave componentSave = ProjectCommands.Self.AddComponent(name);
 
 
-                    RefreshUI();
+                        RefreshUI();
 
-                    SelectedState.Self.SelectedComponent = componentSave;
+                        SelectedState.Self.SelectedComponent = componentSave;
 
-                    GumCommands.Self.FileCommands.TryAutoSaveProject();
-                    GumCommands.Self.FileCommands.TryAutoSaveElement(componentSave);
+                        GumCommands.Self.FileCommands.TryAutoSaveProject();
+                        GumCommands.Self.FileCommands.TryAutoSaveElement(componentSave);
+                    }
                 }
             }
         }

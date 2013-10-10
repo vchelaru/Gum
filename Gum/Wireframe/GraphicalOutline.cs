@@ -14,7 +14,7 @@ namespace Gum.Wireframe
         #region Fields
 
         List<LineRectangle> mHighlightRectangles = new List<LineRectangle>();
-        IPositionedSizedObject mHighlightedIpso;
+        GraphicalUiElement mHighlightedIpso;
         Layer mUiLayer;
         #endregion
 
@@ -26,7 +26,7 @@ namespace Gum.Wireframe
             set;
         }
 
-        public IPositionedSizedObject HighlightedIpso
+        public GraphicalUiElement HighlightedIpso
         {
             set
             {
@@ -49,9 +49,9 @@ namespace Gum.Wireframe
             SetLineRectangleAroundIpso(GetOrMakeAtIndex(0), mHighlightedIpso);
 
 
-            if (mHighlightedIpso is NineSlice)
+            if (mHighlightedIpso.Component is NineSlice)
             {
-                NineSlice nineSlice = mHighlightedIpso as NineSlice;
+                NineSlice nineSlice = mHighlightedIpso.Component as NineSlice;
 
                 float topHeight = 0;
                 float centerHeight = 0;

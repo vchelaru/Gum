@@ -177,30 +177,30 @@ namespace Gum.Wireframe
                 {
                     if (mHighlightedIpso != null)
                     {
-                        UnhighlightIpso(mHighlightedIpso);
+                        UnhighlightIpso(mHighlightedIpso as GraphicalUiElement);
                     }
 
 
 
                     mHighlightedIpso = value;
 
-                    mGraphicalOutline.HighlightedIpso = mHighlightedIpso;
+                    mGraphicalOutline.HighlightedIpso = mHighlightedIpso as GraphicalUiElement;
 
                 }
             }
         }
 
-        private void UnhighlightIpso(IPositionedSizedObject highlightedIpso)
+        private void UnhighlightIpso(GraphicalUiElement highlightedIpso)
         {
-            if (highlightedIpso is Sprite)
+            if (highlightedIpso.Component is Sprite)
             {
                 mOverlaySprite.Visible = false;
             }
-            else if (highlightedIpso is NineSlice)
+            else if (highlightedIpso.Component is NineSlice)
             {
                 mOverlayNineSlice.Visible = false;
             }
-            else if (highlightedIpso is LineRectangle)
+            else if (highlightedIpso.Component is LineRectangle)
             {
                 mOverlaySolidRectangle.Visible = false;
             }
@@ -210,7 +210,14 @@ namespace Gum.Wireframe
         {
             get
             {
-                return HighlightedIpso as Sprite;
+                if (HighlightedIpso == null)
+                {
+                    return null;
+                }
+                else
+                {
+                    return (HighlightedIpso as GraphicalUiElement).Component as Sprite;
+                }
             }
         }
 
@@ -218,7 +225,14 @@ namespace Gum.Wireframe
         {
             get
             {
-                return HighlightedIpso as NineSlice;
+                if (HighlightedIpso == null)
+                {
+                    return null;
+                }
+                else
+                {
+                    return (HighlightedIpso as GraphicalUiElement).Component as NineSlice;
+                }
             }
         }
 
@@ -226,7 +240,14 @@ namespace Gum.Wireframe
         {
             get
             {
-                return HighlightedIpso as LineRectangle;
+                if (HighlightedIpso == null)
+                {
+                    return null;
+                }
+                else
+                {
+                    return (HighlightedIpso as GraphicalUiElement).Component as LineRectangle;
+                }
             }
         }
 

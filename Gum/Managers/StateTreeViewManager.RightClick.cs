@@ -16,22 +16,29 @@ namespace Gum.Managers
 
         internal void AddStateClick()
         {
-            TextInputWindow tiw = new TextInputWindow();
-            tiw.Message = "Enter new State name:";
-
-            if (tiw.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            if (SelectedState.Self.SelectedElement == null)
             {
-                string name = tiw.Result;
+                MessageBox.Show("You must first select an element to add a state");
+            }
+            else
+            {
+                TextInputWindow tiw = new TextInputWindow();
+                tiw.Message = "Enter new State name:";
 
-                StateSave stateSave = ElementCommands.Self.AddState(
-                    SelectedState.Self.SelectedElement, name);
-
-                RefreshUI(SelectedState.Self.SelectedElement);
-
-                SelectedState.Self.SelectedStateSave = stateSave;
-                if (ProjectManager.Self.GeneralSettingsFile.AutoSave)
+                if (tiw.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                 {
-                    ProjectManager.Self.SaveElement(SelectedState.Self.SelectedElement);
+                    string name = tiw.Result;
+
+                    StateSave stateSave = ElementCommands.Self.AddState(
+                        SelectedState.Self.SelectedElement, name);
+
+                    RefreshUI(SelectedState.Self.SelectedElement);
+
+                    SelectedState.Self.SelectedStateSave = stateSave;
+                    if (ProjectManager.Self.GeneralSettingsFile.AutoSave)
+                    {
+                        ProjectManager.Self.SaveElement(SelectedState.Self.SelectedElement);
+                    }
                 }
             }
         }
