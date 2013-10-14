@@ -145,16 +145,11 @@ namespace Gum.Managers
 
 
             // Save the change
-            if (SelectedState.Self.SelectedElement != null &&  ProjectManager.Self.GeneralSettingsFile.AutoSave)
+            if (SelectedState.Self.SelectedElement != null)
             {
-                ProjectManager.Self.SaveElement(SelectedState.Self.SelectedElement);
+                GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
             }
-
-            // Why do we save the project?  
-            // We save the element above, so
-            // we can probably just leave it at that.
-            //ProjectManager.Self.SaveProject();
-
+            
 
             // Inefficient but let's do this for now - we can make it more efficient later
             WireframeObjectManager.Self.RefreshAll(true);
