@@ -331,6 +331,7 @@ namespace Gum.Managers
             variableSave.Type = "string";
             variableSave.Name = "Parent";
             variableSave.CanOnlyBeSetInDefaultState = true;
+            variableSave.CustomTypeConverter = new AvailableInstancesConverter();
             variables.Variables.Add(variableSave);
         }
 

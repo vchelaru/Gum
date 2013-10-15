@@ -128,11 +128,7 @@ namespace Gum.Wireframe
 
         private bool HandleNudge(Keys keyData)
         {
-            System.Console.WriteLine(keyData);
-            if (keyData.ToString() == "Up, Shift")
-            {
-                int m = 3;
-            }
+
             bool handled = false;
 
             int nudgeX = 0;

@@ -133,6 +133,8 @@ namespace Gum.Managers
 
                 ReactIfChangedMemberIsCustomTextureCoordinates(parentElement, changedMember, oldValue);
 
+                ReactIfChangedMemberIsParent(parentElement, changedMember, oldValue);
+
                 PluginManager.Self.VariableSet(parentElement, instance, changedMember, oldValue);
 
 
@@ -154,6 +156,20 @@ namespace Gum.Managers
             // Inefficient but let's do this for now - we can make it more efficient later
             WireframeObjectManager.Self.RefreshAll(true);
             SelectionManager.Self.Refresh();
+        }
+
+        private void ReactIfChangedMemberIsParent(ElementSave parentElement, string changedMember, object oldValue)
+        {
+            VariableSave variable = SelectedState.Self.SelectedVariableSave;
+            // Eventually need to handle tunneled variables
+            if (variable != null && variable.GetRootName() == "Parent")
+            {
+                if (variable.Value == "<NONE>")
+                {
+                    variable.Value = null;
+                }
+
+            }
         }
 
         private void ReactIfChangedMemberIsCustomTextureCoordinates(ElementSave parentElement, string changedMember, object oldValue)

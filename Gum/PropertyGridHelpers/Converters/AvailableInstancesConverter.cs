@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Gum.ToolStates;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -30,5 +32,30 @@ namespace Gum.PropertyGridHelpers.Converters
         }
 
 
+
+        public override TypeConverter.StandardValuesCollection GetStandardValues(ITypeDescriptorContext context)
+        {
+            List<string> values;
+
+            var element = SelectedState.Self.SelectedElement;
+
+            if (element == null)
+            {
+                values = new List<string>();
+            }
+            else
+            {
+                values = SelectedState.Self.SelectedElement.Instances
+                    .Where(item=>item != SelectedState.Self.SelectedInstance)
+                    .Select(item => item.Name)
+                    .ToList<string>();
+            }
+
+            values.Insert(0, "<NONE>");
+
+
+            return new StandardValuesCollection(values);
+
+        }
     }
 }
