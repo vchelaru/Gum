@@ -134,19 +134,28 @@ namespace Gum.Wireframe
             int nudgeX = 0;
             int nudgeY = 0;
 
-            if ((keyData & Keys.Up) == Keys.Up)
+            Keys extracted = keyData;
+            if (keyData >= Keys.KeyCode)
+            {
+                int value = (int)(keyData) + (int)Keys.Modifiers;
+
+                extracted = (Keys)value;
+            }
+
+
+            if (extracted == Keys.Up)
             {
                 nudgeY = -1;
             }
-            if ((keyData & Keys.Down) == Keys.Down)
+            if (extracted == Keys.Down)
             {
                 nudgeY = 1;
             }
-            if ((keyData & Keys.Right) == Keys.Right)
+            if (extracted == Keys.Right)
             {
                 nudgeX = 1;
             }
-            if ((keyData & Keys.Left) == Keys.Left)
+            if (extracted == Keys.Left)
             {
                 nudgeX = -1;
             }

@@ -339,9 +339,10 @@ namespace Gum
 
             if (dialogResult == DialogResult.OK)
             {
-                string folder = FileManager.GetDirectory(fileName);
-
-                Process.Start(folder);
+                // Let's select the file instead of just opening the folder
+                //string folder = FileManager.GetDirectory(fileName);
+                //Process.Start(folder);
+                Process.Start("explorer.exe", "/select," + fileName);
             }
         }
 

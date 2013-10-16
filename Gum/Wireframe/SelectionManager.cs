@@ -320,6 +320,10 @@ namespace Gum.Wireframe
                     SelectionActivity();
                     ProjectVerifier.Self.AssertSelectedIpsosArePartOfRenderer();
                 }
+                else if (!Cursor.IsInWindow)
+                {
+                    HighlightedIpso = null;
+                }
 
                 ProjectVerifier.Self.AssertSelectedIpsosArePartOfRenderer();
 

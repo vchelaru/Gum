@@ -7,13 +7,15 @@ using RenderingLibrary.Graphics;
 
 namespace Gum.Wireframe
 {
-    public class GraphicalUiElement : IRenderable, IPositionedSizedObject
+    public class GraphicalUiElement : IRenderable, IPositionedSizedObject, IVisible
     {
         #region Fields
 
-        IRenderable mContainedObject;
+        IRenderable mContainedObjectAsRenderable;
         // to save on casting:
         IPositionedSizedObject mContainedObjectAsIpso;
+        IVisible mContainedObjectAsIVisible;
+
         GraphicalUiElement mWhatContainsThis;
 
         List<GraphicalUiElement> mWhatThisContains = new List<GraphicalUiElement>();
@@ -32,28 +34,28 @@ namespace Gum.Wireframe
 
         Microsoft.Xna.Framework.Graphics.BlendState IRenderable.BlendState
         {
-            get { return mContainedObject.BlendState; }
+            get { return mContainedObjectAsRenderable.BlendState; }
         }
 
         bool IRenderable.Wrap
         {
-            get { return mContainedObject.Wrap; }
+            get { return mContainedObjectAsRenderable.Wrap; }
         }
 
         void IRenderable.Render(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch, SystemManagers managers)
         {
-            mContainedObject.Render(spriteBatch, managers);
+            mContainedObjectAsRenderable.Render(spriteBatch, managers);
         }
 
         float IRenderable.Z
         {
             get
             {
-                return mContainedObject.Z;
+                return mContainedObjectAsRenderable.Z;
             }
             set
             {
-                mContainedObject.Z = value;
+                mContainedObjectAsRenderable.Z = value;
             }
         }
 
@@ -192,8 +194,9 @@ namespace Gum.Wireframe
                 mWhatContainsThis.mWhatThisContains.Add(this);
             }
             
-            mContainedObject = containedObject;
-            mContainedObjectAsIpso = mContainedObject as IPositionedSizedObject;
+            mContainedObjectAsRenderable = containedObject;
+            mContainedObjectAsIpso = mContainedObjectAsRenderable as IPositionedSizedObject;
+            mContainedObjectAsIVisible = mContainedObjectAsRenderable as IVisible;
         }
 
         #endregion
@@ -205,13 +208,13 @@ namespace Gum.Wireframe
         {
             get
             {
-                if (mContainedObject is GraphicalUiElement)
+                if (mContainedObjectAsRenderable is GraphicalUiElement)
                 {
-                    return ((GraphicalUiElement)mContainedObject).RenderableComponent;
+                    return ((GraphicalUiElement)mContainedObjectAsRenderable).RenderableComponent;
                 }
                 else
                 {
-                    return mContainedObject;
+                    return mContainedObjectAsRenderable;
                 }
 
             }
@@ -220,6 +223,28 @@ namespace Gum.Wireframe
         public override string ToString()
         {
             return Name;
+        }
+
+        bool IVisible.Visible
+        {
+            get
+            {
+                return mContainedObjectAsIVisible.Visible;
+            }
+            set
+            {
+                mContainedObjectAsIVisible.Visible = value;
+            }
+        }
+
+        bool IVisible.AbsoluteVisible
+        {
+            get { return mContainedObjectAsIVisible.AbsoluteVisible; }
+        }
+
+        IVisible IVisible.Parent
+        {
+            get { return this.Parent as IVisible; }
         }
     }
 }

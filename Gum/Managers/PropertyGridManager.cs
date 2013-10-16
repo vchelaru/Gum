@@ -164,7 +164,7 @@ namespace Gum.Managers
             // Eventually need to handle tunneled variables
             if (variable != null && variable.GetRootName() == "Parent")
             {
-                if (variable.Value == "<NONE>")
+                if ((variable.Value as string) == "<NONE>")
                 {
                     variable.Value = null;
                 }
