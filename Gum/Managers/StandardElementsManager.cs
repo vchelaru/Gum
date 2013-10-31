@@ -9,36 +9,10 @@ using Gum.Plugins;
 using Gum.RenderingLibrary;
 using Gum.PropertyGridHelpers.Converters;
 using Microsoft.Xna.Framework;
+using Gum.Wireframe;
 
 namespace Gum.Managers
 {
-    #region Enums
-
-    public enum GeneralUnitType
-    {
-        PixelsFromSmall,
-        PixelsFromLarge,
-        PixelsFromMiddle,
-        Percentage,
-        PercentageOfFile
-    }
-
-    public enum PositionUnitType
-    {
-        PixelsFromLeft,
-        PixelsFromTop,
-        PercentageWidth,
-        PercentageHeight,
-        PixelsFromRight,
-        PixelsFromBottom,
-        PixelsFromCenterX,
-        PixelsFromCenterY
-
-    }
-
-
-
-    #endregion
 
     public class StandardElementsManager
     {

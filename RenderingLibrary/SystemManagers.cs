@@ -10,7 +10,13 @@ namespace RenderingLibrary
 {
     public class SystemManagers
     {
+        #region Fields
+
         int mPrimaryThreadId;
+
+        #endregion
+
+        #region Properties
 
         public Renderer Renderer
         {
@@ -50,6 +56,19 @@ namespace RenderingLibrary
                 return threadId == mPrimaryThreadId;
             }
         }
+
+        #endregion
+
+        public void Activity(double currentTime)
+        {
+            SpriteManager.Activity(currentTime);
+        }
+
+        public void Draw()
+        {
+            Renderer.Draw(this);
+        }
+
 
         public void Initialize(GraphicsDevice graphicsDevice)
         {

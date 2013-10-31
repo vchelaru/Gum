@@ -264,9 +264,6 @@ namespace Gum.Wireframe
                 //    ipso,
                 //    SelectedState.Self.SelectedElement);
             }
-
-
-            WireframeObjectManager.Self.UpdateScalesAndPositionsForSelectedChildren();
         }
 
         public void RefreshPositionsAndScalesForInstance(InstanceSave instance, List<ElementWithState> elementStack)

@@ -39,14 +39,14 @@ namespace Gum.Wireframe
 
                 if (mHighlightedIpso != null)
                 {
-                    UpdateLineRectanglesToHighlight();
+                    UpdateHighlightElements();
                 }
             }
         }
 
-        private void UpdateLineRectanglesToHighlight()
+        private void UpdateHighlightElements()
         {
-            SetLineRectangleAroundIpso(GetOrMakeAtIndex(0), mHighlightedIpso);
+            SetLineRectangleAroundIpso(GetOrMakeRectangleAtIndex(0), mHighlightedIpso);
 
 
             if (mHighlightedIpso.Component is NineSlice)
@@ -75,14 +75,14 @@ namespace Gum.Wireframe
                     centerHeight = nineSlice.Height - (topHeight + bottomHeight);
                     centerWidth = nineSlice.Width - (leftWidth + rightWidth);
 
-                    LineRectangle tallRectangle = GetOrMakeAtIndex(1);
+                    LineRectangle tallRectangle = GetOrMakeRectangleAtIndex(1);
                     tallRectangle.Color = Color.Red;
                     tallRectangle.X = nineSlice.GetAbsoluteX() + leftWidth;
                     tallRectangle.Y = nineSlice.GetAbsoluteY();
                     tallRectangle.Width = centerWidth;
                     tallRectangle.Height = nineSlice.Height;
 
-                    LineRectangle wideRectangle = GetOrMakeAtIndex(2);
+                    LineRectangle wideRectangle = GetOrMakeRectangleAtIndex(2);
                     wideRectangle.Color = Color.Red;
                     wideRectangle.X = nineSlice.GetAbsoluteX();
                     wideRectangle.Y = nineSlice.GetAbsoluteY() + topHeight;
@@ -128,7 +128,7 @@ namespace Gum.Wireframe
             }
         }
 
-        LineRectangle GetOrMakeAtIndex(int i)
+        LineRectangle GetOrMakeRectangleAtIndex(int i)
         {
             if (i < mHighlightRectangles.Count)
             {

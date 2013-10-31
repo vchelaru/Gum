@@ -5,14 +5,7 @@ using System.Text;
 
 namespace Gum.DataTypes
 {
-    public enum DimensionUnitType
-    {
-        Absolute,
-        Percentage,
-        RelativeToContainer,
-        PercentageOfSourceFile
-    }
-    
+   
     public class GuideRectangle : NamedRectangle
     {
         public DimensionUnitType WidthUnitType;

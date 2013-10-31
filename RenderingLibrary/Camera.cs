@@ -31,6 +31,10 @@ namespace RenderingLibrary
         public float AbsoluteTop
         {
             get { return Y - (ClientHeight / 2.0f) / Zoom; }
+            set
+            {
+                Y = value + (ClientHeight / 2.0f) / Zoom;
+            }
         }
 
         public float AbsoluteBottom
@@ -41,6 +45,10 @@ namespace RenderingLibrary
         public float AbsoluteLeft
         {
             get { return X - (ClientWidth / 2.0f) / Zoom; }
+            set
+            {
+                X = value + (ClientWidth / 2.0f) / Zoom;
+            }
         }
 
         public float AbsoluteRight

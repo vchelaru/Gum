@@ -467,105 +467,7 @@ namespace Gum.Wireframe
             return default(T);
         }
 
-
-        internal void UpdateScalesAndPositionsForSelectedChildren()
-        {
-            List<ElementWithState> elementStack = new List<ElementWithState>();
-            elementStack.Add(new ElementWithState(SelectedState.Self.SelectedElement));
-            foreach (IPositionedSizedObject selectedIpso in SelectionManager.Self.SelectedIpsos)
-            {
-                UpdateScalesAndPositionsForSelectedChildren(selectedIpso as GraphicalUiElement, selectedIpso.Tag as InstanceSave, elementStack);
-            }
-        }
-
-        internal void UpdateScalesAndPositionsForChildren(List<GraphicalUiElement> children, List<ElementWithState> elementStack)
-        {
-            foreach (IPositionedSizedObject selectedIpso in children)
-            {
-                UpdateScalesAndPositionsForSelectedChildren(selectedIpso as GraphicalUiElement, selectedIpso.Tag as InstanceSave, elementStack);
-            }
-        }
-
-        void UpdateScalesAndPositionsForSelectedChildren(GraphicalUiElement ipso, InstanceSave instanceSave, List<ElementWithState> elementStack)
-        {
-            if (ipso == null)
-            {
-                throw new ArgumentException("ipso must not be null");
-            }
-            if (ipso.Children.Count() != 0 && ipso.Children.Any(item => item is GraphicalUiElement) == false)
-            {
-                throw new Exception("All GraphicalUiElement children should also be GraphicalUiElements");
-            }
-
-            float width = ((IPositionedSizedObject)ipso).Width;
-            float height = ((IPositionedSizedObject)ipso).Height;
-            if ((width == 0 || height == 0))
-            {
-                int m = 3;
-            }
-
-
-
-
-            ElementSave selectedElement = null;
-
-            bool wasAdded = TryAddToElementStack(instanceSave, elementStack, out selectedElement);
-
-            // Let's do children of the instance first
-            Predicate<InstanceSave> predicate = (childInstance) => childInstance != null && !childInstance.IsParentASibling(elementStack);
-            SetWidthPositionOnIpsoChildren(ipso, elementStack, selectedElement, predicate);
-
-            
-            // pop the stack, then do siblings
-            if (wasAdded)
-            {
-                elementStack.Remove(selectedElement);
-            }
-
-            predicate = (childInstance) => childInstance != null && childInstance.IsParentASibling(elementStack);
-            SetWidthPositionOnIpsoChildren(ipso, elementStack, selectedElement, predicate);
-
-            if (ipso != null)
-            {
-                // Now we can calculate the width/height of this thing
-                width = ((IPositionedSizedObject)ipso).Width;
-                height = ((IPositionedSizedObject)ipso).Height;
-                if ((width == 0 || height == 0) && (ipso.Component is Sprite == false && ipso.Component is Text == false))
-                {
-                    float requiredWidth;
-                    float requiredHeight;
-
-                    GetRequiredDimensionsFromContents(ipso, out requiredWidth, out requiredHeight);
-
-                    if (((IPositionedSizedObject)ipso).Width == 0)
-                    {
-                        ((IPositionedSizedObject)ipso).Width = requiredWidth;
-                    }
-                    if (((IPositionedSizedObject)ipso).Height == 0)
-                    {
-                        ((IPositionedSizedObject)ipso).Height = requiredHeight;
-                    }
-
-                    wasAdded = TryAddToElementStack(instanceSave, elementStack, out selectedElement);
-
-                    // Let's do children of the instance first
-                    predicate = (childInstance) => childInstance != null && !childInstance.IsParentASibling(elementStack);
-                    SetWidthPositionOnIpsoChildren(ipso, elementStack, selectedElement, predicate);
-
-                    // pop the stack, then do siblings
-                    if (wasAdded)
-                    {
-                        elementStack.Remove(selectedElement);
-                    }
-
-                    predicate = (childInstance) => childInstance != null && childInstance.IsParentASibling(elementStack);
-                    SetWidthPositionOnIpsoChildren(ipso, elementStack, selectedElement, predicate);
-
-                }
-            }
-
-        }
-
+               
         private static bool TryAddToElementStack(InstanceSave instanceSave, List<ElementWithState> elementStack, out ElementSave selectedElement)
         {
             bool toReturn = false;
@@ -601,32 +503,6 @@ namespace Gum.Wireframe
                 requiredHeight = System.Math.Max(requiredHeight, child.Y + child.Height);
             }
         }
-
-        private void SetWidthPositionOnIpsoChildren(GraphicalUiElement ipso, List<ElementWithState> elementStack, ElementSave selectedElement, Predicate<InstanceSave> predicate)
-        {
-            SetWidthPositionOnIpsoChildren(ipso.Children, elementStack, selectedElement, predicate);
-        }
-
-        private void SetWidthPositionOnIpsoChildren(IEnumerable<IPositionedSizedObject> children, List<ElementWithState> elementStack, ElementSave selectedElement, Predicate<InstanceSave> predicate)
-        {
-            if (children.Count() != 0 && children.Any(item => item is GraphicalUiElement) == false)
-            {
-                throw new Exception("All GraphicalUiElement children should also be GraphicalUiElements");
-            }
-            // Make sure we only look at IPSOs that actually represent a Gum element/instance
-            foreach (GraphicalUiElement child in children.Where(item=>item.Tag != null && item.Tag is InstanceSave))
-            {
-                InstanceSave childInstance = child.Tag as InstanceSave;
-
-                // ignore siblings:
-                if (predicate(childInstance))
-                {
-                    RecursiveVariableFinder rvf = new RecursiveVariableFinder(childInstance, elementStack);
-                    SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(child, selectedElement, rvf);
-                    UpdateScalesAndPositionsForSelectedChildren(child, childInstance, elementStack);
-                }
-
-            }
-        }
+        
     }
 }

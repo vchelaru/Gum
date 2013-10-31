@@ -158,6 +158,8 @@ namespace RenderingLibrary.Graphics
             pixels[0] = Color.White;
             pixels[1] = Color.Transparent;
             mDottedLineTexture.SetData<Color>(pixels);
+
+            mCamera.UpdateClient();
         }
 
         public Layer AddLayer()

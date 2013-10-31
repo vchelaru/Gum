@@ -41,7 +41,6 @@ namespace Gum.Wireframe
 
         #endregion
 
-
         #region Fields
         
         static SelectionManager mSelf;
@@ -276,6 +275,7 @@ namespace Gum.Wireframe
         }
         #endregion
 
+        #region Methods
 
         public SelectionManager()
         {
@@ -931,5 +931,7 @@ namespace Gum.Wireframe
 
             mResizeHandles.Visible = false;
         }
+
+        #endregion
     }
 }

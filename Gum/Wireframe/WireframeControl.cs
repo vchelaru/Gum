@@ -63,6 +63,11 @@ namespace Gum.Wireframe
 
         #region Properties
 
+        public LineRectangle ScreenBounds
+        {
+            get { return mScreenBounds; }
+        }
+
         new InputLibrary.Cursor Cursor
         {
             get

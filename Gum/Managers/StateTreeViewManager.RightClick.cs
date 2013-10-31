@@ -71,7 +71,8 @@ namespace Gum.Managers
                     {
                         SelectedState.Self.SelectedStateSave.Name = tiw.Result;
                         GumCommands.Self.GuiCommands.RefreshStateTreeView();
-                        GumCommands.Self.FileCommands.TryAutoSaveProject();
+                        // I don't think we need to save the project when renaming a state:
+                        //GumCommands.Self.FileCommands.TryAutoSaveProject();
 
                         GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
                     }
