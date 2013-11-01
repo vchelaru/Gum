@@ -494,22 +494,22 @@ namespace Gum.Wireframe
 
                 if (mXOrigin == HorizontalAlignment.Center)
                 {
-                    unitOffsetX -= this.Width / 2.0f;
+                    unitOffsetX -= mContainedObjectAsIpso.Width / 2.0f;
                 }
                 else if (mXOrigin == HorizontalAlignment.Right)
                 {
-                    unitOffsetX -= this.Width;
+                    unitOffsetX -= mContainedObjectAsIpso.Width;
                 }
                 // no need to handle left
 
 
                 if (mYOrigin == VerticalAlignment.Center)
                 {
-                    unitOffsetY -= this.Height / 2.0f;
+                    unitOffsetY -= mContainedObjectAsIpso.Height / 2.0f;
                 }
                 else if (mYOrigin == VerticalAlignment.Bottom)
                 {
-                    unitOffsetY -= this.Height;
+                    unitOffsetY -= mContainedObjectAsIpso.Height;
                 }
                 // no need to handle top
 

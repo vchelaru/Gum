@@ -933,6 +933,15 @@ namespace Gum.Managers
                     throw new InvalidOperationException();
                 }
             }
+            else if (treeNode.IsStandardElementTreeNode() ||
+                treeNode.IsComponentsFolderTreeNode() ||
+                treeNode.IsScreenTreeNode())
+            {
+                ElementSave element = treeNode.Tag as ElementSave;
+
+
+                string toReturn = treeNode.Parent.GetFullFilePath() + treeNode.Text + "." + element.FileExtension;
+            }
             else
             {
                 string toReturn = treeNode.Parent.GetFullFilePath() + treeNode.Text + "\\";
