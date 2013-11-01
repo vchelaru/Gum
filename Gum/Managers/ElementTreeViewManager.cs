@@ -934,13 +934,15 @@ namespace Gum.Managers
                 }
             }
             else if (treeNode.IsStandardElementTreeNode() ||
-                treeNode.IsComponentsFolderTreeNode() ||
+                treeNode.IsComponentTreeNode() ||
                 treeNode.IsScreenTreeNode())
             {
                 ElementSave element = treeNode.Tag as ElementSave;
 
 
                 string toReturn = treeNode.Parent.GetFullFilePath() + treeNode.Text + "." + element.FileExtension;
+
+                return toReturn;
             }
             else
             {

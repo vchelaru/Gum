@@ -252,7 +252,7 @@ namespace Gum.Wireframe
                 RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(SelectedState.Self.SelectedStateSave);
 
                 string guide = rvf.GetValue<string>("Guide");
-                SetGuideParent(container, element, guide, false);
+                SetGuideParent(container, element, guide, container == null);
             }
 
 

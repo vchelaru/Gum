@@ -238,12 +238,19 @@ namespace Gum.Managers
                 else if (SelectedState.Self.SelectedScreen != null ||
                     SelectedState.Self.SelectedComponent != null)
                 {
+                    mMenuStrip.Items.Add("View in explorer", null, HandleViewInExplorer);
+
+
                     mAddInstance.Text = "Add object to " + SelectedState.Self.SelectedElement.Name;
                     mMenuStrip.Items.Add(mAddInstance);
                     mMenuStrip.Items.Add(mSaveObject);
 
                     mDeleteObject.Text = "Delete " + SelectedState.Self.SelectedElement.ToString();
                     mMenuStrip.Items.Add(mDeleteObject);
+
+
+
+
                 }
                 else if (SelectedState.Self.SelectedStandardElement != null)
                 {
