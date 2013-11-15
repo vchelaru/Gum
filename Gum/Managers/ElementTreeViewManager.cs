@@ -697,6 +697,15 @@ namespace Gum.Managers
 
         public void RefreshUI(ElementSave elementSave)
         {
+            RecordSelection();
+
+            RefreshUIInternal(elementSave);
+
+            SelectRecordedSelection();
+        }
+
+        void RefreshUIInternal(ElementSave elementSave)
+        {
             var foundNode = GetTreeNodeFor(elementSave);
 
             if (foundNode != null)

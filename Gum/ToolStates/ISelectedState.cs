@@ -20,6 +20,7 @@ namespace Gum.ToolStates
         ComponentSave SelectedComponent { get; set; }
         InstanceSave SelectedInstance { get; set; }
         IPositionedSizedObject SelectedIpso { get; set; }
+        List<IPositionedSizedObject> SelectedIpsos { get; }
         IEnumerable<InstanceSave> SelectedInstances { get; set;  }
         string SelectedVariableName { get; }
         StandardElementSave SelectedStandardElement { get; set; }

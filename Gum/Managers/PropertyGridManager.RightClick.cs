@@ -39,7 +39,10 @@ namespace Gum.Managers
 
         void OnExposeVariableClick(object sender, EventArgs e)
         {
-
+            // This code is going to go away.  It's copied into STateReferencingInstanceMember
+            // where it will be maintained going forward. I copied it because this depends on
+            // the SelectedVariableSave and a few other properties that don't exist in the 
+            // STateReferencingInstanceMember
 
             TextInputWindow tiw = new TextInputWindow();
             tiw.Message = "Enter variable name:";
@@ -47,6 +50,9 @@ namespace Gum.Managers
             InstanceSave instanceSave = SelectedState.Self.SelectedInstance;
             VariableSave variableSave = SelectedState.Self.SelectedVariableSave;
             StateSave currentStateSave = SelectedState.Self.SelectedStateSave;
+
+
+
 
             if (variableSave == null)
             {

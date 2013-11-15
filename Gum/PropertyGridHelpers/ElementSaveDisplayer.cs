@@ -28,7 +28,7 @@ namespace Gum.PropertyGridHelpers
     {
         #region Fields
 
-        PropertyDescriptorHelper mHelper = new PropertyDescriptorHelper();
+        static PropertyDescriptorHelper mHelper = new PropertyDescriptorHelper();
 
         #endregion
 
@@ -79,7 +79,7 @@ namespace Gum.PropertyGridHelpers
 
         }
 
-        private PropertyDescriptorCollection DisplayCurrentElement(PropertyDescriptorCollection pdc, ElementSave elementSave, 
+        private static PropertyDescriptorCollection DisplayCurrentElement(PropertyDescriptorCollection pdc, ElementSave elementSave, 
             InstanceSave instanceSave, StateSave defaultState, string prependedVariable, AmountToDisplay amountToDisplay = AmountToDisplay.AllVariables)
         {
             bool isDefault = SelectedState.Self.SelectedStateSave == SelectedState.Self.SelectedElement.DefaultState;
@@ -195,7 +195,7 @@ namespace Gum.PropertyGridHelpers
             return pdc;
         }
 
-        private PropertyDescriptorCollection TryDisplayVariableSave(PropertyDescriptorCollection pdc, ElementSave elementSave, InstanceSave instanceSave, 
+        private static PropertyDescriptorCollection TryDisplayVariableSave(PropertyDescriptorCollection pdc, ElementSave elementSave, InstanceSave instanceSave, 
             AmountToDisplay amountToDisplay, StandardElementSave ses, VariableSave defaultVariable)
         {
             bool shouldInclude = GetIfShouldInclude(defaultVariable, elementSave, instanceSave, ses);
@@ -213,7 +213,8 @@ namespace Gum.PropertyGridHelpers
                 Attribute[] customAttributes = GetAttributesForVariable(defaultVariable);
 
 
-                Type type = typeof(string);
+                //Type type = typeof(string);
+                Type type = Gum.Reflection.TypeManager.Self.GetTypeFromString(defaultVariable.Type);
 
                 string name = defaultVariable.Name;
 
@@ -233,7 +234,7 @@ namespace Gum.PropertyGridHelpers
             return pdc;
         }
 
-        private PropertyDescriptorCollection AddNameAndBaseTypeProperties(PropertyDescriptorCollection pdc)
+        private static PropertyDescriptorCollection AddNameAndBaseTypeProperties(PropertyDescriptorCollection pdc)
         {
             pdc = mHelper.AddProperty(pdc,
                 "Name", typeof(string), TypeDescriptor.GetConverter(typeof(string)), new Attribute[]
@@ -452,7 +453,7 @@ namespace Gum.PropertyGridHelpers
             return shouldInclude;
         }
 
-        private Attribute[] GetAttributesForVariable(VariableSave defaultVariable)
+        private static Attribute[] GetAttributesForVariable(VariableSave defaultVariable)
         {
             Attribute[] customAttributes = null;
 
@@ -496,7 +497,7 @@ namespace Gum.PropertyGridHelpers
         }
 
 
-        private Attribute[] GetAttributesForVariable(VariableListSave variableList)
+        private static Attribute[] GetAttributesForVariable(VariableListSave variableList)
         {
 
             mListOfAttributes.Clear();

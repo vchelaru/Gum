@@ -16,6 +16,8 @@ using Gum.Converters;
 using Gum.Plugins;
 using Gum.RenderingLibrary;
 using RenderingLibrary.Content;
+using WpfDataUi.DataTypes;
+using Gum.DataTypes.ComponentModel;
 
 namespace Gum.Managers
 {
@@ -24,6 +26,7 @@ namespace Gum.Managers
         #region Fields
 
         PropertyGrid mPropertyGrid;
+        WpfDataUi.DataUiGrid mDataGrid;
 
         static PropertyGridManager mPropertyGridManager;
 
@@ -61,8 +64,10 @@ namespace Gum.Managers
         #endregion
 
 
-        public void Initialize(PropertyGrid propertyGrid)
+        public void Initialize(PropertyGrid propertyGrid, WpfDataUi.DataUiGrid wpfDataUiGrid)
         {
+            mDataGrid = wpfDataUiGrid;
+
             mPropertyGrid = propertyGrid;
             mPropertyGrid.PropertySort = PropertySort.Categorized;
 
@@ -76,6 +81,7 @@ namespace Gum.Managers
                 // I don't know if we want to eventually show these
                 // but for now we'll hide the PropertyGrid:
                 mPropertyGrid.Visible = false;
+                mDataGrid.Visibility = System.Windows.Visibility.Hidden;
             }
             else
             {
@@ -86,6 +92,7 @@ namespace Gum.Managers
 
                 var element = SelectedState.Self.SelectedElement;
                 var state = SelectedState.Self.SelectedStateSave;
+                var instance = SelectedState.Self.SelectedInstance;
 
                 bool shouldMakeYellow = element != null && state != element.DefaultState;
 
@@ -97,6 +104,65 @@ namespace Gum.Managers
                 {
                     mPropertyGrid.LineColor = System.Drawing.Color.FromArgb(244, 247, 252);
                 }
+
+                mDataGrid.Visibility = System.Windows.Visibility.Visible;
+
+                bool hasChanged = SelectedState.Self.SelectedStateSave != mDataGrid.Instance;
+                //if (hasChanged)
+                {
+                    var stateSave = SelectedState.Self.SelectedStateSave;
+                    mDataGrid.Instance = stateSave;
+                    if (stateSave != null)
+                    {
+                        mDataGrid.Categories.Clear();
+                        var properties = mPropertyGridDisplayer.GetProperties(null);
+                        foreach (InstanceSavePropertyDescriptor propertyDescriptor in properties)
+                        {
+                            StateReferencingInstanceMember srim;
+                            if (instance != null)
+                            {
+                                srim = 
+                                    new StateReferencingInstanceMember(propertyDescriptor, stateSave, instance.Name + "." + propertyDescriptor.Name, instance, element);
+                            }
+                            else
+                            {
+                                srim = 
+                                    new StateReferencingInstanceMember(propertyDescriptor, stateSave, propertyDescriptor.Name, instance, element);
+                            }
+
+                            srim.SetToDefault += ResetVariableToDefault;
+
+                            string category = propertyDescriptor.Category.Trim();
+
+                            var categoryToAddTo = mDataGrid.Categories.FirstOrDefault(item => item.Name == category);
+
+                            if (categoryToAddTo == null)
+                            {
+                                categoryToAddTo = new MemberCategory(category);
+                                mDataGrid.Categories.Add(categoryToAddTo);
+                            }
+
+                            categoryToAddTo.Members.Add(srim);
+
+                        }
+
+                        MemberCategory categoryToMove = mDataGrid.Categories.FirstOrDefault(item => item.Name == "Position");
+                        if (categoryToMove != null)
+                        {
+                            mDataGrid.Categories.Remove(categoryToMove);
+                            mDataGrid.Categories.Insert(1, categoryToMove);
+                        }
+
+                        categoryToMove = mDataGrid.Categories.FirstOrDefault(item => item.Name == "Dimensions");
+                        if (categoryToMove != null)
+                        {
+                            mDataGrid.Categories.Remove(categoryToMove);
+                            mDataGrid.Categories.Insert(2, categoryToMove);
+                        }
+                    }
+
+                    mDataGrid.Refresh();
+                }
             }
         }
 
@@ -105,9 +171,17 @@ namespace Gum.Managers
 
             string changedMember = e.ChangedItem.PropertyDescriptor.Name;
             object oldValue = e.OldValue;
+
+
+
+            PropertyValueChanged(changedMember, oldValue);
+        }
+
+        public void PropertyValueChanged(string changedMember, object oldValue)
+        {
             object selectedObject = SelectedState.Self.SelectedStateSave;
 
-            
+
             // We used to suppress
             // saving - not sure why.
             //bool saveProject = true;
@@ -142,7 +216,9 @@ namespace Gum.Managers
                 // This used to be above the React methods but
                 // we probably want to referesh the UI after everything
                 // else has changed, don't we?
-                ElementTreeViewManager.Self.RefreshUI();
+                // I think this code makes things REALLY slow - we only want to refresh one of the tree nodes:
+                //ElementTreeViewManager.Self.RefreshUI();
+                ElementTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedElement);
             }
 
 
@@ -151,7 +227,7 @@ namespace Gum.Managers
             {
                 GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
             }
-            
+
 
             // Inefficient but let's do this for now - we can make it more efficient later
             WireframeObjectManager.Self.RefreshAll(true);
@@ -421,6 +497,12 @@ namespace Gum.Managers
         {
             GridItem gridItem = mPropertyGrid.SelectedGridItem;
             string variableName = gridItem.Label;
+
+            ResetVariableToDefault(variableName);
+        }
+
+        private void ResetVariableToDefault(string variableName)
+        {
             bool shouldReset = false;
 
             if (SelectedState.Self.SelectedInstance != null)
@@ -450,7 +532,7 @@ namespace Gum.Managers
                     // Update August 13, 2013
                     // Actually, we do want to remove it if it's part of an element but not the
                     // default state
-                    if (SelectedState.Self.SelectedInstance != null || 
+                    if (SelectedState.Self.SelectedInstance != null ||
                         SelectedState.Self.SelectedStateSave != SelectedState.Self.SelectedElement.DefaultState)
                     {
                         state.Variables.Remove(variable);
@@ -484,7 +566,7 @@ namespace Gum.Managers
                     RefreshUI();
                     WireframeObjectManager.Self.RefreshAll(true);
                     SelectionManager.Self.Refresh();
-                    if( ProjectManager.Self.GeneralSettingsFile.AutoSave)
+                    if (ProjectManager.Self.GeneralSettingsFile.AutoSave)
                     {
                         ProjectManager.Self.SaveElement(SelectedState.Self.SelectedElement);
                     }

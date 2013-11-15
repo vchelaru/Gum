@@ -25,6 +25,8 @@ namespace Gum.DataTypes.ComponentModel
 
         #region Properties
 
+        public string Name { get; private set; }
+
         public TypeConverter TypeConverter
         {
             get { return Converter; }
@@ -66,6 +68,7 @@ namespace Gum.DataTypes.ComponentModel
             : base(name, attrs)
         {
 			mParameterType = type;
+            Name = name;
         }
 
 

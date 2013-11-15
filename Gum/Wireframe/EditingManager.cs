@@ -235,10 +235,25 @@ namespace Gum.Wireframe
                 {
                     RefreshPositionsAndScalesForInstance(instance, elementStack);
 
+
+                    
                     //WireframeObjectManager.Self.SetInstanceIpsoDimensionsAndPositions(ipso,
                     //    SelectedState.Self.SelectedInstance,
                     //    SelectedState.Self.SelectedElement,
                     //    WireframeObjectManager.Self.GetRepresentation(SelectedState.Self.SelectedElement));
+                }
+
+                foreach (var ipso in SelectedState.Self.SelectedIpsos)
+                {
+                    GraphicalUiElement asGue = ipso as GraphicalUiElement;
+                    if (asGue != null)
+                    {
+                        RecursiveVariableFinder rvf = new RecursiveVariableFinder(asGue.Tag as InstanceSave, SelectedState.Self.SelectedElement);
+
+                        WireframeObjectManager.Self.SetGueWidthAndPositionValues(asGue, rvf);
+                        //public void SetGueWidthAndPositionValues(GraphicalUiElement gue, RecursiveVariableFinder rvf)
+                        //asGue.UpdateLayout();
+                    }
                 }
             }
             else
@@ -252,6 +267,8 @@ namespace Gum.Wireframe
                     RecursiveVariableFinder rvf = new RecursiveVariableFinder(elementSave.DefaultState);
 
                     WireframeObjectManager.Self.SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(ipso, elementSave, rvf);
+
+                    ipso.UpdateLayout();
                 }
                 else if(SelectedState.Self.SelectedElement != null)
                 {

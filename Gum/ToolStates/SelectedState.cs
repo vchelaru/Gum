@@ -367,6 +367,14 @@ namespace Gum.ToolStates
             }
         }
 
+        public List<IPositionedSizedObject> SelectedIpsos
+        {
+            get
+            {
+                return SelectionManager.Self.SelectedIpsos;
+            }
+
+        }
 
         #endregion
 

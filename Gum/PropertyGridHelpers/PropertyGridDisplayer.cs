@@ -19,10 +19,10 @@ namespace Gum.PropertyGridHelpers
 
         protected static Attribute[] mEmptyList = new Attribute[0];
 
-        protected EditorAttribute mFileWindowAttribute = new EditorAttribute(typeof(System.Windows.Forms.Design.FileNameEditor), typeof(System.Drawing.Design.UITypeEditor));
+        protected static EditorAttribute mFileWindowAttribute = new EditorAttribute(typeof(System.Windows.Forms.Design.FileNameEditor), typeof(System.Drawing.Design.UITypeEditor));
 
 
-        protected List<Attribute> mListOfAttributes = new List<Attribute>();
+        protected static List<Attribute> mListOfAttributes = new List<Attribute>();
 
         #endregion
 

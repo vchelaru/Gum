@@ -46,10 +46,13 @@
   <ItemGroup>
     <Reference Include="Microsoft.Xna.Framework, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86" />
     <Reference Include="Microsoft.Xna.Framework.Graphics, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86" />
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />
     <Reference Include="System.Design" />
+    <Reference Include="System.Xaml" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -61,6 +64,13 @@
     <Reference Include="TargaImage, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Libraries\TargaImage.dll</HintPath>
+    </Reference>
+    <Reference Include="UIAutomationProvider" />
+    <Reference Include="WindowsBase" />
+    <Reference Include="WindowsFormsIntegration" />
+    <Reference Include="WpfDataUi, Version=1.0.0.0, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Libraries\WpfDataUi\WpfDataUi.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -173,12 +183,16 @@
     <Compile Include="PropertyGridHelpers\PropertyGridDisplayer.cs" />
     <Compile Include="PropertyGridHelpers\ReflectingParameterDescriptor.cs" />
     <Compile Include="PropertyGridHelpers\ReflectingPropertyDescriptorHelper.cs" />
+    <Compile Include="PropertyGridHelpers\StateReferencingInstanceMember.cs" />
     <Compile Include="PropertyGridHelpers\UiTypeConverters\ModalTypeConverter.cs" />
     <Compile Include="Reflection\LateBinder.cs" />
     <Compile Include="Reflection\TypeManager.cs" />
     <Compile Include="RenderingLibrary\Blend.cs" />
     <Compile Include="RenderingLibrary\IPositionedSizedObjectExtensionMethods.cs" />
     <Compile Include="Settings\GeneralSettingsFile.cs" />
+    <Compile Include="TestWpfControl.xaml.cs">
+      <DependentUpon>TestWpfControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ToolCommands\ElementCommands.cs" />
     <Compile Include="ToolCommands\GuiCommands.cs" />
     <Compile Include="ToolCommands\ProjectCommands.cs" />
@@ -300,6 +314,13 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Content\Icons\" />
+    <Folder Include="Libraries\WpfDataUi\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="TestWpfControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

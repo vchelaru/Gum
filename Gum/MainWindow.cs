@@ -20,8 +20,6 @@ namespace Gum
 {
     public partial class MainWindow : Form
     {
-
-
         public MainWindow()
         {
             InitializeComponent();
@@ -32,7 +30,7 @@ namespace Gum
             PluginManager.Self.Initialize(this);
             ElementTreeViewManager.Self.Initialize(this.ObjectTreeView);
             StateTreeViewManager.Self.Initialize(this.StateTreeView, StateContextMenuStrip);
-            PropertyGridManager.Self.Initialize(this.VariablePropertyGrid);
+            PropertyGridManager.Self.Initialize(this.VariablePropertyGrid, ((TestWpfControl)this.elementHost1.Child).DataGrid);
             StandardElementsManager.Self.Initialize();
             MenuStripManager.Self.Initialize(RemoveElementMenuItem, RemoveStateMenuItem);
             GuiCommands.Self.Initialize(wireframeControl1);
