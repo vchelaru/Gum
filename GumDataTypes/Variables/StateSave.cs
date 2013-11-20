@@ -134,6 +134,13 @@ namespace Gum.DataTypes.Variables
 
         public object GetValue(string variableName)
         {
+            ////////////////////Early Out////////////////
+            if (ParentContainer == null)
+            {
+                return null;
+            }
+            //////////////////End Early Out//////////////
+
             // Check for reserved stuff
             if (variableName == "Name")
             {

@@ -36,6 +36,11 @@ namespace Gum.Managers
         ToolStripMenuItem mResetToDefault;
         ToolStripMenuItem mUnExposeVariable;
 
+        ElementSave mLastElement;
+        InstanceSave mLastInstance;
+        StateSave mLastState;
+
+
         #endregion
 
         #region Properties
@@ -57,7 +62,14 @@ namespace Gum.Managers
         {
             get
             {
-                return this.mPropertyGrid.SelectedGridItem.Label;
+                if (this.mPropertyGrid.SelectedGridItem != null)
+                {
+                    return this.mPropertyGrid.SelectedGridItem.Label;
+                }
+                else
+                {
+                    return null;
+                }
             }
         }
 
@@ -87,8 +99,8 @@ namespace Gum.Managers
             {
                 mPropertyGrid.Visible = true;
 
-                mPropertyGrid.SelectedObject = mPropertyGridDisplayer;
-                mPropertyGrid.Refresh();
+                //mPropertyGrid.SelectedObject = mPropertyGridDisplayer;
+                //mPropertyGrid.Refresh();
 
                 var element = SelectedState.Self.SelectedElement;
                 var state = SelectedState.Self.SelectedStateSave;
@@ -107,9 +119,13 @@ namespace Gum.Managers
 
                 mDataGrid.Visibility = System.Windows.Visibility.Visible;
 
-                bool hasChanged = SelectedState.Self.SelectedStateSave != mDataGrid.Instance;
-                //if (hasChanged)
+                bool hasChanged = element != mLastElement || instance != mLastInstance || state != mLastState;
+                if (hasChanged)
                 {
+                    mLastElement = element;
+                    mLastState = state;
+                    mLastInstance = instance;
+
                     var stateSave = SelectedState.Self.SelectedStateSave;
                     mDataGrid.Instance = stateSave;
                     if (stateSave != null)
@@ -121,12 +137,12 @@ namespace Gum.Managers
                             StateReferencingInstanceMember srim;
                             if (instance != null)
                             {
-                                srim = 
+                                srim =
                                     new StateReferencingInstanceMember(propertyDescriptor, stateSave, instance.Name + "." + propertyDescriptor.Name, instance, element);
                             }
                             else
                             {
-                                srim = 
+                                srim =
                                     new StateReferencingInstanceMember(propertyDescriptor, stateSave, propertyDescriptor.Name, instance, element);
                             }
 
@@ -161,6 +177,10 @@ namespace Gum.Managers
                         }
                     }
 
+                    mDataGrid.Refresh();
+                }
+                else
+                {
                     mDataGrid.Refresh();
                 }
             }
