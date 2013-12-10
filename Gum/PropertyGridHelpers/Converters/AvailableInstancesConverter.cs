@@ -10,7 +10,15 @@ namespace Gum.PropertyGridHelpers.Converters
 {
     public class AvailableInstancesConverter : TypeConverter
     {
+        public const string ScreenBoundsName = "<SCREEN BOUNDS>";
+
         public bool ExcludeCurrentInstance
+        {
+            get;
+            set;
+        }
+
+        public bool IncludeScreenBounds
         {
             get;
             set;
@@ -52,7 +60,10 @@ namespace Gum.PropertyGridHelpers.Converters
             }
 
             values.Insert(0, "<NONE>");
-
+            if (IncludeScreenBounds)
+            {
+                values.Insert(1, ScreenBoundsName);
+            }
 
             return new StandardValuesCollection(values);
 

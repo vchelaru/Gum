@@ -305,7 +305,7 @@ namespace Gum.Managers
             variableSave.Type = "string";
             variableSave.Name = "Parent";
             variableSave.CanOnlyBeSetInDefaultState = true;
-            variableSave.CustomTypeConverter = new AvailableInstancesConverter();
+            variableSave.CustomTypeConverter = new AvailableInstancesConverter() { IncludeScreenBounds = true };
             variables.Variables.Add(variableSave);
         }
 

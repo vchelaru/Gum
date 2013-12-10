@@ -23,6 +23,7 @@ namespace Gum.ToolStates
         ReadOnlyCollection<InstanceSave> mSelectedInstancesReadOnly;
         List<InstanceSave> mSelectedInstances = new List<InstanceSave>();
 
+        VariableSave mSelectedVariableSave;
         
 
         #endregion
@@ -291,23 +292,13 @@ namespace Gum.ToolStates
 
         public VariableSave SelectedVariableSave
         {
+            set
+            {
+                mSelectedVariableSave = value;
+            }
             get
             {
-                string selectedName = SelectedVariableName;
-
-                
-                if (!string.IsNullOrEmpty(selectedName))
-                {
-                    if (SelectedInstance != null)
-                    {
-                        selectedName = SelectedInstance.Name + "." + selectedName;
-                    }
-                    return SelectedStateSave.GetVariableSave(selectedName);
-                }
-                else
-                {
-                    return null;
-                }
+                return mSelectedVariableSave;
             }
 
         }
@@ -321,9 +312,9 @@ namespace Gum.ToolStates
         {
             get
             {
-                if (SelectedStateSave != null)
+                if (SelectedVariableSave != null)
                 {
-                    return PropertyGridManager.Self.SelectedLabel;
+                    return SelectedVariableSave.GetRootName();
                 }
                 else
                 {

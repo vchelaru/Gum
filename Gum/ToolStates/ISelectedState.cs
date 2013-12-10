@@ -24,7 +24,7 @@ namespace Gum.ToolStates
         IEnumerable<InstanceSave> SelectedInstances { get; set;  }
         string SelectedVariableName { get; }
         StandardElementSave SelectedStandardElement { get; set; }
-        VariableSave SelectedVariableSave { get; }
+        VariableSave SelectedVariableSave { get; set;  }
         TreeNode SelectedTreeNode { get; }
         RecursiveVariableFinder SelectedRecursiveVariableFinder { get; }
         void UpdateToSelectedStateSave();

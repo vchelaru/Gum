@@ -286,57 +286,64 @@ namespace Gum.Wireframe
 
         #endregion
 
-        
 
+
+        bool isInActivity = false;
 
         void Activity()
         {
-#if DEBUG
-            try
-#endif
+            if (!isInActivity)
             {
-                InputLibrary.Cursor.Self.StartCursorSettingFrameStart();
-                ProjectVerifier.Self.AssertSelectedIpsosArePartOfRenderer();
-                TimeManager.Self.Activity();
-
-                SpriteManager.Self.Activity(TimeManager.Self.CurrentTime);
-
-                DragDropManager.Self.Activity();
-
-                InputLibrary.Cursor.Self.Activity(TimeManager.Self.CurrentTime);
-                InputLibrary.Keyboard.Self.Activity();
-                CameraMovementAndZoomActivity();
-                if (Cursor.PrimaryPush)
-                {
-                    int m = 3;
-                }
-
-                bool isOver = this.mTopRuler.HandleXnaUpdate(InputLibrary.Cursor.Self.IsInWindow) ||
-                    mLeftRuler.HandleXnaUpdate(InputLibrary.Cursor.Self.IsInWindow);
-
-
-
-                // But we want the selection to update the handles to the selected object
-                // after editing is done.  SelectionManager.LateActivity lets us do that.  LateActivity must
-                // come after EidtingManager.Activity.
-                if (mTopRuler.IsCursorOver == false && mLeftRuler.IsCursorOver == false)
-                {
-                    SelectionManager.Self.Activity(this);
-                    // EditingManager activity must happen after SelectionManager activity
-                    EditingManager.Self.Activity();
-
-
-                    SelectionManager.Self.LateActivity();
-                }
-                InputLibrary.Cursor.Self.EndCursorSettingFrameStart();
-
-            }
+                isInActivity = true;
 #if DEBUG
-            catch(Exception e)
-            {
-                MessageBox.Show(e.ToString());
-            }
+                try
 #endif
+                {
+
+                    InputLibrary.Cursor.Self.StartCursorSettingFrameStart();
+                    ProjectVerifier.Self.AssertSelectedIpsosArePartOfRenderer();
+                    TimeManager.Self.Activity();
+
+                    SpriteManager.Self.Activity(TimeManager.Self.CurrentTime);
+
+                    DragDropManager.Self.Activity();
+
+                    InputLibrary.Cursor.Self.Activity(TimeManager.Self.CurrentTime);
+                    InputLibrary.Keyboard.Self.Activity();
+                    CameraMovementAndZoomActivity();
+                    if (Cursor.PrimaryPush)
+                    {
+                        int m = 3;
+                    }
+
+                    bool isOver = this.mTopRuler.HandleXnaUpdate(InputLibrary.Cursor.Self.IsInWindow) ||
+                        mLeftRuler.HandleXnaUpdate(InputLibrary.Cursor.Self.IsInWindow);
+
+
+
+                    // But we want the selection to update the handles to the selected object
+                    // after editing is done.  SelectionManager.LateActivity lets us do that.  LateActivity must
+                    // come after EidtingManager.Activity.
+                    if (mTopRuler.IsCursorOver == false && mLeftRuler.IsCursorOver == false)
+                    {
+                        SelectionManager.Self.Activity(this);
+                        // EditingManager activity must happen after SelectionManager activity
+                        EditingManager.Self.Activity();
+
+
+                        SelectionManager.Self.LateActivity();
+                    }
+                    InputLibrary.Cursor.Self.EndCursorSettingFrameStart();
+
+                }
+#if DEBUG
+                catch (Exception e)
+                {
+                    MessageBox.Show(e.ToString());
+                }
+#endif
+            }
+            isInActivity = false;
         }
 
 

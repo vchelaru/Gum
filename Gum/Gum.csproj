@@ -301,6 +301,7 @@
   <ItemGroup>
     <Content Include="Libraries\TargaImage.dll" />
     <Content Include="Libraries\TargaImage.xml" />
+    <None Include="Libraries\WpfDataUi\WpfDataUi.dll" />
     <None Include="Content\InvalidTexture.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -314,7 +315,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Content\Icons\" />
-    <Folder Include="Libraries\WpfDataUi\" />
   </ItemGroup>
   <ItemGroup>
     <Page Include="TestWpfControl.xaml">

@@ -201,7 +201,6 @@ namespace Gum.Managers
         {
             object selectedObject = SelectedState.Self.SelectedStateSave;
 
-
             // We used to suppress
             // saving - not sure why.
             //bool saveProject = true;
@@ -211,7 +210,14 @@ namespace Gum.Managers
                 ElementSave parentElement = ((StateSave)selectedObject).ParentContainer;
                 InstanceSave instance = SelectedState.Self.SelectedInstance;
 
-
+                if (instance != null)
+                {
+                    SelectedState.Self.SelectedVariableSave = SelectedState.Self.SelectedStateSave.GetVariableSave(instance.Name + "." + changedMember);
+                }
+                else
+                {
+                    SelectedState.Self.SelectedVariableSave = SelectedState.Self.SelectedStateSave.GetVariableSave(changedMember);
+                }
                 // Why do we do this before reacting to names?  I think we want to do it after
                 //ElementTreeViewManager.Self.RefreshUI();
 
@@ -258,7 +264,7 @@ namespace Gum.Managers
         {
             VariableSave variable = SelectedState.Self.SelectedVariableSave;
             // Eventually need to handle tunneled variables
-            if (variable != null && variable.GetRootName() == "Parent")
+            if (variable != null && changedMember == "Parent")
             {
                 if ((variable.Value as string) == "<NONE>")
                 {

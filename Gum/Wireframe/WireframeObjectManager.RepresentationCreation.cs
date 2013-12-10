@@ -17,6 +17,7 @@ using System.Collections;
 using ToolsUtilities;
 using Microsoft.Xna.Framework;
 using Gum.Converters;
+using Gum.PropertyGridHelpers.Converters;
 
 namespace Gum.Wireframe
 {
@@ -252,7 +253,9 @@ namespace Gum.Wireframe
                 RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(SelectedState.Self.SelectedStateSave);
 
                 string guide = rvf.GetValue<string>("Guide");
-                SetGuideParent(container, element, guide, container == null);
+                string parent = rvf.GetValue<string>(instance.Name + ".Parent");
+
+                SetGuideParent(container, element, guide, container == null || parent == AvailableInstancesConverter.ScreenBoundsName);
             }
 
 
@@ -365,7 +368,7 @@ namespace Gum.Wireframe
 
                     string parentName = rvf.GetValue<string>("Parent");
 
-                    if (!string.IsNullOrEmpty(parentName))
+                    if (!string.IsNullOrEmpty(parentName) && parentName != AvailableInstancesConverter.ScreenBoundsName)
                     {
                         IPositionedSizedObject newParent = siblings.FirstOrDefault(item => item.Name == parentName);
 

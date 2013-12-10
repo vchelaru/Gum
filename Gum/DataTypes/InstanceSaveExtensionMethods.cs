@@ -6,6 +6,7 @@ using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.ToolStates;
 using Gum.Wireframe;
+using Gum.PropertyGridHelpers.Converters;
 
 namespace Gum.DataTypes
 {
@@ -22,7 +23,7 @@ namespace Gum.DataTypes
 
             string parent = rvf.GetValue<string>("Parent");
             bool found = false;
-            if (!string.IsNullOrEmpty(parent))
+            if (!string.IsNullOrEmpty(parent) && parent != AvailableInstancesConverter.ScreenBoundsName)
             {
                 ElementSave parentElement = instanceSave.ParentContainer;
 
