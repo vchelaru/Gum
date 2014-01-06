@@ -207,7 +207,13 @@ namespace Gum.Wireframe
             object objectDeleted = null;
             DeleteOptionsWindow optionsWindow = null;
 
-            if (SelectedState.Self.SelectedInstance != null)
+            if (SelectedState.Self.SelectedInstances.Count() > 1)
+            {
+
+                AskToDeleteInstances(SelectedState.Self.SelectedInstances);
+            }
+
+            else if (SelectedState.Self.SelectedInstance != null)
             {
                 objectDeleted = SelectedState.Self.SelectedInstance;
                 AskToDeleteInstance(SelectedState.Self.SelectedInstance);
@@ -280,10 +286,39 @@ namespace Gum.Wireframe
             return result;
         }
 
+
+        private static void AskToDeleteInstances(IEnumerable<InstanceSave> instances)
+        {
+            string message = "Are you sure you'd like to delete the following:";
+
+            foreach (var instance in instances)
+            {
+                message += "\n" + instance.Name;
+            }
+            DialogResult result =
+                MessageBox.Show(message, "Delete instances?", MessageBoxButtons.YesNo);
+
+            if (result == DialogResult.Yes)
+            {
+                ElementSave selectedElement = SelectedState.Self.SelectedElement;
+
+                // Just in case the argument is a reference to the selected instances:
+                var instancesToRemove = instances.ToList();
+
+                foreach (var instance in instancesToRemove)
+                {
+                    Gum.ToolCommands.ElementCommands.Self.RemoveInstance(instance,
+                        selectedElement);
+                }
+
+                RefreshAndSaveAfterInstanceRemoval(selectedElement);
+            }
+        }
+
         private static void AskToDeleteInstance(InstanceSave instance)
         {
             DialogResult result =
-                MessageBox.Show("Are you sure you'd like to delete " + instance.Name + "?", "Delete object?", MessageBoxButtons.YesNo);
+                MessageBox.Show("Are you sure you'd like to delete " + instance.Name + "?", "Delete instance?", MessageBoxButtons.YesNo);
 
             if (result == DialogResult.Yes)
             {
@@ -292,26 +327,31 @@ namespace Gum.Wireframe
                 Gum.ToolCommands.ElementCommands.Self.RemoveInstance(instance,
                     selectedElement);
 
-                if (ProjectManager.Self.GeneralSettingsFile.AutoSave)
-                {
-                    ProjectManager.Self.SaveElement(selectedElement);
-                }
-                ElementSave elementToReselect = selectedElement;
-                // Deselect before selecting the new
-                // selected element and before refreshing everything
-                SelectionManager.Self.Deselect();
-
-                SelectedState.Self.SelectedInstance = null;
-                SelectedState.Self.SelectedElement = elementToReselect;
-
-
-                ElementTreeViewManager.Self.RefreshUI(selectedElement);
-                WireframeObjectManager.Self.RefreshAll(true);
-
-                SelectionManager.Self.Refresh();
-
-                ProjectVerifier.Self.AssertSelectedIpsosArePartOfRenderer();
+                RefreshAndSaveAfterInstanceRemoval(selectedElement);
             }
+        }
+
+        private static void RefreshAndSaveAfterInstanceRemoval(ElementSave selectedElement)
+        {
+            if (ProjectManager.Self.GeneralSettingsFile.AutoSave)
+            {
+                ProjectManager.Self.SaveElement(selectedElement);
+            }
+            ElementSave elementToReselect = selectedElement;
+            // Deselect before selecting the new
+            // selected element and before refreshing everything
+            SelectionManager.Self.Deselect();
+
+            SelectedState.Self.SelectedInstance = null;
+            SelectedState.Self.SelectedElement = elementToReselect;
+
+
+            ElementTreeViewManager.Self.RefreshUI(selectedElement);
+            WireframeObjectManager.Self.RefreshAll(true);
+
+            SelectionManager.Self.Refresh();
+
+            ProjectVerifier.Self.AssertSelectedIpsosArePartOfRenderer();
         }
 
 
