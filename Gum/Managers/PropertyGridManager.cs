@@ -18,6 +18,9 @@ using Gum.RenderingLibrary;
 using RenderingLibrary.Content;
 using WpfDataUi.DataTypes;
 using Gum.DataTypes.ComponentModel;
+using System.Threading.Tasks;
+using System.Threading;
+using System.Collections.ObjectModel;
 
 namespace Gum.Managers
 {
@@ -86,7 +89,7 @@ namespace Gum.Managers
             InitializeRightClickMenu();
         }
 
-        public void RefreshUI()
+        public async void RefreshUI()
         {
             if (SelectedState.Self.SelectedInstances.GetCount() > 1)
             {
@@ -117,73 +120,119 @@ namespace Gum.Managers
                     mPropertyGrid.LineColor = System.Drawing.Color.FromArgb(244, 247, 252);
                 }
 
-                mDataGrid.Visibility = System.Windows.Visibility.Visible;
+                // This can take a little bit of time and we don't want the app to pop/freeze
 
-                bool hasChanged = element != mLastElement || instance != mLastInstance || state != mLastState;
-                if (hasChanged)
+
+                //Task task = new Task(() => RefreshDataGrid(element, state, instance));
+                RefreshDataGrid(element, state, instance);
+                //task.Start();
+
+                //mDataGrid.Visibility = System.Windows.Visibility.Visible;
+
+                //ThreadStart threadStart = new ThreadStart(
+                //    () => RefreshDataGrid(element, state, instance));
+
+                //System.Threading.Thread thread = new System.Threading.Thread(threadStart);
+                //thread.Start();
+
+            }
+        }
+
+        private async void RefreshDataGrid(ElementSave element, StateSave state, InstanceSave instance)
+        {
+
+            bool hasChanged = element != mLastElement || instance != mLastInstance || state != mLastState;
+            if (hasChanged)
+            {
+                List<MemberCategory> categories = await GetCategories(element, state, instance);
+
+                mDataGrid.Instance = SelectedState.Self.SelectedStateSave;
+
+                mDataGrid.Categories.Clear();
+
+
+
+                foreach (var category in categories)
                 {
-                    mLastElement = element;
-                    mLastState = state;
-                    mLastInstance = instance;
+                    Application.DoEvents();
 
-                    var stateSave = SelectedState.Self.SelectedStateSave;
-                    mDataGrid.Instance = stateSave;
-                    if (stateSave != null)
-                    {
-                        mDataGrid.Categories.Clear();
-                        var properties = mPropertyGridDisplayer.GetProperties(null);
-                        foreach (InstanceSavePropertyDescriptor propertyDescriptor in properties)
-                        {
-                            StateReferencingInstanceMember srim;
-                            if (instance != null)
-                            {
-                                srim =
-                                    new StateReferencingInstanceMember(propertyDescriptor, stateSave, instance.Name + "." + propertyDescriptor.Name, instance, element);
-                            }
-                            else
-                            {
-                                srim =
-                                    new StateReferencingInstanceMember(propertyDescriptor, stateSave, propertyDescriptor.Name, instance, element);
-                            }
+                    mDataGrid.Categories.Add(category);
 
-                            srim.SetToDefault += ResetVariableToDefault;
-
-                            string category = propertyDescriptor.Category.Trim();
-
-                            var categoryToAddTo = mDataGrid.Categories.FirstOrDefault(item => item.Name == category);
-
-                            if (categoryToAddTo == null)
-                            {
-                                categoryToAddTo = new MemberCategory(category);
-                                mDataGrid.Categories.Add(categoryToAddTo);
-                            }
-
-                            categoryToAddTo.Members.Add(srim);
-
-                        }
-
-                        MemberCategory categoryToMove = mDataGrid.Categories.FirstOrDefault(item => item.Name == "Position");
-                        if (categoryToMove != null)
-                        {
-                            mDataGrid.Categories.Remove(categoryToMove);
-                            mDataGrid.Categories.Insert(1, categoryToMove);
-                        }
-
-                        categoryToMove = mDataGrid.Categories.FirstOrDefault(item => item.Name == "Dimensions");
-                        if (categoryToMove != null)
-                        {
-                            mDataGrid.Categories.Remove(categoryToMove);
-                            mDataGrid.Categories.Insert(2, categoryToMove);
-                        }
-                    }
-
-                    mDataGrid.Refresh();
-                }
-                else
-                {
-                    mDataGrid.Refresh();
                 }
             }
+
+            mDataGrid.Refresh();
+        }
+
+        private Task<List<MemberCategory>> GetCategories(ElementSave element, StateSave state, InstanceSave instance)
+        {
+            var task = new Task<List<MemberCategory>>(() =>
+            {
+                List<MemberCategory> categories = new List<MemberCategory>();
+
+
+
+                mLastElement = element;
+                mLastState = state;
+                mLastInstance = instance;
+
+
+
+                var stateSave = SelectedState.Self.SelectedStateSave;
+                if (stateSave != null)
+                {
+                    categories.Clear();
+                    var properties = mPropertyGridDisplayer.GetProperties(null);
+                    foreach (InstanceSavePropertyDescriptor propertyDescriptor in properties)
+                    {
+                        StateReferencingInstanceMember srim;
+                        if (instance != null)
+                        {
+                            srim =
+                                new StateReferencingInstanceMember(propertyDescriptor, stateSave, instance.Name + "." + propertyDescriptor.Name, instance, element);
+                        }
+                        else
+                        {
+                            srim =
+                                new StateReferencingInstanceMember(propertyDescriptor, stateSave, propertyDescriptor.Name, instance, element);
+                        }
+
+                        srim.SetToDefault += ResetVariableToDefault;
+
+                        string category = propertyDescriptor.Category.Trim();
+
+                        var categoryToAddTo = categories.FirstOrDefault(item => item.Name == category);
+
+                        if (categoryToAddTo == null)
+                        {
+                            categoryToAddTo = new MemberCategory(category);
+                            categories.Add(categoryToAddTo);
+                        }
+
+                        categoryToAddTo.Members.Add(srim);
+
+                    }
+
+                    MemberCategory categoryToMove = categories.FirstOrDefault(item => item.Name == "Position");
+                    if (categoryToMove != null)
+                    {
+                        categories.Remove(categoryToMove);
+                        categories.Insert(1, categoryToMove);
+                    }
+
+                    categoryToMove = categories.FirstOrDefault(item => item.Name == "Dimensions");
+                    if (categoryToMove != null)
+                    {
+                        categories.Remove(categoryToMove);
+                        categories.Insert(2, categoryToMove);
+                    }
+                }
+                return categories;
+            });
+
+            task.Start();
+
+            return task;
         }
 
         internal void PropertyValueChanged(object s, PropertyValueChangedEventArgs e)

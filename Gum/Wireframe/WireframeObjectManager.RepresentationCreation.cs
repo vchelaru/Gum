@@ -87,6 +87,11 @@ namespace Gum.Wireframe
             {
                 rootIpso = new GraphicalUiElement(null, null);
 
+                // We used to not add the IPSO for the root element to the list of graphical elements
+                // and this prevented selection.  I'm not sure if this was intentionally left out or not
+                // but I think it should be here
+                mGraphicalElements.Add(rootIpso);
+
                 if (elementSave.BaseType == "Sprite" || elementSave.Name == "Sprite")
                 {
                     CreateSpriteFor(elementSave, rootIpso);

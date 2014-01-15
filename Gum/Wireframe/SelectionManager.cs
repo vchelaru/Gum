@@ -500,10 +500,7 @@ namespace Gum.Wireframe
 
             IPositionedSizedObject ipsoOver = null;
 
-            if (InputLibrary.Cursor.Self.PrimaryPush)
-            {
-                int m = 3;
-            }
+
             // First check if we're over the current
             GraphicalUiElement selectedRepresentation = WireframeObjectManager.Self.GetSelectedRepresentation();
             if (InputLibrary.Keyboard.Self.KeyDown(Microsoft.Xna.Framework.Input.Keys.Space))

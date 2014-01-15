@@ -265,10 +265,11 @@ namespace Gum.Wireframe
                     ElementSave elementSave = SelectedState.Self.SelectedElement;
 
                     RecursiveVariableFinder rvf = new RecursiveVariableFinder(elementSave.DefaultState);
+                    WireframeObjectManager.Self.SetGueWidthAndPositionValues(ipso as GraphicalUiElement, rvf);
 
-                    WireframeObjectManager.Self.SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(ipso, elementSave, rvf);
+                    //WireframeObjectManager.Self.SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(ipso, elementSave, rvf);
 
-                    ipso.UpdateLayout();
+                    //ipso.UpdateLayout();
                 }
                 else if(SelectedState.Self.SelectedElement != null)
                 {
