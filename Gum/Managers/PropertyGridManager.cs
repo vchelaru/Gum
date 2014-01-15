@@ -100,8 +100,6 @@ namespace Gum.Managers
             }
             else
             {
-                mPropertyGrid.Visible = true;
-
                 //mPropertyGrid.SelectedObject = mPropertyGridDisplayer;
                 //mPropertyGrid.Refresh();
 
@@ -111,14 +109,6 @@ namespace Gum.Managers
 
                 bool shouldMakeYellow = element != null && state != element.DefaultState;
 
-                if (shouldMakeYellow)
-                {
-                    mPropertyGrid.LineColor = System.Drawing.Color.Orange;
-                }
-                else
-                {
-                    mPropertyGrid.LineColor = System.Drawing.Color.FromArgb(244, 247, 252);
-                }
 
                 // This can take a little bit of time and we don't want the app to pop/freeze
 
@@ -148,6 +138,7 @@ namespace Gum.Managers
 
                 mDataGrid.Instance = SelectedState.Self.SelectedStateSave;
 
+                mDataGrid.Visibility = System.Windows.Visibility.Hidden;
                 mDataGrid.Categories.Clear();
 
 
@@ -159,6 +150,8 @@ namespace Gum.Managers
                     mDataGrid.Categories.Add(category);
 
                 }
+                mDataGrid.Visibility = System.Windows.Visibility.Visible;
+
             }
 
             mDataGrid.Refresh();
