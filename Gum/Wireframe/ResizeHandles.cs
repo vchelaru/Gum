@@ -215,20 +215,20 @@ namespace Gum.Wireframe
                 switch (asGue.XUnits)
                 {
                     case GeneralUnitType.PixelsFromMiddle:
-                        mOriginLine.X += asIpso.Width/2;
+                        mOriginLine.X += asGue.Parent.Width / 2;
                         break;
                     case GeneralUnitType.PixelsFromLarge:
-                        mOriginLine.X += asIpso.Width;
+                        mOriginLine.X += asGue.Parent.Width;
                         break;
                 }
 
                 switch (asGue.YUnits)
                 {
                     case GeneralUnitType.PixelsFromMiddle:
-                        mOriginLine.Y += asIpso.Height / 2;
+                        mOriginLine.Y += asGue.Parent.Height / 2;
                         break;
                     case GeneralUnitType.PixelsFromLarge:
-                        mOriginLine.Y += asIpso.Height;
+                        mOriginLine.Y += asGue.Parent.Height;
                         break;
                 }
 
