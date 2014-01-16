@@ -303,6 +303,7 @@ namespace Gum.Wireframe
             SpriteManager.Self.Add(mOverlayNineSlice, mUiLayer);
 
             mResizeHandles = new ResizeHandles(mUiLayer);
+            mResizeHandles.ShowOrigin = true;
             mResizeHandles.Visible = false;
         }
 

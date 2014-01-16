@@ -8,6 +8,7 @@ using RenderingLibrary.Graphics;
 
 namespace Gum.Wireframe
 {
+    #region Enums
 
     public enum ResizeSide
     {
@@ -22,6 +23,8 @@ namespace Gum.Wireframe
         Left
     }
 
+    #endregion
+
 
     public class ResizeHandles
     {
@@ -33,6 +36,13 @@ namespace Gum.Wireframe
         float mHeight;
 
         LineCircle[] mHandles = new LineCircle[8];
+
+        Line mXLine1;
+        Line mXLine2;
+
+        Line mOriginLine;
+
+
 
         const float RadiusAtNoZoom = 5;
 
@@ -93,7 +103,17 @@ namespace Gum.Wireframe
                     mHandles[i].Visible = value;
                 }
 
+                mXLine1.Visible = value && ShowOrigin;
+                mXLine2.Visible = value && ShowOrigin;
+
+                mOriginLine.Visible = value && ShowOrigin;
             }
+        }
+
+        public bool ShowOrigin
+        {
+            get;
+            set;
         }
 
         #endregion
@@ -109,6 +129,20 @@ namespace Gum.Wireframe
                 ShapeManager.Self.Add(mHandles[i], layer);
 
             }
+
+            mXLine1 = new Line(null);
+            mXLine2 = new Line(null);
+            mXLine1.Name = "Resize Handle X Line 1";
+            mXLine2.Name = "Resize Handle X Line 2";
+
+            ShapeManager.Self.Add(mXLine1, layer);
+            ShapeManager.Self.Add(mXLine2, layer);
+
+            mOriginLine = new Line(null);
+            mOriginLine.Name = "Resize Handle Offset Line";
+            ShapeManager.Self.Add(mOriginLine, layer);
+
+
             Visible = true;
             UpdateToProperties();
         }
@@ -133,7 +167,77 @@ namespace Gum.Wireframe
             this.mY = ipso.GetAbsoluteY();
             this.mWidth = ipso.Width;
             this.mHeight = ipso.Height;
+
+            if (ipso is GraphicalUiElement)
+            {
+                var asGue = ipso as GraphicalUiElement;
+
+                SetOriginXPosition(asGue);
+            }
+
+
             UpdateToProperties();
+        }
+
+        private void SetOriginXPosition(GraphicalUiElement asGue)
+        {
+            IPositionedSizedObject asIpso = asGue;
+            float zoom = Renderer.Self.Camera.Zoom;
+
+            float offset = RadiusAtNoZoom * 1.5f / zoom;
+
+
+
+            float absoluteX = asGue.AbsoluteX;
+            float absoluteY = asGue.AbsoluteY;
+
+            mXLine1.X = absoluteX - offset;
+            mXLine1.Y = absoluteY - offset;
+
+            mXLine2.X = absoluteX - offset;
+            mXLine2.Y = absoluteY + offset;
+
+            mXLine1.RelativePoint = new Microsoft.Xna.Framework.Vector2(offset * 2, offset * 2);
+            mXLine2.RelativePoint = new Microsoft.Xna.Framework.Vector2(offset * 2, -offset * 2);
+
+
+
+            bool shouldShowOffsetLine = asGue.Parent != null && asGue.Parent is GraphicalUiElement;
+
+            mOriginLine.Visible = shouldShowOffsetLine;
+
+            if (shouldShowOffsetLine)
+            {
+                var gueParent = asGue.Parent as GraphicalUiElement;
+                mOriginLine.X = asGue.Parent.GetAbsoluteX();
+                mOriginLine.Y = asGue.Parent.GetAbsoluteY();
+
+                switch (asGue.XUnits)
+                {
+                    case GeneralUnitType.PixelsFromMiddle:
+                        mOriginLine.X += asIpso.Width/2;
+                        break;
+                    case GeneralUnitType.PixelsFromLarge:
+                        mOriginLine.X += asIpso.Width;
+                        break;
+                }
+
+                switch (asGue.YUnits)
+                {
+                    case GeneralUnitType.PixelsFromMiddle:
+                        mOriginLine.Y += asIpso.Height / 2;
+                        break;
+                    case GeneralUnitType.PixelsFromLarge:
+                        mOriginLine.Y += asIpso.Height;
+                        break;
+                }
+
+                mOriginLine.RelativePoint.X = asGue.AbsoluteX - mOriginLine.X;
+                mOriginLine.RelativePoint.Y = asGue.AbsoluteY - mOriginLine.Y;
+            }
+
+
+
         }
 
         public void SetValuesFrom(List<IPositionedSizedObject> ipsoList)
@@ -165,6 +269,17 @@ namespace Gum.Wireframe
                 mY = minY;
                 mWidth = maxX - minX;
                 mHeight = maxY - minY;
+
+                if (ipsoList[0] is GraphicalUiElement)
+                {
+                    var asGue = ipsoList[0] as GraphicalUiElement;
+
+                    SetOriginXPosition(asGue);
+
+                }
+
+
+
             }
 
             UpdateToProperties();

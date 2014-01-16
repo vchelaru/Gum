@@ -52,7 +52,17 @@ namespace Gum.ToolCommands
         public ComponentSave AddComponent(string componentName)
         {
             ComponentSave componentSave = new ComponentSave();
-            componentSave.Initialize(StandardElementsManager.Self.GetDefaultStateFor("Container"));
+
+
+            componentSave.BaseType = "Container";
+            componentSave.Name = componentName;
+
+            ProjectManager.Self.GumProjectSave.ComponentReferences.Add(new ElementReference { Name = componentName, ElementType = ElementType.Component });
+            ProjectManager.Self.GumProjectSave.ComponentReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
+            ProjectManager.Self.GumProjectSave.Components.Add(componentSave);
+
+            componentSave.InitializeDefaultAndComponentVariables();
+
 
             // components shouldn't set their positions to 0 by default, so if the
             // default state sets those values, we should null them out:
@@ -70,12 +80,7 @@ namespace Gum.ToolCommands
                 yVariable.SetsValue = false;
             }
 
-            componentSave.BaseType = "Container";
-            componentSave.Name = componentName;
 
-            ProjectManager.Self.GumProjectSave.ComponentReferences.Add(new ElementReference { Name = componentName, ElementType = ElementType.Component });
-            ProjectManager.Self.GumProjectSave.ComponentReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
-            ProjectManager.Self.GumProjectSave.Components.Add(componentSave);
 
             return componentSave;
         }

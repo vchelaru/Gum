@@ -360,6 +360,45 @@ namespace Gum.Wireframe
 
         public IPositionedSizedObject Component { get { return mContainedObjectAsIpso; } }
 
+        public float AbsoluteX
+        {
+            get
+            {
+                float toReturn = this.GetAbsoluteX();
+
+                switch (XOrigin)
+                {
+                    case HorizontalAlignment.Center:
+                        toReturn += ((IPositionedSizedObject)this).Width/2;
+                        break;
+                    case HorizontalAlignment.Right:
+                        toReturn += ((IPositionedSizedObject)this).Width;
+                        break;
+                }
+                return toReturn;
+            }
+        }
+
+
+        public float AbsoluteY
+        {
+            get
+            {
+                float toReturn = this.GetAbsoluteY();
+
+                switch (YOrigin)
+                {
+                    case VerticalAlignment.Center:
+                        toReturn += ((IPositionedSizedObject)this).Height/2;
+                        break;
+                    case VerticalAlignment.Bottom:
+                        toReturn += ((IPositionedSizedObject)this).Height;
+                        break;
+                }
+                return toReturn;
+            }
+        }
+
 
         #endregion
 
@@ -398,8 +437,7 @@ namespace Gum.Wireframe
         {
             if (!mIsLayoutSuspended && mContainedObjectAsIpso != null)
             {
-                float xDock = 0;
-                float yDock = 0;
+
                 float parentWidth = CanvasWidth;
                 float parentHeight = CanvasHeight;
                 float unitOffsetX = this.X;
@@ -453,7 +491,7 @@ namespace Gum.Wireframe
 
                 if (mXUnits == GeneralUnitType.Percentage)
                 {
-                    unitOffsetX = parentWidth * this.X / 100.0f;
+                    unitOffsetX = parentWidth * mX / 100.0f;
                 }
                 else if (mXUnits == GeneralUnitType.PercentageOfFile)
                 {
@@ -474,7 +512,7 @@ namespace Gum.Wireframe
 
                 if (mYUnits == GeneralUnitType.Percentage)
                 {
-                    unitOffsetY = parentHeight * this.Y / 100.0f;
+                    unitOffsetY = parentHeight * mY / 100.0f;
                 }
                 else if (mYUnits == GeneralUnitType.PercentageOfFile)
                 {
@@ -513,9 +551,8 @@ namespace Gum.Wireframe
                 }
                 // no need to handle top
 
-
-                this.mContainedObjectAsIpso.X = xDock + unitOffsetX;
-                this.mContainedObjectAsIpso.Y = yDock + unitOffsetY;
+                this.mContainedObjectAsIpso.X = unitOffsetX;
+                this.mContainedObjectAsIpso.Y = unitOffsetY;
 
                 mContainedObjectAsIpso.Parent = mParent;
 

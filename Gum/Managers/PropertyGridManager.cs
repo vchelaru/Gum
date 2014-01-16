@@ -131,30 +131,38 @@ namespace Gum.Managers
         private async void RefreshDataGrid(ElementSave element, StateSave state, InstanceSave instance)
         {
 
+
             bool hasChanged = element != mLastElement || instance != mLastInstance || state != mLastState;
             if (hasChanged)
             {
                 List<MemberCategory> categories = await GetCategories(element, state, instance);
-
-                mDataGrid.Instance = SelectedState.Self.SelectedStateSave;
-
-                mDataGrid.Visibility = System.Windows.Visibility.Hidden;
-                mDataGrid.Categories.Clear();
-
-
-
-                foreach (var category in categories)
+                lock (mDataGrid)
                 {
-                    Application.DoEvents();
 
-                    mDataGrid.Categories.Add(category);
+                    mDataGrid.Instance = SelectedState.Self.SelectedStateSave;
 
+                    mDataGrid.Visibility = System.Windows.Visibility.Hidden;
+
+                    mDataGrid.Categories.Clear();
+
+                    // There's a bug here where drag+dropping a new instance will create 
+                    // duplicate UI members.  I am going to deal with it now because it is
+
+
+                    foreach (var category in categories)
+                    {
+                        Application.DoEvents();
+
+                        mDataGrid.Categories.Add(category);
+
+                    }
                 }
                 mDataGrid.Visibility = System.Windows.Visibility.Visible;
 
             }
 
             mDataGrid.Refresh();
+            
         }
 
         private Task<List<MemberCategory>> GetCategories(ElementSave element, StateSave state, InstanceSave instance)
