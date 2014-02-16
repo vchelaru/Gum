@@ -322,6 +322,9 @@ namespace Gum.PropertyGridHelpers
             }
         }
 
+
+#if GUM
+
         private Type GetTypeFromVariableRecursively()
         {
             VariableSave variableSave = null;
@@ -346,6 +349,7 @@ namespace Gum.PropertyGridHelpers
                 return typeof(string);
             }
         }
+#endif
 
         #endregion
     }

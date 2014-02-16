@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using Gum.DataTypes.Variables;
 using Gum.Wireframe;
+using GumDataTypes.Variables;
 
 namespace Gum.DataTypes
 {
@@ -14,7 +15,7 @@ namespace Gum.DataTypes
     /// happens that this consolidates all
     /// logic in one place
     /// </summary>
-    public class RecursiveVariableFinder
+    public class RecursiveVariableFinder : IVariableFinder
     {
         #region Enums
 
@@ -121,7 +122,7 @@ namespace Gum.DataTypes
                     {
                         instanceName = mElementStack.Last().InstanceName;
                     }
-                    var allExposed = WireframeObjectManager.Self.GetExposedVariablesForThisInstance(mInstanceSave, instanceName, mElementStack);
+                    var allExposed = GetExposedVariablesForThisInstance(mInstanceSave, instanceName, mElementStack);
 
                     bool onlyIfSetsValue = false;
                     var found = mInstanceSave.GetVariableFromThisOrBase(mElementStack, variableName, false, onlyIfSetsValue);
@@ -161,6 +162,42 @@ namespace Gum.DataTypes
             }
             throw new NotImplementedException();
         }
+
+        public List<VariableSave> GetExposedVariablesForThisInstance(DataTypes.InstanceSave instance, string parentInstanceName, List<ElementWithState> elementStack)
+        {
+            List<VariableSave> exposedVariables = new List<VariableSave>();
+            if (elementStack.Count > 1)
+            {
+                ElementWithState containerOfVariables = elementStack[elementStack.Count - 2];
+                ElementWithState definerOfVariables = elementStack[elementStack.Count - 1];
+
+                foreach (VariableSave variable in definerOfVariables.Element.DefaultState.Variables)
+                {
+                    if (!string.IsNullOrEmpty(variable.ExposedAsName) && variable.SourceObject == instance.Name)
+                    {
+                        // This variable is exposed, let's see if the container does anything with it
+
+                        VariableSave foundVariable = containerOfVariables.StateSave.GetVariableRecursive(parentInstanceName + "." + variable.ExposedAsName);
+
+                        if (foundVariable != null)
+                        {
+                            VariableSave variableToAdd = new VariableSave();
+                            variableToAdd.Type = variable.Type;
+                            variableToAdd.Value = foundVariable.Value;
+                            variableToAdd.SetsValue = foundVariable.SetsValue;
+                            variableToAdd.Name = variable.Name.Substring(variable.Name.IndexOf('.') + 1);
+                            exposedVariables.Add(variableToAdd);
+                        }
+
+                    }
+
+                }
+
+            }
+
+            return exposedVariables;
+        }
+
 
     }
 }

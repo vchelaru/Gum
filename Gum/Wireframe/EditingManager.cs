@@ -250,7 +250,7 @@ namespace Gum.Wireframe
                     {
                         RecursiveVariableFinder rvf = new RecursiveVariableFinder(asGue.Tag as InstanceSave, SelectedState.Self.SelectedElement);
 
-                        WireframeObjectManager.Self.SetGueWidthAndPositionValues(asGue, rvf);
+                        asGue.SetGueWidthAndPositionValues(rvf);
                         //public void SetGueWidthAndPositionValues(GraphicalUiElement gue, RecursiveVariableFinder rvf)
                         //asGue.UpdateLayout();
                     }
@@ -265,7 +265,7 @@ namespace Gum.Wireframe
                     ElementSave elementSave = SelectedState.Self.SelectedElement;
 
                     RecursiveVariableFinder rvf = new RecursiveVariableFinder(elementSave.DefaultState);
-                    WireframeObjectManager.Self.SetGueWidthAndPositionValues(ipso as GraphicalUiElement, rvf);
+                    (ipso as GraphicalUiElement).SetGueWidthAndPositionValues(rvf);
 
                     //WireframeObjectManager.Self.SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(ipso, elementSave, rvf);
 

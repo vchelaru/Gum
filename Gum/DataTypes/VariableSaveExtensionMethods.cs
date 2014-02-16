@@ -3,16 +3,21 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Gum.DataTypes.Variables;
-using Gum.Reflection;
 using System.ComponentModel;
-using Gum.PropertyGridHelpers.Converters;
+
 using Gum.Managers;
 using ToolsUtilities;
+
+#if GUM
+using Gum.Reflection;
+using Gum.PropertyGridHelpers.Converters;
+#endif
 
 namespace Gum.DataTypes
 {
     public static class VariableSaveExtensionMethods
     {
+#if GUM
         public static bool GetIsEnumeration(this VariableSave variableSave)
         {
             if (string.IsNullOrEmpty(variableSave.Type))
@@ -53,6 +58,7 @@ namespace Gum.DataTypes
                 return typeof(object);
             }
         }
+#endif
 
         public static Type GetPrimitiveType(string typeAsString)
         {
@@ -75,6 +81,7 @@ namespace Gum.DataTypes
             return foundType;
         }
 
+#if GUM
         public static TypeConverter GetTypeConverter(this VariableSave variableSave, ElementSave container = null)
         {
             if (variableSave.CustomTypeConverter != null)
@@ -140,9 +147,11 @@ namespace Gum.DataTypes
                 return TypeDescriptor.GetConverter(type);
             }
         }
-
+#endif
         public static void FixEnumerations(this VariableSave variableSave)
         {
+
+#if GUM
             if (variableSave.GetIsEnumeration() && variableSave.Value != null && variableSave.Value.GetType() == typeof(int))
             {
                 Array array = Enum.GetValues(variableSave.GetRuntimeType());
@@ -150,6 +159,43 @@ namespace Gum.DataTypes
                 variableSave.Value = array.GetValue((int)variableSave.Value);
 
             }
+#else
+            if(variableSave.Value != null && variableSave.Value is int)
+            {
+                switch (variableSave.Type)
+                {
+                    case "DimensionUnitType":
+                    case "Gum.DataTypes.DimensionUnitType":
+                        variableSave.Value = (Gum.DataTypes.DimensionUnitType)variableSave.Value;
+                        break;
+                    case "VerticalAlignment":
+                    case "RenderingLibrary.Graphics.VerticalAlignment":
+
+                        variableSave.Value = (global::RenderingLibrary.Graphics.VerticalAlignment)variableSave.Value;
+                        break;
+                    case "HorizontalAlignment":
+                    case "RenderingLibrary.Graphics.HorizontalAlignment":
+                        variableSave.Value = (global::RenderingLibrary.Graphics.HorizontalAlignment)variableSave.Value;
+                        break;
+                    case "PositionUnitType":
+                    case "Gum.Managers.PositionUnitType":
+                        variableSave.Value = (Gum.Managers.PositionUnitType)variableSave.Value;
+                        break;
+                    case "GeneralUnitType":
+                    case "Gum.Converters.GeneralUnitType":
+                        variableSave.Value = (Gum.Converters.GeneralUnitType)variableSave.Value;
+                        break;
+                    default:
+                        int dm = 3;
+
+                        break;
+                }
+            
+            }
+            int m = 3;
+
+#endif
+
         }
 
         public static VariableSave Clone(this VariableSave whatToClone)
@@ -157,7 +203,9 @@ namespace Gum.DataTypes
             var toReturn = FileManager.CloneSaveObject<VariableSave>(whatToClone);
 
             toReturn.ExcludedValuesForEnum.AddRange(whatToClone.ExcludedValuesForEnum);
+#if GUM
             toReturn.FixEnumerations();
+#endif
             return toReturn;
         }
 

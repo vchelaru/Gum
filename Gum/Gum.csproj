@@ -21,7 +21,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;GUM</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
@@ -77,13 +77,18 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\GumRuntime\ElementSaveExtensions.GumRuntime.cs">
+      <Link>Wireframe\ElementSaveExtensions.GumRuntime.cs</Link>
+    </Compile>
     <Compile Include="..\GumRuntime\GraphicalUiElement.cs">
       <Link>Wireframe\GraphicalUiElement.cs</Link>
+    </Compile>
+    <Compile Include="..\GumRuntime\InstanceSaveExtensionMethods.GumRuntime.cs">
+      <Link>Wireframe\InstanceSaveExtensionMethods.GumRuntime.cs</Link>
     </Compile>
     <Compile Include="Commands\EditCommands.cs" />
     <Compile Include="Commands\FileCommands.cs" />
     <Compile Include="Commands\GuiCommands.cs" />
-    <Compile Include="Converters\UnitConverter.cs" />
     <Compile Include="DataTypes\ComponentSaveExtensionMethods.cs" />
     <Compile Include="DataTypes\ElementSaveExtensionMethods.cs" />
     <Compile Include="DataTypes\GumProjectSaveExtensionMethods.cs" />
@@ -318,6 +323,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Content\Icons\" />
+    <Folder Include="Converters\" />
   </ItemGroup>
   <ItemGroup>
     <Page Include="TestWpfControl.xaml">

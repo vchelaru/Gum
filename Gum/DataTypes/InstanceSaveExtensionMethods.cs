@@ -4,14 +4,18 @@ using System.Linq;
 using System.Text;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
-using Gum.ToolStates;
 using Gum.Wireframe;
+
+#if GUM
 using Gum.PropertyGridHelpers.Converters;
+using Gum.ToolStates;
+#endif
 
 namespace Gum.DataTypes
 {
     public static class InstanceSaveExtensionMethods
     {
+#if GUM
         public static bool IsParentASibling(this InstanceSave instanceSave, List<ElementWithState> elementStack)
         {
             if (instanceSave == null)
@@ -32,7 +36,7 @@ namespace Gum.DataTypes
 
             return found;
         }
-
+#endif
         public static void Initialize(this InstanceSave instanceSave)
         {
             // nothing to do currently?
@@ -47,6 +51,7 @@ namespace Gum.DataTypes
 
         }
 
+
         public static VariableSave GetVariableFromThisOrBase(this InstanceSave instance,
             ElementWithState parent, string variable, bool forceDefault = false, bool onlyIfSetsValue = false)
         {
@@ -60,25 +65,30 @@ namespace Gum.DataTypes
 
             StateSave stateToPullFrom = null;
             StateSave defaultState = null;
+
+#if GUM
             if (SelectedState.Self.SelectedElement != null)
             {
                 stateToPullFrom = SelectedState.Self.SelectedElement.DefaultState;
                 defaultState = SelectedState.Self.SelectedElement.DefaultState;
             }
-            
+#endif
+     
             if (elementStack.Count != 0)
             {
                 stateToPullFrom = elementStack.Last().StateSave;
                 defaultState = elementStack.Last().Element.DefaultState;
             }
 
+            
+#if GUM
             if (elementStack.Count != 0 && elementStack.Last().Element == SelectedState.Self.SelectedElement && 
                 SelectedState.Self.SelectedStateSave != null &&
                 !forceDefault)
             {
                 stateToPullFrom = SelectedState.Self.SelectedStateSave;
             }
-
+#endif
 
             VariableSave variableSave = stateToPullFrom.GetVariableSave(instance.Name + "." + variable);
             // non-default states can override the default state, so first
@@ -131,6 +141,8 @@ namespace Gum.DataTypes
             return variableSave;
 
         }
+
+
 
         public static VariableListSave GetVariableListFromThisOrBase(this InstanceSave instance, ElementSave parentContainer, string variable)
         {
@@ -198,6 +210,7 @@ namespace Gum.DataTypes
             return null;
 
         }
+
 
     }
 

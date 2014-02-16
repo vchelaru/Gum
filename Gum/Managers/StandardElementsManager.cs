@@ -5,11 +5,15 @@ using System.Text;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using RenderingLibrary.Graphics;
-using Gum.Plugins;
-using Gum.RenderingLibrary;
-using Gum.PropertyGridHelpers.Converters;
+
 using Microsoft.Xna.Framework;
 using Gum.Wireframe;
+using Gum.RenderingLibrary;
+
+#if GUM
+using Gum.Plugins;
+using Gum.PropertyGridHelpers.Converters;
+#endif
 
 namespace Gum.Managers
 {
@@ -94,11 +98,18 @@ namespace Gum.Managers
             stateSave.Variables.Add(new VariableSave { Type = "int", Value = 18, Name = "FontSize", Category = "Font" });
 
 
-            stateSave.Variables.Add(new VariableSave { Type = "string", Value = "Default", Name = "State", CustomTypeConverter = new AvailableStatesConverter() });
+
+            stateSave.Variables.Add(new VariableSave { Type = "string", Value = "Default", Name = "State"
+#if GUM
+            , CustomTypeConverter = new AvailableStatesConverter()
+#endif            
+            });
 
             AddColorVariables(stateSave, includeAlpha:true);
 
+#if GUM
             PluginManager.Self.ModifyDefaultStandardState("Text", stateSave);
+#endif
             mDefaults.Add("Text", stateSave);
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -134,7 +145,9 @@ namespace Gum.Managers
 
             List<string> list = new List<string>();
             stateSave.VariableLists.Add(new VariableListSave<string> { Type = "string", Value = list, Category = "Animation", Name = "AnimationFrames"});
+#if GUM
             PluginManager.Self.ModifyDefaultStandardState("Sprite", stateSave);
+#endif
             mDefaults.Add("Sprite", stateSave);
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -156,7 +169,9 @@ namespace Gum.Managers
             AddDimensionsVariables(stateSave, 150, 150, false);
 
             stateSave.Variables.Add(new VariableSave { Type = "bool", Value = true, Name = "Visible" });
+#if GUM
             PluginManager.Self.ModifyDefaultStandardState("Container", stateSave);
+#endif
             mDefaults.Add("Container", stateSave);
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -178,7 +193,9 @@ namespace Gum.Managers
 
             stateSave.Variables.Add(new VariableSave { Type = "bool", Value = true, Name = "Visible" });
             AddColorVariables(stateSave, true);
+#if GUM
             PluginManager.Self.ModifyDefaultStandardState("ColoredRectangle", stateSave);
+#endif
             mDefaults.Add("ColoredRectangle", stateSave);
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -196,7 +213,10 @@ namespace Gum.Managers
             AddColorVariables(stateSave);
             stateSave.Variables.Add(new VariableSave { Type = "Blend", Value = Blend.Normal, Name = "Blend", Category = "Rendering" });
 
+#if GUM
+
             PluginManager.Self.ModifyDefaultStandardState("NineSlice", stateSave);
+#endif
             mDefaults.Add("NineSlice", stateSave);
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -207,10 +227,13 @@ namespace Gum.Managers
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             stateSave = new StateSave();
             stateSave.Name = "Default";
+#if GUM
             PluginManager.Self.ModifyDefaultStandardState("Component", stateSave);
+#endif
 
+#if GUM
             stateSave.Variables.Add(new VariableSave { Type = "string", Value = "Default", Name = "State", CustomTypeConverter = new AvailableStatesConverter()});
-
+#endif
 
             mDefaults.Add("Component", stateSave);
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -223,7 +246,9 @@ namespace Gum.Managers
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             stateSave = new StateSave();
             stateSave.Name = "Default";
+#if GUM
             PluginManager.Self.ModifyDefaultStandardState("Screen", stateSave);
+#endif
 
             mDefaults.Add("Screen", stateSave);
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -295,10 +320,12 @@ namespace Gum.Managers
             stateSave.Variables.Add(new VariableSave { Type = "VerticalAlignment", Value = VerticalAlignment.Top, Name = "Y Origin", Category = "Position" });
 
             stateSave.Variables.Add(new VariableSave { Type = "string", Value = null, Name = "Guide", Category = "Position" });
-
+#if GUM
             AddParentVariables(stateSave);
+#endif
         }
 
+#if GUM
         private static void AddParentVariables(StateSave variables)
         {
             VariableSave variableSave = new VariableSave();
@@ -308,6 +335,7 @@ namespace Gum.Managers
             variableSave.CustomTypeConverter = new AvailableInstancesConverter() { IncludeScreenBounds = true };
             variables.Variables.Add(variableSave);
         }
+#endif 
 
         public StateSave GetDefaultStateFor(string type)
         {

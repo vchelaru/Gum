@@ -5,6 +5,7 @@ using System.Text;
 using RenderingLibrary.Math.Geometry;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
+using Gum.Converters;
 
 namespace Gum.Wireframe
 {

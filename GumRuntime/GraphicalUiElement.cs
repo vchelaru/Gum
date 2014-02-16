@@ -5,42 +5,13 @@ using System.Text;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using Gum.DataTypes;
+using Gum.Managers;
+using Gum.Converters;
+using GumDataTypes.Variables;
 
-
-namespace Gum.Managers
-{
-    public enum PositionUnitType
-    {
-        PixelsFromLeft,
-        PixelsFromTop,
-        PercentageWidth,
-        PercentageHeight,
-        PixelsFromRight,
-        PixelsFromBottom,
-        PixelsFromCenterX,
-        PixelsFromCenterY
-
-    }
-}
 
 namespace Gum.Wireframe
 {
-    #region Enums
-
-    public enum GeneralUnitType
-    {
-        PixelsFromSmall,
-        PixelsFromLarge,
-        PixelsFromMiddle,
-        Percentage,
-        PercentageOfFile
-    }
-
-
-
-
-
-    #endregion
 
 
     public class GraphicalUiElement : IRenderable, IPositionedSizedObject, IVisible
@@ -572,6 +543,28 @@ namespace Gum.Wireframe
             return Name;
         }
 
+        public void SetGueWidthAndPositionValues(IVariableFinder rvf)
+        {
+
+            this.SuspendLayout();
+
+            this.Width = rvf.GetValue<float>("Width");
+            this.Height = rvf.GetValue<float>("Height");
+
+            this.HeightUnit = rvf.GetValue<DimensionUnitType>("Height Units");
+            this.WidthUnit = rvf.GetValue<DimensionUnitType>("Width Units");
+
+            this.XOrigin = rvf.GetValue<HorizontalAlignment>("X Origin");
+            this.YOrigin = rvf.GetValue<VerticalAlignment>("Y Origin");
+
+            this.X = rvf.GetValue<float>("X");
+            this.Y = rvf.GetValue<float>("Y");
+
+            this.XUnits = UnitConverter.Self.ConvertToGeneralUnit(rvf.GetValue<PositionUnitType>("X Units"));
+            this.YUnits = UnitConverter.Self.ConvertToGeneralUnit(rvf.GetValue<PositionUnitType>("Y Units"));
+
+            this.ResumeLayout();
+        }        
 
         public void AddToManagers(SystemManagers mManagers, Layer layer)
         {

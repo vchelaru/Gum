@@ -29,6 +29,24 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x86\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <OutputPath>bin\x86\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.Xna.Framework, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86" />
     <Reference Include="Microsoft.Xna.Framework.Graphics, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86" />
@@ -41,8 +59,39 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DimensionUnitType.cs" />
+    <Compile Include="..\Gum\DataTypes\ComponentSaveExtensionMethods.cs">
+      <Link>ComponentSaveExtensionMethods.cs</Link>
+    </Compile>
+    <Compile Include="..\Gum\DataTypes\ElementSaveExtensionMethods.cs">
+      <Link>ElementSaveExtensionMethods.cs</Link>
+    </Compile>
+    <Compile Include="..\Gum\DataTypes\InstanceSaveExtensionMethods.cs">
+      <Link>InstanceSaveExtensionMethods.cs</Link>
+    </Compile>
+    <Compile Include="..\Gum\DataTypes\RecursiveVariableFinder.cs">
+      <Link>RecursiveVariableFinder.cs</Link>
+    </Compile>
+    <Compile Include="..\Gum\DataTypes\StateSaveExtensionMethods.cs">
+      <Link>StateSaveExtensionMethods.cs</Link>
+    </Compile>
+    <Compile Include="..\Gum\DataTypes\VariableSaveExtensionMethods.cs">
+      <Link>VariableSaveExtensionMethods.cs</Link>
+    </Compile>
+    <Compile Include="..\Gum\Managers\ObjectFinder.cs">
+      <Link>ObjectFinder.cs</Link>
+    </Compile>
+    <Compile Include="..\Gum\Managers\StandardElementsManager.cs">
+      <Link>StandardElementsManager.cs</Link>
+    </Compile>
+    <Compile Include="..\Gum\RenderingLibrary\Blend.cs">
+      <Link>Blend.cs</Link>
+    </Compile>
+    <Compile Include="..\Gum\Wireframe\ElementWithState.cs">
+      <Link>ElementWithState.cs</Link>
+    </Compile>
+    <Compile Include="ElementSaveExtensions.GumRuntime.cs" />
     <Compile Include="GraphicalUiElement.cs" />
+    <Compile Include="InstanceSaveExtensionMethods.GumRuntime.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -2,12 +2,40 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Gum.Managers;
 using Gum.DataTypes;
-using Gum.Wireframe;
+using Gum.Managers;
+
+
+
+namespace Gum.Managers
+{
+    public enum PositionUnitType
+    {
+        PixelsFromLeft,
+        PixelsFromTop,
+        PercentageWidth,
+        PercentageHeight,
+        PixelsFromRight,
+        PixelsFromBottom,
+        PixelsFromCenterX,
+        PixelsFromCenterY
+
+    }
+}
+
 
 namespace Gum.Converters
 {
+
+    public enum GeneralUnitType
+    {
+        PixelsFromSmall,
+        PixelsFromLarge,
+        PixelsFromMiddle,
+        Percentage,
+        PercentageOfFile
+    }
+
     public enum XOrY
     {
         X,

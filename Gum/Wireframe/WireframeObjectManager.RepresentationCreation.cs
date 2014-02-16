@@ -18,6 +18,7 @@ using ToolsUtilities;
 using Microsoft.Xna.Framework;
 using Gum.Converters;
 using Gum.PropertyGridHelpers.Converters;
+using GumRuntime;
 
 namespace Gum.Wireframe
 {
@@ -268,41 +269,6 @@ namespace Gum.Wireframe
             return element;
         }
 
-        public List<VariableSave> GetExposedVariablesForThisInstance(DataTypes.InstanceSave instance, string parentInstanceName, List<ElementWithState> elementStack)
-        {
-            List<VariableSave> exposedVariables = new List<VariableSave>();
-            if (elementStack.Count > 1)
-            {
-                ElementWithState containerOfVariables = elementStack[elementStack.Count - 2];
-                ElementWithState definerOfVariables = elementStack[elementStack.Count - 1];
-
-                foreach (VariableSave variable in definerOfVariables.Element.DefaultState.Variables)
-                {
-                    if (!string.IsNullOrEmpty(variable.ExposedAsName) && variable.SourceObject == instance.Name)
-                    {
-                        // This variable is exposed, let's see if the container does anything with it
-
-                        VariableSave foundVariable = containerOfVariables.StateSave.GetVariableRecursive(parentInstanceName + "." + variable.ExposedAsName);
-
-                        if (foundVariable != null)
-                        {
-                            VariableSave variableToAdd = new VariableSave();
-                            variableToAdd.Type = variable.Type;
-                            variableToAdd.Value = foundVariable.Value;
-                            variableToAdd.SetsValue = foundVariable.SetsValue;
-                            variableToAdd.Name = variable.Name.Substring(variable.Name.IndexOf('.') + 1);
-                            exposedVariables.Add(variableToAdd);
-                        }
-
-                    }
-
-                }
-
-            }
-
-            return exposedVariables;
-        }
-
         private IPositionedSizedObject CreateRepresentationsForInstanceFromComponent(InstanceSave instance, 
             List<ElementWithState> elementStack, InstanceSave parentInstance, GraphicalUiElement parentIpso, 
             ComponentSave baseComponentSave)
@@ -403,7 +369,7 @@ namespace Gum.Wireframe
             
             graphicalUiElement.Visible = (bool)rvf.GetValue("Visible");
 
-            SetGueWidthAndPositionValues(graphicalUiElement, rvf);
+            graphicalUiElement.SetGueWidthAndPositionValues(rvf);
 
 
             return graphicalUiElement;
@@ -422,7 +388,7 @@ namespace Gum.Wireframe
 
             // Sprite may be dependent on the texture for its location, so set the dimensions and positions *after* texture
 
-            SetGueWidthAndPositionValues(graphicalUiElement, rvf);
+            graphicalUiElement.SetGueWidthAndPositionValues(rvf);
 
             graphicalUiElement.Visible = (bool)rvf.GetValue("Visible");
             return graphicalUiElement;
@@ -453,7 +419,7 @@ namespace Gum.Wireframe
 
             // NineSlice may be dependent on the texture for its location, so set the dimensions and positions *after* texture
 
-            SetGueWidthAndPositionValues(graphicalUiElement, rvf);
+            graphicalUiElement.SetGueWidthAndPositionValues(rvf);
 
             graphicalUiElement.SetContainedObject(nineSlice);
 
@@ -470,7 +436,7 @@ namespace Gum.Wireframe
             InitializeNineSlice(nineSlice, rvf);
 
 
-            SetGueWidthAndPositionValues(graphicalUiElement, rvf);
+            graphicalUiElement.SetGueWidthAndPositionValues(rvf);
 
             graphicalUiElement.SetContainedObject(nineSlice);
 
@@ -493,17 +459,28 @@ namespace Gum.Wireframe
         
         private IPositionedSizedObject CreateSolidRectangleFor(ElementSave elementSave, GraphicalUiElement graphicalUiElement)
         {
-            SolidRectangle solidRectangle = InstantiateAndNameSolidRectangle(elementSave.Name);
-            solidRectangle.Tag = elementSave;
-
 
             RecursiveVariableFinder rvf = GetRvfForCurrentElementState(elementSave);
 
-            SetAlphaAndColorValues(solidRectangle, rvf);
+            string baseType = elementSave.BaseType;
+            if (string.IsNullOrEmpty(baseType))
+            {
+                baseType = elementSave.Name;
+            }
 
-            SetGueWidthAndPositionValues(graphicalUiElement, rvf);
+            GumRuntime.InstanceSaveExtensionMethods.SetGraphicalUiElement(
+                rvf, baseType, graphicalUiElement, null, false);
 
-            graphicalUiElement.SetContainedObject(solidRectangle);
+
+
+            SolidRectangle solidRectangle = graphicalUiElement.RenderableComponent as SolidRectangle;
+
+            InitializeSolidRectangle(solidRectangle, elementSave.Name);
+            solidRectangle.Tag = elementSave;
+
+
+
+            
 
             return graphicalUiElement;           
         }
@@ -511,41 +488,29 @@ namespace Gum.Wireframe
         private IPositionedSizedObject CreateSolidRectangleFor(InstanceSave instance, List<ElementWithState> elementStack, GraphicalUiElement graphicalUiElement)
         {
             ElementSave instanceBase = ObjectFinder.Self.GetElementSave(instance.BaseType);
-
-            SolidRectangle solidRectangle = InstantiateAndNameSolidRectangle(instance.Name);
-            solidRectangle.Tag = instance;
-
+            
             RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(instance, elementStack);
 
-            SetAlphaAndColorValues(solidRectangle, rvf);
 
-            SetGueWidthAndPositionValues(graphicalUiElement, rvf);
+            GumRuntime.InstanceSaveExtensionMethods.SetGraphicalUiElement(
+                rvf, instance.BaseType, graphicalUiElement, null, false);
 
-            solidRectangle.Visible = (bool)rvf.GetValue("Visible");
-            graphicalUiElement.SetContainedObject(solidRectangle);
+            SolidRectangle solidRectangle = graphicalUiElement.RenderableComponent as SolidRectangle;
 
+            InitializeSolidRectangle(solidRectangle, instance.Name);
+            solidRectangle.Tag = instance;
+            
             return graphicalUiElement;
         }
-        private void SetAlphaAndColorValues(SolidRectangle solidRectangle, RecursiveVariableFinder rvf)
+
+        private void InitializeSolidRectangle(SolidRectangle solidRectangle, string name)
         {
-            Microsoft.Xna.Framework.Color color = new Microsoft.Xna.Framework.Color(
-                rvf.GetValue<int>("Red"),
-                rvf.GetValue<int>("Green"),
-                rvf.GetValue<int>("Blue"),
-                rvf.GetValue<int>("Alpha")
-                
-                );
-            solidRectangle.Color = color;
-        }
-        private SolidRectangle InstantiateAndNameSolidRectangle(string name)
-        {
-            SolidRectangle solidRectangle = new SolidRectangle();
 
             // Add it to the manager first because the positioning code may need to access the source element/instance
             ShapeManager.Self.Add(solidRectangle);
             solidRectangle.Name = name;
             mSolidRectangles.Add(solidRectangle);
-            return solidRectangle;
+
         }
 
 
@@ -558,7 +523,7 @@ namespace Gum.Wireframe
 
             graphicalUiElement.SetContainedObject(lineRectangle);
 
-            SetGueWidthAndPositionValues(graphicalUiElement, rvf);
+            graphicalUiElement.SetGueWidthAndPositionValues(rvf);
 
             return graphicalUiElement;
         }
@@ -588,7 +553,7 @@ namespace Gum.Wireframe
 
             graphicalUiElement.SetContainedObject(lineRectangle);
 
-            SetGueWidthAndPositionValues(graphicalUiElement, rvf);
+            graphicalUiElement.SetGueWidthAndPositionValues(rvf);
 
             return graphicalUiElement;
         }
@@ -632,7 +597,7 @@ namespace Gum.Wireframe
             Text text = CreateTextInternal(elementSave, elementSave.Name, rvf);
 
 
-            SetGueWidthAndPositionValues(graphicalUiElement, rvf);
+            graphicalUiElement.SetGueWidthAndPositionValues(rvf);
 
             text.EnableTextureCreation();
 
@@ -648,7 +613,7 @@ namespace Gum.Wireframe
             Text text = CreateTextInternal(instance, instance.Name, rvf);
             
             graphicalUiElement.SetContainedObject(text);
-            SetGueWidthAndPositionValues(graphicalUiElement, rvf);
+            graphicalUiElement.SetGueWidthAndPositionValues(rvf);
 
             return graphicalUiElement;
         }
@@ -721,27 +686,7 @@ namespace Gum.Wireframe
         }
 
 
-        public void SetGueWidthAndPositionValues(GraphicalUiElement gue, RecursiveVariableFinder rvf)
-        {
-            gue.SuspendLayout();
 
-            gue.Width = rvf.GetValue<float>("Width");
-            gue.Height = rvf.GetValue<float>("Height");
-
-            gue.HeightUnit = rvf.GetValue<DimensionUnitType>("Height Units");
-            gue.WidthUnit = rvf.GetValue<DimensionUnitType>("Width Units");
-
-            gue.XOrigin = rvf.GetValue<HorizontalAlignment>("X Origin");
-            gue.YOrigin = rvf.GetValue<VerticalAlignment>("Y Origin");
-
-            gue.X = rvf.GetValue<float>("X");
-            gue.Y = rvf.GetValue<float>("Y");
-
-            gue.XUnits = UnitConverter.Self.ConvertToGeneralUnit(rvf.GetValue<PositionUnitType>("X Units"));
-            gue.YUnits = UnitConverter.Self.ConvertToGeneralUnit(rvf.GetValue<PositionUnitType>("Y Units"));
-
-            gue.ResumeLayout();
-        }
 
 
         public void SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(IPositionedSizedObject ipso, ElementSave containerElement, RecursiveVariableFinder rvf)

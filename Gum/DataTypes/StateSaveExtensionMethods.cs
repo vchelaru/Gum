@@ -5,9 +5,11 @@ using System.Text;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using System.Collections;
-using Gum.Reflection;
 using ToolsUtilities;
 using Gum.Wireframe;
+
+//using Gum.Reflection;
+
 
 namespace Gum.DataTypes.Variables
 {
@@ -19,7 +21,6 @@ namespace Gum.DataTypes.Variables
             {
                 variable.FixEnumerations();
             }
-
             stateSave.Variables.Sort((a, b) => a.Name.CompareTo(b.Name));
         }
 
@@ -527,9 +528,13 @@ namespace Gum.DataTypes.Variables
                 stateSave.VariableLists.Add(FileManager.CloneSaveObject(variableList));
             }
 
+#if GUM
+
             stateSave.FixEnumerations();
+#endif
         }
 
+#if GUM
         public static void FixEnumerations(this StateSave stateSave)
         {
             foreach (VariableSave variable in stateSave.Variables)
@@ -545,7 +550,7 @@ namespace Gum.DataTypes.Variables
 
 
         }
-
+#endif
         // I wrote this for animation but it turns out it isn't going to work how I expected
         //public static StateSave CombineBaseValuesAndClone(this StateSave stateSave)
         //{
