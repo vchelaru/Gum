@@ -4,9 +4,12 @@ using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using ToolsUtilities;
+using RenderingLibrary.Content;
 
 namespace RenderingLibrary.Graphics
 {
+    #region Enums
 
     public enum NineSliceSections
     {
@@ -21,6 +24,7 @@ namespace RenderingLibrary.Graphics
         BottomRight
     }
 
+    #endregion
 
     public class NineSlice : IPositionedSizedObject, IRenderable, IVisible
     {
@@ -42,6 +46,8 @@ namespace RenderingLibrary.Graphics
         Sprite mBottomLeftSprite = new Sprite(null);
         Sprite mLeftSprite = new Sprite(null);
         Sprite mCenterSprite = new Sprite(null);
+
+
 
         #endregion
 
@@ -267,7 +273,17 @@ namespace RenderingLibrary.Graphics
             get { return mChildren; }
         }
 
+        public static Dictionary<NineSliceSections, string> PossibleNineSliceEndings
+        {
+            get;
+            private set;
+        }
+        
+
         #endregion
+
+
+        #region Methods
 
 
         void IRenderable.Render(SpriteBatch spriteBatch, SystemManagers managers)
@@ -337,6 +353,7 @@ namespace RenderingLibrary.Graphics
             mParent = parent;
         }
 
+
         #region IVisible Implementation
 
         public bool Visible
@@ -370,10 +387,96 @@ namespace RenderingLibrary.Graphics
 
         #endregion
 
+        static NineSlice()
+        {
+            PossibleNineSliceEndings = new Dictionary<NineSliceSections, string>()
+            {
+                {NineSliceSections.Center, "_center"},
+                {NineSliceSections.Left, "_left"},
+                {NineSliceSections.Right, "_right"},
+                {NineSliceSections.TopLeft, "_topLeft"},
+                {NineSliceSections.Top, "_topCenter"},
+                {NineSliceSections.TopRight, "_topRight"},
+                {NineSliceSections.BottomLeft, "_bottomLeft"},
+                {NineSliceSections.Bottom, "_bottomCenter"},
+                {NineSliceSections.BottomRight, "_bottomRight"}
+            };
+
+        }
 
         public NineSlice()
         {
             Visible = true;
         }
+
+        public void SetTexturesUsingPattern(string anyOf9Textures, SystemManagers managers)
+        {
+
+            string absoluteTexture = anyOf9Textures;
+
+            if(FileManager.IsRelative(absoluteTexture))
+            {
+                absoluteTexture = FileManager.RelativeDirectory + absoluteTexture;
+
+                absoluteTexture = FileManager.RemoveDotDotSlash(absoluteTexture);
+            }
+
+            string extension = FileManager.GetExtension(absoluteTexture);
+
+            string bareTexture = GetBareTextureForNineSliceTexture(absoluteTexture);
+            string error;
+            if (!string.IsNullOrEmpty(bareTexture))
+            {
+                TopLeftTexture = LoaderManager.Self.LoadOrInvalid(
+                    bareTexture + NineSlice.PossibleNineSliceEndings[NineSliceSections.TopLeft] + "." + extension, managers, out error);
+                TopTexture = LoaderManager.Self.LoadOrInvalid(
+                    bareTexture + NineSlice.PossibleNineSliceEndings[NineSliceSections.Top] + "." + extension, managers, out error);
+                TopRightTexture = LoaderManager.Self.LoadOrInvalid(
+                    bareTexture + NineSlice.PossibleNineSliceEndings[NineSliceSections.TopRight] + "." + extension, managers, out error);
+
+                LeftTexture = LoaderManager.Self.LoadOrInvalid(
+                    bareTexture + NineSlice.PossibleNineSliceEndings[NineSliceSections.Left] + "." + extension, managers, out error);
+                CenterTexture = LoaderManager.Self.LoadOrInvalid(
+                    bareTexture + NineSlice.PossibleNineSliceEndings[NineSliceSections.Center] + "." + extension, managers, out error);
+                RightTexture = LoaderManager.Self.LoadOrInvalid(
+                    bareTexture + NineSlice.PossibleNineSliceEndings[NineSliceSections.Right] + "." + extension, managers, out error);
+
+                BottomLeftTexture = LoaderManager.Self.LoadOrInvalid(
+                    bareTexture + NineSlice.PossibleNineSliceEndings[NineSliceSections.BottomLeft] + "." + extension, managers, out error);
+                BottomTexture = LoaderManager.Self.LoadOrInvalid(
+                    bareTexture + NineSlice.PossibleNineSliceEndings[NineSliceSections.Bottom] + "." + extension, managers, out error);
+                BottomRightTexture = LoaderManager.Self.LoadOrInvalid(
+                    bareTexture + NineSlice.PossibleNineSliceEndings[NineSliceSections.BottomRight] + "." + extension, managers, out error);
+            }
+
+
+        }
+
+        
+        public string GetBareTextureForNineSliceTexture(string absoluteTexture)
+        {
+            string extension = FileManager.GetExtension(absoluteTexture);
+
+            string withoutExtension = FileManager.RemoveExtension(absoluteTexture);
+
+            string toReturn = withoutExtension;
+
+            foreach (var kvp in NineSlice.PossibleNineSliceEndings)
+            {
+                if (withoutExtension.ToLower().EndsWith(kvp.Value.ToLower()))
+                {
+                    toReturn = withoutExtension.Substring(0, withoutExtension.Length - kvp.Value.Length);
+                    break;
+                }
+            }
+
+            // No extensions, because we'll need to append that
+            //toReturn += "." + extension;
+
+            return toReturn;
+        }
+
+        #endregion
     }
+
 }

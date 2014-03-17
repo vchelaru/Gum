@@ -193,6 +193,8 @@ namespace RenderingLibrary.Content
             if (FileManager.IsRelative(fileNameStandardized))
             {
                 fileNameStandardized = FileManager.RelativeDirectory + fileNameStandardized;
+
+                fileNameStandardized = FileManager.RemoveDotDotSlash(fileNameStandardized);
             }
 
 
@@ -220,6 +222,10 @@ namespace RenderingLibrary.Content
                 }
                 if (extension == "tga")
                 {
+                    if (renderer.GraphicsDevice == null)
+                    {
+                        throw new Exception("The renderer is null - did you forget to call Initialize?");
+                    }
 
                     Paloma.TargaImage tgaImage = new Paloma.TargaImage(fileName);
                     using (MemoryStream stream = new MemoryStream())

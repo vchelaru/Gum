@@ -57,26 +57,7 @@ namespace Gum.Wireframe
             "Blue"
         };
 
-
-        Dictionary<NineSliceSections, string> mPossibleNineSliceEndings = new Dictionary<NineSliceSections, string>()
-        {
-            {NineSliceSections.Center, "_center"},
-            {NineSliceSections.Left, "_left"},
-            {NineSliceSections.Right, "_right"},
-            {NineSliceSections.TopLeft, "_topLeft"},
-            {NineSliceSections.Top, "_topCenter"},
-            {NineSliceSections.TopRight, "_topRight"},
-            {NineSliceSections.BottomLeft, "_bottomLeft"},
-            {NineSliceSections.Bottom, "_bottomCenter"},
-            {NineSliceSections.BottomRight, "_bottomRight"}
-        };
-
         #endregion
-
-        public Dictionary<NineSliceSections, string> PossibleNineSliceEndings
-        {
-            get { return mPossibleNineSliceEndings; }
-        }
 
         private void CreateIpsoForElement(ElementSave elementSave)
         {
@@ -952,33 +933,7 @@ namespace Gum.Wireframe
             string textureName = (string)rvf.GetValue("SourceFile");
             string absoluteTexture = ProjectManager.Self.MakeAbsoluteIfNecessary(textureName);
 
-            string extension = FileManager.GetExtension(absoluteTexture);
-
-            string bareTexture = GetBareTextureForNineSliceTexture(absoluteTexture);
-            string error;
-            if (!string.IsNullOrEmpty(bareTexture))
-            {
-                nineSlice.TopLeftTexture = LoaderManager.Self.LoadOrInvalid(
-                    bareTexture + mPossibleNineSliceEndings[NineSliceSections.TopLeft] + "." + extension, null, out error);
-                nineSlice.TopTexture = LoaderManager.Self.LoadOrInvalid(
-                    bareTexture + mPossibleNineSliceEndings[NineSliceSections.Top] + "." + extension, null, out error);
-                nineSlice.TopRightTexture = LoaderManager.Self.LoadOrInvalid(
-                    bareTexture + mPossibleNineSliceEndings[NineSliceSections.TopRight] + "." + extension, null, out error);
-
-                nineSlice.LeftTexture = LoaderManager.Self.LoadOrInvalid(
-                    bareTexture + mPossibleNineSliceEndings[NineSliceSections.Left] + "." + extension, null, out error);
-                nineSlice.CenterTexture = LoaderManager.Self.LoadOrInvalid(
-                    bareTexture + mPossibleNineSliceEndings[NineSliceSections.Center] + "." + extension, null, out error);
-                nineSlice.RightTexture = LoaderManager.Self.LoadOrInvalid(
-                    bareTexture + mPossibleNineSliceEndings[NineSliceSections.Right] + "." + extension, null, out error);
-
-                nineSlice.BottomLeftTexture = LoaderManager.Self.LoadOrInvalid(
-                    bareTexture + mPossibleNineSliceEndings[NineSliceSections.BottomLeft] + "." + extension, null, out error);
-                nineSlice.BottomTexture = LoaderManager.Self.LoadOrInvalid(
-                    bareTexture + mPossibleNineSliceEndings[NineSliceSections.Bottom] + "." + extension, null, out error);
-                nineSlice.BottomRightTexture = LoaderManager.Self.LoadOrInvalid(
-                    bareTexture + mPossibleNineSliceEndings[NineSliceSections.BottomRight] + "." + extension, null, out error);
-            }
+            nineSlice.SetTexturesUsingPattern(absoluteTexture, null);
 
             var color = GetColorFromRvf(rvf);
             nineSlice.Color = color;
@@ -1005,28 +960,7 @@ namespace Gum.Wireframe
 
         }
 
-        public string GetBareTextureForNineSliceTexture(string absoluteTexture)
-        {
-            string extension = FileManager.GetExtension(absoluteTexture);
 
-            string withoutExtension = FileManager.RemoveExtension(absoluteTexture);
-
-            string toReturn = withoutExtension;
-
-            foreach (var kvp in mPossibleNineSliceEndings)
-            {
-                if (withoutExtension.ToLower().EndsWith(kvp.Value.ToLower()))
-                {
-                    toReturn = withoutExtension.Substring(0, withoutExtension.Length - kvp.Value.Length);
-                    break;
-                }
-            }
-
-            // No extensions, because we'll need to append that
-            //toReturn += "." + extension;
-
-            return toReturn;
-        }
 
     }
 }
