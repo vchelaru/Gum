@@ -375,10 +375,6 @@ namespace RenderingLibrary.Graphics
             {
                 this.BitmapFont = LoaderManager.Self.DefaultBitmapFont;
             }
-            else
-            {
-                this.BitmapFont = new Graphics.BitmapFont(@"Content\TestFont.fnt", managers);
-            }
 #endif
             UpdateLinePrimitive();
         }
@@ -386,6 +382,13 @@ namespace RenderingLibrary.Graphics
         char[] whatToSplitOn = new char[] { ' '};
         private void UpdateWrappedText()
         {
+            ///////////EARLY OUT/////////////
+            if (this.BitmapFont == null)
+            {
+                return;
+            }
+            /////////END EARLY OUT///////////
+
             mWrappedText.Clear();
 
             float wrappingWidth = mWidth;

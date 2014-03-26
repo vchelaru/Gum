@@ -14,26 +14,26 @@ namespace GumRuntime
 {
     public static class InstanceSaveExtensionMethods
     {
-        public static GraphicalUiElement ToGraphicalUiElement(this InstanceSave instanceSave, SystemManagers systemManagers, bool addToManagers)
+        public static GraphicalUiElement ToGraphicalUiElement(this InstanceSave instanceSave, SystemManagers systemManagers)
         {
             GraphicalUiElement toReturn = new GraphicalUiElement(
                 null, null);
 
-            instanceSave.SetGraphicalUiElement(toReturn, systemManagers, addToManagers);
+            instanceSave.SetGraphicalUiElement(toReturn, systemManagers);
 
             return toReturn;
 
         }
 
-        public static void SetGraphicalUiElement(this InstanceSave instanceSave, GraphicalUiElement graphicalUiElement, SystemManagers systemManagers, bool addToManagers)
+        public static void SetGraphicalUiElement(this InstanceSave instanceSave, GraphicalUiElement graphicalUiElement, SystemManagers systemManagers)
         {
 
             RecursiveVariableFinder rvf = new RecursiveVariableFinder(instanceSave, instanceSave.ParentContainer);
-            SetGraphicalUiElement(rvf, instanceSave.BaseType, graphicalUiElement, systemManagers, addToManagers);
+            SetGraphicalUiElement(rvf, instanceSave.BaseType, graphicalUiElement, systemManagers);
 
         }
 
-        public static void SetGraphicalUiElement(RecursiveVariableFinder rvf, string baseType, GraphicalUiElement graphicalUiElement, SystemManagers systemManagers, bool addToManagers)
+        public static void SetGraphicalUiElement(RecursiveVariableFinder rvf, string baseType, GraphicalUiElement graphicalUiElement, SystemManagers systemManagers)
         {
             IRenderable containedObject = null;
 
@@ -43,19 +43,11 @@ namespace GumRuntime
                 case "Container":
 
                     LineRectangle lineRectangle = new LineRectangle(systemManagers);
-                    if (addToManagers)
-                    {
-                        systemManagers.ShapeManager.Add(lineRectangle);
-                    }
                     containedObject = lineRectangle;
                     break;
 
                 case "ColoredRectangle":
                     SolidRectangle solidRectangle = new SolidRectangle();
-                    if (addToManagers)
-                    {
-                        systemManagers.ShapeManager.Add(solidRectangle);
-                    }
                     SetAlphaAndColorValues(solidRectangle, rvf);
                     solidRectangle.Visible = rvf.GetValue<bool>("Visible");
                     containedObject = solidRectangle;
@@ -69,12 +61,12 @@ namespace GumRuntime
                         texture = LoaderManager.Self.Load(textureValue, systemManagers);
                     }
                     Sprite sprite = new Sprite(texture);
-                    if (addToManagers)
-                    {
-                        systemManagers.SpriteManager.Add(sprite);
-                    }
                     SetAlphaAndColorValues(sprite, rvf);
                     sprite.Visible = rvf.GetValue<bool>("Visible");
+
+                    //Sprite specific
+                    sprite.FlipHorizontal = rvf.GetValue<bool>("FlipHorizontal");
+                    sprite.FlipVertical = rvf.GetValue<bool>("FlipVertical");
                     containedObject = sprite;
 
                     break;
@@ -85,14 +77,29 @@ namespace GumRuntime
                         string relativeFile = rvf.GetValue<string>("SourceFile");
                         nineSlice.SetTexturesUsingPattern(relativeFile, systemManagers);
 
-                        if (addToManagers)
-                        {
-                            systemManagers.SpriteManager.Add(nineSlice);
-                        }
-                        // set alpha and color?
+                        SetAlphaAndColorValues(nineSlice, rvf);
                         nineSlice.Visible = rvf.GetValue<bool>("Visible");
                         containedObject = nineSlice;
 
+                    }
+                    break;
+                case "Text":
+                    {
+                        Text text = new Text(systemManagers, rvf.GetValue<string>("Text"));
+
+                        SetAlphaAndColorValues(text, rvf);
+                        text.Visible = rvf.GetValue<bool>("Visible");
+
+                        string fontName = rvf.GetValue<string>("Font");
+                        int fontSize = rvf.GetValue<int>("FontSize"); // verify these var names
+                        fontName = "FontCache/Font" + fontSize.ToString() + fontName + ".fnt";
+                        BitmapFont font = new BitmapFont(fontName, systemManagers);
+                        text.BitmapFont = font;
+
+                        containedObject = text;
+
+                        //Do Text specific alignment.
+                        SetAlignmentValues(text, rvf); 
                     }
                     break;
                 default:
@@ -115,6 +122,19 @@ namespace GumRuntime
             sprite.Color = ColorFromRvf(rvf);
         }
 
+        private static void SetAlphaAndColorValues(NineSlice nineSlice, RecursiveVariableFinder rvf)
+        {
+            nineSlice.Color = ColorFromRvf(rvf);
+        }
+
+        private static void SetAlphaAndColorValues(Text text, RecursiveVariableFinder rvf)
+        {
+            Microsoft.Xna.Framework.Color color = ColorFromRvf(rvf);
+            text.Red = color.R;
+            text.Green = color.G;
+            text.Blue = color.B;
+            text.Alpha = color.A;  //Is alpha supported?
+        }
 
         static Microsoft.Xna.Framework.Color ColorFromRvf(RecursiveVariableFinder rvf)
         {
@@ -125,6 +145,13 @@ namespace GumRuntime
                 rvf.GetValue<int>("Alpha")
                 );
             return color;
+        }
+
+        private static void SetAlignmentValues(Text text, RecursiveVariableFinder rvf)
+        {
+            //Could these potentially be out of bounds?
+            text.HorizontalAlignment = rvf.GetValue<HorizontalAlignment>("HorizontalAlignment");
+            text.VerticalAlignment = rvf.GetValue<VerticalAlignment>("VerticalAlignment");
         }
     }
 }

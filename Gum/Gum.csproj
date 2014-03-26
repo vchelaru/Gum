@@ -281,10 +281,6 @@
       <Project>{54bfe18a-84b4-48ab-92e0-0774ea019202}</Project>
       <Name>CommonFormsAndControls</Name>
     </ProjectReference>
-    <ProjectReference Include="..\ContentLibrary\ContentLibrary.csproj">
-      <Project>{6E3DECA0-B292-4FBA-B585-7460A329DE2E}</Project>
-      <Name>ContentLibrary</Name>
-    </ProjectReference>
     <ProjectReference Include="..\GumDataTypes\GumDataTypes.csproj">
       <Project>{5971A187-F6B2-4D65-A277-5613DED1F50F}</Project>
       <Name>GumDataTypes</Name>

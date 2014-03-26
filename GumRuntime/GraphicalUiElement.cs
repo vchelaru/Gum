@@ -580,6 +580,50 @@ namespace Gum.Wireframe
             {
                 mManagers.ShapeManager.Add(mContainedObjectAsRenderable as global::RenderingLibrary.Math.Geometry.LineRectangle, layer);
             }
+            else if (mContainedObjectAsRenderable is global::RenderingLibrary.Graphics.SolidRectangle)
+            {
+                mManagers.ShapeManager.Add(mContainedObjectAsRenderable as global::RenderingLibrary.Graphics.SolidRectangle, layer);
+            }
+            else if (mContainedObjectAsRenderable is Text)
+            {
+                mManagers.TextManager.Add(mContainedObjectAsRenderable as Text, layer);
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public void RemoveFromManagers(SystemManagers mManagers)
+        {
+            foreach (var child in this.Children)
+            {
+                if (child is GraphicalUiElement)
+                {
+                    (child as GraphicalUiElement).RemoveFromManagers(mManagers);
+                }
+            }
+
+            if (mContainedObjectAsRenderable is Sprite)
+            {
+                mManagers.SpriteManager.Remove(mContainedObjectAsRenderable as Sprite);
+            }
+            else if (mContainedObjectAsRenderable is NineSlice)
+            {
+                mManagers.SpriteManager.Remove(mContainedObjectAsRenderable as NineSlice);
+            }
+            else if (mContainedObjectAsRenderable is global::RenderingLibrary.Math.Geometry.LineRectangle)
+            {
+                mManagers.ShapeManager.Remove(mContainedObjectAsRenderable as global::RenderingLibrary.Math.Geometry.LineRectangle);
+            }
+            else if (mContainedObjectAsRenderable is global::RenderingLibrary.Graphics.SolidRectangle)
+            {
+                mManagers.ShapeManager.Remove(mContainedObjectAsRenderable as global::RenderingLibrary.Graphics.SolidRectangle);
+            }
+            else if (mContainedObjectAsRenderable is Text)
+            {
+                mManagers.TextManager.Remove(mContainedObjectAsRenderable as Text);
+            }
             else
             {
                 throw new NotImplementedException();
@@ -595,6 +639,18 @@ namespace Gum.Wireframe
         {
             mIsLayoutSuspended = false;
             UpdateLayout();
+        }
+
+        public IPositionedSizedObject GetChildByName(string name)
+        {
+            foreach (IPositionedSizedObject child in Children)
+            {
+                if (child.Name == name)
+                {
+                    return child;
+                }
+            }
+            return null;
         }
 
         #region IVisible Implementation

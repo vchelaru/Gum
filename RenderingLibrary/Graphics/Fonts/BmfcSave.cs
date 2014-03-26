@@ -34,7 +34,7 @@ namespace RenderingLibrary.Graphics.Fonts
                 BmfcSave bmfcSave = new BmfcSave();
                 bmfcSave.FontSize = fontSize;
                 bmfcSave.FontName = fontName;
-                bmfcSave.CreateBitmapFontFilesIfNecessary("FontCache/Font" + bmfcSave.FontSize + bmfcSave.FontName + ".fnt");
+                bmfcSave.CreateBitmapFontFilesIfNecessary("FontCache\\Font" + bmfcSave.FontSize + bmfcSave.FontName + ".fnt");
         }
 
         public void CreateBitmapFontFilesIfNecessary(string fileName)
@@ -64,13 +64,12 @@ namespace RenderingLibrary.Graphics.Fonts
 
                 // Now call the executable
                 ProcessStartInfo info = new ProcessStartInfo();
-                info.FileName = locationToSave.Replace("\\", "/");
+                info.FileName = locationToSave;
 
 
 
                 info.Arguments = "-c \"" + bmfcFileToSave + "\"" +
                     " -o \"" + FileManager.RelativeDirectory + fileName + "\"";
-                info.Arguments = info.Arguments.Replace("\\", "/");
 
                 info.UseShellExecute = false;
                 info.RedirectStandardError = true;

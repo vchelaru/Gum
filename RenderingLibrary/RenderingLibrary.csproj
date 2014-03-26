@@ -117,10 +117,6 @@
     <Compile Include="SystemManagers.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ContentLibrary\ContentLibrary.csproj">
-      <Project>{6E3DECA0-B292-4FBA-B585-7460A329DE2E}</Project>
-      <Name>ContentLibrary</Name>
-    </ProjectReference>
     <ProjectReference Include="..\ToolsUtilities\ToolsUtilities.csproj">
       <Project>{b941a93f-6093-4dc6-ad11-91a058b6c2cc}</Project>
       <Name>ToolsUtilities</Name>

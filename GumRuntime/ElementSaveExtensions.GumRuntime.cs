@@ -19,12 +19,24 @@ namespace GumRuntime
                 null, null);
 
 
-            elementSave.SetGraphicalUiElement(toReturn, systemManagers, addToManagers);
+            elementSave.SetGraphicalUiElement(toReturn, systemManagers);
 
+            //no layering support yet
+            if (addToManagers)
+            {
+                toReturn.AddToManagers(systemManagers, null);
+            }
 
             foreach (var instance in elementSave.Instances)
             {
-                var childGue = instance.ToGraphicalUiElement(systemManagers, true);
+                var childGue = instance.ToGraphicalUiElement(systemManagers);
+                
+                //no layering support yet
+                if (addToManagers)
+                {
+                    childGue.AddToManagers(systemManagers, null);
+                }
+
 
                 childGue.Parent = toReturn;
             }
@@ -33,12 +45,12 @@ namespace GumRuntime
             return toReturn;
         }
 
-        public static void SetGraphicalUiElement(this ElementSave elementSave, GraphicalUiElement toReturn, SystemManagers systemManagers, bool addToManagers)
+        public static void SetGraphicalUiElement(this ElementSave elementSave, GraphicalUiElement toReturn, SystemManagers systemManagers)
         {
             RecursiveVariableFinder rvf = new RecursiveVariableFinder(elementSave.DefaultState);
 
             InstanceSaveExtensionMethods.SetGraphicalUiElement(rvf, elementSave.BaseType,
-                toReturn, systemManagers, true);
+                toReturn, systemManagers);
         }
 
 
