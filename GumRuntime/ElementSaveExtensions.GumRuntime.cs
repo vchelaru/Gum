@@ -21,26 +21,18 @@ namespace GumRuntime
 
             elementSave.SetGraphicalUiElement(toReturn, systemManagers);
 
+            foreach (var instance in elementSave.Instances)
+            {
+                var childGue = instance.ToGraphicalUiElement(systemManagers);
+
+                childGue.Parent = toReturn;
+            }
+
             //no layering support yet
             if (addToManagers)
             {
                 toReturn.AddToManagers(systemManagers, null);
             }
-
-            foreach (var instance in elementSave.Instances)
-            {
-                var childGue = instance.ToGraphicalUiElement(systemManagers);
-                
-                //no layering support yet
-                if (addToManagers)
-                {
-                    childGue.AddToManagers(systemManagers, null);
-                }
-
-
-                childGue.Parent = toReturn;
-            }
-
 
             return toReturn;
         }

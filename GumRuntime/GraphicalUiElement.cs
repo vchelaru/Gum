@@ -592,6 +592,15 @@ namespace Gum.Wireframe
             {
                 throw new NotImplementedException();
             }
+
+            //Recursively add children to the managers
+            foreach (var child in this.Children)
+            {
+                if (child is GraphicalUiElement)
+                {
+                    (child as GraphicalUiElement).AddToManagers(mManagers, layer);
+                }
+            }
         }
 
         public void RemoveFromManagers(SystemManagers mManagers)
