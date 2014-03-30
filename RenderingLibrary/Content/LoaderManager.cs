@@ -222,6 +222,7 @@ namespace RenderingLibrary.Content
                 }
                 if (extension == "tga")
                 {
+#if RENDERING_LIB_SUPPORTS_TGA
                     if (renderer.GraphicsDevice == null)
                     {
                         throw new Exception("The renderer is null - did you forget to call Initialize?");
@@ -234,6 +235,9 @@ namespace RenderingLibrary.Content
                         stream.Seek(0, SeekOrigin.Begin); //must do this, or error is thrown in next line
                         toReturn = Texture2D.FromStream(renderer.GraphicsDevice, stream);
                     }
+#else
+                    throw new NotImplementedException();
+#endif
                 }
                 else
                 {
