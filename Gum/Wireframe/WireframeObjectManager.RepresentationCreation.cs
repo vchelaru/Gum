@@ -632,39 +632,12 @@ namespace Gum.Wireframe
                 fontSize,
                 fontName);
 
-            text.BitmapFont = GetBitmapFontFor(fontName, fontSize);
+            text.BitmapFont = FontManager.Self.GetBitmapFontFor(fontName, fontSize);
             text.EnableTextureCreation();
             return text;
         }
 
-        private BitmapFont GetBitmapFontFor(string fontName, int fontSize)
-        {
-            string fileName = FileManager.RelativeDirectory + "FontCache/Font" + fontSize + fontName + ".fnt";
 
-            if (System.IO.File.Exists(fileName))
-            {
-                try
-                {
-
-                    BitmapFont bitmapFont = (BitmapFont)LoaderManager.Self.GetDisposable(fileName);
-                    if (bitmapFont == null)
-                    {
-                        bitmapFont = new BitmapFont(fileName, (SystemManagers)null);
-                        LoaderManager.Self.AddDisposable(fileName, bitmapFont);
-                    }
-
-                    return bitmapFont;
-                }
-                catch
-                {
-                    return null;
-                }
-            }
-            else
-            {
-                return null;
-            }
-        }
 
 
 
@@ -830,7 +803,7 @@ namespace Gum.Wireframe
         private void InitializeSprite(Sprite sprite, RecursiveVariableFinder rvf)
         {
             string textureName = (string)rvf.GetValue("SourceFile");
-            bool animate = (bool)rvf.GetValue("Animate");
+            bool animate = rvf.GetValue<bool>("Animate");
             List<string> animations = (List<string>)rvf.GetValue("AnimationFrames");
 
             sprite.Animate = animate;

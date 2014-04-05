@@ -58,7 +58,7 @@ namespace Gum.DataTypes
             return GetVariableFromThisOrBase(instance, new List<ElementWithState> { parent }, variable, forceDefault, onlyIfSetsValue);
         }
 
-        public static VariableSave GetVariableFromThisOrBase(this InstanceSave instance, 
+        public static VariableSave GetVariableFromThisOrBase(this InstanceSave instance,
             List<ElementWithState> elementStack, string variable, bool forceDefault = false, bool onlyIfSetsValue = false)
         {
             ElementSave instanceBase = ObjectFinder.Self.GetElementSave(instance.BaseType);
@@ -73,14 +73,18 @@ namespace Gum.DataTypes
                 defaultState = SelectedState.Self.SelectedElement.DefaultState;
             }
 #endif
-     
+
             if (elementStack.Count != 0)
             {
+                if (elementStack.Last().Element == null)
+                {
+                    throw new InvalidOperationException("The ElementStack contains an ElementWithState with no Element");
+                }
                 stateToPullFrom = elementStack.Last().StateSave;
                 defaultState = elementStack.Last().Element.DefaultState;
             }
 
-            
+
 #if GUM
             if (elementStack.Count != 0 && elementStack.Last().Element == SelectedState.Self.SelectedElement && 
                 SelectedState.Self.SelectedStateSave != null &&
@@ -94,11 +98,11 @@ namespace Gum.DataTypes
             // non-default states can override the default state, so first
             // let's see if the selected state is non-default and has a value
             // for a given variable.  If not, we'll fall back to the default.
-            if ((variableSave == null || (onlyIfSetsValue && variableSave.SetsValue == false))&& defaultState != stateToPullFrom)
+            if ((variableSave == null || (onlyIfSetsValue && variableSave.SetsValue == false)) && defaultState != stateToPullFrom)
             {
                 variableSave = defaultState.GetVariableSave(instance.Name + "." + variable);
             }
-            if ( (variableSave == null  || (onlyIfSetsValue && (variableSave.SetsValue == false || variableSave.Value == null))) && instanceBase != null)
+            if ((variableSave == null || (onlyIfSetsValue && (variableSave.SetsValue == false || variableSave.Value == null))) && instanceBase != null)
             {
                 RecursiveVariableFinder rvf = new RecursiveVariableFinder(instance, elementStack);
                 string thisState = stateToPullFrom.GetValue(instance.Name + ".State") as string;
@@ -127,7 +131,7 @@ namespace Gum.DataTypes
                 {
                     variableSave = possibleVariable;
                 }
-                else if(!string.IsNullOrEmpty(instanceBase.BaseType))
+                else if (!string.IsNullOrEmpty(instanceBase.BaseType))
                 {
                     ElementSave element = ObjectFinder.Self.GetElementSave(instanceBase.BaseType);
 
@@ -171,7 +175,7 @@ namespace Gum.DataTypes
         public static object GetValueFromThisOrBase(this InstanceSave instance, ElementSave parent, string variable,
             bool forceDefault = false)
         {
-            return GetValueFromThisOrBase(instance, new List < ElementWithState >(){ new ElementWithState( parent )}, variable, forceDefault);
+            return GetValueFromThisOrBase(instance, new List<ElementWithState>() { new ElementWithState(parent) }, variable, forceDefault);
         }
 
         public static object GetValueFromThisOrBase(this InstanceSave instance, List<ElementWithState> elementStack, string variable,

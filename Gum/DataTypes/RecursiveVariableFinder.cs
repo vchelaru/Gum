@@ -45,10 +45,10 @@ namespace Gum.DataTypes
             }
 
             ContainerType = VariableContainerType.InstanceSave;
-            
+
             mInstanceSave = instanceSave;
 
-            mElementStack = new List<ElementWithState>() { new ElementWithState( container )};
+            mElementStack = new List<ElementWithState>() { new ElementWithState(container) };
         }
 
         public RecursiveVariableFinder(InstanceSave instanceSave, List<ElementWithState> elementStack)
@@ -71,6 +71,10 @@ namespace Gum.DataTypes
         {
             ContainerType = VariableContainerType.StateSave;
             mStateSave = stateSave;
+
+            mElementStack = new List<ElementWithState>();
+            mElementStack.Add(new ElementWithState(stateSave.ParentContainer) { StateName = stateSave.Name });
+
         }
 
         public object GetValue(string variableName)
@@ -78,6 +82,17 @@ namespace Gum.DataTypes
             switch (ContainerType)
             {
                 case VariableContainerType.InstanceSave:
+
+#if DEBUG
+                    if (mElementStack.Count != 0)
+                    {
+                        if (mElementStack.Last().Element == null)
+                        {
+                            throw new InvalidOperationException("The ElementStack contains an ElementWithState with no Element");
+                        }
+                    }
+#endif
+
                     VariableSave variable = GetVariable(variableName);
                     if (variable != null)
                     {
@@ -88,18 +103,29 @@ namespace Gum.DataTypes
                         return null;
                     }
 
-                    //return mInstanceSave.GetValueFromThisOrBase(mElementStack, variableName);
-                    //break;
+                //return mInstanceSave.GetValueFromThisOrBase(mElementStack, variableName);
+                //break;
                 case VariableContainerType.StateSave:
                     return mStateSave.GetValueRecursive(variableName);
-                    //break;
+                //break;
             }
 
             throw new NotImplementedException();
         }
-        
+
         public T GetValue<T>(string variableName)
         {
+#if DEBUG
+            if ( mElementStack.Count != 0)
+            {
+                if (mElementStack.Last().Element == null)
+                {
+                    throw new InvalidOperationException("The ElementStack contains an ElementWithState with no Element");
+                }
+            }
+#endif
+
+
             object valueAsObject = GetValue(variableName);
             if (valueAsObject is T)
             {
@@ -125,6 +151,17 @@ namespace Gum.DataTypes
                     var allExposed = GetExposedVariablesForThisInstance(mInstanceSave, instanceName, mElementStack);
 
                     bool onlyIfSetsValue = false;
+
+#if DEBUG
+                    if (mElementStack.Count != 0)
+                    {
+                        if (mElementStack.Last().Element == null)
+                        {
+                            throw new InvalidOperationException("The ElementStack contains an ElementWithState with no Element");
+                        }
+                    }
+#endif
+
                     var found = mInstanceSave.GetVariableFromThisOrBase(mElementStack, variableName, false, onlyIfSetsValue);
                     if (found != null && !string.IsNullOrEmpty(found.ExposedAsName))
                     {
@@ -145,7 +182,7 @@ namespace Gum.DataTypes
                     return found;
                 case VariableContainerType.StateSave:
                     return mStateSave.GetVariableRecursive(variableName);
-                    //break;
+                //break;
             }
             throw new NotImplementedException();
         }

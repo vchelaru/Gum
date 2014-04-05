@@ -226,5 +226,23 @@ namespace Gum
         {
             StateTreeViewManager.Self.HandleKeyDown(e);
         }
+
+        private void clearFontCacheToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            FontManager.Self.DeleteFontCacheFolder();
+        }
+
+        private void saveAllToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (ObjectFinder.Self.GumProjectSave == null)
+            {
+                MessageBox.Show("There is no project loaded.  Either load a project or create a new project before saving");
+            }
+            else
+            {
+                // Don't do an auto save, force it!
+                GumCommands.Self.FileCommands.ForceSaveProject(true);
+            }
+        }
     }
 }

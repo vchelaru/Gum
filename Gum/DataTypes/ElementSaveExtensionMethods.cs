@@ -32,7 +32,7 @@ namespace Gum.DataTypes
         {
             for (int i = 0; i < list.Count; i++)
             {
-                if(list[i].Name == name)
+                if (list[i].Name == name)
                 {
                     return i;
                 }
@@ -220,7 +220,7 @@ namespace Gum.DataTypes
             }
 #endif
             VariableSave variableSave = stateToPullFrom.GetVariableRecursive(variable);
-            if(variableSave != null)
+            if (variableSave != null)
             {
                 return variableSave.Value;
             }

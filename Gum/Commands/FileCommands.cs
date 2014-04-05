@@ -37,19 +37,19 @@ namespace Gum.Commands
 
         }
 
-        public void TryAutoSaveProject()
+        public void TryAutoSaveProject(bool forceSaveContainedElements = false)
         {
             if (ProjectManager.Self.GeneralSettingsFile.AutoSave && !ProjectManager.Self.HaveErrorsOccurred)
             {
-                ForceSaveProject();
+                ForceSaveProject(forceSaveContainedElements);
             }
         }
 
-        internal void ForceSaveProject()
+        internal void ForceSaveProject(bool forceSaveContainedElements = false)
         {
             if (!ProjectManager.Self.HaveErrorsOccurred)
             {
-                ProjectManager.Self.SaveProject();
+                ProjectManager.Self.SaveProject(forceSaveContainedElements);
             }
             else
             {

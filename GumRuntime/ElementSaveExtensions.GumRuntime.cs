@@ -21,12 +21,7 @@ namespace GumRuntime
 
             elementSave.SetGraphicalUiElement(toReturn, systemManagers);
 
-            foreach (var instance in elementSave.Instances)
-            {
-                var childGue = instance.ToGraphicalUiElement(systemManagers);
 
-                childGue.Parent = toReturn;
-            }
 
             //no layering support yet
             if (addToManagers)
@@ -42,7 +37,17 @@ namespace GumRuntime
             RecursiveVariableFinder rvf = new RecursiveVariableFinder(elementSave.DefaultState);
 
             InstanceSaveExtensionMethods.SetGraphicalUiElement(rvf, elementSave.BaseType,
-                toReturn, systemManagers);
+                ref toReturn, systemManagers);
+
+
+            foreach (var instance in elementSave.Instances)
+            {
+                var childGue = instance.ToGraphicalUiElement(systemManagers);
+
+                childGue.Parent = toReturn;
+            }
+
+
         }
 
 

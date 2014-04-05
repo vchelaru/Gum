@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Gum.Wireframe
 {
-    public class ElementWithState 
+    public class ElementWithState
     {
         public ElementSave Element
         {
@@ -43,7 +43,7 @@ namespace Gum.Wireframe
             }
         }
 
-        public DataTypes.Variables.StateSave StateSave 
+        public DataTypes.Variables.StateSave StateSave
         {
             get
             {
@@ -68,7 +68,7 @@ namespace Gum.Wireframe
 
         public static void Remove(this List<ElementWithState> toAddTo, ElementSave elementSave)
         {
-            toAddTo.Remove( toAddTo.FirstOrDefault(item=>item.Element == elementSave));
+            toAddTo.Remove(toAddTo.FirstOrDefault(item => item.Element == elementSave));
         }
     }
 

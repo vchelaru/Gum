@@ -140,6 +140,7 @@
     <Compile Include="Gui\Plugins\MainWindowPlugin.cs" />
     <Compile Include="Commands\GumCommands.cs" />
     <Compile Include="Managers\FileLocations.cs" />
+    <Compile Include="Managers\FontManager.cs" />
     <Compile Include="Managers\NameVerifier.cs" />
     <Compile Include="Managers\ObjectRemover.cs" />
     <Compile Include="Managers\OutputManager.cs" />

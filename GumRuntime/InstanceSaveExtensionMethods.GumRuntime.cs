@@ -1,4 +1,5 @@
 ﻿using Gum.DataTypes;
+using Gum.Managers;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary;
@@ -19,23 +20,39 @@ namespace GumRuntime
             GraphicalUiElement toReturn = new GraphicalUiElement(
                 null, null);
 
-            instanceSave.SetGraphicalUiElement(toReturn, systemManagers);
+            RecursiveVariableFinder rvf = new RecursiveVariableFinder(instanceSave, instanceSave.ParentContainer);
+            SetGraphicalUiElement(rvf, instanceSave.BaseType, ref toReturn, systemManagers);
 
             return toReturn;
 
         }
 
-        public static void SetGraphicalUiElement(this InstanceSave instanceSave, GraphicalUiElement graphicalUiElement, SystemManagers systemManagers)
-        {
-
-            RecursiveVariableFinder rvf = new RecursiveVariableFinder(instanceSave, instanceSave.ParentContainer);
-            SetGraphicalUiElement(rvf, instanceSave.BaseType, graphicalUiElement, systemManagers);
-
-        }
-
-        public static void SetGraphicalUiElement(RecursiveVariableFinder rvf, string baseType, GraphicalUiElement graphicalUiElement, SystemManagers systemManagers)
+        public static void SetGraphicalUiElement(RecursiveVariableFinder rvf, string baseType, ref GraphicalUiElement graphicalUiElement, SystemManagers systemManagers)
         {
             IRenderable containedObject = null;
+
+            bool handled = TryHandleAsBaseType(rvf, baseType, systemManagers, out containedObject);
+
+            if (handled)
+            {
+                graphicalUiElement.SetContainedObject(containedObject);
+            }
+            else
+            {
+                ElementSave elementSave = ObjectFinder.Self.GetElementSave(baseType);
+
+                if (elementSave != null && elementSave is ComponentSave)
+                {
+                    ElementSaveExtensions.SetGraphicalUiElement(elementSave, graphicalUiElement, systemManagers);
+                }
+            }
+            graphicalUiElement.SetGueWidthAndPositionValues(rvf);
+        }
+
+        private static bool TryHandleAsBaseType(RecursiveVariableFinder rvf, string baseType, SystemManagers systemManagers, out IRenderable containedObject)
+        {
+            bool handledAsBaseType = true;
+            containedObject = null;
 
             switch (baseType)
             {
@@ -99,16 +116,18 @@ namespace GumRuntime
                         containedObject = text;
 
                         //Do Text specific alignment.
-                        SetAlignmentValues(text, rvf); 
+                        SetAlignmentValues(text, rvf);
                     }
                     break;
                 default:
-
-                    throw new Exception("The following type is not supported: " + baseType);
+                    handledAsBaseType = false;
+                    break;
             }
 
-            graphicalUiElement.SetContainedObject(containedObject);
-            graphicalUiElement.SetGueWidthAndPositionValues(rvf);
+
+
+            return handledAsBaseType;
+
         }
 
 

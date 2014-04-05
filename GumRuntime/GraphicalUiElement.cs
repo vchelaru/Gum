@@ -299,7 +299,7 @@ namespace Gum.Wireframe
                 return mWhatThisContains;
             }
         }
-        
+
         public string Name
         {
             get
@@ -340,7 +340,7 @@ namespace Gum.Wireframe
                 switch (XOrigin)
                 {
                     case HorizontalAlignment.Center:
-                        toReturn += ((IPositionedSizedObject)this).Width/2;
+                        toReturn += ((IPositionedSizedObject)this).Width / 2;
                         break;
                     case HorizontalAlignment.Right:
                         toReturn += ((IPositionedSizedObject)this).Width;
@@ -360,7 +360,7 @@ namespace Gum.Wireframe
                 switch (YOrigin)
                 {
                     case VerticalAlignment.Center:
-                        toReturn += ((IPositionedSizedObject)this).Height/2;
+                        toReturn += ((IPositionedSizedObject)this).Height / 2;
                         break;
                     case VerticalAlignment.Bottom:
                         toReturn += ((IPositionedSizedObject)this).Height;
@@ -564,7 +564,7 @@ namespace Gum.Wireframe
             this.YUnits = UnitConverter.Self.ConvertToGeneralUnit(rvf.GetValue<PositionUnitType>("Y Units"));
 
             this.ResumeLayout();
-        }        
+        }
 
         public void AddToManagers(SystemManagers mManagers, Layer layer)
         {

@@ -510,20 +510,8 @@ namespace Gum.Managers
         {
             if (changedMember == "Font" || changedMember == "FontSize")
             {
-                StateSave stateSave = SelectedState.Self.SelectedStateSave;
+                FontManager.Self.ReactToFontValueSet();
 
-
-                string prefix = "";
-                if (SelectedState.Self.SelectedInstance != null)
-                {
-                    prefix = SelectedState.Self.SelectedInstance.Name + ".";
-                }
-
-                object fontSizeAsObject = stateSave.GetValueRecursive(prefix + "FontSize");
-
-                BmfcSave.CreateBitmapFontFilesIfNecessary(
-                    (int)fontSizeAsObject,
-                    (string)stateSave.GetValueRecursive(prefix + "Font"));
             }
         }
 

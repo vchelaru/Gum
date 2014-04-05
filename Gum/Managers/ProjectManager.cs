@@ -176,7 +176,7 @@ namespace Gum
             PluginManager.Self.ProjectLoad(mGumProjectSave);
         }
 
-        internal void SaveProject()
+        internal void SaveProject(bool forceSaveContainedElements = false)
         {
             bool succeeded = false;
 
@@ -193,7 +193,7 @@ namespace Gum
                 {
                     try
                     {
-                        bool saveContainedElements = isNewProject;
+                        bool saveContainedElements = isNewProject || forceSaveContainedElements;
 
                         GumProjectSave.Save(GumProjectSave.FullFileName, saveContainedElements);
                         succeeded = true;
