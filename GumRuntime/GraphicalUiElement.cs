@@ -302,6 +302,28 @@ namespace Gum.Wireframe
             }
         }
 
+        public GraphicalUiElement ParentGue
+        {
+            get
+            {
+                return mWhatContainsThis;
+            }
+            set
+            {
+                if (mWhatContainsThis != null)
+                {
+                    mWhatContainsThis.mWhatThisContains.Remove(this); ;
+                }
+
+                mWhatContainsThis = value;
+
+                if (mWhatContainsThis != null)
+                {
+                    mWhatContainsThis.mWhatThisContains.Add(this);
+                }
+            }
+        }
+
         public string Name
         {
             get
@@ -571,33 +593,39 @@ namespace Gum.Wireframe
         public void AddToManagers(SystemManagers managers, Layer layer)
         {
             mManagers = managers;
-            if (mContainedObjectAsRenderable is Sprite)
+
+            // This may be a Screen
+            if (mContainedObjectAsRenderable != null)
             {
-                managers.SpriteManager.Add(mContainedObjectAsRenderable as Sprite, layer);
-            }
-            else if (mContainedObjectAsRenderable is NineSlice)
-            {
-                managers.SpriteManager.Add(mContainedObjectAsRenderable as NineSlice, layer);
-            }
-            else if (mContainedObjectAsRenderable is global::RenderingLibrary.Math.Geometry.LineRectangle)
-            {
-                managers.ShapeManager.Add(mContainedObjectAsRenderable as global::RenderingLibrary.Math.Geometry.LineRectangle, layer);
-            }
-            else if (mContainedObjectAsRenderable is global::RenderingLibrary.Graphics.SolidRectangle)
-            {
-                managers.ShapeManager.Add(mContainedObjectAsRenderable as global::RenderingLibrary.Graphics.SolidRectangle, layer);
-            }
-            else if (mContainedObjectAsRenderable is Text)
-            {
-                managers.TextManager.Add(mContainedObjectAsRenderable as Text, layer);
-            }
-            else
-            {
-                throw new NotImplementedException();
+
+                if (mContainedObjectAsRenderable is Sprite)
+                {
+                    managers.SpriteManager.Add(mContainedObjectAsRenderable as Sprite, layer);
+                }
+                else if (mContainedObjectAsRenderable is NineSlice)
+                {
+                    managers.SpriteManager.Add(mContainedObjectAsRenderable as NineSlice, layer);
+                }
+                else if (mContainedObjectAsRenderable is global::RenderingLibrary.Math.Geometry.LineRectangle)
+                {
+                    managers.ShapeManager.Add(mContainedObjectAsRenderable as global::RenderingLibrary.Math.Geometry.LineRectangle, layer);
+                }
+                else if (mContainedObjectAsRenderable is global::RenderingLibrary.Graphics.SolidRectangle)
+                {
+                    managers.ShapeManager.Add(mContainedObjectAsRenderable as global::RenderingLibrary.Graphics.SolidRectangle, layer);
+                }
+                else if (mContainedObjectAsRenderable is Text)
+                {
+                    managers.TextManager.Add(mContainedObjectAsRenderable as Text, layer);
+                }
+                else
+                {
+                    throw new NotImplementedException();
+                }
             }
 
             //Recursively add children to the managers
-            foreach (var child in this.Children)
+            foreach (var child in this.ContainedElements)
             {
                 if (child is GraphicalUiElement)
                 {

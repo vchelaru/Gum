@@ -39,12 +39,20 @@ namespace GumRuntime
             InstanceSaveExtensionMethods.SetGraphicalUiElement(rvf, elementSave.BaseType,
                 ref toReturn, systemManagers);
 
+            bool isScreen = elementSave is ScreenSave;
 
             foreach (var instance in elementSave.Instances)
             {
                 var childGue = instance.ToGraphicalUiElement(systemManagers);
 
-                childGue.Parent = toReturn;
+
+
+                if (!isScreen)
+                {
+
+                    childGue.Parent = toReturn;
+                }
+                childGue.ParentGue = toReturn;
             }
 
 
