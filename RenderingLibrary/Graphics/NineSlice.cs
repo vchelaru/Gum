@@ -453,7 +453,7 @@ namespace RenderingLibrary.Graphics
         }
 
         
-        public string GetBareTextureForNineSliceTexture(string absoluteTexture)
+        public static string GetBareTextureForNineSliceTexture(string absoluteTexture)
         {
             string extension = FileManager.GetExtension(absoluteTexture);
 
