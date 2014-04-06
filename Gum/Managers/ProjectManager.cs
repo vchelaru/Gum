@@ -78,7 +78,14 @@ namespace Gum
         {
             GeneralSettingsFile = GeneralSettingsFile.LoadOrCreateNew();
 
-            if (!string.IsNullOrEmpty(GeneralSettingsFile.LastProject))
+
+            CommandLineManager.Self.ReadCommandLine();
+
+            if (!string.IsNullOrEmpty(CommandLineManager.Self.Glux))
+            {
+                GumCommands.Self.FileCommands.LoadProject(CommandLineManager.Self.Glux);
+            }
+            else if (!string.IsNullOrEmpty(GeneralSettingsFile.LastProject))
             {
                 LoadProject(GeneralSettingsFile.LastProject);
             }
@@ -131,7 +138,8 @@ namespace Gum
             return false;
         }
 
-        private void LoadProject(string fileName)
+        // made public so that File commands can access this function
+        public void LoadProject(string fileName)
         {
             string errors;
 

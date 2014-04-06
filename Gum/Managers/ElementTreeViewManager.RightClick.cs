@@ -150,7 +150,14 @@ namespace Gum.Managers
 
                 if (fullFile.EndsWith("\\") || fullFile.EndsWith("/"))
                 {
-                    Process.Start(fullFile);
+                    try
+                    {
+                        Process.Start(fullFile);
+                    }
+                    catch(Exception exc)
+                    {
+                        MessageBox.Show("Could not open location:\n\n" + exc.ToString());
+                    }
                 }
                 else
                 {

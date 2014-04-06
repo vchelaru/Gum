@@ -22,7 +22,7 @@ namespace GumRuntime
 
             RecursiveVariableFinder rvf = new RecursiveVariableFinder(instanceSave, instanceSave.ParentContainer);
             SetGraphicalUiElement(rvf, instanceSave.BaseType, ref toReturn, systemManagers);
-
+            toReturn.Name = instanceSave.Name;
             return toReturn;
 
         }

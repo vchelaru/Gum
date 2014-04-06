@@ -158,6 +158,7 @@ namespace Gum
         {
             ProjectManager.Self.Initialize();
 
+
         }
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)

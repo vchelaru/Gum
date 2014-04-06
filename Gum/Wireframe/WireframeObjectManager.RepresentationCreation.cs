@@ -450,7 +450,7 @@ namespace Gum.Wireframe
             }
 
             GumRuntime.InstanceSaveExtensionMethods.SetGraphicalUiElement(
-                rvf, baseType, graphicalUiElement, null);
+                rvf, baseType, ref graphicalUiElement, null);
 
 
 
@@ -474,7 +474,7 @@ namespace Gum.Wireframe
 
 
             GumRuntime.InstanceSaveExtensionMethods.SetGraphicalUiElement(
-                rvf, instance.BaseType, graphicalUiElement, null);
+                rvf, instance.BaseType, ref graphicalUiElement, null);
 
             SolidRectangle solidRectangle = graphicalUiElement.RenderableComponent as SolidRectangle;
 

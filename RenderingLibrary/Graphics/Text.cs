@@ -68,6 +68,12 @@ namespace RenderingLibrary.Graphics
 
         #region Properties
 
+        public static bool RenderBoundaryDefault
+        {
+            get;
+            set;
+        }
+
         public string Name
         {
             get;
@@ -219,7 +225,7 @@ namespace RenderingLibrary.Graphics
         public IPositionedSizedObject Parent
         {
             get { return mParent; }
-            set 
+            set
             {
                 if (mParent != value)
                 {
@@ -349,10 +355,15 @@ namespace RenderingLibrary.Graphics
 
         #region Methods
 
+        static Text()
+        {
+            RenderBoundaryDefault = true;
+        }
+
         public Text(SystemManagers managers, string text = "Hello")
         {
             Visible = true;
-            RenderBoundary = true;
+            RenderBoundary = RenderBoundaryDefault;
 
             mManagers = managers;
             mChildren = new List<IPositionedSizedObject>();
@@ -361,7 +372,7 @@ namespace RenderingLibrary.Graphics
             mNeedsBitmapFontRefresh = true;
             mBounds = new LinePrimitive(this.Renderer.SinglePixelTexture);
             mBounds.Color = Color.LightGreen;
-            
+
             mBounds.Add(0, 0);
             mBounds.Add(0, 0);
             mBounds.Add(0, 0);
@@ -379,7 +390,7 @@ namespace RenderingLibrary.Graphics
             UpdateLinePrimitive();
         }
 
-        char[] whatToSplitOn = new char[] { ' '};
+        char[] whatToSplitOn = new char[] { ' ' };
         private void UpdateWrappedText()
         {
             ///////////EARLY OUT/////////////
@@ -415,7 +426,7 @@ namespace RenderingLibrary.Graphics
             }
 
 
-            while(wordArray.Count != 0)
+            while (wordArray.Count != 0)
             {
                 string wordUnmodified = wordArray[0];
 
@@ -545,7 +556,7 @@ namespace RenderingLibrary.Graphics
         {
             if (AbsoluteVisible)
             {
-                if(mNeedsBitmapFontRefresh)
+                if (mNeedsBitmapFontRefresh)
                 {
                     UpdateTextureToRender();
                 }
@@ -598,7 +609,7 @@ namespace RenderingLibrary.Graphics
                 mTempForRendering.Y += this.EffectiveHeight - mTempForRendering.Height;
             }
 
-            Sprite.Render(managers, spriteBatch, mTempForRendering, mTextureToRender, 
+            Sprite.Render(managers, spriteBatch, mTempForRendering, mTextureToRender,
                 new Color(mRed, mGreen, mBlue, mAlpha));
         }
 

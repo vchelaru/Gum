@@ -56,5 +56,10 @@ namespace Gum.Commands
                 MessageBox.Show("Cannot save project because of earlier errors");
             }
         }
+
+        public void LoadProject(string fileName)
+        {
+            ProjectManager.Self.LoadProject(fileName);
+        }
     }
 }

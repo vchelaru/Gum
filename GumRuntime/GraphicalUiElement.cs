@@ -34,6 +34,8 @@ namespace Gum.Wireframe
         DimensionUnitType mWidthUnit;
         DimensionUnitType mHeightUnit;
 
+        SystemManagers mManagers;
+
         float mX;
         float mY;
         float mWidth;
@@ -566,27 +568,28 @@ namespace Gum.Wireframe
             this.ResumeLayout();
         }
 
-        public void AddToManagers(SystemManagers mManagers, Layer layer)
+        public void AddToManagers(SystemManagers managers, Layer layer)
         {
+            mManagers = managers;
             if (mContainedObjectAsRenderable is Sprite)
             {
-                mManagers.SpriteManager.Add(mContainedObjectAsRenderable as Sprite, layer);
+                managers.SpriteManager.Add(mContainedObjectAsRenderable as Sprite, layer);
             }
             else if (mContainedObjectAsRenderable is NineSlice)
             {
-                mManagers.SpriteManager.Add(mContainedObjectAsRenderable as NineSlice, layer);
+                managers.SpriteManager.Add(mContainedObjectAsRenderable as NineSlice, layer);
             }
             else if (mContainedObjectAsRenderable is global::RenderingLibrary.Math.Geometry.LineRectangle)
             {
-                mManagers.ShapeManager.Add(mContainedObjectAsRenderable as global::RenderingLibrary.Math.Geometry.LineRectangle, layer);
+                managers.ShapeManager.Add(mContainedObjectAsRenderable as global::RenderingLibrary.Math.Geometry.LineRectangle, layer);
             }
             else if (mContainedObjectAsRenderable is global::RenderingLibrary.Graphics.SolidRectangle)
             {
-                mManagers.ShapeManager.Add(mContainedObjectAsRenderable as global::RenderingLibrary.Graphics.SolidRectangle, layer);
+                managers.ShapeManager.Add(mContainedObjectAsRenderable as global::RenderingLibrary.Graphics.SolidRectangle, layer);
             }
             else if (mContainedObjectAsRenderable is Text)
             {
-                mManagers.TextManager.Add(mContainedObjectAsRenderable as Text, layer);
+                managers.TextManager.Add(mContainedObjectAsRenderable as Text, layer);
             }
             else
             {
@@ -598,18 +601,18 @@ namespace Gum.Wireframe
             {
                 if (child is GraphicalUiElement)
                 {
-                    (child as GraphicalUiElement).AddToManagers(mManagers, layer);
+                    (child as GraphicalUiElement).AddToManagers(managers, layer);
                 }
             }
         }
 
-        public void RemoveFromManagers(SystemManagers mManagers)
+        public void RemoveFromManagers()
         {
             foreach (var child in this.Children)
             {
                 if (child is GraphicalUiElement)
                 {
-                    (child as GraphicalUiElement).RemoveFromManagers(mManagers);
+                    (child as GraphicalUiElement).RemoveFromManagers();
                 }
             }
 
@@ -648,6 +651,11 @@ namespace Gum.Wireframe
         {
             mIsLayoutSuspended = false;
             UpdateLayout();
+        }
+
+        public GraphicalUiElement GetGraphicalUiElementByName(string name)
+        {
+            return GetChildByName(name) as GraphicalUiElement;
         }
 
         public IPositionedSizedObject GetChildByName(string name)
