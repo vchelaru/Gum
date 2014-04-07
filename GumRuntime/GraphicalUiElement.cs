@@ -18,6 +18,8 @@ namespace Gum.Wireframe
     {
         #region Fields
 
+        public static bool ShowLineRectangles = true;
+
         IRenderable mContainedObjectAsRenderable;
         // to save on casting:
         IPositionedSizedObject mContainedObjectAsIpso;
@@ -425,6 +427,11 @@ namespace Gum.Wireframe
             mContainedObjectAsIpso = mContainedObjectAsRenderable as IPositionedSizedObject;
             mContainedObjectAsIVisible = mContainedObjectAsRenderable as IVisible;
 
+            if (containedObject is global::RenderingLibrary.Math.Geometry.LineRectangle)
+            {
+                (containedObject as global::RenderingLibrary.Math.Geometry.LineRectangle).LocalVisible = ShowLineRectangles;
+            }
+
             UpdateLayout();
         }
 
@@ -705,6 +712,7 @@ namespace Gum.Wireframe
 
             return null;
         }
+
         public IPositionedSizedObject GetChildByName(string name)
         {
             foreach (IPositionedSizedObject child in Children)
@@ -759,6 +767,11 @@ namespace Gum.Wireframe
 
                 if (propertyInfo != null)
                 {
+
+                    if (value.GetType() != propertyInfo.PropertyType)
+                    {
+                        value = System.Convert.ChangeType(value, propertyInfo.PropertyType);
+                    }
                     propertyInfo.SetValue(mContainedObjectAsRenderable, value, null);
                 }
             }

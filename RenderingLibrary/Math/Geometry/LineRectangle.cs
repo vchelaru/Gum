@@ -28,10 +28,20 @@ namespace RenderingLibrary.Math.Geometry
 
 
         SystemManagers mManagers;
-        
+
         #endregion
 
         #region Properties
+
+        /// <summary>
+        /// This is similar to the Visible property, but affects only this.
+        /// This allows LineRectangles to not render without making their children invisible.
+        /// </summary>
+        public bool LocalVisible
+        {
+            get;
+            set;
+        }
 
         public string Name
         {
@@ -166,13 +176,15 @@ namespace RenderingLibrary.Math.Geometry
 
         #region Methods
 
-        public LineRectangle() : this(null)
+        public LineRectangle()
+            : this(null)
         {
 
         }
 
         public LineRectangle(SystemManagers managers)
         {
+            LocalVisible = true;
 
             mManagers = managers;
 
@@ -215,10 +227,10 @@ namespace RenderingLibrary.Math.Geometry
             linePrimitive.Replace(4, Vector2.Zero); // close back on itself
 
         }
-        
+
         void IRenderable.Render(SpriteBatch spriteBatch, SystemManagers managers)
         {
-            if (Visible)
+            if (Visible && LocalVisible)
             {
                 RenderLinePrimitive(mLinePrimitive, spriteBatch, this, managers, IsDotted);
             }
