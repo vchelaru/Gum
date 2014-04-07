@@ -27,6 +27,8 @@ namespace Gum.Wireframe
 
         List<GraphicalUiElement> mWhatThisContains = new List<GraphicalUiElement>();
 
+        Dictionary<string, string> mExposedVariables = new Dictionary<string, string>();
+
         GeneralUnitType mXUnits;
         GeneralUnitType mYUnits;
         HorizontalAlignment mXOrigin;
@@ -634,6 +636,16 @@ namespace Gum.Wireframe
             }
         }
 
+        public void AddExposedVariable(string variableName, string underlyingVariable)
+        {
+            mExposedVariables.Add(variableName, underlyingVariable);
+        }
+
+        public bool IsExposedVariable(string variableName)
+        {
+            return this.mExposedVariables.ContainsKey(variableName);
+        }
+
         public void RemoveFromManagers()
         {
             foreach (var child in this.Children)
@@ -683,9 +695,16 @@ namespace Gum.Wireframe
 
         public GraphicalUiElement GetGraphicalUiElementByName(string name)
         {
-            return GetChildByName(name) as GraphicalUiElement;
-        }
+            foreach (var item in mWhatThisContains)
+            {
+                if (item.Name == name)
+                {
+                    return item;
+                }
+            }
 
+            return null;
+        }
         public IPositionedSizedObject GetChildByName(string name)
         {
             foreach (IPositionedSizedObject child in Children)
@@ -696,6 +715,53 @@ namespace Gum.Wireframe
                 }
             }
             return null;
+        }
+
+        public void SetProperty(string propertyName, object value)
+        {
+
+            if (mExposedVariables.ContainsKey(propertyName))
+            {
+                string underlyingProperty = mExposedVariables[propertyName];
+                int indexOfDot = underlyingProperty.IndexOf('.');
+                string instanceName = underlyingProperty.Substring(0, indexOfDot);
+                GraphicalUiElement containedGue = GetGraphicalUiElementByName(instanceName);
+                string variable = underlyingProperty.Substring(indexOfDot + 1);
+                containedGue.SetProperty(variable, value);
+            }
+            else if (this.mContainedObjectAsRenderable != null)
+            {
+                SetPropertyOnRenderable(propertyName, value);
+
+            }
+
+        }
+
+        private void SetPropertyOnRenderable(string propertyName, object value)
+        {
+            bool handled = false;
+
+            // First try special-casing.  
+            if (mContainedObjectAsRenderable is Text)
+            {
+                if (propertyName == "Text")
+                {
+                    ((Text)mContainedObjectAsRenderable).RawText = value as string;
+                    handled = true;
+                }
+
+            }
+
+            // If special case didn't work, let's try reflection
+            if (!handled)
+            {
+                System.Reflection.PropertyInfo propertyInfo = mContainedObjectAsRenderable.GetType().GetProperty(propertyName);
+
+                if (propertyInfo != null)
+                {
+                    propertyInfo.SetValue(mContainedObjectAsRenderable, value, null);
+                }
+            }
         }
 
         #region IVisible Implementation

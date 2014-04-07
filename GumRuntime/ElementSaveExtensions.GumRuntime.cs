@@ -21,8 +21,6 @@ namespace GumRuntime
 
             elementSave.SetGraphicalUiElement(toReturn, systemManagers);
 
-
-
             //no layering support yet
             if (addToManagers)
             {
@@ -38,6 +36,12 @@ namespace GumRuntime
 
             InstanceSaveExtensionMethods.SetGraphicalUiElement(rvf, elementSave.BaseType,
                 ref toReturn, systemManagers);
+
+            foreach (var variable in elementSave.DefaultState.Variables.Where(item => !string.IsNullOrEmpty(item.ExposedAsName)))
+            {
+                toReturn.AddExposedVariable(variable.ExposedAsName, variable.Name);
+            }
+
 
             bool isScreen = elementSave is ScreenSave;
 

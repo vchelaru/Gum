@@ -53,6 +53,21 @@ namespace RenderingLibrary.Graphics
 
         #region Properties
 
+        public byte Alpha
+        {
+            get
+            {
+                return Color.A;
+            }
+            set
+            {
+                if (value != Color.A)
+                {
+                    Color = new Color(Color.R, Color.G, Color.B, value);
+                }
+            }
+        }
+
         public string Name
         {
             get;

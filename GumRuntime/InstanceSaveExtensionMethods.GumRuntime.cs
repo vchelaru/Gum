@@ -23,6 +23,22 @@ namespace GumRuntime
             RecursiveVariableFinder rvf = new RecursiveVariableFinder(instanceSave, instanceSave.ParentContainer);
             SetGraphicalUiElement(rvf, instanceSave.BaseType, ref toReturn, systemManagers);
             toReturn.Name = instanceSave.Name;
+
+            var state = instanceSave.ParentContainer.DefaultState;
+
+
+
+            foreach (var variable in state.Variables.Where(item => item.SourceObject == instanceSave.Name))
+            {
+                string propertyOnInstance = variable.Name.Substring(variable.Name.LastIndexOf('.') + 1);
+
+                if (toReturn.IsExposedVariable(propertyOnInstance))
+                {
+                    toReturn.SetProperty(propertyOnInstance, variable.Value);
+                }
+            }
+
+
             return toReturn;
 
         }
