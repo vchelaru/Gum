@@ -395,17 +395,19 @@ namespace Gum.Managers
 
         public TreeNode GetTreeNodeFor(ScreenSave screenSave)
         {
-            return GetTreeNodeFor(screenSave.Name, mScreensTreeNode);
-            
-            //foreach (TreeNode treeNode in mScreensTreeNode.Nodes)
-            //{
-            //    if (treeNode.Tag == screenSave)
-            //    {
-            //        return treeNode;
-            //    }
-            //}
+            // Why are we using name instead of the direct reference.
+            // This function fails because of this when a rename occurs
+            //return GetTreeNodeFor(screenSave.Name, mScreensTreeNode);
 
-            //return null;
+            foreach (TreeNode treeNode in mScreensTreeNode.Nodes)
+            {
+                if (treeNode.Tag == screenSave)
+                {
+                    return treeNode;
+                }
+            }
+
+            return null;
         }
 
         public TreeNode GetTreeNodeFor(ComponentSave componentSave)

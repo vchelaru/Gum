@@ -7,6 +7,18 @@ namespace Gum.Managers
 {
     public class NameVerifier
     {
+
+        public static char[] InvalidCharacters =
+                new char[] 
+            { 
+                '~', '`', '!', '@', '#', '$', '%', '^', '&', '*', 
+                '(', ')', '-', '=', '+', ';', '\'', ':', '"', '<', 
+                ',', '>', '.', '/', '\\', '?', '[', '{', ']', '}', 
+                '|', 
+                // Spaces are handled separately
+            //    ' ' 
+            };
+
         static NameVerifier mSelf;
 
         public static NameVerifier Self
@@ -53,12 +65,16 @@ namespace Gum.Managers
             return string.IsNullOrEmpty(whyNotValid);
         }
 
-        private void IsNameValidCommon(string folderName, out string whyNotValid)
+        private void IsNameValidCommon(string name, out string whyNotValid)
         {
             whyNotValid = null;
-            if (string.IsNullOrEmpty(folderName))
+            if (string.IsNullOrEmpty(name))
             {
                 whyNotValid = "Empty names are not valid";
+            }
+            else if (name.IndexOfAny(InvalidCharacters) != -1)
+            {
+                whyNotValid = "The name can't contain invalid character " + name[name.IndexOfAny(InvalidCharacters)];
             }
 
         }

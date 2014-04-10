@@ -60,7 +60,7 @@ namespace Gum.DataTypes
         {
             get
             {
-                if (States == null)
+                if (States == null || States.Count == 0)
                 {
                     return null;
                 }

@@ -379,7 +379,10 @@ namespace Gum.ToolStates
         {
             StateTreeViewManager.Self.RefreshUI(SelectedElement);
 
-            if (SelectedElement != null && (SelectedStateSave == null || SelectedElement.States.Contains(SelectedStateSave) == false))
+            if (SelectedElement != null && 
+                (SelectedStateSave == null || SelectedElement.States.Contains(SelectedStateSave) == false) &&
+                SelectedElement.States.Count > 0
+                )
             {
                 SelectedStateSave = SelectedElement.States[0];
             }

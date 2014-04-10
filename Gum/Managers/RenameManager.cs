@@ -36,47 +36,71 @@ namespace Gum.Managers
 
             try
             {
-                // Tell the GumProjectSave to react to the rename.
-                // This changes the names of the ElementSave references.
-                ProjectManager.Self.GumProjectSave.ReactToRenamed(elementSave, instance, oldName);
+                bool isRenamingXmlFile = instance == null;
 
+                bool shouldContinue = true;
 
-
-                if (SelectedState.Self.SelectedInstance != null)
+                if (isRenamingXmlFile)
                 {
-                    string newName = SelectedState.Self.SelectedInstance.Name;
+                    string message = "Are you sure you want to rename " + oldName + "?\n\n" +
+                        "This will change the file name for " + oldName + " which may break " +
+                        "external references to this object.";
+                    var result = MessageBox.Show(message, "Rename Object and File?", MessageBoxButtons.YesNo);
 
-                    foreach (StateSave stateSave in SelectedState.Self.SelectedElement.States)
-                    {
-                        stateSave.ReactToInstanceNameChange(oldName, newName);
-                    }
+                    shouldContinue = result == DialogResult.Yes;
                 }
 
-                // Even though this gets called from the PropertyGrid methods which eventually
-                // save this object, we want to force a save here to make sure it worked.  If it
-                // does, then we're safe to delete the old files.
-                if (ProjectManager.Self.GeneralSettingsFile.AutoSave)
+                if (shouldContinue)
                 {
-                    ProjectManager.Self.SaveElement(elementSave);
-                }
+                    // Tell the GumProjectSave to react to the rename.
+                    // This changes the names of the ElementSave references.
+                    ProjectManager.Self.GumProjectSave.ReactToRenamed(elementSave, instance, oldName);
 
-                // If the instance isn't null, it means we renamed an instance
-                // and not an ElementSave, so no need to save it.
-                if (instance == null)
-                {
-                    // If we got here that means all went okay, so we should delete the old files
-                    string oldXml = elementSave.GetFullPathXmlFile(oldName);
-                    // Delete the XML.
-                    // If the file doesn't
-                    // exist, no biggie - we
-                    // were going to delete it
-                    // anyway.
-                    if (System.IO.File.Exists(oldXml))
+
+
+                    if (SelectedState.Self.SelectedInstance != null)
                     {
-                        System.IO.File.Delete(oldXml);
+                        string newName = SelectedState.Self.SelectedInstance.Name;
+
+                        foreach (StateSave stateSave in SelectedState.Self.SelectedElement.States)
+                        {
+                            stateSave.ReactToInstanceNameChange(oldName, newName);
+                        }
                     }
 
-                    PluginManager.Self.ElementRename(elementSave, oldName);
+                    // Even though this gets called from the PropertyGrid methods which eventually
+                    // save this object, we want to force a save here to make sure it worked.  If it
+                    // does, then we're safe to delete the old files.
+                    if (ProjectManager.Self.GeneralSettingsFile.AutoSave)
+                    {
+                        ProjectManager.Self.SaveElement(elementSave);
+                    }
+
+                    if (isRenamingXmlFile)
+                    {
+                        // If we got here that means all went okay, so we should delete the old files
+                        string oldXml = elementSave.GetFullPathXmlFile(oldName);
+                        // Delete the XML.
+                        // If the file doesn't
+                        // exist, no biggie - we
+                        // were going to delete it
+                        // anyway.
+                        if (System.IO.File.Exists(oldXml))
+                        {
+                            System.IO.File.Delete(oldXml);
+                        }
+
+                        PluginManager.Self.ElementRename(elementSave, oldName);
+
+                        ElementTreeViewManager.Self.RefreshUI(elementSave);
+                    }
+
+
+                }
+                
+                if(!shouldContinue && isRenamingXmlFile)
+                {
+                    elementSave.Name = oldName;
                 }
             }
             catch(Exception e)

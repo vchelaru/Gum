@@ -180,7 +180,10 @@ namespace Gum.Managers
                     }
                 }
 
-                if (wasAnythingSelected == false)
+                if (wasAnythingSelected == false && element.States != null && 
+                    // The user could be selecting an object that has a missing XML file, so states
+                    // were never loaded
+                    element.States.Count > 0)
                 {
                     SelectedState.Self.SelectedStateSave = element.States[0];
 

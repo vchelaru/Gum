@@ -58,6 +58,11 @@ namespace Gum.DataTypes
         {
             string fullName = projectroot + Subfolder + "/" + Name + "." + extension;
 
+            if (ToolsUtilities.FileManager.IsRelative(fullName))
+            {
+                fullName = ToolsUtilities.FileManager.RelativeDirectory + fullName;
+            }
+
             if (System.IO.File.Exists(fullName))
             {
 

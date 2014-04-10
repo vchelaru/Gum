@@ -178,6 +178,45 @@ namespace RenderingLibrary
 
         }
 
+
+        public void ScreenToWorld(float screenX, float screenY, out float worldX, out float worldY)
+        {
+            Vector3 transformed = new Vector3(screenX, screenY, 0);
+            Matrix matrix = GetTransformationMatrix();
+            matrix = Matrix.Invert(matrix);
+
+            TransformVector(ref transformed, ref matrix);
+
+            worldX = transformed.X;
+            worldY = transformed.Y;
+        }
+
+        public static void TransformVector(ref Vector3 vectorToTransform, ref Matrix matrixToTransformBy)
+        {
+
+            Vector3 transformed = Vector3.Zero;
+
+            transformed.X =
+                matrixToTransformBy.M11 * vectorToTransform.X +
+                matrixToTransformBy.M21 * vectorToTransform.Y +
+                matrixToTransformBy.M31 * vectorToTransform.Z +
+                matrixToTransformBy.M41;
+
+            transformed.Y =
+                matrixToTransformBy.M12 * vectorToTransform.X +
+                matrixToTransformBy.M22 * vectorToTransform.Y +
+                matrixToTransformBy.M32 * vectorToTransform.Z +
+                matrixToTransformBy.M42;
+
+            transformed.Z =
+                matrixToTransformBy.M13 * vectorToTransform.X +
+                matrixToTransformBy.M23 * vectorToTransform.Y +
+                matrixToTransformBy.M33 * vectorToTransform.Z +
+                matrixToTransformBy.M43;
+
+            vectorToTransform = transformed;
+        }
+
         // Not sure why but for some reason the GraphicsDevice would
         // return its viewport as different managers- perhaps there is
         // only one graphics device and the viewport is switched when it

@@ -14,7 +14,7 @@ namespace Gum.Wireframe
 {
 
 
-    public class GraphicalUiElement : IRenderable, IPositionedSizedObject, IVisible
+    public partial class GraphicalUiElement : IRenderable, IPositionedSizedObject, IVisible
     {
         #region Fields
 
@@ -57,12 +57,26 @@ namespace Gum.Wireframe
 
         #region Properties
 
+        public SystemManagers Managers
+        {
+            get
+            {
+                return mManagers;
+            }
+        }
 
         public bool Visible
         {
             get
             {
-                return mContainedObjectAsIVisible.Visible;
+                if (mContainedObjectAsIVisible != null)
+                {
+                    return mContainedObjectAsIVisible.Visible;
+                }
+                else
+                {
+                    return false;
+                }
             }
             set
             {
@@ -599,6 +613,9 @@ namespace Gum.Wireframe
             this.ResumeLayout();
         }
 
+
+        partial void CustomAddToManagers();
+
         public void AddToManagers(SystemManagers managers, Layer layer)
         {
             mManagers = managers;
@@ -641,6 +658,7 @@ namespace Gum.Wireframe
                     (child as GraphicalUiElement).AddToManagers(managers, layer);
                 }
             }
+            CustomAddToManagers();
         }
 
         public void AddExposedVariable(string variableName, string underlyingVariable)
@@ -653,9 +671,11 @@ namespace Gum.Wireframe
             return this.mExposedVariables.ContainsKey(variableName);
         }
 
+        partial void CustomRemoveFromManagers();
+
         public void RemoveFromManagers()
         {
-            foreach (var child in this.Children)
+            foreach (var child in this.mWhatThisContains)
             {
                 if (child is GraphicalUiElement)
                 {
@@ -683,10 +703,12 @@ namespace Gum.Wireframe
             {
                 mManagers.TextManager.Remove(mContainedObjectAsRenderable as Text);
             }
-            else
+            else if (mContainedObjectAsRenderable != null)
             {
                 throw new NotImplementedException();
             }
+
+            CustomRemoveFromManagers();
         }
 
         public void SuspendLayout()
