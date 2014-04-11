@@ -44,7 +44,7 @@ namespace Gum.Managers
                 {
                     ElementName = FileManager.RemovePath(FileManager.RemoveExtension(arg));
 
-                    string gluxDirectory = FileManager.GetDirectory(arg);
+                    string gluxDirectory = FileManager.GetDirectory( FileManager.GetDirectory(arg));
 
                     Glux = System.IO.Directory.GetFiles(gluxDirectory)
                         .FirstOrDefault(item => item.ToLowerInvariant().EndsWith(".gumx"));

@@ -57,10 +57,25 @@ namespace Gum.RenderingLibrary
             fileWidth = 0;
             fileHeight = 0;
 
+            Microsoft.Xna.Framework.Graphics.Texture2D texture = null;
+
+
             if (ipso is Sprite)
             {
-                fileWidth = ((Sprite)ipso).Texture.Width;
-                fileHeight = ((Sprite)ipso).Texture.Height;
+                texture = ((Sprite)ipso).Texture;
+
+            }
+            else if (ipso is GraphicalUiElement && ((GraphicalUiElement)ipso).RenderableComponent is Sprite)
+            {
+                var sprite = ((GraphicalUiElement)ipso).RenderableComponent as Sprite;
+
+                texture = sprite.Texture;
+            }
+
+            if (texture != null)
+            {
+                fileWidth = texture.Width;
+                fileHeight = texture.Height;
             }
         }
 

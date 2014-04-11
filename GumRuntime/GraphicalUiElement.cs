@@ -477,7 +477,22 @@ namespace Gum.Wireframe
                 }
                 else if (mWidthUnit == DimensionUnitType.PercentageOfSourceFile)
                 {
-                    throw new NotImplementedException();
+                    bool wasSet = false;
+
+                    if (mContainedObjectAsRenderable is Sprite)
+                    {
+                        Sprite sprite = mContainedObjectAsRenderable as Sprite;
+
+                        if (sprite.Texture != null)
+                        {
+                            widthToSet = sprite.Texture.Width * mWidth / 100.0f;
+                        }
+                    }
+
+                    if (!wasSet)
+                    {
+                        widthToSet = 64 * mWidth / 100.0f;
+                    }
                 }
                 else if (mWidthUnit == DimensionUnitType.RelativeToContainer)
                 {
@@ -490,7 +505,22 @@ namespace Gum.Wireframe
                 }
                 else if (mHeightUnit == DimensionUnitType.PercentageOfSourceFile)
                 {
-                    throw new NotImplementedException();
+                    bool wasSet = false;
+
+                    if (mContainedObjectAsRenderable is Sprite)
+                    {
+                        Sprite sprite = mContainedObjectAsRenderable as Sprite;
+
+                        if (sprite.Texture != null)
+                        {
+                            heightToSet = sprite.Texture.Height * mHeight / 100.0f;
+                        }
+                    }
+                    
+                    if(!wasSet)
+                    {
+                        heightToSet = 64 * mHeight / 100.0f;
+                    }
                 }
                 else if (mHeightUnit == DimensionUnitType.RelativeToContainer)
                 {
@@ -513,7 +543,22 @@ namespace Gum.Wireframe
                 }
                 else if (mXUnits == GeneralUnitType.PercentageOfFile)
                 {
-                    throw new NotImplementedException();
+                    bool wasSet = false;
+
+                    if (mContainedObjectAsRenderable is Sprite)
+                    {
+                        Sprite sprite = mContainedObjectAsRenderable as Sprite;
+
+                        if (sprite.Texture != null)
+                        {
+                            unitOffsetX = sprite.Texture.Width * mX / 100.0f;
+                        }
+                    }
+
+                    if (!wasSet)
+                    {
+                        unitOffsetX = 64 * mX / 100.0f;
+                    }
                 }
                 else if (mXUnits == GeneralUnitType.PixelsFromLarge)
                 {
@@ -534,7 +579,22 @@ namespace Gum.Wireframe
                 }
                 else if (mYUnits == GeneralUnitType.PercentageOfFile)
                 {
-                    throw new NotImplementedException();
+                    bool wasSet = false;
+
+                    if (mContainedObjectAsRenderable is Sprite)
+                    {
+                        Sprite sprite = mContainedObjectAsRenderable as Sprite;
+
+                        if (sprite.Texture != null)
+                        {
+                            unitOffsetY = sprite.Texture.Height * mY / 100.0f;
+                        }
+                    }
+
+                    if (!wasSet)
+                    {
+                        unitOffsetY = 64 * mY / 100.0f;
+                    }
                 }
                 else if (mYUnits == GeneralUnitType.PixelsFromLarge)
                 {

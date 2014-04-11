@@ -84,6 +84,12 @@ namespace Gum
             if (!string.IsNullOrEmpty(CommandLineManager.Self.Glux))
             {
                 GumCommands.Self.FileCommands.LoadProject(CommandLineManager.Self.Glux);
+
+                if (!string.IsNullOrEmpty(CommandLineManager.Self.ElementName))
+                {
+                    SelectedState.Self.SelectedElement = ObjectFinder.Self.GetElementSave(CommandLineManager.Self.ElementName);
+                }
+                
             }
             else if (!string.IsNullOrEmpty(GeneralSettingsFile.LastProject))
             {
