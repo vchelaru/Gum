@@ -319,15 +319,39 @@ namespace Gum
                     }
                     else
                     {
-                        try
+                        const int maxNumberOfTries = 5;
+                        const int msBetweenSaves = 100;
+                        int numberOfTimesTried = 0;
+
+                        succeeded = false;
+                        Exception exception = null;
+
+                        while (numberOfTimesTried < maxNumberOfTries)
                         {
-                            elementSave.Save(fileName);
+                            try
+                            {
+                                elementSave.Save(fileName);
+                                succeeded = true;
+                                break;
+                            }
+
+                            catch (Exception e)
+                            {
+                                exception = e;
+                                System.Threading.Thread.Sleep(100);
+                                numberOfTimesTried++;
+                            }
                         }
-                        catch (Exception e)
+
+
+                        if (succeeded == false)
                         {
-                            MessageBox.Show("Unknown error trying to save the file\n\n" + fileName + "\n\n" + e.ToString());
+
+                            MessageBox.Show("Unknown error trying to save the file\n\n" + fileName + "\n\n" + exception.ToString());
                             succeeded = false;
                         }
+
+
                     }
                     if (succeeded)
                     {

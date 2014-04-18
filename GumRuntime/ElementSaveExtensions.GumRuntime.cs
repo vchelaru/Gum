@@ -42,6 +42,9 @@ namespace GumRuntime
                 toReturn.AddExposedVariable(variable.ExposedAsName, variable.Name);
             }
 
+            toReturn.AddStates(elementSave.States);
+
+            toReturn.Tag = elementSave;
 
             bool isScreen = elementSave is ScreenSave;
 
@@ -57,6 +60,13 @@ namespace GumRuntime
                     childGue.Parent = toReturn;
                 }
                 childGue.ParentGue = toReturn;
+
+                var state = rvf.GetValue<string>(childGue.Name + ".State");
+
+                if (!string.IsNullOrEmpty(state) && state != "Default")
+                {
+                    childGue.ApplyState(state);
+                }
             }
 
 

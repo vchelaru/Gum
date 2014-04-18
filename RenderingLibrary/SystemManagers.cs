@@ -18,6 +18,12 @@ namespace RenderingLibrary
 
         #region Properties
 
+        public static SystemManagers Default
+        {
+            get;
+            set;
+        }
+
         public Renderer Renderer
         {
             get;

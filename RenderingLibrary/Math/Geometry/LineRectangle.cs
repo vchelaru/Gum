@@ -228,13 +228,15 @@ namespace RenderingLibrary.Math.Geometry
 
         }
 
+
         void IRenderable.Render(SpriteBatch spriteBatch, SystemManagers managers)
         {
-            if (Visible && LocalVisible)
+            if (AbsoluteVisible && LocalVisible)
             {
                 RenderLinePrimitive(mLinePrimitive, spriteBatch, this, managers, IsDotted);
             }
         }
+
 
         public static void RenderLinePrimitive(LinePrimitive linePrimitive, SpriteBatch spriteBatch, IPositionedSizedObject ipso, SystemManagers managers, bool isDotted)
         {

@@ -53,6 +53,9 @@ namespace Gum.Wireframe
 
         bool mIsLayoutSuspended = false;
 
+        Dictionary<string, Gum.DataTypes.Variables.StateSave> mStates =
+            new Dictionary<string, DataTypes.Variables.StateSave>();
+
         #endregion
 
         #region Properties
@@ -359,15 +362,30 @@ namespace Gum.Wireframe
             get { return mContainedObjectAsIpso.Children; }
         }
 
+        object mTagIfNoContainedObject;
         public object Tag
         {
             get
             {
-                return mContainedObjectAsIpso.Tag;
+                if (mContainedObjectAsIpso != null)
+                {
+                    return mContainedObjectAsIpso.Tag;
+                }
+                else
+                {
+                    return mTagIfNoContainedObject;
+                }
             }
             set
             {
-                mContainedObjectAsIpso.Tag = value;
+                if (mContainedObjectAsIpso != null)
+                {
+                    mContainedObjectAsIpso.Tag = value;
+                }
+                else
+                {
+                    mTagIfNoContainedObject = value;
+                }
             }
         }
 
@@ -410,6 +428,13 @@ namespace Gum.Wireframe
                 }
                 return toReturn;
             }
+        }
+
+
+        public IVisible ExplicitIVisibleParent
+        {
+            get;
+            set;
         }
 
 
@@ -486,7 +511,7 @@ namespace Gum.Wireframe
                         if (sprite.Texture != null)
                         {
                             widthToSet = sprite.Texture.Width * mWidth / 100.0f;
-                        }
+                }
                     }
 
                     if (!wasSet)
@@ -505,22 +530,7 @@ namespace Gum.Wireframe
                 }
                 else if (mHeightUnit == DimensionUnitType.PercentageOfSourceFile)
                 {
-                    bool wasSet = false;
-
-                    if (mContainedObjectAsRenderable is Sprite)
-                    {
-                        Sprite sprite = mContainedObjectAsRenderable as Sprite;
-
-                        if (sprite.Texture != null)
-                        {
-                            heightToSet = sprite.Texture.Height * mHeight / 100.0f;
-                        }
-                    }
-                    
-                    if(!wasSet)
-                    {
-                        heightToSet = 64 * mHeight / 100.0f;
-                    }
+                    throw new NotImplementedException();
                 }
                 else if (mHeightUnit == DimensionUnitType.RelativeToContainer)
                 {
@@ -543,22 +553,7 @@ namespace Gum.Wireframe
                 }
                 else if (mXUnits == GeneralUnitType.PercentageOfFile)
                 {
-                    bool wasSet = false;
-
-                    if (mContainedObjectAsRenderable is Sprite)
-                    {
-                        Sprite sprite = mContainedObjectAsRenderable as Sprite;
-
-                        if (sprite.Texture != null)
-                        {
-                            unitOffsetX = sprite.Texture.Width * mX / 100.0f;
-                        }
-                    }
-
-                    if (!wasSet)
-                    {
-                        unitOffsetX = 64 * mX / 100.0f;
-                    }
+                    throw new NotImplementedException();
                 }
                 else if (mXUnits == GeneralUnitType.PixelsFromLarge)
                 {
@@ -579,22 +574,7 @@ namespace Gum.Wireframe
                 }
                 else if (mYUnits == GeneralUnitType.PercentageOfFile)
                 {
-                    bool wasSet = false;
-
-                    if (mContainedObjectAsRenderable is Sprite)
-                    {
-                        Sprite sprite = mContainedObjectAsRenderable as Sprite;
-
-                        if (sprite.Texture != null)
-                        {
-                            unitOffsetY = sprite.Texture.Height * mY / 100.0f;
-                        }
-                    }
-
-                    if (!wasSet)
-                    {
-                        unitOffsetY = 64 * mY / 100.0f;
-                    }
+                    throw new NotImplementedException();
                 }
                 else if (mYUnits == GeneralUnitType.PixelsFromLarge)
                 {
@@ -676,8 +656,19 @@ namespace Gum.Wireframe
 
         partial void CustomAddToManagers();
 
+        public void AddToManagers()
+        {
+            AddToManagers(SystemManagers.Default, null);
+        }
+
         public void AddToManagers(SystemManagers managers, Layer layer)
         {
+#if DEBUG
+            if (managers == null)
+            {
+                throw new ArgumentNullException("managers cannot be null");
+            }
+#endif
             mManagers = managers;
 
             // This may be a Screen
@@ -710,6 +701,9 @@ namespace Gum.Wireframe
                 }
             }
 
+            // Custom should be called before children have their Custom called
+            CustomAddToManagers();
+
             //Recursively add children to the managers
             foreach (var child in this.ContainedElements)
             {
@@ -718,7 +712,6 @@ namespace Gum.Wireframe
                     (child as GraphicalUiElement).AddToManagers(managers, layer);
                 }
             }
-            CustomAddToManagers();
         }
 
         public void AddExposedVariable(string variableName, string underlyingVariable)
@@ -743,32 +736,36 @@ namespace Gum.Wireframe
                 }
             }
 
-            if (mContainedObjectAsRenderable is Sprite)
+            // if mManagers is null, then it was never added to the managers
+            if (mManagers != null)
             {
-                mManagers.SpriteManager.Remove(mContainedObjectAsRenderable as Sprite);
-            }
-            else if (mContainedObjectAsRenderable is NineSlice)
-            {
-                mManagers.SpriteManager.Remove(mContainedObjectAsRenderable as NineSlice);
-            }
-            else if (mContainedObjectAsRenderable is global::RenderingLibrary.Math.Geometry.LineRectangle)
-            {
-                mManagers.ShapeManager.Remove(mContainedObjectAsRenderable as global::RenderingLibrary.Math.Geometry.LineRectangle);
-            }
-            else if (mContainedObjectAsRenderable is global::RenderingLibrary.Graphics.SolidRectangle)
-            {
-                mManagers.ShapeManager.Remove(mContainedObjectAsRenderable as global::RenderingLibrary.Graphics.SolidRectangle);
-            }
-            else if (mContainedObjectAsRenderable is Text)
-            {
-                mManagers.TextManager.Remove(mContainedObjectAsRenderable as Text);
-            }
-            else if (mContainedObjectAsRenderable != null)
-            {
-                throw new NotImplementedException();
-            }
+                if (mContainedObjectAsRenderable is Sprite)
+                {
+                    mManagers.SpriteManager.Remove(mContainedObjectAsRenderable as Sprite);
+                }
+                else if (mContainedObjectAsRenderable is NineSlice)
+                {
+                    mManagers.SpriteManager.Remove(mContainedObjectAsRenderable as NineSlice);
+                }
+                else if (mContainedObjectAsRenderable is global::RenderingLibrary.Math.Geometry.LineRectangle)
+                {
+                    mManagers.ShapeManager.Remove(mContainedObjectAsRenderable as global::RenderingLibrary.Math.Geometry.LineRectangle);
+                }
+                else if (mContainedObjectAsRenderable is global::RenderingLibrary.Graphics.SolidRectangle)
+                {
+                    mManagers.ShapeManager.Remove(mContainedObjectAsRenderable as global::RenderingLibrary.Graphics.SolidRectangle);
+                }
+                else if (mContainedObjectAsRenderable is Text)
+                {
+                    mManagers.TextManager.Remove(mContainedObjectAsRenderable as Text);
+                }
+                else if (mContainedObjectAsRenderable != null)
+                {
+                    throw new NotImplementedException();
+                }
 
-            CustomRemoveFromManagers();
+                CustomRemoveFromManagers();
+            }
         }
 
         public void SuspendLayout()
@@ -819,6 +816,14 @@ namespace Gum.Wireframe
                 string variable = underlyingProperty.Substring(indexOfDot + 1);
                 containedGue.SetProperty(variable, value);
             }
+            else if (propertyName.Contains('.'))
+            {
+                int indexOfDot = propertyName.IndexOf('.');
+                string instanceName = propertyName.Substring(0, indexOfDot);
+                GraphicalUiElement containedGue = GetGraphicalUiElementByName(instanceName);
+                string variable = propertyName.Substring(indexOfDot + 1);
+                containedGue.SetProperty(variable, value);
+            }
             else if (this.mContainedObjectAsRenderable != null)
             {
                 SetPropertyOnRenderable(propertyName, value);
@@ -864,7 +869,16 @@ namespace Gum.Wireframe
 
         bool IVisible.AbsoluteVisible
         {
-            get { return mContainedObjectAsIVisible.AbsoluteVisible; }
+            get
+            {
+                bool explicitParentVisible = true;
+                if (ExplicitIVisibleParent != null)
+                {
+                    explicitParentVisible = ExplicitIVisibleParent.AbsoluteVisible;
+                }
+
+                return explicitParentVisible && mContainedObjectAsIVisible.AbsoluteVisible;
+            }
         }
 
         IVisible IVisible.Parent
@@ -874,5 +888,29 @@ namespace Gum.Wireframe
 
         #endregion
 
+        public void ApplyState(string name)
+        {
+            if (mStates.ContainsKey(name))
+            {
+                var state = mStates[name];
+
+                foreach (var variable in state.Variables)
+                {
+                    if (variable.SetsValue)
+                    {
+                        this.SetProperty(variable.Name, variable.Value);
+                    }
+                }
+
+            }
+        }
+
+        public void AddStates(List<DataTypes.Variables.StateSave> list)
+        {
+            foreach (var state in list)
+            {
+                mStates.Add(state.Name, state);
+            }
+        }
     }
 }
