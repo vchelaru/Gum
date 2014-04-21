@@ -450,7 +450,7 @@ namespace Gum.Wireframe
             }
 
             GumRuntime.InstanceSaveExtensionMethods.SetGraphicalUiElement(
-                rvf, baseType, ref graphicalUiElement, null);
+                rvf, baseType, graphicalUiElement, null);
 
 
 
@@ -474,7 +474,7 @@ namespace Gum.Wireframe
 
 
             GumRuntime.InstanceSaveExtensionMethods.SetGraphicalUiElement(
-                rvf, instance.BaseType, ref graphicalUiElement, null);
+                rvf, instance.BaseType, graphicalUiElement, null);
 
             SolidRectangle solidRectangle = graphicalUiElement.RenderableComponent as SolidRectangle;
 
@@ -611,10 +611,10 @@ namespace Gum.Wireframe
             TextManager.Self.Add(text);
             mTexts.Add(text);
 
-            text.Alpha = rvf.GetValue<int>("Alpha") / 255.0f;
-            text.Red = rvf.GetValue<int>("Red")/255.0f;
-            text.Green = rvf.GetValue<int>("Green") / 255.0f;
-            text.Blue = rvf.GetValue<int>("Blue") / 255.0f;
+            text.Alpha = rvf.GetValue<int>("Alpha") ;
+            text.Red = rvf.GetValue<int>("Red");
+            text.Green = rvf.GetValue<int>("Green");
+            text.Blue = rvf.GetValue<int>("Blue");
 
             text.Visible = rvf.GetValue<bool>("Visible");
 

@@ -227,6 +227,56 @@ namespace RenderingLibrary.Graphics
             get;
             set;
         }
+
+        public int Alpha
+        {
+            get
+            {
+                return Color.A;
+            }
+            set
+            {
+                Color.A = (byte)value;
+            }
+        }
+
+        public int Red
+        {
+            get
+            {
+                return Color.R;
+            }
+            set
+            {
+                Color.R = (byte)value;
+            }
+        }
+
+        public int Green
+        {
+            get
+            {
+                return Color.G;
+            }
+            set
+            {
+                Color.G = (byte)value;
+            }
+        }
+
+        public int Blue
+        {
+            get
+            {
+                return Color.B;
+            }
+            set
+            {
+                Color.B = (byte)value;
+            }
+        }
+
+
         #endregion
 
         #region Methods
@@ -261,15 +311,15 @@ namespace RenderingLibrary.Graphics
             }
         }
 
-        public static void Render(SystemManagers managers, SpriteBatch spriteBatch, IPositionedSizedObject ipso, Texture2D texture )
+        public static void Render(SystemManagers managers, SpriteBatch spriteBatch, IPositionedSizedObject ipso, Texture2D texture)
         {
             Color color = new Color(1.0f, 1.0f, 1.0f, 1.0f); // White
 
             Render(managers, spriteBatch, ipso, texture, color);
         }
-        
-        
-        public static void Render(SystemManagers managers, SpriteBatch spriteBatch, 
+
+
+        public static void Render(SystemManagers managers, SpriteBatch spriteBatch,
             IPositionedSizedObject ipso, Texture2D texture, Color color,
             Rectangle? sourceRectangle = null,
             bool flipHorizontal = false,
@@ -287,18 +337,18 @@ namespace RenderingLibrary.Graphics
             }
 
             Texture2D textureToUse = texture;
-            
-            if(textureToUse == null)
+
+            if (textureToUse == null)
             {
                 textureToUse = LoaderManager.Self.InvalidTexture;
             }
 
             SpriteEffects effects = SpriteEffects.None;
-            if(flipHorizontal)
+            if (flipHorizontal)
             {
                 effects |= SpriteEffects.FlipHorizontally;
             }
-            if(flipVertical)
+            if (flipVertical)
             {
                 effects |= SpriteEffects.FlipVertically;
             }
@@ -317,13 +367,13 @@ namespace RenderingLibrary.Graphics
                     float ratioHeight = 1;
                     if (sourceRectangle.HasValue)
                     {
-                        
+
                         ratioWidth = sourceRectangle.Value.Width / (float)textureToUse.Width;
                         ratioHeight = sourceRectangle.Value.Height / (float)textureToUse.Height;
                     }
 
 
-                    scale = new Vector2(ipso.Width / (ratioWidth * textureToUse.Width), 
+                    scale = new Vector2(ipso.Width / (ratioWidth * textureToUse.Width),
                         ipso.Height / (ratioHeight * textureToUse.Height));
                 }
 
@@ -332,7 +382,7 @@ namespace RenderingLibrary.Graphics
                     throw new ObjectDisposedException("Texture is disposed.  Texture name: " + textureToUse.Name + ", sprite scale: " + scale);
                 }
 
-                spriteBatch.Draw(textureToUse, 
+                spriteBatch.Draw(textureToUse,
                     new Vector2(ipso.GetAbsoluteX(), ipso.GetAbsoluteY()),
                     sourceRectangle,
                     color,
@@ -361,8 +411,8 @@ namespace RenderingLibrary.Graphics
 
 
                 spriteBatch.Draw(textureToUse,
-                    destinationRectangle, 
-                    sourceRectangle, 
+                    destinationRectangle,
+                    sourceRectangle,
                     color,
                     0,
                     Vector2.Zero,
@@ -394,7 +444,7 @@ namespace RenderingLibrary.Graphics
 
         public bool AbsoluteVisible
         {
-            get 
+            get
             {
                 if (((IVisible)this).Parent == null)
                 {
@@ -409,7 +459,7 @@ namespace RenderingLibrary.Graphics
 
         IVisible IVisible.Parent
         {
-            get 
+            get
             {
                 return ((IPositionedSizedObject)this).Parent as IVisible;
             }

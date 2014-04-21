@@ -140,11 +140,13 @@
     <Compile Include="Gui\Plugins\MainWindowPlugin.cs" />
     <Compile Include="Commands\GumCommands.cs" />
     <Compile Include="Managers\CommandLineManager.cs" />
+    <Compile Include="Managers\EventsViewModel.cs" />
     <Compile Include="Managers\FileLocations.cs" />
     <Compile Include="Managers\FontManager.cs" />
     <Compile Include="Managers\NameVerifier.cs" />
     <Compile Include="Managers\ObjectRemover.cs" />
     <Compile Include="Managers\OutputManager.cs" />
+    <Compile Include="Managers\PropertyGridManager.Events.cs" />
     <Compile Include="Managers\RenameManager.cs" />
     <Compile Include="Managers\Singleton.cs" />
     <Compile Include="Plugins\BaseClasses\InternalPlugin.cs" />
@@ -186,6 +188,7 @@
     <Compile Include="PropertyGridHelpers\Converters\StringOptionsTypeConverter.cs" />
     <Compile Include="PropertyGridHelpers\Converters\VariableListConverter.cs" />
     <Compile Include="PropertyGridHelpers\ElementSaveDisplayer.cs" />
+    <Compile Include="PropertyGridHelpers\EventInstanceMember.cs" />
     <Compile Include="PropertyGridHelpers\GumProjectSavePropertyGridDisplayer.cs" />
     <Compile Include="PropertyGridHelpers\InstanceSavePropertyDescriptor.cs" />
     <Compile Include="PropertyGridHelpers\GuideRectanglePropertyGridDisplayer.cs" />

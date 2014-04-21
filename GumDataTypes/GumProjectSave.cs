@@ -14,7 +14,7 @@ namespace Gum.DataTypes
         public const string ScreenExtension = "gusx";
         public const string ComponentExtension = "gucx";
         public const string StandardExtension = "gutx";
-
+        public const string ProjectExtension = "gumx";
 
         public List<CustomPropertySave> CustomProperties = new List<CustomPropertySave>();
 

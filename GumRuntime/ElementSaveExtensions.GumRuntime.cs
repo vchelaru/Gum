@@ -12,12 +12,34 @@ namespace GumRuntime
 {
     public static class ElementSaveExtensions
     {
-        public static GraphicalUiElement ToGraphicalUiElement(this ElementSave elementSave, SystemManagers systemManagers, bool addToManagers)
+        static Dictionary<string, Type> mElementToGueTypes = new Dictionary<string, Type>();
+
+        public static void RegisterGueInstantiationType(string elementName, Type gueInheritingType)
+        {
+            mElementToGueTypes[elementName] = gueInheritingType;
+        }
+
+        public static GraphicalUiElement CreateGueForElement(ElementSave elementSave)
         {
 
-            GraphicalUiElement toReturn = new GraphicalUiElement(
-                null, null);
+            GraphicalUiElement toReturn = null;
 
+            if (mElementToGueTypes.ContainsKey(elementSave.Name))
+            {
+                var constructor = mElementToGueTypes[elementSave.Name].GetConstructor(new Type[0]);
+
+                toReturn = constructor.Invoke(new object[0]) as GraphicalUiElement;
+            }
+            else
+            {
+                toReturn = new GraphicalUiElement();
+            }
+            return toReturn;
+        }
+
+        public static GraphicalUiElement ToGraphicalUiElement(this ElementSave elementSave, SystemManagers systemManagers, bool addToManagers)
+        {
+            GraphicalUiElement toReturn = CreateGueForElement(elementSave);
 
             elementSave.SetGraphicalUiElement(toReturn, systemManagers);
 
@@ -35,7 +57,7 @@ namespace GumRuntime
             RecursiveVariableFinder rvf = new RecursiveVariableFinder(elementSave.DefaultState);
 
             InstanceSaveExtensionMethods.SetGraphicalUiElement(rvf, elementSave.BaseType,
-                ref toReturn, systemManagers);
+                toReturn, systemManagers);
 
             foreach (var variable in elementSave.DefaultState.Variables.Where(item => !string.IsNullOrEmpty(item.ExposedAsName)))
             {

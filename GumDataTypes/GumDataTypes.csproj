@@ -66,6 +66,7 @@
     <Compile Include="DimensionUnitType.cs" />
     <Compile Include="ElementReference.cs" />
     <Compile Include="ElementSave.cs" />
+    <Compile Include="EventSave.cs" />
     <Compile Include="GuideRectangle.cs" />
     <Compile Include="GumProjectSave.cs" />
     <Compile Include="InstanceSave.cs" />

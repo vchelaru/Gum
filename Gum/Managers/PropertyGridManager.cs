@@ -21,6 +21,7 @@ using Gum.DataTypes.ComponentModel;
 using System.Threading.Tasks;
 using System.Threading;
 using System.Collections.ObjectModel;
+using WpfDataUi;
 
 namespace Gum.Managers
 {
@@ -29,7 +30,8 @@ namespace Gum.Managers
         #region Fields
 
         PropertyGrid mPropertyGrid;
-        WpfDataUi.DataUiGrid mDataGrid;
+
+        WpfDataUi.DataUiGrid mVariablesDataGrid;
 
         static PropertyGridManager mPropertyGridManager;
 
@@ -79,9 +81,11 @@ namespace Gum.Managers
         #endregion
 
 
-        public void Initialize(PropertyGrid propertyGrid, WpfDataUi.DataUiGrid wpfDataUiGrid)
+        public void Initialize(PropertyGrid propertyGrid, DataUiGrid variablesDataUiGrid, DataUiGrid eventsDataUiGrid)
         {
-            mDataGrid = wpfDataUiGrid;
+            mVariablesDataGrid = variablesDataUiGrid;
+
+            InitializeEvents(eventsDataUiGrid);
 
             mPropertyGrid = propertyGrid;
             mPropertyGrid.PropertySort = PropertySort.Categorized;
@@ -96,7 +100,7 @@ namespace Gum.Managers
                 // I don't know if we want to eventually show these
                 // but for now we'll hide the PropertyGrid:
                 mPropertyGrid.Visible = false;
-                mDataGrid.Visibility = System.Windows.Visibility.Hidden;
+                mVariablesDataGrid.Visibility = System.Windows.Visibility.Hidden;
             }
             else
             {
@@ -126,7 +130,10 @@ namespace Gum.Managers
                 //thread.Start();
 
             }
+
+            RefreshEventsUi();
         }
+
 
         private async void RefreshDataGrid(ElementSave element, StateSave state, InstanceSave instance)
         {
@@ -136,14 +143,14 @@ namespace Gum.Managers
             if (hasChanged)
             {
                 List<MemberCategory> categories = await GetCategories(element, state, instance);
-                lock (mDataGrid)
+                lock (mVariablesDataGrid)
                 {
 
-                    mDataGrid.Instance = SelectedState.Self.SelectedStateSave;
+                    mVariablesDataGrid.Instance = SelectedState.Self.SelectedStateSave;
 
-                    mDataGrid.Visibility = System.Windows.Visibility.Hidden;
+                    mVariablesDataGrid.Visibility = System.Windows.Visibility.Hidden;
 
-                    mDataGrid.Categories.Clear();
+                    mVariablesDataGrid.Categories.Clear();
 
                     // There's a bug here where drag+dropping a new instance will create 
                     // duplicate UI members.  I am going to deal with it now because it is
@@ -153,15 +160,15 @@ namespace Gum.Managers
                     {
                         Application.DoEvents();
 
-                        mDataGrid.Categories.Add(category);
+                        mVariablesDataGrid.Categories.Add(category);
 
                     }
                 }
-                mDataGrid.Visibility = System.Windows.Visibility.Visible;
+                mVariablesDataGrid.Visibility = System.Windows.Visibility.Visible;
 
             }
 
-            mDataGrid.Refresh();
+            mVariablesDataGrid.Refresh();
             
         }
 

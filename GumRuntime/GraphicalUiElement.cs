@@ -442,6 +442,12 @@ namespace Gum.Wireframe
 
         #region Constructor
 
+        public GraphicalUiElement()
+            : this(null, null)
+        {
+
+        }
+
         public GraphicalUiElement(IRenderable containedObject, GraphicalUiElement whatContainsThis)
         {
             SetContainedObject(containedObject);
@@ -530,7 +536,22 @@ namespace Gum.Wireframe
                 }
                 else if (mHeightUnit == DimensionUnitType.PercentageOfSourceFile)
                 {
-                    throw new NotImplementedException();
+                    bool wasSet = false;
+
+                    if (mContainedObjectAsRenderable is Sprite)
+                    {
+                        Sprite sprite = mContainedObjectAsRenderable as Sprite;
+
+                        if (sprite.Texture != null)
+                        {
+                            heightToSet = sprite.Texture.Height * mHeight / 100.0f;
+                        }
+                    }
+
+                    if (!wasSet)
+                    {
+                        heightToSet = 64 * mHeight / 100.0f;
+                    } 
                 }
                 else if (mHeightUnit == DimensionUnitType.RelativeToContainer)
                 {
@@ -553,8 +574,23 @@ namespace Gum.Wireframe
                 }
                 else if (mXUnits == GeneralUnitType.PercentageOfFile)
                 {
-                    throw new NotImplementedException();
-                }
+                    bool wasSet = false;
+
+                    if (mContainedObjectAsRenderable is Sprite)
+                    {
+                        Sprite sprite = mContainedObjectAsRenderable as Sprite;
+
+                        if (sprite.Texture != null)
+                        {
+                            unitOffsetX = sprite.Texture.Width * mX / 100.0f;
+                        }
+                    }
+
+                    if (!wasSet)
+                    {
+                        unitOffsetX = 64 * mX / 100.0f;
+                    }
+                } 
                 else if (mXUnits == GeneralUnitType.PixelsFromLarge)
                 {
                     unitOffsetX = mX + parentWidth;
@@ -574,7 +610,24 @@ namespace Gum.Wireframe
                 }
                 else if (mYUnits == GeneralUnitType.PercentageOfFile)
                 {
-                    throw new NotImplementedException();
+
+                    bool wasSet = false;
+
+
+                    if (mContainedObjectAsRenderable is Sprite)
+                    {
+                        Sprite sprite = mContainedObjectAsRenderable as Sprite;
+
+                        if (sprite.Texture != null)
+                        {
+                            unitOffsetY = sprite.Texture.Height * mY / 100.0f;
+                        }
+                    }
+
+                    if (!wasSet)
+                    {
+                        unitOffsetY = 64 * mY / 100.0f;
+                    }
                 }
                 else if (mYUnits == GeneralUnitType.PixelsFromLarge)
                 {
@@ -669,47 +722,51 @@ namespace Gum.Wireframe
                 throw new ArgumentNullException("managers cannot be null");
             }
 #endif
-            mManagers = managers;
-
-            // This may be a Screen
-            if (mContainedObjectAsRenderable != null)
+            // If mManagers isn't null, it's already been added
+            if (mManagers == null)
             {
+                mManagers = managers;
 
-                if (mContainedObjectAsRenderable is Sprite)
+                // This may be a Screen
+                if (mContainedObjectAsRenderable != null)
                 {
-                    managers.SpriteManager.Add(mContainedObjectAsRenderable as Sprite, layer);
-                }
-                else if (mContainedObjectAsRenderable is NineSlice)
-                {
-                    managers.SpriteManager.Add(mContainedObjectAsRenderable as NineSlice, layer);
-                }
-                else if (mContainedObjectAsRenderable is global::RenderingLibrary.Math.Geometry.LineRectangle)
-                {
-                    managers.ShapeManager.Add(mContainedObjectAsRenderable as global::RenderingLibrary.Math.Geometry.LineRectangle, layer);
-                }
-                else if (mContainedObjectAsRenderable is global::RenderingLibrary.Graphics.SolidRectangle)
-                {
-                    managers.ShapeManager.Add(mContainedObjectAsRenderable as global::RenderingLibrary.Graphics.SolidRectangle, layer);
-                }
-                else if (mContainedObjectAsRenderable is Text)
-                {
-                    managers.TextManager.Add(mContainedObjectAsRenderable as Text, layer);
-                }
-                else
-                {
-                    throw new NotImplementedException();
-                }
-            }
 
-            // Custom should be called before children have their Custom called
-            CustomAddToManagers();
+                    if (mContainedObjectAsRenderable is Sprite)
+                    {
+                        managers.SpriteManager.Add(mContainedObjectAsRenderable as Sprite, layer);
+                    }
+                    else if (mContainedObjectAsRenderable is NineSlice)
+                    {
+                        managers.SpriteManager.Add(mContainedObjectAsRenderable as NineSlice, layer);
+                    }
+                    else if (mContainedObjectAsRenderable is global::RenderingLibrary.Math.Geometry.LineRectangle)
+                    {
+                        managers.ShapeManager.Add(mContainedObjectAsRenderable as global::RenderingLibrary.Math.Geometry.LineRectangle, layer);
+                    }
+                    else if (mContainedObjectAsRenderable is global::RenderingLibrary.Graphics.SolidRectangle)
+                    {
+                        managers.ShapeManager.Add(mContainedObjectAsRenderable as global::RenderingLibrary.Graphics.SolidRectangle, layer);
+                    }
+                    else if (mContainedObjectAsRenderable is Text)
+                    {
+                        managers.TextManager.Add(mContainedObjectAsRenderable as Text, layer);
+                    }
+                    else
+                    {
+                        throw new NotImplementedException();
+                    }
+                }
 
-            //Recursively add children to the managers
-            foreach (var child in this.ContainedElements)
-            {
-                if (child is GraphicalUiElement)
+                // Custom should be called before children have their Custom called
+                CustomAddToManagers();
+
+                //Recursively add children to the managers
+                foreach (var child in this.ContainedElements)
                 {
-                    (child as GraphicalUiElement).AddToManagers(managers, layer);
+                    if (child is GraphicalUiElement)
+                    {
+                        (child as GraphicalUiElement).AddToManagers(managers, layer);
+                    }
                 }
             }
         }

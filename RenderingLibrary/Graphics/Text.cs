@@ -53,10 +53,10 @@ namespace RenderingLibrary.Graphics
 
         List<IPositionedSizedObject> mChildren;
 
-        float mAlpha = 1;
-        float mRed = 1;
-        float mGreen = 1;
-        float mBlue = 1;
+        int mAlpha = 255;
+        int mRed = 255;
+        int mGreen = 255;
+        int mBlue = 255;
 
         public bool mIsTextureCreationSuppressed;
 
@@ -270,25 +270,25 @@ namespace RenderingLibrary.Graphics
             get { return mChildren; }
         }
 
-        public float Alpha
+        public int Alpha
         {
             get { return mAlpha; }
             set { mAlpha = value; }
         }
 
-        public float Red
+        public int Red
         {
             get { return mRed; }
             set { mRed = value; }
         }
 
-        public float Green
+        public int Green
         {
             get { return mGreen; }
             set { mGreen = value; }
         }
 
-        public float Blue
+        public int Blue
         {
             get { return mBlue; }
             set { mBlue = value; }

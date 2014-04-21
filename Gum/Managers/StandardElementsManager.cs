@@ -26,6 +26,8 @@ namespace Gum.Managers
 
         static StandardElementsManager mSelf;
 
+        List<string> mStandardEvents = new List<string>();
+
         #endregion
 
         #region Properties
@@ -66,6 +68,14 @@ namespace Gum.Managers
             get
             {
                 return mDefaults;
+            }
+        }
+
+        public List<string> StandardEvents
+        {
+            get
+            {
+                return mStandardEvents;
             }
         }
 
@@ -254,6 +264,16 @@ namespace Gum.Managers
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            //                                                    Screen                                                          //
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+            mStandardEvents.Add("Click");
+            mStandardEvents.Add("RollOn");
+            mStandardEvents.Add("RollOver");
+            mStandardEvents.Add("RollOff");
+
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
         }

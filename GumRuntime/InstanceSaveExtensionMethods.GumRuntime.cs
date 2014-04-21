@@ -17,11 +17,13 @@ namespace GumRuntime
     {
         public static GraphicalUiElement ToGraphicalUiElement(this InstanceSave instanceSave, SystemManagers systemManagers)
         {
-            GraphicalUiElement toReturn = new GraphicalUiElement(
-                null, null);
+
+            ElementSave instanceElement = ObjectFinder.Self.GetElementSave(instanceSave.BaseType);
+
+            var toReturn = ElementSaveExtensions.CreateGueForElement(instanceElement);
 
             RecursiveVariableFinder rvf = new RecursiveVariableFinder(instanceSave, instanceSave.ParentContainer);
-            SetGraphicalUiElement(rvf, instanceSave.BaseType, ref toReturn, systemManagers);
+            SetGraphicalUiElement(rvf, instanceSave.BaseType, toReturn, systemManagers);
             toReturn.Name = instanceSave.Name;
             toReturn.Tag = instanceSave;
 
@@ -44,7 +46,7 @@ namespace GumRuntime
 
         }
 
-        public static void SetGraphicalUiElement(RecursiveVariableFinder rvf, string baseType, ref GraphicalUiElement graphicalUiElement, SystemManagers systemManagers)
+        public static void SetGraphicalUiElement(RecursiveVariableFinder rvf, string baseType, GraphicalUiElement graphicalUiElement, SystemManagers systemManagers)
         {
             IRenderable containedObject = null;
 

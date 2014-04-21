@@ -30,7 +30,11 @@ namespace Gum
             PluginManager.Self.Initialize(this);
             ElementTreeViewManager.Self.Initialize(this.ObjectTreeView);
             StateTreeViewManager.Self.Initialize(this.StateTreeView, StateContextMenuStrip);
-            PropertyGridManager.Self.Initialize(this.VariablePropertyGrid, ((TestWpfControl)this.elementHost1.Child).DataGrid);
+            PropertyGridManager.Self.Initialize(this.VariablePropertyGrid, 
+                ((TestWpfControl)this.VariableHost.Child).DataGrid,
+                ((TestWpfControl)this.EventsHost.Child).DataGrid
+                
+                );
             StandardElementsManager.Self.Initialize();
             MenuStripManager.Self.Initialize(RemoveElementMenuItem, RemoveStateMenuItem);
             GuiCommands.Self.Initialize(wireframeControl1);

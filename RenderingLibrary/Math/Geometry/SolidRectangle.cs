@@ -94,6 +94,56 @@ namespace RenderingLibrary.Graphics
             get { return BlendState.NonPremultiplied; }
         }
 
+
+        public int Alpha
+        {
+            get
+            {
+                return Color.A;
+            }
+            set
+            {
+                Color.A = (byte)value;
+            }
+        }
+
+        public int Red
+        {
+            get
+            {
+                return Color.R;
+            }
+            set
+            {
+                Color.R = (byte)value;
+            }
+        }
+
+        public int Green
+        {
+            get
+            {
+                return Color.G;
+            }
+            set
+            {
+                Color.G = (byte)value;
+            }
+        }
+
+        public int Blue
+        {
+            get
+            {
+                return Color.B;
+            }
+            set
+            {
+                Color.B = (byte)value;
+            }
+        }
+
+
         #endregion
 
         public SolidRectangle()

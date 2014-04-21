@@ -11,8 +11,8 @@ namespace Gum.DataTypes
 
     public abstract class ElementSave
     {
-        #region Fields
 
+        #region Properties
         public string Name
         {
             get;
@@ -39,16 +39,17 @@ namespace Gum.DataTypes
             set;
         }
 
+        [XmlElement("Event")]
+        public List<EventSave> Events
+        {
+            get;
+            set;
+        }
+
         public abstract string Subfolder
         {
             get;
         }
-
-        // If adding anything here, 
-
-        #endregion
-
-        #region Properties
 
         public abstract string FileExtension
         {
@@ -85,6 +86,7 @@ namespace Gum.DataTypes
         {
             States = new List<StateSave>();
             Instances = new List<InstanceSave>();
+            Events = new List<EventSave>();
         }
 
         public InstanceSave GetInstance(string name)

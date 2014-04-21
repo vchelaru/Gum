@@ -189,7 +189,33 @@ namespace Gum.PropertyGridHelpers
 
             DisplayName = RootVariableName;
 
-            ContextMenuEvents.Add("Expose Variable", HandleExposeVariableClick);
+            if (this.VariableSave != null)
+            {
+                if (string.IsNullOrEmpty(VariableSave.ExposedAsName))
+                {
+
+                    ContextMenuEvents.Add("Expose Variable", HandleExposeVariableClick);
+                }
+                else
+                {
+                    ContextMenuEvents.Add("Un-expose Variable", HandleUnExposeVariableClick);
+                }
+            }
+        }
+
+        private void HandleUnExposeVariableClick(object sender, System.Windows.RoutedEventArgs e)
+        {
+            // Find this variable in the source instance and make it not exposed
+            VariableSave variableSave = this.VariableSave;
+
+            if (variableSave != null)
+            {
+                variableSave.ExposedAsName = null;
+                GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+
+            }
+
+            PropertyGridManager.Self.RefreshUI();
         }
 
         private void HandleExposeVariableClick(object sender, System.Windows.RoutedEventArgs e)

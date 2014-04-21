@@ -34,6 +34,7 @@
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.loadProjectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveProjectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.saveAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.newProjectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.addToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -45,6 +46,8 @@
             this.RemoveElementMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.RemoveStateMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.projectPropertiesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.contentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.clearFontCacheToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.pluginsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.managePluginsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -59,22 +62,21 @@
             this.StateContextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.PropertyGridTab = new System.Windows.Forms.TabControl();
             this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.VariableHost = new System.Windows.Forms.Integration.ElementHost();
+            this.testWpfControl1 = new Gum.TestWpfControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.VariablePropertyGrid = new System.Windows.Forms.PropertyGrid();
             this.PropertyGridMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.PreviewSplitContainer = new System.Windows.Forms.SplitContainer();
             this.panel1 = new System.Windows.Forms.Panel();
             this.ToolbarPanel = new System.Windows.Forms.FlowLayoutPanel();
+            this.wireframeControl1 = new Gum.Wireframe.WireframeControl();
             this.WireframeContextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.WireframeEditControl = new FlatRedBall.AnimationEditorForms.Controls.WireframeEditControl();
             this.panel2 = new System.Windows.Forms.Panel();
             this.OutputTextBox = new System.Windows.Forms.RichTextBox();
-            this.contentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.clearFontCacheToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.elementHost1 = new System.Windows.Forms.Integration.ElementHost();
-            this.testWpfControl1 = new Gum.TestWpfControl();
-            this.wireframeControl1 = new Gum.Wireframe.WireframeControl();
-            this.WireframeEditControl = new FlatRedBall.AnimationEditorForms.Controls.WireframeEditControl();
-            this.saveAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.EventsHost = new System.Windows.Forms.Integration.ElementHost();
+            this.testWpfControl2 = new Gum.TestWpfControl();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.LeftAndEverythingContainer)).BeginInit();
             this.LeftAndEverythingContainer.Panel1.SuspendLayout();
@@ -127,21 +129,28 @@
             // loadProjectToolStripMenuItem
             // 
             this.loadProjectToolStripMenuItem.Name = "loadProjectToolStripMenuItem";
-            this.loadProjectToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.loadProjectToolStripMenuItem.Size = new System.Drawing.Size(149, 22);
             this.loadProjectToolStripMenuItem.Text = "Load Project...";
             this.loadProjectToolStripMenuItem.Click += new System.EventHandler(this.loadProjectToolStripMenuItem_Click);
             // 
             // saveProjectToolStripMenuItem
             // 
             this.saveProjectToolStripMenuItem.Name = "saveProjectToolStripMenuItem";
-            this.saveProjectToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.saveProjectToolStripMenuItem.Size = new System.Drawing.Size(149, 22);
             this.saveProjectToolStripMenuItem.Text = "Save Project";
             this.saveProjectToolStripMenuItem.Click += new System.EventHandler(this.saveProjectToolStripMenuItem_Click);
+            // 
+            // saveAllToolStripMenuItem
+            // 
+            this.saveAllToolStripMenuItem.Name = "saveAllToolStripMenuItem";
+            this.saveAllToolStripMenuItem.Size = new System.Drawing.Size(149, 22);
+            this.saveAllToolStripMenuItem.Text = "Save All";
+            this.saveAllToolStripMenuItem.Click += new System.EventHandler(this.saveAllToolStripMenuItem_Click);
             // 
             // newProjectToolStripMenuItem
             // 
             this.newProjectToolStripMenuItem.Name = "newProjectToolStripMenuItem";
-            this.newProjectToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.newProjectToolStripMenuItem.Size = new System.Drawing.Size(149, 22);
             this.newProjectToolStripMenuItem.Text = "New Project";
             this.newProjectToolStripMenuItem.Click += new System.EventHandler(this.newProjectToolStripMenuItem_Click);
             // 
@@ -223,6 +232,21 @@
             this.projectPropertiesToolStripMenuItem.Size = new System.Drawing.Size(167, 22);
             this.projectPropertiesToolStripMenuItem.Text = "Project Properties";
             this.projectPropertiesToolStripMenuItem.Click += new System.EventHandler(this.projectPropertiesToolStripMenuItem_Click);
+            // 
+            // contentToolStripMenuItem
+            // 
+            this.contentToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.clearFontCacheToolStripMenuItem});
+            this.contentToolStripMenuItem.Name = "contentToolStripMenuItem";
+            this.contentToolStripMenuItem.Size = new System.Drawing.Size(62, 20);
+            this.contentToolStripMenuItem.Text = "Content";
+            // 
+            // clearFontCacheToolStripMenuItem
+            // 
+            this.clearFontCacheToolStripMenuItem.Name = "clearFontCacheToolStripMenuItem";
+            this.clearFontCacheToolStripMenuItem.Size = new System.Drawing.Size(164, 22);
+            this.clearFontCacheToolStripMenuItem.Text = "Clear Font Cache";
+            this.clearFontCacheToolStripMenuItem.Click += new System.EventHandler(this.clearFontCacheToolStripMenuItem_Click);
             // 
             // pluginsToolStripMenuItem
             // 
@@ -381,24 +405,35 @@
             // 
             // tabPage2
             // 
-            this.tabPage2.Controls.Add(this.elementHost1);
+            this.tabPage2.Controls.Add(this.VariableHost);
             this.tabPage2.Location = new System.Drawing.Point(4, 22);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
             this.tabPage2.Size = new System.Drawing.Size(230, 463);
             this.tabPage2.TabIndex = 1;
-            this.tabPage2.Text = "Beta";
+            this.tabPage2.Text = "Variables";
             this.tabPage2.UseVisualStyleBackColor = true;
+            // 
+            // VariableHost
+            // 
+            this.VariableHost.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.VariableHost.Location = new System.Drawing.Point(3, 3);
+            this.VariableHost.Name = "VariableHost";
+            this.VariableHost.Size = new System.Drawing.Size(224, 457);
+            this.VariableHost.TabIndex = 0;
+            this.VariableHost.Text = "elementHost1";
+            this.VariableHost.Child = this.testWpfControl1;
             // 
             // tabPage1
             // 
+            this.tabPage1.Controls.Add(this.EventsHost);
             this.tabPage1.Controls.Add(this.VariablePropertyGrid);
             this.tabPage1.Location = new System.Drawing.Point(4, 22);
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
             this.tabPage1.Size = new System.Drawing.Size(230, 463);
             this.tabPage1.TabIndex = 0;
-            this.tabPage1.Text = "Standard";
+            this.tabPage1.Text = "Events";
             this.tabPage1.UseVisualStyleBackColor = true;
             // 
             // VariablePropertyGrid
@@ -460,10 +495,38 @@
             this.ToolbarPanel.Size = new System.Drawing.Size(618, 31);
             this.ToolbarPanel.TabIndex = 2;
             // 
+            // wireframeControl1
+            // 
+            this.wireframeControl1.AllowDrop = true;
+            this.wireframeControl1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.wireframeControl1.ContextMenuStrip = this.WireframeContextMenuStrip;
+            this.wireframeControl1.Cursor = System.Windows.Forms.Cursors.Default;
+            this.wireframeControl1.DesiredFramesPerSecond = 30F;
+            this.wireframeControl1.Location = new System.Drawing.Point(0, 52);
+            this.wireframeControl1.Name = "wireframeControl1";
+            this.wireframeControl1.Size = new System.Drawing.Size(618, 496);
+            this.wireframeControl1.TabIndex = 0;
+            this.wireframeControl1.Text = "wireframeControl1";
+            this.wireframeControl1.DragDrop += new System.Windows.Forms.DragEventHandler(this.wireframeControl1_DragDrop);
+            this.wireframeControl1.DragEnter += new System.Windows.Forms.DragEventHandler(this.wireframeControl1_DragEnter);
+            this.wireframeControl1.MouseClick += new System.Windows.Forms.MouseEventHandler(this.wireframeControl1_MouseClick);
+            // 
             // WireframeContextMenuStrip
             // 
             this.WireframeContextMenuStrip.Name = "WireframeContextMenuStrip";
             this.WireframeContextMenuStrip.Size = new System.Drawing.Size(61, 4);
+            // 
+            // WireframeEditControl
+            // 
+            this.WireframeEditControl.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.WireframeEditControl.Location = new System.Drawing.Point(0, 0);
+            this.WireframeEditControl.Name = "WireframeEditControl";
+            this.WireframeEditControl.PercentageValue = 100;
+            this.WireframeEditControl.Size = new System.Drawing.Size(618, 22);
+            this.WireframeEditControl.TabIndex = 1;
             // 
             // panel2
             // 
@@ -484,65 +547,15 @@
             this.OutputTextBox.TabIndex = 0;
             this.OutputTextBox.Text = "";
             // 
-            // contentToolStripMenuItem
+            // EventsHost
             // 
-            this.contentToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.clearFontCacheToolStripMenuItem});
-            this.contentToolStripMenuItem.Name = "contentToolStripMenuItem";
-            this.contentToolStripMenuItem.Size = new System.Drawing.Size(62, 20);
-            this.contentToolStripMenuItem.Text = "Content";
-            // 
-            // clearFontCacheToolStripMenuItem
-            // 
-            this.clearFontCacheToolStripMenuItem.Name = "clearFontCacheToolStripMenuItem";
-            this.clearFontCacheToolStripMenuItem.Size = new System.Drawing.Size(164, 22);
-            this.clearFontCacheToolStripMenuItem.Text = "Clear Font Cache";
-            this.clearFontCacheToolStripMenuItem.Click += new System.EventHandler(this.clearFontCacheToolStripMenuItem_Click);
-            // 
-            // elementHost1
-            // 
-            this.elementHost1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.elementHost1.Location = new System.Drawing.Point(3, 3);
-            this.elementHost1.Name = "elementHost1";
-            this.elementHost1.Size = new System.Drawing.Size(224, 457);
-            this.elementHost1.TabIndex = 0;
-            this.elementHost1.Text = "elementHost1";
-            this.elementHost1.Child = this.testWpfControl1;
-            // 
-            // wireframeControl1
-            // 
-            this.wireframeControl1.AllowDrop = true;
-            this.wireframeControl1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.wireframeControl1.ContextMenuStrip = this.WireframeContextMenuStrip;
-            this.wireframeControl1.Cursor = System.Windows.Forms.Cursors.Default;
-            this.wireframeControl1.DesiredFramesPerSecond = 30F;
-            this.wireframeControl1.Location = new System.Drawing.Point(0, 52);
-            this.wireframeControl1.Name = "wireframeControl1";
-            this.wireframeControl1.Size = new System.Drawing.Size(618, 496);
-            this.wireframeControl1.TabIndex = 0;
-            this.wireframeControl1.Text = "wireframeControl1";
-            this.wireframeControl1.DragDrop += new System.Windows.Forms.DragEventHandler(this.wireframeControl1_DragDrop);
-            this.wireframeControl1.DragEnter += new System.Windows.Forms.DragEventHandler(this.wireframeControl1_DragEnter);
-            this.wireframeControl1.MouseClick += new System.Windows.Forms.MouseEventHandler(this.wireframeControl1_MouseClick);
-            // 
-            // WireframeEditControl
-            // 
-            this.WireframeEditControl.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.WireframeEditControl.Location = new System.Drawing.Point(0, 0);
-            this.WireframeEditControl.Name = "WireframeEditControl";
-            this.WireframeEditControl.PercentageValue = 100;
-            this.WireframeEditControl.Size = new System.Drawing.Size(618, 22);
-            this.WireframeEditControl.TabIndex = 1;
-            // 
-            // saveAllToolStripMenuItem
-            // 
-            this.saveAllToolStripMenuItem.Name = "saveAllToolStripMenuItem";
-            this.saveAllToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.saveAllToolStripMenuItem.Text = "Save All";
-            this.saveAllToolStripMenuItem.Click += new System.EventHandler(this.saveAllToolStripMenuItem_Click);
+            this.EventsHost.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.EventsHost.Location = new System.Drawing.Point(3, 3);
+            this.EventsHost.Name = "EventsHost";
+            this.EventsHost.Size = new System.Drawing.Size(224, 457);
+            this.EventsHost.TabIndex = 3;
+            this.EventsHost.Text = "elementHost1";
+            this.EventsHost.Child = this.testWpfControl2;
             // 
             // MainWindow
             // 
@@ -625,11 +638,13 @@
         private System.Windows.Forms.TabControl PropertyGridTab;
         private System.Windows.Forms.TabPage tabPage1;
         private System.Windows.Forms.TabPage tabPage2;
-        private System.Windows.Forms.Integration.ElementHost elementHost1;
+        private System.Windows.Forms.Integration.ElementHost VariableHost;
         private TestWpfControl testWpfControl1;
         private System.Windows.Forms.ToolStripMenuItem contentToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem clearFontCacheToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem saveAllToolStripMenuItem;
+        private System.Windows.Forms.Integration.ElementHost EventsHost;
+        private TestWpfControl testWpfControl2;
     }
 }
 

@@ -53,7 +53,7 @@ namespace RenderingLibrary.Graphics
 
         #region Properties
 
-        public byte Alpha
+        public int Alpha
         {
             get
             {
@@ -67,6 +67,55 @@ namespace RenderingLibrary.Graphics
                 }
             }
         }
+
+        public int Red
+        {
+            get
+            {
+                return Color.R;
+            }
+            set
+            {
+                if (value != Color.R)
+                {
+                    Color = new Color(value, Color.G, Color.B, Color.A);
+                }
+            }
+        }
+
+        public int Green
+        {
+            get
+            {
+                return Color.G;
+            }
+            set
+            {
+                if (value != Color.G)
+                {
+                    Color = new Color(Color.R, value, Color.B, Color.A);
+                }
+            }
+        }
+
+        public int Blue
+        {
+            get
+            {
+                return Color.B;
+            }
+            set
+            {
+                if (value != Color.B)
+                {
+                    Color = new Color(Color.R, Color.G, value, Color.A);
+                }
+            }
+        }
+
+
+
+
 
         public string Name
         {
