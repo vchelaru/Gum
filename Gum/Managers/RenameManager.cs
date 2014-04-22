@@ -55,16 +55,23 @@ namespace Gum.Managers
                     // Tell the GumProjectSave to react to the rename.
                     // This changes the names of the ElementSave references.
                     ProjectManager.Self.GumProjectSave.ReactToRenamed(elementSave, instance, oldName);
+                    
 
-
-
-                    if (SelectedState.Self.SelectedInstance != null)
+                    if (instance != null)
                     {
                         string newName = SelectedState.Self.SelectedInstance.Name;
 
                         foreach (StateSave stateSave in SelectedState.Self.SelectedElement.States)
                         {
                             stateSave.ReactToInstanceNameChange(oldName, newName);
+                        }
+
+                        foreach (var eventSave in SelectedState.Self.SelectedElement.Events)
+                        {
+                            if (eventSave.GetSourceObject() == oldName)
+                            {
+                                eventSave.Name = instance.Name + "." + eventSave.GetRootName();
+                            }
                         }
                     }
 

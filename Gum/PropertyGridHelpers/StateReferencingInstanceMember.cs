@@ -201,6 +201,11 @@ namespace Gum.PropertyGridHelpers
                     ContextMenuEvents.Add("Un-expose Variable", HandleUnExposeVariableClick);
                 }
             }
+            else
+            {
+                // Variable doesn't exist, so they can only expose it, not unexpose it.
+                ContextMenuEvents.Add("Expose Variable", HandleExposeVariableClick);
+            }
         }
 
         private void HandleUnExposeVariableClick(object sender, System.Windows.RoutedEventArgs e)

@@ -100,6 +100,9 @@ namespace Gum.ToolCommands
                 }
             }
 
+            elementToRemoveFrom.Events.RemoveAll(item => item.GetSourceObject() == instanceToRemove.Name);
+
+
             PluginManager.Self.InstanceDelete(elementToRemoveFrom, instanceToRemove);
 
             if (SelectedState.Self.SelectedInstance == instanceToRemove)

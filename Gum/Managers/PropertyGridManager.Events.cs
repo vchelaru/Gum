@@ -28,68 +28,78 @@ namespace Gum.Managers
 
         private void RefreshEventsUi()
         {
-            if (SelectedState.Self.SelectedInstances.GetCount() > 1)
+
+            var selectedInstance = SelectedState.Self.SelectedInstance;
+            var selectedElement = SelectedState.Self.SelectedElement;
+
+            if (selectedElement == null)
             {
                 mEventsDataGrid.Visibility = System.Windows.Visibility.Hidden;
             }
             else
             {
                 //List<MemberCategory> categories = GetEventCategories();
+                mEventsDataGrid.Categories.Clear();
 
-                EventsViewModel viewModel = new EventsViewModel();
+                var eventsOnThisCategory = new MemberCategory();
+                eventsOnThisCategory.Name = "Events on this";
+                mEventsDataGrid.Categories.Add(eventsOnThisCategory);
 
-                var selectedInstance = SelectedState.Self.SelectedInstance;
-                var selectedElement = SelectedState.Self.SelectedElement;
-                viewModel.InstanceSave = selectedInstance;
-                viewModel.ElementSave = selectedElement ;
-
-                mEventsDataGrid.Instance = viewModel;
-                mEventsDataGrid.MembersToIgnore.Add("InstanceSave");
-                mEventsDataGrid.MembersToIgnore.Add("ElementSave");
-                mEventsDataGrid.Categories[0].Name = "Events on this";
                 if (SelectedState.Self.SelectedInstance != null)
                 {
-                    // Now loop through all objects and give them an Expose right click option
-                    foreach (var category in mEventsDataGrid.Categories)
-                    {
-                        foreach (var member in category.Members)
-                        {
-
-                            member.ContextMenuEvents.Add("Expose Event", HandleExposeClick);
-                        }
-                    }
-
-
                     var instanceElement = ObjectFinder.Self.GetElementSave(SelectedState.Self.SelectedInstance.BaseType);
 
                     if (instanceElement != null)
                     {
-                        foreach (var eventSaveInBase in instanceElement.Events.Where(item => !string.IsNullOrEmpty(item.ExposedAsName)))
+                        foreach (var eventSaveInBase in instanceElement.Events.Where(item=>
+                            item.Enabled
+                            && ( string.IsNullOrEmpty(item.GetSourceObject()) || !string.IsNullOrEmpty(item.ExposedAsName))
+                            ))
                         {
-                            var eventSave = SelectedState.Self.SelectedElement.Events.FirstOrDefault(item => item.Name ==
-                                selectedInstance.Name + "." + eventSaveInBase.ExposedAsName);
+                            var eventSave = selectedElement.Events.FirstOrDefault(item => item.Name ==
+                                selectedInstance.Name + "." + eventSaveInBase.GetExposedOrRootName());
 
                             if (eventSave == null)
                             {
                                 eventSave = new EventSave();
-                                eventSave.Name = selectedInstance.Name + "." + eventSaveInBase.ExposedAsName;
-                                selectedElement.Events.Add(eventSave);
+                                eventSave.Name = selectedInstance.Name + "." + eventSaveInBase.GetExposedOrRootName();
+                                // I don't think we want to add this here yet do we?
+                                // We should add it only if the user checks it
+                                //selectedElement.Events.Add(eventSave);
                             }
 
 
 
                             EventInstanceMember instanceMember = new EventInstanceMember(
-                                SelectedState.Self.SelectedElement,
-                                SelectedState.Self.SelectedInstance,
+                                selectedElement,
+                                selectedInstance,
                                 eventSave);
 
                             mEventsDataGrid.Categories[0].Members.Add(instanceMember);
                         }
                     }
 
+                    // Now loop through all objects and give them an Expose right click option
+                    foreach (var category in mEventsDataGrid.Categories)
+                    {
+                        foreach (var member in category.Members)
+                        {
+                            member.ContextMenuEvents.Add("Expose Event", HandleExposeClick);
+                        }
+                    }
                 }
-                else
+                else if(selectedElement != null)
                 {
+                    EventsViewModel viewModel = new EventsViewModel();
+
+                    viewModel.InstanceSave = selectedInstance;
+                    viewModel.ElementSave = selectedElement;
+
+                    mEventsDataGrid.Instance = viewModel;
+                    mEventsDataGrid.MembersToIgnore.Add("InstanceSave");
+                    mEventsDataGrid.MembersToIgnore.Add("ElementSave");
+                    mEventsDataGrid.Categories[0].Name = "Events on this";
+
                     MemberCategory exposed = new MemberCategory();
                     exposed.Name = "Exposed";
 
@@ -124,14 +134,14 @@ namespace Gum.Managers
 
             tiw.Message = "Enter name to expose as:";
 
-            tiw.Result = SelectedState.Self.SelectedInstance.Name + instanceMember.Name;
+            tiw.Result = SelectedState.Self.SelectedInstance.Name + instanceMember.DisplayName;
 
             var dialogResult = tiw.ShowDialog();
 
 
             if (dialogResult == System.Windows.Forms.DialogResult.OK)
             {
-                string nameWithDot = SelectedState.Self.SelectedInstance.Name + "." + instanceMember.Name;
+                string nameWithDot = SelectedState.Self.SelectedInstance.Name + "." + instanceMember.DisplayName;
 
                 EventSave eventSave = SelectedState.Self.SelectedElement.Events.FirstOrDefault(item => item.Name == nameWithDot);
 

@@ -11,6 +11,19 @@ namespace Gum.DataTypes
         public bool Enabled { get; set; }
         public string ExposedAsName { get; set; }
 
+        public string GetExposedOrRootName()
+        {
+            if (!string.IsNullOrEmpty(ExposedAsName))
+            {
+                return ExposedAsName;
+            }
+            else
+            {
+                return GetRootName();
+            }
+        }
+
+
         public string GetRootName()
         {
             if (Name.Contains('.'))
@@ -21,6 +34,21 @@ namespace Gum.DataTypes
             {
                 return Name;
             }
+        }
+
+        public string GetSourceObject()
+        {
+            if (Name.Contains('.'))
+            {
+                int indexOfDot = Name.IndexOf(".");
+
+                return Name.Substring(0, indexOfDot);
+            }
+            else
+            {
+                return null;
+            }
+            
         }
     }
 }

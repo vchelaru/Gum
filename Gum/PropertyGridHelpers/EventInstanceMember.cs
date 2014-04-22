@@ -12,10 +12,11 @@ namespace Gum.PropertyGridHelpers
     {
         EventSave mEventSave;
 
-
+        ElementSave mElementSave;
 
         public EventInstanceMember(ElementSave element, InstanceSave instance, EventSave eventSave)
         {
+            mElementSave = element;
             mEventSave = eventSave;
             if (!string.IsNullOrEmpty(eventSave.ExposedAsName))
             {
@@ -24,6 +25,11 @@ namespace Gum.PropertyGridHelpers
             else
             {
                 this.Name = eventSave.Name;
+            }
+
+            if (instance != null)
+            {
+                this.DisplayName = eventSave.GetRootName();
             }
 
             this.CustomSetEvent += HandlePropertyChanged;
@@ -44,6 +50,12 @@ namespace Gum.PropertyGridHelpers
         private void HandlePropertyChanged(object arg1, object arg2)
         {
             mEventSave.Enabled = (bool)arg2;
+
+            if (mEventSave.Enabled && !this.mElementSave.Events.Contains(mEventSave))
+            {
+                mElementSave.Events.Add(mEventSave);
+            }
+
 
             GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
         }
