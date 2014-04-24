@@ -107,7 +107,7 @@ namespace Gum.DataTypes
 
         private static void RemoveDuplicateVariables(ElementSave element)
         {
-            foreach (var state in element.States)
+            foreach (var state in element.AllStates)
             {
                 List<string> alreadyVisitedVariables = new List<string>();
 

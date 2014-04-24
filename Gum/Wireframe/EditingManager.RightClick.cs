@@ -434,6 +434,11 @@ namespace Gum.Wireframe
             }
             //////////////////End Early Out////////////////
 
+            if (container.Categories.Count != 0)
+            {
+                MessageBox.Show("Pasting into elements with state categories may cause unexpected results.  Please complain on codeplex!");
+            }
+
 
             StateSave newStateSave = mCopiedState.Clone();
 

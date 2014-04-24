@@ -24,6 +24,8 @@ namespace RenderingLibrary.Graphics
         internal string mFontFile;
         internal string[] mTextureNames = new string[1];
 
+        int mOutlineThickness;
+
         #endregion
 
         #region Properties
@@ -262,6 +264,9 @@ namespace RenderingLibrary.Graphics
 
         public void SetFontPattern(string fontPattern)
         {
+            mOutlineThickness = StringFunctions.GetIntAfter(" outline=", fontPattern);
+
+
             #region Identify the size of the character array to create
 
             int sizeOfArray = 256;
@@ -301,6 +306,7 @@ namespace RenderingLibrary.Graphics
             index = fontPattern.IndexOf("char id=");
             while (index != -1)
             {
+
                 int ID = StringFunctions.GetIntAfter("char id=", fontPattern, index);
 
                 mCharacterInfo[ID] = FillBitmapCharacterInfo(ID, fontPattern, mTextures[0].Width,
@@ -452,6 +458,7 @@ namespace RenderingLibrary.Graphics
                         int pageIndex = characterInfo.PageNumber;
 
                         imageData.Blit(imageDatas[pageIndex], sourceRectangle, point);
+
                         point.X -= xOffset;
                         point.X += characterInfo.GetXAdvanceInPixels(LineHeightInPixels);
 

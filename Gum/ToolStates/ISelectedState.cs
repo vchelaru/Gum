@@ -17,6 +17,7 @@ namespace Gum.ToolStates
         ElementSave SelectedElement { get; set; }
         StateSave CustomCurrentStateSave{ get; set; }
         StateSave SelectedStateSave { get; set; }
+        StateSaveCategory SelectedStateCategorySave { get; set; }
         ComponentSave SelectedComponent { get; set; }
         InstanceSave SelectedInstance { get; set; }
         IPositionedSizedObject SelectedIpso { get; set; }

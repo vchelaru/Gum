@@ -24,9 +24,10 @@ namespace Gum.Managers
         }
 
 
-        public BitmapFont GetBitmapFontFor(string fontName, int fontSize)
+        public BitmapFont GetBitmapFontFor(string fontName, int fontSize, int outlineThickness)
         {
-            string fileName = AbsoluteFontCacheFolder + "Font" + fontSize + fontName + ".fnt";
+            string fileName = AbsoluteFontCacheFolder + 
+                FileManager.RemovePath(BmfcSave.GetFontCacheFileNameFor(fontSize, fontName, outlineThickness));
 
             if (System.IO.File.Exists(fileName))
             {
@@ -55,7 +56,14 @@ namespace Gum.Managers
 
         public void DeleteFontCacheFolder()
         {
-            FileManager.DeleteDirectory(AbsoluteFontCacheFolder);
+            try
+            {
+                FileManager.DeleteDirectory(AbsoluteFontCacheFolder);
+            }
+            catch(Exception e)
+            {
+                System.Windows.Forms.MessageBox.Show("Error deleting font cache:\n" + e.ToString());
+            }
         }
 
         internal void ReactToFontValueSet()
@@ -74,7 +82,8 @@ namespace Gum.Managers
 
             BmfcSave.CreateBitmapFontFilesIfNecessary(
                 (int)fontSizeAsObject,
-                (string)stateSave.GetValueRecursive(prefix + "Font"));
+                (string)stateSave.GetValueRecursive(prefix + "Font"),
+                0);
         }
     }
 }

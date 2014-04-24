@@ -7,6 +7,7 @@ using Gum.DataTypes.Variables;
 using Gum.ToolStates;
 using Gum.ToolCommands;
 using System.Windows.Forms;
+using Gum.Commands;
 
 namespace Gum.Managers
 {
@@ -23,7 +24,7 @@ namespace Gum.Managers
             else
             {
                 TextInputWindow tiw = new TextInputWindow();
-                tiw.Message = "Enter new State name:";
+                tiw.Message = "Enter new state name:";
 
                 if (tiw.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                 {
@@ -35,10 +36,36 @@ namespace Gum.Managers
                     RefreshUI(SelectedState.Self.SelectedElement);
 
                     SelectedState.Self.SelectedStateSave = stateSave;
-                    if (ProjectManager.Self.GeneralSettingsFile.AutoSave)
-                    {
-                        ProjectManager.Self.SaveElement(SelectedState.Self.SelectedElement);
-                    }
+
+                    GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+                }
+            }
+        }
+
+        internal void AddStateCategoryClick()
+        {
+            if (SelectedState.Self.SelectedElement == null)
+            {
+                MessageBox.Show("You must first select an element to add a state category");
+            }
+            else
+            {
+                TextInputWindow tiw = new TextInputWindow();
+                tiw.Message = "Enter new category name:";
+
+                if (tiw.ShowDialog() == DialogResult.OK)
+                {
+                    string name = tiw.Result;
+
+                    StateSaveCategory category = ElementCommands.Self.AddCategory(
+                        SelectedState.Self.SelectedElement, name);
+
+                    RefreshUI(SelectedState.Self.SelectedElement);
+
+                    SelectedState.Self.SelectedStateCategorySave = category;
+
+                    GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+
                 }
             }
         }
@@ -54,6 +81,15 @@ namespace Gum.Managers
                     
                     GumCommands.Self.Edit.AddState();
                 });
+            mMenuStrip.Items.Add(tsmi);
+
+            tsmi = new ToolStripMenuItem();
+            tsmi.Text = "Add Category";
+            tsmi.Click += ((obj, arg) =>
+            {
+
+                GumCommands.Self.Edit.AddCategory();
+            });
             mMenuStrip.Items.Add(tsmi);
 
             if (SelectedState.Self.SelectedStateSave != null)

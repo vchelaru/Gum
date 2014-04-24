@@ -61,7 +61,7 @@ namespace Gum.Managers
                     {
                         string newName = SelectedState.Self.SelectedInstance.Name;
 
-                        foreach (StateSave stateSave in SelectedState.Self.SelectedElement.States)
+                        foreach (StateSave stateSave in SelectedState.Self.SelectedElement.AllStates)
                         {
                             stateSave.ReactToInstanceNameChange(oldName, newName);
                         }

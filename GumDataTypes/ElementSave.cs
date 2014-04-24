@@ -32,6 +32,13 @@ namespace Gum.DataTypes
             set;
         }
 
+        [XmlElement("Category")]
+        public List<StateSaveCategory> Categories
+        {
+            get;
+            set;
+        }
+
         [XmlElement("Instance")]
         public List<InstanceSave> Instances
         {
@@ -80,6 +87,26 @@ namespace Gum.DataTypes
             set;
         }
 
+        [XmlIgnore]
+        public IEnumerable<StateSave> AllStates
+        {
+            get
+            {
+                foreach (var state in States)
+                {
+                    yield return state;
+                }
+
+                foreach (var category in Categories)
+                {
+                    foreach (var state in category.States)
+                    {
+                        yield return state;
+                    }
+                }
+            }
+        }
+
         #endregion
 
         public ElementSave()
@@ -87,6 +114,7 @@ namespace Gum.DataTypes
             States = new List<StateSave>();
             Instances = new List<InstanceSave>();
             Events = new List<EventSave>();
+            Categories = new List<StateSaveCategory>();
         }
 
         public InstanceSave GetInstance(string name)

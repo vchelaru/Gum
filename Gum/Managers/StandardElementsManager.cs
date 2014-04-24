@@ -106,6 +106,8 @@ namespace Gum.Managers
             stateSave.Variables.Add(new VariableSave { Type = "HorizontalAlignment", Value = HorizontalAlignment.Left, Name = "HorizontalAlignment", Category = "Text" });
             stateSave.Variables.Add(new VariableSave { Type = "string", Value = "Arial", Name = "Font", IsFont = true, Category = "Font" });
             stateSave.Variables.Add(new VariableSave { Type = "int", Value = 18, Name = "FontSize", Category = "Font" });
+            stateSave.Variables.Add(new VariableSave { Type = "int", Value = 0, Name = "OutlineThickness", Category = "Font" });
+            
 
 
 
@@ -359,7 +361,12 @@ namespace Gum.Managers
 
         public StateSave GetDefaultStateFor(string type)
         {
+            if (mDefaults == null)
+            {
+                throw new Exception("You must first call Initialize on StandardElementsManager before calling this function");
+            }
             return mDefaults[type];
+
         }
 
         public bool IsDefaultType(string type)

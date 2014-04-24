@@ -13,5 +13,10 @@ namespace Gum.Commands
             StateTreeViewManager.Self.AddStateClick();
 
         }
+
+        public void AddCategory()
+        {
+            StateTreeViewManager.Self.AddStateCategoryClick();
+        }
     }
 }

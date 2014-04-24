@@ -64,6 +64,11 @@ namespace GumRuntime
                 toReturn.AddExposedVariable(variable.ExposedAsName, variable.Name);
             }
 
+            if (elementSave.Categories.Count != 0)
+            {
+                throw new NotImplementedException();
+            }
+
             toReturn.AddStates(elementSave.States);
 
             toReturn.Tag = elementSave;

@@ -47,6 +47,8 @@ namespace Gum.DataTypes
     {
         public static void Initialize(this ElementSave elementSave, StateSave defaultState)
         {
+            // Use States and not AllStates because we want to make sure we
+            // have a default state.
             if (elementSave.States.Count == 0 && defaultState != null)
             {
                 StateSave stateToAdd = defaultState.Clone();
@@ -110,7 +112,7 @@ namespace Gum.DataTypes
 
             }
 
-            foreach (StateSave state in elementSave.States)
+            foreach (StateSave state in elementSave.AllStates)
             {
                 state.ParentContainer = elementSave;
                 state.Initialize();

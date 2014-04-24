@@ -73,6 +73,8 @@ namespace Gum.Undo
 
 
                 bool doStatesDiffer = FileManager.AreSaveObjectsEqual(mRecordedElementSave.DefaultState, currentStateSave) == false;
+                bool doStateCategoriesDiffer =
+                    FileManager.AreSaveObjectsEqual(mRecordedElementSave.Categories, selectedElement.Categories) == false;
                 bool doInstanceListsDiffer = FileManager.AreSaveObjectsEqual(mRecordedElementSave.Instances, selectedElement.Instances) == false;
                 bool doTypesDiffer = mRecordedElementSave.BaseType != selectedElement.BaseType;
                 bool doNamesDiffer = mRecordedElementSave.Name != selectedElement.Name;
@@ -91,6 +93,10 @@ namespace Gum.Undo
                     if (!doStatesDiffer)
                     {
                         mRecordedElementSave.States = null;
+                    }
+                    if (!doStateCategoriesDiffer)
+                    {
+                        mRecordedElementSave.Categories = null;
                     }
                     if (!doNamesDiffer)
                     {

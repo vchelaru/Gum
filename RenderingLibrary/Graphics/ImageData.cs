@@ -155,7 +155,10 @@ namespace RenderingLibrary.Graphics
                     int destinationX = x + destination.X;
                     int destinationY = y + destination.Y;
 
-                    this.SetPixel(destinationX, destinationY, source.GetPixelColor(sourceX, sourceY));
+                    if (destinationX < this.Width && destinationY < this.Height)
+                    {
+                        this.SetPixel(destinationX, destinationY, source.GetPixelColor(sourceX, sourceY));
+                    }
                 }
             }
         }

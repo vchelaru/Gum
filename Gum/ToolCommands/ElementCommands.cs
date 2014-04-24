@@ -68,9 +68,30 @@ namespace Gum.ToolCommands
             return stateSave;
         }
 
+        public StateSaveCategory AddCategory(ElementSave elementToAddTo, string name)
+        {
+            if (elementToAddTo == null)
+            {
+                throw new Exception("Could not add category " + name + " because no element is selected");
+            }
+
+            StateSaveCategory category = new StateSaveCategory();
+            category.Name = name;
+
+            elementToAddTo.Categories.Add(category);
+
+
+            return category;
+        }
+
         public void RemoveState(StateSave stateSave, ElementSave elementToRemoveFrom)
         {
             elementToRemoveFrom.States.Remove(stateSave);
+
+            foreach (var category in elementToRemoveFrom.Categories.Where(item => item.States.Contains(stateSave)))
+            {
+                category.States.Remove(stateSave);
+            }
         }
 
         public void RemoveInstance(InstanceSave instanceToRemove, ElementSave elementToRemoveFrom)
@@ -82,7 +103,7 @@ namespace Gum.ToolCommands
 
             elementToRemoveFrom.Instances.Remove(instanceToRemove);
 
-            foreach (StateSave stateSave in elementToRemoveFrom.States)
+            foreach (StateSave stateSave in elementToRemoveFrom.AllStates)
             {
                 for (int i = stateSave.Variables.Count - 1; i > -1; i--)
                 {

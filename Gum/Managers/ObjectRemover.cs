@@ -49,7 +49,7 @@ namespace Gum.Managers
 
                 // loop through all of the states to see if any of the parents' states
                 // reference the state that is being removed.
-                foreach (var stateInContainer in parent.States)
+                foreach (var stateInContainer in parent.AllStates)
                 {
                     var foundVariable = stateInContainer.Variables.FirstOrDefault(item => item.Name == variableToLookFor);
 

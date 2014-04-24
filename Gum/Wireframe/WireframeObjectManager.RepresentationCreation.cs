@@ -109,7 +109,14 @@ namespace Gum.Wireframe
             ElementWithState elementWithState = new ElementWithState(elementSave);
             if (elementSave == SelectedState.Self.SelectedElement)
             {
-                elementWithState.StateName = SelectedState.Self.SelectedStateSave.Name;
+                if (SelectedState.Self.SelectedStateSave != null)
+                {
+                    elementWithState.StateName = SelectedState.Self.SelectedStateSave.Name;
+                }
+                else
+                {
+                    elementWithState.StateName = "Default";
+                }
             }
 
             elementStack.Add(elementWithState);
@@ -237,7 +244,13 @@ namespace Gum.Wireframe
 
             if(element != null)
             {
-                RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(SelectedState.Self.SelectedStateSave);
+                var selectedState = SelectedState.Self.SelectedStateSave;
+                if (selectedState == null)
+                {
+                    selectedState = SelectedState.Self.SelectedElement.DefaultState;
+                }
+
+                RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(selectedState);
 
                 string guide = rvf.GetValue<string>("Guide");
                 string parent = rvf.GetValue<string>(instance.Name + ".Parent");
@@ -281,8 +294,15 @@ namespace Gum.Wireframe
                 {
                     CreateRectangleFor(instance, elementStack, rootIpso);
                 }
-                
-                RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(SelectedState.Self.SelectedStateSave);
+
+                var selectedState = SelectedState.Self.SelectedStateSave;
+
+                if (selectedState == null)
+                {
+                    selectedState = SelectedState.Self.SelectedElement.DefaultState;
+                }
+
+                RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(selectedState);
 
                 string guide = rvf.GetValue<string>("Guide");
                 SetGuideParent(parentIpso, rootIpso, guide, false);
@@ -627,12 +647,14 @@ namespace Gum.Wireframe
 
             string fontName = (string)rvf.GetValue("Font");
             int fontSize = (int)rvf.GetValue("FontSize");
+            int outlineThickness = rvf.GetValue<int>("OutlineThickness");
 
             BmfcSave.CreateBitmapFontFilesIfNecessary(
                 fontSize,
-                fontName);
+                fontName,
+                outlineThickness);
 
-            text.BitmapFont = FontManager.Self.GetBitmapFontFor(fontName, fontSize);
+            text.BitmapFont = FontManager.Self.GetBitmapFontFor(fontName, fontSize, outlineThickness);
             text.EnableTextureCreation();
             return text;
         }

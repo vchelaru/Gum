@@ -45,27 +45,58 @@ namespace Gum.Managers
 
         #endregion
 
-        public TreeNode GetTreeNodeFor(StateSave stateSave)
+        public TreeNode GetTreeNodeForTag(object tag)
         {
-            if (stateSave == null)
+            if (tag == null)
             {
                 return null;
             }
             // Will need to expand this when we add categories
             foreach (TreeNode node in mTreeView.Nodes)
             {
-                if (node.Tag == stateSave)
+                if (node.Tag == tag)
                 {
                     return node;
+                }
+
+                foreach (var subnode in node.Nodes)
+                {
+                    if (node.Tag == tag)
+                    {
+                        return node;
+                    }
                 }
             }
             return null;
         }
 
+
+
         public void Initialize(MultiSelectTreeView treeView, ContextMenuStrip menuStrip)
         {
             mMenuStrip = menuStrip;
             mTreeView = treeView;
+
+
+            mMenuStrip.Items.Clear();
+
+            var tsmi = new ToolStripMenuItem();
+            tsmi.Text = "Add State";
+            tsmi.Click += ((obj, arg) =>
+            {
+
+                GumCommands.Self.Edit.AddState();
+            });
+            mMenuStrip.Items.Add(tsmi);
+
+            tsmi = new ToolStripMenuItem();
+            tsmi.Text = "Add Category";
+            tsmi.Click += ((obj, arg) =>
+            {
+
+                GumCommands.Self.Edit.AddCategory();
+            });
+            mMenuStrip.Items.Add(tsmi);
         }
 
         internal void OnSelect()
@@ -98,10 +129,17 @@ namespace Gum.Managers
 
         public void Select(StateSave stateSave)
         {
-            TreeNode treeNode = GetTreeNodeFor(stateSave);
+            TreeNode treeNode = GetTreeNodeForTag(stateSave);
 
             Select(treeNode);
 
+        }
+
+        public void Select(StateSaveCategory stateSaveCategory)
+        {
+            TreeNode treeNode = GetTreeNodeForTag(stateSaveCategory);
+
+            Select(treeNode);
         }
 
         public void Select(TreeNode treeNode)
@@ -130,32 +168,30 @@ namespace Gum.Managers
 
             if (element != null)
             {
-                while (mTreeView.Nodes.Count > element.States.Count)
-                {
-                    mTreeView.Nodes.RemoveAt(mTreeView.Nodes.Count - 1);
-                }
-                while (mTreeView.Nodes.Count < element.States.Count)
-                {
-                    mTreeView.Nodes.Add(new TreeNode());
-                }
+
+                RemoveUnnecessaryNodes(element);
+
+                AddNeededNodes(element);
 
                 bool wasAnythingSelected = false;
-                for(int i = 0; i < element.States.Count; i++)
+
+                foreach(var state in element.AllStates)
                 {
-                    StateSave state = element.States[i];
                     string stateName = state.Name;
                     if (string.IsNullOrEmpty(stateName))
                     {
                         stateName = "Default";
                     }
 
-                    if (mTreeView.Nodes[i].Text != stateName)
+                    var node = GetTreeNodeForTag(state);
+
+                    if (node.Text != stateName)
                     {
-                        mTreeView.Nodes[i].Text = stateName;
+                        node.Text = stateName;
                     }
-                    if (mTreeView.Nodes[i].Tag != state)
+                    if (node.Tag != state)
                     {
-                        mTreeView.Nodes[i].Tag = state;
+                        node.Tag = state;
                     }
 
                     if (state == lastStateSave)
@@ -165,7 +201,7 @@ namespace Gum.Managers
 
                         wasAnythingSelected = true;
                     }
-                    else if(!mTreeView.Nodes[i].IsSelected && mTreeView.SelectedNode != mTreeView.Nodes[i])
+                    else if (!node.IsSelected && mTreeView.SelectedNode != node)
                     {
                         System.Drawing.Color desiredColor = System.Drawing.Color.White;
                         if (instance != null && state.Variables.Any(item => item.Name.StartsWith(instance.Name + ".")))
@@ -173,9 +209,9 @@ namespace Gum.Managers
                             desiredColor = System.Drawing.Color.Yellow;
                         }
 
-                        if (mTreeView.Nodes[i].BackColor != desiredColor)
+                        if (node.BackColor != desiredColor)
                         {
-                            mTreeView.Nodes[i].BackColor = desiredColor;
+                            node.BackColor = desiredColor;
                         }
                     }
                 }
@@ -197,8 +233,71 @@ namespace Gum.Managers
 
         }
 
+        private void AddNeededNodes(ElementSave element)
+        {
+            foreach (var category in element.Categories)
+            {
+                if (GetTreeNodeForTag(category) == null)
+                {
+                    mTreeView.Nodes.Add(category.Name).Tag = category;
+                }
+            }
 
+            foreach (var state in element.States)
+            {
+                // uncategorized
+                if (GetTreeNodeForTag(state) == null)
+                {
+                    mTreeView.Nodes.Add(state.Name).Tag = state;
+                }
+            }
 
+            foreach (var category in element.Categories)
+            {
+                foreach (var state in category.States)
+                {
+                    // uncategorized
+                    if (GetTreeNodeForTag(state) == null)
+                    {
+                        var toAddTo = GetTreeNodeForTag(category);
+                        
+                        toAddTo.Nodes.Add(state.Name).Tag = state;
+                    }
+                }
+            }
+
+        }
+
+        private void RemoveUnnecessaryNodes(ElementSave element)
+        {
+            var allNodes = mTreeView.Nodes.AllNodes().ToList();
+
+            foreach (var node in allNodes)
+            {
+                if (node.Tag is StateSave && element.AllStates.Contains(node.Tag as StateSave) == false)
+                {
+                    if (node.Parent == null)
+                    {
+                        mTreeView.Nodes.Remove(node);
+                    }
+                    else
+                    {
+                        node.Parent.Nodes.Remove(node);
+                    }
+                }
+                else if (node.Tag is StateSaveCategory && element.Categories.Contains(node.Tag as StateSaveCategory) == false)
+                {
+                    if (node.Parent == null)
+                    {
+                        mTreeView.Nodes.Remove(node);
+                    }
+                    else
+                    {
+                        node.Parent.Nodes.Remove(node);
+                    }
+                }
+            }
+        }
 
 
         internal void HandleKeyDown(KeyEventArgs e)
@@ -234,4 +333,25 @@ namespace Gum.Managers
             }
         }
     }
+
+
+    static class TreeNodeExtensions
+    {
+        public static IEnumerable<TreeNode> AllNodes(this TreeNodeCollection treeNodes)
+        {
+            foreach (TreeNode node in treeNodes)
+            {
+                foreach (var item in node.Nodes.AllNodes())
+                {
+                    yield return item;
+                }
+
+                yield return node;
+            }
+        }
+
+
+    }
+
+
 }

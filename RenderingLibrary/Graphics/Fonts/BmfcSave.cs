@@ -12,6 +12,7 @@ namespace RenderingLibrary.Graphics.Fonts
     {
         public string FontName = "Arial";
         public int FontSize = 20;
+        public int OutlineThickness = 0;
 
         public void Save(string fileName)
         {
@@ -23,18 +24,64 @@ namespace RenderingLibrary.Graphics.Fonts
 
             template = template.Replace("FontNameVariable", FontName);
             template = template.Replace("FontSizeVariable", FontSize.ToString());
+            template = template.Replace("OutlineThicknessVariable", OutlineThickness.ToString());
 
+            //alphaChnl=alphaChnlValue
+            //redChnl=redChnlValue
+            //greenChnl=greenChnlValue
+            //blueChnl=blueChnlValue
+            if (OutlineThickness == 0)
+            {
+                template = template.Replace("alphaChnlValue", "0");
+                template = template.Replace("redChnlValue", "4");
+                template = template.Replace("greenChnlValue", "4");
+                template = template.Replace("blueChnlValue", "4");
+            }
+            else
+            {
+                template = template.Replace("alphaChnlValue", "1");
+                template = template.Replace("redChnlValue", "0");
+                template = template.Replace("greenChnlValue", "0");
+                template = template.Replace("blueChnlValue", "0");
+            }
 
             FileManager.SaveText(template, fileName);
 
         }
 
-        public static void CreateBitmapFontFilesIfNecessary(int fontSize, string fontName)
+        public string FontCacheFileName
         {
-                BmfcSave bmfcSave = new BmfcSave();
-                bmfcSave.FontSize = fontSize;
-                bmfcSave.FontName = fontName;
-                bmfcSave.CreateBitmapFontFilesIfNecessary("FontCache\\Font" + bmfcSave.FontSize + bmfcSave.FontName + ".fnt");
+            get
+            {
+                return GetFontCacheFileNameFor(FontSize, FontName, OutlineThickness);
+            }
+
+        }
+
+        public static string GetFontCacheFileNameFor(int fontSize, string fontName, int outline)
+        {
+            string fileName = null;
+            if (outline == 0)
+            {
+                fileName = "FontCache\\Font" + fontSize + fontName + ".fnt";
+            }
+            else
+            {
+                fileName = "FontCache\\Font" + fontSize + fontName + "_o" + outline + ".fnt";
+            }
+
+            return fileName;
+        }
+
+        public static void CreateBitmapFontFilesIfNecessary(int fontSize, string fontName, int outline)
+        {
+            BmfcSave bmfcSave = new BmfcSave();
+            bmfcSave.FontSize = fontSize;
+            bmfcSave.FontName = fontName;
+            bmfcSave.OutlineThickness = outline;
+
+
+            bmfcSave.CreateBitmapFontFilesIfNecessary(bmfcSave.FontCacheFileName);
         }
 
         public void CreateBitmapFontFilesIfNecessary(string fileName)

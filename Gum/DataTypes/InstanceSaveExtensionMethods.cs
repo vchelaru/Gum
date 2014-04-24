@@ -102,14 +102,22 @@ namespace Gum.DataTypes
             {
                 variableSave = defaultState.GetVariableSave(instance.Name + "." + variable);
             }
-            if ((variableSave == null || (onlyIfSetsValue && (variableSave.SetsValue == false || variableSave.Value == null))) && instanceBase != null)
+
+            // Still haven't found a variable yet, so look in the instanceBase if one exists
+            if ((variableSave == null || 
+                (onlyIfSetsValue && (variableSave.SetsValue == false || variableSave.Value == null))) && instanceBase != null)
             {
+                // create a new recursive variable finder:
                 RecursiveVariableFinder rvf = new RecursiveVariableFinder(instance, elementStack);
+
+                // Let's see if this is in a non-default state
                 string thisState = stateToPullFrom.GetValue(instance.Name + ".State") as string;
                 StateSave instanceStateToPullFrom = instanceBase.DefaultState;
-                if (!string.IsNullOrEmpty(thisState) && instanceBase.States.Any(item => item.Name == thisState))
+
+                // if thisState is not null, then the state is being explicitly set, so let's try to get that state
+                if (!string.IsNullOrEmpty(thisState) && instanceBase.AllStates.Any(item => item.Name == thisState))
                 {
-                    instanceStateToPullFrom = instanceBase.States.First(item => item.Name == thisState);
+                    instanceStateToPullFrom = instanceBase.AllStates.First(item => item.Name == thisState);
                 }
                 // Eventually use the instanceBase's current state value
                 variableSave = instanceStateToPullFrom.GetVariableRecursive(variable);

@@ -225,6 +225,31 @@ namespace Gum.ToolStates
             }
         }
 
+        public StateSaveCategory SelectedStateCategorySave
+        {
+            get
+            {
+                var node = StateTreeViewManager.Self.SelectedNode;
+                if (node != null)
+                {
+                    if (node.Tag is StateSaveCategory)
+                    {
+                        return node.Tag as StateSaveCategory;
+                    }
+                    else if (node.Tag is StateSave && node.Parent != null)
+                    {
+                        return node.Parent.Tag as StateSaveCategory;
+                    }
+                }
+
+                return null;
+            }
+            set
+            {
+                StateTreeViewManager.Self.Select(value);
+            }
+        }
+
         public InstanceSave SelectedInstance
         {
             get
@@ -380,7 +405,7 @@ namespace Gum.ToolStates
             StateTreeViewManager.Self.RefreshUI(SelectedElement);
 
             if (SelectedElement != null && 
-                (SelectedStateSave == null || SelectedElement.States.Contains(SelectedStateSave) == false) &&
+                (SelectedStateSave == null || SelectedElement.AllStates.Contains(SelectedStateSave) == false) &&
                 SelectedElement.States.Count > 0
                 )
             {
@@ -432,7 +457,7 @@ namespace Gum.ToolStates
             
             StateTreeViewManager.Self.RefreshUI(SelectedElement);
 
-            if (SelectedElement != null && (SelectedStateSave == null || SelectedElement.States.Contains(SelectedStateSave) == false))
+            if (SelectedElement != null && (SelectedStateSave == null || SelectedElement.AllStates.Contains(SelectedStateSave) == false))
             {
                 SelectedStateSave = SelectedElement.States[0];
             }

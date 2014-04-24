@@ -53,10 +53,7 @@ namespace Gum.PropertyGridHelpers.Converters
 
             if (elementSave != null)
             {
-                foreach (var state in elementSave.States)
-                {
-                    toReturn.Add(state.Name);
-                }
+                toReturn = elementSave.AllStates.Select(item => item.Name).ToList();
             }
             return toReturn;
         }
