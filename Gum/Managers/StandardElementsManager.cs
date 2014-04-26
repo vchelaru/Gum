@@ -104,9 +104,13 @@ namespace Gum.Managers
             stateSave.Variables.Add(new VariableSave { Type = "string", Value = "Hello", Name = "Text", Category = "Text" });
             stateSave.Variables.Add(new VariableSave { Type = "VerticalAlignment", Value = VerticalAlignment.Top, Name = "VerticalAlignment", Category = "Text" });
             stateSave.Variables.Add(new VariableSave { Type = "HorizontalAlignment", Value = HorizontalAlignment.Left, Name = "HorizontalAlignment", Category = "Text" });
+
+            // font:
+            stateSave.Variables.Add(new VariableSave { Type = "bool", Value = false, Name = "UseCustomFont", Category = "Font" });
             stateSave.Variables.Add(new VariableSave { Type = "string", Value = "Arial", Name = "Font", IsFont = true, Category = "Font" });
             stateSave.Variables.Add(new VariableSave { Type = "int", Value = 18, Name = "FontSize", Category = "Font" });
             stateSave.Variables.Add(new VariableSave { Type = "int", Value = 0, Name = "OutlineThickness", Category = "Font" });
+            stateSave.Variables.Add(new VariableSave { Type = "string", Value = "", Name = "CustomFontFile", Category = "Font", IsFile = true });
             
 
 
@@ -122,6 +126,9 @@ namespace Gum.Managers
 #if GUM
             PluginManager.Self.ModifyDefaultStandardState("Text", stateSave);
 #endif
+
+            ApplySortValuesFromOrderInState(stateSave);
+
             mDefaults.Add("Text", stateSave);
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -160,6 +167,9 @@ namespace Gum.Managers
 #if GUM
             PluginManager.Self.ModifyDefaultStandardState("Sprite", stateSave);
 #endif
+            ApplySortValuesFromOrderInState(stateSave);
+
+
             mDefaults.Add("Sprite", stateSave);
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -184,6 +194,8 @@ namespace Gum.Managers
 #if GUM
             PluginManager.Self.ModifyDefaultStandardState("Container", stateSave);
 #endif
+            ApplySortValuesFromOrderInState(stateSave);
+
             mDefaults.Add("Container", stateSave);
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -208,6 +220,8 @@ namespace Gum.Managers
 #if GUM
             PluginManager.Self.ModifyDefaultStandardState("ColoredRectangle", stateSave);
 #endif
+            ApplySortValuesFromOrderInState(stateSave);
+
             mDefaults.Add("ColoredRectangle", stateSave);
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -229,6 +243,8 @@ namespace Gum.Managers
 
             PluginManager.Self.ModifyDefaultStandardState("NineSlice", stateSave);
 #endif
+            ApplySortValuesFromOrderInState(stateSave);
+
             mDefaults.Add("NineSlice", stateSave);
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -247,6 +263,8 @@ namespace Gum.Managers
             stateSave.Variables.Add(new VariableSave { Type = "string", Value = "Default", Name = "State", CustomTypeConverter = new AvailableStatesConverter()});
 #endif
 
+            ApplySortValuesFromOrderInState(stateSave);
+
             mDefaults.Add("Component", stateSave);
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -262,12 +280,14 @@ namespace Gum.Managers
             PluginManager.Self.ModifyDefaultStandardState("Screen", stateSave);
 #endif
 
+            ApplySortValuesFromOrderInState(stateSave);
+
             mDefaults.Add("Screen", stateSave);
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            //                                                    Screen                                                          //
+            //                                                    Events                                                          //
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
             mStandardEvents.Add("Click");
@@ -278,6 +298,14 @@ namespace Gum.Managers
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+        }
+
+        private void ApplySortValuesFromOrderInState(StateSave stateSave)
+        {
+            for (int i = 0; i < stateSave.Variables.Count; i++)
+            {
+                stateSave.Variables[i].DesiredOrder = i;
+            }
         }
 
         private static void AddColorVariables(StateSave stateSave, bool includeAlpha = true)

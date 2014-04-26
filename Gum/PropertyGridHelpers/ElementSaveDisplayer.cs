@@ -198,7 +198,16 @@ namespace Gum.PropertyGridHelpers
         private static PropertyDescriptorCollection TryDisplayVariableSave(PropertyDescriptorCollection pdc, ElementSave elementSave, InstanceSave instanceSave, 
             AmountToDisplay amountToDisplay, StandardElementSave ses, VariableSave defaultVariable)
         {
-            bool shouldInclude = GetIfShouldInclude(defaultVariable, elementSave, instanceSave, ses);
+            ElementSave container = elementSave;
+            if (instanceSave != null)
+            {
+                container = instanceSave.ParentContainer;
+            }
+
+            // Not sure why we were passing elementSave to this function:
+            // I added a container object
+            //bool shouldInclude = GetIfShouldInclude(defaultVariable, elementSave, instanceSave, ses);
+            bool shouldInclude = GetIfShouldInclude(defaultVariable, container, instanceSave, ses);
 
             shouldInclude &= (
                 string.IsNullOrEmpty(defaultVariable.SourceObject) || 
@@ -296,7 +305,6 @@ namespace Gum.PropertyGridHelpers
                     rvf = new RecursiveVariableFinder(container.DefaultState);
                 }
 
-                // todo: Add ability to exclude variables through plugins
                 shouldInclude = !PluginManager.Self.ShouldExclude(defaultVariable, rvf);
             }
 

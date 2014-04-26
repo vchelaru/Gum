@@ -137,10 +137,12 @@ namespace Gum.DataTypes
 
                 foreach (var variable in defaultState.Variables)
                 {
-                    element.DefaultState.GetVariableSave(variable.Name).CanOnlyBeSetInDefaultState = variable.CanOnlyBeSetInDefaultState;
+                    var variableInLoadedElement = element.DefaultState.GetVariableSave(variable.Name);
+
+                    variableInLoadedElement.CanOnlyBeSetInDefaultState = variable.CanOnlyBeSetInDefaultState;
+                    variableInLoadedElement.DesiredOrder = variable.DesiredOrder;
                 }
             }
-
 
         }
     }

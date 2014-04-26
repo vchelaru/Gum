@@ -160,13 +160,20 @@ namespace Gum.PropertyGridHelpers
             }
         }
 
+        public int SortValue
+        {
+            get;
+            set;
+        }
+
         #endregion
 
         public event Action<string> SetToDefault;
 
         #region Methods
 
-        public StateReferencingInstanceMember(InstanceSavePropertyDescriptor ispd, StateSave stateSave, string variableName, InstanceSave instanceSave, ElementSave elementSave) :
+        public StateReferencingInstanceMember(InstanceSavePropertyDescriptor ispd, StateSave stateSave, 
+            string variableName, InstanceSave instanceSave, ElementSave elementSave) :
             base(variableName, stateSave)
         {
             mInstanceSave = instanceSave;
@@ -177,6 +184,8 @@ namespace Gum.PropertyGridHelpers
             this.CustomGetEvent += GetEvent;
             this.CustomSetEvent += SetEvent;
             this.CustomGetTypeEvent += GetTypeEvent;
+
+            this.SortValue = int.MaxValue;
 
             if (instanceSave != null)
             {
@@ -205,6 +214,31 @@ namespace Gum.PropertyGridHelpers
             {
                 // Variable doesn't exist, so they can only expose it, not unexpose it.
                 ContextMenuEvents.Add("Expose Variable", HandleExposeVariableClick);
+            }
+
+            // This could be slow since we have to check it for every variable in an object.
+            // Maybe we'll want to pass this in to the function?
+            StandardElementSave standardElement = null;
+            if (instanceSave != null)
+            {
+                standardElement = ObjectFinder.Self.GetRootStandardElementSave(instanceSave);
+            }
+            else
+            {
+                standardElement = ObjectFinder.Self.GetRootStandardElementSave(elementSave);
+            }
+
+
+            VariableSave standardVariable = null;
+
+            if (standardElement != null)
+            {
+                standardVariable = standardElement.DefaultState.Variables.FirstOrDefault(item => item.Name == RootVariableName);
+            }
+
+            if (standardVariable != null)
+            {
+                this.SortValue = standardVariable.DesiredOrder;
             }
         }
 

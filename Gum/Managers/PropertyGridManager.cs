@@ -138,11 +138,10 @@ namespace Gum.Managers
         private async void RefreshDataGrid(ElementSave element, StateSave state, InstanceSave instance)
         {
 
-
-            bool hasChanged = element != mLastElement || instance != mLastInstance || state != mLastState;
-            if (hasChanged)
+            bool hasChangedObjectShowing = element != mLastElement || instance != mLastInstance || state != mLastState;
+            if (hasChangedObjectShowing)
             {
-                List<MemberCategory> categories = await GetCategories(element, state, instance);
+                List<MemberCategory> categories = GetCategories(element, state, instance);
                 lock (mVariablesDataGrid)
                 {
 
@@ -167,15 +166,56 @@ namespace Gum.Managers
                 mVariablesDataGrid.Visibility = System.Windows.Visibility.Visible;
 
             }
+            else
+            {
+                // let's see if any variables have been added/removed
+                var categories = GetCategories(element, state, instance);
+
+                foreach (var newCategory in categories)
+                {
+                    // let's see if any variables have changed
+                    var oldCategory = mVariablesDataGrid.Categories.FirstOrDefault(item => item.Name == newCategory.Name);
+
+                    if (DoCategoriesDiffer(oldCategory.Members, newCategory.Members))
+                    {
+                        int index = mVariablesDataGrid.Categories.IndexOf(oldCategory);
+
+                        mVariablesDataGrid.Categories.RemoveAt(index);
+                        mVariablesDataGrid.Categories.Insert(index, newCategory);
+                    }
+                }
+            }
+
 
             mVariablesDataGrid.Refresh();
             
         }
 
-        private Task<List<MemberCategory>> GetCategories(ElementSave element, StateSave state, InstanceSave instance)
+        public bool DoCategoriesDiffer(IEnumerable<InstanceMember> first, IEnumerable<InstanceMember> second)
         {
-            var task = new Task<List<MemberCategory>>(() =>
+            foreach (var item in first)
             {
+                if (!second.Any(other => other.Name == item.Name))
+                {
+                    return true;
+                }
+            }
+
+            foreach (var item in second)
+            {
+                if (!first.Any(other => other.Name == item.Name))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+
+        }
+
+
+        private List<MemberCategory> GetCategories(ElementSave element, StateSave state, InstanceSave instance)
+        {
                 List<MemberCategory> categories = new List<MemberCategory>();
 
 
@@ -221,6 +261,18 @@ namespace Gum.Managers
 
                     }
 
+                    foreach (var category in categories)
+                    {
+                        var enumerable = category.Members.OrderBy(item => ((StateReferencingInstanceMember)item).SortValue).ToList();
+                        category.Members.Clear();
+
+                        foreach (var value in enumerable)
+                        {
+                            category.Members.Add(value);
+                        }
+                    }
+
+
                     MemberCategory categoryToMove = categories.FirstOrDefault(item => item.Name == "Position");
                     if (categoryToMove != null)
                     {
@@ -236,11 +288,7 @@ namespace Gum.Managers
                     }
                 }
                 return categories;
-            });
 
-            task.Start();
-
-            return task;
         }
 
         internal void PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
@@ -302,6 +350,7 @@ namespace Gum.Managers
                 // I think this code makes things REALLY slow - we only want to refresh one of the tree nodes:
                 //ElementTreeViewManager.Self.RefreshUI();
                 ElementTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedElement);
+
             }
 
 

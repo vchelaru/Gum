@@ -8,6 +8,7 @@ namespace Gum.RenderingLibrary
     public enum Blend
     {
         Normal,
-        Additive
+        Additive,
+        Replace
     }
 }

@@ -644,17 +644,34 @@ namespace Gum.Wireframe
             text.HorizontalAlignment = (HorizontalAlignment)rvf.GetValue("HorizontalAlignment");
             text.VerticalAlignment = (VerticalAlignment)rvf.GetValue("VerticalAlignment");
 
+            if(rvf.GetValue<bool>("UseCustomFont"))
+            {
+                string customFontFile = rvf.GetValue<string>("CustomFontFile");
 
-            string fontName = (string)rvf.GetValue("Font");
-            int fontSize = (int)rvf.GetValue("FontSize");
-            int outlineThickness = rvf.GetValue<int>("OutlineThickness");
+                if (!string.IsNullOrEmpty(customFontFile))
+                {
+                    customFontFile = ProjectManager.Self.MakeAbsoluteIfNecessary(customFontFile);
 
-            BmfcSave.CreateBitmapFontFilesIfNecessary(
-                fontSize,
-                fontName,
-                outlineThickness);
+                    if (System.IO.File.Exists(customFontFile))
+                    {
+                        BitmapFont font = new BitmapFont(customFontFile, null);
+                        text.BitmapFont = font;
+                    }
+                }
+            }
+            else
+            {
+                string fontName = (string)rvf.GetValue("Font");
+                int fontSize = (int)rvf.GetValue("FontSize");
+                int outlineThickness = rvf.GetValue<int>("OutlineThickness");
 
-            text.BitmapFont = FontManager.Self.GetBitmapFontFor(fontName, fontSize, outlineThickness);
+                BmfcSave.CreateBitmapFontFilesIfNecessary(
+                    fontSize,
+                    fontName,
+                    outlineThickness);
+
+                text.BitmapFont = FontManager.Self.GetBitmapFontFor(fontName, fontSize, outlineThickness);
+            }
             text.EnableTextureCreation();
             return text;
         }

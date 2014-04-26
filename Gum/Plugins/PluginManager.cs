@@ -862,11 +862,11 @@ namespace Gum.Plugins
         internal bool ShouldExclude(VariableSave defaultVariable, RecursiveVariableFinder rvf)
         {
             bool shouldExclude = false;
-            foreach (var plugin in this.Plugins)
+            foreach (var plugin in this.Plugins.Where(item=>this.PluginContainers[item].IsEnabled))
             {
                 PluginContainer container = this.PluginContainers[plugin];
 
-                if (container.IsEnabled && container.Plugin is PluginBase)
+                if (container.Plugin is PluginBase)
                 {
 
                     try

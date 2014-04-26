@@ -155,9 +155,10 @@ namespace RenderingLibrary.Graphics
                     int destinationX = x + destination.X;
                     int destinationY = y + destination.Y;
 
-                    if (destinationX < this.Width && destinationY < this.Height)
+                    if (destinationX > -1 && destinationY > -1 && destinationX < this.Width && destinationY < this.Height)
                     {
-                        this.SetPixel(destinationX, destinationY, source.GetPixelColor(sourceX, sourceY));
+                        //this.SetPixel(destinationX, destinationY, source.GetPixelColor(sourceX, sourceY));
+                        this.AddPixelRegular(destinationX, destinationY, source.GetPixelColor(sourceX, sourceY));
                     }
                 }
             }
@@ -430,6 +431,16 @@ namespace RenderingLibrary.Graphics
         public void SetPixel(int x, int y, Color color)
         {
             Data[y * width + x] = color;
+        }
+
+        public void AddPixelRegular(int x, int y, Color color)
+        {
+            var existingData = Data[y * width + x];
+
+            Data[y * width + x].R = (byte)((existingData.R * (255 - color.A) / 255.0f) + color.R * color.A / 255.0f);
+            Data[y * width + x].G = (byte)((existingData.G * (255 - color.A) / 255.0f) + color.G * color.A / 255.0f);
+            Data[y * width + x].B = (byte)((existingData.B * (255 - color.A) / 255.0f) + color.B * color.A / 255.0f);
+            Data[y * width + x].A = (byte)Math.MathFunctions.RoundToInt((existingData.A + (255 - existingData.A) * (color.A / 255.0f)));
         }
 
         public Texture2D ToTexture2D()

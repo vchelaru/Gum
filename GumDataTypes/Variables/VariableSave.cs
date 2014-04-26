@@ -101,23 +101,6 @@ namespace Gum.DataTypes.Variables
             return IsHiddenInPropertyGrid == true;
         }
 
-        public override string ToString()
-        {
-            string returnValue = Name + " (" + Type + ")";
-
-            if (Value != null)
-            {
-                returnValue = returnValue + " = " + Value;
-            }
-
-            if (!string.IsNullOrEmpty(ExposedAsName))
-            {
-                returnValue += "[exposed as " + ExposedAsName + "]";
-            }
-
-            return returnValue;
-        }
-
         [XmlIgnore]
         public List<object> ExcludedValuesForEnum
         {
@@ -135,6 +118,13 @@ namespace Gum.DataTypes.Variables
         [XmlIgnore]
         public bool CanOnlyBeSetInDefaultState { get; set; }
 
+        [XmlIgnore]
+        public int DesiredOrder
+        {
+            get;
+            set;
+        }
+
         // If adding stuff here, make sure to add to the Clone method!
 
 
@@ -142,6 +132,10 @@ namespace Gum.DataTypes.Variables
         {
             VariableSave toReturn = (VariableSave)this.MemberwiseClone();
             toReturn.CustomTypeConverter = this.CustomTypeConverter;
+            toReturn.ExcludedValuesForEnum = new List<object>();
+            toReturn.ExcludedValuesForEnum.AddRange(this.ExcludedValuesForEnum);
+
+
             return toReturn;
         }
 
@@ -162,9 +156,27 @@ namespace Gum.DataTypes.Variables
         public VariableSave()
         {
             ExcludedValuesForEnum = new List<object>();
+
+            DesiredOrder = int.MaxValue;
         }
 
 
+        public override string ToString()
+        {
+            string returnValue = Name + " (" + Type + ")";
+
+            if (Value != null)
+            {
+                returnValue = returnValue + " = " + Value;
+            }
+
+            if (!string.IsNullOrEmpty(ExposedAsName))
+            {
+                returnValue += "[exposed as " + ExposedAsName + "]";
+            }
+
+            return returnValue;
+        }
 
 
     }

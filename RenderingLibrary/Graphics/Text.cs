@@ -542,6 +542,7 @@ namespace RenderingLibrary.Graphics
                         mTextureToRender = null;
                     }
                 }
+                mNeedsBitmapFontRefresh = false;
             }
         }
 

@@ -189,6 +189,7 @@
     <Compile Include="PropertyGridHelpers\Converters\VariableListConverter.cs" />
     <Compile Include="PropertyGridHelpers\ElementSaveDisplayer.cs" />
     <Compile Include="PropertyGridHelpers\EventInstanceMember.cs" />
+    <Compile Include="PropertyGridHelpers\Excluders\TextPropertyGridVariableExcluder.cs" />
     <Compile Include="PropertyGridHelpers\GumProjectSavePropertyGridDisplayer.cs" />
     <Compile Include="PropertyGridHelpers\InstanceSavePropertyDescriptor.cs" />
     <Compile Include="PropertyGridHelpers\GuideRectanglePropertyGridDisplayer.cs" />
