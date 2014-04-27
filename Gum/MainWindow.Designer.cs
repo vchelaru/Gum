@@ -224,7 +224,7 @@
             this.RemoveStateMenuItem.Name = "RemoveStateMenuItem";
             this.RemoveStateMenuItem.Size = new System.Drawing.Size(117, 22);
             this.RemoveStateMenuItem.Text = "State";
-            this.RemoveStateMenuItem.Click += new System.EventHandler(this.RemoveStateMenuItem_Click);
+            this.RemoveStateMenuItem.Click += new System.EventHandler(this.RemoveStateOrCategoryMenuItem_Click);
             // 
             // projectPropertiesToolStripMenuItem
             // 

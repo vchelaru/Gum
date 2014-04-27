@@ -52,6 +52,11 @@ namespace Gum.Managers
                 mRemoveState.Text = "State " + SelectedState.Self.SelectedStateSave.Name;
                 mRemoveState.Enabled = true;
             }
+            else if (SelectedState.Self.SelectedStateCategorySave != null)
+            {
+                mRemoveState.Text = "Category " + SelectedState.Self.SelectedStateCategorySave.Name;
+                mRemoveState.Enabled = true;
+            }
             else
             {
                 mRemoveState.Text = "<no state selected>";

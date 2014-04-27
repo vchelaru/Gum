@@ -31,7 +31,7 @@ namespace Gum.Managers
                     string name = tiw.Result;
 
                     StateSave stateSave = ElementCommands.Self.AddState(
-                        SelectedState.Self.SelectedElement, name);
+                        SelectedState.Self.SelectedElement, SelectedState.Self.SelectedStateCategorySave, name);
 
                     RefreshUI(SelectedState.Self.SelectedElement);
 

@@ -148,6 +148,33 @@ namespace Gum.DataTypes
             }
         }
 #endif
+
+        public static bool IsEnumeration(this VariableSave variableSave)
+        {
+            string type = variableSave.Type;
+
+            switch (type)
+            {
+                case "string":
+                    return false;
+                    //break;
+                case "int":
+                    return false;
+
+                    //break;
+                case "float":
+                    return false;
+
+                    //break;
+                case "bool":
+                    return false;
+
+                    //break;
+            }
+
+            return true;
+        }
+
         public static void FixEnumerations(this VariableSave variableSave)
         {
 

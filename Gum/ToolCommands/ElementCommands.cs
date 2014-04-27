@@ -52,7 +52,7 @@ namespace Gum.ToolCommands
             return instanceSave;
         }
 
-        public StateSave AddState(ElementSave elementToAddTo, string name)
+        public StateSave AddState(ElementSave elementToAddTo, StateSaveCategory category, string name)
         {
             if (elementToAddTo == null)
             {
@@ -63,8 +63,14 @@ namespace Gum.ToolCommands
             stateSave.Name = name;
             stateSave.ParentContainer = elementToAddTo;
 
-            elementToAddTo.States.Add(stateSave);
-
+            if (category == null)
+            {
+                elementToAddTo.States.Add(stateSave);
+            }
+            else
+            {
+                category.States.Add(stateSave);
+            }
             return stateSave;
         }
 
@@ -92,6 +98,11 @@ namespace Gum.ToolCommands
             {
                 category.States.Remove(stateSave);
             }
+        }
+
+        public void RemoveStateCategory(StateSaveCategory category, ElementSave elementToRemoveFrom)
+        {
+            elementToRemoveFrom.Categories.Remove(category);
         }
 
         public void RemoveInstance(InstanceSave instanceToRemove, ElementSave elementToRemoveFrom)

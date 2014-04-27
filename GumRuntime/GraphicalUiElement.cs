@@ -56,6 +56,9 @@ namespace Gum.Wireframe
         Dictionary<string, Gum.DataTypes.Variables.StateSave> mStates =
             new Dictionary<string, DataTypes.Variables.StateSave>();
 
+        Dictionary<string, Gum.DataTypes.Variables.StateSaveCategory> mCategories =
+            new Dictionary<string, Gum.DataTypes.Variables.StateSaveCategory>();
+
         #endregion
 
         #region Properties
@@ -517,7 +520,7 @@ namespace Gum.Wireframe
                         if (sprite.Texture != null)
                         {
                             widthToSet = sprite.Texture.Width * mWidth / 100.0f;
-                }
+                        }
                     }
 
                     if (!wasSet)
@@ -551,7 +554,7 @@ namespace Gum.Wireframe
                     if (!wasSet)
                     {
                         heightToSet = 64 * mHeight / 100.0f;
-                    } 
+                    }
                 }
                 else if (mHeightUnit == DimensionUnitType.RelativeToContainer)
                 {
@@ -590,7 +593,7 @@ namespace Gum.Wireframe
                     {
                         unitOffsetX = 64 * mX / 100.0f;
                     }
-                } 
+                }
                 else if (mXUnits == GeneralUnitType.PixelsFromLarge)
                 {
                     unitOffsetX = mX + parentWidth;
@@ -960,6 +963,11 @@ namespace Gum.Wireframe
                 }
 
             }
+        }
+
+        public void AddCategory(DataTypes.Variables.StateSaveCategory category)
+        {
+            mCategories.Add(category.Name, category);
         }
 
         public void AddStates(List<DataTypes.Variables.StateSave> list)

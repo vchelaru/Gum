@@ -64,9 +64,9 @@ namespace GumRuntime
                 toReturn.AddExposedVariable(variable.ExposedAsName, variable.Name);
             }
 
-            if (elementSave.Categories.Count != 0)
+            foreach (var category in elementSave.Categories)
             {
-                throw new NotImplementedException();
+                toReturn.AddCategory(category);
             }
 
             toReturn.AddStates(elementSave.States);

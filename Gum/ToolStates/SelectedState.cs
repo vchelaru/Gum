@@ -435,7 +435,14 @@ namespace Gum.ToolStates
 
             SelectionManager.Self.Refresh();
 
-            StateTreeViewManager.Self.Select(SelectedStateSave);
+            if (SelectedStateSave != null)
+            {
+                StateTreeViewManager.Self.Select(SelectedStateSave);
+            }
+            else if (SelectedStateCategorySave != null)
+            {
+                StateTreeViewManager.Self.Select(SelectedStateCategorySave);
+            }
 
             PropertyGridManager.Self.RefreshUI();
 

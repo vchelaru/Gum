@@ -106,9 +106,16 @@ namespace Gum
             EditingManager.Self.RemoveSelectedElement();
         }
 
-        private void RemoveStateMenuItem_Click(object sender, EventArgs e)
+        private void RemoveStateOrCategoryMenuItem_Click(object sender, EventArgs e)
         {
-            ObjectRemover.Self.Remove(SelectedState.Self.SelectedStateSave);
+            if (SelectedState.Self.SelectedStateSave != null)
+            {
+                ObjectRemover.Self.Remove(SelectedState.Self.SelectedStateSave);
+            }
+            else if (SelectedState.Self.SelectedStateCategorySave != null)
+            {
+                ObjectRemover.Self.Remove(SelectedState.Self.SelectedStateCategorySave);
+            }
         }
 
         private void ObjectTreeView_MouseClick(object sender, MouseEventArgs e)

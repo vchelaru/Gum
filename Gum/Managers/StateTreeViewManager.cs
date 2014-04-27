@@ -59,11 +59,11 @@ namespace Gum.Managers
                     return node;
                 }
 
-                foreach (var subnode in node.Nodes)
+                foreach (TreeNode subnode in node.Nodes)
                 {
-                    if (node.Tag == tag)
+                    if (subnode.Tag == tag)
                     {
-                        return node;
+                        return subnode;
                     }
                 }
             }
@@ -216,14 +216,21 @@ namespace Gum.Managers
                     }
                 }
 
-                if (wasAnythingSelected == false && element.States != null && 
-                    // The user could be selecting an object that has a missing XML file, so states
-                    // were never loaded
-                    element.States.Count > 0)
-                {
-                    SelectedState.Self.SelectedStateSave = element.States[0];
+                // Victor Chelaru
+                // April 26, 2014
+                // I think this code would select a 
+                // state if the selected node was deleted.
+                // But we don't want to do this now since Gum
+                // supports state categories.
+                //if (wasAnythingSelected == false && element.States != null && 
+                //    // The user could be selecting an object that has a missing XML file, so states
+                //    // were never loaded
+                //    element.States.Count > 0)
+                //{
+                    
+                //    SelectedState.Self.SelectedStateSave = element.States[0];
 
-                }
+                //}
             }
             else
             {

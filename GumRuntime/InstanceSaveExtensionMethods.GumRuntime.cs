@@ -126,10 +126,26 @@ namespace GumRuntime
                         SetAlphaAndColorValues(text, rvf);
                         text.Visible = rvf.GetValue<bool>("Visible");
 
-                        string fontName = rvf.GetValue<string>("Font");
-                        int fontSize = rvf.GetValue<int>("FontSize"); // verify these var names
-                        fontName = "FontCache/Font" + fontSize.ToString() + fontName + ".fnt";
-                        BitmapFont font = new BitmapFont(fontName, systemManagers);
+                        BitmapFont font = null;
+                        if (rvf.GetValue<bool>("UseCustomFont"))
+                        {
+                            string customFontFile = rvf.GetValue<string>("CustomFontFile");
+
+                            if (!string.IsNullOrEmpty(customFontFile))
+                            {
+                                font = new BitmapFont(customFontFile, systemManagers);
+                            }
+
+
+                        }
+                        else
+                        {
+
+                            string fontName = rvf.GetValue<string>("Font");
+                            int fontSize = rvf.GetValue<int>("FontSize"); // verify these var names
+                            fontName = "FontCache/Font" + fontSize.ToString() + fontName + ".fnt";
+                            font = new BitmapFont(fontName, systemManagers);
+                        }
                         text.BitmapFont = font;
 
                         containedObject = text;
