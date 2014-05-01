@@ -686,6 +686,7 @@ namespace Gum.Managers
                     RefreshUI();
                     WireframeObjectManager.Self.RefreshAll(true);
                     SelectionManager.Self.Refresh();
+
                     if (ProjectManager.Self.GeneralSettingsFile.AutoSave)
                     {
                         ProjectManager.Self.SaveElement(SelectedState.Self.SelectedElement);

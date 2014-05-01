@@ -333,6 +333,16 @@ namespace Gum.Managers
                             nodeToAddTo = nodeToAddTo.Parent;
                         }
 
+                        if (nodeToAddTo == null)
+                        {
+                            nodeToAddTo = RootScreensTreeNode;
+                        }
+
+                        if (nodeToAddTo.IsPartOfScreensFolderStructure() == false)
+                        {
+                            nodeToAddTo = RootScreensTreeNode;
+                        }
+
                         string path = nodeToAddTo.GetFullFilePath();
 
                         string relativeToScreens = FileManager.MakeRelative(path,
@@ -377,8 +387,34 @@ namespace Gum.Managers
                     else
                     {
 
+                        TreeNode nodeToAddTo = ElementTreeViewManager.Self.SelectedNode;
 
-                        ComponentSave componentSave = ProjectCommands.Self.AddComponent(name);
+                        while (nodeToAddTo != null && nodeToAddTo.Tag is ComponentSave && nodeToAddTo.Parent != null)
+                        {
+                            nodeToAddTo = nodeToAddTo.Parent;
+                        }
+
+                        if (nodeToAddTo == null)
+                        {
+                            nodeToAddTo = RootComponentsTreeNode;
+                        }
+
+                        if (nodeToAddTo.IsPartOfComponentsFolderStructure() == false)
+                        {
+                            nodeToAddTo = RootComponentsTreeNode;
+                        }
+
+                        string path = nodeToAddTo.GetFullFilePath();
+
+                        string relativeToComponents = FileManager.MakeRelative(path,
+                            FileLocations.Self.ComponentsFolder);
+
+
+
+
+
+
+                        ComponentSave componentSave = ProjectCommands.Self.AddComponent(relativeToComponents + name);
 
 
                         RefreshUI();

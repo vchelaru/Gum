@@ -77,6 +77,211 @@ namespace Gum.Managers
         }
         #endregion
 
+        #region Methods
+
+
+        #region Find/Get
+        public TreeNode GetTreeNodeFor(ElementSave elementSave)
+        {
+            if (elementSave == null)
+            {
+                return null;
+            }
+            else if (elementSave is ScreenSave)
+            {
+                return GetTreeNodeFor(elementSave as ScreenSave);
+            }
+            else if (elementSave is ComponentSave)
+            {
+                return GetTreeNodeFor(elementSave as ComponentSave);
+            }
+            else if (elementSave is StandardElementSave)
+            {
+                return GetTreeNodeFor(elementSave as StandardElementSave);
+            }
+
+            return null;
+        }
+
+
+
+
+        public TreeNode GetTreeNodeFor(ScreenSave screenSave)
+        {
+            // Why are we using name instead of the direct reference.
+            // This function fails because of this when a rename occurs
+            //return GetTreeNodeFor(screenSave.Name, mScreensTreeNode);
+
+
+            // I don't think this will find the node if it's renamed, so we need to do a deep reference search by tag
+
+            return GetTreeNodeForTag(screenSave, RootScreensTreeNode);
+        }
+
+        public TreeNode GetTreeNodeFor(ComponentSave componentSave)
+        {
+            // I don't think this will find the node if it's renamed, so we need to do a deep reference search by tag
+
+            // This could be renamed:
+            //return GetTreeNodeFor(componentSave.Name, this.mComponentsTreeNode);
+
+            return GetTreeNodeForTag(componentSave, RootComponentsTreeNode);
+        }
+
+        public TreeNode GetTreeNodeFor(StandardElementSave standardElementSave)
+        {
+            return GetTreeNodeForTag(standardElementSave, RootStandardElementsTreeNode);
+        }
+
+        public TreeNode GetTreeNodeFor(InstanceSave instanceSave, TreeNode container)
+        {
+            foreach (TreeNode node in container.Nodes)
+            {
+                if (node.Tag == instanceSave)
+                {
+                    return node;
+                }
+            }
+
+            return null;
+        }
+
+        public TreeNode GetTreeNodeFor(string absoluteDirectory)
+        {
+            string relative = FileManager.MakeRelative(absoluteDirectory,
+                FileManager.GetDirectory(ProjectManager.Self.GumProjectSave.FullFileName));
+
+
+            relative = FileManager.Standardize(relative);
+
+            if (relative.StartsWith("screens\\"))
+            {
+                string modifiedRelative = relative.Substring("screens\\".Length);
+
+                return GetTreeNodeFor(modifiedRelative, mScreensTreeNode);
+            }
+            else if (relative.StartsWith("components\\"))
+            {
+                string modifiedRelative = relative.Substring("components\\".Length);
+
+                return GetTreeNodeFor(modifiedRelative, mComponentsTreeNode);
+            }
+            else if (relative.StartsWith("standards\\"))
+            {
+                string modifiedRelative = relative.Substring("standards\\".Length);
+
+                return GetTreeNodeFor(modifiedRelative, mStandardElementsTreeNode);
+            }
+
+            return null;
+
+        }
+
+        TreeNode GetTreeNodeFor(string relativeDirectory, TreeNode container)
+        {
+            string whatToLookFor = relativeDirectory;
+            string sub = "";
+            if (string.IsNullOrEmpty(relativeDirectory))
+            {
+                return container;
+            }
+            else if (relativeDirectory.Contains("\\"))
+            {
+                int indexOfSlashes = relativeDirectory.IndexOf('\\');
+                whatToLookFor = relativeDirectory.Substring(0, indexOfSlashes);
+
+                sub = relativeDirectory.Substring(indexOfSlashes + 1, relativeDirectory.Length - (indexOfSlashes + 1));
+
+
+            }
+
+            foreach (TreeNode node in container.Nodes)
+            {
+                if (node.Text.ToLower() == whatToLookFor.ToLower())
+                {
+                    return GetTreeNodeFor(sub, node);
+
+                }
+            }
+
+            return null;
+
+        }
+
+        TreeNode GetTreeNodeForTag(object tag, TreeNode container = null)
+        {
+            if (container == null)
+            {
+                if (tag is ScreenSave)
+                {
+                    container = RootScreensTreeNode;
+                }
+                else if (tag is ComponentSave)
+                {
+                    container = RootComponentsTreeNode;
+                }
+                else if (tag is StandardElementSave)
+                {
+                    container = RootStandardElementsTreeNode;
+                }
+            }
+
+            foreach (TreeNode treeNode in container.Nodes)
+            {
+                if (treeNode.Tag == tag)
+                {
+                    return treeNode;
+                }
+
+                var found = GetTreeNodeForTag(tag, treeNode);
+
+                if (found != null)
+                {
+                    return found;
+                }
+            }
+
+            return null;
+        }
+
+        public TreeNode GetTreeNodeOver()
+        {
+            System.Drawing.Point point =
+                mTreeView.PointToClient(Cursor.Position);
+
+
+            return mTreeView.GetNodeAt(point);
+
+        }
+
+        #endregion
+
+
+
+
+        public TreeNode RootScreensTreeNode
+        {
+            get
+            {
+                return mScreensTreeNode;
+            }
+        }
+
+        public TreeNode RootComponentsTreeNode
+        {
+            get
+            {
+                return mComponentsTreeNode;
+            }
+        }
+
+        public TreeNode RootStandardElementsTreeNode
+        {
+            get
+            {
+                return mStandardElementsTreeNode;
+            }
+        }
 
         public void Initialize(MultiSelectTreeView treeView)
         {
@@ -368,158 +573,7 @@ namespace Gum.Managers
             }
         }
 
-        public TreeNode GetTreeNodeFor(ElementSave elementSave)
-        {
-            if (elementSave == null)
-            {
-                return null;
-            }
-            else if (elementSave is ScreenSave)
-            {
-                return GetTreeNodeFor(elementSave as ScreenSave);
-            }
-            else if (elementSave is ComponentSave)
-            {
-                return GetTreeNodeFor(elementSave as ComponentSave);
-            }
-            else if (elementSave is StandardElementSave)
-            {
-                return GetTreeNodeFor(elementSave as StandardElementSave);
-            }
 
-            return null;
-        }
-
-
-
-
-        public TreeNode GetTreeNodeFor(ScreenSave screenSave)
-        {
-            // Why are we using name instead of the direct reference.
-            // This function fails because of this when a rename occurs
-            //return GetTreeNodeFor(screenSave.Name, mScreensTreeNode);
-
-            foreach (TreeNode treeNode in mScreensTreeNode.Nodes)
-            {
-                if (treeNode.Tag == screenSave)
-                {
-                    return treeNode;
-                }
-            }
-
-            return null;
-        }
-
-        public TreeNode GetTreeNodeFor(ComponentSave componentSave)
-        {
-            foreach (TreeNode treeNode in this.mComponentsTreeNode.Nodes)
-            {
-                if (treeNode.Tag == componentSave)
-                {
-                    return treeNode;
-                }
-            }
-
-            return null;
-        }
-
-        public TreeNode GetTreeNodeFor(StandardElementSave standardElementSave)
-        {
-            foreach (TreeNode treeNode in this.mStandardElementsTreeNode.Nodes)
-            {
-                if (treeNode.Tag == standardElementSave)
-                {
-                    return treeNode;
-                }
-            }
-
-            return null;
-        }
-
-        public TreeNode GetTreeNodeFor(InstanceSave instanceSave, TreeNode container)
-        {
-            foreach (TreeNode node in container.Nodes)
-            {
-                if (node.Tag == instanceSave)
-                {
-                    return node;
-                }
-            }
-
-            return null;
-        }
-
-        public TreeNode GetTreeNodeFor(string absoluteDirectory)
-        {
-            string relative = FileManager.MakeRelative(absoluteDirectory,
-                FileManager.GetDirectory(ProjectManager.Self.GumProjectSave.FullFileName));
-
-
-            relative = FileManager.Standardize(relative);
-
-            if (relative.StartsWith("screens\\"))
-            {
-                string modifiedRelative = relative.Substring("screens\\".Length);
-
-                return GetTreeNodeFor(modifiedRelative, mScreensTreeNode);
-            }
-            else if (relative.StartsWith("components\\"))
-            {
-                string modifiedRelative = relative.Substring("components\\".Length);
-
-                return GetTreeNodeFor(modifiedRelative, mComponentsTreeNode);
-            }
-            else if (relative.StartsWith("standards\\"))
-            {
-                string modifiedRelative = relative.Substring("standards\\".Length);
-
-                return GetTreeNodeFor(modifiedRelative, mStandardElementsTreeNode);
-            }
-
-            return null;
-
-        }
-
-        TreeNode GetTreeNodeFor(string relativeDirectory, TreeNode container)
-        {
-            string whatToLookFor = relativeDirectory;
-            string sub = "";
-            if (string.IsNullOrEmpty(relativeDirectory))
-            {
-                return container;
-            }
-            else if (relativeDirectory.Contains("\\"))
-            {
-                int indexOfSlashes = relativeDirectory.IndexOf('\\');
-                whatToLookFor = relativeDirectory.Substring(0, indexOfSlashes);
-
-                sub = relativeDirectory.Substring(indexOfSlashes + 1, relativeDirectory.Length - (indexOfSlashes + 1));
-
-
-            }
-
-            foreach (TreeNode node in container.Nodes)
-            {
-                if (node.Text.ToLower() == whatToLookFor.ToLower())
-                {
-                    return GetTreeNodeFor(sub, node);
-
-                }
-            }
-
-            return null;
-
-        }
-
-        public TreeNode GetTreeNodeOver()
-        {
-            System.Drawing.Point point = 
-                mTreeView.PointToClient(Cursor.Position);
-
-
-            return mTreeView.GetNodeAt(point);
-
-        }
 
         public void RecordSelection()
         {
@@ -861,6 +915,10 @@ namespace Gum.Managers
                 }
             }
         }
+
+        #endregion
+
+
     }
 
 
@@ -969,6 +1027,57 @@ namespace Gum.Managers
                 treeNode.Parent != null &&
                 (treeNode.Parent.IsScreensFolderTreeNode() || treeNode.Parent.IsTopScreenContainerTreeNode());
         }
+
+
+
+        public static bool IsPartOfScreensFolderStructure(this TreeNode treeNode)
+        {
+            if (treeNode == ElementTreeViewManager.Self.RootScreensTreeNode)
+            {
+                return true;
+            }
+            else if (treeNode.Parent == null)
+            {
+                return false;
+            }
+            else
+            {
+                return treeNode.Parent.IsPartOfScreensFolderStructure();
+            }
+        }
+
+        public static bool IsPartOfComponentsFolderStructure(this TreeNode treeNode)
+        {
+            if (treeNode == ElementTreeViewManager.Self.RootComponentsTreeNode)
+            {
+                return true;
+            }
+            else if (treeNode.Parent == null)
+            {
+                return false;
+            }
+            else
+            {
+                return treeNode.Parent.IsPartOfComponentsFolderStructure();
+            }
+        }
+
+        public static bool IsPartOfStandardElementsFolderStructure(this TreeNode treeNode)
+        {
+            if (treeNode == ElementTreeViewManager.Self.RootStandardElementsTreeNode)
+            {
+                return true;
+            }
+            else if (treeNode.Parent == null)
+            {
+                return false;
+            }
+            else
+            {
+                return treeNode.Parent.IsPartOfStandardElementsFolderStructure();
+            }
+        }
+
 
         public static bool IsComponentsFolderTreeNode(this TreeNode treeNode)
         {
