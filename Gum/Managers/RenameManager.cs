@@ -99,6 +99,8 @@ namespace Gum.Managers
 
                         PluginManager.Self.ElementRename(elementSave, oldName);
 
+                        GumCommands.Self.FileCommands.TryAutoSaveProject();
+
                         ElementTreeViewManager.Self.RefreshUI(elementSave);
                     }
 

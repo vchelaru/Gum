@@ -111,6 +111,11 @@ namespace Gum.DataTypes
 
 
             }
+            else
+            {
+                // Let's give it an empty state so that it doesn't cause runtime problems
+                elementSave.States.Add(new StateSave());
+            }
 
             foreach (StateSave state in elementSave.AllStates)
             {

@@ -344,11 +344,14 @@ namespace Gum.Wireframe
                     {
                         IPositionedSizedObject newParent = siblings.FirstOrDefault(item => item.Name == parentName);
 
-                        contained.Parent = newParent;
+                        // This may have bad XML so if it doesn't exist, then let's ignore this:
+                        if (newParent != null)
+                        {
 
+                            contained.Parent = newParent;
+
+                        }
                     }
-
-                    SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(contained, elementStack.LastOrDefault().Element, rvf);
                 }
 
             }
@@ -676,150 +679,7 @@ namespace Gum.Wireframe
             return text;
         }
 
-
-
-
-
-
-
-        public void SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(IPositionedSizedObject ipso, ElementSave containerElement, RecursiveVariableFinder rvf)
-        {
-            object widthAsObjects = rvf.GetValue("Width");
-            object heightAsObjects = rvf.GetValue("Height");
-            object heightUnits = rvf.GetValue("Height Units");
-            object widthUnits = rvf.GetValue("Width Units");
-
-            var horizontalAlignment = rvf.GetValue<HorizontalAlignment>("X Origin");
-            var verticalAlignment = rvf.GetValue<VerticalAlignment>("Y Origin");
-
-
-
-
-            object xAsObject = rvf.GetValue("X");
-            object yAsObject = rvf.GetValue("Y");
-
-            object xUnits = rvf.GetValue("X Units");
-            object yUnits = rvf.GetValue("Y Units");
-#if DEBUG
-            if (xUnits is int)
-            {
-                throw new Exception("X Units must not be an int - must be a PositionUnitType enum");
-            }
-            if (widthUnits is int)
-            {
-                throw new Exception("Width Units must not be an int - must be an enum");
-            }
-#endif
-            float xAsFloat = 0;
-            if (xAsObject != null)
-            {
-                xAsFloat = (float)xAsObject;
-            }
-            float yAsFloat = 0;
-            if (yAsObject != null)
-            {
-                yAsFloat = (float)yAsObject;
-            }
-
-
-            SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(
-                ipso,
-                containerElement,
-                (float)widthAsObjects,
-                (float)heightAsObjects,
-                widthUnits,
-                heightUnits,
-                horizontalAlignment,
-                verticalAlignment,
-                xAsFloat,
-                yAsFloat,
-                xUnits,
-                yUnits
                 
-                
-                );
-        }
-
-        private static void SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(IPositionedSizedObject ipso, ElementSave containerElement, 
-            float widthBeforePercentage, float heightBeforePercentage, 
-            object widthUnitType, object heightUnitType,
-            HorizontalAlignment horizontalAlignment, VerticalAlignment verticalAlignment, float xBeforePercentage, float yBeforePercentage,
-            object xUnitType, object yUnitType
-            )
-        {
-            try
-            {
-                float widthAfterPercentage;
-                float heightAfterPercentage;
-
-                GumProjectSave gumProjectSave = ObjectFinder.Self.GumProjectSave;
-
-                ipso.UpdateAccordingToPercentages(
-                    containerElement,
-
-                    widthBeforePercentage,
-                    heightBeforePercentage, widthUnitType, heightUnitType,
-                    gumProjectSave.DefaultCanvasWidth,
-                    gumProjectSave.DefaultCanvasHeight,
-                    out widthAfterPercentage, out heightAfterPercentage);
-
-                ((IPositionedSizedObject)ipso).Width = widthAfterPercentage;
-                ((IPositionedSizedObject)ipso).Height = heightAfterPercentage;
-
-                // This updates the texture in case the values are 0 so that the element can be positioned correctly
-                if (ipso is Text)
-                {
-                    (ipso as Text).UpdateTextureToRender();
-                }
-
-                float multiplierX;
-                float multiplierY;
-                GetMultipliersFromAlignment(horizontalAlignment, verticalAlignment, out multiplierX, out multiplierY);
-
-                float xAfterPercentage;
-                float yAfterPercentage;
-                ipso.UpdateAccordingToPercentages(
-                    containerElement,
-                    xBeforePercentage,
-                    yBeforePercentage,
-
-                    xUnitType, yUnitType,
-                    gumProjectSave.DefaultCanvasWidth,
-                    gumProjectSave.DefaultCanvasHeight,
-                    out xAfterPercentage, out yAfterPercentage);
-
-                ((IPositionedSizedObject)ipso).X = xAfterPercentage + multiplierX * ((IPositionedSizedObject)ipso).Width;
-                ((IPositionedSizedObject)ipso).Y = yAfterPercentage + multiplierY * ((IPositionedSizedObject)ipso).Height;
-            }
-            catch (Exception e)
-            {
-                throw e;
-            }
-        }
-
-        private static void GetMultipliersFromAlignment(HorizontalAlignment horizontalAlignment, VerticalAlignment verticalAlignment, out float multiplierX, out float multiplierY)
-        {
-            multiplierX = 0;
-            multiplierY = 0;
-            if (horizontalAlignment == HorizontalAlignment.Center)
-            {
-                multiplierX = -.5f;
-            }
-            else if (horizontalAlignment == HorizontalAlignment.Right)
-            {
-                multiplierX = -1;
-            }
-            if (verticalAlignment == VerticalAlignment.Center)
-            {
-                multiplierY = -.5f;
-            }
-            if (verticalAlignment == VerticalAlignment.Bottom)
-            {
-                multiplierY = -1;
-            }
-        }
-
-        
         StateSave temporaryStateSave = new StateSave();
 
 

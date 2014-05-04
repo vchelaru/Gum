@@ -13,29 +13,6 @@ namespace Gum.RenderingLibrary
 {
     public static class IPositionedSizedObjectExtensionMethods
     {
-        public static void UpdateAccordingToPercentages(this IPositionedSizedObject ipso, 
-            ElementSave containerElement,
-            float unmodifiedX, float unmodifiedY, 
-            object xUnitType, object yUnitType,
-            //string xVariable, string yVariable,
-            float canvasWidth, float canvasHeight,
-            out float x, out float y)
-        {
-
-            string qualifiedVariablePrefixWithDot = GetQualifiedPrefixWithDot(ipso, WireframeObjectManager.Self.GetElement(ipso), containerElement);
-
-            float parentWidth;
-            float parentHeight;
-            GetParentWidthAndHeight(ipso, canvasWidth, canvasHeight, out parentWidth, out parentHeight);
-
-            float fileWidth;
-            float fileHeight;
-            GetFileWidthAndHeight(ipso, out fileWidth, out fileHeight);
-
-            UnitConverter.Self.ConvertToPixelCoordinates(unmodifiedX, unmodifiedY, xUnitType, yUnitType, parentWidth, parentHeight, fileWidth, fileHeight,  out x, out y);
-
-        }
-
         public static void GetParentWidthAndHeight(this IPositionedSizedObject ipso, float canvasWidth, float canvasHeight, out float parentWidth, out float parentHeight)
         {
 

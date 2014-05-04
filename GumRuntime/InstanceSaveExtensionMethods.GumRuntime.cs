@@ -66,6 +66,10 @@ namespace GumRuntime
                 }
             }
             graphicalUiElement.SetGueWidthAndPositionValues(rvf);
+            if (rvf.GetVariable("Visible") != null)
+            {
+                graphicalUiElement.Visible = rvf.GetValue<bool>("Visible");
+            }
         }
 
         private static bool TryHandleAsBaseType(RecursiveVariableFinder rvf, string baseType, SystemManagers systemManagers, out IRenderable containedObject)

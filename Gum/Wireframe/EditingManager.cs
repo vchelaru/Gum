@@ -286,10 +286,12 @@ namespace Gum.Wireframe
 
         public void RefreshPositionsAndScalesForInstance(InstanceSave instance, List<ElementWithState> elementStack)
         {
-            IPositionedSizedObject ipso = WireframeObjectManager.Self.GetRepresentation(instance, elementStack);
+            GraphicalUiElement ipso = WireframeObjectManager.Self.GetRepresentation(instance, elementStack);
 
-            RecursiveVariableFinder rvf = new RecursiveVariableFinder(instance, SelectedState.Self.SelectedElement);
-            WireframeObjectManager.Self.SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(ipso, SelectedState.Self.SelectedElement, rvf);
+            ipso.UpdateLayout();
+
+            //RecursiveVariableFinder rvf = new RecursiveVariableFinder(instance, SelectedState.Self.SelectedElement);
+            //WireframeObjectManager.Self.SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(ipso, SelectedState.Self.SelectedElement, rvf);
         }
 
         private void HandlesActivity()

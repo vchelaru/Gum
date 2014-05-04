@@ -86,7 +86,11 @@ namespace Gum.Wireframe
             }
             set
             {
-                mContainedObjectAsIVisible.Visible = value;
+                // If this is a Screen, then it doesn't have a contained IVisible:
+                if (mContainedObjectAsIVisible != null)
+                {
+                    mContainedObjectAsIVisible.Visible = value;
+                }
             }
         }
 
@@ -498,7 +502,12 @@ namespace Gum.Wireframe
                 float widthToSet = mWidth;
                 float heightToSet = mHeight;
 
-                if (this.Parent != null)
+                if (this.ParentGue != null && this.ParentGue.mContainedObjectAsRenderable != null)
+                {
+                    parentWidth = this.ParentGue.mContainedObjectAsIpso.Width;
+                    parentHeight = this.ParentGue.mContainedObjectAsIpso.Height;
+                }
+                else if (this.Parent != null)
                 {
                     parentWidth = Parent.Width;
                     parentHeight = Parent.Height;
