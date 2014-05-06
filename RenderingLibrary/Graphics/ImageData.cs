@@ -437,10 +437,20 @@ namespace RenderingLibrary.Graphics
         {
             var existingData = Data[y * width + x];
 
-            Data[y * width + x].R = (byte)((existingData.R * (255 - color.A) / 255.0f) + color.R * color.A / 255.0f);
-            Data[y * width + x].G = (byte)((existingData.G * (255 - color.A) / 255.0f) + color.G * color.A / 255.0f);
-            Data[y * width + x].B = (byte)((existingData.B * (255 - color.A) / 255.0f) + color.B * color.A / 255.0f);
-            Data[y * width + x].A = (byte)Math.MathFunctions.RoundToInt((existingData.A + (255 - existingData.A) * (color.A / 255.0f)));
+            if (Data[y * width + x].A != 0)
+            {
+                Data[y * width + x].R = (byte)((existingData.R * (255 - color.A) / 255.0f) + color.R * color.A / 255.0f);
+                Data[y * width + x].G = (byte)((existingData.G * (255 - color.A) / 255.0f) + color.G * color.A / 255.0f);
+                Data[y * width + x].B = (byte)((existingData.B * (255 - color.A) / 255.0f) + color.B * color.A / 255.0f);
+                Data[y * width + x].A = (byte)Math.MathFunctions.RoundToInt((existingData.A + (255 - existingData.A) * (color.A / 255.0f)));
+            }
+            else
+            {
+                Data[y * width + x].R = color.R;
+                Data[y * width + x].G = color.G;
+                Data[y * width + x].B = color.B;
+                Data[y * width + x].A = color.A;
+            }
         }
 
         public Texture2D ToTexture2D()

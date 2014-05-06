@@ -176,7 +176,7 @@ namespace Gum.Managers
                     // let's see if any variables have changed
                     var oldCategory = mVariablesDataGrid.Categories.FirstOrDefault(item => item.Name == newCategory.Name);
 
-                    if (DoCategoriesDiffer(oldCategory.Members, newCategory.Members))
+                    if ( oldCategory != null && DoCategoriesDiffer(oldCategory.Members, newCategory.Members))
                     {
                         int index = mVariablesDataGrid.Categories.IndexOf(oldCategory);
 

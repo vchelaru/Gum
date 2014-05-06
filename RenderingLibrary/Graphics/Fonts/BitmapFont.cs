@@ -478,6 +478,7 @@ namespace RenderingLibrary.Graphics
 
                 const bool generateMipmaps = false;
 
+
                 return imageData.ToTexture2D(generateMipmaps);
             }
             else

@@ -98,11 +98,16 @@ namespace Gum.ToolCommands
             {
                 category.States.Remove(stateSave);
             }
+
+            GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
         }
 
         public void RemoveStateCategory(StateSaveCategory category, ElementSave elementToRemoveFrom)
         {
             elementToRemoveFrom.Categories.Remove(category);
+
+            GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+
         }
 
         public void RemoveInstance(InstanceSave instanceToRemove, ElementSave elementToRemoveFrom)

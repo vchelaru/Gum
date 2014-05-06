@@ -25,6 +25,7 @@ namespace Gum.Managers
 
 
         ToolStripMenuItem mAddScreen;
+        ToolStripMenuItem mImportScreen;
 
         ToolStripMenuItem mAddComponent;
         ToolStripMenuItem mImportComponent;
@@ -45,6 +46,10 @@ namespace Gum.Managers
             mAddScreen = new ToolStripMenuItem();
             mAddScreen.Text = "Add Screen";
             mAddScreen.Click += new EventHandler(AddScreenClick);
+
+            mImportScreen = new ToolStripMenuItem();
+            mImportScreen.Text = "Import Screen";
+            mImportScreen.Click += ImportScreenClick;
 
             mAddComponent = new ToolStripMenuItem();
             mAddComponent.Text = "Add Component";
@@ -74,6 +79,8 @@ namespace Gum.Managers
             mDeleteObject.Text = "Delete";
             mDeleteObject.Click += new EventHandler(HandleDeleteObjectClick);
         }
+
+
 
         void HandleDeleteObjectClick(object sender, EventArgs e)
         {
@@ -109,6 +116,11 @@ namespace Gum.Managers
         void ImportComponentClick(object sender, EventArgs e)
         {
             ImportComponentClick();
+        }
+
+        void ImportScreenClick(object sender, EventArgs e)
+        {
+            ImportScreenClick() ;
         }
 
         void AddScreenClick(object sender, EventArgs e)
@@ -278,6 +290,7 @@ namespace Gum.Managers
                 else if (SelectedNode.IsTopScreenContainerTreeNode() || SelectedNode.IsScreensFolderTreeNode())
                 {
                     mMenuStrip.Items.Add(mAddScreen);
+                    mMenuStrip.Items.Add(mImportScreen);
                     mMenuStrip.Items.Add(mAddFolder);
                     mMenuStrip.Items.Add("View in explorer", null, HandleViewInExplorer);
 
@@ -428,6 +441,82 @@ namespace Gum.Managers
             }
         }
 
+        public void ImportScreenClick()
+        {
+            bool succeeded = true;
+            if (ObjectFinder.Self.GumProjectSave == null || string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave.FullFileName))
+            {
+                MessageBox.Show("You must first save the project before adding a new screen");
+                succeeded = false;
+            }
+            else
+            {
+                OpenFileDialog openFileDialog = new OpenFileDialog();
+                openFileDialog.Filter = "Gum Screen (*.gusx)|*.gusx";
+
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    string fileName = openFileDialog.FileName;
+
+                    string desiredDirectory =
+                        FileManager.GetDirectory(
+                        ProjectManager.Self.GumProjectSave.FullFileName) + "Screens/";
+
+                    if (FileManager.IsRelativeTo(fileName, desiredDirectory) == false)
+                    {
+                        MessageBox.Show("The file must be in the Gum project's Screens folder.  " +
+                            "This file will be copied, and the copy will be referenced.");
+
+                        try
+                        {
+                            string destination = desiredDirectory + FileManager.RemovePath(fileName);
+                            System.IO.File.Copy(fileName,
+                                destination);
+
+                            fileName = destination;
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show("Error copying the file: " + ex.ToString());
+                            succeeded = false;
+                        }
+                    }
+
+                    if (succeeded)
+                    {
+                        string strippedName = FileManager.RemovePath(FileManager.RemoveExtension(fileName));
+
+                        ProjectManager.Self.GumProjectSave.ScreenReferences.Add(
+                            new ElementReference { Name = strippedName, ElementType = ElementType.Screen });
+
+                        ProjectManager.Self.GumProjectSave.ScreenReferences.Sort(
+                            (first, second) => first.Name.CompareTo(second.Name));
+
+                        var screenSave = FileManager.XmlDeserialize<ScreenSave>(fileName);
+
+                        ProjectManager.Self.GumProjectSave.Screens.Add(screenSave);
+
+                        ProjectManager.Self.GumProjectSave.Screens.Sort(
+                            (first, second) => first.Name.CompareTo(second.Name));
+
+                        screenSave.Initialize(null);
+
+                        RefreshUI();
+
+                        SelectedState.Self.SelectedScreen = screenSave;
+
+                        GumCommands.Self.FileCommands.TryAutoSaveProject();
+                        GumCommands.Self.FileCommands.TryAutoSaveElement(screenSave);
+                    }
+
+                }
+                else
+                {
+                    succeeded = false;
+                }
+            }
+        }
+
         public void ImportComponentClick()
         {
             bool succeeded = true;
@@ -482,6 +571,9 @@ namespace Gum.Managers
                         var componentSave = FileManager.XmlDeserialize<ComponentSave>(fileName);
 
                         ProjectManager.Self.GumProjectSave.Components.Add(componentSave);
+
+                        ProjectManager.Self.GumProjectSave.Components.Sort(
+                            (first, second) => first.Name.CompareTo(second.Name));
 
                         componentSave.InitializeDefaultAndComponentVariables();
 
