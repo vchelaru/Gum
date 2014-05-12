@@ -47,74 +47,11 @@ namespace Gum.Managers
 
                 if (SelectedState.Self.SelectedInstance != null)
                 {
-                    var instanceElement = ObjectFinder.Self.GetElementSave(SelectedState.Self.SelectedInstance.BaseType);
-
-                    if (instanceElement != null)
-                    {
-                        foreach (var eventSaveInBase in instanceElement.Events.Where(item=>
-                            item.Enabled
-                            && ( string.IsNullOrEmpty(item.GetSourceObject()) || !string.IsNullOrEmpty(item.ExposedAsName))
-                            ))
-                        {
-                            var eventSave = selectedElement.Events.FirstOrDefault(item => item.Name ==
-                                selectedInstance.Name + "." + eventSaveInBase.GetExposedOrRootName());
-
-                            if (eventSave == null)
-                            {
-                                eventSave = new EventSave();
-                                eventSave.Name = selectedInstance.Name + "." + eventSaveInBase.GetExposedOrRootName();
-                                // I don't think we want to add this here yet do we?
-                                // We should add it only if the user checks it
-                                //selectedElement.Events.Add(eventSave);
-                            }
-
-
-
-                            EventInstanceMember instanceMember = new EventInstanceMember(
-                                selectedElement,
-                                selectedInstance,
-                                eventSave);
-
-                            mEventsDataGrid.Categories[0].Members.Add(instanceMember);
-                        }
-                    }
-
-                    // Now loop through all objects and give them an Expose right click option
-                    foreach (var category in mEventsDataGrid.Categories)
-                    {
-                        foreach (var member in category.Members)
-                        {
-                            member.ContextMenuEvents.Add("Expose Event", HandleExposeClick);
-                        }
-                    }
+                    RefreshEventsForInstance(selectedInstance, selectedElement);
                 }
                 else if(selectedElement != null)
                 {
-                    EventsViewModel viewModel = new EventsViewModel();
-
-                    viewModel.InstanceSave = selectedInstance;
-                    viewModel.ElementSave = selectedElement;
-
-                    mEventsDataGrid.Instance = viewModel;
-                    mEventsDataGrid.MembersToIgnore.Add("InstanceSave");
-                    mEventsDataGrid.MembersToIgnore.Add("ElementSave");
-                    mEventsDataGrid.Categories[0].Name = "Events on this";
-
-                    MemberCategory exposed = new MemberCategory();
-                    exposed.Name = "Exposed";
-
-                    foreach (var eventSave in SelectedState.Self.SelectedElement.Events.Where(item => !string.IsNullOrEmpty(item.ExposedAsName)))
-                    {
-                        EventInstanceMember instanceMember = new EventInstanceMember(
-                            SelectedState.Self.SelectedElement,
-                            SelectedState.Self.SelectedInstance,
-                            eventSave);
-
-                        exposed.Members.Add(instanceMember);
-
-                    }
-
-                    mEventsDataGrid.Categories.Add(exposed);
+                    RefreshEventsForElement(selectedElement);
 
                 }
 
@@ -123,6 +60,114 @@ namespace Gum.Managers
                 mEventsDataGrid.Refresh();
 
 
+            }
+        }
+
+        private void RefreshEventsForElement(ElementSave selectedElement)
+        {
+            EventsViewModel viewModel = new EventsViewModel();
+
+            viewModel.InstanceSave = null;
+            viewModel.ElementSave = selectedElement;
+
+            mEventsDataGrid.Instance = viewModel;
+            mEventsDataGrid.MembersToIgnore.Add("InstanceSave");
+            mEventsDataGrid.MembersToIgnore.Add("ElementSave");
+            mEventsDataGrid.Categories[0].Name = "Events on this";
+
+            MemberCategory exposed = new MemberCategory();
+            exposed.Name = "Exposed";
+
+            var exposedEvents = SelectedState.Self.SelectedElement.Events.Where(item => !string.IsNullOrEmpty(item.ExposedAsName));
+
+            foreach (var eventSave in exposedEvents)
+            {
+                EventInstanceMember instanceMember = new EventInstanceMember(
+                    SelectedState.Self.SelectedElement,
+                    SelectedState.Self.SelectedInstance,
+                    eventSave);
+
+                var local = eventSave;
+
+                instanceMember.ContextMenuEvents.Add(
+                    "Rename",
+                    delegate
+                    {
+                        TextInputWindow tiw = new TextInputWindow();
+                        tiw.Message = "Enter new name";
+                        tiw.Result = local.ExposedAsName;
+
+                        if (tiw.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                        {
+                            string whyNotValid = null;
+
+                            bool isValid = true;
+
+                            // todo:
+                            //isValid = NameVerifier.Self.IsEventNameValid(tiw.Result, out whyNotValid);
+
+                            if (isValid)
+                            {
+                                string oldName = local.ExposedAsName;
+                                local.ExposedAsName = tiw.Result;
+                                RenameManager.Self.HandleRename(selectedElement, local, oldName);
+                                GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+                                GumCommands.Self.GuiCommands.RefreshPropertyGrid();
+                            }
+                        }
+
+                    });
+
+
+                exposed.Members.Add(instanceMember);
+
+
+            }
+
+            mEventsDataGrid.Categories.Add(exposed);
+        }
+
+        private void RefreshEventsForInstance(InstanceSave selectedInstance, ElementSave selectedElement)
+        {
+            var instanceElement = ObjectFinder.Self.GetElementSave(SelectedState.Self.SelectedInstance.BaseType);
+
+            if (instanceElement != null)
+            {
+                foreach (var eventSaveInBase in instanceElement.Events.Where(item =>
+                    item.Enabled
+                    && (string.IsNullOrEmpty(item.GetSourceObject()) || !string.IsNullOrEmpty(item.ExposedAsName))
+                    ))
+                {
+                    var eventSave = selectedElement.Events.FirstOrDefault(item => item.Name ==
+                        selectedInstance.Name + "." + eventSaveInBase.GetExposedOrRootName());
+
+                    if (eventSave == null)
+                    {
+                        eventSave = new EventSave();
+                        eventSave.Name = selectedInstance.Name + "." + eventSaveInBase.GetExposedOrRootName();
+                        // I don't think we want to add this here yet do we?
+                        // We should add it only if the user checks it
+                        //selectedElement.Events.Add(eventSave);
+                    }
+
+
+
+                    EventInstanceMember instanceMember = new EventInstanceMember(
+                        selectedElement,
+                        selectedInstance,
+                        eventSave);
+
+                    mEventsDataGrid.Categories[0].Members.Add(instanceMember);
+                }
+            }
+
+            // Now loop through all objects and give them an Expose right click option
+            foreach (var category in mEventsDataGrid.Categories)
+            {
+                foreach (var member in category.Members)
+                {
+                    member.ContextMenuEvents.Add("Expose Event", HandleExposeClick);
+                }
             }
         }
 

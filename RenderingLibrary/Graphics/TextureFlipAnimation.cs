@@ -12,13 +12,19 @@ namespace RenderingLibrary.Graphics
     {
         #region Fields
 
-        bool mLoops;
+        bool mLoops = true;
         double mTimeIntoAnimation;
         double mLastUpdate;
 
         #endregion
 
         #region Properties
+
+        public bool Loops
+        {
+            get { return mLoops; }
+            set { mLoops = value; }
+        }
 
         double FrameLength
         {
@@ -95,7 +101,7 @@ namespace RenderingLibrary.Graphics
         {
             mTimeIntoAnimation += time - mLastUpdate;
             mLastUpdate = time;
-            while (AnimationLength != 0 && mTimeIntoAnimation > AnimationLength)
+            while (mLoops && AnimationLength != 0 && mTimeIntoAnimation > AnimationLength)
             {
                 mTimeIntoAnimation -= AnimationLength;
             }

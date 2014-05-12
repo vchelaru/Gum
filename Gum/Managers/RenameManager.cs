@@ -103,8 +103,6 @@ namespace Gum.Managers
 
                         ElementTreeViewManager.Self.RefreshUI(elementSave);
                     }
-
-
                 }
                 
                 if(!shouldContinue && isRenamingXmlFile)
@@ -117,8 +115,32 @@ namespace Gum.Managers
                 MessageBox.Show("Error renaming element " + elementSave.ToString() + "\n\n" + e.ToString());
                 succeeded = false;
             }
+        }
 
-            
+        public void HandleRename(ElementSave containerElement, EventSave eventSave, string oldName)
+        {
+
+            List<ElementSave> elements = new List<ElementSave>();
+            elements.AddRange(ProjectManager.Self.GumProjectSave.Screens);
+            elements.AddRange(ProjectManager.Self.GumProjectSave.Components);
+
+            foreach (var possibleElement in elements)
+            {
+
+                foreach (var instance in possibleElement.Instances.Where(item=>item.IsOfType(containerElement.Name)))
+                {
+                    foreach (var eventToRename in possibleElement.Events.Where(item => item.GetSourceObject() == instance.Name))
+                    {
+                        if (eventToRename.GetRootName() == oldName)
+                        {
+                            eventToRename.Name = instance.Name + "." + eventSave.ExposedAsName;
+                        }
+                    }
+
+                }
+
+            }
+
 
 
         }

@@ -212,15 +212,15 @@ namespace Gum.DataTypes
                     case "Gum.Converters.GeneralUnitType":
                         variableSave.Value = (Gum.Converters.GeneralUnitType)variableSave.Value;
                         break;
+                    case "Gum.RenderingLibrary.Blend":
+                    case "Blend":
+                        variableSave.Value = (Gum.RenderingLibrary.Blend)variableSave.Value;
+                        break;
                     default:
-                        int dm = 3;
-
                         break;
                 }
             
             }
-            int m = 3;
-
 #endif
 
         }
@@ -238,11 +238,6 @@ namespace Gum.DataTypes
 
         public static bool GetIsFileFromRoot(this VariableSave variable, InstanceSave instance)
         {
-            if (variable == null)
-            {
-                int m = 3;
-            }
-
             if (string.IsNullOrEmpty(variable.SourceObject))
             {
                 ElementSave root = ObjectFinder.Self.GetRootStandardElementSave(instance);

@@ -5,7 +5,6 @@ using System.Text;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections;
 using Microsoft.Xna.Framework;
-using System;
 using RenderingLibrary.Graphics;
 
 namespace RenderingLibrary.Math.Geometry

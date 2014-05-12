@@ -26,5 +26,10 @@ namespace Gum.Commands
             StateTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedElement);
             
         }
+
+        internal void RefreshPropertyGrid()
+        {
+            PropertyGridManager.Self.RefreshUI();
+        }
     }
 }

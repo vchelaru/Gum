@@ -33,6 +33,7 @@
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.loadProjectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.loadRecentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveProjectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.newProjectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -65,6 +66,8 @@
             this.VariableHost = new System.Windows.Forms.Integration.ElementHost();
             this.testWpfControl1 = new Gum.TestWpfControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.EventsHost = new System.Windows.Forms.Integration.ElementHost();
+            this.testWpfControl2 = new Gum.TestWpfControl();
             this.VariablePropertyGrid = new System.Windows.Forms.PropertyGrid();
             this.PropertyGridMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.PreviewSplitContainer = new System.Windows.Forms.SplitContainer();
@@ -75,8 +78,6 @@
             this.WireframeEditControl = new FlatRedBall.AnimationEditorForms.Controls.WireframeEditControl();
             this.panel2 = new System.Windows.Forms.Panel();
             this.OutputTextBox = new System.Windows.Forms.RichTextBox();
-            this.EventsHost = new System.Windows.Forms.Integration.ElementHost();
-            this.testWpfControl2 = new Gum.TestWpfControl();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.LeftAndEverythingContainer)).BeginInit();
             this.LeftAndEverythingContainer.Panel1.SuspendLayout();
@@ -119,6 +120,7 @@
             // 
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.loadProjectToolStripMenuItem,
+            this.loadRecentToolStripMenuItem,
             this.saveProjectToolStripMenuItem,
             this.saveAllToolStripMenuItem,
             this.newProjectToolStripMenuItem});
@@ -132,6 +134,12 @@
             this.loadProjectToolStripMenuItem.Size = new System.Drawing.Size(149, 22);
             this.loadProjectToolStripMenuItem.Text = "Load Project...";
             this.loadProjectToolStripMenuItem.Click += new System.EventHandler(this.loadProjectToolStripMenuItem_Click);
+            // 
+            // loadRecentToolStripMenuItem
+            // 
+            this.loadRecentToolStripMenuItem.Name = "loadRecentToolStripMenuItem";
+            this.loadRecentToolStripMenuItem.Size = new System.Drawing.Size(149, 22);
+            this.loadRecentToolStripMenuItem.Text = "Load Recent";
             // 
             // saveProjectToolStripMenuItem
             // 
@@ -312,8 +320,9 @@
             this.ObjectTreeView.SelectedNodes = ((System.Collections.Generic.List<System.Windows.Forms.TreeNode>)(resources.GetObject("ObjectTreeView.SelectedNodes")));
             this.ObjectTreeView.Size = new System.Drawing.Size(192, 617);
             this.ObjectTreeView.TabIndex = 0;
-            this.ObjectTreeView.AfterClickSelect += new System.Windows.Forms.TreeViewEventHandler(this.ObjectTreeView_AfterSelect);
+            this.ObjectTreeView.AfterClickSelect += new System.Windows.Forms.TreeViewEventHandler(this.ObjectTreeView_AfterClickSelect);
             this.ObjectTreeView.ItemDrag += new System.Windows.Forms.ItemDragEventHandler(this.ObjectTreeView_ItemDrag);
+            this.ObjectTreeView.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.ObjectTreeView_AfterSelect_1);
             this.ObjectTreeView.KeyDown += new System.Windows.Forms.KeyEventHandler(this.ObjectTreeView_KeyDown);
             this.ObjectTreeView.MouseClick += new System.Windows.Forms.MouseEventHandler(this.ObjectTreeView_MouseClick);
             // 
@@ -436,6 +445,16 @@
             this.tabPage1.Text = "Events";
             this.tabPage1.UseVisualStyleBackColor = true;
             // 
+            // EventsHost
+            // 
+            this.EventsHost.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.EventsHost.Location = new System.Drawing.Point(3, 3);
+            this.EventsHost.Name = "EventsHost";
+            this.EventsHost.Size = new System.Drawing.Size(224, 457);
+            this.EventsHost.TabIndex = 3;
+            this.EventsHost.Text = "elementHost1";
+            this.EventsHost.Child = this.testWpfControl2;
+            // 
             // VariablePropertyGrid
             // 
             this.VariablePropertyGrid.ContextMenuStrip = this.PropertyGridMenuStrip;
@@ -547,16 +566,6 @@
             this.OutputTextBox.TabIndex = 0;
             this.OutputTextBox.Text = "";
             // 
-            // EventsHost
-            // 
-            this.EventsHost.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.EventsHost.Location = new System.Drawing.Point(3, 3);
-            this.EventsHost.Name = "EventsHost";
-            this.EventsHost.Size = new System.Drawing.Size(224, 457);
-            this.EventsHost.TabIndex = 3;
-            this.EventsHost.Text = "elementHost1";
-            this.EventsHost.Child = this.testWpfControl2;
-            // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -645,6 +654,7 @@
         private System.Windows.Forms.ToolStripMenuItem saveAllToolStripMenuItem;
         private System.Windows.Forms.Integration.ElementHost EventsHost;
         private TestWpfControl testWpfControl2;
+        private System.Windows.Forms.ToolStripMenuItem loadRecentToolStripMenuItem;
     }
 }
 

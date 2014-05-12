@@ -28,6 +28,7 @@ namespace Gum
 
             TypeManager.Self.Initialize();
             PluginManager.Self.Initialize(this);
+            
             ElementTreeViewManager.Self.Initialize(this.ObjectTreeView);
             StateTreeViewManager.Self.Initialize(this.StateTreeView, StateContextMenuStrip);
             PropertyGridManager.Self.Initialize(this.VariablePropertyGrid, 
@@ -69,11 +70,6 @@ namespace Gum
         private void componentToolStripMenuItem_Click(object sender, EventArgs e)
         {
             ElementTreeViewManager.Self.AddComponentClick();
-        }
-
-        private void ObjectTreeView_AfterSelect(object sender, TreeViewEventArgs e)
-        {
-            ElementTreeViewManager.Self.OnSelect(ObjectTreeView.SelectedNode);
         }
 
         private void instanceToolStripMenuItem_Click(object sender, EventArgs e)
@@ -167,6 +163,7 @@ namespace Gum
 
         private void MainWindow_Load(object sender, EventArgs e)
         {
+            ProjectManager.Self.RecentFilesUpdated += RefreshRecentFiles;
             ProjectManager.Self.Initialize();
 
 
@@ -256,5 +253,46 @@ namespace Gum
                 GumCommands.Self.FileCommands.ForceSaveProject(true);
             }
         }
+
+        private void ObjectTreeView_AfterSelect_1(object sender, TreeViewEventArgs e)
+        {
+            // If we use AfterClickSelect instead of AfterSelect then
+            // we don't get notified when the user selects nothing.
+            // Update - we only want to do this if it's null:
+            // Otherwise we can't drag drop
+            if (ObjectTreeView.SelectedNode == null)
+            {
+                ElementTreeViewManager.Self.OnSelect(ObjectTreeView.SelectedNode);
+            }
+
+        }
+
+        public void RefreshRecentFiles()
+        {
+            this.loadRecentToolStripMenuItem.DropDownItems.Clear();
+
+            foreach (var item in ProjectManager.Self.GeneralSettingsFile.RecentProjects)
+            {
+                ToolStripMenuItem tsmi = new ToolStripMenuItem();
+                tsmi.Text = item;
+
+                this.loadRecentToolStripMenuItem.DropDownItems.Add(tsmi);
+
+                tsmi.Click += delegate
+                {
+                    ProjectManager.Self.LoadProject(tsmi.Text);
+
+                };
+
+            }
+
+        }
+
+        private void ObjectTreeView_AfterClickSelect(object sender, TreeViewEventArgs e)
+        {
+            ElementTreeViewManager.Self.OnSelect(ObjectTreeView.SelectedNode);
+        }
+
+
     }
 }

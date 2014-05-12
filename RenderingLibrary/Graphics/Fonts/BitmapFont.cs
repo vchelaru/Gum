@@ -295,55 +295,59 @@ namespace RenderingLibrary.Graphics
                 StringFunctions.GetIntAfter(
                 "lineHeight=", fontPattern);
 
-            BitmapCharacterInfo space = FillBitmapCharacterInfo(' ', fontPattern,
-               mTextures[0].Width, mTextures[0].Height, mLineHeightInPixels, 0);
-
-            for (int i = 0; i < sizeOfArray; i++)
-            {
-                mCharacterInfo[i] = space;
-            }
-
-            index = fontPattern.IndexOf("char id=");
-            while (index != -1)
+            if (mTextures.Length > 0)
             {
 
-                int ID = StringFunctions.GetIntAfter("char id=", fontPattern, index);
+                BitmapCharacterInfo space = FillBitmapCharacterInfo(' ', fontPattern,
+                   mTextures[0].Width, mTextures[0].Height, mLineHeightInPixels, 0);
 
-                mCharacterInfo[ID] = FillBitmapCharacterInfo(ID, fontPattern, mTextures[0].Width,
-                    mTextures[0].Height, mLineHeightInPixels, index);
-
-                int indexOfID = fontPattern.IndexOf("char id=", index);
-                if (indexOfID != -1)
+                for (int i = 0; i < sizeOfArray; i++)
                 {
-                    index = indexOfID + ID.ToString().Length;
+                    mCharacterInfo[i] = space;
                 }
-                else
-                    index = -1;
-            }
 
-            #region Get Kearning Info
-
-            index = fontPattern.IndexOf("kerning ");
-
-            if (index != -1)
-            {
-
-                index = fontPattern.IndexOf("first=", index);
-
+                index = fontPattern.IndexOf("char id=");
                 while (index != -1)
                 {
-                    int ID = StringFunctions.GetIntAfter("first=", fontPattern, index);
-                    int secondCharacter = StringFunctions.GetIntAfter("second=", fontPattern, index);
-                    int kearningAmount = StringFunctions.GetIntAfter("amount=", fontPattern, index);
 
-                    mCharacterInfo[ID].SecondLetterKearning.Add(secondCharacter, kearningAmount);
+                    int ID = StringFunctions.GetIntAfter("char id=", fontPattern, index);
 
-                    index = fontPattern.IndexOf("first=", index + 1);
+                    mCharacterInfo[ID] = FillBitmapCharacterInfo(ID, fontPattern, mTextures[0].Width,
+                        mTextures[0].Height, mLineHeightInPixels, index);
+
+                    int indexOfID = fontPattern.IndexOf("char id=", index);
+                    if (indexOfID != -1)
+                    {
+                        index = indexOfID + ID.ToString().Length;
+                    }
+                    else
+                        index = -1;
                 }
+
+                #region Get Kearning Info
+
+                index = fontPattern.IndexOf("kerning ");
+
+                if (index != -1)
+                {
+
+                    index = fontPattern.IndexOf("first=", index);
+
+                    while (index != -1)
+                    {
+                        int ID = StringFunctions.GetIntAfter("first=", fontPattern, index);
+                        int secondCharacter = StringFunctions.GetIntAfter("second=", fontPattern, index);
+                        int kearningAmount = StringFunctions.GetIntAfter("amount=", fontPattern, index);
+
+                        mCharacterInfo[ID].SecondLetterKearning.Add(secondCharacter, kearningAmount);
+
+                        index = fontPattern.IndexOf("first=", index + 1);
+                    }
+                }
+
+                #endregion
+
             }
-
-            #endregion
-
             //mCharacterInfo[32].ScaleX = .23f;
         }
 
@@ -494,15 +498,19 @@ namespace RenderingLibrary.Graphics
             {
                 char character = line[i];
                 BitmapCharacterInfo characterInfo = GetCharacterInfo(character);
-                bool isLast = i == line.Length - 1;
 
-                if (isLast)
+                if (characterInfo != null)
                 {
-                    toReturn += characterInfo.GetPixelWidth(Texture) + characterInfo.GetPixelXOffset(LineHeightInPixels);
-                }
-                else
-                {
-                    toReturn += characterInfo.GetXAdvanceInPixels(LineHeightInPixels);
+                    bool isLast = i == line.Length - 1;
+
+                    if (isLast)
+                    {
+                        toReturn += characterInfo.GetPixelWidth(Texture) + characterInfo.GetPixelXOffset(LineHeightInPixels);
+                    }
+                    else
+                    {
+                        toReturn += characterInfo.GetXAdvanceInPixels(LineHeightInPixels);
+                    }
                 }
             }
             return toReturn;

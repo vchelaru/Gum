@@ -65,7 +65,7 @@ namespace GumRuntime
                     ElementSaveExtensions.SetGraphicalUiElement(elementSave, graphicalUiElement, systemManagers);
                 }
             }
-            graphicalUiElement.SetGueWidthAndPositionValues(rvf);
+            graphicalUiElement.SetGueValues(rvf);
             if (rvf.GetVariable("Visible") != null)
             {
                 graphicalUiElement.Visible = rvf.GetValue<bool>("Visible");

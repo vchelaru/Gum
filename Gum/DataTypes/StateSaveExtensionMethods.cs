@@ -47,7 +47,9 @@ namespace Gum.DataTypes.Variables
                     var foundVariable = stateSave.GetVariableRecursive(variableName);
                     if (foundVariable != null && foundVariable.SetsValue)
                     {
-                        return foundVariable.Value;
+                        // Why do we early out here?
+                        //return foundVariable.Value;
+                        value = foundVariable.Value;
                         wasFound = true;
                     }
                 }

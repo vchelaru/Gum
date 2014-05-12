@@ -225,6 +225,25 @@ namespace Gum.ToolStates
             }
         }
 
+        public StateSave SelectedStateSaveOrDefault
+        {
+            get
+            {
+                if (SelectedStateSave != null)
+                {
+                    return SelectedStateSave;
+                }
+                else if (SelectedElement != null)
+                {
+                    return SelectedElement.DefaultState;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+        }
+
         public StateSaveCategory SelectedStateCategorySave
         {
             get

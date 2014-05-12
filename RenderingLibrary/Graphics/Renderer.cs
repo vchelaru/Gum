@@ -268,11 +268,25 @@ namespace RenderingLibrary.Graphics
 
             if (renderStates.Wrap)
             {
-                samplerState = SamplerState.PointWrap;
+                if (renderStates.Filtering)
+                {
+                    samplerState = SamplerState.LinearWrap;
+                }
+                else
+                {
+                    samplerState = SamplerState.PointWrap;
+                }
             }
             else
             {
-                samplerState = SamplerState.PointClamp;
+                if (renderStates.Filtering)
+                {
+                    samplerState = SamplerState.LinearClamp;
+                }
+                else
+                {
+                    samplerState = SamplerState.PointClamp;
+                }
             }
 
             mSpriteBatch.Begin(SpriteSortMode.Immediate, renderStates.BlendState, samplerState, 

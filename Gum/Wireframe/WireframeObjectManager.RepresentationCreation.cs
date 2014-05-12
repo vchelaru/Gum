@@ -96,7 +96,7 @@ namespace Gum.Wireframe
                 }
 
 
-                RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(SelectedState.Self.SelectedStateSave);
+                RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(SelectedState.Self.SelectedStateSaveOrDefault);
 
                 string guide = rvf.GetValue<string>("Guide");
                 SetGuideParent(null, rootIpso, guide, true);
@@ -373,7 +373,7 @@ namespace Gum.Wireframe
             
             graphicalUiElement.Visible = (bool)rvf.GetValue("Visible");
 
-            graphicalUiElement.SetGueWidthAndPositionValues(rvf);
+            graphicalUiElement.SetGueValues(rvf);
 
 
             return graphicalUiElement;
@@ -392,7 +392,8 @@ namespace Gum.Wireframe
 
             // Sprite may be dependent on the texture for its location, so set the dimensions and positions *after* texture
 
-            graphicalUiElement.SetGueWidthAndPositionValues(rvf);
+            graphicalUiElement.SetGueValues(rvf);
+
 
             graphicalUiElement.Visible = (bool)rvf.GetValue("Visible");
             return graphicalUiElement;
@@ -423,7 +424,7 @@ namespace Gum.Wireframe
 
             // NineSlice may be dependent on the texture for its location, so set the dimensions and positions *after* texture
 
-            graphicalUiElement.SetGueWidthAndPositionValues(rvf);
+            graphicalUiElement.SetGueValues(rvf);
 
             graphicalUiElement.SetContainedObject(nineSlice);
 
@@ -440,7 +441,7 @@ namespace Gum.Wireframe
             InitializeNineSlice(nineSlice, rvf);
 
 
-            graphicalUiElement.SetGueWidthAndPositionValues(rvf);
+            graphicalUiElement.SetGueValues(rvf);
 
             graphicalUiElement.SetContainedObject(nineSlice);
 
@@ -527,7 +528,7 @@ namespace Gum.Wireframe
 
             graphicalUiElement.SetContainedObject(lineRectangle);
 
-            graphicalUiElement.SetGueWidthAndPositionValues(rvf);
+            graphicalUiElement.SetGueValues(rvf);
 
             return graphicalUiElement;
         }
@@ -535,7 +536,7 @@ namespace Gum.Wireframe
         private static DataTypes.RecursiveVariableFinder GetRvfForCurrentElementState(ElementSave elementSave)
         {
             StateSave sourceStateSave = elementSave.DefaultState;
-            if (elementSave == SelectedState.Self.SelectedElement)
+            if (elementSave == SelectedState.Self.SelectedElement && SelectedState.Self.SelectedStateSave != null)
             {
                 sourceStateSave = SelectedState.Self.SelectedStateSave;
             }
@@ -557,7 +558,7 @@ namespace Gum.Wireframe
 
             graphicalUiElement.SetContainedObject(lineRectangle);
 
-            graphicalUiElement.SetGueWidthAndPositionValues(rvf);
+            graphicalUiElement.SetGueValues(rvf);
 
             return graphicalUiElement;
         }
@@ -601,7 +602,7 @@ namespace Gum.Wireframe
             Text text = CreateTextInternal(elementSave, elementSave.Name, rvf);
 
 
-            graphicalUiElement.SetGueWidthAndPositionValues(rvf);
+            graphicalUiElement.SetGueValues(rvf);
 
             text.EnableTextureCreation();
 
@@ -617,7 +618,7 @@ namespace Gum.Wireframe
             Text text = CreateTextInternal(instance, instance.Name, rvf);
             
             graphicalUiElement.SetContainedObject(text);
-            graphicalUiElement.SetGueWidthAndPositionValues(rvf);
+            graphicalUiElement.SetGueValues(rvf);
 
             return graphicalUiElement;
         }
@@ -771,16 +772,57 @@ namespace Gum.Wireframe
                 }
             }
 
-            bool useCustomSource = rvf.GetValue<bool>("Custom Texture Coordinates");
-            if (useCustomSource)
-            {
-                sprite.SourceRectangle = new Rectangle(
-                    rvf.GetValue<int>("Texture Left"),
-                    rvf.GetValue<int>("Texture Top"),
-                    rvf.GetValue<int>("Texture Width"),
-                    rvf.GetValue<int>("Texture Height"));
+            SetSpriteTextureCoordinates(sprite, rvf);
 
-                sprite.Wrap = rvf.GetValue<bool>("Wrap");
+
+        }
+
+        private static void SetSpriteTextureCoordinates(Sprite sprite, RecursiveVariableFinder rvf)
+        {
+
+            // Old way:
+            //bool useCustomSource = rvf.GetValue<bool>("Custom Texture Coordinates");
+            //if (useCustomSource)
+            //{
+            //    sprite.SourceRectangle = new Rectangle(
+            //        rvf.GetValue<int>("Texture Left"),
+            //        rvf.GetValue<int>("Texture Top"),
+            //        rvf.GetValue<int>("Texture Width"),
+            //        rvf.GetValue<int>("Texture Height"));
+
+            //    sprite.Wrap = rvf.GetValue<bool>("Wrap");
+            //}
+            // New way:
+            var textureAddress = rvf.GetValue<TextureAddress>("Texture Address");
+            switch (textureAddress)
+            {
+                case TextureAddress.EntireTexture:
+                    sprite.SourceRectangle = null;
+                    sprite.Wrap = false;
+                    break;
+                case TextureAddress.Custom:
+                    sprite.SourceRectangle = new Rectangle(
+                        rvf.GetValue<int>("Texture Left"),
+                        rvf.GetValue<int>("Texture Top"),
+                        rvf.GetValue<int>("Texture Width"),
+                        rvf.GetValue<int>("Texture Height"));
+                    sprite.Wrap = rvf.GetValue<bool>("Wrap");
+
+                    break;
+                case TextureAddress.DimensionsBased:
+                    int left = rvf.GetValue<int>("Texture Left");
+                    int top = rvf.GetValue<int>("Texture Top");
+                    int width = (int)(sprite.EffectiveWidth * rvf.GetValue<float>("Texture Width Scale"));
+                    int height = (int)(sprite.EffectiveHeight * rvf.GetValue<float>("Texture Height Scale"));
+
+                    sprite.SourceRectangle = new Rectangle(
+                        left,
+                        top,
+                        width,
+                        height);
+                    sprite.Wrap = rvf.GetValue<bool>("Wrap");
+
+                    break;
             }
         }
 

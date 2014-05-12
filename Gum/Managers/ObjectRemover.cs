@@ -118,7 +118,7 @@ namespace Gum.Managers
                 {
                     var foundVariable = stateInContainer.Variables.FirstOrDefault(item => item.Name == variableToLookFor);
 
-                    if (foundVariable != null)
+                    if (foundVariable != null && foundVariable.Value == stateSave.Name)
                     {
                         MultiButtonMessageBox mbmb = new MultiButtonMessageBox();
                         mbmb.MessageText = "The state " + stateSave.Name + " is used in the element " + 

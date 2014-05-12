@@ -17,6 +17,8 @@ namespace Gum.ToolStates
         ElementSave SelectedElement { get; set; }
         StateSave CustomCurrentStateSave{ get; set; }
         StateSave SelectedStateSave { get; set; }
+        StateSave SelectedStateSaveOrDefault { get;}
+
         StateSaveCategory SelectedStateCategorySave { get; set; }
         ComponentSave SelectedComponent { get; set; }
         InstanceSave SelectedInstance { get; set; }
@@ -33,6 +35,7 @@ namespace Gum.ToolStates
 
         void UpdateToSelectedElement();
         void UpdateToSelectedInstanceSave();
+
 
     }
 }

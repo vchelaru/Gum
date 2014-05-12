@@ -519,6 +519,12 @@ namespace Gum.Wireframe
                     {
                         copiedVariable.Name = targetInstance.Name + "." + copiedVariable.GetRootName();
                         copiedVariable.SourceObject = targetInstance.Name;
+
+
+                        // We don't want to copy exposed variables.
+                        // If we did, the user would have 2 variables exposed with the same.
+                        copiedVariable.ExposedAsName = null;
+
                         targetElement.DefaultState.Variables.Add(copiedVariable);
                     }
                 }
@@ -555,6 +561,11 @@ namespace Gum.Wireframe
                         VariableSave copiedVariable = sourceVariable.Clone();
                         copiedVariable.Name = targetInstance.Name + "." + copiedVariable.GetRootName();
                         copiedVariable.SourceObject = targetInstance.Name;
+
+                        // We don't want to copy exposed variables.
+                        // If we did, the user would have 2 variables exposed with the same.
+                        copiedVariable.ExposedAsName = null;
+
                         SelectedState.Self.SelectedStateSave.Variables.Add(copiedVariable);
                     }
                 }
@@ -568,6 +579,7 @@ namespace Gum.Wireframe
                         VariableListSave copiedList = sourceList.Clone();
                         copiedList.Name = targetInstance.Name + "." + copiedList.GetRootName();
                         copiedList.SourceObject = targetInstance.Name;
+                        
                         SelectedState.Self.SelectedStateSave.VariableLists.Add(copiedList);
                     }
                 }

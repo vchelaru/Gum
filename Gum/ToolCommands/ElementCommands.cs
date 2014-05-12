@@ -61,6 +61,12 @@ namespace Gum.ToolCommands
 
             StateSave stateSave = new StateSave();
             stateSave.Name = name;
+            AddState(elementToAddTo, category, stateSave);
+            return stateSave;
+        }
+
+        public void AddState(ElementSave elementToAddTo, StateSaveCategory category, StateSave stateSave)
+        {
             stateSave.ParentContainer = elementToAddTo;
 
             if (category == null)
@@ -71,7 +77,6 @@ namespace Gum.ToolCommands
             {
                 category.States.Add(stateSave);
             }
-            return stateSave;
         }
 
         public StateSaveCategory AddCategory(ElementSave elementToAddTo, string name)

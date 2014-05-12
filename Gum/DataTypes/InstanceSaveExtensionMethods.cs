@@ -223,6 +223,26 @@ namespace Gum.DataTypes
 
         }
 
+        public static bool IsOfType(this InstanceSave instance, string elementName)
+        {
+            if (instance.BaseType == elementName)
+            {
+                return true;
+            }
+            else
+            {
+                var baseElement = instance.GetBaseElementSave();
+
+                if (baseElement != null)
+                {
+                    return baseElement.IsOfType(elementName);
+
+                }
+            }
+
+            return false;
+
+        }
 
     }
 

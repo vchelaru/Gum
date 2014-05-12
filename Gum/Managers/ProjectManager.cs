@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Gum.DataTypes;
 using Gum.Managers;
 using System.Windows.Forms;
@@ -64,6 +62,12 @@ namespace Gum
                 return mHaveErrorsOccurred;
             }
         }
+        #endregion
+
+        #region Events
+
+        public event Action RecentFilesUpdated;
+
         #endregion
 
         #region Methods
@@ -135,6 +139,8 @@ namespace Gum
                 LoadProject(fileName);
 
                 GeneralSettingsFile.LastProject = fileName;
+
+
                 GeneralSettingsFile.Save();
 
                 return true;
@@ -175,6 +181,10 @@ namespace Gum
             if (mGumProjectSave != null)
             {
                 mGumProjectSave.Initialize();
+
+
+                RecreateMissingStandardElements();
+
                 mGumProjectSave.AddNewStandardElementTypes();
                 mGumProjectSave.FixStandardVariables();
 
@@ -188,6 +198,41 @@ namespace Gum
             WireframeObjectManager.Self.UpdateGuides();
 
             PluginManager.Self.ProjectLoad(mGumProjectSave);
+
+            GeneralSettingsFile.AddToRecentFilesIfNew(fileName);
+
+            if (RecentFilesUpdated != null)
+            {
+                RecentFilesUpdated();
+            }
+
+        }
+
+        private void RecreateMissingStandardElements()
+        {
+            List<StandardElementSave> missingElements = new List<StandardElementSave>();
+            foreach (var element in mGumProjectSave.StandardElements)
+            {
+                if (element.IsSourceFileMissing)
+                {
+                    missingElements.Add(element);
+
+                }
+            }
+
+            foreach (var element in missingElements)
+            {
+                var result = MessageBox.Show(
+                    "The following standard is missing: " + element.Name + "  Recreate it?", "Recreate " + element.Name + "?", MessageBoxButtons.OKCancel);
+
+                if (result == DialogResult.OK)
+                {
+                    mGumProjectSave.StandardElements.RemoveAll(item => item.Name == element.Name);
+                    mGumProjectSave.StandardElementReferences.RemoveAll(item => item.Name == element.Name);
+
+                    StandardElementsManager.Self.AddStandardElementSaveInstance(mGumProjectSave, element.Name);
+                }
+            }
         }
 
         internal void SaveProject(bool forceSaveContainedElements = false)

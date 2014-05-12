@@ -44,6 +44,13 @@ namespace Gum.Settings
             }
         }
 
+        public List<string> RecentProjects
+        {
+            get;
+            set;
+        }
+
+
         #endregion
 
         #region Methods
@@ -52,6 +59,8 @@ namespace Gum.Settings
         {
             ShowTextOutlines = false;
             mAutoSave = true;
+
+            RecentProjects = new List<string>();
         }
 
         public static GeneralSettingsFile LoadOrCreateNew()
@@ -80,6 +89,23 @@ namespace Gum.Settings
         public void Save()
         {
             FileManager.XmlSerialize(this, GeneralSettingsFileName);
+        }
+
+        public void AddToRecentFilesIfNew(string file)
+        {
+            if (this.RecentProjects.Contains(file) == false)
+            {
+                this.RecentProjects.Add(file);
+            }
+
+            const int maxFileCount = 20;
+
+            while (this.RecentProjects.Count > 20)
+            {
+                int lastIndex = RecentProjects.Count - 1;
+
+                RecentProjects.RemoveAt(lastIndex);
+            }
         }
 
         #endregion

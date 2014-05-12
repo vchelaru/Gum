@@ -8,6 +8,7 @@ using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Converters;
 using GumDataTypes.Variables;
+using Microsoft.Xna.Framework;
 
 
 namespace Gum.Wireframe
@@ -39,6 +40,18 @@ namespace Gum.Wireframe
         DimensionUnitType mHeightUnit;
 
         SystemManagers mManagers;
+
+
+        int mTextureTop;
+        int mTextureLeft;
+        int mTextureWidth;
+        int mTextureHeight;
+        bool mWrap;
+
+        float mTextureWidthScale;
+        float mTextureHeightScale;
+
+        TextureAddress mTextureAddress;
 
         float mX;
         float mY;
@@ -445,6 +458,112 @@ namespace Gum.Wireframe
         }
 
 
+        public int TextureTop
+        {
+            get
+            {
+                return mTextureTop;
+            }
+            set
+            {
+
+                mTextureTop = value;
+                UpdateLayout();
+            }
+        }
+
+        public int TextureLeft
+        {
+            get
+            {
+                return mTextureLeft;
+            }
+            set
+            {
+
+                mTextureLeft = value;
+                UpdateLayout();
+            }
+        }
+        public int TextureWidth
+        {
+            get
+            {
+                return mTextureWidth;
+            }
+            set
+            {
+
+                mTextureWidth = value;
+                UpdateLayout();
+            }
+        }
+        public int TextureHeight
+        {
+            get
+            {
+                return mTextureHeight;
+            }
+            set
+            {
+
+                mTextureHeight = value;
+                UpdateLayout();
+            }
+        }
+
+        public float TextureWidthScale
+        {
+            get
+            {
+                return mTextureWidthScale;
+            }
+            set
+            {
+
+                mTextureWidthScale = value;
+                UpdateLayout();
+            }
+        }
+        public float TextureHeightScale
+        {
+            get
+            {
+                return mTextureHeightScale;
+            }
+            set
+            {
+
+                mTextureHeightScale = value;
+                UpdateLayout();
+            }
+        }
+
+        public TextureAddress TextureAddress
+        {
+            get
+            {
+                return mTextureAddress;
+            }
+            set
+            {
+                mTextureAddress = value;
+                UpdateLayout();
+            }
+        }
+
+        public bool Wrap
+        {
+            get
+            {
+                return mWrap;
+            }
+            set
+            {
+                mWrap = value;
+                UpdateLayout();
+            }
+        }
         #endregion
 
         #region Constructor
@@ -677,6 +796,42 @@ namespace Gum.Wireframe
                 this.mContainedObjectAsIpso.X = unitOffsetX;
                 this.mContainedObjectAsIpso.Y = unitOffsetY;
 
+                if (mContainedObjectAsRenderable is Sprite)
+                {
+                    var sprite = mContainedObjectAsRenderable as Sprite;
+                    var textureAddress = mTextureAddress;
+                    switch (textureAddress)
+                    {
+                        case TextureAddress.EntireTexture:
+                            sprite.SourceRectangle = null;
+                            sprite.Wrap = false;
+                            break;
+                        case TextureAddress.Custom:
+                            sprite.SourceRectangle = new Microsoft.Xna.Framework.Rectangle(
+                                mTextureLeft,
+                                mTextureTop,
+                                mTextureWidth,
+                                mTextureHeight);
+                            sprite.Wrap = mWrap;
+
+                            break;
+                        case TextureAddress.DimensionsBased:
+                            int left = mTextureLeft;
+                            int top = mTextureTop;
+                            int width = (int)(sprite.EffectiveWidth / mTextureWidthScale);
+                            int height = (int)(sprite.EffectiveHeight / mTextureHeightScale);
+
+                            sprite.SourceRectangle = new Rectangle(
+                                left,
+                                top,
+                                width,
+                                height);
+                            sprite.Wrap = mWrap;
+
+                            break;
+                    }
+                }
+
                 mContainedObjectAsIpso.Parent = mParent;
 
                 foreach (var child in this.Children)
@@ -695,7 +850,7 @@ namespace Gum.Wireframe
             return Name;
         }
 
-        public void SetGueWidthAndPositionValues(IVariableFinder rvf)
+        public void SetGueValues(IVariableFinder rvf)
         {
 
             this.SuspendLayout();
@@ -714,6 +869,18 @@ namespace Gum.Wireframe
 
             this.XUnits = UnitConverter.Self.ConvertToGeneralUnit(rvf.GetValue<PositionUnitType>("X Units"));
             this.YUnits = UnitConverter.Self.ConvertToGeneralUnit(rvf.GetValue<PositionUnitType>("Y Units"));
+
+            this.TextureWidth = rvf.GetValue<int>("Texture Width");
+            this.TextureHeight = rvf.GetValue<int>("Texture Height");
+            this.TextureLeft = rvf.GetValue<int>("Texture Left");
+            this.TextureTop = rvf.GetValue<int>("Texture Top");
+
+            this.TextureWidthScale = rvf.GetValue<float>("Texture Width Scale");
+            this.TextureHeightScale = rvf.GetValue<float>("Texture Height Scale");
+
+            this.Wrap = rvf.GetValue<bool>("Wrap");
+
+            this.TextureAddress = rvf.GetValue<TextureAddress>("Texture Address");
 
             this.ResumeLayout();
         }

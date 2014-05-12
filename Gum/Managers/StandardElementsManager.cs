@@ -18,6 +18,14 @@ using Gum.PropertyGridHelpers.Converters;
 namespace Gum.Managers
 {
 
+    public enum TextureAddress
+    {
+        EntireTexture,
+        Custom,
+        DimensionsBased
+    }
+
+
     public class StandardElementsManager
     {
         #region Fields
@@ -106,7 +114,8 @@ namespace Gum.Managers
             stateSave.Variables.Add(new VariableSave { Type = "HorizontalAlignment", Value = HorizontalAlignment.Left, Name = "HorizontalAlignment", Category = "Text" });
 
             // font:
-            stateSave.Variables.Add(new VariableSave { Type = "bool", Value = false, Name = "UseCustomFont", Category = "Font" });
+            stateSave.Variables.Add(new VariableSave 
+            { Type = "bool", Value = false, Name = "UseCustomFont", Category = "Font" });
             stateSave.Variables.Add(new VariableSave { Type = "string", Value = "Arial", Name = "Font", IsFont = true, Category = "Font" });
             stateSave.Variables.Add(new VariableSave { Type = "int", Value = 18, Name = "FontSize", Category = "Font" });
             stateSave.Variables.Add(new VariableSave { Type = "int", Value = 0, Name = "OutlineThickness", Category = "Font" });
@@ -151,11 +160,19 @@ namespace Gum.Managers
             stateSave.Variables.Add(new VariableSave { Type = "bool", Value = false, Category = "Flip", Name = "FlipHorizontal" });
             stateSave.Variables.Add(new VariableSave { Type = "bool", Value = false, Category = "Flip", Name = "FlipVertical" });
 
-            stateSave.Variables.Add(new VariableSave { Type = "bool", Value = false, Name = "Custom Texture Coordinates", Category="Source" });
+
+            //stateSave.Variables.Add(new VariableSave { Type = "bool", Value = false, Name = "Custom Texture Coordinates", Category="Source" });
+            stateSave.Variables.Add(new VariableSave 
+            { Type = "TextureAddress", Value = Gum.Managers.TextureAddress.EntireTexture, Name = "Texture Address", Category = "Source" });
+
             stateSave.Variables.Add(new VariableSave { Type = "int", Value = 0, Name = "Texture Top", Category = "Source" });
             stateSave.Variables.Add(new VariableSave { Type = "int", Value = 0, Name = "Texture Left", Category = "Source" });
             stateSave.Variables.Add(new VariableSave { Type = "int", Value = 0, Name = "Texture Width", Category = "Source" });
             stateSave.Variables.Add(new VariableSave { Type = "int", Value = 0, Name = "Texture Height", Category = "Source" });
+
+            stateSave.Variables.Add(new VariableSave { Type = "float", Value = 0, Name = "Texture Width Scale", Category = "Source" });
+            stateSave.Variables.Add(new VariableSave { Type = "float", Value = 0, Name = "Texture Height Scale", Category = "Source" });
+
             stateSave.Variables.Add(new VariableSave { Type = "bool", Value = false, Name = "Wrap", Category = "Source" });
 
             AddColorVariables(stateSave);

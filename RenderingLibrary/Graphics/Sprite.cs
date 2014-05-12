@@ -307,7 +307,166 @@ namespace RenderingLibrary.Graphics
         {
             if (this.AbsoluteVisible)
             {
-                Render(managers, spriteBatch, this, Texture, Color, SourceRectangle, FlipHorizontal, FlipVertical);
+                bool shouldTileByMultipleCalls = this.Wrap && (this as IRenderable).Wrap == false;
+                if (shouldTileByMultipleCalls)
+                {
+                    RenderTiledSprite(spriteBatch, managers);
+                }
+                else
+                {
+                    Render(managers, spriteBatch, this, Texture, Color, SourceRectangle, FlipHorizontal, FlipVertical);
+                }
+            }
+        }
+
+        private void RenderTiledSprite(SpriteBatch spriteBatch, SystemManagers managers)
+        {
+            
+            float texelsWide = this.Texture.Width;
+            if (SourceRectangle.HasValue)
+            {
+                texelsWide = SourceRectangle.Value.Width;
+            }
+
+            float texelsTall = this.Texture.Height;
+            if (SourceRectangle.HasValue)
+            {
+                texelsTall = SourceRectangle.Value.Height;
+            }
+
+            float xRepetitions = texelsWide / (float)Texture.Width;
+            float yRepetitions = texelsTall / (float)Texture.Height;
+
+            if (xRepetitions > 0 && yRepetitions > 0)
+            {
+                float eachWidth = this.EffectiveWidth / xRepetitions;
+                float eachHeight = this.EffectiveHeight / yRepetitions;
+
+                float oldEffectiveWidth = this.EffectiveWidth;
+                float oldEffectiveHeight = this.EffectiveHeight;
+
+                float oldWidth = this.Width;
+                float oldHeight = this.Height;
+
+                float oldX = this.X;
+                float oldY = this.Y;
+
+                var oldSource = this.SourceRectangle.Value;
+
+
+                float texelsPerWorldUnitX = (float)Texture.Width / eachWidth;
+                float texelsPerWorldUnitY = (float)Texture.Height / eachHeight;
+
+                int oldSourceY = oldSource.Y;
+
+                if (oldSourceY < 0)
+                {
+                    int amountToAdd = 1 - (oldSourceY / Texture.Height);
+
+                    oldSourceY += amountToAdd * Texture.Height;
+                }
+
+                if (oldSourceY > 0)
+                {
+                    int amountToAdd = System.Math.Abs(oldSourceY) / Texture.Height;
+                    oldSourceY -= amountToAdd * Texture.Height;
+                }
+                float startingY = -oldSourceY * (1 / texelsPerWorldUnitY);
+                while (startingY < (int)oldEffectiveHeight)
+                {
+                    float worldUnitsChoppedOffTop = System.Math.Max(0, -startingY);
+                    float worldUnitsChoppedOffBottom = System.Math.Max(0, startingY + eachHeight - (int)oldEffectiveHeight);
+
+                    int texelsChoppedOffTop = 0;
+                    if (worldUnitsChoppedOffTop > 0)
+                    {
+                        texelsChoppedOffTop = oldSourceY;
+                    }
+
+                    int texelsChoppedOffBottom =
+                        RenderingLibrary.Math.MathFunctions.RoundToInt(worldUnitsChoppedOffBottom * texelsPerWorldUnitY);
+
+                    this.Y = oldY + startingY + worldUnitsChoppedOffTop;
+
+                    int sourceHeight = (int)(Texture.Height - texelsChoppedOffTop - texelsChoppedOffBottom);
+
+                    if(sourceHeight == 0)
+                    {
+                        break;
+                    }
+
+                    this.Height = sourceHeight * 1 / texelsPerWorldUnitY;
+
+                    int oldSourceX = oldSource.X;
+
+                    if (oldSourceX < 0)
+                    {
+                        int amountToAdd = 1 - (oldSourceX / Texture.Width);
+
+                        oldSourceX += amountToAdd * Texture.Width;
+                    }
+
+                    if (oldSourceX > 0)
+                    {
+                        int amountToAdd = System.Math.Abs(oldSourceX) / Texture.Width;
+
+                        oldSourceX -= amountToAdd * Texture.Width;
+                    }
+
+                    float startingX = -oldSourceX * (1 / texelsPerWorldUnitX);
+
+
+
+                    while (startingX < (int)oldEffectiveWidth)
+                    {
+                        float worldUnitsChoppedOffLeft = System.Math.Max(0, -startingX);
+                        float worldUnitsChoppedOffRight = System.Math.Max(0, startingX + eachWidth - (int)oldEffectiveWidth);
+
+                        int texelsChoppedOffLeft = 0;
+                        if (worldUnitsChoppedOffLeft > 0)
+                        {
+                            // Let's use the hard number to not have any floating point issues:
+                            //texelsChoppedOffLeft = worldUnitsChoppedOffLeft * texelsPerWorldUnit;
+                            texelsChoppedOffLeft = oldSourceX;
+                        }
+                        int texelsChoppedOffRight = 
+                            RenderingLibrary.Math.MathFunctions.RoundToInt(worldUnitsChoppedOffRight * texelsPerWorldUnitX);
+
+                        this.X = oldX + startingX + worldUnitsChoppedOffLeft;
+
+                        int sourceWidth = (int)(Texture.Width - texelsChoppedOffLeft - texelsChoppedOffRight);
+
+                        if (sourceWidth == 0)
+                        {
+                            break;
+                        }
+
+                        this.Width = sourceWidth * 1 / texelsPerWorldUnitX;
+
+
+
+                        this.SourceRectangle = new Rectangle(
+                            RenderingLibrary.Math.MathFunctions.RoundToInt(texelsChoppedOffLeft), 
+                            RenderingLibrary.Math.MathFunctions.RoundToInt(texelsChoppedOffTop), 
+                            sourceWidth,
+                            sourceHeight);
+                        //this.Width = thisWidth ;
+                        Render(managers, spriteBatch, this, Texture, Color, SourceRectangle, FlipHorizontal, FlipVertical);
+                        startingX = System.Math.Max(0, startingX);
+                        startingX += this.Width;
+
+                    }
+                    startingY = System.Math.Max(0, startingY);
+                    startingY += this.Height;
+                }
+
+                this.Width = oldWidth;
+                this.Height = oldHeight;
+
+                this.X = oldX;
+                this.Y = oldY;
+
+                this.SourceRectangle = oldSource;
             }
         }
 
@@ -397,7 +556,7 @@ namespace RenderingLibrary.Graphics
                 int width = textureToUse.Width;
                 int height = textureToUse.Height;
 
-                if (sourceRectangle != null && sourceRectangle.HasValue != null)
+                if (sourceRectangle != null && sourceRectangle.HasValue)
                 {
                     width = sourceRectangle.Value.Width;
                     height = sourceRectangle.Value.Height;

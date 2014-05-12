@@ -114,7 +114,7 @@ namespace Gum.DataTypes.Variables
             set;
         }
         
-        public VariableListSave<T> Clone()
+        public new VariableListSave<T> Clone()
         {
             return FileManager.CloneSaveObject<VariableListSave<T>>(this);
         }
