@@ -220,6 +220,8 @@ namespace Gum
                 }
             }
 
+
+
             foreach (var element in missingElements)
             {
                 var result = MessageBox.Show(
@@ -230,7 +232,11 @@ namespace Gum
                     mGumProjectSave.StandardElements.RemoveAll(item => item.Name == element.Name);
                     mGumProjectSave.StandardElementReferences.RemoveAll(item => item.Name == element.Name);
 
-                    StandardElementsManager.Self.AddStandardElementSaveInstance(mGumProjectSave, element.Name);
+                    var newElement = StandardElementsManager.Self.AddStandardElementSaveInstance(mGumProjectSave, element.Name);
+
+                    string gumProjectDirectory = FileManager.GetDirectory(mGumProjectSave.FullFileName);
+
+                    mGumProjectSave.SaveStandardElements(gumProjectDirectory);
                 }
             }
         }

@@ -439,7 +439,7 @@ namespace Gum.Managers
             }
         }
 
-        public void AddStandardElementSaveInstance(GumProjectSave gumProjectSave, string type)
+        public StandardElementSave AddStandardElementSaveInstance(GumProjectSave gumProjectSave, string type)
         {
             StandardElementSave elementSave = new StandardElementSave();
             elementSave.Initialize(mDefaults[type]);
@@ -448,6 +448,8 @@ namespace Gum.Managers
             
             gumProjectSave.StandardElementReferences.Add( new ElementReference { Name = type, ElementType = ElementType.Standard});
             gumProjectSave.StandardElements.Add( elementSave);
+
+            return elementSave;
         }
 
     }

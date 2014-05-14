@@ -209,10 +209,15 @@ namespace Gum.DataTypes
                 {
                     componentSave.Save(directory + ElementReference.ComponentSubfolder + "/" + componentSave.Name + "." + ComponentExtension);
                 }
-                foreach (var standardElement in StandardElements)
-                {
-                    standardElement.Save(directory + ElementReference.StandardSubfolder + "/" + standardElement.Name + "." + StandardExtension);
-                }
+                SaveStandardElements(directory);
+            }
+        }
+
+        public void SaveStandardElements(string directory)
+        {
+            foreach (var standardElement in StandardElements)
+            {
+                standardElement.Save(directory + ElementReference.StandardSubfolder + "/" + standardElement.Name + "." + StandardExtension);
             }
         }
 

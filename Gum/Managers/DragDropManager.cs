@@ -243,7 +243,9 @@ namespace Gum.Managers
                 firstFile = files[0];
             }
 
-            if (!string.IsNullOrEmpty(firstFile))
+            if (SelectedState.Self.SelectedElement != null &&
+                SelectedState.Self.SelectedStateSave != null &&
+                !string.IsNullOrEmpty(firstFile))
             {
                 string extension = FileManager.GetExtension(firstFile);
 

@@ -353,7 +353,6 @@ namespace Gum.Wireframe
                         }
                     }
                 }
-
             }
         }
 
