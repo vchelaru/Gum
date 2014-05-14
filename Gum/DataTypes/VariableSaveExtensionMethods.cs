@@ -216,6 +216,11 @@ namespace Gum.DataTypes
                     case "Blend":
                         variableSave.Value = (Gum.RenderingLibrary.Blend)variableSave.Value;
                         break;
+                    case "Gum.Managers.TextureAddress":
+                    case "TextureAddress":
+                    
+                        variableSave.Value = (TextureAddress)variableSave.Value;
+                        break;
                     default:
                         break;
                 }

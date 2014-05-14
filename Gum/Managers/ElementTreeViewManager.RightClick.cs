@@ -604,7 +604,7 @@ namespace Gum.Managers
                 string name = tiw.Result;
                 string whyNotValid;
 
-                if (!NameVerifier.Self.IsInstanceNameValid(name, out whyNotValid))
+                if (!NameVerifier.Self.IsInstanceNameValid(name, null, SelectedState.Self.SelectedElement, out whyNotValid))
                 {
                     MessageBox.Show(whyNotValid);
                 }

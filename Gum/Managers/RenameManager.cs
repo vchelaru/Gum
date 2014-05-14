@@ -40,7 +40,17 @@ namespace Gum.Managers
 
                 bool shouldContinue = true;
 
-                if (isRenamingXmlFile)
+                if (instance != null)
+                {
+                    string whyNot;
+                    if (NameVerifier.Self.IsInstanceNameValid(instance.Name, instance, elementSave, out whyNot) == false)
+                    {
+                        MessageBox.Show(whyNot);
+                        shouldContinue = false;
+                    }
+                }
+
+                if (shouldContinue && isRenamingXmlFile)
                 {
                     string message = "Are you sure you want to rename " + oldName + "?\n\n" +
                         "This will change the file name for " + oldName + " which may break " +
@@ -49,6 +59,7 @@ namespace Gum.Managers
 
                     shouldContinue = result == DialogResult.Yes;
                 }
+
 
                 if (shouldContinue)
                 {
@@ -108,6 +119,10 @@ namespace Gum.Managers
                 if(!shouldContinue && isRenamingXmlFile)
                 {
                     elementSave.Name = oldName;
+                }
+                else if (!shouldContinue && instance != null)
+                {
+                    instance.Name = oldName;
                 }
             }
             catch(Exception e)

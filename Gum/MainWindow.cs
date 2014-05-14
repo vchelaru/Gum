@@ -215,7 +215,7 @@ namespace Gum
 
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("Version 1.0");
+            MessageBox.Show("Gum version " + Application.ProductVersion);
         }
 
         private void newProjectToolStripMenuItem_Click(object sender, EventArgs e)

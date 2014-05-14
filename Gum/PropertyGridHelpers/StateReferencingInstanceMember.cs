@@ -297,9 +297,18 @@ namespace Gum.PropertyGridHelpers
 
             if (result == DialogResult.OK)
             {
-                variableSave.ExposedAsName = tiw.Result;
+                string whyNot;
+                if (!NameVerifier.Self.IsExposedVariableNameValid(tiw.Result, SelectedState.Self.SelectedElement, out whyNot))
+                {
+                    MessageBox.Show(whyNot);
+                }
+                else
+                {
 
-                GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+                    variableSave.ExposedAsName = tiw.Result;
+
+                    GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+                }
             }
             else
             {
