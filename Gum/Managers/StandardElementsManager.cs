@@ -120,7 +120,7 @@ namespace Gum.Managers
             stateSave.Variables.Add(new VariableSave { Type = "int", Value = 18, Name = "FontSize", Category = "Font" });
             stateSave.Variables.Add(new VariableSave { Type = "int", Value = 0, Name = "OutlineThickness", Category = "Font" });
             stateSave.Variables.Add(new VariableSave { Type = "string", Value = "", Name = "CustomFontFile", Category = "Font", IsFile = true });
-            
+            stateSave.Variables.Add(new VariableSave { Type = "float", Value = 1.0f, Name = "Font Scale", Category = "Font" });
 
 
 

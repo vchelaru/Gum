@@ -150,6 +150,18 @@ namespace GumRuntime
                             fontName = "FontCache/Font" + fontSize.ToString() + fontName + ".fnt";
                             font = new BitmapFont(fontName, systemManagers);
                         }
+
+                        var fontScaleVariable = rvf.GetVariable("Font Scale");
+                        if (fontScaleVariable != null && fontScaleVariable.SetsValue && fontScaleVariable.Value != null &&
+                            ((float)fontScaleVariable.Value) != 0)
+                        {
+                            text.FontScale = (float)fontScaleVariable.Value;
+                        }
+                        else
+                        {
+                            text.FontScale = 1;
+                        }
+
                         text.BitmapFont = font;
 
                         containedObject = text;

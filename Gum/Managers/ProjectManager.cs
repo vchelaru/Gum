@@ -138,11 +138,6 @@ namespace Gum
 
                 LoadProject(fileName);
 
-                GeneralSettingsFile.LastProject = fileName;
-
-
-                GeneralSettingsFile.Save();
-
                 return true;
             }
 
@@ -200,6 +195,12 @@ namespace Gum
             PluginManager.Self.ProjectLoad(mGumProjectSave);
 
             GeneralSettingsFile.AddToRecentFilesIfNew(fileName);
+
+            if (GeneralSettingsFile.LastProject != fileName)
+            {
+                GeneralSettingsFile.LastProject = fileName;
+                GeneralSettingsFile.Save();
+            }
 
             if (RecentFilesUpdated != null)
             {

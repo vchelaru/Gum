@@ -58,6 +58,8 @@ namespace RenderingLibrary.Graphics
         int mGreen = 255;
         int mBlue = 255;
 
+        float mFontScale = 1;
+
         public bool mIsTextureCreationSuppressed;
 
         SystemManagers mManagers;
@@ -173,7 +175,7 @@ namespace RenderingLibrary.Graphics
                     }
                     else
                     {
-                        return mTextureToRender.Width;
+                        return mTextureToRender.Width * mFontScale;
                     }
                 }
                 else
@@ -200,7 +202,7 @@ namespace RenderingLibrary.Graphics
                     }
                     else
                     {
-                        return mTextureToRender.Height;
+                        return mTextureToRender.Height * mFontScale;
                     }
                 }
                 else
@@ -292,6 +294,17 @@ namespace RenderingLibrary.Graphics
         {
             get { return mBlue; }
             set { mBlue = value; }
+        }
+
+        public float FontScale
+        {
+            get { return mFontScale; }
+            set
+            {
+                mFontScale = value;
+                UpdateWrappedText();
+                mNeedsBitmapFontRefresh = true;
+            }
         }
 
         public object Tag { get; set; }
@@ -402,7 +415,7 @@ namespace RenderingLibrary.Graphics
 
             mWrappedText.Clear();
 
-            float wrappingWidth = mWidth;
+            float wrappingWidth = mWidth / mFontScale;
             if (mWidth == 0)
             {
                 wrappingWidth = float.PositiveInfinity;
@@ -586,8 +599,8 @@ namespace RenderingLibrary.Graphics
 
             mTempForRendering.X = this.X;
             mTempForRendering.Y = this.Y;
-            mTempForRendering.Width = this.mTextureToRender.Width;
-            mTempForRendering.Height = this.mTextureToRender.Height;
+            mTempForRendering.Width = this.mTextureToRender.Width * mFontScale;
+            mTempForRendering.Height = this.mTextureToRender.Height * mFontScale;
             mTempForRendering.Parent = this.Parent;
 
             float widthDifference = this.EffectiveWidth - mTempForRendering.Width;

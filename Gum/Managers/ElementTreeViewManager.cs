@@ -789,7 +789,23 @@ namespace Gum.Managers
                     if (nodeForInstance == null)
                     {
                         TreeNode treeNode = new TreeNode();
-                        treeNode.ImageIndex = InstanceImageIndex;
+
+                        bool doesInstanceHaveValidComponent = true;
+
+                        if (ObjectFinder.Self.GetElementSave(instance.BaseType) == null)
+                        {
+                            doesInstanceHaveValidComponent = false;
+                        }
+
+                        if (doesInstanceHaveValidComponent)
+                        {
+                            treeNode.ImageIndex = InstanceImageIndex;
+                        }
+                        else
+                        {
+                            treeNode.ImageIndex = ExclamationIndex;
+                        }
+
                         treeNode.Tag = instance;
                         node.Nodes.Add(treeNode);
 

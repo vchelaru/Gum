@@ -249,7 +249,7 @@ namespace Gum.Wireframe
 
         public DimensionUnitType WidthUnit
         {
-            get { return WidthUnit; }
+            get { return mWidthUnit; }
             set { mWidthUnit = value; UpdateLayout(); }
         }
 
@@ -608,241 +608,451 @@ namespace Gum.Wireframe
 
         #endregion
 
+        bool IsAllLayoutAbsolute()
+        {
+            return (mWidthUnit == DimensionUnitType.Absolute || mWidthUnit == DimensionUnitType.PercentageOfSourceFile) &&
+                (mHeightUnit == DimensionUnitType.Absolute || mHeightUnit == DimensionUnitType.PercentageOfSourceFile) &&
+                (mXUnits == GeneralUnitType.PixelsFromLarge || mXUnits == GeneralUnitType.PixelsFromMiddle || mXUnits == GeneralUnitType.PixelsFromSmall) &&
+                (mYUnits == GeneralUnitType.PixelsFromLarge || mYUnits == GeneralUnitType.PixelsFromMiddle || mYUnits == GeneralUnitType.PixelsFromSmall);
+        }
+
+        float GetRequiredParentWidth()
+        {
+            float positionValue = mX;
+
+            // This GUE hasn't been set yet so it can't give
+            // valid widths/heights
+            if (this.mContainedObjectAsIpso == null)
+            {
+                return 0;
+            }
+            float smallEdge = positionValue;
+            if (mXOrigin == HorizontalAlignment.Center)
+            {
+                smallEdge = positionValue - ((IPositionedSizedObject)this).Width / 2.0f;
+            }
+            else if (mXOrigin == HorizontalAlignment.Right)
+            {
+                smallEdge = positionValue - ((IPositionedSizedObject)this).Width;
+            }
+
+            float bigEdge = positionValue;
+            if (mXOrigin == HorizontalAlignment.Center)
+            {
+                bigEdge = positionValue + ((IPositionedSizedObject)this).Width / 2.0f;
+            }
+            if (mXOrigin == HorizontalAlignment.Left)
+            {
+                bigEdge = positionValue + ((IPositionedSizedObject)this).Width;
+            }
+
+            var units = mXUnits;
+
+            float dimensionToReturn = GetDimensionFromEdges(smallEdge, bigEdge, units);
+
+            return dimensionToReturn;
+        }
+
+        float GetRequiredParentHeight()
+        {
+            float positionValue = mY;
+
+            // This GUE hasn't been set yet so it can't give
+            // valid widths/heights
+            if (this.mContainedObjectAsIpso == null)
+            {
+                return 0;
+            }
+            float smallEdge = positionValue;
+            if (mYOrigin == VerticalAlignment.Center)
+            {
+                smallEdge = positionValue - ((IPositionedSizedObject)this).Height / 2.0f;
+            }
+            else if (mYOrigin == VerticalAlignment.Bottom)
+            {
+                smallEdge = positionValue - ((IPositionedSizedObject)this).Height;
+            }
+
+            float bigEdge = positionValue;
+            if (mYOrigin == VerticalAlignment.Center)
+            {
+                bigEdge = positionValue + ((IPositionedSizedObject)this).Height / 2.0f;
+            }
+            if (mYOrigin == VerticalAlignment.Top)
+            {
+                bigEdge = positionValue + ((IPositionedSizedObject)this).Height;
+            }
+
+            var units = mYUnits;
+
+            float dimensionToReturn = GetDimensionFromEdges(smallEdge, bigEdge, units);
+
+            return dimensionToReturn;
+
+
+        }
+
+        private static float GetDimensionFromEdges(float smallEdge, float bigEdge, GeneralUnitType units)
+        {
+            float dimensionToReturn = 0;
+            if (units == GeneralUnitType.PixelsFromSmall)
+            {
+                smallEdge = 0;
+                bigEdge = System.Math.Max(0, bigEdge);
+                dimensionToReturn = bigEdge - smallEdge;
+            }
+            else if (units == GeneralUnitType.PixelsFromMiddle)
+            {
+                // use the full width
+                float abs1 = System.Math.Abs(smallEdge);
+                float abs2 = System.Math.Abs(bigEdge);
+
+                dimensionToReturn = 2 * System.Math.Max(abs1, abs2);
+            }
+            else if (units == GeneralUnitType.PixelsFromLarge)
+            {
+                smallEdge = System.Math.Min(0, smallEdge);
+                bigEdge = 0;
+                dimensionToReturn = bigEdge - smallEdge;
+
+            }
+            return dimensionToReturn;
+        }
+
         public void UpdateLayout()
+        {
+            UpdateLayout(true, true);
+
+
+        }
+
+        public bool GetIfDimensionsDependOnChildren()
+        {
+            return (this.WidthUnit == DimensionUnitType.Absolute && this.mWidth == 0) ||
+                (this.HeightUnit == DimensionUnitType.Absolute && this.mHeight == 0);
+        }
+
+        public void UpdateLayout(bool updateParent, bool updateChildren)
         {
             if (!mIsLayoutSuspended && mContainedObjectAsIpso != null)
             {
-
-                float parentWidth = CanvasWidth;
-                float parentHeight = CanvasHeight;
-                float unitOffsetX = this.X;
-                float unitOffsetY = this.Y;
-
-                float widthToSet = mWidth;
-                float heightToSet = mHeight;
-
-                if (this.ParentGue != null && this.ParentGue.mContainedObjectAsRenderable != null)
-                {
-                    parentWidth = this.ParentGue.mContainedObjectAsIpso.Width;
-                    parentHeight = this.ParentGue.mContainedObjectAsIpso.Height;
-                }
-                else if (this.Parent != null)
-                {
-                    parentWidth = Parent.Width;
-                    parentHeight = Parent.Height;
-                }
-
-
-                if (mWidthUnit == DimensionUnitType.Percentage)
-                {
-                    widthToSet = parentWidth * mWidth / 100.0f;
-                }
-                else if (mWidthUnit == DimensionUnitType.PercentageOfSourceFile)
-                {
-                    bool wasSet = false;
-
-                    if (mContainedObjectAsRenderable is Sprite)
-                    {
-                        Sprite sprite = mContainedObjectAsRenderable as Sprite;
-
-                        if (sprite.Texture != null)
-                        {
-                            widthToSet = sprite.Texture.Width * mWidth / 100.0f;
-                        }
-                    }
-
-                    if (!wasSet)
-                    {
-                        widthToSet = 64 * mWidth / 100.0f;
-                    }
-                }
-                else if (mWidthUnit == DimensionUnitType.RelativeToContainer)
-                {
-                    widthToSet = parentWidth + mWidth;
-                }
-
-                if (mHeightUnit == DimensionUnitType.Percentage)
-                {
-                    heightToSet = parentHeight * mHeight / 100.0f;
-                }
-                else if (mHeightUnit == DimensionUnitType.PercentageOfSourceFile)
-                {
-                    bool wasSet = false;
-
-                    if (mContainedObjectAsRenderable is Sprite)
-                    {
-                        Sprite sprite = mContainedObjectAsRenderable as Sprite;
-
-                        if (sprite.Texture != null)
-                        {
-                            heightToSet = sprite.Texture.Height * mHeight / 100.0f;
-                        }
-                    }
-
-                    if (!wasSet)
-                    {
-                        heightToSet = 64 * mHeight / 100.0f;
-                    }
-                }
-                else if (mHeightUnit == DimensionUnitType.RelativeToContainer)
-                {
-                    heightToSet = parentHeight + mHeight;
-                }
-
-
-                mContainedObjectAsIpso.Width = widthToSet;
-                mContainedObjectAsIpso.Height = heightToSet;
-
-                if (mContainedObjectAsIpso is Text)
-                {
-                    ((Text)mContainedObjectAsIpso).UpdateTextureToRender();
-                }
-
-
-                if (mXUnits == GeneralUnitType.Percentage)
-                {
-                    unitOffsetX = parentWidth * mX / 100.0f;
-                }
-                else if (mXUnits == GeneralUnitType.PercentageOfFile)
-                {
-                    bool wasSet = false;
-
-                    if (mContainedObjectAsRenderable is Sprite)
-                    {
-                        Sprite sprite = mContainedObjectAsRenderable as Sprite;
-
-                        if (sprite.Texture != null)
-                        {
-                            unitOffsetX = sprite.Texture.Width * mX / 100.0f;
-                        }
-                    }
-
-                    if (!wasSet)
-                    {
-                        unitOffsetX = 64 * mX / 100.0f;
-                    }
-                }
-                else if (mXUnits == GeneralUnitType.PixelsFromLarge)
-                {
-                    unitOffsetX = mX + parentWidth;
-                }
-                else if (mXUnits == GeneralUnitType.PixelsFromMiddle)
-                {
-                    unitOffsetX = mX + parentWidth / 2.0f;
-                }
-                //else if (mXUnits == GeneralUnitType.PixelsFromSmall)
-                //{
-                //    // no need to do anything
-                //}
-
-                if (mYUnits == GeneralUnitType.Percentage)
-                {
-                    unitOffsetY = parentHeight * mY / 100.0f;
-                }
-                else if (mYUnits == GeneralUnitType.PercentageOfFile)
-                {
-
-                    bool wasSet = false;
-
-
-                    if (mContainedObjectAsRenderable is Sprite)
-                    {
-                        Sprite sprite = mContainedObjectAsRenderable as Sprite;
-
-                        if (sprite.Texture != null)
-                        {
-                            unitOffsetY = sprite.Texture.Height * mY / 100.0f;
-                        }
-                    }
-
-                    if (!wasSet)
-                    {
-                        unitOffsetY = 64 * mY / 100.0f;
-                    }
-                }
-                else if (mYUnits == GeneralUnitType.PixelsFromLarge)
-                {
-                    unitOffsetY = mY + parentHeight;
-                }
-                else if (mYUnits == GeneralUnitType.PixelsFromMiddle)
-                {
-                    unitOffsetY = mY + parentHeight / 2.0f;
-                }
-
-
-
-
-                if (mXOrigin == HorizontalAlignment.Center)
-                {
-                    unitOffsetX -= mContainedObjectAsIpso.Width / 2.0f;
-                }
-                else if (mXOrigin == HorizontalAlignment.Right)
-                {
-                    unitOffsetX -= mContainedObjectAsIpso.Width;
-                }
-                // no need to handle left
-
-
-                if (mYOrigin == VerticalAlignment.Center)
-                {
-                    unitOffsetY -= mContainedObjectAsIpso.Height / 2.0f;
-                }
-                else if (mYOrigin == VerticalAlignment.Bottom)
-                {
-                    unitOffsetY -= mContainedObjectAsIpso.Height;
-                }
-                // no need to handle top
-
-                this.mContainedObjectAsIpso.X = unitOffsetX;
-                this.mContainedObjectAsIpso.Y = unitOffsetY;
-
-                if (mContainedObjectAsRenderable is Sprite)
-                {
-                    var sprite = mContainedObjectAsRenderable as Sprite;
-                    var textureAddress = mTextureAddress;
-                    switch (textureAddress)
-                    {
-                        case TextureAddress.EntireTexture:
-                            sprite.SourceRectangle = null;
-                            sprite.Wrap = false;
-                            break;
-                        case TextureAddress.Custom:
-                            sprite.SourceRectangle = new Microsoft.Xna.Framework.Rectangle(
-                                mTextureLeft,
-                                mTextureTop,
-                                mTextureWidth,
-                                mTextureHeight);
-                            sprite.Wrap = mWrap;
-
-                            break;
-                        case TextureAddress.DimensionsBased:
-                            int left = mTextureLeft;
-                            int top = mTextureTop;
-                            int width = (int)(sprite.EffectiveWidth / mTextureWidthScale);
-                            int height = (int)(sprite.EffectiveHeight / mTextureHeightScale);
-
-                            sprite.SourceRectangle = new Rectangle(
-                                left,
-                                top,
-                                width,
-                                height);
-                            sprite.Wrap = mWrap;
-
-                            break;
-                    }
-                }
-
+                // May 15, 2014
+                // This needs to be
+                // set before we start
+                // doing the updates because
+                // we use foreaches internally
+                // in the updates.
                 mContainedObjectAsIpso.Parent = mParent;
 
-                foreach (var child in this.Children)
+                if (updateParent && this.ParentGue != null && ParentGue.GetIfDimensionsDependOnChildren())
                 {
-                    if (child is GraphicalUiElement)
+                    // Just climb up one and update from there
+                    this.ParentGue.UpdateLayout(true, true);
+                }
+                else
+                {
+
+
+                    float parentWidth;
+                    float parentHeight;
+                    GetParentDimensions(out parentWidth, out parentHeight);
+
+                    UpdateDimensions(parentWidth, parentHeight);
+
+                    if (mContainedObjectAsIpso is Text)
                     {
-                        (child as GraphicalUiElement).UpdateLayout();
+                        ((Text)mContainedObjectAsIpso).UpdateTextureToRender();
+                    }
+                    if (mContainedObjectAsRenderable is Sprite)
+                    {
+                        UpdateTextureCoordinates();
+                    }
+
+                    UpdatePosition(parentWidth, parentHeight);
+
+                    if (updateChildren)
+                    {
+                        foreach (var child in this.Children)
+                        {
+                            if (child is GraphicalUiElement)
+                            {
+                                (child as GraphicalUiElement).UpdateLayout(false, true);
+                            }
+                        }
+                    }
+
+                    // Eventually add more conditions here to make it fire less often
+                    // like check the width/height of the parent to see if they're 0
+                    if (updateParent && this.ParentGue != null)
+                    {
+                        this.ParentGue.UpdateLayout(false, false);
                     }
                 }
             }
 
+        }
+
+        
+
+        private void GetParentDimensions(out float parentWidth, out float parentHeight)
+        {
+            parentWidth = CanvasWidth;
+            parentHeight = CanvasHeight;
+
+            if (this.ParentGue != null && this.ParentGue.mContainedObjectAsRenderable != null)
+            {
+                parentWidth = this.ParentGue.mContainedObjectAsIpso.Width;
+                parentHeight = this.ParentGue.mContainedObjectAsIpso.Height;
+            }
+            else if (this.Parent != null)
+            {
+                parentWidth = Parent.Width;
+                parentHeight = Parent.Height;
+            }
+        }
+
+        private void UpdateTextureCoordinates()
+        {
+            var sprite = mContainedObjectAsRenderable as Sprite;
+            var textureAddress = mTextureAddress;
+            switch (textureAddress)
+            {
+                case TextureAddress.EntireTexture:
+                    sprite.SourceRectangle = null;
+                    sprite.Wrap = false;
+                    break;
+                case TextureAddress.Custom:
+                    sprite.SourceRectangle = new Microsoft.Xna.Framework.Rectangle(
+                        mTextureLeft,
+                        mTextureTop,
+                        mTextureWidth,
+                        mTextureHeight);
+                    sprite.Wrap = mWrap;
+
+                    break;
+                case TextureAddress.DimensionsBased:
+                    int left = mTextureLeft;
+                    int top = mTextureTop;
+                    int width = (int)(sprite.EffectiveWidth / mTextureWidthScale);
+                    int height = (int)(sprite.EffectiveHeight / mTextureHeightScale);
+
+                    sprite.SourceRectangle = new Rectangle(
+                        left,
+                        top,
+                        width,
+                        height);
+                    sprite.Wrap = mWrap;
+
+                    break;
+            }
+        }
+
+        private void UpdatePosition(float parentWidth, float parentHeight)
+        {
+            float unitOffsetX = this.X;
+            float unitOffsetY = this.Y;
+
+            if (mXUnits == GeneralUnitType.Percentage)
+            {
+                unitOffsetX = parentWidth * mX / 100.0f;
+            }
+            else if (mXUnits == GeneralUnitType.PercentageOfFile)
+            {
+                bool wasSet = false;
+
+                if (mContainedObjectAsRenderable is Sprite)
+                {
+                    Sprite sprite = mContainedObjectAsRenderable as Sprite;
+
+                    if (sprite.Texture != null)
+                    {
+                        unitOffsetX = sprite.Texture.Width * mX / 100.0f;
+                    }
+                }
+
+                if (!wasSet)
+                {
+                    unitOffsetX = 64 * mX / 100.0f;
+                }
+            }
+            else if (mXUnits == GeneralUnitType.PixelsFromLarge)
+            {
+                unitOffsetX = mX + parentWidth;
+            }
+            else if (mXUnits == GeneralUnitType.PixelsFromMiddle)
+            {
+                unitOffsetX = mX + parentWidth / 2.0f;
+            }
+            //else if (mXUnits == GeneralUnitType.PixelsFromSmall)
+            //{
+            //    // no need to do anything
+            //}
+
+            if (mYUnits == GeneralUnitType.Percentage)
+            {
+                unitOffsetY = parentHeight * mY / 100.0f;
+            }
+            else if (mYUnits == GeneralUnitType.PercentageOfFile)
+            {
+
+                bool wasSet = false;
+
+
+                if (mContainedObjectAsRenderable is Sprite)
+                {
+                    Sprite sprite = mContainedObjectAsRenderable as Sprite;
+
+                    if (sprite.Texture != null)
+                    {
+                        unitOffsetY = sprite.Texture.Height * mY / 100.0f;
+                    }
+                }
+
+                if (!wasSet)
+                {
+                    unitOffsetY = 64 * mY / 100.0f;
+                }
+            }
+            else if (mYUnits == GeneralUnitType.PixelsFromLarge)
+            {
+                unitOffsetY = mY + parentHeight;
+            }
+            else if (mYUnits == GeneralUnitType.PixelsFromMiddle)
+            {
+                unitOffsetY = mY + parentHeight / 2.0f;
+            }
+
+
+
+
+            if (mXOrigin == HorizontalAlignment.Center)
+            {
+                unitOffsetX -= mContainedObjectAsIpso.Width / 2.0f;
+            }
+            else if (mXOrigin == HorizontalAlignment.Right)
+            {
+                unitOffsetX -= mContainedObjectAsIpso.Width;
+            }
+            // no need to handle left
+
+
+            if (mYOrigin == VerticalAlignment.Center)
+            {
+                unitOffsetY -= mContainedObjectAsIpso.Height / 2.0f;
+            }
+            else if (mYOrigin == VerticalAlignment.Bottom)
+            {
+                unitOffsetY -= mContainedObjectAsIpso.Height;
+            }
+            // no need to handle top
+
+
+            this.mContainedObjectAsIpso.X = unitOffsetX;
+            this.mContainedObjectAsIpso.Y = unitOffsetY;
+        }
+
+        private void UpdateDimensions(float parentWidth, float parentHeight)
+        {
+            UpdateWidth(parentWidth);
+
+            UpdateHeight(parentHeight);
+        }
+
+        private void UpdateHeight(float parentHeight)
+        {
+            float heightToSet = mHeight;
+
+            if (mHeightUnit == DimensionUnitType.Absolute && heightToSet == 0)
+            {
+                float maxHeight = 0;
+                foreach (var element in this.ContainedElements)
+                {
+                    if (element.IsAllLayoutAbsolute())
+                    {
+                        var elementWidth = element.GetRequiredParentHeight();
+                        maxHeight = System.Math.Max(maxHeight, elementWidth);
+                    }
+                }
+
+                heightToSet = maxHeight;
+            }
+            else if (mHeightUnit == DimensionUnitType.Percentage)
+            {
+                heightToSet = parentHeight * mHeight / 100.0f;
+            }
+            else if (mHeightUnit == DimensionUnitType.PercentageOfSourceFile)
+            {
+                bool wasSet = false;
+
+                if (mContainedObjectAsRenderable is Sprite)
+                {
+                    Sprite sprite = mContainedObjectAsRenderable as Sprite;
+
+                    if (sprite.Texture != null)
+                    {
+                        heightToSet = sprite.Texture.Height * mHeight / 100.0f;
+                    }
+                }
+
+                if (!wasSet)
+                {
+                    heightToSet = 64 * mHeight / 100.0f;
+                }
+            }
+            else if (mHeightUnit == DimensionUnitType.RelativeToContainer)
+            {
+                heightToSet = parentHeight + mHeight;
+            }
+
+            mContainedObjectAsIpso.Height = heightToSet;
+        }
+
+        private void UpdateWidth(float parentWidth)
+        {
+            float widthToSet = mWidth;
+
+            if (mWidthUnit == DimensionUnitType.Absolute && widthToSet == 0)
+            {
+                float maxWidth = 0;
+                foreach (var element in this.ContainedElements)
+                {
+                    if (element.IsAllLayoutAbsolute())
+                    {
+                        var elementWidth = element.GetRequiredParentWidth();
+                        maxWidth = System.Math.Max(maxWidth, elementWidth);
+                    }
+                }
+
+                widthToSet = maxWidth;
+            }
+            else if (mWidthUnit == DimensionUnitType.Percentage)
+            {
+                widthToSet = parentWidth * mWidth / 100.0f;
+            }
+            else if (mWidthUnit == DimensionUnitType.PercentageOfSourceFile)
+            {
+                bool wasSet = false;
+
+                if (mContainedObjectAsRenderable is Sprite)
+                {
+                    Sprite sprite = mContainedObjectAsRenderable as Sprite;
+
+                    if (sprite.Texture != null)
+                    {
+                        widthToSet = sprite.Texture.Width * mWidth / 100.0f;
+                    }
+                }
+
+                if (!wasSet)
+                {
+                    widthToSet = 64 * mWidth / 100.0f;
+                }
+            }
+            else if (mWidthUnit == DimensionUnitType.RelativeToContainer)
+            {
+                widthToSet = parentWidth + mWidth;
+            }
+            mContainedObjectAsIpso.Width = widthToSet;
         }
 
         public override string ToString()

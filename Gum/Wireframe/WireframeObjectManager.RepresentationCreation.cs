@@ -641,7 +641,10 @@ namespace Gum.Wireframe
 
             text.Visible = rvf.GetValue<bool>("Visible");
 
-
+            if (rvf.GetVariable("Font Scale") != null)
+            {
+                text.FontScale = rvf.GetValue<float>("Font Scale");
+            }
 
             text.RawText = (string)rvf.GetValue("Text");
             text.HorizontalAlignment = (HorizontalAlignment)rvf.GetValue("HorizontalAlignment");
