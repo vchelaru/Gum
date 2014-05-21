@@ -19,14 +19,14 @@ namespace Gum.Managers
     {
         #region Fields
 
-        const int TransparentImageIndex = 0;
-        const int FolderImageIndex = 1;
-        const int ComponentImageIndex = 2;
-        const int InstanceImageIndex = 3;
-        const int ScreenImageIndex = 4;
-        const int StandardElementImageIndex = 5;
-        const int ExclamationIndex = 6;
-
+        public const int TransparentImageIndex = 0;
+        public const int FolderImageIndex = 1;
+        public const int ComponentImageIndex = 2;
+        public const int InstanceImageIndex = 3;
+        public const int ScreenImageIndex = 4;
+        public const int StandardElementImageIndex = 5;
+        public const int ExclamationIndex = 6;
+        public const int StateImageIndex = 7;
 
         static ElementTreeViewManager mSelf;
 

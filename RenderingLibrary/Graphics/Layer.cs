@@ -16,6 +16,8 @@ namespace RenderingLibrary.Graphics
 
         #endregion
 
+        public IPositionedSizedObject ScissorIpso { get; set; }
+
         public LayerCameraSettings LayerCameraSettings
         {
             get;
@@ -106,6 +108,57 @@ namespace RenderingLibrary.Graphics
         public override string ToString()
         {
             return Name + " : " + mRenderables.Count + " IRenderables";
+        }
+
+        public bool ContainsRenderable(IRenderable whatToTest)
+        {
+            if (this.Renderables.Contains(whatToTest))
+            {
+                return true;
+            }
+
+            foreach (IRenderable renderable in this.Renderables)
+            {
+                if (renderable is SortableLayer)
+                {
+                    if (((SortableLayer)renderable).ContainsRenderable(whatToTest))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        internal Microsoft.Xna.Framework.Rectangle GetScissorRectangleFor(Camera camera)
+        {
+            var ipso = ScissorIpso;
+
+            int left = global::RenderingLibrary.Math.MathFunctions.RoundToInt(ipso.GetAbsoluteLeft() - camera.AbsoluteLeft);
+            int right = global::RenderingLibrary.Math.MathFunctions.RoundToInt(ipso.GetAbsoluteRight() - camera.AbsoluteLeft);
+            int top = global::RenderingLibrary.Math.MathFunctions.RoundToInt(ipso.GetAbsoluteTop() - camera.AbsoluteTop);
+            int bottom = global::RenderingLibrary.Math.MathFunctions.RoundToInt(ipso.GetAbsoluteBottom() - camera.AbsoluteTop);
+
+            left = System.Math.Max(0, left);
+            top = System.Math.Max(0, top);
+            right = System.Math.Max(0, right);
+            bottom = System.Math.Max(0, bottom);
+
+            left = System.Math.Min(left, camera.ClientWidth);
+            right = System.Math.Min(right, camera.ClientWidth);
+
+            top = System.Math.Min(top, camera.ClientHeight);
+            bottom = System.Math.Min(bottom, camera.ClientHeight);
+
+            int width = right - left;
+            int height = bottom - top;
+
+            return new Microsoft.Xna.Framework.Rectangle(
+                left,
+                top,
+                width,
+                height);
         }
     }
 }

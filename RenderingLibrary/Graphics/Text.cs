@@ -130,6 +130,8 @@ namespace RenderingLibrary.Graphics
             }
         }
 
+        public float Rotation { get; set; }
+
         public float Width
         {
             get
@@ -624,7 +626,7 @@ namespace RenderingLibrary.Graphics
             }
 
             Sprite.Render(managers, spriteBatch, mTempForRendering, mTextureToRender,
-                new Color(mRed, mGreen, mBlue, mAlpha));
+                new Color(mRed, mGreen, mBlue, mAlpha), null, false, false, Rotation);
         }
 
         IPositionedSizedObject mTempForRendering;

@@ -103,6 +103,33 @@ namespace Gum.DataTypes
                     }
                 }
 
+                foreach (var stateSaveCategory in elementSave.Categories)
+                {
+                    VariableSave foundVariable = elementSave.DefaultState.Variables.FirstOrDefault(item => item.Name == stateSaveCategory.Name + "State");
+
+                    if (foundVariable == null)
+                    {
+                        elementSave.DefaultState.Variables.Add(new VariableSave()
+                        {
+                            Name = stateSaveCategory.Name + "State",
+                            Type = "string",
+                            Value = null
+#if GUM
+,
+                            CustomTypeConverter = new Gum.PropertyGridHelpers.Converters.AvailableStatesConverter(stateSaveCategory.Name)
+#endif
+
+                        });
+                    }
+                    else
+                    {
+#if GUM
+
+                        foundVariable.CustomTypeConverter = new Gum.PropertyGridHelpers.Converters.AvailableStatesConverter(stateSaveCategory.Name);
+#endif
+                    }
+                }
+
                 VariableSaveSorter vss = new VariableSaveSorter();
                 vss.ListOrderToMatch = defaultState.Variables;
 

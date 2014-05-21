@@ -63,13 +63,13 @@ namespace Gum.DataTypes
         {
             ElementSave instanceBase = ObjectFinder.Self.GetElementSave(instance.BaseType);
 
-            StateSave stateToPullFrom = null;
+            IEnumerable<StateSave> statesToPullFrom = null;
             StateSave defaultState = null;
 
 #if GUM
             if (SelectedState.Self.SelectedElement != null)
             {
-                stateToPullFrom = SelectedState.Self.SelectedElement.DefaultState;
+                statesToPullFrom = new List<StateSave>{SelectedState.Self.SelectedElement.DefaultState};
                 defaultState = SelectedState.Self.SelectedElement.DefaultState;
             }
 #endif
@@ -80,7 +80,7 @@ namespace Gum.DataTypes
                 {
                     throw new InvalidOperationException("The ElementStack contains an ElementWithState with no Element");
                 }
-                stateToPullFrom = elementStack.Last().StateSave;
+                statesToPullFrom = elementStack.Last().AllStates;
                 defaultState = elementStack.Last().Element.DefaultState;
             }
 
@@ -90,15 +90,24 @@ namespace Gum.DataTypes
                 SelectedState.Self.SelectedStateSave != null &&
                 !forceDefault)
             {
-                stateToPullFrom = SelectedState.Self.SelectedStateSave;
+                statesToPullFrom = new List<StateSave> { SelectedState.Self.SelectedStateSave };
             }
 #endif
 
-            VariableSave variableSave = stateToPullFrom.GetVariableSave(instance.Name + "." + variable);
+
+            VariableSave variableSave = null;
+            foreach (var stateToPullFrom in statesToPullFrom)
+            {
+                var possibleVariable = stateToPullFrom.GetVariableSave(instance.Name + "." + variable);
+                if (possibleVariable != null)
+                {
+                    variableSave = possibleVariable;
+                }
+            }
             // non-default states can override the default state, so first
             // let's see if the selected state is non-default and has a value
             // for a given variable.  If not, we'll fall back to the default.
-            if ((variableSave == null || (onlyIfSetsValue && variableSave.SetsValue == false)) && defaultState != stateToPullFrom)
+            if ((variableSave == null || (onlyIfSetsValue && variableSave.SetsValue == false)) && !statesToPullFrom.Contains(defaultState))
             {
                 variableSave = defaultState.GetVariableSave(instance.Name + "." + variable);
             }
@@ -111,7 +120,15 @@ namespace Gum.DataTypes
                 RecursiveVariableFinder rvf = new RecursiveVariableFinder(instance, elementStack);
 
                 // Let's see if this is in a non-default state
-                string thisState = stateToPullFrom.GetValue(instance.Name + ".State") as string;
+                string thisState = null;
+                foreach (var stateToPullFrom in statesToPullFrom)
+                {
+                    var foundStateVariable = stateToPullFrom.GetVariableSave(instance.Name + ".State");
+                    if (foundStateVariable != null && foundStateVariable.SetsValue)
+                    {
+                        thisState = foundStateVariable.Value as string;
+                    }
+                }
                 StateSave instanceStateToPullFrom = instanceBase.DefaultState;
 
                 // if thisState is not null, then the state is being explicitly set, so let's try to get that state

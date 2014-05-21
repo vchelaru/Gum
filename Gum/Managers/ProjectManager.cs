@@ -185,6 +185,9 @@ namespace Gum
 
                 FileManager.RelativeDirectory = FileManager.GetDirectory(fileName);
                 mGumProjectSave.RemoveDuplicateVariables();
+
+
+                GraphicalUiElement.ShowLineRectangles = mGumProjectSave.ShowOutlines;
             }
 
             // Now that a new project is loaded, refresh the UI!

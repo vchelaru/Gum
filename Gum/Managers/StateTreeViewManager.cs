@@ -194,6 +194,8 @@ namespace Gum.Managers
                         node.Tag = state;
                     }
 
+                    node.ImageIndex = ElementTreeViewManager.StateImageIndex;
+
                     if (state == lastStateSave)
                     {
 
@@ -246,7 +248,9 @@ namespace Gum.Managers
             {
                 if (GetTreeNodeForTag(category) == null)
                 {
-                    mTreeView.Nodes.Add(category.Name).Tag = category;
+                    var treeNode = mTreeView.Nodes.Add(category.Name);
+                    treeNode.Tag = category;
+                    treeNode.ImageIndex = ElementTreeViewManager.FolderImageIndex;
                 }
             }
 
@@ -255,7 +259,9 @@ namespace Gum.Managers
                 // uncategorized
                 if (GetTreeNodeForTag(state) == null)
                 {
-                    mTreeView.Nodes.Add(state.Name).Tag = state;
+                    var treeNode = mTreeView.Nodes.Add(state.Name);
+                    treeNode.Tag = state;
+                    treeNode.ImageIndex = ElementTreeViewManager.StateImageIndex;
                 }
             }
 
@@ -267,8 +273,11 @@ namespace Gum.Managers
                     if (GetTreeNodeForTag(state) == null)
                     {
                         var toAddTo = GetTreeNodeForTag(category);
-                        
-                        toAddTo.Nodes.Add(state.Name).Tag = state;
+
+                        var treeNode = toAddTo.Nodes.Add(state.Name);
+                        treeNode.ImageIndex = ElementTreeViewManager.StateImageIndex;
+
+                        treeNode.Tag = state;
                     }
                 }
             }

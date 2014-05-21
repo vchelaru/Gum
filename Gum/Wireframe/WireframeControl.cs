@@ -233,6 +233,8 @@ namespace Gum.Wireframe
                 UpdateWireframeToProject();
 
                 mHasInitialized = true;
+
+                SystemManagers.Default = SystemManagers.CreateFromSingletons();
             }
             catch(Exception exception)
             {
@@ -374,8 +376,6 @@ namespace Gum.Wireframe
 
         protected override void Draw()
         {
-            try
-            {
                 if (mHasInitialized)
                 {
                     Activity();
@@ -384,12 +384,6 @@ namespace Gum.Wireframe
 
                     Renderer.Self.Draw(null);
                 }
-            }
-            catch (Exception e)
-            {
-                MessageBox.Show(e.ToString());
-                throw e;
-            }
             
         }
 

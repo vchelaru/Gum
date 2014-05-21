@@ -79,20 +79,20 @@ namespace GumRuntime
             {
                 var childGue = instance.ToGraphicalUiElement(systemManagers);
 
-
-
-                if (!isScreen)
+                if (childGue != null)
                 {
+                    if (!isScreen)
+                    {
+                        childGue.Parent = toReturn;
+                    }
+                    childGue.ParentGue = toReturn;
 
-                    childGue.Parent = toReturn;
-                }
-                childGue.ParentGue = toReturn;
+                    var state = rvf.GetValue<string>(childGue.Name + ".State");
 
-                var state = rvf.GetValue<string>(childGue.Name + ".State");
-
-                if (!string.IsNullOrEmpty(state) && state != "Default")
-                {
-                    childGue.ApplyState(state);
+                    if (!string.IsNullOrEmpty(state) && state != "Default")
+                    {
+                        childGue.ApplyState(state);
+                    }
                 }
             }
 

@@ -86,11 +86,18 @@ namespace Gum.ToolCommands
                 throw new Exception("Could not add category " + name + " because no element is selected");
             }
 
+
+
             StateSaveCategory category = new StateSaveCategory();
             category.Name = name;
 
             elementToAddTo.Categories.Add(category);
 
+            elementToAddTo.DefaultState.Variables.Add(new VariableSave() { Name = category.Name + "State", Type = "string", Value = null
+#if GUM
+,             CustomTypeConverter = new Gum.PropertyGridHelpers.Converters.AvailableStatesConverter(category.Name)
+#endif    
+            });
 
             return category;
         }

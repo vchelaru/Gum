@@ -159,6 +159,19 @@ namespace Gum.Wireframe
             }
         }
 
+
+        float IPositionedSizedObject.Rotation 
+        {
+            get
+            {
+                return mContainedObjectAsIpso.Rotation;
+            }
+            set
+            {
+                mContainedObjectAsIpso.Rotation = value;
+            }
+        }
+
         float IPositionedSizedObject.Width
         {
             get
@@ -220,6 +233,10 @@ namespace Gum.Wireframe
             }
         }
 
+        /// <summary>
+        /// Used for clipping.
+        /// </summary>
+        SortableLayer mSortableLayer;
 
         #endregion
 
@@ -257,6 +274,12 @@ namespace Gum.Wireframe
         {
             get { return mHeightUnit; }
             set { mHeightUnit = value; UpdateLayout(); }
+        }
+
+        public ChildrenLayout ChildrenLayout
+        {
+            get;
+            set;
         }
 
         public float X
@@ -564,6 +587,12 @@ namespace Gum.Wireframe
                 UpdateLayout();
             }
         }
+
+        public bool ClipsChildren
+        {
+            get;
+            set;
+        }
         #endregion
 
         #region Constructor
@@ -571,7 +600,7 @@ namespace Gum.Wireframe
         public GraphicalUiElement()
             : this(null, null)
         {
-
+            ClipsChildren = true;
         }
 
         public GraphicalUiElement(IRenderable containedObject, GraphicalUiElement whatContainsThis)
@@ -607,6 +636,8 @@ namespace Gum.Wireframe
         }
 
         #endregion
+
+        #region Methods
 
         bool IsAllLayoutAbsolute()
         {
@@ -744,7 +775,8 @@ namespace Gum.Wireframe
                 // in the updates.
                 mContainedObjectAsIpso.Parent = mParent;
 
-                if (updateParent && this.ParentGue != null && ParentGue.GetIfDimensionsDependOnChildren())
+                if (updateParent && this.ParentGue != null && 
+                    (ParentGue.GetIfDimensionsDependOnChildren() || ParentGue.ChildrenLayout != Gum.Managers.ChildrenLayout.Regular ))
                 {
                     // Just climb up one and update from there
                     this.ParentGue.UpdateLayout(true, true);
@@ -787,9 +819,19 @@ namespace Gum.Wireframe
                     {
                         this.ParentGue.UpdateLayout(false, false);
                     }
+
+                    UpdateLayerScissor();
                 }
             }
 
+        }
+
+        private void UpdateLayerScissor()
+        {
+            if (mSortableLayer != null)
+            {
+                mSortableLayer.ScissorIpso = this;
+            }
         }
 
         
@@ -799,16 +841,30 @@ namespace Gum.Wireframe
             parentWidth = CanvasWidth;
             parentHeight = CanvasHeight;
 
-            if (this.ParentGue != null && this.ParentGue.mContainedObjectAsRenderable != null)
-            {
-                parentWidth = this.ParentGue.mContainedObjectAsIpso.Width;
-                parentHeight = this.ParentGue.mContainedObjectAsIpso.Height;
-            }
-            else if (this.Parent != null)
+            // I think we want to obey the non GUE parent first if it exists, then the GUE
+            //if (this.ParentGue != null && this.ParentGue.mContainedObjectAsRenderable != null)
+            //{
+            //    parentWidth = this.ParentGue.mContainedObjectAsIpso.Width;
+            //    parentHeight = this.ParentGue.mContainedObjectAsIpso.Height;
+            //}
+            //else if (this.Parent != null)
+            //{
+            //    parentWidth = Parent.Width;
+            //    parentHeight = Parent.Height;
+            //}
+
+            if (this.Parent != null)
             {
                 parentWidth = Parent.Width;
                 parentHeight = Parent.Height;
             }
+            else if (this.ParentGue != null && this.ParentGue.mContainedObjectAsRenderable != null)
+            {
+                parentWidth = this.ParentGue.mContainedObjectAsIpso.Width;
+                parentHeight = this.ParentGue.mContainedObjectAsIpso.Height;
+
+            }
+
         }
 
         private void UpdateTextureCoordinates()
@@ -849,9 +905,304 @@ namespace Gum.Wireframe
 
         private void UpdatePosition(float parentWidth, float parentHeight)
         {
-            float unitOffsetX = this.X;
-            float unitOffsetY = this.Y;
+            UpdatePosition(parentWidth, parentHeight, wrap:false);
 
+            // but if the user wants to wrap, we should wrap
+            bool shouldTestForWrapping = true;
+
+            bool shouldWrap = shouldTestForWrapping && GetIfParentStacks() &&
+                ((ParentGue.ChildrenLayout == Gum.Managers.ChildrenLayout.LeftToRightStack && this.GetAbsoluteRight() > ParentGue.GetAbsoluteRight()) ||
+                (ParentGue.ChildrenLayout == Gum.Managers.ChildrenLayout.TopToBottomStack && this.GetAbsoluteBottom() > ParentGue.GetAbsoluteBottom()));
+
+            if (shouldWrap)
+            {
+                UpdatePosition(parentWidth, parentHeight, wrap:true);
+            }
+        }
+
+        private void UpdatePosition(float parentWidth, float parentHeight, bool wrap)
+        {
+
+            float parentOriginOffsetX;
+            float parentOriginOffsetY;
+            bool parentUsesSpecialLayout;
+            bool wasHandledX;
+            bool wasHandledY;
+
+            bool canWrap = true;
+
+            GetParentOffsets(canWrap, wrap, parentWidth, parentHeight, 
+                out parentOriginOffsetX, out parentOriginOffsetY, 
+                out wasHandledX, out wasHandledY);
+
+
+            float unitOffsetX = 0;
+            float unitOffsetY = 0;
+
+            AdjustOffsetsByUnits(parentWidth, parentHeight, ref unitOffsetX, ref unitOffsetY);
+
+
+            AdjustOffsetsByOrigin(ref unitOffsetX, ref unitOffsetY);
+
+            unitOffsetX += parentOriginOffsetX;
+            unitOffsetY += parentOriginOffsetY;
+            
+
+            this.mContainedObjectAsIpso.X = unitOffsetX;
+            this.mContainedObjectAsIpso.Y = unitOffsetY;
+        }
+
+        public void GetParentOffsets(out float parentOriginOffsetX, out float parentOriginOffsetY)
+        {
+            float parentWidth;
+            float parentHeight;
+            GetParentDimensions(out parentWidth, out parentHeight);
+
+            bool throwaway1;
+            bool throwaway2;
+
+            bool wrap = false;
+
+            GetParentOffsets(true, false, parentWidth, parentHeight, out parentOriginOffsetX, out parentOriginOffsetY,
+                out throwaway1, out throwaway2);
+        }
+
+        private void GetParentOffsets(bool canWrap, bool shouldWrap, float parentWidth, float parentHeight, out float parentOriginOffsetX, out float parentOriginOffsetY, out bool wasHandledX, out bool wasHandledY)
+        {
+            parentOriginOffsetX = 0;
+            parentOriginOffsetY = 0;
+
+            TryAdjustOffsetsByParentLayoutType(canWrap, shouldWrap, ref parentOriginOffsetX, ref parentOriginOffsetY, out wasHandledX, out wasHandledY);
+
+            wasHandledX = false;
+            wasHandledY = false;
+
+            AdjustParentOriginOffsetsByUnits(parentWidth, parentHeight, ref parentOriginOffsetX, ref parentOriginOffsetY,
+                ref wasHandledX, ref wasHandledY);
+
+        }
+
+        private void TryAdjustOffsetsByParentLayoutType(bool canWrap, bool shouldWrap, ref float unitOffsetX, ref float unitOffsetY, 
+            out bool wasHandledX, out bool wasHandledY)
+        {
+
+            wasHandledX = false;
+            wasHandledY = false;
+
+            if (GetIfParentStacks())
+            {
+                float whatToStackAfterX;
+                float whatToStackAfterY;
+
+                IPositionedSizedObject whatToStackAfter = GetWhatToStackAfter(canWrap, shouldWrap, out whatToStackAfterX, out whatToStackAfterY);
+
+
+
+                float xRelativeTo = 0;
+                float yRelativeTo = 0;
+
+                if(whatToStackAfter != null)
+                {
+                    switch (this.ParentGue.ChildrenLayout)
+                    {
+                        case Gum.Managers.ChildrenLayout.TopToBottomStack:
+
+                            if (canWrap)
+                            {
+                                xRelativeTo = whatToStackAfterX;
+                                wasHandledX = true;
+                            }
+
+                            yRelativeTo = whatToStackAfterY;
+                            wasHandledY = true;
+
+
+                            break;
+                        case Gum.Managers.ChildrenLayout.LeftToRightStack:
+                            xRelativeTo = whatToStackAfterX;
+                            wasHandledX = true;
+
+                            if (canWrap)
+                            {
+                                yRelativeTo = whatToStackAfterY;
+                                wasHandledY = true;
+                            }
+                            break;
+                        default:
+                            throw new NotImplementedException();
+
+                            break;
+                    }
+
+                }
+
+                unitOffsetX += xRelativeTo;
+                unitOffsetY += yRelativeTo;
+            }
+        }
+
+        private bool GetIfParentStacks()
+        {
+            return this.ParentGue != null && this.ParentGue.ChildrenLayout != Gum.Managers.ChildrenLayout.Regular;
+        }
+
+        private IPositionedSizedObject GetWhatToStackAfter(bool canWrap, bool shouldWrap, out float whatToStackAfterX, out float whatToStackAfterY)
+        {
+            int thisIndex = this.ParentGue.mWhatThisContains.IndexOf(this);
+
+            IPositionedSizedObject whatToStackAfter = null;
+            whatToStackAfterX = 0;
+            whatToStackAfterY = 0;
+            if (thisIndex > 0)
+            {
+                if (shouldWrap)
+                {
+                    int currentIndex = thisIndex - 1;
+                    IPositionedSizedObject minimumItem = this.ParentGue.mWhatThisContains[currentIndex];
+
+                    Func<IPositionedSizedObject, float> getAbsoluteValueFunc = null;
+
+                    if (ParentGue.ChildrenLayout == Gum.Managers.ChildrenLayout.LeftToRightStack)
+                    {
+                        getAbsoluteValueFunc = item => item.GetAbsoluteX();
+                    }
+                    else if(ParentGue.ChildrenLayout == Gum.Managers.ChildrenLayout.TopToBottomStack)
+                    {
+                        getAbsoluteValueFunc = item => item.GetAbsoluteY();
+                    }
+
+                    float minValue = getAbsoluteValueFunc(minimumItem);
+                    currentIndex--;
+
+                    while (currentIndex > -1)
+                    {
+                        var candidate = this.ParentGue.mWhatThisContains[currentIndex];
+
+                        if (getAbsoluteValueFunc(candidate) < minValue)
+                        {
+                            minValue = getAbsoluteValueFunc(candidate);
+                            minimumItem = candidate;
+                        }
+                        else
+                        {
+                            break;
+                        }
+
+                    }
+                    whatToStackAfter = minimumItem;
+
+                    if (ParentGue.ChildrenLayout == Gum.Managers.ChildrenLayout.LeftToRightStack)
+                    {
+                        whatToStackAfterX = 0;
+                        whatToStackAfterY = whatToStackAfter.Y + whatToStackAfter.Height;
+
+                    }
+                    else if (ParentGue.ChildrenLayout == Gum.Managers.ChildrenLayout.TopToBottomStack)
+                    {
+                        whatToStackAfterY = 0;
+                        whatToStackAfterX = whatToStackAfter.X + whatToStackAfter.Width;
+                    }
+                }
+                else
+                {
+                    whatToStackAfter = this.ParentGue.mWhatThisContains[thisIndex - 1] as IPositionedSizedObject;
+                    if (whatToStackAfter != null)
+                    {
+                        if (ParentGue.ChildrenLayout == Gum.Managers.ChildrenLayout.LeftToRightStack || shouldWrap)
+                        {
+                            whatToStackAfterX = whatToStackAfter.X + whatToStackAfter.Width;
+                        }
+                        else
+                        {
+                            whatToStackAfterX = whatToStackAfter.X;
+                        }
+
+                        if (ParentGue.ChildrenLayout == Gum.Managers.ChildrenLayout.TopToBottomStack || shouldWrap)
+                        {
+                            whatToStackAfterY = whatToStackAfter.Y + whatToStackAfter.Height;
+                        }
+                        else
+                        {
+                            whatToStackAfterY = whatToStackAfter.Y;
+                        }
+                    }
+                }
+            }
+
+
+            
+
+
+
+
+
+            return whatToStackAfter;
+        }
+
+        private void AdjustOffsetsByOrigin(ref float unitOffsetX, ref float unitOffsetY)
+        {
+
+            if (mXOrigin == HorizontalAlignment.Center)
+            {
+                unitOffsetX -= mContainedObjectAsIpso.Width / 2.0f;
+            }
+            else if (mXOrigin == HorizontalAlignment.Right)
+            {
+                unitOffsetX -= mContainedObjectAsIpso.Width;
+            }
+            // no need to handle left
+
+
+            if (mYOrigin == VerticalAlignment.Center)
+            {
+                unitOffsetY -= mContainedObjectAsIpso.Height / 2.0f;
+            }
+            else if (mYOrigin == VerticalAlignment.Bottom)
+            {
+                unitOffsetY -= mContainedObjectAsIpso.Height;
+            }
+            // no need to handle top
+        }
+
+        private void AdjustParentOriginOffsetsByUnits(float parentWidth, float parentHeight, 
+            ref float unitOffsetX, ref float unitOffsetY, ref bool wasHandledX, ref bool wasHandledY)
+        {
+            if (!wasHandledX)
+            {
+
+                if (mXUnits == GeneralUnitType.PixelsFromLarge)
+                {
+                    unitOffsetX = parentWidth;
+                    wasHandledX = true;
+                }
+                else if (mXUnits == GeneralUnitType.PixelsFromMiddle)
+                {
+                    unitOffsetX = parentWidth / 2.0f;
+                    wasHandledX = true;
+                }
+                //else if (mXUnits == GeneralUnitType.PixelsFromSmall)
+                //{
+                //    // no need to do anything
+                //}
+            }
+
+            if (!wasHandledY)
+            {
+                if (mYUnits == GeneralUnitType.PixelsFromLarge)
+                {
+                    unitOffsetY = parentHeight;
+                    wasHandledY = true;
+                }
+                else if (mYUnits == GeneralUnitType.PixelsFromMiddle)
+                {
+                    unitOffsetY = parentHeight / 2.0f;
+                    wasHandledY = true;
+                }
+            }
+        }
+
+        private void AdjustOffsetsByUnits(float parentWidth, float parentHeight, ref float unitOffsetX, ref float unitOffsetY)
+        {
             if (mXUnits == GeneralUnitType.Percentage)
             {
                 unitOffsetX = parentWidth * mX / 100.0f;
@@ -875,22 +1226,14 @@ namespace Gum.Wireframe
                     unitOffsetX = 64 * mX / 100.0f;
                 }
             }
-            else if (mXUnits == GeneralUnitType.PixelsFromLarge)
+            else
             {
-                unitOffsetX = mX + parentWidth;
+                unitOffsetX += mX;
             }
-            else if (mXUnits == GeneralUnitType.PixelsFromMiddle)
-            {
-                unitOffsetX = mX + parentWidth / 2.0f;
-            }
-            //else if (mXUnits == GeneralUnitType.PixelsFromSmall)
-            //{
-            //    // no need to do anything
-            //}
 
-            if (mYUnits == GeneralUnitType.Percentage)
+            if (mXUnits == GeneralUnitType.Percentage)
             {
-                unitOffsetY = parentHeight * mY / 100.0f;
+                unitOffsetX = parentWidth * mX / 100.0f;
             }
             else if (mYUnits == GeneralUnitType.PercentageOfFile)
             {
@@ -913,42 +1256,10 @@ namespace Gum.Wireframe
                     unitOffsetY = 64 * mY / 100.0f;
                 }
             }
-            else if (mYUnits == GeneralUnitType.PixelsFromLarge)
+            else
             {
-                unitOffsetY = mY + parentHeight;
+                unitOffsetY += mY;
             }
-            else if (mYUnits == GeneralUnitType.PixelsFromMiddle)
-            {
-                unitOffsetY = mY + parentHeight / 2.0f;
-            }
-
-
-
-
-            if (mXOrigin == HorizontalAlignment.Center)
-            {
-                unitOffsetX -= mContainedObjectAsIpso.Width / 2.0f;
-            }
-            else if (mXOrigin == HorizontalAlignment.Right)
-            {
-                unitOffsetX -= mContainedObjectAsIpso.Width;
-            }
-            // no need to handle left
-
-
-            if (mYOrigin == VerticalAlignment.Center)
-            {
-                unitOffsetY -= mContainedObjectAsIpso.Height / 2.0f;
-            }
-            else if (mYOrigin == VerticalAlignment.Bottom)
-            {
-                unitOffsetY -= mContainedObjectAsIpso.Height;
-            }
-            // no need to handle top
-
-
-            this.mContainedObjectAsIpso.X = unitOffsetX;
-            this.mContainedObjectAsIpso.Y = unitOffsetY;
         }
 
         private void UpdateDimensions(float parentWidth, float parentHeight)
@@ -1100,7 +1411,9 @@ namespace Gum.Wireframe
 
         public void AddToManagers()
         {
-            AddToManagers(SystemManagers.Default, null);
+
+                AddToManagers(SystemManagers.Default, null);
+            
         }
 
         public void AddToManagers(SystemManagers managers, Layer layer)
@@ -1114,7 +1427,30 @@ namespace Gum.Wireframe
             // If mManagers isn't null, it's already been added
             if (mManagers == null)
             {
+                // Set the managers first because it's used by the clip region
                 mManagers = managers;
+
+                // If this clips children...
+                if (ClipsChildren)
+                {
+                    // Then let's use a new Layer...
+                    if (mSortableLayer == null)
+                    {
+                        mSortableLayer = new SortableLayer();
+
+                    }
+
+                    Renderer.Self.AddLayer(mSortableLayer, layer);
+
+                    // Now we'll just set layer to mSortableLayer so everything goes on as normal
+                    layer = mSortableLayer;
+
+                    UpdateLayerScissor();
+                }
+
+
+
+
 
                 // This may be a Screen
                 if (mContainedObjectAsRenderable != null)
@@ -1185,6 +1521,11 @@ namespace Gum.Wireframe
             // if mManagers is null, then it was never added to the managers
             if (mManagers != null)
             {
+                if (mSortableLayer != null)
+                {
+                    mManagers.Renderer.RemoveLayer(this.mSortableLayer);
+                }
+
                 if (mContainedObjectAsRenderable is Sprite)
                 {
                     mManagers.SpriteManager.Remove(mContainedObjectAsRenderable as Sprite);
@@ -1209,6 +1550,7 @@ namespace Gum.Wireframe
                 {
                     throw new NotImplementedException();
                 }
+
 
                 CustomRemoveFromManagers();
             }
@@ -1363,5 +1705,7 @@ namespace Gum.Wireframe
                 mStates.Add(state.Name, state);
             }
         }
+
+        #endregion
     }
 }

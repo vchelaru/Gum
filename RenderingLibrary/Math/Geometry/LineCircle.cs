@@ -95,6 +95,7 @@ namespace RenderingLibrary.Math.Geometry
         {
             get { return true; }
         }
+
         #endregion
 
         #region Methods

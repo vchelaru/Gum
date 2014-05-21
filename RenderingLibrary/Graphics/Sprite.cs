@@ -179,6 +179,8 @@ namespace RenderingLibrary.Graphics
             set;
         }
 
+        public float Rotation { get; set; }
+
         public bool Animate
         {
             get;
@@ -314,7 +316,7 @@ namespace RenderingLibrary.Graphics
                 }
                 else
                 {
-                    Render(managers, spriteBatch, this, Texture, Color, SourceRectangle, FlipHorizontal, FlipVertical);
+                    Render(managers, spriteBatch, this, Texture, Color, SourceRectangle, FlipHorizontal, FlipVertical, Rotation);
                 }
             }
         }
@@ -482,7 +484,8 @@ namespace RenderingLibrary.Graphics
             IPositionedSizedObject ipso, Texture2D texture, Color color,
             Rectangle? sourceRectangle = null,
             bool flipHorizontal = false,
-            bool flipVertical = false
+            bool flipVertical = false,
+            float rotationInDegrees = 0
             )
         {
             Renderer renderer = null;
@@ -545,7 +548,7 @@ namespace RenderingLibrary.Graphics
                     new Vector2(ipso.GetAbsoluteX(), ipso.GetAbsoluteY()),
                     sourceRectangle,
                     color,
-                    0,
+                    Microsoft.Xna.Framework.MathHelper.TwoPi * -rotationInDegrees/360.0f,
                     Vector2.Zero,
                     scale,
                     effects,
@@ -573,7 +576,7 @@ namespace RenderingLibrary.Graphics
                     destinationRectangle,
                     sourceRectangle,
                     color,
-                    0,
+                    rotationInDegrees/360.0f,
                     Vector2.Zero,
                     effects,
                     0

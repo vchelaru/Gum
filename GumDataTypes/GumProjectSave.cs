@@ -34,6 +34,12 @@ namespace Gum.DataTypes
             set;
         }
 
+        public bool ShowOutlines
+        {
+            get;
+            set;
+        }
+
         public List<GuideRectangle> Guides
         {
             get;
@@ -95,6 +101,8 @@ namespace Gum.DataTypes
 
         public GumProjectSave()
         {
+            ShowOutlines = true;
+
             Guides = new List<GuideRectangle>();
 
             DefaultCanvasWidth = 800;

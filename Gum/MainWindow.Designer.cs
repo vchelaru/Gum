@@ -342,6 +342,7 @@
             this.ElementTreeImages.Images.SetKeyName(4, "screen.png");
             this.ElementTreeImages.Images.SetKeyName(5, "StandardElement.png");
             this.ElementTreeImages.Images.SetKeyName(6, "redExclamation.png");
+            this.ElementTreeImages.Images.SetKeyName(7, "state.png");
             // 
             // VariablesAndEverythingElse
             // 
@@ -386,9 +387,12 @@
             this.StateTreeView.AlwaysHaveOneNodeSelected = false;
             this.StateTreeView.ContextMenuStrip = this.StateContextMenuStrip;
             this.StateTreeView.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.StateTreeView.ImageIndex = 0;
+            this.StateTreeView.ImageList = this.ElementTreeImages;
             this.StateTreeView.Location = new System.Drawing.Point(0, 0);
             this.StateTreeView.MultiSelectBehavior = CommonFormsAndControls.MultiSelectBehavior.CtrlDown;
             this.StateTreeView.Name = "StateTreeView";
+            this.StateTreeView.SelectedImageIndex = 0;
             this.StateTreeView.SelectedNodes = ((System.Collections.Generic.List<System.Windows.Forms.TreeNode>)(resources.GetObject("StateTreeView.SelectedNodes")));
             this.StateTreeView.Size = new System.Drawing.Size(238, 116);
             this.StateTreeView.TabIndex = 0;

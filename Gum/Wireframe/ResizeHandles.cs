@@ -210,28 +210,13 @@ namespace Gum.Wireframe
             if (shouldShowOffsetLine)
             {
                 var gueParent = asGue.Parent as GraphicalUiElement;
-                mOriginLine.X = asGue.Parent.GetAbsoluteX();
-                mOriginLine.Y = asGue.Parent.GetAbsoluteY();
 
-                switch (asGue.XUnits)
-                {
-                    case GeneralUnitType.PixelsFromMiddle:
-                        mOriginLine.X += asGue.Parent.Width / 2;
-                        break;
-                    case GeneralUnitType.PixelsFromLarge:
-                        mOriginLine.X += asGue.Parent.Width;
-                        break;
-                }
+                float parentOriginOffsetX;
+                float parentOriginOffsetY;
+                asGue.GetParentOffsets(out parentOriginOffsetX, out parentOriginOffsetY);
 
-                switch (asGue.YUnits)
-                {
-                    case GeneralUnitType.PixelsFromMiddle:
-                        mOriginLine.Y += asGue.Parent.Height / 2;
-                        break;
-                    case GeneralUnitType.PixelsFromLarge:
-                        mOriginLine.Y += asGue.Parent.Height;
-                        break;
-                }
+                mOriginLine.X = parentOriginOffsetX + asGue.Parent.GetAbsoluteX();
+                mOriginLine.Y = parentOriginOffsetY + asGue.Parent.GetAbsoluteY();
 
                 mOriginLine.RelativePoint.X = asGue.AbsoluteX - mOriginLine.X;
                 mOriginLine.RelativePoint.Y = asGue.AbsoluteY - mOriginLine.Y;

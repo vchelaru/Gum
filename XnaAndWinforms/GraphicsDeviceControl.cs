@@ -194,30 +194,32 @@ namespace XnaAndWinforms
                     }
                 }
 
-                if (string.IsNullOrEmpty(mRenderError))
+
+                lock (this)
                 {
-                    try
+
+                    if (string.IsNullOrEmpty(mRenderError))
                     {
-                        if (XnaUpdate != null)
+                        try
                         {
-                            XnaUpdate();
-                        }
-                        // Draw the control using the GraphicsDevice.
-                        lock (this)
-                        {
+                            if (XnaUpdate != null)
+                            {
+                                XnaUpdate();
+                            }
                             Draw();
                             EndDraw();
                         }
+                        catch (Exception exception)
+                        {
+                            mRenderError = exception.ToString();
+                        }
                     }
-                    catch (Exception exception)
+                    
+                    else
                     {
-                        mRenderError = exception.ToString();
+                        // If BeginDraw failed, show an error message using System.Drawing.
+                        PaintUsingSystemDrawing(e.Graphics, mRenderError);
                     }
-                }
-                else
-                {
-                    // If BeginDraw failed, show an error message using System.Drawing.
-                    PaintUsingSystemDrawing(e.Graphics, mRenderError);
                 }
             }
 

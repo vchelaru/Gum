@@ -26,6 +26,7 @@ namespace Gum.PropertyGridHelpers
             set;
         }
 
+
         public override System.ComponentModel.PropertyDescriptorCollection GetProperties(Attribute[] attributes)
         {
             PropertyDescriptorCollection pdc = mHelper.GetEmpty();
@@ -34,7 +35,7 @@ namespace Gum.PropertyGridHelpers
 
             mHelper.Include(GumProjectSave, "DefaultCanvasHeight", ref pdc);
             mHelper.Include(GumProjectSave, "DefaultCanvasWidth", ref pdc);
-
+            mHelper.Include(GumProjectSave, "ShowOutlines", ref pdc);
 
 
             return pdc;

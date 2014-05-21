@@ -20,27 +20,30 @@ namespace GumRuntime
 
             ElementSave instanceElement = ObjectFinder.Self.GetElementSave(instanceSave.BaseType);
 
-            var toReturn = ElementSaveExtensions.CreateGueForElement(instanceElement);
-
-            RecursiveVariableFinder rvf = new RecursiveVariableFinder(instanceSave, instanceSave.ParentContainer);
-            SetGraphicalUiElement(rvf, instanceSave.BaseType, toReturn, systemManagers);
-            toReturn.Name = instanceSave.Name;
-            toReturn.Tag = instanceSave;
-
-            var state = instanceSave.ParentContainer.DefaultState;
-
-
-
-            foreach (var variable in state.Variables.Where(item => item.SourceObject == instanceSave.Name))
+            GraphicalUiElement toReturn = null;
+            if (instanceElement != null)
             {
-                string propertyOnInstance = variable.Name.Substring(variable.Name.LastIndexOf('.') + 1);
+                toReturn = ElementSaveExtensions.CreateGueForElement(instanceElement);
 
-                if (toReturn.IsExposedVariable(propertyOnInstance))
+                RecursiveVariableFinder rvf = new RecursiveVariableFinder(instanceSave, instanceSave.ParentContainer);
+                SetGraphicalUiElement(rvf, instanceSave.BaseType, toReturn, systemManagers);
+                toReturn.Name = instanceSave.Name;
+                toReturn.Tag = instanceSave;
+
+                var state = instanceSave.ParentContainer.DefaultState;
+
+
+
+                foreach (var variable in state.Variables.Where(item => item.SourceObject == instanceSave.Name))
                 {
-                    toReturn.SetProperty(propertyOnInstance, variable.Value);
+                    string propertyOnInstance = variable.Name.Substring(variable.Name.LastIndexOf('.') + 1);
+
+                    if (toReturn.IsExposedVariable(propertyOnInstance))
+                    {
+                        toReturn.SetProperty(propertyOnInstance, variable.Value);
+                    }
                 }
             }
-
 
             return toReturn;
 

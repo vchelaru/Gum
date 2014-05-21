@@ -81,6 +81,7 @@ namespace RenderingLibrary.Graphics
             }
         }
 
+        public float Rotation { get; set; }
 
         public ICollection<IPositionedSizedObject> Children
         {
@@ -170,7 +171,7 @@ namespace RenderingLibrary.Graphics
 
                 Sprite.Render(managers, spriteBatch, this,
                     renderer.SinglePixelTexture,
-                    this.Color);
+                    this.Color, null, false, false, Rotation);
 
             }
         }

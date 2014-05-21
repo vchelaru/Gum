@@ -51,6 +51,11 @@ namespace Gum.Gui.Forms
             WireframeObjectManager.Self.UpdateGuides();
             WireframeObjectManager.Self.RefreshAll(true);
             PluginManager.Self.GuidesChanged();
+
+            if (ProjectState.Self.GumProjectSave != null)
+            {
+                GraphicalUiElement.ShowLineRectangles = ProjectState.Self.GumProjectSave.ShowOutlines;
+            }
             //EditingManager.Self.UpdateSelectedObjectsPositionAndDimensions();
         }
 

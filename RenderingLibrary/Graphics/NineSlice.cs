@@ -114,7 +114,7 @@ namespace RenderingLibrary.Graphics
         }
 
 
-
+        public float Rotation { get; set; }
 
 
         public string Name

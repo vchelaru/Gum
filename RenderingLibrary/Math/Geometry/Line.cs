@@ -26,6 +26,9 @@ namespace RenderingLibrary.Math.Geometry
 
         #region Properties
 
+
+        public float Rotation { get; set; }
+
         public string Name
         {
             get;
@@ -141,6 +144,7 @@ namespace RenderingLibrary.Math.Geometry
         {
             get { return true; }
         }
+
         #endregion
 
 

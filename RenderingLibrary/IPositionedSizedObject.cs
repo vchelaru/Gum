@@ -10,6 +10,7 @@ namespace RenderingLibrary
         float X { get; set; }
         float Y { get; set; }
         float Z { get; set; }
+        float Rotation { get; set; }
         float Width { get; set; }
         float Height { get; set; }
         string Name { get; set; }

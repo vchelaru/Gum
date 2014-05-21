@@ -25,6 +25,13 @@ namespace Gum.Managers
         DimensionsBased
     }
 
+    public enum ChildrenLayout
+    {
+        Regular,
+        TopToBottomStack,
+        LeftToRightStack
+
+    }
 
     public class StandardElementsManager
     {
@@ -126,7 +133,7 @@ namespace Gum.Managers
 
             stateSave.Variables.Add(new VariableSave { Type = "string", Value = "Default", Name = "State"
 #if GUM
-            , CustomTypeConverter = new AvailableStatesConverter()
+            , CustomTypeConverter = new AvailableStatesConverter(null)
 #endif            
             });
 
@@ -157,6 +164,7 @@ namespace Gum.Managers
             stateSave.Variables.Add(new VariableSave { Type = "bool", Value = true, Name = "Visible" });
             stateSave.Variables.Add(new VariableSave { Type = "bool", Value = false, Category = "Animation", Name = "Animate" });
 
+            //stateSave.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation" });
             stateSave.Variables.Add(new VariableSave { Type = "bool", Value = false, Category = "Flip", Name = "FlipHorizontal" });
             stateSave.Variables.Add(new VariableSave { Type = "bool", Value = false, Category = "Flip", Name = "FlipVertical" });
 
@@ -208,6 +216,8 @@ namespace Gum.Managers
             AddDimensionsVariables(stateSave, 150, 150, false);
 
             stateSave.Variables.Add(new VariableSave { Type = "bool", Value = true, Name = "Visible" });
+            stateSave.Variables.Add(new VariableSave { Type = "ChildrenLayout", Value = ChildrenLayout.Regular, Name = "Children Layout" });
+            stateSave.Variables.Add(new VariableSave { Type = "bool", Value = false, Name = "Clips Children" });
 #if GUM
             PluginManager.Self.ModifyDefaultStandardState("Container", stateSave);
 #endif
@@ -277,7 +287,7 @@ namespace Gum.Managers
 #endif
 
 #if GUM
-            stateSave.Variables.Add(new VariableSave { Type = "string", Value = "Default", Name = "State", CustomTypeConverter = new AvailableStatesConverter()});
+            stateSave.Variables.Add(new VariableSave { Type = "string", Value = "Default", Name = "State", CustomTypeConverter = new AvailableStatesConverter(null)});
 #endif
 
             ApplySortValuesFromOrderInState(stateSave);

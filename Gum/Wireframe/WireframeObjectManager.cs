@@ -174,34 +174,39 @@ namespace Gum.Wireframe
 
         private void ClearAll()
         {
-            foreach (LineRectangle rectangle in mLineRectangles)
+            foreach (var element in mGraphicalElements)
             {
-                ShapeManager.Self.Remove(rectangle);
+                element.RemoveFromManagers();
             }
+
+            //foreach (LineRectangle rectangle in mLineRectangles)
+            //{
+            //    ShapeManager.Self.Remove(rectangle);
+            //}
             mLineRectangles.Clear();
 
-            foreach (Sprite sprite in mSprites)
-            {
-                SpriteManager.Self.Remove(sprite);
-            }
+            //foreach (Sprite sprite in mSprites)
+            //{
+            //    SpriteManager.Self.Remove(sprite);
+            //}
             mSprites.Clear();
 
-            foreach (Text text in mTexts)
-            {
-                TextManager.Self.Remove(text);
-            }
+            //foreach (Text text in mTexts)
+            //{
+            //    TextManager.Self.Remove(text);
+            //}
             mTexts.Clear();
 
-            foreach (SolidRectangle solidRectangle in mSolidRectangles)
-            {
-                ShapeManager.Self.Remove(solidRectangle);
-            }
+            //foreach (SolidRectangle solidRectangle in mSolidRectangles)
+            //{
+            //    ShapeManager.Self.Remove(solidRectangle);
+            //}
             mSolidRectangles.Clear();
 
-            foreach (NineSlice nineSlice in mNineSlices)
-            {
-                SpriteManager.Self.Remove(nineSlice);
-            }
+            //foreach (NineSlice nineSlice in mNineSlices)
+            //{
+            //    SpriteManager.Self.Remove(nineSlice);
+            //}
             mNineSlices.Clear();
 
             mGraphicalElements.Clear();

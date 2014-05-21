@@ -290,7 +290,7 @@ namespace Gum.PropertyGridHelpers
 
             if (shouldInclude)
             {
-                shouldInclude = GetShouldIncludeBasedOnBaseType(defaultVariable, container, rootElementSave);
+                shouldInclude = GetShouldIncludeBasedOnBaseType(defaultVariable, container, currentInstance, rootElementSave);
             }
 
             if (shouldInclude)
@@ -409,7 +409,7 @@ namespace Gum.PropertyGridHelpers
             return shouldInclude;
         }
 
-        private static bool GetShouldIncludeBasedOnBaseType(VariableSave defaultVariable, ElementSave container, StandardElementSave rootElementSave)
+        private static bool GetShouldIncludeBasedOnBaseType(VariableSave defaultVariable, ElementSave container, InstanceSave instanceSave, StandardElementSave rootElementSave)
         {
             bool shouldInclude = false;
 
@@ -449,6 +449,22 @@ namespace Gum.PropertyGridHelpers
                     if (!shouldInclude && rootElementSave != null)
                     {
                         shouldInclude = rootElementSave.DefaultState.GetVariableSave(defaultVariable.Name) != null;
+                    }
+
+                    string nameWithoutState = null;
+                    if (!shouldInclude && defaultVariable.Name.EndsWith("State") && instanceSave != null)
+                    {
+                        nameWithoutState = defaultVariable.Name.Substring(0, defaultVariable.Name.Length - "State".Length);
+
+                        var instanceElement = ObjectFinder.Self.GetElementSave(instanceSave.BaseType);
+
+
+                        // See if this is a category:
+                        if (!string.IsNullOrEmpty(nameWithoutState) &&
+                            instanceElement != null && instanceElement.Categories.Any(item => item.Name == nameWithoutState))
+                        {
+                            shouldInclude = true;
+                        }
                     }
                 }
             }

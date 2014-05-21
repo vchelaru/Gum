@@ -100,6 +100,7 @@ namespace Gum.Wireframe
 
                 string guide = rvf.GetValue<string>("Guide");
                 SetGuideParent(null, rootIpso, guide, true);
+
             }
             List<GraphicalUiElement> newlyAdded = new List<GraphicalUiElement>();
 
@@ -140,6 +141,12 @@ namespace Gum.Wireframe
                 {
                     newlyAdded.Add(child);
                     mGraphicalElements.Add(child);
+
+                    // There is no GUE for the root, so each child is in charge of adding itself.
+                    if (rootIpso == null)
+                    {
+                        child.AddToManagers();
+                    }
                 }
             }
 
@@ -148,6 +155,11 @@ namespace Gum.Wireframe
 
             //);
             elementStack.Remove(elementStack.FirstOrDefault(item => item.Element == elementSave));
+
+            if (rootIpso != null)
+            {
+                rootIpso.AddToManagers();
+            }
         }
 
         private GraphicalUiElement CreateRepresentationForInstance(InstanceSave instance, InstanceSave parentInstance, List<ElementWithState> elementStack, GraphicalUiElement container)
@@ -308,8 +320,15 @@ namespace Gum.Wireframe
                 SetGuideParent(parentIpso, rootIpso, guide, false);
 
                 ElementWithState elementWithState = new ElementWithState(baseComponentSave);
-                var state = new DataTypes.RecursiveVariableFinder(instance, elementStack).GetValue("State") as string;
+                var tempRvf = new DataTypes.RecursiveVariableFinder(instance, elementStack);
+                var state = tempRvf.GetValue("State") as string;
                 elementWithState.StateName = state;
+
+                foreach (var category in baseComponentSave.Categories)
+                {
+                    elementWithState.CategorizedStates.Add(category.Name, tempRvf.GetValue<string>(category.Name + "State"));
+                }
+
                 elementWithState.InstanceName = instance.Name;
                 elementStack.Add(elementWithState);
 
@@ -401,8 +420,6 @@ namespace Gum.Wireframe
         {
             Sprite sprite = new Sprite(LoaderManager.Self.InvalidTexture);
 
-            // Add it to the manager first because the positioning code may need to access the source element/instance
-            SpriteManager.Self.Add(sprite);
             sprite.Name = name;
             sprite.Tag = tag;
 
@@ -450,8 +467,6 @@ namespace Gum.Wireframe
         {
             NineSlice nineSlice = new NineSlice();
 
-            // Add it to the manager first because the positioning code may need to access the source element/instance
-            SpriteManager.Self.Add(nineSlice);
             nineSlice.Name = name;
             nineSlice.Tag = tag;
 
@@ -510,8 +525,6 @@ namespace Gum.Wireframe
         private void InitializeSolidRectangle(SolidRectangle solidRectangle, string name)
         {
 
-            // Add it to the manager first because the positioning code may need to access the source element/instance
-            ShapeManager.Self.Add(solidRectangle);
             solidRectangle.Name = name;
             mSolidRectangles.Add(solidRectangle);
 
@@ -528,6 +541,11 @@ namespace Gum.Wireframe
             graphicalUiElement.SetContainedObject(lineRectangle);
 
             graphicalUiElement.SetGueValues(rvf);
+
+            // Right now I only set this value on GUEs for elements and not visual things like Sprites/Texts.
+            // This may change.
+            graphicalUiElement.ChildrenLayout = rvf.GetValue<ChildrenLayout>("Children Layout");
+            graphicalUiElement.ClipsChildren = rvf.GetValue<bool>("Clips Children");
 
             return graphicalUiElement;
         }
@@ -554,10 +572,14 @@ namespace Gum.Wireframe
             RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(instance, elementStack);
             
             lineRectangle.Visible = rvf.GetValue<bool>("Visible");
+            lineRectangle.LocalVisible = GraphicalUiElement.ShowLineRectangles;
 
             graphicalUiElement.SetContainedObject(lineRectangle);
 
             graphicalUiElement.SetGueValues(rvf);
+
+            graphicalUiElement.ChildrenLayout = rvf.GetValue<ChildrenLayout>("Children Layout");
+            graphicalUiElement.ClipsChildren = rvf.GetValue<bool>("Clips Children");
 
             return graphicalUiElement;
         }
@@ -565,8 +587,6 @@ namespace Gum.Wireframe
         {
             LineRectangle lineRectangle = new LineRectangle();
 
-            // Add it to the manager first because the positioning code may need to access the source element/instance
-            ShapeManager.Self.Add(lineRectangle);
             lineRectangle.Name = name;
             mLineRectangles.Add(lineRectangle);
             return lineRectangle;
@@ -630,8 +650,6 @@ namespace Gum.Wireframe
 
             text.RenderBoundary = ProjectManager.Self.GeneralSettingsFile.ShowTextOutlines;
 
-            // Add it to the manager first because the positioning code may need to access the source element/instance
-            TextManager.Self.Add(text);
             mTexts.Add(text);
 
             text.Alpha = rvf.GetValue<int>("Alpha") ;
@@ -773,6 +791,8 @@ namespace Gum.Wireframe
                     throw new Exception("This blend mode is not supported");
                 }
             }
+
+            sprite.Rotation = rvf.GetValue<float>("Rotation");
 
             SetSpriteTextureCoordinates(sprite, rvf);
 

@@ -310,6 +310,7 @@ namespace Gum.Wireframe
             mLayer = Renderer.AddLayer();
             mLayer.LayerCameraSettings = new LayerCameraSettings();
             mLayer.LayerCameraSettings.IsInScreenSpace = true;
+            mLayer.Name = "Ruler Layer";
         }
 
         private bool HandleMovingGuides(bool isCursorInWindow)

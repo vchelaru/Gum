@@ -216,78 +216,74 @@ namespace Gum.Managers
 
         private List<MemberCategory> GetCategories(ElementSave element, StateSave state, InstanceSave instance)
         {
-                List<MemberCategory> categories = new List<MemberCategory>();
+            List<MemberCategory> categories = new List<MemberCategory>();
 
+            mLastElement = element;
+            mLastState = state;
+            mLastInstance = instance;
 
-
-                mLastElement = element;
-                mLastState = state;
-                mLastInstance = instance;
-
-
-
-                var stateSave = SelectedState.Self.SelectedStateSave;
-                if (stateSave != null)
+            var stateSave = SelectedState.Self.SelectedStateSave;
+            if (stateSave != null)
+            {
+                categories.Clear();
+                var properties = mPropertyGridDisplayer.GetProperties(null);
+                foreach (InstanceSavePropertyDescriptor propertyDescriptor in properties)
                 {
-                    categories.Clear();
-                    var properties = mPropertyGridDisplayer.GetProperties(null);
-                    foreach (InstanceSavePropertyDescriptor propertyDescriptor in properties)
+                    StateReferencingInstanceMember srim;
+                    if (instance != null)
                     {
-                        StateReferencingInstanceMember srim;
-                        if (instance != null)
-                        {
-                            srim =
-                                new StateReferencingInstanceMember(propertyDescriptor, stateSave, instance.Name + "." + propertyDescriptor.Name, instance, element);
-                        }
-                        else
-                        {
-                            srim =
-                                new StateReferencingInstanceMember(propertyDescriptor, stateSave, propertyDescriptor.Name, instance, element);
-                        }
-
-                        srim.SetToDefault += ResetVariableToDefault;
-
-                        string category = propertyDescriptor.Category.Trim();
-
-                        var categoryToAddTo = categories.FirstOrDefault(item => item.Name == category);
-
-                        if (categoryToAddTo == null)
-                        {
-                            categoryToAddTo = new MemberCategory(category);
-                            categories.Add(categoryToAddTo);
-                        }
-
-                        categoryToAddTo.Members.Add(srim);
-
+                        srim =
+                            new StateReferencingInstanceMember(propertyDescriptor, stateSave, instance.Name + "." + propertyDescriptor.Name, instance, element);
+                    }
+                    else
+                    {
+                        srim =
+                            new StateReferencingInstanceMember(propertyDescriptor, stateSave, propertyDescriptor.Name, instance, element);
                     }
 
-                    foreach (var category in categories)
-                    {
-                        var enumerable = category.Members.OrderBy(item => ((StateReferencingInstanceMember)item).SortValue).ToList();
-                        category.Members.Clear();
+                    srim.SetToDefault += ResetVariableToDefault;
 
-                        foreach (var value in enumerable)
-                        {
-                            category.Members.Add(value);
-                        }
+                    string category = propertyDescriptor.Category.Trim();
+
+                    var categoryToAddTo = categories.FirstOrDefault(item => item.Name == category);
+
+                    if (categoryToAddTo == null)
+                    {
+                        categoryToAddTo = new MemberCategory(category);
+                        categories.Add(categoryToAddTo);
                     }
 
+                    categoryToAddTo.Members.Add(srim);
 
-                    MemberCategory categoryToMove = categories.FirstOrDefault(item => item.Name == "Position");
-                    if (categoryToMove != null)
-                    {
-                        categories.Remove(categoryToMove);
-                        categories.Insert(1, categoryToMove);
-                    }
+                }
 
-                    categoryToMove = categories.FirstOrDefault(item => item.Name == "Dimensions");
-                    if (categoryToMove != null)
+                foreach (var category in categories)
+                {
+                    var enumerable = category.Members.OrderBy(item => ((StateReferencingInstanceMember)item).SortValue).ToList();
+                    category.Members.Clear();
+
+                    foreach (var value in enumerable)
                     {
-                        categories.Remove(categoryToMove);
-                        categories.Insert(2, categoryToMove);
+                        category.Members.Add(value);
                     }
                 }
-                return categories;
+
+
+                MemberCategory categoryToMove = categories.FirstOrDefault(item => item.Name == "Position");
+                if (categoryToMove != null)
+                {
+                    categories.Remove(categoryToMove);
+                    categories.Insert(1, categoryToMove);
+                }
+
+                categoryToMove = categories.FirstOrDefault(item => item.Name == "Dimensions");
+                if (categoryToMove != null)
+                {
+                    categories.Remove(categoryToMove);
+                    categories.Insert(2, categoryToMove);
+                }
+            }
+            return categories;
 
         }
 

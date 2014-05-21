@@ -20,7 +20,9 @@ namespace RenderingLibrary.Graphics
     public class Renderer
     {
         #region Fields
-        
+
+        int mDrawCallsPerFrame = 0;
+
         List<Layer> mLayers = new List<Layer>();
         ReadOnlyCollection<Layer> mLayersReadOnly;
 
@@ -37,6 +39,8 @@ namespace RenderingLibrary.Graphics
         Texture2D mDottedLineTexture;
 
         public static object LockObject = new object();
+
+        bool mIsInSpriteBatchCall = false;
         #endregion
 
         #region Properties
@@ -169,9 +173,21 @@ namespace RenderingLibrary.Graphics
             return layer;
         }
 
+
+        public void AddLayer(SortableLayer sortableLayer, Layer masterLayer)
+        {
+            if (masterLayer == null)
+            {
+                masterLayer = LayersWritable[0];
+            }
+
+            masterLayer.Add(sortableLayer);
+        }
+
         public void Draw(SystemManagers managers)
         {
-            
+
+            mDrawCallsPerFrame = 0;
 
             // So that 2 controls don't render at the same time.
             lock (LockObject)
@@ -184,18 +200,34 @@ namespace RenderingLibrary.Graphics
 
                 foreach (Layer layer in mLayers)
                 {
-                    BeginSpriteBatch(mRenderStateVariables, layer);
+                    RenderLayer(managers, layer);
 
-                    layer.SortRenderables();
-
-                    foreach (IRenderable renderable in layer.Renderables)
-                    {
-                        AdjustRenderStates(mRenderStateVariables, layer, renderable);
-                        renderable.Render(mSpriteBatch, managers);
-                    }
-                    mSpriteBatch.End();
                 }
 
+            }
+        }
+
+        internal void RenderLayer(SystemManagers managers, Layer layer)
+        {
+            if (mIsInSpriteBatchCall)
+            {
+                mSpriteBatch.End();
+            }
+            BeginSpriteBatch(mRenderStateVariables, layer);
+            mIsInSpriteBatchCall = true;
+
+            layer.SortRenderables();
+
+            foreach (IRenderable renderable in layer.Renderables)
+            {
+                AdjustRenderStates(mRenderStateVariables, layer, renderable);
+                renderable.Render(mSpriteBatch, managers);
+            }
+
+            if (mIsInSpriteBatchCall)
+            {
+                mSpriteBatch.End();
+                mIsInSpriteBatchCall = false;
             }
         }
 
@@ -233,6 +265,71 @@ namespace RenderingLibrary.Graphics
         private void BeginSpriteBatch(RenderStateVariables renderStates, Layer layer)
         {
 
+            Matrix matrix = GetZoomAndMatrix(layer);
+
+            SamplerState samplerState = GetSamplerState(renderStates);
+
+            RasterizerState rasterizerState = GetRasterizerState(renderStates, layer);
+
+            mSpriteBatch.Begin(SpriteSortMode.Immediate, renderStates.BlendState, 
+                samplerState, 
+                DepthStencilState.Default, 
+                rasterizerState,
+                null, matrix);
+            mDrawCallsPerFrame++;
+        }
+
+        private RasterizerState GetRasterizerState(RenderStateVariables renderStates, Layer layer)
+        {
+            bool isFullscreen = layer.ScissorIpso == null;
+            RasterizerState rasterizer = new RasterizerState();
+            rasterizer.CullMode = CullMode.None;
+
+            if (isFullscreen)
+            {
+                rasterizer.ScissorTestEnable = false;
+
+            }
+            else
+            {
+                rasterizer.ScissorTestEnable = true;
+                mSpriteBatch.GraphicsDevice.ScissorRectangle = layer.GetScissorRectangleFor(mCamera);
+
+            }
+            return rasterizer;
+        }
+
+        private Microsoft.Xna.Framework.Graphics.SamplerState GetSamplerState(RenderStateVariables renderStates)
+        {
+            SamplerState samplerState;
+
+            if (renderStates.Wrap)
+            {
+                if (renderStates.Filtering)
+                {
+                    samplerState = SamplerState.LinearWrap;
+                }
+                else
+                {
+                    samplerState = SamplerState.PointWrap;
+                }
+            }
+            else
+            {
+                if (renderStates.Filtering)
+                {
+                    samplerState = SamplerState.LinearClamp;
+                }
+                else
+                {
+                    samplerState = SamplerState.PointClamp;
+                }
+            }
+            return samplerState;
+        }
+
+        private Matrix GetZoomAndMatrix(Layer layer)
+        {
             Matrix matrix;
 
             if (layer.LayerCameraSettings != null)
@@ -263,35 +360,7 @@ namespace RenderingLibrary.Graphics
                 matrix = Camera.GetTransformationMatrix();
                 CurrentZoom = Camera.Zoom;
             }
-
-            SamplerState samplerState;
-
-            if (renderStates.Wrap)
-            {
-                if (renderStates.Filtering)
-                {
-                    samplerState = SamplerState.LinearWrap;
-                }
-                else
-                {
-                    samplerState = SamplerState.PointWrap;
-                }
-            }
-            else
-            {
-                if (renderStates.Filtering)
-                {
-                    samplerState = SamplerState.LinearClamp;
-                }
-                else
-                {
-                    samplerState = SamplerState.PointClamp;
-                }
-            }
-
-            mSpriteBatch.Begin(SpriteSortMode.Immediate, renderStates.BlendState, samplerState, 
-                DepthStencilState.Default, RasterizerState.CullNone,
-                null, matrix);
+            return matrix;
         }
 
         internal void RemoveRenderable(IRenderable renderable)
@@ -305,7 +374,13 @@ namespace RenderingLibrary.Graphics
             }
         }
 
+        public void RemoveLayer(SortableLayer sortableLayer)
+        {
+            RemoveRenderable(sortableLayer);
+        }
+
         #endregion
+
 
     }
 }

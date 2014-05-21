@@ -29,6 +29,8 @@ namespace RenderingLibrary.Math.Geometry
 
         SystemManagers mManagers;
 
+        bool mVisible;
+
         #endregion
 
         #region Properties
@@ -79,6 +81,9 @@ namespace RenderingLibrary.Math.Geometry
             set;
         }
 
+
+        public float Rotation { get; set; }
+
         public float Width
         {
             get { return mWidth; }
@@ -120,8 +125,11 @@ namespace RenderingLibrary.Math.Geometry
         }
         public bool Visible
         {
-            get;
-            set;
+            get { return mVisible; }
+            set
+            {
+                mVisible = value;
+            }
         }
         public Color Color
         {
@@ -172,6 +180,7 @@ namespace RenderingLibrary.Math.Geometry
         {
             get { return true; }
         }
+
         #endregion
 
         #region Methods
@@ -233,6 +242,7 @@ namespace RenderingLibrary.Math.Geometry
         {
             if (AbsoluteVisible && LocalVisible)
             {
+                // todo - add rotation
                 RenderLinePrimitive(mLinePrimitive, spriteBatch, this, managers, IsDotted);
             }
         }
