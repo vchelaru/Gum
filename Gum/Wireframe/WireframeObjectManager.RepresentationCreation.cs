@@ -546,6 +546,7 @@ namespace Gum.Wireframe
             // This may change.
             graphicalUiElement.ChildrenLayout = rvf.GetValue<ChildrenLayout>("Children Layout");
             graphicalUiElement.ClipsChildren = rvf.GetValue<bool>("Clips Children");
+            graphicalUiElement.WrapsChildren = rvf.GetValue<bool>("Wraps Children");
 
             return graphicalUiElement;
         }
@@ -580,6 +581,7 @@ namespace Gum.Wireframe
 
             graphicalUiElement.ChildrenLayout = rvf.GetValue<ChildrenLayout>("Children Layout");
             graphicalUiElement.ClipsChildren = rvf.GetValue<bool>("Clips Children");
+            graphicalUiElement.WrapsChildren = rvf.GetValue<bool>("Wraps Children");
 
             return graphicalUiElement;
         }

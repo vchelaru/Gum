@@ -219,6 +219,7 @@
     <Compile Include="Undo\StateSaveMemento.cs" />
     <Compile Include="Undo\UndoObject.cs" />
     <Compile Include="Undo\UndoPlugin.cs" />
+    <Compile Include="Wireframe\CameraController.cs" />
     <Compile Include="Wireframe\EditingManager.cs" />
     <Compile Include="Wireframe\EditingManager.RightClick.cs" />
     <Compile Include="Wireframe\ElementWithState.cs" />

@@ -48,6 +48,8 @@ namespace Gum.Wireframe
         int mTextureHeight;
         bool mWrap;
 
+        bool mWrapsChildren = false;
+
         float mTextureWidthScale;
         float mTextureHeightScale;
 
@@ -588,6 +590,12 @@ namespace Gum.Wireframe
             }
         }
 
+        public bool WrapsChildren
+        {
+            get { return mWrapsChildren; }
+            set { mWrapsChildren = value; UpdateLayout(); }
+        }
+
         public bool ClipsChildren
         {
             get;
@@ -907,10 +915,8 @@ namespace Gum.Wireframe
         {
             UpdatePosition(parentWidth, parentHeight, wrap:false);
 
-            // but if the user wants to wrap, we should wrap
-            bool shouldTestForWrapping = true;
-
-            bool shouldWrap = shouldTestForWrapping && GetIfParentStacks() &&
+            
+            bool shouldWrap = GetIfParentStacks() && ParentGue.WrapsChildren &&
                 ((ParentGue.ChildrenLayout == Gum.Managers.ChildrenLayout.LeftToRightStack && this.GetAbsoluteRight() > ParentGue.GetAbsoluteRight()) ||
                 (ParentGue.ChildrenLayout == Gum.Managers.ChildrenLayout.TopToBottomStack && this.GetAbsoluteBottom() > ParentGue.GetAbsoluteBottom()));
 
@@ -929,7 +935,7 @@ namespace Gum.Wireframe
             bool wasHandledX;
             bool wasHandledY;
 
-            bool canWrap = true;
+            bool canWrap = ParentGue != null && ParentGue.WrapsChildren;
 
             GetParentOffsets(canWrap, wrap, parentWidth, parentHeight, 
                 out parentOriginOffsetX, out parentOriginOffsetY, 

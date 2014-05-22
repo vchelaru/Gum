@@ -217,6 +217,7 @@ namespace Gum.Managers
 
             stateSave.Variables.Add(new VariableSave { Type = "bool", Value = true, Name = "Visible" });
             stateSave.Variables.Add(new VariableSave { Type = "ChildrenLayout", Value = ChildrenLayout.Regular, Name = "Children Layout" });
+            stateSave.Variables.Add(new VariableSave { Type = "bool", Value = false, Name = "Wraps Children" });
             stateSave.Variables.Add(new VariableSave { Type = "bool", Value = false, Name = "Clips Children" });
 #if GUM
             PluginManager.Self.ModifyDefaultStandardState("Container", stateSave);

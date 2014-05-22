@@ -135,10 +135,24 @@ namespace RenderingLibrary.Graphics
         {
             var ipso = ScissorIpso;
 
-            int left = global::RenderingLibrary.Math.MathFunctions.RoundToInt(ipso.GetAbsoluteLeft() - camera.AbsoluteLeft);
-            int right = global::RenderingLibrary.Math.MathFunctions.RoundToInt(ipso.GetAbsoluteRight() - camera.AbsoluteLeft);
-            int top = global::RenderingLibrary.Math.MathFunctions.RoundToInt(ipso.GetAbsoluteTop() - camera.AbsoluteTop);
-            int bottom = global::RenderingLibrary.Math.MathFunctions.RoundToInt(ipso.GetAbsoluteBottom() - camera.AbsoluteTop);
+            float worldX = ipso.GetAbsoluteLeft();
+            float worldY = ipso.GetAbsoluteTop();
+
+            float screenX;
+            float screenY;
+            camera.WorldToScreen(worldX, worldY, out screenX, out screenY);
+
+            int left = global::RenderingLibrary.Math.MathFunctions.RoundToInt(screenX);
+            int top = global::RenderingLibrary.Math.MathFunctions.RoundToInt(screenY);
+
+            worldX = ipso.GetAbsoluteRight();
+            worldY = ipso.GetAbsoluteBottom();
+            camera.WorldToScreen(worldX, worldY, out screenX, out screenY);
+
+            int right = global::RenderingLibrary.Math.MathFunctions.RoundToInt(screenX);
+            int bottom = global::RenderingLibrary.Math.MathFunctions.RoundToInt(screenY);
+            
+
 
             left = System.Math.Max(0, left);
             top = System.Math.Max(0, top);

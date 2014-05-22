@@ -202,6 +202,7 @@ namespace Gum.Wireframe
                 Renderer.Self.SamplerState = SamplerState.PointWrap;
 
                 LoaderManager.Self.Initialize(null, "content/TestFont.fnt", Services, null);
+                CameraController.Self.Initialize(Cursor, Camera, mWireframeEditControl);
 
                 InputLibrary.Cursor.Self.Initialize(this);
                 InputLibrary.Keyboard.Self.Initialize(this);
@@ -210,17 +211,11 @@ namespace Gum.Wireframe
                 mScreenBounds.Width = 800;
                 mScreenBounds.Height = 600;
                 mScreenBounds.Color = ScreenBoundsColor;
-                ShapeManager.Self.Add(mScreenBounds, SelectionManager.Self.UiLayer);
-
-
-                Renderer.Self.Camera.X = Renderer.Self.GraphicsDevice.Viewport.Width / 2 - 30;
-                Renderer.Self.Camera.Y = Renderer.Self.GraphicsDevice.Viewport.Height / 2 - 30;
-                
+                ShapeManager.Self.Add(mScreenBounds, SelectionManager.Self.UiLayer);              
 
                 this.KeyDown += new KeyEventHandler(OnKeyDown);
                 this.KeyPress += new KeyPressEventHandler(OnKeyPress);
-                this.MouseWheel += new MouseEventHandler(HandleMouseWheel);
-
+                this.MouseWheel += new MouseEventHandler(CameraController.Self.HandleMouseWheel);
                 this.mTopRuler = new Ruler(this, null, InputLibrary.Cursor.Self);
                 mLeftRuler = new Ruler(this, null, InputLibrary.Cursor.Self);
                 mLeftRuler.RulerSide = RulerSide.Left;
@@ -256,35 +251,7 @@ namespace Gum.Wireframe
 
         }
 
-        void HandleMouseWheel(object sender, MouseEventArgs e)
-        {
-            float worldX = Cursor.GetWorldX();
-            float worldY = Cursor.GetWorldY();
 
-            float differenceX = Camera.X - worldX;
-            float differenceY = Camera.Y - worldY;
-
-            float oldZoom = Camera.Zoom;
-
-            if (e.Delta < 0)
-            {
-                mWireframeEditControl.ZoomOut();
-            }
-            else
-            {
-                mWireframeEditControl.ZoomIn();
-            }
-
-            float newDifferenceX = differenceX * oldZoom / Camera.Zoom;
-            float newDifferenceY = differenceY * oldZoom / Camera.Zoom;
-
-            Camera.X = worldX + newDifferenceX;
-            Camera.Y = worldY + newDifferenceY;
-
-
-            //Renderer.Self.Camera.X = worldX;
-            //Renderer.Self.Camera.Y = worldY;
-        }
 
         #endregion
 
@@ -312,7 +279,7 @@ namespace Gum.Wireframe
 
                     InputLibrary.Cursor.Self.Activity(TimeManager.Self.CurrentTime);
                     InputLibrary.Keyboard.Self.Activity();
-                    CameraMovementAndZoomActivity();
+                    CameraController.Self.CameraMovementAndZoomActivity();
                     if (Cursor.PrimaryPush)
                     {
                         int m = 3;
@@ -357,22 +324,6 @@ namespace Gum.Wireframe
                 mScreenBounds.Height = ProjectManager.Self.GumProjectSave.DefaultCanvasHeight;
             }
         }
-
-
-        private void CameraMovementAndZoomActivity()
-        {
-
-            if (Cursor.IsInWindow)
-            {
-                if (Cursor.MiddleDown)
-                {
-                    Renderer.Self.Camera.Position.X -= InputLibrary.Cursor.Self.XChange / Renderer.Self.Camera.Zoom;
-                    Renderer.Self.Camera.Position.Y -= InputLibrary.Cursor.Self.YChange / Renderer.Self.Camera.Zoom;
-                }
-            }
-        }
-
-
 
         protected override void Draw()
         {

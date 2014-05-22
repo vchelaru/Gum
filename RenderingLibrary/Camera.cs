@@ -191,6 +191,17 @@ namespace RenderingLibrary
             worldY = transformed.Y;
         }
 
+        public void WorldToScreen(float worldX, float worldY, out float screenX, out float screenY)
+        {
+            Vector3 transformed = new Vector3(worldX, worldY, 0);
+            Matrix matrix = GetTransformationMatrix();
+
+            TransformVector(ref transformed, ref matrix);
+
+            screenX = transformed.X;
+            screenY = transformed.Y;
+        }
+
         public static void TransformVector(ref Vector3 vectorToTransform, ref Matrix matrixToTransformBy)
         {
 
