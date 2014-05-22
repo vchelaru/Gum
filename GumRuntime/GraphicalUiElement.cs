@@ -344,6 +344,45 @@ namespace Gum.Wireframe
             }
         }
 
+        public GraphicalUiElement ParentGue
+        {
+            get
+            {
+                return mWhatContainsThis;
+            }
+            set
+            {
+                if (mWhatContainsThis != null)
+                {
+                    mWhatContainsThis.mWhatThisContains.Remove(this); ;
+                }
+
+                mWhatContainsThis = value;
+
+                if (mWhatContainsThis != null)
+                {
+                    mWhatContainsThis.mWhatThisContains.Add(this);
+                }
+            }
+        }
+
+        public GraphicalUiElement EffectiveParentGue
+        {
+            get
+            {
+                if (Parent != null && Parent is GraphicalUiElement)
+                {
+                    return Parent as GraphicalUiElement;
+                }
+                else
+                {
+                    return ParentGue;
+                }
+            }
+        }
+
+
+
         public IRenderable RenderableComponent
         {
             get
@@ -368,27 +407,6 @@ namespace Gum.Wireframe
             }
         }
 
-        public GraphicalUiElement ParentGue
-        {
-            get
-            {
-                return mWhatContainsThis;
-            }
-            set
-            {
-                if (mWhatContainsThis != null)
-                {
-                    mWhatContainsThis.mWhatThisContains.Remove(this); ;
-                }
-
-                mWhatContainsThis = value;
-
-                if (mWhatContainsThis != null)
-                {
-                    mWhatContainsThis.mWhatThisContains.Add(this);
-                }
-            }
-        }
 
         public string Name
         {
@@ -915,10 +933,11 @@ namespace Gum.Wireframe
         {
             UpdatePosition(parentWidth, parentHeight, wrap:false);
 
+            var effectiveParent = EffectiveParentGue;
             
             bool shouldWrap = GetIfParentStacks() && ParentGue.WrapsChildren &&
-                ((ParentGue.ChildrenLayout == Gum.Managers.ChildrenLayout.LeftToRightStack && this.GetAbsoluteRight() > ParentGue.GetAbsoluteRight()) ||
-                (ParentGue.ChildrenLayout == Gum.Managers.ChildrenLayout.TopToBottomStack && this.GetAbsoluteBottom() > ParentGue.GetAbsoluteBottom()));
+                ((effectiveParent.ChildrenLayout == Gum.Managers.ChildrenLayout.LeftToRightStack && this.GetAbsoluteRight() > effectiveParent.GetAbsoluteRight()) ||
+                (effectiveParent.ChildrenLayout == Gum.Managers.ChildrenLayout.TopToBottomStack && this.GetAbsoluteBottom() > effectiveParent.GetAbsoluteBottom()));
 
             if (shouldWrap)
             {
@@ -931,11 +950,10 @@ namespace Gum.Wireframe
 
             float parentOriginOffsetX;
             float parentOriginOffsetY;
-            bool parentUsesSpecialLayout;
             bool wasHandledX;
             bool wasHandledY;
 
-            bool canWrap = ParentGue != null && ParentGue.WrapsChildren;
+            bool canWrap = EffectiveParentGue != null && EffectiveParentGue.WrapsChildren;
 
             GetParentOffsets(canWrap, wrap, parentWidth, parentHeight, 
                 out parentOriginOffsetX, out parentOriginOffsetY, 
@@ -1009,7 +1027,7 @@ namespace Gum.Wireframe
 
                 if(whatToStackAfter != null)
                 {
-                    switch (this.ParentGue.ChildrenLayout)
+                    switch (this.EffectiveParentGue.ChildrenLayout)
                     {
                         case Gum.Managers.ChildrenLayout.TopToBottomStack:
 
@@ -1049,12 +1067,27 @@ namespace Gum.Wireframe
 
         private bool GetIfParentStacks()
         {
-            return this.ParentGue != null && this.ParentGue.ChildrenLayout != Gum.Managers.ChildrenLayout.Regular;
+            return this.EffectiveParentGue != null && this.EffectiveParentGue.ChildrenLayout != Gum.Managers.ChildrenLayout.Regular;
         }
+
+        static List<IPositionedSizedObject> mWhatToStackAfterList = new List<IPositionedSizedObject>();
 
         private IPositionedSizedObject GetWhatToStackAfter(bool canWrap, bool shouldWrap, out float whatToStackAfterX, out float whatToStackAfterY)
         {
-            int thisIndex = this.ParentGue.mWhatThisContains.IndexOf(this);
+            var parentGue = this.EffectiveParentGue;
+
+            int thisIndex = 0;
+            mWhatToStackAfterList.Clear();
+            
+            if (this.Parent == null)
+            {
+                mWhatToStackAfterList.AddRange(this.ParentGue.mWhatThisContains);
+            }
+            else if(this.Parent is GraphicalUiElement)
+            {
+                mWhatToStackAfterList.AddRange(this.Parent.Children);
+            }
+            thisIndex = mWhatToStackAfterList.IndexOf(this);
 
             IPositionedSizedObject whatToStackAfter = null;
             whatToStackAfterX = 0;
@@ -1064,15 +1097,15 @@ namespace Gum.Wireframe
                 if (shouldWrap)
                 {
                     int currentIndex = thisIndex - 1;
-                    IPositionedSizedObject minimumItem = this.ParentGue.mWhatThisContains[currentIndex];
+                    IPositionedSizedObject minimumItem = mWhatToStackAfterList[currentIndex];
 
                     Func<IPositionedSizedObject, float> getAbsoluteValueFunc = null;
 
-                    if (ParentGue.ChildrenLayout == Gum.Managers.ChildrenLayout.LeftToRightStack)
+                    if (parentGue.ChildrenLayout == Gum.Managers.ChildrenLayout.LeftToRightStack)
                     {
                         getAbsoluteValueFunc = item => item.GetAbsoluteX();
                     }
-                    else if(ParentGue.ChildrenLayout == Gum.Managers.ChildrenLayout.TopToBottomStack)
+                    else if (parentGue.ChildrenLayout == Gum.Managers.ChildrenLayout.TopToBottomStack)
                     {
                         getAbsoluteValueFunc = item => item.GetAbsoluteY();
                     }
@@ -1082,7 +1115,7 @@ namespace Gum.Wireframe
 
                     while (currentIndex > -1)
                     {
-                        var candidate = this.ParentGue.mWhatThisContains[currentIndex];
+                        var candidate = mWhatToStackAfterList[currentIndex];
 
                         if (getAbsoluteValueFunc(candidate) < minValue)
                         {
@@ -1097,13 +1130,13 @@ namespace Gum.Wireframe
                     }
                     whatToStackAfter = minimumItem;
 
-                    if (ParentGue.ChildrenLayout == Gum.Managers.ChildrenLayout.LeftToRightStack)
+                    if (parentGue.ChildrenLayout == Gum.Managers.ChildrenLayout.LeftToRightStack)
                     {
                         whatToStackAfterX = 0;
                         whatToStackAfterY = whatToStackAfter.Y + whatToStackAfter.Height;
 
                     }
-                    else if (ParentGue.ChildrenLayout == Gum.Managers.ChildrenLayout.TopToBottomStack)
+                    else if (parentGue.ChildrenLayout == Gum.Managers.ChildrenLayout.TopToBottomStack)
                     {
                         whatToStackAfterY = 0;
                         whatToStackAfterX = whatToStackAfter.X + whatToStackAfter.Width;
@@ -1111,10 +1144,10 @@ namespace Gum.Wireframe
                 }
                 else
                 {
-                    whatToStackAfter = this.ParentGue.mWhatThisContains[thisIndex - 1] as IPositionedSizedObject;
+                    whatToStackAfter = mWhatToStackAfterList[thisIndex - 1] as IPositionedSizedObject;
                     if (whatToStackAfter != null)
                     {
-                        if (ParentGue.ChildrenLayout == Gum.Managers.ChildrenLayout.LeftToRightStack || shouldWrap)
+                        if (parentGue.ChildrenLayout == Gum.Managers.ChildrenLayout.LeftToRightStack || shouldWrap)
                         {
                             whatToStackAfterX = whatToStackAfter.X + whatToStackAfter.Width;
                         }
@@ -1123,7 +1156,7 @@ namespace Gum.Wireframe
                             whatToStackAfterX = whatToStackAfter.X;
                         }
 
-                        if (ParentGue.ChildrenLayout == Gum.Managers.ChildrenLayout.TopToBottomStack || shouldWrap)
+                        if (parentGue.ChildrenLayout == Gum.Managers.ChildrenLayout.TopToBottomStack || shouldWrap)
                         {
                             whatToStackAfterY = whatToStackAfter.Y + whatToStackAfter.Height;
                         }
