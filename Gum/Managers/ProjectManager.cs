@@ -175,7 +175,7 @@ namespace Gum
 
             if (mGumProjectSave != null)
             {
-                mGumProjectSave.Initialize();
+                bool wasModified = mGumProjectSave.Initialize();
 
 
                 RecreateMissingStandardElements();
@@ -188,6 +188,11 @@ namespace Gum
 
 
                 GraphicalUiElement.ShowLineRectangles = mGumProjectSave.ShowOutlines;
+
+                if (wasModified)
+                {
+                    ProjectManager.Self.SaveProject(forceSaveContainedElements:true);
+                }
             }
 
             // Now that a new project is loaded, refresh the UI!

@@ -219,11 +219,11 @@ namespace Gum.DataTypes
                     case "Gum.Managers.TextureAddress":
                     case "TextureAddress":
                     
-                        avariableSave.Value = (TextureAddress)variableSave.Value;
+                        variableSave.Value = (TextureAddress)variableSave.Value;
                         break;
                     case "Gum.Managers.ChildrenLayout":         
                     case "ChildrenLayout":
-                        avariableSave.Value = (ChildrenLayout)variableSave.Value;
+                        variableSave.Value = (ChildrenLayout)variableSave.Value;
                         break;
                     default:
                         break;

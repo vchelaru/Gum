@@ -9,8 +9,16 @@ namespace Gum.DataTypes
 {
     public static class GumProjectSaveExtensionMethods
     {
-        public static void Initialize(this GumProjectSave gumProjectSave)
+        /// <summary>
+        /// Initializes the GumProjectSave for editing in Gum.  This means
+        /// adding any variables that are necessary, fixing enumerations, and
+        /// checking for other errors.
+        /// </summary>
+        /// <param name="gumProjectSave">The GumProjectSave</param>
+        public static bool Initialize(this GumProjectSave gumProjectSave)
         {
+            bool wasModified = false;
+
             gumProjectSave.ComponentReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
             gumProjectSave.ScreenReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
             gumProjectSave.StandardElementReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
@@ -29,7 +37,7 @@ namespace Gum.DataTypes
                 StateSave stateSave = StandardElementsManager.Self.GetDefaultStateFor(standardElementSave.Name);
                 // this will result in extra variables being
                 // added
-                standardElementSave.Initialize(stateSave);
+                wasModified = standardElementSave.Initialize(stateSave) || wasModified;
             }
 
             foreach (ScreenSave screenSave in gumProjectSave.Screens)
@@ -66,7 +74,7 @@ namespace Gum.DataTypes
                 componentSave.Initialize(StandardElementsManager.Self.DefaultStates["Component"]);
             }
 
-
+            return wasModified;
         }
 
         /// <summary>

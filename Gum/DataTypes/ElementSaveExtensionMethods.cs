@@ -45,8 +45,34 @@ namespace Gum.DataTypes
 
     public static class ElementSaveExtensionMethods
     {
-        public static void Initialize(this ElementSave elementSave, StateSave defaultState)
+        public static bool Initialize(this ElementSave elementSave, StateSave defaultState)
         {
+            bool wasModified = false;
+
+            if (AddAndModifyVariablesAccordingToDefault(elementSave, defaultState))
+            {
+                wasModified = true;
+            }
+
+            foreach (StateSave state in elementSave.AllStates)
+            {
+                state.ParentContainer = elementSave;
+                state.Initialize();
+
+            }
+
+            foreach (InstanceSave instance in elementSave.Instances)
+            {
+                instance.ParentContainer = elementSave;
+                instance.Initialize();
+            }
+
+            return wasModified;
+        }
+
+        private static bool AddAndModifyVariablesAccordingToDefault(ElementSave elementSave, StateSave defaultState)
+        {
+            bool wasModified = false;
             // Use States and not AllStates because we want to make sure we
             // have a default state.
             if (elementSave.States.Count == 0 && defaultState != null)
@@ -73,13 +99,15 @@ namespace Gum.DataTypes
 
                     if (existingVariable == null)
                     {
-                        // this type doesn't have this variable, so let's add it
-                        // August 2, 2012 
-                        // Shouldn't we clone it?
+                        wasModified = true;
                         elementSave.DefaultState.Variables.Add(variableSave.Clone());
                     }
                     else
                     {
+
+                        // All of these properties are only relevant to the
+                        // editor so we don't want to mark the object as modified
+                        // when these properties are set.
                         existingVariable.Category = variableSave.Category;
                         existingVariable.CustomTypeConverter = variableSave.CustomTypeConverter;
                         existingVariable.ExcludedValuesForEnum.Clear();
@@ -94,11 +122,14 @@ namespace Gum.DataTypes
 
                     if (existingList == null)
                     {
+                        wasModified = true;
                         // this type doesn't have this list yet, so let's add it
                         elementSave.DefaultState.VariableLists.Add(variableList.Clone());
                     }
                     else
                     {
+                        // See the VariableSave section on why we don't set
+                        // wasModified = true here
                         existingList.Category = variableList.Category;
                     }
                 }
@@ -145,18 +176,7 @@ namespace Gum.DataTypes
                 //elementSave.States.Add(new StateSave());
             }
 
-            foreach (StateSave state in elementSave.AllStates)
-            {
-                state.ParentContainer = elementSave;
-                state.Initialize();
-
-            }
-
-            foreach (InstanceSave instance in elementSave.Instances)
-            {
-                instance.ParentContainer = elementSave;
-                instance.Initialize();
-            }
+            return wasModified;
         }
 
         public static bool ContainsName(this List<StandardElementSave> list, string name)
