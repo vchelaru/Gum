@@ -626,7 +626,7 @@ namespace Gum.Wireframe
         public GraphicalUiElement()
             : this(null, null)
         {
-            ClipsChildren = true;
+
         }
 
         public GraphicalUiElement(IRenderable containedObject, GraphicalUiElement whatContainsThis)
@@ -1479,7 +1479,7 @@ namespace Gum.Wireframe
 
                     }
 
-                    Renderer.Self.AddLayer(mSortableLayer, layer);
+                    mManagers.Renderer.AddLayer(mSortableLayer, layer);
 
                     // Now we'll just set layer to mSortableLayer so everything goes on as normal
                     layer = mSortableLayer;

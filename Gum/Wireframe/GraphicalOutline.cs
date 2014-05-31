@@ -64,13 +64,13 @@ namespace Gum.Wireframe
                 if (nineSlice.TopTexture != null && nineSlice.BottomTexture != null && 
                     nineSlice.LeftTexture != null && nineSlice.RightTexture != null)
                 {
-                    topHeight = nineSlice.TopTexture.Height;
+                    topHeight = nineSlice.OutsideSpriteHeight;
 
-                    bottomHeight = nineSlice.BottomTexture.Height;
+                    bottomHeight = nineSlice.OutsideSpriteHeight;
 
-                    leftWidth = nineSlice.LeftTexture.Width;
+                    leftWidth = nineSlice.OutsideSpriteWidth;
 
-                    rightWidth = nineSlice.RightTexture.Width;
+                    rightWidth = nineSlice.OutsideSpriteWidth;
 
                     centerHeight = nineSlice.Height - (topHeight + bottomHeight);
                     centerWidth = nineSlice.Width - (leftWidth + rightWidth);

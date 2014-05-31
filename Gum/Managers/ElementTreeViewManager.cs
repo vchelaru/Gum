@@ -625,15 +625,14 @@ namespace Gum.Managers
             {
                 TreeNode parentTreeNode = GetTreeNodeFor(parent);
 
-                if (parentTreeNode == null)
+                // This could be null if the user started a new project or loaded a different project.
+                if (parentTreeNode != null)
                 {
-                    throw new NullReferenceException("Could not find a tree node for " + parent);
+
+                    TreeNode treeNode = GetTreeNodeFor(instanceSave, parentTreeNode);
+
+                    Select(treeNode);
                 }
-
-                TreeNode treeNode = GetTreeNodeFor(instanceSave, parentTreeNode);
-
-                Select(treeNode);
-
                 
             }
             else

@@ -271,9 +271,11 @@ namespace RenderingLibrary.Graphics
 
             RasterizerState rasterizerState = GetRasterizerState(renderStates, layer);
 
+            DepthStencilState depthStencilState = DepthStencilState.DepthRead;
+
             mSpriteBatch.Begin(SpriteSortMode.Immediate, renderStates.BlendState, 
-                samplerState, 
-                DepthStencilState.Default, 
+                samplerState,
+                depthStencilState, 
                 rasterizerState,
                 null, matrix);
             mDrawCallsPerFrame++;

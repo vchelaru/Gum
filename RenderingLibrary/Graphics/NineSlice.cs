@@ -342,7 +342,16 @@ namespace RenderingLibrary.Graphics
             get;
             private set;
         }
-        
+
+        public float OutsideSpriteWidth
+        {
+            get { return mTopLeftSprite.EffectiveWidth; }
+        }
+
+        public float OutsideSpriteHeight
+        {
+            get { return mTopLeftSprite.EffectiveHeight; }
+        }
 
         #endregion
 
@@ -473,6 +482,65 @@ namespace RenderingLibrary.Graphics
             Visible = true;
         }
 
+        public void SetSingleTexture(Texture2D texture)
+        {
+            TopLeftTexture = texture;
+            TopTexture = texture;
+            TopRightTexture = texture;
+
+            LeftTexture = texture;
+            CenterTexture = texture;
+            RightTexture = texture;
+
+            BottomLeftTexture = texture;
+            BottomTexture = texture;
+            BottomRightTexture = texture;
+
+
+                UpdateSourceRectanglesForSingleTexture(texture);
+        }
+
+        public void UpdateSourceRectanglesForSingleTexture(Texture2D texture)
+        {
+            if (texture != null)
+            {
+                int outsideWidth = (texture.Width + 1) / 3;
+                int insideWidth = texture.Width - (outsideWidth * 2);
+
+                int outsideHeight = (texture.Height + 1) / 3;
+                int insideHeight = texture.Height - (outsideHeight * 2);
+
+                mTopLeftSprite.SourceRectangle = new Rectangle(0, 0, outsideWidth, outsideHeight);
+                mTopSprite.SourceRectangle = new Rectangle(outsideWidth, 0, insideWidth, outsideHeight);
+                mTopRightSprite.SourceRectangle = new Rectangle(insideWidth + outsideWidth, 0, outsideWidth, outsideHeight);
+
+                mLeftSprite.SourceRectangle = new Rectangle(0, outsideHeight, outsideWidth, insideHeight);
+                mCenterSprite.SourceRectangle = new Rectangle(outsideWidth, outsideHeight, insideWidth, insideHeight);
+                mRightSprite.SourceRectangle = new Rectangle(outsideWidth + insideWidth, outsideHeight, outsideWidth, insideHeight);
+
+                mBottomLeftSprite.SourceRectangle = new Rectangle(0, outsideHeight + insideHeight, outsideWidth, outsideHeight);
+                mBottomSprite.SourceRectangle = new Rectangle(outsideWidth, outsideHeight + insideHeight, insideWidth, outsideHeight);
+                mBottomRightSprite.SourceRectangle = new Rectangle(outsideWidth + insideWidth, outsideHeight + insideHeight, outsideWidth, outsideHeight);
+            }
+
+        }
+
+        public void UpdateSourceRectanglesForMultipleTextures()
+        {
+            mTopLeftSprite.SourceRectangle = null;
+            mTopSprite.SourceRectangle = null;
+            mTopRightSprite.SourceRectangle = null;
+
+            mLeftSprite.SourceRectangle = null;
+            mCenterSprite.SourceRectangle = null;
+            mRightSprite.SourceRectangle = null;
+
+            mBottomLeftSprite.SourceRectangle = null;
+            mBottomSprite.SourceRectangle = null;
+            mBottomRightSprite.SourceRectangle = null;
+
+        }
+
         public void SetTexturesUsingPattern(string anyOf9Textures, SystemManagers managers)
         {
 
@@ -516,6 +584,7 @@ namespace RenderingLibrary.Graphics
 
         }
 
+
         
         public static string GetBareTextureForNineSliceTexture(string absoluteTexture)
         {
@@ -541,6 +610,8 @@ namespace RenderingLibrary.Graphics
         }
 
         #endregion
+
+
     }
 
 }

@@ -116,7 +116,7 @@ namespace Gum.DataTypes
                         {
                             VariableSave rootVariableSave = foundElementSave.DefaultState.GetVariableSave(variableSave.GetRootName());
 
-                            if (variableSave != null)
+                            if (rootVariableSave != null)
                             {
                                 return rootVariableSave.GetTypeConverter((ElementSave)null);
                             }

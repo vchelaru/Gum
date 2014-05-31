@@ -333,7 +333,7 @@ namespace Gum.Managers
 
                     string whyNotValid;
 
-                    if (!NameVerifier.Self.IsScreenNameValid(name, out whyNotValid))
+                    if (!NameVerifier.Self.IsScreenNameValid(name, null, out whyNotValid))
                     {
                         MessageBox.Show(whyNotValid);
                     }
@@ -393,7 +393,7 @@ namespace Gum.Managers
 
                     string whyNotValid;
 
-                    if (!NameVerifier.Self.IsComponentNameValid(name, out whyNotValid))
+                    if (!NameVerifier.Self.IsComponentNameValid(name, null, out whyNotValid))
                     {
                         MessageBox.Show(whyNotValid);
                     }

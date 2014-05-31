@@ -96,6 +96,8 @@ namespace Gum.DataTypes
 
 
             VariableSave variableSave = null;
+
+            // See if the variable is set by the container of the instance:
             foreach (var stateToPullFrom in statesToPullFrom)
             {
                 var possibleVariable = stateToPullFrom.GetVariableSave(instance.Name + "." + variable);
@@ -116,29 +118,12 @@ namespace Gum.DataTypes
             if ((variableSave == null || 
                 (onlyIfSetsValue && (variableSave.SetsValue == false || variableSave.Value == null))) && instanceBase != null)
             {
-                // create a new recursive variable finder:
-                RecursiveVariableFinder rvf = new RecursiveVariableFinder(instance, elementStack);
+                VariableSave foundVariableSave = TryGetVariableFromStatesOnInstance(instance, variable, instanceBase, statesToPullFrom);
 
-                // Let's see if this is in a non-default state
-                string thisState = null;
-                foreach (var stateToPullFrom in statesToPullFrom)
+                if (foundVariableSave != null)
                 {
-                    var foundStateVariable = stateToPullFrom.GetVariableSave(instance.Name + ".State");
-                    if (foundStateVariable != null && foundStateVariable.SetsValue)
-                    {
-                        thisState = foundStateVariable.Value as string;
-                    }
+                    variableSave = foundVariableSave;
                 }
-                StateSave instanceStateToPullFrom = instanceBase.DefaultState;
-
-                // if thisState is not null, then the state is being explicitly set, so let's try to get that state
-                if (!string.IsNullOrEmpty(thisState) && instanceBase.AllStates.Any(item => item.Name == thisState))
-                {
-                    instanceStateToPullFrom = instanceBase.AllStates.First(item => item.Name == thisState);
-                }
-                // Eventually use the instanceBase's current state value
-                variableSave = instanceStateToPullFrom.GetVariableRecursive(variable);
-
             }
 
             // I don't think we have to do this because we're going to copy over
@@ -169,6 +154,68 @@ namespace Gum.DataTypes
 
             return variableSave;
 
+        }
+
+        private static VariableSave TryGetVariableFromStatesOnInstance(InstanceSave instance, string variable, ElementSave instanceBase, IEnumerable<StateSave> statesToPullFrom)
+        {
+
+            string stateVariableName;
+            StateSave fallbackState;
+            List<StateSave> statesToLoopThrough;
+
+            VariableSave foundVariableSave = null;
+
+            foreach (var stateCategory in instanceBase.Categories)
+            {
+                stateVariableName = stateCategory.Name + "State";
+                fallbackState = null;
+                statesToLoopThrough = stateCategory.States;
+
+                foundVariableSave = TryGetVariableFromStateOnInstance(instance, variable, statesToPullFrom, 
+                    stateVariableName, fallbackState, statesToLoopThrough);
+            }
+
+            if (foundVariableSave == null)
+            {
+                stateVariableName = "State";
+                fallbackState = instanceBase.DefaultState;
+                statesToLoopThrough = instanceBase.States;
+
+                foundVariableSave = TryGetVariableFromStateOnInstance(instance, variable, statesToPullFrom, 
+                    stateVariableName, fallbackState, statesToLoopThrough);
+            }
+
+            return foundVariableSave;
+        }
+
+        private static VariableSave TryGetVariableFromStateOnInstance(InstanceSave instance, string variable, IEnumerable<StateSave> statesToPullFrom, string stateVariableName, StateSave fallbackState, List<StateSave> statesToLoopThrough)
+        {
+            VariableSave foundVariableSave = null;
+
+            // Let's see if this is in a non-default state
+            string thisState = null;
+            foreach (var stateToPullFrom in statesToPullFrom)
+            {
+                var foundStateVariable = stateToPullFrom.GetVariableSave(instance.Name + "." + stateVariableName);
+                if (foundStateVariable != null && foundStateVariable.SetsValue)
+                {
+                    thisState = foundStateVariable.Value as string;
+                }
+            }
+            StateSave instanceStateToPullFrom = fallbackState;
+
+            // if thisState is not null, then the state is being explicitly set, so let's try to get that state
+            if (!string.IsNullOrEmpty(thisState) && statesToLoopThrough.Any(item => item.Name == thisState))
+            {
+                instanceStateToPullFrom = statesToLoopThrough.First(item => item.Name == thisState);
+            }
+
+            if (instanceStateToPullFrom != null)
+            {
+                // Eventually use the instanceBase's current state value
+                foundVariableSave = instanceStateToPullFrom.GetVariableRecursive(variable);
+            }
+            return foundVariableSave;
         }
 
 

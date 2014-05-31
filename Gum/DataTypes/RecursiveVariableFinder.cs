@@ -156,7 +156,7 @@ namespace Gum.DataTypes
                     {
                         instanceName = mElementStack.Last().InstanceName;
                     }
-                    var allExposed = GetExposedVariablesForThisInstance(mInstanceSave, instanceName, mElementStack);
+                    var allExposed = GetExposedVariablesForThisInstance(mInstanceSave, instanceName, mElementStack, variableName);
 
                     bool onlyIfSetsValue = false;
 
@@ -173,7 +173,7 @@ namespace Gum.DataTypes
                     var found = mInstanceSave.GetVariableFromThisOrBase(mElementStack, variableName, false, onlyIfSetsValue);
                     if (found != null && !string.IsNullOrEmpty(found.ExposedAsName))
                     {
-                        var exposed = allExposed.FirstOrDefault(item => item.Name == variableName);
+                        var exposed = allExposed.FirstOrDefault();
 
                         if (exposed != null && exposed.Value != null)
                         {
@@ -208,7 +208,14 @@ namespace Gum.DataTypes
             throw new NotImplementedException();
         }
 
-        public List<VariableSave> GetExposedVariablesForThisInstance(DataTypes.InstanceSave instance, string parentInstanceName, List<ElementWithState> elementStack)
+        public List<VariableSave> GetExposedVariablesForThisInstance(DataTypes.InstanceSave instance, string parentInstanceName, 
+            List<ElementWithState> elementStack)
+        {
+            return GetExposedVariablesForThisInstance(instance, parentInstanceName, elementStack, null);
+        }
+
+        public List<VariableSave> GetExposedVariablesForThisInstance(DataTypes.InstanceSave instance, string parentInstanceName, 
+            List<ElementWithState> elementStack, string requiredName)
         {
             List<VariableSave> exposedVariables = new List<VariableSave>();
             if (elementStack.Count > 1)
@@ -216,22 +223,51 @@ namespace Gum.DataTypes
                 ElementWithState containerOfVariables = elementStack[elementStack.Count - 2];
                 ElementWithState definerOfVariables = elementStack[elementStack.Count - 1];
 
-                foreach (VariableSave variable in definerOfVariables.Element.DefaultState.Variables)
+                foreach (VariableSave variable in definerOfVariables.Element.DefaultState.Variables.Where(
+                    item => !string.IsNullOrEmpty(item.ExposedAsName) && item.GetRootName() == requiredName))
                 {
-                    if (!string.IsNullOrEmpty(variable.ExposedAsName) && variable.SourceObject == instance.Name)
+                    if (variable.SourceObject == instance.Name)
                     {
                         // This variable is exposed, let's see if the container does anything with it
 
-                        VariableSave foundVariable = containerOfVariables.StateSave.GetVariableRecursive(parentInstanceName + "." + variable.ExposedAsName);
+                        VariableSave foundVariable = containerOfVariables.StateSave.GetVariableRecursive(
+                            parentInstanceName + "." + variable.ExposedAsName);
 
                         if (foundVariable != null)
                         {
+                            if (!string.IsNullOrEmpty(foundVariable.ExposedAsName))
+                            {
+                                // This variable is itself exposed, so we should go up one level to see 
+                                // what's going on.
+                                var instanceInParent = containerOfVariables.Element.GetInstance(parentInstanceName);
+                                var parentparentInstanceName = containerOfVariables.InstanceName;
+
+                                List<ElementWithState> stackWithLastRemoved = new List<ElementWithState>();
+                                stackWithLastRemoved.AddRange(elementStack);
+                                stackWithLastRemoved.RemoveAt(stackWithLastRemoved.Count - 1);
+
+                                var exposedExposed = GetExposedVariablesForThisInstance(instanceInParent, parentparentInstanceName, 
+                                    stackWithLastRemoved,
+                                    // This used to be this:
+                                    //foundVariable.ExposedAsName
+                                    // But it should be this:
+                                    variable.ExposedAsName
+                                    );
+
+                                if (exposedExposed.Count != 0)
+                                {
+                                    foundVariable = exposedExposed.First();
+                                }
+
+                            }
+                            
                             VariableSave variableToAdd = new VariableSave();
                             variableToAdd.Type = variable.Type;
                             variableToAdd.Value = foundVariable.Value;
                             variableToAdd.SetsValue = foundVariable.SetsValue;
                             variableToAdd.Name = variable.Name.Substring(variable.Name.IndexOf('.') + 1);
                             exposedVariables.Add(variableToAdd);
+
                         }
 
                     }

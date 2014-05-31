@@ -871,8 +871,31 @@ namespace Gum.Wireframe
             string textureName = (string)rvf.GetValue("SourceFile");
             string absoluteTexture = ProjectManager.Self.MakeAbsoluteIfNecessary(textureName);
 
-            nineSlice.SetTexturesUsingPattern(absoluteTexture, null);
+            bool usePattern = false;
 
+            string withoutExtension = FileManager.RemoveExtension(absoluteTexture);
+            string toReturn = withoutExtension;
+            foreach (var kvp in NineSlice.PossibleNineSliceEndings)
+            {
+                if (withoutExtension.ToLower().EndsWith(kvp.Value.ToLower()))
+                {
+                    usePattern = true;
+                    break;
+                }
+            }
+
+            if (usePattern)
+            {
+                nineSlice.SetTexturesUsingPattern(absoluteTexture, null);
+            }
+            else
+            {
+                if (!string.IsNullOrEmpty(absoluteTexture))
+                {
+                    nineSlice.SetSingleTexture(LoaderManager.Self.Load(absoluteTexture, null));
+                }
+
+            }
             var color = GetColorFromRvf(rvf);
             nineSlice.Color = color;
 
