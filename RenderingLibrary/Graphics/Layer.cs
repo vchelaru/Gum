@@ -51,7 +51,7 @@ namespace RenderingLibrary.Graphics
             mRenderablesReadOnly = new ReadOnlyCollection<IRenderable>(mRenderables);
         }
 
-        internal void Add(IRenderable renderable)
+        public void Add(IRenderable renderable)
         {
             lock (mRenderables)
             {
@@ -59,7 +59,7 @@ namespace RenderingLibrary.Graphics
             }
         }
 
-        internal void Remove(IRenderable renderable)
+        public void Remove(IRenderable renderable)
         {
             mRenderables.Remove(renderable);
         }

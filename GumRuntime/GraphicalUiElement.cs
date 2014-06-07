@@ -240,6 +240,8 @@ namespace Gum.Wireframe
         /// </summary>
         SortableLayer mSortableLayer;
 
+        Layer mLayer;
+
         #endregion
 
         public GeneralUnitType XUnits
@@ -1270,7 +1272,7 @@ namespace Gum.Wireframe
                 unitOffsetX += mX;
             }
 
-            if (mXUnits == GeneralUnitType.Percentage)
+            if (mYUnits == GeneralUnitType.Percentage)
             {
                 unitOffsetX = parentWidth * mX / 100.0f;
             }
@@ -1466,6 +1468,8 @@ namespace Gum.Wireframe
             // If mManagers isn't null, it's already been added
             if (mManagers == null)
             {
+                mLayer = layer;
+
                 // Set the managers first because it's used by the clip region
                 mManagers = managers;
 
@@ -1546,6 +1550,41 @@ namespace Gum.Wireframe
         }
 
         partial void CustomRemoveFromManagers();
+
+        public void MoveToLayer(Layer layer)
+        {
+            var layerToRemoveFrom = mLayer;
+            if (mLayer == null)
+            {
+                layerToRemoveFrom = mManagers.Renderer.Layers[0];
+            }
+
+            var layerToAddTo = layer;
+            if (layerToAddTo == null)
+            {
+                layerToAddTo = mManagers.Renderer.Layers[0];
+            }
+
+            if (mSortableLayer != null)
+            {
+                throw new NotImplementedException();
+            }
+
+
+
+            // This may be a Screen
+            if (mContainedObjectAsRenderable != null)
+            {
+                layerToRemoveFrom.Remove(mContainedObjectAsRenderable);
+                layerToAddTo.Add(mContainedObjectAsRenderable);
+            }
+
+            foreach (var contained in this.ContainedElements)
+            {
+                contained.MoveToLayer(layer);
+            }
+
+        }
 
         public void RemoveFromManagers()
         {

@@ -75,6 +75,16 @@ namespace RenderingLibrary
             Renderer.Draw(this);
         }
 
+        public void Draw(Layer layer)
+        {
+            Renderer.Draw(this, layer);
+        }
+
+        public void Draw(IEnumerable<Layer> layers)
+        {
+            Renderer.Draw(this, layers);
+        }
+
 
         public void Initialize(GraphicsDevice graphicsDevice)
         {

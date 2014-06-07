@@ -15,7 +15,8 @@ namespace GumRuntime
 {
     public static class InstanceSaveExtensionMethods
     {
-        public static GraphicalUiElement ToGraphicalUiElement(this InstanceSave instanceSave, SystemManagers systemManagers)
+        public static GraphicalUiElement ToGraphicalUiElement(this InstanceSave instanceSave, SystemManagers systemManagers,
+            RecursiveVariableFinder rvf)
         {
 
             ElementSave instanceElement = ObjectFinder.Self.GetElementSave(instanceSave.BaseType);
@@ -25,7 +26,11 @@ namespace GumRuntime
             {
                 toReturn = ElementSaveExtensions.CreateGueForElement(instanceElement);
 
-                RecursiveVariableFinder rvf = new RecursiveVariableFinder(instanceSave, instanceSave.ParentContainer);
+                if (rvf == null)
+                {
+                    rvf = new RecursiveVariableFinder(instanceSave, instanceSave.ParentContainer);
+                }
+
                 SetGraphicalUiElement(rvf, instanceSave.BaseType, toReturn, systemManagers);
                 toReturn.Name = instanceSave.Name;
                 toReturn.Tag = instanceSave;
@@ -63,9 +68,12 @@ namespace GumRuntime
             {
                 ElementSave elementSave = ObjectFinder.Self.GetElementSave(baseType);
 
+
+
                 if (elementSave != null && elementSave is ComponentSave)
                 {
-                    ElementSaveExtensions.SetGraphicalUiElement(elementSave, graphicalUiElement, systemManagers);
+                    
+                    ElementSaveExtensions.SetGraphicalUiElement(elementSave, graphicalUiElement, systemManagers, rvf);
                 }
             }
             graphicalUiElement.SetGueValues(rvf);

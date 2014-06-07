@@ -150,12 +150,19 @@ namespace Gum.Managers
                         //selectedElement.Events.Add(eventSave);
                     }
 
-
+                    
 
                     EventInstanceMember instanceMember = new EventInstanceMember(
                         selectedElement,
                         selectedInstance,
                         eventSave);
+
+                    if (!string.IsNullOrEmpty(eventSave.ExposedAsName))
+                    {
+                        instanceMember.DisplayName = eventSave.GetExposedOrRootName() + " (exposed as " +
+                            eventSave.ExposedAsName + ")";
+                    }
+
 
                     mEventsDataGrid.Categories[0].Members.Add(instanceMember);
                 }

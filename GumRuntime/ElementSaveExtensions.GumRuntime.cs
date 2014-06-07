@@ -37,11 +37,20 @@ namespace GumRuntime
             return toReturn;
         }
 
-        public static GraphicalUiElement ToGraphicalUiElement(this ElementSave elementSave, SystemManagers systemManagers, bool addToManagers)
+
+        public static GraphicalUiElement ToGraphicalUiElement(this ElementSave elementSave, SystemManagers systemManagers,
+            bool addToManagers)
+        {
+            return elementSave.ToGraphicalUiElement(systemManagers, addToManagers, new RecursiveVariableFinder(elementSave.DefaultState));
+
+        }
+
+        public static GraphicalUiElement ToGraphicalUiElement(this ElementSave elementSave, SystemManagers systemManagers, 
+            bool addToManagers, RecursiveVariableFinder rvf)
         {
             GraphicalUiElement toReturn = CreateGueForElement(elementSave);
 
-            elementSave.SetGraphicalUiElement(toReturn, systemManagers);
+            elementSave.SetGraphicalUiElement(toReturn, systemManagers, rvf);
 
             //no layering support yet
             if (addToManagers)
@@ -52,9 +61,8 @@ namespace GumRuntime
             return toReturn;
         }
 
-        public static void SetGraphicalUiElement(this ElementSave elementSave, GraphicalUiElement toReturn, SystemManagers systemManagers)
+        public static void SetGraphicalUiElement(this ElementSave elementSave, GraphicalUiElement toReturn, SystemManagers systemManagers, RecursiveVariableFinder rvf)
         {
-            RecursiveVariableFinder rvf = new RecursiveVariableFinder(elementSave.DefaultState);
 
             InstanceSaveExtensionMethods.SetGraphicalUiElement(rvf, elementSave.BaseType,
                 toReturn, systemManagers);
@@ -75,9 +83,24 @@ namespace GumRuntime
 
             bool isScreen = elementSave is ScreenSave;
 
+            InstanceSave instanceToRestore = null;
+
+            if (rvf.ContainerType == RecursiveVariableFinder.VariableContainerType.InstanceSave)
+            {
+                instanceToRestore = rvf.PopInstance();
+
+                var toPush = new ElementWithState(elementSave);
+                toPush.InstanceName = instanceToRestore.Name;
+
+                rvf.PushElement(toPush);
+            }
+
+
             foreach (var instance in elementSave.Instances)
             {
-                var childGue = instance.ToGraphicalUiElement(systemManagers);
+                rvf.PushInstance(instance);
+
+                var childGue = instance.ToGraphicalUiElement(systemManagers, rvf);
 
                 if (childGue != null)
                 {
@@ -94,10 +117,39 @@ namespace GumRuntime
                         childGue.ApplyState(state);
                     }
                 }
+
+                rvf.PopInstance();
             }
 
 
+            // instances have been created, let's do the attachment:
+            foreach (var instance in elementSave.Instances)
+            {
+                rvf.PushInstance(instance);
+                var parentValue = rvf.GetValue<string>("Parent");
 
+                if (!string.IsNullOrEmpty(parentValue))
+                {
+                    var instanceGue = toReturn.GetGraphicalUiElementByName(instance.Name);
+
+                    if (instanceGue != null)
+                    {
+                        var potentialParent = toReturn.GetGraphicalUiElementByName(parentValue);
+                        if (potentialParent != null)
+                        {
+                            instanceGue.Parent = potentialParent;
+                        }
+                    }
+                }
+                rvf.PopInstance();
+            }
+
+
+            if (instanceToRestore != null)
+            {
+                rvf.PopElement();
+                rvf.PushInstance(instanceToRestore);
+            }
         }
 
 

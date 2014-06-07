@@ -51,6 +51,10 @@ namespace RenderingLibrary.Graphics
             private set;
         }
 
+        public Layer MainLayer
+        {
+            get { return mLayers[0]; }
+        }
 
         internal List<Layer> LayersWritable
         {
@@ -186,9 +190,27 @@ namespace RenderingLibrary.Graphics
 
         public void Draw(SystemManagers managers)
         {
-
             mDrawCallsPerFrame = 0;
 
+            Draw(managers, mLayers);
+        }
+
+        public void Draw(SystemManagers managers, Layer layer)
+        {
+            // So that 2 controls don't render at the same time.
+            lock (LockObject)
+            {
+                mCamera.UpdateClient();
+
+                mRenderStateVariables.BlendState = BlendState.NonPremultiplied;
+                mRenderStateVariables.Wrap = false;
+
+                RenderLayer(managers, layer);
+            }
+        }
+
+        public void Draw(SystemManagers managers, IEnumerable<Layer> layers)
+        {
             // So that 2 controls don't render at the same time.
             lock (LockObject)
             {
@@ -198,7 +220,7 @@ namespace RenderingLibrary.Graphics
                 mRenderStateVariables.Wrap = false;
 
 
-                foreach (Layer layer in mLayers)
+                foreach (Layer layer in layers)
                 {
                     RenderLayer(managers, layer);
 
@@ -379,6 +401,11 @@ namespace RenderingLibrary.Graphics
         public void RemoveLayer(SortableLayer sortableLayer)
         {
             RemoveRenderable(sortableLayer);
+        }
+
+        public void RemoveLayer(Layer layer)
+        {
+            mLayers.Remove(layer);
         }
 
         #endregion
