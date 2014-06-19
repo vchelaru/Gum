@@ -202,10 +202,17 @@ namespace RenderingLibrary.Graphics
             {
                 mCamera.UpdateClient();
 
+                var oldSampler = GraphicsDevice.SamplerStates[0];
+
                 mRenderStateVariables.BlendState = BlendState.NonPremultiplied;
                 mRenderStateVariables.Wrap = false;
 
                 RenderLayer(managers, layer);
+
+                if (oldSampler != null)
+                {
+                    GraphicsDevice.SamplerStates[0] = oldSampler;
+                }
             }
         }
 
@@ -215,6 +222,7 @@ namespace RenderingLibrary.Graphics
             lock (LockObject)
             {
                 mCamera.UpdateClient();
+
 
                 mRenderStateVariables.BlendState = BlendState.NonPremultiplied;
                 mRenderStateVariables.Wrap = false;

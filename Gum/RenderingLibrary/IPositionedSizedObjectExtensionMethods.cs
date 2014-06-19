@@ -117,7 +117,7 @@ namespace Gum.RenderingLibrary
 
             while (parent != null)
             {
-                if (parent.Tag is ElementSave)
+                if (parent.Tag is ElementSave || parent.Tag == null)
                 {
                     // we found it, so break!
                     break;
@@ -146,7 +146,16 @@ namespace Gum.RenderingLibrary
             }
             else
             {
-                return parent.GetAttachmentQualifiedName(elementStack) + "." + ipso.Name;
+                var parentName = parent.GetAttachmentQualifiedName(elementStack);
+                if (!string.IsNullOrEmpty(parentName))
+                {
+                    return parentName + "." + ipso.Name;
+                }
+                else
+                {
+                    return ipso.Name;
+
+                }
             }
 
         }

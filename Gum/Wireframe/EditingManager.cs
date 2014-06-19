@@ -199,17 +199,44 @@ namespace Gum.Wireframe
                 }
                 else
                 {
-                    foreach (InstanceSave instance in SelectedState.Self.SelectedInstances)
+                    ElementWithState element = new ElementWithState(SelectedState.Self.SelectedElement);
+                    List<ElementWithState> stack = new List<ElementWithState>() { element };
+
+                    var selectedInstances = SelectedState.Self.SelectedInstances;
+
+                    foreach (InstanceSave instance in selectedInstances)
                     {
-                        if (xToMoveBy != 0)
+                        bool shouldSkip = false;
+                        // Make sure this isn't attached to another instance
+                        var representation = WireframeObjectManager.Self.GetRepresentation(instance, stack);
+
+                        if (representation != null && representation.Parent != null)
                         {
-                            hasChangeOccurred = true;
-                            float value = ModifyVariable("X", xToMoveBy, instance);
+                            var parentRepresentation = representation.Parent;
+
+                            if (parentRepresentation != null)
+                            {
+                                var parentInstance = WireframeObjectManager.Self.GetInstance(parentRepresentation, InstanceFetchType.InstanceInCurrentElement, stack);
+
+                                if (selectedInstances.Contains(parentInstance))
+                                {
+                                    shouldSkip = true;
+                                }
+                            }
                         }
-                        if (yToMoveBy != 0)
+
+                        if (!shouldSkip)
                         {
-                            hasChangeOccurred = true;
-                            float value = ModifyVariable("Y", yToMoveBy, instance);
+                            if (xToMoveBy != 0)
+                            {
+                                hasChangeOccurred = true;
+                                float value = ModifyVariable("X", xToMoveBy, instance);
+                            }
+                            if (yToMoveBy != 0)
+                            {
+                                hasChangeOccurred = true;
+                                float value = ModifyVariable("Y", yToMoveBy, instance);
+                            }
                         }
                     }
                 }

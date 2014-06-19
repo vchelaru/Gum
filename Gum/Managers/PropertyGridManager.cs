@@ -93,7 +93,7 @@ namespace Gum.Managers
             InitializeRightClickMenu();
         }
 
-        public async void RefreshUI()
+        public async void RefreshUI(bool force = false)
         {
             if (SelectedState.Self.SelectedInstances.GetCount() > 1)
             {
@@ -118,7 +118,7 @@ namespace Gum.Managers
 
 
                 //Task task = new Task(() => RefreshDataGrid(element, state, instance));
-                RefreshDataGrid(element, state, instance);
+                RefreshDataGrid(element, state, instance, force);
                 //task.Start();
 
                 //mDataGrid.Visibility = System.Windows.Visibility.Visible;
@@ -135,10 +135,11 @@ namespace Gum.Managers
         }
 
 
-        private async void RefreshDataGrid(ElementSave element, StateSave state, InstanceSave instance)
+        private async void RefreshDataGrid(ElementSave element, StateSave state, InstanceSave instance, bool force = false)
         {
 
-            bool hasChangedObjectShowing = element != mLastElement || instance != mLastInstance || state != mLastState;
+            bool hasChangedObjectShowing = element != mLastElement || instance != mLastInstance || state != mLastState ||
+                force;
             if (hasChangedObjectShowing)
             {
                 List<MemberCategory> categories = GetCategories(element, state, instance);

@@ -156,7 +156,8 @@ namespace Gum.PropertyGridHelpers
         {
             get
             {
-                return mStateSave.Variables.FirstOrDefault(item => item.Name == mVariableName);
+                return mStateSave.Variables.FirstOrDefault(item => 
+                    item.Name == mVariableName || item.ExposedAsName == mVariableName);
             }
         }
 
@@ -251,10 +252,9 @@ namespace Gum.PropertyGridHelpers
             {
                 variableSave.ExposedAsName = null;
                 GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
-
             }
 
-            PropertyGridManager.Self.RefreshUI();
+            PropertyGridManager.Self.RefreshUI(force:true);
         }
 
         private void HandleExposeVariableClick(object sender, System.Windows.RoutedEventArgs e)
@@ -308,6 +308,8 @@ namespace Gum.PropertyGridHelpers
                     variableSave.ExposedAsName = tiw.Result;
 
                     GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+
+                    GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);
                 }
             }
             else

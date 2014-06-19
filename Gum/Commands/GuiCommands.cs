@@ -27,9 +27,9 @@ namespace Gum.Commands
             
         }
 
-        internal void RefreshPropertyGrid()
+        internal void RefreshPropertyGrid(bool force = false)
         {
-            PropertyGridManager.Self.RefreshUI();
+            PropertyGridManager.Self.RefreshUI(force:force);
         }
     }
 }
