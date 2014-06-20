@@ -793,7 +793,7 @@ namespace Gum.Wireframe
 
         public void UpdateLayout(bool updateParent, bool updateChildren)
         {
-            if (!mIsLayoutSuspended && mContainedObjectAsIpso != null)
+            if (!mIsLayoutSuspended)
             {
                 // May 15, 2014
                 // This needs to be
@@ -801,7 +801,10 @@ namespace Gum.Wireframe
                 // doing the updates because
                 // we use foreaches internally
                 // in the updates.
-                mContainedObjectAsIpso.Parent = mParent;
+                if (mContainedObjectAsIpso != null)
+                {
+                    mContainedObjectAsIpso.Parent = mParent;
+                }
 
                 if (updateParent && this.ParentGue != null && 
                     (ParentGue.GetIfDimensionsDependOnChildren() || ParentGue.ChildrenLayout != Gum.Managers.ChildrenLayout.Regular ))
@@ -817,26 +820,40 @@ namespace Gum.Wireframe
                     float parentHeight;
                     GetParentDimensions(out parentWidth, out parentHeight);
 
-                    UpdateDimensions(parentWidth, parentHeight);
-
-                    if (mContainedObjectAsIpso is Text)
+                    if (mContainedObjectAsIpso != null)
                     {
-                        ((Text)mContainedObjectAsIpso).UpdateTextureToRender();
-                    }
-                    if (mContainedObjectAsRenderable is Sprite)
-                    {
-                        UpdateTextureCoordinates();
+                        UpdateDimensions(parentWidth, parentHeight);
+
+                        if (mContainedObjectAsIpso is Text)
+                        {
+                            ((Text)mContainedObjectAsIpso).UpdateTextureToRender();
+                        }
+                        if (mContainedObjectAsRenderable is Sprite)
+                        {
+                            UpdateTextureCoordinates();
+                        }
+
+                        UpdatePosition(parentWidth, parentHeight);
                     }
 
-                    UpdatePosition(parentWidth, parentHeight);
 
                     if (updateChildren)
                     {
-                        foreach (var child in this.Children)
+                        if (this.mContainedObjectAsIpso == null)
                         {
-                            if (child is GraphicalUiElement)
+                            foreach (var child in this.ContainedElements)
                             {
-                                (child as GraphicalUiElement).UpdateLayout(false, true);
+                                child.UpdateLayout(false, true);
+                            }
+                        }
+                        else
+                        {
+                            foreach (var child in this.Children)
+                            {
+                                if (child is GraphicalUiElement)
+                                {
+                                    (child as GraphicalUiElement).UpdateLayout(false, true);
+                                }
                             }
                         }
                     }
