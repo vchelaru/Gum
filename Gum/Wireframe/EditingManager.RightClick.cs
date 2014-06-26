@@ -366,7 +366,7 @@ namespace Gum.Wireframe
 
             if (copyType == CopyType.Instance)
             {
-                StoreCopiedInstance();
+                StoreCopiedInstances();
             }
             else if (copyType == CopyType.State)
             {
@@ -382,13 +382,17 @@ namespace Gum.Wireframe
             }
         }
 
-        private void StoreCopiedInstance()
+        private void StoreCopiedInstances()
         {
 
 
             if (SelectedState.Self.SelectedInstance != null)
             {
-                foreach (var instance in SelectedState.Self.SelectedInstances)
+                var element = SelectedState.Self.SelectedElement;
+
+                // When copying we want to grab all instances in the order that they are in their container.
+                // That way when they're pasted they are pasted in the right order
+                foreach (var instance in SelectedState.Self.SelectedInstances.OrderBy(item=>element.Instances.IndexOf(item)))
                 {
                     mCopiedInstances.Add(instance.Clone());
                 }

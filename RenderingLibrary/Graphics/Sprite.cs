@@ -310,7 +310,7 @@ namespace RenderingLibrary.Graphics
             if (this.AbsoluteVisible)
             {
                 bool shouldTileByMultipleCalls = this.Wrap && (this as IRenderable).Wrap == false;
-                if (shouldTileByMultipleCalls)
+                if (shouldTileByMultipleCalls && this.Texture != null)
                 {
                     RenderTiledSprite(spriteBatch, managers);
                 }
@@ -503,6 +503,11 @@ namespace RenderingLibrary.Graphics
             if (textureToUse == null)
             {
                 textureToUse = LoaderManager.Self.InvalidTexture;
+
+                if (textureToUse == null)
+                {
+                    return;
+                }
             }
 
             SpriteEffects effects = SpriteEffects.None;

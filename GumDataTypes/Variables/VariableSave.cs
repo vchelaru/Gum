@@ -152,6 +152,18 @@ namespace Gum.DataTypes.Variables
             }
         }
 
+        public static string GetRootName(string variableName)
+        {
+            if (variableName == null || variableName.Contains('.'))
+            {
+                return variableName.Substring(1 + variableName.IndexOf('.'));
+            }
+            else
+            {
+                return variableName;
+            }
+        }
+
 
         public VariableSave()
         {

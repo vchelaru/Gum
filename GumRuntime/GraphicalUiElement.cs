@@ -1461,6 +1461,10 @@ namespace Gum.Wireframe
 
             this.TextureAddress = rvf.GetValue<TextureAddress>("Texture Address");
 
+            this.ChildrenLayout = rvf.GetValue<ChildrenLayout>("Children Layout");
+            this.WrapsChildren = rvf.GetValue<bool>("Wraps Children");
+            this.ClipsChildren = rvf.GetValue<bool>("Clips Children");
+
             this.ResumeLayout();
         }
 
@@ -1727,7 +1731,15 @@ namespace Gum.Wireframe
                     ((Text)mContainedObjectAsRenderable).RawText = value as string;
                     handled = true;
                 }
-
+            }
+            else if (mContainedObjectAsRenderable is Sprite)
+            {
+                if (propertyName == "SourceFile")
+                {
+                    string valueAsString = value as string;
+                    ((Sprite)mContainedObjectAsRenderable).Texture = global::RenderingLibrary.Content.LoaderManager.Self.Load(valueAsString, SystemManagers.Default);
+                    handled = true;
+                }
             }
 
             // If special case didn't work, let's try reflection

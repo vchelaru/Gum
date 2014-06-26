@@ -126,7 +126,18 @@ namespace GumRuntime
                         string file = rvf.GetValue<string>("SourceFile");
                         NineSlice nineSlice = new NineSlice();
                         string relativeFile = rvf.GetValue<string>("SourceFile");
-                        nineSlice.SetTexturesUsingPattern(relativeFile, systemManagers);
+
+
+                        bool usePattern = NineSlice.GetIfShouldUsePattern(relativeFile);
+                        if (usePattern)
+                        {
+                            nineSlice.SetTexturesUsingPattern(relativeFile, systemManagers);
+                        }
+                        else
+                        {
+                            nineSlice.SetSingleTexture(LoaderManager.Self.Load(
+                                ToolsUtilities.FileManager.RelativeDirectory + relativeFile, systemManagers));
+                        }
 
                         SetAlphaAndColorValues(nineSlice, rvf);
                         nineSlice.Visible = rvf.GetValue<bool>("Visible");

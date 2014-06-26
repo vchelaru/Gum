@@ -110,7 +110,9 @@ namespace GumRuntime
                     }
                     childGue.ParentGue = toReturn;
 
-                    var state = rvf.GetValue<string>(childGue.Name + ".State");
+                    // I think we just pass "State"
+                    //var state = rvf.GetValue<string>(childGue.Name + ".State");
+                    var state = rvf.GetValue<string>("State");
 
                     if (!string.IsNullOrEmpty(state) && state != "Default")
                     {

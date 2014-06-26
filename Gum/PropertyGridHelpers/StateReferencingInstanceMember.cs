@@ -199,23 +199,7 @@ namespace Gum.PropertyGridHelpers
 
             DisplayName = RootVariableName;
 
-            if (this.VariableSave != null)
-            {
-                if (string.IsNullOrEmpty(VariableSave.ExposedAsName))
-                {
-
-                    ContextMenuEvents.Add("Expose Variable", HandleExposeVariableClick);
-                }
-                else
-                {
-                    ContextMenuEvents.Add("Un-expose Variable", HandleUnExposeVariableClick);
-                }
-            }
-            else
-            {
-                // Variable doesn't exist, so they can only expose it, not unexpose it.
-                ContextMenuEvents.Add("Expose Variable", HandleExposeVariableClick);
-            }
+            AddExposeVariableMenuOptions();
 
             // This could be slow since we have to check it for every variable in an object.
             // Maybe we'll want to pass this in to the function?
@@ -240,6 +224,34 @@ namespace Gum.PropertyGridHelpers
             if (standardVariable != null)
             {
                 this.SortValue = standardVariable.DesiredOrder;
+            }
+        }
+
+        private void AddExposeVariableMenuOptions()
+        {
+            if (this.VariableSave != null)
+            {
+                if (string.IsNullOrEmpty(VariableSave.ExposedAsName))
+                {
+
+                    ContextMenuEvents.Add("Expose Variable", HandleExposeVariableClick);
+                }
+                else
+                {
+                    ContextMenuEvents.Add("Un-expose Variable", HandleUnExposeVariableClick);
+                }
+            }
+            else
+            {
+                var rootName = Gum.DataTypes.Variables.VariableSave.GetRootName(mVariableName);
+
+                bool canExpose = rootName != "Name" && rootName != "Base Type";
+
+                if (canExpose)
+                {
+                    // Variable doesn't exist, so they can only expose it, not unexpose it.
+                    ContextMenuEvents.Add("Expose Variable", HandleExposeVariableClick);
+                }
             }
         }
 
@@ -280,41 +292,55 @@ namespace Gum.PropertyGridHelpers
                 string rawVariableName = this.RootVariableName;
 
                 ElementSave elementForInstance = ObjectFinder.Self.GetElementSave(instanceSave.BaseType);
-                string variableType = elementForInstance.DefaultState.GetVariableSave(rawVariableName).Type;
 
-                currentStateSave.SetValue(variableName, null, instanceSave, variableType);
+                var variableInDefault = elementForInstance.DefaultState.GetVariableSave(rawVariableName);
 
-                // Now the variable should be created so we can access it
-                variableSave = VariableSave;
+                if (variableInDefault != null)
+                {
+                    string variableType = variableInDefault.Type;
+
+                    currentStateSave.SetValue(variableName, null, instanceSave, variableType);
+
+                    // Now the variable should be created so we can access it
+                    variableSave = VariableSave;
+                }
             }
 
-            //tiw.Result = instanceSave.Name + variableSave.Name;
-            // We want to use the name without the dots.
-            // So something like TextInstance.Text would be
-            // TextInstanceText
-            tiw.Result = variableSave.Name.Replace(".", "");
-            DialogResult result = tiw.ShowDialog();
-
-            if (result == DialogResult.OK)
+            if (variableSave == null)
             {
-                string whyNot;
-                if (!NameVerifier.Self.IsExposedVariableNameValid(tiw.Result, SelectedState.Self.SelectedElement, out whyNot))
-                {
-                    MessageBox.Show(whyNot);
-                }
-                else
-                {
-
-                    variableSave.ExposedAsName = tiw.Result;
-
-                    GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
-
-                    GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);
-                }
+                MessageBox.Show("This variable cannot be exposed.");
             }
             else
             {
-                currentStateSave.Variables.Remove(variableSave);
+
+                //tiw.Result = instanceSave.Name + variableSave.Name;
+                // We want to use the name without the dots.
+                // So something like TextInstance.Text would be
+                // TextInstanceText
+                tiw.Result = variableSave.Name.Replace(".", "");
+                DialogResult result = tiw.ShowDialog();
+
+                if (result == DialogResult.OK)
+                {
+                    string whyNot;
+                    if (!NameVerifier.Self.IsExposedVariableNameValid(tiw.Result, SelectedState.Self.SelectedElement, out whyNot))
+                    {
+                        MessageBox.Show(whyNot);
+                    }
+                    else
+                    {
+
+                        variableSave.ExposedAsName = tiw.Result;
+
+                        GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+
+                        GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);
+                    }
+                }
+                else
+                {
+                    currentStateSave.Variables.Remove(variableSave);
+                }
             }
         }
 

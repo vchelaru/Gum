@@ -871,18 +871,12 @@ namespace Gum.Wireframe
             string textureName = (string)rvf.GetValue("SourceFile");
             string absoluteTexture = ProjectManager.Self.MakeAbsoluteIfNecessary(textureName);
 
-            bool usePattern = false;
-
             string withoutExtension = FileManager.RemoveExtension(absoluteTexture);
+
+            bool usePattern = NineSlice.GetIfShouldUsePattern(absoluteTexture);
+
             string toReturn = withoutExtension;
-            foreach (var kvp in NineSlice.PossibleNineSliceEndings)
-            {
-                if (withoutExtension.ToLower().EndsWith(kvp.Value.ToLower()))
-                {
-                    usePattern = true;
-                    break;
-                }
-            }
+
 
             if (usePattern)
             {

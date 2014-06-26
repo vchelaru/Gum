@@ -324,6 +324,7 @@ namespace Gum.ToolStates
             set
             {
                 mSelectedInstances.Clear();
+
                 foreach (var item in value)
                 {
                     mSelectedInstances.Add(item);
