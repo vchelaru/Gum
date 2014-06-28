@@ -548,6 +548,11 @@ namespace RenderingLibrary.Graphics
                     }
 
                     mTextureToRender = fontToUse.RenderToTexture2D(WrappedText, this.HorizontalAlignment, mManagers);
+
+                    if(mTextureToRender is RenderTarget2D)
+                    {
+                        (mTextureToRender as RenderTarget2D).ContentLost += delegate { mNeedsBitmapFontRefresh = true; };
+                    }
                 }
                 else if (mBitmapFont == null)
                 {

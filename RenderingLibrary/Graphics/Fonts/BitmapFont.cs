@@ -384,10 +384,127 @@ namespace RenderingLibrary.Graphics
 
         public Texture2D RenderToTexture2D(IEnumerable lines, HorizontalAlignment horizontalAlignment, SystemManagers managers)
         {
-            
+            bool useImageData = false;
+            if (useImageData)
+            {
+                return RenderToTexture2DUsingImageData(lines, horizontalAlignment, managers);
+            }
+            else
+            {
+                return RenderToTexture2DUsingRenderStates(lines, horizontalAlignment, managers);
 
+            }
+        }
+
+        private Texture2D RenderToTexture2DUsingRenderStates(IEnumerable lines, HorizontalAlignment horizontalAlignment, SystemManagers managers)
+        {
+            if(managers == null)
+            {
+                managers = SystemManagers.Default;
+            }
+
+            RenderTarget2D renderTarget = null;
+
+            using (SpriteBatch spriteBatch = new SpriteBatch(managers.Renderer.GraphicsDevice))
+            {
+
+                Point point = new Point();
+
+                int maxWidthSoFar = 0;
+                int requiredWidth = 0;
+                int requiredHeight = 0;
+
+                List<int> widths = new List<int>();
+
+                foreach (string line in lines)
+                {
+                    requiredHeight += LineHeightInPixels;
+                    requiredWidth = 0;
+
+                    requiredWidth = MeasureString(line);
+                    widths.Add(requiredWidth);
+                    maxWidthSoFar = System.Math.Max(requiredWidth, maxWidthSoFar);
+                }
+
+                const int MaxWidthAndHeight = 2048; // change this later?
+                maxWidthSoFar = System.Math.Min(maxWidthSoFar, MaxWidthAndHeight);
+                requiredHeight = System.Math.Min(requiredHeight, MaxWidthAndHeight);
+
+
+                if (maxWidthSoFar != 0)
+                {
+                    renderTarget = new RenderTarget2D(managers.Renderer.GraphicsDevice, maxWidthSoFar, requiredHeight);
+                    managers.Renderer.GraphicsDevice.SetRenderTarget(renderTarget);
+
+                    managers.Renderer.GraphicsDevice.Clear(Color.Transparent);
+                    spriteBatch.Begin();
+                    int lineNumber = 0;
+
+                    foreach (string line in lines)
+                    {
+                        point.X = 0;
+
+                        if (horizontalAlignment == HorizontalAlignment.Right)
+                        {
+                            point.X = maxWidthSoFar - widths[lineNumber];
+                        }
+                        else if (horizontalAlignment == HorizontalAlignment.Center)
+                        {
+                            point.X = (maxWidthSoFar - widths[lineNumber]) / 2;
+                        }
+
+                        foreach (char c in line)
+                        {
+                            BitmapCharacterInfo characterInfo = GetCharacterInfo(c);
+
+                            int sourceLeft = characterInfo.GetPixelLeft(Texture);
+                            int sourceTop = characterInfo.GetPixelTop(Texture);
+                            int sourceWidth = characterInfo.GetPixelRight(Texture) - sourceLeft;
+                            int sourceHeight = characterInfo.GetPixelBottom(Texture) - sourceTop;
+
+
+                            int distanceFromTop = characterInfo.GetPixelDistanceFromTop(LineHeightInPixels);
+
+                            // There could be some offset for this character
+                            int xOffset = characterInfo.GetPixelXOffset(LineHeightInPixels);
+                            point.X += xOffset;
+
+                            point.Y = lineNumber * LineHeightInPixels + distanceFromTop;
+
+                            Microsoft.Xna.Framework.Rectangle sourceRectangle = new Microsoft.Xna.Framework.Rectangle(
+                                sourceLeft, sourceTop, sourceWidth, sourceHeight);
+
+                            int pageIndex = characterInfo.PageNumber;
+
+                            Rectangle destinationRectangle = new Rectangle(point.X, point.Y, sourceWidth, sourceHeight);
+
+                            spriteBatch.Draw(mTextures[pageIndex], destinationRectangle, sourceRectangle, Color.White);
+
+                            point.X -= xOffset;
+                            point.X += characterInfo.GetXAdvanceInPixels(LineHeightInPixels);
+
+
+
+
+                        }
+
+                        point.X = 0;
+                        lineNumber++;
+                    }
+                    spriteBatch.End();
+                    managers.Renderer.GraphicsDevice.SetRenderTarget(null);
+                }
+
+
+            }
+
+            return renderTarget;
+        }
+
+        private Texture2D RenderToTexture2DUsingImageData(IEnumerable lines, HorizontalAlignment horizontalAlignment, SystemManagers managers)
+        {
             ImageData[] imageDatas = new ImageData[this.mTextures.Length];
-            
+
             for (int i = 0; i < imageDatas.Length; i++)
             {
                 // Only use the existing buffer on one-page fonts
@@ -416,6 +533,12 @@ namespace RenderingLibrary.Graphics
                 widths.Add(requiredWidth);
                 maxWidthSoFar = System.Math.Max(requiredWidth, maxWidthSoFar);
             }
+
+            const int MaxWidthAndHeight = 2048; // change this later?
+            maxWidthSoFar = System.Math.Min(maxWidthSoFar, MaxWidthAndHeight);
+            requiredHeight = System.Math.Min(requiredHeight, MaxWidthAndHeight);
+
+
 
             ImageData imageData = null;
 

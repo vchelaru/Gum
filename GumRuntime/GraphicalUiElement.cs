@@ -295,7 +295,7 @@ namespace Gum.Wireframe
             set
             {
                 mX = value;
-                UpdateLayout();
+                UpdateLayout(true, 0);
             }
         }
 
@@ -308,7 +308,7 @@ namespace Gum.Wireframe
             set
             {
                 mY = value;
-                UpdateLayout();
+                UpdateLayout(true, 0);
             }
         }
 
@@ -793,6 +793,16 @@ namespace Gum.Wireframe
 
         public void UpdateLayout(bool updateParent, bool updateChildren)
         {
+            int value = int.MaxValue;
+            if(!updateChildren)
+            {
+                value = 0;
+            }
+            UpdateLayout(updateParent, value);
+        }
+
+        public void UpdateLayout(bool updateParent, int childrenUpdateDepth)
+        {
             if (!mIsLayoutSuspended)
             {
                 // May 15, 2014
@@ -810,7 +820,7 @@ namespace Gum.Wireframe
                     (ParentGue.GetIfDimensionsDependOnChildren() || ParentGue.ChildrenLayout != Gum.Managers.ChildrenLayout.Regular ))
                 {
                     // Just climb up one and update from there
-                    this.ParentGue.UpdateLayout(true, true);
+                    this.ParentGue.UpdateLayout(true, childrenUpdateDepth + 1);
                 }
                 else
                 {
@@ -824,7 +834,9 @@ namespace Gum.Wireframe
                     {
                         UpdateDimensions(parentWidth, parentHeight);
 
-                        if (mContainedObjectAsIpso is Text)
+                        // If the update is "deep" then we want to refresh the text texture.
+                        // Otherwise it may have been something shallow like a reposition.
+                        if (mContainedObjectAsIpso is Text && childrenUpdateDepth > 0)
                         {
                             ((Text)mContainedObjectAsIpso).UpdateTextureToRender();
                         }
@@ -837,13 +849,13 @@ namespace Gum.Wireframe
                     }
 
 
-                    if (updateChildren)
+                    if (childrenUpdateDepth > 0)
                     {
                         if (this.mContainedObjectAsIpso == null)
                         {
                             foreach (var child in this.ContainedElements)
                             {
-                                child.UpdateLayout(false, true);
+                                child.UpdateLayout(false, childrenUpdateDepth-1);
                             }
                         }
                         else
@@ -852,7 +864,7 @@ namespace Gum.Wireframe
                             {
                                 if (child is GraphicalUiElement)
                                 {
-                                    (child as GraphicalUiElement).UpdateLayout(false, true);
+                                    (child as GraphicalUiElement).UpdateLayout(false, childrenUpdateDepth - 1);
                                 }
                             }
                         }
