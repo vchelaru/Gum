@@ -529,6 +529,14 @@ namespace RenderingLibrary.Graphics
         }
 
         // made public so that objects that need to position based off of the texture can force call this
+        public void TryUpdateTextureToRender()
+        {
+            if (mNeedsBitmapFontRefresh)
+            {
+                UpdateTextureToRender();
+            }
+        }
+
         public void UpdateTextureToRender()
         {
             if (!mIsTextureCreationSuppressed)
@@ -577,10 +585,13 @@ namespace RenderingLibrary.Graphics
         {
             if (AbsoluteVisible)
             {
-                if (mNeedsBitmapFontRefresh)
-                {
-                    UpdateTextureToRender();
-                }
+                // Moved this out of here - it's manually called by the TextManager
+                // This is required because we can't update in the draw call now that
+                // we're using RenderTargets
+                //if (mNeedsBitmapFontRefresh)
+                //{
+                //    UpdateTextureToRender();
+                //}
                 if (RenderBoundary)
                 {
                     LineRectangle.RenderLinePrimitive(mBounds, spriteBatch, this, managers, false);

@@ -86,7 +86,13 @@ namespace RenderingLibrary.Graphics
 
 
 
-        public static ImageData FromTexture2D(Texture2D texture2D, SystemManagers managers, Color[] colorBuffer = null)
+        public static ImageData FromTexture2D(Texture2D texture2D, SystemManagers managers)
+        {
+            return FromTexture2D(texture2D, managers, null);
+
+        }
+
+        public static ImageData FromTexture2D(Texture2D texture2D, SystemManagers managers, Color[] colorBuffer)
         {
             ImageData imageData = null;
         

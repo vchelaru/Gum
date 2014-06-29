@@ -48,7 +48,12 @@ namespace RenderingLibrary.Graphics
         }
         #endregion
 
-        public void Add(Text text, Layer layer = null)
+        public void Add(Text text)
+        {
+            Add(text, null);
+        }
+
+        public void Add(Text text, Layer layer)
         {
             if (layer == null)
             {
@@ -69,5 +74,16 @@ namespace RenderingLibrary.Graphics
         }
 
 
+
+        internal void RenderTextTextures()
+        {
+            foreach(var text in mTexts)
+            {
+                if (text.AbsoluteVisible)
+                {
+                    text.TryUpdateTextureToRender();
+                }
+            }
+        }
     }
 }

@@ -26,7 +26,8 @@ namespace GumRuntime
 
             if (mElementToGueTypes.ContainsKey(elementSave.Name))
             {
-                var constructor = mElementToGueTypes[elementSave.Name].GetConstructor(new Type[0]);
+                var type = mElementToGueTypes[elementSave.Name];
+                var constructor = type.GetConstructor(new Type[0]);
 
                 toReturn = constructor.Invoke(new object[0]) as GraphicalUiElement;
             }

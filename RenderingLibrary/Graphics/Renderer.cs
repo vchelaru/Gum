@@ -192,6 +192,13 @@ namespace RenderingLibrary.Graphics
         {
             mDrawCallsPerFrame = 0;
 
+            if(managers == null)
+            {
+                managers = SystemManagers.Default;
+            }
+            // Before we draw, make sure all Text objects have their text updated
+            managers.TextManager.RenderTextTextures();
+
             Draw(managers, mLayers);
         }
 

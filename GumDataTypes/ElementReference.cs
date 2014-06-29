@@ -62,6 +62,7 @@ namespace Gum.DataTypes
             {
                 fullName = ToolsUtilities.FileManager.RelativeDirectory + fullName;
             }
+            fullName = ToolsUtilities.FileManager.Standardize(fullName);
 
             if (System.IO.File.Exists(fullName))
             {

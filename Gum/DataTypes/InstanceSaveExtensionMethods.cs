@@ -52,14 +52,40 @@ namespace Gum.DataTypes
         }
 
 
+        
         public static VariableSave GetVariableFromThisOrBase(this InstanceSave instance,
-            ElementWithState parent, string variable, bool forceDefault = false, bool onlyIfSetsValue = false)
+            ElementWithState parent, string variable)
+        {
+            return GetVariableFromThisOrBase(instance, new List<ElementWithState> { parent }, variable, false, false);
+        }
+
+        public static VariableSave GetVariableFromThisOrBase(this InstanceSave instance,
+            ElementWithState parent, string variable, bool forceDefault)
+        {
+            return GetVariableFromThisOrBase(instance, new List<ElementWithState> { parent }, variable, forceDefault, false);
+        }
+
+        public static VariableSave GetVariableFromThisOrBase(this InstanceSave instance,
+            ElementWithState parent, string variable, bool forceDefault, bool onlyIfSetsValue)
         {
             return GetVariableFromThisOrBase(instance, new List<ElementWithState> { parent }, variable, forceDefault, onlyIfSetsValue);
         }
 
+        
         public static VariableSave GetVariableFromThisOrBase(this InstanceSave instance,
-            List<ElementWithState> elementStack, string variable, bool forceDefault = false, bool onlyIfSetsValue = false)
+            List<ElementWithState> elementStack, string variable)
+        {
+            return GetVariableFromThisOrBase(instance,elementStack, variable, false, false);
+        }
+
+        public static VariableSave GetVariableFromThisOrBase(this InstanceSave instance,
+            List<ElementWithState> elementStack, string variable, bool forceDefault)
+        {
+            return GetVariableFromThisOrBase(instance, elementStack, variable, forceDefault, false);
+        }
+
+        public static VariableSave GetVariableFromThisOrBase(this InstanceSave instance,
+            List<ElementWithState> elementStack, string variable, bool forceDefault, bool onlyIfSetsValue)
         {
             ElementSave instanceBase = ObjectFinder.Self.GetElementSave(instance.BaseType);
 
