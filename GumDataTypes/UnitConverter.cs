@@ -169,7 +169,7 @@ namespace Gum.Converters
         }
 
 
-        public GeneralUnitType ConvertToGeneralUnit(object specificUnit)
+        public static GeneralUnitType ConvertToGeneralUnit(object specificUnit)
         {
             if (specificUnit is PositionUnitType)
             {

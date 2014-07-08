@@ -1,0 +1,94 @@
+﻿<Window x:Class="StateAnimationPlugin.Views.MainWindow"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:views="clr-namespace:StateAnimationPlugin.Views"
+             mc:Ignorable="d" 
+             Height="300" Width="500">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"></RowDefinition>
+            <RowDefinition></RowDefinition>
+        </Grid.RowDefinitions>
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"></RowDefinition>
+                <RowDefinition Height="Auto"></RowDefinition>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="40"></ColumnDefinition>
+                <ColumnDefinition></ColumnDefinition>
+                <ColumnDefinition Width="50"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            <Button x:Name="PlayStopButton" Width="25" Height="25" Click="HandlePlayStopClicked">
+                <Image x:Name="ButtonImage" Source="Resources/PlayIcon.png"></Image>
+            </Button>
+            <Slider Grid.Column="1"
+                    Value="{Binding DisplayedAnimationTime}"
+                    Minimum="0"
+                    Maximum="{Binding SelectedAnimation.Length}"
+                    TickPlacement="TopLeft"
+                    TickFrequency="1"
+                
+                    >
+            
+            </Slider>
+
+            <TextBox Grid.Column="2" Text="{Binding DisplayedAnimationTime}"></TextBox>
+
+            <views:TimedStateMarkerDisplay Grid.Row="1" Grid.Column="1" Height="10" 
+                                           RangeMaximum="{Binding SelectedAnimation.Length}"
+                                           MarkerItemSource="{Binding SelectedAnimation.MarkerTimes}"
+                                           >
+            </views:TimedStateMarkerDisplay>
+        </Grid>
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition></ColumnDefinition>
+                <ColumnDefinition></ColumnDefinition>
+                <ColumnDefinition Width="Auto"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition></RowDefinition>
+                    <RowDefinition Height="Auto"></RowDefinition>
+                </Grid.RowDefinitions>
+                <ListBox ItemsSource="{Binding Animations}" SelectedItem="{Binding SelectedAnimation}" KeyDown="HandleDeleteAnimationPressed">
+                </ListBox>
+                <Button x:Name="AddAnimationButton" Grid.Row="1" VerticalAlignment="Bottom" Click="AddAnimationButton_Click">Add Animation</Button>
+            </Grid>
+            
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition></RowDefinition>
+                    <RowDefinition Height="Auto"></RowDefinition>
+                </Grid.RowDefinitions>
+
+                <!--State List Box-->
+                <ListBox ItemsSource="{Binding SelectedAnimation.States}" 
+                         SelectedItem="{Binding SelectedAnimation.SelectedState}" KeyDown="HandleDeleteAnimatedStatePressed">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Label Content="{Binding DisplayString}"></Label>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                    
+                </ListBox>
+                <Button x:Name="AddStateButton" Grid.Row="1" VerticalAlignment="Bottom" Click="AddStateButton_Click">Add State</Button>
+            </Grid>
+            <views:StateView 
+                DataContext="{Binding SelectedAnimation.SelectedState}"
+                Grid.Column="2" 
+                Width="195" 
+                HorizontalAlignment="Left"
+                Margin="0,0,5,0"
+                > </views:StateView>
+
+        </Grid>
+
+
+    </Grid>
+</Window>

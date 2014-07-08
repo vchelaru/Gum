@@ -19,6 +19,8 @@ namespace Gum.Wireframe
     {
         #region Fields
 
+
+
         public static bool ShowLineRectangles = true;
 
         IRenderable mContainedObjectAsRenderable;
@@ -128,6 +130,12 @@ namespace Gum.Wireframe
         {
             get
             {
+#if DEBUG
+                if(mContainedObjectAsIpso == null)
+                {
+                    int m = 3;
+                }
+#endif
                 return mContainedObjectAsIpso.X;
             }
             set
@@ -178,7 +186,14 @@ namespace Gum.Wireframe
         {
             get
             {
-                return mContainedObjectAsIpso.Width;
+                if (mContainedObjectAsIpso == null)
+                {
+                    return GraphicalUiElement.CanvasWidth;
+                }
+                else
+                {
+                    return mContainedObjectAsIpso.Width;
+                }
             }
             set
             {
@@ -190,7 +205,14 @@ namespace Gum.Wireframe
         {
             get
             {
-                return mContainedObjectAsIpso.Height;
+                if (mContainedObjectAsIpso == null)
+                {
+                    return GraphicalUiElement.CanvasHeight;
+                }
+                else
+                {
+                    return mContainedObjectAsIpso.Height;
+                }
             }
             set
             {
@@ -331,12 +353,12 @@ namespace Gum.Wireframe
             {
                 if (mParent != value)
                 {
-                    if (mParent != null)
+                    if (mParent != null && mParent.Children != null)
                     {
                         mParent.Children.Remove(this);
                     }
                     mParent = value;
-                    if (mParent != null)
+                    if (mParent != null && mParent.Children != null)
                     {
                         mParent.Children.Add(this);
                     }
@@ -424,7 +446,17 @@ namespace Gum.Wireframe
 
         public ICollection<IPositionedSizedObject> Children
         {
-            get { return mContainedObjectAsIpso.Children; }
+            get 
+            {
+                if(mContainedObjectAsIpso != null)
+                {
+                    return mContainedObjectAsIpso.Children;
+                }
+                else
+                {
+                    return null;
+                }
+            }
         }
 
         object mTagIfNoContainedObject;
@@ -640,7 +672,10 @@ namespace Gum.Wireframe
             {
                 mWhatContainsThis.mWhatThisContains.Add(this);
 
-                this.Parent = whatContainsThis;
+                if (whatContainsThis.mContainedObjectAsIpso != null)
+                {
+                    this.Parent = whatContainsThis;
+                }
             }
         }
 
@@ -793,7 +828,7 @@ namespace Gum.Wireframe
 
         public void UpdateLayout(bool updateParent, bool updateChildren)
         {
-            int value = int.MaxValue;
+            int value = int.MaxValue/2;
             if(!updateChildren)
             {
                 value = 0;
@@ -1458,8 +1493,8 @@ namespace Gum.Wireframe
             this.X = rvf.GetValue<float>("X");
             this.Y = rvf.GetValue<float>("Y");
 
-            this.XUnits = UnitConverter.Self.ConvertToGeneralUnit(rvf.GetValue<PositionUnitType>("X Units"));
-            this.YUnits = UnitConverter.Self.ConvertToGeneralUnit(rvf.GetValue<PositionUnitType>("Y Units"));
+            this.XUnits = UnitConverter.ConvertToGeneralUnit(rvf.GetValue<PositionUnitType>("X Units"));
+            this.YUnits = UnitConverter.ConvertToGeneralUnit(rvf.GetValue<PositionUnitType>("Y Units"));
 
             this.TextureWidth = rvf.GetValue<int>("Texture Width");
             this.TextureHeight = rvf.GetValue<int>("Texture Height");
@@ -1667,15 +1702,40 @@ namespace Gum.Wireframe
             }
         }
 
-        public void SuspendLayout()
+        public void SuspendLayout(bool recursive = false)
         {
             mIsLayoutSuspended = true;
+
+            if(recursive)
+            {
+                foreach(var item in this.ContainedElements)
+                {
+                    item.SuspendLayout(true);
+                }
+            }
         }
 
-        public void ResumeLayout()
+        public void ResumeLayout(bool recursive = false)
         {
             mIsLayoutSuspended = false;
+
+            if (recursive)
+            {
+                ResumeLayoutNoUpdateRecursive();
+            }
+
             UpdateLayout();
+        }
+
+        private void ResumeLayoutNoUpdateRecursive()
+        {
+
+            mIsLayoutSuspended = false;
+
+            foreach (var item in this.ContainedElements)
+            {
+                item.ResumeLayoutNoUpdateRecursive();
+            }
         }
 
         public GraphicalUiElement GetGraphicalUiElementByName(string name)
@@ -1723,12 +1783,60 @@ namespace Gum.Wireframe
                 string variable = propertyName.Substring(indexOfDot + 1);
                 containedGue.SetProperty(variable, value);
             }
+            else if(TrySetValueOnThis(propertyName, value))
+            {
+                // success, do nothing, but it's in an else if to prevent the following else if's from evaluating
+            }
             else if (this.mContainedObjectAsRenderable != null)
             {
                 SetPropertyOnRenderable(propertyName, value);
 
             }
 
+        }
+
+        private bool TrySetValueOnThis(string propertyName, object value)
+        {
+            bool toReturn = false;
+            switch(propertyName)
+            {
+                case "Height":
+                    this.Height = (float)value;
+                    toReturn = true;
+                    break;
+                case "Width":
+                    this.Width = (float)value;
+                    toReturn = true;
+                    break;
+                case "X":
+                    this.X = (float)value;
+                    toReturn = true;
+                    break;
+                case "X Origin":
+                    this.XOrigin = (HorizontalAlignment)value;
+                    toReturn = true;
+                    break;
+                case "X Units":
+                    this.XUnits = UnitConverter.ConvertToGeneralUnit(value);
+                    toReturn = true;
+                    break;
+                case "Y":
+                    this.Y = (float)value;
+                    toReturn = true;
+                    break;
+                case "Y Origin":
+                    this.YOrigin = (VerticalAlignment)value;
+                    toReturn = true;
+                    break;
+                case "Y Units":
+
+                    this.YUnits = UnitConverter.ConvertToGeneralUnit(value);
+                    toReturn = true;
+                    break;
+
+            }
+
+            return toReturn;
         }
 
         private void SetPropertyOnRenderable(string propertyName, object value)
@@ -1742,6 +1850,10 @@ namespace Gum.Wireframe
                 {
                     ((Text)mContainedObjectAsRenderable).RawText = value as string;
                     handled = true;
+                }
+                else if(propertyName == "Font Scale")
+                {
+                    ((Text)mContainedObjectAsRenderable).FontScale = (float)value;
                 }
             }
             else if (mContainedObjectAsRenderable is Sprite)
@@ -1778,6 +1890,12 @@ namespace Gum.Wireframe
         {
             get
             {
+#if DEBUG
+                if(mContainedObjectAsIVisible == null)
+                {
+                    int m = 3;
+                }
+#endif
                 bool explicitParentVisible = true;
                 if (ExplicitIVisibleParent != null)
                 {
@@ -1801,15 +1919,23 @@ namespace Gum.Wireframe
             {
                 var state = mStates[name];
 
-                foreach (var variable in state.Variables)
-                {
-                    if (variable.SetsValue)
-                    {
-                        this.SetProperty(variable.Name, variable.Value);
-                    }
-                }
+                ApplyState(state);
 
             }
+        }
+
+        public void ApplyState(DataTypes.Variables.StateSave state)
+        {
+            this.SuspendLayout(true);
+
+            foreach (var variable in state.Variables)
+            {
+                if (variable.SetsValue)
+                {
+                    this.SetProperty(variable.Name, variable.Value);
+                }
+            }
+            this.ResumeLayout(true);
         }
 
         public void AddCategory(DataTypes.Variables.StateSaveCategory category)

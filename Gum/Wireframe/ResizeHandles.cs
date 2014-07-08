@@ -235,10 +235,6 @@ namespace Gum.Wireframe
                 float maxX = ipsoList[0].GetAbsoluteX() + ipsoList[0].Width;
                 float maxY = ipsoList[0].GetAbsoluteY() + ipsoList[0].Height;
 
-                if (InputLibrary.Cursor.Self.PrimaryClick)
-                {
-                    int m = 3;
-                }
 
                 for (int i = 1; i < ipsoList.Count; i++)
                 {

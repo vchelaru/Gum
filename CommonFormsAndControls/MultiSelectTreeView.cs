@@ -6,54 +6,6 @@ using System.Windows.Forms;
 
 namespace CommonFormsAndControls
 {
-    #region Tree Node Extension Methods
-
-    public static class TreeNodeExtensions
-    {
-        public static TreeNode NextNodeCrawlingTree(this TreeNode node)
-        {
-            // return child?
-            if (node.Nodes.Count != 0)
-            {
-                return node.Nodes[0];
-            }
-            
-            // return sibling?
-            TreeNode nextSibling = node.NextNode;
-
-            if (nextSibling != null)
-            {
-                return nextSibling;
-            }
-
-            TreeNode parentNode = node.Parent;
-
-            while (parentNode != null)
-            {
-                if (parentNode.NextNode == null)
-                {
-                    parentNode = parentNode.Parent;
-                }
-                else
-                {
-                    return parentNode.NextNode;
-                }
-
-            }
-
-            return null;
-
-        }
-    }   
-
-    #endregion
-
-    public enum MultiSelectBehavior
-    {
-        CtrlDown,
-        RegularClick
-    }
-
     public class MultiSelectTreeView : TreeView, IEnumerable<TreeNode>
     {
         #region Fields
@@ -997,5 +949,53 @@ namespace CommonFormsAndControls
         }
 
         #endregion
+    }
+
+    #region Tree Node Extension Methods
+
+    public static class TreeNodeExtensions
+    {
+        public static TreeNode NextNodeCrawlingTree(this TreeNode node)
+        {
+            // return child?
+            if (node.Nodes.Count != 0)
+            {
+                return node.Nodes[0];
+            }
+
+            // return sibling?
+            TreeNode nextSibling = node.NextNode;
+
+            if (nextSibling != null)
+            {
+                return nextSibling;
+            }
+
+            TreeNode parentNode = node.Parent;
+
+            while (parentNode != null)
+            {
+                if (parentNode.NextNode == null)
+                {
+                    parentNode = parentNode.Parent;
+                }
+                else
+                {
+                    return parentNode.NextNode;
+                }
+
+            }
+
+            return null;
+
+        }
+    }
+
+    #endregion
+
+    public enum MultiSelectBehavior
+    {
+        CtrlDown,
+        RegularClick
     }
 }

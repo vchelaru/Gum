@@ -32,5 +32,20 @@ namespace Gum.Managers
 
             mRichTextBox.Text = text;
         }
+
+        public void AddError(string whatToAdd)
+        {
+            string text = mRichTextBox.Text;
+            text += "\n[" + DateTime.Now.ToShortTimeString() + "] ERROR:  " + whatToAdd;
+
+            if (text.Length > MaxCharacterLength)
+            {
+                text = text.Substring(MaxCharacterLength / 2);
+            }
+
+            mRichTextBox.Text = text;
+        }
+
+
     }
 }

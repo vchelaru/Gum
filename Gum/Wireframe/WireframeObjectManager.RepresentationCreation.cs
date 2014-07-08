@@ -59,7 +59,7 @@ namespace Gum.Wireframe
 
         #endregion
 
-        private void CreateIpsoForElement(ElementSave elementSave)
+        private GraphicalUiElement CreateIpsoForElement(ElementSave elementSave)
         {
             GraphicalUiElement rootIpso = null;
 
@@ -102,6 +102,12 @@ namespace Gum.Wireframe
                 SetGuideParent(null, rootIpso, guide, true);
 
             }
+            else
+            {
+                rootIpso = new GraphicalUiElement();
+                rootIpso.Tag = elementSave;
+                mGraphicalElements.Add(rootIpso);
+            }
             List<GraphicalUiElement> newlyAdded = new List<GraphicalUiElement>();
 
 
@@ -127,6 +133,7 @@ namespace Gum.Wireframe
             //Parallel.ForEach(elementSave.Instances, instance =>
             foreach (var instance in elementSave.Instances)
             {
+
                 GraphicalUiElement child = CreateRepresentationForInstance(instance, null, elementStack, rootIpso);
 
                 if (child == null)
@@ -160,6 +167,8 @@ namespace Gum.Wireframe
             {
                 rootIpso.AddToManagers();
             }
+
+            return rootIpso;
         }
 
         private GraphicalUiElement CreateRepresentationForInstance(InstanceSave instance, InstanceSave parentInstance, List<ElementWithState> elementStack, GraphicalUiElement container)
@@ -217,32 +226,6 @@ namespace Gum.Wireframe
                     CreateRectangleFor(instance, elementStack, element);
                 }
             }
-            //if (shouldPrefixParentName)
-            //{
-            //    string prefixName = null;
-            //    if (parentIpso != null)
-            //    {
-            //        prefixName = parentIpso.Name + ".";
-            //    }
-
-            //    toReturn.Name = prefixName + toReturn.Name;
-
-            //}
-
-            // This was an attempt to fix sorting when parallelized
-            //if (toReturn != null)
-            //{
-            //    if(parentInstance == null)
-            //    {
-            //        var parent = instance.ParentContainer;
-
-            //        if(parent != null)
-            //        {
-            //            toReturn.Z = parent.Instances.IndexOf(instance);
-            //        }
-            //    }
-            //}
-
 
 
             if (newIpso != null && (newIpso is GraphicalUiElement) == false)
@@ -594,10 +577,13 @@ namespace Gum.Wireframe
             return lineRectangle;
         }
 
-        private void SetGuideParent(IPositionedSizedObject parentIpso, GraphicalUiElement ipso, string guideName, bool setParentToBoundsIfNoGuide)
+        private void SetGuideParent(GraphicalUiElement parentIpso, GraphicalUiElement ipso, string guideName, bool setParentToBoundsIfNoGuide)
         {
             // I dont't think we want to do this anymore because it should be handled by the GraphicalUiElement
-            ipso.Parent = parentIpso;
+            if (parentIpso != null && (parentIpso.Tag == null || parentIpso.Tag is ScreenSave == false))
+            {
+                ipso.Parent = parentIpso;
+            }
 
             if (!string.IsNullOrEmpty(guideName))
             {

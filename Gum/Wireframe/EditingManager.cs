@@ -803,7 +803,7 @@ namespace Gum.Wireframe
 
         private static float AdjustAmountAccordingToUnitType(string baseVariableName, float amount, object unitsVariableAsObject)
         {
-            GeneralUnitType generalUnitType = UnitConverter.Self.ConvertToGeneralUnit(unitsVariableAsObject);
+            GeneralUnitType generalUnitType = UnitConverter.ConvertToGeneralUnit(unitsVariableAsObject);
 
             float xAmount;
             float yAmount;

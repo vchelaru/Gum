@@ -68,12 +68,12 @@ namespace RenderingLibrary.Graphics
             {
                 if (mParent != value)
                 {
-                    if (mParent != null)
+                    if (mParent != null && mParent.Children != null)
                     {
                         mParent.Children.Remove(this);
                     }
                     mParent = value;
-                    if (mParent != null)
+                    if (mParent != null && mParent.Children != null)
                     {
                         mParent.Children.Add(this);
                     }

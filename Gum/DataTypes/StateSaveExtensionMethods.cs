@@ -602,7 +602,7 @@ namespace Gum.DataTypes.Variables
 
         //}
 
-        public static void MergeIntoThis(this StateSave thisState, StateSave other, float ratio = 1)
+        public static void MergeIntoThis(this StateSave thisState, StateSave other, float otherRatio = 1)
         {
             foreach (var variableSave in other.Variables)
             {
@@ -625,7 +625,7 @@ namespace Gum.DataTypes.Variables
 
 
 
-                whatToSet.Value = GetValueConsideringInterpolation(whatToSet, variableSave, ratio);
+                whatToSet.Value = GetValueConsideringInterpolation(whatToSet, variableSave, otherRatio);
             }
 
             // todo:  Handle lists?

@@ -102,7 +102,7 @@ namespace Gum.Wireframe
             set;
         }
 
-        public IPositionedSizedObject SelectedIpso
+        public GraphicalUiElement SelectedIpso
         {
             get
             {
@@ -112,12 +112,12 @@ namespace Gum.Wireframe
                 }
                 else
                 {
-                    return mSelectedIpsos[0];
+                    return mSelectedIpsos[0] as GraphicalUiElement;
                 }
             }
             set
             {
-                if (value != null)
+                if (value != null && (value.Tag == null || (value.Tag is ScreenSave == false)))
                 {
                     mResizeHandles.Visible = true;
                     mResizeHandles.SetValuesFrom(value);
@@ -147,7 +147,7 @@ namespace Gum.Wireframe
 
                 if (value.Count == 1)
                 {
-                    SelectedIpso = value[0];
+                    SelectedIpso = value[0] as GraphicalUiElement;
                 }
                 else if (value.Count > 1)
                 {
@@ -512,10 +512,10 @@ namespace Gum.Wireframe
 
 
 
-        public IPositionedSizedObject GetRepresentationAt(float x, float y, bool skipSelected, List<ElementWithState> elementStack)
+        public GraphicalUiElement GetRepresentationAt(float x, float y, bool skipSelected, List<ElementWithState> elementStack)
         {
 
-            IPositionedSizedObject ipsoOver = null;
+            GraphicalUiElement ipsoOver = null;
 
 
             // First check if we're over the current
@@ -615,9 +615,9 @@ namespace Gum.Wireframe
             return ipsoOver;
         }
 
-        private IPositionedSizedObject ReverseLoopToFindIpso(float x, float y, int indexToStartAt, int indexToEndAt, bool visibleToCheck, List<ElementWithState> elementStack)
+        private GraphicalUiElement ReverseLoopToFindIpso(float x, float y, int indexToStartAt, int indexToEndAt, bool visibleToCheck, List<ElementWithState> elementStack)
         {
-            IPositionedSizedObject ipsoOver = null;
+            GraphicalUiElement ipsoOver = null;
 
             if (indexToEndAt < -1)
             {
@@ -633,23 +633,25 @@ namespace Gum.Wireframe
             {
                 
                 GraphicalUiElement ipso = WireframeObjectManager.Self.AllIpsos[i];
-
-                bool visible = IsIpsoVisible(ipso);
-
-
-                if (visible == visibleToCheck && ipso.HasCursorOver(x, y) && (WireframeObjectManager.Self.IsRepresentation(ipso)))
+                bool skip = ipso.Tag is ScreenSave;
+                if (!skip)
                 {
+                    bool visible = IsIpsoVisible(ipso);
 
-                    // hold on, even though this is a valid IPSO and the cursor is over it, we gotta see if
-                    // it's an instance that is locked.  If so, we shouldn't select it!
-                    InstanceSave instanceSave = ipso.Tag as InstanceSave;
-                    if (instanceSave == null || instanceSave.Locked == false)
+
+                    if (visible == visibleToCheck && ipso.HasCursorOver(x, y) && (WireframeObjectManager.Self.IsRepresentation(ipso)))
                     {
-                        ipsoOver = ipso;
-                        break;
+
+                        // hold on, even though this is a valid IPSO and the cursor is over it, we gotta see if
+                        // it's an instance that is locked.  If so, we shouldn't select it!
+                        InstanceSave instanceSave = ipso.Tag as InstanceSave;
+                        if (instanceSave == null || instanceSave.Locked == false)
+                        {
+                            ipsoOver = ipso;
+                            break;
+                        }
                     }
                 }
-
             }
 
             return ipsoOver;
@@ -658,7 +660,18 @@ namespace Gum.Wireframe
         private static bool IsIpsoVisible(IPositionedSizedObject ipso)
         {
             bool isVisible = true;
-            if(ipso is IVisible)
+            if(ipso is GraphicalUiElement)
+            {
+                 if(ipso.Tag == null || ipso.Tag is ScreenSave == false)
+                 {
+                     isVisible = ((IVisible)ipso).AbsoluteVisible;             
+                 }
+                 else
+                 {
+                     isVisible = false;
+                 }
+            }
+            else if(ipso is IVisible)
             {
                 isVisible = ((IVisible)ipso).AbsoluteVisible;             
             }
@@ -725,9 +738,14 @@ namespace Gum.Wireframe
         {
             if (SelectedIpsos.Count != 0)
             {
-                mResizeHandles.SetValuesFrom(SelectedIpsos);
+                bool shouldSkip = SelectedIpso.Tag is ScreenSave;
 
-                mResizeHandles.UpdateHandleRadius();
+                if (!shouldSkip)
+                {
+                    mResizeHandles.SetValuesFrom(SelectedIpsos);
+
+                    mResizeHandles.UpdateHandleRadius();
+                }
             }
         }
 
@@ -848,7 +866,7 @@ namespace Gum.Wireframe
                         }
                         else
                         {
-                            SelectedIpso = representation;
+                            SelectedIpso = representation as GraphicalUiElement;
                         }
                     }
                     ProjectVerifier.Self.AssertSelectedIpsosArePartOfRenderer();

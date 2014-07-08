@@ -85,14 +85,21 @@ namespace Gum.Debug
                     whatToTest = ((GraphicalUiElement)whatToTest).RenderableComponent;
                 }
                 bool found = false;
-                foreach (var layer in Renderer.Self.Layers)
+
+                if (whatToTest == null)
                 {
-                    if (layer.ContainsRenderable(whatToTest))
+                    found = true;
+                }
+                else
+                {
+                    foreach (var layer in Renderer.Self.Layers)
                     {
-                        found = true;
+                        if (layer.ContainsRenderable(whatToTest))
+                        {
+                            found = true;
+                        }
                     }
                 }
-
                 if (!found)
                 {
                     throw new Exception("Argument is not part of Renderer");

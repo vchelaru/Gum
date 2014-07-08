@@ -1,0 +1,173 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{991D5E91-45C6-44DE-AA07-9A3FF695AB9E}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>StateAnimationPlugin</RootNamespace>
+    <AssemblyName>StateAnimationPlugin</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x86\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <OutputPath>bin\x86\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="FlatRedBall.InterpolationCore, Version=1.0.0.0, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Libraries\FlatRedBall.InterpolationCore.dll</HintPath>
+    </Reference>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.Composition" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xaml" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="WindowsBase" />
+    <Reference Include="WindowsFormsIntegration" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Managers\AnimationCollectionViewModelManager.cs" />
+    <Compile Include="MainPlugin.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SaveClasses\AnimatedStateSave.cs" />
+    <Compile Include="SaveClasses\AnimationSave.cs" />
+    <Compile Include="SaveClasses\ElementAnimationsSave.cs" />
+    <Compile Include="ViewModels\AnimatedStateViewModel.cs" />
+    <Compile Include="ViewModels\ElementAnimationsViewModel.cs" />
+    <Compile Include="ViewModels\AnimationViewModel.cs" />
+    <Compile Include="Views\ListBoxMessageBox.xaml.cs">
+      <DependentUpon>ListBoxMessageBox.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\MainWindow.xaml.cs">
+      <DependentUpon>MainWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\StateView.xaml.cs">
+      <DependentUpon>StateView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\TimedStateMarkerDisplay.xaml.cs">
+      <DependentUpon>TimedStateMarkerDisplay.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Timeline.xaml.cs">
+      <DependentUpon>Timeline.xaml</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CommonFormsAndControls\CommonFormsAndControls.csproj">
+      <Project>{54bfe18a-84b4-48ab-92e0-0774ea019202}</Project>
+      <Name>CommonFormsAndControls</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\GumDataTypes\GumDataTypes.csproj">
+      <Project>{5971a187-f6b2-4d65-a277-5613ded1f50f}</Project>
+      <Name>GumDataTypes</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Gum\Gum.csproj">
+      <Project>{121ac5a5-8f6a-42b2-8863-debc45b052bc}</Project>
+      <Name>Gum</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\InputLibrary\InputLibrary.csproj">
+      <Project>{938d9a00-8529-4ce8-9077-e0a3994a73ea}</Project>
+      <Name>InputLibrary</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\RenderingLibrary\RenderingLibrary.csproj">
+      <Project>{a86ee399-7c93-42e1-80ed-ca4cbf4ca573}</Project>
+      <Name>RenderingLibrary</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ToolsUtilities\ToolsUtilities.csproj">
+      <Project>{b941a93f-6093-4dc6-ad11-91a058b6c2cc}</Project>
+      <Name>ToolsUtilities</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="Views\ListBoxMessageBox.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\MainWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\StateView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\TimedStateMarkerDisplay.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\Timeline.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Libraries\FlatRedBall.InterpolationCore.dll" />
+    <None Include="Libraries\FlatRedBall.InterpolationCore.pdb" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Bear.png" />
+    <EmbeddedResource Include="Resources\PlayIcon.png" />
+    <EmbeddedResource Include="Resources\StopIcon.png" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>if not exist $(SolutionDir)Gum\bin\Debug\Plugins\ md $(SolutionDir)Gum\bin\Debug\Plugins\
+if not exist $(SolutionDir)Gum\bin\Debug\Plugins\StateAnimationPlugin\ md $(SolutionDir)Gum\bin\Debug\Plugins\StateAnimationPlugin\
+copy $(TargetDir)StateAnimationPlugin.dll $(SolutionDir)Gum\bin\Debug\Plugins\StateAnimationPlugin\StateAnimationPlugin.dll
+copy $(TargetDir)StateAnimationPlugin.pdb $(SolutionDir)Gum\bin\Debug\Plugins\StateAnimationPlugin\StateAnimationPlugin.pdb
+
+copy $(TargetDir)FlatRedBall.InterpolationCore.dll $(SolutionDir)Gum\bin\Debug\Plugins\StateAnimationPlugin\FlatRedBall.InterpolationCore.dll
+copy $(TargetDir)FlatRedBall.InterpolationCore.pdb $(SolutionDir)Gum\bin\Debug\Plugins\StateAnimationPlugin\FlatRedBall.InterpolationCore.pdb</PostBuildEvent>
+  </PropertyGroup>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

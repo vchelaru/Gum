@@ -1,0 +1,34 @@
+﻿<UserControl x:Class="StateAnimationPlugin.Views.StateView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="104" d:DesignWidth="200">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"></ColumnDefinition>
+            <ColumnDefinition></ColumnDefinition>
+        </Grid.ColumnDefinitions>
+
+        <StackPanel>
+            <Label Content="{Binding StateName, FallbackValue=StateName}"></Label>
+            <Label>Time:</Label>
+            <Label>Interpolation Type:</Label>
+            <Label>In/Out:</Label>
+        </StackPanel>
+
+        <StackPanel Grid.Column="1">
+
+            <TextBox Margin="0,30,0,0" x:Name="TimeTextBox"
+                Text="{Binding Time}" KeyDown="TextBox_KeyDown"   
+                     
+             />
+            
+            <ComboBox x:Name="InterpolationTypeComboBox" Margin="0,7,0,2" SelectedItem="{Binding InterpolationType}"></ComboBox>
+            <ComboBox x:Name="EasingTypeComboBox" Margin="0,1,0,2" SelectedItem="{Binding Easing}"></ComboBox>
+        </StackPanel>
+
+
+    </Grid>
+</UserControl>

@@ -54,6 +54,8 @@ namespace Gum.Wireframe
         const int width = 8192;
 
 
+
+
         #endregion
 
         #region Properties
@@ -104,6 +106,12 @@ namespace Gum.Wireframe
                 }
                 return mSelf;
             }
+        }
+
+        public GraphicalUiElement RootGue
+        {
+            get;
+            private set;
         }
 
         #endregion
@@ -229,6 +237,7 @@ namespace Gum.Wireframe
             if (elementSave == null || elementSave.IsSourceFileMissing)
             {
                 ClearAll();
+                RootGue = null;
             }
 
             else if (elementSave != null && (force || elementSave != ElementShowing))
@@ -245,7 +254,7 @@ namespace Gum.Wireframe
                 }
                 LoaderManager.Self.CacheTextures = true;
 
-                CreateIpsoForElement(elementSave);
+                RootGue = CreateIpsoForElement(elementSave);
 
             }
             ElementShowing = elementSave;

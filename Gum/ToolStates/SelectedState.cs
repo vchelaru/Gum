@@ -399,7 +399,7 @@ namespace Gum.ToolStates
             }
             set
             {
-                SelectionManager.Self.SelectedIpso = value;
+                SelectionManager.Self.SelectedIpso = value as GraphicalUiElement;
             }
         }
 
