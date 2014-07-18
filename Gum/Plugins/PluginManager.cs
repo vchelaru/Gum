@@ -275,7 +275,13 @@ namespace Gum.Plugins
                         error += "\n" + loaderExceptions[0].ToString();
                     }
                 }
+                else
+                {
+                    error += "\n" + e.Message;
+                }
                 MessageBox.Show(error);
+
+                instance.Plugins = new List<PluginBase>();
 
                 return;
             }

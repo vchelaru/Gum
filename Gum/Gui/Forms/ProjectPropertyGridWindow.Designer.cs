@@ -28,20 +28,20 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.propertyGrid1 = new System.Windows.Forms.PropertyGrid();
+            this.TopPropertyGrid = new System.Windows.Forms.PropertyGrid();
             this.GuideListDisplay = new Gum.Gui.Controls.GuideListDisplay();
             this.AutoSaveCheckBox = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
-            // propertyGrid1
+            // TopPropertyGrid
             // 
-            this.propertyGrid1.HelpVisible = false;
-            this.propertyGrid1.Location = new System.Drawing.Point(12, 35);
-            this.propertyGrid1.Name = "propertyGrid1";
-            this.propertyGrid1.Size = new System.Drawing.Size(262, 72);
-            this.propertyGrid1.TabIndex = 0;
-            this.propertyGrid1.ToolbarVisible = false;
-            this.propertyGrid1.PropertyValueChanged += new System.Windows.Forms.PropertyValueChangedEventHandler(this.propertyGrid1_PropertyValueChanged);
+            this.TopPropertyGrid.HelpVisible = false;
+            this.TopPropertyGrid.Location = new System.Drawing.Point(12, 35);
+            this.TopPropertyGrid.Name = "TopPropertyGrid";
+            this.TopPropertyGrid.Size = new System.Drawing.Size(262, 72);
+            this.TopPropertyGrid.TabIndex = 0;
+            this.TopPropertyGrid.ToolbarVisible = false;
+            this.TopPropertyGrid.PropertyValueChanged += new System.Windows.Forms.PropertyValueChangedEventHandler(this.TopPropertyGridValueChanged);
             // 
             // GuideListDisplay
             // 
@@ -71,7 +71,7 @@
             this.ClientSize = new System.Drawing.Size(286, 272);
             this.Controls.Add(this.AutoSaveCheckBox);
             this.Controls.Add(this.GuideListDisplay);
-            this.Controls.Add(this.propertyGrid1);
+            this.Controls.Add(this.TopPropertyGrid);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "ProjectPropertyGridWindow";
@@ -84,7 +84,7 @@
 
         #endregion
 
-        private System.Windows.Forms.PropertyGrid propertyGrid1;
+        private System.Windows.Forms.PropertyGrid TopPropertyGrid;
         private Controls.GuideListDisplay GuideListDisplay;
         private System.Windows.Forms.CheckBox AutoSaveCheckBox;
     }

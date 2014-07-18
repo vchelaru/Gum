@@ -12,4 +12,12 @@ namespace Gum.DataTypes
         RelativeToContainer,
         PercentageOfSourceFile
     }
+
+    public static class DimensionUnitTypeExtensions
+    {
+        public static bool GetIsPixelBased(this DimensionUnitType unitType)
+        {
+            return unitType == DimensionUnitType.Absolute || unitType == DimensionUnitType.RelativeToContainer;
+        }
+    }
 }

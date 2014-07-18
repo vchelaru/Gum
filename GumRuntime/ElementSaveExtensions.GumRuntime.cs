@@ -21,8 +21,8 @@ namespace GumRuntime
 
         public static GraphicalUiElement CreateGueForElement(ElementSave elementSave)
         {
-
             GraphicalUiElement toReturn = null;
+
 
             if (mElementToGueTypes.ContainsKey(elementSave.Name))
             {
@@ -35,6 +35,7 @@ namespace GumRuntime
             {
                 toReturn = new GraphicalUiElement();
             }
+            toReturn.ElementSave = elementSave;
             return toReturn;
         }
 
@@ -65,6 +66,15 @@ namespace GumRuntime
         public static void SetGraphicalUiElement(this ElementSave elementSave, GraphicalUiElement toReturn, SystemManagers systemManagers, RecursiveVariableFinder rvf)
         {
 
+            // We need to set categories and states before calling SetGraphicalUiElement so that the states can be used
+            foreach (var category in elementSave.Categories)
+            {
+                toReturn.AddCategory(category);
+            }
+
+            toReturn.AddStates(elementSave.States);
+
+
             InstanceSaveExtensionMethods.SetGraphicalUiElement(rvf, elementSave.BaseType,
                 toReturn, systemManagers);
 
@@ -73,12 +83,6 @@ namespace GumRuntime
                 toReturn.AddExposedVariable(variable.ExposedAsName, variable.Name);
             }
 
-            foreach (var category in elementSave.Categories)
-            {
-                toReturn.AddCategory(category);
-            }
-
-            toReturn.AddStates(elementSave.States);
 
             toReturn.Tag = elementSave;
 

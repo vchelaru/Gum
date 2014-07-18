@@ -52,7 +52,7 @@ namespace Gum.Wireframe
 
         ResizeHandles mResizeHandles;
 
-        List<IPositionedSizedObject> mSelectedIpsos = new List<IPositionedSizedObject>();
+        List<GraphicalUiElement> mSelectedIpsos = new List<GraphicalUiElement>();
         IPositionedSizedObject mHighlightedIpso;
 
         GraphicalOutline mGraphicalOutline;
@@ -136,7 +136,7 @@ namespace Gum.Wireframe
             }
         }
 
-        public List<IPositionedSizedObject> SelectedIpsos
+        public List<GraphicalUiElement> SelectedIpsos
         {
             get
             {
@@ -534,7 +534,7 @@ namespace Gum.Wireframe
             }
             else
             {
-                if (selectedRepresentation != null)
+                if (selectedRepresentation != null && selectedRepresentation.Tag is ScreenSave == false)
                 {
                     if (selectedRepresentation.HasCursorOver(x, y))
                     {
@@ -857,7 +857,7 @@ namespace Gum.Wireframe
                     {
                         if (SelectedState.Self.SelectedInstances.GetCount() > 1)
                         {
-                            List<IPositionedSizedObject> selectedIpsos = new List<IPositionedSizedObject>();
+                            List<GraphicalUiElement> selectedIpsos = new List<GraphicalUiElement>();
                             foreach (var instance in SelectedState.Self.SelectedInstances)
                             {
                                 selectedIpsos.Add(WireframeObjectManager.Self.GetRepresentation(instance, elementStack));
@@ -925,7 +925,7 @@ namespace Gum.Wireframe
         {
             Clear();
 
-            List<IPositionedSizedObject> representations = new List<IPositionedSizedObject>();
+            List<GraphicalUiElement> representations = new List<GraphicalUiElement>();
 
             var elementStack = SelectedState.Self.GetTopLevelElementStack();
             if (SelectedState.Self.SelectedInstances.GetCount() != 0)
@@ -933,7 +933,7 @@ namespace Gum.Wireframe
                 
                 foreach (var instance in SelectedState.Self.SelectedInstances)
                 {
-                    IPositionedSizedObject toAdd = 
+                    GraphicalUiElement toAdd = 
                         WireframeObjectManager.Self.GetRepresentation(instance, elementStack);
                     if (toAdd != null)
                     {
@@ -943,7 +943,7 @@ namespace Gum.Wireframe
             }
             else if (SelectedState.Self.SelectedElement != null)
             {
-                IPositionedSizedObject toAdd =
+                GraphicalUiElement toAdd =
                     WireframeObjectManager.Self.GetRepresentation(SelectedState.Self.SelectedElement);
 
                 if (toAdd != null)

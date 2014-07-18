@@ -14,6 +14,7 @@ using Gum.Converters;
 using Gum.Events;
 using Gum.Input;
 using Gum.RenderingLibrary;
+using RenderingLibrary.Math;
 
 namespace Gum.Wireframe
 {
@@ -47,6 +48,8 @@ namespace Gum.Wireframe
                 return mSelf;
             }
         }
+
+        public bool RestrictToUnitValues { get; set; }
 
         #endregion
 
@@ -121,11 +124,176 @@ namespace Gum.Wireframe
                 mHasGrabbed = false;
             }
 
+            if (cursor.PrimaryClick && mHasChangedAnythingSinceLastPush)
+            {
+                // let's snap everything
+                if (RestrictToUnitValues)
+                {
+                    SnapSelectedToUnitValues();
+                }
+            }
+
             if (cursor.PrimaryClick && mHasChangedAnythingSinceLastPush && ProjectManager.Self.GeneralSettingsFile.AutoSave)
             {
                 ProjectManager.Self.SaveElement(SelectedState.Self.SelectedElement);
                 mHasChangedAnythingSinceLastPush = false;
             }
+        }
+
+        private void SnapSelectedToUnitValues()
+        {
+            bool wasAnythingModified = false;
+
+            if(SelectedState.Self.SelectedInstances.Count() == 0 && 
+                (SelectedState.Self.SelectedComponent != null || SelectedState.Self.SelectedStandardElement != null))
+            {
+                GraphicalUiElement gue = SelectionManager.Self.SelectedIpso;
+
+
+                float differenceToUnitX;
+                float differenceToUnitY;
+                float differenceToUnitWidth;
+                float differenceToUnitHeight;
+                GetDifferenceToUnit(gue, out differenceToUnitX, out differenceToUnitY, out differenceToUnitWidth, out differenceToUnitHeight);
+                
+                if (differenceToUnitX != 0)
+                {
+                    gue.X = ModifyVariable("X", differenceToUnitX, SelectedState.Self.SelectedElement);
+                    wasAnythingModified = true;
+                }
+                if (differenceToUnitY != 0)
+                {
+                    gue.Y = ModifyVariable("Y", differenceToUnitY, SelectedState.Self.SelectedElement);
+                    wasAnythingModified = true;
+                }
+                if(differenceToUnitWidth != 0)
+                {
+                    gue.Width = ModifyVariable("Width", differenceToUnitWidth, SelectedState.Self.SelectedElement);
+                    wasAnythingModified = true;
+                }
+                if (differenceToUnitHeight != 0)
+                {
+                    gue.Height = ModifyVariable("Height", differenceToUnitHeight, SelectedState.Self.SelectedElement);
+                    wasAnythingModified = true;
+                }
+            }
+            else if(SelectedState.Self.SelectedInstances.Count() != 0)
+            {
+                foreach(var gue in SelectionManager.Self.SelectedIpsos)
+                {
+                    var instanceSave = gue.Tag as InstanceSave;
+
+                    if(instanceSave != null && !ShouldSkipDraggingMovementOn(instanceSave))
+                    {
+                        float differenceToUnitX;
+                        float differenceToUnitY;
+
+                        float differenceToUnitWidth;
+                        float differenceToUnitHeight;
+
+                        GetDifferenceToUnit(gue, out differenceToUnitX, out differenceToUnitY, out differenceToUnitWidth, out differenceToUnitHeight);
+
+                        if (differenceToUnitX != 0)
+                        {
+                            gue.X = ModifyVariable("X", differenceToUnitX, instanceSave);
+                            wasAnythingModified = true;
+                        }
+                        if (differenceToUnitY != 0)
+                        {
+                            gue.Y = ModifyVariable("Y", differenceToUnitY, instanceSave);
+                            wasAnythingModified = true;
+                        }
+                        if (differenceToUnitWidth != 0)
+                        {
+                            gue.Width = ModifyVariable("Width", differenceToUnitWidth, instanceSave);
+                            wasAnythingModified = true;
+                        }
+                        if (differenceToUnitHeight != 0)
+                        {
+                            gue.Height = ModifyVariable("Height", differenceToUnitHeight, instanceSave);
+                            wasAnythingModified = true;
+                        }
+                    }
+
+                }
+            }
+
+            if(wasAnythingModified)
+            {
+                GumCommands.Self.GuiCommands.RefreshPropertyGrid(true);
+            }
+        }
+
+        private static void GetDifferenceToUnit(GraphicalUiElement gue, 
+            out float differenceToUnitPositionX, out float differenceToUnitPositionY,
+            out float differenceToUnitWidth, out float differenceToUnitHeight
+            
+            )
+        {
+            differenceToUnitPositionX = 0;
+            differenceToUnitPositionY = 0;
+            differenceToUnitWidth = 0;
+            differenceToUnitHeight = 0;
+
+
+            if (gue.XUnits.GetIsPixelBased())
+            {
+                float x = gue.X;
+                float desiredX = MathFunctions.RoundToInt(x);
+                differenceToUnitPositionX = desiredX - x;
+            }
+            if(gue.YUnits.GetIsPixelBased())
+            {
+                float y = gue.Y;
+                float desiredY = MathFunctions.RoundToInt(y);
+                differenceToUnitPositionY = desiredY - y;
+            }
+
+            if(gue.WidthUnit.GetIsPixelBased())
+            {
+                float width = gue.Width;
+                float desiredWidth = MathFunctions.RoundToInt(width);
+                differenceToUnitWidth = desiredWidth - width;
+            }
+
+            if (gue.HeightUnit.GetIsPixelBased())
+            {
+                float height = gue.Height;
+                float desiredHeight = MathFunctions.RoundToInt(height);
+                differenceToUnitHeight = desiredHeight - height;
+            }
+
+        }
+
+        private bool ShouldSkipDraggingMovementOn(InstanceSave instanceSave)
+        {
+
+            ElementWithState element = new ElementWithState(SelectedState.Self.SelectedElement);
+
+            List<ElementWithState> stack = new List<ElementWithState>() { element };
+
+            var selectedInstances = SelectedState.Self.SelectedInstances;
+
+            bool shouldSkip = false;
+            // Make sure this isn't attached to another instance
+            var representation = WireframeObjectManager.Self.GetRepresentation(instanceSave, stack);
+
+            if (representation != null && representation.Parent != null)
+            {
+                var parentRepresentation = representation.Parent;
+
+                if (parentRepresentation != null)
+                {
+                    var parentInstance = WireframeObjectManager.Self.GetInstance(parentRepresentation, InstanceFetchType.InstanceInCurrentElement, stack);
+
+                    if (selectedInstances.Contains(parentInstance))
+                    {
+                        shouldSkip = true;
+                    }
+                }
+            }
+
+            return shouldSkip;
         }
 
         private void PushActivity()
@@ -171,59 +339,27 @@ namespace Gum.Wireframe
             {
                 bool hasChangeOccurred = false;
 
-                if (SelectedState.Self.SelectedInstances.Count() == 0 && SelectedState.Self.SelectedComponent != null)
+                if (SelectedState.Self.SelectedInstances.Count() == 0 && 
+                    (SelectedState.Self.SelectedComponent != null || SelectedState.Self.SelectedStandardElement != null))
                 {
                     if (xToMoveBy != 0)
                     {
                         hasChangeOccurred = true;
-                        float value = ModifyVariable("X", xToMoveBy, SelectedState.Self.SelectedComponent);
+                        ModifyVariable("X", xToMoveBy, SelectedState.Self.SelectedElement);
                     }
                     if (yToMoveBy != 0)
                     {
                         hasChangeOccurred = true;
-                        float value = ModifyVariable("Y", yToMoveBy, SelectedState.Self.SelectedComponent);
-                    }
-                }
-                else if (SelectedState.Self.SelectedInstances.Count() == 0 && SelectedState.Self.SelectedStandardElement != null)
-                {
-                    if (xToMoveBy != 0)
-                    {
-                        hasChangeOccurred = true;
-                        float value = ModifyVariable("X", xToMoveBy, SelectedState.Self.SelectedStandardElement);
-                    }
-                    if (yToMoveBy != 0)
-                    {
-                        hasChangeOccurred = true;
-                        float value = ModifyVariable("Y", yToMoveBy, SelectedState.Self.SelectedStandardElement);
+                        ModifyVariable("Y", yToMoveBy, SelectedState.Self.SelectedElement);
                     }
                 }
                 else
                 {
-                    ElementWithState element = new ElementWithState(SelectedState.Self.SelectedElement);
-                    List<ElementWithState> stack = new List<ElementWithState>() { element };
-
                     var selectedInstances = SelectedState.Self.SelectedInstances;
 
                     foreach (InstanceSave instance in selectedInstances)
                     {
-                        bool shouldSkip = false;
-                        // Make sure this isn't attached to another instance
-                        var representation = WireframeObjectManager.Self.GetRepresentation(instance, stack);
-
-                        if (representation != null && representation.Parent != null)
-                        {
-                            var parentRepresentation = representation.Parent;
-
-                            if (parentRepresentation != null)
-                            {
-                                var parentInstance = WireframeObjectManager.Self.GetInstance(parentRepresentation, InstanceFetchType.InstanceInCurrentElement, stack);
-
-                                if (selectedInstances.Contains(parentInstance))
-                                {
-                                    shouldSkip = true;
-                                }
-                            }
-                        }
+                        bool shouldSkip = ShouldSkipDraggingMovementOn(instance);
 
                         if (!shouldSkip)
                         {
@@ -252,6 +388,8 @@ namespace Gum.Wireframe
                 }
             }
         }
+
+
 
         public void UpdateSelectedObjectsPositionAndDimensions()
         {
@@ -882,5 +1020,6 @@ namespace Gum.Wireframe
         }
 
         #endregion
+
     }
 }

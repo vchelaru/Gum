@@ -226,20 +226,19 @@ namespace Gum.Wireframe
 
         }
 
-        public void SetValuesFrom(List<IPositionedSizedObject> ipsoList)
+        public void SetValuesFrom(IEnumerable<IPositionedSizedObject> ipsoList)
         {
-            if (ipsoList.Count != 0)
+            if (ipsoList.Count() != 0)
             {
-                float minX = ipsoList[0].GetAbsoluteX();
-                float minY = ipsoList[0].GetAbsoluteY();
-                float maxX = ipsoList[0].GetAbsoluteX() + ipsoList[0].Width;
-                float maxY = ipsoList[0].GetAbsoluteY() + ipsoList[0].Height;
+                var first = ipsoList.FirstOrDefault();
 
+                float minX = first.GetAbsoluteX();
+                float minY = first.GetAbsoluteY();
+                float maxX = first.GetAbsoluteX() + first.Width;
+                float maxY = first.GetAbsoluteY() + first.Height;
 
-                for (int i = 1; i < ipsoList.Count; i++)
+                foreach(var item in ipsoList)
                 {
-                    var item = ipsoList[i];
-
                     minX = Math.Min(minX, item.GetAbsoluteX());
                     minY = Math.Min(minY, item.GetAbsoluteY());
 
@@ -252,9 +251,9 @@ namespace Gum.Wireframe
                 mWidth = maxX - minX;
                 mHeight = maxY - minY;
 
-                if (ipsoList[0] is GraphicalUiElement)
+                if (first is GraphicalUiElement)
                 {
-                    var asGue = ipsoList[0] as GraphicalUiElement;
+                    var asGue = first as GraphicalUiElement;
 
                     SetOriginXPosition(asGue);
 

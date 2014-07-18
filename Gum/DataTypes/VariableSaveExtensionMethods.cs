@@ -149,6 +149,59 @@ namespace Gum.DataTypes
         }
 #endif
 
+        public static bool IsState(this VariableSave variableSave, ElementSave container)
+        {
+            ElementSave throwaway1;
+            StateSaveCategory throwaway2;
+            return variableSave.IsState(container, out throwaway1, out throwaway2);
+        }
+
+        public static bool IsState(this VariableSave variableSave, ElementSave container, out ElementSave categoryContainer, out StateSaveCategory category)
+        {
+            category = null;
+            categoryContainer = null;
+
+            var variableName = variableSave.GetRootName();
+
+            ///////////////Early Out
+            if(variableName.EndsWith("State") == false)
+            {
+                return false;                
+            }
+            /////////////End early out
+
+            // what about uncategorized
+
+            string categoryName = variableName.Substring(0, variableName.Length - "State".Length);
+
+            if(string.IsNullOrEmpty( variableSave.SourceObject) == false)
+            {
+                var instanceSave = container.GetInstance(variableSave.SourceObject);
+
+                if(instanceSave != null)
+                {
+                    var element = ObjectFinder.Self.GetElementSave(instanceSave.BaseType);
+
+                    if(element != null)
+                    {
+                        category = element.GetStateSaveCategoryRecursively(categoryName, out categoryContainer);
+
+                        return category != null;
+                    }
+                }
+            }
+            else
+            {
+                category = container.GetStateSaveCategoryRecursively(categoryName, out categoryContainer);
+
+                return category != null;
+            }
+
+            return false;
+        }
+
+
+
         public static bool IsEnumeration(this VariableSave variableSave)
         {
             string type = variableSave.Type;

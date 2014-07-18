@@ -36,6 +36,7 @@ namespace Gum.PropertyGridHelpers
             mHelper.Include(GumProjectSave, "DefaultCanvasHeight", ref pdc);
             mHelper.Include(GumProjectSave, "DefaultCanvasWidth", ref pdc);
             mHelper.Include(GumProjectSave, "ShowOutlines", ref pdc);
+            mHelper.Include(GumProjectSave, "RestrictToUnitValues", ref pdc);
 
 
             return pdc;

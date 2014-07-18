@@ -20,8 +20,6 @@ namespace Gum.ToolStates
         #region Fields
 
         static ISelectedState mSelf;
-        ReadOnlyCollection<InstanceSave> mSelectedInstancesReadOnly;
-        List<InstanceSave> mSelectedInstances = new List<InstanceSave>();
 
         VariableSave mSelectedVariableSave;
         
@@ -309,28 +307,30 @@ namespace Gum.ToolStates
         {
             get
             {
-                mSelectedInstances.Clear();
+                // For performance reasons I was creating the instances here, but now I'm going to
+                // simply return a copy of the list so that loops don't throw exceptions in foreach's if the list modifies
+                List<InstanceSave> list = new List<InstanceSave>();
 
                 foreach (TreeNode node in ElementTreeViewManager.Self.SelectedNodes)
                 {
                     if (node.IsInstanceTreeNode())
                     {
-                        mSelectedInstances.Add(node.Tag as InstanceSave);
+                        list.Add(node.Tag as InstanceSave);
                     }
                 }
 
-                return mSelectedInstancesReadOnly;
+                return list;
             }
             set
             {
-                mSelectedInstances.Clear();
+                List<InstanceSave> list = new List<InstanceSave>();
 
                 foreach (var item in value)
                 {
-                    mSelectedInstances.Add(item);
+                    list.Add(item);
                 }
 
-                ElementTreeViewManager.Self.Select(mSelectedInstances);
+                ElementTreeViewManager.Self.Select(list);
             }
 
         }
@@ -403,7 +403,7 @@ namespace Gum.ToolStates
             }
         }
 
-        public List<IPositionedSizedObject> SelectedIpsos
+        public List<GraphicalUiElement> SelectedIpsos
         {
             get
             {
@@ -416,7 +416,6 @@ namespace Gum.ToolStates
 
         private SelectedState()
         {
-            mSelectedInstancesReadOnly = new ReadOnlyCollection<InstanceSave>(mSelectedInstances);
 
         }
 

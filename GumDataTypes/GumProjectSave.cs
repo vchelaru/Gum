@@ -40,6 +40,12 @@ namespace Gum.DataTypes
             set;
         }
 
+        public bool RestrictToUnitValues
+        {
+            get;
+            set;
+        }
+
         public List<GuideRectangle> Guides
         {
             get;

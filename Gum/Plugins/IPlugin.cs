@@ -10,8 +10,8 @@ namespace Gum.Plugins
         UserDisabled,
         PluginException,
         PluginInitiated,
-        GluxUnload,
-        GlueShutDown
+        GumxUnload,
+        GumShutDown
     }
 
     public interface IPlugin

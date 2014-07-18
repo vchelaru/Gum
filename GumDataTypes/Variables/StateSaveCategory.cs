@@ -26,5 +26,10 @@ namespace Gum.DataTypes.Variables
         {
             States = new List<StateSave>();
         }
+
+        public override string ToString()
+        {
+            return Name;
+        }
     }
 }

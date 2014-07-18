@@ -285,9 +285,51 @@ namespace Gum.DataTypes
             }
         }
 
+        public static StateSave GetStateSaveRecursively(this ElementSave element, string stateName)
+        {
+            var foundState = element.AllStates.FirstOrDefault(item => item.Name == stateName);
 
+            if(foundState != null)
+            {
+                return foundState;
+            }
 
+            if(!string.IsNullOrEmpty(element.BaseType))
+            {
+                var baseElement = ObjectFinder.Self.GetElementSave(element.BaseType);
 
+                return baseElement.GetStateSaveRecursively(stateName);
+            }
+
+            return null;
+        }
+
+        public static StateSaveCategory GetStateSaveCategoryRecursively(this ElementSave element, string categoryName)
+        {
+            ElementSave throwaway;
+            return GetStateSaveCategoryRecursively(element, categoryName, out throwaway);
+        }
+
+        public static StateSaveCategory GetStateSaveCategoryRecursively(this ElementSave element, string categoryName, out ElementSave categoryContainer)
+        {
+            var foundCategory = element.Categories.FirstOrDefault(item => item.Name == categoryName);
+
+            if(foundCategory != null)
+            {
+                categoryContainer = element;
+                return foundCategory;
+            }
+
+            if(!string.IsNullOrEmpty(element.BaseType))
+            {
+                var baseElement = ObjectFinder.Self.GetElementSave(element.BaseType);
+
+                return baseElement.GetStateSaveCategoryRecursively(categoryName, out categoryContainer);
+            }
+
+            categoryContainer = null;
+            return null;
+        }
 
     }
 }

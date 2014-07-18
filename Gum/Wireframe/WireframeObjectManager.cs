@@ -116,6 +116,8 @@ namespace Gum.Wireframe
 
         #endregion
 
+        #region Methods
+
         public void Initialize(WireframeEditControl editControl, WireframeControl wireframeControl)
         {
             mWireframeControl = wireframeControl;
@@ -517,6 +519,8 @@ namespace Gum.Wireframe
                 requiredHeight = System.Math.Max(requiredHeight, child.Y + child.Height);
             }
         }
-        
+
+        #endregion
+
     }
 }

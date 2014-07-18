@@ -76,9 +76,17 @@ namespace Gum.Wireframe
         Dictionary<string, Gum.DataTypes.Variables.StateSaveCategory> mCategories =
             new Dictionary<string, Gum.DataTypes.Variables.StateSaveCategory>();
 
+
+
         #endregion
 
         #region Properties
+
+        public ElementSave ElementSave
+        {
+            get;
+            set;
+        }
 
         public SystemManagers Managers
         {
@@ -1512,6 +1520,19 @@ namespace Gum.Wireframe
             this.WrapsChildren = rvf.GetValue<bool>("Wraps Children");
             this.ClipsChildren = rvf.GetValue<bool>("Clips Children");
 
+            if (this.ElementSave != null)
+            {
+                foreach (var category in ElementSave.Categories)
+                {
+                    string valueOnThisState = rvf.GetValue<string>(category.Name + "State");
+
+                    if (!string.IsNullOrEmpty(valueOnThisState))
+                    {
+                        this.ApplyState(valueOnThisState);
+                    }
+                }
+            }
+
             this.ResumeLayout();
         }
 
@@ -1773,7 +1794,12 @@ namespace Gum.Wireframe
                 string instanceName = underlyingProperty.Substring(0, indexOfDot);
                 GraphicalUiElement containedGue = GetGraphicalUiElementByName(instanceName);
                 string variable = underlyingProperty.Substring(indexOfDot + 1);
-                containedGue.SetProperty(variable, value);
+
+                // Children may not have been created yet
+                if (containedGue != null)
+                {
+                    containedGue.SetProperty(variable, value);
+                }
             }
             else if (propertyName.Contains('.'))
             {
@@ -1781,7 +1807,14 @@ namespace Gum.Wireframe
                 string instanceName = propertyName.Substring(0, indexOfDot);
                 GraphicalUiElement containedGue = GetGraphicalUiElementByName(instanceName);
                 string variable = propertyName.Substring(indexOfDot + 1);
-                containedGue.SetProperty(variable, value);
+                
+                // instances may not have been set yet
+                if (containedGue != null)
+                {
+                    containedGue.SetProperty(variable, value);
+                }
+
+                
             }
             else if(TrySetValueOnThis(propertyName, value))
             {
@@ -1869,16 +1902,23 @@ namespace Gum.Wireframe
             // If special case didn't work, let's try reflection
             if (!handled)
             {
-                System.Reflection.PropertyInfo propertyInfo = mContainedObjectAsRenderable.GetType().GetProperty(propertyName);
-
-                if (propertyInfo != null)
+                if (propertyName == "Parent")
                 {
+                    // do something
+                }
+                else
+                {
+                    System.Reflection.PropertyInfo propertyInfo = mContainedObjectAsRenderable.GetType().GetProperty(propertyName);
 
-                    if (value.GetType() != propertyInfo.PropertyType)
+                    if (propertyInfo != null)
                     {
-                        value = System.Convert.ChangeType(value, propertyInfo.PropertyType);
+
+                        if (value.GetType() != propertyInfo.PropertyType)
+                        {
+                            value = System.Convert.ChangeType(value, propertyInfo.PropertyType);
+                        }
+                        propertyInfo.SetValue(mContainedObjectAsRenderable, value, null);
                     }
-                    propertyInfo.SetValue(mContainedObjectAsRenderable, value, null);
                 }
             }
         }
@@ -1921,6 +1961,19 @@ namespace Gum.Wireframe
 
                 ApplyState(state);
 
+            }
+
+
+            // This is a little dangerous because it's ambiguous.
+            // Technically categories could have same-named states.
+            foreach (var category in mCategories.Values)
+            {
+                var foundState = category.States.FirstOrDefault(item => item.Name == name);
+
+                if (foundState != null)
+                {
+                    ApplyState(foundState);
+                }
             }
         }
 

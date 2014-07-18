@@ -31,9 +31,9 @@ namespace Gum.Gui.Forms
             mDisplayer.GumProjectSave = ProjectState.Self.GumProjectSave;
             mDisplayer.GeneralSettings = ProjectManager.Self.GeneralSettingsFile;
 
-            this.propertyGrid1.SelectedObject = mDisplayer;
+            this.TopPropertyGrid.SelectedObject = mDisplayer;
 
-            this.GuideListDisplay.PropertyGridChanged += new EventHandler(OnPropertyGridChanged);
+            this.GuideListDisplay.PropertyGridChanged += new EventHandler(OnGuidePropertyGridChanged);
             this.GuideListDisplay.NewGuideAdded += new EventHandler(OnNewGuideAdded);
 
         }
@@ -44,7 +44,7 @@ namespace Gum.Gui.Forms
             WireframeObjectManager.Self.UpdateGuides();
         }
 
-        void OnPropertyGridChanged(object sender, EventArgs e)
+        void OnGuidePropertyGridChanged(object sender, EventArgs e)
         {
             GumCommands.Self.FileCommands.TryAutoSaveProject();
 
@@ -55,11 +55,15 @@ namespace Gum.Gui.Forms
             if (ProjectState.Self.GumProjectSave != null)
             {
                 GraphicalUiElement.ShowLineRectangles = ProjectState.Self.GumProjectSave.ShowOutlines;
+                EditingManager.Self.RestrictToUnitValues = ProjectState.Self.GumProjectSave.RestrictToUnitValues;
             }
+
+
+
             //EditingManager.Self.UpdateSelectedObjectsPositionAndDimensions();
         }
 
-        private void propertyGrid1_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
+        private void TopPropertyGridValueChanged(object s, PropertyValueChangedEventArgs e)
         {
 
             GumCommands.Self.FileCommands.TryAutoSaveProject();
@@ -67,6 +71,11 @@ namespace Gum.Gui.Forms
 
             GuiCommands.Self.RefreshWireframeDisplay();
             WireframeObjectManager.Self.RefreshAll(true);
+
+
+            GraphicalUiElement.CanvasWidth = ProjectState.Self.GumProjectSave.DefaultCanvasWidth;
+            GraphicalUiElement.CanvasHeight = ProjectState.Self.GumProjectSave.DefaultCanvasHeight;
+
             //EditingManager.Self.UpdateSelectedObjectsPositionAndDimensions();
         }
 

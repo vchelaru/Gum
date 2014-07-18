@@ -188,11 +188,15 @@ namespace Gum
 
 
                 GraphicalUiElement.ShowLineRectangles = mGumProjectSave.ShowOutlines;
+                EditingManager.Self.RestrictToUnitValues = mGumProjectSave.RestrictToUnitValues;
 
                 if (wasModified)
                 {
                     ProjectManager.Self.SaveProject(forceSaveContainedElements:true);
                 }
+
+                GraphicalUiElement.CanvasWidth = mGumProjectSave.DefaultCanvasWidth;
+                GraphicalUiElement.CanvasHeight = mGumProjectSave.DefaultCanvasHeight;
             }
 
             // Now that a new project is loaded, refresh the UI!

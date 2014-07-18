@@ -36,6 +36,18 @@ namespace Gum.Converters
         PercentageOfFile
     }
 
+    public static class GeneralUnitTypeExtensions
+    {
+        public static bool GetIsPixelBased(this GeneralUnitType unitType)
+        {
+            return unitType == GeneralUnitType.PixelsFromSmall ||
+                unitType == GeneralUnitType.PixelsFromMiddle ||
+                unitType == GeneralUnitType.PixelsFromLarge;
+        }
+
+    }
+
+
     public enum XOrY
     {
         X,
