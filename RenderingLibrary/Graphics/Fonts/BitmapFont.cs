@@ -398,14 +398,23 @@ namespace RenderingLibrary.Graphics
 
         private Texture2D RenderToTexture2DUsingRenderStates(IEnumerable lines, HorizontalAlignment horizontalAlignment, SystemManagers managers)
         {
-            if(managers == null)
+            if (managers == null)
             {
                 managers = SystemManagers.Default;
             }
 
+            ////////////////// Early out /////////////////////////
+            if (managers.Renderer.GraphicsDevice.GraphicsDeviceStatus != GraphicsDeviceStatus.Normal)
+            {
+                return null;
+            }
+            ///////////////// End early out //////////////////////
+
+
             RenderTarget2D renderTarget = null;
 
-            using (SpriteBatch spriteBatch = new SpriteBatch(managers.Renderer.GraphicsDevice))
+            
+            using (  SpriteBatch spriteBatch = new SpriteBatch(managers.Renderer.GraphicsDevice))
             {
 
                 Point point = new Point();

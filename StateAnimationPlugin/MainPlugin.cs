@@ -129,6 +129,14 @@ namespace StateAnimationPlugin
             }
             else if (stateVmBefore != null && stateVmAfter != null)
             {
+                if(stateVmAfter.CachedCumulativeState == null || 
+                    stateVmAfter.CachedCumulativeState == null)
+                {
+                    if (mCurrentViewModel.SelectedAnimation != null && SelectedState.Self.SelectedElement != null)
+                    {
+                        mCurrentViewModel.SelectedAnimation.RefreshCombinedStates(SelectedState.Self.SelectedElement);
+                    }
+                }
                 double linearRatio = GetLinearRatio(value, stateVmBefore, stateVmAfter);
                 var stateBefore = stateVmBefore.CachedCumulativeState;
 

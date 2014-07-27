@@ -430,6 +430,9 @@ namespace Gum.Managers
                     
                 }
             }
+
+
+            
             foreach (ComponentSave componentSave in ProjectManager.Self.GumProjectSave.Components)
             {
                 if (GetTreeNodeFor(componentSave) == null)
@@ -453,6 +456,8 @@ namespace Gum.Managers
                 }
             }
 
+
+
             foreach (StandardElementSave standardSave in ProjectManager.Self.GumProjectSave.StandardElements)
             {
                 if (standardSave.Name != "Component")
@@ -474,6 +479,8 @@ namespace Gum.Managers
                     }
                 }
             }
+
+
 
             #endregion
 
@@ -539,6 +546,12 @@ namespace Gum.Managers
             }
 
             #endregion
+
+            mScreensTreeNode.Nodes.SortByName();
+
+            mComponentsTreeNode.Nodes.SortByName();
+
+            mStandardElementsTreeNode.Nodes.SortByName();
 
             #region Re-select whatever was selected before
 

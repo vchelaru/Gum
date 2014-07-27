@@ -325,12 +325,18 @@ namespace Gum.Wireframe
             }
         }
 
+        protected override void PreDrawUpdate()
+        {
+            if (mHasInitialized)
+            {
+                Activity();
+            }
+        }
+
         protected override void Draw()
         {
                 if (mHasInitialized)
                 {
-                    Activity();
-
                     GraphicsDevice.Clear(BackgroundColor);
 
                     Renderer.Self.Draw(null);

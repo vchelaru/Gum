@@ -258,7 +258,7 @@ namespace Gum.Wireframe
             return element;
         }
 
-        private IPositionedSizedObject CreateRepresentationsForInstanceFromComponent(InstanceSave instance, 
+        private GraphicalUiElement CreateRepresentationsForInstanceFromComponent(InstanceSave instance, 
             List<ElementWithState> elementStack, InstanceSave parentInstance, GraphicalUiElement parentIpso, 
             ComponentSave baseComponentSave)
         {

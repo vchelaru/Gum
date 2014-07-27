@@ -246,26 +246,34 @@ namespace RenderingLibrary.Graphics
 
         internal void RenderLayer(SystemManagers managers, Layer layer)
         {
-            if (mIsInSpriteBatchCall)
-            {
-                mSpriteBatch.End();
-            }
-            BeginSpriteBatch(mRenderStateVariables, layer);
-            mIsInSpriteBatchCall = true;
+            // If the Layer's clip region has no width or height, then let's
+            // skip over rendering it, otherwise XNA crashes:
+            var clipRegion = layer.GetScissorRectangleFor(managers.Renderer.Camera);
 
-            layer.SortRenderables();
-
-            foreach (IRenderable renderable in layer.Renderables)
+            if(clipRegion.Width != 0 && clipRegion.Height != 0)
             {
-                AdjustRenderStates(mRenderStateVariables, layer, renderable);
-                renderable.Render(mSpriteBatch, managers);
+                if (mIsInSpriteBatchCall)
+                {
+                    mSpriteBatch.End();
+                }
+                BeginSpriteBatch(mRenderStateVariables, layer);
+                mIsInSpriteBatchCall = true;
+
+                layer.SortRenderables();
+
+                foreach (IRenderable renderable in layer.Renderables)
+                {
+                    AdjustRenderStates(mRenderStateVariables, layer, renderable);
+                    renderable.Render(mSpriteBatch, managers);
+                }
+
+                if (mIsInSpriteBatchCall)
+                {
+                    mSpriteBatch.End();
+                    mIsInSpriteBatchCall = false;
+                }
             }
 
-            if (mIsInSpriteBatchCall)
-            {
-                mSpriteBatch.End();
-                mIsInSpriteBatchCall = false;
-            }
         }
 
         private void AdjustRenderStates(RenderStateVariables renderState, Layer layer, IRenderable renderable)

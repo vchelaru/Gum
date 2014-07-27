@@ -16,6 +16,8 @@ namespace RenderingLibrary.Graphics
 
         #endregion
 
+        #region Properties
+
         public IPositionedSizedObject ScissorIpso { get; set; }
 
         public LayerCameraSettings LayerCameraSettings
@@ -45,6 +47,14 @@ namespace RenderingLibrary.Graphics
                 return mRenderables;
             }
         }
+
+        public Layer ParentLayer
+        {
+            get;
+            set;
+        }
+
+        #endregion
 
         public Layer()
         {
@@ -135,44 +145,76 @@ namespace RenderingLibrary.Graphics
         {
             var ipso = ScissorIpso;
 
-            float worldX = ipso.GetAbsoluteLeft();
-            float worldY = ipso.GetAbsoluteTop();
+            if (ipso == null)
+            {
+                return new Microsoft.Xna.Framework.Rectangle(
+                    0,0,
+                    camera.ClientWidth,
+                    camera.ClientHeight
 
-            float screenX;
-            float screenY;
-            camera.WorldToScreen(worldX, worldY, out screenX, out screenY);
+                    );
+            }
+            else
+            {
 
-            int left = global::RenderingLibrary.Math.MathFunctions.RoundToInt(screenX);
-            int top = global::RenderingLibrary.Math.MathFunctions.RoundToInt(screenY);
+                float worldX = ipso.GetAbsoluteLeft();
+                float worldY = ipso.GetAbsoluteTop();
 
-            worldX = ipso.GetAbsoluteRight();
-            worldY = ipso.GetAbsoluteBottom();
-            camera.WorldToScreen(worldX, worldY, out screenX, out screenY);
+                float screenX;
+                float screenY;
+                camera.WorldToScreen(worldX, worldY, out screenX, out screenY);
 
-            int right = global::RenderingLibrary.Math.MathFunctions.RoundToInt(screenX);
-            int bottom = global::RenderingLibrary.Math.MathFunctions.RoundToInt(screenY);
-            
+                int left = global::RenderingLibrary.Math.MathFunctions.RoundToInt(screenX);
+                int top = global::RenderingLibrary.Math.MathFunctions.RoundToInt(screenY);
+
+                worldX = ipso.GetAbsoluteRight();
+                worldY = ipso.GetAbsoluteBottom();
+                camera.WorldToScreen(worldX, worldY, out screenX, out screenY);
+
+                int right = global::RenderingLibrary.Math.MathFunctions.RoundToInt(screenX);
+                int bottom = global::RenderingLibrary.Math.MathFunctions.RoundToInt(screenY);
 
 
-            left = System.Math.Max(0, left);
-            top = System.Math.Max(0, top);
-            right = System.Math.Max(0, right);
-            bottom = System.Math.Max(0, bottom);
 
-            left = System.Math.Min(left, camera.ClientWidth);
-            right = System.Math.Min(right, camera.ClientWidth);
+                left = System.Math.Max(0, left);
+                top = System.Math.Max(0, top);
+                right = System.Math.Max(0, right);
+                bottom = System.Math.Max(0, bottom);
 
-            top = System.Math.Min(top, camera.ClientHeight);
-            bottom = System.Math.Min(bottom, camera.ClientHeight);
+                left = System.Math.Min(left, camera.ClientWidth);
+                right = System.Math.Min(right, camera.ClientWidth);
 
-            int width = right - left;
-            int height = bottom - top;
+                top = System.Math.Min(top, camera.ClientHeight);
+                bottom = System.Math.Min(bottom, camera.ClientHeight);
 
-            return new Microsoft.Xna.Framework.Rectangle(
-                left,
-                top,
-                width,
-                height);
+
+
+                if (ParentLayer != null)
+                {
+                    var parentRectangle = ParentLayer.GetScissorRectangleFor(camera);
+                    if(top > parentRectangle.Bottom)
+                    {
+                        int m = 3;
+                    }
+                    left = System.Math.Max(left, parentRectangle.Left);
+                    right = System.Math.Min(right, parentRectangle.Right);
+                    top = System.Math.Max(top, parentRectangle.Top);
+                    bottom = System.Math.Min(bottom, parentRectangle.Bottom);
+                }
+
+                int width = System.Math.Max(0, right - left);
+                int height = System.Math.Max(0, bottom - top);
+
+
+                Microsoft.Xna.Framework.Rectangle thisRectangle = new Microsoft.Xna.Framework.Rectangle(
+                    left,
+                    top,
+                    width,
+                    height);
+
+                return thisRectangle;
+            }
+
         }
     }
 }

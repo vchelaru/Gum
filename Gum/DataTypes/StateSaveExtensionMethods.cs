@@ -215,6 +215,12 @@ namespace Gum.DataTypes.Variables
                     variable.Name = newName + "." +  variable.Name.Substring((oldName + ".").Length);
                     variable.SourceObject = newName;
                 }
+
+                if (variable.GetRootName() == "Parent" && variable.SetsValue && variable.Value is string && 
+                    (string)(variable.Value) == oldName)
+                {
+                    variable.Value = newName;
+                }
             }
 
             foreach (VariableListSave variableList in stateSave.VariableLists)
@@ -604,12 +610,21 @@ namespace Gum.DataTypes.Variables
 
         public static void MergeIntoThis(this StateSave thisState, StateSave other, float otherRatio = 1)
         {
+#if DEBUG
+            if(other == null)
+            {
+                throw new ArgumentNullException("other Statesave is null and it shouldn't be");
+            }
+#endif
+
             foreach (var variableSave in other.Variables)
             {
                 // The first will use its default if one doesn't exist
                 VariableSave whatToSet = thisState.GetVariableSave(variableSave.Name);
 
                 bool needsValueFromBase = whatToSet == null || whatToSet.SetsValue == false;
+                bool setsValue = variableSave.SetsValue;
+
                 if (whatToSet == null)
                 {
                     whatToSet = variableSave.Clone();
@@ -617,6 +632,11 @@ namespace Gum.DataTypes.Variables
                     // Get the value recursively before adding it to the list
                     if (needsValueFromBase)
                     {
+                        var variableOnThis = thisState.GetVariableSave(variableSave.Name);
+                        if(variableOnThis != null)
+                        {
+                            setsValue |= variableOnThis.SetsValue;
+                        }
                         whatToSet.Value = thisState.GetValueRecursive(variableSave.Name);
                     }
 
@@ -624,7 +644,7 @@ namespace Gum.DataTypes.Variables
                 }
 
 
-
+                whatToSet.SetsValue = setsValue;
                 whatToSet.Value = GetValueConsideringInterpolation(whatToSet, variableSave, otherRatio);
             }
 

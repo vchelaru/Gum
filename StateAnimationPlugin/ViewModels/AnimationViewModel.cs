@@ -89,6 +89,7 @@ namespace StateAnimationPlugin.ViewModels
 
         #endregion
 
+        #region Methods
 
         public AnimationViewModel()
         {
@@ -213,7 +214,7 @@ namespace StateAnimationPlugin.ViewModels
 
             foreach(var animatedState in this.States)
             {
-                var originalState = element.States.FirstOrDefault(item => item.Name == animatedState.StateName);
+                var originalState = element.AllStates.FirstOrDefault(item => item.Name == animatedState.StateName);
 
                 var combined = previous.Clone();
                 combined.MergeIntoThis(originalState);
@@ -224,6 +225,7 @@ namespace StateAnimationPlugin.ViewModels
             }
         }
 
+        #endregion
     }
 
     #region ListExtension methods class

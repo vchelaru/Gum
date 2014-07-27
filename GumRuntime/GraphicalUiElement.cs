@@ -875,13 +875,25 @@ namespace Gum.Wireframe
 
                     if (mContainedObjectAsIpso != null)
                     {
+                        float widthBefore = 0;
+                        float heightBefore = 0;
+                        if(this.mContainedObjectAsIpso != null)
+                        {
+                            widthBefore = mContainedObjectAsIpso.Width;
+                            heightBefore = mContainedObjectAsIpso.Height;
+                        }
+
                         UpdateDimensions(parentWidth, parentHeight);
 
                         // If the update is "deep" then we want to refresh the text texture.
                         // Otherwise it may have been something shallow like a reposition.
                         if (mContainedObjectAsIpso is Text && childrenUpdateDepth > 0)
                         {
-                            ((Text)mContainedObjectAsIpso).UpdateTextureToRender();
+                            // Only if the width or height have changed:
+                            if (mContainedObjectAsIpso.Width != widthBefore || mContainedObjectAsIpso.Height != heightBefore)
+                            {
+                                ((Text)mContainedObjectAsIpso).UpdateTextureToRender();
+                            }
                         }
                         if (mContainedObjectAsRenderable is Sprite)
                         {
@@ -1008,8 +1020,8 @@ namespace Gum.Wireframe
             UpdatePosition(parentWidth, parentHeight, wrap:false);
 
             var effectiveParent = EffectiveParentGue;
-            
-            bool shouldWrap = GetIfParentStacks() && ParentGue.WrapsChildren &&
+
+            bool shouldWrap = GetIfParentStacks() && this.EffectiveParentGue.WrapsChildren &&
                 ((effectiveParent.ChildrenLayout == Gum.Managers.ChildrenLayout.LeftToRightStack && this.GetAbsoluteRight() > effectiveParent.GetAbsoluteRight()) ||
                 (effectiveParent.ChildrenLayout == Gum.Managers.ChildrenLayout.TopToBottomStack && this.GetAbsoluteBottom() > effectiveParent.GetAbsoluteBottom()));
 
@@ -1572,6 +1584,8 @@ namespace Gum.Wireframe
 
                     }
 
+                    mSortableLayer.ParentLayer = layer;
+
                     mManagers.Renderer.AddLayer(mSortableLayer, layer);
 
                     // Now we'll just set layer to mSortableLayer so everything goes on as normal
@@ -1580,50 +1594,86 @@ namespace Gum.Wireframe
                     UpdateLayerScissor();
                 }
 
-
-
-
-
-                // This may be a Screen
-                if (mContainedObjectAsRenderable != null)
-                {
-
-                    if (mContainedObjectAsRenderable is Sprite)
-                    {
-                        managers.SpriteManager.Add(mContainedObjectAsRenderable as Sprite, layer);
-                    }
-                    else if (mContainedObjectAsRenderable is NineSlice)
-                    {
-                        managers.SpriteManager.Add(mContainedObjectAsRenderable as NineSlice, layer);
-                    }
-                    else if (mContainedObjectAsRenderable is global::RenderingLibrary.Math.Geometry.LineRectangle)
-                    {
-                        managers.ShapeManager.Add(mContainedObjectAsRenderable as global::RenderingLibrary.Math.Geometry.LineRectangle, layer);
-                    }
-                    else if (mContainedObjectAsRenderable is global::RenderingLibrary.Graphics.SolidRectangle)
-                    {
-                        managers.ShapeManager.Add(mContainedObjectAsRenderable as global::RenderingLibrary.Graphics.SolidRectangle, layer);
-                    }
-                    else if (mContainedObjectAsRenderable is Text)
-                    {
-                        managers.TextManager.Add(mContainedObjectAsRenderable as Text, layer);
-                    }
-                    else
-                    {
-                        throw new NotImplementedException();
-                    }
-                }
+                AddContainedRenderableToManagers(managers, layer);
 
                 // Custom should be called before children have their Custom called
                 CustomAddToManagers();
 
+                AddChildren(managers, layer);
+            }
+        }
+
+        private void AddChildren(SystemManagers managers, Layer layer)
+        {
+            // In a simple situation we'd just loop through the
+            // ContainedElements and add them to the manager.  However,
+            // this means that the container will dictate the Layer that
+            // its children reside on.  This is not what we want if we have
+            // two children, one of which is attached to the other, and the parent
+            // instance clips its children.  Therefore, we should make sure that we're
+            // only adding direct children and letting instances handle their own children
+
+            if (this.ElementSave != null && this.ElementSave is ScreenSave)
+            {
+
                 //Recursively add children to the managers
                 foreach (var child in this.ContainedElements)
                 {
+                    // July 27, 2014
+                    // Is this an unnecessary check?
+                    // if (child is GraphicalUiElement)
+                    {
+                        if (child.Parent == null || child.Parent == this)
+                        {
+                            (child as GraphicalUiElement).AddToManagers(managers, layer);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                foreach(var child in this.Children)
+                {
                     if (child is GraphicalUiElement)
                     {
-                        (child as GraphicalUiElement).AddToManagers(managers, layer);
+                        if (child.Parent == null || child.Parent == this)
+                        {
+                            (child as GraphicalUiElement).AddToManagers(managers, layer);
+                        }
                     }
+                }
+            }
+        }
+
+        private void AddContainedRenderableToManagers(SystemManagers managers, Layer layer)
+        {
+            // This may be a Screen
+            if (mContainedObjectAsRenderable != null)
+            {
+
+                if (mContainedObjectAsRenderable is Sprite)
+                {
+                    managers.SpriteManager.Add(mContainedObjectAsRenderable as Sprite, layer);
+                }
+                else if (mContainedObjectAsRenderable is NineSlice)
+                {
+                    managers.SpriteManager.Add(mContainedObjectAsRenderable as NineSlice, layer);
+                }
+                else if (mContainedObjectAsRenderable is global::RenderingLibrary.Math.Geometry.LineRectangle)
+                {
+                    managers.ShapeManager.Add(mContainedObjectAsRenderable as global::RenderingLibrary.Math.Geometry.LineRectangle, layer);
+                }
+                else if (mContainedObjectAsRenderable is global::RenderingLibrary.Graphics.SolidRectangle)
+                {
+                    managers.ShapeManager.Add(mContainedObjectAsRenderable as global::RenderingLibrary.Graphics.SolidRectangle, layer);
+                }
+                else if (mContainedObjectAsRenderable is Text)
+                {
+                    managers.TextManager.Add(mContainedObjectAsRenderable as Text, layer);
+                }
+                else
+                {
+                    throw new NotImplementedException();
                 }
             }
         }

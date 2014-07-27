@@ -70,6 +70,7 @@
     </Compile>
     <Compile Include="GraphicsDeviceService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RenderingError.cs" />
     <Compile Include="ServiceContainer.cs" />
   </ItemGroup>
   <ItemGroup>

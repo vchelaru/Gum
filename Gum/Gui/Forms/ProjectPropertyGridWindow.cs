@@ -52,11 +52,6 @@ namespace Gum.Gui.Forms
             WireframeObjectManager.Self.RefreshAll(true);
             PluginManager.Self.GuidesChanged();
 
-            if (ProjectState.Self.GumProjectSave != null)
-            {
-                GraphicalUiElement.ShowLineRectangles = ProjectState.Self.GumProjectSave.ShowOutlines;
-                EditingManager.Self.RestrictToUnitValues = ProjectState.Self.GumProjectSave.RestrictToUnitValues;
-            }
 
 
 
@@ -75,6 +70,13 @@ namespace Gum.Gui.Forms
 
             GraphicalUiElement.CanvasWidth = ProjectState.Self.GumProjectSave.DefaultCanvasWidth;
             GraphicalUiElement.CanvasHeight = ProjectState.Self.GumProjectSave.DefaultCanvasHeight;
+
+            if (ProjectState.Self.GumProjectSave != null)
+            {
+                GraphicalUiElement.ShowLineRectangles = ProjectState.Self.GumProjectSave.ShowOutlines;
+                EditingManager.Self.RestrictToUnitValues = ProjectState.Self.GumProjectSave.RestrictToUnitValues;
+            }
+
 
             //EditingManager.Self.UpdateSelectedObjectsPositionAndDimensions();
         }

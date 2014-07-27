@@ -147,8 +147,16 @@ namespace StateAnimationPlugin.Views
                 if (dialogResult.HasValue && dialogResult.Value)
                 {
                     var item = lbmb.SelectedItem;
-                    
-                    ViewModel.SelectedAnimation.States.Add(new AnimatedStateViewModel() { StateName = (string)item });
+
+                    var newVm = new AnimatedStateViewModel() { StateName = (string)item };
+
+                    if(ViewModel.SelectedAnimation.SelectedState != null)
+                    {
+                        // put this after the current animation
+                        newVm.Time = ViewModel.SelectedAnimation.SelectedState.Time + 1f;
+                    }
+
+                    ViewModel.SelectedAnimation.States.Add(newVm);
 
                     ViewModel.SelectedAnimation.States.BubbleSort();
                 }
@@ -191,9 +199,24 @@ namespace StateAnimationPlugin.Views
 
         private void HandlePlayStopClicked(object sender, RoutedEventArgs e)
         {
+            if (this.ViewModel != null && SelectedState.Self.SelectedElement != null)
+            {
+                this.ViewModel.SelectedAnimation.RefreshCombinedStates(SelectedState.Self.SelectedElement);
+            }
+
             mPlayTimer.IsEnabled = !mPlayTimer.IsEnabled;
 
             UpdatePlayStopButton();
+        }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            if(mPlayTimer.IsEnabled)
+            {
+                mPlayTimer.Stop(); ;
+
+                
+            }
         }
 
 

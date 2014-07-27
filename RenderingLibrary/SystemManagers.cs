@@ -8,7 +8,7 @@ using RenderingLibrary.Math.Geometry;
 
 namespace RenderingLibrary
 {
-    public class SystemManagers
+    public partial class SystemManagers
     {
         #region Fields
 

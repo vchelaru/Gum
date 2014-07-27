@@ -159,7 +159,7 @@ namespace Gum.Managers
 
                     if (!string.IsNullOrEmpty(eventSave.ExposedAsName))
                     {
-                        instanceMember.DisplayName = eventSave.GetExposedOrRootName() + " (exposed as " +
+                        instanceMember.DisplayName = eventSave.GetRootName() + " (exposed as " +
                             eventSave.ExposedAsName + ")";
                     }
 
@@ -173,12 +173,40 @@ namespace Gum.Managers
             {
                 foreach (var member in category.Members)
                 {
-                    member.ContextMenuEvents.Add("Expose Event", HandleExposeClick);
+                    string rawName = member.Name;
+                    if(member.DisplayName.Contains(" (exposed"))
+                    {
+                        rawName = member.DisplayName.Substring(0, member.DisplayName.IndexOf(" (exposed"));
+                    }
+
+                    var eventSave = selectedElement.Events.FirstOrDefault(item => item.Name ==
+                        selectedInstance.Name + "." + rawName);
+
+                    bool isAlreadyExposed = eventSave != null && !string.IsNullOrEmpty(eventSave.ExposedAsName);
+
+                    if (isAlreadyExposed)
+                    {
+                        member.ContextMenuEvents.Add("Un-expose Event", delegate
+                            {
+                                eventSave.ExposedAsName = null;
+                                if (SelectedState.Self.SelectedElement != null)
+                                {
+                                    GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+                                    GumCommands.Self.GuiCommands.RefreshPropertyGrid(true);
+                                }
+                            }
+                            );
+
+                    }
+                    else
+                    {
+                        member.ContextMenuEvents.Add("Expose Event", HandleExposeEventClick);
+                    }
                 }
             }
         }
 
-        private void HandleExposeClick(object sender, System.Windows.RoutedEventArgs e)
+        private void HandleExposeEventClick(object sender, System.Windows.RoutedEventArgs e)
         {
             TextInputWindow tiw = new TextInputWindow();
 
@@ -209,10 +237,10 @@ namespace Gum.Managers
                 if (SelectedState.Self.SelectedElement != null)
                 {
                     GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+
+                    GumCommands.Self.GuiCommands.RefreshPropertyGrid(true);
                 }
             }
         }
-
-
     }
 }

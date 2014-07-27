@@ -42,7 +42,7 @@ namespace XnaAndWinforms
 
         float mDesiredFramesPerSecond = 30;
 
-        string mRenderError = null;
+        RenderingError mRenderError = null;
 
         bool mIsInitialized = false;
 
@@ -184,21 +184,18 @@ namespace XnaAndWinforms
 
             if (clientWidth > 0 && clientHeight > 0)
             {
-                if (string.IsNullOrEmpty(mRenderError))
-                {
-                    string beginDrawError = BeginDraw();
+                PreDrawUpdate();
 
-                    if (!string.IsNullOrEmpty(beginDrawError))
-                    {
-                        mRenderError = beginDrawError;
-                    }
+                if (string.IsNullOrEmpty(mRenderError.Message))
+                {
+                    BeginDraw(mRenderError);
                 }
 
 
                 lock (this)
                 {
 
-                    if (string.IsNullOrEmpty(mRenderError))
+                    if (string.IsNullOrEmpty(mRenderError.Message))
                     {
                         try
                         {
@@ -211,14 +208,16 @@ namespace XnaAndWinforms
                         }
                         catch (Exception exception)
                         {
-                            mRenderError = exception.ToString();
+                            mRenderError.Message = exception.ToString();
                         }
                     }
                     
                     else
                     {
                         // If BeginDraw failed, show an error message using System.Drawing.
-                        PaintUsingSystemDrawing(e.Graphics, mRenderError);
+                        PaintUsingSystemDrawing(e.Graphics, mRenderError.ProcessedMessage);
+
+                        DesiredFramesPerSecond = 1;
                     }
                 }
             }
@@ -232,41 +231,39 @@ namespace XnaAndWinforms
         /// if this was not possible, which can happen if the graphics device is
         /// lost, or if we are running inside the Form designer.
         /// </summary>
-        string BeginDraw()
+        void BeginDraw(RenderingError error)
         {
             // If we have no graphics device, we must be running in the designer.
             if (graphicsDeviceService == null)
             {
-                return Text + "\n\n" + GetType();
+                error.Message = Text + "\n\n" + GetType();
             }
 
-            // Make sure the graphics device is big enough, and is not lost.
-            string deviceResetError = HandleDeviceReset();
-
-            if (!string.IsNullOrEmpty(deviceResetError))
+            if (error.HasErrors == false || error.GraphicsDeviceNeedsReset)
             {
-                return deviceResetError;
+                TryHandleDeviceReset(error);
             }
+            if (!error.HasErrors)
+            {
 
-            // Many GraphicsDeviceControl instances can be sharing the same
-            // GraphicsDevice. The device backbuffer will be resized to fit the
-            // largest of these controls. But what if we are currently drawing
-            // a smaller control? To avoid unwanted stretching, we set the
-            // viewport to only use the top left portion of the full backbuffer.
-            Viewport viewport = new Viewport();
+                // Many GraphicsDeviceControl instances can be sharing the same
+                // GraphicsDevice. The device backbuffer will be resized to fit the
+                // largest of these controls. But what if we are currently drawing
+                // a smaller control? To avoid unwanted stretching, we set the
+                // viewport to only use the top left portion of the full backbuffer.
+                Viewport viewport = new Viewport();
 
-            viewport.X = 0;
-            viewport.Y = 0;
+                viewport.X = 0;
+                viewport.Y = 0;
 
-            viewport.Width = ClientSize.Width;
-            viewport.Height = ClientSize.Height;
+                viewport.Width = ClientSize.Width;
+                viewport.Height = ClientSize.Height;
 
-            viewport.MinDepth = 0;
-            viewport.MaxDepth = 1;
+                viewport.MinDepth = 0;
+                viewport.MaxDepth = 1;
 
-            GraphicsDevice.Viewport = viewport;
-
-            return null;
+                GraphicsDevice.Viewport = viewport;
+            }
         }
 
 
@@ -300,45 +297,55 @@ namespace XnaAndWinforms
         /// that the device is not lost. Returns an error string if the device
         /// could not be reset.
         /// </summary>
-        string HandleDeviceReset()
+        void TryHandleDeviceReset(RenderingError error)
         {
-            bool deviceNeedsReset = false;
 
             switch (GraphicsDevice.GraphicsDeviceStatus)
             {
                 case GraphicsDeviceStatus.Lost:
-                    // If the graphics device is lost, we cannot use it at all.
-                    return "Graphics device lost";
-
+                    // If the graphics device is lost, but we can try to reset it
+                    error.Message = "Graphics device lost";
+                    error.GraphicsDeviceLost = true;
+                    break;
                 case GraphicsDeviceStatus.NotReset:
                     // If device is in the not-reset state, we should try to reset it.
-                    deviceNeedsReset = true;
+                    error.GraphicsDeviceNeedsReset = true;
+                    error.Message = "Graphics device needs reset";
+
                     break;
 
                 default:
                     // If the device state is ok, check whether it is big enough.
                     PresentationParameters pp = GraphicsDevice.PresentationParameters;
 
-                    deviceNeedsReset = (ClientSize.Width > pp.BackBufferWidth) ||
+                    bool deviceNeedsReset = (ClientSize.Width > pp.BackBufferWidth) ||
                                        (ClientSize.Height > pp.BackBufferHeight);
+                    if(deviceNeedsReset)
+                    {
+                        error.Message = "Resolution has changed, needs reset";
+                        error.GraphicsDeviceNeedsReset = true;
+                    }
                     break;
             }
 
             // Do we need to reset the device?
-            if (deviceNeedsReset)
+            if (error.GraphicsDeviceNeedsReset)
             {
                 try
                 {
                     graphicsDeviceService.ResetDevice(ClientSize.Width,
                                                       ClientSize.Height);
+
+                    error.Message = null;
+                    error.GraphicsDeviceNeedsReset = false;
                 }
                 catch (Exception e)
                 {
-                    return "Graphics device reset failed\n\n" + e;
+                    error.GraphicsDeviceNeedsReset = false;
+                    error.Message = "Graphics device reset failed\n\n" + e;
                 }
             }
 
-            return null;
         }
 
 
@@ -377,7 +384,7 @@ namespace XnaAndWinforms
 
         #endregion
 
-        #region Abstract Methods
+        #region Protected Virtual Methods
 
 
         /// <summary>
@@ -385,12 +392,18 @@ namespace XnaAndWinforms
         /// </summary>
         protected virtual void Initialize()
         {
+            mRenderError = new RenderingError();
+
             if (XnaInitialize != null)
             {
                 XnaInitialize();
             }
         }
 
+        protected virtual void PreDrawUpdate()
+        {
+
+        }
 
         /// <summary>
         /// Derived classes override this to draw themselves using the GraphicsDevice.
@@ -406,7 +419,7 @@ namespace XnaAndWinforms
             }
             catch (Exception e)
             {
-                this.mRenderError = e.ToString();
+                this.mRenderError.Message = e.ToString();
             }
 
         }

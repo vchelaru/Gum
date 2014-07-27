@@ -56,7 +56,7 @@ namespace Gum.Wireframe
         {
             get
             {
-                var toReturn = Element.States.FirstOrDefault(item => item.Name == StateName);
+                var toReturn = Element.AllStates.FirstOrDefault(item => item.Name == StateName);
                 if (toReturn == null)
                 {
                     toReturn = Element.DefaultState;
