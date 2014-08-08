@@ -15,6 +15,12 @@ namespace Gum
             private set;
         }
 
+        public WireframeCommands WireframeCommands
+        {
+            get;
+            private set;
+        }
+
         public FileCommands FileCommands
         {
             get;
@@ -33,6 +39,7 @@ namespace Gum
             GuiCommands = new GuiCommands();
             FileCommands = new FileCommands();
             Edit = new EditCommands();
+            WireframeCommands = new WireframeCommands();
         }
 
         public void Initialize(MainWindow mainWindow)

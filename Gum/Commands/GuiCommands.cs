@@ -11,9 +11,14 @@ namespace Gum.Commands
     public class GuiCommands
     {
         FlowLayoutPanel mFlowLayoutPanel;
+
+        MainWindow mMainWindow;
+
         internal void Initialize(MainWindow mainWindow)
         {
             mFlowLayoutPanel = mainWindow.ToolbarPanel;
+
+            mMainWindow = mainWindow;
         }
 
         public void AddControl(Control control)
@@ -30,6 +35,12 @@ namespace Gum.Commands
         internal void RefreshPropertyGrid(bool force = false)
         {
             PropertyGridManager.Self.RefreshUI(force:force);
+        }
+
+        internal void AddControl(System.Windows.Controls.UserControl control, string tabTitle)
+        {
+            mMainWindow.AddWpfControl(control, tabTitle);
+
         }
     }
 }

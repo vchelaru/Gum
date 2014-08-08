@@ -303,7 +303,7 @@ namespace RenderingLibrary.Graphics
             get { return mFontScale; }
             set
             {
-                mFontScale = value;
+                mFontScale = System.Math.Max(0, value);
                 UpdateWrappedText();
                 mNeedsBitmapFontRefresh = true;
             }
@@ -642,7 +642,7 @@ namespace RenderingLibrary.Graphics
             }
 
             Sprite.Render(managers, spriteBatch, mTempForRendering, mTextureToRender,
-                new Color(mRed, mGreen, mBlue, mAlpha), null, false, false, Rotation);
+                new Color(mRed, mGreen, mBlue, mAlpha), null, false, false, Rotation, treat0AsFullDimensions:false);
         }
 
         IPositionedSizedObject mTempForRendering;

@@ -42,7 +42,7 @@ namespace XnaAndWinforms
 
         float mDesiredFramesPerSecond = 30;
 
-        RenderingError mRenderError = null;
+        RenderingError mRenderError = new RenderingError();
 
         bool mIsInitialized = false;
 
@@ -173,12 +173,24 @@ namespace XnaAndWinforms
             this.Invalidate();
         }
 
+        int simultaneousPaints = 0;
 
         /// <summary>
         /// Redraws the control in response to a WinForms paint message.
         /// </summary>
         protected override void OnPaint(PaintEventArgs e)
         {
+            // This prevents multiple invalidates from happening at the same time.
+            // It can fix some bugs and improves performance.
+            if(simultaneousPaints > 0)
+            {
+                return;
+            }
+
+
+
+            simultaneousPaints++;
+
             int clientWidth = ClientSize.Width;
             int clientHeight = ClientSize.Height;
 
@@ -223,6 +235,7 @@ namespace XnaAndWinforms
             }
 
             base.OnPaint(e);
+            simultaneousPaints--;
         }
 
 
@@ -392,7 +405,6 @@ namespace XnaAndWinforms
         /// </summary>
         protected virtual void Initialize()
         {
-            mRenderError = new RenderingError();
 
             if (XnaInitialize != null)
             {

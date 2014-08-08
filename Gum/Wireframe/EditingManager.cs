@@ -399,13 +399,6 @@ namespace Gum.Wireframe
                 foreach (var instance in SelectedState.Self.SelectedInstances)
                 {
                     RefreshPositionsAndScalesForInstance(instance, elementStack);
-
-
-                    
-                    //WireframeObjectManager.Self.SetInstanceIpsoDimensionsAndPositions(ipso,
-                    //    SelectedState.Self.SelectedInstance,
-                    //    SelectedState.Self.SelectedElement,
-                    //    WireframeObjectManager.Self.GetRepresentation(SelectedState.Self.SelectedElement));
                 }
 
                 foreach (var ipso in SelectedState.Self.SelectedIpsos)
@@ -416,8 +409,6 @@ namespace Gum.Wireframe
                         RecursiveVariableFinder rvf = new RecursiveVariableFinder(asGue.Tag as InstanceSave, SelectedState.Self.SelectedElement);
 
                         asGue.SetGueValues(rvf);
-                        //public void SetGueWidthAndPositionValues(GraphicalUiElement gue, RecursiveVariableFinder rvf)
-                        //asGue.UpdateLayout();
                     }
                 }
             }
@@ -431,10 +422,6 @@ namespace Gum.Wireframe
 
                     RecursiveVariableFinder rvf = new RecursiveVariableFinder(elementSave.DefaultState);
                     (ipso as GraphicalUiElement).SetGueValues(rvf);
-
-                    //WireframeObjectManager.Self.SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(ipso, elementSave, rvf);
-
-                    //ipso.UpdateLayout();
                 }
                 else if(SelectedState.Self.SelectedElement != null)
                 {
@@ -443,9 +430,6 @@ namespace Gum.Wireframe
                         RefreshPositionsAndScalesForInstance(instance, elementStack);
                     }
                 }
-                //WireframeObjectManager.Self.SetElementIpsoDimensionsAndPositions(
-                //    ipso,
-                //    SelectedState.Self.SelectedElement);
             }
         }
 
@@ -455,8 +439,6 @@ namespace Gum.Wireframe
 
             ipso.UpdateLayout();
 
-            //RecursiveVariableFinder rvf = new RecursiveVariableFinder(instance, SelectedState.Self.SelectedElement);
-            //WireframeObjectManager.Self.SetIpsoWidthAndPositionAccordingToUnitValueAndTypes(ipso, SelectedState.Self.SelectedElement, rvf);
         }
 
         private void HandlesActivity()
@@ -494,12 +476,12 @@ namespace Gum.Wireframe
             if (SelectionManager.Self.HasSelection && SelectedState.Self.SelectedInstances.Count() == 0)
             {
                 // That means we have the entire component selected
-                hasChangeOccurred |= SideGrabbingActivityForInstanceSave(cursorXChange, cursorYChange, null, elementStack);
+                hasChangeOccurred |= SideGrabbingActivityForInstanceSave(cursorXChange, cursorYChange, instanceSave:null, elementStack:elementStack);
             }
 
             foreach (InstanceSave save in SelectedState.Self.SelectedInstances)
             {
-                hasChangeOccurred |= SideGrabbingActivityForInstanceSave(cursorXChange, cursorYChange, save, elementStack);
+                hasChangeOccurred |= SideGrabbingActivityForInstanceSave(cursorXChange, cursorYChange, instanceSave:save, elementStack:elementStack);
             }
 
             if (hasChangeOccurred)
@@ -735,38 +717,51 @@ namespace Gum.Wireframe
 
         private static float GetRatioXOverInSelection(IPositionedSizedObject ipso, HorizontalAlignment horizontalAlignment)
         {
-            float handleLeft = SelectionManager.Self.ResizeHandles.X;
-            float handleWidth = SelectionManager.Self.ResizeHandles.Width;
 
-            float ipsoXToUse = ipso.GetAbsoluteX();
+            //float handleLeft = SelectionManager.Self.ResizeHandles.X;
+            //float handleWidth = SelectionManager.Self.ResizeHandles.Width;
 
-            if (horizontalAlignment == HorizontalAlignment.Center)
+            //float ipsoXToUse = ipso.GetAbsoluteX();
+
+            //if (horizontalAlignment == HorizontalAlignment.Center)
+            //{
+            //    ipsoXToUse += ipso.Width / 2.0f;
+            //}
+            //else if (horizontalAlignment == HorizontalAlignment.Right)
+            //{
+            //    ipsoXToUse += ipso.Width;
+            //}
+
+            //return (ipsoXToUse - handleLeft) / handleWidth;
+            // Isn't this easier?
+            if (horizontalAlignment == HorizontalAlignment.Left)
             {
-                ipsoXToUse += ipso.Width / 2.0f;
+                return 0;
             }
-            else if (horizontalAlignment == HorizontalAlignment.Right)
+            else if (horizontalAlignment == HorizontalAlignment.Center)
             {
-                ipsoXToUse += ipso.Width;
+                return .5f;
             }
-
-            return (ipsoXToUse - handleLeft) / handleWidth;
+            else// if (horizontalAlignment == HorizontalAlignment.Right)
+            {
+                return 1;
+            }
         }
 
         private static float GetRatioYDownInSelection(IPositionedSizedObject ipso, VerticalAlignment verticalAlignment)
         {
-            float handleTop = SelectionManager.Self.ResizeHandles.Y;
-            float handleHeight = SelectionManager.Self.ResizeHandles.Height;
-            float ipsoYToUse = ipso.GetAbsoluteY();
-            if (verticalAlignment == VerticalAlignment.Center)
+            if (verticalAlignment == VerticalAlignment.Top)
             {
-                ipsoYToUse += ipso.Height / 2.0f;
+                return 0;
             }
-            if (verticalAlignment == VerticalAlignment.Bottom)
+            else if (verticalAlignment == VerticalAlignment.Center)
             {
-                ipsoYToUse += ipso.Height;
+                return .5f;
             }
-
-            return (ipsoYToUse - handleTop) / handleHeight;
+            else //if (verticalAlignment == VerticalAlignment.Bottom)
+            {
+                return 1;
+            }
         }
 
         private float GetXMultiplierForLeft(InstanceSave instanceSave, IPositionedSizedObject ipso)
@@ -883,6 +878,10 @@ namespace Gum.Wireframe
                         currentValue = selectedIpso.Height;
                     }
                 }
+                else if ((DimensionUnitType)unitsValue == DimensionUnitType.RelativeToContainer)
+                {
+                    // We don't do anything special with "0" when RelativeToContainer, so don't modify the currentValue
+                }
                 else if ((DimensionUnitType)unitsValue == DimensionUnitType.PercentageOfSourceFile)
                 {
                     if (selectedIpso is Sprite)
@@ -902,6 +901,7 @@ namespace Gum.Wireframe
                         }
                     }
                 }
+
                 else
                 {
                     float parentValue;

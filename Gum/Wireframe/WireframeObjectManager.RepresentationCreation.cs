@@ -108,6 +108,8 @@ namespace Gum.Wireframe
                 rootIpso.Tag = elementSave;
                 mGraphicalElements.Add(rootIpso);
             }
+            rootIpso.ElementSave = elementSave;
+
             List<GraphicalUiElement> newlyAdded = new List<GraphicalUiElement>();
 
 
@@ -150,7 +152,7 @@ namespace Gum.Wireframe
                     mGraphicalElements.Add(child);
 
                     // There is no GUE for the root, so each child is in charge of adding itself.
-                    if (rootIpso == null)
+                    if (rootIpso == null || mGuideRectangles.Contains(child.Parent) || child.Parent == mWireframeControl.ScreenBounds)
                     {
                         child.AddToManagers();
                     }

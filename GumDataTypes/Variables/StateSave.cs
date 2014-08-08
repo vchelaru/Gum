@@ -225,6 +225,22 @@ namespace Gum.DataTypes.Variables
             }
         }
 
+        public void SetValue(string variableName, object valueToSet, string variableType)
+        {
+            VariableSave variableState = GetVariableSave(variableName);
+
+            if(variableState == null)
+            {
+                variableState = new VariableSave();
+                variableState.Name = variableName;
+                variableState.Type = variableType;
+                this.Variables.Add(variableState);
+            }
+
+            variableState.Value = valueToSet;
+            variableState.SetsValue = true;
+        }
+
         public override string ToString()
         {
             return this.Name + " in " + ParentContainer;

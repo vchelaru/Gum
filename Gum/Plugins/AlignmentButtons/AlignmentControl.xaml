@@ -1,0 +1,38 @@
+﻿<UserControl x:Class="Gum.Plugins.AlignmentButtons.AlignmentControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d">
+    <GroupBox Header="Dock" VerticalAlignment="Top" HorizontalAlignment="Left">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"></RowDefinition>
+                <RowDefinition Height="Auto"></RowDefinition>
+                <RowDefinition Height="Auto"></RowDefinition>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"></ColumnDefinition>
+                <ColumnDefinition Width="Auto"></ColumnDefinition>
+                <ColumnDefinition Width="Auto"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+
+            <Button x:Name="TopButton" Click="TopButton_Click" Grid.Row="0" Grid.Column="1" Margin="3">
+                <Image Source="/Gum;component/Content/Icons/Sizing/TopSide.png" Height="32" Width="32"/>
+            </Button>
+            <Button x:Name="LeftButton" Click="LeftButton_Click" Grid.Row="1" Grid.Column="0" Margin="3">
+                <Image Source="/Gum;component/Content/Icons/Sizing/LeftSide.png" Height="32" Width="32"/>
+            </Button>
+            <Button x:Name="FillButton" Click="FillButton_Click" Grid.Row="1" Grid.Column="1" Margin="3">
+                <Image Source="/Gum;component/Content/Icons/Sizing/Fill.png" Height="32" Width="32"/>
+            </Button>
+            <Button x:Name="RightButton" Click="RightButton_Click" Grid.Row="1" Grid.Column="2" Margin="3">
+                <Image Source="/Gum;component/Content/Icons/Sizing/RightSide.png" Height="32" Width="32"/>
+            </Button>
+            <Button x:Name="BottomButton" Click="BottomButton_Click" Grid.Row="2" Grid.Column="1" Margin="3">
+                <Image Source="/Gum;component/Content/Icons/Sizing/BottomSide.png" Height="32" Width="32"/>
+            </Button>
+        
+        </Grid>
+    </GroupBox>
+</UserControl>

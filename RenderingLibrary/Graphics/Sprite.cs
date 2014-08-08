@@ -485,7 +485,8 @@ namespace RenderingLibrary.Graphics
             Rectangle? sourceRectangle = null,
             bool flipHorizontal = false,
             bool flipVertical = false,
-            float rotationInDegrees = 0
+            float rotationInDegrees = 0,
+            bool treat0AsFullDimensions = true
             )
         {
             Renderer renderer = null;
@@ -520,7 +521,7 @@ namespace RenderingLibrary.Graphics
                 effects |= SpriteEffects.FlipVertically;
             }
 
-            if (ipso.Width > 0 && ipso.Height > 0)
+            if ((ipso.Width > 0 && ipso.Height > 0) || treat0AsFullDimensions == false)
             {
                 Vector2 scale = Vector2.One;
 

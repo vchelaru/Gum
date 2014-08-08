@@ -483,18 +483,6 @@ namespace Gum.Wireframe
                 mOverlayNineSlice.Green = HighlightedNineSlice.Green;
                 mOverlayNineSlice.Blue = HighlightedNineSlice.Blue;
 
-
-                if (HighlightedNineSlice.TopLeftTexture == HighlightedNineSlice.TopTexture)
-                {
-                    // This is using the same texture for all sides, so let's update to that
-                    mOverlayNineSlice.UpdateSourceRectanglesForSingleTexture(
-                        mOverlayNineSlice.TopLeftTexture);
-                }
-                else
-                {
-                    mOverlayNineSlice.UpdateSourceRectanglesForMultipleTextures();
-                }
-
             }
             else if (HighlightedLineRectangle != null)
             {

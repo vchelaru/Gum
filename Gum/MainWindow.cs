@@ -49,6 +49,7 @@ namespace Gum
             // ProjectManager.Initialize may load a project, and if it
             // does, then we need to make sure that the wireframe controls
             // are set up properly before that happens.
+
         }
 
         //void HandleXnaInitialize(object sender, EventArgs e)
@@ -293,6 +294,25 @@ namespace Gum
             ElementTreeViewManager.Self.OnSelect(ObjectTreeView.SelectedNode);
         }
 
+        public void AddWpfControl(System.Windows.Controls.UserControl control, string tabTitle)
+        {
+            System.Windows.Forms.Integration.ElementHost wpfHost;
+            wpfHost = new System.Windows.Forms.Integration.ElementHost();
+            wpfHost.Dock = DockStyle.Fill;
+            wpfHost.Child = control;
 
+            System.Windows.Forms.TabPage tabPage = new TabPage();
+
+            tabPage.Controls.Add(wpfHost);
+            tabPage.Location = new System.Drawing.Point(4, 22);
+            tabPage.Padding = new System.Windows.Forms.Padding(3);
+            tabPage.Size = new System.Drawing.Size(230, 463);
+            tabPage.TabIndex = 1;
+            tabPage.Text = tabTitle;
+            tabPage.UseVisualStyleBackColor = true;
+
+
+            this.PropertyGridTab.Controls.Add(tabPage);
+        }
     }
 }

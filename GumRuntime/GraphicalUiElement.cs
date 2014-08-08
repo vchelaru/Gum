@@ -1050,13 +1050,24 @@ namespace Gum.Wireframe
             float unitOffsetY = 0;
 
             AdjustOffsetsByUnits(parentWidth, parentHeight, ref unitOffsetX, ref unitOffsetY);
-
+#if DEBUG
+            if(float.IsNaN(unitOffsetX) || float.IsNaN(unitOffsetY))
+            {
+                throw new Exception("Invalid unit offsets");
+            }
+#endif
 
             AdjustOffsetsByOrigin(ref unitOffsetX, ref unitOffsetY);
-
+#if DEBUG
+            if(float.IsNaN(unitOffsetX) || float.IsNaN(unitOffsetY))
+            {
+                throw new Exception("Invalid unit offsets");
+            }
+#endif
             unitOffsetX += parentOriginOffsetX;
             unitOffsetY += parentOriginOffsetY;
             
+
 
             this.mContainedObjectAsIpso.X = unitOffsetX;
             this.mContainedObjectAsIpso.Y = unitOffsetY;
@@ -1630,7 +1641,7 @@ namespace Gum.Wireframe
                     }
                 }
             }
-            else
+            else if(this.Children != null)
             {
                 foreach(var child in this.Children)
                 {

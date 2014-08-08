@@ -89,6 +89,7 @@
     <Compile Include="Commands\EditCommands.cs" />
     <Compile Include="Commands\FileCommands.cs" />
     <Compile Include="Commands\GuiCommands.cs" />
+    <Compile Include="Commands\WireframeCommands.cs" />
     <Compile Include="DataTypes\ComponentSaveExtensionMethods.cs" />
     <Compile Include="DataTypes\ElementSaveExtensionMethods.cs" />
     <Compile Include="DataTypes\GumProjectSaveExtensionMethods.cs" />
@@ -150,6 +151,10 @@
     <Compile Include="Managers\PropertyGridManager.VariableSet.cs" />
     <Compile Include="Managers\RenameManager.cs" />
     <Compile Include="Managers\Singleton.cs" />
+    <Compile Include="Plugins\AlignmentButtons\AlignmentControl.xaml.cs">
+      <DependentUpon>AlignmentControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Plugins\AlignmentButtons\AlignmentMainPlugin.cs" />
     <Compile Include="Plugins\BaseClasses\InternalPlugin.cs" />
     <Compile Include="PropertyGridHelpers\Converters\AvailableGuidesTypeConverter.cs" />
     <Compile Include="Input\CursorExtensionMethods.cs" />
@@ -312,6 +317,21 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Resource Include="Content\Icons\Sizing\BottomSide.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Content\Icons\Sizing\Fill.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Content\Icons\Sizing\LeftSide.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Content\Icons\Sizing\RightSide.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Content\Icons\Sizing\TopSide.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
     <Content Include="Libraries\TargaImage.dll" />
     <Content Include="Libraries\TargaImage.xml" />
     <None Include="Libraries\WpfDataUi\WpfDataUi.dll" />
@@ -326,10 +346,13 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Content\Icons\" />
     <Folder Include="Converters\" />
   </ItemGroup>
   <ItemGroup>
+    <Page Include="Plugins\AlignmentButtons\AlignmentControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="TestWpfControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

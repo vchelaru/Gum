@@ -47,6 +47,11 @@ namespace RenderingLibrary.Graphics
         Sprite mLeftSprite = new Sprite(null);
         Sprite mCenterSprite = new Sprite(null);
 
+        int mFullOutsideWidth;
+        int mFullInsideWidth;
+
+        int mFullOutsideHeight;
+        int mFullInsideHeight;
 
 
         #endregion
@@ -142,18 +147,9 @@ namespace RenderingLibrary.Graphics
             {
                 // I think we want to treat these individually so a 
                 // width could be set but height could be default
-                if (Width != 0)
-                {
-                    return Width;
-                }
-                else if (LeftTexture != null && CenterTexture != null && RightTexture != null)
-                {
-                    return LeftTexture.Width + CenterTexture.Width + RightTexture.Width;
-                }
-                else
-                {
-                    return 32;
-                }
+
+                return Width;
+
             }
         }
 
@@ -161,19 +157,7 @@ namespace RenderingLibrary.Graphics
         {
             get
             {
-                // See comment in Width
-                if (Height != 0)
-                {
-                    return Height;
-                }
-                else if (TopTexture != null && CenterTexture != null && BottomTexture != null)
-                {
-                    return TopTexture.Height + CenterTexture.Height + BottomTexture.Height;
-                }
-                else
-                {
-                    return 32;
-                }
+                return Height;
             }
         }
 
@@ -255,13 +239,32 @@ namespace RenderingLibrary.Graphics
         public float X
         {
             get { return Position.X; }
-            set { Position.X = value; }
+            set 
+            { 
+#if DEBUG
+                if(float.IsNaN(value))
+                {
+                    throw new Exception("NaN is not an acceptable value");
+                }
+#endif
+                Position.X = value; 
+            }
         }
 
         public float Y
         {
             get { return Position.Y; }
-            set { Position.Y = value; }
+            set 
+            {
+#if DEBUG
+                if (float.IsNaN(value))
+                {
+                    throw new Exception("NaN is not an acceptable value");
+                }
+#endif
+                Position.Y = value; 
+            
+            }
         }
 
         public float Z
@@ -361,10 +364,64 @@ namespace RenderingLibrary.Graphics
 
         void IRenderable.Render(SpriteBatch spriteBatch, SystemManagers managers)
         {
-            if (this.AbsoluteVisible)
+            if (this.AbsoluteVisible && Width > 0 && Height > 0)
             {
-                float desiredMiddleWidth = this.Width - mTopLeftSprite.EffectiveWidth - mTopRightSprite.EffectiveWidth;
-                float desiredMiddleHeight = this.Height - this.mTopLeftSprite.EffectiveHeight - this.mBottomLeftSprite.EffectiveHeight;
+                
+
+
+                RefreshSourceRectangles();
+
+                
+                bool usesMulti = mTopLeftSprite.Texture != mTopSprite.Texture;
+
+                float desiredMiddleWidth = 0;
+                float desiredMiddleHeight = 0;
+
+
+                if (usesMulti == false)
+                {
+                    float fullWidth = mFullOutsideWidth * 2 + mFullInsideWidth;
+                    if (Width >= fullWidth)
+                    {
+                        desiredMiddleWidth = this.Width - mTopLeftSprite.EffectiveWidth - mTopRightSprite.EffectiveWidth;
+
+                        mTopLeftSprite.Width = mTopRightSprite.Width = mLeftSprite.Width = mRightSprite.Width =
+                            mBottomLeftSprite.Width = mBottomRightSprite.Width = mFullOutsideWidth;
+                    }
+                    else if (Width >= mFullOutsideWidth * 2)
+                    {
+                        desiredMiddleWidth = this.Width - mFullOutsideWidth * 2;
+
+                        mTopLeftSprite.Width = mTopRightSprite.Width = mLeftSprite.Width = mRightSprite.Width = 
+                             mBottomLeftSprite.Width = mBottomRightSprite.Width = mFullOutsideWidth;
+                    }
+                    else
+                    {
+                        desiredMiddleWidth = 0;
+                        mTopLeftSprite.Width = mTopRightSprite.Width = mLeftSprite.Width = mRightSprite.Width =
+                            mBottomLeftSprite.Width = mBottomRightSprite.Width = Width/2.0f;
+                    }
+
+
+                    float fullHeight= mFullOutsideHeight * 2 + mFullInsideHeight;
+                    if(Height >= fullHeight)
+                    {
+                        desiredMiddleHeight = this.Height - mTopLeftSprite.EffectiveHeight - mTopRightSprite.EffectiveHeight;
+                    }
+                    else if (Height >= mFullOutsideHeight * 2)
+                    {
+                        desiredMiddleHeight = this.Height - mFullOutsideHeight * 2;
+                    }
+                    else
+                    {
+                        desiredMiddleHeight = 0;
+                    }
+                }
+                else
+                {
+                    desiredMiddleWidth = this.Width - mTopLeftSprite.EffectiveWidth - mTopRightSprite.EffectiveWidth;
+                    desiredMiddleHeight = this.Height - this.mTopLeftSprite.EffectiveHeight - this.mBottomLeftSprite.EffectiveHeight;
+                }
 
                 this.mTopSprite.Width = desiredMiddleWidth;
                 this.mCenterSprite.Width = desiredMiddleWidth;
@@ -382,7 +439,7 @@ namespace RenderingLibrary.Graphics
                 mTopSprite.X = mTopLeftSprite.X + mTopLeftSprite.EffectiveWidth;
                 mTopSprite.Y = y;
 
-                mTopRightSprite.X = mTopSprite.X + mTopSprite.EffectiveWidth;
+                mTopRightSprite.X = mTopSprite.X + mTopSprite.Width;
                 mTopRightSprite.Y = y;
 
                 y = mTopLeftSprite.Y + mTopLeftSprite.EffectiveHeight;
@@ -393,10 +450,10 @@ namespace RenderingLibrary.Graphics
                 mCenterSprite.X = mLeftSprite.X + mLeftSprite.EffectiveWidth;
                 mCenterSprite.Y = y;
 
-                mRightSprite.X = mCenterSprite.X + mCenterSprite.EffectiveWidth;
+                mRightSprite.X = mCenterSprite.X + mCenterSprite.Width;
                 mRightSprite.Y = y;
 
-                y = mLeftSprite.Y + mLeftSprite.EffectiveHeight;
+                y = mLeftSprite.Y + mLeftSprite.Height;
 
                 mBottomLeftSprite.X = this.GetAbsoluteX();
                 mBottomLeftSprite.Y = y;
@@ -404,21 +461,109 @@ namespace RenderingLibrary.Graphics
                 mBottomSprite.X = mBottomLeftSprite.X + mBottomLeftSprite.EffectiveWidth;
                 mBottomSprite.Y = y;
 
-                mBottomRightSprite.X = mBottomSprite.X + mBottomSprite.EffectiveWidth;
+                mBottomRightSprite.X = mBottomSprite.X + mBottomSprite.Width;
                 mBottomRightSprite.Y = y;
 
+                Render(mTopLeftSprite, managers, spriteBatch);
+                if (desiredMiddleWidth > 0)
+                {
+                    Render(mTopSprite, managers, spriteBatch);
+                    Render(mBottomSprite, managers, spriteBatch);
 
-                ((IRenderable)mTopLeftSprite).Render(spriteBatch, managers);
-                ((IRenderable)mTopSprite).Render(spriteBatch, managers);
-                ((IRenderable)mTopRightSprite).Render(spriteBatch, managers);
-                ((IRenderable)mLeftSprite).Render(spriteBatch, managers);
-                ((IRenderable)mCenterSprite).Render(spriteBatch, managers);
-                ((IRenderable)mRightSprite).Render(spriteBatch, managers);
-                ((IRenderable)mBottomLeftSprite).Render(spriteBatch, managers);
-                ((IRenderable)mBottomSprite).Render(spriteBatch, managers);
-                ((IRenderable)mBottomRightSprite).Render(spriteBatch, managers);
+                    if (desiredMiddleHeight > 0)
+                    {
+                        Render(mCenterSprite, managers, spriteBatch);
+                    }
 
+                }
+                if(desiredMiddleHeight > 0)
+                {
+                    Render(mLeftSprite, managers, spriteBatch);
+                    Render(mRightSprite, managers, spriteBatch);
+                }
+
+
+                Render(mTopRightSprite, managers, spriteBatch);
+                Render(mBottomLeftSprite, managers, spriteBatch);
+                Render(mBottomRightSprite, managers, spriteBatch);
             }
+        }
+
+        private void RefreshSourceRectangles()
+        {
+            bool useMulti = mTopLeftSprite.Texture != mTopSprite.Texture;
+
+            if (useMulti)
+            {
+                if (mTopLeftSprite.Texture == null)
+                {
+                    mTopLeftSprite.SourceRectangle = null;
+                    mTopSprite.SourceRectangle = null;
+                    mTopRightSprite.SourceRectangle = null;
+
+                    mLeftSprite.SourceRectangle = null;
+                    mCenterSprite.SourceRectangle = null;
+                    mRightSprite.SourceRectangle = null;
+
+                    mBottomLeftSprite.SourceRectangle = null;
+                    mBottomSprite.SourceRectangle = null;
+                    mBottomRightSprite.SourceRectangle = null;
+                }
+                else
+                {
+                    mFullOutsideWidth = mTopLeftSprite.Texture.Width;
+                    mFullInsideWidth = mTopLeftSprite.Texture.Width - (mFullOutsideWidth * 2);
+
+                    mTopLeftSprite.SourceRectangle = new Rectangle(0, 0, mTopLeftSprite.Texture.Width, mTopLeftSprite.Texture.Height);
+                    mTopSprite.SourceRectangle = new Rectangle(0, 0, mTopSprite.Texture.Width, mTopSprite.Texture.Height);
+                    mTopRightSprite.SourceRectangle = new Rectangle(0, 0, mTopRightSprite.Texture.Width, mTopRightSprite.Texture.Height);
+
+                    mLeftSprite.SourceRectangle = new Rectangle(0, 0, mLeftSprite.Texture.Width, mLeftSprite.Texture.Height);
+                    mCenterSprite.SourceRectangle = new Rectangle(0, 0, mCenterSprite.Texture.Width, mCenterSprite.Texture.Height);
+                    mRightSprite.SourceRectangle = new Rectangle(0, 0, mRightSprite.Texture.Width, mRightSprite.Texture.Height);
+
+                    mBottomLeftSprite.SourceRectangle = new Rectangle(0, 0, mBottomLeftSprite.Texture.Width, mBottomLeftSprite.Texture.Height);
+                    mBottomSprite.SourceRectangle = new Rectangle(0, 0, mBottomSprite.Texture.Width, mBottomSprite.Texture.Height);
+                    mBottomRightSprite.SourceRectangle = new Rectangle(0, 0, mBottomRightSprite.Texture.Width, mBottomRightSprite.Texture.Height);
+                }
+            }
+            else
+            {
+                var texture = mTopLeftSprite.Texture;
+
+                mFullOutsideWidth = (texture.Width + 1) / 3;
+                mFullInsideWidth = texture.Width - (mFullOutsideWidth * 2);
+
+                mFullOutsideHeight = (texture.Height + 1) / 3;
+                mFullInsideHeight = texture.Height - (mFullOutsideHeight * 2);
+
+                int outsideWidth = System.Math.Min(mFullOutsideWidth, RenderingLibrary.Math.MathFunctions.RoundToInt( this.Width / 2)); ;
+                int outsideHeight = System.Math.Min(mFullOutsideHeight, RenderingLibrary.Math.MathFunctions.RoundToInt(this.Height / 2));
+                int insideWidth = mFullInsideWidth;
+                int insideHeight = mFullInsideHeight;
+
+                
+
+
+                mTopLeftSprite.SourceRectangle = new Rectangle(0, 0, outsideWidth, outsideHeight);
+                mTopSprite.SourceRectangle = new Rectangle(outsideWidth, 0, insideWidth, outsideHeight);
+                mTopRightSprite.SourceRectangle = new Rectangle(insideWidth + outsideWidth, 0, outsideWidth, outsideHeight);
+
+                mLeftSprite.SourceRectangle = new Rectangle(0, outsideHeight, outsideWidth, insideHeight);
+                mCenterSprite.SourceRectangle = new Rectangle(outsideWidth, outsideHeight, insideWidth, insideHeight);
+                mRightSprite.SourceRectangle = new Rectangle(outsideWidth + insideWidth, outsideHeight, outsideWidth, insideHeight);
+
+                mBottomLeftSprite.SourceRectangle = new Rectangle(0, outsideHeight + insideHeight, outsideWidth, outsideHeight);
+                mBottomSprite.SourceRectangle = new Rectangle(outsideWidth, outsideHeight + insideHeight, insideWidth, outsideHeight);
+                mBottomRightSprite.SourceRectangle = new Rectangle(outsideWidth + insideWidth, outsideHeight + insideHeight, outsideWidth, outsideHeight);
+            }
+        }
+
+        void Render(Sprite sprite, SystemManagers managers, SpriteBatch spriteBatch)
+        {
+            Sprite.Render(managers, spriteBatch, sprite, sprite.Texture, sprite.Color, 
+                sprite.SourceRectangle, sprite.FlipHorizontal, sprite.FlipVertical, sprite.Rotation, treat0AsFullDimensions:false);
+
         }
 
         void IPositionedSizedObject.SetParentDirect(IPositionedSizedObject parent)
@@ -495,50 +640,6 @@ namespace RenderingLibrary.Graphics
             BottomLeftTexture = texture;
             BottomTexture = texture;
             BottomRightTexture = texture;
-
-
-                UpdateSourceRectanglesForSingleTexture(texture);
-        }
-
-        public void UpdateSourceRectanglesForSingleTexture(Texture2D texture)
-        {
-            if (texture != null)
-            {
-                int outsideWidth = (texture.Width + 1) / 3;
-                int insideWidth = texture.Width - (outsideWidth * 2);
-
-                int outsideHeight = (texture.Height + 1) / 3;
-                int insideHeight = texture.Height - (outsideHeight * 2);
-
-                mTopLeftSprite.SourceRectangle = new Rectangle(0, 0, outsideWidth, outsideHeight);
-                mTopSprite.SourceRectangle = new Rectangle(outsideWidth, 0, insideWidth, outsideHeight);
-                mTopRightSprite.SourceRectangle = new Rectangle(insideWidth + outsideWidth, 0, outsideWidth, outsideHeight);
-
-                mLeftSprite.SourceRectangle = new Rectangle(0, outsideHeight, outsideWidth, insideHeight);
-                mCenterSprite.SourceRectangle = new Rectangle(outsideWidth, outsideHeight, insideWidth, insideHeight);
-                mRightSprite.SourceRectangle = new Rectangle(outsideWidth + insideWidth, outsideHeight, outsideWidth, insideHeight);
-
-                mBottomLeftSprite.SourceRectangle = new Rectangle(0, outsideHeight + insideHeight, outsideWidth, outsideHeight);
-                mBottomSprite.SourceRectangle = new Rectangle(outsideWidth, outsideHeight + insideHeight, insideWidth, outsideHeight);
-                mBottomRightSprite.SourceRectangle = new Rectangle(outsideWidth + insideWidth, outsideHeight + insideHeight, outsideWidth, outsideHeight);
-            }
-
-        }
-
-        public void UpdateSourceRectanglesForMultipleTextures()
-        {
-            mTopLeftSprite.SourceRectangle = null;
-            mTopSprite.SourceRectangle = null;
-            mTopRightSprite.SourceRectangle = null;
-
-            mLeftSprite.SourceRectangle = null;
-            mCenterSprite.SourceRectangle = null;
-            mRightSprite.SourceRectangle = null;
-
-            mBottomLeftSprite.SourceRectangle = null;
-            mBottomSprite.SourceRectangle = null;
-            mBottomRightSprite.SourceRectangle = null;
-
         }
 
         public void SetTexturesUsingPattern(string anyOf9Textures, SystemManagers managers)
