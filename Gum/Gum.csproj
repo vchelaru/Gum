@@ -321,7 +321,6 @@
     <None Include="Content\TestFont_0.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <Content Include="gum_icon2.png" />
     <None Include="Plugins\readme.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
