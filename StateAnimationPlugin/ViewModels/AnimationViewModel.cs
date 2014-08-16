@@ -1,5 +1,6 @@
 ﻿using Gum.DataTypes;
 using Gum.DataTypes.Variables;
+using StateAnimationPlugin.Managers;
 using StateAnimationPlugin.SaveClasses;
 using System;
 using System.Collections;
@@ -9,6 +10,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Media.Imaging;
 
 namespace StateAnimationPlugin.ViewModels
 {
@@ -21,6 +23,11 @@ namespace StateAnimationPlugin.ViewModels
         AnimatedStateViewModel mSelectedState;
 
         bool mIsInMiddleOfSort = false;
+
+        BitmapFrame mLoopBitmap;
+        BitmapFrame mPlayOnceBitmap;
+
+        bool mLoops = false;
 
         #endregion
 
@@ -49,6 +56,30 @@ namespace StateAnimationPlugin.ViewModels
                     var toReturn = States.Last().Time;
                     return toReturn;
                 }
+            }
+        }
+
+        public bool Loops
+        {
+            get
+            {
+                return mLoops;
+            }
+        }
+
+        public BitmapFrame ButtonBitmapFrame
+        {
+            get
+            {
+                if (mLoops)
+                {
+                    return mLoopBitmap;
+                }
+                else
+                {
+                    return mPlayOnceBitmap;
+                }
+
             }
         }
 
@@ -95,13 +126,17 @@ namespace StateAnimationPlugin.ViewModels
         {
             States = new ObservableCollection<AnimatedStateViewModel>();
             States.CollectionChanged += HandleCollectionChanged;
+
+            mLoopBitmap = BitmapLoader.Self.LoadImage("LoopIcon.png");
+
+            mPlayOnceBitmap = BitmapLoader.Self.LoadImage("PlayOnceIcon.png");
         }
 
         public static AnimationViewModel FromSave(AnimationSave save)
         {
             AnimationViewModel toReturn = new AnimationViewModel();
             toReturn.Name = save.Name;
-            
+            toReturn.mLoops = save.Loops;
             foreach(var stateSave in save.States)
             {
                 toReturn.States.Add(AnimatedStateViewModel.FromSave(stateSave));
@@ -114,6 +149,7 @@ namespace StateAnimationPlugin.ViewModels
         {
             AnimationSave toReturn = new AnimationSave();
             toReturn.Name = this.Name;
+            toReturn.Loops = this.mLoops;
 
             foreach(var state in this.States)
             {
@@ -171,7 +207,6 @@ namespace StateAnimationPlugin.ViewModels
             return Name + " (" + Length.ToString("0.00") + ")";
         }
 
-
         private void OnPropertyChanged(string propertyName)
         {
 
@@ -222,6 +257,18 @@ namespace StateAnimationPlugin.ViewModels
                 animatedState.CachedCumulativeState = combined;
 
                 previous = combined;
+            }
+        }
+
+        public void ToggleLoop()
+        {
+            mLoops = !mLoops;
+
+            OnPropertyChanged("ButtonBitmapFrame");
+
+            if(AnyChange != null)
+            {
+                AnyChange(this, new PropertyChangedEventArgs("Loops"));
             }
         }
 

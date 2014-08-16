@@ -70,6 +70,7 @@
   <ItemGroup>
     <Compile Include="Managers\AnimationCollectionViewModelManager.cs" />
     <Compile Include="MainPlugin.cs" />
+    <Compile Include="Managers\BitmapLoader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SaveClasses\AnimatedStateSave.cs" />
     <Compile Include="SaveClasses\AnimationSave.cs" />
@@ -153,6 +154,10 @@
     <EmbeddedResource Include="Resources\Bear.png" />
     <EmbeddedResource Include="Resources\PlayIcon.png" />
     <EmbeddedResource Include="Resources\StopIcon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\LoopIcon.png" />
+    <EmbeddedResource Include="Resources\PlayOnceIcon.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

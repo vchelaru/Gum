@@ -1,11 +1,10 @@
-﻿using Gum.Converters;
-using Gum.DataTypes;
+﻿using Gum.DataTypes;
 using Gum.DataTypes.Variables;
+using Gum.Managers;
 using Gum.Plugins;
 using Gum.ToolStates;
 using Gum.Wireframe;
 using RenderingLibrary;
-using RenderingLibrary.Content;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,10 +12,14 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Gum.RenderingLibrary;
+using Gum.Converters;
+using RenderingLibrary.Content;
+using CommonFormsAndControls.Forms;
+using ToolsUtilities;
 
-namespace Gum.Managers
+namespace Gum.PropertyGridHelpers
 {
-    public partial class PropertyGridManager
+    public class SetVariableLogic : Singleton<SetVariableLogic>
     {
         internal void PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
         {
@@ -243,6 +246,52 @@ namespace Gum.Managers
             // Eventually need to handle tunneled variables
             if (variable != null && variable.GetRootName() == "SourceFile")
             {
+                string value = variable.Value as string;
+
+                if(!string.IsNullOrEmpty(value))
+                {
+                    // See if this is relative to the project
+                    bool isRelativeToProject = !value.StartsWith("../") && !value.StartsWith("..\\");
+
+                    if (!isRelativeToProject)
+                    {
+                        // Ask the user what to do - make it relative?
+                        MultiButtonMessageBox mbmb = new 
+                            MultiButtonMessageBox();
+
+                        mbmb.MessageText = "The file\n" + value + "\nis not relative to the project.  What would you like to do?";
+                        mbmb.AddButton("Reference the file in its current location", DialogResult.OK);
+                        mbmb.AddButton("Copy the file relative to the Gum project and reference the copy", DialogResult.Yes);
+
+                        var dialogResult = mbmb.ShowDialog();
+                        
+                        if(dialogResult == DialogResult.Yes)
+                        {
+                            string directory = FileManager.GetDirectory(ProjectManager.Self.GumProjectSave.FullFileName);
+
+                            string targetAbsoluteFile = directory + FileManager.RemovePath(value);
+
+                            string sourceAbsoluteFile = 
+                                directory + value ;
+                            sourceAbsoluteFile = FileManager.RemoveDotDotSlash(sourceAbsoluteFile);
+
+                            try
+                            {
+                                System.IO.File.Copy(sourceAbsoluteFile, targetAbsoluteFile);
+
+                                variable.Value = FileManager.RemovePath(value);
+
+                            }
+                            catch(Exception e)
+                            {
+                                MessageBox.Show("Error copying file:\n" + e.ToString());
+                            }
+                        }
+                    }
+
+                }
+
+
                 StateSave stateSave = SelectedState.Self.SelectedStateSave;
 
                 RecursiveVariableFinder rvf = new RecursiveVariableFinder(stateSave);
@@ -340,5 +389,19 @@ namespace Gum.Managers
                 }
             }
         }
+
+        string GetQualifiedName(string variableName)
+        {
+            if (SelectedState.Self.SelectedInstance != null)
+            {
+                return SelectedState.Self.SelectedInstance.Name + "." + variableName;
+            }
+            else
+            {
+                return variableName;
+            }
+        }
+
+
     }
 }

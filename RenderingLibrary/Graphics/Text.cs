@@ -36,6 +36,23 @@ namespace RenderingLibrary.Graphics
     {
         #region Fields
 
+        /// <summary>
+        /// Stores the width of the text object's texture before it has had a chance to render.
+        /// </summary>
+        /// <remarks>
+        /// A Texture can have a width that depends on its texture.  However, its texture will not 
+        /// be rendered created until the entire engine is rendered.  This will be used until that render
+        /// occurs if not null.
+        /// </remarks>
+        int? mPreRenderWidth;
+        /// <summary>
+        /// Stores the height of the text object's texture before it has had a chance to render.
+        /// </summary>
+        /// <remarks>
+        /// See mPreRenderWidth for more information about this member.
+        /// </remarks>
+        int? mPreRenderHeight;
+
         public Vector2 Position;
 
         public Color Color = Color.White;
@@ -180,6 +197,10 @@ namespace RenderingLibrary.Graphics
                         return mTextureToRender.Width * mFontScale;
                     }
                 }
+                else if (mPreRenderWidth.HasValue)
+                {
+                    return mPreRenderWidth.Value;
+                }
                 else
                 {
                     return 32;
@@ -206,6 +227,10 @@ namespace RenderingLibrary.Graphics
                     {
                         return mTextureToRender.Height * mFontScale;
                     }
+                }
+                else if (mPreRenderHeight.HasValue)
+                {
+                    return mPreRenderHeight.Value;
                 }
                 else
                 {
@@ -557,7 +582,7 @@ namespace RenderingLibrary.Graphics
 
                     mTextureToRender = fontToUse.RenderToTexture2D(WrappedText, this.HorizontalAlignment, mManagers);
 
-                    if(mTextureToRender is RenderTarget2D)
+                    if (mTextureToRender is RenderTarget2D)
                     {
                         (mTextureToRender as RenderTarget2D).ContentLost += delegate { mNeedsBitmapFontRefresh = true; };
                     }
@@ -570,6 +595,10 @@ namespace RenderingLibrary.Graphics
                         mTextureToRender = null;
                     }
                 }
+
+                mPreRenderWidth = null;
+                mPreRenderHeight = null;
+
                 mNeedsBitmapFontRefresh = false;
             }
         }
@@ -642,7 +671,7 @@ namespace RenderingLibrary.Graphics
             }
 
             Sprite.Render(managers, spriteBatch, mTempForRendering, mTextureToRender,
-                new Color(mRed, mGreen, mBlue, mAlpha), null, false, false, Rotation, treat0AsFullDimensions:false);
+                new Color(mRed, mGreen, mBlue, mAlpha), null, false, false, Rotation, treat0AsFullDimensions: false);
         }
 
         IPositionedSizedObject mTempForRendering;
@@ -724,6 +753,28 @@ namespace RenderingLibrary.Graphics
             mIsTextureCreationSuppressed = false;
             mNeedsBitmapFontRefresh = true;
             //UpdateTextureToRender();
+        }
+
+        public void SetNeedsRefreshToTrue()
+        {
+            mNeedsBitmapFontRefresh = true;
+        }
+
+        public void UpdatePreRenderDimensions()
+        {
+
+            if (this.mBitmapFont != null)
+            {
+                int requiredWidth;
+                int requiredHeight;
+
+                string[] lines = this.mRawText.Split('\n');
+
+                mBitmapFont.GetRequiredWithAndHeight(lines, out requiredWidth, out requiredHeight);
+
+                mPreRenderWidth = requiredWidth;
+                mPreRenderHeight = requiredHeight;
+            }
         }
         #endregion
 

@@ -115,6 +115,10 @@
     <Compile Include="Math\Geometry\LineRectangle.cs" />
     <Compile Include="Math\Geometry\ShapeManager.cs" />
     <Compile Include="Math\MathFunctions.cs" />
+    <Compile Include="Packing\RectangleNode.cs" />
+    <Compile Include="Packing\RectangleTree.cs" />
+    <Compile Include="Packing\TextureAtlas.cs" />
+    <Compile Include="Packing\TextureCombiner.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SystemManagers.cs" />
   </ItemGroup>

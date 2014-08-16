@@ -76,7 +76,7 @@ namespace RenderingLibrary.Graphics
 
 
             string directory = FileManager.GetDirectory(fontFile);
-            
+
             for (int i = 0; i < mTextures.Length; i++)
             {
                 if (FileManager.IsRelative(texturesToLoad[i]))
@@ -380,9 +380,9 @@ namespace RenderingLibrary.Graphics
         }
 
         // To help out the GC, we're going to just use a Color that's 2048x2048
-        static Color[] mColorBuffer = new Color[2048*2048];
+        static Color[] mColorBuffer = new Color[2048 * 2048];
 
-        public Texture2D RenderToTexture2D(IEnumerable lines, HorizontalAlignment horizontalAlignment, SystemManagers managers)
+        public Texture2D RenderToTexture2D(IEnumerable<string> lines, HorizontalAlignment horizontalAlignment, SystemManagers managers)
         {
             bool useImageData = false;
             if (useImageData)
@@ -396,7 +396,7 @@ namespace RenderingLibrary.Graphics
             }
         }
 
-        private Texture2D RenderToTexture2DUsingRenderStates(IEnumerable lines, HorizontalAlignment horizontalAlignment, SystemManagers managers)
+        private Texture2D RenderToTexture2DUsingRenderStates(IEnumerable<string> lines, HorizontalAlignment horizontalAlignment, SystemManagers managers)
         {
             if (managers == null)
             {
@@ -413,36 +413,20 @@ namespace RenderingLibrary.Graphics
 
             RenderTarget2D renderTarget = null;
 
-            
-            using (  SpriteBatch spriteBatch = new SpriteBatch(managers.Renderer.GraphicsDevice))
+
+            using (SpriteBatch spriteBatch = new SpriteBatch(managers.Renderer.GraphicsDevice))
             {
 
                 Point point = new Point();
+                int requiredWidth;
+                int requiredHeight;
+                List<int> widths;
+                GetRequiredWithAndHeight(lines, out requiredWidth, out requiredHeight, out widths);
 
-                int maxWidthSoFar = 0;
-                int requiredWidth = 0;
-                int requiredHeight = 0;
 
-                List<int> widths = new List<int>();
-
-                foreach (string line in lines)
+                if (requiredWidth != 0)
                 {
-                    requiredHeight += LineHeightInPixels;
-                    requiredWidth = 0;
-
-                    requiredWidth = MeasureString(line);
-                    widths.Add(requiredWidth);
-                    maxWidthSoFar = System.Math.Max(requiredWidth, maxWidthSoFar);
-                }
-
-                const int MaxWidthAndHeight = 2048; // change this later?
-                maxWidthSoFar = System.Math.Min(maxWidthSoFar, MaxWidthAndHeight);
-                requiredHeight = System.Math.Min(requiredHeight, MaxWidthAndHeight);
-
-
-                if (maxWidthSoFar != 0)
-                {
-                    renderTarget = new RenderTarget2D(managers.Renderer.GraphicsDevice, maxWidthSoFar, requiredHeight);
+                    renderTarget = new RenderTarget2D(managers.Renderer.GraphicsDevice, requiredWidth, requiredHeight);
                     managers.Renderer.GraphicsDevice.SetRenderTarget(renderTarget);
 
                     managers.Renderer.GraphicsDevice.Clear(Color.Transparent);
@@ -455,11 +439,11 @@ namespace RenderingLibrary.Graphics
 
                         if (horizontalAlignment == HorizontalAlignment.Right)
                         {
-                            point.X = maxWidthSoFar - widths[lineNumber];
+                            point.X = requiredWidth - widths[lineNumber];
                         }
                         else if (horizontalAlignment == HorizontalAlignment.Center)
                         {
-                            point.X = (maxWidthSoFar - widths[lineNumber]) / 2;
+                            point.X = (requiredWidth - widths[lineNumber]) / 2;
                         }
 
                         foreach (char c in line)
@@ -508,6 +492,35 @@ namespace RenderingLibrary.Graphics
             }
 
             return renderTarget;
+        }
+
+        public void GetRequiredWithAndHeight(IEnumerable lines, out int requiredWidth, out int requiredHeight)
+        {
+            List<int> throwaway;
+            GetRequiredWithAndHeight(lines, out requiredWidth, out requiredHeight, out throwaway);
+        }
+
+        private void GetRequiredWithAndHeight(IEnumerable lines, out int requiredWidth, out int requiredHeight, out List<int> widths)
+        {
+
+            requiredWidth = 0;
+            requiredHeight = 0;
+
+            widths = new List<int>();
+
+            foreach (string line in lines)
+            {
+                requiredHeight += LineHeightInPixels;
+                int lineWidth = 0;
+
+                lineWidth = MeasureString(line);
+                widths.Add(lineWidth);
+                requiredWidth = System.Math.Max(lineWidth, requiredWidth);
+            }
+
+            const int MaxWidthAndHeight = 2048; // change this later?
+            requiredWidth = System.Math.Min(requiredWidth, MaxWidthAndHeight);
+            requiredHeight = System.Math.Min(requiredHeight, MaxWidthAndHeight);
         }
 
         private Texture2D RenderToTexture2DUsingImageData(IEnumerable lines, HorizontalAlignment horizontalAlignment, SystemManagers managers)

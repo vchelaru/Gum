@@ -288,18 +288,6 @@ namespace Gum.Managers
 
         }
 
-        string GetQualifiedName(string variableName)
-        {
-            if (SelectedState.Self.SelectedInstance != null)
-            {
-                return SelectedState.Self.SelectedInstance.Name + "." + variableName;
-            }
-            else
-            {
-                return variableName;
-            }
-        }
-
         //private void ReactIfChangedMemberIsAnimation(ElementSave parentElement, string changedMember, object oldValue, out bool saveProject)
         //{
         //    const string sourceFileString = "SourceFile";

@@ -61,5 +61,10 @@ namespace Gum.Commands
         {
             ProjectManager.Self.LoadProject(fileName);
         }
+
+        public string GetFullFileName(ElementSave element)
+        {
+            return element.GetFullPathXmlFile();
+        }
     }
 }

@@ -387,8 +387,7 @@ namespace Gum.PropertyGridHelpers
 
                 mPropertyDescriptor.SetValue(instance, value);
 
-
-                Gum.Managers.PropertyGridManager.Self.PropertyValueChanged(RootVariableName, oldValue);
+                SetVariableLogic.Self.PropertyValueChanged(RootVariableName, oldValue);
 
             }
             else

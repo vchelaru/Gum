@@ -7,6 +7,8 @@ namespace StateAnimationPlugin.SaveClasses
 {
     public class AnimationSave
     {
+        public bool Loops { get; set; }
+
         public string Name { get; set; }
 
         public List<AnimatedStateSave> States { get; set; }

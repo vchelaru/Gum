@@ -269,15 +269,22 @@ namespace Gum.Plugins
                 string error = "Error loading plugins";
                 if (e is ReflectionTypeLoadException)
                 {
+                    error += "Error is a reflection type load exception\n";
                     var loaderExceptions = (e as ReflectionTypeLoadException).LoaderExceptions;
-                    if (loaderExceptions.Length != 0)
+
+                    foreach(var loaderException in loaderExceptions)
                     {
-                        error += "\n" + loaderExceptions[0].ToString();
+                        error += "\n" + loaderException.ToString();
                     }
                 }
                 else
                 {
                     error += "\n" + e.Message;
+
+                    if(e.InnerException != null)
+                    {
+                        error += "\n Inner Exception:\n" + e.InnerException.Message;
+                    }
                 }
                 MessageBox.Show(error);
 
@@ -322,6 +329,8 @@ namespace Gum.Plugins
                     return item;
                 }
             }
+
+            MessageBox.Show("Couldn't find assembly: " + args.Name + " for " + args.RequestingAssembly);
 
             return null;
         }

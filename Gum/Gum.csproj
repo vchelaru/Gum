@@ -148,7 +148,6 @@
     <Compile Include="Managers\ObjectRemover.cs" />
     <Compile Include="Managers\OutputManager.cs" />
     <Compile Include="Managers\PropertyGridManager.Events.cs" />
-    <Compile Include="Managers\PropertyGridManager.VariableSet.cs" />
     <Compile Include="Managers\RenameManager.cs" />
     <Compile Include="Managers\Singleton.cs" />
     <Compile Include="Plugins\AlignmentButtons\AlignmentControl.xaml.cs">
@@ -204,6 +203,7 @@
     <Compile Include="PropertyGridHelpers\PropertyGridDisplayer.cs" />
     <Compile Include="PropertyGridHelpers\ReflectingParameterDescriptor.cs" />
     <Compile Include="PropertyGridHelpers\ReflectingPropertyDescriptorHelper.cs" />
+    <Compile Include="PropertyGridHelpers\SetVariableLogic.cs" />
     <Compile Include="PropertyGridHelpers\StateReferencingInstanceMember.cs" />
     <Compile Include="PropertyGridHelpers\UiTypeConverters\ModalTypeConverter.cs" />
     <Compile Include="Reflection\LateBinder.cs" />

@@ -23,7 +23,7 @@
                 <ColumnDefinition Width="50"></ColumnDefinition>
             </Grid.ColumnDefinitions>
             <Button x:Name="PlayStopButton" Width="25" Height="25" Click="HandlePlayStopClicked">
-                <Image x:Name="ButtonImage" Source="Resources/PlayIcon.png"></Image>
+                <Image x:Name="ButtonImage" Source="{Binding ButtonBitmapFrame}"></Image>
             </Button>
             <Slider Grid.Column="1"
                     Value="{Binding DisplayedAnimationTime}"
@@ -56,7 +56,19 @@
                     <RowDefinition></RowDefinition>
                     <RowDefinition Height="Auto"></RowDefinition>
                 </Grid.RowDefinitions>
-                <ListBox ItemsSource="{Binding Animations}" SelectedItem="{Binding SelectedAnimation}" KeyDown="HandleDeleteAnimationPressed">
+                <ListBox ItemsSource="{Binding Animations}" 
+                         SelectedItem="{Binding SelectedAnimation}" 
+                         KeyDown="HandleDeleteAnimationPressed">
+                  <ListBox.ItemTemplate>
+                    <DataTemplate>
+                      <StackPanel Orientation="Horizontal">
+                        <Button Click="LoopToggleClick">
+                          <Image Source="{Binding ButtonBitmapFrame}"></Image>
+                        </Button>
+                        <Label Content="{Binding Name}"/>
+                      </StackPanel>
+                    </DataTemplate>
+                  </ListBox.ItemTemplate>
                 </ListBox>
                 <Button x:Name="AddAnimationButton" Grid.Row="1" VerticalAlignment="Bottom" Click="AddAnimationButton_Click">Add Animation</Button>
             </Grid>

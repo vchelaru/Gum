@@ -55,7 +55,18 @@ namespace Gum.DataTypes.Variables
 
         public string SourceObject
         {
-            get { return mSourceObject; }
+            get
+            {
+                if (Name.Contains('.'))
+                {
+                    return Name.Substring(0, Name.IndexOf('.'));
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            // todo- kill this
             set 
             { 
                 mSourceObject = value; 
@@ -142,7 +153,7 @@ namespace Gum.DataTypes.Variables
         public string GetRootName()
         {
 
-            if (string.IsNullOrEmpty(SourceObject))
+            if (Name.IndexOf('.') == -1)
             {
                 return Name;
             }

@@ -37,7 +37,7 @@ namespace Gum.Commands
             PropertyGridManager.Self.RefreshUI(force:force);
         }
 
-        internal void AddControl(System.Windows.Controls.UserControl control, string tabTitle)
+        public void AddControl(System.Windows.Controls.UserControl control, string tabTitle)
         {
             mMainWindow.AddWpfControl(control, tabTitle);
 

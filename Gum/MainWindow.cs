@@ -15,6 +15,7 @@ using Gum.Wireframe;
 using Gum.Gui.Forms;
 using Gum.Undo;
 using Gum.Debug;
+using Gum.PropertyGridHelpers;
 
 namespace Gum
 {
@@ -90,7 +91,7 @@ namespace Gum
 
         private void VariablePropertyGrid_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
         {
-            PropertyGridManager.Self.PropertyValueChanged(s, e);
+            SetVariableLogic.Self.PropertyValueChanged(s, e);
         }
 
         private void stateToolStripMenuItem_Click(object sender, EventArgs e)

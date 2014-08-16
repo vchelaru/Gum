@@ -361,6 +361,9 @@ namespace Gum.Wireframe
                 float worldXAt = Cursor.GetWorldX();
                 float worldYAt = Cursor.GetWorldY();
 
+                IPositionedSizedObject representationOver = null;
+
+
                 if (EditingManager.Self.ContextMenuStrip != null && EditingManager.Self.ContextMenuStrip.Visible)
                 {
                     // do nothing!
@@ -371,11 +374,10 @@ namespace Gum.Wireframe
 
                     #region Selecting element activity
 
-                    IPositionedSizedObject representation = null;
 
                     if (SideOver != ResizeSide.None)
                     {
-                        representation = WireframeObjectManager.Self.GetSelectedRepresentation();
+                        representationOver = WireframeObjectManager.Self.GetSelectedRepresentation();
                         IsOverBody = false;
                     }
                     else
@@ -383,7 +385,7 @@ namespace Gum.Wireframe
                         if (IsOverBody && Cursor.PrimaryDown)
                         {
                             cursorToSet = Cursors.SizeAll;
-                            representation = WireframeObjectManager.Self.GetSelectedRepresentation();
+                            representationOver = WireframeObjectManager.Self.GetSelectedRepresentation();
                         }
                         else
                         {
@@ -391,10 +393,10 @@ namespace Gum.Wireframe
                             elementStack.Add(new ElementWithState(SelectedState.Self.SelectedElement));
 
 
-                            representation =
+                            representationOver =
                                 GetRepresentationAt(worldXAt, worldYAt, false, elementStack);
 
-                            if (representation != null)
+                            if (representationOver != null)
                             {
                                 cursorToSet = Cursors.SizeAll;
                                 IsOverBody = true;
@@ -405,20 +407,32 @@ namespace Gum.Wireframe
                             }
                         }
                     }
-
-                    // We don't want to show the highlight when the user is performing some kind of editing.
-                    // Therefore make sure the cursor isn't down.
-                    if (representation != null && Cursor.PrimaryDown == false)
-                    {
-                        HighlightedIpso = representation;
-                    }
-                    else
-                    {
-                        HighlightedIpso = null;
-                    }
-
                     #endregion
                 }
+
+
+                if(representationOver != null && representationOver is NineSlice)
+                {
+
+                    // This function updates the sizes and texture coordinates of the 
+                    // highlighted representation if it's a NineSlice.  This is needed before
+                    // we set the HighlightedIpso and before we update the highlight objects
+                    (representationOver as NineSlice).RefreshTextureCoordinatesAndSpriteSizes();
+                }
+
+
+                // We don't want to show the highlight when the user is performing some kind of editing.
+                // Therefore make sure the cursor isn't down.
+                if (representationOver != null && Cursor.PrimaryDown == false)
+                {
+                    HighlightedIpso = representationOver;
+                }
+                else
+                {
+                    HighlightedIpso = null;
+                }
+
+
 
 
 

@@ -1,12 +1,16 @@
 ﻿using Gum.ToolStates;
+using StateAnimationPlugin.Managers;
 using StateAnimationPlugin.SaveClasses;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 
 namespace StateAnimationPlugin.ViewModels
 {
@@ -19,7 +23,15 @@ namespace StateAnimationPlugin.ViewModels
 
         double mDisplayedAnimationTime;
 
-        double mTimelineValue;
+        // 50 isn't smooth enough, we want more fps!
+        //const int mTimerFrequencyInMs = 50;
+        const int mTimerFrequencyInMs = 20;
+
+        System.Windows.Threading.DispatcherTimer mPlayTimer;
+
+        BitmapFrame mPlayBitmap;
+        BitmapFrame mStopBitmap;
+
 
         #endregion
 
@@ -68,6 +80,22 @@ namespace StateAnimationPlugin.ViewModels
                 OnPropertyChanged("DisplayedAnimationTime");
             }
         }
+
+        public BitmapFrame ButtonBitmapFrame
+        {
+            get
+            {
+                if(mPlayTimer.IsEnabled)
+                {
+                    return mStopBitmap;
+                }
+                else
+                {
+                    return mPlayBitmap;
+                }
+            }
+        }
+
         #endregion
 
         #region Events
@@ -83,6 +111,15 @@ namespace StateAnimationPlugin.ViewModels
         public ElementAnimationsViewModel()
         {
             Animations = new ObservableCollection<AnimationViewModel>();
+
+
+            mPlayTimer = new DispatcherTimer();
+            mPlayTimer.Interval = new TimeSpan(0, 0, 0, 0, mTimerFrequencyInMs);
+            mPlayTimer.Tick += HandlePlayTimerTick;
+
+            mPlayBitmap = BitmapLoader.Self.LoadImage("PlayIcon.png");
+
+            mStopBitmap = BitmapLoader.Self.LoadImage("StopIcon.png");
         }
 
         public static ElementAnimationsViewModel FromSave(ElementAnimationsSave save)
@@ -155,6 +192,54 @@ namespace StateAnimationPlugin.ViewModels
         private void HandleAnimationItemChange(object sender, PropertyChangedEventArgs e)
         {
             OnAnyChange(sender, e.PropertyName);
+        }
+
+
+        private void HandlePlayTimerTick(object sender, EventArgs e)
+        {
+            var newValue = DisplayedAnimationTime + mTimerFrequencyInMs / 1000.0;
+
+
+            if (SelectedAnimation != null)
+            {
+                bool reachedTheEnd = newValue > this.SelectedAnimation.Length;
+                if(reachedTheEnd)
+                {
+                    if (this.SelectedAnimation.Loops)
+                    {
+                        newValue = 0;
+                    }
+                    else
+                    {
+                        TogglePlayStop();
+                    }
+                }
+            }
+            DisplayedAnimationTime = newValue;
+        }
+
+
+
+        internal void TogglePlayStop()
+        {
+            mPlayTimer.IsEnabled = !mPlayTimer.IsEnabled;
+
+            if(mPlayTimer.IsEnabled)
+            {
+                DisplayedAnimationTime = 0;
+            }
+
+            OnPropertyChanged("ButtonBitmapFrame");
+        }
+
+        public void Stop()
+        {
+            if (mPlayTimer.IsEnabled)
+            {
+                mPlayTimer.Stop();
+                OnPropertyChanged("ButtonBitmapFrame");
+
+            }
         }
 
         #endregion

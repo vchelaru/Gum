@@ -26,14 +26,6 @@ namespace StateAnimationPlugin.Views
     /// </summary>
     public partial class MainWindow
     {
-        #region Fields
-
-
-        DispatcherTimer mPlayTimer;
-
-        #endregion
-
-
         #region Properties
 
         ElementAnimationsViewModel ViewModel
@@ -53,36 +45,10 @@ namespace StateAnimationPlugin.Views
             InitializeComponent();
 
             InitializeTimer();
-
-            UpdatePlayStopButton();
         }
 
         private void InitializeTimer()
         {
-            int timerFrequencyMs = 50;
-            mPlayTimer = new DispatcherTimer();
-            mPlayTimer.Interval = new TimeSpan(0, 0, 0, 0, timerFrequencyMs);
-            mPlayTimer.Tick += delegate
-            {
-                ViewModel.DisplayedAnimationTime += timerFrequencyMs / 1000.0;
-            };
-
-        }
-
-        private void UpdatePlayStopButton()
-        {
-            string imageName = "PlayIcon";
-
-            bool isPlaying = mPlayTimer.IsEnabled;
-            if(isPlaying)
-            {
-                imageName = "StopIcon";
-            }
-
-            Assembly thisassembly = Assembly.GetExecutingAssembly();
-            System.IO.Stream imageStream = thisassembly.GetManifestResourceStream("StateAnimationPlugin.Resources." + imageName + ".png");
-            BitmapFrame bmp = BitmapFrame.Create(imageStream);
-            this.ButtonImage.Source = bmp;
         }
 
         private void AddAnimationButton_Click(object sender, RoutedEventArgs e)
@@ -163,6 +129,15 @@ namespace StateAnimationPlugin.Views
             }
         }
 
+        private void LoopToggleClick(object sender, RoutedEventArgs e)
+        {
+            var animation = ((Button)sender).DataContext as AnimationViewModel;
+            if (animation != null)
+            {
+                animation.ToggleLoop();
+            }
+        }
+
         private string GetWhyAddingTimedStateIsInvalid()
         {
             string whyIsntValid = null;
@@ -199,24 +174,17 @@ namespace StateAnimationPlugin.Views
 
         private void HandlePlayStopClicked(object sender, RoutedEventArgs e)
         {
-            if (this.ViewModel != null && SelectedState.Self.SelectedElement != null)
+            if (this.ViewModel != null && SelectedState.Self.SelectedElement != null && this.ViewModel.SelectedAnimation != null)
             {
                 this.ViewModel.SelectedAnimation.RefreshCombinedStates(SelectedState.Self.SelectedElement);
             }
 
-            mPlayTimer.IsEnabled = !mPlayTimer.IsEnabled;
-
-            UpdatePlayStopButton();
+            ViewModel.TogglePlayStop();
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            if(mPlayTimer.IsEnabled)
-            {
-                mPlayTimer.Stop(); ;
-
-                
-            }
+            ViewModel.Stop();
         }
 
 

@@ -892,7 +892,13 @@ namespace Gum.Wireframe
                             // Only if the width or height have changed:
                             if (mContainedObjectAsIpso.Width != widthBefore || mContainedObjectAsIpso.Height != heightBefore)
                             {
-                                ((Text)mContainedObjectAsIpso).UpdateTextureToRender();
+                                // I think this should only happen when actually rendering:
+                                //((Text)mContainedObjectAsIpso).UpdateTextureToRender();
+                                var asText = mContainedObjectAsIpso as Text;
+
+                                asText.SetNeedsRefreshToTrue();
+                                asText.UpdatePreRenderDimensions();
+
                             }
                         }
                         if (mContainedObjectAsRenderable is Sprite)
@@ -2062,6 +2068,44 @@ namespace Gum.Wireframe
             foreach (var state in list)
             {
                 mStates.Add(state.Name, state);
+            }
+        }
+
+        public void GetUsedTextures(List<Microsoft.Xna.Framework.Graphics.Texture2D> listToFill)
+        {
+            var renderable = this.mContainedObjectAsRenderable;
+
+            if(renderable is Sprite)
+            {
+                var texture = (renderable as Sprite).Texture;
+
+                if(texture != null && !listToFill.Contains(texture)) listToFill.Add(texture);
+            }
+            else if(renderable is NineSlice)
+            {
+                var nineSlice = renderable as NineSlice;
+
+                if (nineSlice.TopLeftTexture != null && !listToFill.Contains(nineSlice.TopLeftTexture)) listToFill.Add(nineSlice.TopLeftTexture);
+                if (nineSlice.TopTexture != null && !listToFill.Contains(nineSlice.TopTexture)) listToFill.Add(nineSlice.TopTexture);
+                if (nineSlice.TopRightTexture != null && !listToFill.Contains(nineSlice.TopRightTexture)) listToFill.Add(nineSlice.TopRightTexture);
+
+                if (nineSlice.LeftTexture != null && !listToFill.Contains(nineSlice.LeftTexture)) listToFill.Add(nineSlice.LeftTexture);
+                if (nineSlice.CenterTexture != null && !listToFill.Contains(nineSlice.CenterTexture)) listToFill.Add(nineSlice.CenterTexture);
+                if (nineSlice.RightTexture != null && !listToFill.Contains(nineSlice.RightTexture)) listToFill.Add(nineSlice.RightTexture);
+
+                if (nineSlice.BottomLeftTexture != null && !listToFill.Contains(nineSlice.BottomLeftTexture)) listToFill.Add(nineSlice.BottomLeftTexture);
+                if (nineSlice.BottomTexture != null && !listToFill.Contains(nineSlice.BottomTexture)) listToFill.Add(nineSlice.BottomTexture);
+                if (nineSlice.BottomRightTexture != null && !listToFill.Contains(nineSlice.BottomRightTexture)) listToFill.Add(nineSlice.BottomRightTexture);
+            }
+            else if(renderable is Text)
+            {
+                // what do we do here?  Texts could change so do we want to return them if used in a atlas?
+                // This is todo for later
+            }
+
+            foreach(var item in this.ContainedElements)
+            {
+                item.GetUsedTextures(listToFill);
             }
         }
 

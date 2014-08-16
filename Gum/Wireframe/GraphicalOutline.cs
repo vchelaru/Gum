@@ -30,16 +30,19 @@ namespace Gum.Wireframe
         {
             set
             {
-                mHighlightedIpso = value;
-
-                for (int i = 0; i < mHighlightRectangles.Count; i++)
+                if (value != mHighlightedIpso)
                 {
-                    mHighlightRectangles[i].Visible = false;
-                }
+                    mHighlightedIpso = value;
 
-                if (mHighlightedIpso != null)
-                {
-                    UpdateHighlightElements();
+                    for (int i = 0; i < mHighlightRectangles.Count; i++)
+                    {
+                        mHighlightRectangles[i].Visible = false;
+                    }
+
+                    if (mHighlightedIpso != null)
+                    {
+                        UpdateHighlightElements();
+                    }
                 }
             }
         }
@@ -53,6 +56,7 @@ namespace Gum.Wireframe
             {
                 NineSlice nineSlice = mHighlightedIpso.Component as NineSlice;
 
+
                 float topHeight = 0;
                 float centerHeight = 0;
                 float bottomHeight = 0;
@@ -64,6 +68,8 @@ namespace Gum.Wireframe
                 if (nineSlice.TopTexture != null && nineSlice.BottomTexture != null && 
                     nineSlice.LeftTexture != null && nineSlice.RightTexture != null)
                 {
+
+
                     topHeight = nineSlice.OutsideSpriteHeight;
 
                     bottomHeight = nineSlice.OutsideSpriteHeight;

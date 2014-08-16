@@ -139,6 +139,14 @@ namespace RenderingLibrary.Graphics
             set;
         }
 
+        public int DrawCalls
+        {
+            get
+            {
+                return mDrawCallsPerFrame;
+            }
+        }
+
         #endregion
 
         #region Methods

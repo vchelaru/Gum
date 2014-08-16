@@ -12,9 +12,87 @@ using ToolsUtilities;
 
 namespace Gum.Managers
 {
+
     public partial class StateTreeViewManager
     {
+        const string mNoCategory = "<no category>";
 
+        #region Add to menu
+
+        internal void PopulateMenuStrip()
+        {
+            mMenuStrip.Items.Clear();
+
+            AddMenuItem("Add State", GumCommands.Self.Edit.AddState);
+
+            AddMenuItem("Add Category", GumCommands.Self.Edit.AddCategory);
+
+            if (SelectedState.Self.SelectedStateSave != null)
+            {
+                AddMenuItem("Rename State", RenameStateClick);
+
+                AddMenuItem("Duplicate State", DuplicateStateClick);
+
+
+                if (SelectedState.Self.SelectedStateSave != SelectedState.Self.SelectedElement.DefaultState)
+                {
+                    AddMenuItem("Make Default", MakeDefaultClick);
+
+                    AddMoveToCategoryItems();
+                }
+            }
+        }
+
+        private void AddMoveToCategoryItems()
+        {
+            var categoryNames = SelectedState.Self.SelectedElement.Categories
+                .Where(item=>item != SelectedState.Self.SelectedStateCategorySave)
+                .Select(item => item.Name).ToList();
+
+            if(SelectedState.Self.SelectedStateCategorySave != null)
+            {
+                categoryNames.Insert(0, mNoCategory);
+            }
+
+            if(categoryNames.Count != 0)
+            {
+                var rootItem = AddMenuItem("Move to category", null);
+
+                foreach(var categoryName in categoryNames)
+                {
+                    var categorySpecificItem = new ToolStripMenuItem();
+                    categorySpecificItem.Text = categoryName;
+                    rootItem.DropDownItems.Add(categorySpecificItem);
+
+                    // make a local var to prevent problems with delayed evaluation
+                    string categoryNameEvaluated = categoryName;
+
+                    categorySpecificItem.Click += delegate
+                    {
+                        MoveToCategory(categoryNameEvaluated);
+
+                    };
+                }
+            }
+        }
+
+        private ToolStripMenuItem AddMenuItem(string text, Action clickAction)
+        {
+            var tsmi = new ToolStripMenuItem();
+            tsmi.Text = text;
+            if(clickAction != null)
+            {
+                tsmi.Click += delegate
+                {
+                    clickAction();
+                };
+            }
+            mMenuStrip.Items.Add(tsmi);
+
+            return tsmi;
+        }
+
+        #endregion
 
         internal void AddStateClick()
         {
@@ -49,138 +127,118 @@ namespace Gum.Managers
             }
         }
 
-        internal void PopulateMenuStrip()
+        private static void MakeDefaultClick()
         {
-            mMenuStrip.Items.Clear();
+            StateSave state = SelectedState.Self.SelectedStateSave;
 
-            var tsmi = new ToolStripMenuItem();
-            tsmi.Text = "Add State";
-            tsmi.Click += ( (obj, arg) =>
-                {
-                    
-                    GumCommands.Self.Edit.AddState();
-                });
-            mMenuStrip.Items.Add(tsmi);
+            var element = SelectedState.Self.SelectedElement;
 
-            tsmi = new ToolStripMenuItem();
-            tsmi.Text = "Add Category";
-            tsmi.Click += ((obj, arg) =>
+            if (!element.States.Contains(state))
             {
-
-                GumCommands.Self.Edit.AddCategory();
-            });
-            mMenuStrip.Items.Add(tsmi);
-
-            if (SelectedState.Self.SelectedStateSave != null)
-            {
-                AddRenameStateMenuItem();
-
-                AddDuplicateStateMenuItem();
-
-                if (SelectedState.Self.SelectedStateSave != SelectedState.Self.SelectedElement.DefaultState)
-                {
-                    AddMakeDefaultStateMenuItem();
-                }
+                // It's categorized
+                MessageBox.Show("Categorized states cannot be made default");
             }
-
-        }
-
-        private void AddMakeDefaultStateMenuItem()
-        {
-            ToolStripMenuItem tsmi = new ToolStripMenuItem();
-
-            tsmi.Text = "Make Default";
-
-            tsmi.Click += delegate
+            else
             {
-                StateSave state = SelectedState.Self.SelectedStateSave;
-
-                var element = SelectedState.Self.SelectedElement;
-
-                if (!element.States.Contains(state))
-                {
-                    // It's categorized
-                    MessageBox.Show("Categorized states cannot be made default");
-                }
-                else
-                {
-                    element.States.Remove(state);
-                    element.States.Insert(0, state);
-
-                    StateTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedElement);
-
-                    SelectedState.Self.SelectedStateSave = state;
-
-                    GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
-                }
-
-            };
-            mMenuStrip.Items.Add(tsmi);
-        }
-
-        private void AddDuplicateStateMenuItem()
-        {
-            ToolStripMenuItem tsmi = new ToolStripMenuItem();
-            tsmi.Text = "Duplicate State";
-
-            tsmi.Click += delegate
-            {
-                StateSave newState = SelectedState.Self.SelectedStateSave.Clone();
-
-
-                newState.ParentContainer = SelectedState.Self.SelectedElement;
-
-                if (SelectedState.Self.SelectedStateCategorySave == null)
-                {
-                    int index = SelectedState.Self.SelectedElement.States.IndexOf(SelectedState.Self.SelectedStateSave);
-                    SelectedState.Self.SelectedElement.States.Insert(index+1, newState);
-                }
-                else
-                {
-                    int index = SelectedState.Self.SelectedStateCategorySave.States.IndexOf(SelectedState.Self.SelectedStateSave);
-                    SelectedState.Self.SelectedStateCategorySave.States.Insert(index+1, newState);
-                }
-
-
-                while (SelectedState.Self.SelectedElement.AllStates.Any(item => item != newState && item.Name == newState.Name))
-                {
-                    newState.Name = StringFunctions.IncrementNumberAtEnd(newState.Name);
-                }
+                element.States.Remove(state);
+                element.States.Insert(0, state);
 
                 StateTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedElement);
 
-                SelectedState.Self.SelectedStateSave = newState;
+                SelectedState.Self.SelectedStateSave = state;
 
                 GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
-
-            };
-            mMenuStrip.Items.Add(tsmi);
+            }
         }
 
-        private ToolStripMenuItem AddRenameStateMenuItem()
+        private static void DuplicateStateClick()
         {
-            ToolStripMenuItem tsmi = new ToolStripMenuItem();
-            tsmi.Text = "Rename State";
-            tsmi.Click += ((obj, arg) =>
+            StateSave newState = SelectedState.Self.SelectedStateSave.Clone();
+
+
+            newState.ParentContainer = SelectedState.Self.SelectedElement;
+
+            if (SelectedState.Self.SelectedStateCategorySave == null)
             {
-                TextInputWindow tiw = new TextInputWindow();
-                tiw.Message = "Enter new name";
-                tiw.Result = SelectedState.Self.SelectedStateSave.Name;
-                var result = tiw.ShowDialog();
+                int index = SelectedState.Self.SelectedElement.States.IndexOf(SelectedState.Self.SelectedStateSave);
+                SelectedState.Self.SelectedElement.States.Insert(index + 1, newState);
+            }
+            else
+            {
+                int index = SelectedState.Self.SelectedStateCategorySave.States.IndexOf(SelectedState.Self.SelectedStateSave);
+                SelectedState.Self.SelectedStateCategorySave.States.Insert(index + 1, newState);
+            }
 
-                if (result == DialogResult.OK)
-                {
-                    SelectedState.Self.SelectedStateSave.Name = tiw.Result;
-                    GumCommands.Self.GuiCommands.RefreshStateTreeView();
-                    // I don't think we need to save the project when renaming a state:
-                    //GumCommands.Self.FileCommands.TryAutoSaveProject();
 
-                    GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
-                }
-            });
-            mMenuStrip.Items.Add(tsmi);
-            return tsmi;
+            while (SelectedState.Self.SelectedElement.AllStates.Any(item => item != newState && item.Name == newState.Name))
+            {
+                newState.Name = StringFunctions.IncrementNumberAtEnd(newState.Name);
+            }
+
+            StateTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedElement);
+
+            SelectedState.Self.SelectedStateSave = newState;
+
+            GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
         }
 
+        private static void RenameStateClick()
+        {
+            TextInputWindow tiw = new TextInputWindow();
+            tiw.Message = "Enter new name";
+            tiw.Result = SelectedState.Self.SelectedStateSave.Name;
+            var result = tiw.ShowDialog();
+
+            if (result == DialogResult.OK)
+            {
+                SelectedState.Self.SelectedStateSave.Name = tiw.Result;
+                GumCommands.Self.GuiCommands.RefreshStateTreeView();
+                // I don't think we need to save the project when renaming a state:
+                //GumCommands.Self.FileCommands.TryAutoSaveProject();
+
+                GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+            }
+        }
+
+        private static void MoveToCategory(string categoryNameToMoveTo)
+        {
+            var stateToMove = SelectedState.Self.SelectedStateSave;
+
+            ////////////////////Early Out //////////////////////
+            if(stateToMove == null)
+            {
+                return;
+            }
+            //////////////////End Early Out /////////////////////
+
+            var categoryToMoveFrom = SelectedState.Self.SelectedElement.Categories
+                .FirstOrDefault(item=>item.States.Contains(stateToMove));
+
+            var categoryToMoveTo = SelectedState.Self.SelectedElement.Categories
+                .FirstOrDefault(item=>item.Name == categoryNameToMoveTo);
+
+            if(categoryNameToMoveTo == mNoCategory)
+            {
+                categoryToMoveFrom.States.Remove(stateToMove);
+                SelectedState.Self.SelectedElement.States.Add(stateToMove);
+            }
+            else
+            {
+                if(categoryToMoveFrom != null)
+                {
+                    categoryToMoveFrom.States.Remove(stateToMove);
+                }
+                else
+                {
+                    SelectedState.Self.SelectedElement.States.Remove(stateToMove);
+                }
+
+                categoryToMoveTo.States.Add(stateToMove);
+            }
+
+            GumCommands.Self.GuiCommands.RefreshStateTreeView();
+            GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+
+        }
     }
 }

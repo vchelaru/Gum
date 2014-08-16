@@ -290,15 +290,39 @@ namespace Gum.Managers
 
             foreach (var node in allNodes)
             {
-                if (node.Tag is StateSave && element.AllStates.Contains(node.Tag as StateSave) == false)
+                if (node.Tag is StateSave)
                 {
-                    if (node.Parent == null)
+                    // First check to see if this doesn't exist at all...
+                    bool shouldRemove = element.AllStates.Contains(node.Tag as StateSave) == false;
+
+                    // ... and if it does exist, see if it's part of the wrong category
+                    if(!shouldRemove)
                     {
-                        mTreeView.Nodes.Remove(node);
+                        if(node.Parent != null)
+                        {
+                            var category = node.Parent.Tag as StateSaveCategory;
+
+                            if(!category.States.Contains(node.Tag as StateSave))
+                            {
+                                shouldRemove = true;
+                            }
+                        }
+                        else
+                        {
+                            shouldRemove = element.Categories.Any(item => item.States.Contains(node.Tag as StateSave));
+                        }
                     }
-                    else
+
+                    if(shouldRemove)
                     {
-                        node.Parent.Nodes.Remove(node);
+                        if (node.Parent == null)
+                        {
+                            mTreeView.Nodes.Remove(node);
+                        }
+                        else
+                        {
+                            node.Parent.Nodes.Remove(node);
+                        }
                     }
                 }
                 else if (node.Tag is StateSaveCategory && element.Categories.Contains(node.Tag as StateSaveCategory) == false)
