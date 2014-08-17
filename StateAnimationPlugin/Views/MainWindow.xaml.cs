@@ -121,6 +121,10 @@ namespace StateAnimationPlugin.Views
                         // put this after the current animation
                         newVm.Time = ViewModel.SelectedAnimation.SelectedState.Time + 1f;
                     }
+                    else if(ViewModel.SelectedAnimation.States.Count != 0)
+                    {
+                        newVm.Time = ViewModel.SelectedAnimation.States.Last().Time + 1f;
+                    }
 
                     ViewModel.SelectedAnimation.States.Add(newVm);
 

@@ -157,7 +157,7 @@ namespace RenderingLibrary.Graphics
 
         void IRenderable.Render(SpriteBatch spriteBatch, SystemManagers managers)
         {
-            if (this.AbsoluteVisible)
+            if (this.AbsoluteVisible && this.Width > 0 && this.Height > 0)
             {
                 Renderer renderer = null;
                 if (managers == null)
