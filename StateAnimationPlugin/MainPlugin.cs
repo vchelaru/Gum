@@ -139,20 +139,23 @@ namespace StateAnimationPlugin
                 }
                 double linearRatio = GetLinearRatio(value, stateVmBefore, stateVmAfter);
                 var stateBefore = stateVmBefore.CachedCumulativeState;
-
-                double processedRatio = ProcessRatio(stateVmBefore.InterpolationType, stateVmBefore.Easing, linearRatio);
-
                 var stateAfter = stateVmAfter.CachedCumulativeState;
 
-                var combined = stateBefore.Clone();
-                combined.MergeIntoThis(stateAfter, (float)processedRatio);
+                if (stateBefore != null && stateAfter != null)
+                {
+                    double processedRatio = ProcessRatio(stateVmBefore.InterpolationType, stateVmBefore.Easing, linearRatio);
 
-                SelectedState.Self.CustomCurrentStateSave = combined;
 
-                // for performance we will only update wireframe:
-                //SelectedState.Self.UpdateToSelectedStateSave();
-                //WireframeObjectManager.Self.RefreshAll(true);
-                WireframeObjectManager.Self.RootGue.ApplyState(combined);
+                    var combined = stateBefore.Clone();
+                    combined.MergeIntoThis(stateAfter, (float)processedRatio);
+
+                    SelectedState.Self.CustomCurrentStateSave = combined;
+
+                    // for performance we will only update wireframe:
+                    //SelectedState.Self.UpdateToSelectedStateSave();
+                    //WireframeObjectManager.Self.RefreshAll(true);
+                    WireframeObjectManager.Self.RootGue.ApplyState(combined);
+                }
             }
         }
 

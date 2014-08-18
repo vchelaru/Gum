@@ -84,7 +84,8 @@
                          SelectedItem="{Binding SelectedAnimation.SelectedState}" KeyDown="HandleDeleteAnimatedStatePressed">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <Label Content="{Binding DisplayString}"></Label>
+                            <Label Foreground="{Binding LabelBrush}" Content="{Binding DisplayString}">
+                            </Label>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                     

@@ -132,14 +132,20 @@ namespace StateAnimationPlugin.ViewModels
             mPlayOnceBitmap = BitmapLoader.Self.LoadImage("PlayOnceIcon.png");
         }
 
-        public static AnimationViewModel FromSave(AnimationSave save)
+        public static AnimationViewModel FromSave(AnimationSave save, ElementSave element)
         {
             AnimationViewModel toReturn = new AnimationViewModel();
             toReturn.Name = save.Name;
             toReturn.mLoops = save.Loops;
             foreach(var stateSave in save.States)
             {
-                toReturn.States.Add(AnimatedStateViewModel.FromSave(stateSave));
+                var foundState = element.AllStates.FirstOrDefault(item => item.Name == stateSave.StateName);
+
+                var newAnimatedStateViewModel = AnimatedStateViewModel.FromSave(stateSave);
+
+                newAnimatedStateViewModel.HasValidState = foundState != null;
+
+                toReturn.States.Add(newAnimatedStateViewModel);
             }
 
             return toReturn;
@@ -250,13 +256,15 @@ namespace StateAnimationPlugin.ViewModels
             foreach(var animatedState in this.States)
             {
                 var originalState = element.AllStates.FirstOrDefault(item => item.Name == animatedState.StateName);
+                if (originalState != null)
+                {
+                    var combined = previous.Clone();
+                    combined.MergeIntoThis(originalState);
 
-                var combined = previous.Clone();
-                combined.MergeIntoThis(originalState);
+                    animatedState.CachedCumulativeState = combined;
 
-                animatedState.CachedCumulativeState = combined;
-
-                previous = combined;
+                    previous = combined;
+                }
             }
         }
 

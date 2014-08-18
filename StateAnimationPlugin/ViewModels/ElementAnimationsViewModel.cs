@@ -122,13 +122,13 @@ namespace StateAnimationPlugin.ViewModels
             mStopBitmap = BitmapLoader.Self.LoadImage("StopIcon.png");
         }
 
-        public static ElementAnimationsViewModel FromSave(ElementAnimationsSave save)
+        public static ElementAnimationsViewModel FromSave(ElementAnimationsSave save, Gum.DataTypes.ElementSave element)
         {
             ElementAnimationsViewModel toReturn = new ElementAnimationsViewModel();
 
             foreach(var animation in save.Animations)
             {
-                toReturn.Animations.Add(AnimationViewModel.FromSave(animation));
+                toReturn.Animations.Add(AnimationViewModel.FromSave(animation, element));
             }
 
             return toReturn;

@@ -76,10 +76,10 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>if not exist $(SolutionDir)Gum\bin\Debug\Plugins\ md $(SolutionDir)Gum\bin\Debug\Plugins\
-if not exist $(SolutionDir)Gum\bin\Debug\Plugins\PerformanceMeasurementPlugin\ md $(SolutionDir)Gum\bin\Debug\Plugins\PerformanceMeasurementPlugin\
-copy $(TargetDir)PerformanceMeasurementPlugin.dll $(SolutionDir)Gum\bin\Debug\Plugins\PerformanceMeasurementPlugin\PerformanceMeasurementPlugin.dll
-copy $(TargetDir)PerformanceMeasurementPlugin.pdb $(SolutionDir)Gum\bin\Debug\Plugins\PerformanceMeasurementPlugin\PerformanceMeasurementPlugin.pdb</PostBuildEvent>
+    <PostBuildEvent>if not exist $(SolutionDir)Gum\bin\Debug\Data\Plugins\ md $(SolutionDir)Gum\bin\Debug\Data\Plugins\
+if not exist $(SolutionDir)Gum\bin\Debug\Data\Plugins\PerformanceMeasurementPlugin\ md $(SolutionDir)Gum\bin\Debug\Data\Plugins\PerformanceMeasurementPlugin\
+copy $(TargetDir)PerformanceMeasurementPlugin.dll $(SolutionDir)Gum\bin\Debug\Data\Plugins\PerformanceMeasurementPlugin\PerformanceMeasurementPlugin.dll
+copy $(TargetDir)PerformanceMeasurementPlugin.pdb $(SolutionDir)Gum\bin\Debug\Data\Plugins\PerformanceMeasurementPlugin\PerformanceMeasurementPlugin.pdb</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

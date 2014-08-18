@@ -7,6 +7,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Media;
 
 namespace StateAnimationPlugin.ViewModels
 {
@@ -72,6 +73,29 @@ namespace StateAnimationPlugin.ViewModels
             get
             {
                 return StateName + " (" + Time.ToString("0.00") + ")";
+            }
+        }
+
+        public bool HasValidState
+        {
+            get;
+            set;
+        }
+
+        public SolidColorBrush LabelBrush
+        {
+            get
+            {
+                if (HasValidState)
+                {
+                    return Brushes.Black;
+
+                }
+                else
+                {
+
+                    return Brushes.Red;
+                }
             }
         }
 

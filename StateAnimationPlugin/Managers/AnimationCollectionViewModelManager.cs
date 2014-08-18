@@ -37,7 +37,7 @@ namespace StateAnimationPlugin.Managers
                         {
                             var save = FileManager.XmlDeserialize<ElementAnimationsSave>(fileName);
 
-                            return ElementAnimationsViewModel.FromSave(save);
+                            return ElementAnimationsViewModel.FromSave(save, currentElement);
                         }
                         catch(Exception exception)
                         {
