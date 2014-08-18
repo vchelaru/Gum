@@ -2109,6 +2109,14 @@ namespace Gum.Wireframe
             }
         }
 
+        public void InterpolateBetween(Gum.DataTypes.Variables.StateSave first, Gum.DataTypes.Variables.StateSave second, float interpolationValue)
+        {
+            var cloneOfFirst = first.Clone();
+            Gum.DataTypes.Variables.StateSaveExtensionMethods.MergeIntoThis(cloneOfFirst, second, interpolationValue);
+
+            this.ApplyState(cloneOfFirst);
+        }
+
         #endregion
     }
 }
