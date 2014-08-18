@@ -58,6 +58,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="EnumerableExtensionMethods.cs" />
     <Compile Include="FormUtilities.cs" />
     <Compile Include="MultiButtonMessageBox.cs">
       <SubType>Form</SubType>

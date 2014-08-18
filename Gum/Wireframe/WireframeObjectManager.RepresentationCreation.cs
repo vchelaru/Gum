@@ -899,7 +899,7 @@ namespace Gum.Wireframe
             }
 
 
-            nineSlice.Visible = (bool)rvf.GetValue("Visible");
+            nineSlice.Visible = rvf.GetValue<bool>("Visible");
 
         }
 

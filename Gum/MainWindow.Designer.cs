@@ -384,7 +384,7 @@
             // 
             // StateTreeView
             // 
-            this.StateTreeView.AlwaysHaveOneNodeSelected = false;
+            this.StateTreeView.AlwaysHaveOneNodeSelected = true;
             this.StateTreeView.ContextMenuStrip = this.StateContextMenuStrip;
             this.StateTreeView.Dock = System.Windows.Forms.DockStyle.Fill;
             this.StateTreeView.ImageIndex = 0;
@@ -421,7 +421,7 @@
             this.tabPage2.Controls.Add(this.VariableHost);
             this.tabPage2.Location = new System.Drawing.Point(4, 22);
             this.tabPage2.Name = "tabPage2";
-            this.tabPage2.Padding = new System.Windows.Forms.Padding(3, 3, 3, 3);
+            this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
             this.tabPage2.Size = new System.Drawing.Size(230, 464);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "Variables";
@@ -443,8 +443,8 @@
             this.tabPage1.Controls.Add(this.VariablePropertyGrid);
             this.tabPage1.Location = new System.Drawing.Point(4, 22);
             this.tabPage1.Name = "tabPage1";
-            this.tabPage1.Padding = new System.Windows.Forms.Padding(3, 3, 3, 3);
-            this.tabPage1.Size = new System.Drawing.Size(170, 466);
+            this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPage1.Size = new System.Drawing.Size(230, 464);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "Events";
             this.tabPage1.UseVisualStyleBackColor = true;
@@ -454,7 +454,7 @@
             this.EventsHost.Dock = System.Windows.Forms.DockStyle.Fill;
             this.EventsHost.Location = new System.Drawing.Point(3, 3);
             this.EventsHost.Name = "EventsHost";
-            this.EventsHost.Size = new System.Drawing.Size(164, 460);
+            this.EventsHost.Size = new System.Drawing.Size(224, 458);
             this.EventsHost.TabIndex = 3;
             this.EventsHost.Text = "elementHost1";
             this.EventsHost.Child = this.testWpfControl2;
@@ -467,7 +467,7 @@
             this.VariablePropertyGrid.Location = new System.Drawing.Point(3, 3);
             this.VariablePropertyGrid.Margin = new System.Windows.Forms.Padding(0, 3, 3, 3);
             this.VariablePropertyGrid.Name = "VariablePropertyGrid";
-            this.VariablePropertyGrid.Size = new System.Drawing.Size(164, 460);
+            this.VariablePropertyGrid.Size = new System.Drawing.Size(224, 458);
             this.VariablePropertyGrid.TabIndex = 2;
             this.VariablePropertyGrid.ToolbarVisible = false;
             this.VariablePropertyGrid.PropertyValueChanged += new System.Windows.Forms.PropertyValueChangedEventHandler(this.VariablePropertyGrid_PropertyValueChanged);
@@ -527,7 +527,6 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.wireframeControl1.ContextMenuStrip = this.WireframeContextMenuStrip;
             this.wireframeControl1.Cursor = System.Windows.Forms.Cursors.Default;
-            this.wireframeControl1.DesiredFramesPerSecond = 30F;
             this.wireframeControl1.Location = new System.Drawing.Point(0, 52);
             this.wireframeControl1.Name = "wireframeControl1";
             this.wireframeControl1.Size = new System.Drawing.Size(618, 495);
@@ -547,7 +546,7 @@
             this.WireframeEditControl.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.WireframeEditControl.Location = new System.Drawing.Point(0, 0);
-            this.WireframeEditControl.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.WireframeEditControl.Margin = new System.Windows.Forms.Padding(4);
             this.WireframeEditControl.Name = "WireframeEditControl";
             this.WireframeEditControl.PercentageValue = 100;
             this.WireframeEditControl.Size = new System.Drawing.Size(618, 22);

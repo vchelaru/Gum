@@ -129,13 +129,7 @@ namespace Gum.Managers
             stateSave.Variables.Add(new VariableSave { Type = "string", Value = "", Name = "CustomFontFile", Category = "Font", IsFile = true });
             stateSave.Variables.Add(new VariableSave { Type = "float", Value = 1.0f, Name = "Font Scale", Category = "Font" });
 
-
-
-            stateSave.Variables.Add(new VariableSave { Type = "string", Value = "Default", Name = "State"
-#if GUM
-            , CustomTypeConverter = new AvailableStatesConverter(null)
-#endif            
-            });
+            AddStateVariable(stateSave);
 
             AddColorVariables(stateSave, includeAlpha:true);
 
@@ -186,6 +180,9 @@ namespace Gum.Managers
             AddColorVariables(stateSave);
 
             stateSave.Variables.Add(new VariableSave { Type = "Blend", Value = Blend.Normal, Name = "Blend", Category = "Rendering" });
+
+            AddStateVariable(stateSave);
+
 
             List<string> list = new List<string>();
             stateSave.VariableLists.Add(new VariableListSave<string> { Type = "string", Value = list, Category = "Animation", Name = "AnimationFrames"});
@@ -245,6 +242,9 @@ namespace Gum.Managers
 
             stateSave.Variables.Add(new VariableSave { Type = "bool", Value = true, Name = "Visible" });
             AddColorVariables(stateSave, true);
+
+            AddStateVariable(stateSave);
+
 #if GUM
             PluginManager.Self.ModifyDefaultStandardState("ColoredRectangle", stateSave);
 #endif
@@ -266,6 +266,10 @@ namespace Gum.Managers
 
             AddColorVariables(stateSave);
             stateSave.Variables.Add(new VariableSave { Type = "Blend", Value = Blend.Normal, Name = "Blend", Category = "Rendering" });
+
+
+            AddStateVariable(stateSave);
+
 
 #if GUM
 
@@ -314,6 +318,19 @@ namespace Gum.Managers
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+
+            foreach (var defaultState in mDefaults.Values)
+            {
+                foreach (var variable in defaultState.Variables)
+                {
+                    variable.SetsValue = true;
+                }
+            }
+
+
+
+
+
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             //                                                    Events                                                          //
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -326,6 +343,20 @@ namespace Gum.Managers
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+        }
+
+        private static void AddStateVariable(StateSave stateSave)
+        {
+            stateSave.Variables.Add(new VariableSave
+            {
+                Type = "string",
+                Value = "Default",
+                Name = "State"
+#if GUM
+,
+                CustomTypeConverter = new AvailableStatesConverter(null)
+#endif
+            });
         }
 
         private void ApplySortValuesFromOrderInState(StateSave stateSave)

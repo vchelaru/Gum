@@ -1444,6 +1444,14 @@ namespace Gum.Wireframe
                     if (sprite.Texture != null)
                     {
                         heightToSet = sprite.Texture.Height * mHeight / 100.0f;
+
+                        if (sprite.SourceRectangle.HasValue)
+                        {
+                            heightToSet = (sprite.SourceRectangle.Value.Bottom - sprite.SourceRectangle.Value.Top) * mHeight / 100.0f;
+                        }
+
+                        wasSet = true;
+
                     }
                 }
 
@@ -1493,6 +1501,13 @@ namespace Gum.Wireframe
                     if (sprite.Texture != null)
                     {
                         widthToSet = sprite.Texture.Width * mWidth / 100.0f;
+
+                        if(sprite.SourceRectangle.HasValue)
+                        {
+                            widthToSet =  ( sprite.SourceRectangle.Value.Right - sprite.SourceRectangle.Value.Left ) * mWidth / 100.0f;
+                        }
+
+                        wasSet = true;
                     }
                 }
 

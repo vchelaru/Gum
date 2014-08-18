@@ -117,8 +117,14 @@ namespace Gum.Managers
                 // What we do is select the first one if it exists
                 if (mTreeView.Nodes.Count != 0)
                 {
-                    selectedObject = mTreeView.Nodes[0].Tag;
-                    mTreeView.SelectedNode = mTreeView.Nodes[0];
+                    var newlySelectedNode = mTreeView.Nodes.FirstOrDefault(item=> 
+                        {
+                            TreeNode itemAsNode = item as TreeNode;
+                            return itemAsNode.Tag is StateSave && (itemAsNode.Tag as StateSave).Name == "Default";
+                        }) as TreeNode;
+
+                    selectedObject = newlySelectedNode.Tag;
+                    mTreeView.SelectedNode = newlySelectedNode;
                 }
             }
             SelectedState.Self.CustomCurrentStateSave = null;

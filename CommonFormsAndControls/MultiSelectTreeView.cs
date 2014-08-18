@@ -85,6 +85,12 @@ namespace CommonFormsAndControls
             }
 			set
 			{
+                // Don't do anything if it's the same selection
+                if(value == mSelectedNode)
+                {
+                    return;
+                }
+
 				ClearSelectedNodes();
 				if( value != null )
 				{
@@ -707,13 +713,23 @@ namespace CommonFormsAndControls
             try
 #endif
             {
+
+                bool shouldRaiseEvents = true;
+
                 if (node == null)
                 {
-                    for (int i = SelectedNodes.Count - 1; i > -1; i--)
+                    if (AlwaysHaveOneNodeSelected == false)
                     {
-                        Deselect(SelectedNodes[i]);
+                        for (int i = SelectedNodes.Count - 1; i > -1; i--)
+                        {
+                            Deselect(SelectedNodes[i]);
+                        }
+                        mSelectedNode = null;
                     }
-                    mSelectedNode = null;
+                    else
+                    {
+                        shouldRaiseEvents = false;
+                    }
                 }
                 else if (mSelectedNode == null || ModifierKeys == Keys.Control || MultiSelectBehavior == MultiSelectBehavior.RegularClick)
                 {
@@ -845,7 +861,10 @@ namespace CommonFormsAndControls
                 // using node, because that's
                 // the node that just got selected.
                 //OnAfterSelect(new TreeViewEventArgs(mSelectedNode));
-                OnAfterSelect(new TreeViewEventArgs(node));
+                if (shouldRaiseEvents)
+                {
+                    OnAfterSelect(new TreeViewEventArgs(node));
+                }
             }
 #if !DEBUG
 			finally
