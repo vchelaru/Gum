@@ -114,7 +114,13 @@ namespace StateAnimationPlugin.Views
                 {
                     var item = lbmb.SelectedItem;
 
-                    var newVm = new AnimatedStateViewModel() { StateName = (string)item };
+                    var newVm = new AnimatedStateViewModel() { StateName = (string)item, 
+                        // User just selected the state, so it better be valid!
+                        HasValidState = true,
+                        InterpolationType = FlatRedBall.Glue.StateInterpolation.InterpolationType.Linear,
+                        Easing = FlatRedBall.Glue.StateInterpolation.Easing.Out
+                    
+                    };
 
                     if(ViewModel.SelectedAnimation.SelectedState != null)
                     {

@@ -59,23 +59,25 @@ namespace GumRuntime
             IRenderable containedObject = null;
 
             bool handled = TryHandleAsBaseType(rvf, baseType, systemManagers, out containedObject);
-
+            ElementSave elementSave = ObjectFinder.Self.GetElementSave(baseType);
             if (handled)
             {
                 graphicalUiElement.SetContainedObject(containedObject);
             }
             else
             {
-                ElementSave elementSave = ObjectFinder.Self.GetElementSave(baseType);
-
-
-
                 if (elementSave != null && elementSave is ComponentSave)
                 {
                     
                     ElementSaveExtensions.SetGraphicalUiElement(elementSave, graphicalUiElement, systemManagers, rvf);
                 }
             }
+
+            foreach (var variable in elementSave.DefaultState.Variables.Where(item => !string.IsNullOrEmpty(item.ExposedAsName)))
+            {
+                graphicalUiElement.AddExposedVariable(variable.ExposedAsName, variable.Name);
+            }
+
             graphicalUiElement.SetGueValues(rvf);
             if (rvf.GetVariable("Visible") != null)
             {

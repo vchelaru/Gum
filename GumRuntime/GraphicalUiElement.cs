@@ -1710,6 +1710,7 @@ namespace Gum.Wireframe
             }
         }
 
+        // todo:  This should be called on instances and not just on element saves.  This is messing up animation
         public void AddExposedVariable(string variableName, string underlyingVariable)
         {
             mExposedVariables.Add(variableName, underlyingVariable);

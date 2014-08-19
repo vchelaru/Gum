@@ -13,6 +13,12 @@ namespace StateAnimationPlugin.SaveClasses
         public float Time { get; set; }
 
         public InterpolationType InterpolationType { get; set; }
-        public Easing Easing { get; set; }        
+        public Easing Easing { get; set; }   
+     
+        public AnimatedStateSave()
+        {
+            Easing = FlatRedBall.Glue.StateInterpolation.Easing.Out;
+            InterpolationType = FlatRedBall.Glue.StateInterpolation.InterpolationType.Linear;
+        }
     }
 }

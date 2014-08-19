@@ -243,10 +243,23 @@ namespace Gum.DataTypes.Variables
 
             VariableSave variableSave = stateSave.GetVariableSave(variableName);
 
+            string exposedVariableSourceName = null;
+
             string rootName = variableName;
             if (variableName.Contains('.'))
             {
                 rootName = variableName.Substring(variableName.IndexOf('.') + 1);
+            }
+            else if(stateSave.ParentContainer != null && stateSave.ParentContainer.DefaultState != stateSave)
+            {
+                // This isn't the default state, so let's ask the default state if this is an exposed variable...
+                var defaultState = stateSave.ParentContainer.DefaultState;
+
+                var found = defaultState.Variables.FirstOrDefault(item=>item.ExposedAsName == variableName);
+                if(found != null)
+                {
+                    exposedVariableSourceName = found.Name;
+                }
             }
 
             if (!isReservedName)
@@ -258,12 +271,17 @@ namespace Gum.DataTypes.Variables
                 else
                 {
 
-                    stateSave.AssignVariableSave(variableName, value, instanceSave, variableType);
+                    variableSave = stateSave.AssignVariableSave(variableName, value, instanceSave, variableType);
+
+                    if (!string.IsNullOrEmpty(exposedVariableSourceName))
+                    {
+                        variableSave.ExposedAsName = variableName;
+                        variableSave.Name = exposedVariableSourceName;
+                    }
+
                     stateSave.Variables.Sort((first, second) => first.Name.CompareTo(second.Name));
-
-
                 }
-                variableSave = stateSave.GetVariableSave(variableName);
+
 
                 bool isFile = false;
 
@@ -394,7 +412,7 @@ namespace Gum.DataTypes.Variables
         /// <param name="value">The value to assign to the variable.</param>
         /// <param name="instanceSave">The instance that owns this variable.  This may be null.</param>
         /// <param name="variableType">The type of the variable.  This is only needed if the value is null.</param>
-        private static void AssignVariableSave(this StateSave stateSave, string variableName, object value, 
+        private static VariableSave AssignVariableSave(this StateSave stateSave, string variableName, object value, 
             InstanceSave instanceSave, string variableType = null)
         {
             // Not a reserved variable, so use the State's variables
@@ -491,6 +509,8 @@ namespace Gum.DataTypes.Variables
             variableSave.SetsValue = true;
 
             variableSave.Value = value;
+
+            return variableSave;
         }
 
         public static StateSave Clone(this StateSave whatToClone)

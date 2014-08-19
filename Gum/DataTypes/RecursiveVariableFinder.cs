@@ -288,6 +288,7 @@ namespace Gum.DataTypes
 
             }
 
+
             return exposedVariables;
         }
 

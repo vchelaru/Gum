@@ -110,6 +110,11 @@ namespace Gum.Wireframe
             }
             rootIpso.ElementSave = elementSave;
 
+            foreach(var exposedVariable in elementSave.DefaultState.Variables.Where(item=> !string.IsNullOrEmpty(item.ExposedAsName) ))
+            {
+                rootIpso.AddExposedVariable(exposedVariable.ExposedAsName, exposedVariable.Name);
+            }
+
             List<GraphicalUiElement> newlyAdded = new List<GraphicalUiElement>();
 
 
@@ -241,6 +246,14 @@ namespace Gum.Wireframe
 
             if(element != null)
             {
+                var baseElement = ObjectFinder.Self.GetElementSave(instance.BaseType);
+                if (baseElement != null)
+                {
+                    foreach (var exposedVariable in baseElement.DefaultState.Variables.Where(item => !string.IsNullOrEmpty(item.ExposedAsName)))
+                    {
+                        element.AddExposedVariable(exposedVariable.ExposedAsName, exposedVariable.Name);
+                    }
+                }
                 var selectedState = SelectedState.Self.SelectedStateSave;
                 if (selectedState == null)
                 {
