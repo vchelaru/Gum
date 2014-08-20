@@ -70,7 +70,7 @@ namespace StateAnimationPlugin.Managers
         }
 
 
-        string GetAbsoluteAnimationFileNameFor(ElementSave elementSave)
+        public string GetAbsoluteAnimationFileNameFor(ElementSave elementSave)
         {
             var fullPathXmlForElement = elementSave.GetFullPathXmlFile();
 

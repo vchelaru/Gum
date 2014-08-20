@@ -91,6 +91,11 @@ namespace Gum.Managers
             return null;
         }
 
+        public ElementSave GetElementSave(InstanceSave instance)
+        {
+            return GetElementSave(instance.BaseType);
+        }
+
         public ElementSave GetElementSave(string elementName)
         {
             ScreenSave screenSave = GetScreen(elementName);
@@ -213,6 +218,53 @@ namespace Gum.Managers
             return list;
         }
 
+        public List<ElementSave> GetElementsReferencing(string partialFileName)
+        {
+            partialFileName = partialFileName.ToLower().Replace("\\", "/");
+
+            List<ElementSave> referencingElements = new List<ElementSave>();
+            foreach(var item in GumProjectSave.Screens)
+            {
+                List<string> files = new List<string>();
+
+                FillListWithReferencedFiles(files, item);
+
+                if (files.Any(file => file.ToLower().Replace("\\", "/").Contains(partialFileName)))
+                {
+                    referencingElements.Add(item);
+                }
+
+            }
+
+            foreach (var item in GumProjectSave.Components)
+            {
+                List<string> files = new List<string>();
+
+                FillListWithReferencedFiles(files, item);
+
+                if (files.Any(file => file.ToLower().Replace("\\", "/").Contains(partialFileName)))
+                {
+                    referencingElements.Add(item);
+                }
+
+            }
+
+            foreach (var item in GumProjectSave.StandardElements)
+            {
+                List<string> files = new List<string>();
+
+                FillListWithReferencedFiles(files, item);
+
+                if (files.Any(file => file.ToLower().Replace("\\", "/").Contains(partialFileName)))
+                {
+                    referencingElements.Add(item);
+                }
+
+            }
+
+            return referencingElements;
+        }
+
         public List<ElementSave> GetElementsReferencingRecursively(ElementSave elementSave)
         {
             List<ElementSave> typesToGoThrough = new List<ElementSave>();
@@ -257,36 +309,60 @@ namespace Gum.Managers
         }
 
 
-        void FillListWithReferencedFiles<T>(List<string> files, IList<T> elements) where T : ElementSave
+        private void FillListWithReferencedFiles<T>(List<string> files, IList<T> elements) where T : ElementSave
         {
-            RecursiveVariableFinder rvf;
-            string value;
-
-
             // These files are all relative to the project, so we don't have to worry
             // about making them absolute/relative again.  It should just work.
             foreach (ElementSave element in elements)
             {
+                FillListWithReferencedFiles(files, element);
+            }
+        }
+
+        private void FillListWithReferencedFiles(List<string> files, ElementSave element)
+        {
+            RecursiveVariableFinder rvf;
+            string value;
+
+            foreach (var state in element.AllStates)
+            {
+
                 rvf = new RecursiveVariableFinder(element.DefaultState);
 
-                value = rvf.GetValue("SourceFile") as string;
-
+                value = rvf.GetValue<string>("SourceFile");
                 if (!string.IsNullOrEmpty(value))
                 {
                     files.Add(value);
                 }
 
+                value = rvf.GetValue<string>("CustomFontFile");
+                if (!string.IsNullOrEmpty(value))
+                {
+                    files.Add(value);
+                }
+
+                List<Gum.Wireframe.ElementWithState> elementStack = new List<Wireframe.ElementWithState>();
+                var elementWithState = new Gum.Wireframe.ElementWithState(element);
+                elementWithState.StateName = state.Name;
+                elementStack.Add(elementWithState);
+
                 foreach (InstanceSave instance in element.Instances)
                 {
-                    rvf = new RecursiveVariableFinder(instance, element);
+                    rvf = new RecursiveVariableFinder(instance, elementStack);
 
-                    value = rvf.GetValue("SourceFile") as string;
+                    value = rvf.GetValue<string>("SourceFile");
+                    if (!string.IsNullOrEmpty(value))
+                    {
+                        files.Add(value);
+                    }
 
+                    value = rvf.GetValue<string>("CustomFontFile");
                     if (!string.IsNullOrEmpty(value))
                     {
                         files.Add(value);
                     }
                 }
+
             }
         }
 

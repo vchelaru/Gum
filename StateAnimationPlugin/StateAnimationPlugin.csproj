@@ -77,6 +77,7 @@
     <Compile Include="SaveClasses\ElementAnimationReferenceSave.cs" />
     <Compile Include="SaveClasses\ElementAnimationsSave.cs" />
     <Compile Include="ViewModels\AnimatedStateViewModel.cs" />
+    <Compile Include="ViewModels\AnimationContainerViewModel.cs" />
     <Compile Include="ViewModels\ElementAnimationsViewModel.cs" />
     <Compile Include="ViewModels\AnimationViewModel.cs" />
     <Compile Include="Views\ListBoxMessageBox.xaml.cs">
@@ -87,6 +88,9 @@
     </Compile>
     <Compile Include="Views\StateView.xaml.cs">
       <DependentUpon>StateView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\SubAnimationSelectionWindow.xaml.cs">
+      <DependentUpon>SubAnimationSelectionWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\TimedStateMarkerDisplay.xaml.cs">
       <DependentUpon>TimedStateMarkerDisplay.xaml</DependentUpon>
@@ -136,6 +140,10 @@
     <Page Include="Views\StateView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\SubAnimationSelectionWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="Views\TimedStateMarkerDisplay.xaml">
       <SubType>Designer</SubType>

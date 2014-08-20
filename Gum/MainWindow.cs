@@ -315,5 +315,33 @@ namespace Gum
 
             this.PropertyGridTab.Controls.Add(tabPage);
         }
+
+        private void findFileReferencesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            CommonFormsAndControls.TextInputWindow tiw = new CommonFormsAndControls.TextInputWindow();
+            tiw.Message = "Enter entire or partial file name:";
+            var dialogResult = tiw.ShowDialog();
+
+            if (dialogResult == System.Windows.Forms.DialogResult.OK)
+            {
+
+                var elements = ObjectFinder.Self.GetElementsReferencing(tiw.Result);
+
+                string message = "File referenced by:";
+
+                if (elements.Count == 0)
+                {
+                    message += "\nNothing references this file";
+                }
+                else
+                {
+                    foreach (var element in elements)
+                    {
+                        message += "\n" + element.ToString();
+                    }
+                }
+                MessageBox.Show(message);
+            }
+        }
     }
 }

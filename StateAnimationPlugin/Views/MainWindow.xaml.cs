@@ -139,6 +139,17 @@ namespace StateAnimationPlugin.Views
             }
         }
 
+        private void AddSubAnimationButton_Click(object sender, RoutedEventArgs e)
+        {
+            SubAnimationSelectionWindow window = new SubAnimationSelectionWindow();
+            var result = window.ShowDialog();
+
+            if(result.HasValue && result.Value)
+            {
+
+            }
+        }
+
         private void LoopToggleClick(object sender, RoutedEventArgs e)
         {
             var animation = ((Button)sender).DataContext as AnimationViewModel;

@@ -5,7 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:views="clr-namespace:StateAnimationPlugin.Views"
              mc:Ignorable="d" 
-             Height="300" Width="500" Closing="Window_Closing">
+             Height="300" Width="580" Closing="Window_Closing">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"></RowDefinition>
@@ -17,6 +17,7 @@
                 <RowDefinition Height="Auto"></RowDefinition>
                 <RowDefinition Height="Auto"></RowDefinition>
             </Grid.RowDefinitions>
+          
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="40"></ColumnDefinition>
                 <ColumnDefinition></ColumnDefinition>
@@ -46,7 +47,7 @@
         </Grid>
         <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition></ColumnDefinition>
+                <ColumnDefinition Width="130"></ColumnDefinition>
                 <ColumnDefinition></ColumnDefinition>
                 <ColumnDefinition Width="Auto"></ColumnDefinition>
             </Grid.ColumnDefinitions>
@@ -74,13 +75,13 @@
             </Grid>
             
             <Grid Grid.Column="1">
-                <Grid.RowDefinitions>
+              <Grid.RowDefinitions>
                     <RowDefinition></RowDefinition>
                     <RowDefinition Height="Auto"></RowDefinition>
-                </Grid.RowDefinitions>
+              </Grid.RowDefinitions>
 
-                <!--State List Box-->
-                <ListBox ItemsSource="{Binding SelectedAnimation.States}" 
+              <!--State List Box-->
+              <ListBox ItemsSource="{Binding SelectedAnimation.States}" 
                          SelectedItem="{Binding SelectedAnimation.SelectedState}" KeyDown="HandleDeleteAnimatedStatePressed">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
@@ -89,8 +90,15 @@
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                     
-                </ListBox>
-                <Button x:Name="AddStateButton" Grid.Row="1" VerticalAlignment="Bottom" Click="AddStateButton_Click">Add State</Button>
+              </ListBox>
+              <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition></ColumnDefinition>
+                  <ColumnDefinition></ColumnDefinition>
+                </Grid.ColumnDefinitions>
+                <Button x:Name="AddStateButton" Click="AddStateButton_Click">Add State</Button>
+                <Button x:Name="AddSubAnimationButton" Click="AddSubAnimationButton_Click" Grid.Column="1">Add Sub-animation</Button>
+              </Grid>
             </Grid>
             <views:StateView 
                 DataContext="{Binding SelectedAnimation.SelectedState}"
