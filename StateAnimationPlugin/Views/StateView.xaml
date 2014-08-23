@@ -4,18 +4,20 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" 
-             d:DesignHeight="104" d:DesignWidth="200">
+             d:DesignHeight="104" d:DesignWidth="200" Focusable="true" Background="#FFFFFE">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"></ColumnDefinition>
             <ColumnDefinition></ColumnDefinition>
         </Grid.ColumnDefinitions>
 
+        <TextBox  x:Name="Focusable"  Width="0" Height="0" Margin="0" VerticalAlignment="Top" HorizontalAlignment="Left"/>
+      
         <StackPanel>
-            <Label Content="{Binding StateName, FallbackValue=StateName}"></Label>
-            <Label>Time:</Label>
-            <Label>Interpolation Type:</Label>
-            <Label>In/Out:</Label>
+          <Label x:Name="NameLabel" Content="{Binding DisplayName, FallbackValue=StateName}"></Label>
+          <Label>Time:</Label>
+          <Label Visibility="{Binding InterpolationElementVisibility}">Interpolation Type:</Label>
+          <Label Visibility="{Binding InterpolationElementVisibility}">In/Out:"</Label>
         </StackPanel>
 
         <StackPanel Grid.Column="1">
@@ -25,8 +27,10 @@
                      
              />
             
-            <ComboBox x:Name="InterpolationTypeComboBox" Margin="0,7,0,2" SelectedItem="{Binding InterpolationType}"></ComboBox>
-            <ComboBox x:Name="EasingTypeComboBox" Margin="0,1,0,2" SelectedItem="{Binding Easing}"></ComboBox>
+            <ComboBox x:Name="InterpolationTypeComboBox"
+                      Visibility="{Binding InterpolationElementVisibility}" Margin="0,7,0,2" SelectedItem="{Binding InterpolationType}"></ComboBox>
+            <ComboBox x:Name="EasingTypeComboBox"
+                      Visibility="{Binding InterpolationElementVisibility}" Margin="0,1,0,2" SelectedItem="{Binding Easing}"></ComboBox>
         </StackPanel>
 
 

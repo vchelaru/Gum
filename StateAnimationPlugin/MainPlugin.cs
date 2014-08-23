@@ -112,76 +112,11 @@ namespace StateAnimationPlugin
             }
             ////////////////////// END EARLY OUT
 
-            var value = mCurrentViewModel.DisplayedAnimationTime;
+            var animationTime = mCurrentViewModel.DisplayedAnimationTime;
 
-            var stateVmBefore = mCurrentViewModel.SelectedAnimation.States.LastOrDefault(item => item.Time <= value);
-            var stateVmAfter = mCurrentViewModel.SelectedAnimation.States.FirstOrDefault(item => item.Time >= value);
-
-            if (stateVmBefore == null && stateVmAfter != null)
-            {
-                SelectedState.Self.CustomCurrentStateSave = stateVmAfter.CachedCumulativeState;
-                WireframeObjectManager.Self.RootGue.ApplyState(SelectedState.Self.CustomCurrentStateSave);
-            }
-            else if (stateVmBefore != null && stateVmAfter == null)
-            {
-                SelectedState.Self.CustomCurrentStateSave = stateVmBefore.CachedCumulativeState;
-                WireframeObjectManager.Self.RootGue.ApplyState(SelectedState.Self.CustomCurrentStateSave);
-            }
-            else if (stateVmBefore != null && stateVmAfter != null)
-            {
-                if(stateVmAfter.CachedCumulativeState == null || 
-                    stateVmAfter.CachedCumulativeState == null)
-                {
-                    if (mCurrentViewModel.SelectedAnimation != null && SelectedState.Self.SelectedElement != null)
-                    {
-                        mCurrentViewModel.SelectedAnimation.RefreshCombinedStates(SelectedState.Self.SelectedElement);
-                    }
-                }
-                double linearRatio = GetLinearRatio(value, stateVmBefore, stateVmAfter);
-                var stateBefore = stateVmBefore.CachedCumulativeState;
-                var stateAfter = stateVmAfter.CachedCumulativeState;
-
-                if (stateBefore != null && stateAfter != null)
-                {
-                    double processedRatio = ProcessRatio(stateVmBefore.InterpolationType, stateVmBefore.Easing, linearRatio);
-
-
-                    var combined = stateBefore.Clone();
-                    combined.MergeIntoThis(stateAfter, (float)processedRatio);
-
-                    SelectedState.Self.CustomCurrentStateSave = combined;
-
-                    // for performance we will only update wireframe:
-                    //SelectedState.Self.UpdateToSelectedStateSave();
-                    //WireframeObjectManager.Self.RefreshAll(true);
-                    WireframeObjectManager.Self.RootGue.ApplyState(combined);
-                }
-            }
+            mCurrentViewModel.SelectedAnimation.SetStateAtTime(animationTime, SelectedState.Self.SelectedElement, defaultIfNull:true);
         }
 
-        private double ProcessRatio(FlatRedBall.Glue.StateInterpolation.InterpolationType interpolationType, FlatRedBall.Glue.StateInterpolation.Easing easing, double linearRatio)
-        {
-            var interpolationFunction = Tweener.GetInterpolationFunction(interpolationType, easing);
-
-            return interpolationFunction.Invoke((float)linearRatio, 0, 1, 1);
-        }
-
-        private static double GetLinearRatio(double value, AnimatedStateViewModel stateVmBefore, AnimatedStateViewModel stateVmAfter)
-        {
-            double valueBefore = stateVmBefore.Time;
-            double valueAfter = stateVmAfter.Time;
-
-            double range = valueAfter - valueBefore;
-            double timeIn = value - valueBefore;
-
-            double ratio = 0;
-
-            if (valueAfter != valueBefore)
-            {
-                ratio = timeIn / range;
-            }
-            return ratio;
-        }
 
         private void HandleDataChange(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
@@ -209,7 +144,7 @@ namespace StateAnimationPlugin
                 }
             }
 
-            if( sender is AnimatedStateViewModel)
+            if( sender is AnimatedKeyframeViewModel)
             {
                 if(variableName == "DisplayString")
                 {

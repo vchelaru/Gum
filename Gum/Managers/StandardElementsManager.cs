@@ -292,7 +292,13 @@ namespace Gum.Managers
 #endif
 
 #if GUM
-            stateSave.Variables.Add(new VariableSave { Type = "string", Value = "Default", Name = "State", CustomTypeConverter = new AvailableStatesConverter(null)});
+            // Victor Chelaru
+            // August 21, 2014
+            // Not sure why we have
+            // this here.  Doing so would
+            // create an endless loop...
+            //stateSave.Variables.Add(new VariableSave { Type = "string", Value = "Default", Name = "State", CustomTypeConverter = new AvailableStatesConverter(null)});
+            stateSave.Variables.Add(new VariableSave { Type = "string", Value = null, Name = "State", CustomTypeConverter = new AvailableStatesConverter(null) });
 #endif
 
             ApplySortValuesFromOrderInState(stateSave);

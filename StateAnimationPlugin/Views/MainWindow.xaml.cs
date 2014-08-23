@@ -114,7 +114,7 @@ namespace StateAnimationPlugin.Views
                 {
                     var item = lbmb.SelectedItem;
 
-                    var newVm = new AnimatedStateViewModel() { StateName = (string)item, 
+                    var newVm = new AnimatedKeyframeViewModel() { StateName = (string)item, 
                         // User just selected the state, so it better be valid!
                         HasValidState = true,
                         InterpolationType = FlatRedBall.Glue.StateInterpolation.InterpolationType.Linear,
@@ -122,19 +122,19 @@ namespace StateAnimationPlugin.Views
                     
                     };
 
-                    if(ViewModel.SelectedAnimation.SelectedState != null)
+                    if(ViewModel.SelectedAnimation.SelectedKeyframe != null)
                     {
                         // put this after the current animation
-                        newVm.Time = ViewModel.SelectedAnimation.SelectedState.Time + 1f;
+                        newVm.Time = ViewModel.SelectedAnimation.SelectedKeyframe.Time + 1f;
                     }
-                    else if(ViewModel.SelectedAnimation.States.Count != 0)
+                    else if(ViewModel.SelectedAnimation.Keyframes.Count != 0)
                     {
-                        newVm.Time = ViewModel.SelectedAnimation.States.Last().Time + 1f;
+                        newVm.Time = ViewModel.SelectedAnimation.Keyframes.Last().Time + 1f;
                     }
 
-                    ViewModel.SelectedAnimation.States.Add(newVm);
+                    ViewModel.SelectedAnimation.Keyframes.Add(newVm);
 
-                    ViewModel.SelectedAnimation.States.BubbleSort();
+                    ViewModel.SelectedAnimation.Keyframes.BubbleSort();
                 }
             }
         }
@@ -144,9 +144,38 @@ namespace StateAnimationPlugin.Views
             SubAnimationSelectionWindow window = new SubAnimationSelectionWindow();
             var result = window.ShowDialog();
 
-            if(result.HasValue && result.Value)
+            if (result.HasValue && result.Value && window.SelectedAnimation != null)
             {
+                var selectedAnimation = window.SelectedAnimation;
 
+                AnimatedKeyframeViewModel newVm = new AnimatedKeyframeViewModel();
+                if (selectedAnimation.ContainingInstance != null)
+                {
+                    newVm.AnimationName = selectedAnimation.ContainingInstance.Name + "." + selectedAnimation.Name;
+                }
+                else
+                {
+                    newVm.AnimationName = selectedAnimation.Name;
+                }
+
+                newVm.SubAnimationViewModel = selectedAnimation;
+
+                newVm.HasValidState = true;
+
+                if (ViewModel.SelectedAnimation.SelectedKeyframe != null)
+                {
+                    // put this after the current animation
+                    newVm.Time = ViewModel.SelectedAnimation.SelectedKeyframe.Time + 1f;
+                }
+                else if (ViewModel.SelectedAnimation.Keyframes.Count != 0)
+                {
+                    newVm.Time = ViewModel.SelectedAnimation.Keyframes.Last().Time + 1f;
+                }
+
+
+                ViewModel.SelectedAnimation.Keyframes.Add(newVm);
+
+                ViewModel.SelectedAnimation.Keyframes.BubbleSort();
             }
         }
 
@@ -186,10 +215,10 @@ namespace StateAnimationPlugin.Views
 
         private void HandleDeleteAnimatedStatePressed(object sender, KeyEventArgs e)
         {
-            if (e.Key == Key.Delete && this.ViewModel.SelectedAnimation != null && this.ViewModel.SelectedAnimation.SelectedState != null)
+            if (e.Key == Key.Delete && this.ViewModel.SelectedAnimation != null && this.ViewModel.SelectedAnimation.SelectedKeyframe != null)
             {
-                this.ViewModel.SelectedAnimation.States.Remove(this.ViewModel.SelectedAnimation.SelectedState);
-                this.ViewModel.SelectedAnimation.SelectedState = null;
+                this.ViewModel.SelectedAnimation.Keyframes.Remove(this.ViewModel.SelectedAnimation.SelectedKeyframe);
+                this.ViewModel.SelectedAnimation.SelectedKeyframe = null;
             }
         }
 

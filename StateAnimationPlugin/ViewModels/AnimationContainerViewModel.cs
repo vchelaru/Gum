@@ -15,11 +15,11 @@ namespace StateAnimationPlugin.ViewModels
             {
                 if(mInstanceSave == null)
                 {
-                    return mElementSave.Name + "(container)";
+                    return mElementSave.Name + " (container)";
                 }
                 else
                 {
-                    return mInstanceSave.Name;
+                    return mInstanceSave.Name + " (" + InstanceSave.BaseType + ")";
                 }
             }
         }

@@ -79,5 +79,39 @@ namespace Gum.Wireframe
             }
         }
 
+
+        internal void HandleKeyPress(KeyEventArgs e)
+        {
+            if ((Control.ModifierKeys & Keys.Control) == Keys.Control)
+            {
+                if (e.KeyCode == System.Windows.Forms.Keys.Up)
+                {
+                    SystemManagers.Default.Renderer.Camera.Y -= 10 / SystemManagers.Default.Renderer.Camera.Zoom;
+                }
+                else if (e.KeyCode == System.Windows.Forms.Keys.Down)
+                {
+                    SystemManagers.Default.Renderer.Camera.Y += 10 / SystemManagers.Default.Renderer.Camera.Zoom;
+                }
+                else if (e.KeyCode == System.Windows.Forms.Keys.Left)
+                {
+                    SystemManagers.Default.Renderer.Camera.X -= 10 / SystemManagers.Default.Renderer.Camera.Zoom;
+
+                }
+                else if (e.KeyCode == System.Windows.Forms.Keys.Right)
+                {
+                    SystemManagers.Default.Renderer.Camera.X += 10 / SystemManagers.Default.Renderer.Camera.Zoom;
+
+                }
+                else if(e.KeyCode == Keys.Oemplus || e.KeyCode == Keys.Add)
+                {
+                    mWireframeEditControl.ZoomIn();
+                }
+                else if (e.KeyCode == Keys.OemMinus || e.KeyCode == Keys.Subtract)
+                {
+                    mWireframeEditControl.ZoomOut();
+                }
+            }
+
+        }
     }
 }

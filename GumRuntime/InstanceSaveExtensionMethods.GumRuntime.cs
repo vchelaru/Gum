@@ -73,11 +73,16 @@ namespace GumRuntime
                 }
             }
 
-            foreach (var variable in elementSave.DefaultState.Variables.Where(item => !string.IsNullOrEmpty(item.ExposedAsName)))
+            // If this is a Screen it won't have a base element
+            // The Screen itself is an element, but for exposed variables
+            // we look at the base type (I think)
+            if (elementSave != null)
             {
-                graphicalUiElement.AddExposedVariable(variable.ExposedAsName, variable.Name);
+                foreach (var variable in elementSave.DefaultState.Variables.Where(item => !string.IsNullOrEmpty(item.ExposedAsName)))
+                {
+                    graphicalUiElement.AddExposedVariable(variable.ExposedAsName, variable.Name);
+                }
             }
-
             graphicalUiElement.SetGueValues(rvf);
             if (rvf.GetVariable("Visible") != null)
             {

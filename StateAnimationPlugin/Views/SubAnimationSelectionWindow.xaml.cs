@@ -1,4 +1,5 @@
-﻿using Gum.Managers;
+﻿using Gum.DataTypes;
+using Gum.Managers;
 using Gum.ToolStates;
 using StateAnimationPlugin.Managers;
 using StateAnimationPlugin.SaveClasses;
@@ -28,7 +29,13 @@ namespace StateAnimationPlugin.Views
     /// </summary>
     public partial class SubAnimationSelectionWindow : INotifyPropertyChanged
     {
+        #region Fields
+
         AnimationContainerViewModel mSelectedContainer;
+
+        #endregion
+
+        #region Properties
 
         public List<AnimationContainerViewModel> AnimationContainers
         {
@@ -42,26 +49,8 @@ namespace StateAnimationPlugin.Views
             {
                 if(SelectedContainer != null)
                 {
-                    string fileName = null;
-                    if(SelectedContainer.InstanceSave == null)
-                    {
-                        // Get all animations on "this" container
-                        fileName = 
-                            AnimationCollectionViewModelManager.Self.GetAbsoluteAnimationFileNameFor(SelectedContainer.ElementSave);
-                    }
-                    else
-                    {
-                        var instance = SelectedContainer.InstanceSave;
-
-                        var instanceElement = ObjectFinder.Self.GetElementSave(instance);
-
-                        if(instanceElement != null)
-                        {
-                            fileName = AnimationCollectionViewModelManager.Self.GetAbsoluteAnimationFileNameFor(
-                                instanceElement);
-                            
-                        }
-                    }
+                    ElementSave elementSave;
+                    string fileName = GetFileNameForSelectedContainerAnimations(out elementSave);
 
                     
                     if (!string.IsNullOrEmpty(fileName) && System.IO.File.Exists(fileName))
@@ -82,10 +71,13 @@ namespace StateAnimationPlugin.Views
                         {
                             foreach (var item in save.Animations)
                             {
-                                yield return new AnimationViewModel()
-                                {
-                                    Name = item.Name
-                                };
+                                AnimationViewModel toReturn = AnimationViewModel.FromSave(
+                                    item, elementSave);
+
+                                toReturn.Name = item.Name;
+                                toReturn.ContainingInstance = SelectedContainer.InstanceSave;
+
+                                yield return toReturn;
                             }
                         }
                         
@@ -96,6 +88,7 @@ namespace StateAnimationPlugin.Views
 
             }
         }
+
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -113,6 +106,16 @@ namespace StateAnimationPlugin.Views
                 OnPropertyChange("Animations");
             }
         }
+
+        public AnimationViewModel SelectedAnimation
+        {
+            get;
+            set;
+        }
+
+        #endregion
+
+        #region Methods
 
         public SubAnimationSelectionWindow()
         {
@@ -155,6 +158,37 @@ namespace StateAnimationPlugin.Views
                 PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
             }
         }
+
+
+        private string GetFileNameForSelectedContainerAnimations(out ElementSave element)
+        {
+            string fileName = null;
+            if (SelectedContainer.InstanceSave == null)
+            {
+                element = SelectedContainer.ElementSave;
+
+                // Get all animations on "this" container
+                fileName =
+                    AnimationCollectionViewModelManager.Self.GetAbsoluteAnimationFileNameFor(SelectedContainer.ElementSave);
+            }
+            else
+            {
+                var instance = SelectedContainer.InstanceSave;
+
+                var instanceElement = ObjectFinder.Self.GetElementSave(instance);
+                element = instanceElement;
+
+                if (instanceElement != null)
+                {
+                    fileName = AnimationCollectionViewModelManager.Self.GetAbsoluteAnimationFileNameFor(
+                        instanceElement);
+
+                }
+            }
+            return fileName;
+        }
+
+        #endregion
 
 
     }

@@ -140,7 +140,6 @@ namespace Gum.Wireframe
             //Parallel.ForEach(elementSave.Instances, instance =>
             foreach (var instance in elementSave.Instances)
             {
-
                 GraphicalUiElement child = CreateRepresentationForInstance(instance, null, elementStack, rootIpso);
 
                 if (child == null)
@@ -156,16 +155,21 @@ namespace Gum.Wireframe
                     newlyAdded.Add(child);
                     mGraphicalElements.Add(child);
 
-                    // There is no GUE for the root, so each child is in charge of adding itself.
-                    if (rootIpso == null || mGuideRectangles.Contains(child.Parent) || child.Parent == mWireframeControl.ScreenBounds)
-                    {
-                        child.AddToManagers();
-                    }
+                    
                 }
             }
 
                 
             SetUpParentRelationship(newlyAdded, elementStack, elementSave.Instances);
+
+            foreach(var child in newlyAdded)
+            {
+                // If there is no GUE for the root, so each child is in charge of adding itself.
+                if (rootIpso == null || mGuideRectangles.Contains(child.Parent) || child.Parent == mWireframeControl.ScreenBounds)
+                {
+                    child.AddToManagers();
+                }
+            }
 
             //);
             elementStack.Remove(elementStack.FirstOrDefault(item => item.Element == elementSave));
@@ -252,6 +256,13 @@ namespace Gum.Wireframe
                     foreach (var exposedVariable in baseElement.DefaultState.Variables.Where(item => !string.IsNullOrEmpty(item.ExposedAsName)))
                     {
                         element.AddExposedVariable(exposedVariable.ExposedAsName, exposedVariable.Name);
+                    }
+
+
+                    element.AddStates(baseElement.States);
+                    foreach (var category in baseElement.Categories)
+                    {
+                        element.AddCategory(category);
                     }
                 }
                 var selectedState = SelectedState.Self.SelectedStateSave;

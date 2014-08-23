@@ -1713,7 +1713,7 @@ namespace Gum.Wireframe
         // todo:  This should be called on instances and not just on element saves.  This is messing up animation
         public void AddExposedVariable(string variableName, string underlyingVariable)
         {
-            mExposedVariables.Add(variableName, underlyingVariable);
+            mExposedVariables[variableName] = underlyingVariable;
         }
 
         public bool IsExposedVariable(string variableName)
@@ -1916,12 +1916,29 @@ namespace Gum.Wireframe
             bool toReturn = false;
             switch(propertyName)
             {
+                case "Children Layout":
+                    this.ChildrenLayout = (ChildrenLayout)value;
+                    toReturn = true;
+                    break;
+                case "Clips Children":
+                    this.ClipsChildren = (bool)value;
+                    toReturn = true;
+                    break;
+
                 case "Height":
                     this.Height = (float)value;
                     toReturn = true;
                     break;
+                case "Height Units":
+                    this.HeightUnit = (DimensionUnitType)value;
+                    toReturn = true;
+                    break;
                 case "Width":
                     this.Width = (float)value;
+                    toReturn = true;
+                    break;
+                case "Width Units":
+                    this.WidthUnit = (DimensionUnitType)value;
                     toReturn = true;
                     break;
                 case "X":
@@ -1950,6 +1967,30 @@ namespace Gum.Wireframe
                     toReturn = true;
                     break;
 
+            }
+
+            if(!toReturn)
+            {
+
+                if(propertyName.EndsWith("State") && value is string)
+                {
+                    var valueAsString = value as string;
+
+                    string nameWithoutState = propertyName.Substring(0, propertyName.Length - "State".Length);
+
+                    if (mCategories.ContainsKey(nameWithoutState))
+                    {
+
+                        var category = mCategories[nameWithoutState];
+
+                        var state = category.States.FirstOrDefault(item => item.Name == valueAsString);
+                        if (state != null)
+                        {
+                            ApplyState(state);
+                            toReturn = true;
+                        }
+                    }
+                }
             }
 
             return toReturn;
@@ -2083,9 +2124,12 @@ namespace Gum.Wireframe
         {
             foreach (var state in list)
             {
-                mStates.Add(state.Name, state);
+                // Right now this doesn't support inheritance
+                // Need to investigate this....at some point:
+                mStates[state.Name] = state;
             }
         }
+
 
         public void GetUsedTextures(List<Microsoft.Xna.Framework.Graphics.Texture2D> listToFill)
         {

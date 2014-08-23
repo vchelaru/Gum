@@ -11,12 +11,58 @@ namespace Gum.PropertyGridHelpers.Converters
 {
     public class AvailableStatesConverter : TypeConverter
     {
+        InstanceSave mOverridingInstanceSave;
+        ElementSave mOverridingElementSave;
+
+        bool mUsesOverrides;
 
         string mCategory;
+
+        public InstanceSave InstanceSave 
+        { 
+            get
+            {
+                if (mUsesOverrides)
+                {
+                    return mOverridingInstanceSave;
+
+                }
+                else
+                {
+                    return SelectedState.Self.SelectedInstance;
+                }
+            }
+            set
+            {
+                mOverridingInstanceSave = value;
+                mUsesOverrides = true;
+            }
+        }
+        public ElementSave ElementSave 
+        { 
+            get
+            {
+                if (mUsesOverrides)
+                {
+                    return mOverridingElementSave;
+                }
+                else
+                {
+                    return SelectedState.Self.SelectedElement;
+
+                }
+            }
+            set
+            {
+                mOverridingElementSave = value;
+                mUsesOverrides = true;
+            }
+        }
 
         public AvailableStatesConverter(string category)
         {
             mCategory = category;
+
         }
 
 
@@ -33,13 +79,13 @@ namespace Gum.PropertyGridHelpers.Converters
         public override TypeConverter.StandardValuesCollection GetStandardValues(ITypeDescriptorContext context)
         {
             List<string> availableStates = new List<string>();
-            if (SelectedState.Self.SelectedInstance != null)
+            if (InstanceSave != null)
             {
-                availableStates = GetAvailableStates(SelectedState.Self.SelectedInstance, mCategory);
+                availableStates = GetAvailableStates(InstanceSave, mCategory);
             }
             else
             {
-                availableStates = GetAvailableStates(SelectedState.Self.SelectedElement, mCategory);
+                availableStates = GetAvailableStates(ElementSave, mCategory);
             }
 
             return new StandardValuesCollection(availableStates);

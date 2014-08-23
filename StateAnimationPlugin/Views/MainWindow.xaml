@@ -5,7 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:views="clr-namespace:StateAnimationPlugin.Views"
              mc:Ignorable="d" 
-             Height="300" Width="580" Closing="Window_Closing">
+             Height="400" Width="580" Closing="Window_Closing">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"></RowDefinition>
@@ -30,7 +30,7 @@
                     Value="{Binding DisplayedAnimationTime}"
                     Minimum="0"
                     Maximum="{Binding SelectedAnimation.Length}"
-                    TickPlacement="TopLeft"
+                    TickPlacement="BottomRight"
                     TickFrequency="1"
                 
                     >
@@ -41,7 +41,8 @@
 
             <views:TimedStateMarkerDisplay Grid.Row="1" Grid.Column="1" Height="10" 
                                            RangeMaximum="{Binding SelectedAnimation.Length}"
-                                           MarkerItemSource="{Binding SelectedAnimation.MarkerTimes}"
+                                           MarkerItemSource="{Binding SelectedAnimation.Keyframes}"
+                                           SelectedKeyframe="{Binding SelectedAnimation.SelectedKeyframe}"
                                            >
             </views:TimedStateMarkerDisplay>
         </Grid>
@@ -81,12 +82,15 @@
               </Grid.RowDefinitions>
 
               <!--State List Box-->
-              <ListBox ItemsSource="{Binding SelectedAnimation.States}" 
-                         SelectedItem="{Binding SelectedAnimation.SelectedState}" KeyDown="HandleDeleteAnimatedStatePressed">
+              <ListBox ItemsSource="{Binding SelectedAnimation.Keyframes}" 
+                         SelectedItem="{Binding SelectedAnimation.SelectedKeyframe}" KeyDown="HandleDeleteAnimatedStatePressed">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
+                          <StackPanel Orientation="Horizontal">
+                            <Image Source="{Binding IconBitmapFrame}"/>
                             <Label Foreground="{Binding LabelBrush}" Content="{Binding DisplayString}">
                             </Label>
+                          </StackPanel>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                     
@@ -101,7 +105,7 @@
               </Grid>
             </Grid>
             <views:StateView 
-                DataContext="{Binding SelectedAnimation.SelectedState}"
+                DataContext="{Binding SelectedAnimation.SelectedKeyframe}"
                 Grid.Column="2" 
                 Width="195" 
                 HorizontalAlignment="Left"

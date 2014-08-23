@@ -43,6 +43,8 @@ namespace StateAnimationPlugin.Views
 
         }
 
+         //Next step:  Make animations vs. state interpolations visibly different in the tree view
+
         private void TextBox_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == System.Windows.Input.Key.Enter)
@@ -51,7 +53,9 @@ namespace StateAnimationPlugin.Views
                 e.Handled = true;
 
                 // Make it lose and regain focus to apply the databainding
-                InterpolationTypeComboBox.Focus();
+                Focusable.Focus();
+
+                //InterpolationTypeComboBox.Focus();
                 TimeTextBox.Focus();
             }
         }

@@ -216,7 +216,6 @@ namespace Gum.PropertyGridHelpers
 
             if (shouldInclude)
             {
-
                 TypeConverter typeConverter = defaultVariable.GetTypeConverter(elementSave);
 
                 Attribute[] customAttributes = GetAttributesForVariable(defaultVariable);

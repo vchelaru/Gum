@@ -1,4 +1,5 @@
-﻿using System;
+﻿using StateAnimationPlugin.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -20,7 +21,16 @@ namespace StateAnimationPlugin.Views
     /// </summary>
     public partial class TimedStateMarkerDisplay : UserControl
     {
+        #region Fields
+
         float mRangeMinimum;
+
+        List<Rectangle> mRectangles = new List<Rectangle>();
+
+
+        #endregion
+
+        #region Properties
 
 
         public double RangeMaximum
@@ -36,27 +46,39 @@ namespace StateAnimationPlugin.Views
 
 
 
-        public IEnumerable<double> MarkerItemSource
+        public IEnumerable<AnimatedKeyframeViewModel> MarkerItemSource
         {
-            get { return (IEnumerable<double>)GetValue(MarkerItemSourceProperty); }
+            get { return (IEnumerable<AnimatedKeyframeViewModel>)GetValue(MarkerItemSourceProperty); }
             set { SetValue(MarkerItemSourceProperty, value); }
         }
 
         // Using a DependencyProperty as the backing store for MarkerItemSource.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty MarkerItemSourceProperty =
-            DependencyProperty.Register("MarkerItemSource", typeof(IEnumerable<double>), 
+            DependencyProperty.Register("MarkerItemSource", typeof(IEnumerable<AnimatedKeyframeViewModel>), 
             typeof(TimedStateMarkerDisplay), new PropertyMetadata(null, MarkerItemSourceChangeCallback));
 
-        
 
-        List<Rectangle> mRectangles = new List<Rectangle>();
+
+        public AnimatedKeyframeViewModel SelectedKeyframe
+        {
+            get { return (AnimatedKeyframeViewModel)GetValue(SelectedKeyframeProperty); }
+            set { SetValue(SelectedKeyframeProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for SelectedKeyframe.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty SelectedKeyframeProperty =
+            DependencyProperty.Register("SelectedKeyframe", typeof(AnimatedKeyframeViewModel), typeof(TimedStateMarkerDisplay), new PropertyMetadata(null, SelectedKeyframeChangedCallback));
+
+
+
+        #endregion
+
+        #region Methods
 
         public TimedStateMarkerDisplay()
         {
             InitializeComponent();
-
-            //MarkerItemSource = new List<double> { 0, 0.5, 1.5, 3, 5 };
-
+            
             //RangeMinimum = 0;
             RangeMaximum = 7;
 
@@ -67,6 +89,13 @@ namespace StateAnimationPlugin.Views
         private void HandleCanvasSizeChanged(object sender, SizeChangedEventArgs e)
         {
             RefreshRectangles();
+        }
+
+
+        private static void SelectedKeyframeChangedCallback(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var instance = d as TimedStateMarkerDisplay;
+            instance.UpdateRectangleProperties();
         }
 
 
@@ -86,14 +115,95 @@ namespace StateAnimationPlugin.Views
 
         private void RefreshRectangles()
         {
+            AddAndDestroyRectanglesToMatchSourceCount();
+
+            UpdateRectangleProperties();
+        }
+
+        private void UpdateRectangleProperties()
+        {
+            int subAnimationIndex = 0;
+            int index = 0;
+
+            const float Border = 5;
+
+            double requiredHeight = 10;
+
+            if (MarkerItemSource != null)
+            {
+                foreach (var keyframe in MarkerItemSource)
+                {
+                    bool isState = !string.IsNullOrEmpty(keyframe.StateName);
+
+                    double percentage = 0;
+
+                    if (RangeMaximum != 0)
+                    {
+                        percentage = keyframe.Time / RangeMaximum;
+                    }
+
+                    // Why multiply the border by 3?
+                    // Not sure, but 2 didn't work.
+                    double canvasWidth = (Canvas.ActualWidth - Border * 3);
+
+                    var offset = Border + percentage * canvasWidth;
+
+                    var rectangle = mRectangles[index];
+                    rectangle.SetValue(Canvas.LeftProperty, offset);
+                    double topValue = 0;
+
+                    if (isState)
+                    {
+                        rectangle.Fill = Brushes.Red;
+                        rectangle.Width = 10;
+                    }
+                    else
+                    {
+                        rectangle.Fill = Brushes.Blue;
+                        if (RangeMaximum != 0)
+                        {
+                            double widthPercentage = (keyframe.Length / RangeMaximum);
+                            rectangle.Width = Border + widthPercentage * canvasWidth;
+                        }
+                        else
+                        {
+                            rectangle.Width = 10;
+                        }
+                        topValue = 10.0 + subAnimationIndex * (rectangle.Height + 1);
+                        subAnimationIndex++;
+                    }
+
+                    if(keyframe == SelectedKeyframe)
+                    {
+                        rectangle.Fill = Brushes.Yellow;
+                        rectangle.Stroke = Brushes.Black;
+                    }
+                    else
+                    {
+                        rectangle.Stroke = null;
+                    }
+
+                    rectangle.SetValue(Canvas.TopProperty, topValue);
+
+                    requiredHeight = System.Math.Max(requiredHeight, topValue + rectangle.Height);
+
+                    index++;
+                }
+            }
+
+            this.Height = requiredHeight;
+        }
+
+        private void AddAndDestroyRectanglesToMatchSourceCount()
+        {
             var timesCount = 0;
-            
-            if(MarkerItemSource != null)
+
+            if (MarkerItemSource != null)
             {
                 timesCount = MarkerItemSource.Count();
             }
 
-            while(mRectangles.Count < timesCount)
+            while (mRectangles.Count < timesCount)
             {
                 Rectangle rectangle = new Rectangle();
                 rectangle.Fill = new SolidColorBrush(Color.FromArgb(255, 255, 0, 0));
@@ -110,33 +220,9 @@ namespace StateAnimationPlugin.Views
                 this.Canvas.Children.Remove(mRectangles.Last());
                 mRectangles.RemoveAt(mRectangles.Count - 1);
             }
-
-            int index = 0;
-
-            const float Border = 5;
-
-            if (MarkerItemSource != null)
-            {
-                foreach (var time in MarkerItemSource)
-                {
-
-                    double percentage = 0;
-
-                    if (RangeMaximum != 0)
-                    {
-                        percentage = time / RangeMaximum;
-                    }
-
-                    double width = (Canvas.ActualWidth - Border * 2);
-
-                    var offset = Border + percentage * width;
-
-                    mRectangles[index].SetValue(Canvas.LeftProperty, offset);
-
-                    index++;
-                }
-            }
         }
+
+        #endregion
 
     }
 }

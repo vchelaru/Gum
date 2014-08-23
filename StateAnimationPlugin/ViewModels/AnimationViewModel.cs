@@ -1,5 +1,7 @@
-﻿using Gum.DataTypes;
+﻿using FlatRedBall.Glue.StateInterpolation;
+using Gum.DataTypes;
 using Gum.DataTypes.Variables;
+using Gum.Wireframe;
 using StateAnimationPlugin.Managers;
 using StateAnimationPlugin.SaveClasses;
 using System;
@@ -20,7 +22,7 @@ namespace StateAnimationPlugin.ViewModels
 
         string mName;
 
-        AnimatedStateViewModel mSelectedState;
+        AnimatedKeyframeViewModel mSelectedState;
 
         bool mIsInMiddleOfSort = false;
 
@@ -47,13 +49,14 @@ namespace StateAnimationPlugin.ViewModels
         { 
             get
             {
-                if(States.Count == 0)
+                if(Keyframes.Count == 0)
                 {
                     return 0;
                 }
                 else
                 {
-                    var toReturn = States.Last().Time;
+                    var toReturn = Keyframes.Max(item => item.Time + item.Length);
+
                     return toReturn;
                 }
             }
@@ -83,9 +86,9 @@ namespace StateAnimationPlugin.ViewModels
             }
         }
 
-        public ObservableCollection<AnimatedStateViewModel> States { get; private set; }
+        public ObservableCollection<AnimatedKeyframeViewModel> Keyframes { get; private set; }
 
-        public AnimatedStateViewModel SelectedState 
+        public AnimatedKeyframeViewModel SelectedKeyframe 
         {
             get
             {
@@ -95,19 +98,14 @@ namespace StateAnimationPlugin.ViewModels
             {
                 mSelectedState = value;
 
-                OnPropertyChanged("SelectedState");
+                OnPropertyChanged("SelectedKeyframe");
             }
         }
 
-        public IEnumerable<double> MarkerTimes
+        public InstanceSave ContainingInstance
         {
-            get
-            {
-                foreach(var item in States)
-                {
-                    yield return (double)item.Time;
-                }
-            }
+            get;
+            set;
         }
 
         #endregion
@@ -124,15 +122,15 @@ namespace StateAnimationPlugin.ViewModels
 
         public AnimationViewModel()
         {
-            States = new ObservableCollection<AnimatedStateViewModel>();
-            States.CollectionChanged += HandleCollectionChanged;
+            Keyframes = new ObservableCollection<AnimatedKeyframeViewModel>();
+            Keyframes.CollectionChanged += HandleCollectionChanged;
 
             mLoopBitmap = BitmapLoader.Self.LoadImage("LoopIcon.png");
 
             mPlayOnceBitmap = BitmapLoader.Self.LoadImage("PlayOnceIcon.png");
         }
 
-        public static AnimationViewModel FromSave(AnimationSave save, ElementSave element)
+        public static AnimationViewModel FromSave(AnimationSave save, ElementSave element, ElementAnimationsSave allAnimationSaves = null)
         {
             AnimationViewModel toReturn = new AnimationViewModel();
             toReturn.Name = save.Name;
@@ -141,12 +139,66 @@ namespace StateAnimationPlugin.ViewModels
             {
                 var foundState = element.AllStates.FirstOrDefault(item => item.Name == stateSave.StateName);
 
-                var newAnimatedStateViewModel = AnimatedStateViewModel.FromSave(stateSave);
+                var newAnimatedStateViewModel = AnimatedKeyframeViewModel.FromSave(stateSave);
 
                 newAnimatedStateViewModel.HasValidState = foundState != null;
 
-                toReturn.States.Add(newAnimatedStateViewModel);
+                toReturn.Keyframes.Add(newAnimatedStateViewModel);
             }
+
+            foreach(var animationReference in save.Animations)
+            {
+                var foundAnimationReference = save.Animations.FirstOrDefault(item => item.Name == animationReference.Name);
+
+                AnimationSave animationSave = null;
+                ElementSave subAnimationElement= null;
+                ElementAnimationsSave subAnimationSiblings = null;
+
+                if( string.IsNullOrEmpty(foundAnimationReference.SourceObject))
+                {
+                    if(allAnimationSaves == null)
+                    {
+                        allAnimationSaves = AnimationCollectionViewModelManager.Self.GetElementAnimationsSave(element);
+                    }
+
+                    animationSave = allAnimationSaves.Animations.FirstOrDefault(item => item.Name == foundAnimationReference.RootName);
+                    subAnimationElement = element;
+                    subAnimationSiblings = allAnimationSaves;
+                }
+                else
+                {
+                    var instance = element.Instances.FirstOrDefault(item => item.Name == foundAnimationReference.SourceObject);
+
+                    if(instance != null)
+                    {
+                        ElementSave instanceElement = Gum.Managers.ObjectFinder.Self.GetElementSave(instance);
+                        subAnimationElement = instanceElement;
+
+                        if(instanceElement != null)
+                        {
+                            var allAnimations = AnimationCollectionViewModelManager.Self.GetElementAnimationsSave(instanceElement);
+
+                            animationSave = allAnimations.Animations.FirstOrDefault(item => item.Name == foundAnimationReference.RootName);
+                            subAnimationElement = instanceElement;
+                            subAnimationSiblings = allAnimations;
+                        }
+                    }
+                }
+                var newVm = AnimatedKeyframeViewModel.FromSave(foundAnimationReference);
+
+                if(animationSave != null)
+                {
+                    newVm.SubAnimationViewModel = AnimationViewModel.FromSave(animationSave, subAnimationElement, subAnimationSiblings);
+                }
+
+
+                newVm.HasValidState = foundAnimationReference != null;
+
+                toReturn.Keyframes.Add(newVm);
+
+            }
+
+            toReturn.SortList();
 
             return toReturn;
         }
@@ -157,9 +209,16 @@ namespace StateAnimationPlugin.ViewModels
             toReturn.Name = this.Name;
             toReturn.Loops = this.mLoops;
 
-            foreach(var state in this.States)
+            foreach(var state in this.Keyframes)
             {
-                toReturn.States.Add(state.ToSave());
+                if (!string.IsNullOrEmpty(state.StateName))
+                {
+                    toReturn.States.Add(state.ToAnimatedStateSave());
+                }
+                else
+                {
+                    toReturn.Animations.Add(state.ToAnimationReferenceSave());
+                }
             }
 
             return toReturn;
@@ -171,7 +230,7 @@ namespace StateAnimationPlugin.ViewModels
             {
                 foreach(var newAdd in e.NewItems)
                 {
-                    var asAnimatedState = newAdd as AnimatedStateViewModel;
+                    var asAnimatedState = newAdd as AnimatedKeyframeViewModel;
 
                     asAnimatedState.PropertyChanged += HandleAnimatedStatePropertyChange;
                 }
@@ -232,11 +291,11 @@ namespace StateAnimationPlugin.ViewModels
         {
             mIsInMiddleOfSort = true;
 
-            var oldSelected = this.SelectedState;
+            var oldSelected = this.SelectedKeyframe;
 
-            this.States.BubbleSort();
+            this.Keyframes.BubbleSort();
 
-            this.SelectedState = oldSelected;
+            this.SelectedKeyframe = oldSelected;
 
             mIsInMiddleOfSort = false;
         }
@@ -249,21 +308,63 @@ namespace StateAnimationPlugin.ViewModels
         /// the keyframes so that when animations are played they can properly interpolate.
         /// 
         /// </summary>
-        public void RefreshCombinedStates(ElementSave element)
+        public void RefreshCombinedStates(ElementSave element, bool useDefaultAsStarting = true)
         {
-            StateSave previous = element.DefaultState;
+            StateSave previous = null;
 
-            foreach(var animatedState in this.States)
+            if (useDefaultAsStarting)
+            {
+                previous = element.DefaultState;
+            }
+
+            foreach(var animatedState in this.Keyframes.Where(item=>!string.IsNullOrEmpty(item.StateName)))
             {
                 var originalState = element.AllStates.FirstOrDefault(item => item.Name == animatedState.StateName);
+
                 if (originalState != null)
                 {
-                    var combined = previous.Clone();
-                    combined.MergeIntoThis(originalState);
+                    if (previous == null)
+                    {
+                        previous = originalState;
+                        animatedState.CachedCumulativeState = originalState.Clone();
+                    }
+                    else
+                    {
+                        var combined = previous.Clone();
+                        combined.MergeIntoThis(originalState);
+                        combined.Name = originalState.Name;
+                        animatedState.CachedCumulativeState = combined;
 
-                    animatedState.CachedCumulativeState = combined;
+                        previous = combined;
+                    }
+                }
+            }
 
-                    previous = combined;
+            foreach(var subAnimation in this.Keyframes.Where(item=>!string.IsNullOrEmpty(item.AnimationName)))
+            {
+                InstanceSave instance = null;
+
+                string name = subAnimation.AnimationName;
+
+                if(name.Contains('.'))
+                {
+                    int indexOfDot = name.IndexOf('.');
+
+                    string instanceName = name.Substring(0, indexOfDot);
+
+                    instance = element.Instances.FirstOrDefault(item => item.Name == instanceName);
+                }
+                if (instance == null)
+                {
+                    subAnimation.SubAnimationViewModel.RefreshCombinedStates(element, false);
+                }
+                else
+                {
+                    var instanceElement = Gum.Managers.ObjectFinder.Self.GetElementSave(instance);
+                    if (instanceElement != null)
+                    {
+                        subAnimation.SubAnimationViewModel.RefreshCombinedStates(instanceElement, false);
+                    }
                 }
             }
         }
@@ -278,6 +379,166 @@ namespace StateAnimationPlugin.ViewModels
             {
                 AnyChange(this, new PropertyChangedEventArgs("Loops"));
             }
+        }
+
+        public void SetStateAtTime(double animationTime, ElementSave element, bool defaultIfNull)
+        {
+            StateSave stateToSet = GetStateToSet(animationTime, element, defaultIfNull);
+
+            if(stateToSet != null)
+            {
+                WireframeObjectManager.Self.RootGue.ApplyState(stateToSet);
+            }
+        }
+
+        private StateSave GetStateToSet(double animationTime, ElementSave element, bool defaultIfNull)
+        {
+            StateSave stateToSet = null;
+
+            GetStateToSetFromStateKeyframes(animationTime, element, ref stateToSet, defaultIfNull);
+
+            CombineStateFromAnimations(animationTime, element, ref stateToSet);
+
+            return stateToSet;
+        }
+
+        private void CombineStateFromAnimations(double animationTime, ElementSave element, ref StateSave stateToSet)
+        {
+            var animationKeyframes = this.Keyframes.Where(item => item.SubAnimationViewModel != null && item.Time <= animationTime);
+
+            foreach(var keyframe in animationKeyframes)
+            {
+                var subAnimationElement = element;
+
+                string instanceName = null;
+
+                if(keyframe.AnimationName.Contains('.'))
+                {
+                    instanceName = keyframe.AnimationName.Substring(0, keyframe.AnimationName.IndexOf('.'));
+
+                    InstanceSave instance = element.Instances.FirstOrDefault(item => item.Name == instanceName);
+
+                    if(instance != null)
+                    {
+                        subAnimationElement = Gum.Managers.ObjectFinder.Self.GetElementSave(instance);
+                    }
+                }
+
+                var relativeTime = animationTime - keyframe.Time;
+
+                var stateFromAnimation = keyframe.SubAnimationViewModel.GetStateToSet(relativeTime, element, false);
+
+                if(stateFromAnimation != null)
+                {
+                    if(subAnimationElement != element)
+                    {
+                        foreach(var variable in stateFromAnimation.Variables)
+                        {
+                            variable.Name = instanceName + "." + variable.Name;
+                        }
+                    }
+
+                    stateToSet.MergeIntoThis(stateFromAnimation, 1);
+                }
+            }
+
+        }
+
+        private StateSave GetStateToSetFromStateKeyframes(double animationTime, ElementSave element, ref StateSave stateToSet, bool defaultIfNull)
+        {
+            var stateKeyframes = this.Keyframes.Where(item => !string.IsNullOrEmpty(item.StateName));
+
+            var stateVmBefore = stateKeyframes.LastOrDefault(item => item.Time <= animationTime);
+            var stateVmAfter = stateKeyframes.FirstOrDefault(item => item.Time >= animationTime);
+
+            if (stateVmBefore == null && stateVmAfter != null)
+            {
+                if (stateVmAfter.CachedCumulativeState == null)
+                {
+                    if (element != null)
+                    {
+                        RefreshCombinedStates(element);
+                    }
+                }
+
+                Gum.ToolStates.SelectedState.Self.CustomCurrentStateSave = stateVmAfter.CachedCumulativeState;
+                stateToSet = Gum.ToolStates.SelectedState.Self.CustomCurrentStateSave.Clone();
+            }
+            else if (stateVmBefore != null && stateVmAfter == null)
+            {
+                if (stateVmBefore.CachedCumulativeState == null)
+                {
+                    if (element != null)
+                    {
+                        RefreshCombinedStates(element);
+                    }
+                }
+                Gum.ToolStates.SelectedState.Self.CustomCurrentStateSave = stateVmBefore.CachedCumulativeState;
+                stateToSet = Gum.ToolStates.SelectedState.Self.CustomCurrentStateSave.Clone();
+            }
+            else if (stateVmBefore != null && stateVmAfter != null)
+            {
+                if (stateVmAfter.CachedCumulativeState == null ||
+                    stateVmAfter.CachedCumulativeState == null)
+                {
+                    if (element != null)
+                    {
+                        RefreshCombinedStates(element);
+                    }
+                }
+                double linearRatio = GetLinearRatio(animationTime, stateVmBefore, stateVmAfter);
+                var stateBefore = stateVmBefore.CachedCumulativeState;
+                var stateAfter = stateVmAfter.CachedCumulativeState;
+
+                if (stateBefore != null && stateAfter != null)
+                {
+                    double processedRatio = ProcessRatio(stateVmBefore.InterpolationType, stateVmBefore.Easing, linearRatio);
+
+
+                    var combined = stateBefore.Clone();
+                    combined.MergeIntoThis(stateAfter, (float)processedRatio);
+
+                    Gum.ToolStates.SelectedState.Self.CustomCurrentStateSave = combined;
+
+                    // for performance we will only update wireframe:
+                    //SelectedState.Self.UpdateToSelectedStateSave();
+                    //WireframeObjectManager.Self.RefreshAll(true);
+
+                    stateToSet = combined;
+                }
+            }
+
+            if(stateToSet == null && defaultIfNull)
+            {
+                stateToSet = element.DefaultState.Clone();
+            }
+
+            return stateToSet;
+        }
+
+
+        private double ProcessRatio(FlatRedBall.Glue.StateInterpolation.InterpolationType interpolationType, FlatRedBall.Glue.StateInterpolation.Easing easing, double linearRatio)
+        {
+            var interpolationFunction = Tweener.GetInterpolationFunction(interpolationType, easing);
+
+            return interpolationFunction.Invoke((float)linearRatio, 0, 1, 1);
+        }
+
+        private static double GetLinearRatio(double value, AnimatedKeyframeViewModel stateVmBefore, AnimatedKeyframeViewModel stateVmAfter)
+        {
+            double valueBefore = stateVmBefore.Time;
+            double valueAfter = stateVmAfter.Time;
+
+            double range = valueAfter - valueBefore;
+            double timeIn = value - valueBefore;
+
+            double ratio = 0;
+
+            if (valueAfter != valueBefore)
+            {
+                ratio = timeIn / range;
+            }
+            return ratio;
         }
 
         #endregion
@@ -302,6 +563,62 @@ namespace StateAnimationPlugin.ViewModels
                     }
                 }
             }
+        }
+    }
+
+    #endregion
+
+    #region AnimationSave Extension Methods
+
+    public static class AnimationSaveExtensions
+    {
+        public static float GetLength(this AnimationSave animation, ElementSave elementSave, ElementAnimationsSave allAnimationSaves)
+        {
+            float lastState = animation.States.Max(item => item.Time);
+
+            float endOfLastSubAnimation = 0;
+            if(animation.Animations != null)
+            {
+                foreach(var subAnimation in animation.Animations)
+                {
+                    AnimationSave subAnimationSave = null;
+                    ElementSave subAnimationElement = null;
+                    ElementAnimationsSave subAnimationSiblings = null;
+
+                    if(subAnimation.SourceObject == null)
+                    {
+                        subAnimationSave = allAnimationSaves.Animations.FirstOrDefault(item => item.Name == subAnimation.Name);
+                        subAnimationElement = elementSave;
+                        subAnimationSiblings = allAnimationSaves;
+                    }
+                    else
+                    {
+                        var instance = elementSave.Instances.FirstOrDefault(item=>item.Name == subAnimation.SourceObject);
+                        if(instance != null)
+                        {
+                            ElementSave instanceElement = Gum.Managers.ObjectFinder.Self.GetElementSave(instance);
+
+                            if(instanceElement != null)
+                            {
+                                var instanceAnimations = AnimationCollectionViewModelManager.Self.GetElementAnimationsSave(instanceElement);
+
+                                subAnimationSave = instanceAnimations.Animations.FirstOrDefault(item => item.Name == subAnimation.RootName);
+                                subAnimationElement = instanceElement;
+                                subAnimationSiblings = instanceAnimations;
+                            }
+                        }
+                    }
+
+                    if (subAnimationSave != null)
+                    {
+                        endOfLastSubAnimation = 
+                            System.Math.Max( endOfLastSubAnimation,
+                            subAnimation.Time + subAnimationSave.GetLength(subAnimationElement, subAnimationSiblings));
+                    }
+                }
+            }
+
+            return System.Math.Max(lastState, endOfLastSubAnimation);
         }
     }
 

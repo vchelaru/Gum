@@ -49,6 +49,7 @@
             this.projectPropertiesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.contentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.clearFontCacheToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.findFileReferencesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.pluginsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.managePluginsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -78,7 +79,6 @@
             this.WireframeEditControl = new FlatRedBall.AnimationEditorForms.Controls.WireframeEditControl();
             this.panel2 = new System.Windows.Forms.Panel();
             this.OutputTextBox = new System.Windows.Forms.RichTextBox();
-            this.findFileReferencesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.LeftAndEverythingContainer)).BeginInit();
             this.LeftAndEverythingContainer.Panel1.SuspendLayout();
@@ -257,6 +257,13 @@
             this.clearFontCacheToolStripMenuItem.Size = new System.Drawing.Size(182, 22);
             this.clearFontCacheToolStripMenuItem.Text = "Clear Font Cache";
             this.clearFontCacheToolStripMenuItem.Click += new System.EventHandler(this.clearFontCacheToolStripMenuItem_Click);
+            // 
+            // findFileReferencesToolStripMenuItem
+            // 
+            this.findFileReferencesToolStripMenuItem.Name = "findFileReferencesToolStripMenuItem";
+            this.findFileReferencesToolStripMenuItem.Size = new System.Drawing.Size(182, 22);
+            this.findFileReferencesToolStripMenuItem.Text = "Find file references...";
+            this.findFileReferencesToolStripMenuItem.Click += new System.EventHandler(this.findFileReferencesToolStripMenuItem_Click);
             // 
             // pluginsToolStripMenuItem
             // 
@@ -529,7 +536,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.wireframeControl1.ContextMenuStrip = this.WireframeContextMenuStrip;
             this.wireframeControl1.Cursor = System.Windows.Forms.Cursors.Default;
-            this.wireframeControl1.DesiredFramesPerSecond = 1F;
+            this.wireframeControl1.DesiredFramesPerSecond = 30F;
             this.wireframeControl1.Location = new System.Drawing.Point(0, 52);
             this.wireframeControl1.Name = "wireframeControl1";
             this.wireframeControl1.Size = new System.Drawing.Size(618, 495);
@@ -573,13 +580,6 @@
             this.OutputTextBox.Size = new System.Drawing.Size(618, 50);
             this.OutputTextBox.TabIndex = 0;
             this.OutputTextBox.Text = "";
-            // 
-            // findFileReferencesToolStripMenuItem
-            // 
-            this.findFileReferencesToolStripMenuItem.Name = "findFileReferencesToolStripMenuItem";
-            this.findFileReferencesToolStripMenuItem.Size = new System.Drawing.Size(182, 22);
-            this.findFileReferencesToolStripMenuItem.Text = "Find file references...";
-            this.findFileReferencesToolStripMenuItem.Click += new System.EventHandler(this.findFileReferencesToolStripMenuItem_Click);
             // 
             // MainWindow
             // 

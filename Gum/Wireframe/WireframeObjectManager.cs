@@ -16,6 +16,7 @@ using Gum.RenderingLibrary;
 using Microsoft.Xna.Framework;
 using FlatRedBall.AnimationEditorForms.Controls;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace Gum.Wireframe
 {
@@ -124,8 +125,15 @@ namespace Gum.Wireframe
             mWireframeControl.AfterXnaInitialize += HandleAfterXnaIntiailize;
             mWireframeControl.XnaUpdate += HandleXnaUpdate;
 
+            mWireframeControl.KeyDown += HandleKeyPress;
+
             mEditControl = editControl;
             mEditControl.ZoomChanged += new EventHandler(HandleControlZoomChange);
+        }
+
+        private void HandleKeyPress(object sender, System.Windows.Forms.KeyEventArgs e)
+        {
+            CameraController.Self.HandleKeyPress(e);
         }
 
         private void HandleAfterXnaIntiailize(object sender, EventArgs e)

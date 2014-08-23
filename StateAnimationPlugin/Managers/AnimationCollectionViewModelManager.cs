@@ -78,5 +78,12 @@ namespace StateAnimationPlugin.Managers
 
             return absoluteFileName;
         }
+
+        public ElementAnimationsSave GetElementAnimationsSave(ElementSave element)
+        {
+            string fileName = GetAbsoluteAnimationFileNameFor(element);
+
+            return FileManager.XmlDeserialize<ElementAnimationsSave>(fileName);
+        }
     }
 }

@@ -829,7 +829,7 @@ namespace Gum.Wireframe
             modificationAmount = AdjustAmountAccordingToUnitType(baseVariableName, modificationAmount, unitsVariableAsObject);
 
             float newValue = currentValue + modificationAmount;
-            SelectedState.Self.SelectedStateSave.SetValue(nameWithInstance, newValue, instanceSave);
+            SelectedState.Self.SelectedStateSave.SetValue(nameWithInstance, newValue, instanceSave, "float");
             return newValue;
         }
 
@@ -848,7 +848,7 @@ namespace Gum.Wireframe
             modificationAmount = AdjustAmountAccordingToUnitType(baseVariableName, modificationAmount, unitsVariableAsObject);
 
             float newValue = currentValue + modificationAmount;
-            SelectedState.Self.SelectedStateSave.SetValue(baseVariableName, newValue, null);
+            SelectedState.Self.SelectedStateSave.SetValue(baseVariableName, newValue, null, "float");
             return newValue;
         }
 

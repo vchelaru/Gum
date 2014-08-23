@@ -20,5 +20,10 @@ namespace StateAnimationPlugin.SaveClasses
             Easing = FlatRedBall.Glue.StateInterpolation.Easing.Out;
             InterpolationType = FlatRedBall.Glue.StateInterpolation.InterpolationType.Linear;
         }
+
+        public override string ToString()
+        {
+            return StateName + " " + Time;
+        }
     }
 }

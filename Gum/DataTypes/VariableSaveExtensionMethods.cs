@@ -84,6 +84,9 @@ namespace Gum.DataTypes
 #if GUM
         public static TypeConverter GetTypeConverter(this VariableSave variableSave, ElementSave container = null)
         {
+            ElementSave categoryContainer;
+            StateSaveCategory category;
+
             if (variableSave.CustomTypeConverter != null)
             {
                 return variableSave.CustomTypeConverter;
@@ -98,6 +101,12 @@ namespace Gum.DataTypes
                 availableGuidesTypeConverter.GumProjectSave = ObjectFinder.Self.GumProjectSave;
                 availableGuidesTypeConverter.ShowNewGuide = false;
                 return availableGuidesTypeConverter;
+            }
+            else if(variableSave.IsState(container, out categoryContainer, out category ))
+            {
+                AvailableStatesConverter converter = new AvailableStatesConverter(category.Name);
+                converter.ElementSave = categoryContainer;
+                return converter;
             }
             else
             {
