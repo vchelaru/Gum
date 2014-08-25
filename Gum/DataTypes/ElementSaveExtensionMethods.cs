@@ -59,6 +59,7 @@ namespace Gum.DataTypes
                 state.ParentContainer = elementSave;
                 state.Initialize();
 
+                FixStateVariableTypes(elementSave, state, ref wasModified);
             }
 
             foreach (InstanceSave instance in elementSave.Instances)
@@ -68,6 +69,27 @@ namespace Gum.DataTypes
             }
 
             return wasModified;
+        }
+
+        private static void FixStateVariableTypes(ElementSave elementSave, StateSave state, ref bool wasModified)
+        {
+            foreach(var variable in state.Variables.Where(item=>item.Type == "string" && item.Name.Contains("State")))
+            {
+                string name = variable.Name;
+
+                var withoutState = name.Substring(0, name.Length - "State".Length);
+                if(variable.Name == "State")
+                {
+                    variable.Type = "State";
+                    wasModified = true;
+                }
+                else if(elementSave.Categories.Any(item=>item.Name == withoutState))
+                {
+
+                    variable.Type = withoutState;
+                    wasModified = true;
+                }
+            }
         }
 
         private static bool AddAndModifyVariablesAccordingToDefault(ElementSave elementSave, StateSave defaultState)
@@ -207,7 +229,7 @@ namespace Gum.DataTypes
 #if GUM
         public static string GetFullPathXmlFile(this ElementSave instance)
         {
-            return instance.GetFullPathXmlFile(instance.Name);         
+            return instance.GetFullPathXmlFile(instance.Name);
         }
 
 
@@ -289,12 +311,12 @@ namespace Gum.DataTypes
         {
             var foundState = element.AllStates.FirstOrDefault(item => item.Name == stateName);
 
-            if(foundState != null)
+            if (foundState != null)
             {
                 return foundState;
             }
 
-            if(!string.IsNullOrEmpty(element.BaseType))
+            if (!string.IsNullOrEmpty(element.BaseType))
             {
                 var baseElement = ObjectFinder.Self.GetElementSave(element.BaseType);
 
@@ -314,13 +336,13 @@ namespace Gum.DataTypes
         {
             var foundCategory = element.Categories.FirstOrDefault(item => item.Name == categoryName);
 
-            if(foundCategory != null)
+            if (foundCategory != null)
             {
                 categoryContainer = element;
                 return foundCategory;
             }
 
-            if(!string.IsNullOrEmpty(element.BaseType))
+            if (!string.IsNullOrEmpty(element.BaseType))
             {
                 var baseElement = ObjectFinder.Self.GetElementSave(element.BaseType);
 

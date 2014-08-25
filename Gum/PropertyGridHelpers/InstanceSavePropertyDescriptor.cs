@@ -120,11 +120,13 @@ namespace Gum.DataTypes.ComponentModel
         {
 
 
-            
+            ElementSave elementSave = SelectedState.Self.SelectedElement;
             StateSave stateSave = SelectedState.Self.SelectedStateSave;
             InstanceSave instanceSave = SelectedState.Self.SelectedInstance;
 
             string name = GetVariableNameConsideringSelection();
+
+
 
             // <None> is a reserved 
             // value for when we want
@@ -137,7 +139,14 @@ namespace Gum.DataTypes.ComponentModel
                 value = null;
             }
 
-            stateSave.SetValue(name, value, instanceSave);
+            string variableType = null;
+            var existingVariable = elementSave.GetVariableFromThisOrBase(name);
+            if(existingVariable != null)
+            {
+                variableType = existingVariable.Type;
+            }
+
+            stateSave.SetValue(name, value, instanceSave, variableType);
         }
 
 

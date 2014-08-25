@@ -69,9 +69,15 @@ namespace Gum.DataTypes
                     defaultStateSave = ses.DefaultState;
                 }
 
-                componentSave.Initialize(defaultStateSave);
+                if(componentSave.Initialize(defaultStateSave))
+                {
+                    wasModified = true;
+                }
 
-                componentSave.Initialize(StandardElementsManager.Self.DefaultStates["Component"]);
+                if(componentSave.Initialize(StandardElementsManager.Self.DefaultStates["Component"]))
+                {
+                    wasModified = true;
+                }
             }
 
             return wasModified;

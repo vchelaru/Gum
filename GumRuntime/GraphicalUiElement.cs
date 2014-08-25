@@ -1941,6 +1941,28 @@ namespace Gum.Wireframe
                     this.WidthUnit = (DimensionUnitType)value;
                     toReturn = true;
                     break;
+                case "Texture Left":
+                    this.TextureLeft = (int)value;
+                    toReturn = true;
+                    break;
+                case "Texture Top":
+                    this.TextureTop = (int)value;
+                    toReturn = true;
+                    break;
+                case "Texture Width":
+                    this.TextureWidth = (int)value;
+                    toReturn = true;
+                    break;
+                case "Texture Height":
+                    this.TextureHeight = (int)value;
+                    toReturn = true;
+
+                    break;
+                case "Texture Address":
+
+                    this.TextureAddress = (Gum.Managers.TextureAddress)value;
+                    toReturn = true;
+                    break;
                 case "X":
                     this.X = (float)value;
                     toReturn = true;
@@ -2015,11 +2037,18 @@ namespace Gum.Wireframe
             }
             else if (mContainedObjectAsRenderable is Sprite)
             {
+                var sprite = mContainedObjectAsRenderable as Sprite;
+
                 if (propertyName == "SourceFile")
                 {
                     string valueAsString = value as string;
-                    ((Sprite)mContainedObjectAsRenderable).Texture = global::RenderingLibrary.Content.LoaderManager.Self.Load(valueAsString, SystemManagers.Default);
+                    sprite.Texture = global::RenderingLibrary.Content.LoaderManager.Self.Load(valueAsString, SystemManagers.Default);
                     handled = true;
+                }
+
+                if(!handled)
+                {
+                    int m = 3;
                 }
             }
 
@@ -2107,7 +2136,7 @@ namespace Gum.Wireframe
 
             foreach (var variable in state.Variables)
             {
-                if (variable.SetsValue)
+                if (variable.SetsValue && variable.Value != null)
                 {
                     this.SetProperty(variable.Name, variable.Value);
                 }

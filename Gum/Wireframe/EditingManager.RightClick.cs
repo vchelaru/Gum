@@ -522,8 +522,6 @@ namespace Gum.Wireframe
                     if (sourceVariable.SourceObject == sourceInstance.Name)
                     {
                         copiedVariable.Name = targetInstance.Name + "." + copiedVariable.GetRootName();
-                        copiedVariable.SourceObject = targetInstance.Name;
-
 
                         // We don't want to copy exposed variables.
                         // If we did, the user would have 2 variables exposed with the same.
@@ -564,7 +562,6 @@ namespace Gum.Wireframe
 
                         VariableSave copiedVariable = sourceVariable.Clone();
                         copiedVariable.Name = targetInstance.Name + "." + copiedVariable.GetRootName();
-                        copiedVariable.SourceObject = targetInstance.Name;
 
                         // We don't want to copy exposed variables.
                         // If we did, the user would have 2 variables exposed with the same.

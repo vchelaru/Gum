@@ -53,6 +53,7 @@ namespace Gum.DataTypes.Variables
             }
         }
 
+        [XmlIgnore]
         public string SourceObject
         {
             get
@@ -66,11 +67,7 @@ namespace Gum.DataTypes.Variables
                     return null;
                 }
             }
-            // todo- kill this
-            set 
-            { 
-                mSourceObject = value; 
-            }
+
         }
 
 

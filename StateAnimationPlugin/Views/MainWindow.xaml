@@ -107,7 +107,7 @@
             <views:StateView 
                 DataContext="{Binding SelectedAnimation.SelectedKeyframe}"
                 Grid.Column="2" 
-                Width="195" 
+                Width="210" 
                 HorizontalAlignment="Left"
                 Margin="0,0,5,0"
                 > </views:StateView>

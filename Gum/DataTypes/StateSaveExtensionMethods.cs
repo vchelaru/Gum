@@ -213,7 +213,6 @@ namespace Gum.DataTypes.Variables
                 if(variable.SourceObject == oldName)
                 {
                     variable.Name = newName + "." +  variable.Name.Substring((oldName + ".").Length);
-                    variable.SourceObject = newName;
                 }
 
                 if (variable.GetRootName() == "Parent" && variable.SetsValue && variable.Value is string && 
@@ -421,8 +420,14 @@ namespace Gum.DataTypes.Variables
             if (variableSave == null)
             {
                 variableSave = new VariableSave();
+                
+                // If the variableType is not null, give it priority
+                if(!string.IsNullOrEmpty(variableType))
+                {
+                    variableSave.Type = variableType;
+                }
 
-                if (value is bool)
+                else if (value is bool)
                 {
                     variableSave.Type = "bool";
                 }
@@ -503,7 +508,6 @@ namespace Gum.DataTypes.Variables
                     }
                     
                 }
-                variableSave.SourceObject = sourceObjectName;
             }
 
             variableSave.SetsValue = true;

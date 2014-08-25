@@ -13,8 +13,17 @@ using Gum.ToolStates;
 
 namespace Gum.DataTypes
 {
+    class InstanceStatePair
+    {
+        public InstanceSave InstanceSave { get; set;}
+        public string VariableName { get; set; }
+    }
     public static class InstanceSaveExtensionMethods
     {
+
+        // To prevent infinite recursion we need to keep track of states that are being looked up
+        static List<InstanceStatePair> mActiveInstanceStatePairs = new List<InstanceStatePair>();
+
 #if GUM
         public static bool IsParentASibling(this InstanceSave instanceSave, List<ElementWithState> elementStack)
         {
@@ -56,69 +65,46 @@ namespace Gum.DataTypes
         public static VariableSave GetVariableFromThisOrBase(this InstanceSave instance,
             ElementWithState parent, string variable)
         {
-            return GetVariableFromThisOrBase(instance, new List<ElementWithState> { parent }, variable, false, false);
+            var elementStack = new List<ElementWithState> { parent };
+            return GetVariableFromThisOrBase(instance, elementStack, new RecursiveVariableFinder(instance, elementStack), variable, false, false);
         }
 
         public static VariableSave GetVariableFromThisOrBase(this InstanceSave instance,
             ElementWithState parent, string variable, bool forceDefault)
         {
-            return GetVariableFromThisOrBase(instance, new List<ElementWithState> { parent }, variable, forceDefault, false);
+            var elementStack = new List<ElementWithState> { parent };
+
+            return GetVariableFromThisOrBase(instance, elementStack, new RecursiveVariableFinder(instance, elementStack), variable, forceDefault, false);
         }
 
         public static VariableSave GetVariableFromThisOrBase(this InstanceSave instance,
             ElementWithState parent, string variable, bool forceDefault, bool onlyIfSetsValue)
         {
-            return GetVariableFromThisOrBase(instance, new List<ElementWithState> { parent }, variable, forceDefault, onlyIfSetsValue);
+            var elementStack = new List<ElementWithState> { parent };
+            return GetVariableFromThisOrBase(instance, elementStack, new RecursiveVariableFinder(instance, elementStack), variable, forceDefault, onlyIfSetsValue);
         }
 
         
         public static VariableSave GetVariableFromThisOrBase(this InstanceSave instance,
             List<ElementWithState> elementStack, string variable)
         {
-            return GetVariableFromThisOrBase(instance,elementStack, variable, false, false);
+            return GetVariableFromThisOrBase(instance,elementStack, new RecursiveVariableFinder(instance, elementStack), variable, false, false);
         }
 
         public static VariableSave GetVariableFromThisOrBase(this InstanceSave instance,
             List<ElementWithState> elementStack, string variable, bool forceDefault)
         {
-            return GetVariableFromThisOrBase(instance, elementStack, variable, forceDefault, false);
+            return GetVariableFromThisOrBase(instance, elementStack, new RecursiveVariableFinder(instance, elementStack), variable, forceDefault, false);
         }
 
         public static VariableSave GetVariableFromThisOrBase(this InstanceSave instance,
-            List<ElementWithState> elementStack, string variable, bool forceDefault, bool onlyIfSetsValue)
+            List<ElementWithState> elementStack, RecursiveVariableFinder rvf, string variable, bool forceDefault, bool onlyIfSetsValue)
         {
             ElementSave instanceBase = ObjectFinder.Self.GetElementSave(instance.BaseType);
 
-            IEnumerable<StateSave> statesToPullFrom = null;
-            StateSave defaultState = null;
-
-#if GUM
-            if (SelectedState.Self.SelectedElement != null)
-            {
-                statesToPullFrom = new List<StateSave>{SelectedState.Self.SelectedElement.DefaultState};
-                defaultState = SelectedState.Self.SelectedElement.DefaultState;
-            }
-#endif
-
-            if (elementStack.Count != 0)
-            {
-                if (elementStack.Last().Element == null)
-                {
-                    throw new InvalidOperationException("The ElementStack contains an ElementWithState with no Element");
-                }
-                statesToPullFrom = elementStack.Last().AllStates;
-                defaultState = elementStack.Last().Element.DefaultState;
-            }
-
-
-#if GUM
-            if (elementStack.Count != 0 && elementStack.Last().Element == SelectedState.Self.SelectedElement && 
-                SelectedState.Self.SelectedStateSave != null &&
-                !forceDefault)
-            {
-                statesToPullFrom = new List<StateSave> { SelectedState.Self.SelectedStateSave };
-            }
-#endif
+            List<StateSave> statesToPullFrom;
+            StateSave defaultState;
+            GetStatesToUse(instance, elementStack, forceDefault, instanceBase, rvf, out statesToPullFrom, out defaultState);
 
 
             VariableSave variableSave = null;
@@ -179,6 +165,41 @@ namespace Gum.DataTypes
             }
 
             return variableSave;
+
+        }
+
+        private static void GetStatesToUse(InstanceSave instance, List<ElementWithState> elementStack, bool forceDefault, ElementSave instanceBase, RecursiveVariableFinder rvf, out List<StateSave> statesToPullFrom, out StateSave defaultState)
+        {
+            statesToPullFrom = null;
+            defaultState = null;
+
+#if GUM
+            if (SelectedState.Self.SelectedElement != null)
+            {
+                statesToPullFrom = new List<StateSave> { SelectedState.Self.SelectedElement.DefaultState };
+                defaultState = SelectedState.Self.SelectedElement.DefaultState;
+            }
+#endif
+
+            if (elementStack.Count != 0)
+            {
+                if (elementStack.Last().Element == null)
+                {
+                    throw new InvalidOperationException("The ElementStack contains an ElementWithState with no Element");
+                }
+                statesToPullFrom = elementStack.Last().AllStates.ToList();
+                defaultState = elementStack.Last().Element.DefaultState;
+            }
+
+
+#if GUM
+            if (elementStack.Count != 0 && elementStack.Last().Element == SelectedState.Self.SelectedElement &&
+                SelectedState.Self.SelectedStateSave != null &&
+                !forceDefault)
+            {
+                statesToPullFrom = new List<StateSave> { SelectedState.Self.SelectedStateSave };
+            }
+#endif
 
         }
 

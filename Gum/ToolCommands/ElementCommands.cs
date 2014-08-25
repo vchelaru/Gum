@@ -93,11 +93,17 @@ namespace Gum.ToolCommands
 
             elementToAddTo.Categories.Add(category);
 
-            elementToAddTo.DefaultState.Variables.Add(new VariableSave() { Name = category.Name + "State", Type = "string", Value = null
+            string categoryName = category.Name + "State";
+
+
+            elementToAddTo.DefaultState.Variables.Add(new VariableSave() { Name = categoryName, Type = categoryName, Value = null
 #if GUM
 ,             CustomTypeConverter = new Gum.PropertyGridHelpers.Converters.AvailableStatesConverter(category.Name)
 #endif    
             });
+
+
+            elementToAddTo.DefaultState.Variables.Sort((first, second) => first.Name.CompareTo(second.Name));
 
             return category;
         }

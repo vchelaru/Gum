@@ -182,7 +182,7 @@ namespace Gum.DataTypes
                     }
 #endif
 
-                    var found = mInstanceSave.GetVariableFromThisOrBase(mElementStack, variableName, false, onlyIfSetsValue);
+                    var found = mInstanceSave.GetVariableFromThisOrBase(mElementStack, this, variableName, false, onlyIfSetsValue);
                     if (found != null && !string.IsNullOrEmpty(found.ExposedAsName))
                     {
                         var exposed = allExposed.FirstOrDefault();
@@ -196,7 +196,7 @@ namespace Gum.DataTypes
                     if (found == null || found.SetsValue == false || found.Value == null)
                     {
                         onlyIfSetsValue = true;
-                        found = mInstanceSave.GetVariableFromThisOrBase(mElementStack, variableName, false, true);
+                        found = mInstanceSave.GetVariableFromThisOrBase(mElementStack, this, variableName, false, true);
                     }
 
                     return found;

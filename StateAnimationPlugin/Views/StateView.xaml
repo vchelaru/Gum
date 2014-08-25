@@ -10,28 +10,28 @@
             <ColumnDefinition Width="Auto"></ColumnDefinition>
             <ColumnDefinition></ColumnDefinition>
         </Grid.ColumnDefinitions>
+      <Grid.RowDefinitions>
+        <RowDefinition Height="26"></RowDefinition>
+        <RowDefinition Height="26"></RowDefinition>
+        <RowDefinition Height="26"></RowDefinition>
+        <RowDefinition Height="26"></RowDefinition>
+      </Grid.RowDefinitions>
 
-        <TextBox  x:Name="Focusable"  Width="0" Height="0" Margin="0" VerticalAlignment="Top" HorizontalAlignment="Left"/>
+      <TextBox  x:Name="Focusable"  Width="0" Height="0" Margin="0" VerticalAlignment="Top" HorizontalAlignment="Left"/>
       
-        <StackPanel>
-          <Label x:Name="NameLabel" Content="{Binding DisplayName, FallbackValue=StateName}"></Label>
-          <Label>Time:</Label>
-          <Label Visibility="{Binding InterpolationElementVisibility}">Interpolation Type:</Label>
-          <Label Visibility="{Binding InterpolationElementVisibility}">In/Out:"</Label>
-        </StackPanel>
+      <Label Grid.Row="0" x:Name="NameLabel" Grid.ColumnSpan="2" Content="{Binding DisplayName, FallbackValue=StateName}"></Label>
+      <Label Grid.Row="1">Time:</Label>
+      <Label Grid.Row="2" Visibility="{Binding InterpolationElementVisibility}">Interpolation Type:</Label>
+      <Label Grid.Row="3" Visibility="{Binding InterpolationElementVisibility}">In/Out:"</Label>
 
-        <StackPanel Grid.Column="1">
-
-            <TextBox Margin="0,30,0,0" x:Name="TimeTextBox"
+      <TextBox Grid.Row="1" Grid.Column="1" x:Name="TimeTextBox"
                 Text="{Binding Time}" KeyDown="TextBox_KeyDown"   
-                     
              />
-            
-            <ComboBox x:Name="InterpolationTypeComboBox"
-                      Visibility="{Binding InterpolationElementVisibility}" Margin="0,7,0,2" SelectedItem="{Binding InterpolationType}"></ComboBox>
-            <ComboBox x:Name="EasingTypeComboBox"
-                      Visibility="{Binding InterpolationElementVisibility}" Margin="0,1,0,2" SelectedItem="{Binding Easing}"></ComboBox>
-        </StackPanel>
+
+      <ComboBox Grid.Row="2" Grid.Column="1" x:Name="InterpolationTypeComboBox"
+                      Visibility="{Binding InterpolationElementVisibility}" SelectedItem="{Binding InterpolationType}"></ComboBox>
+      <ComboBox Grid.Row="3" Grid.Column="1" x:Name="EasingTypeComboBox"
+                      Visibility="{Binding InterpolationElementVisibility}" SelectedItem="{Binding Easing}"></ComboBox>
 
 
     </Grid>

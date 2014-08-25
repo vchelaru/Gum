@@ -239,6 +239,7 @@ namespace Gum.Wireframe
             }
 
 
+
             if (newIpso != null && (newIpso is GraphicalUiElement) == false)
             {
                 element = new GraphicalUiElement(newIpso as IRenderable, container);
@@ -250,9 +251,11 @@ namespace Gum.Wireframe
 
             if(element != null)
             {
+
                 var baseElement = ObjectFinder.Self.GetElementSave(instance.BaseType);
                 if (baseElement != null)
                 {
+                    element.ElementSave = baseElement;
                     foreach (var exposedVariable in baseElement.DefaultState.Variables.Where(item => !string.IsNullOrEmpty(item.ExposedAsName)))
                     {
                         element.AddExposedVariable(exposedVariable.ExposedAsName, exposedVariable.Name);
@@ -265,6 +268,9 @@ namespace Gum.Wireframe
                         element.AddCategory(category);
                     }
                 }
+
+
+
                 var selectedState = SelectedState.Self.SelectedStateSave;
                 if (selectedState == null)
                 {
@@ -280,7 +286,18 @@ namespace Gum.Wireframe
             }
 
 
-
+            if (container != null)
+            {
+                var containerElement = elementStack.Last().Element;
+                foreach (var variable in elementStack
+                    .Last()
+                    .AllStates
+                    .SelectMany(item => item.Variables)
+                    .Where(item => item.SourceObject == instance.Name && item.SetsValue && item.Value != null))
+                {
+                    container.SetProperty(variable.Name, variable.Value);
+                }
+            }
             return element;
         }
 
@@ -764,8 +781,8 @@ namespace Gum.Wireframe
                     {
                         string error;
                         sprite.Texture = LoaderManager.Self.LoadOrInvalid(textureName, null, out error);
-                        // Do we want to print this out somewhere?  Well, for now we'll just
-                        // tolearte it silently because the invalid texture is shown
+                        // Do we want to print missing textures somewhere?  Well, for now we'll just
+                        // tolerate it silently because the invalid texture is shown
                     }
                     else
                     {

@@ -298,7 +298,8 @@ namespace Gum.Managers
             // this here.  Doing so would
             // create an endless loop...
             //stateSave.Variables.Add(new VariableSave { Type = "string", Value = "Default", Name = "State", CustomTypeConverter = new AvailableStatesConverter(null)});
-            stateSave.Variables.Add(new VariableSave { Type = "string", Value = null, Name = "State", CustomTypeConverter = new AvailableStatesConverter(null) });
+            // The type used to be "string" but we want to differentiate it from actual strings so we use "State"
+            stateSave.Variables.Add(new VariableSave { Type = "State", Value = null, Name = "State", CustomTypeConverter = new AvailableStatesConverter(null) });
 #endif
 
             ApplySortValuesFromOrderInState(stateSave);
@@ -355,7 +356,7 @@ namespace Gum.Managers
         {
             stateSave.Variables.Add(new VariableSave
             {
-                Type = "string",
+                Type = "State",
                 Value = "Default",
                 Name = "State"
 #if GUM
