@@ -82,8 +82,14 @@ namespace StateAnimationPlugin.Managers
         public ElementAnimationsSave GetElementAnimationsSave(ElementSave element)
         {
             string fileName = GetAbsoluteAnimationFileNameFor(element);
-
-            return FileManager.XmlDeserialize<ElementAnimationsSave>(fileName);
+            if (System.IO.File.Exists(fileName))
+            {
+                return FileManager.XmlDeserialize<ElementAnimationsSave>(fileName);
+            }
+            else
+            {
+                return null;
+            }
         }
     }
 }

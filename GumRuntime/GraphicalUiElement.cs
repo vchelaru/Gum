@@ -298,13 +298,13 @@ namespace Gum.Wireframe
             set { mYOrigin = value; UpdateLayout(); }
         }
 
-        public DimensionUnitType WidthUnit
+        public DimensionUnitType WidthUnits
         {
             get { return mWidthUnit; }
             set { mWidthUnit = value; UpdateLayout(); }
         }
 
-        public DimensionUnitType HeightUnit
+        public DimensionUnitType HeightUnits
         {
             get { return mHeightUnit; }
             set { mHeightUnit = value; UpdateLayout(); }
@@ -830,8 +830,8 @@ namespace Gum.Wireframe
 
         public bool GetIfDimensionsDependOnChildren()
         {
-            return (this.WidthUnit == DimensionUnitType.Absolute && this.mWidth == 0) ||
-                (this.HeightUnit == DimensionUnitType.Absolute && this.mHeight == 0);
+            return (this.WidthUnits == DimensionUnitType.Absolute && this.mWidth == 0) ||
+                (this.HeightUnits == DimensionUnitType.Absolute && this.mHeight == 0);
         }
 
         public void UpdateLayout(bool updateParent, bool updateChildren)
@@ -1536,8 +1536,8 @@ namespace Gum.Wireframe
             this.Width = rvf.GetValue<float>("Width");
             this.Height = rvf.GetValue<float>("Height");
 
-            this.HeightUnit = rvf.GetValue<DimensionUnitType>("Height Units");
-            this.WidthUnit = rvf.GetValue<DimensionUnitType>("Width Units");
+            this.HeightUnits = rvf.GetValue<DimensionUnitType>("Height Units");
+            this.WidthUnits = rvf.GetValue<DimensionUnitType>("Width Units");
 
             this.XOrigin = rvf.GetValue<HorizontalAlignment>("X Origin");
             this.YOrigin = rvf.GetValue<VerticalAlignment>("Y Origin");
@@ -1930,7 +1930,7 @@ namespace Gum.Wireframe
                     toReturn = true;
                     break;
                 case "Height Units":
-                    this.HeightUnit = (DimensionUnitType)value;
+                    this.HeightUnits = (DimensionUnitType)value;
                     toReturn = true;
                     break;
                 case "Width":
@@ -1938,7 +1938,7 @@ namespace Gum.Wireframe
                     toReturn = true;
                     break;
                 case "Width Units":
-                    this.WidthUnit = (DimensionUnitType)value;
+                    this.WidthUnits = (DimensionUnitType)value;
                     toReturn = true;
                     break;
                 case "Texture Left":
@@ -2045,7 +2045,30 @@ namespace Gum.Wireframe
                     sprite.Texture = global::RenderingLibrary.Content.LoaderManager.Self.Load(valueAsString, SystemManagers.Default);
                     handled = true;
                 }
-
+                if(propertyName == "Alpha")
+                {
+                    int valueAsInt = (int)value;
+                    sprite.Alpha = valueAsInt;
+                    handled = true;
+                }
+                if (propertyName == "Red")
+                {
+                    int valueAsInt = (int)value;
+                    sprite.Red = valueAsInt;
+                    handled = true;
+                }
+                if(propertyName == "Green")
+                {
+                    int valueAsInt = (int)value;
+                    sprite.Green = valueAsInt;
+                    handled = true;
+                }
+                if (propertyName == "Blue")
+                {
+                    int valueAsInt = (int)value;
+                    sprite.Blue = valueAsInt;
+                    handled = true;
+                }
                 if(!handled)
                 {
                     int m = 3;

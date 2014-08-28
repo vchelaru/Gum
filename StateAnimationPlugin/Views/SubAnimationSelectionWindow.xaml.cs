@@ -124,15 +124,22 @@ namespace StateAnimationPlugin.Views
             AnimationContainers = new List<AnimationContainerViewModel>();
 
             var acvm = new AnimationContainerViewModel(
-                SelectedState.Self.SelectedComponent, null
+                SelectedState.Self.SelectedElement, null
                 );
             AnimationContainers.Add(acvm);
 
-            foreach(var instance in SelectedState.Self.SelectedComponent.Instances)
+            foreach(var instance in SelectedState.Self.SelectedElement.Instances)
             {
-                acvm = new AnimationContainerViewModel(SelectedState.Self.SelectedComponent, instance);
-
-                AnimationContainers.Add(acvm);
+                var instanceElement = ObjectFinder.Self.GetElementSave(instance);
+                if (instanceElement != null)
+                {
+                    var animationSave = AnimationCollectionViewModelManager.Self.GetElementAnimationsSave(instanceElement);
+                    if (animationSave != null && animationSave.Animations.Count != 0)
+                    {
+                        acvm = new AnimationContainerViewModel(SelectedState.Self.SelectedElement, instance);
+                        AnimationContainers.Add(acvm);
+                    }
+                }
             }
 
 

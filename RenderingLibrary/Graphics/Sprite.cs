@@ -57,27 +57,7 @@ namespace RenderingLibrary.Graphics
         {
             get
             {
-                // I think we want to treat these individually so a 
-                // width could be set but height could be default
-                if (Width != 0)
-                {
-                    return Width;
-                }
-                else if (Texture != null)
-                {
-                    if (this.SourceRectangle != null && SourceRectangle.HasValue)
-                    {
-                        return SourceRectangle.Value.Width;
-                    }
-                    else
-                    {
-                        return Texture.Width;
-                    }
-                }
-                else
-                {
-                    return 32;
-                }
+                return Width;
             }
         }
 
@@ -86,25 +66,7 @@ namespace RenderingLibrary.Graphics
             get
             {
                 // See comment in Width
-                if (Height != 0)
-                {
-                    return Height;
-                }
-                else if (Texture != null)
-                {
-                    if (this.SourceRectangle != null && SourceRectangle.HasValue)
-                    {
-                        return SourceRectangle.Value.Height;
-                    }
-                    else
-                    {
-                        return Texture.Height;
-                    }
-                }
-                else
-                {
-                    return 32;
-                }
+                return Height;
             }
         }
 
@@ -307,7 +269,7 @@ namespace RenderingLibrary.Graphics
 
         void IRenderable.Render(SpriteBatch spriteBatch, SystemManagers managers)
         {
-            if (this.AbsoluteVisible)
+            if (this.AbsoluteVisible && Width > 0 && Height > 0)
             {
                 bool shouldTileByMultipleCalls = this.Wrap && (this as IRenderable).Wrap == false;
                 if (shouldTileByMultipleCalls && this.Texture != null)
@@ -486,7 +448,7 @@ namespace RenderingLibrary.Graphics
             bool flipHorizontal = false,
             bool flipVertical = false,
             float rotationInDegrees = 0,
-            bool treat0AsFullDimensions = true
+            bool treat0AsFullDimensions = false
             )
         {
             Renderer renderer = null;

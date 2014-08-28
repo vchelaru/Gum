@@ -249,14 +249,14 @@ namespace Gum.Wireframe
                 differenceToUnitPositionY = desiredY - y;
             }
 
-            if(gue.WidthUnit.GetIsPixelBased())
+            if(gue.WidthUnits.GetIsPixelBased())
             {
                 float width = gue.Width;
                 float desiredWidth = MathFunctions.RoundToInt(width);
                 differenceToUnitWidth = desiredWidth - width;
             }
 
-            if (gue.HeightUnit.GetIsPixelBased())
+            if (gue.HeightUnits.GetIsPixelBased())
             {
                 float height = gue.Height;
                 float desiredHeight = MathFunctions.RoundToInt(height);

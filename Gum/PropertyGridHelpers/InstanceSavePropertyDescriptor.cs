@@ -124,6 +124,15 @@ namespace Gum.DataTypes.ComponentModel
             StateSave stateSave = SelectedState.Self.SelectedStateSave;
             InstanceSave instanceSave = SelectedState.Self.SelectedInstance;
 
+            //////////////// Early Out/////////////
+            if(stateSave == null)
+            {
+                return;
+            }
+
+
+            ///////////////End Early Out///////////
+
             string name = GetVariableNameConsideringSelection();
 
 
@@ -146,6 +155,7 @@ namespace Gum.DataTypes.ComponentModel
                 variableType = existingVariable.Type;
             }
 
+            
             stateSave.SetValue(name, value, instanceSave, variableType);
         }
 

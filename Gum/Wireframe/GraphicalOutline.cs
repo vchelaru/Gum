@@ -120,18 +120,9 @@ namespace Gum.Wireframe
             rectangle.Y = pso.GetAbsoluteY() - adjustedSelectionBorder;
 
 
-            if ((pso.Width == 0 || pso.Height == 0) && pso is Sprite)
-            {
-                Sprite asSprite = pso as Sprite;
 
-                rectangle.Width = asSprite.EffectiveWidth + adjustedSelectionBorder * 2;
-                rectangle.Height = asSprite.EffectiveHeight + adjustedSelectionBorder * 2;
-            }
-            else
-            {
-                rectangle.Width = pso.Width + adjustedSelectionBorder * 2;
-                rectangle.Height = pso.Height + adjustedSelectionBorder * 2;
-            }
+            rectangle.Width = pso.Width + adjustedSelectionBorder * 2;
+            rectangle.Height = pso.Height + adjustedSelectionBorder * 2;
         }
 
         LineRectangle GetOrMakeRectangleAtIndex(int i)

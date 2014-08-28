@@ -35,6 +35,18 @@ namespace Gum.Managers
 
     public class StandardElementsManager
     {
+        #region Enums
+
+        enum DimensionVariableAction
+        {
+            ExcludeFileOptions,
+            AllowFileOptions,
+            DefaultToPercentageOfFile
+        }
+
+        #endregion
+
+
         #region Fields
 
         Dictionary<string, StateSave> mDefaults;
@@ -114,7 +126,7 @@ namespace Gum.Managers
             StateSave stateSave = new StateSave();
             stateSave.Name = "Default";
             AddPositioningVariables(stateSave);
-            AddDimensionsVariables(stateSave, 100, 50, false);
+            AddDimensionsVariables(stateSave, 100, 50, DimensionVariableAction.ExcludeFileOptions);
             stateSave.Variables.Add(new VariableSave { Type = "bool", Value = true, Name = "Visible" });
             stateSave.Variables.Add(new VariableSave { Type = "string", Value = "Hello", Name = "Text", Category = "Text" });
             stateSave.Variables.Add(new VariableSave { Type = "VerticalAlignment", Value = VerticalAlignment.Top, Name = "VerticalAlignment", Category = "Text" });
@@ -153,7 +165,7 @@ namespace Gum.Managers
             stateSave = new StateSave();
             stateSave.Name = "Default";
             AddPositioningVariables(stateSave);
-            AddDimensionsVariables(stateSave, 0, 0, true);
+            AddDimensionsVariables(stateSave, 100, 100, DimensionVariableAction.DefaultToPercentageOfFile);
             stateSave.Variables.Add(new VariableSave { Type = "string", Value = "", Name = "SourceFile", IsFile = true});
             stateSave.Variables.Add(new VariableSave { Type = "bool", Value = true, Name = "Visible" });
             stateSave.Variables.Add(new VariableSave { Type = "bool", Value = false, Category = "Animation", Name = "Animate" });
@@ -210,7 +222,7 @@ namespace Gum.Managers
 
             AddPositioningVariables(stateSave);
 
-            AddDimensionsVariables(stateSave, 150, 150, false);
+            AddDimensionsVariables(stateSave, 150, 150, DimensionVariableAction.ExcludeFileOptions);
 
             stateSave.Variables.Add(new VariableSave { Type = "bool", Value = true, Name = "Visible" });
             stateSave.Variables.Add(new VariableSave { Type = "ChildrenLayout", Value = ChildrenLayout.Regular, Name = "Children Layout" });
@@ -238,7 +250,7 @@ namespace Gum.Managers
 
             AddPositioningVariables(stateSave);
 
-            AddDimensionsVariables(stateSave, 50, 50, false);
+            AddDimensionsVariables(stateSave, 50, 50, DimensionVariableAction.ExcludeFileOptions);
 
             stateSave.Variables.Add(new VariableSave { Type = "bool", Value = true, Name = "Visible" });
             AddColorVariables(stateSave, true);
@@ -260,7 +272,7 @@ namespace Gum.Managers
             stateSave = new StateSave();
             stateSave.Name = "Default";
             AddPositioningVariables(stateSave);
-            AddDimensionsVariables(stateSave, 64, 64, false);
+            AddDimensionsVariables(stateSave, 64, 64, DimensionVariableAction.ExcludeFileOptions);
             stateSave.Variables.Add(new VariableSave { Type = "string", Value = "", Name = "SourceFile", IsFile = true });
             stateSave.Variables.Add(new VariableSave { Type = "bool", Value = true, Name = "Visible" });
 
@@ -385,15 +397,21 @@ namespace Gum.Managers
             stateSave.Variables.Add(new VariableSave { Type = "int", Value = 255, Name = "Blue", Category = "Rendering" });
         }
 
-        private static void AddDimensionsVariables(StateSave stateSave, float defaultWidth, float defaultHeight, bool allowFromFile)
+        private static void AddDimensionsVariables(StateSave stateSave, float defaultWidth, float defaultHeight, DimensionVariableAction dimensionVariableAction)
         {
 
 
             stateSave.Variables.Add(new VariableSave { Type = "float", Value = defaultWidth, Name = "Width", Category = "Dimensions" });
 
-            VariableSave variableSave =
-                new VariableSave { Type = typeof(DimensionUnitType).Name, Value = DimensionUnitType.Absolute, Name = "Width Units", Category = "Dimensions" };
-            if (!allowFromFile)
+            var defaultValue = DimensionUnitType.Absolute;
+
+            if(dimensionVariableAction == DimensionVariableAction.DefaultToPercentageOfFile)
+            {
+                defaultValue = DimensionUnitType.PercentageOfSourceFile;
+            }
+
+            VariableSave variableSave = new VariableSave { Type = typeof(DimensionUnitType).Name, Value = defaultValue, Name = "Width Units", Category = "Dimensions" };
+            if (dimensionVariableAction == DimensionVariableAction.ExcludeFileOptions)
             {
                 variableSave.ExcludedValuesForEnum.Add(DimensionUnitType.PercentageOfSourceFile);
             }
@@ -402,9 +420,9 @@ namespace Gum.Managers
 
 
             stateSave.Variables.Add(new VariableSave { Type = "float", Value = defaultHeight, Name = "Height", Category = "Dimensions" });
-            variableSave =
-                new VariableSave { Type = typeof(DimensionUnitType).Name, Value = DimensionUnitType.Absolute, Name = "Height Units", Category = "Dimensions" };
-            if (!allowFromFile)
+
+            variableSave = new VariableSave { Type = typeof(DimensionUnitType).Name, Value = defaultValue, Name = "Height Units", Category = "Dimensions" };
+            if (dimensionVariableAction == DimensionVariableAction.ExcludeFileOptions)
             {
                 variableSave.ExcludedValuesForEnum.Add(DimensionUnitType.PercentageOfSourceFile);
             }

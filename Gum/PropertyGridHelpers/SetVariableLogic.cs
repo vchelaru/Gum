@@ -200,11 +200,6 @@ namespace Gum.PropertyGridHelpers
                     UnitConverter.Self.ConvertToPixelCoordinates(
                         valueOnObject, 0, oldValue, null, parentWidth, parentHeight, fileWidth, fileHeight, out outX, out outY);
 
-                    if (isWidthOrHeight && outX == 0)
-                    {
-                        outX = fileWidth;
-                    }
-
                     UnitConverter.Self.ConvertToUnitTypeCoordinates(
                         outX, outY, unitType, null, parentWidth, parentHeight, fileWidth, fileHeight, out valueToSet, out outY);
                 }
@@ -212,11 +207,6 @@ namespace Gum.PropertyGridHelpers
                 {
                     UnitConverter.Self.ConvertToPixelCoordinates(
                         0, valueOnObject, null, oldValue, parentWidth, parentHeight, fileWidth, fileHeight, out outX, out outY);
-
-                    if (isWidthOrHeight && outY == 0)
-                    {
-                        outY = fileHeight;
-                    }
 
                     UnitConverter.Self.ConvertToUnitTypeCoordinates(
                         outX, outY, null, unitType, parentWidth, parentHeight, fileWidth, fileHeight, out outX, out valueToSet);
