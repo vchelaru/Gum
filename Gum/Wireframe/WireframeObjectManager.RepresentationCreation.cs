@@ -906,18 +906,20 @@ namespace Gum.Wireframe
 
             string toReturn = withoutExtension;
 
-
-            if (usePattern)
+            if (System.IO.File.Exists(absoluteTexture))
             {
-                nineSlice.SetTexturesUsingPattern(absoluteTexture, null);
-            }
-            else
-            {
-                if (!string.IsNullOrEmpty(absoluteTexture))
+                if (usePattern)
                 {
-                    nineSlice.SetSingleTexture(LoaderManager.Self.Load(absoluteTexture, null));
+                    nineSlice.SetTexturesUsingPattern(absoluteTexture, null);
                 }
+                else
+                {
+                    if (!string.IsNullOrEmpty(absoluteTexture))
+                    {
+                        nineSlice.SetSingleTexture(LoaderManager.Self.Load(absoluteTexture, null));
+                    }
 
+                }
             }
             var color = GetColorFromRvf(rvf);
             nineSlice.Color = color;

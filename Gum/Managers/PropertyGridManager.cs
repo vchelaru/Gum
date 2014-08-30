@@ -135,16 +135,31 @@ namespace Gum.Managers
         }
 
 
-        private async void RefreshDataGrid(ElementSave element, StateSave state, InstanceSave instance, bool force = false)
+        static object lockObject = new object();
+        static List<string> records = new List<string>();
+
+        static int SimultaneousCalls = 0;
+
+        private void RefreshDataGrid(ElementSave element, StateSave state, InstanceSave instance, bool force = false)
         {
 
             bool hasChangedObjectShowing = element != mLastElement || instance != mLastInstance || state != mLastState ||
                 force;
+
+
             if (hasChangedObjectShowing)
             {
                 List<MemberCategory> categories = GetCategories(element, state, instance);
-                lock (mVariablesDataGrid)
+                Application.DoEvents();
+                SimultaneousCalls ++;
+                lock (lockObject)
                 {
+                    if(SimultaneousCalls > 1)
+                    {
+                        SimultaneousCalls--;
+                        return;
+                    }
+                    records.Add("in");
 
                     mVariablesDataGrid.Instance = SelectedState.Self.SelectedStateSave;
 
@@ -158,12 +173,25 @@ namespace Gum.Managers
 
                     foreach (var category in categories)
                     {
-                        Application.DoEvents();
 
+                        // We used to do this:
+                        // Application.DoEvents();
+                        // That made things go faster,
+                        // but it made the "lock" not work, which could make duplicate UI show up.
                         mVariablesDataGrid.Categories.Add(category);
-
+                        if(SimultaneousCalls > 1)
+                        {
+                            SimultaneousCalls--;
+                            // EARLY OUT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                            return;
+                        }
                     }
+
                 }
+
+                SimultaneousCalls--;
+                Application.DoEvents();
+
                 mVariablesDataGrid.Visibility = System.Windows.Visibility.Visible;
 
             }

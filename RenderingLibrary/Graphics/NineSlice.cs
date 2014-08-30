@@ -569,6 +569,34 @@ namespace RenderingLibrary.Graphics
                 mBottomSprite.SourceRectangle = new Rectangle(outsideWidth, outsideHeight + insideHeight, insideWidth, outsideHeight);
                 mBottomRightSprite.SourceRectangle = new Rectangle(outsideWidth + insideWidth, outsideHeight + insideHeight, outsideWidth, outsideHeight);
             }
+
+            if(mTopSprite.SourceRectangle.HasValue)
+            {
+                mTopSprite.Height = mTopSprite.SourceRectangle.Value.Height;
+                mTopLeftSprite.Height = mTopSprite.Height;
+                mTopRightSprite.Height = mTopSprite.Height;
+
+            }
+            if (mBottomSprite.SourceRectangle.HasValue)
+            {
+                mBottomSprite.Height = mBottomSprite.SourceRectangle.Value.Height;
+                mBottomRightSprite.Height = mBottomSprite.Height;
+                mBottomLeftSprite.Height = mBottomSprite.Height;
+            }
+
+            if (mLeftSprite.SourceRectangle.HasValue)
+            {
+                mLeftSprite.Width = mLeftSprite.SourceRectangle.Value.Width;
+                mTopLeftSprite.Width = mLeftSprite.Width;
+                mBottomLeftSprite.Width = mLeftSprite.Width;
+            }
+
+            if(mRightSprite.SourceRectangle.HasValue)
+            {
+                mRightSprite.Width = mRightSprite.SourceRectangle.Value.Width;
+                mTopRightSprite.Width = mRightSprite.Width;
+                mBottomRightSprite.Width = mRightSprite.Width;
+            }
         }
 
         void Render(Sprite sprite, SystemManagers managers, SpriteBatch spriteBatch)

@@ -60,16 +60,15 @@ namespace Gum.Gui.Forms
 
         private void TopPropertyGridValueChanged(object s, PropertyValueChangedEventArgs e)
         {
-
-            GumCommands.Self.FileCommands.TryAutoSaveProject();
-
+            // Set the canvas width/height first before refreshing everyting so that the refresh uses these values:
+            GraphicalUiElement.CanvasWidth = ProjectState.Self.GumProjectSave.DefaultCanvasWidth;
+            GraphicalUiElement.CanvasHeight = ProjectState.Self.GumProjectSave.DefaultCanvasHeight;
 
             GuiCommands.Self.RefreshWireframeDisplay();
             WireframeObjectManager.Self.RefreshAll(true);
 
 
-            GraphicalUiElement.CanvasWidth = ProjectState.Self.GumProjectSave.DefaultCanvasWidth;
-            GraphicalUiElement.CanvasHeight = ProjectState.Self.GumProjectSave.DefaultCanvasHeight;
+
 
             if (ProjectState.Self.GumProjectSave != null)
             {
@@ -77,6 +76,7 @@ namespace Gum.Gui.Forms
                 EditingManager.Self.RestrictToUnitValues = ProjectState.Self.GumProjectSave.RestrictToUnitValues;
             }
 
+            GumCommands.Self.FileCommands.TryAutoSaveProject();
 
             //EditingManager.Self.UpdateSelectedObjectsPositionAndDimensions();
         }

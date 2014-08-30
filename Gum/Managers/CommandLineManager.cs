@@ -1,4 +1,5 @@
 ﻿using Gum.DataTypes;
+using Gum.Plugins;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,9 +28,12 @@ namespace Gum.Managers
         public void ReadCommandLine()
         {
             string[] commandLineArgs = Environment.GetCommandLineArgs();
+            GumCommands.Self.GuiCommands.PrintOutput(commandLineArgs.Length + " command line argument(s)...");
 
             foreach (var arg in commandLineArgs)
             {
+                GumCommands.Self.GuiCommands.PrintOutput("Processing command line arg: " + arg);
+
                 // For now we support a single command line argument, either the .glux or an
                 // object within the .glux
                 string argExtension = FileManager.GetExtension(arg);

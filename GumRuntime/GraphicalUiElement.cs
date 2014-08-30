@@ -2042,7 +2042,18 @@ namespace Gum.Wireframe
                 if (propertyName == "SourceFile")
                 {
                     string valueAsString = value as string;
-                    sprite.Texture = global::RenderingLibrary.Content.LoaderManager.Self.Load(valueAsString, SystemManagers.Default);
+
+                    if (ToolsUtilities.FileManager.IsRelative(valueAsString))
+                    {
+                        valueAsString = ToolsUtilities.FileManager.RelativeDirectory + valueAsString;
+
+                        valueAsString = ToolsUtilities.FileManager.RemoveDotDotSlash(valueAsString);
+                    }
+
+                    if (ToolsUtilities.FileManager.FileExists(valueAsString))
+                    {
+                        sprite.Texture = global::RenderingLibrary.Content.LoaderManager.Self.Load(valueAsString, SystemManagers.Default);
+                    }
                     handled = true;
                 }
                 if(propertyName == "Alpha")
@@ -2073,6 +2084,30 @@ namespace Gum.Wireframe
                 {
                     int m = 3;
                 }
+            }
+            else if(mContainedObjectAsRenderable is NineSlice)
+            {
+                var nineSlice = mContainedObjectAsRenderable as NineSlice;
+
+                if(propertyName == "SourceFile")
+                {
+                    
+                    string valueAsString = value as string;
+
+                    if (ToolsUtilities.FileManager.IsRelative(valueAsString))
+                    {
+                        valueAsString = ToolsUtilities.FileManager.RelativeDirectory + valueAsString;
+
+                        valueAsString = ToolsUtilities.FileManager.RemoveDotDotSlash(valueAsString);
+                    }
+
+                    if (ToolsUtilities.FileManager.FileExists(valueAsString))
+                    {
+                        nineSlice.SetSingleTexture(global::RenderingLibrary.Content.LoaderManager.Self.Load(valueAsString, SystemManagers.Default));
+                    }
+                    handled = true;
+                }
+
             }
 
             // If special case didn't work, let's try reflection

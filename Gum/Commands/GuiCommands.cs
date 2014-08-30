@@ -42,5 +42,10 @@ namespace Gum.Commands
             mMainWindow.AddWpfControl(control, tabTitle);
 
         }
+
+        public void PrintOutput(string output)
+        {
+            OutputManager.Self.AddOutput(output);
+        }
     }
 }
