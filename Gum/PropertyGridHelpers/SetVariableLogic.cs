@@ -254,30 +254,52 @@ namespace Gum.PropertyGridHelpers
                         mbmb.AddButton("Copy the file relative to the Gum project and reference the copy", DialogResult.Yes);
 
                         var dialogResult = mbmb.ShowDialog();
-                        
+
+                        bool shouldCopy = false;
+
+                        string directory = FileManager.GetDirectory(ProjectManager.Self.GumProjectSave.FullFileName);
+                        string targetAbsoluteFile = directory + FileManager.RemovePath(value);
+
                         if(dialogResult == DialogResult.Yes)
                         {
-                            string directory = FileManager.GetDirectory(ProjectManager.Self.GumProjectSave.FullFileName);
+                            shouldCopy = true;
 
-                            string targetAbsoluteFile = directory + FileManager.RemovePath(value);
+                            // If the destination already exists, we gotta ask the user what they want to do.
+                            if (System.IO.File.Exists(targetAbsoluteFile))
+                            {
+                                mbmb = new MultiButtonMessageBox();
+                                mbmb.MessageText = "The destination file already exists.  Would you like to overwrite it?";
+                                mbmb.AddButton("Yes", DialogResult.Yes);
+                                mbmb.AddButton("No, use the original file", DialogResult.No);
 
-                            string sourceAbsoluteFile = 
-                                directory + value ;
-                            sourceAbsoluteFile = FileManager.RemoveDotDotSlash(sourceAbsoluteFile);
+                                shouldCopy = mbmb.ShowDialog() == DialogResult.Yes;
+                            }
+                         
+                        }
+
+                        if (shouldCopy)
+                        {
 
                             try
                             {
-                                System.IO.File.Copy(sourceAbsoluteFile, targetAbsoluteFile);
+
+                                string sourceAbsoluteFile =
+                                    directory + value;
+                                sourceAbsoluteFile = FileManager.RemoveDotDotSlash(sourceAbsoluteFile);
+
+                                System.IO.File.Copy(sourceAbsoluteFile, targetAbsoluteFile, overwrite:true);
 
                                 variable.Value = FileManager.RemovePath(value);
 
                             }
-                            catch(Exception e)
+                            catch (Exception e)
                             {
                                 MessageBox.Show("Error copying file:\n" + e.ToString());
                             }
                         }
                     }
+
+
 
                 }
 

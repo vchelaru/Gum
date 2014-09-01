@@ -148,26 +148,24 @@ namespace StateAnimationPlugin.ViewModels
 
             foreach(var animationReference in save.Animations)
             {
-                var foundAnimationReference = save.Animations.FirstOrDefault(item => item.Name == animationReference.Name);
-
                 AnimationSave animationSave = null;
                 ElementSave subAnimationElement= null;
                 ElementAnimationsSave subAnimationSiblings = null;
 
-                if( string.IsNullOrEmpty(foundAnimationReference.SourceObject))
+                if (string.IsNullOrEmpty(animationReference.SourceObject))
                 {
                     if(allAnimationSaves == null)
                     {
                         allAnimationSaves = AnimationCollectionViewModelManager.Self.GetElementAnimationsSave(element);
                     }
 
-                    animationSave = allAnimationSaves.Animations.FirstOrDefault(item => item.Name == foundAnimationReference.RootName);
+                    animationSave = allAnimationSaves.Animations.FirstOrDefault(item => item.Name == animationReference.RootName);
                     subAnimationElement = element;
                     subAnimationSiblings = allAnimationSaves;
                 }
                 else
                 {
-                    var instance = element.Instances.FirstOrDefault(item => item.Name == foundAnimationReference.SourceObject);
+                    var instance = element.Instances.FirstOrDefault(item => item.Name == animationReference.SourceObject);
 
                     if(instance != null)
                     {
@@ -178,13 +176,13 @@ namespace StateAnimationPlugin.ViewModels
                         {
                             var allAnimations = AnimationCollectionViewModelManager.Self.GetElementAnimationsSave(instanceElement);
 
-                            animationSave = allAnimations.Animations.FirstOrDefault(item => item.Name == foundAnimationReference.RootName);
+                            animationSave = allAnimations.Animations.FirstOrDefault(item => item.Name == animationReference.RootName);
                             subAnimationElement = instanceElement;
                             subAnimationSiblings = allAnimations;
                         }
                     }
                 }
-                var newVm = AnimatedKeyframeViewModel.FromSave(foundAnimationReference);
+                var newVm = AnimatedKeyframeViewModel.FromSave(animationReference);
 
                 if(animationSave != null)
                 {
@@ -192,7 +190,7 @@ namespace StateAnimationPlugin.ViewModels
                 }
 
 
-                newVm.HasValidState = foundAnimationReference != null;
+                newVm.HasValidState = animationReference != null;
 
                 toReturn.Keyframes.Add(newVm);
 

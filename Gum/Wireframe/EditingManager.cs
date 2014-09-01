@@ -420,7 +420,12 @@ namespace Gum.Wireframe
                 {
                     ElementSave elementSave = SelectedState.Self.SelectedElement;
 
-                    RecursiveVariableFinder rvf = new RecursiveVariableFinder(elementSave.DefaultState);
+                    var state = elementSave.DefaultState;
+                    if(SelectedState.Self.SelectedStateSave != null)
+                    {
+                        state = SelectedState.Self.SelectedStateSave;
+                    }
+                    RecursiveVariableFinder rvf = new RecursiveVariableFinder(state);
                     (ipso as GraphicalUiElement).SetGueValues(rvf);
                 }
                 else if(SelectedState.Self.SelectedElement != null)

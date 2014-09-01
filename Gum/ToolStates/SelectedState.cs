@@ -509,8 +509,10 @@ namespace Gum.ToolStates
             if (SelectedElement != null)
             {
                 ElementWithState item = new ElementWithState(SelectedElement);
-
-
+                if (this.SelectedStateSave != null)
+                {
+                    item.StateName = this.SelectedStateSave.Name;
+                }
                 toReturn.Add(item);
 
 

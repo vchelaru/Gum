@@ -128,7 +128,8 @@ namespace StateAnimationPlugin.ViewModels
 
             foreach(var animation in save.Animations)
             {
-                toReturn.Animations.Add(AnimationViewModel.FromSave(animation, element));
+                var vm = AnimationViewModel.FromSave(animation, element);
+                toReturn.Animations.Add(vm);
             }
 
             return toReturn;
