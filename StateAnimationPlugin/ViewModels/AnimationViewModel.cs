@@ -510,7 +510,11 @@ namespace StateAnimationPlugin.ViewModels
             {
                 stateToSet = element.DefaultState.Clone();
             }
+            else if(stateToSet == null)
+            {
 
+                stateToSet = new StateSave();
+            }
             return stateToSet;
         }
 
