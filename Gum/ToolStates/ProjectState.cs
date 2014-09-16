@@ -18,7 +18,13 @@ namespace Gum.ToolStates
             }
         }
 
-
+        public ISelectedState Selected
+        {
+            get
+            {
+                return SelectedState.Self;
+            }
+        }
 
         public GumProjectSave GumProjectSave
         {

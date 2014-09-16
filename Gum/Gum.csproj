@@ -243,9 +243,11 @@
     <Compile Include="Wireframe\WireframeObjectManager.RepresentationCreation.cs" />
     <EmbeddedResource Include="Gui\Controls\GuideListDisplay.resx">
       <DependentUpon>GuideListDisplay.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Gui\Controls\WireframeEditControl.resx">
       <DependentUpon>WireframeEditControl.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Gui\Forms\DeleteOptionsWindow.resx">
       <DependentUpon>DeleteOptionsWindow.cs</DependentUpon>

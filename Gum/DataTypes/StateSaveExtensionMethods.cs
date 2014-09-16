@@ -676,6 +676,116 @@ namespace Gum.DataTypes.Variables
 
         }
 
+        public static void AddIntoThis(this StateSave thisState, StateSave other)
+        {
+            foreach (var variableSave in other.Variables)
+            {
+                // The first will use its default if one doesn't exist
+                VariableSave whatToSet = thisState.GetVariableSave(variableSave.Name);
+
+                if(whatToSet != null && (whatToSet.SetsValue || variableSave.SetsValue))
+                {
+                    whatToSet.SetsValue = true;
+                    whatToSet.Value = AddValue(whatToSet, variableSave);
+
+                }
+            }
+
+            // todo:  Handle lists?
+
+        }
+
+        public static void SubtractFromThis(this StateSave thisState, StateSave other)
+        {
+            foreach (var variableSave in other.Variables)
+            {
+                // The first will use its default if one doesn't exist
+                VariableSave whatToSet = thisState.GetVariableSave(variableSave.Name);
+
+                if (whatToSet != null && (whatToSet.SetsValue || variableSave.SetsValue))
+                {
+                    whatToSet.SetsValue = true;
+                    whatToSet.Value = SubtractValue(whatToSet, variableSave);
+
+                }
+            }
+
+            // todo:  Handle lists?
+
+        }
+
+        private static object SubtractValue(VariableSave firstVariable, VariableSave secondVariable)
+        {
+            if (firstVariable.Value == null || secondVariable.Value == null)
+            {
+                return secondVariable.Value;
+            }
+            else if (firstVariable.Value is float && secondVariable.Value is float)
+            {
+                float firstFloat = (float)firstVariable.Value;
+                float secondFloat = (float)secondVariable.Value;
+
+                return firstFloat - secondFloat;
+            }
+            else if (firstVariable.Value is double && secondVariable.Value is double)
+            {
+                double firstDouble = (double)firstVariable.Value;
+                double secondDouble = (double)secondVariable.Value;
+
+                return firstDouble - secondDouble;
+            }
+
+            else if (firstVariable.Value is int)
+            {
+                int firstInt = (int)firstVariable.Value;
+                int secondInt = (int)secondVariable.Value;
+
+                return firstInt - secondInt;
+            }
+            else
+            {
+                return secondVariable.Value;
+            }
+
+        }
+
+
+
+        private static object AddValue(VariableSave firstVariable, VariableSave secondVariable)
+        {
+            if (firstVariable.Value == null || secondVariable.Value == null)
+            {
+                return secondVariable.Value;
+            }
+            else if (firstVariable.Value is float && secondVariable.Value is float)
+            {
+                float firstFloat = (float)firstVariable.Value;
+                float secondFloat = (float)secondVariable.Value;
+
+                return firstFloat + secondFloat;
+            }
+            else if (firstVariable.Value is double && secondVariable.Value is double)
+            {
+                double firstDouble = (double)firstVariable.Value;
+                double secondDouble = (double)secondVariable.Value;
+
+                return firstDouble + secondDouble;
+            }
+
+            else if (firstVariable.Value is int)
+            {
+                int firstInt = (int)firstVariable.Value;
+                int secondInt = (int)secondVariable.Value;
+
+                return firstInt + secondInt;
+            }
+            else
+            {
+                return secondVariable.Value;
+            }
+
+        }
+
         private static object GetValueConsideringInterpolation(VariableSave firstVariable, VariableSave secondVariable, float interpolationValue)
         {
             if (firstVariable.Value == null || secondVariable.Value == null)
