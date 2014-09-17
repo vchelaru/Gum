@@ -501,10 +501,27 @@ namespace Gum.DataTypes.Variables
                 //VariableSave baseVariableSave = baseElement.DefaultState.GetVariableSave(rootName);
                 if (instanceSave != null)
                 {
-                    VariableSave baseVariableSave = ObjectFinder.Self.GetRootStandardElementSave(instanceSave).DefaultState.GetVariableSave(rootName);
-                    if (baseVariableSave != null)
+                    // can we get this from the base element?
+                    var instanceBase = ObjectFinder.Self.GetElementSave(instanceSave);
+                    bool found = false;
+
+                    if(instanceBase != null)
                     {
-                        variableSave.IsFile = baseVariableSave.IsFile;
+                        VariableSave baseVariableSave = instanceBase.DefaultState.Variables.FirstOrDefault(item => item.ExposedAsName == rootName || item.Name == rootName);
+                        if(baseVariableSave != null)
+                        {
+                            variableSave.IsFile = baseVariableSave.IsFile;
+                            found = true;
+                        }
+                    }
+
+                    if (!found)
+                    {
+                        VariableSave baseVariableSave = ObjectFinder.Self.GetRootStandardElementSave(instanceSave).DefaultState.GetVariableSave(rootName);
+                        if (baseVariableSave != null)
+                        {
+                            variableSave.IsFile = baseVariableSave.IsFile;
+                        }
                     }
                     
                 }

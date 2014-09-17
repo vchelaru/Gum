@@ -158,6 +158,10 @@ namespace Gum.DataTypes
         }
 #endif
 
+
+
+
+
         public static bool IsState(this VariableSave variableSave, ElementSave container)
         {
             ElementSave throwaway1;
@@ -165,7 +169,7 @@ namespace Gum.DataTypes
             return variableSave.IsState(container, out throwaway1, out throwaway2);
         }
 
-        public static bool IsState(this VariableSave variableSave, ElementSave container, out ElementSave categoryContainer, out StateSaveCategory category)
+        public static bool IsState(this VariableSave variableSave, ElementSave container, out ElementSave categoryContainer, out StateSaveCategory category, bool recursive = true)
         {
             category = null;
             categoryContainer = null;
@@ -173,7 +177,7 @@ namespace Gum.DataTypes
             var variableName = variableSave.GetRootName();
 
             ///////////////Early Out
-            if(variableName.EndsWith("State") == false)
+            if(variableName.EndsWith("State") == false && string.IsNullOrEmpty(variableSave.SourceObject ))
             {
                 return false;                
             }
@@ -181,7 +185,12 @@ namespace Gum.DataTypes
 
             // what about uncategorized
 
-            string categoryName = variableName.Substring(0, variableName.Length - "State".Length);
+            string categoryName = null;
+
+            if (variableName.EndsWith("State"))
+            {
+                categoryName = variableName.Substring(0, variableName.Length - "State".Length);
+            }
 
             if(string.IsNullOrEmpty( variableSave.SourceObject) == false)
             {
@@ -193,9 +202,21 @@ namespace Gum.DataTypes
 
                     if(element != null)
                     {
-                        category = element.GetStateSaveCategoryRecursively(categoryName, out categoryContainer);
+                        // let's try going recursively:
+                        var subVariable = element.DefaultState.Variables.FirstOrDefault(item => item.ExposedAsName == variableSave.GetRootName());
 
-                        return category != null;
+                        if (subVariable != null && recursive)
+                        {
+                            return subVariable.IsState(element, out categoryContainer, out category);   
+                        }
+                        else
+                        {
+                            category = element.GetStateSaveCategoryRecursively(categoryName, out categoryContainer);
+
+
+
+                            return category != null;
+                        }
                     }
                 }
             }
