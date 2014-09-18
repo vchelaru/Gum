@@ -100,6 +100,7 @@
     <Compile Include="Graphics\NineSlice.cs" />
     <Compile Include="Graphics\Renderer.cs" />
     <Compile Include="Graphics\SortableLayer.cs" />
+    <Compile Include="Graphics\SpriteBatchStack.cs" />
     <Compile Include="Graphics\TimedSpriteSheetAnimation.cs" />
     <Compile Include="Math\Geometry\Line.cs" />
     <Compile Include="Math\Geometry\LineGrid.cs" />

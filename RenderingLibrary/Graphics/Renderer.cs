@@ -26,7 +26,7 @@ namespace RenderingLibrary.Graphics
         List<Layer> mLayers = new List<Layer>();
         ReadOnlyCollection<Layer> mLayersReadOnly;
 
-        protected SpriteBatch mSpriteBatch;
+        protected SpriteBatchStack mSpriteBatch;
         RenderStateVariables mRenderStateVariables = new RenderStateVariables();
 
         GraphicsDevice mGraphicsDevice;
@@ -40,7 +40,6 @@ namespace RenderingLibrary.Graphics
 
         public static object LockObject = new object();
 
-        bool mIsInSpriteBatchCall = false;
         #endregion
 
         #region Properties
@@ -162,7 +161,7 @@ namespace RenderingLibrary.Graphics
 
             mGraphicsDevice = graphicsDevice;
 
-            mSpriteBatch = new SpriteBatch(mGraphicsDevice);
+            mSpriteBatch = new SpriteBatchStack(mGraphicsDevice);
 
             mSinglePixelTexture = new Texture2D(mGraphicsDevice, 1, 1, false, SurfaceFormat.Color);
             Color[] pixels = new Color[1];
@@ -260,26 +259,17 @@ namespace RenderingLibrary.Graphics
 
             if(clipRegion.Width != 0 && clipRegion.Height != 0)
             {
-                if (mIsInSpriteBatchCall)
-                {
-                    mSpriteBatch.End();
-                }
-                BeginSpriteBatch(mRenderStateVariables, layer);
-                mIsInSpriteBatchCall = true;
+                BeginSpriteBatch(mRenderStateVariables, layer, BeginType.Push);
 
                 layer.SortRenderables();
 
                 foreach (IRenderable renderable in layer.Renderables)
                 {
                     AdjustRenderStates(mRenderStateVariables, layer, renderable);
-                    renderable.Render(mSpriteBatch, managers);
+                    renderable.Render(mSpriteBatch.SpriteBatch, managers);
                 }
 
-                if (mIsInSpriteBatchCall)
-                {
-                    mSpriteBatch.End();
-                    mIsInSpriteBatchCall = false;
-                }
+                mSpriteBatch.Pop();
             }
 
         }
@@ -310,12 +300,11 @@ namespace RenderingLibrary.Graphics
 
             if (shouldResetStates)
             {
-                mSpriteBatch.End();
-                BeginSpriteBatch(renderState, layer);
+                BeginSpriteBatch(renderState, layer, BeginType.Begin);
             }
         }
 
-        private void BeginSpriteBatch(RenderStateVariables renderStates, Layer layer)
+        private void BeginSpriteBatch(RenderStateVariables renderStates, Layer layer, BeginType beginType)
         {
 
             Matrix matrix = GetZoomAndMatrix(layer);
@@ -324,13 +313,34 @@ namespace RenderingLibrary.Graphics
 
             RasterizerState rasterizerState = GetRasterizerState(renderStates, layer);
 
+
+            Rectangle scissorRectangle = new Rectangle();
+            if(rasterizerState.ScissorTestEnable)
+            {
+                scissorRectangle = layer.GetScissorRectangleFor(mCamera);
+            }
+
+
             DepthStencilState depthStencilState = DepthStencilState.DepthRead;
 
-            mSpriteBatch.Begin(SpriteSortMode.Immediate, renderStates.BlendState, 
-                samplerState,
-                depthStencilState, 
-                rasterizerState,
-                null, matrix);
+            if (beginType == BeginType.Begin)
+            {
+                mSpriteBatch.Begin(SpriteSortMode.Immediate, renderStates.BlendState,
+                    samplerState,
+                    depthStencilState,
+                    rasterizerState,
+                    null, matrix, 
+                    scissorRectangle);
+            }
+            else 
+            {
+                mSpriteBatch.Push(SpriteSortMode.Immediate, renderStates.BlendState,
+                    samplerState,
+                    depthStencilState,
+                    rasterizerState,
+                    null, matrix,
+                    scissorRectangle);
+            }
             mDrawCallsPerFrame++;
         }
 
@@ -348,7 +358,6 @@ namespace RenderingLibrary.Graphics
             else
             {
                 rasterizer.ScissorTestEnable = true;
-                mSpriteBatch.GraphicsDevice.ScissorRectangle = layer.GetScissorRectangleFor(mCamera);
 
             }
             return rasterizer;

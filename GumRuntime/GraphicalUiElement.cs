@@ -1583,14 +1583,14 @@ namespace Gum.Wireframe
 
         partial void CustomAddToManagers();
 
-        public void AddToManagers()
+        public virtual void AddToManagers()
         {
 
                 AddToManagers(SystemManagers.Default, null);
             
         }
 
-        public void AddToManagers(SystemManagers managers, Layer layer)
+        public virtual void AddToManagers(SystemManagers managers, Layer layer)
         {
 #if DEBUG
             if (managers == null)

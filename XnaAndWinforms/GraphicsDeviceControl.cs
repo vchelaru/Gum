@@ -209,6 +209,7 @@ namespace XnaAndWinforms
 
                     if (string.IsNullOrEmpty(mRenderError.Message))
                     {
+
                         try
                         {
                             if (XnaUpdate != null)

@@ -211,20 +211,35 @@ namespace Gum.DataTypes
                         }
                         else
                         {
-                            category = element.GetStateSaveCategoryRecursively(categoryName, out categoryContainer);
+                            if (variableName == "State")
+                            {
+                                categoryContainer = element;
+                                category = null;
+                                return true;
+                            }
+                            else
+                            {
 
-
-
-                            return category != null;
+                                category = element.GetStateSaveCategoryRecursively(categoryName, out categoryContainer);
+                                return category != null;
+                            }
                         }
                     }
                 }
             }
             else
             {
-                category = container.GetStateSaveCategoryRecursively(categoryName, out categoryContainer);
+                if (variableName == "State")
+                {
+                    return true;
+                }
+                else
+                {
 
-                return category != null;
+                    category = container.GetStateSaveCategoryRecursively(categoryName, out categoryContainer);
+
+                    return category != null;
+                }
             }
 
             return false;
