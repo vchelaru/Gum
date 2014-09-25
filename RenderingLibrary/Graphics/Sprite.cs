@@ -29,6 +29,8 @@ namespace RenderingLibrary.Graphics
 
         #region Properties
 
+        // todo:  Anim sizing
+
         public string Name
         {
             get;
@@ -264,6 +266,13 @@ namespace RenderingLibrary.Graphics
                 Texture = Animation.CurrentTexture;
                 FlipHorizontal = Animation.FlipHorizontal;
                 FlipVertical = Animation.FlipVertical;
+
+                // Right now we'll just default this to resize the Sprite, but eventually we may want more control over it
+                if (SourceRectangle.HasValue)
+                {
+                    this.Width = SourceRectangle.Value.Width;
+                    this.Height = SourceRectangle.Value.Height;
+                }
             }
         }
 
