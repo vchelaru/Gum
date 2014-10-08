@@ -572,6 +572,7 @@ namespace RenderingLibrary.Graphics
                     fontToUse = LoaderManager.Self.DefaultBitmapFont;
                 }
 
+
                 if (fontToUse != null)
                 {
                     if (mTextureToRender != null)
@@ -584,7 +585,7 @@ namespace RenderingLibrary.Graphics
 
                     if (mTextureToRender is RenderTarget2D)
                     {
-                        (mTextureToRender as RenderTarget2D).ContentLost += delegate { mNeedsBitmapFontRefresh = true; };
+                        (mTextureToRender as RenderTarget2D).ContentLost += SetNeedsRefresh;
                     }
                 }
                 else if (mBitmapFont == null)
@@ -601,6 +602,11 @@ namespace RenderingLibrary.Graphics
 
                 mNeedsBitmapFontRefresh = false;
             }
+        }
+
+        void SetNeedsRefresh(object sender, EventArgs args)
+        {
+            mNeedsBitmapFontRefresh = true;
         }
 
         void UpdateLinePrimitive()

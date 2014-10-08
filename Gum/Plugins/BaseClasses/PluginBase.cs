@@ -70,7 +70,12 @@ namespace Gum.Plugins.BaseClasses
             if (menuToAddTo == null)
             {
                 menuToAddTo = new ToolStripMenuItem(menuNameToAddTo);
-                MenuStrip.Items.Add(menuToAddTo);
+
+                // Don't call Add - this will put the menu item after the "Help" menu item, which should be last
+                //MenuStrip.Items.Add(menuToAddTo);
+
+                int indexToInsertAt = MenuStrip.Items.Count - 1;
+                MenuStrip.Items.Insert(indexToInsertAt, menuToAddTo);
             }
 
 

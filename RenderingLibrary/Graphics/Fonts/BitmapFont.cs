@@ -414,21 +414,23 @@ namespace RenderingLibrary.Graphics
             RenderTarget2D renderTarget = null;
 
 
-            using (SpriteBatch spriteBatch = new SpriteBatch(managers.Renderer.GraphicsDevice))
+
+            Point point = new Point();
+            int requiredWidth;
+            int requiredHeight;
+            List<int> widths;
+            GetRequiredWithAndHeight(lines, out requiredWidth, out requiredHeight, out widths);
+
+
+            if (requiredWidth != 0)
             {
 
-                Point point = new Point();
-                int requiredWidth;
-                int requiredHeight;
-                List<int> widths;
-                GetRequiredWithAndHeight(lines, out requiredWidth, out requiredHeight, out widths);
-
-
-                if (requiredWidth != 0)
+                var oldViewport = managers.Renderer.GraphicsDevice.Viewport;
+                renderTarget = new RenderTarget2D(managers.Renderer.GraphicsDevice, requiredWidth, requiredHeight);
+                managers.Renderer.GraphicsDevice.SetRenderTarget(renderTarget);
+                managers.Renderer.GraphicsDevice.SetRenderTarget(renderTarget);
+                using (SpriteBatch spriteBatch = new SpriteBatch(managers.Renderer.GraphicsDevice))
                 {
-                    renderTarget = new RenderTarget2D(managers.Renderer.GraphicsDevice, requiredWidth, requiredHeight);
-                    managers.Renderer.GraphicsDevice.SetRenderTarget(renderTarget);
-
                     managers.Renderer.GraphicsDevice.Clear(Color.Transparent);
                     spriteBatch.Begin();
                     int lineNumber = 0;
@@ -485,9 +487,10 @@ namespace RenderingLibrary.Graphics
                         lineNumber++;
                     }
                     spriteBatch.End();
-                    managers.Renderer.GraphicsDevice.SetRenderTarget(null);
                 }
 
+                managers.Renderer.GraphicsDevice.SetRenderTarget(null);
+                managers.Renderer.GraphicsDevice.Viewport = oldViewport;
 
             }
 
