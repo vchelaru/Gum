@@ -108,7 +108,7 @@ namespace ToolsUtilities
         {
             string firstAsString;
             string secondAsString;
-            
+
             XmlSerialize(first, out firstAsString);
             XmlSerialize(second, out secondAsString);
 
@@ -126,7 +126,7 @@ namespace ToolsUtilities
             return (T)serializer.Deserialize(new StringReader(container));
         }
 
-        public static T CloneSaveObjectCast<U,T>(U objectToClone)
+        public static T CloneSaveObjectCast<U, T>(U objectToClone)
         {
             string container;
 
@@ -179,50 +179,71 @@ namespace ToolsUtilities
                 DeleteDirectory(dirs[i]);
             }
 
-                
+
             System.IO.Directory.Delete(dir);
         }
 
-		public static bool FileExists(string fileName)
-		{
-			return FileExists(fileName, false);
-		}
+        public static bool FileExists(string fileName)
+        {
+            return FileExists(fileName, false);
+        }
 
 
-		public static bool FileExists(string fileName, bool ignoreExtensions)
-		{
-			if (!ignoreExtensions)
-			{
-				return File.Exists(fileName);
-			}
-			else
-			{
-				fileName = Standardize(fileName);
-				// This takes a little bit of work
-				string fileWithoutExtension = FileManager.RemoveExtension(fileName);
-
-				List<string> filesInDirectory = GetAllFilesInDirectory(
-					FileManager.GetDirectory(fileName),
-					null,
-					0);
-
-				for (int i = 0; i < filesInDirectory.Count; i++)
-				{
-					if (filesInDirectory[i] == fileName ||
-						FileManager.RemoveExtension(filesInDirectory[i]) == fileWithoutExtension)
+        public static bool FileExists(string fileName, bool ignoreExtensions)
+        {
+            if (!ignoreExtensions)
+            {
+#if ANDROID
+				try
+                {
+					var filename = Standardize(fileName);
+					if(fileName.StartsWith(".\\"))
 					{
-						return true;
+						fileName = fileName.Substring(2);
 					}
-				}
+					using (var stream = Microsoft.Xna.Framework.TitleContainer.OpenStream(fileName))
+					{
+						return stream != null;
+					}
+                }
+                catch
+                {
+                    return false;
+                }
 
-				return false;
+#else
+                return File.Exists(fileName);
 
-			}
-		}
+#endif
+            }
+            else
+            {
+                fileName = Standardize(fileName);
+                // This takes a little bit of work
+                string fileWithoutExtension = FileManager.RemoveExtension(fileName);
+
+                List<string> filesInDirectory = GetAllFilesInDirectory(
+                    FileManager.GetDirectory(fileName),
+                    null,
+                    0);
+
+                for (int i = 0; i < filesInDirectory.Count; i++)
+                {
+                    if (filesInDirectory[i] == fileName ||
+                        FileManager.RemoveExtension(filesInDirectory[i]) == fileWithoutExtension)
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+
+            }
+        }
 
 
-		public static string FromFileText(string fileName)
-		{
+        public static string FromFileText(string fileName)
+        {
             Encoding encoding = Encoding.Default;
 
             return FromFileText(fileName, encoding);
@@ -247,64 +268,66 @@ namespace ToolsUtilities
             return containedText;
 
 #else
-			string containedText = "";
+            string containedText = "";
 
             if (IsRelative(fileName))
             {
                 fileName = RelativeDirectory + fileName;
             }
 
-			// Creating a filestream then using that enables us to open files that are open by other apps.
-			using (FileStream fileStream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-			{
-				using (System.IO.StreamReader sr = new StreamReader(fileStream, encoding))
-				{
-					containedText = sr.ReadToEnd();
-					sr.Close();
-				}
-			}
+            fileName = TryRemoveLeadingDotSlash(fileName);
 
-			return containedText;
+            // Creating a filestream then using that enables us to open files that are open by other apps.
+            using (var fileStream = GetStreamForFile(fileName))
+            {
+                using (System.IO.StreamReader sr = new StreamReader(fileStream, encoding))
+                {
+                    containedText = sr.ReadToEnd();
+                    sr.Close();
+                }
+            }
+
+            return containedText;
 #endif
-		}
+        }
 
         public static byte[] FromFileBytes(string fileName)
         {
             byte[] bytesToReturn = null;
-			using (FileStream fileStream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-			{
+            using (FileStream fileStream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            {
                 bytesToReturn = new byte[fileStream.Length];
 
                 fileStream.Read(bytesToReturn, 0, bytesToReturn.Length);
-			}
+            }
 
             return bytesToReturn;
 
         }
 
 
-		public static string FindAndAddExtension(string fileName)
-		{
-			fileName = Standardize(fileName);
-			// This takes a little bit of work
-			string fileWithoutExtension = FileManager.RemoveExtension(fileName);
+        public static string FindAndAddExtension(string fileName)
+        {
+            fileName = Standardize(fileName);
+            // This takes a little bit of work
+            string fileWithoutExtension = FileManager.RemoveExtension(fileName);
 
-			List<string> filesInDirectory = GetAllFilesInDirectory(
-				FileManager.GetDirectory(fileName),
-				null,
-				0);
+            List<string> filesInDirectory = GetAllFilesInDirectory(
+                FileManager.GetDirectory(fileName),
+                null,
+                0);
 
-			for (int i = 0; i < filesInDirectory.Count; i++)
-			{
-				if (filesInDirectory[i] == fileName ||
-					FileManager.RemoveExtension(filesInDirectory[i]) == fileWithoutExtension)
-				{
-					return filesInDirectory[i];
-				}
-			}
+            for (int i = 0; i < filesInDirectory.Count; i++)
+            {
+                if (filesInDirectory[i] == fileName ||
+                    FileManager.RemoveExtension(filesInDirectory[i]) == fileWithoutExtension)
+                {
+                    return filesInDirectory[i];
+                }
+            }
 
-			return fileName;
-		}
+            return fileName;
+        }
 
         #region XML Docs
         /// <summary>
@@ -350,10 +373,10 @@ namespace ToolsUtilities
 
         public static void GetAllFilesInDirectory(string directory, string fileType, int depthToSearch, List<string> arrayToReturn)
         {
-			if (!Directory.Exists(directory))
-			{
-				return;
-			}
+            if (!Directory.Exists(directory))
+            {
+                return;
+            }
             //if (directory == "")
             //    directory = mRelativeDirectory;
 
@@ -371,10 +394,10 @@ namespace ToolsUtilities
 
             if (string.IsNullOrEmpty(fileType))
             {
-				for (int i = 0; i < files.Length; i++)
-				{
-					files[i] = FileManager.Standardize(files[i]);
-				}
+                for (int i = 0; i < files.Length; i++)
+                {
+                    files[i] = FileManager.Standardize(files[i]);
+                }
                 arrayToReturn.AddRange(files);
             }
             else
@@ -467,49 +490,49 @@ namespace ToolsUtilities
         #endregion
         public static string GetExtension(string fileName)
         {
-			try
-			{
-				if (fileName == null)
-				{
-					return "";
-				}
+            try
+            {
+                if (fileName == null)
+                {
+                    return "";
+                }
 
 
-				int i = fileName.LastIndexOf('.');
-				if (i != -1)
-				{
-					bool hasDotSlash = false;
+                int i = fileName.LastIndexOf('.');
+                if (i != -1)
+                {
+                    bool hasDotSlash = false;
 
-					if (i == fileName.Length - 1)
-					{
-						return "";
-					}
+                    if (i == fileName.Length - 1)
+                    {
+                        return "";
+                    }
 
-					if (i < fileName.Length + 1 && (fileName[i + 1] == '/' || fileName[i + 1] == '\\'))
-					{
-						hasDotSlash = true;
-					}
+                    if (i < fileName.Length + 1 && (fileName[i + 1] == '/' || fileName[i + 1] == '\\'))
+                    {
+                        hasDotSlash = true;
+                    }
 
-					if (hasDotSlash)
-					{
-						return "";
-					}
-					else
-					{
-						return fileName.Substring(i + 1, fileName.Length - (i + 1)).ToLower();
-					}
-				}
-				else
-				{
-					return ""; // This returns "" because calling the method with a string like "redball" should return no extension
-				}
-			}
-			catch
+                    if (hasDotSlash)
+                    {
+                        return "";
+                    }
+                    else
+                    {
+                        return fileName.Substring(i + 1, fileName.Length - (i + 1)).ToLower();
+                    }
+                }
+                else
+                {
+                    return ""; // This returns "" because calling the method with a string like "redball" should return no extension
+                }
+            }
+            catch
             {
                 //EMP: Removed to clean up Warnings
-				//int m = 3;
-				throw new Exception();
-			}
+                //int m = 3;
+                throw new Exception();
+            }
         }
 
 
@@ -539,52 +562,52 @@ namespace ToolsUtilities
         }
 
 
-		public static string GetRecastedFileName(string fileName)
-		{
-			return GetProperFilePathCapitalization(fileName);
-		}
+        public static string GetRecastedFileName(string fileName)
+        {
+            return GetProperFilePathCapitalization(fileName);
+        }
 
 
-		public static string GetWordAfter(string stringToStartAfter, string entireString)
-		{
-			return GetWordAfter(stringToStartAfter, entireString, 0);
-		}
+        public static string GetWordAfter(string stringToStartAfter, string entireString)
+        {
+            return GetWordAfter(stringToStartAfter, entireString, 0);
+        }
 
-		static char[] WhitespaceChars = new char[] { ' ', '\n', '\t', '\r' };
-		public static string GetWordAfter(string stringToStartAfter, string entireString, int indexToStartAt)
-		{
-			int indexOf = entireString.IndexOf(stringToStartAfter, indexToStartAt);
-			if (indexOf != -1)
-			{
-				int startOfWord = indexOf + stringToStartAfter.Length;
+        static char[] WhitespaceChars = new char[] { ' ', '\n', '\t', '\r' };
+        public static string GetWordAfter(string stringToStartAfter, string entireString, int indexToStartAt)
+        {
+            int indexOf = entireString.IndexOf(stringToStartAfter, indexToStartAt);
+            if (indexOf != -1)
+            {
+                int startOfWord = indexOf + stringToStartAfter.Length;
 
-				// Let's not count the start of the word if it's a newline
-				while (entireString[startOfWord] == WhitespaceChars[0] ||
-					entireString[startOfWord] == WhitespaceChars[1] ||
-					entireString[startOfWord] == WhitespaceChars[2] ||
-					entireString[startOfWord] == WhitespaceChars[3])
-				{
-					startOfWord++;
-				}
+                // Let's not count the start of the word if it's a newline
+                while (entireString[startOfWord] == WhitespaceChars[0] ||
+                    entireString[startOfWord] == WhitespaceChars[1] ||
+                    entireString[startOfWord] == WhitespaceChars[2] ||
+                    entireString[startOfWord] == WhitespaceChars[3])
+                {
+                    startOfWord++;
+                }
 
-				int endOfWord = entireString.IndexOfAny(WhitespaceChars, startOfWord);
+                int endOfWord = entireString.IndexOfAny(WhitespaceChars, startOfWord);
 
-				return entireString.Substring(startOfWord, endOfWord - startOfWord);
-			}
-			else
-			{
-				return null;
-			}
+                return entireString.Substring(startOfWord, endOfWord - startOfWord);
+            }
+            else
+            {
+                return null;
+            }
 
-		}
+        }
 
 
-		public static bool IsRelative(string fileName)
-		{
-			if (fileName == null)
-			{
-				throw new System.ArgumentException("Cannot check if a null file name is relative.");
-			}
+        public static bool IsRelative(string fileName)
+        {
+            if (fileName == null)
+            {
+                throw new System.ArgumentException("Cannot check if a null file name is relative.");
+            }
 
 
 #if XBOX360
@@ -608,11 +631,11 @@ namespace ToolsUtilities
 
             return true;
 #else
-			// a non-relative directory will have a letter than a : at the beginning.
-			// for example c:/file.bmp.  If other cases arise, this may need to be changed.
-			return !(fileName.Length > 1 && (fileName[1] == ':' || fileName.StartsWith("\\\\")));
+            // a non-relative directory will have a letter than a : at the beginning.
+            // for example c:/file.bmp.  If other cases arise, this may need to be changed.
+            return !(fileName.Length > 1 && (fileName[1] == ':' || fileName.StartsWith("\\\\")));
 #endif
-		}
+        }
 
 
         public static bool IsRelativeTo(string fileName, string directory)
@@ -657,67 +680,67 @@ namespace ToolsUtilities
             return Standardize(pathToMakeAbsolute, true, true);// RelativeDirectory + pathToMakeAbsolute;
         }
 
-		public static string MakeRelative(string pathToMakeRelative, string pathToMakeRelativeTo)
-		{
-			return MakeRelative(pathToMakeRelative, pathToMakeRelativeTo, false);
-		}
+        public static string MakeRelative(string pathToMakeRelative, string pathToMakeRelativeTo)
+        {
+            return MakeRelative(pathToMakeRelative, pathToMakeRelativeTo, false);
+        }
 
-		public static string MakeRelative(string pathToMakeRelative, string pathToMakeRelativeTo, bool preserveCase)
-		{
-			if (string.IsNullOrEmpty(pathToMakeRelative) == false)
-			{
-				pathToMakeRelative = FileManager.Standardize(pathToMakeRelative, preserveCase);
-				pathToMakeRelativeTo = FileManager.Standardize(pathToMakeRelativeTo, preserveCase);
+        public static string MakeRelative(string pathToMakeRelative, string pathToMakeRelativeTo, bool preserveCase)
+        {
+            if (string.IsNullOrEmpty(pathToMakeRelative) == false)
+            {
+                pathToMakeRelative = FileManager.Standardize(pathToMakeRelative, preserveCase);
+                pathToMakeRelativeTo = FileManager.Standardize(pathToMakeRelativeTo, preserveCase);
 
-				// Use the old method if we can
+                // Use the old method if we can
                 if (pathToMakeRelative.ToLowerInvariant().StartsWith(pathToMakeRelativeTo.ToLowerInvariant()))
-				{
-					pathToMakeRelative = pathToMakeRelative.Substring(pathToMakeRelativeTo.Length);
-				}
-				else
-				{
-					// Otherwise, we have to use the new method to identify the common root
+                {
+                    pathToMakeRelative = pathToMakeRelative.Substring(pathToMakeRelativeTo.Length);
+                }
+                else
+                {
+                    // Otherwise, we have to use the new method to identify the common root
 
-					// Split the path strings
-					string[] path = pathToMakeRelative.Split('\\');
-					string[] relpath = pathToMakeRelativeTo.Split('\\');
+                    // Split the path strings
+                    string[] path = pathToMakeRelative.Split('\\');
+                    string[] relpath = pathToMakeRelativeTo.Split('\\');
 
-					string relativepath = string.Empty;
+                    string relativepath = string.Empty;
 
-					// build the new path
-					int start = 0;
+                    // build the new path
+                    int start = 0;
                     while (start < path.Length && start < relpath.Length && path[start].ToLower() == relpath[start].ToLower())
-					{
-						start++;
-					}
+                    {
+                        start++;
+                    }
 
-					// If start is 0, they aren't on the same drive, so there is no way to make the path relative without it being absolute
-					if (start != 0)
-					{
-						// add .. for every directory left in the relative path, this is the shared root
-						for (int i = start; i < relpath.Length; i++)
-						{
-							if (relpath[i] != string.Empty)
-								relativepath += @"..\";
-						}
+                    // If start is 0, they aren't on the same drive, so there is no way to make the path relative without it being absolute
+                    if (start != 0)
+                    {
+                        // add .. for every directory left in the relative path, this is the shared root
+                        for (int i = start; i < relpath.Length; i++)
+                        {
+                            if (relpath[i] != string.Empty)
+                                relativepath += @"..\";
+                        }
 
-						// if the current relative path is still empty, and there are more than one entries left in the path,
-						// the file is in a subdirectory.  Start with ./
-						if (relativepath == string.Empty && path.Length - start > 0)
-						{
-							relativepath += @"./";
-						}
+                        // if the current relative path is still empty, and there are more than one entries left in the path,
+                        // the file is in a subdirectory.  Start with ./
+                        if (relativepath == string.Empty && path.Length - start > 0)
+                        {
+                            relativepath += @"./";
+                        }
 
-						// add the rest of the path
-						for (int i = start; i < path.Length; i++)
-						{
-							relativepath += path[i];
-							if (i < path.Length - 1) relativepath += "\\";
-						}
+                        // add the rest of the path
+                        for (int i = start; i < path.Length; i++)
+                        {
+                            relativepath += path[i];
+                            if (i < path.Length - 1) relativepath += "\\";
+                        }
 
-						pathToMakeRelative = relativepath;
-					}
-				}
+                        pathToMakeRelative = relativepath;
+                    }
+                }
                 if (pathToMakeRelative.StartsWith("\\"))
                 {
                     pathToMakeRelative = pathToMakeRelative.Substring(1);
@@ -726,9 +749,9 @@ namespace ToolsUtilities
 
 
 
-			return pathToMakeRelative;
+            return pathToMakeRelative;
 
-		}
+        }
 
         public static string RemoveDotDotSlash(string fileNameToFix)
         {
@@ -831,20 +854,20 @@ namespace ToolsUtilities
         }
 
 
-		public static void SaveText(string stringToSave, string fileName)
-		{
+        public static void SaveText(string stringToSave, string fileName)
+        {
             SaveText(stringToSave, fileName, Encoding.UTF8);
         }
 
         public static void SaveText(string stringToSave, string fileName, Encoding encoding)
         {
-			FileInfo fileInfo = new FileInfo(fileName);
+            FileInfo fileInfo = new FileInfo(fileName);
 
-			if (!string.IsNullOrEmpty(FileManager.GetDirectory(fileName)) &&
-				!Directory.Exists(FileManager.GetDirectory(fileName)))
-			{
-				Directory.CreateDirectory(FileManager.GetDirectory(fileName));
-			}
+            if (!string.IsNullOrEmpty(FileManager.GetDirectory(fileName)) &&
+                !Directory.Exists(FileManager.GetDirectory(fileName)))
+            {
+                Directory.CreateDirectory(FileManager.GetDirectory(fileName));
+            }
 
             if (encoding == Encoding.UTF8)
             {
@@ -856,7 +879,7 @@ namespace ToolsUtilities
             }
             else
             {
-                if (File.Exists(fileName))
+                if (FileManager.FileExists(fileName))
                 {
                     File.Delete(fileName);
                 }
@@ -870,12 +893,12 @@ namespace ToolsUtilities
                 }
 
             }
-		}
+        }
 
 
         public static void SaveByteArray(byte[] whatToSave, string fileName)
         {
-            if (File.Exists(fileName))
+            if (FileManager.FileExists(fileName))
             {
                 File.Delete(fileName);
             }
@@ -926,7 +949,7 @@ namespace ToolsUtilities
         {
             bool succeeded = true;
 
-            if (File.Exists(targetFileName))
+            if (FileManager.FileExists(targetFileName))
             {
                 File.Delete(targetFileName);
             }
@@ -978,13 +1001,13 @@ namespace ToolsUtilities
             }
         }
 
-		public static string Standardize(string fileName)
-		{
-			return Standardize(fileName, false);
-		}
+        public static string Standardize(string fileName)
+        {
+            return Standardize(fileName, false);
+        }
 
-		public static string Standardize(string fileName, bool preserveCase)
-		{
+        public static string Standardize(string fileName, bool preserveCase)
+        {
 
             return Standardize(fileName, preserveCase, false);
         }
@@ -1013,7 +1036,7 @@ namespace ToolsUtilities
 
             }
 
-		}
+        }
 
         public static T XmlDeserializeEmbeddedResource<T>(Assembly assembly, string location)
         {
@@ -1050,19 +1073,13 @@ namespace ToolsUtilities
 
             //ThrowExceptionIfFileDoesntExist(fileName);
 
-#if XBOX360 || SILVERLIGHT
+#if ANDROID
             // Silverlight and 360 don't like ./ at the start of the file name, but that's what we use to identify an absolute path
-            if (fileName.Length > 1 && fileName[0] == '.' && fileName[1] == '/')
-                fileName = fileName.Substring(2);
-            
+			fileName = TryRemoveLeadingDotSlash (fileName);
 #endif
 
 
-#if SILVERLIGHT
-            Stream stream = GetStreamForFile(fileName);
-#else
-            using (FileStream stream = System.IO.File.OpenRead(fileName))
-#endif
+            using (Stream stream = GetStreamForFile(fileName))
             {
                 try
                 {
@@ -1076,6 +1093,24 @@ namespace ToolsUtilities
             }
 
             return objectToReturn;
+        }
+
+        static string TryRemoveLeadingDotSlash(string fileName)
+        {
+            if (fileName != null && fileName.Length > 1 && fileName[0] == '.' && (fileName[1] == '/' || fileName[1] == '\\'))
+            {
+                fileName = fileName.Substring(2);
+            }
+            return fileName;
+        }
+
+        static Stream GetStreamForFile(string fileName)
+        {
+#if ANDROID
+			return Microsoft.Xna.Framework.TitleContainer.OpenStream(fileName);
+#else
+            return System.IO.File.OpenRead(fileName);
+#endif
         }
 
         public static T XmlDeserializeFromStream<T>(Stream stream)
@@ -1133,16 +1168,16 @@ namespace ToolsUtilities
                 writer = XmlWriter.Create(isfs, xms);
 
 #else
-                
-                if (System.IO.File.Exists(fileName))
+
+                if (FileManager.FileExists(fileName))
                     fs = System.IO.File.Open(fileName, FileMode.OpenOrCreate | FileMode.Truncate);
                 else
                     fs = System.IO.File.Open(fileName, FileMode.OpenOrCreate);
 
                 XmlTextWriter writer = new XmlTextWriter(fs, System.Text.Encoding.UTF8);
                 writer.Formatting = System.Xml.Formatting.Indented;
-                
-                
+
+
 #endif
 
                 serializer.Serialize(writer, objectToSerialize);
@@ -1209,26 +1244,26 @@ namespace ToolsUtilities
             }
         }
 
-		static string GetProperDirectoryCapitalization(DirectoryInfo dirInfo)
-		{
-			DirectoryInfo parentDirInfo = dirInfo.Parent;
-			if (null == parentDirInfo)
-				return dirInfo.Name;
-			return Path.Combine(GetProperDirectoryCapitalization(parentDirInfo),
-								parentDirInfo.GetDirectories(dirInfo.Name)[0].Name);
-		}
+        static string GetProperDirectoryCapitalization(DirectoryInfo dirInfo)
+        {
+            DirectoryInfo parentDirInfo = dirInfo.Parent;
+            if (null == parentDirInfo)
+                return dirInfo.Name;
+            return Path.Combine(GetProperDirectoryCapitalization(parentDirInfo),
+                                parentDirInfo.GetDirectories(dirInfo.Name)[0].Name);
+        }
 
-		static string GetProperFilePathCapitalization(string filename)
-		{
-			if (File.Exists(filename))
-			{
-				FileInfo fileInfo = new FileInfo(filename);
-				DirectoryInfo dirInfo = fileInfo.Directory;
-				return Path.Combine(GetProperDirectoryCapitalization(dirInfo),
-									dirInfo.GetFiles(fileInfo.Name)[0].Name);
-			}
-			else
-			{
+        static string GetProperFilePathCapitalization(string filename)
+        {
+            if (FileManager.FileExists(filename))
+            {
+                FileInfo fileInfo = new FileInfo(filename);
+                DirectoryInfo dirInfo = fileInfo.Directory;
+                return Path.Combine(GetProperDirectoryCapitalization(dirInfo),
+                                    dirInfo.GetFiles(fileInfo.Name)[0].Name);
+            }
+            else
+            {
                 // August 8, 2011
                 // We used to return
                 // null here but I'm not
@@ -1237,8 +1272,8 @@ namespace ToolsUtilities
                 // we should just return the original
                 // name.
                 return filename;
-			}
-		}
+            }
+        }
 
         public static bool DoesFileHaveSvnConflict(string fileName)
         {

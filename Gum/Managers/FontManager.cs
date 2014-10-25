@@ -29,7 +29,7 @@ namespace Gum.Managers
             string fileName = AbsoluteFontCacheFolder + 
                 FileManager.RemovePath(BmfcSave.GetFontCacheFileNameFor(fontSize, fontName, outlineThickness));
 
-            if (System.IO.File.Exists(fileName))
+            if (FileManager.FileExists(fileName))
             {
                 try
                 {

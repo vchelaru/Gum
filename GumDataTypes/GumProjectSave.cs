@@ -126,24 +126,46 @@ namespace Gum.DataTypes
 
         public static GumProjectSave Load(string fileName, out string errors)
         {
+            GumProjectSave gps = null;
+
+			#if ANDROID
+			gps = LoadFromTitleStorage(fileName, out errors);
+            #else
             if (System.IO.File.Exists(fileName))
             {
-                GumProjectSave gps = FileManager.XmlDeserialize<GumProjectSave>(fileName);
-
-                string projectRootDirectory = FileManager.GetDirectory(fileName);
-
-                gps.PopulateElementSavesFromReferences(projectRootDirectory, out errors);
-
-                gps.FullFileName = fileName;
-
-                return gps;
+                gps = FileManager.XmlDeserialize<GumProjectSave>(fileName);
             }
             else
             {
                 errors = "The Gum project file does not exist";
-                return null;
             }
+            #endif
+
+            string projectRootDirectory = FileManager.GetDirectory(fileName);
+
+            gps.PopulateElementSavesFromReferences(projectRootDirectory, out errors);
+            gps.FullFileName = fileName;
+
+            return gps;
         }
+
+        #if ANDROID
+		static GumProjectSave LoadFromTitleStorage (string fileName, out string errors)
+		{
+			using (System.IO.Stream stream = Microsoft.Xna.Framework.TitleContainer.OpenStream(fileName))
+			{
+				GumProjectSave gps = FileManager.XmlDeserializeFromStream<GumProjectSave>(stream);
+
+				string projectRootDirectory = FileManager.GetDirectory(fileName);
+
+				gps.PopulateElementSavesFromReferences(projectRootDirectory, out errors);
+
+				gps.FullFileName = fileName;
+
+				return gps;
+			}
+		}
+        #endif
 
         private void PopulateElementSavesFromReferences(string projectRootDirectory, out string errors)
         {

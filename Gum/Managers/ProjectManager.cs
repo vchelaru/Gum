@@ -157,7 +157,8 @@ namespace Gum
                 MessageBox.Show("Errors loading " + fileName + "\n\n" + errors);
                 
                 // If the file doesn't exist, that's okay we will let the user still work - it's not like they can overwrite a file that doesn't exist
-                if (System.IO.File.Exists(fileName))
+                // But if it does exist, we want to be careful and not allow overwriting because they could be wiping out good data
+                if (FileManager.FileExists(fileName))
                 {
                     mHaveErrorsOccurred = true;
                 }

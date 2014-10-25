@@ -89,7 +89,7 @@ namespace RenderingLibrary.Graphics.Fonts
             string resourceName = "RenderingLibrary.Libraries.bmfont.exe";
             string locationToSave = FileManager.RelativeDirectory  + "Libraries\\bmfont.exe";
 
-            if (!System.IO.File.Exists(locationToSave))
+            if (!FileManager.FileExists(locationToSave))
             {
                 FileManager.SaveEmbeddedResource(
                     Assembly.GetAssembly(typeof(BmfcSave)),
@@ -100,7 +100,7 @@ namespace RenderingLibrary.Graphics.Fonts
 
             string desiredFntFile = FileManager.RelativeDirectory + fileName;
 
-            if (!System.IO.File.Exists(desiredFntFile))
+            if (!FileManager.FileExists(desiredFntFile))
             {
 
                 string bmfcFileToSave = FileManager.RelativeDirectory + FileManager.RemoveExtension(fileName) + ".bmfc";

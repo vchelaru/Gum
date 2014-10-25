@@ -52,8 +52,8 @@ namespace StateAnimationPlugin.Views
                     ElementSave elementSave;
                     string fileName = GetFileNameForSelectedContainerAnimations(out elementSave);
 
-                    
-                    if (!string.IsNullOrEmpty(fileName) && System.IO.File.Exists(fileName))
+
+                    if (!string.IsNullOrEmpty(fileName) && FileManager.FileExists(fileName))
                     {
                         ElementAnimationsSave save = null;
 

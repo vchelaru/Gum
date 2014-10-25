@@ -31,7 +31,7 @@ namespace StateAnimationPlugin.Managers
                 {
                     var fileName = GetAbsoluteAnimationFileNameFor(currentElement);
 
-                    if (File.Exists(fileName))
+                    if (FileManager.FileExists(fileName))
                     {
                         try
                         {
@@ -82,7 +82,7 @@ namespace StateAnimationPlugin.Managers
         public ElementAnimationsSave GetElementAnimationsSave(ElementSave element)
         {
             string fileName = GetAbsoluteAnimationFileNameFor(element);
-            if (System.IO.File.Exists(fileName))
+            if (FileManager.FileExists(fileName))
             {
                 return FileManager.XmlDeserialize<ElementAnimationsSave>(fileName);
             }

@@ -64,7 +64,8 @@ namespace Gum.DataTypes
             }
             fullName = ToolsUtilities.FileManager.Standardize(fullName);
 
-            if (System.IO.File.Exists(fullName))
+
+            if (FileManager.FileExists(fullName))
             {
 
 

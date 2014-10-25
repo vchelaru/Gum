@@ -140,7 +140,7 @@ namespace RenderingLibrary.Content
         private void CreateInvalidTextureGraphic(string invalidTextureLocation, SystemManagers managers)
         {
             if (!string.IsNullOrEmpty(invalidTextureLocation) &&
-                System.IO.File.Exists(invalidTextureLocation))
+                FileManager.FileExists(invalidTextureLocation))
             {
 
                 mInvalidTexture = Load(invalidTextureLocation, managers);

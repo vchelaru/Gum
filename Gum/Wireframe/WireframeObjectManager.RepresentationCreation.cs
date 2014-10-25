@@ -906,7 +906,7 @@ namespace Gum.Wireframe
 
             string toReturn = withoutExtension;
 
-            if (System.IO.File.Exists(absoluteTexture))
+            if (FileManager.FileExists(absoluteTexture))
             {
                 if (usePattern)
                 {

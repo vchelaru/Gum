@@ -67,6 +67,11 @@ namespace RenderingLibrary.Graphics
 
         public BitmapFont(string fontFile, SystemManagers managers)
         {
+
+#if ANDROID
+			fontFile = fontFile.ToLowerInvariant();
+#endif
+
             string fontContents = FileManager.FromFileText(fontFile);
             mFontFile = FileManager.Standardize(fontFile);
 
