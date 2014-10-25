@@ -241,7 +241,7 @@ namespace RenderingLibrary.Content
                 }
                 else
                 {
-                    using (FileStream stream = System.IO.File.OpenRead(fileNameStandardized))
+                    using (FileStream stream = FileManager.GetStreamForFile(fileNameStandardized))
                     {
                         Texture2D texture = Texture2D.FromStream(renderer.GraphicsDevice,
                             stream);

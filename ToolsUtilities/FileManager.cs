@@ -1104,7 +1104,7 @@ namespace ToolsUtilities
             return fileName;
         }
 
-        static Stream GetStreamForFile(string fileName)
+        public static Stream GetStreamForFile(string fileName)
         {
 #if ANDROID
 			return Microsoft.Xna.Framework.TitleContainer.OpenStream(fileName);
