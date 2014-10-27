@@ -610,26 +610,13 @@ namespace ToolsUtilities
             }
 
 
-#if XBOX360
+#if XBOX360 || ANDROID
             
-            if(fileName.Length > 1 && fileName[0] == '.' && fileName[1] == '/')
+			if(fileName.Length > 1 && fileName[0] == '.' && (fileName[1] == '/' || fileName[1] == '\\'))
                 return false;
             else
                 return true;
-            //return !(fileName.Length > 1 && fileName[1] == ':');
 
-
-#elif SILVERLIGHT
-            if (fileName.Length > 1 && fileName[0] == '.' && fileName[1] == '/')
-                return false;
-
-            // If it's isolated storage, then it's not relative:
-            if (fileName.Contains(IsolatedStoragePrefix))
-            {
-                return false;
-            }
-
-            return true;
 #else
             // a non-relative directory will have a letter than a : at the beginning.
             // for example c:/file.bmp.  If other cases arise, this may need to be changed.
@@ -1107,6 +1094,7 @@ namespace ToolsUtilities
         public static Stream GetStreamForFile(string fileName)
         {
 #if ANDROID
+            fileName = TryRemoveLeadingDotSlash(fileName);
 			return Microsoft.Xna.Framework.TitleContainer.OpenStream(fileName);
 #else
             return System.IO.File.OpenRead(fileName);
