@@ -294,7 +294,7 @@ namespace RenderingLibrary.Graphics
             }
         }
 
-        public ICollection<IPositionedSizedObject> Children
+        public List<IPositionedSizedObject> Children
         {
             get { return mChildren; }
         }
@@ -562,6 +562,9 @@ namespace RenderingLibrary.Graphics
             }
         }
 
+        static int reuse = 0;
+        static int isNew = 0;
+
         public void UpdateTextureToRender()
         {
             if (!mIsTextureCreationSuppressed)
@@ -575,15 +578,40 @@ namespace RenderingLibrary.Graphics
 
                 if (fontToUse != null)
                 {
-                    if (mTextureToRender != null)
+                    //if (mTextureToRender != null)
+                    //{
+                    //    mTextureToRender.Dispose();
+                    //    mTextureToRender = null;
+                    //}
+
+                    var returnedRenderTarget = fontToUse.RenderToTexture2D(WrappedText, this.HorizontalAlignment, mManagers, mTextureToRender);
+                    bool isNewInstance = returnedRenderTarget != mTextureToRender;
+
+                    if (isNewInstance)
                     {
-                        mTextureToRender.Dispose();
-                        mTextureToRender = null;
+                        isNew++;
+
+                    }
+                    else
+                    {
+                        reuse++;
                     }
 
-                    mTextureToRender = fontToUse.RenderToTexture2D(WrappedText, this.HorizontalAlignment, mManagers);
+                    Console.WriteLine("New: " + isNew + ", Reuse:" + reuse);
 
-                    if (mTextureToRender is RenderTarget2D)
+                    if (isNewInstance && mTextureToRender != null)
+                    {
+                        mTextureToRender.Dispose();
+
+                        if (mTextureToRender is RenderTarget2D)
+                        {
+                            (mTextureToRender as RenderTarget2D).ContentLost -= SetNeedsRefresh;
+                        }
+                        mTextureToRender = null;
+                    }
+                    mTextureToRender = returnedRenderTarget;
+
+                    if (isNewInstance && mTextureToRender is RenderTarget2D)
                     {
                         (mTextureToRender as RenderTarget2D).ContentLost += SetNeedsRefresh;
                     }

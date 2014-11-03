@@ -15,7 +15,7 @@ namespace RenderingLibrary.Graphics
 
     #region BeginParameters class
 
-    public class BeginParameters
+    public struct BeginParameters
     {
         public SpriteSortMode SortMode { get; set; }
         public BlendState BlendState { get; set; }
@@ -27,7 +27,7 @@ namespace RenderingLibrary.Graphics
         public Rectangle ScissorRectangle { get; set; }
         public BeginParameters Clone()
         {
-            return this.MemberwiseClone() as BeginParameters;
+            return (BeginParameters)this.MemberwiseClone();
         }
     }
 
@@ -37,8 +37,8 @@ namespace RenderingLibrary.Graphics
     {
         #region Fields
 
-        List<BeginParameters> mStateStack = new List<BeginParameters>();
-        BeginParameters mLastParameters;
+        List<BeginParameters?> mStateStack = new List<BeginParameters?>();
+        BeginParameters? mLastParameters;
 
         #endregion
 
@@ -61,8 +61,8 @@ namespace RenderingLibrary.Graphics
             SpriteBatch = new SpriteBatch(graphicsDevice);
         }
 
-        public void Push(SpriteSortMode sortMode, BlendState blendState, SamplerState samplerState, 
-            DepthStencilState depthStencilState, RasterizerState rasterizerState, Effect effect, 
+        public void Push(SpriteSortMode sortMode, BlendState blendState, SamplerState samplerState,
+            DepthStencilState depthStencilState, RasterizerState rasterizerState, Effect effect,
             Matrix transformMatrix, Rectangle scissorRectangle)
         {
 
@@ -78,11 +78,11 @@ namespace RenderingLibrary.Graphics
             mLastParameters = mStateStack.Last();
             mStateStack.RemoveAt(mStateStack.Count - 1);
 
-            
-            if (mLastParameters != null)
+
+            if (mLastParameters.HasValue)
             {
-                Begin(mLastParameters.SortMode, mLastParameters.BlendState, mLastParameters.SamplerState, mLastParameters.DepthStencilState,
-                    mLastParameters.RasterizerState, mLastParameters.Effect, mLastParameters.TransformMatrix, mLastParameters.ScissorRectangle);
+                Begin(mLastParameters.Value.SortMode, mLastParameters.Value.BlendState, mLastParameters.Value.SamplerState, mLastParameters.Value.DepthStencilState,
+                    mLastParameters.Value.RasterizerState, mLastParameters.Value.Effect, mLastParameters.Value.TransformMatrix, mLastParameters.Value.ScissorRectangle);
             }
             else
             {
@@ -95,18 +95,21 @@ namespace RenderingLibrary.Graphics
             DepthStencilState depthStencilState, RasterizerState rasterizerState, Effect effect, Matrix transformMatrix,
             Rectangle scissorRectangle)
         {
-            bool isNewRender = mLastParameters == null;
+            bool isNewRender = mLastParameters.HasValue == false;
 
-            mLastParameters = new BeginParameters();
-            
-            mLastParameters.SortMode = sortMode;
-            mLastParameters.BlendState = blendState;
-            mLastParameters.SamplerState = samplerState;
-            mLastParameters.DepthStencilState = depthStencilState;
-            mLastParameters.RasterizerState = rasterizerState;
-            mLastParameters.Effect = effect;
-            mLastParameters.TransformMatrix = transformMatrix;
-            mLastParameters.ScissorRectangle = scissorRectangle;
+            var newParameters = new BeginParameters();
+
+            newParameters.SortMode = sortMode;
+            newParameters.BlendState = blendState;
+            newParameters.SamplerState = samplerState;
+            newParameters.DepthStencilState = depthStencilState;
+            newParameters.RasterizerState = rasterizerState;
+            newParameters.Effect = effect;
+            newParameters.TransformMatrix = transformMatrix;
+            newParameters.ScissorRectangle = scissorRectangle;
+
+            mLastParameters = newParameters;
+
             if (!isNewRender)
             {
                 SpriteBatch.End();

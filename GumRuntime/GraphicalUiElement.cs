@@ -139,7 +139,7 @@ namespace Gum.Wireframe
             get
             {
 #if DEBUG
-                if(mContainedObjectAsIpso == null)
+                if (mContainedObjectAsIpso == null)
                 {
                     int m = 3;
                 }
@@ -178,7 +178,7 @@ namespace Gum.Wireframe
         }
 
 
-        float IPositionedSizedObject.Rotation 
+        float IPositionedSizedObject.Rotation
         {
             get
             {
@@ -431,6 +431,13 @@ namespace Gum.Wireframe
             }
         }
 
+        /// <summary>
+        /// Returns an enumerable for all GraphicalUiElements that this contains.
+        /// </summary>
+        /// <remarks>
+        /// Since this is an interface using ContainedElements in a foreach allocates memory
+        /// and this can actually be significant in a game that updates its UI frequently.
+        /// </remarks>
         public IEnumerable<GraphicalUiElement> ContainedElements
         {
             get
@@ -452,11 +459,11 @@ namespace Gum.Wireframe
             }
         }
 
-        public ICollection<IPositionedSizedObject> Children
+        public List<IPositionedSizedObject> Children
         {
-            get 
+            get
             {
-                if(mContainedObjectAsIpso != null)
+                if (mContainedObjectAsIpso != null)
                 {
                     return mContainedObjectAsIpso.Children;
                 }
@@ -836,8 +843,8 @@ namespace Gum.Wireframe
 
         public void UpdateLayout(bool updateParent, bool updateChildren)
         {
-            int value = int.MaxValue/2;
-            if(!updateChildren)
+            int value = int.MaxValue / 2;
+            if (!updateChildren)
             {
                 value = 0;
             }
@@ -859,8 +866,8 @@ namespace Gum.Wireframe
                     mContainedObjectAsIpso.Parent = mParent;
                 }
 
-                if (updateParent && this.ParentGue != null && 
-                    (ParentGue.GetIfDimensionsDependOnChildren() || ParentGue.ChildrenLayout != Gum.Managers.ChildrenLayout.Regular ))
+                if (updateParent && this.ParentGue != null &&
+                    (ParentGue.GetIfDimensionsDependOnChildren() || ParentGue.ChildrenLayout != Gum.Managers.ChildrenLayout.Regular))
                 {
                     // Just climb up one and update from there
                     this.ParentGue.UpdateLayout(true, childrenUpdateDepth + 1);
@@ -877,7 +884,7 @@ namespace Gum.Wireframe
                     {
                         float widthBefore = 0;
                         float heightBefore = 0;
-                        if(this.mContainedObjectAsIpso != null)
+                        if (this.mContainedObjectAsIpso != null)
                         {
                             widthBefore = mContainedObjectAsIpso.Width;
                             heightBefore = mContainedObjectAsIpso.Height;
@@ -914,9 +921,9 @@ namespace Gum.Wireframe
                     {
                         if (this.mContainedObjectAsIpso == null)
                         {
-                            foreach (var child in this.ContainedElements)
+                            foreach (var child in this.mWhatThisContains)
                             {
-                                child.UpdateLayout(false, childrenUpdateDepth-1);
+                                child.UpdateLayout(false, childrenUpdateDepth - 1);
                             }
                         }
                         else
@@ -952,7 +959,7 @@ namespace Gum.Wireframe
             }
         }
 
-        
+
 
         private void GetParentDimensions(out float parentWidth, out float parentHeight)
         {
@@ -1023,7 +1030,7 @@ namespace Gum.Wireframe
 
         private void UpdatePosition(float parentWidth, float parentHeight)
         {
-            UpdatePosition(parentWidth, parentHeight, wrap:false);
+            UpdatePosition(parentWidth, parentHeight, wrap: false);
 
             var effectiveParent = EffectiveParentGue;
 
@@ -1033,7 +1040,7 @@ namespace Gum.Wireframe
 
             if (shouldWrap)
             {
-                UpdatePosition(parentWidth, parentHeight, wrap:true);
+                UpdatePosition(parentWidth, parentHeight, wrap: true);
             }
         }
 
@@ -1047,8 +1054,8 @@ namespace Gum.Wireframe
 
             bool canWrap = EffectiveParentGue != null && EffectiveParentGue.WrapsChildren;
 
-            GetParentOffsets(canWrap, wrap, parentWidth, parentHeight, 
-                out parentOriginOffsetX, out parentOriginOffsetY, 
+            GetParentOffsets(canWrap, wrap, parentWidth, parentHeight,
+                out parentOriginOffsetX, out parentOriginOffsetY,
                 out wasHandledX, out wasHandledY);
 
 
@@ -1057,7 +1064,7 @@ namespace Gum.Wireframe
 
             AdjustOffsetsByUnits(parentWidth, parentHeight, ref unitOffsetX, ref unitOffsetY);
 #if DEBUG
-            if(float.IsNaN(unitOffsetX) || float.IsNaN(unitOffsetY))
+            if (float.IsNaN(unitOffsetX) || float.IsNaN(unitOffsetY))
             {
                 throw new Exception("Invalid unit offsets");
             }
@@ -1065,14 +1072,14 @@ namespace Gum.Wireframe
 
             AdjustOffsetsByOrigin(ref unitOffsetX, ref unitOffsetY);
 #if DEBUG
-            if(float.IsNaN(unitOffsetX) || float.IsNaN(unitOffsetY))
+            if (float.IsNaN(unitOffsetX) || float.IsNaN(unitOffsetY))
             {
                 throw new Exception("Invalid unit offsets");
             }
 #endif
             unitOffsetX += parentOriginOffsetX;
             unitOffsetY += parentOriginOffsetY;
-            
+
 
 
             this.mContainedObjectAsIpso.X = unitOffsetX;
@@ -1109,7 +1116,7 @@ namespace Gum.Wireframe
 
         }
 
-        private void TryAdjustOffsetsByParentLayoutType(bool canWrap, bool shouldWrap, ref float unitOffsetX, ref float unitOffsetY, 
+        private void TryAdjustOffsetsByParentLayoutType(bool canWrap, bool shouldWrap, ref float unitOffsetX, ref float unitOffsetY,
             out bool wasHandledX, out bool wasHandledY)
         {
 
@@ -1128,7 +1135,7 @@ namespace Gum.Wireframe
                 float xRelativeTo = 0;
                 float yRelativeTo = 0;
 
-                if(whatToStackAfter != null)
+                if (whatToStackAfter != null)
                 {
                     switch (this.EffectiveParentGue.ChildrenLayout)
                     {
@@ -1173,24 +1180,25 @@ namespace Gum.Wireframe
             return this.EffectiveParentGue != null && this.EffectiveParentGue.ChildrenLayout != Gum.Managers.ChildrenLayout.Regular;
         }
 
-        static List<IPositionedSizedObject> mWhatToStackAfterList = new List<IPositionedSizedObject>();
-
         private IPositionedSizedObject GetWhatToStackAfter(bool canWrap, bool shouldWrap, out float whatToStackAfterX, out float whatToStackAfterY)
         {
             var parentGue = this.EffectiveParentGue;
 
             int thisIndex = 0;
-            mWhatToStackAfterList.Clear();
-            
+
+            // We used to have a static list we were populating, but that allocates memory so we
+            // now use the actual list.
+            System.Collections.IList siblings = null;
+
             if (this.Parent == null)
             {
-                mWhatToStackAfterList.AddRange(this.ParentGue.mWhatThisContains);
+                siblings = this.ParentGue.mWhatThisContains;
             }
-            else if(this.Parent is GraphicalUiElement)
+            else if (this.Parent is GraphicalUiElement)
             {
-                mWhatToStackAfterList.AddRange(this.Parent.Children);
+                siblings = ((GraphicalUiElement)Parent).Children as System.Collections.IList;
             }
-            thisIndex = mWhatToStackAfterList.IndexOf(this);
+            thisIndex = siblings.IndexOf(this);
 
             IPositionedSizedObject whatToStackAfter = null;
             whatToStackAfterX = 0;
@@ -1200,7 +1208,7 @@ namespace Gum.Wireframe
                 if (shouldWrap)
                 {
                     int currentIndex = thisIndex - 1;
-                    IPositionedSizedObject minimumItem = mWhatToStackAfterList[currentIndex];
+                    IPositionedSizedObject minimumItem = siblings[currentIndex] as IPositionedSizedObject;
 
                     Func<IPositionedSizedObject, float> getAbsoluteValueFunc = null;
 
@@ -1218,7 +1226,7 @@ namespace Gum.Wireframe
 
                     while (currentIndex > -1)
                     {
-                        var candidate = mWhatToStackAfterList[currentIndex];
+                        var candidate = siblings[currentIndex] as IPositionedSizedObject;
 
                         if (getAbsoluteValueFunc(candidate) < minValue)
                         {
@@ -1247,7 +1255,7 @@ namespace Gum.Wireframe
                 }
                 else
                 {
-                    whatToStackAfter = mWhatToStackAfterList[thisIndex - 1] as IPositionedSizedObject;
+                    whatToStackAfter = siblings[thisIndex - 1] as IPositionedSizedObject;
                     if (whatToStackAfter != null)
                     {
                         if (parentGue.ChildrenLayout == Gum.Managers.ChildrenLayout.LeftToRightStack || shouldWrap)
@@ -1270,13 +1278,6 @@ namespace Gum.Wireframe
                     }
                 }
             }
-
-
-            
-
-
-
-
 
             return whatToStackAfter;
         }
@@ -1306,7 +1307,7 @@ namespace Gum.Wireframe
             // no need to handle top
         }
 
-        private void AdjustParentOriginOffsetsByUnits(float parentWidth, float parentHeight, 
+        private void AdjustParentOriginOffsetsByUnits(float parentWidth, float parentHeight,
             ref float unitOffsetX, ref float unitOffsetY, ref bool wasHandledX, ref bool wasHandledY)
         {
             if (!wasHandledX)
@@ -1418,7 +1419,7 @@ namespace Gum.Wireframe
             if (mHeightUnit == DimensionUnitType.Absolute && heightToSet == 0)
             {
                 float maxHeight = 0;
-                foreach (var element in this.ContainedElements)
+                foreach (var element in this.mWhatThisContains)
                 {
                     if (element.IsAllLayoutAbsolute())
                     {
@@ -1475,7 +1476,7 @@ namespace Gum.Wireframe
             if (mWidthUnit == DimensionUnitType.Absolute && widthToSet == 0)
             {
                 float maxWidth = 0;
-                foreach (var element in this.ContainedElements)
+                foreach (var element in this.mWhatThisContains)
                 {
                     if (element.IsAllLayoutAbsolute())
                     {
@@ -1502,9 +1503,9 @@ namespace Gum.Wireframe
                     {
                         widthToSet = sprite.Texture.Width * mWidth / 100.0f;
 
-                        if(sprite.SourceRectangle.HasValue)
+                        if (sprite.SourceRectangle.HasValue)
                         {
-                            widthToSet =  ( sprite.SourceRectangle.Value.Right - sprite.SourceRectangle.Value.Left ) * mWidth / 100.0f;
+                            widthToSet = (sprite.SourceRectangle.Value.Right - sprite.SourceRectangle.Value.Left) * mWidth / 100.0f;
                         }
 
                         wasSet = true;
@@ -1586,8 +1587,8 @@ namespace Gum.Wireframe
         public virtual void AddToManagers()
         {
 
-                AddToManagers(SystemManagers.Default, null);
-            
+            AddToManagers(SystemManagers.Default, null);
+
         }
 
         public virtual void AddToManagers(SystemManagers managers, Layer layer)
@@ -1649,7 +1650,7 @@ namespace Gum.Wireframe
             {
 
                 //Recursively add children to the managers
-                foreach (var child in this.ContainedElements)
+                foreach (var child in this.mWhatThisContains)
                 {
                     // July 27, 2014
                     // Is this an unnecessary check?
@@ -1662,9 +1663,9 @@ namespace Gum.Wireframe
                     }
                 }
             }
-            else if(this.Children != null)
+            else if (this.Children != null)
             {
-                foreach(var child in this.Children)
+                foreach (var child in this.Children)
                 {
                     if (child is GraphicalUiElement)
                     {
@@ -1751,7 +1752,7 @@ namespace Gum.Wireframe
                 layerToAddTo.Add(mContainedObjectAsRenderable);
             }
 
-            foreach (var contained in this.ContainedElements)
+            foreach (var contained in this.mWhatThisContains)
             {
                 contained.MoveToLayer(layer);
             }
@@ -1810,9 +1811,9 @@ namespace Gum.Wireframe
         {
             mIsLayoutSuspended = true;
 
-            if(recursive)
+            if (recursive)
             {
-                foreach(var item in this.ContainedElements)
+                foreach (var item in this.mWhatThisContains)
                 {
                     item.SuspendLayout(true);
                 }
@@ -1836,7 +1837,7 @@ namespace Gum.Wireframe
 
             mIsLayoutSuspended = false;
 
-            foreach (var item in this.ContainedElements)
+            foreach (var item in this.mWhatThisContains)
             {
                 item.ResumeLayoutNoUpdateRecursive();
             }
@@ -1890,16 +1891,16 @@ namespace Gum.Wireframe
                 string instanceName = propertyName.Substring(0, indexOfDot);
                 GraphicalUiElement containedGue = GetGraphicalUiElementByName(instanceName);
                 string variable = propertyName.Substring(indexOfDot + 1);
-                
+
                 // instances may not have been set yet
                 if (containedGue != null)
                 {
                     containedGue.SetProperty(variable, value);
                 }
 
-                
+
             }
-            else if(TrySetValueOnThis(propertyName, value))
+            else if (TrySetValueOnThis(propertyName, value))
             {
                 // success, do nothing, but it's in an else if to prevent the following else if's from evaluating
             }
@@ -1914,7 +1915,7 @@ namespace Gum.Wireframe
         private bool TrySetValueOnThis(string propertyName, object value)
         {
             bool toReturn = false;
-            switch(propertyName)
+            switch (propertyName)
             {
                 case "Children Layout":
                     this.ChildrenLayout = (ChildrenLayout)value;
@@ -1991,10 +1992,10 @@ namespace Gum.Wireframe
 
             }
 
-            if(!toReturn)
+            if (!toReturn)
             {
 
-                if(propertyName.EndsWith("State") && value is string)
+                if (propertyName.EndsWith("State") && value is string)
                 {
                     var valueAsString = value as string;
 
@@ -2030,7 +2031,7 @@ namespace Gum.Wireframe
                     ((Text)mContainedObjectAsRenderable).RawText = value as string;
                     handled = true;
                 }
-                else if(propertyName == "Font Scale")
+                else if (propertyName == "Font Scale")
                 {
                     ((Text)mContainedObjectAsRenderable).FontScale = (float)value;
                 }
@@ -2056,7 +2057,7 @@ namespace Gum.Wireframe
                     }
                     handled = true;
                 }
-                if(propertyName == "Alpha")
+                if (propertyName == "Alpha")
                 {
                     int valueAsInt = (int)value;
                     sprite.Alpha = valueAsInt;
@@ -2068,7 +2069,7 @@ namespace Gum.Wireframe
                     sprite.Red = valueAsInt;
                     handled = true;
                 }
-                if(propertyName == "Green")
+                if (propertyName == "Green")
                 {
                     int valueAsInt = (int)value;
                     sprite.Green = valueAsInt;
@@ -2080,18 +2081,18 @@ namespace Gum.Wireframe
                     sprite.Blue = valueAsInt;
                     handled = true;
                 }
-                if(!handled)
+                if (!handled)
                 {
                     int m = 3;
                 }
             }
-            else if(mContainedObjectAsRenderable is NineSlice)
+            else if (mContainedObjectAsRenderable is NineSlice)
             {
                 var nineSlice = mContainedObjectAsRenderable as NineSlice;
 
-                if(propertyName == "SourceFile")
+                if (propertyName == "SourceFile")
                 {
-                    
+
                     string valueAsString = value as string;
 
                     if (ToolsUtilities.FileManager.IsRelative(valueAsString))
@@ -2142,7 +2143,7 @@ namespace Gum.Wireframe
             get
             {
 #if DEBUG
-                if(mContainedObjectAsIVisible == null)
+                if (mContainedObjectAsIVisible == null)
                 {
                     int m = 3;
                 }
@@ -2202,6 +2203,20 @@ namespace Gum.Wireframe
             this.ResumeLayout(true);
         }
 
+        public void ApplyState(List<DataTypes.Variables.VariableSaveValues> variableSaveValues)
+        {
+            this.SuspendLayout(true);
+
+            foreach (var variable in variableSaveValues)
+            {
+                if (variable.Value != null)
+                {
+                    this.SetProperty(variable.Name, variable.Value);
+                }
+            }
+            this.ResumeLayout(true);
+        }
+
         public void AddCategory(DataTypes.Variables.StateSaveCategory category)
         {
             mCategories.Add(category.Name, category);
@@ -2222,13 +2237,13 @@ namespace Gum.Wireframe
         {
             var renderable = this.mContainedObjectAsRenderable;
 
-            if(renderable is Sprite)
+            if (renderable is Sprite)
             {
                 var texture = (renderable as Sprite).Texture;
 
-                if(texture != null && !listToFill.Contains(texture)) listToFill.Add(texture);
+                if (texture != null && !listToFill.Contains(texture)) listToFill.Add(texture);
             }
-            else if(renderable is NineSlice)
+            else if (renderable is NineSlice)
             {
                 var nineSlice = renderable as NineSlice;
 
@@ -2244,13 +2259,13 @@ namespace Gum.Wireframe
                 if (nineSlice.BottomTexture != null && !listToFill.Contains(nineSlice.BottomTexture)) listToFill.Add(nineSlice.BottomTexture);
                 if (nineSlice.BottomRightTexture != null && !listToFill.Contains(nineSlice.BottomRightTexture)) listToFill.Add(nineSlice.BottomRightTexture);
             }
-            else if(renderable is Text)
+            else if (renderable is Text)
             {
                 // what do we do here?  Texts could change so do we want to return them if used in a atlas?
                 // This is todo for later
             }
 
-            foreach(var item in this.ContainedElements)
+            foreach (var item in this.mWhatThisContains)
             {
                 item.GetUsedTextures(listToFill);
             }
@@ -2258,10 +2273,11 @@ namespace Gum.Wireframe
 
         public void InterpolateBetween(Gum.DataTypes.Variables.StateSave first, Gum.DataTypes.Variables.StateSave second, float interpolationValue)
         {
-            var cloneOfFirst = first.Clone();
-            Gum.DataTypes.Variables.StateSaveExtensionMethods.MergeIntoThis(cloneOfFirst, second, interpolationValue);
+            List<Gum.DataTypes.Variables.VariableSaveValues> values = new List<DataTypes.Variables.VariableSaveValues>();
 
-            this.ApplyState(cloneOfFirst);
+            Gum.DataTypes.Variables.StateSaveExtensionMethods.Merge(first, second, interpolationValue, values);
+
+            this.ApplyState(values);
         }
 
         #endregion

@@ -15,7 +15,7 @@ namespace RenderingLibrary
         float Height { get; set; }
         string Name { get; set; }
         IPositionedSizedObject Parent { get; set; }
-        ICollection<IPositionedSizedObject> Children{ get; }
+        List<IPositionedSizedObject> Children{ get; }
         void SetParentDirect(IPositionedSizedObject newParent);
         object Tag { get; set; }
     }

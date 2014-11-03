@@ -21,6 +21,9 @@ namespace RenderingLibrary.Graphics
     {
         #region Fields
 
+        RasterizerState scissorTestEnabled;
+        RasterizerState scissorTestDisabled;
+
         int mDrawCallsPerFrame = 0;
 
         List<Layer> mLayers = new List<Layer>();
@@ -146,6 +149,14 @@ namespace RenderingLibrary.Graphics
             }
         }
 
+        internal SpriteBatch SpriteBatch
+        {
+            get
+            {
+                return mSpriteBatch.SpriteBatch;
+            }
+        }
+
         #endregion
 
         #region Methods
@@ -174,7 +185,24 @@ namespace RenderingLibrary.Graphics
             pixels[1] = Color.Transparent;
             mDottedLineTexture.SetData<Color>(pixels);
 
+            CreateRasterizerStates();
+
             mCamera.UpdateClient();
+        }
+
+        private void CreateRasterizerStates()
+        {
+
+
+            scissorTestEnabled = new RasterizerState();
+            scissorTestDisabled = new RasterizerState();
+
+            scissorTestEnabled.CullMode = CullMode.None;
+
+            scissorTestEnabled.ScissorTestEnable = true;
+            scissorTestDisabled.ScissorTestEnable = false;
+
+
         }
 
         public Layer AddLayer()
@@ -343,26 +371,19 @@ namespace RenderingLibrary.Graphics
             }
             mDrawCallsPerFrame++;
         }
-
         private RasterizerState GetRasterizerState(RenderStateVariables renderStates, Layer layer)
         {
             bool isFullscreen = layer.ScissorIpso == null;
-            RasterizerState rasterizer = new RasterizerState();
-            rasterizer.CullMode = CullMode.None;
 
             if (isFullscreen)
             {
-                rasterizer.ScissorTestEnable = false;
-
+                return scissorTestDisabled;
             }
             else
             {
-                rasterizer.ScissorTestEnable = true;
-
+                return scissorTestEnabled;
             }
-            return rasterizer;
         }
-
         private Microsoft.Xna.Framework.Graphics.SamplerState GetSamplerState(RenderStateVariables renderStates)
         {
             SamplerState samplerState;

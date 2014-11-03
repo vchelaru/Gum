@@ -143,7 +143,7 @@ namespace RenderingLibrary.Math.Geometry
             }
         }
 
-        public ICollection<IPositionedSizedObject> Children
+        public List<IPositionedSizedObject> Children
         {
             get { return mChildren; }
         }

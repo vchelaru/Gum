@@ -335,7 +335,7 @@ namespace RenderingLibrary.Graphics
 
 
 
-        public ICollection<IPositionedSizedObject> Children
+        public List<IPositionedSizedObject> Children
         {
             get { return mChildren; }
         }

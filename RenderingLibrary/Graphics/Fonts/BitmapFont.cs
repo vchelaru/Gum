@@ -387,7 +387,7 @@ namespace RenderingLibrary.Graphics
         // To help out the GC, we're going to just use a Color that's 2048x2048
         static Color[] mColorBuffer = new Color[2048 * 2048];
 
-        public Texture2D RenderToTexture2D(IEnumerable<string> lines, HorizontalAlignment horizontalAlignment, SystemManagers managers)
+        public Texture2D RenderToTexture2D(IEnumerable<string> lines, HorizontalAlignment horizontalAlignment, SystemManagers managers, Texture2D toReplace = null)
         {
             bool useImageData = false;
             if (useImageData)
@@ -396,12 +396,12 @@ namespace RenderingLibrary.Graphics
             }
             else
             {
-                return RenderToTexture2DUsingRenderStates(lines, horizontalAlignment, managers);
+                return RenderToTexture2DUsingRenderStates(lines, horizontalAlignment, managers, toReplace);
 
             }
         }
 
-        private Texture2D RenderToTexture2DUsingRenderStates(IEnumerable<string> lines, HorizontalAlignment horizontalAlignment, SystemManagers managers)
+        private Texture2D RenderToTexture2DUsingRenderStates(IEnumerable<string> lines, HorizontalAlignment horizontalAlignment, SystemManagers managers, Texture2D toReplace = null)
         {
             if (managers == null)
             {
@@ -431,10 +431,19 @@ namespace RenderingLibrary.Graphics
             {
 
                 var oldViewport = managers.Renderer.GraphicsDevice.Viewport;
-                renderTarget = new RenderTarget2D(managers.Renderer.GraphicsDevice, requiredWidth, requiredHeight);
+                if (toReplace != null && requiredWidth == toReplace.Width && requiredHeight == toReplace.Height)
+                {
+                    renderTarget = toReplace as RenderTarget2D;
+
+                }
+                else
+                {
+                    renderTarget = new RenderTarget2D(managers.Renderer.GraphicsDevice, requiredWidth, requiredHeight);
+
+                }
                 managers.Renderer.GraphicsDevice.SetRenderTarget(renderTarget);
-                managers.Renderer.GraphicsDevice.SetRenderTarget(renderTarget);
-                using (SpriteBatch spriteBatch = new SpriteBatch(managers.Renderer.GraphicsDevice))
+
+                SpriteBatch spriteBatch = managers.Renderer.SpriteBatch;
                 {
                     managers.Renderer.GraphicsDevice.Clear(Color.Transparent);
                     spriteBatch.Begin();

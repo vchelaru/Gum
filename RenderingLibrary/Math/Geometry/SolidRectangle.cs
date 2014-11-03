@@ -83,7 +83,7 @@ namespace RenderingLibrary.Graphics
 
         public float Rotation { get; set; }
 
-        public ICollection<IPositionedSizedObject> Children
+        public List<IPositionedSizedObject> Children
         {
             get { return mChildren; }
         }

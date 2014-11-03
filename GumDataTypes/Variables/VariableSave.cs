@@ -7,6 +7,16 @@ using System.Xml.Serialization;
 
 namespace Gum.DataTypes.Variables
 {
+    /// <summary>
+    /// Struct representation of VariableSave which can be used in situations where
+    /// heap allocation should not occur
+    /// </summary>
+    public struct VariableSaveValues
+    {
+        public object Value;
+        public string Name;
+    }
+
     public class VariableSave
     {
         object mValue;

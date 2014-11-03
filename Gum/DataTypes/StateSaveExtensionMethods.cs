@@ -649,6 +649,63 @@ namespace Gum.DataTypes.Variables
 
         //}
 
+        public static void Merge(StateSave firstState, StateSave secondState, float otherRatio, List<VariableSaveValues> mergedValues)
+        {
+#if DEBUG
+            if (firstState == null || secondState == null)
+            {
+                throw new ArgumentNullException("States must not be null");
+            }
+#endif
+
+            foreach (var secondVariable in secondState.Variables)
+            {
+                object secondValue = secondVariable.Value;
+
+                VariableSave firstVariable = firstState.GetVariableSave(secondVariable.Name);
+
+                // If this variable doesn't have a value, or if the variable doesn't set the variable
+                // then we need to go recursive to see what the value is:
+                bool needsValueFromBase = firstVariable == null || firstVariable.SetsValue == false;
+                bool setsValue = secondVariable.SetsValue;
+
+                object firstValue = firstVariable.Value;
+
+                if (firstVariable == null)
+                {
+                    firstValue = secondVariable.Value;
+
+                    // Get the value recursively before adding it to the list
+                    if (needsValueFromBase)
+                    {
+                        var variableOnThis = firstState.GetVariableSave(secondVariable.Name);
+                        if (variableOnThis != null)
+                        {
+                            setsValue |= variableOnThis.SetsValue;
+                        }
+
+                        firstValue = firstState.GetValueRecursive(secondVariable.Name);
+                    }
+                }
+
+                if(setsValue)
+                {
+                    object interpolated = GetValueConsideringInterpolation(firstValue, secondValue, otherRatio);
+
+                    VariableSaveValues value = new VariableSaveValues();
+                    value.Name = secondVariable.Name;
+                    value.Value = interpolated;
+
+                    mergedValues.Add(value);
+                }
+            }
+
+            // todo:  Handle lists?
+
+
+
+        }
+
         public static void MergeIntoThis(this StateSave thisState, StateSave other, float otherRatio = 1)
         {
 #if DEBUG
@@ -663,8 +720,11 @@ namespace Gum.DataTypes.Variables
                 // The first will use its default if one doesn't exist
                 VariableSave whatToSet = thisState.GetVariableSave(variableSave.Name);
 
+                // If this variable doesn't have a value, or if the variable doesn't set the variable
+                // then we need to go recursive to see what the value is:
                 bool needsValueFromBase = whatToSet == null || whatToSet.SetsValue == false;
                 bool setsValue = variableSave.SetsValue;
+
 
                 if (whatToSet == null)
                 {
@@ -686,7 +746,7 @@ namespace Gum.DataTypes.Variables
 
 
                 whatToSet.SetsValue = setsValue;
-                whatToSet.Value = GetValueConsideringInterpolation(whatToSet, variableSave, otherRatio);
+                whatToSet.Value = GetValueConsideringInterpolation(whatToSet.Value, variableSave.Value, otherRatio);
             }
 
             // todo:  Handle lists?
@@ -803,37 +863,37 @@ namespace Gum.DataTypes.Variables
 
         }
 
-        private static object GetValueConsideringInterpolation(VariableSave firstVariable, VariableSave secondVariable, float interpolationValue)
+        private static object GetValueConsideringInterpolation(object firstValue, object secondValue, float interpolationValue)
         {
-            if (firstVariable.Value == null || secondVariable.Value == null)
+            if (firstValue == null || secondValue == null)
             {
-                return secondVariable.Value;
+                return secondValue;
             }
-            else if (firstVariable.Value is float && secondVariable.Value is float)
+            else if (firstValue is float && secondValue is float)
             {
-                float firstFloat = (float)firstVariable.Value;
-                float secondFloat = (float)secondVariable.Value;
+                float firstFloat = (float)firstValue;
+                float secondFloat = (float)secondValue;
 
                 return firstFloat + (secondFloat - firstFloat) * interpolationValue;
             }
-            else if (firstVariable.Value is double && secondVariable.Value is double)
+            else if (firstValue is double && secondValue is double)
             {
-                double firstFloat = (double)firstVariable.Value;
-                double secondFloat = (double)secondVariable.Value;
+                double firstFloat = (double)firstValue;
+                double secondFloat = (double)secondValue;
 
                 return firstFloat + (secondFloat - firstFloat) * interpolationValue;
             }
 
-            else if (firstVariable.Value is int)
+            else if (firstValue is int)
             {
-                int firstFloat = (int)firstVariable.Value;
-                int secondFloat = (int)secondVariable.Value;
+                int firstFloat = (int)firstValue;
+                int secondFloat = (int)secondValue;
 
                 return (int)(.5f + firstFloat + (secondFloat - firstFloat) * interpolationValue);
             }
             else
             {
-                return secondVariable.Value;
+                return secondValue;
             }
         }
     }
