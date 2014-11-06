@@ -1885,7 +1885,7 @@ namespace Gum.Wireframe
                     containedGue.SetProperty(variable, value);
                 }
             }
-            else if (propertyName.Contains('.'))
+            else if (ToolsUtilities.StringFunctions.ContainsNoAlloc( propertyName, '.'))
             {
                 int indexOfDot = propertyName.IndexOf('.');
                 string instanceName = propertyName.Substring(0, indexOfDot);
@@ -2271,15 +2271,27 @@ namespace Gum.Wireframe
             }
         }
 
+        static List<List<Gum.DataTypes.Variables.VariableSaveValues>> listOfLists = new List<List<Gum.DataTypes.Variables.VariableSaveValues>>();
+        int index = 0;
+
         public void InterpolateBetween(Gum.DataTypes.Variables.StateSave first, Gum.DataTypes.Variables.StateSave second, float interpolationValue)
         {
-            List<Gum.DataTypes.Variables.VariableSaveValues> values = new List<DataTypes.Variables.VariableSaveValues>();
+            if (index >= listOfLists.Count)
+            {
+                const int capacity = 20;
+                var newList = new List<DataTypes.Variables.VariableSaveValues>(capacity);
+                listOfLists.Add(newList);
+            }
+
+            List<Gum.DataTypes.Variables.VariableSaveValues> values = listOfLists[index];
+            values.Clear();
+            index++;
 
             Gum.DataTypes.Variables.StateSaveExtensionMethods.Merge(first, second, interpolationValue, values);
 
             this.ApplyState(values);
+            index--;
         }
-
         #endregion
     }
 }

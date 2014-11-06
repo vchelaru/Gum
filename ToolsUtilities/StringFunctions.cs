@@ -463,5 +463,20 @@ namespace ToolsUtilities
 
             return toReturn;
         }
+
+
+        public static bool ContainsNoAlloc(string containingString, char charToLookFor)
+        {
+            int length = containingString.Length;
+
+            for (int i = 0; i < length; i++)
+            {
+                if (containingString[i] == charToLookFor)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
     }
 }

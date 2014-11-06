@@ -291,7 +291,7 @@ namespace RenderingLibrary.Graphics
 
                 layer.SortRenderables();
 
-                foreach (IRenderable renderable in layer.Renderables)
+                foreach (IRenderable renderable in layer.RenderablesWriteable)
                 {
                     AdjustRenderStates(mRenderStateVariables, layer, renderable);
                     renderable.Render(mSpriteBatch.SpriteBatch, managers);

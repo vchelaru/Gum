@@ -141,6 +141,7 @@
     <Compile Include="Gui\Plugins\MainWindowPlugin.cs" />
     <Compile Include="Commands\GumCommands.cs" />
     <Compile Include="Managers\CommandLineManager.cs" />
+    <Compile Include="Managers\ContentLoader.cs" />
     <Compile Include="Managers\EventsViewModel.cs" />
     <Compile Include="Managers\FileLocations.cs" />
     <Compile Include="Managers\FontManager.cs" />

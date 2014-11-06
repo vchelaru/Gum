@@ -26,10 +26,17 @@ namespace RenderingLibrary.Content
 
         ContentManager mContentManager;
 
+        
 
         #endregion
 
         #region Properties
+
+        public IContentLoader ContentLoader
+        {
+            get;
+            set;
+        }
 
         public bool CacheTextures
         {
@@ -260,6 +267,18 @@ namespace RenderingLibrary.Content
                 }
             }
             return toReturn;
+        }
+
+        public T LoadContent<T>(string contentName)
+        {
+#if DEBUG
+            if(this.ContentLoader == null)
+            {
+                throw new Exception("The content loader is null - you must set it prior to calling LoadContent.");
+            }
+#endif
+
+            return ContentLoader.LoadContent<T>(contentName);
         }
 
         public SpriteFont LoadSpriteFont(string fileName)

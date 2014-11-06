@@ -116,7 +116,8 @@ namespace GumRuntime
                     string textureValue = rvf.GetValue<string>("SourceFile");
                     if (!string.IsNullOrEmpty(textureValue))
                     {
-                        texture = LoaderManager.Self.Load(textureValue, systemManagers);
+                        texture = LoaderManager.Self.LoadContent<Texture2D>(textureValue);
+                        //texture = LoaderManager.Self.Load(textureValue, systemManagers);
                     }
                     Sprite sprite = new Sprite(texture);
                     SetAlphaAndColorValues(sprite, rvf);
@@ -142,8 +143,10 @@ namespace GumRuntime
                         }
                         else
                         {
-                            nineSlice.SetSingleTexture(LoaderManager.Self.Load(
-                                ToolsUtilities.FileManager.RelativeDirectory + relativeFile, systemManagers));
+                            //var loadedTexture = LoaderManager.Self.Load(ToolsUtilities.FileManager.RelativeDirectory + relativeFile, systemManagers);
+                            var loadedTexture = LoaderManager.Self.LoadContent<Texture2D>(relativeFile);
+
+                            nineSlice.SetSingleTexture(loadedTexture);
                         }
 
                         SetAlphaAndColorValues(nineSlice, rvf);

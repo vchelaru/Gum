@@ -170,7 +170,7 @@ namespace Gum.DataTypes.Variables
                 }
             }
 
-            if (variableName.Contains('.'))
+            if (ToolsUtilities.StringFunctions.ContainsNoAlloc(variableName, '.'))
             {
                 string instanceName = variableName.Substring(0, variableName.IndexOf('.'));
 

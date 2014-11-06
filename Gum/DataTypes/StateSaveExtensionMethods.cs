@@ -98,7 +98,7 @@ namespace Gum.DataTypes.Variables
             // to the parent
             ElementSave baseElement = null;
 
-            if (variableName.Contains('.'))
+            if (StringFunctions.ContainsNoAlloc(variableName, '.'))
             {
                 string instanceToSearchFor = variableName.Substring(0, variableName.IndexOf('.'));
 

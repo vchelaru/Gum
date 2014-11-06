@@ -201,6 +201,8 @@ namespace Gum.Wireframe
 
                 Renderer.Self.SamplerState = SamplerState.PointWrap;
 
+                LoaderManager.Self.ContentLoader = new ContentLoader();
+
                 LoaderManager.Self.Initialize(null, "content/TestFont.fnt", Services, null);
                 CameraController.Self.Initialize(Cursor, Camera, mWireframeEditControl);
 

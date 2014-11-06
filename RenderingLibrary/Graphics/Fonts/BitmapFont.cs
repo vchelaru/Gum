@@ -86,14 +86,17 @@ namespace RenderingLibrary.Graphics
             {
                 if (FileManager.IsRelative(texturesToLoad[i]))
                 {
-                    mTextures[i] = LoaderManager.Self.Load(directory + texturesToLoad[i], managers);
+
+                    //mTextures[i] = LoaderManager.Self.Load(directory + texturesToLoad[i], managers);
+                    mTextures[i] = LoaderManager.Self.LoadContent<Texture2D>(directory + texturesToLoad[i]);
                 }
                 else
                 {
-                    mTextures[i] = LoaderManager.Self.Load(texturesToLoad[i], managers);
+                    //mTextures[i] = LoaderManager.Self.Load(texturesToLoad[i], managers);
+                    mTextures[i] = LoaderManager.Self.LoadContent<Texture2D>(texturesToLoad[i]);
                 }
-            }
-
+            } 
+            
             SetFontPattern(fontContents);
         }
 
