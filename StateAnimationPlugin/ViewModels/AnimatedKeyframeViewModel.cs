@@ -144,6 +144,21 @@ namespace StateAnimationPlugin.ViewModels
             set;
         }
 
+        public System.Windows.Visibility HasInvalidStateVisibility
+        {
+            get
+            {
+                if(HasValidState)
+                {
+                    return System.Windows.Visibility.Collapsed;
+                }
+                else
+                {
+                    return System.Windows.Visibility.Visible;
+                }
+            }
+        }
+
         public SolidColorBrush LabelBrush
         {
             get
@@ -181,6 +196,7 @@ namespace StateAnimationPlugin.ViewModels
                 }
             }
         }
+
 
         public BitmapFrame IconBitmapFrame
         {

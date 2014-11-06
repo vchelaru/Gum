@@ -99,6 +99,7 @@ namespace StateAnimationPlugin.ViewModels
                 mSelectedState = value;
 
                 OnPropertyChanged("SelectedKeyframe");
+                OnPropertyChanged("HasSelectedKeyframeVisibility");
             }
         }
 

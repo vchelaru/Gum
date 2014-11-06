@@ -562,9 +562,6 @@ namespace RenderingLibrary.Graphics
             }
         }
 
-        static int reuse = 0;
-        static int isNew = 0;
-
         public void UpdateTextureToRender()
         {
             if (!mIsTextureCreationSuppressed)
@@ -586,18 +583,6 @@ namespace RenderingLibrary.Graphics
 
                     var returnedRenderTarget = fontToUse.RenderToTexture2D(WrappedText, this.HorizontalAlignment, mManagers, mTextureToRender);
                     bool isNewInstance = returnedRenderTarget != mTextureToRender;
-
-                    if (isNewInstance)
-                    {
-                        isNew++;
-
-                    }
-                    else
-                    {
-                        reuse++;
-                    }
-
-                    Console.WriteLine("New: " + isNew + ", Reuse:" + reuse);
 
                     if (isNewInstance && mTextureToRender != null)
                     {
