@@ -15,11 +15,14 @@ namespace StateAnimationPlugin.Managers
 {
     public class AnimationCollectionViewModelManager : Singleton<AnimationCollectionViewModelManager>
     {
+
         public ElementAnimationsViewModel CurrentAnimationCollectionViewModel
         {
         
             get
             {
+
+
 
                 var currentElement = SelectedState.Self.SelectedElement;
 
@@ -31,28 +34,32 @@ namespace StateAnimationPlugin.Managers
                 {
                     var fileName = GetAbsoluteAnimationFileNameFor(currentElement);
 
+                    ElementAnimationsViewModel toReturn = null;
+
                     if (FileManager.FileExists(fileName))
                     {
                         try
                         {
                             var save = FileManager.XmlDeserialize<ElementAnimationsSave>(fileName);
 
-                            return ElementAnimationsViewModel.FromSave(save, currentElement);
+                            toReturn = ElementAnimationsViewModel.FromSave(save, currentElement);
                         }
                         catch(Exception exception)
                         {
                             OutputManager.Self.AddError(exception.ToString());
-                            ElementAnimationsViewModel toReturn = new ElementAnimationsViewModel();
-                            return toReturn;
+                            toReturn = new ElementAnimationsViewModel();
 
                         }
                     }
                     else
                     {
-                        ElementAnimationsViewModel toReturn = new ElementAnimationsViewModel();
+                        toReturn = new ElementAnimationsViewModel();
 
-                        return toReturn;
                     }
+
+                    toReturn.Element = currentElement;
+
+                    return toReturn;
                 }
 
             }

@@ -1,4 +1,5 @@
-﻿using Gum.ToolStates;
+﻿using Gum.DataTypes;
+using Gum.ToolStates;
 using StateAnimationPlugin.Managers;
 using StateAnimationPlugin.SaveClasses;
 using System;
@@ -94,6 +95,12 @@ namespace StateAnimationPlugin.ViewModels
                     return mPlayBitmap;
                 }
             }
+        }
+
+        public ElementSave Element
+        {
+            get;
+            set;
         }
 
         #endregion

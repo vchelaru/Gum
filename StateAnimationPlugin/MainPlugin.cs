@@ -13,7 +13,8 @@ using Gum.ToolStates;
 using System.Windows;
 using Gum.DataTypes.Variables;
 using Gum.Wireframe;
-using FlatRedBall.Glue.StateInterpolation; 
+using FlatRedBall.Glue.StateInterpolation;
+using Gum.DataTypes; 
 
 namespace StateAnimationPlugin
 {
@@ -23,6 +24,8 @@ namespace StateAnimationPlugin
         #region Fields
 
         ElementAnimationsViewModel mCurrentViewModel;
+
+        MainWindow mMainWindow;
 
         #endregion
 
@@ -58,6 +61,15 @@ namespace StateAnimationPlugin
 
         private void CreateEvents()
         {
+            this.ElementSelected += delegate
+            {
+                RefreshViewModel();
+            };
+
+            this.InstanceSelected += delegate
+            {
+                RefreshViewModel();
+            };
 
         }
 
@@ -76,17 +88,42 @@ namespace StateAnimationPlugin
             }
             else
             {
-                MainWindow mainWindow = new MainWindow();
+                if(mMainWindow == null || mMainWindow.IsVisible == false)
+                {
+                    mMainWindow = new MainWindow();
+                    ElementHost.EnableModelessKeyboardInterop(mMainWindow);
+                }
 
-                ElementHost.EnableModelessKeyboardInterop(mainWindow);
-                mainWindow.Show();
 
+
+                RefreshViewModel();
+            }
+        }
+
+        private void RefreshViewModel()
+        {
+            ElementSave currentlyReferencedElement = null;
+            if(mCurrentViewModel != null)
+            {
+                currentlyReferencedElement = mCurrentViewModel.Element;
+            }
+
+            if (currentlyReferencedElement != SelectedState.Self.SelectedElement)
+            {
                 mCurrentViewModel = AnimationCollectionViewModelManager.Self.CurrentAnimationCollectionViewModel;
-                mCurrentViewModel.PropertyChanged += HandlePropertyChanged;
 
-                mCurrentViewModel.AnyChange += HandleDataChange;
 
-                mainWindow.DataContext = mCurrentViewModel;
+
+                if (mCurrentViewModel != null)
+                {
+                    mCurrentViewModel.PropertyChanged += HandlePropertyChanged;
+                    mCurrentViewModel.AnyChange += HandleDataChange;
+                }
+
+                if (mMainWindow != null)
+                {
+                    mMainWindow.DataContext = mCurrentViewModel;
+                }
             }
         }
 
