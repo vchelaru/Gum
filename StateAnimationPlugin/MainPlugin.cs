@@ -125,10 +125,11 @@ namespace StateAnimationPlugin
                     mCurrentViewModel.AnyChange += HandleDataChange;
                 }
 
-                if (mMainWindow != null)
-                {
-                    mMainWindow.DataContext = mCurrentViewModel;
-                }
+
+            }
+            if (mMainWindow != null)
+            {
+                mMainWindow.DataContext = mCurrentViewModel;
             }
         }
 
