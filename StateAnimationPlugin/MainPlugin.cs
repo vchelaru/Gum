@@ -92,6 +92,11 @@ namespace StateAnimationPlugin
                 {
                     mMainWindow = new MainWindow();
                     ElementHost.EnableModelessKeyboardInterop(mMainWindow);
+                    mMainWindow.Show();
+                }
+                else
+                {
+                    mMainWindow.Focus();
                 }
 
 
