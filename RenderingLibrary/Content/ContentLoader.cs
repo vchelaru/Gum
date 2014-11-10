@@ -6,8 +6,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Gum.Managers
+namespace RenderingLibrary.Content
 {
+    /// <summary>
+    /// Provides a simple implementation of IContentLoader for applications
+    /// using the LoaderManager and not specifying their own custom ContentLoader.
+    /// This content loader uses the default SystemManagers internally.
+    /// </summary>
     public class ContentLoader : IContentLoader
     {
 

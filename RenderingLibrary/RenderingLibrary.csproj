@@ -86,6 +86,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Camera.cs" />
+    <Compile Include="Content\ContentLoader.cs" />
     <Compile Include="Content\IContentLoader.cs" />
     <Compile Include="Content\LoaderManager.cs" />
     <Compile Include="Graphics\AnimationFrame.cs" />
