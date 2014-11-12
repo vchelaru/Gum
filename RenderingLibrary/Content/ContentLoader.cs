@@ -15,12 +15,13 @@ namespace RenderingLibrary.Content
     /// </summary>
     public class ContentLoader : IContentLoader
     {
+        public SystemManagers SystemManagers { get; set; }
 
         public T LoadContent<T>(string contentName)
         {
             if(typeof(T) == typeof(Texture2D))
             {
-                var texture = LoaderManager.Self.Load(contentName, null);
+                var texture = LoaderManager.Self.Load(contentName, SystemManagers);
                 return (T)(object)texture;
             }
             else
