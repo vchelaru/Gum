@@ -31,7 +31,8 @@ namespace GumRuntime
                     rvf = new RecursiveVariableFinder(instanceSave, instanceSave.ParentContainer);
                 }
 
-                SetGraphicalUiElement(rvf, instanceSave.BaseType, toReturn, systemManagers);
+                GumRuntime.ElementSaveExtensions.SetGraphicalUiElement(instanceElement, toReturn, systemManagers, rvf);
+
                 toReturn.Name = instanceSave.Name;
                 toReturn.Tag = instanceSave;
 
@@ -54,43 +55,9 @@ namespace GumRuntime
 
         }
 
-        public static void SetGraphicalUiElement(RecursiveVariableFinder rvf, string baseType, GraphicalUiElement graphicalUiElement, SystemManagers systemManagers)
-        {
-            IRenderable containedObject = null;
 
-            bool handled = TryHandleAsBaseType(rvf, baseType, systemManagers, out containedObject);
-            ElementSave elementSave = ObjectFinder.Self.GetElementSave(baseType);
-            if (handled)
-            {
-                graphicalUiElement.SetContainedObject(containedObject);
-            }
-            else
-            {
-                if (elementSave != null && elementSave is ComponentSave)
-                {
-                    
-                    ElementSaveExtensions.SetGraphicalUiElement(elementSave, graphicalUiElement, systemManagers, rvf);
-                }
-            }
 
-            // If this is a Screen it won't have a base element
-            // The Screen itself is an element, but for exposed variables
-            // we look at the base type (I think)
-            if (elementSave != null)
-            {
-                foreach (var variable in elementSave.DefaultState.Variables.Where(item => !string.IsNullOrEmpty(item.ExposedAsName)))
-                {
-                    graphicalUiElement.AddExposedVariable(variable.ExposedAsName, variable.Name);
-                }
-            }
-            graphicalUiElement.SetGueValues(rvf);
-            if (rvf.GetVariable("Visible") != null)
-            {
-                graphicalUiElement.Visible = rvf.GetValue<bool>("Visible");
-            }
-        }
-
-        private static bool TryHandleAsBaseType(RecursiveVariableFinder rvf, string baseType, SystemManagers systemManagers, out IRenderable containedObject)
+        internal static bool TryHandleAsBaseType(RecursiveVariableFinder rvf, string baseType, SystemManagers systemManagers, out IRenderable containedObject)
         {
             bool handledAsBaseType = true;
             containedObject = null;

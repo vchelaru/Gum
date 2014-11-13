@@ -2001,7 +2001,16 @@ namespace Gum.Wireframe
 
                     string nameWithoutState = propertyName.Substring(0, propertyName.Length - "State".Length);
 
-                    if (mCategories.ContainsKey(nameWithoutState))
+                    if(string.IsNullOrEmpty(nameWithoutState))
+                    {
+                        // This is an uncategorized state
+                        if(mStates.ContainsKey(valueAsString))
+                        {
+                            ApplyState(mStates[valueAsString]);
+                            toReturn = true;
+                        }
+                    }
+                    else if (mCategories.ContainsKey(nameWithoutState))
                     {
 
                         var category = mCategories[nameWithoutState];
@@ -2193,7 +2202,7 @@ namespace Gum.Wireframe
         {
             this.SuspendLayout(true);
 
-            foreach (var variable in state.Variables)
+            foreach (var variable in state.Variables.Where(item=>item.IsState(state.ParentContainer) == false))
             {
                 if (variable.SetsValue && variable.Value != null)
                 {
@@ -2219,6 +2228,7 @@ namespace Gum.Wireframe
 
         public void AddCategory(DataTypes.Variables.StateSaveCategory category)
         {
+            //mCategories[category.Name] = category;
             mCategories.Add(category.Name, category);
         }
 

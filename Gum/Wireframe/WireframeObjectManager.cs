@@ -38,12 +38,6 @@ namespace Gum.Wireframe
 
         static WireframeObjectManager mSelf;
 
-        List<LineRectangle> mLineRectangles = new List<LineRectangle>();
-        List<Sprite> mSprites = new List<Sprite>();
-        List<Text> mTexts = new List<Text>();
-        List<SolidRectangle> mSolidRectangles = new List<SolidRectangle>();
-        List<NineSlice> mNineSlices = new List<NineSlice>();
-
         List<GraphicalUiElement> mGraphicalElements = new List<GraphicalUiElement>();
 
         WireframeEditControl mEditControl;
@@ -197,36 +191,6 @@ namespace Gum.Wireframe
                 element.RemoveFromManagers();
             }
 
-            //foreach (LineRectangle rectangle in mLineRectangles)
-            //{
-            //    ShapeManager.Self.Remove(rectangle);
-            //}
-            mLineRectangles.Clear();
-
-            //foreach (Sprite sprite in mSprites)
-            //{
-            //    SpriteManager.Self.Remove(sprite);
-            //}
-            mSprites.Clear();
-
-            //foreach (Text text in mTexts)
-            //{
-            //    TextManager.Self.Remove(text);
-            //}
-            mTexts.Clear();
-
-            //foreach (SolidRectangle solidRectangle in mSolidRectangles)
-            //{
-            //    ShapeManager.Self.Remove(solidRectangle);
-            //}
-            mSolidRectangles.Clear();
-
-            //foreach (NineSlice nineSlice in mNineSlices)
-            //{
-            //    SpriteManager.Self.Remove(nineSlice);
-            //}
-            mNineSlices.Clear();
-
             mGraphicalElements.Clear();
         }
 
@@ -330,33 +294,6 @@ namespace Gum.Wireframe
             }
             return null;
         }
-
-        public Text GetText(InstanceSave instanceSave)
-        {
-            foreach (Text text in mTexts)
-            {
-                if (text.Name == instanceSave.Name)
-                {
-                    return text;
-                }
-            }
-
-            return null;
-
-        }
-
-        public Text GetText(ElementSave elementSave)
-        {
-            foreach (Text text in mTexts)
-            {
-                if (text.Name == elementSave.Name)
-                {
-                    return text;
-                }
-            }
-            return null;
-        }
-
 
         /// <summary>
         /// Returns the InstanceSave that uses this representation or the
@@ -463,9 +400,7 @@ namespace Gum.Wireframe
 
         public bool IsRepresentation(IPositionedSizedObject ipso)
         {
-            return mLineRectangles.Contains(ipso) || mSprites.Contains(ipso) ||
-                mTexts.Contains(ipso) || mSolidRectangles.Contains(ipso) ||
-                mNineSlices.Contains(ipso) || mLineRectangles.Contains(ipso) || mGraphicalElements.Contains(ipso);
+            return mGraphicalElements.Contains(ipso);
         }
 
         public ElementSave GetElement(IPositionedSizedObject representation)

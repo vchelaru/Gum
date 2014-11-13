@@ -63,43 +63,77 @@ namespace GumRuntime
             return toReturn;
         }
 
-        public static void SetGraphicalUiElement(this ElementSave elementSave, GraphicalUiElement toReturn, SystemManagers systemManagers, RecursiveVariableFinder rvf)
+        public static void SetStatesAndCategoriesRecursively(this GraphicalUiElement graphicalElement, ElementSave elementSave)
         {
+
+            if(!string.IsNullOrEmpty(elementSave.BaseType))
+            {
+                var baseElementSave = Gum.Managers.ObjectFinder.Self.GetElementSave(elementSave.BaseType);
+                if(baseElementSave != null)
+                {
+                    graphicalElement.SetStatesAndCategoriesRecursively(baseElementSave);
+                }
+            }
 
             // We need to set categories and states before calling SetGraphicalUiElement so that the states can be used
             foreach (var category in elementSave.Categories)
             {
-                toReturn.AddCategory(category);
+                graphicalElement.AddCategory(category);
             }
 
-            toReturn.AddStates(elementSave.States);
+            graphicalElement.AddStates(elementSave.States);
+        }
 
+        public static void CreateGraphicalComponent(this GraphicalUiElement graphicalElement, RecursiveVariableFinder rvf, ElementSave elementSave, SystemManagers systemManagers)
+        {
+            IRenderable containedObject = null;
 
-            InstanceSaveExtensionMethods.SetGraphicalUiElement(rvf, elementSave.BaseType,
-                toReturn, systemManagers);
+            bool handled = InstanceSaveExtensionMethods.TryHandleAsBaseType(rvf, elementSave.Name, systemManagers, out containedObject);
 
-            foreach (var variable in elementSave.DefaultState.Variables.Where(item => !string.IsNullOrEmpty(item.ExposedAsName)))
+            if (handled)
             {
-                toReturn.AddExposedVariable(variable.ExposedAsName, variable.Name);
+                graphicalElement.SetContainedObject(containedObject);
+            }
+            else
+            {
+                if (elementSave != null && elementSave is ComponentSave)
+                {
+                    var baseElement = Gum.Managers.ObjectFinder.Self.GetElementSave(elementSave.BaseType);
+
+                    if (baseElement != null)
+                    {
+                        graphicalElement.CreateGraphicalComponent(rvf, baseElement, systemManagers);
+                    }
+                }
+            }
+        }
+
+        static void AddExposedVariablesRecursively(this GraphicalUiElement graphicalElement, ElementSave elementSave)
+        {
+            if (!string.IsNullOrEmpty(elementSave.BaseType))
+            {
+                var baseElementSave = Gum.Managers.ObjectFinder.Self.GetElementSave(elementSave.BaseType);
+                if (baseElementSave != null)
+                {
+                    graphicalElement.AddExposedVariablesRecursively(baseElementSave);
+                }
             }
 
 
-            toReturn.Tag = elementSave;
+            if (elementSave != null)
+            {
+                foreach (var variable in elementSave.DefaultState.Variables.Where(item => !string.IsNullOrEmpty(item.ExposedAsName)))
+                {
+                    graphicalElement.AddExposedVariable(variable.ExposedAsName, variable.Name);
+                }
+            }
 
+        }
+
+
+        static void CreateChildrenRecursively(this GraphicalUiElement graphicalElement, ElementSave elementSave, RecursiveVariableFinder rvf, SystemManagers systemManagers)
+        {
             bool isScreen = elementSave is ScreenSave;
-
-            InstanceSave instanceToRestore = null;
-
-            if (rvf.ContainerType == RecursiveVariableFinder.VariableContainerType.InstanceSave)
-            {
-                instanceToRestore = rvf.PopInstance();
-
-                var toPush = new ElementWithState(elementSave);
-                toPush.InstanceName = instanceToRestore.Name;
-
-                rvf.PushElement(toPush);
-            }
-
 
             foreach (var instance in elementSave.Instances)
             {
@@ -111,9 +145,9 @@ namespace GumRuntime
                 {
                     if (!isScreen)
                     {
-                        childGue.Parent = toReturn;
+                        childGue.Parent = graphicalElement;
                     }
-                    childGue.ParentGue = toReturn;
+                    childGue.ParentGue = graphicalElement;
 
                     // I think we just pass "State"
                     //var state = rvf.GetValue<string>(childGue.Name + ".State");
@@ -137,11 +171,11 @@ namespace GumRuntime
 
                 if (!string.IsNullOrEmpty(parentValue))
                 {
-                    var instanceGue = toReturn.GetGraphicalUiElementByName(instance.Name);
+                    var instanceGue = graphicalElement.GetGraphicalUiElementByName(instance.Name);
 
                     if (instanceGue != null)
                     {
-                        var potentialParent = toReturn.GetGraphicalUiElementByName(parentValue);
+                        var potentialParent = graphicalElement.GetGraphicalUiElementByName(parentValue);
                         if (potentialParent != null)
                         {
                             instanceGue.Parent = potentialParent;
@@ -151,12 +185,44 @@ namespace GumRuntime
                 rvf.PopInstance();
             }
 
+        }
 
-            if (instanceToRestore != null)
+        static void SetVariablesRecursively(this GraphicalUiElement graphicalElement, ElementSave elementSave)
+        {
+            graphicalElement.SetVariablesRecursively(elementSave, elementSave.DefaultState);
+        }
+        
+        public static void SetVariablesRecursively(this GraphicalUiElement graphicalElement, ElementSave elementSave, Gum.DataTypes.Variables.StateSave stateSave)
+        {
+            if (!string.IsNullOrEmpty(elementSave.BaseType))
             {
-                rvf.PopElement();
-                rvf.PushInstance(instanceToRestore);
+                var baseElementSave = Gum.Managers.ObjectFinder.Self.GetElementSave(elementSave.BaseType);
+                if (baseElementSave != null)
+                {
+                    graphicalElement.SetVariablesRecursively(baseElementSave);
+                }
             }
+
+            foreach (var variable in stateSave.Variables.Where(item => item.SetsValue && item.Value != null))
+            {
+                graphicalElement.SetProperty(variable.Name, variable.Value);
+            }
+        }
+
+        public static void SetGraphicalUiElement(this ElementSave elementSave, GraphicalUiElement toReturn, SystemManagers systemManagers, RecursiveVariableFinder rvf)
+        {
+            // We need to set categories and states first since those are used below;
+            toReturn.SetStatesAndCategoriesRecursively(elementSave);
+
+            toReturn.CreateGraphicalComponent(rvf, elementSave, systemManagers);
+
+            toReturn.AddExposedVariablesRecursively(elementSave);
+
+            toReturn.CreateChildrenRecursively(elementSave, rvf, systemManagers);
+
+            toReturn.Tag = elementSave;
+
+            toReturn.SetVariablesRecursively(elementSave);
         }
 
 

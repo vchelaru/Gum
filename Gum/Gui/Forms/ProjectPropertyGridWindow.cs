@@ -64,8 +64,7 @@ namespace Gum.Gui.Forms
             GraphicalUiElement.CanvasWidth = ProjectState.Self.GumProjectSave.DefaultCanvasWidth;
             GraphicalUiElement.CanvasHeight = ProjectState.Self.GumProjectSave.DefaultCanvasHeight;
 
-            GuiCommands.Self.RefreshWireframeDisplay();
-            WireframeObjectManager.Self.RefreshAll(true);
+
 
 
 
@@ -75,6 +74,10 @@ namespace Gum.Gui.Forms
                 GraphicalUiElement.ShowLineRectangles = ProjectState.Self.GumProjectSave.ShowOutlines;
                 EditingManager.Self.RestrictToUnitValues = ProjectState.Self.GumProjectSave.RestrictToUnitValues;
             }
+
+            //I think we need to refresh *after* we show line rectangles
+            GuiCommands.Self.RefreshWireframeDisplay();
+            WireframeObjectManager.Self.RefreshAll(true);
 
             GumCommands.Self.FileCommands.TryAutoSaveProject();
 
