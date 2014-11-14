@@ -264,8 +264,8 @@ namespace Gum.DataTypes
                     asElementSave.BaseType = oldValue.ToString();
                 }
             }
-
-            PropertyGridManager.Self.RefreshUI();
+            const bool fullRefresh = true;
+            PropertyGridManager.Self.RefreshUI(fullRefresh);
             StateTreeViewManager.Self.RefreshUI(asElementSave);
         }
 #endif

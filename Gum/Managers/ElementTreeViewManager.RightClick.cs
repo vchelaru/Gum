@@ -616,7 +616,7 @@ namespace Gum.Managers
 
         }
 
-        public void AddInstance(string name, string type, ElementSave elementToAddTo)
+        public InstanceSave AddInstance(string name, string type, ElementSave elementToAddTo)
         {
 
             InstanceSave instanceSave = ElementCommands.Self.AddInstance(elementToAddTo, name);
@@ -641,6 +641,8 @@ namespace Gum.Managers
                 // to take this out:
                 //ProjectManager.Self.SaveProject();
             }
+
+            return instanceSave;
         }
 
     }

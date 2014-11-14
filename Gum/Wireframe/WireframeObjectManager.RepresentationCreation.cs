@@ -170,7 +170,8 @@ namespace Gum.Wireframe
 
 
             rootIpso.SetStatesAndCategoriesRecursively(elementSave);
-            rootIpso.SetVariablesRecursively(elementSave, elementSave.DefaultState);
+            var state = SelectedState.Self.SelectedStateSave;
+            rootIpso.SetVariablesRecursively(elementSave, state);
 
             // I think this has to be *after* we set varaibles because that's where clipping gets set
             if (rootIpso != null)
@@ -794,6 +795,12 @@ namespace Gum.Wireframe
                 {
                     sprite.BlendState = Microsoft.Xna.Framework.Graphics.BlendState.Additive;
                 }
+                else if (blend == Blend.Replace)
+                {
+                    sprite.BlendState = Microsoft.Xna.Framework.Graphics.BlendState.Opaque;
+                
+                }
+
                 else
                 {
                     throw new Exception("This blend mode is not supported");

@@ -104,7 +104,14 @@ namespace Gum.DataTypes
             }
             else if(variableSave.IsState(container, out categoryContainer, out category ))
             {
-                AvailableStatesConverter converter = new AvailableStatesConverter(category.Name);
+                string categoryName = null;
+
+                if(category != null)
+                {
+                    categoryName = category.Name;
+                }
+
+                AvailableStatesConverter converter = new AvailableStatesConverter(categoryName);
                 converter.ElementSave = categoryContainer;
                 return converter;
             }

@@ -32,7 +32,7 @@ namespace Gum.PropertyGridHelpers
             PropertyValueChanged(changedMember, oldValue);
         }
 
-        public void PropertyValueChanged(string changedMember, object oldValue)
+        public void PropertyValueChanged(string changedMember, object oldValue, bool refresh = true)
         {
             object selectedObject = SelectedState.Self.SelectedStateSave;
 
@@ -55,7 +55,6 @@ namespace Gum.PropertyGridHelpers
                 }
                 // Why do we do this before reacting to names?  I think we want to do it after
                 //ElementTreeViewManager.Self.RefreshUI();
-
                 ReactToChangedMember(changedMember, oldValue, parentElement, instance);
 
 
@@ -65,30 +64,38 @@ namespace Gum.PropertyGridHelpers
                 // else has changed, don't we?
                 // I think this code makes things REALLY slow - we only want to refresh one of the tree nodes:
                 //ElementTreeViewManager.Self.RefreshUI();
-                ElementTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedElement);
 
+                if (refresh)
+                {
+                    ElementTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedElement);
+                }
             }
 
-
-            // Save the change
-            if (SelectedState.Self.SelectedElement != null)
+            if (refresh)
             {
-                GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+                // Save the change
+                if (SelectedState.Self.SelectedElement != null)
+                {
+                    GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+                }
+
+
+                // Inefficient but let's do this for now - we can make it more efficient later
+                WireframeObjectManager.Self.RefreshAll(true);
+                SelectionManager.Self.Refresh();
             }
-
-
-            // Inefficient but let's do this for now - we can make it more efficient later
-            WireframeObjectManager.Self.RefreshAll(true);
-            SelectionManager.Self.Refresh();
         }
 
         private void ReactToChangedMember(string changedMember, object oldValue, ElementSave parentElement, InstanceSave instance)
         {
+
             ReactIfChangedMemberIsName(parentElement, instance, changedMember, oldValue);
 
             ReactIfChangedMemberIsBaseType(parentElement, changedMember, oldValue);
 
             ReactIfChangedMemberIsFont(parentElement, changedMember, oldValue);
+
+            ReactIfChangedMemberIsCustomFont(parentElement, changedMember, oldValue);
 
             ReactIfChangedMemberIsUnitType(parentElement, changedMember, oldValue);
 
@@ -128,6 +135,13 @@ namespace Gum.PropertyGridHelpers
                 FontManager.Self.ReactToFontValueSet();
 
             }
+        }
+
+        private void ReactIfChangedMemberIsCustomFont(ElementSave parentElement, string changedMember, object oldValue)
+        {
+
+            PropertyGridManager.Self.RefreshUI(force: true);
+
         }
 
         private void ReactIfChangedMemberIsUnitType(ElementSave parentElement, string changedMember, object oldValue)

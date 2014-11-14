@@ -29,6 +29,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StateAnimationPlugin", "Sta
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PerformanceMeasurementPlugin", "PerformanceMeasurementPlugin\PerformanceMeasurementPlugin.csproj", "{8D388562-F5F6-4000-9489-33761112B974}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WpfDataUi", "WpfDataUi\WpfDataUi.csproj", "{47241002-7EB5-433B-B931-A530BB6B84EE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -218,6 +220,24 @@ Global
 		{8D388562-F5F6-4000-9489-33761112B974}.UnitTest|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{8D388562-F5F6-4000-9489-33761112B974}.UnitTest|Mixed Platforms.Build.0 = Release|Any CPU
 		{8D388562-F5F6-4000-9489-33761112B974}.UnitTest|x86.ActiveCfg = Release|Any CPU
+		{47241002-7EB5-433B-B931-A530BB6B84EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{47241002-7EB5-433B-B931-A530BB6B84EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{47241002-7EB5-433B-B931-A530BB6B84EE}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{47241002-7EB5-433B-B931-A530BB6B84EE}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{47241002-7EB5-433B-B931-A530BB6B84EE}.Debug|x86.ActiveCfg = Debug|x86
+		{47241002-7EB5-433B-B931-A530BB6B84EE}.Debug|x86.Build.0 = Debug|x86
+		{47241002-7EB5-433B-B931-A530BB6B84EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{47241002-7EB5-433B-B931-A530BB6B84EE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{47241002-7EB5-433B-B931-A530BB6B84EE}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{47241002-7EB5-433B-B931-A530BB6B84EE}.Release|Mixed Platforms.Build.0 = Release|x86
+		{47241002-7EB5-433B-B931-A530BB6B84EE}.Release|x86.ActiveCfg = Release|x86
+		{47241002-7EB5-433B-B931-A530BB6B84EE}.Release|x86.Build.0 = Release|x86
+		{47241002-7EB5-433B-B931-A530BB6B84EE}.UnitTest|Any CPU.ActiveCfg = Release|Any CPU
+		{47241002-7EB5-433B-B931-A530BB6B84EE}.UnitTest|Any CPU.Build.0 = Release|Any CPU
+		{47241002-7EB5-433B-B931-A530BB6B84EE}.UnitTest|Mixed Platforms.ActiveCfg = Release|x86
+		{47241002-7EB5-433B-B931-A530BB6B84EE}.UnitTest|Mixed Platforms.Build.0 = Release|x86
+		{47241002-7EB5-433B-B931-A530BB6B84EE}.UnitTest|x86.ActiveCfg = Release|x86
+		{47241002-7EB5-433B-B931-A530BB6B84EE}.UnitTest|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -234,5 +254,6 @@ Global
 		{B941A93F-6093-4DC6-AD11-91A058B6C2CC} = {20FE6025-9144-4FFB-9F0E-97947EF3F7F0}
 		{991D5E91-45C6-44DE-AA07-9A3FF695AB9E} = {28BBCA70-AFC9-4C9B-9114-E0E23FA01C3F}
 		{8D388562-F5F6-4000-9489-33761112B974} = {28BBCA70-AFC9-4C9B-9114-E0E23FA01C3F}
+		{47241002-7EB5-433B-B931-A530BB6B84EE} = {20FE6025-9144-4FFB-9F0E-97947EF3F7F0}
 	EndGlobalSection
 EndGlobal

@@ -1,0 +1,23 @@
+﻿<UserControl x:Class="WpfDataUi.Controls.CheckBoxDisplay"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             Height="24" d:DesignWidth="300">
+    <Grid>
+
+        <CheckBox x:Name="CheckBox" VerticalAlignment="Center" 
+                  Margin="0,4" 
+                  Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"
+
+                  Content="Property Label:"
+                  >
+            <CheckBox.ContextMenu>
+                <ContextMenu>
+                </ContextMenu>
+            </CheckBox.ContextMenu>
+
+        </CheckBox>
+    </Grid>
+</UserControl>

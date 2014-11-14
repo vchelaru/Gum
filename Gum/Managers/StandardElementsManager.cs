@@ -191,7 +191,8 @@ namespace Gum.Managers
 
             AddColorVariables(stateSave);
 
-            stateSave.Variables.Add(new VariableSave { Type = "Blend", Value = Blend.Normal, Name = "Blend", Category = "Rendering" });
+
+            stateSave.Variables.Add(new VariableSave { Type = "Blend", Value = Blend.Normal, Name = "Blend", Category = "Rendering"});
 
             AddStateVariable(stateSave);
 

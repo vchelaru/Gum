@@ -159,13 +159,27 @@ namespace Gum.Managers
                 ElementSave draggedAsElementSave = draggedObject as ElementSave;                    
                 ElementSave target = Wireframe.WireframeObjectManager.Self.ElementShowing;
 
-                HandleDroppedElementInElement(draggedAsElementSave, target, out handled);
+                // Depending on how fast the user clicks the UI may think they dragged an instance rather than 
+                // an element, so let's protect against that with this null check.
+                if (draggedAsElementSave != null)
+                {
+                    var newInstance = HandleDroppedElementInElement(draggedAsElementSave, target, out handled);
+
+                    float worldX = SelectionManager.Self.Cursor.GetWorldX();
+                    float worldY = SelectionManager.Self.Cursor.GetWorldY();
+
+                    SetInstanceToPosition(worldX, worldY, newInstance);
+
+                    SaveAndRefresh();
+                }
             }
 
         }
 
-        private static void HandleDroppedElementInElement(ElementSave draggedAsElementSave, ElementSave target, out bool handled)
+        private static InstanceSave HandleDroppedElementInElement(ElementSave draggedAsElementSave, ElementSave target, out bool handled)
         {
+            InstanceSave newInstance = null;
+
             handled = false;
             if (target == null)
             {
@@ -201,20 +215,36 @@ namespace Gum.Managers
 
                 if (canAdd)
                 {
+#if DEBUG
+                    if(draggedAsElementSave == null)
+                    {
+                        throw new Exception("DraggedAsElementSave is null and it shouldn't be.  For vic - try to put this exception earlier to see what's up.");
+                    }
+#endif
+
                     string name = GetUniqueNameForNewInstance(draggedAsElementSave, target);
 
                     // First we want to re-select the target so that it is highlighted in the tree view and not
                     // the object we dragged off.  This is so that plugins can properly use the SelectedElement.
                     ElementTreeViewManager.Self.Select(target);
 
-                    ElementTreeViewManager.Self.AddInstance(name, draggedAsElementSave.Name, target);
+                    newInstance = ElementTreeViewManager.Self.AddInstance(name, draggedAsElementSave.Name, target);
                     handled = true;
                 }
             }
+
+            return newInstance;
         }
 
         private static string GetUniqueNameForNewInstance(ElementSave elementSave, ElementSave element)
         {
+#if DEBUG
+            if(elementSave == null)
+            {
+                throw new ArgumentNullException("elementSave");
+            }
+#endif
+
             string name = elementSave.Name + "Instance";
 
             // Gotta make this unique:
@@ -315,15 +345,20 @@ namespace Gum.Managers
 
             if (shouldUpdate)
             {
-                GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
-                PropertyGridManager.Self.RefreshUI();
-                ElementTreeViewManager.Self.RefreshUI();
-                WireframeObjectManager.Self.RefreshAll(true);
+                SaveAndRefresh();
 
             }
 
             int m = 3;
 
+        }
+
+        private static void SaveAndRefresh()
+        {
+            GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+            PropertyGridManager.Self.RefreshUI();
+            ElementTreeViewManager.Self.RefreshUI();
+            WireframeObjectManager.Self.RefreshAll(true);
         }
 
         private static bool AddNewInstanceForDrop(string fileName, float worldX, float worldY)
@@ -343,6 +378,20 @@ namespace Gum.Managers
                 ElementCommands.Self.AddInstance(SelectedState.Self.SelectedElement, nameToAdd);
             instance.BaseType = "Sprite";
 
+            SetInstanceToPosition(worldX, worldY, instance);
+
+
+
+            SelectedState.Self.SelectedStateSave.SetValue(
+                    instance.Name + ".SourceFile", fileName);
+
+
+            shouldUpdate = true;
+            return shouldUpdate;
+        }
+
+        private static void SetInstanceToPosition(float worldX, float worldY, InstanceSave instance)
+        {
             float parentX = 0;
             float parentY = 0;
             if (SelectedState.Self.SelectedComponent != null)
@@ -358,15 +407,6 @@ namespace Gum.Managers
 
             SelectedState.Self.SelectedStateSave.SetValue(
                     instance.Name + ".Y", worldY - parentY);
-
-
-
-            SelectedState.Self.SelectedStateSave.SetValue(
-                    instance.Name + ".SourceFile", fileName);
-
-
-            shouldUpdate = true;
-            return shouldUpdate;
         }
 
         internal void HandleFileDragEnter(object sender, DragEventArgs e)

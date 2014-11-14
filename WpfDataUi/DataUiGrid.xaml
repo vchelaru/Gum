@@ -1,0 +1,33 @@
+﻿<UserControl x:Class="WpfDataUi.DataUiGrid"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:DataUi="clr-namespace:WpfDataUi"
+             mc:Ignorable="d" 
+             d:DesignHeight="300" d:DesignWidth="300"
+             >
+
+    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+                  HorizontalAlignment="Stretch"
+                  >
+
+        <ItemsControl Name="InternalControl" ItemsSource="{Binding Categories}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <!--  Each Expander is one MemberCategory -->
+                    <Expander Header="{Binding Name}" Visibility="{Binding Visibility}" IsExpanded="True" BorderBrush="DarkGray" Margin="1">
+                        <ItemsControl ItemsSource="{Binding Members}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <DataUi:SingleDataUiContainer Margin="1"/>
+                                </DataTemplate>    
+                            </ItemsControl.ItemTemplate>
+                            
+                        </ItemsControl>
+                    </Expander>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </ScrollViewer>
+</UserControl>

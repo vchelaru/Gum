@@ -71,9 +71,29 @@
     <Reference Include="UIAutomationProvider" />
     <Reference Include="WindowsBase" />
     <Reference Include="WindowsFormsIntegration" />
-    <Reference Include="WpfDataUi, Version=1.0.0.0, Culture=neutral, processorArchitecture=x86">
+    <Reference Include="Xceed.Wpf.AvalonDock, Version=2.3.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>Libraries\WpfDataUi\WpfDataUi.dll</HintPath>
+      <HintPath>Libraries\Xceed\Xceed.Wpf.AvalonDock.dll</HintPath>
+    </Reference>
+    <Reference Include="Xceed.Wpf.AvalonDock.Themes.Aero, Version=2.3.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Libraries\Xceed\Xceed.Wpf.AvalonDock.Themes.Aero.dll</HintPath>
+    </Reference>
+    <Reference Include="Xceed.Wpf.AvalonDock.Themes.Metro, Version=2.3.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Libraries\Xceed\Xceed.Wpf.AvalonDock.Themes.Metro.dll</HintPath>
+    </Reference>
+    <Reference Include="Xceed.Wpf.AvalonDock.Themes.VS2010, Version=2.3.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Libraries\Xceed\Xceed.Wpf.AvalonDock.Themes.VS2010.dll</HintPath>
+    </Reference>
+    <Reference Include="Xceed.Wpf.DataGrid, Version=2.3.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Libraries\Xceed\Xceed.Wpf.DataGrid.dll</HintPath>
+    </Reference>
+    <Reference Include="Xceed.Wpf.Toolkit, Version=2.3.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Libraries\Xceed\Xceed.Wpf.Toolkit.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -90,6 +110,9 @@
     <Compile Include="Commands\FileCommands.cs" />
     <Compile Include="Commands\GuiCommands.cs" />
     <Compile Include="Commands\WireframeCommands.cs" />
+    <Compile Include="Controls\ColorDisplay.xaml.cs">
+      <DependentUpon>ColorDisplay.xaml</DependentUpon>
+    </Compile>
     <Compile Include="DataTypes\ComponentSaveExtensionMethods.cs" />
     <Compile Include="DataTypes\ElementSaveExtensionMethods.cs" />
     <Compile Include="DataTypes\GumProjectSaveExtensionMethods.cs" />
@@ -314,12 +337,22 @@
       <Project>{b941a93f-6093-4dc6-ad11-91a058b6c2cc}</Project>
       <Name>ToolsUtilities</Name>
     </ProjectReference>
+    <ProjectReference Include="..\WpfDataUi\WpfDataUi.csproj">
+      <Project>{47241002-7eb5-433b-b931-a530bb6b84ee}</Project>
+      <Name>WpfDataUi</Name>
+    </ProjectReference>
     <ProjectReference Include="..\XnaAndWinforms\XnaAndWinforms.csproj">
       <Project>{C39A973C-66D6-4A6C-82B5-AE0042F210F8}</Project>
       <Name>XnaAndWinforms</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Libraries\Xceed\Xceed.Wpf.AvalonDock.dll" />
+    <None Include="Libraries\Xceed\Xceed.Wpf.AvalonDock.Themes.Aero.dll" />
+    <None Include="Libraries\Xceed\Xceed.Wpf.AvalonDock.Themes.Metro.dll" />
+    <None Include="Libraries\Xceed\Xceed.Wpf.AvalonDock.Themes.VS2010.dll" />
+    <None Include="Libraries\Xceed\Xceed.Wpf.DataGrid.dll" />
+    <None Include="Libraries\Xceed\Xceed.Wpf.Toolkit.dll" />
     <Resource Include="Content\Icons\Sizing\BottomSide.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
@@ -338,7 +371,6 @@
     <None Include="Launcher.exe" />
     <Content Include="Libraries\TargaImage.dll" />
     <Content Include="Libraries\TargaImage.xml" />
-    <None Include="Libraries\WpfDataUi\WpfDataUi.dll" />
     <None Include="Content\InvalidTexture.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -353,6 +385,10 @@
     <Folder Include="Converters\" />
   </ItemGroup>
   <ItemGroup>
+    <Page Include="Controls\ColorDisplay.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Plugins\AlignmentButtons\AlignmentControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

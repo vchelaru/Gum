@@ -2131,7 +2131,7 @@ namespace Gum.Wireframe
                 {
                     System.Reflection.PropertyInfo propertyInfo = mContainedObjectAsRenderable.GetType().GetProperty(propertyName);
 
-                    if (propertyInfo != null)
+                    if (propertyInfo != null && propertyInfo.CanWrite)
                     {
 
                         if (value.GetType() != propertyInfo.PropertyType)

@@ -93,45 +93,58 @@ namespace Gum.Managers
             InitializeRightClickMenu();
         }
 
+        bool isInRefresh = false;
+
         public async void RefreshUI(bool force = false)
         {
-            if (SelectedState.Self.SelectedInstances.GetCount() > 1)
+            if(isInRefresh)
             {
-                // I don't know if we want to eventually show these
-                // but for now we'll hide the PropertyGrid:
-                mPropertyGrid.Visible = false;
-                mVariablesDataGrid.Visibility = System.Windows.Visibility.Hidden;
-            }
-            else
-            {
-                //mPropertyGrid.SelectedObject = mPropertyGridDisplayer;
-                //mPropertyGrid.Refresh();
-
-                var element = SelectedState.Self.SelectedElement;
-                var state = SelectedState.Self.SelectedStateSave;
-                var instance = SelectedState.Self.SelectedInstance;
-
-                bool shouldMakeYellow = element != null && state != element.DefaultState;
-
-
-                // This can take a little bit of time and we don't want the app to pop/freeze
-
-
-                //Task task = new Task(() => RefreshDataGrid(element, state, instance));
-                RefreshDataGrid(element, state, instance, force);
-                //task.Start();
-
-                //mDataGrid.Visibility = System.Windows.Visibility.Visible;
-
-                //ThreadStart threadStart = new ThreadStart(
-                //    () => RefreshDataGrid(element, state, instance));
-
-                //System.Threading.Thread thread = new System.Threading.Thread(threadStart);
-                //thread.Start();
-
+                return;
             }
 
-            RefreshEventsUi();
+
+            if (!isInRefresh)
+            {
+                isInRefresh = true;
+                if (SelectedState.Self.SelectedInstances.GetCount() > 1)
+                {
+                    // I don't know if we want to eventually show these
+                    // but for now we'll hide the PropertyGrid:
+                    mPropertyGrid.Visible = false;
+                    mVariablesDataGrid.Visibility = System.Windows.Visibility.Hidden;
+                }
+                else
+                {
+                    //mPropertyGrid.SelectedObject = mPropertyGridDisplayer;
+                    //mPropertyGrid.Refresh();
+
+                    var element = SelectedState.Self.SelectedElement;
+                    var state = SelectedState.Self.SelectedStateSave;
+                    var instance = SelectedState.Self.SelectedInstance;
+
+                    bool shouldMakeYellow = element != null && state != element.DefaultState;
+
+
+                    // This can take a little bit of time and we don't want the app to pop/freeze
+
+
+                    //Task task = new Task(() => RefreshDataGrid(element, state, instance));
+                    RefreshDataGrid(element, state, instance, force);
+                    //task.Start();
+
+                    //mDataGrid.Visibility = System.Windows.Visibility.Visible;
+
+                    //ThreadStart threadStart = new ThreadStart(
+                    //    () => RefreshDataGrid(element, state, instance));
+
+                    //System.Threading.Thread thread = new System.Threading.Thread(threadStart);
+                    //thread.Start();
+
+                }
+
+                RefreshEventsUi();
+                isInRefresh = false;
+            }
         }
 
 
@@ -311,9 +324,120 @@ namespace Gum.Managers
                     categories.Remove(categoryToMove);
                     categories.Insert(2, categoryToMove);
                 }
+
+                UpdateColorCategory(categories);
             }
             return categories;
 
+        }
+
+        private void UpdateColorCategory(List<MemberCategory> categories)
+        {
+            var category = categories.FirstOrDefault(item => item.Name == "Rendering");
+
+            if(category != null)
+            {
+                string redVariableName;
+                string greenVariableName;
+                string blueVariableName;
+                GetRedGreenBlueVarNames(out redVariableName, out greenVariableName, out blueVariableName);
+
+                var redVar = category.Members.FirstOrDefault(item => item.Name == redVariableName);
+                var greenVar = category.Members.FirstOrDefault(item => item.Name == greenVariableName);
+                var blueVar = category.Members.FirstOrDefault(item => item.Name == blueVariableName);
+
+                if (redVar != null && greenVar != null && blueVar != null)
+                {
+                    InstanceMember instanceMember = new InstanceMember("Color", null);
+                    instanceMember.PreferredDisplayer = typeof(Gum.Controls.DataUi.ColorDisplay);
+                    instanceMember.CustomGetTypeEvent += (arg) => typeof(Microsoft.Xna.Framework.Color);
+                    instanceMember.CustomGetEvent += GetCurrentColor;
+                    instanceMember.CustomSetEvent += SetCurrentColor;
+
+                    // so color updates
+                    redVar.PropertyChanged += delegate
+                    { 
+                        instanceMember.SimulateValueChanged();
+                    };
+                    greenVar.PropertyChanged += delegate { instanceMember.SimulateValueChanged(); };
+                    blueVar.PropertyChanged += delegate { instanceMember.SimulateValueChanged(); };
+
+                    category.Members.Add(instanceMember);
+
+                }
+            }
+        }
+
+        object GetCurrentColor(object arg)
+        {
+            string redVariableName;
+            string greenVariableName;
+            string blueVariableName;
+            GetRedGreenBlueVarNames(out redVariableName, out greenVariableName, out blueVariableName);
+
+            var selectedState = SelectedState.Self.SelectedStateSave;
+
+            int red = 0;
+            object redAsObject = selectedState.GetValueRecursive(redVariableName);
+            if(redAsObject != null)
+            {
+                red = (int)redAsObject;
+            }
+
+            int green = 0;
+            object greenAsObject = selectedState.GetValueRecursive(greenVariableName);
+            if (greenAsObject != null)
+            {
+                green = (int)greenAsObject;
+            }
+
+            int blue = 0;
+            object blueAsObject = selectedState.GetValueRecursive(blueVariableName);
+            if (blueAsObject != null)
+            {
+                blue = (int)blueAsObject;
+            }
+
+            return new Microsoft.Xna.Framework.Color(red, green, blue);
+        }
+
+        private static void GetRedGreenBlueVarNames(out string redVariableName, out string greenVariableName, out string blueVariableName)
+        {
+            string prefix = "";
+
+            if (SelectedState.Self.SelectedInstance != null)
+            {
+                prefix = SelectedState.Self.SelectedInstance.Name + ".";
+            }
+
+            redVariableName = prefix + "Red";
+            greenVariableName = prefix + "Green";
+            blueVariableName = prefix + "Blue";
+        }
+
+        void SetCurrentColor(object arg1, object colorAsObject)
+        {
+            var oldColor = (Microsoft.Xna.Framework.Color)GetCurrentColor(null);
+
+
+            string redVariableName;
+            string greenVariableName;
+            string blueVariableName;
+            GetRedGreenBlueVarNames(out redVariableName, out greenVariableName, out blueVariableName);
+
+            var state = SelectedState.Self.SelectedStateSave;
+
+            var color = (Microsoft.Xna.Framework.Color)colorAsObject;
+
+            state.SetValue(redVariableName, (int)color.R, "int");
+            state.SetValue(greenVariableName, (int)color.G, "int");
+            state.SetValue(blueVariableName, (int)color.B, "int");
+
+            SetVariableLogic.Self.PropertyValueChanged(redVariableName, (int)oldColor.R, false );
+            SetVariableLogic.Self.PropertyValueChanged(greenVariableName, (int)oldColor.G, false );
+            SetVariableLogic.Self.PropertyValueChanged(blueVariableName, (int)oldColor.B, true);
+
+            RefreshUI();
         }
 
         //private void ReactIfChangedMemberIsAnimation(ElementSave parentElement, string changedMember, object oldValue, out bool saveProject)

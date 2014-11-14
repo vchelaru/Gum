@@ -1,0 +1,9 @@
+﻿<Window x:Class="WpfDataUi.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:DataUi="clr-namespace:WpfDataUi"
+        Title="MainWindow" Height="350" Width="525">
+    <Grid>
+        <DataUi:DataUiGrid x:Name="Grid"></DataUi:DataUiGrid>
+    </Grid>
+</Window>
