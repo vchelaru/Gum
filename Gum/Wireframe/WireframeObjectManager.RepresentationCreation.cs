@@ -170,8 +170,15 @@ namespace Gum.Wireframe
 
 
             rootIpso.SetStatesAndCategoriesRecursively(elementSave);
-            var state = SelectedState.Self.SelectedStateSave;
-            rootIpso.SetVariablesRecursively(elementSave, state);
+
+            // First we need to the default state (and do so recursively)
+            rootIpso.SetVariablesRecursively(elementSave, elementSave.DefaultState);
+            // then we override it with the current state if one is set:
+            if (SelectedState.Self.SelectedStateSave != elementSave.DefaultState && SelectedState.Self.SelectedStateSave != null)
+            {
+                var state = SelectedState.Self.SelectedStateSave;
+                rootIpso.SetVariablesTopLevel(elementSave, state);
+            }
 
             // I think this has to be *after* we set varaibles because that's where clipping gets set
             if (rootIpso != null)
@@ -495,7 +502,7 @@ namespace Gum.Wireframe
                 baseType = elementSave.Name;
             }
             
-            graphicalUiElement.CreateGraphicalComponent(rvf, elementSave, null);
+            graphicalUiElement.CreateGraphicalComponent(elementSave, null);
            
             graphicalUiElement.Tag = elementSave;
 
@@ -519,7 +526,7 @@ namespace Gum.Wireframe
             
             RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(instance, elementStack);
 
-            graphicalUiElement.CreateGraphicalComponent(rvf, instanceBase, null);
+            graphicalUiElement.CreateGraphicalComponent(instanceBase, null);
 
             graphicalUiElement.Tag = instance;
 

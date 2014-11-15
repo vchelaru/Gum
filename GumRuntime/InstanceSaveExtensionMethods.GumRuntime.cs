@@ -15,8 +15,7 @@ namespace GumRuntime
 {
     public static class InstanceSaveExtensionMethods
     {
-        public static GraphicalUiElement ToGraphicalUiElement(this InstanceSave instanceSave, SystemManagers systemManagers,
-            RecursiveVariableFinder rvf)
+        public static GraphicalUiElement ToGraphicalUiElement(this InstanceSave instanceSave, SystemManagers systemManagers)
         {
 
             ElementSave instanceElement = ObjectFinder.Self.GetElementSave(instanceSave.BaseType);
@@ -26,12 +25,7 @@ namespace GumRuntime
             {
                 toReturn = ElementSaveExtensions.CreateGueForElement(instanceElement);
 
-                if (rvf == null)
-                {
-                    rvf = new RecursiveVariableFinder(instanceSave, instanceSave.ParentContainer);
-                }
-
-                GumRuntime.ElementSaveExtensions.SetGraphicalUiElement(instanceElement, toReturn, systemManagers, rvf);
+                GumRuntime.ElementSaveExtensions.SetGraphicalUiElement(instanceElement, toReturn, systemManagers);
 
                 toReturn.Name = instanceSave.Name;
                 toReturn.Tag = instanceSave;
@@ -57,7 +51,7 @@ namespace GumRuntime
 
 
 
-        internal static bool TryHandleAsBaseType(RecursiveVariableFinder rvf, string baseType, SystemManagers systemManagers, out IRenderable containedObject)
+        internal static bool TryHandleAsBaseType(string baseType, SystemManagers systemManagers, out IRenderable containedObject)
         {
             bool handledAsBaseType = true;
             containedObject = null;
@@ -73,100 +67,51 @@ namespace GumRuntime
 
                 case "ColoredRectangle":
                     SolidRectangle solidRectangle = new SolidRectangle();
-                    SetAlphaAndColorValues(solidRectangle, rvf);
-                    solidRectangle.Visible = rvf.GetValue<bool>("Visible");
                     containedObject = solidRectangle;
                     break;
                 case "Sprite":
                     Texture2D texture = null;
 
-                    string textureValue = rvf.GetValue<string>("SourceFile");
-                    if (!string.IsNullOrEmpty(textureValue))
-                    {
-                        texture = LoaderManager.Self.LoadContent<Texture2D>(textureValue);
-                        //texture = LoaderManager.Self.Load(textureValue, systemManagers);
-                    }
                     Sprite sprite = new Sprite(texture);
-                    SetAlphaAndColorValues(sprite, rvf);
-                    sprite.Visible = rvf.GetValue<bool>("Visible");
-
-                    //Sprite specific
-                    sprite.FlipHorizontal = rvf.GetValue<bool>("FlipHorizontal");
-                    sprite.FlipVertical = rvf.GetValue<bool>("FlipVertical");
                     containedObject = sprite;
 
                     break;
                 case "NineSlice":
                     {
-                        string file = rvf.GetValue<string>("SourceFile");
                         NineSlice nineSlice = new NineSlice();
-                        string relativeFile = rvf.GetValue<string>("SourceFile");
-
-
-                        bool usePattern = NineSlice.GetIfShouldUsePattern(relativeFile);
-                        if (usePattern)
-                        {
-                            nineSlice.SetTexturesUsingPattern(relativeFile, systemManagers);
-                        }
-                        else
-                        {
-                            //var loadedTexture = LoaderManager.Self.Load(ToolsUtilities.FileManager.RelativeDirectory + relativeFile, systemManagers);
-                            var loadedTexture = LoaderManager.Self.LoadContent<Texture2D>(relativeFile);
-
-                            nineSlice.SetSingleTexture(loadedTexture);
-                        }
-
-                        SetAlphaAndColorValues(nineSlice, rvf);
-                        nineSlice.Visible = rvf.GetValue<bool>("Visible");
                         containedObject = nineSlice;
 
                     }
                     break;
                 case "Text":
                     {
-                        Text text = new Text(systemManagers, rvf.GetValue<string>("Text"));
+                        Text text = new Text(systemManagers, "");
 
-                        SetAlphaAndColorValues(text, rvf);
-                        text.Visible = rvf.GetValue<bool>("Visible");
+                        //BitmapFont font = null;
+                        //if (rvf.GetValue<bool>("UseCustomFont"))
+                        //{
+                        //    string customFontFile = rvf.GetValue<string>("CustomFontFile");
 
-                        BitmapFont font = null;
-                        if (rvf.GetValue<bool>("UseCustomFont"))
-                        {
-                            string customFontFile = rvf.GetValue<string>("CustomFontFile");
-
-                            if (!string.IsNullOrEmpty(customFontFile))
-                            {
-                                font = new BitmapFont(customFontFile, systemManagers);
-                            }
+                        //    if (!string.IsNullOrEmpty(customFontFile))
+                        //    {
+                        //        font = new BitmapFont(customFontFile, systemManagers);
+                        //    }
 
 
-                        }
-                        else
-                        {
+                        //}
+                        //else
+                        //{
 
-                            string fontName = rvf.GetValue<string>("Font");
-                            int fontSize = rvf.GetValue<int>("FontSize"); // verify these var names
-                            fontName = "FontCache/Font" + fontSize.ToString() + fontName + ".fnt";
-                            font = new BitmapFont(fontName, systemManagers);
-                        }
-
-                        var fontScaleVariable = rvf.GetVariable("Font Scale");
-                        if (fontScaleVariable != null && fontScaleVariable.SetsValue && fontScaleVariable.Value != null &&
-                            ((float)fontScaleVariable.Value) != 0)
-                        {
-                            text.FontScale = (float)fontScaleVariable.Value;
-                        }
-                        else
-                        {
-                            text.FontScale = 1;
-                        }
-
-                        text.BitmapFont = font;
+                        //    string fontName = rvf.GetValue<string>("Font");
+                        //    int fontSize = rvf.GetValue<int>("FontSize"); // verify these var names
+                        //    fontName = "FontCache/Font" + fontSize.ToString() + fontName + ".fnt";
+                        //    font = new BitmapFont(fontName, systemManagers);
+                        //}
 
                         containedObject = text;
 
                         //Do Text specific alignment.
-                        SetAlignmentValues(text, rvf);
+                        //SetAlignmentValues(text, rvf);
                     }
                     break;
                 default:

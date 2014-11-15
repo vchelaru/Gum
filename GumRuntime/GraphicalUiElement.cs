@@ -890,6 +890,16 @@ namespace Gum.Wireframe
                             heightBefore = mContainedObjectAsIpso.Height;
                         }
 
+                        // The texture dimensions may need to be set before
+                        // updating width if we are using % of texture width/height.
+                        // However, if the texture coordinates depend on the dimensions
+                        // (like for a tiling background) then this also needs to be set
+                        // after UpdateDimensions. 
+                        if (mContainedObjectAsRenderable is Sprite)
+                        {
+                            UpdateTextureCoordinates();
+                        }
+
                         UpdateDimensions(parentWidth, parentHeight);
 
                         // If the update is "deep" then we want to refresh the text texture.
@@ -908,6 +918,9 @@ namespace Gum.Wireframe
 
                             }
                         }
+
+                        // See the above call to UpdateTextureCoordiantes
+                        // on why this is called both before and after UpdateDimensions
                         if (mContainedObjectAsRenderable is Sprite)
                         {
                             UpdateTextureCoordinates();
@@ -1934,6 +1947,21 @@ namespace Gum.Wireframe
                     this.HeightUnits = (DimensionUnitType)value;
                     toReturn = true;
                     break;
+                case "Parent":
+                    {
+                        string valueAsString = (string)value;
+
+                        if (!string.IsNullOrEmpty(valueAsString) && mWhatContainsThis != null)
+                        {
+                            var newParent = this.mWhatContainsThis.GetGraphicalUiElementByName(valueAsString);
+                            if (newParent != null)
+                            {
+                                Parent = newParent;
+                            }
+                        }
+                        toReturn = true;
+                    }
+                    break;
                 case "Width":
                     this.Width = (float)value;
                     toReturn = true;
@@ -2202,7 +2230,14 @@ namespace Gum.Wireframe
         {
             this.SuspendLayout(true);
 
-            foreach (var variable in state.Variables.Where(item=>item.IsState(state.ParentContainer) == false))
+            var variablesToConsider = 
+                state.Variables.Where(item =>
+                    // We can set the variable if it's not setting a state (to prevent recursive setting).                   
+                    item.IsState(state.ParentContainer) == false ||
+                    // If it is setting a state we'll allow it if it's on a child.
+                    !string.IsNullOrEmpty(item.SourceObject));
+
+            foreach (var variable in variablesToConsider)
             {
                 if (variable.SetsValue && variable.Value != null)
                 {

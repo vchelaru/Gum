@@ -40,19 +40,12 @@ namespace GumRuntime
         }
 
 
-        public static GraphicalUiElement ToGraphicalUiElement(this ElementSave elementSave, SystemManagers systemManagers,
-            bool addToManagers)
-        {
-            return elementSave.ToGraphicalUiElement(systemManagers, addToManagers, new RecursiveVariableFinder(elementSave.DefaultState));
-
-        }
-
         public static GraphicalUiElement ToGraphicalUiElement(this ElementSave elementSave, SystemManagers systemManagers, 
-            bool addToManagers, RecursiveVariableFinder rvf)
+            bool addToManagers)
         {
             GraphicalUiElement toReturn = CreateGueForElement(elementSave);
 
-            elementSave.SetGraphicalUiElement(toReturn, systemManagers, rvf);
+            elementSave.SetGraphicalUiElement(toReturn, systemManagers);
 
             //no layering support yet
             if (addToManagers)
@@ -84,11 +77,11 @@ namespace GumRuntime
             graphicalElement.AddStates(elementSave.States);
         }
 
-        public static void CreateGraphicalComponent(this GraphicalUiElement graphicalElement, RecursiveVariableFinder rvf, ElementSave elementSave, SystemManagers systemManagers)
+        public static void CreateGraphicalComponent(this GraphicalUiElement graphicalElement, ElementSave elementSave, SystemManagers systemManagers)
         {
             IRenderable containedObject = null;
 
-            bool handled = InstanceSaveExtensionMethods.TryHandleAsBaseType(rvf, elementSave.Name, systemManagers, out containedObject);
+            bool handled = InstanceSaveExtensionMethods.TryHandleAsBaseType(elementSave.Name, systemManagers, out containedObject);
 
             if (handled)
             {
@@ -102,7 +95,7 @@ namespace GumRuntime
 
                     if (baseElement != null)
                     {
-                        graphicalElement.CreateGraphicalComponent(rvf, baseElement, systemManagers);
+                        graphicalElement.CreateGraphicalComponent(baseElement, systemManagers);
                     }
                 }
             }
@@ -131,15 +124,13 @@ namespace GumRuntime
         }
 
 
-        static void CreateChildrenRecursively(this GraphicalUiElement graphicalElement, ElementSave elementSave, RecursiveVariableFinder rvf, SystemManagers systemManagers)
+        static void CreateChildrenRecursively(this GraphicalUiElement graphicalElement, ElementSave elementSave, SystemManagers systemManagers)
         {
             bool isScreen = elementSave is ScreenSave;
 
             foreach (var instance in elementSave.Instances)
             {
-                rvf.PushInstance(instance);
-
-                var childGue = instance.ToGraphicalUiElement(systemManagers, rvf);
+                var childGue = instance.ToGraphicalUiElement(systemManagers);
 
                 if (childGue != null)
                 {
@@ -148,43 +139,8 @@ namespace GumRuntime
                         childGue.Parent = graphicalElement;
                     }
                     childGue.ParentGue = graphicalElement;
-
-                    // I think we just pass "State"
-                    //var state = rvf.GetValue<string>(childGue.Name + ".State");
-                    var state = rvf.GetValue<string>("State");
-
-                    if (!string.IsNullOrEmpty(state) && state != "Default")
-                    {
-                        childGue.ApplyState(state);
-                    }
                 }
-
-                rvf.PopInstance();
             }
-
-
-            // instances have been created, let's do the attachment:
-            foreach (var instance in elementSave.Instances)
-            {
-                rvf.PushInstance(instance);
-                var parentValue = rvf.GetValue<string>("Parent");
-
-                if (!string.IsNullOrEmpty(parentValue))
-                {
-                    var instanceGue = graphicalElement.GetGraphicalUiElementByName(instance.Name);
-
-                    if (instanceGue != null)
-                    {
-                        var potentialParent = graphicalElement.GetGraphicalUiElementByName(parentValue);
-                        if (potentialParent != null)
-                        {
-                            instanceGue.Parent = potentialParent;
-                        }
-                    }
-                }
-                rvf.PopInstance();
-            }
-
         }
 
         static void SetVariablesRecursively(this GraphicalUiElement graphicalElement, ElementSave elementSave)
@@ -192,6 +148,14 @@ namespace GumRuntime
             graphicalElement.SetVariablesRecursively(elementSave, elementSave.DefaultState);
         }
         
+        public static void SetVariablesTopLevel(this GraphicalUiElement graphicalElement, ElementSave elementSave, Gum.DataTypes.Variables.StateSave stateSave)
+        {
+            foreach (var variable in stateSave.Variables.Where(item => item.SetsValue && item.Value != null))
+            {
+                graphicalElement.SetProperty(variable.Name, variable.Value);
+            }
+        }
+
         public static void SetVariablesRecursively(this GraphicalUiElement graphicalElement, ElementSave elementSave, Gum.DataTypes.Variables.StateSave stateSave)
         {
             if (!string.IsNullOrEmpty(elementSave.BaseType))
@@ -209,16 +173,16 @@ namespace GumRuntime
             }
         }
 
-        public static void SetGraphicalUiElement(this ElementSave elementSave, GraphicalUiElement toReturn, SystemManagers systemManagers, RecursiveVariableFinder rvf)
+        public static void SetGraphicalUiElement(this ElementSave elementSave, GraphicalUiElement toReturn, SystemManagers systemManagers)
         {
             // We need to set categories and states first since those are used below;
             toReturn.SetStatesAndCategoriesRecursively(elementSave);
 
-            toReturn.CreateGraphicalComponent(rvf, elementSave, systemManagers);
+            toReturn.CreateGraphicalComponent(elementSave, systemManagers);
 
             toReturn.AddExposedVariablesRecursively(elementSave);
 
-            toReturn.CreateChildrenRecursively(elementSave, rvf, systemManagers);
+            toReturn.CreateChildrenRecursively(elementSave, systemManagers);
 
             toReturn.Tag = elementSave;
 
