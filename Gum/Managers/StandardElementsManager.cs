@@ -127,19 +127,18 @@ namespace Gum.Managers
             stateSave.Name = "Default";
             AddPositioningVariables(stateSave);
             AddDimensionsVariables(stateSave, 100, 50, DimensionVariableAction.ExcludeFileOptions);
-            stateSave.Variables.Add(new VariableSave { Type = "bool", Value = true, Name = "Visible" });
-            stateSave.Variables.Add(new VariableSave { Type = "string", Value = "Hello", Name = "Text", Category = "Text" });
-            stateSave.Variables.Add(new VariableSave { Type = "VerticalAlignment", Value = VerticalAlignment.Top, Name = "VerticalAlignment", Category = "Text" });
-            stateSave.Variables.Add(new VariableSave { Type = "HorizontalAlignment", Value = HorizontalAlignment.Left, Name = "HorizontalAlignment", Category = "Text" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "Hello", Name = "Text", Category = "Text" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "VerticalAlignment", Value = VerticalAlignment.Top, Name = "VerticalAlignment", Category = "Text" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "HorizontalAlignment", Value = HorizontalAlignment.Left, Name = "HorizontalAlignment", Category = "Text" });
 
             // font:
-            stateSave.Variables.Add(new VariableSave 
-            { Type = "bool", Value = false, Name = "UseCustomFont", Category = "Font" });
-            stateSave.Variables.Add(new VariableSave { Type = "string", Value = "Arial", Name = "Font", IsFont = true, Category = "Font" });
-            stateSave.Variables.Add(new VariableSave { Type = "int", Value = 18, Name = "FontSize", Category = "Font" });
-            stateSave.Variables.Add(new VariableSave { Type = "int", Value = 0, Name = "OutlineThickness", Category = "Font" });
-            stateSave.Variables.Add(new VariableSave { Type = "string", Value = "", Name = "CustomFontFile", Category = "Font", IsFile = true });
-            stateSave.Variables.Add(new VariableSave { Type = "float", Value = 1.0f, Name = "Font Scale", Category = "Font" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "UseCustomFont", Category = "Font" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "Arial", Name = "Font", IsFont = true, Category = "Font" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 18, Name = "FontSize", Category = "Font" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "OutlineThickness", Category = "Font" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "CustomFontFile", Category = "Font", IsFile = true });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 1.0f, Name = "Font Scale", Category = "Font" });
 
             AddStateVariable(stateSave);
 
@@ -166,33 +165,32 @@ namespace Gum.Managers
             stateSave.Name = "Default";
             AddPositioningVariables(stateSave);
             AddDimensionsVariables(stateSave, 100, 100, DimensionVariableAction.DefaultToPercentageOfFile);
-            stateSave.Variables.Add(new VariableSave { Type = "string", Value = "", Name = "SourceFile", IsFile = true});
-            stateSave.Variables.Add(new VariableSave { Type = "bool", Value = true, Name = "Visible" });
-            stateSave.Variables.Add(new VariableSave { Type = "bool", Value = false, Category = "Animation", Name = "Animate" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "SourceFile", IsFile = true });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Category = "Animation", Name = "Animate" });
 
             //stateSave.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation" });
-            stateSave.Variables.Add(new VariableSave { Type = "bool", Value = false, Category = "Flip", Name = "FlipHorizontal" });
-            stateSave.Variables.Add(new VariableSave { Type = "bool", Value = false, Category = "Flip", Name = "FlipVertical" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Category = "Flip", Name = "FlipHorizontal" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Category = "Flip", Name = "FlipVertical" });
 
 
             //stateSave.Variables.Add(new VariableSave { Type = "bool", Value = false, Name = "Custom Texture Coordinates", Category="Source" });
-            stateSave.Variables.Add(new VariableSave 
-            { Type = "TextureAddress", Value = Gum.Managers.TextureAddress.EntireTexture, Name = "Texture Address", Category = "Source" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "TextureAddress", Value = Gum.Managers.TextureAddress.EntireTexture, Name = "Texture Address", Category = "Source" });
 
-            stateSave.Variables.Add(new VariableSave { Type = "int", Value = 0, Name = "Texture Top", Category = "Source" });
-            stateSave.Variables.Add(new VariableSave { Type = "int", Value = 0, Name = "Texture Left", Category = "Source" });
-            stateSave.Variables.Add(new VariableSave { Type = "int", Value = 0, Name = "Texture Width", Category = "Source" });
-            stateSave.Variables.Add(new VariableSave { Type = "int", Value = 0, Name = "Texture Height", Category = "Source" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "Texture Top", Category = "Source" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "Texture Left", Category = "Source" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "Texture Width", Category = "Source" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "Texture Height", Category = "Source" });
 
-            stateSave.Variables.Add(new VariableSave { Type = "float", Value = 0, Name = "Texture Width Scale", Category = "Source" });
-            stateSave.Variables.Add(new VariableSave { Type = "float", Value = 0, Name = "Texture Height Scale", Category = "Source" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0, Name = "Texture Width Scale", Category = "Source" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0, Name = "Texture Height Scale", Category = "Source" });
 
-            stateSave.Variables.Add(new VariableSave { Type = "bool", Value = false, Name = "Wrap", Category = "Source" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "Wrap", Category = "Source" });
 
             AddColorVariables(stateSave);
 
 
-            stateSave.Variables.Add(new VariableSave { Type = "Blend", Value = Blend.Normal, Name = "Blend", Category = "Rendering"});
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "Blend", Value = Blend.Normal, Name = "Blend", Category = "Rendering" });
 
             AddStateVariable(stateSave);
 
@@ -225,10 +223,10 @@ namespace Gum.Managers
 
             AddDimensionsVariables(stateSave, 150, 150, DimensionVariableAction.ExcludeFileOptions);
 
-            stateSave.Variables.Add(new VariableSave { Type = "bool", Value = true, Name = "Visible" });
-            stateSave.Variables.Add(new VariableSave { Type = "ChildrenLayout", Value = ChildrenLayout.Regular, Name = "Children Layout" });
-            stateSave.Variables.Add(new VariableSave { Type = "bool", Value = false, Name = "Wraps Children" });
-            stateSave.Variables.Add(new VariableSave { Type = "bool", Value = false, Name = "Clips Children" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "ChildrenLayout", Value = ChildrenLayout.Regular, Name = "Children Layout" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "Wraps Children" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "Clips Children" });
 #if GUM
             PluginManager.Self.ModifyDefaultStandardState("Container", stateSave);
 #endif
@@ -253,7 +251,7 @@ namespace Gum.Managers
 
             AddDimensionsVariables(stateSave, 50, 50, DimensionVariableAction.ExcludeFileOptions);
 
-            stateSave.Variables.Add(new VariableSave { Type = "bool", Value = true, Name = "Visible" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
             AddColorVariables(stateSave, true);
 
             AddStateVariable(stateSave);
@@ -274,11 +272,11 @@ namespace Gum.Managers
             stateSave.Name = "Default";
             AddPositioningVariables(stateSave);
             AddDimensionsVariables(stateSave, 64, 64, DimensionVariableAction.ExcludeFileOptions);
-            stateSave.Variables.Add(new VariableSave { Type = "string", Value = "", Name = "SourceFile", IsFile = true });
-            stateSave.Variables.Add(new VariableSave { Type = "bool", Value = true, Name = "Visible" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "SourceFile", IsFile = true });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
 
             AddColorVariables(stateSave);
-            stateSave.Variables.Add(new VariableSave { Type = "Blend", Value = Blend.Normal, Name = "Blend", Category = "Rendering" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "Blend", Value = Blend.Normal, Name = "Blend", Category = "Rendering" });
 
 
             AddStateVariable(stateSave);
@@ -312,7 +310,7 @@ namespace Gum.Managers
             // create an endless loop...
             //stateSave.Variables.Add(new VariableSave { Type = "string", Value = "Default", Name = "State", CustomTypeConverter = new AvailableStatesConverter(null)});
             // The type used to be "string" but we want to differentiate it from actual strings so we use "State"
-            stateSave.Variables.Add(new VariableSave { Type = "State", Value = null, Name = "State", CustomTypeConverter = new AvailableStatesConverter(null) });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "State", Value = null, Name = "State", CustomTypeConverter = new AvailableStatesConverter(null) });
 #endif
 
             ApplySortValuesFromOrderInState(stateSave);
@@ -338,14 +336,14 @@ namespace Gum.Managers
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-
-            foreach (var defaultState in mDefaults.Values)
-            {
-                foreach (var variable in defaultState.Variables)
-                {
-                    variable.SetsValue = true;
-                }
-            }
+            // We shouldn't do this because states above may explicitly not want to set values - like the variable for state
+            //foreach (var defaultState in mDefaults.Values)
+            //{
+            //    foreach (var variable in defaultState.Variables)
+            //    {
+            //        variable.SetsValue = true;
+            //    }
+            //}
 
 
 
@@ -369,6 +367,8 @@ namespace Gum.Managers
         {
             stateSave.Variables.Add(new VariableSave
             {
+                // Don't want it to set the value...
+                SetsValue = false, 
                 Type = "State",
                 Value = "Default",
                 Name = "State"
@@ -391,18 +391,18 @@ namespace Gum.Managers
         {
             if (includeAlpha)
             {
-                stateSave.Variables.Add(new VariableSave { Type = "int", Value = 255, Name = "Alpha", Category="Rendering" });
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "Alpha", Category = "Rendering" });
             }
-            stateSave.Variables.Add(new VariableSave { Type = "int", Value = 255, Name = "Red", Category = "Rendering" });
-            stateSave.Variables.Add(new VariableSave { Type = "int", Value = 255, Name = "Green", Category = "Rendering" });
-            stateSave.Variables.Add(new VariableSave { Type = "int", Value = 255, Name = "Blue", Category = "Rendering" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "Red", Category = "Rendering" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "Green", Category = "Rendering" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "Blue", Category = "Rendering" });
         }
 
         private static void AddDimensionsVariables(StateSave stateSave, float defaultWidth, float defaultHeight, DimensionVariableAction dimensionVariableAction)
         {
 
 
-            stateSave.Variables.Add(new VariableSave { Type = "float", Value = defaultWidth, Name = "Width", Category = "Dimensions" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = defaultWidth, Name = "Width", Category = "Dimensions" });
 
             var defaultValue = DimensionUnitType.Absolute;
 
@@ -411,7 +411,7 @@ namespace Gum.Managers
                 defaultValue = DimensionUnitType.PercentageOfSourceFile;
             }
 
-            VariableSave variableSave = new VariableSave { Type = typeof(DimensionUnitType).Name, Value = defaultValue, Name = "Width Units", Category = "Dimensions" };
+            VariableSave variableSave = new VariableSave { SetsValue = true, Type = typeof(DimensionUnitType).Name, Value = defaultValue, Name = "Width Units", Category = "Dimensions" };
             if (dimensionVariableAction == DimensionVariableAction.ExcludeFileOptions)
             {
                 variableSave.ExcludedValuesForEnum.Add(DimensionUnitType.PercentageOfSourceFile);
@@ -420,9 +420,9 @@ namespace Gum.Managers
 
 
 
-            stateSave.Variables.Add(new VariableSave { Type = "float", Value = defaultHeight, Name = "Height", Category = "Dimensions" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = defaultHeight, Name = "Height", Category = "Dimensions" });
 
-            variableSave = new VariableSave { Type = typeof(DimensionUnitType).Name, Value = defaultValue, Name = "Height Units", Category = "Dimensions" };
+            variableSave = new VariableSave { SetsValue = true, Type = typeof(DimensionUnitType).Name, Value = defaultValue, Name = "Height Units", Category = "Dimensions" };
             if (dimensionVariableAction == DimensionVariableAction.ExcludeFileOptions)
             {
                 variableSave.ExcludedValuesForEnum.Add(DimensionUnitType.PercentageOfSourceFile);
@@ -445,16 +445,16 @@ namespace Gum.Managers
             yUnitsExclusions.Add(PositionUnitType.PixelsFromRight);
 
 
-            stateSave.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Name = "X", Category = "Position" });
-            stateSave.Variables.Add(new VariableSave { Type = typeof(PositionUnitType).Name, Value = PositionUnitType.PixelsFromLeft, Name = "X Units", Category = "Position", ExcludedValuesForEnum = xUnitsExclusions });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0.0f, Name = "X", Category = "Position" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = typeof(PositionUnitType).Name, Value = PositionUnitType.PixelsFromLeft, Name = "X Units", Category = "Position", ExcludedValuesForEnum = xUnitsExclusions });
 
-            stateSave.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Name = "Y", Category = "Position" });
-            stateSave.Variables.Add(new VariableSave { Type = typeof(PositionUnitType).Name, Value = PositionUnitType.PixelsFromTop, Name = "Y Units", Category = "Position", ExcludedValuesForEnum = yUnitsExclusions });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0.0f, Name = "Y", Category = "Position" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = typeof(PositionUnitType).Name, Value = PositionUnitType.PixelsFromTop, Name = "Y Units", Category = "Position", ExcludedValuesForEnum = yUnitsExclusions });
 
-            stateSave.Variables.Add(new VariableSave { Type = "HorizontalAlignment", Value = HorizontalAlignment.Left, Name = "X Origin", Category = "Position" });
-            stateSave.Variables.Add(new VariableSave { Type = "VerticalAlignment", Value = VerticalAlignment.Top, Name = "Y Origin", Category = "Position" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "HorizontalAlignment", Value = HorizontalAlignment.Left, Name = "X Origin", Category = "Position" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "VerticalAlignment", Value = VerticalAlignment.Top, Name = "Y Origin", Category = "Position" });
 
-            stateSave.Variables.Add(new VariableSave { Type = "string", Value = null, Name = "Guide", Category = "Position" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = null, Name = "Guide", Category = "Position" });
 #if GUM
             AddParentVariables(stateSave);
 #endif
@@ -464,6 +464,7 @@ namespace Gum.Managers
         private static void AddParentVariables(StateSave variables)
         {
             VariableSave variableSave = new VariableSave();
+            variableSave.SetsValue = true;
             variableSave.Type = "string";
             variableSave.Name = "Parent";
             variableSave.CanOnlyBeSetInDefaultState = true;

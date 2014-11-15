@@ -19,13 +19,13 @@ namespace Gum.DataTypes
         {
             bool wasModified = false;
 
-            gumProjectSave.ComponentReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
             gumProjectSave.ScreenReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
+            gumProjectSave.ComponentReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
             gumProjectSave.StandardElementReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
 
-            gumProjectSave.StandardElements.Sort((first, second) => first.Name.CompareTo(second.Name));
             gumProjectSave.Screens.Sort((first, second) => first.Name.CompareTo(second.Name));
             gumProjectSave.Components.Sort((first, second) => first.Name.CompareTo(second.Name));
+            gumProjectSave.StandardElements.Sort((first, second) => first.Name.CompareTo(second.Name));
 
 
             // Do StandardElements first
@@ -78,6 +78,47 @@ namespace Gum.DataTypes
                 {
                     wasModified = true;
                 }
+            }
+
+            if(gumProjectSave.Version < 1)
+            {
+                // This means that all default variables have SetValue = false
+                // We need to fix that
+                foreach (StandardElementSave standardElementSave in gumProjectSave.StandardElements)
+                {
+                    var defaultState = standardElementSave.DefaultState;
+
+                    foreach(var variable in defaultState.Variables)
+                    {
+                        if(variable.IsState(standardElementSave) == false)
+                        {
+                            variable.SetsValue = true;
+                        }
+                    }
+                }
+
+                foreach(var component in gumProjectSave.Components)
+                {
+                    // We only want to do this on components that don't inherit from other components:
+                    var baseComponent = ObjectFinder.Self.GetComponent(component.BaseType);
+
+                    if (baseComponent == null)
+                    {
+
+                        var defaultState = component.DefaultState;
+
+
+                        foreach (var variable in defaultState.Variables)
+                        {
+                            if (variable.IsState(component) == false)
+                            {
+                                variable.SetsValue = true;
+                            }
+                        }
+                    }
+                }
+
+                wasModified = true;
             }
 
             return wasModified;

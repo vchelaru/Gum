@@ -22,6 +22,8 @@ namespace Gum.DataTypes
 
         #region Properties
 
+        public int Version { get; set; }
+
         public int DefaultCanvasWidth
         {
             get;

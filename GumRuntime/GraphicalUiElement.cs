@@ -2055,7 +2055,6 @@ namespace Gum.Wireframe
 
             return toReturn;
         }
-
         private void SetPropertyOnRenderable(string propertyName, object value)
         {
             bool handled = false;
@@ -2063,15 +2062,7 @@ namespace Gum.Wireframe
             // First try special-casing.  
             if (mContainedObjectAsRenderable is Text)
             {
-                if (propertyName == "Text")
-                {
-                    ((Text)mContainedObjectAsRenderable).RawText = value as string;
-                    handled = true;
-                }
-                else if (propertyName == "Font Scale")
-                {
-                    ((Text)mContainedObjectAsRenderable).FontScale = (float)value;
-                }
+                handled = TrySetPropertyOnText(propertyName, value);
             }
             else if (mContainedObjectAsRenderable is Sprite)
             {
@@ -2171,6 +2162,86 @@ namespace Gum.Wireframe
                 }
             }
         }
+
+        private bool TrySetPropertyOnText(string propertyName, object value)
+        {
+            bool handled = false;
+
+            if (propertyName == "Text")
+            {
+                ((Text)mContainedObjectAsRenderable).RawText = value as string;
+                handled = true;
+            }
+            else if (propertyName == "Font Scale")
+            {
+                ((Text)mContainedObjectAsRenderable).FontScale = (float)value;
+            }
+            else if (propertyName == "Font")
+            {
+                this.Font = value as string;
+
+                UpdateToFontValues();
+            }
+            else if (propertyName == "UseCustomFont")
+            {
+                this.UseCustomFont = (bool)value;
+                UpdateToFontValues();
+            }
+
+            else if (propertyName == "CustomFontFile")
+            {
+                CustomFontFile = (string)value;
+                UpdateToFontValues();
+            }
+            else if (propertyName == "FontSize")
+            {
+                FontSize = (int)value;
+                UpdateToFontValues();
+            }
+            return handled;
+        }
+
+        public bool UseCustomFont { get; set; }
+        public string CustomFontFile { get; set; }
+        public string Font { get; set; }
+        public int FontSize { get; set; }
+
+        void UpdateToFontValues()
+        {
+            BitmapFont font = null;
+
+
+            if (UseCustomFont)
+            {
+
+                if (!string.IsNullOrEmpty(CustomFontFile))
+                {
+                    font = new BitmapFont(CustomFontFile, SystemManagers.Default);
+                }
+
+
+            }
+            else
+            {
+                if (FontSize > 0 && !string.IsNullOrEmpty(Font))
+                {
+                    var fontName = "FontCache/Font" + FontSize.ToString() + Font + ".fnt";
+
+                    string fullFileName = ToolsUtilities.FileManager.RelativeDirectory + fontName;
+
+                    if (ToolsUtilities.FileManager.FileExists(fullFileName))
+                    {
+                        font = new BitmapFont(fontName, SystemManagers.Default);
+                    }
+                }
+            }
+
+            var text = this.mContainedObjectAsRenderable as Text;
+
+            text.BitmapFont = font;
+
+        }
+
 
         #region IVisible Implementation
 
