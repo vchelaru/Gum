@@ -196,7 +196,7 @@ namespace ToolsUtilities
 #if ANDROID
 				try
                 {
-					var filename = Standardize(fileName);
+					fileName = Standardize(fileName);
 					if(fileName.StartsWith(".\\"))
 					{
 						fileName = fileName.Substring(2);

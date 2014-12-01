@@ -184,6 +184,15 @@ namespace Gum.Wireframe
             if (rootIpso != null)
             {
                 rootIpso.AddToManagers();
+
+                if (rootIpso.ElementSave is ScreenSave)
+                {
+                    // If it's a screen and it hasn't been added yet, we need to add it.
+                    foreach (var item in rootIpso.ContainedElements.Where(candidate=>candidate.Managers == null))
+                    {
+                        item.AddToManagers();
+                    }
+                }
             }
 
             return rootIpso;
