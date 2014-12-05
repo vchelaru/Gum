@@ -271,13 +271,23 @@ namespace Gum.PropertyGridHelpers
 
         private void HandleExposeVariableClick(object sender, System.Windows.RoutedEventArgs e)
         {
+            InstanceSave instanceSave = SelectedState.Self.SelectedInstance;
+
+            ///////////////////////////////////////Early Out//////////////////////////////////////
+            if(instanceSave == null)
+            {
+                MessageBox.Show("Cannot expose variables on components or screens, only on instances");
+                return;
+            }
+            ////////////////////////////////////End Early Out/////////////////////////////////////
+
+            
             TextInputWindow tiw = new TextInputWindow();
             tiw.Message = "Enter variable name:";
 
 
 
 
-            InstanceSave instanceSave = SelectedState.Self.SelectedInstance;
             StateSave currentStateSave = SelectedState.Self.SelectedStateSave;
 
             VariableSave variableSave = this.VariableSave;

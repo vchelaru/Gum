@@ -128,6 +128,12 @@ namespace Gum.DataTypes
 
         public static GumProjectSave Load(string fileName, out string errors)
         {
+            if(string.IsNullOrEmpty(fileName))
+            {
+                errors = "Passed null file name, could not load GumProjectSave";
+                return null;
+            }
+
             GumProjectSave gps = null;
 
 			#if ANDROID

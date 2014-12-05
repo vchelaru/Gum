@@ -207,26 +207,28 @@ namespace Gum.PropertyGridHelpers
 
 
 
-                float valueOnObject = (float)stateSave.GetValueRecursive(GetQualifiedName(variableToSet));
-
-                if (xOrY == XOrY.X)
+                float valueOnObject = 0;
+                if(stateSave.TryGetValue<float>(GetQualifiedName(variableToSet), out valueOnObject))
                 {
-                    UnitConverter.Self.ConvertToPixelCoordinates(
-                        valueOnObject, 0, oldValue, null, parentWidth, parentHeight, fileWidth, fileHeight, out outX, out outY);
 
-                    UnitConverter.Self.ConvertToUnitTypeCoordinates(
-                        outX, outY, unitType, null, parentWidth, parentHeight, fileWidth, fileHeight, out valueToSet, out outY);
+                    if (xOrY == XOrY.X)
+                    {
+                        UnitConverter.Self.ConvertToPixelCoordinates(
+                            valueOnObject, 0, oldValue, null, parentWidth, parentHeight, fileWidth, fileHeight, out outX, out outY);
+
+                        UnitConverter.Self.ConvertToUnitTypeCoordinates(
+                            outX, outY, unitType, null, parentWidth, parentHeight, fileWidth, fileHeight, out valueToSet, out outY);
+                    }
+                    else
+                    {
+                        UnitConverter.Self.ConvertToPixelCoordinates(
+                            0, valueOnObject, null, oldValue, parentWidth, parentHeight, fileWidth, fileHeight, out outX, out outY);
+
+                        UnitConverter.Self.ConvertToUnitTypeCoordinates(
+                            outX, outY, null, unitType, parentWidth, parentHeight, fileWidth, fileHeight, out outX, out valueToSet);
+                    }
+                    wasAnythingSet = true;
                 }
-                else
-                {
-                    UnitConverter.Self.ConvertToPixelCoordinates(
-                        0, valueOnObject, null, oldValue, parentWidth, parentHeight, fileWidth, fileHeight, out outX, out outY);
-
-                    UnitConverter.Self.ConvertToUnitTypeCoordinates(
-                        outX, outY, null, unitType, parentWidth, parentHeight, fileWidth, fileHeight, out outX, out valueToSet);
-                }
-                wasAnythingSet = true;
-
             }
 
             if (wasAnythingSet)
