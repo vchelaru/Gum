@@ -199,7 +199,7 @@ namespace Gum.PropertyGridHelpers
 
             DisplayName = RootVariableName;
 
-            AddExposeVariableMenuOptions();
+            TryAddExposeVariableMenuOptions(instanceSave);
 
             // This could be slow since we have to check it for every variable in an object.
             // Maybe we'll want to pass this in to the function?
@@ -227,14 +227,16 @@ namespace Gum.PropertyGridHelpers
             }
         }
 
-        private void AddExposeVariableMenuOptions()
+        private void TryAddExposeVariableMenuOptions(InstanceSave instance)
         {
             if (this.VariableSave != null)
             {
                 if (string.IsNullOrEmpty(VariableSave.ExposedAsName))
                 {
-
-                    ContextMenuEvents.Add("Expose Variable", HandleExposeVariableClick);
+                    if (instance != null)
+                    {
+                        ContextMenuEvents.Add("Expose Variable", HandleExposeVariableClick);
+                    }
                 }
                 else
                 {
@@ -245,7 +247,8 @@ namespace Gum.PropertyGridHelpers
             {
                 var rootName = Gum.DataTypes.Variables.VariableSave.GetRootName(mVariableName);
 
-                bool canExpose = rootName != "Name" && rootName != "Base Type";
+                bool canExpose = rootName != "Name" && rootName != "Base Type"
+                    && instance != null;
 
                 if (canExpose)
                 {

@@ -1669,6 +1669,12 @@ namespace Gum.Wireframe
                     // Is this an unnecessary check?
                     // if (child is GraphicalUiElement)
                     {
+                        // December 1, 2014
+                        // I think that when we
+                        // add a screen we should
+                        // add all of the children of
+                        // the screen.  There's nothing
+                        // "above" that.
                         if (child.Parent == null || child.Parent == this)
                         {
                             (child as GraphicalUiElement).AddToManagers(managers, layer);
@@ -2132,7 +2138,16 @@ namespace Gum.Wireframe
 
                     if (ToolsUtilities.FileManager.FileExists(valueAsString))
                     {
-                        nineSlice.SetSingleTexture(global::RenderingLibrary.Content.LoaderManager.Self.Load(valueAsString, SystemManagers.Default));
+                        if (NineSlice.GetIfShouldUsePattern(valueAsString))
+                        {
+                            nineSlice.SetTexturesUsingPattern(valueAsString, SystemManagers.Default);
+
+                        }
+                        else
+                        {
+                            var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
+                            nineSlice.SetSingleTexture(loaderManager.Load(valueAsString, SystemManagers.Default));
+                        }
                     }
                     handled = true;
                 }
@@ -2229,9 +2244,13 @@ namespace Gum.Wireframe
 
                     string fullFileName = ToolsUtilities.FileManager.RelativeDirectory + fontName;
 
+#if ANDROID
+                    fullFileName = fullFileName.ToLowerInvariant();
+#endif
+
                     if (ToolsUtilities.FileManager.FileExists(fullFileName))
                     {
-                        font = new BitmapFont(fontName, SystemManagers.Default);
+                        font = new BitmapFont(fullFileName, SystemManagers.Default);
                     }
                 }
             }
@@ -2250,12 +2269,6 @@ namespace Gum.Wireframe
         {
             get
             {
-#if DEBUG
-                if (mContainedObjectAsIVisible == null)
-                {
-                    int m = 3;
-                }
-#endif
                 bool explicitParentVisible = true;
                 if (ExplicitIVisibleParent != null)
                 {
