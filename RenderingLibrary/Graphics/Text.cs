@@ -474,7 +474,7 @@ namespace RenderingLibrary.Graphics
 
                 bool containsNewline = false;
 
-                if (word.Contains('\n'))
+                if ( ToolsUtilities.StringFunctions.ContainsNoAlloc( word, '\n'))
                 {
                     word = word.Substring(0, word.IndexOf('\n'));
                     containsNewline = true;

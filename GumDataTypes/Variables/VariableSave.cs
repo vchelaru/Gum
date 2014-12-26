@@ -68,7 +68,7 @@ namespace Gum.DataTypes.Variables
         {
             get
             {
-                if (Name.Contains('.'))
+                if ( ToolsUtilities.StringFunctions.ContainsNoAlloc( Name, '.'))
                 {
                     return Name.Substring(0, Name.IndexOf('.'));
                 }
@@ -126,12 +126,14 @@ namespace Gum.DataTypes.Variables
             set;
         }
 
+#if !WINDOWS_8
         [XmlIgnore]
         public TypeConverter CustomTypeConverter
         {
             get;
             set;
         }
+#endif
 
         [XmlIgnore]
         public bool CanOnlyBeSetInDefaultState { get; set; }
@@ -149,7 +151,9 @@ namespace Gum.DataTypes.Variables
         public VariableSave Clone()
         {
             VariableSave toReturn = (VariableSave)this.MemberwiseClone();
+#if !WINDOWS_8
             toReturn.CustomTypeConverter = this.CustomTypeConverter;
+#endif
             toReturn.ExcludedValuesForEnum = new List<object>();
             toReturn.ExcludedValuesForEnum.AddRange(this.ExcludedValuesForEnum);
 

@@ -16,6 +16,9 @@ namespace RenderingLibrary.Graphics.Fonts
 
         public void Save(string fileName)
         {
+#if WINDOWS_8
+            throw new NotImplementedException();
+#else
             var assembly2 = Assembly.GetEntryAssembly();
 
             string directory = FileManager.GetDirectory(assembly2.Location);
@@ -46,7 +49,7 @@ namespace RenderingLibrary.Graphics.Fonts
             }
 
             FileManager.SaveText(template, fileName);
-
+#endif        
         }
 
         public string FontCacheFileName
@@ -73,6 +76,11 @@ namespace RenderingLibrary.Graphics.Fonts
             return fileName;
         }
 
+
+
+
+        // tool-necessary implementations
+#if !WINDOWS_8
         public static void CreateBitmapFontFilesIfNecessary(int fontSize, string fontName, int outline)
         {
             BmfcSave bmfcSave = new BmfcSave();
@@ -146,5 +154,6 @@ namespace RenderingLibrary.Graphics.Fonts
                 }
             }
         }
+#endif
     }
 }

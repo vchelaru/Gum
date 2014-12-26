@@ -11,48 +11,6 @@ using System.ComponentModel;
 
 namespace ToolsUtilities
 {
-    #region SvnConflictInFileException
-
-    public class SvnConflictInFileException : System.IO.FileLoadException
-    {
-        public SvnConflictInFileException()
-            : base()
-        {
-
-        }
-
-        public SvnConflictInFileException(string message)
-            : base(message)
-        {
-
-        }
-
-        public SvnConflictInFileException(string message, Exception inner)
-            : base(message, inner)
-        {
-
-        }
-
-        public SvnConflictInFileException(string message, string fileName)
-            : base(message, fileName)
-        {
-
-        }
-
-        public SvnConflictInFileException(SerializationInfo info, StreamingContext context)
-            : base(info, context)
-        {
-
-        }
-
-        public SvnConflictInFileException(string message, string fileName, Exception inner)
-            : base(message, fileName, inner)
-        {
-        }
-    }
-
-    #endregion
-
     #region XML Docs
     /// <summary>
     /// Utility class used to help dealing with files.
@@ -62,12 +20,17 @@ namespace ToolsUtilities
     /// Victor Chelaru wrote that code and he's the one who put it in here.
     /// </remarks>
     #endregion
-    public static class FileManager
+    public static partial class FileManager
     {
         public const char DefaultSlash = '\\';
         #region Fields
+
         static string mRelativeDirectory =
+#if WINDOWS_8
+            "./";
+#else
             Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location).ToLower().Replace("/", "\\") + "\\";
+#endif
         static Dictionary<Type, XmlSerializer> mXmlSerializers = new Dictionary<Type, XmlSerializer>();
 
         #endregion
@@ -81,23 +44,6 @@ namespace ToolsUtilities
             {
                 mRelativeDirectory = value;
             }
-        }
-
-        public static string UserApplicationDataForThisApplication
-        {
-            get
-            {
-                string applicationDataName = Assembly.GetEntryAssembly().FullName;
-
-                applicationDataName = applicationDataName.Substring(0, applicationDataName.IndexOf(','));
-
-                return Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + @"\" + applicationDataName + @"\";
-            }
-        }
-
-        public static string MyDocuments
-        {
-            get { return Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + @"\"; }
         }
 
         #endregion
@@ -137,52 +83,6 @@ namespace ToolsUtilities
             return (T)serializer.Deserialize(new StringReader(container));
         }
 
-        public static void CopyFilesRecursively(string source, string target)
-        {
-            DirectoryInfo sourceDirectory = new DirectoryInfo(source);
-            DirectoryInfo targetDirectory = new DirectoryInfo(target);
-
-            CopyFilesRecursively(sourceDirectory, targetDirectory);
-        }
-
-        public static void CopyFilesRecursively(DirectoryInfo source, DirectoryInfo target)
-        {
-            if (!Directory.Exists(target.FullName))
-            {
-                Directory.CreateDirectory(target.FullName);
-            }
-
-            foreach (DirectoryInfo dir in source.GetDirectories())
-            {
-                CopyFilesRecursively(dir, target.CreateSubdirectory(dir.Name));
-            }
-            foreach (FileInfo file in source.GetFiles())
-            {
-                file.CopyTo(Path.Combine(target.FullName, file.Name), true);
-            }
-        }
-
-        public static void DeleteDirectory(string dir)
-        {
-            System.IO.DirectoryInfo info = new System.IO.DirectoryInfo(dir);
-            if (!info.Exists) return;
-
-            string[] files = System.IO.Directory.GetFiles(dir);
-            for (int i = 0; i < files.Length; i++)
-            {
-                System.IO.File.Delete(files[i]);
-            }
-
-            string[] dirs = System.IO.Directory.GetDirectories(dir);
-            for (int i = 0; i < dirs.Length; i++)
-            {
-                DeleteDirectory(dirs[i]);
-            }
-
-
-            System.IO.Directory.Delete(dir);
-        }
-
         public static bool FileExists(string fileName)
         {
             return FileExists(fileName, false);
@@ -193,7 +93,8 @@ namespace ToolsUtilities
         {
             if (!ignoreExtensions)
             {
-#if ANDROID
+#if ANDROID || IOS || WINDOWS_8
+
 				try
                 {
 					fileName = Standardize(fileName);
@@ -218,6 +119,9 @@ namespace ToolsUtilities
             }
             else
             {
+#if WINDOWS_8
+                throw new NotImplementedException();
+#else
                 fileName = Standardize(fileName);
                 // This takes a little bit of work
                 string fileWithoutExtension = FileManager.RemoveExtension(fileName);
@@ -237,16 +141,20 @@ namespace ToolsUtilities
                 }
 
                 return false;
-
+#endif
             }
         }
 
 
         public static string FromFileText(string fileName)
         {
-            Encoding encoding = Encoding.Default;
+#if WINDOWS_8
+            return FromFileText(fileName);
 
+#else
+            Encoding encoding = Encoding.Default;
             return FromFileText(fileName, encoding);
+#endif
         }
 
         public static string FromFileText(string fileName, Encoding encoding)
@@ -283,7 +191,9 @@ namespace ToolsUtilities
                 using (System.IO.StreamReader sr = new StreamReader(fileStream, encoding))
                 {
                     containedText = sr.ReadToEnd();
+#if !WINDOWS_8
                     sr.Close();
+#endif
                 }
             }
 
@@ -291,141 +201,7 @@ namespace ToolsUtilities
 #endif
         }
 
-        public static byte[] FromFileBytes(string fileName)
-        {
-            byte[] bytesToReturn = null;
-            using (FileStream fileStream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-            {
-                bytesToReturn = new byte[fileStream.Length];
 
-                fileStream.Read(bytesToReturn, 0, bytesToReturn.Length);
-            }
-
-            return bytesToReturn;
-
-        }
-
-
-        public static string FindAndAddExtension(string fileName)
-        {
-            fileName = Standardize(fileName);
-            // This takes a little bit of work
-            string fileWithoutExtension = FileManager.RemoveExtension(fileName);
-
-            List<string> filesInDirectory = GetAllFilesInDirectory(
-                FileManager.GetDirectory(fileName),
-                null,
-                0);
-
-            for (int i = 0; i < filesInDirectory.Count; i++)
-            {
-                if (filesInDirectory[i] == fileName ||
-                    FileManager.RemoveExtension(filesInDirectory[i]) == fileWithoutExtension)
-                {
-                    return filesInDirectory[i];
-                }
-            }
-
-            return fileName;
-        }
-
-        #region XML Docs
-        /// <summary>
-        /// Returns a List containing all files which match the fileType argument which are 
-        /// in the directory argument or a subfolder.  This recurs, returning all files.
-        /// </summary>
-        /// <param name="directory">String representing the directory to search.  If an empty
-        /// string is passed, the method will search starting in the directory holding the .exe.</param>
-        /// <param name="fileType">The file type to search for specified as an extension.  The extension
-        /// can either have a period or not.  That is ".jpg" and "jpg" are both valid fileType arguments.  An empty
-        /// or null value for this parameter will return all files regardless of file type.</param>
-        /// <returns>A list containing all of the files found which match the fileType.</returns>
-        #endregion
-        public static List<string> GetAllFilesInDirectory(string directory, string fileType)
-        {
-            return GetAllFilesInDirectory(directory, fileType, int.MaxValue);
-
-        }
-
-        #region XML Docs
-        /// <summary>
-        /// Returns a List containing all files which match the fileType argument which are within
-        /// the depthToSearch folder range relative to the directory argument.
-        /// </summary>
-        /// <param name="directory">String representing the directory to search.  If an empty
-        /// string is passed, the method will search starting in the directory holding the .exe.</param>
-        /// <param name="fileType">The file type to search for specified as an extension.  The extension
-        /// can either have a period or not.  That is ".jpg" and "jpg" are both valid fileType arguments.  An empty
-        /// or null value for this parameter will return all files regardless of file type.</param>
-        /// <param name="depthToSearch">The depth to search through.  If the depthToSearch
-        /// is 0, only the argument directory will be searched.</param>
-        /// <returns>A list containing all of the files found which match the fileType.</returns>
-        #endregion
-        public static List<string> GetAllFilesInDirectory(string directory, string fileType, int depthToSearch)
-        {
-            List<string> arrayToReturn = new List<string>();
-
-            GetAllFilesInDirectory(directory, fileType, depthToSearch, arrayToReturn);
-
-            return arrayToReturn;
-        }
-
-
-        public static void GetAllFilesInDirectory(string directory, string fileType, int depthToSearch, List<string> arrayToReturn)
-        {
-            if (!Directory.Exists(directory))
-            {
-                return;
-            }
-            //if (directory == "")
-            //    directory = mRelativeDirectory;
-
-            if (directory.EndsWith(@"\") == false && directory.EndsWith("/") == false)
-                directory += @"\";
-
-            // if they passed in a fileType which begins with a period (like ".jpg"), then
-            // remove the period so only the extension remains.  That is, convert
-            // ".jpg" to "jpg"
-            if (fileType != null && fileType.Length > 0 && fileType[0] == '.')
-                fileType = fileType.Substring(1);
-
-            string[] files = System.IO.Directory.GetFiles(directory);
-            string[] directories = System.IO.Directory.GetDirectories(directory);
-
-            if (string.IsNullOrEmpty(fileType))
-            {
-                for (int i = 0; i < files.Length; i++)
-                {
-                    files[i] = FileManager.Standardize(files[i]);
-                }
-                arrayToReturn.AddRange(files);
-            }
-            else
-            {
-                int fileCount = files.Length;
-
-                for (int i = 0; i < fileCount; i++)
-                {
-                    string file = files[i];
-                    if (GetExtension(file) == fileType)
-                    {
-                        arrayToReturn.Add(file);
-                    }
-                }
-            }
-
-
-            if (depthToSearch > 0)
-            {
-                int directoryCount = directories.Length;
-                for (int i = 0; i < directoryCount; i++)
-                {
-                    string directoryChecking = directories[i];
-
-                    GetAllFilesInDirectory(directoryChecking, fileType, depthToSearch - 1, arrayToReturn);
-                }
-            }
-        }
 
 
         public static string GetDirectory(string fileName)
@@ -536,36 +312,8 @@ namespace ToolsUtilities
         }
 
 
-        public static string GetRootObjectType(string fileName)
-        {
-            if (!File.Exists(fileName))
-            {
-                throw new ArgumentException("Could not find the file " + fileName, "fileName");
-
-            }
-
-            string typeToReturn = null;
-
-            using (FileStream fileStream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-            {
-                using (System.IO.StreamReader sr = new StreamReader(fileStream))
-                {
-                    sr.ReadLine(); // this is the version and encoding line
-                    string line = sr.ReadLine();
-
-                    typeToReturn = StringFunctions.GetWordAfter("<", line);
-                    sr.Close();
-                }
-            }
-
-            return typeToReturn;
-        }
 
 
-        public static string GetRecastedFileName(string fileName)
-        {
-            return GetProperFilePathCapitalization(fileName);
-        }
 
 
         public static string GetWordAfter(string stringToStartAfter, string entireString)
@@ -610,7 +358,7 @@ namespace ToolsUtilities
             }
 
 
-#if XBOX360 || ANDROID
+#if XBOX360 || ANDROID || IOS
             
 			if(fileName.Length > 1 && fileName[0] == '.' && (fileName[1] == '/' || fileName[1] == '\\'))
                 return false;
@@ -841,6 +589,528 @@ namespace ToolsUtilities
         }
 
 
+
+
+
+        public static string Standardize(string fileName)
+        {
+            return Standardize(fileName, false);
+        }
+
+        public static string Standardize(string fileName, bool preserveCase)
+        {
+
+            return Standardize(fileName, preserveCase, false);
+        }
+
+        public static string Standardize(string fileName, bool preserveCase, bool makeAbsolute)
+        {
+            // The standard used here is the backslash.
+            // This is the opposite of FlatRedBall, so be careful!
+
+            if (makeAbsolute)
+            {
+                if (IsRelative(fileName))
+                {
+                    fileName = (RelativeDirectory + fileName).Replace("/", "\\");
+                }
+
+            }
+
+            if (preserveCase)
+            {
+                return fileName.Replace('/', '\\');
+            }
+            else
+            {
+                return fileName.Replace('/', '\\').ToLower();
+
+            }
+
+        }
+
+
+        public static T XmlDeserialize<T>(string fileName)
+        {
+            T objectToReturn = default(T);
+
+
+            //if (FileManager.IsRelative(fileName))
+            //    fileName = FileManager.RelativeDirectory + fileName;
+
+
+
+
+            //ThrowExceptionIfFileDoesntExist(fileName);
+
+#if ANDROID || IOS
+            // Silverlight and 360 don't like ./ at the start of the file name, but that's what we use to identify an absolute path
+			fileName = TryRemoveLeadingDotSlash (fileName);
+#endif
+
+
+            using (Stream stream = GetStreamForFile(fileName))
+            {
+                try
+                {
+                    objectToReturn = XmlDeserializeFromStream<T>(stream);
+                }
+                catch (Exception e)
+                {
+                    throw new Exception("Could not deserialize the XML file " + fileName + " because of the following error:\n\n" + e);
+                }
+#if !WINDOWS_8
+                stream.Close();
+#endif
+            }
+
+            return objectToReturn;
+        }
+
+        static string TryRemoveLeadingDotSlash(string fileName)
+        {
+            if (fileName != null && fileName.Length > 1 && fileName[0] == '.' && (fileName[1] == '/' || fileName[1] == '\\'))
+            {
+                fileName = fileName.Substring(2);
+            }
+            return fileName;
+        }
+
+        public static Stream GetStreamForFile(string fileName)
+        {
+#if ANDROID || IOS || WINDOWS_8
+            fileName = TryRemoveLeadingDotSlash(fileName);
+			return Microsoft.Xna.Framework.TitleContainer.OpenStream(fileName);
+#else
+            return System.IO.File.OpenRead(fileName);
+#endif
+        }
+
+        public static T XmlDeserializeFromStream<T>(Stream stream)
+        {
+            Type type = typeof(T);
+
+            XmlSerializer serializer = GetXmlSerializer(type);
+
+            T objectToReturn = (T)serializer.Deserialize(stream);
+
+            return objectToReturn;
+        }
+
+
+
+        internal static XmlSerializer GetXmlSerializer(Type type)
+        {
+            if (mXmlSerializers.ContainsKey(type))
+            {
+                return mXmlSerializers[type];
+            }
+            else
+            {
+
+                // For info on this block, see:
+                // http://stackoverflow.com/questions/1127431/xmlserializer-giving-filenotfoundexception-at-constructor
+#if DEBUG
+                XmlSerializer newSerializer = XmlSerializer.FromTypes(new[] { type })[0];
+#else
+                XmlSerializer newSerializer = null;
+                newSerializer = new XmlSerializer(type);
+#endif
+                mXmlSerializers.Add(type, newSerializer);
+                return newSerializer;
+            }
+        }
+
+
+
+        public static bool DoesFileHaveSvnConflict(string fileName)
+        {
+            string fileContents = FromFileText(fileName);
+            // This is how SVN marks conflicts, and we want to check for both <<<<<<< and ======= just in case one or the other happens to appear in a string somewhere.
+            return fileContents.Contains("<<<<<<<") && fileContents.Contains("=======");
+        }
+
+
+        public static void XmlSerialize<T>(T objectToSerialize, out string stringToSerializeTo)
+        {
+            MemoryStream memoryStream = new MemoryStream();
+
+            XmlSerializer serializer = GetXmlSerializer(typeof(T));
+
+            serializer.Serialize(memoryStream, objectToSerialize);
+
+
+#if SILVERLIGHT || WINDOWS_PHONE  || (XBOX360 && XNA4) || MONODROID || WINDOWS_8
+
+            byte[] asBytes = memoryStream.ToArray();
+
+            stringToSerializeTo = System.Text.Encoding.UTF8.GetString(asBytes, 0, asBytes.Length);
+#elif XBOX360
+            
+            throw new NotImplementedException("XmlSerialization to string is not supported yet");
+
+
+
+#else
+
+            stringToSerializeTo = System.Text.Encoding.UTF8.GetString(memoryStream.ToArray());
+#endif
+
+        }
+        #endregion
+    }
+
+
+    // Stuff that only works on desktop (and not Windows RT)
+    public static partial class FileManager
+    {
+#if !WINDOWS_8
+        public static void CopyFilesRecursively(string source, string target)
+        {
+            DirectoryInfo sourceDirectory = new DirectoryInfo(source);
+            DirectoryInfo targetDirectory = new DirectoryInfo(target);
+
+            CopyFilesRecursively(sourceDirectory, targetDirectory);
+        }
+        public static void CopyFilesRecursively(DirectoryInfo source, DirectoryInfo target)
+        {
+            if (!Directory.Exists(target.FullName))
+            {
+                Directory.CreateDirectory(target.FullName);
+            }
+
+            foreach (DirectoryInfo dir in source.GetDirectories())
+            {
+                CopyFilesRecursively(dir, target.CreateSubdirectory(dir.Name));
+            }
+            foreach (FileInfo file in source.GetFiles())
+            {
+                file.CopyTo(Path.Combine(target.FullName, file.Name), true);
+            }
+        }
+        private static void CreateDirectory(string targetFileName)
+        {
+            string directory = FileManager.GetDirectory(targetFileName);
+
+            if (!Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+        }
+        
+        public static void DeleteDirectory(string dir)
+        {
+            System.IO.DirectoryInfo info = new System.IO.DirectoryInfo(dir);
+            if (!info.Exists) return;
+
+            string[] files = System.IO.Directory.GetFiles(dir);
+            for (int i = 0; i < files.Length; i++)
+            {
+                System.IO.File.Delete(files[i]);
+            }
+
+            string[] dirs = System.IO.Directory.GetDirectories(dir);
+            for (int i = 0; i < dirs.Length; i++)
+            {
+                DeleteDirectory(dirs[i]);
+            }
+
+
+            System.IO.Directory.Delete(dir);
+        }
+
+        private static bool DeleteTargetFileIfExists(string targetFileName)
+        {
+            bool succeeded = true;
+
+            if (FileManager.FileExists(targetFileName))
+            {
+                File.Delete(targetFileName);
+            }
+            return succeeded;
+        }
+
+        public static string FindAndAddExtension(string fileName)
+        {
+            fileName = Standardize(fileName);
+            // This takes a little bit of work
+            string fileWithoutExtension = FileManager.RemoveExtension(fileName);
+
+            List<string> filesInDirectory = GetAllFilesInDirectory(
+                FileManager.GetDirectory(fileName),
+                null,
+                0);
+
+            for (int i = 0; i < filesInDirectory.Count; i++)
+            {
+                if (filesInDirectory[i] == fileName ||
+                    FileManager.RemoveExtension(filesInDirectory[i]) == fileWithoutExtension)
+                {
+                    return filesInDirectory[i];
+                }
+            }
+
+            return fileName;
+        }
+        public static byte[] FromFileBytes(string fileName)
+        {
+            byte[] bytesToReturn = null;
+            using (FileStream fileStream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            {
+                bytesToReturn = new byte[fileStream.Length];
+
+                fileStream.Read(bytesToReturn, 0, bytesToReturn.Length);
+            }
+
+            return bytesToReturn;
+
+        }
+        #region XML Docs
+        /// <summary>
+        /// Returns a List containing all files which match the fileType argument which are 
+        /// in the directory argument or a subfolder.  This recurs, returning all files.
+        /// </summary>
+        /// <param name="directory">String representing the directory to search.  If an empty
+        /// string is passed, the method will search starting in the directory holding the .exe.</param>
+        /// <param name="fileType">The file type to search for specified as an extension.  The extension
+        /// can either have a period or not.  That is ".jpg" and "jpg" are both valid fileType arguments.  An empty
+        /// or null value for this parameter will return all files regardless of file type.</param>
+        /// <returns>A list containing all of the files found which match the fileType.</returns>
+        #endregion
+        public static List<string> GetAllFilesInDirectory(string directory, string fileType)
+        {
+            return GetAllFilesInDirectory(directory, fileType, int.MaxValue);
+
+        }
+
+        #region XML Docs
+        /// <summary>
+        /// Returns a List containing all files which match the fileType argument which are within
+        /// the depthToSearch folder range relative to the directory argument.
+        /// </summary>
+        /// <param name="directory">String representing the directory to search.  If an empty
+        /// string is passed, the method will search starting in the directory holding the .exe.</param>
+        /// <param name="fileType">The file type to search for specified as an extension.  The extension
+        /// can either have a period or not.  That is ".jpg" and "jpg" are both valid fileType arguments.  An empty
+        /// or null value for this parameter will return all files regardless of file type.</param>
+        /// <param name="depthToSearch">The depth to search through.  If the depthToSearch
+        /// is 0, only the argument directory will be searched.</param>
+        /// <returns>A list containing all of the files found which match the fileType.</returns>
+        #endregion
+        public static List<string> GetAllFilesInDirectory(string directory, string fileType, int depthToSearch)
+        {
+            List<string> arrayToReturn = new List<string>();
+
+            GetAllFilesInDirectory(directory, fileType, depthToSearch, arrayToReturn);
+
+            return arrayToReturn;
+        }
+
+
+        public static void GetAllFilesInDirectory(string directory, string fileType, int depthToSearch, List<string> arrayToReturn)
+        {
+            if (!Directory.Exists(directory))
+            {
+                return;
+            }
+            //if (directory == "")
+            //    directory = mRelativeDirectory;
+
+            if (directory.EndsWith(@"\") == false && directory.EndsWith("/") == false)
+                directory += @"\";
+
+            // if they passed in a fileType which begins with a period (like ".jpg"), then
+            // remove the period so only the extension remains.  That is, convert
+            // ".jpg" to "jpg"
+            if (fileType != null && fileType.Length > 0 && fileType[0] == '.')
+                fileType = fileType.Substring(1);
+
+            string[] files = System.IO.Directory.GetFiles(directory);
+            string[] directories = System.IO.Directory.GetDirectories(directory);
+
+            if (string.IsNullOrEmpty(fileType))
+            {
+                for (int i = 0; i < files.Length; i++)
+                {
+                    files[i] = FileManager.Standardize(files[i]);
+                }
+                arrayToReturn.AddRange(files);
+            }
+            else
+            {
+                int fileCount = files.Length;
+
+                for (int i = 0; i < fileCount; i++)
+                {
+                    string file = files[i];
+                    if (GetExtension(file) == fileType)
+                    {
+                        arrayToReturn.Add(file);
+                    }
+                }
+            }
+
+
+            if (depthToSearch > 0)
+            {
+                int directoryCount = directories.Length;
+                for (int i = 0; i < directoryCount; i++)
+                {
+                    string directoryChecking = directories[i];
+
+                    GetAllFilesInDirectory(directoryChecking, fileType, depthToSearch - 1, arrayToReturn);
+                }
+            }
+        }
+        private static byte[] GetByteArrayFromEmbeddedResource(Assembly assembly, string resourceName)
+        {
+            if (string.IsNullOrEmpty(resourceName))
+            {
+                throw new NullReferenceException("ResourceName must not be null - can't get the byte array for resource");
+            }
+
+            if (assembly == null)
+            {
+                throw new NullReferenceException("Assembly is null, so can't find the resource\n" + resourceName);
+            }
+
+            Stream resourceStream = assembly.GetManifestResourceStream(resourceName);
+
+            if (resourceStream == null)
+            {
+                string message = "Could not find a resource stream for\n" + resourceName + "\n but found " +
+                    "the following names:\n\n";
+
+                foreach (string containedResource in assembly.GetManifestResourceNames())
+                {
+                    message += containedResource + "\n";
+                }
+
+
+                throw new NullReferenceException(message);
+            }
+
+            byte[] buffer = new byte[resourceStream.Length];
+            resourceStream.Read(buffer, 0, buffer.Length);
+            resourceStream.Close();
+            resourceStream.Dispose();
+            return buffer;
+        }
+
+        static string GetProperDirectoryCapitalization(DirectoryInfo dirInfo)
+        {
+            DirectoryInfo parentDirInfo = dirInfo.Parent;
+            if (null == parentDirInfo)
+                return dirInfo.Name;
+            return Path.Combine(GetProperDirectoryCapitalization(parentDirInfo),
+                                parentDirInfo.GetDirectories(dirInfo.Name)[0].Name);
+        }
+        static string GetProperFilePathCapitalization(string filename)
+        {
+            if (FileManager.FileExists(filename))
+            {
+                FileInfo fileInfo = new FileInfo(filename);
+                DirectoryInfo dirInfo = fileInfo.Directory;
+                return Path.Combine(GetProperDirectoryCapitalization(dirInfo),
+                                    dirInfo.GetFiles(fileInfo.Name)[0].Name);
+            }
+            else
+            {
+                // August 8, 2011
+                // We used to return
+                // null here but I'm not
+                // sure why that is a good
+                // idea.  If we can't recast
+                // we should just return the original
+                // name.
+                return filename;
+            }
+        }
+        public static string GetRecastedFileName(string fileName)
+        {
+            return GetProperFilePathCapitalization(fileName);
+        }
+        public static string GetRootObjectType(string fileName)
+        {
+            if (!File.Exists(fileName))
+            {
+                throw new ArgumentException("Could not find the file " + fileName, "fileName");
+
+            }
+
+            string typeToReturn = null;
+
+            using (FileStream fileStream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            {
+                using (System.IO.StreamReader sr = new StreamReader(fileStream))
+                {
+                    sr.ReadLine(); // this is the version and encoding line
+                    string line = sr.ReadLine();
+
+                    typeToReturn = StringFunctions.GetWordAfter("<", line);
+                    sr.Close();
+                }
+            }
+
+            return typeToReturn;
+        }
+
+        public static string MyDocuments
+        {
+            get { return Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + @"\"; }
+        }
+
+        public static void SaveByteArray(byte[] whatToSave, string fileName)
+        {
+            if (FileManager.FileExists(fileName))
+            {
+                File.Delete(fileName);
+            }
+
+            Directory.CreateDirectory(FileManager.GetDirectory(fileName));
+
+            using (FileStream fs = new FileStream(fileName, FileMode.Create))
+            {
+                using (BinaryWriter bw = new BinaryWriter(fs))
+                {
+                    bw.Write(whatToSave);
+                    bw.Close();
+                    fs.Close();
+                }
+            }
+
+        }
+
+
+        public static void SaveEmbeddedResource(Assembly assembly, string resourceName, string targetFileName)
+        {
+
+            CreateDirectory(targetFileName);
+
+            byte[] buffer = GetByteArrayFromEmbeddedResource(assembly, resourceName);
+
+            bool succeeded = DeleteTargetFileIfExists(targetFileName);
+
+            WriteStreamToFile(targetFileName, buffer, succeeded);
+        }
+
+        private static void WriteStreamToFile(string targetFileName, byte[] buffer, bool succeeded)
+        {
+            if (succeeded)
+            {
+                using (FileStream fs = new FileStream(targetFileName, FileMode.Create))
+                {
+                    using (BinaryWriter bw = new BinaryWriter(fs))
+                    {
+                        bw.Write(buffer);
+                        bw.Close();
+                        fs.Close();
+                    }
+                }
+            }
+        }
+
+
         public static void SaveText(string stringToSave, string fileName)
         {
             SaveText(stringToSave, fileName, Encoding.UTF8);
@@ -883,242 +1153,18 @@ namespace ToolsUtilities
         }
 
 
-        public static void SaveByteArray(byte[] whatToSave, string fileName)
+
+        public static string UserApplicationDataForThisApplication
         {
-            if (FileManager.FileExists(fileName))
+            get
             {
-                File.Delete(fileName);
-            }
+                string applicationDataName = Assembly.GetEntryAssembly().FullName;
 
-            Directory.CreateDirectory(FileManager.GetDirectory(fileName));
+                applicationDataName = applicationDataName.Substring(0, applicationDataName.IndexOf(','));
 
-            using (FileStream fs = new FileStream(fileName, FileMode.Create))
-            {
-                using (BinaryWriter bw = new BinaryWriter(fs))
-                {
-                    bw.Write(whatToSave);
-                    bw.Close();
-                    fs.Close();
-                }
-            }
-
-        }
-
-        public static void SaveEmbeddedResource(Assembly assembly, string resourceName, string targetFileName)
-        {
-
-            CreateDirectory(targetFileName);
-
-            byte[] buffer = GetByteArrayFromEmbeddedResource(assembly, resourceName);
-
-            bool succeeded = DeleteTargetFileIfExists(targetFileName);
-
-            WriteStreamToFile(targetFileName, buffer, succeeded);
-        }
-
-        private static void WriteStreamToFile(string targetFileName, byte[] buffer, bool succeeded)
-        {
-            if (succeeded)
-            {
-                using (FileStream fs = new FileStream(targetFileName, FileMode.Create))
-                {
-                    using (BinaryWriter bw = new BinaryWriter(fs))
-                    {
-                        bw.Write(buffer);
-                        bw.Close();
-                        fs.Close();
-                    }
-                }
+                return Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + @"\" + applicationDataName + @"\";
             }
         }
-
-        private static bool DeleteTargetFileIfExists(string targetFileName)
-        {
-            bool succeeded = true;
-
-            if (FileManager.FileExists(targetFileName))
-            {
-                File.Delete(targetFileName);
-            }
-            return succeeded;
-        }
-
-        private static byte[] GetByteArrayFromEmbeddedResource(Assembly assembly, string resourceName)
-        {
-            if (string.IsNullOrEmpty(resourceName))
-            {
-                throw new NullReferenceException("ResourceName must not be null - can't get the byte array for resource");
-            }
-
-            if (assembly == null)
-            {
-                throw new NullReferenceException("Assembly is null, so can't find the resource\n" + resourceName);
-            }
-
-            Stream resourceStream = assembly.GetManifestResourceStream(resourceName);
-
-            if (resourceStream == null)
-            {
-                string message = "Could not find a resource stream for\n" + resourceName + "\n but found " +
-                    "the following names:\n\n";
-
-                foreach (string containedResource in assembly.GetManifestResourceNames())
-                {
-                    message += containedResource + "\n";
-                }
-
-
-                throw new NullReferenceException(message);
-            }
-
-            byte[] buffer = new byte[resourceStream.Length];
-            resourceStream.Read(buffer, 0, buffer.Length);
-            resourceStream.Close();
-            resourceStream.Dispose();
-            return buffer;
-        }
-
-        private static void CreateDirectory(string targetFileName)
-        {
-            string directory = FileManager.GetDirectory(targetFileName);
-
-            if (!Directory.Exists(directory))
-            {
-                Directory.CreateDirectory(directory);
-            }
-        }
-
-        public static string Standardize(string fileName)
-        {
-            return Standardize(fileName, false);
-        }
-
-        public static string Standardize(string fileName, bool preserveCase)
-        {
-
-            return Standardize(fileName, preserveCase, false);
-        }
-
-        public static string Standardize(string fileName, bool preserveCase, bool makeAbsolute)
-        {
-            // The standard used here is the backslash.
-            // This is the opposite of FlatRedBall, so be careful!
-
-            if (makeAbsolute)
-            {
-                if (IsRelative(fileName))
-                {
-                    fileName = (RelativeDirectory + fileName).Replace("/", "\\");
-                }
-
-            }
-
-            if (preserveCase)
-            {
-                return fileName.Replace('/', '\\');
-            }
-            else
-            {
-                return fileName.Replace('/', '\\').ToLower();
-
-            }
-
-        }
-
-        public static T XmlDeserializeEmbeddedResource<T>(Assembly assembly, string location)
-        {
-            T objectToReturn = default(T);
-            Type type = typeof(T);
-
-            using (Stream resourceStream = assembly.GetManifestResourceStream(location))
-            {
-                XmlSerializer serializer = GetXmlSerializer(type);
-                objectToReturn = (T)serializer.Deserialize(resourceStream);
-                resourceStream.Close();
-
-            }
-
-            return objectToReturn;
-        }
-
-        public static T XmlDeserialize<T>(string fileName)
-        {
-            T objectToReturn = default(T);
-
-#if SILVERLIGHT
-            if (fileName.Contains(FileManager.IsolatedStoragePrefix) && mHasUserFolderBeenInitialized == false)
-            {
-                throw new InvalidOperationException("The user folder hasn't been initialized.  Call FileManager.InitializeUserFolder first");
-            }
-#endif
-
-            //if (FileManager.IsRelative(fileName))
-            //    fileName = FileManager.RelativeDirectory + fileName;
-
-
-
-
-            //ThrowExceptionIfFileDoesntExist(fileName);
-
-#if ANDROID
-            // Silverlight and 360 don't like ./ at the start of the file name, but that's what we use to identify an absolute path
-			fileName = TryRemoveLeadingDotSlash (fileName);
-#endif
-
-
-            using (Stream stream = GetStreamForFile(fileName))
-            {
-                try
-                {
-                    objectToReturn = XmlDeserializeFromStream<T>(stream);
-                }
-                catch (Exception e)
-                {
-                    throw new Exception("Could not deserialize the XML file " + fileName + " because of the following error:\n\n" + e);
-                }
-                stream.Close();
-            }
-
-            return objectToReturn;
-        }
-
-        static string TryRemoveLeadingDotSlash(string fileName)
-        {
-            if (fileName != null && fileName.Length > 1 && fileName[0] == '.' && (fileName[1] == '/' || fileName[1] == '\\'))
-            {
-                fileName = fileName.Substring(2);
-            }
-            return fileName;
-        }
-
-        public static Stream GetStreamForFile(string fileName)
-        {
-#if ANDROID
-            fileName = TryRemoveLeadingDotSlash(fileName);
-			return Microsoft.Xna.Framework.TitleContainer.OpenStream(fileName);
-#else
-            return System.IO.File.OpenRead(fileName);
-#endif
-        }
-
-        public static T XmlDeserializeFromStream<T>(Stream stream)
-        {
-            Type type = typeof(T);
-
-            XmlSerializer serializer = GetXmlSerializer(type);
-
-            T objectToReturn = (T)serializer.Deserialize(stream);
-
-            return objectToReturn;
-        }
-
-
-        public static void XmlSerialize<T>(T objectToSerialize, string fileName)
-        {
-
-            XmlSerialize(typeof(T), objectToSerialize, fileName);
-        }
-
 
         public static void XmlSerialize(Type type, object objectToSerialize, string fileName)
         {
@@ -1182,95 +1228,28 @@ namespace ToolsUtilities
 #endif
             }
         }
-
-        public static void XmlSerialize<T>(T objectToSerialize, out string stringToSerializeTo)
+        public static void XmlSerialize<T>(T objectToSerialize, string fileName)
         {
-            MemoryStream memoryStream = new MemoryStream();
 
-            XmlSerializer serializer = GetXmlSerializer(typeof(T));
-
-            serializer.Serialize(memoryStream, objectToSerialize);
+            XmlSerialize(typeof(T), objectToSerialize, fileName);
+        }
 
 
-#if SILVERLIGHT || WINDOWS_PHONE  || (XBOX360 && XNA4) || MONODROID
+        public static T XmlDeserializeEmbeddedResource<T>(Assembly assembly, string location)
+        {
+            T objectToReturn = default(T);
+            Type type = typeof(T);
 
-            byte[] asBytes = memoryStream.ToArray();
+            using (Stream resourceStream = assembly.GetManifestResourceStream(location))
+            {
+                XmlSerializer serializer = GetXmlSerializer(type);
+                objectToReturn = (T)serializer.Deserialize(resourceStream);
+                resourceStream.Close();
 
-            stringToSerializeTo = System.Text.Encoding.UTF8.GetString(asBytes, 0, asBytes.Length);
-#elif XBOX360
-            
-            throw new NotImplementedException("XmlSerialization to string is not supported yet");
+            }
 
-
-
-#else
-
-            stringToSerializeTo = System.Text.Encoding.UTF8.GetString(memoryStream.ToArray());
+            return objectToReturn;
+        }
 #endif
-
-        }
-
-        internal static XmlSerializer GetXmlSerializer(Type type)
-        {
-            if (mXmlSerializers.ContainsKey(type))
-            {
-                return mXmlSerializers[type];
-            }
-            else
-            {
-
-                // For info on this block, see:
-                // http://stackoverflow.com/questions/1127431/xmlserializer-giving-filenotfoundexception-at-constructor
-#if DEBUG
-                XmlSerializer newSerializer = XmlSerializer.FromTypes(new[] { type })[0];
-#else
-                XmlSerializer newSerializer = null;
-                newSerializer = new XmlSerializer(type);
-#endif
-                mXmlSerializers.Add(type, newSerializer);
-                return newSerializer;
-            }
-        }
-
-        static string GetProperDirectoryCapitalization(DirectoryInfo dirInfo)
-        {
-            DirectoryInfo parentDirInfo = dirInfo.Parent;
-            if (null == parentDirInfo)
-                return dirInfo.Name;
-            return Path.Combine(GetProperDirectoryCapitalization(parentDirInfo),
-                                parentDirInfo.GetDirectories(dirInfo.Name)[0].Name);
-        }
-
-        static string GetProperFilePathCapitalization(string filename)
-        {
-            if (FileManager.FileExists(filename))
-            {
-                FileInfo fileInfo = new FileInfo(filename);
-                DirectoryInfo dirInfo = fileInfo.Directory;
-                return Path.Combine(GetProperDirectoryCapitalization(dirInfo),
-                                    dirInfo.GetFiles(fileInfo.Name)[0].Name);
-            }
-            else
-            {
-                // August 8, 2011
-                // We used to return
-                // null here but I'm not
-                // sure why that is a good
-                // idea.  If we can't recast
-                // we should just return the original
-                // name.
-                return filename;
-            }
-        }
-
-        public static bool DoesFileHaveSvnConflict(string fileName)
-        {
-            string fileContents = FromFileText(fileName);
-            // This is how SVN marks conflicts, and we want to check for both <<<<<<< and ======= just in case one or the other happens to appear in a string somewhere.
-            return fileContents.Contains("<<<<<<<") && fileContents.Contains("=======");
-        }
-
-
-        #endregion
     }
 }

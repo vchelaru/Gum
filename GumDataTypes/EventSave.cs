@@ -26,7 +26,7 @@ namespace Gum.DataTypes
 
         public string GetRootName()
         {
-            if (Name.Contains('.'))
+            if (ToolsUtilities.StringFunctions.ContainsNoAlloc(Name, '.'))
             {
                 return Name.Substring(Name.IndexOf('.') + 1);
             }
@@ -38,7 +38,7 @@ namespace Gum.DataTypes
 
         public string GetSourceObject()
         {
-            if (Name.Contains('.'))
+            if (ToolsUtilities.StringFunctions.ContainsNoAlloc(Name, '.'))
             {
                 int indexOfDot = Name.IndexOf(".");
 

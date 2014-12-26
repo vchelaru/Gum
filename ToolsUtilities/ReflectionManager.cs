@@ -16,7 +16,8 @@ namespace ToolsUtilities
             List<T> toReturn = new List<T>();
 
 
-            PropertyInfo[] properties = containerType.GetProperties();
+            IEnumerable<PropertyInfo> properties = containerType.GetProperties();
+
             foreach (PropertyInfo property in properties)
             {
                 if (property.PropertyType == typeOfT)
@@ -34,7 +35,7 @@ namespace ToolsUtilities
 
             }
 
-            FieldInfo[] fields = containerType.GetFields();
+            IEnumerable<FieldInfo> fields = containerType.GetFields();
             foreach (FieldInfo field in fields)
             {
                 if (field.FieldType == typeOfT)

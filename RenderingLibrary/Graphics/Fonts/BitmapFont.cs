@@ -68,7 +68,7 @@ namespace RenderingLibrary.Graphics
         public BitmapFont(string fontFile, SystemManagers managers)
         {
 
-#if ANDROID
+#if ANDROID || IOS
 			fontFile = fontFile.ToLowerInvariant();
 #endif
 
@@ -454,7 +454,8 @@ namespace RenderingLibrary.Graphics
 
                     foreach (string line in lines)
                     {
-                        point.X = 0;
+                        // scoot over to leave room for the outline
+                        point.X = mOutlineThickness;
 
                         if (horizontalAlignment == HorizontalAlignment.Right)
                         {
@@ -541,6 +542,10 @@ namespace RenderingLibrary.Graphics
             const int MaxWidthAndHeight = 2048; // change this later?
             requiredWidth = System.Math.Min(requiredWidth, MaxWidthAndHeight);
             requiredHeight = System.Math.Min(requiredHeight, MaxWidthAndHeight);
+            if(requiredWidth != 0 && mOutlineThickness != 0)
+            {
+                requiredWidth += mOutlineThickness * 2;
+            }
         }
 
         private Texture2D RenderToTexture2DUsingImageData(IEnumerable lines, HorizontalAlignment horizontalAlignment, SystemManagers managers)

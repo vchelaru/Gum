@@ -136,9 +136,9 @@ namespace Gum.DataTypes
 
             GumProjectSave gps = null;
 
-			#if ANDROID
+#if ANDROID || IOS || WINDOWS_8
 			gps = LoadFromTitleStorage(fileName, out errors);
-            #else
+#else
             if (System.IO.File.Exists(fileName))
             {
                 gps = FileManager.XmlDeserialize<GumProjectSave>(fileName);
@@ -157,7 +157,7 @@ namespace Gum.DataTypes
             return gps;
         }
 
-        #if ANDROID
+#if ANDROID || IOS || WINDOWS_8
 		static GumProjectSave LoadFromTitleStorage (string fileName, out string errors)
 		{
 			using (System.IO.Stream stream = Microsoft.Xna.Framework.TitleContainer.OpenStream(fileName))
@@ -173,7 +173,7 @@ namespace Gum.DataTypes
 				return gps;
 			}
 		}
-        #endif
+#endif
 
         private void PopulateElementSavesFromReferences(string projectRootDirectory, out string errors)
         {
@@ -236,6 +236,7 @@ namespace Gum.DataTypes
             }
         }
 
+#if WINDOWS_8
         public void Save(string fileName, bool saveElements)
         {
             FileManager.XmlSerialize(this, fileName);
@@ -256,6 +257,7 @@ namespace Gum.DataTypes
                 SaveStandardElements(directory);
             }
         }
+#endif
 
         public void SaveStandardElements(string directory)
         {

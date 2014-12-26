@@ -2213,6 +2213,11 @@ namespace Gum.Wireframe
                 FontSize = (int)value;
                 UpdateToFontValues();
             }
+            else if (propertyName == "OutlineThickness")
+            {
+                OutlineThickness = (int)value;
+                UpdateToFontValues();
+            }
             return handled;
         }
 
@@ -2220,6 +2225,7 @@ namespace Gum.Wireframe
         public string CustomFontFile { get; set; }
         public string Font { get; set; }
         public int FontSize { get; set; }
+        public int OutlineThickness { get; set; }
 
         void UpdateToFontValues()
         {
@@ -2240,11 +2246,11 @@ namespace Gum.Wireframe
             {
                 if (FontSize > 0 && !string.IsNullOrEmpty(Font))
                 {
-                    var fontName = "FontCache/Font" + FontSize.ToString() + Font + ".fnt";
+                    string fontName = global::RenderingLibrary.Graphics.Fonts.BmfcSave.GetFontCacheFileNameFor(FontSize, Font, OutlineThickness);
 
                     string fullFileName = ToolsUtilities.FileManager.RelativeDirectory + fontName;
 
-#if ANDROID
+#if ANDROID || IOS
                     fullFileName = fullFileName.ToLowerInvariant();
 #endif
 
