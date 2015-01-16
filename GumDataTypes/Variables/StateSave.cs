@@ -61,14 +61,16 @@ namespace Gum.DataTypes.Variables
 
             toReturn.Name = this.Name;
             toReturn.Variables = new List<VariableSave>();
-            foreach (var variable in this.Variables)
+            for (int i = 0; i < Variables.Count; i++ )
             {
+                var variable = this.Variables[i];
+
                 toReturn.Variables.Add(variable.Clone());
             }
 
-            foreach (var variableList in this.VariableLists)
+            for (int i = 0; i < this.VariableLists.Count; i++ )
             {
-                toReturn.VariableLists.Add(variableList.Clone());
+                toReturn.VariableLists.Add(VariableLists[i].Clone());
             }
 
             toReturn.ParentContainer = this.ParentContainer;
@@ -78,9 +80,10 @@ namespace Gum.DataTypes.Variables
 
         public VariableSave GetVariableSave(string variableName)
         {
-            foreach(var variableSave in Variables)
+            for (int i = 0; i < Variables.Count; i++)
             {
-                if(variableSave.Name == variableName || variableSave.ExposedAsName == variableName)
+                var variableSave = Variables[i];
+                if (variableSave.Name == variableName || variableSave.ExposedAsName == variableName)
                 {
                     return variableSave;
                 }

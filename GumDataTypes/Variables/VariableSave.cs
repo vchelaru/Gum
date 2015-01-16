@@ -20,7 +20,6 @@ namespace Gum.DataTypes.Variables
     public class VariableSave
     {
         object mValue;
-        string mSourceObject;
 
         public bool IsFile
         {
@@ -176,7 +175,7 @@ namespace Gum.DataTypes.Variables
 
         public static string GetRootName(string variableName)
         {
-            if (variableName == null || variableName.Contains('.'))
+            if (variableName == null || ToolsUtilities.StringFunctions.ContainsNoAlloc(variableName, '.'))
             {
                 return variableName.Substring(1 + variableName.IndexOf('.'));
             }

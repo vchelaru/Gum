@@ -10,7 +10,6 @@ namespace RenderingLibrary.Graphics
     {
         #region Fields
 
-        bool mLoops;
         double mTimeIntoAnimation;
         double mLastUpdate;
 

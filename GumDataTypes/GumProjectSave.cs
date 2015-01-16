@@ -236,7 +236,7 @@ namespace Gum.DataTypes
             }
         }
 
-#if WINDOWS_8
+#if !WINDOWS_8
         public void Save(string fileName, bool saveElements)
         {
             FileManager.XmlSerialize(this, fileName);

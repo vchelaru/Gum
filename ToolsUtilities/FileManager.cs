@@ -149,7 +149,7 @@ namespace ToolsUtilities
         public static string FromFileText(string fileName)
         {
 #if WINDOWS_8
-            return FromFileText(fileName);
+            return FromFileText(fileName, Encoding.UTF8);
 
 #else
             Encoding encoding = Encoding.Default;
