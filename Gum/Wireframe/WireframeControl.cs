@@ -337,15 +337,12 @@ namespace Gum.Wireframe
 
         protected override void Draw()
         {
-                if (mHasInitialized)
-                {
-                    GraphicsDevice.Clear(BackgroundColor);
+            if (mHasInitialized)
+            {
+                GraphicsDevice.Clear(BackgroundColor);
 
-                    Renderer.Self.Draw(null);
-                }
-            
+                Renderer.Self.Draw(null);
+            }
         }
-
-
     }
 }

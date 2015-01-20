@@ -180,14 +180,18 @@ namespace XnaAndWinforms
         /// </summary>
         protected override void OnPaint(PaintEventArgs e)
         {
+            if (DesignMode)
+            {
+                e.Graphics.FillRectangle(Brushes.BlanchedAlmond, ClientRectangle);
+                return;
+            }
+
             // This prevents multiple invalidates from happening at the same time.
             // It can fix some bugs and improves performance.
             if(simultaneousPaints > 0)
             {
                 return;
             }
-
-
 
             simultaneousPaints++;
 
