@@ -297,7 +297,6 @@
             // 
             // LeftAndEverythingContainer
             // 
-            this.LeftAndEverythingContainer.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
             this.LeftAndEverythingContainer.Dock = System.Windows.Forms.DockStyle.Fill;
             this.LeftAndEverythingContainer.FixedPanel = System.Windows.Forms.FixedPanel.Panel1;
             this.LeftAndEverythingContainer.Location = new System.Drawing.Point(0, 24);
@@ -374,7 +373,6 @@
             // 
             // StatesAndVariablesContainer
             // 
-            this.StatesAndVariablesContainer.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
             this.StatesAndVariablesContainer.Dock = System.Windows.Forms.DockStyle.Fill;
             this.StatesAndVariablesContainer.Location = new System.Drawing.Point(0, 0);
             this.StatesAndVariablesContainer.Name = "StatesAndVariablesContainer";
@@ -489,7 +487,6 @@
             // 
             // PreviewSplitContainer
             // 
-            this.PreviewSplitContainer.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
             this.PreviewSplitContainer.Dock = System.Windows.Forms.DockStyle.Fill;
             this.PreviewSplitContainer.Location = new System.Drawing.Point(0, 0);
             this.PreviewSplitContainer.Name = "PreviewSplitContainer";
@@ -564,7 +561,6 @@
             // 
             // panel2
             // 
-            this.panel2.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
             this.panel2.Controls.Add(this.OutputTextBox);
             this.panel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel2.Location = new System.Drawing.Point(0, 0);
@@ -577,7 +573,7 @@
             this.OutputTextBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.OutputTextBox.Location = new System.Drawing.Point(0, 0);
             this.OutputTextBox.Name = "OutputTextBox";
-            this.OutputTextBox.Size = new System.Drawing.Size(618, 50);
+            this.OutputTextBox.Size = new System.Drawing.Size(622, 54);
             this.OutputTextBox.TabIndex = 0;
             this.OutputTextBox.Text = "";
             // 
