@@ -175,7 +175,7 @@ namespace Gum.DataTypes.Variables
 
         public static string GetRootName(string variableName)
         {
-            if (variableName == null || ToolsUtilities.StringFunctions.ContainsNoAlloc(variableName, '.'))
+            if (variableName != null && ToolsUtilities.StringFunctions.ContainsNoAlloc(variableName, '.'))
             {
                 return variableName.Substring(1 + variableName.IndexOf('.'));
             }
