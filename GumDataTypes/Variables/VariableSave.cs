@@ -67,9 +67,10 @@ namespace Gum.DataTypes.Variables
         {
             get
             {
-                if ( ToolsUtilities.StringFunctions.ContainsNoAlloc( Name, '.'))
+                int dotIndex = Name.IndexOf('.');
+                if (dotIndex != -1)
                 {
-                    return Name.Substring(0, Name.IndexOf('.'));
+                    return Name.Substring(0, dotIndex);
                 }
                 else
                 {
@@ -162,14 +163,14 @@ namespace Gum.DataTypes.Variables
 
         public string GetRootName()
         {
-
-            if (Name.IndexOf('.') == -1)
+            int dotIndex = Name.IndexOf('.');
+            if (dotIndex == -1)
             {
                 return Name;
             }
             else
             {
-                return Name.Substring(1 + Name.IndexOf('.'));
+                return Name.Substring(1 + dotIndex);
             }
         }
 
