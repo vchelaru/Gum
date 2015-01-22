@@ -669,7 +669,7 @@ namespace Gum.DataTypes.Variables
                 bool needsValueFromBase = firstVariable == null || firstVariable.SetsValue == false;
                 bool setsValue = secondVariable.SetsValue;
 
-                object firstValue = firstVariable.Value;
+                object firstValue = null;
 
                 if (firstVariable == null)
                 {
@@ -686,6 +686,10 @@ namespace Gum.DataTypes.Variables
 
                         firstValue = firstState.GetValueRecursive(secondVariable.Name);
                     }
+                }
+                else
+                {
+                    firstValue = firstVariable.Value;
                 }
 
                 if(setsValue)
