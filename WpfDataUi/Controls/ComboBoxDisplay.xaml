@@ -12,7 +12,7 @@
             <ColumnDefinition Width="{Binding SecondGridLength}"></ColumnDefinition>
         </Grid.ColumnDefinitions>
 
-        <Label x:Name="Label">Property Label:</Label>
+        <Label x:Name="Label" VerticalAlignment="Center">Property Label:</Label>
         <ComboBox Grid.Column="1" x:Name="ComboBox" 
                   SelectionChanged="ComboBox_SelectionChanged" 
                   TextBlock.Foreground="{Binding DesiredForegroundBrush}"
