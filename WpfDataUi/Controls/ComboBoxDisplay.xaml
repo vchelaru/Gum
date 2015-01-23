@@ -16,7 +16,7 @@
         <ComboBox Grid.Column="1" x:Name="ComboBox" 
                   SelectionChanged="ComboBox_SelectionChanged" 
                   TextBlock.Foreground="{Binding DesiredForegroundBrush}"
-                  MinWidth="60">
+                  MinWidth="60" VerticalAlignment="Center">
             <ComboBox.ContextMenu>
                 <ContextMenu>
                 </ContextMenu>
