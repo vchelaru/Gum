@@ -29,29 +29,21 @@
         private void InitializeComponent()
         {
             this.TopPropertyGrid = new System.Windows.Forms.PropertyGrid();
-            this.GuideListDisplay = new Gum.Gui.Controls.GuideListDisplay();
             this.AutoSaveCheckBox = new System.Windows.Forms.CheckBox();
+            this.GuideListDisplay = new Gum.Gui.Controls.GuideListDisplay();
             this.SuspendLayout();
             // 
             // TopPropertyGrid
             // 
+            this.TopPropertyGrid.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.TopPropertyGrid.HelpVisible = false;
             this.TopPropertyGrid.Location = new System.Drawing.Point(12, 35);
             this.TopPropertyGrid.Name = "TopPropertyGrid";
-            this.TopPropertyGrid.Size = new System.Drawing.Size(262, 72);
+            this.TopPropertyGrid.Size = new System.Drawing.Size(238, 110);
             this.TopPropertyGrid.TabIndex = 0;
             this.TopPropertyGrid.ToolbarVisible = false;
             this.TopPropertyGrid.PropertyValueChanged += new System.Windows.Forms.PropertyValueChangedEventHandler(this.TopPropertyGridValueChanged);
-            // 
-            // GuideListDisplay
-            // 
-            this.GuideListDisplay.GumProjectSave = null;
-            this.GuideListDisplay.Location = new System.Drawing.Point(12, 118);
-            this.GuideListDisplay.Margin = new System.Windows.Forms.Padding(3, 8, 3, 3);
-            this.GuideListDisplay.Name = "GuideListDisplay";
-            this.GuideListDisplay.Padding = new System.Windows.Forms.Padding(0, 8, 0, 0);
-            this.GuideListDisplay.Size = new System.Drawing.Size(262, 142);
-            this.GuideListDisplay.TabIndex = 1;
             // 
             // AutoSaveCheckBox
             // 
@@ -64,11 +56,24 @@
             this.AutoSaveCheckBox.UseVisualStyleBackColor = true;
             this.AutoSaveCheckBox.CheckedChanged += new System.EventHandler(this.AutoSaveCheckBox_CheckedChanged);
             // 
+            // GuideListDisplay
+            // 
+            this.GuideListDisplay.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.GuideListDisplay.GumProjectSave = null;
+            this.GuideListDisplay.Location = new System.Drawing.Point(12, 156);
+            this.GuideListDisplay.Margin = new System.Windows.Forms.Padding(3, 8, 3, 3);
+            this.GuideListDisplay.Name = "GuideListDisplay";
+            this.GuideListDisplay.Padding = new System.Windows.Forms.Padding(0, 8, 0, 0);
+            this.GuideListDisplay.Size = new System.Drawing.Size(238, 188);
+            this.GuideListDisplay.TabIndex = 1;
+            // 
             // ProjectPropertyGridWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(286, 272);
+            this.ClientSize = new System.Drawing.Size(262, 356);
             this.Controls.Add(this.AutoSaveCheckBox);
             this.Controls.Add(this.GuideListDisplay);
             this.Controls.Add(this.TopPropertyGrid);
