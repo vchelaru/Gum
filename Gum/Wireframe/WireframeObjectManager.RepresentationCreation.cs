@@ -689,9 +689,9 @@ namespace Gum.Wireframe
                 text.FontScale = rvf.GetValue<float>("Font Scale");
             }
 
-            text.RawText = (string)rvf.GetValue("Text");
-            text.HorizontalAlignment = (HorizontalAlignment)rvf.GetValue("HorizontalAlignment");
-            text.VerticalAlignment = (VerticalAlignment)rvf.GetValue("VerticalAlignment");
+            text.RawText = rvf.GetValue<string>("Text");
+            text.HorizontalAlignment = rvf.GetValue<HorizontalAlignment>("HorizontalAlignment");
+            text.VerticalAlignment = rvf.GetValue<VerticalAlignment>("VerticalAlignment");
 
             if(rvf.GetValue<bool>("UseCustomFont"))
             {
@@ -710,8 +710,8 @@ namespace Gum.Wireframe
             }
             else
             {
-                string fontName = (string)rvf.GetValue("Font");
-                int fontSize = (int)rvf.GetValue("FontSize");
+                string fontName = rvf.GetValue<string>("Font");
+                int fontSize = rvf.GetValue<int>("FontSize");
                 int outlineThickness = rvf.GetValue<int>("OutlineThickness");
 
                 BmfcSave.CreateBitmapFontFilesIfNecessary(
