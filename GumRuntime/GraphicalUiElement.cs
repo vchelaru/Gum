@@ -1694,6 +1694,17 @@ namespace Gum.Wireframe
                         }
                     }
                 }
+
+                // If a Component contains a child and that child is parented to the screen bounds then we should still add it
+                foreach (var child in this.mWhatThisContains)
+                {
+                    // We'll check if this child has a parent, and if that parent isn't part of this component. If not, then
+                    // we'll add it
+                    if(child.Parent != null && this.mWhatThisContains.Contains(child.Parent) == false)
+                    {
+                        (child as GraphicalUiElement).AddToManagers(managers, layer);
+                    }
+                }
             }
         }
 
