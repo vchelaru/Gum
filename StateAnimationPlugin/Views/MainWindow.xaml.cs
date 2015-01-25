@@ -18,6 +18,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using StateAnimationPlugin.Validation;
 
 namespace StateAnimationPlugin.Views
 {
@@ -73,12 +74,19 @@ namespace StateAnimationPlugin.Views
 
                 if(dialogResult == System.Windows.Forms.DialogResult.OK)
                 {
-                    var newAnimation = new AnimationViewModel() { Name = tiw.Result };
+                    string whyInvalid;
+                    if (!NameValidator.IsAnimationNameValid(tiw.Result, out whyInvalid))
+                    {
+                        MessageBox.Show(whyInvalid);
+                    }
+                    else
+                    {
+                        var newAnimation = new AnimationViewModel() { Name = tiw.Result };
 
-                    this.ViewModel.Animations.Add(newAnimation);
+                        this.ViewModel.Animations.Add(newAnimation);
 
-                    this.ViewModel.SelectedAnimation = newAnimation;
-
+                        this.ViewModel.SelectedAnimation = newAnimation;
+                    }
                 }
             }
         }
