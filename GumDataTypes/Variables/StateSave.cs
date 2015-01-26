@@ -209,7 +209,7 @@ namespace Gum.DataTypes.Variables
 
             // If the user hasn't set this variable on this state, it'll be null. So let's just display null
             // for now.  Eventually we'll display a variable plus some kind of indication that it's an unset variable.
-            if(variableState == null)
+            if(variableState == null || variableState.SetsValue == false)
             {
                 VariableListSave variableListSave = GetVariableListSave(variableName);
                 if (variableListSave != null)

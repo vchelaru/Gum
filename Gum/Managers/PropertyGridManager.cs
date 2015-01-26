@@ -482,7 +482,7 @@ namespace Gum.Managers
                 // Don't let the user reset standard element variables, they have to have some actual value
                 (SelectedState.Self.SelectedElement is StandardElementSave) == false)
             {
-                variableName = variableName;
+                //variableName = variableName;
                 shouldReset = true;
             }
 

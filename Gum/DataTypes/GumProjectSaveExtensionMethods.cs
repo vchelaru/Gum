@@ -38,6 +38,8 @@ namespace Gum.DataTypes
                 // this will result in extra variables being
                 // added
                 wasModified = standardElementSave.Initialize(stateSave) || wasModified;
+
+                stateSave.ParentContainer = standardElementSave;
             }
 
             foreach (ScreenSave screenSave in gumProjectSave.Screens)
