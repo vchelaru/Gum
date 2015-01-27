@@ -119,14 +119,7 @@ namespace Gum.DataTypes
 
         public InstanceSave GetInstance(string name)
         {
-            foreach (InstanceSave instance in this.Instances)
-            {
-                if (instance.Name == name)
-                {
-                    return instance;
-                }
-            }
-            return null;
+            return Instances.FirstOrDefault(i => i.Name == name);
         }
 
         public void Save(string fileName)

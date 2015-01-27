@@ -94,7 +94,6 @@ namespace ToolsUtilities
             if (!ignoreExtensions)
             {
 #if ANDROID || IOS || WINDOWS_8
-
 				try
                 {
 					fileName = Standardize(fileName);
@@ -111,10 +110,8 @@ namespace ToolsUtilities
                 {
                     return false;
                 }
-
 #else
                 return File.Exists(fileName);
-
 #endif
             }
             else
@@ -218,8 +215,6 @@ namespace ToolsUtilities
             {
                 // If this happens then fileName is actually a directory.
                 // So we should return the parent directory of the argument.
-
-
 
                 lastIndex = System.Math.Max(
                     fileName.LastIndexOf('/', fileName.Length - 2),

@@ -80,30 +80,12 @@ namespace Gum.DataTypes.Variables
 
         public VariableSave GetVariableSave(string variableName)
         {
-            for (int i = 0; i < Variables.Count; i++)
-            {
-                var variableSave = Variables[i];
-                if (variableSave.Name == variableName || variableSave.ExposedAsName == variableName)
-                {
-                    return variableSave;
-                }
-            }
-
-
-
-            return null;
+            return Variables.FirstOrDefault(v => v.Name == variableName || v.ExposedAsName == variableName);
         }
 
         public VariableListSave GetVariableListSave(string variableName)
         {
-            foreach (var variableList in VariableLists)
-            {
-                if (variableList.Name == variableName)
-                {
-                    return variableList;
-                }
-            }
-            return null;
+            return VariableLists.FirstOrDefault(list => list.Name == variableName);
         }
 
         public bool TryGetValue<T>(string variableName, out T result)
@@ -223,7 +205,6 @@ namespace Gum.DataTypes.Variables
             }
             else
             {
-            
                 return variableState.Value;
             }
         }
