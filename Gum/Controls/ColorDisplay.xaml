@@ -17,7 +17,7 @@
         <Label x:Name="Label" MinWidth="100">Property Label:</Label>
         <xctk:ColorPicker Grid.Column="1" Width="60"
                           Name="ColorPicker" 
-                          SelectedColorChanged="HandleColorChange">
+                          SelectedColorChanged="HandleColorChange" VerticalAlignment="Center">
             
         </xctk:ColorPicker>
     </Grid>

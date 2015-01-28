@@ -13,7 +13,7 @@
         
         <TextBox Grid.Column="1" x:Name="TextBox" 
                  Margin="0,0,24,0" LostFocus="TextBox_LostFocus_1" 
-                 MinWidth="60">
+                 MinWidth="60" VerticalAlignment="Center">
             <TextBox.ContextMenu>
                 <ContextMenu>
                 </ContextMenu>
@@ -21,7 +21,7 @@
         </TextBox>
         <Button Grid.Column="1"
                 Width="24"
-                HorizontalAlignment="Right" Click="Button_Click_1"
+                HorizontalAlignment="Right" Click="Button_Click_1" VerticalAlignment="Center"
                 >...</Button>
         
     </Grid>
