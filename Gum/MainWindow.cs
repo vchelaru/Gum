@@ -64,6 +64,11 @@ namespace Gum
 
         }
 
+        private void undoToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            UndoManager.Self.PerformUndo();
+        }
+
         private void screenToolStripMenuItem_Click(object sender, EventArgs e)
         {
             ElementTreeViewManager.Self.AddScreenClick();
@@ -167,23 +172,6 @@ namespace Gum
         {
             ProjectManager.Self.RecentFilesUpdated += RefreshRecentFiles;
             ProjectManager.Self.Initialize();
-
-
-        }
-
-        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
-        {
-            // CTRL+Z, control z, undo, ctrl z, ctrl + z
-            switch (keyData)
-            {
-                case Keys.Control | Keys.Z:
-                    UndoManager.Self.PerformUndo();
-                    return true;
-                default:
-                    break;
-            }
-
-            return base.ProcessCmdKey(ref msg, keyData);
         }
 
         private void VariablesAndEverythingElse_SplitterMoved(object sender, SplitterEventArgs e)
