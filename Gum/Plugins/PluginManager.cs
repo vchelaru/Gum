@@ -556,7 +556,6 @@ namespace Gum.Plugins
                     }
                 }
             }
-
         }
 
 
@@ -592,11 +591,10 @@ namespace Gum.Plugins
                 doesPluginWantToShutDown =
                     container.Plugin.ShutDown(shutDownReason);
             }
-            catch (Exception exception)
+            catch (Exception)
             {
                 doesPluginWantToShutDown = true;
             }
-
 
 
             if (doesPluginWantToShutDown)
@@ -606,28 +604,24 @@ namespace Gum.Plugins
 
             if (shutDownReason == PluginShutDownReason.UserDisabled)
             {
-                mPluginSettingsSave.DisabledPlugins.Add(pluginToShutDown.UniqueId);
-                StringFunctions.RemoveDuplicates(mPluginSettingsSave.DisabledPlugins);
-                mPluginSettingsSave.Save(PluginSettingsSaveFileName);
+                if (!mPluginSettingsSave.DisabledPlugins.Contains(pluginToShutDown.UniqueId))
+                {
+                    mPluginSettingsSave.DisabledPlugins.Add(pluginToShutDown.UniqueId);
+                    mPluginSettingsSave.Save(PluginSettingsSaveFileName);
+                }
             }
 
             return doesPluginWantToShutDown;
-
         }
 
         internal static void ReenablePlugin(IPlugin pluginToReenable)
         {
-            if (mPluginSettingsSave.DisabledPlugins.Contains(pluginToReenable.UniqueId))
-            {
-                mPluginSettingsSave.DisabledPlugins.Remove(pluginToReenable.UniqueId);
-            }
-            mPluginSettingsSave.Save(PluginSettingsSaveFileName);
-
+            if (mPluginSettingsSave.DisabledPlugins.Remove(pluginToReenable.UniqueId))
+                mPluginSettingsSave.Save(PluginSettingsSaveFileName);
         }
 
         internal static void AddInternalPlugins()
         {
-
         }
 
 

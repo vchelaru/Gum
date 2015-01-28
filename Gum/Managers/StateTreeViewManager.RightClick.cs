@@ -122,7 +122,6 @@ namespace Gum.Managers
                     SelectedState.Self.SelectedStateCategorySave = category;
 
                     GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
-
                 }
             }
         }
@@ -238,7 +237,6 @@ namespace Gum.Managers
 
             GumCommands.Self.GuiCommands.RefreshStateTreeView();
             GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
-
         }
     }
 }

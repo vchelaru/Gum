@@ -239,32 +239,22 @@ namespace Gum.Managers
         private static string GetUniqueNameForNewInstance(ElementSave elementSave, ElementSave element)
         {
 #if DEBUG
-            if(elementSave == null)
+            if (elementSave == null)
             {
                 throw new ArgumentNullException("elementSave");
             }
 #endif
 
             string name = elementSave.Name + "Instance";
+            IEnumerable<string> existingNames = element.Instances.Select(i => i.Name);
 
-            // Gotta make this unique:
-            List<string> existingNames = new List<string>();
-            foreach (InstanceSave instance in element.Instances)
-            {
-                existingNames.Add(instance.Name);
-            }
-            name = StringFunctions.MakeStringUnique(name, existingNames);
-            return name;
+            return StringFunctions.MakeStringUnique(name, existingNames);
         }
 
         internal void HandleFileDragDrop(object sender, DragEventArgs e)
         {
-            /////////////////////////////Early Out///////////////////////
-            if (SelectedState.Self.SelectedStandardElement != null)
-            {
+            if (SelectedState.Self.SelectedStandardElement != null) // Don't allow dropping on standard elements
                 return;
-            }
-            ///////////////////////////End Early Out/////////////////////
 
             string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
             string firstFile = null;
@@ -282,7 +272,6 @@ namespace Gum.Managers
                 if (LoaderManager.Self.ValidTextureExtensions.Contains(extension))
                 {
                     HandleTextureFileDragDrop(firstFile);
-
                 }
             }
         }
@@ -293,7 +282,6 @@ namespace Gum.Managers
 
             fileName = FileManager.MakeRelative(fileName,
                 FileLocations.Self.ProjectFolder);
-
 
 
             // See if we're over representation that can take a file
@@ -346,11 +334,7 @@ namespace Gum.Managers
             if (shouldUpdate)
             {
                 SaveAndRefresh();
-
             }
-
-            int m = 3;
-
         }
 
         private static void SaveAndRefresh()
@@ -366,12 +350,7 @@ namespace Gum.Managers
             bool shouldUpdate = true;
             string nameToAdd = FileManager.RemovePath(FileManager.RemoveExtension(fileName));
 
-
-            List<string> existingNames = new List<string>();
-            foreach (InstanceSave existingInstance in SelectedState.Self.SelectedElement.Instances)
-            {
-                existingNames.Add(existingInstance.Name);
-            }
+            IEnumerable<string> existingNames = SelectedState.Self.SelectedElement.Instances.Select(i => i.Name);
             nameToAdd = StringFunctions.MakeStringUnique(nameToAdd, existingNames);
 
             InstanceSave instance =
@@ -381,9 +360,7 @@ namespace Gum.Managers
             SetInstanceToPosition(worldX, worldY, instance);
 
 
-
-            SelectedState.Self.SelectedStateSave.SetValue(
-                    instance.Name + ".SourceFile", fileName);
+            SelectedState.Self.SelectedStateSave.SetValue(instance.Name + ".SourceFile", fileName);
 
 
             shouldUpdate = true;
@@ -402,22 +379,17 @@ namespace Gum.Managers
 
             // This thing may be left or center aligned so we should account for that
 
-            SelectedState.Self.SelectedStateSave.SetValue(
-                    instance.Name + ".X", worldX - parentX);
-
-            SelectedState.Self.SelectedStateSave.SetValue(
-                    instance.Name + ".Y", worldY - parentY);
+            SelectedState.Self.SelectedStateSave.SetValue(instance.Name + ".X", worldX - parentX);
+            SelectedState.Self.SelectedStateSave.SetValue(instance.Name + ".Y", worldY - parentY);
         }
 
         internal void HandleFileDragEnter(object sender, DragEventArgs e)
         {
-            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            if (SelectedState.Self.SelectedStandardElement == null && // can't drop on standard elements
+                e.Data.GetDataPresent(DataFormats.FileDrop))
             {
                 e.Effect = DragDropEffects.Copy;
             }
-
-
-
         }
     }
 }

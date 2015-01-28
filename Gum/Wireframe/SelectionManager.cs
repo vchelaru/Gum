@@ -338,7 +338,6 @@ namespace Gum.Wireframe
         public void LateActivity()
         {
             UpdateResizeHandles();
-
         }
 
         public void Deselect()
@@ -516,7 +515,6 @@ namespace Gum.Wireframe
 
         public GraphicalUiElement GetRepresentationAt(float x, float y, bool skipSelected, List<ElementWithState> elementStack)
         {
-
             GraphicalUiElement ipsoOver = null;
 
 

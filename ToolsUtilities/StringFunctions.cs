@@ -215,25 +215,6 @@ namespace ToolsUtilities
             return true;
         }
 
-        public static void RemoveDuplicates(List<string> strings)
-        {
-
-            Dictionary<string, int> uniqueStore = new Dictionary<string, int>();
-            List<string> finalList = new List<string>();
-
-            foreach (string currValue in strings)
-            {
-                if (!uniqueStore.ContainsKey(currValue))
-                {
-                    uniqueStore.Add(currValue, 0);
-                    finalList.Add(currValue);
-                }
-            }
-
-            strings.Clear();
-            strings.AddRange(finalList);
-        }
-
         public static bool Contains(this string[] values, string value)
         {
             for (int i = 0; i < values.Length; i++)
@@ -260,63 +241,10 @@ namespace ToolsUtilities
 
         public static string MakeStringUnique(string stringToMakeUnique, IEnumerable<string> strings)
         {
-            return MakeStringUnique(stringToMakeUnique, strings, 1);
-        }
-
-        public static string MakeStringUnique(string stringToMakeUnique, IEnumerable<string> strings, int numberToStartAt)
-        {
-            List<string> list = strings.ToList();
-            for (int i = 0; i < list.Count; i++)
-            {
-                if (stringToMakeUnique == list[i])
-                {
-                    // the name matches an item in the list that isn't the same reference, so increment the number.
-                    stringToMakeUnique = IncrementNumberAtEnd(stringToMakeUnique);
-
-                    // Inefficient?  Maybe if we have large numbers, but we're just using it to start at #2
-                    // I may revisit this if this causes problems
-                    while (GetNumberAtEnd(stringToMakeUnique) < numberToStartAt)
-                    {
-                        stringToMakeUnique = IncrementNumberAtEnd(stringToMakeUnique);
-                    }
-
-                    // restart the loop:
-                    i = -1;
-                }
-            }
+            while (strings.Contains(stringToMakeUnique))
+                stringToMakeUnique = IncrementNumberAtEnd(stringToMakeUnique);
 
             return stringToMakeUnique;
-        }
-
-        #region XML Docs
-        /// <summary>
-        /// Returns the number found at the end of the argument stringToGetNumberFrom or throws an
-        /// ArgumentException if no number is found.
-        /// </summary>
-        /// <remarks>
-        /// A stringToGetNumberFrom of "sprite41" will result in the value of 41 returned.  A 
-        /// stringToGetNumberFrom of "sprite" will result in an ArgumentException being thrown.
-        /// </remarks>
-        /// <exception cref="System.ArgumentException">Throws ArgumentException if no number is found at the end of the argument string.</exception>
-        /// <param name="stringToGetNumberFrom">The number found at the end.</param>
-        /// <returns>The integer value found at the end of the stringToGetNumberFrom.</returns>
-        #endregion
-        public static int GetNumberAtEnd(string stringToGetNumberFrom)
-        {
-            int letterChecking = stringToGetNumberFrom.Length;
-            do
-            {
-                letterChecking--;
-            } while (letterChecking > -1 && Char.IsDigit(stringToGetNumberFrom[letterChecking]));
-
-
-            if (letterChecking == stringToGetNumberFrom.Length - 1 && !Char.IsDigit(stringToGetNumberFrom[letterChecking]))
-            {
-                throw new ArgumentException("The argument string has no number at the end.");
-            }
-
-            return System.Convert.ToInt32(
-                stringToGetNumberFrom.Substring(letterChecking + 1, stringToGetNumberFrom.Length - letterChecking - 1));
         }
 
         #region XML Docs

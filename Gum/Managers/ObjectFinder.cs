@@ -296,7 +296,7 @@ namespace Gum.Managers
             return toReturn;
         }
 
-        public List<string> GetAllFilesInProject()
+        public IEnumerable<string> GetAllFilesInProject()
         {
             List<string> toReturn = new List<string>();
 
@@ -304,8 +304,7 @@ namespace Gum.Managers
             FillListWithReferencedFiles(toReturn, GumProjectSave.Components);
             FillListWithReferencedFiles(toReturn, GumProjectSave.StandardElements);
 
-            StringFunctions.RemoveDuplicates(toReturn);
-            return toReturn;
+            return toReturn.Distinct();
         }
 
 
@@ -326,7 +325,6 @@ namespace Gum.Managers
 
             foreach (var state in element.AllStates)
             {
-
                 rvf = new RecursiveVariableFinder(element.DefaultState);
 
                 value = rvf.GetValue<string>("SourceFile");
@@ -362,10 +360,8 @@ namespace Gum.Managers
                         files.Add(value);
                     }
                 }
-
             }
         }
-
     }
 
 

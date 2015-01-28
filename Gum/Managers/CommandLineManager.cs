@@ -53,9 +53,7 @@ namespace Gum.Managers
                     Glux = System.IO.Directory.GetFiles(gluxDirectory)
                         .FirstOrDefault(item => item.ToLowerInvariant().EndsWith(".gumx"));
                 }
-
             }
-
         }
     }
 }

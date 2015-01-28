@@ -252,7 +252,6 @@ namespace Gum.Managers
             }
 
             return false;
-
         }
 
 
