@@ -7,7 +7,7 @@
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Name="FirstColumn" Width="{Binding FirstGridLength}"></ColumnDefinition>
-            <ColumnDefinition Width="{Binding SecondGridLength}"></ColumnDefinition>
+            <ColumnDefinition Width="*"></ColumnDefinition>
         </Grid.ColumnDefinitions>    
         <Label x:Name="Label" MinWidth="100">Property Label:</Label>        
         

@@ -9,7 +9,7 @@
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="{Binding FirstGridLength}"></ColumnDefinition>
-            <ColumnDefinition Width="{Binding SecondGridLength}"></ColumnDefinition>
+            <ColumnDefinition Width="*"></ColumnDefinition>
         </Grid.ColumnDefinitions>
 
         <Label x:Name="Label" VerticalAlignment="Center">Property Label:</Label>

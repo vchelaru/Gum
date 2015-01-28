@@ -8,10 +8,7 @@
              d:DesignHeight="300" d:DesignWidth="300"
              >
 
-    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
-                  HorizontalAlignment="Stretch"
-                  >
-
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
         <ItemsControl Name="InternalControl" ItemsSource="{Binding Categories}">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
@@ -23,7 +20,6 @@
                                     <DataUi:SingleDataUiContainer Margin="1"/>
                                 </DataTemplate>    
                             </ItemsControl.ItemTemplate>
-                            
                         </ItemsControl>
                     </Expander>
                 </DataTemplate>
