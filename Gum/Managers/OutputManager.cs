@@ -15,8 +15,6 @@ namespace Gum.Managers
         public void Initialize(RichTextBox richTextBox)
         {
             mRichTextBox = richTextBox;
-
-
         }
 
 
@@ -31,6 +29,7 @@ namespace Gum.Managers
             }
 
             mRichTextBox.Text = text;
+            ScrollToBottom();
         }
 
         public void AddError(string whatToAdd)
@@ -44,8 +43,14 @@ namespace Gum.Managers
             }
 
             mRichTextBox.Text = text;
+            ScrollToBottom();
         }
 
 
+        private void ScrollToBottom()
+        {
+            mRichTextBox.Select(mRichTextBox.TextLength, 0);
+            mRichTextBox.ScrollToCaret();
+        }
     }
 }
