@@ -41,8 +41,8 @@ namespace Gum.Wireframe
 
         public void HandleMouseWheel(object sender, MouseEventArgs e)
         {
-            float worldX = this.Cursor.GetWorldX();
-            float worldY = this.Cursor.GetWorldY();
+            float worldX, worldY;
+            Camera.ScreenToWorld(e.X, e.Y, out worldX, out worldY);
 
             float differenceX = Camera.X - worldX;
             float differenceY = Camera.Y - worldY;
@@ -63,12 +63,10 @@ namespace Gum.Wireframe
 
             Camera.X = worldX + newDifferenceX;
             Camera.Y = worldY + newDifferenceY;
-
         }
 
         public void CameraMovementAndZoomActivity()
         {
-
             if (Cursor.IsInWindow)
             {
                 if (Cursor.MiddleDown)
@@ -95,14 +93,12 @@ namespace Gum.Wireframe
                 else if (e.KeyCode == System.Windows.Forms.Keys.Left)
                 {
                     SystemManagers.Default.Renderer.Camera.X -= 10 / SystemManagers.Default.Renderer.Camera.Zoom;
-
                 }
                 else if (e.KeyCode == System.Windows.Forms.Keys.Right)
                 {
                     SystemManagers.Default.Renderer.Camera.X += 10 / SystemManagers.Default.Renderer.Camera.Zoom;
-
                 }
-                else if(e.KeyCode == Keys.Oemplus || e.KeyCode == Keys.Add)
+                else if (e.KeyCode == Keys.Oemplus || e.KeyCode == Keys.Add)
                 {
                     mWireframeEditControl.ZoomIn();
                 }
@@ -111,7 +107,6 @@ namespace Gum.Wireframe
                     mWireframeEditControl.ZoomOut();
                 }
             }
-
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using InputLibrary;
@@ -14,6 +15,7 @@ using CommonFormsAndControls.Forms;
 using Gum.ToolStates;
 using Gum.DataTypes.Variables;
 using Gum.ToolCommands;
+using RenderingLibrary.Graphics;
 
 namespace Gum.Managers
 {
@@ -52,8 +54,6 @@ namespace Gum.Managers
         public void OnItemDrag(object item)
         {
             mDraggedItem = item;
-
-
         }
 
         public void Activity()
@@ -86,12 +86,11 @@ namespace Gum.Managers
 
         private void HandleDroppedItemOnTreeView(object draggedObject, TreeNode treeNodeDroppedOn)
         {
-
             if (treeNodeDroppedOn != null)
             {
                 object targetTag = treeNodeDroppedOn.Tag;
 
-                if (draggedObject  is ElementSave)
+                if (draggedObject is ElementSave)
                 {
                     ElementSave draggedAsElementSave = draggedObject as ElementSave;
 
@@ -121,7 +120,6 @@ namespace Gum.Managers
                 else if (draggedObject is InstanceSave)
                 {
                     HandleDroppedInstance(draggedObject, targetTag);
-
                 }
             }
         }
@@ -129,8 +127,6 @@ namespace Gum.Managers
         private static void HandleDroppedInstance(object draggedObject, object targetTag)
         {
             InstanceSave draggedAsInstanceSave = draggedObject as InstanceSave;
-
-            bool handled;
 
             ElementSave targetElementSave = targetTag as ElementSave;
             if (targetElementSave == null && targetTag is InstanceSave)
@@ -165,15 +161,15 @@ namespace Gum.Managers
                 {
                     var newInstance = HandleDroppedElementInElement(draggedAsElementSave, target, out handled);
 
-                    float worldX = SelectionManager.Self.Cursor.GetWorldX();
-                    float worldY = SelectionManager.Self.Cursor.GetWorldY();
+                    float worldX, worldY;
+                    Renderer.Self.Camera.ScreenToWorld(Cursor.X, Cursor.Y,
+                                                       out worldX, out worldY);
 
                     SetInstanceToPosition(worldX, worldY, newInstance);
 
                     SaveAndRefresh();
                 }
             }
-
         }
 
         private static InstanceSave HandleDroppedElementInElement(ElementSave draggedAsElementSave, ElementSave target, out bool handled)
@@ -251,90 +247,105 @@ namespace Gum.Managers
             return StringFunctions.MakeStringUnique(name, existingNames);
         }
 
-        internal void HandleFileDragDrop(object sender, DragEventArgs e)
+        private bool CanDrop()
         {
-            if (SelectedState.Self.SelectedStandardElement != null) // Don't allow dropping on standard elements
-                return;
+            return SelectedState.Self.SelectedStandardElement == null &&    // Don't allow dropping on standard elements
+                   SelectedState.Self.SelectedElement != null &&            // An element must be selected
+                   SelectedState.Self.SelectedStateSave != null;            // A state must be selected
+        }
 
-            string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
-            string firstFile = null;
-            if(files.Length != 0)
+        internal void HandleFileDragEnter(object sender, DragEventArgs e)
+        {
+            if (CanDrop() && e.Data.GetDataPresent(DataFormats.FileDrop))
             {
-                firstFile = files[0];
-            }
-
-            if (SelectedState.Self.SelectedElement != null &&
-                SelectedState.Self.SelectedStateSave != null &&
-                !string.IsNullOrEmpty(firstFile))
-            {
-                string extension = FileManager.GetExtension(firstFile);
-
-                if (LoaderManager.Self.ValidTextureExtensions.Contains(extension))
-                {
-                    HandleTextureFileDragDrop(firstFile);
-                }
+                e.Effect = DragDropEffects.Copy;
             }
         }
 
-        private void HandleTextureFileDragDrop(string fileName)
+        internal void HandleFileDragDrop(object sender, DragEventArgs e)
         {
-            // Make the filename relative:
+            if (!CanDrop())
+                return;
 
-            fileName = FileManager.MakeRelative(fileName,
-                FileLocations.Self.ProjectFolder);
+            float worldX, worldY;
+            Renderer.Self.Camera.ScreenToWorld(Cursor.X, Cursor.Y, out worldX, out worldY);
 
+            string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
 
-            // See if we're over representation that can take a file
-            float worldX = SelectionManager.Self.Cursor.GetWorldX();
-            float worldY = SelectionManager.Self.Cursor.GetWorldY();
-
-            List<ElementWithState> elementStack = new List<ElementWithState>();
-            elementStack.Add(new ElementWithState(SelectedState.Self.SelectedElement) { StateName = SelectedState.Self.SelectedStateSave.Name });
-
-
-            IPositionedSizedObject ipsoOver = 
-                SelectionManager.Self.GetRepresentationAt(worldX, worldY, false, elementStack);
-
-            MultiButtonMessageBox mbmb = new MultiButtonMessageBox();
-
-            mbmb.MessageText = "What do you want to do with the file " + fileName;
-            if (ipsoOver != null && ipsoOver.Tag is InstanceSave)
+            // If only one file was dropped, see if we're over an instance that can take a file
+            if (files.Length == 1)
             {
-                var baseStandardElement = ObjectFinder.Self.GetRootStandardElementSave(ipsoOver.Tag as InstanceSave);
-                if (baseStandardElement.DefaultState.Variables.Any(item => item.Name == "SourceFile"))
-                {
-                    mbmb.AddButton("Set source file on " + ipsoOver.Name, DialogResult.OK);
-                }
-            }
+                if (!ValidExtension(files[0]))
+                    return;
 
-            mbmb.AddButton("Add new Sprite", DialogResult.Yes);
-            mbmb.AddButton("Nothing", DialogResult.Cancel);
-
-            var result = mbmb.ShowDialog();
-            bool shouldUpdate = false;
-
-            if (result == DialogResult.OK)
-            {
-                InstanceSave instance = ipsoOver.Tag as InstanceSave;
+                InstanceSave instance = FindInstanceWithSourceFile(worldX, worldY);
                 if (instance != null)
                 {
-                    // Need to make the file relative to the project:
+                    string fileName = FileManager.MakeRelative(files[0], FileLocations.Self.ProjectFolder);
 
-                    SelectedState.Self.SelectedStateSave.SetValue(
-                        instance.Name + ".SourceFile", fileName);
-                    shouldUpdate = true;
+                    MultiButtonMessageBox mbmb = new MultiButtonMessageBox();
+                    mbmb.MessageText = "What do you want to do with the file " + fileName;
 
+                    mbmb.AddButton("Set source file on " + instance.Name, DialogResult.OK);
+                    mbmb.AddButton("Add new Sprite", DialogResult.Yes);
+                    mbmb.AddButton("Nothing", DialogResult.Cancel);
+
+                    var result = mbmb.ShowDialog();
+
+                    if (result == DialogResult.OK)
+                    {
+                        SelectedState.Self.SelectedStateSave.SetValue(instance.Name + ".SourceFile", fileName);
+                        SaveAndRefresh();
+                        return;
+                    }
+                    else if (result == DialogResult.Cancel)
+                    {
+                        return;
+                    }
+                    // continue for DialogResult.Yes
                 }
             }
-            else if (result == DialogResult.Yes)
+
+            bool shouldUpdate = false;
+
+            foreach (string file in files)
             {
-                shouldUpdate = AddNewInstanceForDrop(fileName, worldX, worldY);
+                if (!ValidExtension(file))
+                    continue;
+
+                string fileName = FileManager.MakeRelative(file, FileLocations.Self.ProjectFolder);
+                if (AddNewInstanceForDrop(fileName, worldX, worldY))
+                    shouldUpdate = true;
             }
 
             if (shouldUpdate)
-            {
                 SaveAndRefresh();
+        }
+
+        private bool ValidExtension(string file)
+        {
+            string extension = FileManager.GetExtension(file);
+            return LoaderManager.Self.ValidTextureExtensions.Contains(extension);
+        }
+
+        private InstanceSave FindInstanceWithSourceFile(float worldX, float worldY)
+        {
+            List<ElementWithState> elementStack = new List<ElementWithState>();
+            elementStack.Add(new ElementWithState(SelectedState.Self.SelectedElement) { StateName = SelectedState.Self.SelectedStateSave.Name });
+
+            IPositionedSizedObject ipsoOver = SelectionManager.Self.GetRepresentationAt(worldX, worldY, false, elementStack);
+
+            if (ipsoOver != null && ipsoOver.Tag is InstanceSave)
+            {
+                var baseStandardElement = ObjectFinder.Self.GetRootStandardElementSave(ipsoOver.Tag as InstanceSave);
+
+                if (baseStandardElement.DefaultState.Variables.Any(v => v.Name == "SourceFile"))
+                {
+                    return ipsoOver.Tag as InstanceSave;
+                }
             }
+
+            return null;
         }
 
         private static void SaveAndRefresh()
@@ -381,15 +392,6 @@ namespace Gum.Managers
 
             SelectedState.Self.SelectedStateSave.SetValue(instance.Name + ".X", worldX - parentX);
             SelectedState.Self.SelectedStateSave.SetValue(instance.Name + ".Y", worldY - parentY);
-        }
-
-        internal void HandleFileDragEnter(object sender, DragEventArgs e)
-        {
-            if (SelectedState.Self.SelectedStandardElement == null && // can't drop on standard elements
-                e.Data.GetDataPresent(DataFormats.FileDrop))
-            {
-                e.Effect = DragDropEffects.Copy;
-            }
         }
     }
 }

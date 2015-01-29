@@ -511,10 +511,7 @@ namespace ToolsUtilities
                     indexOfNextDotDotSlash = fileNameToFix.IndexOf("..\\");
 
                     shouldLoop = indexOfNextDotDotSlash > 0;
-
-
                 }
-
             }
 
             return fileNameToFix.Replace("/", "\\");
@@ -538,7 +535,6 @@ namespace ToolsUtilities
                 return fileName.Substring(0, fileName.Length - (extensionLength + 1));
             else
                 return fileName;
-
         }
 
 

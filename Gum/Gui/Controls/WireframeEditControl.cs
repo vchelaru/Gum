@@ -94,7 +94,6 @@ namespace FlatRedBall.AnimationEditorForms.Controls
             }
 
             ComboBox.Text = "100%";
-
         }
 
         private void ComboBox_SelectedIndexChanged(object sender, EventArgs e)
@@ -124,9 +123,7 @@ namespace FlatRedBall.AnimationEditorForms.Controls
             {
                 index--;
                 ComboBox.SelectedIndex = index;
-
             }
-
         }
     }
 }

@@ -380,7 +380,5 @@ namespace Gum.Managers
                 return ObjectFinder.Self.GetElementSave(instanceSave.BaseType);
             }
         }
-
-
     }
 }

@@ -49,7 +49,7 @@ namespace InputLibrary
                 {
                     throw new NullReferenceException("The Cursor's Control is null.  You must call Initialize before using the Cursor");
                 }
-                System.Drawing.Point point = mControl.PointToClient(new System.Drawing.Point((int)mMouseState.X, (int)mMouseState.Y));
+                System.Drawing.Point point = mControl.PointToClient(new System.Drawing.Point(mMouseState.X, mMouseState.Y));
                 return point.X >= 0 && point.Y >= 0 && point.X < mControl.Width && point.Y < mControl.Height;
             }
         }
@@ -58,7 +58,7 @@ namespace InputLibrary
         {
             get
             {
-                System.Drawing.Point point = mControl.PointToClient(new System.Drawing.Point((int)mMouseState.X, (int)mMouseState.Y));
+                System.Drawing.Point point = mControl.PointToClient(new System.Drawing.Point(mMouseState.X, mMouseState.Y));
                 return point.X;
                 //return mMouseState.X;
             }
@@ -68,7 +68,7 @@ namespace InputLibrary
         {
             get
             {
-                System.Drawing.Point point = mControl.PointToClient(new System.Drawing.Point((int)mMouseState.X, (int)mMouseState.Y));
+                System.Drawing.Point point = mControl.PointToClient(new System.Drawing.Point(mMouseState.X, mMouseState.Y));
                 return point.Y;
 
                 //return mMouseState.Y;

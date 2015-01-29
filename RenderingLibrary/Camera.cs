@@ -168,24 +168,19 @@ namespace RenderingLibrary
 
         public static Matrix GetTransformationMatirx(float x, float y, float zoom, int clientWidth, int clientHeight)
         {
-            Matrix matrix;
-            
-            matrix =       
-              Matrix.CreateTranslation(new Vector3(-x, -y, 0)) *
-                                         Matrix.CreateScale(new Vector3(zoom, zoom, 1)) *
-                                         Matrix.CreateTranslation(new Vector3(clientWidth * 0.5f, clientHeight * 0.5f, 0));
-            return matrix;
-
+            return Matrix.CreateTranslation(new Vector3(-x, -y, 0)) *
+                   Matrix.CreateScale(new Vector3(zoom, zoom, 1)) *
+                   Matrix.CreateTranslation(new Vector3(clientWidth * 0.5f, clientHeight * 0.5f, 0));
         }
 
 
         public void ScreenToWorld(float screenX, float screenY, out float worldX, out float worldY)
         {
-            Vector3 transformed = new Vector3(screenX, screenY, 0);
-            Matrix matrix = GetTransformationMatrix();
-            matrix = Matrix.Invert(matrix);
+            Matrix matrix = Matrix.Invert(GetTransformationMatrix());
 
-            TransformVector(ref transformed, ref matrix);
+            Vector3 position = new Vector3(screenX, screenY, 0);
+            Vector3 transformed;
+            Vector3.Transform(ref position, ref matrix, out transformed);
 
             worldX = transformed.X;
             worldY = transformed.Y;
@@ -193,39 +188,14 @@ namespace RenderingLibrary
 
         public void WorldToScreen(float worldX, float worldY, out float screenX, out float screenY)
         {
-            Vector3 transformed = new Vector3(worldX, worldY, 0);
             Matrix matrix = GetTransformationMatrix();
 
-            TransformVector(ref transformed, ref matrix);
+            Vector3 position = new Vector3(worldX, worldY, 0);
+            Vector3 transformed;
+            Vector3.Transform(ref position, ref matrix, out transformed);
 
             screenX = transformed.X;
             screenY = transformed.Y;
-        }
-
-        public static void TransformVector(ref Vector3 vectorToTransform, ref Matrix matrixToTransformBy)
-        {
-
-            Vector3 transformed = Vector3.Zero;
-
-            transformed.X =
-                matrixToTransformBy.M11 * vectorToTransform.X +
-                matrixToTransformBy.M21 * vectorToTransform.Y +
-                matrixToTransformBy.M31 * vectorToTransform.Z +
-                matrixToTransformBy.M41;
-
-            transformed.Y =
-                matrixToTransformBy.M12 * vectorToTransform.X +
-                matrixToTransformBy.M22 * vectorToTransform.Y +
-                matrixToTransformBy.M32 * vectorToTransform.Z +
-                matrixToTransformBy.M42;
-
-            transformed.Z =
-                matrixToTransformBy.M13 * vectorToTransform.X +
-                matrixToTransformBy.M23 * vectorToTransform.Y +
-                matrixToTransformBy.M33 * vectorToTransform.Z +
-                matrixToTransformBy.M43;
-
-            vectorToTransform = transformed;
         }
 
         // Not sure why but for some reason the GraphicsDevice would
@@ -242,6 +212,5 @@ namespace RenderingLibrary
         }
 
         #endregion
-
     }
 }
