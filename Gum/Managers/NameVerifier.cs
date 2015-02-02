@@ -88,7 +88,6 @@ namespace Gum.Managers
             if (string.IsNullOrEmpty(whyNotValid))
             {
                 IsNameAlreadyUsed(variableName, null, elementSave, out whyNotValid);
-
             }
 
             return string.IsNullOrEmpty(whyNotValid);

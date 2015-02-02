@@ -183,7 +183,6 @@ namespace Gum.DataTypes.Variables
                         return instanceSave.Locked;
                     }
                 }
-
             }
 
             VariableSave variableState = GetVariableSave(variableName);

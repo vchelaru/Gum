@@ -275,27 +275,16 @@ namespace Gum.PropertyGridHelpers
         private void HandleExposeVariableClick(object sender, System.Windows.RoutedEventArgs e)
         {
             InstanceSave instanceSave = SelectedState.Self.SelectedInstance;
-
-            ///////////////////////////////////////Early Out//////////////////////////////////////
-            if(instanceSave == null)
+            if (instanceSave == null)
             {
                 MessageBox.Show("Cannot expose variables on components or screens, only on instances");
                 return;
             }
-            ////////////////////////////////////End Early Out/////////////////////////////////////
-
             
-            TextInputWindow tiw = new TextInputWindow();
-            tiw.Message = "Enter variable name:";
-
-
-
 
             StateSave currentStateSave = SelectedState.Self.SelectedStateSave;
-
             VariableSave variableSave = this.VariableSave;
-
-
+            bool tempVariable = false;
 
             if (variableSave == null)
             {
@@ -316,6 +305,7 @@ namespace Gum.PropertyGridHelpers
 
                     // Now the variable should be created so we can access it
                     variableSave = VariableSave;
+                    tempVariable = true;
                 }
             }
 
@@ -325,12 +315,13 @@ namespace Gum.PropertyGridHelpers
             }
             else
             {
-
-                //tiw.Result = instanceSave.Name + variableSave.Name;
+                TextInputWindow tiw = new TextInputWindow();
+                tiw.Message = "Enter variable name:";
                 // We want to use the name without the dots.
                 // So something like TextInstance.Text would be
                 // TextInstanceText
                 tiw.Result = variableSave.Name.Replace(".", "");
+
                 DialogResult result = tiw.ShowDialog();
 
                 if (result == DialogResult.OK)
@@ -342,19 +333,17 @@ namespace Gum.PropertyGridHelpers
                     }
                     else
                     {
-
                         variableSave.ExposedAsName = tiw.Result;
+                        tempVariable = false;
 
                         GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
-
                         GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);
                     }
                 }
-                else
-                {
-                    currentStateSave.Variables.Remove(variableSave);
-                }
             }
+
+            if (tempVariable)
+                currentStateSave.Variables.Remove(variableSave);
         }
 
         private void HandleUnexposeVariableClick(object sender, System.Windows.RoutedEventArgs e)
@@ -366,10 +355,8 @@ namespace Gum.PropertyGridHelpers
             {
                 variableSave.ExposedAsName = null;
                 GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
-
+                PropertyGridManager.Self.RefreshUI();
             }
-
-            PropertyGridManager.Self.RefreshUI();
         }
 
         private object GetEvent(object instance)

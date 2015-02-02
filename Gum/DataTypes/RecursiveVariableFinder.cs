@@ -73,11 +73,7 @@ namespace Gum.DataTypes
 
             mInstanceSave = instanceSave;
             mElementStack = elementStack;
-
         }
-
-
-
 
         public RecursiveVariableFinder(StateSave stateSave)
         {
@@ -94,7 +90,6 @@ namespace Gum.DataTypes
 #endif
 
             mElementStack.Add(new ElementWithState(stateSave.ParentContainer) { StateName = stateSave.Name });
-
         }
 
         public object GetValue(string variableName)
@@ -168,7 +163,6 @@ namespace Gum.DataTypes
                     {
                         instanceName = mElementStack.Last().InstanceName;
                     }
-                    var allExposed = GetExposedVariablesForThisInstance(mInstanceSave, instanceName, mElementStack, variableName);
 
                     bool onlyIfSetsValue = false;
 
@@ -185,6 +179,7 @@ namespace Gum.DataTypes
                     var found = mInstanceSave.GetVariableFromThisOrBase(mElementStack, this, variableName, false, onlyIfSetsValue);
                     if (found != null && !string.IsNullOrEmpty(found.ExposedAsName))
                     {
+                        var allExposed = GetExposedVariablesForThisInstance(mInstanceSave, instanceName, mElementStack, variableName);
                         var exposed = allExposed.FirstOrDefault();
 
                         if (exposed != null && exposed.Value != null)
@@ -218,12 +213,6 @@ namespace Gum.DataTypes
                 //break;
             }
             throw new NotImplementedException();
-        }
-
-        public List<VariableSave> GetExposedVariablesForThisInstance(DataTypes.InstanceSave instance, string parentInstanceName, 
-            List<ElementWithState> elementStack)
-        {
-            return GetExposedVariablesForThisInstance(instance, parentInstanceName, elementStack, null);
         }
 
         public List<VariableSave> GetExposedVariablesForThisInstance(DataTypes.InstanceSave instance, string parentInstanceName, 
@@ -279,7 +268,6 @@ namespace Gum.DataTypes
                             variableToAdd.SetsValue = foundVariable.SetsValue;
                             variableToAdd.Name = variable.Name.Substring(variable.Name.IndexOf('.') + 1);
                             exposedVariables.Add(variableToAdd);
-
                         }
 
                     }

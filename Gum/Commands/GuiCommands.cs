@@ -17,7 +17,6 @@ namespace Gum.Commands
         internal void Initialize(MainWindow mainWindow)
         {
             mFlowLayoutPanel = mainWindow.ToolbarPanel;
-
             mMainWindow = mainWindow;
         }
 
@@ -29,7 +28,6 @@ namespace Gum.Commands
         internal void RefreshStateTreeView()
         {
             StateTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedElement);
-            
         }
 
         internal void RefreshPropertyGrid(bool force = false)
@@ -40,7 +38,6 @@ namespace Gum.Commands
         public void AddControl(System.Windows.Controls.UserControl control, string tabTitle)
         {
             mMainWindow.AddWpfControl(control, tabTitle);
-
         }
 
         public void PrintOutput(string output)

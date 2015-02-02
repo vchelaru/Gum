@@ -77,7 +77,6 @@ namespace Gum.DataTypes.Variables
                     return null;
                 }
             }
-
         }
 
 
