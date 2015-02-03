@@ -39,7 +39,6 @@ namespace Gum.Managers
             if (SelectedState.Self.SelectedInstance != null &&
                 SelectedState.Self.SelectedComponent != null)
             {
-
                 if (variableSave == null || string.IsNullOrEmpty(variableSave.ExposedAsName))
                 {
 

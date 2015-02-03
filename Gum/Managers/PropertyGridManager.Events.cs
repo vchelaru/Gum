@@ -99,11 +99,10 @@ namespace Gum.Managers
 
                         if (tiw.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                         {
-                            string whyNotValid = null;
-
                             bool isValid = true;
 
                             // todo:
+                            //string whyNotValid = null;
                             //isValid = NameVerifier.Self.IsEventNameValid(tiw.Result, out whyNotValid);
 
                             if (isValid)

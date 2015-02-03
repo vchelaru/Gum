@@ -215,7 +215,7 @@ namespace Gum.Reflection
 
 #if DEBUG
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 if(fieldInfo == null)
                 {

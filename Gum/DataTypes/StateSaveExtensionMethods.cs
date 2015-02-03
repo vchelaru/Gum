@@ -155,13 +155,9 @@ namespace Gum.DataTypes.Variables
                         return baseElement.DefaultState.GetVariableRecursive(nameInBase);
                     }
                 }
-                    
-                return variableSave;
             }
-            else
-            {
-                return variableSave;
-            }
+
+            return variableSave;
         }
 
         public static VariableListSave GetVariableListRecursive(this StateSave stateSave, string variableName)

@@ -1177,10 +1177,7 @@ namespace Gum.Wireframe
                             break;
                         default:
                             throw new NotImplementedException();
-
-                            break;
                     }
-
                 }
 
                 unitOffsetX += xRelativeTo;

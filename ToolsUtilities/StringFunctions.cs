@@ -215,28 +215,9 @@ namespace ToolsUtilities
             return true;
         }
 
-        public static bool Contains(this string[] values, string value)
+        public static bool Contains<T>(this T[] values, T value)
         {
-            for (int i = 0; i < values.Length; i++)
-            {
-                if (values[i] == value)
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        public static bool Contains(this char[] values, char value)
-        {
-            for (int i = 0; i < values.Length; i++)
-            {
-                if (values[i] == value)
-                {
-                    return true;
-                }
-            }
-            return false;
+            return Array.IndexOf(values, value) != -1;
         }
 
         public static string MakeStringUnique(string stringToMakeUnique, IEnumerable<string> strings)
@@ -317,41 +298,35 @@ namespace ToolsUtilities
             return originalString;
         }
 
-        public static bool IsNullOrEmpty(this string stringInQuestion)
-        {
-            return string.IsNullOrEmpty(stringInQuestion);
-        }
+        private static char[] validHexCharacters = new char[] {
+            '0',
+            '1',
+            '2',
+            '3',
+            '4',
+            '5',
+            '6',
+            '7',
+            '8',
+            '9',
+            'a','A',
+            'b','B',
+            'c','C',
+            'd','D',
+            'e','E',
+            'f','F'
+        };
 
         public static bool IsValidHex(string stringWithout0x)
         {
-            char[] validCharacters = new char[]
-            {
-                '0',
-                '1',
-                '2',
-                '3',
-                '4',
-                '5',
-                '6',
-                '7',
-                '8',
-                '9',
-                'a','A',
-                'b','B',
-                'c','C',
-                'd','D',
-                'e','E',
-                'f','F'
-            };
-
-            if (stringWithout0x.IsNullOrEmpty())
+            if (string.IsNullOrEmpty(stringWithout0x))
             {
                 return false;
             }
 
             for (int i = 0; i < stringWithout0x.Length; i++)
             {
-                if (validCharacters.Contains(stringWithout0x[i]) == false)
+                if (validHexCharacters.Contains(stringWithout0x[i]) == false)
                 {
                     return false;
                 }
@@ -392,19 +367,9 @@ namespace ToolsUtilities
             return toReturn;
         }
 
-
         public static bool ContainsNoAlloc(string containingString, char charToLookFor)
         {
-            int length = containingString.Length;
-
-            for (int i = 0; i < length; i++)
-            {
-                if (containingString[i] == charToLookFor)
-                {
-                    return true;
-                }
-            }
-            return false;
+            return containingString.IndexOf(charToLookFor) != -1;
         }
     }
 }

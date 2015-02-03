@@ -210,7 +210,5 @@ namespace Gum.DataTypes.Variables
 
             return returnValue;
         }
-
-
     }
 }
