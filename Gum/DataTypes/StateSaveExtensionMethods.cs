@@ -270,7 +270,13 @@ namespace Gum.DataTypes.Variables
                 // instanceSave may (probably will be) null.
                 if (instanceSave != null)
                 {
-                    isFile = variableSave.GetIsFileFromRoot(instanceSave);
+                    VariableSave temp = variableSave;
+                    if (variableSave == null)
+                    {
+                        temp = new VariableSave();
+                        temp.Name = variableName;
+                    }
+                    isFile = temp.GetIsFileFromRoot(instanceSave);
                 }
                 else
                 {
