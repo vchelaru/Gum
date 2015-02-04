@@ -232,7 +232,8 @@ namespace Gum.DataTypes.Variables
         }
 
 
-        public static void SetValue(this StateSave stateSave, string variableName, object value, InstanceSave instanceSave = null, string variableType = null)
+        public static void SetValue(this StateSave stateSave, string variableName, object value, 
+            InstanceSave instanceSave = null, string variableType = null)
         {
             bool isReservedName = TrySetReservedValues(stateSave, variableName, value, instanceSave);
 
@@ -259,25 +260,6 @@ namespace Gum.DataTypes.Variables
 
             if (!isReservedName)
             {
-                if (value != null && value is IList)
-                {
-                    stateSave.AssignVariableListSave(variableName, value, instanceSave);
-                }
-                else
-                {
-
-                    variableSave = stateSave.AssignVariableSave(variableName, value, instanceSave, variableType);
-
-                    if (!string.IsNullOrEmpty(exposedVariableSourceName))
-                    {
-                        variableSave.ExposedAsName = variableName;
-                        variableSave.Name = exposedVariableSourceName;
-                    }
-
-                    stateSave.Variables.Sort((first, second) => first.Name.CompareTo(second.Name));
-                }
-
-
                 bool isFile = false;
 
                 // Why might instanceSave be null?
@@ -290,10 +272,40 @@ namespace Gum.DataTypes.Variables
                 {
                     isFile = variableSave.GetIsFileFromRoot(instanceSave);
                 }
-                else if (variableSave != null)
+                else
                 {
-                    isFile = variableSave.IsFile;
+                    VariableSave temp = variableSave;
+                    if(variableSave == null)
+                    {
+                        temp = new VariableSave();
+                        temp.Name = variableName;
+                    }
+                    isFile = temp.GetIsFileFromRoot(stateSave.ParentContainer);
                 }
+
+
+                if (value != null && value is IList)
+                {
+                    stateSave.AssignVariableListSave(variableName, value, instanceSave);
+                }
+                else
+                {
+
+                    variableSave = stateSave.AssignVariableSave(variableName, value, instanceSave, variableType, isFile);
+
+                    variableSave.IsFile = isFile;
+
+                    if (!string.IsNullOrEmpty(exposedVariableSourceName))
+                    {
+                        variableSave.ExposedAsName = variableName;
+                        variableSave.Name = exposedVariableSourceName;
+                    }
+
+                    stateSave.Variables.Sort((first, second) => first.Name.CompareTo(second.Name));
+                }
+
+
+
 
                 if (isFile &&
                     value is string &&
@@ -305,7 +317,7 @@ namespace Gum.DataTypes.Variables
                     value = FileManager.MakeRelative((string)value, directoryToMakeRelativeTo, preserveCase);
 
                     // re-assign the value using the relative name now
-                    stateSave.AssignVariableSave(variableName, value, instanceSave, variableType);
+                    var assignedVariable = stateSave.AssignVariableSave(variableName, value, instanceSave, variableType, isFile);
                 }
             }
 
@@ -408,7 +420,7 @@ namespace Gum.DataTypes.Variables
         /// <param name="instanceSave">The instance that owns this variable.  This may be null.</param>
         /// <param name="variableType">The type of the variable.  This is only needed if the value is null.</param>
         private static VariableSave AssignVariableSave(this StateSave stateSave, string variableName, object value, 
-            InstanceSave instanceSave, string variableType = null)
+            InstanceSave instanceSave, string variableType = null, bool isFile = false)
         {
             // Not a reserved variable, so use the State's variables
             VariableSave variableSave = stateSave.GetVariableSave(variableName);
@@ -449,7 +461,7 @@ namespace Gum.DataTypes.Variables
                     variableSave.Type = value.GetType().ToString();
                 }
 
-                // Let's get the variable that this comes from to see if it's a file
+                variableSave.IsFile = isFile;
 
                 variableSave.Name = variableName;
 

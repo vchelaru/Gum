@@ -350,6 +350,21 @@ namespace Gum.DataTypes
             return toReturn;
         }
 
+        public static bool GetIsFileFromRoot(this VariableSave variable, ElementSave element)
+        {
+            var variableInRoot = element.DefaultState.Variables.FirstOrDefault(item => item.Name == variable.GetRootName());
+
+            if (variableInRoot != null)
+            {
+                return variableInRoot.IsFile;
+            }            
+            else
+            {
+                // unknown so assume no
+                return false;
+            }
+        }
+
         public static bool GetIsFileFromRoot(this VariableSave variable, InstanceSave instance)
         {
             if (string.IsNullOrEmpty(variable.SourceObject))
