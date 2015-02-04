@@ -1219,9 +1219,9 @@ namespace ToolsUtilities
 #endif
             }
         }
+
         public static void XmlSerialize<T>(T objectToSerialize, string fileName)
         {
-
             XmlSerialize(typeof(T), objectToSerialize, fileName);
         }
 

@@ -9,16 +9,9 @@ namespace Gum.Settings
 {
     public class GeneralSettingsFile
     {
-        #region Fields
-
-        bool mAutoSave;
-
-        #endregion
-
-
         #region Properties
 
-        public string LastProject
+        public string LastProject 
         {
             get;
             set;
@@ -32,8 +25,8 @@ namespace Gum.Settings
 
         public bool AutoSave
         {
-            get { return mAutoSave; }
-            set { mAutoSave = value; }
+            get;
+            set;
         }
 
         static string GeneralSettingsFileName
@@ -58,7 +51,7 @@ namespace Gum.Settings
         public GeneralSettingsFile()
         {
             ShowTextOutlines = false;
-            mAutoSave = true;
+            AutoSave = true;
 
             RecentProjects = new List<string>();
         }
@@ -93,19 +86,13 @@ namespace Gum.Settings
 
         public void AddToRecentFilesIfNew(string file)
         {
-            if (this.RecentProjects.Contains(file) == false)
-            {
-                this.RecentProjects.Add(file);
-            }
+            if (!RecentProjects.Contains(file))
+                RecentProjects.Add(file);
 
             const int maxFileCount = 20;
 
-            while (this.RecentProjects.Count > 20)
-            {
-                int lastIndex = RecentProjects.Count - 1;
-
-                RecentProjects.RemoveAt(lastIndex);
-            }
+            if (RecentProjects.Count > maxFileCount)
+                RecentProjects.RemoveRange(0, RecentProjects.Count - maxFileCount);
         }
 
         #endregion
