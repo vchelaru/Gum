@@ -29,6 +29,12 @@ namespace Gum.Settings
             set;
         }
 
+        public int FrameRate
+        {
+            get;
+            set;
+        }
+
         static string GeneralSettingsFileName
         {
             get
@@ -52,6 +58,7 @@ namespace Gum.Settings
         {
             ShowTextOutlines = false;
             AutoSave = true;
+            FrameRate = 30;
 
             RecentProjects = new List<string>();
         }

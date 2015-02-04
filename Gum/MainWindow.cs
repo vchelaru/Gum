@@ -172,6 +172,10 @@ namespace Gum
         {
             ProjectManager.Self.RecentFilesUpdated += RefreshRecentFiles;
             ProjectManager.Self.Initialize();
+
+            // Apply FrameRate, but keep it within sane limits
+            float FrameRate = Math.Max(Math.Min(ProjectManager.Self.GeneralSettingsFile.FrameRate, 60), 10);
+            wireframeControl1.DesiredFramesPerSecond = FrameRate;
         }
 
         private void VariablesAndEverythingElse_SplitterMoved(object sender, SplitterEventArgs e)
@@ -253,7 +257,6 @@ namespace Gum
             {
                 ElementTreeViewManager.Self.OnSelect(ObjectTreeView.SelectedNode);
             }
-
         }
 
         public void RefreshRecentFiles()
@@ -262,19 +265,16 @@ namespace Gum
 
             foreach (var item in ProjectManager.Self.GeneralSettingsFile.RecentProjects)
             {
-                ToolStripMenuItem tsmi = new ToolStripMenuItem();
-                tsmi.Text = item;
+                ToolStripMenuItem menuItem = new ToolStripMenuItem();
+                menuItem.Text = item;
 
-                this.loadRecentToolStripMenuItem.DropDownItems.Add(tsmi);
+                this.loadRecentToolStripMenuItem.DropDownItems.Add(menuItem);
 
-                tsmi.Click += delegate
+                menuItem.Click += delegate
                 {
-                    ProjectManager.Self.LoadProject(tsmi.Text);
-
+                    ProjectManager.Self.LoadProject(menuItem.Text);
                 };
-
             }
-
         }
 
         private void ObjectTreeView_AfterClickSelect(object sender, TreeViewEventArgs e)

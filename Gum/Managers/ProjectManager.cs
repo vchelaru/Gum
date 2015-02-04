@@ -82,7 +82,6 @@ namespace Gum
         {
             GeneralSettingsFile = GeneralSettingsFile.LoadOrCreateNew();
 
-
             CommandLineManager.Self.ReadCommandLine();
 
             if (!string.IsNullOrEmpty(CommandLineManager.Self.Glux))
@@ -93,7 +92,6 @@ namespace Gum
                 {
                     SelectedState.Self.SelectedElement = ObjectFinder.Self.GetElementSave(CommandLineManager.Self.ElementName);
                 }
-                
             }
             else if (!string.IsNullOrEmpty(GeneralSettingsFile.LastProject))
             {
@@ -103,9 +101,6 @@ namespace Gum
             {
                 CreateNewProject();
             }
-
-
-
         }
 
         public void CreateNewProject()
