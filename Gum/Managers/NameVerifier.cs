@@ -74,8 +74,10 @@ namespace Gum.Managers
         {
             IsNameValidCommon(instanceName, out whyNotValid);
 
-            IsNameAlreadyUsed(instanceName, instanceSave, elementSave, out whyNotValid);
-
+            if (string.IsNullOrEmpty(whyNotValid))
+            {
+                IsNameAlreadyUsed(instanceName, instanceSave, elementSave, out whyNotValid);
+            }
             return string.IsNullOrEmpty(whyNotValid);
         }
 
