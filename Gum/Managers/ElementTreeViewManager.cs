@@ -947,6 +947,47 @@ namespace Gum.Managers
         #endregion
 
 
+
+        internal void HandleMouseOver(int x, int y)
+        {
+            var objectOver = this.mTreeView.GetNodeAt(x, y);
+
+            ElementSave element = null;
+            InstanceSave instance = null;
+
+            if(objectOver != null && objectOver.Tag != null)
+            {
+                if(objectOver.Tag is ElementSave)
+                {
+                    element = objectOver.Tag as ElementSave;
+                }
+                else if(objectOver.Tag is InstanceSave)
+                {
+                    instance = objectOver.Tag as InstanceSave;
+                }
+            }
+
+            GraphicalUiElement whatToHighlight = null;
+
+            if(element != null)
+            {
+                whatToHighlight = WireframeObjectManager.Self.GetRepresentation(element);
+            }
+            else if(instance != null)
+            {
+                whatToHighlight = WireframeObjectManager.Self.GetRepresentation(instance, null);
+            }
+
+            try
+            {
+                SelectionManager.Self.HighlightedIpso = whatToHighlight;
+
+            }
+            catch (Exception e)
+            {
+                int m = 3;
+            }
+        }
     }
 
 

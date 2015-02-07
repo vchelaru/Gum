@@ -323,7 +323,8 @@ namespace Gum.Wireframe
                 }
                 else if (!Cursor.IsInWindow)
                 {
-                    HighlightedIpso = null;
+                    // the element view window can also highlight, so we don't want to do this:
+                    //HighlightedIpso = null;
                 }
 
                 ProjectVerifier.Self.AssertSelectedIpsosArePartOfRenderer();

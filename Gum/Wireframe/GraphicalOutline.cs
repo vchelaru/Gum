@@ -39,7 +39,7 @@ namespace Gum.Wireframe
                         mHighlightRectangles[i].Visible = false;
                     }
 
-                    if (mHighlightedIpso != null)
+                    if (mHighlightedIpso != null && mHighlightedIpso.Component != null)
                     {
                         UpdateHighlightElements();
                     }

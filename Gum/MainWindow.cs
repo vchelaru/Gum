@@ -330,5 +330,11 @@ namespace Gum
                 MessageBox.Show(message);
             }
         }
+
+        private void ObjectTreeView_MouseMove(object sender, MouseEventArgs e)
+        {
+
+            ElementTreeViewManager.Self.HandleMouseOver(e.X, e.Y);
+        }
     }
 }
