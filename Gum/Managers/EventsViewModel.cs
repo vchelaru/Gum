@@ -75,10 +75,7 @@ namespace Gum.Managers
             eventInstance.Enabled = value;
 
             // Save the change
-            if (SelectedState.Self.SelectedElement != null)
-            {
-                GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
-            }
+            GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
         }
     }
 
