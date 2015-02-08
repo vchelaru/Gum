@@ -135,17 +135,21 @@ namespace WpfDataUi
 
         public static void RefreshContextMenu(this IDataUi dataUi, ContextMenu contextMenu)
         {
-            RoutedEventHandler handler = (sender, e) => 
+            RoutedEventHandler makeDefaultHandler = (sender, e) => 
                 {
                     dataUi.InstanceMember.IsDefault = true;
                     dataUi.Refresh();
+                    if(dataUi is ISetDefaultable)
+                    {
+                        ((ISetDefaultable)dataUi).SetToDetafult();
+                    }
                 };
 
 
 
             contextMenu.Items.Clear();
 
-            AddContextMenuItem("Make Default", handler, contextMenu);
+            AddContextMenuItem("Make Default", makeDefaultHandler, contextMenu);
             if (dataUi.InstanceMember != null)
             {
                 foreach (var kvp in dataUi.InstanceMember.ContextMenuEvents)

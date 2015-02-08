@@ -499,8 +499,14 @@ namespace Gum.Managers
                     // Update August 13, 2013
                     // Actually, we do want to remove it if it's part of an element but not the
                     // default state
-                    if (SelectedState.Self.SelectedInstance != null ||
-                        SelectedState.Self.SelectedStateSave != SelectedState.Self.SelectedElement.DefaultState)
+                    bool shouldRemove = SelectedState.Self.SelectedInstance != null ||
+                        SelectedState.Self.SelectedStateSave != SelectedState.Self.SelectedElement.DefaultState;
+
+                    // Also, don't remove it if it's an exposed variable, this un-exposes things
+                    shouldRemove = shouldRemove &&
+                        string.IsNullOrEmpty(variable.ExposedAsName);
+
+                    if (shouldRemove)
                     {
                         state.Variables.Remove(variable);
                     }

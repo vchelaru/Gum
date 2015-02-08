@@ -139,6 +139,7 @@
     <Compile Include="EventArguments\PropertyChangedArgs.cs" />
     <Compile Include="IDataUi.cs" />
     <Compile Include="IDataUiExtensionMethods.cs" />
+    <Compile Include="ISetDefaultable.cs" />
     <Compile Include="LateBinder.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>

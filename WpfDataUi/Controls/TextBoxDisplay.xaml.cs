@@ -20,7 +20,7 @@ namespace WpfDataUi.Controls
     /// <summary>
     /// Interaction logic for TextBoxDisplay.xaml
     /// </summary>
-    public partial class TextBoxDisplay : UserControl, IDataUi
+    public partial class TextBoxDisplay : UserControl, IDataUi, ISetDefaultable
     {
         #region Fields
 
@@ -124,6 +124,10 @@ namespace WpfDataUi.Controls
             }
         }
 
-
+        public void SetToDetafult()
+        {
+            // So we don't exlicitly set values when losing focus
+            this.mTextBoxLogic.HasUserChangedAnything = false;
+        }
     }
 }
