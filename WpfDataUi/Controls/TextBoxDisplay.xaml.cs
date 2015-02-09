@@ -65,7 +65,7 @@ namespace WpfDataUi.Controls
                 Refresh();
             }
         }
-       
+
         public bool SuppressSettingProperty { get; set; }
 
         #endregion
@@ -124,7 +124,7 @@ namespace WpfDataUi.Controls
             }
         }
 
-        public void SetToDetafult()
+        public void SetToDefault()
         {
             // So we don't exlicitly set values when losing focus
             this.mTextBoxLogic.HasUserChangedAnything = false;

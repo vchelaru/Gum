@@ -8,7 +8,7 @@ using System.Windows.Controls;
 namespace WpfDataUi
 {
     public static class IDataUiExtensionMethods
-    {        
+    {
         public static bool HasEnoughInformationToWork(this IDataUi dataUi)
         {
             return dataUi.InstanceMember.IsDefined;
@@ -135,13 +135,13 @@ namespace WpfDataUi
 
         public static void RefreshContextMenu(this IDataUi dataUi, ContextMenu contextMenu)
         {
-            RoutedEventHandler makeDefaultHandler = (sender, e) => 
+            RoutedEventHandler makeDefaultHandler = (sender, e) =>
                 {
                     dataUi.InstanceMember.IsDefault = true;
                     dataUi.Refresh();
                     if(dataUi is ISetDefaultable)
                     {
-                        ((ISetDefaultable)dataUi).SetToDetafult();
+                        ((ISetDefaultable)dataUi).SetToDefault();
                     }
                 };
 
@@ -161,7 +161,7 @@ namespace WpfDataUi
 
         private static MenuItem AddContextMenuItem(string text, RoutedEventHandler handler, ContextMenu contextMenu)
         {
-            
+
             MenuItem menuItem = new MenuItem();
             menuItem.Header = text;
             menuItem.Click += handler;

@@ -7,6 +7,6 @@ namespace WpfDataUi
 {
     interface ISetDefaultable
     {
-        void SetToDetafult();
+        void SetToDefault();
     }
 }
