@@ -98,13 +98,7 @@ namespace XnaAndWinforms
         public GraphicsDeviceControl()
             : base()
         {
-        }
 
-        /// <summary>
-        /// Initializes the control.
-        /// </summary>
-        protected override void OnCreateControl()
-        {
             // Don't initialize the graphics device if we are running in the designer.
             if (!DesignMode)
             {
@@ -131,9 +125,17 @@ namespace XnaAndWinforms
                 Initialize();
             }
 
+            mIsInitialized = true;
+        }
+
+        /// <summary>
+        /// Initializes the control.
+        /// </summary>
+        /// 
+        protected override void OnCreateControl()
+        {
             base.OnCreateControl();
 
-            mIsInitialized = true;
         }
 
 
@@ -157,7 +159,6 @@ namespace XnaAndWinforms
         #region Events
 
         public event Action XnaDraw;
-        public event Action XnaInitialize;
         public event Action XnaUpdate;
 
         #endregion
@@ -411,10 +412,6 @@ namespace XnaAndWinforms
         protected virtual void Initialize()
         {
 
-            if (XnaInitialize != null)
-            {
-                XnaInitialize();
-            }
         }
 
         protected virtual void PreDrawUpdate()

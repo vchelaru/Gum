@@ -41,8 +41,7 @@ namespace Gum
             MenuStripManager.Self.Initialize(RemoveElementMenuItem, RemoveStateMenuItem);
             GuiCommands.Self.Initialize(wireframeControl1);
             Wireframe.WireframeObjectManager.Self.Initialize(WireframeEditControl, wireframeControl1);
-            wireframeControl1.XnaInitialize += new Action(HandleXnaInitialize);
-            //wireframeControl1.AfterXnaInitialize += HandleXnaInitialize;
+
             EditingManager.Self.Initialize(this.WireframeContextMenuStrip);
             OutputManager.Self.Initialize(this.OutputTextBox);
             // ProjectManager.Initialize used to happen here, but I 
@@ -50,7 +49,7 @@ namespace Gum
             // ProjectManager.Initialize may load a project, and if it
             // does, then we need to make sure that the wireframe controls
             // are set up properly before that happens.
-
+            HandleXnaInitialize();
         }
 
         //void HandleXnaInitialize(object sender, EventArgs e)

@@ -204,7 +204,7 @@ namespace Gum.Wireframe
                 LoaderManager.Self.ContentLoader = new ContentLoader();
 
                 LoaderManager.Self.Initialize(null, "content/TestFont.fnt", Services, null);
-                CameraController.Self.Initialize(Cursor, Camera, mWireframeEditControl);
+                CameraController.Self.Initialize(Cursor, Camera, mWireframeEditControl, this.Width, this.Height);
 
                 InputLibrary.Cursor.Self.Initialize(this);
                 InputLibrary.Keyboard.Self.Initialize(this);

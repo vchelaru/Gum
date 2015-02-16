@@ -27,15 +27,14 @@ namespace Gum.Wireframe
 
         WireframeEditControl mWireframeEditControl;
 
-        public void Initialize(InputLibrary.Cursor cursor, Camera camera, WireframeEditControl wireframeEditControl)
+        public void Initialize(InputLibrary.Cursor cursor, Camera camera, WireframeEditControl wireframeEditControl, int defaultWidth, int defaultHeight)
         {
             this.Cursor = cursor;
             this.Camera = camera;
             this.mWireframeEditControl = wireframeEditControl;
 
-
-            Renderer.Self.Camera.X = Renderer.Self.GraphicsDevice.Viewport.Width / 2 - 30;
-            Renderer.Self.Camera.Y = Renderer.Self.GraphicsDevice.Viewport.Height / 2 - 30;
+            Renderer.Self.Camera.X = defaultWidth / 2 - 30;
+            Renderer.Self.Camera.Y = defaultHeight / 2 - 30;
         }
 
 
