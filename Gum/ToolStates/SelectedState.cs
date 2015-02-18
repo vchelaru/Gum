@@ -70,7 +70,6 @@ namespace Gum.ToolStates
             }
             set
             {
-
                 // We don't want this to unset selected components or standards if this is set to null
                 if (value != SelectedScreen && ( value != null || SelectedScreen == null || SelectedScreen is ScreenSave))
                 {

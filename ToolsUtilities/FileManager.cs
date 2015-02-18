@@ -439,7 +439,7 @@ namespace ToolsUtilities
 
                     // build the new path
                     int start = 0;
-                    while (start < path.Length && start < relpath.Length && path[start].ToLower() == relpath[start].ToLower())
+                    while (start < path.Length && start < relpath.Length && path[start].Equals(relpath[start], StringComparison.OrdinalIgnoreCase))
                     {
                         start++;
                     }
@@ -581,20 +581,7 @@ namespace ToolsUtilities
 
 
 
-
-
-        public static string Standardize(string fileName)
-        {
-            return Standardize(fileName, false);
-        }
-
-        public static string Standardize(string fileName, bool preserveCase)
-        {
-
-            return Standardize(fileName, preserveCase, false);
-        }
-
-        public static string Standardize(string fileName, bool preserveCase, bool makeAbsolute)
+        public static string Standardize(string fileName, bool preserveCase = false, bool makeAbsolute = false)
         {
             // The standard used here is the backslash.
             // This is the opposite of FlatRedBall, so be careful!
@@ -605,7 +592,6 @@ namespace ToolsUtilities
                 {
                     fileName = (RelativeDirectory + fileName).Replace("/", "\\");
                 }
-
             }
 
             if (preserveCase)
@@ -615,9 +601,7 @@ namespace ToolsUtilities
             else
             {
                 return fileName.Replace('/', '\\').ToLower();
-
             }
-
         }
 
 

@@ -180,11 +180,9 @@ namespace Gum.Wireframe
                     }
 
 
-
                     mHighlightedIpso = value;
 
                     mGraphicalOutline.HighlightedIpso = mHighlightedIpso as GraphicalUiElement;
-
                 }
             }
         }

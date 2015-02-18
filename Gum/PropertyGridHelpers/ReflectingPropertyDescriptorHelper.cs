@@ -154,7 +154,7 @@ namespace Gum.PropertyGridHelpers
             ReflectingParameterDescriptor epd = new ReflectingParameterDescriptor(propertyName, attributes);
             epd.SetComponentType(propertyType);
             epd.Instance = CurrentInstance;
-            epd.MemberChangeEvent = eventArgs as MemberChangeEventHandler;
+            epd.MemberChangeEvent = eventArgs;
             epd.CustomGetMember = getMember;
             epd.TypeConverter = converter;
 
@@ -165,7 +165,6 @@ namespace Gum.PropertyGridHelpers
             //PropertyDescriptor propertyDescriptor;
 
             return new PropertyDescriptorCollection(properties.ToArray());
-
         }
 
         public PropertyDescriptorCollection SetPropertyDisplay(PropertyDescriptorCollection pdc, string oldName, string newName)

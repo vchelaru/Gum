@@ -41,7 +41,7 @@ namespace Gum.Managers
 
         #region Initialize and event handlers
 
-        private void InitializeTreeNodes()
+        private void InitializeMenuItems()
         {
             mAddScreen = new ToolStripMenuItem();
             mAddScreen.Text = "Add Screen";

@@ -26,8 +26,7 @@ namespace Gum.Managers
         {
             get
             {
-                return
-                    FileManager.GetDirectory(ObjectFinder.Self.GumProjectSave.FullFileName) + "Screens\\";
+                return ProjectFolder + "Screens\\";
 
             }
         }
@@ -36,21 +35,16 @@ namespace Gum.Managers
         {
             get
             {
-                return
-                    FileManager.GetDirectory(ObjectFinder.Self.GumProjectSave.FullFileName) + "Components\\";
+                return ProjectFolder + "Components\\";
             }
         }
-
-
 
         public string ProjectFolder 
         {
             get
             {
-                return FileManager.GetDirectory(
-                    ObjectFinder.Self.GumProjectSave.FullFileName);
+                return FileManager.GetDirectory(ObjectFinder.Self.GumProjectSave.FullFileName);
             }
-
         }
     }
 }

@@ -179,33 +179,30 @@ namespace Gum.Managers
 
         TreeNode GetTreeNodeFor(string relativeDirectory, TreeNode container)
         {
-            string whatToLookFor = relativeDirectory;
-            string sub = "";
             if (string.IsNullOrEmpty(relativeDirectory))
             {
                 return container;
             }
-            else if (relativeDirectory.Contains("\\"))
+
+            int indexOfSlash = relativeDirectory.IndexOf('\\');
+            string whatToLookFor = relativeDirectory;
+            string sub = "";
+
+            if (indexOfSlash != -1)
             {
-                int indexOfSlashes = relativeDirectory.IndexOf('\\');
-                whatToLookFor = relativeDirectory.Substring(0, indexOfSlashes);
-
-                sub = relativeDirectory.Substring(indexOfSlashes + 1, relativeDirectory.Length - (indexOfSlashes + 1));
-
-
+                whatToLookFor = relativeDirectory.Substring(0, indexOfSlash);
+                sub = relativeDirectory.Substring(indexOfSlash + 1, relativeDirectory.Length - (indexOfSlash + 1));
             }
 
             foreach (TreeNode node in container.Nodes)
             {
-                if (node.Text.ToLower() == whatToLookFor.ToLower())
+                if (node.Text.Equals(whatToLookFor, StringComparison.OrdinalIgnoreCase))
                 {
                     return GetTreeNodeFor(sub, node);
-
                 }
             }
 
             return null;
-
         }
 
         TreeNode GetTreeNodeForTag(object tag, TreeNode container = null)
@@ -289,7 +286,7 @@ namespace Gum.Managers
             mMenuStrip = mTreeView.ContextMenuStrip;
             RefreshUI();
 
-            InitializeTreeNodes();
+            InitializeMenuItems();
         }
         
 
@@ -306,14 +303,13 @@ namespace Gum.Managers
                 AddAndRemoveScreensComponentsAndStandards(null);
             }
             SelectRecordedSelection();
-
         }
 
         private void AddAndRemoveFolderNodes()
         {
             if (ObjectFinder.Self.GumProjectSave != null && 
                 
-                !string.IsNullOrEmpty(ObjectFinder.Self.GumProjectSave.FullFileName ))
+                !string.IsNullOrEmpty(ObjectFinder.Self.GumProjectSave.FullFileName))
             {
                 string currentDirectory = FileManager.GetDirectory(ObjectFinder.Self.GumProjectSave.FullFileName);
 
@@ -334,7 +330,6 @@ namespace Gum.Managers
 
         private void AddAndRemoveFolderNodes(string currentDirectory, TreeNodeCollection nodesToAddTo)
         {
-
             // todo: removes
             var directories = Directory.EnumerateDirectories(currentDirectory);
 
@@ -367,30 +362,24 @@ namespace Gum.Managers
                         found = true;
                         break;
                     }
-
                 }
 
                 if (!found)
                 {
                     nodesToAddTo.RemoveAt(i);
-
                 }               
-
             }
         }
 
         private void AddAndRemoveScreensComponentsAndStandards(TreeNode folderTreeNode)
         {
+            if (ProjectManager.Self.GumProjectSave == null)
+                return;
+
             // Save off old selected stuff
             InstanceSave selectedInstance = SelectedState.Self.SelectedInstance;
             ElementSave selectedElement = SelectedState.Self.SelectedElement;
 
-
-            ///////////////EARLY OUT///////////////////
-            if (ProjectManager.Self.GumProjectSave == null)
-            {
-                return;
-            }
 
             if (!string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave.FullFileName))
             {
@@ -411,52 +400,23 @@ namespace Gum.Managers
             {
                 if (GetTreeNodeFor(screenSave) == null)
                 {
-                    TreeNode treeNode = new TreeNode();
-                    if (screenSave.IsSourceFileMissing)
-                    {
-                        treeNode.ImageIndex = ExclamationIndex;
-                    }
-                    else
-                    {
-                        treeNode.ImageIndex = ScreenImageIndex;
-                    }
-                    treeNode.Tag = screenSave;
-
                     string fullPath = FileLocations.Self.ScreensFolder + FileManager.GetDirectory(screenSave.Name);
+                    TreeNode parentNode = GetTreeNodeFor(fullPath);
 
-                    TreeNode treeNodeToAddTo = GetTreeNodeFor(fullPath);
-
-                    treeNodeToAddTo.Nodes.Add(treeNode);
-                    
+                    AddTreeNodeForElement(screenSave, parentNode, ScreenImageIndex);
                 }
             }
 
-
-            
             foreach (ComponentSave componentSave in ProjectManager.Self.GumProjectSave.Components)
             {
                 if (GetTreeNodeFor(componentSave) == null)
                 {
-                    TreeNode treeNode = new TreeNode();
-                    if (componentSave.IsSourceFileMissing)
-                    {
-                        treeNode.ImageIndex = ExclamationIndex;
-                    }
-                    else
-                    {
-                        treeNode.ImageIndex = ComponentImageIndex;
-                    }
-                    treeNode.Tag = componentSave;
-
                     string fullPath = FileLocations.Self.ComponentsFolder + FileManager.GetDirectory(componentSave.Name);
+                    TreeNode parentNode = GetTreeNodeFor(fullPath);
 
-                    TreeNode treeNodeToAddTo = GetTreeNodeFor(fullPath);
-
-                    treeNodeToAddTo.Nodes.Add(treeNode);
+                    AddTreeNodeForElement(componentSave, parentNode, ComponentImageIndex);
                 }
             }
-
-
 
             foreach (StandardElementSave standardSave in ProjectManager.Self.GumProjectSave.StandardElements)
             {
@@ -464,18 +424,7 @@ namespace Gum.Managers
                 {
                     if (GetTreeNodeFor(standardSave) == null)
                     {
-                        TreeNode treeNode = new TreeNode();
-                        if (standardSave.IsSourceFileMissing)
-                        {
-                            treeNode.ImageIndex = ExclamationIndex;
-                        }
-                        else
-                        {
-                            treeNode.ImageIndex = StandardElementImageIndex;
-                        }
-                        treeNode.Tag = standardSave;
-
-                        mStandardElementsTreeNode.Nodes.Add(treeNode);
+                        AddTreeNodeForElement(standardSave, mStandardElementsTreeNode, StandardElementImageIndex);
                     }
                 }
             }
@@ -560,11 +509,21 @@ namespace Gum.Managers
                 SelectedState.Self.SelectedInstance = selectedInstance;
             }
 
-
-
             #endregion
+        }
 
+        private static void AddTreeNodeForElement(ElementSave element, TreeNode parentNode, int defaultImageIndex)
+        {
+            TreeNode treeNode = new TreeNode();
 
+            if (element.IsSourceFileMissing)
+                treeNode.ImageIndex = ExclamationIndex;
+            else
+                treeNode.ImageIndex = defaultImageIndex;
+
+            treeNode.Tag = element;
+
+            parentNode.Nodes.Add(treeNode);
         }
 
         private void CreateRootTreeNodesIfNecessary()
@@ -582,10 +541,8 @@ namespace Gum.Managers
                 mStandardElementsTreeNode = new TreeNode("Standard");
                 mStandardElementsTreeNode.ImageIndex = FolderImageIndex;
                 mTreeView.Nodes.Add(mStandardElementsTreeNode);
-
             }
         }
-
 
 
         public void RecordSelection()
@@ -666,7 +623,6 @@ namespace Gum.Managers
                 {
                     TreeNode itemTreeNode = GetTreeNodeFor(item, parentContainer);
                     treeNodeList.Add(itemTreeNode);
-
                 }
 
                 Select(treeNodeList);
@@ -676,7 +632,6 @@ namespace Gum.Managers
             {
                 Select((TreeNode)null);
             }
-
         }
 
 
@@ -691,51 +646,15 @@ namespace Gum.Managers
             }
             else
             {
-                if (elementSave is ScreenSave)
-                {
-                    Select(elementSave as ScreenSave);
-                }
-                else if(elementSave is ComponentSave)
-                {
-                    Select(elementSave as ComponentSave);
-                }
-                else if (elementSave is StandardElementSave)
-                {
-                    Select(elementSave as StandardElementSave);
-                }
+                Select(GetTreeNodeFor(elementSave));
             }
-
         }
-
-        void Select(ScreenSave screenSave)
-        {
-            TreeNode treeNode = GetTreeNodeFor(screenSave);
-
-            Select(treeNode);
-        }
-
-        void Select(ComponentSave componentSave)
-        {
-            TreeNode treeNode = GetTreeNodeFor(componentSave);
-
-            Select(treeNode);
-        }
-
-        void Select(StandardElementSave standardElementSave)
-        {
-            TreeNode treeNode = GetTreeNodeFor(standardElementSave);
-
-            Select(treeNode);
-        }
-
 
         private void Select(TreeNode treeNode)
         {
             if (mTreeView.SelectedNode != treeNode)
             {
                 // See comment above about why we have to manually raise the AfterClick
-
-
 
                 mTreeView.SelectedNode = treeNode;
 
@@ -745,9 +664,8 @@ namespace Gum.Managers
                 }
 
                 mTreeView.CallAfterClickSelect(null, new TreeViewEventArgs(treeNode));
-
-
             }
+
             ProjectVerifier.Self.AssertSelectedIpsosArePartOfRenderer();
         }
 
@@ -784,61 +702,46 @@ namespace Gum.Managers
 
         void RefreshUI(TreeNode node)
         {
-
             if (node.Tag is ElementSave)
             {
                 ElementSave elementSave = node.Tag as ElementSave;
 
                 node.Text = FileManager.RemovePath(elementSave.Name);
-
                 node.Nodes.Clear();
-
 
                 foreach (InstanceSave instance in elementSave.Instances)
                 {
                     TreeNode nodeForInstance = GetTreeNodeFor(instance, node);
 
                     if (nodeForInstance == null)
-                    {
-                        TreeNode treeNode = new TreeNode();
-
-                        bool doesInstanceHaveValidComponent = true;
-
-                        if (ObjectFinder.Self.GetElementSave(instance.BaseType) == null)
-                        {
-                            doesInstanceHaveValidComponent = false;
-                        }
-
-                        if (doesInstanceHaveValidComponent)
-                        {
-                            treeNode.ImageIndex = InstanceImageIndex;
-                        }
-                        else
-                        {
-                            treeNode.ImageIndex = ExclamationIndex;
-                        }
-
-                        treeNode.Tag = instance;
-                        node.Nodes.Add(treeNode);
-
-                    }
+                        AddTreeNodeForInstance(instance, node);
                 }
             }
             else if (node.Tag is InstanceSave)
             {
                 InstanceSave instanceSave = node.Tag as InstanceSave;
-
                 node.Text = instanceSave.Name;
             }
 
             foreach (TreeNode treeNode in node.Nodes)
             {
                 RefreshUI(treeNode);
-
             }
+        }
 
-            // Why do we do this?  Shouldn't we do it by order in the list?
-            //node.Nodes.SortByName();
+        private static void AddTreeNodeForInstance(InstanceSave instance, TreeNode parentContainerNode)
+        {
+            TreeNode treeNode = new TreeNode();
+
+            bool validBaseType = ObjectFinder.Self.GetElementSave(instance.BaseType) != null;
+
+            if (validBaseType)
+                treeNode.ImageIndex = InstanceImageIndex;
+            else
+                treeNode.ImageIndex = ExclamationIndex;
+
+            treeNode.Tag = instance;
+            parentContainerNode.Nodes.Add(treeNode);
         }
         
         internal void OnSelect(TreeNode selectedTreeNode)
@@ -981,7 +884,6 @@ namespace Gum.Managers
             try
             {
                 SelectionManager.Self.HighlightedIpso = whatToHighlight;
-
             }
             catch (Exception e)
             {
@@ -997,27 +899,27 @@ namespace Gum.Managers
     {
         public static bool IsScreenTreeNode(this TreeNode treeNode)
         {
-            return treeNode.Tag != null && treeNode.Tag is ScreenSave;
+            return treeNode.Tag is ScreenSave;
         }
 
         public static bool IsComponentTreeNode(this TreeNode treeNode)
         {
-            return treeNode.Tag != null && treeNode.Tag is ComponentSave;
+            return treeNode.Tag is ComponentSave;
         }
 
         public static bool IsStandardElementTreeNode(this TreeNode treeNode)
         {
-            return treeNode.Tag != null && treeNode.Tag is StandardElementSave;
+            return treeNode.Tag is StandardElementSave;
         }
 
         public static bool IsInstanceTreeNode(this TreeNode treeNode)
         {
-            return treeNode.Tag != null && treeNode.Tag is InstanceSave;
+            return treeNode.Tag is InstanceSave;
         }
 
         public static bool IsStateSaveTreeNode(this TreeNode treeNode)
         {
-            return treeNode.Tag != null && treeNode.Tag is StateSave;
+            return treeNode.Tag is StateSave;
         }
 
         public static bool IsTopElementContainerTreeNode(this TreeNode treeNode)
@@ -1076,17 +978,11 @@ namespace Gum.Managers
                 treeNode.IsScreenTreeNode())
             {
                 ElementSave element = treeNode.Tag as ElementSave;
-
-
-                string toReturn = treeNode.Parent.GetFullFilePath() + treeNode.Text + "." + element.FileExtension;
-
-                return toReturn;
+                return treeNode.Parent.GetFullFilePath() + treeNode.Text + "." + element.FileExtension;
             }
             else
             {
-                string toReturn = treeNode.Parent.GetFullFilePath() + treeNode.Text + "\\";
-
-                return toReturn;
+                return treeNode.Parent.GetFullFilePath() + treeNode.Text + "\\";
             }
         }
 
@@ -1102,49 +998,34 @@ namespace Gum.Managers
         public static bool IsPartOfScreensFolderStructure(this TreeNode treeNode)
         {
             if (treeNode == ElementTreeViewManager.Self.RootScreensTreeNode)
-            {
                 return true;
-            }
-            else if (treeNode.Parent == null)
-            {
+
+            if (treeNode.Parent == null)
                 return false;
-            }
-            else
-            {
-                return treeNode.Parent.IsPartOfScreensFolderStructure();
-            }
+
+            return treeNode.Parent.IsPartOfScreensFolderStructure();
         }
 
         public static bool IsPartOfComponentsFolderStructure(this TreeNode treeNode)
         {
             if (treeNode == ElementTreeViewManager.Self.RootComponentsTreeNode)
-            {
                 return true;
-            }
-            else if (treeNode.Parent == null)
-            {
+
+            if (treeNode.Parent == null)
                 return false;
-            }
-            else
-            {
-                return treeNode.Parent.IsPartOfComponentsFolderStructure();
-            }
+
+            return treeNode.Parent.IsPartOfComponentsFolderStructure();
         }
 
         public static bool IsPartOfStandardElementsFolderStructure(this TreeNode treeNode)
         {
             if (treeNode == ElementTreeViewManager.Self.RootStandardElementsTreeNode)
-            {
                 return true;
-            }
-            else if (treeNode.Parent == null)
-            {
+
+            if (treeNode.Parent == null)
                 return false;
-            }
-            else
-            {
-                return treeNode.Parent.IsPartOfStandardElementsFolderStructure();
-            }
+
+            return treeNode.Parent.IsPartOfStandardElementsFolderStructure();
         }
 
 
@@ -1195,7 +1076,6 @@ namespace Gum.Managers
                     }
                 }
             }
-
         }
 
         private static bool FirstComesBeforeSecond(TreeNode first, TreeNode second)
@@ -1216,7 +1096,6 @@ namespace Gum.Managers
                 return first.Text.CompareTo(second.Text) < 0;
             }
         }
-
     }
 
 #endregion

@@ -121,7 +121,7 @@ namespace Gum.Managers
 
 
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            //                                                     TEXT                                                           //
+            //                                                     Text                                                           //
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             StateSave stateSave = new StateSave();
             stateSave.Name = "Default";
@@ -400,8 +400,6 @@ namespace Gum.Managers
 
         private static void AddDimensionsVariables(StateSave stateSave, float defaultWidth, float defaultHeight, DimensionVariableAction dimensionVariableAction)
         {
-
-
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = defaultWidth, Name = "Width", Category = "Dimensions" });
 
             var defaultValue = DimensionUnitType.Absolute;

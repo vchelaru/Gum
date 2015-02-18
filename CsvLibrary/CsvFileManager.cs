@@ -33,7 +33,7 @@ namespace CsvLibrary
             //FileManager.ThrowExceptionIfFileDoesntExist(fileName);
 
 
-            string extension = FileManager.GetExtension(fileName).ToLower();
+            string extension = FileManager.GetExtension(fileName);
 
 #if SILVERLIGHT || XBOX360 || WINDOWS_PHONE
             

@@ -733,7 +733,7 @@ namespace RenderingLibrary.Graphics
             string withoutExtension = FileManager.RemoveExtension(absoluteTexture);
             foreach (var kvp in NineSlice.PossibleNineSliceEndings)
             {
-                if (withoutExtension.ToLower().EndsWith(kvp.Value.ToLower()))
+                if (withoutExtension.EndsWith(kvp.Value, StringComparison.OrdinalIgnoreCase))
                 {
                     usePattern = true;
                     break;
@@ -753,7 +753,7 @@ namespace RenderingLibrary.Graphics
 
             foreach (var kvp in NineSlice.PossibleNineSliceEndings)
             {
-                if (withoutExtension.ToLower().EndsWith(kvp.Value.ToLower()))
+                if (withoutExtension.EndsWith(kvp.Value, StringComparison.OrdinalIgnoreCase))
                 {
                     toReturn = withoutExtension.Substring(0, withoutExtension.Length - kvp.Value.Length);
                     break;

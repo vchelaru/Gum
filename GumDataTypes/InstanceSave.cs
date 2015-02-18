@@ -9,7 +9,6 @@ namespace Gum.DataTypes
 {
     public class InstanceSave
     {
-
         public string Name;
         public string BaseType;
 
