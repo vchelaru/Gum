@@ -706,7 +706,7 @@ namespace Gum.Managers
             }
         }
 
-        private TreeNode AddTreeNodeForInstance(InstanceSave instance, TreeNode parentContainerNode)
+        private TreeNode AddTreeNodeForInstance(InstanceSave instance, TreeNode parentContainerNode, HashSet<InstanceSave> pendingAdditions = null)
         {
             TreeNode treeNode = new TreeNode();
 
@@ -724,11 +724,23 @@ namespace Gum.Managers
 
             if (parentInstance != null)
             {
-                parentNode = GetTreeNodeFor(parentInstance, parentContainerNode);
+                TreeNode parentInstanceNode = GetTreeNodeFor(parentInstance, parentContainerNode);
 
-                if (parentNode == null)
+                // Make sure we are not already trying to add the parent (protects against stack overflow with invalid data)
+                if (parentInstanceNode == null && (pendingAdditions == null || !pendingAdditions.Contains(parentInstance)))
                 {
-                    parentNode = AddTreeNodeForInstance(parentInstance, parentContainerNode);
+                    if (pendingAdditions == null)
+                    {
+                        pendingAdditions = new HashSet<InstanceSave>();
+                    }
+
+                    pendingAdditions.Add(parentInstance);
+                    parentInstanceNode = AddTreeNodeForInstance(parentInstance, parentContainerNode, pendingAdditions);
+                }
+
+                if (parentInstanceNode != null)
+                {
+                    parentNode = parentInstanceNode;
                 }
             }
 
