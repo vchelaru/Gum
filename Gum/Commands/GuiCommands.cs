@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using Gum.DataTypes;
 
 namespace Gum.Commands
 {
@@ -43,6 +44,17 @@ namespace Gum.Commands
         public void PrintOutput(string output)
         {
             OutputManager.Self.AddOutput(output);
+        }
+
+        public void RefreshElementTreeView()
+        {
+            ElementTreeViewManager.Self.RefreshUI();
+
+        }
+
+        public void RefreshElementTreeView(ElementSave element)
+        {
+            ElementTreeViewManager.Self.RefreshUI(element);
         }
     }
 }

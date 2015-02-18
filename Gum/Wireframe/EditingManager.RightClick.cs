@@ -164,7 +164,7 @@ namespace Gum.Wireframe
                 }
                 WireframeObjectManager.Self.RefreshAll(true);
                 PropertyGridManager.Self.RefreshUI();
-                ElementTreeViewManager.Self.RefreshUI();
+                GumCommands.Self.GuiCommands.RefreshElementTreeView();
             }
 
 
@@ -346,7 +346,7 @@ namespace Gum.Wireframe
             SelectedState.Self.SelectedElement = elementToReselect;
 
 
-            ElementTreeViewManager.Self.RefreshUI(selectedElement);
+            GumCommands.Self.GuiCommands.RefreshElementTreeView(selectedElement);
             WireframeObjectManager.Self.RefreshAll(true);
 
             SelectionManager.Self.Refresh();
@@ -612,7 +612,7 @@ namespace Gum.Wireframe
 
 
 
-            ElementTreeViewManager.Self.RefreshUI(targetElement);
+            GumCommands.Self.GuiCommands.RefreshElementTreeView(targetElement);
 
 
             SelectedState.Self.SelectedInstance = targetInstance;
@@ -643,7 +643,7 @@ namespace Gum.Wireframe
             InstanceSave instance = SelectedState.Self.SelectedInstance;
             ElementSave element = SelectedState.Self.SelectedElement;
 
-            ElementTreeViewManager.Self.RefreshUI();
+            GumCommands.Self.GuiCommands.RefreshElementTreeView();
 
 
             WireframeObjectManager.Self.RefreshAll(true);
@@ -743,7 +743,7 @@ namespace Gum.Wireframe
                 ProjectCommands.Self.RemoveComponent(asComponentSave);
             }
 
-            ElementTreeViewManager.Self.RefreshUI();
+            GumCommands.Self.GuiCommands.RefreshElementTreeView();
             StateTreeViewManager.Self.RefreshUI(null);
             PropertyGridManager.Self.RefreshUI();
             Wireframe.WireframeObjectManager.Self.RefreshAll(true);

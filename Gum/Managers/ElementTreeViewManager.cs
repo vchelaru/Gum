@@ -275,7 +275,7 @@ namespace Gum.Managers
         {
             mTreeView = treeView;
             mMenuStrip = mTreeView.ContextMenuStrip;
-            RefreshUI();
+            GumCommands.Self.GuiCommands.RefreshElementTreeView();
 
             InitializeMenuItems();
         }

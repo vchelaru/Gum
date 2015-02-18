@@ -352,7 +352,8 @@ namespace Gum.Managers
         {
             GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
             PropertyGridManager.Self.RefreshUI();
-            ElementTreeViewManager.Self.RefreshUI();
+            GumCommands.Self.GuiCommands.RefreshElementTreeView();
+
             WireframeObjectManager.Self.RefreshAll(true);
         }
 

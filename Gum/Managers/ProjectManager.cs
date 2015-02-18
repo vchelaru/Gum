@@ -110,7 +110,7 @@ namespace Gum
 
             StandardElementsManager.Self.PopulateProjectWithDefaultStandards(mGumProjectSave);
             // Now that a new project is created, refresh the UI!
-            ElementTreeViewManager.Self.RefreshUI();
+            GumCommands.Self.GuiCommands.RefreshElementTreeView();
         }
 
         public bool LoadProject()
@@ -196,7 +196,7 @@ namespace Gum
             }
 
             // Now that a new project is loaded, refresh the UI!
-            ElementTreeViewManager.Self.RefreshUI();
+            GumCommands.Self.GuiCommands.RefreshElementTreeView();
             // And the guides
             WireframeObjectManager.Self.UpdateGuides();
 

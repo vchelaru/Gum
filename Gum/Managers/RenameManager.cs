@@ -112,7 +112,7 @@ namespace Gum.Managers
 
                         GumCommands.Self.FileCommands.TryAutoSaveProject();
 
-                        ElementTreeViewManager.Self.RefreshUI(elementSave);
+                        GumCommands.Self.GuiCommands.RefreshElementTreeView(elementSave);
                     }
                 }
                 

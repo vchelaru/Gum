@@ -159,7 +159,8 @@ namespace Gum.Managers
                         System.IO.Directory.CreateDirectory(folder);
                     }
 
-                    RefreshUI();
+                    GumCommands.Self.GuiCommands.RefreshElementTreeView();
+
                 }
             }
         }
@@ -207,7 +208,8 @@ namespace Gum.Managers
                 if (!Directory.Exists(fullFile))
                 {
                     // It doesn't exist, so let's just refresh the UI for this and it will go away
-                    RefreshUI();
+                    GumCommands.Self.GuiCommands.RefreshElementTreeView();
+
                 }
                 else
                 {
@@ -233,7 +235,7 @@ namespace Gum.Managers
                             try
                             {
                                 Directory.Delete(fullFile);
-                                RefreshUI();
+                                GumCommands.Self.GuiCommands.RefreshElementTreeView();
                             }
                             catch
                             {
@@ -364,7 +366,7 @@ namespace Gum.Managers
                         ScreenSave screenSave = ProjectCommands.Self.AddScreen(relativeToScreens + name);
 
 
-                        RefreshUI();
+                        GumCommands.Self.GuiCommands.RefreshElementTreeView();
 
                         SelectedState.Self.SelectedScreen = screenSave;
 
@@ -424,13 +426,10 @@ namespace Gum.Managers
 
 
 
-
-
-
                         ComponentSave componentSave = ProjectCommands.Self.AddComponent(relativeToComponents + name);
 
 
-                        RefreshUI();
+                        GumCommands.Self.GuiCommands.RefreshElementTreeView();
 
                         SelectedState.Self.SelectedComponent = componentSave;
 
@@ -501,7 +500,7 @@ namespace Gum.Managers
 
                         screenSave.Initialize(null);
 
-                        RefreshUI();
+                        GumCommands.Self.GuiCommands.RefreshElementTreeView();
 
                         SelectedState.Self.SelectedScreen = screenSave;
 
@@ -577,7 +576,7 @@ namespace Gum.Managers
 
                         componentSave.InitializeDefaultAndComponentVariables();
 
-                        RefreshUI();
+                        GumCommands.Self.GuiCommands.RefreshElementTreeView();
 
                         SelectedState.Self.SelectedComponent = componentSave;
 

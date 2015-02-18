@@ -67,7 +67,7 @@ namespace Gum.PropertyGridHelpers
 
                 if (refresh)
                 {
-                    ElementTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedElement);
+                    GumCommands.Self.GuiCommands.RefreshElementTreeView(SelectedState.Self.SelectedElement);
                 }
             }
 

@@ -163,7 +163,7 @@ namespace Gum.Undo
                 RecordState();
 
 
-                ElementTreeViewManager.Self.RefreshUI();
+                GumCommands.Self.GuiCommands.RefreshElementTreeView();
                 SelectedState.Self.UpdateToSelectedStateSave();
 
                 // The instances may have changed.  We will want 

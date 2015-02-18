@@ -130,6 +130,7 @@ namespace Gum.Managers
 
                     //Task task = new Task(() => RefreshDataGrid(element, state, instance));
                     RefreshDataGrid(element, state, instance, force);
+                    GumCommands.Self.GuiCommands.RefreshElementTreeView(element);
                     //task.Start();
 
                     //mDataGrid.Visibility = System.Windows.Visibility.Visible;
@@ -467,6 +468,10 @@ namespace Gum.Managers
             ResetVariableToDefault(variableName);
         }
 
+        /// <summary>
+        /// Called when the user clicks the "Make Default" menu item
+        /// </summary>
+        /// <param name="variableName">The variable to make default.</param>
         private void ResetVariableToDefault(string variableName)
         {
             bool shouldReset = false;
