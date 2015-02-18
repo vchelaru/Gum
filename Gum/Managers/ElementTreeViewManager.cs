@@ -108,23 +108,11 @@ namespace Gum.Managers
 
         public TreeNode GetTreeNodeFor(ScreenSave screenSave)
         {
-            // Why are we using name instead of the direct reference.
-            // This function fails because of this when a rename occurs
-            //return GetTreeNodeFor(screenSave.Name, mScreensTreeNode);
-
-
-            // I don't think this will find the node if it's renamed, so we need to do a deep reference search by tag
-
             return GetTreeNodeForTag(screenSave, RootScreensTreeNode);
         }
 
         public TreeNode GetTreeNodeFor(ComponentSave componentSave)
         {
-            // I don't think this will find the node if it's renamed, so we need to do a deep reference search by tag
-
-            // This could be renamed:
-            //return GetTreeNodeFor(componentSave.Name, this.mComponentsTreeNode);
-
             return GetTreeNodeForTag(componentSave, RootComponentsTreeNode);
         }
 
@@ -140,6 +128,12 @@ namespace Gum.Managers
                 if (node.Tag == instanceSave)
                 {
                     return node;
+                }
+
+                TreeNode childNode = GetTreeNodeFor(instanceSave, node);
+                if (childNode != null)
+                {
+                    return childNode;
                 }
             }
 
@@ -243,12 +237,9 @@ namespace Gum.Managers
 
         public TreeNode GetTreeNodeOver()
         {
-            System.Drawing.Point point =
-                mTreeView.PointToClient(Cursor.Position);
-
+            System.Drawing.Point point = mTreeView.PointToClient(Cursor.Position);
 
             return mTreeView.GetNodeAt(point);
-
         }
 
         #endregion
@@ -314,15 +305,15 @@ namespace Gum.Managers
                 string currentDirectory = FileManager.GetDirectory(ObjectFinder.Self.GumProjectSave.FullFileName);
 
                 // Let's make sure these folders exist, they better!
-                Directory.CreateDirectory(this.mStandardElementsTreeNode.GetFullFilePath());
-                Directory.CreateDirectory(this.mScreensTreeNode.GetFullFilePath());
-                Directory.CreateDirectory(this.mComponentsTreeNode.GetFullFilePath());
+                Directory.CreateDirectory(mStandardElementsTreeNode.GetFullFilePath());
+                Directory.CreateDirectory(mScreensTreeNode.GetFullFilePath());
+                Directory.CreateDirectory(mComponentsTreeNode.GetFullFilePath());
 
 
                 // add folders to the screens, entities, and standard elements
-                AddAndRemoveFolderNodes(this.mStandardElementsTreeNode.GetFullFilePath(), this.mStandardElementsTreeNode.Nodes);
-                AddAndRemoveFolderNodes(this.mScreensTreeNode.GetFullFilePath(), this.mScreensTreeNode.Nodes);
-                AddAndRemoveFolderNodes(this.mComponentsTreeNode.GetFullFilePath(), this.mComponentsTreeNode.Nodes);
+                AddAndRemoveFolderNodes(mStandardElementsTreeNode.GetFullFilePath(), mStandardElementsTreeNode.Nodes);
+                AddAndRemoveFolderNodes(mScreensTreeNode.GetFullFilePath(), mScreensTreeNode.Nodes);
+                AddAndRemoveFolderNodes(mComponentsTreeNode.GetFullFilePath(), mComponentsTreeNode.Nodes);
 
                 //AddAndRemoveFolderNodes(currentDirectory, this.mTreeView.Nodes);
             }
@@ -351,13 +342,11 @@ namespace Gum.Managers
 
                 bool found = false;
 
-                string nodeText = node.Text.ToLower();
-
                 foreach (string directory in directories)
                 {
-                    string directoryStripped = FileManager.RemovePath(directory).ToLower();
+                    string directoryStripped = FileManager.RemovePath(directory);
 
-                    if (directoryStripped == nodeText)
+                    if (directoryStripped.Equals(node.Text, StringComparison.OrdinalIgnoreCase))
                     {
                         found = true;
                         break;
@@ -437,13 +426,12 @@ namespace Gum.Managers
 
             for (int i = mScreensTreeNode.Nodes.Count - 1; i > -1; i--)
             {
-                // If the tag is null, that means that it's a folder TreeNode, so we don't want to remove it
-                if (mScreensTreeNode.Nodes[i].Tag != null)
+                ScreenSave screen = mScreensTreeNode.Nodes[i].Tag as ScreenSave;
+
+                // If the screen is null, that means that it's a folder TreeNode, so we don't want to remove it
+                if (screen != null)
                 {
-
-                    ScreenSave ss = mScreensTreeNode.Nodes[i].Tag as ScreenSave;
-
-                    if (!ProjectManager.Self.GumProjectSave.Screens.Contains(ss))
+                    if (!ProjectManager.Self.GumProjectSave.Screens.Contains(screen))
                     {
                         mScreensTreeNode.Nodes.RemoveAt(i);
                     }
@@ -452,12 +440,12 @@ namespace Gum.Managers
 
             for (int i = mComponentsTreeNode.Nodes.Count - 1; i > -1; i--)
             {
-                // If the tag is null, that means that it's a folder TreeNode, so we don't want to remove it
-                if (mComponentsTreeNode.Nodes[i].Tag != null)
-                {
-                    ComponentSave cs = mComponentsTreeNode.Nodes[i].Tag as ComponentSave;
+                ComponentSave component = mComponentsTreeNode.Nodes[i].Tag as ComponentSave;
 
-                    if (!ProjectManager.Self.GumProjectSave.Components.Contains(cs))
+                // If the component is null, that means that it's a folder TreeNode, so we don't want to remove it
+                if (component != null)
+                {
+                    if (!ProjectManager.Self.GumProjectSave.Components.Contains(component))
                     {
                         mComponentsTreeNode.Nodes.RemoveAt(i);
                     }
@@ -467,9 +455,9 @@ namespace Gum.Managers
             for (int i = mStandardElementsTreeNode.Nodes.Count - 1; i > -1; i-- )
             {
                 // Do we want to support folders here?
-                StandardElementSave ses = mStandardElementsTreeNode.Nodes[i].Tag as StandardElementSave;
+                StandardElementSave standardElement = mStandardElementsTreeNode.Nodes[i].Tag as StandardElementSave;
 
-                if (!ProjectManager.Self.GumProjectSave.StandardElements.Contains(ses))
+                if (!ProjectManager.Self.GumProjectSave.StandardElements.Contains(standardElement))
                 {
                     mStandardElementsTreeNode.Nodes.RemoveAt(i);
                 }
@@ -598,10 +586,7 @@ namespace Gum.Managers
                 // This could be null if the user started a new project or loaded a different project.
                 if (parentTreeNode != null)
                 {
-
-                    TreeNode treeNode = GetTreeNodeFor(instanceSave, parentTreeNode);
-
-                    Select(treeNode);
+                    Select(GetTreeNodeFor(instanceSave, parentTreeNode));
                 }
                 
             }
@@ -626,7 +611,6 @@ namespace Gum.Managers
                 }
 
                 Select(treeNodeList);
-
             }
             else
             {
@@ -683,20 +667,13 @@ namespace Gum.Managers
 
         public void RefreshUI(ElementSave elementSave)
         {
-            RecordSelection();
-
-            RefreshUIInternal(elementSave);
-
-            SelectRecordedSelection();
-        }
-
-        void RefreshUIInternal(ElementSave elementSave)
-        {
-            var foundNode = GetTreeNodeFor(elementSave);
+            TreeNode foundNode = GetTreeNodeFor(elementSave);
 
             if (foundNode != null)
             {
+                RecordSelection();
                 RefreshUI(foundNode);
+                SelectRecordedSelection();
             }
         }
 
@@ -729,7 +706,7 @@ namespace Gum.Managers
             }
         }
 
-        private static void AddTreeNodeForInstance(InstanceSave instance, TreeNode parentContainerNode)
+        private TreeNode AddTreeNodeForInstance(InstanceSave instance, TreeNode parentContainerNode)
         {
             TreeNode treeNode = new TreeNode();
 
@@ -741,8 +718,41 @@ namespace Gum.Managers
                 treeNode.ImageIndex = ExclamationIndex;
 
             treeNode.Tag = instance;
-            parentContainerNode.Nodes.Add(treeNode);
+
+            TreeNode parentNode = parentContainerNode;
+            InstanceSave parentInstance = FindParentInstance(instance);
+
+            if (parentInstance != null)
+            {
+                parentNode = GetTreeNodeFor(parentInstance, parentContainerNode);
+
+                if (parentNode == null)
+                {
+                    parentNode = AddTreeNodeForInstance(parentInstance, parentContainerNode);
+                }
+            }
+
+            parentNode.Nodes.Add(treeNode);
+
+            return treeNode;
         }
+
+        private InstanceSave FindParentInstance(InstanceSave instance)
+        {
+            ElementSave element = instance.ParentContainer;
+
+            string name = instance.Name + ".Parent";
+            VariableSave variable = element.DefaultState.Variables.FirstOrDefault(v => v.Name == name);
+
+            if (variable != null && variable.SetsValue && variable.Value != null)
+            {
+                string parentName = (string) variable.Value;
+                return element.GetInstance(parentName);
+            }
+
+            return null;
+        }
+
         
         internal void OnSelect(TreeNode selectedTreeNode)
         {
@@ -772,8 +782,6 @@ namespace Gum.Managers
 
                 GumEvents.Self.CallInstanceSelected();
             }
-            
-
         }
 
 
@@ -786,18 +794,13 @@ namespace Gum.Managers
                 {
                     throw new Exception();
                 }
-
             }
-
         }
-
-
 
 
 
         internal void HandleKeyDown(KeyEventArgs e)
         {
-
             HandleCopyCutPaste(e);
 
             HandleDelete(e);
