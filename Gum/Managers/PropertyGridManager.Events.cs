@@ -28,7 +28,6 @@ namespace Gum.Managers
 
         private void RefreshEventsUi()
         {
-
             var selectedInstance = SelectedState.Self.SelectedInstance;
             var selectedElement = SelectedState.Self.SelectedElement;
 
@@ -58,8 +57,6 @@ namespace Gum.Managers
                 mEventsDataGrid.Visibility = System.Windows.Visibility.Visible;
 
                 mEventsDataGrid.Refresh();
-
-
             }
         }
 

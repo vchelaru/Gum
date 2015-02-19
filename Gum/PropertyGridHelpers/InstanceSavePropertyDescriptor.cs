@@ -91,7 +91,6 @@ namespace Gum.DataTypes.ComponentModel
 
         public override object GetValue(object component)
         {
-
             StateSave stateSave = SelectedState.Self.SelectedStateSave;
             if (stateSave != null)
             {

@@ -68,9 +68,7 @@ namespace Gum.Managers
 
         internal void ReactToFontValueSet()
         {
-
             StateSave stateSave = SelectedState.Self.SelectedStateSave;
-
 
             string prefix = "";
             if (SelectedState.Self.SelectedInstance != null)

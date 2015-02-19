@@ -778,7 +778,6 @@ namespace Gum.Managers
 
             if (selectedObject == null)
             {
-
                 SelectedState.Self.UpdateToSelectedElement();
                 // do nothing
             }
@@ -789,7 +788,6 @@ namespace Gum.Managers
             else if (selectedObject is InstanceSave)
             {
                 SelectedState.Self.UpdateToSelectedInstanceSave();
-
 
                 GumEvents.Self.CallInstanceSelected();
             }

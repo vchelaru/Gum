@@ -384,11 +384,9 @@ namespace Gum.PropertyGridHelpers
             {
                 object oldValue = base.Value;
 
-
                 mPropertyDescriptor.SetValue(instance, value);
 
                 SetVariableLogic.Self.PropertyValueChanged(RootVariableName, oldValue);
-
             }
             else
             {

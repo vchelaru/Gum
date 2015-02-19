@@ -297,7 +297,6 @@ namespace Gum.ToolStates
 
                         SelectedElement = selected;
                     }
-
                 }
             }
         }
