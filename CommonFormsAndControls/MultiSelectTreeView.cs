@@ -18,6 +18,7 @@ namespace CommonFormsAndControls
 		private const double TIMERVALUE = 750;
 		bool mNewKeyMatchesFirstKey;
 		private TreeNode mSelectedNode;
+        private bool mSelectedNodeChanged = false;
         private List<TreeNode> mSelectedNodes = null;
 
 
@@ -44,7 +45,7 @@ namespace CommonFormsAndControls
 				{
 					foreach( TreeNode node in value )
 					{
-						ToggleNode( node, true );
+						SetNodeSelected( node, true );
 					}
 					OnAfterSelect(new TreeViewEventArgs(mSelectedNode));
 				}
@@ -86,15 +87,15 @@ namespace CommonFormsAndControls
 			set
 			{
                 // Don't do anything if it's the same selection
-                if(value == mSelectedNode)
+                if (value == mSelectedNode)
                 {
                     return;
                 }
 
 				ClearSelectedNodes();
-				if( value != null )
+				if (value != null)
 				{
-					ReactToClickedNode( value );
+					ReactToClickedNode(value);
 					OnAfterSelect(new TreeViewEventArgs(mSelectedNode));
 				}
 			}
@@ -128,7 +129,7 @@ namespace CommonFormsAndControls
             {
                 if (mSelectedNode == null && this.TopNode != null && AlwaysHaveOneNodeSelected)
                 {
-                    ToggleNode(this.TopNode, true);
+                    SetNodeSelected(this.TopNode, true);
                 }
 
                 base.OnGotFocus(e);
@@ -151,6 +152,8 @@ namespace CommonFormsAndControls
 #endif
             {
                 base.SelectedNode = null;
+
+                TreeNode previousSelectedNode = mSelectedNode;
 
                 TreeNode node = this.GetNodeAt(e.Location);
                 if (node != null)
@@ -184,7 +187,10 @@ namespace CommonFormsAndControls
                 {
                     ReactToClickedNode(node);
                 }
+
                 base.OnMouseDown(e);
+
+                mSelectedNodeChanged = previousSelectedNode != mSelectedNode;
             }
 #if !DEBUG
             catch (Exception ex)
@@ -211,8 +217,10 @@ namespace CommonFormsAndControls
                 TreeNode node = this.GetNodeAt(e.Location);
                 if (node != null)
                 {
-                    if (                       
-                        ((ModifierKeys == Keys.None && MultiSelectBehavior != MultiSelectBehavior.RegularClick) && mSelectedNodes.Count > 1 && mSelectedNodes.Contains(node) && e.Button != MouseButtons.Right))
+                    if ((ModifierKeys == Keys.None && MultiSelectBehavior != MultiSelectBehavior.RegularClick) &&
+                        mSelectedNodes.Count > 1 &&
+                        mSelectedNodes.Contains(node) &&
+                        e.Button != MouseButtons.Right)
                     {
                         int extraOnLeft = 0;
 
@@ -229,7 +237,7 @@ namespace CommonFormsAndControls
                         }
                     }
 
-                    if (AfterClickSelect != null)
+                    if (mSelectedNodeChanged && AfterClickSelect != null)
                     {
                         AfterClickSelect(this, new TreeViewEventArgs(node));
                     }
@@ -262,7 +270,7 @@ namespace CommonFormsAndControls
                     if (!mSelectedNodes.Contains(node))
                     {
                         SelectSingleNode(node);
-                        ToggleNode(node, true);
+                        SetNodeSelected(node, true);
                     }
                 }
 
@@ -397,7 +405,7 @@ namespace CommonFormsAndControls
                 // select the top node
                 if (mSelectedNode == null && this.TopNode != null)
                 {
-                    ToggleNode(this.TopNode, true);
+                    SetNodeSelected(this.TopNode, true);
                 }
 
                 // Nothing is still selected in the tree, this isn't a good state, leave.
@@ -589,22 +597,25 @@ namespace CommonFormsAndControls
 
         public void Deselect(TreeNode node)
         {
-            mSelectedNodes.Remove(node);
-            node.BackColor = this.BackColor;
-            node.ForeColor = mOriginalColors[node]; //this.ForeColor;
-            mOriginalColors.Remove(node);
+            if (mSelectedNodes.Remove(node))
+            {
+                node.BackColor = this.BackColor;
+                node.ForeColor = mOriginalColors[node];
+                mOriginalColors.Remove(node);
+            }
         }
 
         public void AddNodeToSelected(TreeNode node)
         {
             mSelectedNode = node;
+
             if (!mSelectedNodes.Contains(node))
             {
                 mSelectedNodes.Add(node);
                 mOriginalColors.Add(node, node.ForeColor);
+                node.BackColor = SystemColors.Highlight;
+                node.ForeColor = SystemColors.HighlightText;
             }
-            node.BackColor = SystemColors.Highlight;
-            node.ForeColor = SystemColors.HighlightText;
         }
 
         public void CallAfterClickSelect(object sender, TreeViewEventArgs args)
@@ -640,20 +651,15 @@ namespace CommonFormsAndControls
 
 		private void ClearSelectedNodes()
 		{
-			try
+			foreach (TreeNode node in mSelectedNodes)
 			{
-				foreach( TreeNode node in mSelectedNodes )
-				{
-					node.BackColor = this.BackColor;
-					node.ForeColor = mOriginalColors[node];//this.ForeColor;
-				}
+				node.BackColor = this.BackColor;
+				node.ForeColor = mOriginalColors[node];
 			}
-			finally
-			{
-				mSelectedNodes.Clear();
-				mOriginalColors.Clear();
-				mSelectedNode = null;
-			}
+
+			mSelectedNodes.Clear();
+			mOriginalColors.Clear();
+			mSelectedNode = null;
 		}
 
         private bool FindAndSelectNode(TreeNode node)
@@ -735,7 +741,7 @@ namespace CommonFormsAndControls
                 {
                     // Ctrl+Click selects an unselected node, or unselects a selected node.
                     bool bIsSelected = mSelectedNodes.Contains(node);
-                    ToggleNode(node, !bIsSelected);
+                    SetNodeSelected(node, !bIsSelected);
                 }
                 else if (ModifierKeys == Keys.Shift)
                 {
@@ -754,7 +760,7 @@ namespace CommonFormsAndControls
                             {
                                 ndStart = ndStart.NextVisibleNode;
                                 if (ndStart == null) break;
-                                ToggleNode(ndStart, true);
+                                SetNodeSelected(ndStart, true);
                             }
                         }
                         else if (ndStart.Index == ndEnd.Index)
@@ -769,7 +775,7 @@ namespace CommonFormsAndControls
                             {
                                 ndStart = ndStart.PrevVisibleNode;
                                 if (ndStart == null) break;
-                                ToggleNode(ndStart, true);
+                                SetNodeSelected(ndStart, true);
                             }
                         }
                     }
@@ -811,7 +817,7 @@ namespace CommonFormsAndControls
                             {
                                 ndStart = ndStart.NextVisibleNode;
                                 if (ndStart == null) break;
-                                ToggleNode(ndStart, true);
+                                SetNodeSelected(ndStart, true);
                             }
                         }
                         else if (ndStartP.Index == ndEndP.Index)
@@ -822,7 +828,7 @@ namespace CommonFormsAndControls
                                 {
                                     ndStart = ndStart.NextVisibleNode;
                                     if (ndStart == null) break;
-                                    ToggleNode(ndStart, true);
+                                    SetNodeSelected(ndStart, true);
                                 }
                             }
                             else
@@ -831,7 +837,7 @@ namespace CommonFormsAndControls
                                 {
                                     ndStart = ndStart.PrevVisibleNode;
                                     if (ndStart == null) break;
-                                    ToggleNode(ndStart, true);
+                                    SetNodeSelected(ndStart, true);
                                 }
                             }
                         }
@@ -843,7 +849,7 @@ namespace CommonFormsAndControls
                             {
                                 ndStart = ndStart.PrevVisibleNode;
                                 if (ndStart == null) break;
-                                ToggleNode(ndStart, true);
+                                SetNodeSelected(ndStart, true);
                             }
                         }
                     }
@@ -874,35 +880,26 @@ namespace CommonFormsAndControls
 #endif
 		}
 
-		private void SelectSingleNode( TreeNode node )
+		private void SelectSingleNode(TreeNode node)
 		{
-
-			if( node == null )
-			{
+			if (node == null)
 				return;
-			}
+
 			ClearSelectedNodes();
-			ToggleNode( node, true );
+			SetNodeSelected(node, true);
 			node.EnsureVisible();
 		}
 
-		private void ToggleNode( TreeNode node, bool bSelectNode )
+		private void SetNodeSelected(TreeNode node, bool selected)
 		{
-            if (node != null)
-            {
-                if (bSelectNode)
-                {
-                    AddNodeToSelected(node);
-                }
-                else
-                {
-                    Deselect(node);
-                }
-            }
+            if (node == null)
+                return;
+
+            if (selected)
+                AddNodeToSelected(node);
+            else
+                Deselect(node);
 		}
-
-
-
 
 
         public void UpdateForeColorFor(TreeNode treeNode, ref Color color)

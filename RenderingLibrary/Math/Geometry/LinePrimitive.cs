@@ -142,13 +142,11 @@ namespace RenderingLibrary.Math.Geometry
         public void Render(SpriteBatch spriteBatch, SystemManagers managers)
         {
             Render(spriteBatch, managers, mTexture, .2f);
-
         }
 
 
         public void Render(SpriteBatch spriteBatch, SystemManagers managers, Texture2D textureToUse, float repetitionsPerLength)
         {
-
             if (mVectors.Count < 2)
                 return;
 
@@ -171,13 +169,8 @@ namespace RenderingLibrary.Math.Geometry
             }
             for (int i = 1; i < mVectors.Count; i++)
             {
-                Vector2 vector1;
-                
-                Vector2 vector2;
-
-
-                vector1 = (Vector2)mVectors[i - 1];
-                vector2 = (Vector2)mVectors[i];
+                Vector2 vector1 = mVectors[i - 1];
+                Vector2 vector2 = mVectors[i];
 
                 // calculate the distance between the two vectors
                 float distance = Vector2.Distance(vector1, vector2);
@@ -238,8 +231,6 @@ namespace RenderingLibrary.Math.Geometry
             mVectors.Add(new Vector2(radius * (float)System.Math.Cos(0),
                     radius * (float)System.Math.Sin(0)));
         }
-
-
 
     }
 }

@@ -588,7 +588,6 @@ namespace Gum.Managers
                 {
                     Select(GetTreeNodeFor(instanceSave, parentTreeNode));
                 }
-                
             }
             else
             {
