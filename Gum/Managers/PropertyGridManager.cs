@@ -97,55 +97,50 @@ namespace Gum.Managers
 
         public async void RefreshUI(bool force = false)
         {
-            if(isInRefresh)
-            {
+            if (isInRefresh)
                 return;
-            }
 
 
-            if (!isInRefresh)
+            isInRefresh = true;
+
+            if (SelectedState.Self.SelectedInstances.GetCount() > 1)
             {
-                isInRefresh = true;
-                if (SelectedState.Self.SelectedInstances.GetCount() > 1)
-                {
-                    // I don't know if we want to eventually show these
-                    // but for now we'll hide the PropertyGrid:
-                    mPropertyGrid.Visible = false;
-                    mVariablesDataGrid.Visibility = System.Windows.Visibility.Hidden;
-                }
-                else
-                {
-                    //mPropertyGrid.SelectedObject = mPropertyGridDisplayer;
-                    //mPropertyGrid.Refresh();
-
-                    var element = SelectedState.Self.SelectedElement;
-                    var state = SelectedState.Self.SelectedStateSave;
-                    var instance = SelectedState.Self.SelectedInstance;
-
-                    bool shouldMakeYellow = element != null && state != element.DefaultState;
-
-
-                    // This can take a little bit of time and we don't want the app to pop/freeze
-
-
-                    //Task task = new Task(() => RefreshDataGrid(element, state, instance));
-                    RefreshDataGrid(element, state, instance, force);
-                    GumCommands.Self.GuiCommands.RefreshElementTreeView(element);
-                    //task.Start();
-
-                    //mDataGrid.Visibility = System.Windows.Visibility.Visible;
-
-                    //ThreadStart threadStart = new ThreadStart(
-                    //    () => RefreshDataGrid(element, state, instance));
-
-                    //System.Threading.Thread thread = new System.Threading.Thread(threadStart);
-                    //thread.Start();
-
-                }
-
-                RefreshEventsUi();
-                isInRefresh = false;
+                // I don't know if we want to eventually show these
+                // but for now we'll hide the PropertyGrid:
+                mPropertyGrid.Visible = false;
+                mVariablesDataGrid.Visibility = System.Windows.Visibility.Hidden;
             }
+            else
+            {
+                //mPropertyGrid.SelectedObject = mPropertyGridDisplayer;
+                //mPropertyGrid.Refresh();
+
+                var element = SelectedState.Self.SelectedElement;
+                var state = SelectedState.Self.SelectedStateSave;
+                var instance = SelectedState.Self.SelectedInstance;
+
+                bool shouldMakeYellow = element != null && state != element.DefaultState;
+
+
+                // This can take a little bit of time and we don't want the app to pop/freeze
+
+
+                //Task task = new Task(() => RefreshDataGrid(element, state, instance));
+                RefreshDataGrid(element, state, instance, force);
+                //task.Start();
+
+                //mDataGrid.Visibility = System.Windows.Visibility.Visible;
+
+                //ThreadStart threadStart = new ThreadStart(
+                //    () => RefreshDataGrid(element, state, instance));
+
+                //System.Threading.Thread thread = new System.Threading.Thread(threadStart);
+                //thread.Start();
+            }
+
+            RefreshEventsUi();
+
+            isInRefresh = false;
         }
 
 
@@ -475,9 +470,11 @@ namespace Gum.Managers
         private void ResetVariableToDefault(string variableName)
         {
             bool shouldReset = false;
+            bool affectsTreeView = false;
 
             if (SelectedState.Self.SelectedInstance != null)
             {
+                affectsTreeView = variableName == "Parent";
                 variableName = SelectedState.Self.SelectedInstance.Name + "." + variableName;
 
                 shouldReset = true;
@@ -518,8 +515,8 @@ namespace Gum.Managers
                     else
                     {
                         variable.Value = null;
+                        variable.SetsValue = false;
                     }
-                    variable.SetsValue = false; // just to be safe
 
                     wasChangeMade = true;
                     // We need to refresh the property grid and the wireframe display
@@ -544,6 +541,11 @@ namespace Gum.Managers
                     RefreshUI();
                     WireframeObjectManager.Self.RefreshAll(true);
                     SelectionManager.Self.Refresh();
+
+                    if (affectsTreeView)
+                    {
+                        GumCommands.Self.GuiCommands.RefreshElementTreeView(SelectedState.Self.SelectedElement);
+                    }
 
                     if (ProjectManager.Self.GeneralSettingsFile.AutoSave)
                     {
