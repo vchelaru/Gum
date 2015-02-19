@@ -23,11 +23,8 @@ namespace Gum.PropertyGridHelpers
     {
         internal void PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
         {
-
             string changedMember = e.ChangedItem.PropertyDescriptor.Name;
             object oldValue = e.OldValue;
-
-
 
             PropertyValueChanged(changedMember, oldValue);
         }
@@ -88,7 +85,6 @@ namespace Gum.PropertyGridHelpers
 
         private void ReactToChangedMember(string changedMember, object oldValue, ElementSave parentElement, InstanceSave instance)
         {
-
             ReactIfChangedMemberIsName(parentElement, instance, changedMember, oldValue);
 
             ReactIfChangedMemberIsBaseType(parentElement, changedMember, oldValue);
@@ -113,7 +109,6 @@ namespace Gum.PropertyGridHelpers
             if (changedMember == "Name")
             {
                 RenameManager.Self.HandleRename(container, instance, (string)oldValue);
-
             }
         }
 
@@ -125,7 +120,6 @@ namespace Gum.PropertyGridHelpers
 
                 asElementSave.ReactToChangedBaseType(SelectedState.Self.SelectedInstance, oldValue.ToString());
             }
-
         }
 
         private void ReactIfChangedMemberIsFont(ElementSave parentElement, string changedMember, object oldValue)
@@ -133,15 +127,13 @@ namespace Gum.PropertyGridHelpers
             if (changedMember == "Font" || changedMember == "FontSize")
             {
                 FontManager.Self.ReactToFontValueSet();
-
             }
         }
 
         private void ReactIfChangedMemberIsCustomFont(ElementSave parentElement, string changedMember, object oldValue)
         {
-
-            PropertyGridManager.Self.RefreshUI(force: true);
-
+            // FIXME: This react needs a proper if condition
+            //PropertyGridManager.Self.RefreshUI(force: true);
         }
 
         private void ReactIfChangedMemberIsUnitType(ElementSave parentElement, string changedMember, object oldValue)
@@ -240,10 +232,7 @@ namespace Gum.PropertyGridHelpers
                 }
 
                 stateSave.SetValue(variableToSet, valueToSet, instanceSave);
-
             }
-
-
         }
 
         private void ReactIfChangedMemberIsTexture(ElementSave parentElement, string changedMember, object oldValue)
@@ -341,6 +330,7 @@ namespace Gum.PropertyGridHelpers
                     variable.Value = null;
                 }
 
+                GumCommands.Self.GuiCommands.RefreshElementTreeView(parentElement);
             }
         }
 
@@ -413,7 +403,6 @@ namespace Gum.PropertyGridHelpers
                             SelectedState.Self.SelectedStateSave.SetValue("Texture Height Scale", 1.0f);
                         }
                     }
-
                 }
             }
         }
@@ -429,7 +418,6 @@ namespace Gum.PropertyGridHelpers
                 return variableName;
             }
         }
-
 
     }
 }
