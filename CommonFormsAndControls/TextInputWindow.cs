@@ -44,7 +44,7 @@ namespace CommonFormsAndControls
             //StartPosition = FormStartPosition.Manual;
             //Location = new Point(TextInputWindow.MousePosition.X, TextInputWindow.MousePosition.Y);
 
-            this.Shown += new EventHandler(OnShown);
+            this.Shown += OnShown;
         }
 
         void OnShown(object sender, EventArgs e)
@@ -63,7 +63,5 @@ namespace CommonFormsAndControls
             DialogResult = DialogResult.OK;
             this.Close();
         }
-
-
     }
 }

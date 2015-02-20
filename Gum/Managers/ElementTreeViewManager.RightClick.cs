@@ -35,8 +35,8 @@ namespace Gum.Managers
         ToolStripMenuItem mGoToDefinition;
         ToolStripMenuItem mDeleteObject;
 
-
         ToolStripMenuItem mAddFolder;
+
         #endregion
 
         #region Initialize and event handlers
@@ -45,7 +45,7 @@ namespace Gum.Managers
         {
             mAddScreen = new ToolStripMenuItem();
             mAddScreen.Text = "Add Screen";
-            mAddScreen.Click += new EventHandler(AddScreenClick);
+            mAddScreen.Click += AddScreenClick;
 
             mImportScreen = new ToolStripMenuItem();
             mImportScreen.Text = "Import Screen";
@@ -53,31 +53,31 @@ namespace Gum.Managers
 
             mAddComponent = new ToolStripMenuItem();
             mAddComponent.Text = "Add Component";
-            mAddComponent.Click += new EventHandler(AddComponentClick);
+            mAddComponent.Click += AddComponentClick;
 
             mImportComponent = new ToolStripMenuItem();
             mImportComponent.Text = "Import Component";
-            mImportComponent.Click += new EventHandler(ImportComponentClick);
+            mImportComponent.Click += ImportComponentClick;
 
             mAddInstance = new ToolStripMenuItem();
             mAddInstance.Text = "Add Instance";
-            mAddInstance.Click += new EventHandler(AddInstanceClick);
+            mAddInstance.Click += AddInstanceClick;
 
             mSaveObject = new ToolStripMenuItem();
             mSaveObject.Text = "Force Save Object";
-            mSaveObject.Click += new EventHandler(ForceSaveObjectClick);
+            mSaveObject.Click += ForceSaveObjectClick;
 
             mGoToDefinition = new ToolStripMenuItem();
             mGoToDefinition.Text = "Go to definition";
-            mGoToDefinition.Click += new EventHandler(OnGoToDefinitionClick);
+            mGoToDefinition.Click += OnGoToDefinitionClick;
 
             mAddFolder = new ToolStripMenuItem();
             mAddFolder.Text = "Add Folder";
-            mAddFolder.Click += new EventHandler(AddFolderClick);
+            mAddFolder.Click += AddFolderClick;
 
             mDeleteObject = new ToolStripMenuItem();
             mDeleteObject.Text = "Delete";
-            mDeleteObject.Click += new EventHandler(HandleDeleteObjectClick);
+            mDeleteObject.Click += HandleDeleteObjectClick;
         }
 
 
@@ -94,38 +94,12 @@ namespace Gum.Managers
                 ElementSave element = ObjectFinder.Self.GetElementSave(SelectedState.Self.SelectedInstance.BaseType);
 
                 SelectedState.Self.SelectedElement = element;
-
             }
         }
 
         void ForceSaveObjectClick(object sender, EventArgs e)
         {
             ProjectManager.Self.SaveElement(SelectedState.Self.SelectedElement);
-        }
-
-        void AddInstanceClick(object sender, EventArgs e)
-        {
-            AddInstanceClick();
-        }
-
-        void AddComponentClick(object sender, EventArgs e)
-        {
-            AddComponentClick();
-        }
-
-        void ImportComponentClick(object sender, EventArgs e)
-        {
-            ImportComponentClick();
-        }
-
-        void ImportScreenClick(object sender, EventArgs e)
-        {
-            ImportScreenClick() ;
-        }
-
-        void AddScreenClick(object sender, EventArgs e)
-        {
-            AddScreenClick();
         }
 
         void AddFolderClick(object sender, EventArgs e)
@@ -160,7 +134,6 @@ namespace Gum.Managers
                     }
 
                     GumCommands.Self.GuiCommands.RefreshElementTreeView();
-
                 }
             }
         }
@@ -209,7 +182,6 @@ namespace Gum.Managers
                 {
                     // It doesn't exist, so let's just refresh the UI for this and it will go away
                     GumCommands.Self.GuiCommands.RefreshElementTreeView();
-
                 }
                 else
                 {
@@ -223,7 +195,6 @@ namespace Gum.Managers
                     else if (directories != null && directories.Length > 0)
                     {
                         MessageBox.Show("Cannot delete this folder, it currently contains " + directories.Length + " directories.");
-
                     }
 
                     else
@@ -241,12 +212,8 @@ namespace Gum.Managers
                             {
                                 MessageBox.Show("Could not delete folder");
                             }
-
-
-
                         }
                     }
-
                 }
             }
         }
@@ -318,7 +285,7 @@ namespace Gum.Managers
 
         }
 
-        public void AddScreenClick()
+        public void AddScreenClick(object sender, EventArgs e)
         {
             if (ObjectFinder.Self.GumProjectSave == null || string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave.FullFileName))
             {
@@ -378,7 +345,7 @@ namespace Gum.Managers
             }
         }
 
-        public void AddComponentClick()
+        public void AddComponentClick(object sender, EventArgs e)
         {
             if (ObjectFinder.Self.GumProjectSave == null || string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave.FullFileName))
             {
@@ -401,7 +368,6 @@ namespace Gum.Managers
                     }
                     else
                     {
-
                         TreeNode nodeToAddTo = ElementTreeViewManager.Self.SelectedNode;
 
                         while (nodeToAddTo != null && nodeToAddTo.Tag is ComponentSave && nodeToAddTo.Parent != null)
@@ -440,7 +406,7 @@ namespace Gum.Managers
             }
         }
 
-        public void ImportScreenClick()
+        public void ImportScreenClick(object sender, EventArgs e)
         {
             bool succeeded = true;
             if (ObjectFinder.Self.GumProjectSave == null || string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave.FullFileName))
@@ -516,7 +482,7 @@ namespace Gum.Managers
             }
         }
 
-        public void ImportComponentClick()
+        public void ImportComponentClick(object sender, EventArgs e)
         {
             bool succeeded = true;
             if (ObjectFinder.Self.GumProjectSave == null || string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave.FullFileName))
@@ -593,7 +559,7 @@ namespace Gum.Managers
         }
 
 
-        public void AddInstanceClick()
+        public void AddInstanceClick(object sender, EventArgs e)
         {
             TextInputWindow tiw = new TextInputWindow();
             tiw.Message = "Enter new object name:";
@@ -617,7 +583,6 @@ namespace Gum.Managers
 
         public InstanceSave AddInstance(string name, string type, ElementSave elementToAddTo)
         {
-
             InstanceSave instanceSave = ElementCommands.Self.AddInstance(elementToAddTo, name);
             instanceSave.BaseType = type;
 

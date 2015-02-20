@@ -33,8 +33,8 @@ namespace Gum.Gui.Forms
 
             this.TopPropertyGrid.SelectedObject = mDisplayer;
 
-            this.GuideListDisplay.PropertyGridChanged += new EventHandler(OnGuidePropertyGridChanged);
-            this.GuideListDisplay.NewGuideAdded += new EventHandler(OnNewGuideAdded);
+            this.GuideListDisplay.PropertyGridChanged += OnGuidePropertyGridChanged;
+            this.GuideListDisplay.NewGuideAdded += OnNewGuideAdded;
 
         }
 

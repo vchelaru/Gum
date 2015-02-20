@@ -122,7 +122,7 @@ namespace Gum.Wireframe
             mWireframeControl.KeyDown += HandleKeyPress;
 
             mEditControl = editControl;
-            mEditControl.ZoomChanged += new EventHandler(HandleControlZoomChange);
+            mEditControl.ZoomChanged += HandleControlZoomChange;
         }
 
         private void HandleKeyPress(object sender, System.Windows.Forms.KeyEventArgs e)

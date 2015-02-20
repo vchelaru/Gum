@@ -70,17 +70,17 @@ namespace Gum
 
         private void screenToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            ElementTreeViewManager.Self.AddScreenClick();
+            ElementTreeViewManager.Self.AddScreenClick(sender, e);
         }
 
         private void componentToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            ElementTreeViewManager.Self.AddComponentClick();
+            ElementTreeViewManager.Self.AddComponentClick(sender, e);
         }
 
         private void instanceToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            ElementTreeViewManager.Self.AddInstanceClick();
+            ElementTreeViewManager.Self.AddInstanceClick(sender, e);
         }
 
         private void StateTreeView_AfterSelect(object sender, TreeViewEventArgs e)

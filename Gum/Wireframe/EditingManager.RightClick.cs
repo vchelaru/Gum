@@ -53,28 +53,24 @@ namespace Gum.Wireframe
 
             mBringToFront = new ToolStripMenuItem();
             mBringToFront.Text = "Bring to front";
-            mBringToFront.Click += new EventHandler(OnBringToFrontClick);
-
-            
+            mBringToFront.Click += OnBringToFrontClick;
 
             mSendToBack = new ToolStripMenuItem();
             mSendToBack.Text = "Send to back";
-            mSendToBack.Click += new EventHandler(OnSendToBack);
-
+            mSendToBack.Click += OnSendToBack;
 
             mMoveForward = new ToolStripMenuItem();
             mMoveForward.Text = "Move Forward";
-            mMoveForward.Click += new EventHandler(OnMoveForward);
+            mMoveForward.Click += OnMoveForward;
 
             mMoveBackward = new ToolStripMenuItem();
             mMoveBackward.Text = "Move Backward";
-            mMoveBackward.Click += new EventHandler(OnMoveBackward);
+            mMoveBackward.Click += OnMoveBackward;
 
             mMoveInFrontOf = new ToolStripMenuItem();
             mMoveInFrontOf.Text = "Move In Front Of";
 
             contextMenuStrip.VisibleChanged += HandleVisibleChange;
-
         }
 
         private void HandleVisibleChange(object sender, EventArgs e)
