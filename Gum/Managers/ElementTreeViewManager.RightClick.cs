@@ -56,8 +56,8 @@ namespace Gum.Managers
             mAddComponent.Click += AddComponentClick;
 
             mImportComponent = new ToolStripMenuItem();
-            mImportComponent.Text = "Import Component";
-            mImportComponent.Click += ImportComponentClick;
+            mImportComponent.Text = "Import Components";
+            mImportComponent.Click += ImportComponentsClick;
 
             mAddInstance = new ToolStripMenuItem();
             mAddInstance.Text = "Add Instance";
@@ -162,7 +162,6 @@ namespace Gum.Managers
                     Process.Start("explorer.exe", "/select," + fullFile);
                 }
             }
-
         }
 
         void HandleDeleteFolder(object sender, EventArgs e)
@@ -231,15 +230,11 @@ namespace Gum.Managers
                 if (SelectedState.Self.SelectedInstance != null)
                 {
                     mMenuStrip.Items.Add(mGoToDefinition);
-
                 }
-
                 // ScreenSave or ComponentSave
-                else if (SelectedState.Self.SelectedScreen != null ||
-                    SelectedState.Self.SelectedComponent != null)
+                else if (SelectedState.Self.SelectedScreen != null || SelectedState.Self.SelectedComponent != null)
                 {
                     mMenuStrip.Items.Add("View in explorer", null, HandleViewInExplorer);
-
 
                     mAddInstance.Text = "Add object to " + SelectedState.Self.SelectedElement.Name;
                     mMenuStrip.Items.Add(mAddInstance);
@@ -247,10 +242,6 @@ namespace Gum.Managers
 
                     mDeleteObject.Text = "Delete " + SelectedState.Self.SelectedElement.ToString();
                     mMenuStrip.Items.Add(mDeleteObject);
-
-
-
-
                 }
                 else if (SelectedState.Self.SelectedStandardElement != null)
                 {
@@ -267,7 +258,6 @@ namespace Gum.Managers
                     {
                         mMenuStrip.Items.Add("Delete Folder", null, HandleDeleteFolder);
                     }
-
                 }
                 else if (SelectedNode.IsTopComponentContainerTreeNode() || SelectedNode.IsComponentsFolderTreeNode())
                 {
@@ -282,7 +272,6 @@ namespace Gum.Managers
                     }
                 }
             }
-
         }
 
         public void AddScreenClick(object sender, EventArgs e)
@@ -482,79 +471,74 @@ namespace Gum.Managers
             }
         }
 
-        public void ImportComponentClick(object sender, EventArgs e)
+        public void ImportComponentsClick(object sender, EventArgs e)
         {
-            bool succeeded = true;
             if (ObjectFinder.Self.GumProjectSave == null || string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave.FullFileName))
             {
                 MessageBox.Show("You must first save the project before adding a new component");
-                succeeded = false;
+                return;
             }
-            else
+
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+            openFileDialog.Multiselect = true;
+            openFileDialog.Filter = "Gum Component (*.gucx)|*.gucx";
+
+            if (openFileDialog.ShowDialog() != DialogResult.OK)
+                return;
+
+            ComponentSave lastImportedComponent = null;
+
+            for (int i = 0; i < openFileDialog.FileNames.Length; ++i)
             {
-                OpenFileDialog openFileDialog = new OpenFileDialog();
-                openFileDialog.Filter = "Gum Component (*.gucx)|*.gucx";
+                string fileName = openFileDialog.FileNames[i];
+                string desiredDirectory = FileManager.GetDirectory(
+                    ProjectManager.Self.GumProjectSave.FullFileName) + "Components/";
 
-                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                if (!FileManager.IsRelativeTo(fileName, desiredDirectory))
                 {
-                    string fileName = openFileDialog.FileName;
+                    string fileNameWithoutPath = FileManager.RemovePath(fileName);
 
-                    string desiredDirectory =
-                        FileManager.GetDirectory(
-                        ProjectManager.Self.GumProjectSave.FullFileName) + "Components/";
+                    MessageBox.Show("The file " + fileNameWithoutPath + " must be in the Gum project's Components folder. " +
+                        "This file will be copied, and the copy will be referenced.");
 
-                    if (FileManager.IsRelativeTo(fileName, desiredDirectory) == false)
+                    try
                     {
-                        MessageBox.Show("The file must be in the Gum project's Components folder.  " +
-                            "This file will be copied, and the copy will be referenced.");
+                        string destination = desiredDirectory + fileNameWithoutPath;
+                        System.IO.File.Copy(fileName, destination);
 
-                        try
-                        {
-                            string destination = desiredDirectory + FileManager.RemovePath(fileName);
-                            System.IO.File.Copy(fileName,
-                                destination);
-
-                            fileName = destination;
-                        }
-                        catch(Exception ex)
-                        {
-                            MessageBox.Show("Error copying the file: " + ex.ToString());
-                            succeeded = false;
-                        }
+                        fileName = destination;
                     }
-
-                    if (succeeded)
+                    catch (Exception ex)
                     {
-                        string strippedName = FileManager.RemovePath(FileManager.RemoveExtension(fileName));
-
-                        ProjectManager.Self.GumProjectSave.ComponentReferences.Add(
-                            new ElementReference { Name = strippedName, ElementType = ElementType.Component });
-
-                        ProjectManager.Self.GumProjectSave.ComponentReferences.Sort(
-                            (first, second) => first.Name.CompareTo(second.Name));
-
-                        var componentSave = FileManager.XmlDeserialize<ComponentSave>(fileName);
-
-                        ProjectManager.Self.GumProjectSave.Components.Add(componentSave);
-
-                        ProjectManager.Self.GumProjectSave.Components.Sort(
-                            (first, second) => first.Name.CompareTo(second.Name));
-
-                        componentSave.InitializeDefaultAndComponentVariables();
-
-                        GumCommands.Self.GuiCommands.RefreshElementTreeView();
-
-                        SelectedState.Self.SelectedComponent = componentSave;
-
-                        GumCommands.Self.FileCommands.TryAutoSaveProject();
-                        GumCommands.Self.FileCommands.TryAutoSaveElement(componentSave);
+                        MessageBox.Show("Error copying the file: " + ex.ToString());
+                        break;
                     }
+                }
 
-                }
-                else
-                {
-                    succeeded = false;
-                }
+                string strippedName = FileManager.RemovePath(FileManager.RemoveExtension(fileName));
+
+                var componentSave = FileManager.XmlDeserialize<ComponentSave>(fileName);
+
+                var componentReferences = ProjectManager.Self.GumProjectSave.ComponentReferences;
+                componentReferences.Add(new ElementReference { Name = componentSave.Name, ElementType = ElementType.Component });
+                componentReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
+
+                var components = ProjectManager.Self.GumProjectSave.Components;
+                components.Add(componentSave);
+                components.Sort((first, second) => first.Name.CompareTo(second.Name));
+
+                componentSave.InitializeDefaultAndComponentVariables();
+
+                GumCommands.Self.FileCommands.TryAutoSaveElement(componentSave);
+
+                lastImportedComponent = componentSave;
+            }
+
+            if (lastImportedComponent != null)
+            {
+                GumCommands.Self.GuiCommands.RefreshElementTreeView();
+                SelectedState.Self.SelectedComponent = lastImportedComponent;
+                GumCommands.Self.FileCommands.TryAutoSaveProject();
             }
         }
 
