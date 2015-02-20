@@ -41,7 +41,6 @@ namespace Gum.Gui.Plugins
                         MessageBox.Show("Could not delete the file\n" + fileName);
                     }
                 }
-                
             }
         }
 
@@ -75,7 +74,6 @@ namespace Gum.Gui.Plugins
             mDeleteXmlComboBox = new CheckBox();
             mDeleteXmlComboBox.Checked = true;
         }
-
 
     }
 }

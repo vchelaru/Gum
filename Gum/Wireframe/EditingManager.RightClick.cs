@@ -116,7 +116,6 @@ namespace Gum.Wireframe
                     RefreshInResponseToReorder();
                 }
             }
-
         }
 
         void OnSendToBack(object sender, EventArgs e)
@@ -205,10 +204,8 @@ namespace Gum.Wireframe
 
             if (SelectedState.Self.SelectedInstances.Count() > 1)
             {
-
                 AskToDeleteInstances(SelectedState.Self.SelectedInstances);
             }
-
             else if (SelectedState.Self.SelectedInstance != null)
             {
                 objectDeleted = SelectedState.Self.SelectedInstance;
@@ -216,7 +213,6 @@ namespace Gum.Wireframe
             }
             else if (SelectedState.Self.SelectedComponent != null)
             {
-
                 DialogResult result = ShowDeleteDialog(SelectedState.Self.SelectedComponent, out optionsWindow);
 
                 if (result == DialogResult.Yes || result == DialogResult.OK)
@@ -224,13 +220,10 @@ namespace Gum.Wireframe
                     objectDeleted = SelectedState.Self.SelectedComponent;
                     // We need to remove the reference
                     EditingManager.Self.RemoveSelectedElement();
-
                 }
             }
             else if (SelectedState.Self.SelectedScreen != null)
             {
-
-
                 DialogResult result = ShowDeleteDialog(SelectedState.Self.SelectedScreen, out optionsWindow);
 
                 if (result == DialogResult.Yes || result == DialogResult.OK)
@@ -239,7 +232,6 @@ namespace Gum.Wireframe
                     // We need to remove the reference
                     EditingManager.Self.RemoveSelectedElement();
                 }
-
             }
 
             if (objectDeleted != null)
@@ -276,7 +268,6 @@ namespace Gum.Wireframe
             PluginManager.Self.ShowDeleteDialog(optionsWindow, objectToDelete);
 
             DialogResult result = optionsWindow.ShowDialog();
-
 
 
             return result;
@@ -320,8 +311,7 @@ namespace Gum.Wireframe
             {
                 ElementSave selectedElement = SelectedState.Self.SelectedElement;
 
-                Gum.ToolCommands.ElementCommands.Self.RemoveInstance(instance,
-                    selectedElement);
+                Gum.ToolCommands.ElementCommands.Self.RemoveInstance(instance, selectedElement);
 
                 RefreshAndSaveAfterInstanceRemoval(selectedElement);
             }
@@ -380,8 +370,6 @@ namespace Gum.Wireframe
 
         private void StoreCopiedInstances()
         {
-
-
             if (SelectedState.Self.SelectedInstance != null)
             {
                 var element = SelectedState.Self.SelectedElement;
@@ -401,7 +389,6 @@ namespace Gum.Wireframe
                     {
                         mCopiedState.Variables.RemoveAt(i);
                     }
-
                 }
 
                 // And also any VariableLists:
@@ -411,7 +398,6 @@ namespace Gum.Wireframe
                     {
                         mCopiedState.VariableLists.RemoveAt(i);
                     }
-
                 }
             }
         }
@@ -421,7 +407,6 @@ namespace Gum.Wireframe
         private void PasteCopiedInstanceSave()
         {
             PasteInstanceSaves(mCopiedInstances, mCopiedState, SelectedState.Self.SelectedElement);
-
         }
 
         private void PastedCopiedState()
@@ -480,7 +465,6 @@ namespace Gum.Wireframe
                 if (targetElement != null)
                 {
                     PastedCopiedInstance(sourceInstance, sourceElement, targetElement, targetInstance, copiedState);
-
                 }
             }
 
@@ -488,8 +472,6 @@ namespace Gum.Wireframe
             {
                 SelectedState.Self.SelectedInstances = newInstances;
             }
-
-        
         }
 
         private void PastedCopiedInstance(InstanceSave sourceInstance, ElementSave sourceElement, ElementSave targetElement, InstanceSave targetInstance, StateSave copiedState)
@@ -540,7 +522,6 @@ namespace Gum.Wireframe
                         targetElement.DefaultState.VariableLists.Add(copiedVariableList);
                     }
                 }
-            
             }
             else
             {
@@ -625,7 +606,6 @@ namespace Gum.Wireframe
 
             if (SelectedState.Self.SelectedInstance != null)
             {
-
                 // to bring to back, we're going to remove, then add (at the end)
                 element.Instances.Remove(instance);
                 element.Instances.Add(instance);
@@ -671,9 +651,6 @@ namespace Gum.Wireframe
 
                 PopulateMoveInFrontOfMenuItem();
             }
-
-
-
         }
 
         private void PopulateMoveInFrontOfMenuItem()
@@ -693,7 +670,6 @@ namespace Gum.Wireframe
 
                     item.Click += HandleMoveInFrontOfClick;
                 }
-                
             }
         }
 
@@ -710,7 +686,7 @@ namespace Gum.Wireframe
 
             RefreshInResponseToReorder();
 
-            if( ProjectManager.Self.GeneralSettingsFile.AutoSave)
+            if (ProjectManager.Self.GeneralSettingsFile.AutoSave)
             {
                 ProjectManager.Self.SaveElement(element);
             }
@@ -719,16 +695,13 @@ namespace Gum.Wireframe
 
         public void RemoveSelectedElement()
         {
-            ElementSave elementToRemove = SelectedState.Self.SelectedElement;
-
-            RemoveElement(elementToRemove);
+            RemoveElement(SelectedState.Self.SelectedElement);
         }
 
         private void RemoveElement(ElementSave elementToRemove)
         {
             ScreenSave asScreenSave = elementToRemove as ScreenSave;
             ComponentSave asComponentSave = elementToRemove as ComponentSave;
-
 
             if (asScreenSave != null)
             {

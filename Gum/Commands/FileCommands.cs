@@ -34,7 +34,6 @@ namespace Gum.Commands
             StateTreeViewManager.Self.RefreshUI(null);
             PropertyGridManager.Self.RefreshUI();
             WireframeObjectManager.Self.RefreshAll(true);
-
         }
 
         public void TryAutoSaveProject(bool forceSaveContainedElements = false)

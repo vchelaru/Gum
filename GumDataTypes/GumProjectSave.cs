@@ -241,11 +241,10 @@ namespace Gum.DataTypes
         {
             FileManager.XmlSerialize(this, fileName);
 
-            string directory = FileManager.GetDirectory(fileName);
-
-
             if (saveElements)
             {
+                string directory = FileManager.GetDirectory(fileName);
+
                 foreach (var screenSave in Screens)
                 {
                     screenSave.Save(directory + ElementReference.ScreenSubfolder + "/" + screenSave.Name + "." + ScreenExtension);
