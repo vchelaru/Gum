@@ -71,8 +71,6 @@ namespace Gum.DataTypes.Variables
                         }
 
                         value = baseElement.DefaultState.GetValueRecursive(nameInBase);
-
-
                     }
 
 

@@ -304,12 +304,7 @@ namespace Gum.Managers
                             nodeToAddTo = nodeToAddTo.Parent;
                         }
 
-                        if (nodeToAddTo == null)
-                        {
-                            nodeToAddTo = RootScreensTreeNode;
-                        }
-
-                        if (nodeToAddTo.IsPartOfScreensFolderStructure() == false)
+                        if (nodeToAddTo == null || !nodeToAddTo.IsPartOfScreensFolderStructure())
                         {
                             nodeToAddTo = RootScreensTreeNode;
                         }
@@ -328,7 +323,6 @@ namespace Gum.Managers
 
                         GumCommands.Self.FileCommands.TryAutoSaveElement(screenSave);
                         GumCommands.Self.FileCommands.TryAutoSaveProject();
-
                     }
                 }
             }
@@ -364,12 +358,7 @@ namespace Gum.Managers
                             nodeToAddTo = nodeToAddTo.Parent;
                         }
 
-                        if (nodeToAddTo == null)
-                        {
-                            nodeToAddTo = RootComponentsTreeNode;
-                        }
-
-                        if (nodeToAddTo.IsPartOfComponentsFolderStructure() == false)
+                        if (nodeToAddTo == null || !nodeToAddTo.IsPartOfComponentsFolderStructure())
                         {
                             nodeToAddTo = RootComponentsTreeNode;
                         }
@@ -562,7 +551,6 @@ namespace Gum.Managers
                     AddInstance(name, StandardElementsManager.Self.DefaultType, SelectedState.Self.SelectedElement);
                 }
             }
-
         }
 
         public InstanceSave AddInstance(string name, string type, ElementSave elementToAddTo)
@@ -584,10 +572,6 @@ namespace Gum.Managers
             if (ProjectManager.Self.GeneralSettingsFile.AutoSave)
             {
                 ProjectManager.Self.SaveElement(elementToAddTo);
-                // I don't think we need to save the entire project
-                // if we add a new instance, only the element.  I'm going
-                // to take this out:
-                //ProjectManager.Self.SaveProject();
             }
 
             return instanceSave;

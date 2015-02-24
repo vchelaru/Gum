@@ -35,7 +35,5 @@ namespace Gum.ToolStates
 
         void UpdateToSelectedElement();
         void UpdateToSelectedInstanceSave();
-
-
     }
 }

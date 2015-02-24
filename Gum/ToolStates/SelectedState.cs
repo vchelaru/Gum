@@ -51,9 +51,9 @@ namespace Gum.ToolStates
             {
                 TreeNode treeNode = ElementTreeViewManager.Self.SelectedNode;
 
-                while(treeNode != null)
+                while (treeNode != null)
                 {
-                    if(treeNode.IsScreenTreeNode())
+                    if (treeNode.IsScreenTreeNode())
                     {
                         return treeNode.Tag as ScreenSave;
                     }
@@ -71,7 +71,7 @@ namespace Gum.ToolStates
             set
             {
                 // We don't want this to unset selected components or standards if this is set to null
-                if (value != SelectedScreen && ( value != null || SelectedScreen == null || SelectedScreen is ScreenSave))
+                if (value != SelectedScreen && (value != null || SelectedScreen == null || SelectedScreen is ScreenSave))
                 {
                     ElementTreeViewManager.Self.Select(value);
                 }

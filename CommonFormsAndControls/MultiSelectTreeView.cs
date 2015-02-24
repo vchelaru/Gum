@@ -43,9 +43,9 @@ namespace CommonFormsAndControls
 				ClearSelectedNodes();
 				if( value != null )
 				{
-					foreach( TreeNode node in value )
+					foreach (TreeNode node in value)
 					{
-						SetNodeSelected( node, true );
+						SetNodeSelected(node, true);
 					}
 					OnAfterSelect(new TreeViewEventArgs(mSelectedNode));
 				}
