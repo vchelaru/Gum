@@ -269,65 +269,11 @@ namespace Gum.DataTypes
                             variableToAdd.Name = variable.Name.Substring(variable.Name.IndexOf('.') + 1);
                             exposedVariables.Add(variableToAdd);
                         }
-
                     }
-
                 }
-
             }
-
 
             return exposedVariables;
-        }
-
-        public void PushInstance(InstanceSave instanceSave)
-        {
-            if (ContainerType == VariableContainerType.InstanceSave)
-            {
-                throw new Exception();
-            }
-            if (mElementStack.Count == 0)
-            {
-                throw new Exception();
-            }
-
-            ContainerType = VariableContainerType.InstanceSave;
-
-            mInstanceSave = instanceSave;
-        }
-
-        public InstanceSave PopInstance()
-        {
-            var toReturn = mInstanceSave;
-            if (ContainerType != VariableContainerType.InstanceSave)
-            {
-                throw new Exception();
-            }
-
-            ContainerType = VariableContainerType.StateSave;
-
-            mInstanceSave = null;
-            return toReturn;
-        }
-
-        public void PushElement(ElementWithState element)
-        {
-            if (ContainerType != VariableContainerType.StateSave)
-            {
-                throw new Exception();
-            }
-
-            mElementStack.Add(element);
-        }
-
-        public void PopElement()
-        {
-            if (ContainerType != VariableContainerType.StateSave)
-            {
-                throw new Exception();
-            }
-
-            mElementStack.Remove(mElementStack.Last());
         }
     }
 }
