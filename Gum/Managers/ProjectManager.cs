@@ -143,9 +143,11 @@ namespace Gum
         // made public so that File commands can access this function
         public void LoadProject(string fileName)
         {
-            string errors;
+            GumLoadResult result;
 
-            mGumProjectSave = GumProjectSave.Load(fileName, out errors);
+            mGumProjectSave = GumProjectSave.Load(fileName, out result);
+
+            string errors = result.ErrorMessage;
 
             if (!string.IsNullOrEmpty(errors))
             {
