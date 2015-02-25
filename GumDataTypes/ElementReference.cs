@@ -54,7 +54,7 @@ namespace Gum.DataTypes
         }
 
 
-        public T ToElementSave<T>(string projectroot, string extension, ref string errors) where T : ElementSave, new()
+        public T ToElementSave<T>(string projectroot, string extension, GumLoadResult result) where T : ElementSave, new()
         {
             string fullName = projectroot + Subfolder + "/" + Name + "." + extension;
 
@@ -75,7 +75,7 @@ namespace Gum.DataTypes
                 {
                     // The file name doesn't match the name of the element.  This can cause errors
                     // at runtime so let's tell the user:
-                    errors += "\nThe project references an element named " + Name + ", but the XML for this element has its name set to " + elementSave.Name + "\n"; 
+                    result.ErrorMessage += "\nThe project references an element named " + Name + ", but the XML for this element has its name set to " + elementSave.Name + "\n"; 
                 }
 
                 return elementSave;
@@ -89,6 +89,10 @@ namespace Gum.DataTypes
                 // If we do treat this as an error, then Gum goes into a state 
                 // where it can't save anything.
                 //errors += "\nCould not find the file name " + fullName;
+                // Update Feb 20, 2015
+                // But we can record it:
+                result.MissingFiles.Add(fullName);
+
 
                 T elementSave = new T();
 

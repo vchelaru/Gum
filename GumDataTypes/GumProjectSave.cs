@@ -7,6 +7,27 @@ using ToolsUtilities;
 
 namespace Gum.DataTypes
 {
+
+    public class GumLoadResult
+    {
+        public string ErrorMessage
+        {
+            get;
+            set;
+        }
+
+        public List<string> MissingFiles
+        {
+            get;
+            private set;
+        }
+
+        public GumLoadResult()
+        {
+            MissingFiles = new List<string>();
+        }
+    }
+
     public class GumProjectSave
     {
         #region Fields
@@ -126,18 +147,19 @@ namespace Gum.DataTypes
         }
 
 
-        public static GumProjectSave Load(string fileName, out string errors)
+        public static GumProjectSave Load(string fileName, out GumLoadResult result)
         {
-            if(string.IsNullOrEmpty(fileName))
+            result = new GumLoadResult();
+            if (string.IsNullOrEmpty(fileName))
             {
-                errors = "Passed null file name, could not load GumProjectSave";
+                result.ErrorMessage = "Passed null file name, could not load GumProjectSave";
                 return null;
             }
 
             GumProjectSave gps = null;
 
 #if ANDROID || IOS || WINDOWS_8
-			gps = LoadFromTitleStorage(fileName, out errors);
+            gps = LoadFromTitleStorage(fileName, result);
 #else
             if (System.IO.File.Exists(fileName))
             {
@@ -145,20 +167,20 @@ namespace Gum.DataTypes
             }
             else
             {
-                errors = "The Gum project file does not exist";
+                result.ErrorMessage = "The Gum project file does not exist";
             }
-            #endif
+#endif
 
             string projectRootDirectory = FileManager.GetDirectory(fileName);
 
-            gps.PopulateElementSavesFromReferences(projectRootDirectory, out errors);
+            gps.PopulateElementSavesFromReferences(projectRootDirectory, result);
             gps.FullFileName = fileName;
 
             return gps;
         }
 
 #if ANDROID || IOS || WINDOWS_8
-		static GumProjectSave LoadFromTitleStorage (string fileName, out string errors)
+        static GumProjectSave LoadFromTitleStorage(string fileName, GumLoadResult result)
 		{
 			using (System.IO.Stream stream = Microsoft.Xna.Framework.TitleContainer.OpenStream(fileName))
 			{
@@ -166,7 +188,7 @@ namespace Gum.DataTypes
 
 				string projectRootDirectory = FileManager.GetDirectory(fileName);
 
-				gps.PopulateElementSavesFromReferences(projectRootDirectory, out errors);
+				gps.PopulateElementSavesFromReferences(projectRootDirectory, result);
 
 				gps.FullFileName = fileName;
 
@@ -175,9 +197,9 @@ namespace Gum.DataTypes
 		}
 #endif
 
-        private void PopulateElementSavesFromReferences(string projectRootDirectory, out string errors)
+        private void PopulateElementSavesFromReferences(string projectRootDirectory, GumLoadResult result)
         {
-            errors = "";
+            string errors = "";
 
             Screens.Clear();
             Components.Clear();
@@ -188,7 +210,7 @@ namespace Gum.DataTypes
                 ScreenSave toAdd = null;
                 try
                 {
-                    toAdd = reference.ToElementSave<ScreenSave>(projectRootDirectory, ScreenExtension, ref errors);
+                    toAdd = reference.ToElementSave<ScreenSave>(projectRootDirectory, ScreenExtension, result);
                 }
                 catch (Exception e)
                 {
@@ -206,7 +228,7 @@ namespace Gum.DataTypes
                                 
                 try
                 {
-                    toAdd = reference.ToElementSave<ComponentSave>(projectRootDirectory, ComponentExtension, ref errors);
+                    toAdd = reference.ToElementSave<ComponentSave>(projectRootDirectory, ComponentExtension, result);
                 }
                 catch (Exception e)
                 {
@@ -223,7 +245,7 @@ namespace Gum.DataTypes
                 StandardElementSave toAdd = null;
                 try
                 {
-                    toAdd = reference.ToElementSave<StandardElementSave>(projectRootDirectory, StandardExtension, ref errors);
+                    toAdd = reference.ToElementSave<StandardElementSave>(projectRootDirectory, StandardExtension, result);
                 }
                 catch (Exception e)
                 {
@@ -234,6 +256,9 @@ namespace Gum.DataTypes
                     StandardElements.Add(toAdd);
                 }
             }
+
+            result.ErrorMessage += errors;
+
         }
 
 #if !WINDOWS_8
