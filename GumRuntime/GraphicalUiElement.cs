@@ -20,7 +20,7 @@ namespace Gum.Wireframe
         #region Fields
 
 
-
+        public static int UpdateLayoutCallCount;
         public static bool ShowLineRectangles = true;
 
         IRenderable mContainedObjectAsRenderable;
@@ -69,6 +69,8 @@ namespace Gum.Wireframe
 
 
         bool mIsLayoutSuspended = false;
+
+        public static bool IsAllLayoutSuspended = false;
 
         Dictionary<string, Gum.DataTypes.Variables.StateSave> mStates =
             new Dictionary<string, DataTypes.Variables.StateSave>();
@@ -853,8 +855,10 @@ namespace Gum.Wireframe
 
         public void UpdateLayout(bool updateParent, int childrenUpdateDepth)
         {
-            if (!mIsLayoutSuspended)
+            if (!mIsLayoutSuspended && !IsAllLayoutSuspended)
             {
+                UpdateLayoutCallCount++;
+
                 // May 15, 2014
                 // This needs to be
                 // set before we start
@@ -941,8 +945,10 @@ namespace Gum.Wireframe
                         }
                         else
                         {
-                            foreach (var child in this.Children)
+                            for (int i = 0; i < this.Children.Count; i++)
                             {
+                                var child = this.Children[i];
+
                                 if (child is GraphicalUiElement)
                                 {
                                     (child as GraphicalUiElement).UpdateLayout(false, childrenUpdateDepth - 1);
@@ -2095,7 +2101,7 @@ namespace Gum.Wireframe
 
                     if (ToolsUtilities.FileManager.FileExists(valueAsString))
                     {
-                        sprite.Texture = global::RenderingLibrary.Content.LoaderManager.Self.Load(valueAsString, SystemManagers.Default);
+                        sprite.Texture = global::RenderingLibrary.Content.LoaderManager.Self.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(valueAsString);
                     }
                     handled = true;
                 }
@@ -2153,8 +2159,9 @@ namespace Gum.Wireframe
                         }
                         else
                         {
-                            var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
-                            nineSlice.SetSingleTexture(loaderManager.Load(valueAsString, SystemManagers.Default));
+                            var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self; 
+                            nineSlice.SetSingleTexture(loaderManager.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(valueAsString));
+
                         }
                     }
                     handled = true;
@@ -2237,15 +2244,24 @@ namespace Gum.Wireframe
 
         void UpdateToFontValues()
         {
+
             BitmapFont font = null;
 
+
+            var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
+            var contentLoader = loaderManager.ContentLoader;
 
             if (UseCustomFont)
             {
 
                 if (!string.IsNullOrEmpty(CustomFontFile))
                 {
-                    font = new BitmapFont(CustomFontFile, SystemManagers.Default);
+                    font = contentLoader.TryGetCachedDisposable<BitmapFont>(CustomFontFile);
+                    if (font == null)
+                    {
+                        font = new BitmapFont(CustomFontFile, SystemManagers.Default);
+                        contentLoader.AddDisposable(CustomFontFile, font);
+                    }
                 }
 
 
@@ -2264,7 +2280,15 @@ namespace Gum.Wireframe
 
                     if (ToolsUtilities.FileManager.FileExists(fullFileName))
                     {
-                        font = new BitmapFont(fullFileName, SystemManagers.Default);
+
+                        font = contentLoader.TryGetCachedDisposable<BitmapFont>(fullFileName);
+                        if (font == null)
+                        {
+                            font = new BitmapFont(fullFileName, SystemManagers.Default);
+
+                            contentLoader.AddDisposable(fullFileName, font);
+                        }
+
                     }
                 }
             }

@@ -784,12 +784,15 @@ namespace RenderingLibrary.Graphics
 
             if (this.mBitmapFont != null)
             {
-                int requiredWidth;
-                int requiredHeight;
+                int requiredWidth = 0;
+                int requiredHeight = 0;
 
-                string[] lines = this.mRawText.Split('\n');
+                if (this.mRawText != null)
+                {
+                    string[] lines = this.mRawText.Split('\n');
 
-                mBitmapFont.GetRequiredWithAndHeight(lines, out requiredWidth, out requiredHeight);
+                    mBitmapFont.GetRequiredWithAndHeight(lines, out requiredWidth, out requiredHeight);
+                }
 
                 mPreRenderWidth = requiredWidth;
                 mPreRenderHeight = requiredHeight;

@@ -172,8 +172,7 @@ namespace RenderingLibrary.Content
             errorMessage = null;
             try
             {
-                toReturn = Load(fileName, managers );
-
+                toReturn = LoadContent<Texture2D>(fileName);
             }
             catch(Exception e)
             {
@@ -193,6 +192,7 @@ namespace RenderingLibrary.Content
         /// GraphicsDevice is needed to load Texture2D's.  If "null" is passed, then the singleton
         /// Renderer will be used.  </param>
         /// <returns></returns>
+        [Obsolete("Use LoadContent instead")]
         public Texture2D Load(string fileName, SystemManagers managers)
         {
             string fileNameStandardized = FileManager.Standardize(fileName, false, false);

@@ -224,6 +224,7 @@ namespace Gum.Wireframe
 
                 if (didElementChange)
                 {
+                    ((ContentLoader)LoaderManager.Self.ContentLoader).DisposeAndClear();
                     LoaderManager.Self.CacheTextures = false;
                 }
                 LoaderManager.Self.CacheTextures = true;
