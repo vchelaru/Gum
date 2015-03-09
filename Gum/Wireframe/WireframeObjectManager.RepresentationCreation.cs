@@ -19,6 +19,7 @@ using Microsoft.Xna.Framework;
 using Gum.Converters;
 using Gum.PropertyGridHelpers.Converters;
 using GumRuntime;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace Gum.Wireframe
 {
@@ -802,16 +803,16 @@ namespace Gum.Wireframe
 
             if (rvf.GetValue("Blend") != null)
             {
-                var blend = (Blend)rvf.GetValue("Blend");
-                if (blend == Blend.Normal)
+                var blend = (Gum.RenderingLibrary.Blend)rvf.GetValue("Blend");
+                if (blend == Gum.RenderingLibrary.Blend.Normal)
                 {
                     // do nothing?
                 }
-                else if (blend == Blend.Additive)
+                else if (blend == Gum.RenderingLibrary.Blend.Additive)
                 {
                     sprite.BlendState = Microsoft.Xna.Framework.Graphics.BlendState.Additive;
                 }
-                else if (blend == Blend.Replace)
+                else if (blend == Gum.RenderingLibrary.Blend.Replace)
                 {
                     sprite.BlendState = Microsoft.Xna.Framework.Graphics.BlendState.Opaque;
                 
@@ -916,7 +917,16 @@ namespace Gum.Wireframe
                 {
                     if (!string.IsNullOrEmpty(absoluteTexture))
                     {
-                        nineSlice.SetSingleTexture(LoaderManager.Self.Load(absoluteTexture, null));
+                        Texture2D texture = LoaderManager.Self.InvalidTexture;
+                        try
+                        {
+                            texture = LoaderManager.Self.Load(absoluteTexture, null);
+                        }
+                        catch(Exception e)
+                        {
+                            OutputManager.Self.AddError("Error trying to load " + absoluteTexture + "\n\n" + e.ToString());
+                        }
+                        nineSlice.SetSingleTexture(texture);
                     }
 
                 }
@@ -926,12 +936,12 @@ namespace Gum.Wireframe
 
             if (rvf.GetValue("Blend") != null)
             {
-                var blend = (Blend)rvf.GetValue("Blend");
-                if (blend == Blend.Normal)
+                var blend = (Gum.RenderingLibrary.Blend)rvf.GetValue("Blend");
+                if (blend == Gum.RenderingLibrary.Blend.Normal)
                 {
                     // do nothing?
                 }
-                else if (blend == Blend.Additive)
+                else if (blend == Gum.RenderingLibrary.Blend.Additive)
                 {
                     nineSlice.BlendState = Microsoft.Xna.Framework.Graphics.BlendState.Additive;
                 }

@@ -53,6 +53,8 @@ namespace RenderingLibrary.Graphics
         int mFullOutsideHeight;
         int mFullInsideHeight;
 
+        public Rectangle? SourceRectangle;
+
 
         #endregion
 
@@ -543,11 +545,27 @@ namespace RenderingLibrary.Graphics
             {
                 var texture = mTopLeftSprite.Texture;
 
-                mFullOutsideWidth = (texture.Width + 1) / 3;
-                mFullInsideWidth = texture.Width - (mFullOutsideWidth * 2);
+                int leftCoordinate = 0;
+                int rightCoordinate = texture.Width;
+                int topCoordinate = 0;
+                int bottomCoordinate = texture.Height;
 
-                mFullOutsideHeight = (texture.Height + 1) / 3;
-                mFullInsideHeight = texture.Height - (mFullOutsideHeight * 2);
+                if(SourceRectangle.HasValue)
+                {
+                    leftCoordinate = SourceRectangle.Value.Left;
+                    rightCoordinate = SourceRectangle.Value.Right;
+                    topCoordinate = SourceRectangle.Value.Top;
+                    bottomCoordinate = SourceRectangle.Value.Bottom;
+                }
+
+                int usedWidth = rightCoordinate - leftCoordinate;
+                int usedHeight = bottomCoordinate - topCoordinate;
+
+                mFullOutsideWidth = (usedWidth + 1) / 3;
+                mFullInsideWidth = usedWidth - (mFullOutsideWidth * 2);
+
+                mFullOutsideHeight = (usedHeight + 1) / 3;
+                mFullInsideHeight = usedHeight - (mFullOutsideHeight * 2);
 
                 int outsideWidth = System.Math.Min(mFullOutsideWidth, RenderingLibrary.Math.MathFunctions.RoundToInt( this.Width / 2)); ;
                 int outsideHeight = System.Math.Min(mFullOutsideHeight, RenderingLibrary.Math.MathFunctions.RoundToInt(this.Height / 2));
@@ -557,17 +575,53 @@ namespace RenderingLibrary.Graphics
                 
 
 
-                mTopLeftSprite.SourceRectangle = new Rectangle(0, 0, outsideWidth, outsideHeight);
-                mTopSprite.SourceRectangle = new Rectangle(outsideWidth, 0, insideWidth, outsideHeight);
-                mTopRightSprite.SourceRectangle = new Rectangle(insideWidth + outsideWidth, 0, outsideWidth, outsideHeight);
+                mTopLeftSprite.SourceRectangle = new Rectangle(
+                    leftCoordinate + 0,
+                    topCoordinate + 0,
+                    outsideWidth,
+                    outsideHeight);
+                mTopSprite.SourceRectangle = new Rectangle(
+                    leftCoordinate + outsideWidth,
+                    topCoordinate + 0,
+                    insideWidth,
+                    outsideHeight);
+                mTopRightSprite.SourceRectangle = new Rectangle(
+                    leftCoordinate + insideWidth + outsideWidth,
+                    topCoordinate + 0,
+                    outsideWidth,
+                    outsideHeight);
 
-                mLeftSprite.SourceRectangle = new Rectangle(0, outsideHeight, outsideWidth, insideHeight);
-                mCenterSprite.SourceRectangle = new Rectangle(outsideWidth, outsideHeight, insideWidth, insideHeight);
-                mRightSprite.SourceRectangle = new Rectangle(outsideWidth + insideWidth, outsideHeight, outsideWidth, insideHeight);
+                mLeftSprite.SourceRectangle = new Rectangle(
+                    leftCoordinate + 0,
+                    topCoordinate + outsideHeight,
+                    outsideWidth,
+                    insideHeight);
+                mCenterSprite.SourceRectangle = new Rectangle(
+                    leftCoordinate + outsideWidth,
+                    topCoordinate + outsideHeight,
+                    insideWidth,
+                    insideHeight);
+                mRightSprite.SourceRectangle = new Rectangle(
+                    leftCoordinate + outsideWidth + insideWidth,
+                    topCoordinate + outsideHeight,
+                    outsideWidth,
+                    insideHeight);
 
-                mBottomLeftSprite.SourceRectangle = new Rectangle(0, outsideHeight + insideHeight, outsideWidth, outsideHeight);
-                mBottomSprite.SourceRectangle = new Rectangle(outsideWidth, outsideHeight + insideHeight, insideWidth, outsideHeight);
-                mBottomRightSprite.SourceRectangle = new Rectangle(outsideWidth + insideWidth, outsideHeight + insideHeight, outsideWidth, outsideHeight);
+                mBottomLeftSprite.SourceRectangle = new Rectangle(
+                    leftCoordinate + 0,
+                    topCoordinate + outsideHeight + insideHeight,
+                    outsideWidth,
+                    outsideHeight);
+                mBottomSprite.SourceRectangle = new Rectangle(
+                    leftCoordinate + outsideWidth,
+                    topCoordinate + outsideHeight + insideHeight,
+                    insideWidth,
+                    outsideHeight);
+                mBottomRightSprite.SourceRectangle = new Rectangle(
+                    leftCoordinate + outsideWidth + insideWidth,
+                    topCoordinate + outsideHeight + insideHeight,
+                    outsideWidth,
+                    outsideHeight);
             }
 
             if(mTopSprite.SourceRectangle.HasValue)
