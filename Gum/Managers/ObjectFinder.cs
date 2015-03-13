@@ -42,7 +42,9 @@ namespace Gum.Managers
             {
                 foreach (ScreenSave screenSave in gps.Screens)
                 {
-                    if (screenSave.Name == screenName)
+                    // Since the screen name may come from a file we want to ignore case:
+                    //if (screenSave.Name == screenName)
+                    if (screenSave.Name.Equals(screenName, StringComparison.InvariantCultureIgnoreCase))
                     {
                         return screenSave;
                     }
@@ -61,7 +63,10 @@ namespace Gum.Managers
             {
                 foreach (ComponentSave componentSave in gps.Components)
                 {
-                    if (componentSave.Name == componentName)
+                    // Since the component name may come from a file name we want
+                    // to ignore case:
+                    //if (componentSave.Name == componentName)
+                    if (componentSave.Name.Equals(componentName, StringComparison.InvariantCultureIgnoreCase))
                     {
                         return componentSave;
                     }

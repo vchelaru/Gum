@@ -19,7 +19,7 @@ namespace GumRuntime
             mElementToGueTypes[elementName] = gueInheritingType;
         }
 
-        public static GraphicalUiElement CreateGueForElement(ElementSave elementSave)
+        public static GraphicalUiElement CreateGueForElement(ElementSave elementSave, bool fullInstantiation = false)
         {
             GraphicalUiElement toReturn = null;
 
@@ -29,9 +29,9 @@ namespace GumRuntime
                 var type = mElementToGueTypes[elementSave.Name];
                 var constructor = type.GetConstructor(new Type[] { typeof(bool), typeof(bool) });
 
-                bool fullInstantiation = false;
-                bool callAssignReferences = false;
-                toReturn = constructor.Invoke(new object[]{fullInstantiation, callAssignReferences}) as GraphicalUiElement;
+
+                bool callAssignReferences = fullInstantiation;
+                toReturn = constructor.Invoke(new object[] { fullInstantiation, callAssignReferences }) as GraphicalUiElement;
             }
             else
             {
