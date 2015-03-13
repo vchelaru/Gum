@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml.Serialization;
@@ -161,13 +162,19 @@ namespace Gum.DataTypes
 #if ANDROID || IOS || WINDOWS_8
             gps = LoadFromTitleStorage(fileName, result);
 #else
-            if (System.IO.File.Exists(fileName))
+            try
             {
                 gps = FileManager.XmlDeserialize<GumProjectSave>(fileName);
             }
-            else
+            catch (FileNotFoundException)
             {
                 result.ErrorMessage = "The Gum project file does not exist";
+                return null;
+            }
+            catch (IOException ex)
+            {
+                result.ErrorMessage = ex.Message;
+                return null;
             }
 #endif
 

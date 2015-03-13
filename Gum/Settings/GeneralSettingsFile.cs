@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using ToolsUtilities;
+using System.Windows.Forms;
+using System.Drawing;
 
 namespace Gum.Settings
 {
@@ -49,6 +51,35 @@ namespace Gum.Settings
             set;
         }
 
+        public Rectangle MainWindowBounds
+        {
+            get;
+            set;
+        }
+
+        public FormWindowState MainWindowState
+        {
+            get;
+            set;
+        }
+
+        public int LeftAndEverythingSplitterDistance
+        {
+            get;
+            set;
+        }
+
+        public int PreviewSplitterDistance
+        {
+            get;
+            set;
+        }
+
+        public int StatesAndVariablesSplitterDistance
+        {
+            get;
+            set;
+        }
 
         #endregion
 
@@ -59,7 +90,9 @@ namespace Gum.Settings
             ShowTextOutlines = false;
             AutoSave = true;
             FrameRate = 30;
-
+            LeftAndEverythingSplitterDistance = 196;
+            PreviewSplitterDistance = 558;
+            StatesAndVariablesSplitterDistance = 119;
             RecentProjects = new List<string>();
         }
 
