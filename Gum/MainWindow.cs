@@ -175,6 +175,42 @@ namespace Gum
             // Apply FrameRate, but keep it within sane limits
             float FrameRate = Math.Max(Math.Min(ProjectManager.Self.GeneralSettingsFile.FrameRate, 60), 10);
             wireframeControl1.DesiredFramesPerSecond = FrameRate;
+
+            var settings = ProjectManager.Self.GeneralSettingsFile;
+
+            // Apply the window position and size settings only if a large enough portion of the
+            // window would end up on the screen.
+            var workingArea = Screen.GetWorkingArea(settings.MainWindowBounds);
+            var intersection = Rectangle.Intersect(settings.MainWindowBounds, workingArea);
+            if (intersection.Width > 100 && intersection.Height > 100)
+            {
+                DesktopBounds = settings.MainWindowBounds;
+                WindowState = settings.MainWindowState;
+            }
+
+            LeftAndEverythingContainer.SplitterDistance
+                = Math.Max(0, settings.LeftAndEverythingSplitterDistance);
+            PreviewSplitContainer.SplitterDistance
+                = Math.Max(0, settings.PreviewSplitterDistance);
+            StatesAndVariablesContainer.SplitterDistance
+                = Math.Max(0, settings.StatesAndVariablesSplitterDistance);
+        }
+
+        private void MainWindow_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            var settings = ProjectManager.Self.GeneralSettingsFile;
+
+            settings.MainWindowBounds = DesktopBounds;
+            settings.MainWindowState = WindowState;
+
+            settings.LeftAndEverythingSplitterDistance
+                = LeftAndEverythingContainer.SplitterDistance;
+            settings.PreviewSplitterDistance
+                = PreviewSplitContainer.SplitterDistance;
+            settings.StatesAndVariablesSplitterDistance
+                = StatesAndVariablesContainer.SplitterDistance;
+
+            settings.Save();
         }
 
         private void VariablesAndEverythingElse_SplitterMoved(object sender, SplitterEventArgs e)
