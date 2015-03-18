@@ -175,20 +175,14 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>echo 0
-if not exist $(SolutionDir)Gum\bin\Debug\Data\Plugins\ md $(SolutionDir)Gum\bin\Debug\Data\Plugins\
-echo 1
-if not exist $(SolutionDir)Gum\bin\Debug\Data\Plugins\StateAnimationPlugin\ md $(SolutionDir)Gum\bin\Debug\Data\Plugins\StateAnimationPlugin\
-echo 2
-copy $(TargetDir)StateAnimationPlugin.dll $(SolutionDir)Gum\bin\Debug\Data\Plugins\StateAnimationPlugin\StateAnimationPlugin.dll
-echo 3
-copy $(TargetDir)StateAnimationPlugin.pdb $(SolutionDir)Gum\bin\Debug\Data\Plugins\StateAnimationPlugin\StateAnimationPlugin.pdb
-echo 4
+    <PostBuildEvent>if not exist $(ProjectDir)..\Gum\bin\Debug\Data\Plugins\ md $(ProjectDir)..\Gum\bin\Debug\Data\Plugins\
+if not exist $(ProjectDir)..\Gum\bin\Debug\Data\Plugins\StateAnimationPlugin\ md $(ProjectDir)..\Gum\bin\Debug\Data\Plugins\StateAnimationPlugin\
+copy $(TargetDir)StateAnimationPlugin.dll $(ProjectDir)..\Gum\bin\Debug\Data\Plugins\StateAnimationPlugin\StateAnimationPlugin.dll
+copy $(TargetDir)StateAnimationPlugin.pdb $(ProjectDir)..\Gum\bin\Debug\Data\Plugins\StateAnimationPlugin\StateAnimationPlugin.pdb
 
-copy $(TargetDir)FlatRedBall.InterpolationCore.dll $(SolutionDir)Gum\bin\Debug\Data\Plugins\StateAnimationPlugin\FlatRedBall.InterpolationCore.dll
-echo 5
-copy $(TargetDir)FlatRedBall.InterpolationCore.pdb $(SolutionDir)Gum\bin\Debug\Data\Plugins\StateAnimationPlugin\FlatRedBall.InterpolationCore.pdb
-echo 6</PostBuildEvent>
+copy $(TargetDir)FlatRedBall.InterpolationCore.dll $(ProjectDir)..\Gum\bin\Debug\Data\Plugins\StateAnimationPlugin\FlatRedBall.InterpolationCore.dll
+copy $(TargetDir)FlatRedBall.InterpolationCore.pdb $(ProjectDir)..\Gum\bin\Debug\Data\Plugins\StateAnimationPlugin\FlatRedBall.InterpolationCore.pdb
+</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
