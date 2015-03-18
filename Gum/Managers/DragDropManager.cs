@@ -294,7 +294,7 @@ namespace Gum.Managers
 
                     if (result == DialogResult.OK)
                     {
-                        SelectedState.Self.SelectedStateSave.SetValue(instance.Name + ".SourceFile", fileName);
+                        SelectedState.Self.SelectedStateSave.SetValue(instance.Name + ".SourceFile", fileName, instance);
                         SaveAndRefresh();
                         return;
                     }

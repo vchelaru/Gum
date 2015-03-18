@@ -53,6 +53,9 @@ namespace WpfDataUi.Controls
         void HandleTextBoxGotFocus(object sender, System.Windows.RoutedEventArgs e)
         {
             TextAtStartOfEditing = mAssociatedTextBox.Text;
+
+            mAssociatedTextBox.SelectAll();
+
             HasUserChangedAnything = false;
         }
 
