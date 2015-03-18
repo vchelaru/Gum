@@ -111,6 +111,8 @@ namespace Gum
             StandardElementsManager.Self.PopulateProjectWithDefaultStandards(mGumProjectSave);
             // Now that a new project is created, refresh the UI!
             GumCommands.Self.GuiCommands.RefreshElementTreeView();
+
+            PluginManager.Self.ProjectLoad(mGumProjectSave);
         }
 
         public bool LoadProject()

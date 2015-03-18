@@ -40,7 +40,7 @@ namespace Gum.Gui.Plugins
 
         void OnProjectLoad(DataTypes.GumProjectSave obj)
         {
-            if (obj != null)
+            if (obj != null && !string.IsNullOrEmpty(obj.FullFileName))
             {
                 string fileName = obj.FullFileName;
 
