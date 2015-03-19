@@ -91,7 +91,6 @@ namespace Gum.Wireframe
         void OnKeyDown(object sender, KeyEventArgs e)
         {
             ElementTreeViewManager.Self.HandleCopyCutPaste(e);
-
             ElementTreeViewManager.Self.HandleDelete(e);
 
             // I think this is handled in ProcessCmdKey
@@ -192,7 +191,6 @@ namespace Gum.Wireframe
         {
             try
             {
-                XnaUpdate += HandleXnaUpdate;
                 mWireframeEditControl = wireframeEditControl;
 
                 mWireframeEditControl.ZoomChanged += HandleZoomChanged;
@@ -236,24 +234,14 @@ namespace Gum.Wireframe
             catch(Exception exception)
             {
                 MessageBox.Show("Error initializing the wireframe control\n\n" + exception);
-                int m = 3;
-
             }
         }
 
         void HandleZoomChanged(object sender, EventArgs e)
         {
-
             this.mLeftRuler.ZoomValue = mWireframeEditControl.PercentageValue / 100.0f;
             this.mTopRuler.ZoomValue = mWireframeEditControl.PercentageValue / 100.0f;
         }
-
-        void HandleXnaUpdate()
-        {
-
-        }
-
-
 
         #endregion
 

@@ -31,7 +31,6 @@ namespace XnaAndWinforms
     {
         #region Fields
 
-
         // However many GraphicsDeviceControl instances you have, they all share
         // the same underlying GraphicsDevice, managed by this helper service.
         GraphicsDeviceService graphicsDeviceService;
@@ -44,8 +43,6 @@ namespace XnaAndWinforms
 
         RenderingError mRenderError = new RenderingError();
 
-        bool mIsInitialized = false;
-
         #endregion
 
         #region Properties
@@ -55,7 +52,6 @@ namespace XnaAndWinforms
             get { return mDesiredFramesPerSecond; }
             set
             {
-
                 mDesiredFramesPerSecond = value;
                 // If this is not null, then we're post-initialize
                 // so set the timer right away.  If it is null then
@@ -96,9 +92,7 @@ namespace XnaAndWinforms
         #region Constructor/Initialization
 
         public GraphicsDeviceControl()
-            : base()
         {
-
             // Don't initialize the graphics device if we are running in the designer.
             if (!DesignMode)
             {
@@ -124,20 +118,7 @@ namespace XnaAndWinforms
                 // Give derived classes a chance to initialize themselves.
                 Initialize();
             }
-
-            mIsInitialized = true;
         }
-
-        /// <summary>
-        /// Initializes the control.
-        /// </summary>
-        /// 
-        protected override void OnCreateControl()
-        {
-            base.OnCreateControl();
-
-        }
-
 
         /// <summary>
         /// Disposes the control.
@@ -171,7 +152,7 @@ namespace XnaAndWinforms
         /// </summary>
         public void RefreshDisplay()
         {
-            this.Invalidate();
+            Invalidate();
         }
 
         int simultaneousPaints = 0;
@@ -211,10 +192,8 @@ namespace XnaAndWinforms
 
                 lock (this)
                 {
-
                     if (string.IsNullOrEmpty(mRenderError.Message))
                     {
-
                         try
                         {
                             if (XnaUpdate != null)
@@ -229,7 +208,6 @@ namespace XnaAndWinforms
                             mRenderError.Message = exception.ToString();
                         }
                     }
-                    
                     else
                     {
                         // If BeginDraw failed, show an error message using System.Drawing.
@@ -364,7 +342,6 @@ namespace XnaAndWinforms
                     error.Message = "Graphics device reset failed\n\n" + e;
                 }
             }
-
         }
 
 
@@ -411,12 +388,10 @@ namespace XnaAndWinforms
         /// </summary>
         protected virtual void Initialize()
         {
-
         }
 
         protected virtual void PreDrawUpdate()
         {
-
         }
 
         /// <summary>
@@ -443,8 +418,8 @@ namespace XnaAndWinforms
         protected override bool IsInputKey(Keys keyData)
         {
             return true;
-
         }
+
         protected override void OnMouseDown(MouseEventArgs e)
         {
             this.SetStyle(ControlStyles.Selectable, true);
@@ -454,6 +429,5 @@ namespace XnaAndWinforms
             this.Select();
             base.OnMouseDown(e);
         }
-
     }
 }

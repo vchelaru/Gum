@@ -20,7 +20,6 @@ namespace Gum.Gui.Forms
 
         public ProjectPropertyGridWindow()
         {
-            
             InitializeComponent();
 
             AutoSaveCheckBox.Checked = ProjectManager.Self.GeneralSettingsFile.AutoSave;
@@ -35,7 +34,6 @@ namespace Gum.Gui.Forms
 
             this.GuideListDisplay.PropertyGridChanged += OnGuidePropertyGridChanged;
             this.GuideListDisplay.NewGuideAdded += OnNewGuideAdded;
-
         }
 
         void OnNewGuideAdded(object sender, EventArgs e)
@@ -51,10 +49,7 @@ namespace Gum.Gui.Forms
             WireframeObjectManager.Self.UpdateGuides();
             WireframeObjectManager.Self.RefreshAll(true);
             PluginManager.Self.GuidesChanged();
-
-
-
-
+            
             //EditingManager.Self.UpdateSelectedObjectsPositionAndDimensions();
         }
 
@@ -63,11 +58,6 @@ namespace Gum.Gui.Forms
             // Set the canvas width/height first before refreshing everyting so that the refresh uses these values:
             GraphicalUiElement.CanvasWidth = ProjectState.Self.GumProjectSave.DefaultCanvasWidth;
             GraphicalUiElement.CanvasHeight = ProjectState.Self.GumProjectSave.DefaultCanvasHeight;
-
-
-
-
-
 
             if (ProjectState.Self.GumProjectSave != null)
             {

@@ -81,8 +81,6 @@ namespace Gum.Wireframe
                         line.X *= mZoomValue / oldValue;
                     }
                 }
-
-
             }
         }
 
@@ -227,7 +225,6 @@ namespace Gum.Wireframe
             ReactToRulerSides();
 
             CreateRulerLines();
-
         }
 
         public void DestroyRulerLines()
@@ -433,8 +430,6 @@ namespace Gum.Wireframe
 
             if (mCursor.PrimaryClick)
             {
-               
-
                 if (x > mRectangle.X && x < mRectangle.X + mRectangle.Width &&
                     y > mRectangle.Y && y < mRectangle.Y + mRectangle.Height)
                 {
@@ -479,7 +474,6 @@ namespace Gum.Wireframe
                 mOffsetSprite.Y = 0;
                 mOffsetSprite.X = MathFunctions.RoundToInt(
                     -camera.X * mZoomValue + halfResolutionWidth);
-
             }
         }
 
@@ -592,6 +586,5 @@ namespace Gum.Wireframe
             }
             return length;
         }
-
     }
 }

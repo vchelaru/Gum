@@ -811,7 +811,6 @@ namespace Gum.Managers
         internal void HandleKeyDown(KeyEventArgs e)
         {
             HandleCopyCutPaste(e);
-
             HandleDelete(e);
 
             if (e.KeyCode == Keys.Up || e.KeyCode == Keys.Down)
