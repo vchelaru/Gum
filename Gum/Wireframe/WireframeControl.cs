@@ -202,7 +202,7 @@ namespace Gum.Wireframe
                 LoaderManager.Self.ContentLoader = new ContentLoader();
 
                 LoaderManager.Self.Initialize(null, "content/TestFont.fnt", Services, null);
-                CameraController.Self.Initialize(Cursor, Camera, mWireframeEditControl, this.Width, this.Height);
+                CameraController.Self.Initialize(Camera, mWireframeEditControl, Width, Height);
 
                 InputLibrary.Cursor.Self.Initialize(this);
                 InputLibrary.Keyboard.Self.Initialize(this);
@@ -213,9 +213,11 @@ namespace Gum.Wireframe
                 mScreenBounds.Color = ScreenBoundsColor;
                 ShapeManager.Self.Add(mScreenBounds, SelectionManager.Self.UiLayer);              
 
-                this.KeyDown += new KeyEventHandler(OnKeyDown);
-                this.KeyPress += new KeyPressEventHandler(OnKeyPress);
-                this.MouseWheel += new MouseEventHandler(CameraController.Self.HandleMouseWheel);
+                this.KeyDown += OnKeyDown;
+                this.KeyPress += OnKeyPress;
+                this.MouseDown += CameraController.Self.HandleMouseDown;
+                this.MouseMove += CameraController.Self.HandleMouseMove;
+                this.MouseWheel += CameraController.Self.HandleMouseWheel;
                 this.mTopRuler = new Ruler(this, null, InputLibrary.Cursor.Self);
                 mLeftRuler = new Ruler(this, null, InputLibrary.Cursor.Self);
                 mLeftRuler.RulerSide = RulerSide.Left;
@@ -271,7 +273,6 @@ namespace Gum.Wireframe
 
                     InputLibrary.Cursor.Self.Activity(TimeManager.Self.CurrentTime);
                     InputLibrary.Keyboard.Self.Activity();
-                    CameraController.Self.CameraMovementAndZoomActivity();
                     if (Cursor.PrimaryPush)
                     {
                         int m = 3;

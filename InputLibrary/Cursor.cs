@@ -79,7 +79,7 @@ namespace InputLibrary
         {
             get
             {
-                return IsInWindow && mControl.Focused && mMouseState.MiddleButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
+                return mControl.Focused && mMouseState.MiddleButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
             }
         }
 

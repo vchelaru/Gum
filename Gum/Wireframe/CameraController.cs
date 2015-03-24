@@ -13,12 +13,6 @@ namespace Gum.Wireframe
 {
     public class CameraController : Gum.Managers.Singleton<CameraController>
     {
-        InputLibrary.Cursor Cursor
-        {
-            get;
-            set;
-        }
-
         global::RenderingLibrary.Camera Camera
         {
             get;
@@ -26,19 +20,18 @@ namespace Gum.Wireframe
         }
 
         WireframeEditControl mWireframeEditControl;
+        System.Drawing.Point mLastMouseLocation;
 
-        public void Initialize(InputLibrary.Cursor cursor, Camera camera, WireframeEditControl wireframeEditControl, int defaultWidth, int defaultHeight)
+        public void Initialize(Camera camera, WireframeEditControl wireframeEditControl, int defaultWidth, int defaultHeight)
         {
-            this.Cursor = cursor;
-            this.Camera = camera;
-            this.mWireframeEditControl = wireframeEditControl;
+            Camera = camera;
+            mWireframeEditControl = wireframeEditControl;
 
             Renderer.Self.Camera.X = defaultWidth / 2 - 30;
             Renderer.Self.Camera.Y = defaultHeight / 2 - 30;
         }
 
-
-        public void HandleMouseWheel(object sender, MouseEventArgs e)
+        internal void HandleMouseWheel(object sender, MouseEventArgs e)
         {
             float worldX, worldY;
             Camera.ScreenToWorld(e.X, e.Y, out worldX, out worldY);
@@ -64,18 +57,29 @@ namespace Gum.Wireframe
             Camera.Y = worldY + newDifferenceY;
         }
 
-        public void CameraMovementAndZoomActivity()
+        internal void HandleMouseDown(object sender, MouseEventArgs e)
         {
-            if (Cursor.IsInWindow)
+            if (e.Button == MouseButtons.Middle)
             {
-                if (Cursor.MiddleDown)
-                {
-                    Renderer.Self.Camera.Position.X -= InputLibrary.Cursor.Self.XChange / Renderer.Self.Camera.Zoom;
-                    Renderer.Self.Camera.Position.Y -= InputLibrary.Cursor.Self.YChange / Renderer.Self.Camera.Zoom;
-                }
+                mLastMouseLocation = e.Location;
             }
         }
 
+        internal void HandleMouseMove(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Middle)
+            {
+                int xChange = e.X - mLastMouseLocation.X;
+                int yChange = e.Y - mLastMouseLocation.Y;
+
+                Renderer.Self.Camera.Position.X -= xChange / Renderer.Self.Camera.Zoom;
+                Renderer.Self.Camera.Position.Y -= yChange / Renderer.Self.Camera.Zoom;
+
+                Gum.ToolCommands.GuiCommands.Self.RefreshWireframe();
+
+                mLastMouseLocation = e.Location;
+            }
+        }
 
         internal void HandleKeyPress(KeyEventArgs e)
         {
