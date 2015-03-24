@@ -37,7 +37,7 @@ namespace Gum.Wireframe
 
         void OnProjectLoad(GumProjectSave obj)
         {
-            GuiCommands.Self.RefreshWireframeDisplay();
+            GuiCommands.Self.UpdateWireframeToProject();
         }
     }
 
@@ -225,7 +225,7 @@ namespace Gum.Wireframe
                     AfterXnaInitialize(this, null);
                 }
 
-                UpdateWireframeToProject();
+                UpdateToProject();
 
                 mHasInitialized = true;
 
@@ -241,6 +241,8 @@ namespace Gum.Wireframe
         {
             this.mLeftRuler.ZoomValue = mWireframeEditControl.PercentageValue / 100.0f;
             this.mTopRuler.ZoomValue = mWireframeEditControl.PercentageValue / 100.0f;
+
+            Invalidate();
         }
 
         #endregion
@@ -306,7 +308,7 @@ namespace Gum.Wireframe
         }
 
 
-        public void UpdateWireframeToProject()
+        public void UpdateToProject()
         {
             if (mScreenBounds != null && ProjectManager.Self.GumProjectSave != null)
             {
