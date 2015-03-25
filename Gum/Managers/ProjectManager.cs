@@ -190,6 +190,8 @@ namespace Gum
                 GraphicalUiElement.ShowLineRectangles = mGumProjectSave.ShowOutlines;
                 EditingManager.Self.RestrictToUnitValues = mGumProjectSave.RestrictToUnitValues;
 
+                PluginManager.Self.ProjectLoad(mGumProjectSave);
+
                 if (wasModified)
                 {
                     ProjectManager.Self.SaveProject(forceSaveContainedElements:true);
@@ -198,13 +200,15 @@ namespace Gum
                 GraphicalUiElement.CanvasWidth = mGumProjectSave.DefaultCanvasWidth;
                 GraphicalUiElement.CanvasHeight = mGumProjectSave.DefaultCanvasHeight;
             }
+            else
+            {
+                PluginManager.Self.ProjectLoad(mGumProjectSave);
+            }
 
             // Now that a new project is loaded, refresh the UI!
             GumCommands.Self.GuiCommands.RefreshElementTreeView();
             // And the guides
             WireframeObjectManager.Self.UpdateGuides();
-
-            PluginManager.Self.ProjectLoad(mGumProjectSave);
 
             GeneralSettingsFile.AddToRecentFilesIfNew(fileName);
 
@@ -269,9 +273,27 @@ namespace Gum
 
                 if (shouldSave)
                 {
+                    PluginManager.Self.BeforeProjectSave(GumProjectSave);
+
                     try
                     {
                         bool saveContainedElements = isNewProject || forceSaveContainedElements;
+
+                        if (saveContainedElements)
+                        {
+                            foreach (var screenSave in GumProjectSave.Screens)
+                            {
+                                PluginManager.Self.BeforeElementSave(screenSave);
+                            }
+                            foreach (var componentSave in GumProjectSave.Components)
+                            {
+                                PluginManager.Self.BeforeElementSave(componentSave);
+                            }
+                            foreach (var standardElementSave in GumProjectSave.StandardElements)
+                            {
+                                PluginManager.Self.BeforeElementSave(standardElementSave);
+                            }
+                        }
 
                         GumProjectSave.Save(GumProjectSave.FullFileName, saveContainedElements);
                         succeeded = true;
