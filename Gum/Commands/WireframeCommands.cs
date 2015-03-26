@@ -12,7 +12,6 @@ namespace Gum.Commands
         public void Refresh()
         {
             WireframeObjectManager.Self.RefreshAll(force:true);
-
         }
     }
 }

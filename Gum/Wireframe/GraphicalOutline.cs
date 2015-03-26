@@ -51,11 +51,9 @@ namespace Gum.Wireframe
         {
             SetLineRectangleAroundIpso(GetOrMakeRectangleAtIndex(0), mHighlightedIpso);
 
-
             if (mHighlightedIpso.Component is NineSlice)
             {
                 NineSlice nineSlice = mHighlightedIpso.Component as NineSlice;
-
 
                 float topHeight = 0;
                 float centerHeight = 0;
@@ -68,8 +66,6 @@ namespace Gum.Wireframe
                 if (nineSlice.TopTexture != null && nineSlice.BottomTexture != null && 
                     nineSlice.LeftTexture != null && nineSlice.RightTexture != null)
                 {
-
-
                     topHeight = nineSlice.OutsideSpriteHeight;
 
                     bottomHeight = nineSlice.OutsideSpriteHeight;
@@ -94,8 +90,6 @@ namespace Gum.Wireframe
                     wideRectangle.Y = nineSlice.GetAbsoluteY() + topHeight;
                     wideRectangle.Width = nineSlice.Width;
                     wideRectangle.Height = centerHeight;
-
-
                 }
             }
         }
@@ -118,8 +112,6 @@ namespace Gum.Wireframe
             rectangle.Visible = true;
             rectangle.X = pso.GetAbsoluteX() - adjustedSelectionBorder;
             rectangle.Y = pso.GetAbsoluteY() - adjustedSelectionBorder;
-
-
 
             rectangle.Width = pso.Width + adjustedSelectionBorder * 2;
             rectangle.Height = pso.Height + adjustedSelectionBorder * 2;

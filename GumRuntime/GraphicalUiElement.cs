@@ -917,8 +917,6 @@ namespace Gum.Wireframe
         public void UpdateLayout()
         {
             UpdateLayout(true, true);
-
-
         }
 
         public bool GetIfDimensionsDependOnChildren()
@@ -1034,7 +1032,6 @@ namespace Gum.Wireframe
 
                                 asText.SetNeedsRefreshToTrue();
                                 asText.UpdatePreRenderDimensions();
-
                             }
                         }
 
@@ -1122,9 +1119,7 @@ namespace Gum.Wireframe
             {
                 parentWidth = this.ParentGue.mContainedObjectAsIpso.Width;
                 parentHeight = this.ParentGue.mContainedObjectAsIpso.Height;
-
             }
-
         }
 
         private void UpdateTextureCoordinates()
@@ -1216,7 +1211,6 @@ namespace Gum.Wireframe
 
         private void UpdatePosition(float parentWidth, float parentHeight, bool wrap)
         {
-
             float parentOriginOffsetX;
             float parentOriginOffsetY;
             bool wasHandledX;

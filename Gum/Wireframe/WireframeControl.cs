@@ -97,11 +97,8 @@ namespace Gum.Wireframe
             //HandleNudge(e);
         }
 
-
         void OnKeyPress(object sender, KeyPressEventArgs e)
         {
-            int m = 3;
-
         }
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
@@ -132,7 +129,6 @@ namespace Gum.Wireframe
 
         private bool HandleNudge(Keys keyData)
         {
-
             bool handled = false;
 
             int nudgeX = 0;
@@ -176,9 +172,7 @@ namespace Gum.Wireframe
                 EditingManager.Self.MoveSelectedObjectsBy(nudgeX, nudgeY);
                 handled = true;
 
-
                 GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
-            
             }
             return handled;
         }     
@@ -262,7 +256,6 @@ namespace Gum.Wireframe
                 try
 #endif
                 {
-
                     InputLibrary.Cursor.Self.StartCursorSettingFrameStart();
                     ProjectVerifier.Self.AssertSelectedIpsosArePartOfRenderer();
                     TimeManager.Self.Activity();
@@ -282,7 +275,6 @@ namespace Gum.Wireframe
                         mLeftRuler.HandleXnaUpdate(InputLibrary.Cursor.Self.IsInWindow);
 
 
-
                     // But we want the selection to update the handles to the selected object
                     // after editing is done.  SelectionManager.LateActivity lets us do that.  LateActivity must
                     // come after EidtingManager.Activity.
@@ -292,11 +284,10 @@ namespace Gum.Wireframe
                         // EditingManager activity must happen after SelectionManager activity
                         EditingManager.Self.Activity();
 
-
                         SelectionManager.Self.LateActivity();
                     }
-                    InputLibrary.Cursor.Self.EndCursorSettingFrameStart();
 
+                    InputLibrary.Cursor.Self.EndCursorSettingFrameStart();
                 }
 #if DEBUG
                 catch (Exception e)
@@ -305,6 +296,7 @@ namespace Gum.Wireframe
                 }
 #endif
             }
+
             isInActivity = false;
         }
 

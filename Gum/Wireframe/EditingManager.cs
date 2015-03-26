@@ -85,7 +85,6 @@ namespace Gum.Wireframe
         {
             if (SelectedState.Self.SelectedElement != null)
             {
-
                 PushActivity();
 
                 ClickActivity();
@@ -95,8 +94,6 @@ namespace Gum.Wireframe
                 HandlesActivity();
 
                 BodyGrabbingActivity();
-
-                
             }
         }
 
@@ -267,7 +264,6 @@ namespace Gum.Wireframe
 
         private bool ShouldSkipDraggingMovementOn(InstanceSave instanceSave)
         {
-
             ElementWithState element = new ElementWithState(SelectedState.Self.SelectedElement);
 
             List<ElementWithState> stack = new List<ElementWithState>() { element };
@@ -407,7 +403,6 @@ namespace Gum.Wireframe
                     if (asGue != null)
                     {
                         RecursiveVariableFinder rvf = new RecursiveVariableFinder(asGue.Tag as InstanceSave, SelectedState.Self.SelectedElement);
-
                         asGue.SetGueValues(rvf);
                     }
                 }
@@ -443,9 +438,7 @@ namespace Gum.Wireframe
         public void RefreshPositionsAndScalesForInstance(InstanceSave instance, List<ElementWithState> elementStack)
         {
             GraphicalUiElement ipso = WireframeObjectManager.Self.GetRepresentation(instance, elementStack);
-
             ipso.UpdateLayout();
-
         }
 
         private void HandlesActivity()
@@ -493,9 +486,7 @@ namespace Gum.Wireframe
 
             if (hasChangeOccurred)
             {
-
                 UpdateSelectedObjectsPositionAndDimensions();
-
                 PropertyGridManager.Self.RefreshUI();
 
                 // I don't think we need this anymore because they're updated automatically in SelectionManager
@@ -541,7 +532,6 @@ namespace Gum.Wireframe
 
         private void AdjustCursorChangeValuesForShiftDrag(ref float cursorXChange, ref float cursorYChange, InstanceSave instanceSave, List<ElementWithState> elementStack)
         {
-            
             if (InputLibrary.Keyboard.Self.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift) ||
                 InputLibrary.Keyboard.Self.KeyDown(Microsoft.Xna.Framework.Input.Keys.RightShift))
             {
@@ -587,7 +577,6 @@ namespace Gum.Wireframe
                     }
 
                     float aspectRatio = absoluteXDifference / absoluteYDifference;
-
 
 
                     if (aspectRatio > mAspectRatioOnGrab)
@@ -845,7 +834,6 @@ namespace Gum.Wireframe
             object currentValueAsObject;
             currentValueAsObject = GetCurrentValueForVariable(baseVariableName, null);
 
-
             float currentValue = (float)currentValueAsObject;
             string unitsVariableName = baseVariableName + " Units";
             string unitsNameWithInstance;
@@ -908,7 +896,6 @@ namespace Gum.Wireframe
                         }
                     }
                 }
-
                 else
                 {
                     float parentValue;
@@ -941,8 +928,8 @@ namespace Gum.Wireframe
                     }
 
                 }
-
             }
+
             return currentValue;
         }
 
@@ -1012,7 +999,6 @@ namespace Gum.Wireframe
         {
             nameWithInstance = baseVariableName;
 
-
             if (instanceSave != null)
             {
                 nameWithInstance = instanceSave.Name + "." + baseVariableName;
@@ -1027,6 +1013,5 @@ namespace Gum.Wireframe
         }
 
         #endregion
-
     }
 }

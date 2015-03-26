@@ -206,10 +206,8 @@ namespace Gum.Wireframe
                 ClearAll();
                 RootGue = null;
             }
-
             else if (elementSave != null && (force || elementSave != ElementShowing))
             {
-
                 ClearAll();
 
                 // If it's the same element, let's not refresh the textures

@@ -173,10 +173,8 @@ namespace InputLibrary
 
         public void Activity(double currentTime)
         {
-
             mLastFrameMouseState = mMouseState;
             PrimaryDoubleClick = false;
-
 
             mMouseState = Microsoft.Xna.Framework.Input.Mouse.GetState();
 
@@ -206,7 +204,6 @@ namespace InputLibrary
                 }
                 mLastClickTime = currentTime;
             }
-
         }
 
         public void Initialize( Control control)
@@ -221,7 +218,6 @@ namespace InputLibrary
         public void StartCursorSettingFrameStart()
         {
             mHasBeenSet = false;
-
         }
 
         public void SetWinformsCursor(WinCursor cursor)

@@ -46,9 +46,7 @@ namespace Gum.Wireframe
         public void Activity()
         {
             CurrentTime = mStopWatch.Elapsed.TotalSeconds;
-
         }
-
 
 
         void InitializeStopwatch()
