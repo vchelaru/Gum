@@ -892,14 +892,7 @@ namespace Gum.Managers
                 whatToHighlight = WireframeObjectManager.Self.GetRepresentation(instance, null);
             }
 
-            try
-            {
-                SelectionManager.Self.HighlightedIpso = whatToHighlight;
-            }
-            catch (Exception e)
-            {
-                int m = 3;
-            }
+            SelectionManager.Self.HighlightedIpso = whatToHighlight;
         }
     }
 
