@@ -28,7 +28,7 @@ namespace Gum.Plugins
 
     #endregion
 
-    class PluginManager
+    public class PluginManager
     {
         #region Fields
 
@@ -656,6 +656,52 @@ namespace Gum.Plugins
             }      
 
 #endif
+        }
+
+        internal void BeforeElementSave(ElementSave savedElement)
+        {
+            foreach (PluginBase plugin in this.Plugins)
+            {
+                PluginContainer container = this.mPluginContainers[plugin];
+
+                if (container.IsEnabled)
+                {
+                    try
+                    {
+                        plugin.CallBeforeElementSave(savedElement);
+                    }
+                    catch (Exception e)
+                    {
+#if DEBUG
+                        MessageBox.Show("Error in plugin " + plugin.FriendlyName + ":\r\n" + e.ToString());
+#endif
+                        container.Fail(e, "Failed in BeforeElementSave");
+                    }
+                }
+            }
+        }
+
+        internal void BeforeProjectSave(GumProjectSave savedProject)
+        {
+            foreach (var plugin in this.Plugins)
+            {
+                PluginContainer container = this.PluginContainers[plugin];
+
+                if (container.IsEnabled)
+                {
+                    try
+                    {
+                        plugin.CallBeforeProjectSave(savedProject);
+                    }
+                    catch (Exception e)
+                    {
+#if DEBUG
+                        MessageBox.Show("Error in plugin " + plugin.FriendlyName + ":\n\n" + e.ToString());
+#endif
+                        container.Fail(e, "Failed in BeforeProjectSave");
+                    }
+                }
+            }
         }
 
         internal void Export(ElementSave elementToExport)

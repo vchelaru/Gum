@@ -15,7 +15,8 @@ namespace Gum.Plugins.BaseClasses
 
         public event Action<GumProjectSave> ProjectLoad;
         public event Action<GumProjectSave> ProjectSave;
-
+        public event Action<GumProjectSave> BeforeProjectSave;
+        public event Action<ElementSave> BeforeElementSave;
         public event Action GuidesChanged;
         public event Action<ElementSave> Export;
         public event Action<DeleteOptionsWindow, object> DeleteOptionsWindowShow;
@@ -200,8 +201,21 @@ namespace Gum.Plugins.BaseClasses
             }
         }
 
+        public void CallBeforeElementSave(ElementSave elementSave)
+        {
+            if (BeforeElementSave != null)
+            {
+                BeforeElementSave(elementSave);
+            }
+        }
 
-
+        public void CallBeforeProjectSave(GumProjectSave savedProject)
+        {
+            if (BeforeProjectSave != null)
+            {
+                BeforeProjectSave(savedProject);
+            }
+        }
 
         internal bool GetIfVariableIsExcluded(VariableSave defaultVariable, RecursiveVariableFinder rvf)
         {
