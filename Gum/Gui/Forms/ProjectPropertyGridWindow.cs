@@ -66,7 +66,7 @@ namespace Gum.Gui.Forms
             }
 
             //I think we need to refresh *after* we show line rectangles
-            GuiCommands.Self.RefreshWireframeDisplay();
+            GuiCommands.Self.UpdateWireframeToProject();
             WireframeObjectManager.Self.RefreshAll(true);
 
             GumCommands.Self.FileCommands.TryAutoSaveProject();

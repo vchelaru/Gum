@@ -196,7 +196,7 @@ namespace Gum.Wireframe
 
             SelectionManager.Self.Refresh();
 
-            mWireframeControl.UpdateWireframeToProject();
+            mWireframeControl.UpdateToProject();
         }
 
         public void RefreshAll(bool force, ElementSave elementSave)

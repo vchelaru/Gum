@@ -436,6 +436,8 @@ namespace Gum.Wireframe
                     }
                 }
             }
+
+            GuiCommands.Self.RefreshWireframe();
         }
 
         public void RefreshPositionsAndScalesForInstance(InstanceSave instance, List<ElementWithState> elementStack)
