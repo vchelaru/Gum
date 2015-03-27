@@ -632,7 +632,8 @@ namespace ToolsUtilities
                 }
                 catch (Exception e)
                 {
-                    throw new Exception("Could not deserialize the XML file " + fileName + " because of the following error:\n\n" + e);
+                    throw new IOException("Could not deserialize the XML file"
+                        + Environment.NewLine + fileName, e);
                 }
 #if !WINDOWS_8
                 stream.Close();
