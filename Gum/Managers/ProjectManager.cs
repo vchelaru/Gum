@@ -175,8 +175,7 @@ namespace Gum
 
             if (mGumProjectSave != null)
             {
-                bool wasModified = mGumProjectSave.Initialize();
-
+                mGumProjectSave.Initialize();
 
                 RecreateMissingStandardElements();
 
@@ -191,11 +190,6 @@ namespace Gum
                 EditingManager.Self.RestrictToUnitValues = mGumProjectSave.RestrictToUnitValues;
 
                 PluginManager.Self.ProjectLoad(mGumProjectSave);
-
-                if (wasModified)
-                {
-                    ProjectManager.Self.SaveProject(forceSaveContainedElements:true);
-                }
 
                 GraphicalUiElement.CanvasWidth = mGumProjectSave.DefaultCanvasWidth;
                 GraphicalUiElement.CanvasHeight = mGumProjectSave.DefaultCanvasHeight;
@@ -233,11 +227,8 @@ namespace Gum
                 if (element.IsSourceFileMissing)
                 {
                     missingElements.Add(element);
-
                 }
             }
-
-
 
             foreach (var element in missingElements)
             {

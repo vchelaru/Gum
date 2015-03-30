@@ -15,10 +15,8 @@ namespace Gum.DataTypes
         /// checking for other errors.
         /// </summary>
         /// <param name="gumProjectSave">The GumProjectSave</param>
-        public static bool Initialize(this GumProjectSave gumProjectSave)
+        public static void Initialize(this GumProjectSave gumProjectSave)
         {
-            bool wasModified = false;
-
             gumProjectSave.ScreenReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
             gumProjectSave.ComponentReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
             gumProjectSave.StandardElementReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
@@ -37,7 +35,7 @@ namespace Gum.DataTypes
                 StateSave stateSave = StandardElementsManager.Self.GetDefaultStateFor(standardElementSave.Name);
                 // this will result in extra variables being
                 // added
-                wasModified = standardElementSave.Initialize(stateSave) || wasModified;
+                standardElementSave.Initialize(stateSave);
 
                 stateSave.ParentContainer = standardElementSave;
             }
@@ -47,7 +45,6 @@ namespace Gum.DataTypes
                 screenSave.Initialize(null);
             }
 
-            
 
             foreach (ComponentSave componentSave in gumProjectSave.Components)
             {
@@ -71,15 +68,8 @@ namespace Gum.DataTypes
                     defaultStateSave = ses.DefaultState;
                 }
 
-                if(componentSave.Initialize(defaultStateSave))
-                {
-                    wasModified = true;
-                }
-
-                if(componentSave.Initialize(StandardElementsManager.Self.DefaultStates["Component"]))
-                {
-                    wasModified = true;
-                }
+                componentSave.Initialize(defaultStateSave);
+                componentSave.Initialize(StandardElementsManager.Self.DefaultStates["Component"]);
             }
 
             if(gumProjectSave.Version < 1)
@@ -119,11 +109,7 @@ namespace Gum.DataTypes
                         }
                     }
                 }
-
-                wasModified = true;
             }
-
-            return wasModified;
         }
 
         /// <summary>

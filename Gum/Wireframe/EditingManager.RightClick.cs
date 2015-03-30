@@ -161,8 +161,6 @@ namespace Gum.Wireframe
                 PropertyGridManager.Self.RefreshUI();
                 GumCommands.Self.GuiCommands.RefreshElementTreeView();
             }
-
-
         }
         
         public void OnPaste(CopyType copyType)
