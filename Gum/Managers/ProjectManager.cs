@@ -361,7 +361,6 @@ namespace Gum
                 DialogResult result = openFileDialog.ShowDialog();
 
 
-
                 if (result == DialogResult.OK)
                 {
                     GumProjectSave.FullFileName = openFileDialog.FileName;
@@ -394,6 +393,8 @@ namespace Gum
 
                 if (shouldSave)
                 {
+                    PluginManager.Self.BeforeElementSave(elementSave);
+
                     string fileName = elementSave.GetFullPathXmlFile();
 
                     // if it's readonly, let's warn the user
@@ -420,11 +421,10 @@ namespace Gum
                                 succeeded = true;
                                 break;
                             }
-
                             catch (Exception e)
                             {
                                 exception = e;
-                                System.Threading.Thread.Sleep(100);
+                                System.Threading.Thread.Sleep(msBetweenSaves);
                                 numberOfTimesTried++;
                             }
                         }
@@ -432,19 +432,15 @@ namespace Gum
 
                         if (succeeded == false)
                         {
-
                             MessageBox.Show("Unknown error trying to save the file\n\n" + fileName + "\n\n" + exception.ToString());
                             succeeded = false;
                         }
-
-
                     }
                     if (succeeded)
                     {
                         OutputManager.Self.AddOutput("Saved " + elementSave + " to " + fileName);
                     }
                 }
-
 
                 PluginManager.Self.Export(elementSave);
             }
