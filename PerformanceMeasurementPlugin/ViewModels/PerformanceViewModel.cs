@@ -17,7 +17,14 @@ namespace PerformanceMeasurementPlugin.ViewModels
         {
             get
             {
-                return SystemManagers.Default.Renderer.DrawCalls;
+                if (SystemManagers.Default != null)
+                {
+                    return SystemManagers.Default.Renderer.DrawCalls;
+                }
+                else
+                {
+                    return 0;
+                }
             }
         }
 
