@@ -17,6 +17,7 @@ namespace Gum.Plugins.BaseClasses
         public event Action<GumProjectSave> ProjectSave;
         public event Action<GumProjectSave> BeforeProjectSave;
         public event Action<ElementSave> BeforeElementSave;
+        public event Action<ElementSave> ElementSave;
         public event Action GuidesChanged;
         public event Action<ElementSave> Export;
         public event Action<DeleteOptionsWindow, object> DeleteOptionsWindowShow;
@@ -206,6 +207,14 @@ namespace Gum.Plugins.BaseClasses
             if (BeforeElementSave != null)
             {
                 BeforeElementSave(elementSave);
+            }
+        }
+
+        public void CallElementSave(ElementSave elementSave)
+        {
+            if (ElementSave != null)
+            {
+                ElementSave(elementSave);
             }
         }
 

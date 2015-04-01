@@ -681,6 +681,29 @@ namespace Gum.Plugins
             }
         }
 
+        internal void ElementSave(ElementSave savedElement)
+        {
+            foreach (PluginBase plugin in this.Plugins)
+            {
+                PluginContainer container = this.mPluginContainers[plugin];
+
+                if (container.IsEnabled)
+                {
+                    try
+                    {
+                        plugin.CallElementSave(savedElement);
+                    }
+                    catch (Exception e)
+                    {
+#if DEBUG
+                        MessageBox.Show("Error in plugin " + plugin.FriendlyName + ":\r\n" + e.ToString());
+#endif
+                        container.Fail(e, "Failed in ElementSave");
+                    }
+                }
+            }
+        }
+
         internal void BeforeProjectSave(GumProjectSave savedProject)
         {
             foreach (var plugin in this.Plugins)
