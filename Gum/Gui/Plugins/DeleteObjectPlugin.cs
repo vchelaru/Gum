@@ -13,7 +13,12 @@ namespace Gum.Gui.Plugins
     [Export(typeof(Gum.Plugins.BaseClasses.PluginBase))]
     public class DeleteObjectPlugin : InternalPlugin
     {
-        public CheckBox DeleteXmlCheckBox { get; private set; }
+        private CheckBox mDeleteXmlCheckBox;
+
+        public bool DeleteXmlIsChecked
+        {
+            get { return mDeleteXmlCheckBox.Checked; }
+        }
 
         public override void StartUp()
         {
@@ -25,7 +30,7 @@ namespace Gum.Gui.Plugins
 
         void HandleDeleteConfirm(Forms.DeleteOptionsWindow deleteOptionsWindow, object deletedObject)
         {
-            if (DeleteXmlCheckBox.Checked)
+            if (mDeleteXmlCheckBox.Checked)
             {
                 string fileName = GetFileNameForObject(deletedObject);
 
@@ -63,15 +68,15 @@ namespace Gum.Gui.Plugins
 
         void HandleDeleteOptionsShow(Forms.DeleteOptionsWindow obj, object objectToDelete)
         {
-            obj.AddUi(DeleteXmlCheckBox);
-            DeleteXmlCheckBox.Text = "Delete XML file";
-            DeleteXmlCheckBox.Width = 220;
+            obj.AddUi(mDeleteXmlCheckBox);
+            mDeleteXmlCheckBox.Text = "Delete XML file";
+            mDeleteXmlCheckBox.Width = 220;
         }
 
         private void CreateDeleteXmlFileComboBox()
         {
-            DeleteXmlCheckBox = new CheckBox();
-            DeleteXmlCheckBox.Checked = true;
+            mDeleteXmlCheckBox = new CheckBox();
+            mDeleteXmlCheckBox.Checked = true;
         }
 
     }
