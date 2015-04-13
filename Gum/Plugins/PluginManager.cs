@@ -681,7 +681,7 @@ namespace Gum.Plugins
             }
         }
 
-        internal void ElementSave(ElementSave savedElement)
+        internal void AfterElementSave(ElementSave savedElement)
         {
             foreach (PluginBase plugin in this.Plugins)
             {
@@ -691,7 +691,7 @@ namespace Gum.Plugins
                 {
                     try
                     {
-                        plugin.CallElementSave(savedElement);
+                        plugin.CallAfterElementSave(savedElement);
                     }
                     catch (Exception e)
                     {

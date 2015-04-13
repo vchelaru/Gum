@@ -302,15 +302,15 @@ namespace Gum
                         {
                             foreach (var screenSave in GumProjectSave.Screens)
                             {
-                                PluginManager.Self.ElementSave(screenSave);
+                                PluginManager.Self.AfterElementSave(screenSave);
                             }
                             foreach (var componentSave in GumProjectSave.Components)
                             {
-                                PluginManager.Self.ElementSave(componentSave);
+                                PluginManager.Self.AfterElementSave(componentSave);
                             }
                             foreach (var standardElementSave in GumProjectSave.StandardElements)
                             {
-                                PluginManager.Self.ElementSave(standardElementSave);
+                                PluginManager.Self.AfterElementSave(standardElementSave);
                             }
                         }
                     }
@@ -455,7 +455,7 @@ namespace Gum
                     if (succeeded)
                     {
                         OutputManager.Self.AddOutput("Saved " + elementSave + " to " + fileName);
-                        PluginManager.Self.ElementSave(elementSave);
+                        PluginManager.Self.AfterElementSave(elementSave);
                     }
                 }
 
