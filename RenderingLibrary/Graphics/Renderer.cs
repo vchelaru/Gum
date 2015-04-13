@@ -192,8 +192,6 @@ namespace RenderingLibrary.Graphics
 
         private void CreateRasterizerStates()
         {
-
-
             scissorTestEnabled = new RasterizerState();
             scissorTestDisabled = new RasterizerState();
 
@@ -201,8 +199,6 @@ namespace RenderingLibrary.Graphics
 
             scissorTestEnabled.ScissorTestEnable = true;
             scissorTestDisabled.ScissorTestEnable = false;
-
-
         }
 
         public Layer AddLayer()
@@ -273,9 +269,7 @@ namespace RenderingLibrary.Graphics
                 foreach (Layer layer in layers)
                 {
                     RenderLayer(managers, layer);
-
                 }
-
             }
         }
 
@@ -299,7 +293,6 @@ namespace RenderingLibrary.Graphics
 
                 mSpriteBatch.Pop();
             }
-
         }
 
         private void AdjustRenderStates(RenderStateVariables renderState, Layer layer, IRenderable renderable)

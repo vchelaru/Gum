@@ -314,8 +314,8 @@ namespace Gum.Managers
                     continue;
 
                 string fileName = FileManager.MakeRelative(file, FileLocations.Self.ProjectFolder);
-                if (AddNewInstanceForDrop(fileName, worldX, worldY))
-                    shouldUpdate = true;
+                AddNewInstanceForDrop(fileName, worldX, worldY);
+                shouldUpdate = true;
             }
 
             if (shouldUpdate)
@@ -357,9 +357,8 @@ namespace Gum.Managers
             WireframeObjectManager.Self.RefreshAll(true);
         }
 
-        private static bool AddNewInstanceForDrop(string fileName, float worldX, float worldY)
+        private static void AddNewInstanceForDrop(string fileName, float worldX, float worldY)
         {
-            bool shouldUpdate = true;
             string nameToAdd = FileManager.RemovePath(FileManager.RemoveExtension(fileName));
 
             IEnumerable<string> existingNames = SelectedState.Self.SelectedElement.Instances.Select(i => i.Name);
@@ -371,12 +370,7 @@ namespace Gum.Managers
 
             SetInstanceToPosition(worldX, worldY, instance);
 
-
-            SelectedState.Self.SelectedStateSave.SetValue(instance.Name + ".SourceFile", fileName);
-
-
-            shouldUpdate = true;
-            return shouldUpdate;
+            SelectedState.Self.SelectedStateSave.SetValue(instance.Name + ".SourceFile", fileName, instance);
         }
 
         private static void SetInstanceToPosition(float worldX, float worldY, InstanceSave instance)

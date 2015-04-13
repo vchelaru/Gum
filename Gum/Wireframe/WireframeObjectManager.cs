@@ -117,7 +117,6 @@ namespace Gum.Wireframe
         {
             mWireframeControl = wireframeControl;
             mWireframeControl.AfterXnaInitialize += HandleAfterXnaIntiailize;
-            mWireframeControl.XnaUpdate += HandleXnaUpdate;
 
             mWireframeControl.KeyDown += HandleKeyPress;
 
@@ -173,11 +172,6 @@ namespace Gum.Wireframe
             SpriteManager.Self.Add(mBackgroundSprite);
         }
 
-        private void HandleXnaUpdate()
-        {
-        }
-
-
 
         void HandleControlZoomChange(object sender, EventArgs e)
         {
@@ -202,21 +196,18 @@ namespace Gum.Wireframe
 
             SelectionManager.Self.Refresh();
 
-            mWireframeControl.UpdateWireframeToProject();
+            mWireframeControl.UpdateToProject();
         }
 
         public void RefreshAll(bool force, ElementSave elementSave)
         {
-
             if (elementSave == null || elementSave.IsSourceFileMissing)
             {
                 ClearAll();
                 RootGue = null;
             }
-
             else if (elementSave != null && (force || elementSave != ElementShowing))
             {
-
                 ClearAll();
 
                 // If it's the same element, let's not refresh the textures
@@ -306,7 +297,6 @@ namespace Gum.Wireframe
         {
             ElementSave selectedElement = SelectedState.Self.SelectedElement;
 
-
             string prefix = selectedElement.Name + ".";
             if (selectedElement is ScreenSave)
             {
@@ -314,7 +304,6 @@ namespace Gum.Wireframe
             }
 
             return GetInstance(representation, selectedElement, prefix, fetchType, elementStack);
-
         }
 
         public InstanceSave GetInstance(IPositionedSizedObject representation, ElementSave instanceContainer, string prefix, InstanceFetchType fetchType, List<ElementWithState> elementStack)
@@ -341,7 +330,6 @@ namespace Gum.Wireframe
                     break;
                 }
             }
-
 
             if (toReturn == null)
             {
@@ -371,7 +359,6 @@ namespace Gum.Wireframe
 
         private string StripGuideOrParentNameIfNecessaryName(string qualifiedName, IPositionedSizedObject representation)
         {
-            bool wasStripped = false;
             foreach (NamedRectangle rectangle in ObjectFinder.Self.GumProjectSave.Guides)
             {
                 if (qualifiedName.StartsWith(rectangle.Name + "."))
@@ -445,7 +432,6 @@ namespace Gum.Wireframe
                     ElementWithState elementWithState = new ElementWithState(selectedElement);
                     var state = new DataTypes.RecursiveVariableFinder(instanceSave, elementStack).GetValue("State") as string;
                     elementWithState.StateName = state;
-                    //elementWithState.StateName 
                     elementStack.Add(elementWithState);
                     toReturn = true;
                 }
@@ -465,6 +451,5 @@ namespace Gum.Wireframe
         }
 
         #endregion
-
     }
 }

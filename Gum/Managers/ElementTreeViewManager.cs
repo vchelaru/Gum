@@ -811,7 +811,6 @@ namespace Gum.Managers
         internal void HandleKeyDown(KeyEventArgs e)
         {
             HandleCopyCutPaste(e);
-
             HandleDelete(e);
 
             if (e.KeyCode == Keys.Up || e.KeyCode == Keys.Down)
@@ -893,14 +892,7 @@ namespace Gum.Managers
                 whatToHighlight = WireframeObjectManager.Self.GetRepresentation(instance, null);
             }
 
-            try
-            {
-                SelectionManager.Self.HighlightedIpso = whatToHighlight;
-            }
-            catch (Exception e)
-            {
-                int m = 3;
-            }
+            SelectionManager.Self.HighlightedIpso = whatToHighlight;
         }
     }
 

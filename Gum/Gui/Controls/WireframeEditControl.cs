@@ -58,7 +58,6 @@ namespace FlatRedBall.AnimationEditorForms.Controls
         public WireframeEditControl()
         {
             InitializeComponent();
-
             InitializeComboBox();
         }
 
@@ -85,7 +84,6 @@ namespace FlatRedBall.AnimationEditorForms.Controls
             mAvailableZoomLevels.Add(63);
             mAvailableZoomLevels.Add(50);
             mAvailableZoomLevels.Add(33);
-
             mAvailableZoomLevels.Add(25);
 
             foreach (var value in mAvailableZoomLevels)

@@ -190,6 +190,8 @@ namespace Gum
                 GraphicalUiElement.ShowLineRectangles = mGumProjectSave.ShowOutlines;
                 EditingManager.Self.RestrictToUnitValues = mGumProjectSave.RestrictToUnitValues;
 
+                PluginManager.Self.ProjectLoad(mGumProjectSave);
+
                 if (wasModified)
                 {
                     ProjectManager.Self.SaveProject(forceSaveContainedElements:true);
@@ -198,13 +200,15 @@ namespace Gum
                 GraphicalUiElement.CanvasWidth = mGumProjectSave.DefaultCanvasWidth;
                 GraphicalUiElement.CanvasHeight = mGumProjectSave.DefaultCanvasHeight;
             }
+            else
+            {
+                PluginManager.Self.ProjectLoad(mGumProjectSave);
+            }
 
             // Now that a new project is loaded, refresh the UI!
             GumCommands.Self.GuiCommands.RefreshElementTreeView();
             // And the guides
             WireframeObjectManager.Self.UpdateGuides();
-
-            PluginManager.Self.ProjectLoad(mGumProjectSave);
 
             GeneralSettingsFile.AddToRecentFilesIfNew(fileName);
 
@@ -269,29 +273,44 @@ namespace Gum
 
                 if (shouldSave)
                 {
+                    PluginManager.Self.BeforeProjectSave(GumProjectSave);
+
                     try
                     {
                         bool saveContainedElements = isNewProject || forceSaveContainedElements;
+
+                        if (saveContainedElements)
+                        {
+                            foreach (var screenSave in GumProjectSave.Screens)
+                            {
+                                PluginManager.Self.BeforeElementSave(screenSave);
+                            }
+                            foreach (var componentSave in GumProjectSave.Components)
+                            {
+                                PluginManager.Self.BeforeElementSave(componentSave);
+                            }
+                            foreach (var standardElementSave in GumProjectSave.StandardElements)
+                            {
+                                PluginManager.Self.BeforeElementSave(standardElementSave);
+                            }
+                        }
 
                         GumProjectSave.Save(GumProjectSave.FullFileName, saveContainedElements);
                         succeeded = true;
                     }
                     catch(UnauthorizedAccessException exception)
                     {
-                        string fileName = GetFileNameFromException(exception);
-
-                        bool isReadOnly = GetIfFileIsReadOnly(fileName);
-
-                        if (isReadOnly)
+                        string fileName = TryGetFileNameFromException(exception);
+                        if (fileName != null && IsFileReadOnly(fileName))
                         {
                             ShowReadOnlyDialog(fileName);
                         }
                         else
                         {
-                            MessageBox.Show("Unknown error trying to save the file\n\n" +
-                                fileName + "\n\n" + exception.ToString());
+                            MessageBox.Show("Unknown error trying to save the project:\n\n" + exception.ToString());
                         }
                     }
+
                     // This may be the first time the file is being saved.  If so, we should make it relative
                     FileManager.RelativeDirectory = FileManager.GetDirectory(GumProjectSave.FullFileName);
 
@@ -303,14 +322,17 @@ namespace Gum
             }
         }
 
-        private static string GetFileNameFromException(UnauthorizedAccessException exception)
+        private static string TryGetFileNameFromException(UnauthorizedAccessException exception)
         {
-            string fileName = exception.Message;
+            string message = exception.Message;
 
-            int start = exception.Message.IndexOf('\'') + 1;
-            int end = exception.Message.IndexOf('\'', start);
+            int start = message.IndexOf('\'') + 1;
+            int end = message.IndexOf('\'', start);
 
-            return exception.Message.Substring(start, end - start);
+            if (start != -1 && end != -1)
+                return message.Substring(start, end - start);
+
+            return null;
         }
 
         public string MakeAbsoluteIfNecessary(string textureAsString)
@@ -337,7 +359,6 @@ namespace Gum
                 openFileDialog.Title = "Where would you like to save the Gum project?";
 
                 DialogResult result = openFileDialog.ShowDialog();
-
 
 
                 if (result == DialogResult.OK)
@@ -372,10 +393,12 @@ namespace Gum
 
                 if (shouldSave)
                 {
+                    PluginManager.Self.BeforeElementSave(elementSave);
+
                     string fileName = elementSave.GetFullPathXmlFile();
 
                     // if it's readonly, let's warn the user
-                    bool isReadOnly = GetIfFileIsReadOnly(fileName);
+                    bool isReadOnly = IsFileReadOnly(fileName);
 
                     if (isReadOnly)
                     {
@@ -398,11 +421,10 @@ namespace Gum
                                 succeeded = true;
                                 break;
                             }
-
                             catch (Exception e)
                             {
                                 exception = e;
-                                System.Threading.Thread.Sleep(100);
+                                System.Threading.Thread.Sleep(msBetweenSaves);
                                 numberOfTimesTried++;
                             }
                         }
@@ -410,19 +432,15 @@ namespace Gum
 
                         if (succeeded == false)
                         {
-
                             MessageBox.Show("Unknown error trying to save the file\n\n" + fileName + "\n\n" + exception.ToString());
                             succeeded = false;
                         }
-
-
                     }
                     if (succeeded)
                     {
                         OutputManager.Self.AddOutput("Saved " + elementSave + " to " + fileName);
                     }
                 }
-
 
                 PluginManager.Self.Export(elementSave);
             }
@@ -448,13 +466,11 @@ namespace Gum
             }
         }
 
-        public static bool GetIfFileIsReadOnly(string fileName)
+        public static bool IsFileReadOnly(string fileName)
         {
-            bool isReadOnly = System.IO.File.Exists(fileName) && new FileInfo(fileName).IsReadOnly;
-            return isReadOnly;
+            return System.IO.File.Exists(fileName) && new FileInfo(fileName).IsReadOnly;
         }
+
         #endregion
-
-
     }
 }

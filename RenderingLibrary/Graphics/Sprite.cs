@@ -294,7 +294,6 @@ namespace RenderingLibrary.Graphics
 
         private void RenderTiledSprite(SpriteBatch spriteBatch, SystemManagers managers)
         {
-            
             float texelsWide = this.Texture.Width;
             if (SourceRectangle.HasValue)
             {
@@ -388,8 +387,6 @@ namespace RenderingLibrary.Graphics
 
                     float startingX = -oldSourceX * (1 / texelsPerWorldUnitX);
 
-
-
                     while (startingX < (int)oldEffectiveWidth)
                     {
                         float worldUnitsChoppedOffLeft = System.Math.Max(0, -startingX);
@@ -415,7 +412,6 @@ namespace RenderingLibrary.Graphics
                         }
 
                         this.Width = sourceWidth * 1 / texelsPerWorldUnitX;
-
 
 
                         this.SourceRectangle = new Rectangle(
@@ -506,11 +502,9 @@ namespace RenderingLibrary.Graphics
                     float ratioHeight = 1;
                     if (sourceRectangle.HasValue)
                     {
-
                         ratioWidth = sourceRectangle.Value.Width / (float)textureToUse.Width;
                         ratioHeight = sourceRectangle.Value.Height / (float)textureToUse.Height;
                     }
-
 
                     scale = new Vector2(ipso.Width / (ratioWidth * textureToUse.Width),
                         ipso.Height / (ratioHeight * textureToUse.Height));

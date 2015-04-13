@@ -37,7 +37,7 @@ namespace Gum.Wireframe
 
         void OnProjectLoad(GumProjectSave obj)
         {
-            GuiCommands.Self.RefreshWireframeDisplay();
+            GuiCommands.Self.UpdateWireframeToProject();
         }
     }
 
@@ -91,18 +91,14 @@ namespace Gum.Wireframe
         void OnKeyDown(object sender, KeyEventArgs e)
         {
             ElementTreeViewManager.Self.HandleCopyCutPaste(e);
-
             ElementTreeViewManager.Self.HandleDelete(e);
 
             // I think this is handled in ProcessCmdKey
             //HandleNudge(e);
         }
 
-
         void OnKeyPress(object sender, KeyPressEventArgs e)
         {
-            int m = 3;
-
         }
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
@@ -133,7 +129,6 @@ namespace Gum.Wireframe
 
         private bool HandleNudge(Keys keyData)
         {
-
             bool handled = false;
 
             int nudgeX = 0;
@@ -177,9 +172,7 @@ namespace Gum.Wireframe
                 EditingManager.Self.MoveSelectedObjectsBy(nudgeX, nudgeY);
                 handled = true;
 
-
                 GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
-            
             }
             return handled;
         }     
@@ -192,7 +185,6 @@ namespace Gum.Wireframe
         {
             try
             {
-                XnaUpdate += HandleXnaUpdate;
                 mWireframeEditControl = wireframeEditControl;
 
                 mWireframeEditControl.ZoomChanged += HandleZoomChanged;
@@ -204,7 +196,7 @@ namespace Gum.Wireframe
                 LoaderManager.Self.ContentLoader = new ContentLoader();
 
                 LoaderManager.Self.Initialize(null, "content/TestFont.fnt", Services, null);
-                CameraController.Self.Initialize(Cursor, Camera, mWireframeEditControl, this.Width, this.Height);
+                CameraController.Self.Initialize(Camera, mWireframeEditControl, Width, Height);
 
                 InputLibrary.Cursor.Self.Initialize(this);
                 InputLibrary.Keyboard.Self.Initialize(this);
@@ -215,9 +207,11 @@ namespace Gum.Wireframe
                 mScreenBounds.Color = ScreenBoundsColor;
                 ShapeManager.Self.Add(mScreenBounds, SelectionManager.Self.UiLayer);              
 
-                this.KeyDown += new KeyEventHandler(OnKeyDown);
-                this.KeyPress += new KeyPressEventHandler(OnKeyPress);
-                this.MouseWheel += new MouseEventHandler(CameraController.Self.HandleMouseWheel);
+                this.KeyDown += OnKeyDown;
+                this.KeyPress += OnKeyPress;
+                this.MouseDown += CameraController.Self.HandleMouseDown;
+                this.MouseMove += CameraController.Self.HandleMouseMove;
+                this.MouseWheel += CameraController.Self.HandleMouseWheel;
                 this.mTopRuler = new Ruler(this, null, InputLibrary.Cursor.Self);
                 mLeftRuler = new Ruler(this, null, InputLibrary.Cursor.Self);
                 mLeftRuler.RulerSide = RulerSide.Left;
@@ -227,7 +221,7 @@ namespace Gum.Wireframe
                     AfterXnaInitialize(this, null);
                 }
 
-                UpdateWireframeToProject();
+                UpdateToProject();
 
                 mHasInitialized = true;
 
@@ -236,24 +230,16 @@ namespace Gum.Wireframe
             catch(Exception exception)
             {
                 MessageBox.Show("Error initializing the wireframe control\n\n" + exception);
-                int m = 3;
-
             }
         }
 
         void HandleZoomChanged(object sender, EventArgs e)
         {
-
             this.mLeftRuler.ZoomValue = mWireframeEditControl.PercentageValue / 100.0f;
             this.mTopRuler.ZoomValue = mWireframeEditControl.PercentageValue / 100.0f;
+
+            Invalidate();
         }
-
-        void HandleXnaUpdate()
-        {
-
-        }
-
-
 
         #endregion
 
@@ -270,7 +256,6 @@ namespace Gum.Wireframe
                 try
 #endif
                 {
-
                     InputLibrary.Cursor.Self.StartCursorSettingFrameStart();
                     ProjectVerifier.Self.AssertSelectedIpsosArePartOfRenderer();
                     TimeManager.Self.Activity();
@@ -281,7 +266,6 @@ namespace Gum.Wireframe
 
                     InputLibrary.Cursor.Self.Activity(TimeManager.Self.CurrentTime);
                     InputLibrary.Keyboard.Self.Activity();
-                    CameraController.Self.CameraMovementAndZoomActivity();
                     if (Cursor.PrimaryPush)
                     {
                         int m = 3;
@@ -289,7 +273,6 @@ namespace Gum.Wireframe
 
                     bool isOver = this.mTopRuler.HandleXnaUpdate(InputLibrary.Cursor.Self.IsInWindow) ||
                         mLeftRuler.HandleXnaUpdate(InputLibrary.Cursor.Self.IsInWindow);
-
 
 
                     // But we want the selection to update the handles to the selected object
@@ -301,11 +284,10 @@ namespace Gum.Wireframe
                         // EditingManager activity must happen after SelectionManager activity
                         EditingManager.Self.Activity();
 
-
                         SelectionManager.Self.LateActivity();
                     }
-                    InputLibrary.Cursor.Self.EndCursorSettingFrameStart();
 
+                    InputLibrary.Cursor.Self.EndCursorSettingFrameStart();
                 }
 #if DEBUG
                 catch (Exception e)
@@ -314,11 +296,12 @@ namespace Gum.Wireframe
                 }
 #endif
             }
+
             isInActivity = false;
         }
 
 
-        public void UpdateWireframeToProject()
+        public void UpdateToProject()
         {
             if (mScreenBounds != null && ProjectManager.Self.GumProjectSave != null)
             {

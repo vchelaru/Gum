@@ -20,7 +20,6 @@ namespace Gum.Gui.Forms
 
         public ProjectPropertyGridWindow()
         {
-            
             InitializeComponent();
 
             AutoSaveCheckBox.Checked = ProjectManager.Self.GeneralSettingsFile.AutoSave;
@@ -35,7 +34,6 @@ namespace Gum.Gui.Forms
 
             this.GuideListDisplay.PropertyGridChanged += OnGuidePropertyGridChanged;
             this.GuideListDisplay.NewGuideAdded += OnNewGuideAdded;
-
         }
 
         void OnNewGuideAdded(object sender, EventArgs e)
@@ -51,10 +49,7 @@ namespace Gum.Gui.Forms
             WireframeObjectManager.Self.UpdateGuides();
             WireframeObjectManager.Self.RefreshAll(true);
             PluginManager.Self.GuidesChanged();
-
-
-
-
+            
             //EditingManager.Self.UpdateSelectedObjectsPositionAndDimensions();
         }
 
@@ -64,11 +59,6 @@ namespace Gum.Gui.Forms
             GraphicalUiElement.CanvasWidth = ProjectState.Self.GumProjectSave.DefaultCanvasWidth;
             GraphicalUiElement.CanvasHeight = ProjectState.Self.GumProjectSave.DefaultCanvasHeight;
 
-
-
-
-
-
             if (ProjectState.Self.GumProjectSave != null)
             {
                 GraphicalUiElement.ShowLineRectangles = ProjectState.Self.GumProjectSave.ShowOutlines;
@@ -76,7 +66,7 @@ namespace Gum.Gui.Forms
             }
 
             //I think we need to refresh *after* we show line rectangles
-            GuiCommands.Self.RefreshWireframeDisplay();
+            GuiCommands.Self.UpdateWireframeToProject();
             WireframeObjectManager.Self.RefreshAll(true);
 
             GumCommands.Self.FileCommands.TryAutoSaveProject();

@@ -18,9 +18,6 @@ using Gum.Debug;
 
 namespace Gum.Wireframe
 {
-
-
-
     public class SelectionManager
     {
         #region GetFocusedControl interop implementation
@@ -144,7 +141,6 @@ namespace Gum.Wireframe
             }
             private set
             {
-
                 if (value.Count == 1)
                 {
                     SelectedIpso = value[0] as GraphicalUiElement;
@@ -160,7 +156,6 @@ namespace Gum.Wireframe
                 {
                     mSelectedIpsos.Clear();
                 }
-
             }
         }
 
@@ -178,7 +173,6 @@ namespace Gum.Wireframe
                     {
                         UnhighlightIpso(mHighlightedIpso as GraphicalUiElement);
                     }
-
 
                     mHighlightedIpso = value;
 
@@ -411,7 +405,6 @@ namespace Gum.Wireframe
 
                 if(representationOver != null && representationOver is NineSlice)
                 {
-
                     // This function updates the sizes and texture coordinates of the 
                     // highlighted representation if it's a NineSlice.  This is needed before
                     // we set the HighlightedIpso and before we update the highlight objects
@@ -430,10 +423,6 @@ namespace Gum.Wireframe
                     HighlightedIpso = null;
                 }
 
-
-
-
-
                 Cursor.SetWinformsCursor(cursorToSet);
             }
             else if(InputLibrary.Cursor.Self.PrimaryDown)
@@ -441,7 +430,6 @@ namespace Gum.Wireframe
                 // We only want to hide it if the user is holding the cursor down over the wireframe window.
                 HighlightedIpso = null;
             }
-
             
             UpdateHighlightObjects();
         }
@@ -757,7 +745,6 @@ namespace Gum.Wireframe
                 {
                     PushAndDoubleClickSelectionActivity();
                 }
-                
 
                 if (Cursor.PrimaryClick)
                 {
@@ -880,7 +867,8 @@ namespace Gum.Wireframe
 
         }
 
-        private static void GetElementOrInstanceForIpso(IPositionedSizedObject representation, List<ElementWithState> elementStack, out InstanceSave selectedInstance, out ElementSave selectedElement)
+        private static void GetElementOrInstanceForIpso(IPositionedSizedObject representation, List<ElementWithState> elementStack,
+                                                        out InstanceSave selectedInstance, out ElementSave selectedElement)
         {
             selectedInstance = null;
             selectedElement = null;
@@ -954,12 +942,9 @@ namespace Gum.Wireframe
             SelectedIpsos = representations;
         }
 
-
-
         private void Clear()
         {
             HighlightedIpso = null;
-
             mResizeHandles.Visible = false;
         }
 

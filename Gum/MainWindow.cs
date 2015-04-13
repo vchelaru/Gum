@@ -334,7 +334,6 @@ namespace Gum
             tabPage.Text = tabTitle;
             tabPage.UseVisualStyleBackColor = true;
 
-
             this.PropertyGridTab.Controls.Add(tabPage);
         }
 
@@ -346,7 +345,6 @@ namespace Gum
 
             if (dialogResult == System.Windows.Forms.DialogResult.OK)
             {
-
                 var elements = ObjectFinder.Self.GetElementsReferencing(tiw.Result);
 
                 string message = "File referenced by:";
@@ -368,7 +366,6 @@ namespace Gum
 
         private void ObjectTreeView_MouseMove(object sender, MouseEventArgs e)
         {
-
             ElementTreeViewManager.Self.HandleMouseOver(e.X, e.Y);
         }
     }

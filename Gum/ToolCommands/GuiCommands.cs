@@ -23,11 +23,14 @@ namespace Gum.ToolCommands
             mWireframeControl = wireframeControl;
         }
 
-        public void RefreshWireframeDisplay()
+        public void UpdateWireframeToProject()
         {
+            mWireframeControl.UpdateToProject();
+        }
 
-            mWireframeControl.UpdateWireframeToProject();
-
+        public void RefreshWireframe()
+        {
+            mWireframeControl.RefreshDisplay();
         }
     }
 }
