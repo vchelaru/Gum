@@ -30,7 +30,7 @@
     <PlatformTarget>x86</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>bin\Release\Data\</OutputPath>
     <DefineConstants>TRACE;GUM</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -38,7 +38,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'UnitTest|x86'">
     <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\x86\UnitTest\</OutputPath>
+    <OutputPath>bin\UnitTest\Data\</OutputPath>
     <DefineConstants>TRACE;DEBUG;GUM</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>x86</PlatformTarget>
