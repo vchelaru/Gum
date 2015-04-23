@@ -27,16 +27,13 @@ namespace Gum.Managers
             }
         }
 
-
-
+        public bool IsRenamingXmlFile { get; private set; }
 
         public void HandleRename(ElementSave elementSave, InstanceSave instance, string oldName)
         {
-            bool succeeded = true;
-
             try
             {
-                bool isRenamingXmlFile = instance == null;
+                IsRenamingXmlFile = instance == null;
 
                 bool shouldContinue = true;
 
@@ -50,7 +47,7 @@ namespace Gum.Managers
                     }
                 }
 
-                if (shouldContinue && isRenamingXmlFile)
+                if (shouldContinue && IsRenamingXmlFile)
                 {
                     string message = "Are you sure you want to rename " + oldName + "?\n\n" +
                         "This will change the file name for " + oldName + " which may break " +
@@ -66,7 +63,7 @@ namespace Gum.Managers
                     // Tell the GumProjectSave to react to the rename.
                     // This changes the names of the ElementSave references.
                     ProjectManager.Self.GumProjectSave.ReactToRenamed(elementSave, instance, oldName);
-                    
+
 
                     if (instance != null)
                     {
@@ -94,7 +91,7 @@ namespace Gum.Managers
                         ProjectManager.Self.SaveElement(elementSave);
                     }
 
-                    if (isRenamingXmlFile)
+                    if (IsRenamingXmlFile)
                     {
                         // If we got here that means all went okay, so we should delete the old files
                         string oldXml = elementSave.GetFullPathXmlFile(oldName);
@@ -115,8 +112,8 @@ namespace Gum.Managers
                         GumCommands.Self.GuiCommands.RefreshElementTreeView(elementSave);
                     }
                 }
-                
-                if(!shouldContinue && isRenamingXmlFile)
+
+                if (!shouldContinue && IsRenamingXmlFile)
                 {
                     elementSave.Name = oldName;
                 }
@@ -125,10 +122,13 @@ namespace Gum.Managers
                     instance.Name = oldName;
                 }
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 MessageBox.Show("Error renaming element " + elementSave.ToString() + "\n\n" + e.ToString());
-                succeeded = false;
+            }
+            finally
+            {
+                IsRenamingXmlFile = false;
             }
         }
 
