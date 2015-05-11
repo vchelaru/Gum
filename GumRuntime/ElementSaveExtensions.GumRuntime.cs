@@ -169,7 +169,28 @@ namespace GumRuntime
                 }
             }
 
-            foreach (var variable in stateSave.Variables.Where(item => item.SetsValue && item.Value != null))
+            var variablesToSet = stateSave.Variables.Where(item => item.SetsValue && item.Value != null);
+
+            foreach (var variable in variablesToSet)
+            {
+                // See below for explanation on why we don't set Parent here
+                if (variable.GetRootName() != "Parent")
+                {
+                    graphicalElement.SetProperty(variable.Name, variable.Value);
+                }
+            }
+
+            // Now set all parents
+            // The reason for this is
+            // because parents need to
+            // be assigned in the order
+            // of the instances in the .glux.
+            // That way they are drawn in the same
+            // order as they are defined.
+            variablesToSet = variablesToSet.Where(item => item.GetRootName() == "Parent")
+                .OrderBy(item => elementSave.Instances.FindIndex(instance => instance.Name == item.SourceObject));
+
+            foreach (var variable in variablesToSet)
             {
                 graphicalElement.SetProperty(variable.Name, variable.Value);
             }
