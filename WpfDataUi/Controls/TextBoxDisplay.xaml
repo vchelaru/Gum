@@ -12,7 +12,7 @@
         
         <Label x:Name="Label" MinWidth="100">Property Label:</Label>
         <TextBox Grid.Column="1" x:Name="TextBox" LostFocus="TextBox_LostFocus_1" 
-                 MinWidth="60" VerticalAlignment="Center">
+                 MinWidth="60" Height="20" VerticalAlignment="Center">
             <TextBox.ContextMenu>
                 <ContextMenu>
                 </ContextMenu>
