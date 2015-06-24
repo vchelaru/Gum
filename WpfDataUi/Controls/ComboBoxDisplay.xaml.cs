@@ -124,11 +124,6 @@ namespace WpfDataUi.Controls
 
         public ApplyValueResult TrySetValueOnUi(object valueOnInstance)
         {
-            if (InstanceMember != null && InstanceMember.Name.Contains(".Layer"))
-            {
-                int m = 3;
-            }
-
             this.SuppressSettingProperty = true;
             this.ComboBox.SelectedItem = valueOnInstance;
             this.ComboBox.Text = valueOnInstance.ToString();

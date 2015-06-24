@@ -76,6 +76,7 @@ namespace WpfDataUi
         {
             this.DataContextChanged += HandleDataContextChanged;
             InitializeComponent();
+
         }
 
         #endregion
@@ -117,6 +118,10 @@ namespace WpfDataUi
                 }
             }
 
+            if(controlToAdd == null && instanceMember.CustomOptions.Count != 0)
+            {
+                controlToAdd = new ComboBoxDisplay();
+            }
 
             if (controlToAdd == null)
             {

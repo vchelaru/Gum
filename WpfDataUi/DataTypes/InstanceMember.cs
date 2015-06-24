@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Windows;
+using System.Windows.Media;
 using WpfDataUi.EventArguments;
 
 
@@ -231,13 +232,20 @@ namespace WpfDataUi.DataTypes
             }
         }
 
-        static List<object> sEmptyList = new List<object>();
+        List<object> backingList = new List<object>();
         public virtual IList<object> CustomOptions
         {
             get
             {
-                return sEmptyList;
+                return backingList;
             }
+        }
+
+        Brush backgroundColor;
+        public Brush BackgroundColor
+        {
+            get { return backgroundColor; }
+            set { backgroundColor = value; }
         }
 
         #endregion
@@ -245,10 +253,24 @@ namespace WpfDataUi.DataTypes
         #region Events
         public EventHandler BeforeSetByUi;
         public EventHandler AfterSetByUi;
+
+        /// <summary>
+        /// Action which is called whenever an error occurs when the user enters a value.
+        /// Parameter contains the newly-set value. 
+        /// </summary>
+        /// <example>
+        /// This can occur if the user attemts to set a non-numerical value for a numerical variable, such as
+        /// "a" for a float.
+        /// </example>
+        public Action<object> SetValueError;
+
         public event PropertyChangedEventHandler PropertyChanged;
 
-
         public event Action<object, object> CustomSetEvent;
+        /// <summary>
+        /// Allows the InstanceMenber to define its own custom logic for getting a value.
+        /// This requires a CustomSetEvent to be functional.
+        /// </summary>
         public event Func<object, object> CustomGetEvent;
         public event Func<object, Type> CustomGetTypeEvent;
 
@@ -295,7 +317,12 @@ namespace WpfDataUi.DataTypes
 
         public override string ToString()
         {
-            return Name + " = " + Value;
+            string name = Name;
+            if(string.IsNullOrEmpty(name))
+            {
+                name = mCustomDisplay;
+            }
+            return name + " = " + Value;
         }
 
         public void CallAfterSetByUi()

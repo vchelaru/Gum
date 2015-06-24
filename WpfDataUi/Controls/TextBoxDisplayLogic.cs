@@ -65,7 +65,9 @@ namespace WpfDataUi.Controls
 
             if (HasUserChangedAnything)
             {
-                if (mContainer.TryGetValueOnUi(out newValue) == ApplyValueResult.Success)
+                var result = mContainer.TryGetValueOnUi(out newValue);
+
+                if (result == ApplyValueResult.Success)
                 {
                     if (InstanceMember.BeforeSetByUi != null)
                     {
@@ -77,6 +79,14 @@ namespace WpfDataUi.Controls
 
 
                     return mContainer.TrySetValueOnInstance(newValue);
+                }
+                else
+                {
+                    if(InstanceMember.SetValueError != null)
+                    {
+                        InstanceMember.SetValueError(mAssociatedTextBox.Text);
+                    }
+
                 }
             }
             return ApplyValueResult.Success;

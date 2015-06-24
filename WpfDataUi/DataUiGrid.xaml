@@ -17,7 +17,7 @@
                         <ItemsControl ItemsSource="{Binding Members}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <DataUi:SingleDataUiContainer Margin="1"/>
+                                    <DataUi:SingleDataUiContainer Margin="3,0,3,0" Background="{Binding BackgroundColor}"/>
                                 </DataTemplate>    
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>

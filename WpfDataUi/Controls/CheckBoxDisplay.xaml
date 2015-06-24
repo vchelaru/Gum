@@ -8,7 +8,8 @@
     <Grid>
 
         <CheckBox x:Name="CheckBox" VerticalAlignment="Center" 
-                  Margin="0,4" 
+                  VerticalContentAlignment="Center"
+                  Margin="4,4" 
                   Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"
 
                   Content="Property Label:"

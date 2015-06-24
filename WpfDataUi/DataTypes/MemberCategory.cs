@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Windows;
+using System.Windows.Media;
 
 namespace WpfDataUi.DataTypes
 {
@@ -75,6 +76,22 @@ namespace WpfDataUi.DataTypes
             if(PropertyChanged != null)
             {
                 PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            }
+        }
+
+        public void SetAlternatingColors(Brush evenBrush, Brush oddBrush)
+        {
+            for (int i = 0; i < this.Members.Count; i++)
+            {
+                if (i % 2 == 0)
+                {
+                    Members[i].BackgroundColor = evenBrush;
+                }
+                else
+                {
+                    Members[i].BackgroundColor = oddBrush;
+                }
+
             }
         }
 
