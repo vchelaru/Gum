@@ -297,6 +297,22 @@ namespace Gum
 
                         GumProjectSave.Save(GumProjectSave.FullFileName, saveContainedElements);
                         succeeded = true;
+
+                        if (succeeded && saveContainedElements)
+                        {
+                            foreach (var screenSave in GumProjectSave.Screens)
+                            {
+                                PluginManager.Self.AfterElementSave(screenSave);
+                            }
+                            foreach (var componentSave in GumProjectSave.Components)
+                            {
+                                PluginManager.Self.AfterElementSave(componentSave);
+                            }
+                            foreach (var standardElementSave in GumProjectSave.StandardElements)
+                            {
+                                PluginManager.Self.AfterElementSave(standardElementSave);
+                            }
+                        }
                     }
                     catch(UnauthorizedAccessException exception)
                     {
@@ -439,6 +455,7 @@ namespace Gum
                     if (succeeded)
                     {
                         OutputManager.Self.AddOutput("Saved " + elementSave + " to " + fileName);
+                        PluginManager.Self.AfterElementSave(elementSave);
                     }
                 }
 
