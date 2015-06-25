@@ -15,7 +15,9 @@
         <Label x:Name="Label" VerticalAlignment="Center">Property Label:</Label>
         <ComboBox Grid.Column="1" x:Name="ComboBox" 
                   SelectionChanged="ComboBox_SelectionChanged" 
+                  VerticalContentAlignment="Center"
                   TextBlock.Foreground="{Binding DesiredForegroundBrush}"
+                  Height="22"
                   MinWidth="60" VerticalAlignment="Center">
             <ComboBox.ContextMenu>
                 <ContextMenu>
