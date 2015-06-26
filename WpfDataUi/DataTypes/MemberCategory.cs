@@ -32,6 +32,13 @@ namespace WpfDataUi.DataTypes
             }
         }
 
+
+        public int FontSize
+        {
+            get;
+            set;
+        }
+
         public ObservableCollection<InstanceMember> Members
         {
             get;
@@ -61,6 +68,8 @@ namespace WpfDataUi.DataTypes
 
         void InstantiateAll()
         {
+            FontSize = 12;
+
             Members = new ObservableCollection<InstanceMember>();
 
             Members.CollectionChanged += HandleMembersChanged;
