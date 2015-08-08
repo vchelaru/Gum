@@ -107,6 +107,7 @@
       <DependentUpon>TextBoxDisplay.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\TextBoxDisplayLogic.cs" />
+    <Compile Include="DataGridAttachedProperties.cs" />
     <Compile Include="DataTypes\IMemberDefinition.cs" />
     <Compile Include="DataTypes\IMemberDefinitionContainer.cs" />
     <Compile Include="DataTypes\InstanceMember.cs" />

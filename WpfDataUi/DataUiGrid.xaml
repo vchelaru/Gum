@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:DataUi="clr-namespace:WpfDataUi"
+             xmlns:local="clr-namespace:WpfDataUi"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300"
              >
@@ -13,7 +14,11 @@
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
                     <!--  Each Expander is one MemberCategory -->
-                    <Expander Header="{Binding Name}" Visibility="{Binding Visibility}" FontSize="{Binding FontSize}" IsExpanded="True" BorderBrush="DarkGray" Margin="1">
+                    <Expander Header="{Binding Name}" Visibility="{Binding Visibility}" 
+                              FontSize="{Binding FontSize}" 
+                              IsExpanded="True" BorderBrush="DarkGray" Margin="1"
+                              local:DataGridAttachedProperties.HideExpanderArrow="{Binding HideHeader}"
+                              >
                         <ItemsControl ItemsSource="{Binding Members}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>

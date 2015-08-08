@@ -32,6 +32,11 @@ namespace WpfDataUi.DataTypes
             }
         }
 
+        public bool HideHeader
+        {
+            get;
+            set;
+        }
 
         public int FontSize
         {
@@ -68,6 +73,8 @@ namespace WpfDataUi.DataTypes
 
         void InstantiateAll()
         {
+            HideHeader = false;
+
             FontSize = 12;
 
             Members = new ObservableCollection<InstanceMember>();
