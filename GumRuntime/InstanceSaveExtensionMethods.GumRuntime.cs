@@ -80,38 +80,12 @@ namespace GumRuntime
                     {
                         NineSlice nineSlice = new NineSlice();
                         containedObject = nineSlice;
-
                     }
                     break;
                 case "Text":
                     {
                         Text text = new Text(systemManagers, "");
-
-                        //BitmapFont font = null;
-                        //if (rvf.GetValue<bool>("UseCustomFont"))
-                        //{
-                        //    string customFontFile = rvf.GetValue<string>("CustomFontFile");
-
-                        //    if (!string.IsNullOrEmpty(customFontFile))
-                        //    {
-                        //        font = new BitmapFont(customFontFile, systemManagers);
-                        //    }
-
-
-                        //}
-                        //else
-                        //{
-
-                        //    string fontName = rvf.GetValue<string>("Font");
-                        //    int fontSize = rvf.GetValue<int>("FontSize"); // verify these var names
-                        //    fontName = "FontCache/Font" + fontSize.ToString() + fontName + ".fnt";
-                        //    font = new BitmapFont(fontName, systemManagers);
-                        //}
-
                         containedObject = text;
-
-                        //Do Text specific alignment.
-                        //SetAlignmentValues(text, rvf);
                     }
                     break;
                 default:
@@ -119,10 +93,7 @@ namespace GumRuntime
                     break;
             }
 
-
-
             return handledAsBaseType;
-
         }
 
 

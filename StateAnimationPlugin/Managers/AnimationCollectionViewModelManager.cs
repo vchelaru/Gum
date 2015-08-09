@@ -81,9 +81,16 @@ namespace StateAnimationPlugin.Managers
         {
             var fullPathXmlForElement = elementSave.GetFullPathXmlFile();
 
-            var absoluteFileName = FileManager.RemoveExtension(fullPathXmlForElement) + "Animations.ganx";
+            if (string.IsNullOrEmpty(fullPathXmlForElement))
+            {
+                return null;
+            }
+            else
+            {
+                var absoluteFileName = FileManager.RemoveExtension(fullPathXmlForElement) + "Animations.ganx";
 
-            return absoluteFileName;
+                return absoluteFileName;
+            }
         }
 
         public ElementAnimationsSave GetElementAnimationsSave(ElementSave element)

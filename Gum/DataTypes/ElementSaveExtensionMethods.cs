@@ -237,6 +237,11 @@ namespace Gum.DataTypes
 
         public static string GetFullPathXmlFile(this ElementSave instance, string elementSaveName)
         {
+            if (string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave.FullFileName))
+            {
+                return null;
+            }
+
             string directory = FileManager.GetDirectory(ProjectManager.Self.GumProjectSave.FullFileName);
 
             return directory + instance.Subfolder + "\\" + elementSaveName + "." + instance.FileExtension;
