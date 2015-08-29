@@ -265,6 +265,66 @@ namespace Gum.Managers
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+
+
+
+
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            //                                               Circle                                                               //
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            stateSave = new StateSave();
+            stateSave.Name = "Default";
+
+            AddPositioningVariables(stateSave);
+
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 16.0f, Name = "Radius" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 16.0f, Name = "Width", IsHiddenInPropertyGrid = true });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 16.0f, Name = "Height", IsHiddenInPropertyGrid = true });
+
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
+            //AddColorVariables(stateSave, true);
+
+            AddStateVariable(stateSave);
+
+#if GUM
+            PluginManager.Self.ModifyDefaultStandardState("Circle", stateSave);
+#endif
+            ApplySortValuesFromOrderInState(stateSave);
+
+            mDefaults.Add("Circle", stateSave);
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            //                                               Rectangle                                                            //
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            stateSave = new StateSave();
+            stateSave.Name = "Default";
+
+            AddPositioningVariables(stateSave);
+
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 16.0f, Name = "Width" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 16.0f, Name = "Height" });
+
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
+            //AddColorVariables(stateSave, true);
+
+            AddStateVariable(stateSave);
+
+#if GUM
+            PluginManager.Self.ModifyDefaultStandardState("Rectangle", stateSave);
+#endif
+            ApplySortValuesFromOrderInState(stateSave);
+
+            mDefaults.Add("Rectangle", stateSave);
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             //                                                    NineSlice                                                         //
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

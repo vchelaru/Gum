@@ -70,6 +70,7 @@ namespace Gum.Wireframe
             rootIpso.Tag = elementSave;
             mGraphicalElements.Add(rootIpso);
 
+            rootIpso.ElementSave = elementSave;
             if (isScreen == false)
             {
                 // We used to not add the IPSO for the root element to the list of graphical elements
@@ -88,7 +89,6 @@ namespace Gum.Wireframe
 
             }
             
-            rootIpso.ElementSave = elementSave;
 
             foreach(var exposedVariable in elementSave.DefaultState.Variables.Where(item=> !string.IsNullOrEmpty(item.ExposedAsName) ))
             {
@@ -187,7 +187,7 @@ namespace Gum.Wireframe
 
             string type = instance.BaseType;
 
-            if (type == "Sprite" || type == "ColoredRectangle" || type == "NineSlice" || type == "Text")
+            if (type == "Sprite" || type == "ColoredRectangle" || type == "NineSlice" || type == "Text" || type == "Circle" || type == "Rectangle")
             {
                 graphicalElement = new GraphicalUiElement(null, container);
                 ElementSave instanceBase = ObjectFinder.Self.GetElementSave(instance.BaseType);
@@ -285,7 +285,7 @@ namespace Gum.Wireframe
 
                 string type = ses.Name;
 
-                if (type == "Sprite" || type == "ColoredRectangle" || type == "NineSlice" || type == "Text")
+                if (type == "Sprite" || type == "ColoredRectangle" || type == "NineSlice" || type == "Text" || type == "Circle" || type == "Rectangle")
                 {
                     ElementSave instanceBase = ObjectFinder.Self.GetElementSave(instance.BaseType);
                     rootIpso.CreateGraphicalComponent(instanceBase, null);

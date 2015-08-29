@@ -86,7 +86,7 @@ namespace WpfDataUi.Controls
 
             mTextBoxLogic.RefreshDisplay();
 
-            this.Label.Content = InstanceMember.DisplayName;
+            this.Label.Text = InstanceMember.DisplayName;
             this.RefreshContextMenu(TextBox.ContextMenu);
 
             SuppressSettingProperty = false;

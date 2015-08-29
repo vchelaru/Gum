@@ -9,6 +9,7 @@ using Gum.Managers;
 using Gum.Converters;
 using GumDataTypes.Variables;
 using Microsoft.Xna.Framework;
+using RenderingLibrary.Math.Geometry;
 
 
 namespace Gum.Wireframe
@@ -793,7 +794,10 @@ namespace Gum.Wireframe
 
             if (containedObject is global::RenderingLibrary.Math.Geometry.LineRectangle)
             {
-                (containedObject as global::RenderingLibrary.Math.Geometry.LineRectangle).LocalVisible = ShowLineRectangles;
+                if (this.ElementSave != null && ElementSave.Name == "Container")
+                {
+                    (containedObject as global::RenderingLibrary.Math.Geometry.LineRectangle).LocalVisible = ShowLineRectangles;
+                }
             }
 
             UpdateLayout();
@@ -1882,6 +1886,10 @@ namespace Gum.Wireframe
                 {
                     managers.TextManager.Add(mContainedObjectAsRenderable as Text, layer);
                 }
+                else if (mContainedObjectAsRenderable is LineCircle)
+                {
+                    managers.ShapeManager.Add(mContainedObjectAsRenderable as LineCircle, layer);
+                }
                 else
                 {
                     throw new NotImplementedException();
@@ -1974,6 +1982,10 @@ namespace Gum.Wireframe
                 else if (mContainedObjectAsRenderable is Text)
                 {
                     mManagers.TextManager.Remove(mContainedObjectAsRenderable as Text);
+                }
+                else if(mContainedObjectAsRenderable is LineCircle)
+                {
+                    mManagers.ShapeManager.Remove(mContainedObjectAsRenderable as LineCircle);
                 }
                 else if (mContainedObjectAsRenderable != null)
                 {

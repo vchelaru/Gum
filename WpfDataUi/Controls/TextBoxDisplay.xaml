@@ -10,7 +10,9 @@
             <ColumnDefinition Width="*"></ColumnDefinition>
         </Grid.ColumnDefinitions>
         
-        <Label x:Name="Label" MinWidth="100">Property Label:</Label>
+        <TextBlock x:Name="Label" MinWidth="100" TextWrapping="Wrap"  VerticalAlignment="Center"
+                   Padding="4"
+                   >Property Label:</TextBlock>
         <TextBox Grid.Column="1" x:Name="TextBox" LostFocus="TextBox_LostFocus_1" 
                  VerticalContentAlignment="Center"
                  MinWidth="60" Height="20" VerticalAlignment="Center">

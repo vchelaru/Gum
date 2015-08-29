@@ -232,5 +232,14 @@ namespace RenderingLibrary.Math.Geometry
                     radius * (float)System.Math.Sin(0)));
         }
 
+        public void Shift(float x, float y)
+        {
+            Vector2 shiftAmount = new Vector2(x, y);
+            for(int i = 0; i < mVectors.Count; i++)
+            {
+                mVectors[i] = mVectors[i] + shiftAmount;
+            }
+        }
+
     }
 }

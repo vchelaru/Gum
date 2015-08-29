@@ -9,11 +9,25 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace RenderingLibrary.Math.Geometry
 {
-    public class LineCircle : IRenderable
+    public enum CircleOrigin
+    {
+        Center,
+        TopLeft
+    }
+
+    public class LineCircle : IVisible, IRenderable, IPositionedSizedObject
     {
         #region Fields
         float mRadius;
         LinePrimitive mLinePrimitive;
+
+        IPositionedSizedObject mParent;
+
+        bool mVisible;
+
+        List<IPositionedSizedObject> mChildren;
+
+        CircleOrigin mCircleOrigin;
 
         #endregion
 
@@ -57,8 +71,11 @@ namespace RenderingLibrary.Math.Geometry
 
         public bool Visible
         {
-            get;
-            set;
+            get { return mVisible; }
+            set
+            {
+                mVisible = value;
+            }
         }
 
         public float Radius
@@ -96,6 +113,57 @@ namespace RenderingLibrary.Math.Geometry
             get { return true; }
         }
 
+        public CircleOrigin CircleOrigin
+        {
+            get
+            {
+                return mCircleOrigin;
+            }
+            set
+            {
+                mCircleOrigin = value;
+                UpdatePoints();
+            }
+        }
+
+
+
+        public float Rotation
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public float Width
+        {
+            get
+            {
+                return Radius * 2;
+            }
+            set
+            {
+                Radius = value / 2;
+            }
+        }
+
+        public float Height
+        {
+            get
+            {
+                return Radius * 2;
+            }
+            set
+            {
+                Radius = value / 2;
+            }
+        }
+
         #endregion
 
         #region Methods
@@ -108,6 +176,9 @@ namespace RenderingLibrary.Math.Geometry
 
         public LineCircle(SystemManagers managers)
         {
+
+            mChildren = new List<IPositionedSizedObject>();
+
             mRadius = 32;
             Visible = true;
 
@@ -129,6 +200,11 @@ namespace RenderingLibrary.Math.Geometry
         {
 
             mLinePrimitive.CreateCircle(Radius, 15);
+
+            if(mCircleOrigin == Geometry.CircleOrigin.TopLeft)
+            {
+                mLinePrimitive.Shift(Radius, Radius);
+            }
         }
 
         public bool HasCursorOver(float x, float y)
@@ -142,11 +218,67 @@ namespace RenderingLibrary.Math.Geometry
 
         void IRenderable.Render(SpriteBatch spriteBatch, SystemManagers managers)
         {
-            if (Visible)
+            if (AbsoluteVisible)
             {
                 mLinePrimitive.Render(spriteBatch, managers);
             }
         }
         #endregion
+
+
+        public IPositionedSizedObject Parent
+        {
+            get { return mParent; }
+            set
+            {
+                if (mParent != value)
+                {
+                    if (mParent != null)
+                    {
+                        mParent.Children.Remove(this);
+                    }
+                    mParent = value;
+                    if (mParent != null)
+                    {
+                        mParent.Children.Add(this);
+                    }
+                }
+            }
+        }
+
+        public List<IPositionedSizedObject> Children
+        {
+            get { return mChildren; }
+        }
+
+        void IPositionedSizedObject.SetParentDirect(IPositionedSizedObject parent)
+        {
+            mParent = parent;
+        }
+
+        public object Tag { get; set; }
+
+        public bool AbsoluteVisible
+        {
+            get
+            {
+                if (((IVisible)this).Parent == null)
+                {
+                    return Visible;
+                }
+                else
+                {
+                    return Visible && ((IVisible)this).Parent.AbsoluteVisible;
+                }
+            }
+        }
+
+        IVisible IVisible.Parent
+        {
+            get
+            {
+                return ((IPositionedSizedObject)this).Parent as IVisible;
+            }
+        }
     }
 }

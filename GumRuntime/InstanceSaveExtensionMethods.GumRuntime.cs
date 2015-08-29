@@ -65,6 +65,17 @@ namespace GumRuntime
                     containedObject = lineRectangle;
                     break;
 
+                case "Rectangle":
+                    LineRectangle rectangle = new LineRectangle();
+                    rectangle.IsDotted = false;
+                    containedObject = rectangle;
+                    break;
+                case "Circle":
+                    LineCircle circle = new LineCircle();
+                    circle.CircleOrigin = CircleOrigin.TopLeft;
+                    containedObject = circle;
+                    break;
+
                 case "ColoredRectangle":
                     SolidRectangle solidRectangle = new SolidRectangle();
                     containedObject = solidRectangle;

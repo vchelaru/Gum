@@ -225,8 +225,13 @@ namespace Gum.Converters
                         throw new NotImplementedException();
                 }
             }
+            else if(specificUnit == null)
+            {
+                // If none is specified, use the default:
+                return GeneralUnitType.PixelsFromSmall;
+            }
 
-            throw new NotImplementedException();
+            throw new NotImplementedException("specific unit not supported: " + specificUnit);
         }
 
 
