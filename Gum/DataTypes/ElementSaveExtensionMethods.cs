@@ -45,21 +45,16 @@ namespace Gum.DataTypes
 
     public static class ElementSaveExtensionMethods
     {
-        public static bool Initialize(this ElementSave elementSave, StateSave defaultState)
+        public static void Initialize(this ElementSave elementSave, StateSave defaultState)
         {
-            bool wasModified = false;
-
-            if (AddAndModifyVariablesAccordingToDefault(elementSave, defaultState))
-            {
-                wasModified = true;
-            }
+            AddAndModifyVariablesAccordingToDefault(elementSave, defaultState);
 
             foreach (StateSave state in elementSave.AllStates)
             {
                 state.ParentContainer = elementSave;
                 state.Initialize();
 
-                FixStateVariableTypes(elementSave, state, ref wasModified);
+                FixStateVariableTypes(elementSave, state);
             }
 
             foreach (InstanceSave instance in elementSave.Instances)
@@ -67,11 +62,9 @@ namespace Gum.DataTypes
                 instance.ParentContainer = elementSave;
                 instance.Initialize();
             }
-
-            return wasModified;
         }
 
-        private static void FixStateVariableTypes(ElementSave elementSave, StateSave state, ref bool wasModified)
+        private static void FixStateVariableTypes(ElementSave elementSave, StateSave state)
         {
             foreach(var variable in state.Variables.Where(item=>item.Type == "string" && item.Name.Contains("State")))
             {
@@ -81,20 +74,16 @@ namespace Gum.DataTypes
                 if(variable.Name == "State")
                 {
                     variable.Type = "State";
-                    wasModified = true;
                 }
                 else if(elementSave.Categories.Any(item=>item.Name == withoutState))
                 {
-
                     variable.Type = withoutState;
-                    wasModified = true;
                 }
             }
         }
 
-        private static bool AddAndModifyVariablesAccordingToDefault(ElementSave elementSave, StateSave defaultState)
+        private static void AddAndModifyVariablesAccordingToDefault(ElementSave elementSave, StateSave defaultState)
         {
-            bool wasModified = false;
             // Use States and not AllStates because we want to make sure we
             // have a default state.
             if (elementSave.States.Count == 0 && defaultState != null)
@@ -121,15 +110,10 @@ namespace Gum.DataTypes
 
                     if (existingVariable == null)
                     {
-                        wasModified = true;
                         elementSave.DefaultState.Variables.Add(variableSave.Clone());
                     }
                     else
                     {
-
-                        // All of these properties are only relevant to the
-                        // editor so we don't want to mark the object as modified
-                        // when these properties are set.
                         existingVariable.Category = variableSave.Category;
 #if !WINDOWS_8
                         existingVariable.CustomTypeConverter = variableSave.CustomTypeConverter;
@@ -146,14 +130,11 @@ namespace Gum.DataTypes
 
                     if (existingList == null)
                     {
-                        wasModified = true;
                         // this type doesn't have this list yet, so let's add it
                         elementSave.DefaultState.VariableLists.Add(variableList.Clone());
                     }
                     else
                     {
-                        // See the VariableSave section on why we don't set
-                        // wasModified = true here
                         existingList.Category = variableList.Category;
                     }
                 }
@@ -173,7 +154,6 @@ namespace Gum.DataTypes
 ,
                             CustomTypeConverter = new Gum.PropertyGridHelpers.Converters.AvailableStatesConverter(stateSaveCategory.Name)
 #endif
-
                         });
                     }
                     else
@@ -190,17 +170,13 @@ namespace Gum.DataTypes
 
 
                 elementSave.DefaultState.Variables.Sort(vss);
-
-
             }
             else
             {
                 // Let's give it an empty state so that it doesn't cause runtime problems
-                // Nevermind, this causes problelms in Gum
+                // Never mind, this causes problems in Gum
                 //elementSave.States.Add(new StateSave());
             }
-
-            return wasModified;
         }
 
         public static bool ContainsName(this List<StandardElementSave> list, string name)
