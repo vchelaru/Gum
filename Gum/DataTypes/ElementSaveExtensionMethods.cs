@@ -136,6 +136,24 @@ namespace Gum.DataTypes
 #endif
                         existingVariable.ExcludedValuesForEnum.Clear();
                         existingVariable.ExcludedValuesForEnum.AddRange(variableSave.ExcludedValuesForEnum);
+
+                        // let's fix any values that may be incorrectly set from types
+                        if(existingVariable.Type == "float" && existingVariable.Value != null && (existingVariable.Value is float) == false)
+                        {
+                            float asFloat = 0.0f;
+                            try
+                            {
+                                asFloat = (float)System.Convert.ChangeType(existingVariable.Value, typeof(float));
+                            }
+                            catch
+                            {
+                                // do nothing, we'll fall back to 0
+                            }
+
+                            existingVariable.Value = asFloat;
+                            wasModified = true;
+                            
+                        }
                     }
                 }
 

@@ -182,8 +182,8 @@ namespace Gum.Managers
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "Texture Width", Category = "Source" });
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "Texture Height", Category = "Source" });
 
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0, Name = "Texture Width Scale", Category = "Source" });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0, Name = "Texture Height Scale", Category = "Source" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0.0f, Name = "Texture Width Scale", Category = "Source" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0.0f, Name = "Texture Height Scale", Category = "Source" });
 
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "Wrap", Category = "Source" });
 

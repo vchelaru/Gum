@@ -63,117 +63,116 @@ namespace Gum.Wireframe
         private GraphicalUiElement CreateIpsoForElement(ElementSave elementSave)
         {
             GraphicalUiElement rootIpso = null;
-
             bool isScreen = elementSave is ScreenSave;
-
             rootIpso = new GraphicalUiElement();
-            rootIpso.Tag = elementSave;
-            mGraphicalElements.Add(rootIpso);
 
-            rootIpso.ElementSave = elementSave;
-            if (isScreen == false)
+            
+            // If we don't turn off layouts, layouts can be called tens of thousands of times for
+            // complex elements. We'll turn off layouts, then turn them back on at the end and manually
+            // layout:
+            GraphicalUiElement.IsAllLayoutSuspended = true;
             {
-                // We used to not add the IPSO for the root element to the list of graphical elements
-                // and this prevented selection.  I'm not sure if this was intentionally left out or not
-                // but I think it should be here
+
+                rootIpso.Tag = elementSave;
                 mGraphicalElements.Add(rootIpso);
 
-                rootIpso.CreateGraphicalComponent(elementSave, null);
-                rootIpso.Component.Name = elementSave.Name;
-                rootIpso.Component.Tag = elementSave;
-
-                RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(SelectedState.Self.SelectedStateSaveOrDefault);
-
-                string guide = rvf.GetValue<string>("Guide");
-                SetGuideParent(null, rootIpso, guide, true);
-
-            }
-            
-
-            foreach(var exposedVariable in elementSave.DefaultState.Variables.Where(item=> !string.IsNullOrEmpty(item.ExposedAsName) ))
-            {
-                rootIpso.AddExposedVariable(exposedVariable.ExposedAsName, exposedVariable.Name);
-            }
-
-            List<GraphicalUiElement> newlyAdded = new List<GraphicalUiElement>();
-
-
-            List<ElementWithState> elementStack = new List<ElementWithState>();
-
-            ElementWithState elementWithState = new ElementWithState(elementSave);
-            if (elementSave == SelectedState.Self.SelectedElement)
-            {
-                if (SelectedState.Self.SelectedStateSave != null)
+                rootIpso.ElementSave = elementSave;
+                if (isScreen == false)
                 {
-                    elementWithState.StateName = SelectedState.Self.SelectedStateSave.Name;
+                    // We used to not add the IPSO for the root element to the list of graphical elements
+                    // and this prevented selection.  I'm not sure if this was intentionally left out or not
+                    // but I think it should be here
+                    mGraphicalElements.Add(rootIpso);
+
+                    rootIpso.CreateGraphicalComponent(elementSave, null);
+                    rootIpso.Component.Name = elementSave.Name;
+                    rootIpso.Component.Tag = elementSave;
+
+                    RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(SelectedState.Self.SelectedStateSaveOrDefault);
+
+                    string guide = rvf.GetValue<string>("Guide");
+                    SetGuideParent(null, rootIpso, guide, true);
                 }
-                else
+
+                foreach (var exposedVariable in elementSave.DefaultState.Variables.Where(item => !string.IsNullOrEmpty(item.ExposedAsName)))
                 {
-                    elementWithState.StateName = "Default";
+                    rootIpso.AddExposedVariable(exposedVariable.ExposedAsName, exposedVariable.Name);
                 }
-            }
 
-            elementStack.Add(elementWithState);
+                List<GraphicalUiElement> newlyAdded = new List<GraphicalUiElement>();
+                List<ElementWithState> elementStack = new List<ElementWithState>();
 
-            // parallel screws up the ordering of objects, so we'll do it on the primary thread for now
-            // and parallelize it later:
-            //Parallel.ForEach(elementSave.Instances, instance =>
-            foreach (var instance in elementSave.Instances)
-            {
-                GraphicalUiElement child = CreateRepresentationForInstance(instance, null, elementStack, rootIpso);
-
-                if (child == null)
+                ElementWithState elementWithState = new ElementWithState(elementSave);
+                if (elementSave == SelectedState.Self.SelectedElement)
                 {
-                    // This can occur
-                    // if an instance references
-                    // a component that doesn't exist.
-                    // I don't think we need to do anything
-                    // here.
-                }
-                else
-                {
-                    newlyAdded.Add(child);
-                    mGraphicalElements.Add(child);
-
-                    
-                }
-            }
-
-                
-            SetUpParentRelationship(newlyAdded, elementStack, elementSave.Instances);
-
-
-
-            //);
-            elementStack.Remove(elementStack.FirstOrDefault(item => item.Element == elementSave));
-
-
-
-            rootIpso.SetStatesAndCategoriesRecursively(elementSave);
-
-            // First we need to the default state (and do so recursively)
-            rootIpso.SetVariablesRecursively(elementSave, elementSave.DefaultState);
-            // then we override it with the current state if one is set:
-            if (SelectedState.Self.SelectedStateSave != elementSave.DefaultState && SelectedState.Self.SelectedStateSave != null)
-            {
-                var state = SelectedState.Self.SelectedStateSave;
-                rootIpso.SetVariablesTopLevel(elementSave, state);
-            }
-
-            // I think this has to be *after* we set varaibles because that's where clipping gets set
-            if (rootIpso != null)
-            {
-                rootIpso.AddToManagers();
-
-                if (rootIpso.ElementSave is ScreenSave)
-                {
-                    // If it's a screen and it hasn't been added yet, we need to add it.
-                    foreach (var item in rootIpso.ContainedElements.Where(candidate=>candidate.Managers == null))
+                    if (SelectedState.Self.SelectedStateSave != null)
                     {
-                        item.AddToManagers();
+                        elementWithState.StateName = SelectedState.Self.SelectedStateSave.Name;
+                    }
+                    else
+                    {
+                        elementWithState.StateName = "Default";
+                    }
+                }
+
+                elementStack.Add(elementWithState);
+
+                // parallel screws up the ordering of objects, so we'll do it on the primary thread for now
+                // and parallelize it later:
+                //Parallel.ForEach(elementSave.Instances, instance =>
+                foreach (var instance in elementSave.Instances)
+                {
+                    GraphicalUiElement child = CreateRepresentationForInstance(instance, null, elementStack, rootIpso);
+
+                    if (child == null)
+                    {
+                        // This can occur
+                        // if an instance references
+                        // a component that doesn't exist.
+                        // I don't think we need to do anything
+                        // here.
+                    }
+                    else
+                    {
+                        newlyAdded.Add(child);
+                        mGraphicalElements.Add(child);
+                    }
+                }
+
+                SetUpParentRelationship(newlyAdded, elementStack, elementSave.Instances);
+
+                elementStack.Remove(elementStack.FirstOrDefault(item => item.Element == elementSave));
+
+                rootIpso.SetStatesAndCategoriesRecursively(elementSave);
+
+                // First we need to the default state (and do so recursively)
+                rootIpso.SetVariablesRecursively(elementSave, elementSave.DefaultState);
+                // then we override it with the current state if one is set:
+                if (SelectedState.Self.SelectedStateSave != elementSave.DefaultState && SelectedState.Self.SelectedStateSave != null)
+                {
+                    var state = SelectedState.Self.SelectedStateSave;
+                    rootIpso.SetVariablesTopLevel(elementSave, state);
+                }
+
+                // I think this has to be *after* we set varaibles because that's where clipping gets set
+                if (rootIpso != null)
+                {
+                    rootIpso.AddToManagers();
+
+                    if (rootIpso.ElementSave is ScreenSave)
+                    {
+                        // If it's a screen and it hasn't been added yet, we need to add it.
+                        foreach (var item in rootIpso.ContainedElements.Where(candidate => candidate.Managers == null))
+                        {
+                            item.AddToManagers();
+                        }
                     }
                 }
             }
+            GraphicalUiElement.IsAllLayoutSuspended = false;
+            // There is a bug that currently requires layout to be performed twice.
+            rootIpso.UpdateLayout();
+            rootIpso.UpdateLayout();
 
             return rootIpso;
         }
