@@ -1018,11 +1018,16 @@ namespace Gum.Wireframe
                         // after UpdateDimensions. 
                         if (mContainedObjectAsRenderable is Sprite || mContainedObjectAsRenderable is NineSlice)
                         {
-                            UpdateTextureCoordinates();
+                            UpdateTextureCoordinatesNotDimensionBased();
                         }
 
                         UpdateDimensions(parentWidth, parentHeight);
 
+                        if (mContainedObjectAsRenderable is Sprite || mContainedObjectAsRenderable is NineSlice)
+                        {
+                            UpdateTextureCoordinatesDimensionBased();
+                        }
+                        
                         // If the update is "deep" then we want to refresh the text texture.
                         // Otherwise it may have been something shallow like a reposition.
                         if (mContainedObjectAsIpso is Text && childrenUpdateDepth > 0)
@@ -1043,7 +1048,7 @@ namespace Gum.Wireframe
                         // on why this is called both before and after UpdateDimensions
                         if (mContainedObjectAsRenderable is Sprite)
                         {
-                            UpdateTextureCoordinates();
+                            UpdateTextureCoordinatesNotDimensionBased();
                         }
 
                         UpdatePosition(parentWidth, parentHeight);
@@ -1126,7 +1131,57 @@ namespace Gum.Wireframe
             }
         }
 
-        private void UpdateTextureCoordinates()
+        private void UpdateTextureCoordinatesDimensionBased()
+        {
+            if (mContainedObjectAsRenderable is Sprite)
+            {
+                var sprite = mContainedObjectAsRenderable as Sprite;
+                var textureAddress = mTextureAddress;
+                switch (textureAddress)
+                {
+                    case TextureAddress.DimensionsBased:
+                        int left = mTextureLeft;
+                        int top = mTextureTop;
+                        int width = (int)(sprite.EffectiveWidth / mTextureWidthScale);
+                        int height = (int)(sprite.EffectiveHeight / mTextureHeightScale);
+
+                        sprite.SourceRectangle = new Rectangle(
+                            left,
+                            top,
+                            width,
+                            height);
+                        sprite.Wrap = mWrap;
+
+                        break;
+                }
+            }
+            else if (mContainedObjectAsRenderable is NineSlice)
+            {
+                var nineSlice = mContainedObjectAsRenderable as NineSlice;
+                var textureAddress = mTextureAddress;
+                switch (textureAddress)
+                {
+                    case TextureAddress.DimensionsBased:
+                        int left = mTextureLeft;
+                        int top = mTextureTop;
+                        int width = (int)(nineSlice.EffectiveWidth / mTextureWidthScale);
+                        int height = (int)(nineSlice.EffectiveHeight / mTextureHeightScale);
+
+                        nineSlice.SourceRectangle = new Rectangle(
+                            left,
+                            top,
+                            width,
+                            height);
+
+                        break;
+                }
+            }
+
+
+        }
+
+
+        private void UpdateTextureCoordinatesNotDimensionBased()
         {
             if (mContainedObjectAsRenderable is Sprite)
             {
@@ -1148,17 +1203,7 @@ namespace Gum.Wireframe
 
                         break;
                     case TextureAddress.DimensionsBased:
-                        int left = mTextureLeft;
-                        int top = mTextureTop;
-                        int width = (int)(sprite.EffectiveWidth / mTextureWidthScale);
-                        int height = (int)(sprite.EffectiveHeight / mTextureHeightScale);
-
-                        sprite.SourceRectangle = new Rectangle(
-                            left,
-                            top,
-                            width,
-                            height);
-                        sprite.Wrap = mWrap;
+                        // This is done *after* setting dimensions
 
                         break;
                 }
@@ -1611,13 +1656,14 @@ namespace Gum.Wireframe
                     {
                         heightToSet = sprite.Texture.Height * mHeight / 100.0f;
 
-                        if (sprite.SourceRectangle.HasValue)
+                        // If the address is dimension based, then that means texture coords depend on dimension...but we
+                        // can't make dimension based on texture coords as that would cause a circular 
+                        if (sprite.SourceRectangle.HasValue && mTextureAddress != TextureAddress.DimensionsBased)
                         {
                             heightToSet = (sprite.SourceRectangle.Value.Bottom - sprite.SourceRectangle.Value.Top) * mHeight / 100.0f;
                         }
 
                         wasSet = true;
-
                     }
                 }
 
@@ -1668,7 +1714,9 @@ namespace Gum.Wireframe
                     {
                         widthToSet = sprite.Texture.Width * mWidth / 100.0f;
 
-                        if (sprite.SourceRectangle.HasValue)
+                        // If the address is dimension based, then that means texture coords depend on dimension...but we
+                        // can't make dimension based on texture coords as that would cause a circular reference
+                        if (sprite.SourceRectangle.HasValue && mTextureAddress != TextureAddress.DimensionsBased)
                         {
                             widthToSet = (sprite.SourceRectangle.Value.Right - sprite.SourceRectangle.Value.Left) * mWidth / 100.0f;
                         }
@@ -2164,6 +2212,14 @@ namespace Gum.Wireframe
                     toReturn = true;
 
                     break;
+                case "Texture Width Scale":
+                    this.TextureWidthScale = (float)value;
+                    toReturn = true;
+                    break;
+                case "Texture Height Scale":
+                    this.TextureHeightScale = (float)value;
+                    toReturn = true;
+                    break;
                 case "Texture Address":
 
                     this.TextureAddress = (Gum.Managers.TextureAddress)value;
@@ -2194,7 +2250,9 @@ namespace Gum.Wireframe
                     this.YUnits = UnitConverter.ConvertToGeneralUnit(value);
                     toReturn = true;
                     break;
-
+                case "Wrap":
+                    this.Wrap = (bool)value;
+                    break;
             }
 
             if (!toReturn)
@@ -2259,28 +2317,29 @@ namespace Gum.Wireframe
                     if (ToolsUtilities.FileManager.FileExists(valueAsString))
                     {
                         sprite.Texture = global::RenderingLibrary.Content.LoaderManager.Self.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(valueAsString);
+                        UpdateLayout();
                     }
                     handled = true;
                 }
-                if (propertyName == "Alpha")
+                else if (propertyName == "Alpha")
                 {
                     int valueAsInt = (int)value;
                     sprite.Alpha = valueAsInt;
                     handled = true;
                 }
-                if (propertyName == "Red")
+                else if (propertyName == "Red")
                 {
                     int valueAsInt = (int)value;
                     sprite.Red = valueAsInt;
                     handled = true;
                 }
-                if (propertyName == "Green")
+                else if (propertyName == "Green")
                 {
                     int valueAsInt = (int)value;
                     sprite.Green = valueAsInt;
                     handled = true;
                 }
-                if (propertyName == "Blue")
+                else if (propertyName == "Blue")
                 {
                     int valueAsInt = (int)value;
                     sprite.Blue = valueAsInt;
