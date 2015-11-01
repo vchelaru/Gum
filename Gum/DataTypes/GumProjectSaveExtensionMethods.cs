@@ -44,7 +44,7 @@ namespace Gum.DataTypes
 
             foreach (ScreenSave screenSave in gumProjectSave.Screens)
             {
-                screenSave.Initialize(null);
+                wasModified = screenSave.Initialize(null) || wasModified;
             }
 
             
@@ -119,7 +119,7 @@ namespace Gum.DataTypes
                         }
                     }
                 }
-
+                gumProjectSave.Version = 1;
                 wasModified = true;
             }
 
