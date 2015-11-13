@@ -65,6 +65,7 @@ namespace Gum.Wireframe
         float mY;
         float mWidth;
         float mHeight;
+        float mRotation;
 
         static float mCanvasWidth = 800;
         static float mCanvasHeight = 600;
@@ -183,18 +184,6 @@ namespace Gum.Wireframe
             }
         }
 
-
-        float IPositionedSizedObject.Rotation
-        {
-            get
-            {
-                return mContainedObjectAsIpso.Rotation;
-            }
-            set
-            {
-                mContainedObjectAsIpso.Rotation = value;
-            }
-        }
 
         float IPositionedSizedObject.Width
         {
@@ -358,6 +347,25 @@ namespace Gum.Wireframe
             get;
             set;
         }
+
+
+        public float Rotation
+        {
+            get
+            {
+                return mRotation;
+            }
+            set
+            {
+                if (mRotation != value)
+                {
+                    mRotation = value;
+
+                    UpdateLayout(true, 0);
+                }
+            }
+        }
+
 
         public float X
         {
@@ -572,16 +580,32 @@ namespace Gum.Wireframe
             {
                 float toReturn = this.GetAbsoluteX();
 
+                var originOffset = Vector2.Zero;
+
                 switch (XOrigin)
                 {
                     case HorizontalAlignment.Center:
-                        toReturn += ((IPositionedSizedObject)this).Width / 2;
+                        originOffset.X = ((IPositionedSizedObject)this).Width / 2;
+
                         break;
                     case HorizontalAlignment.Right:
-                        toReturn += ((IPositionedSizedObject)this).Width;
+                        originOffset.X = ((IPositionedSizedObject)this).Width;
                         break;
                 }
-                return toReturn;
+
+                switch (YOrigin)
+                {
+                    case VerticalAlignment.Center:
+                        originOffset.Y = ((IPositionedSizedObject)this).Height / 2;
+                        break;
+                    case VerticalAlignment.Bottom:
+                        originOffset.Y = ((IPositionedSizedObject)this).Height;
+                        break;
+                }
+
+                var matrix = this.GetRotationMatrix();
+                originOffset = Vector2.Transform(originOffset, matrix);
+                return toReturn + originOffset.X;
             }
         }
 
@@ -592,16 +616,32 @@ namespace Gum.Wireframe
             {
                 float toReturn = this.GetAbsoluteY();
 
+                var originOffset = Vector2.Zero;
+
+                switch (XOrigin)
+                {
+                    case HorizontalAlignment.Center:
+                        originOffset.X = ((IPositionedSizedObject)this).Width / 2;
+
+                        break;
+                    case HorizontalAlignment.Right:
+                        originOffset.X = ((IPositionedSizedObject)this).Width;
+                        break;
+                }
+
                 switch (YOrigin)
                 {
                     case VerticalAlignment.Center:
-                        toReturn += ((IPositionedSizedObject)this).Height / 2;
+                        originOffset.Y = ((IPositionedSizedObject)this).Height / 2;
                         break;
                     case VerticalAlignment.Bottom:
-                        toReturn += ((IPositionedSizedObject)this).Height;
+                        originOffset.Y = ((IPositionedSizedObject)this).Height;
                         break;
                 }
-                return toReturn;
+                var matrix = this.GetRotationMatrix();
+                originOffset = Vector2.Transform(originOffset, matrix);
+
+                return toReturn + originOffset.Y;
             }
         }
 
@@ -1291,6 +1331,8 @@ namespace Gum.Wireframe
             }
 #endif
 
+
+
             AdjustOffsetsByOrigin(ref unitOffsetX, ref unitOffsetY);
 #if DEBUG
             if (float.IsNaN(unitOffsetX) || float.IsNaN(unitOffsetY))
@@ -1298,6 +1340,7 @@ namespace Gum.Wireframe
                 throw new Exception("Invalid unit offsets");
             }
 #endif
+
             unitOffsetX += parentOriginOffsetX;
             unitOffsetY += parentOriginOffsetY;
 
@@ -1502,27 +1545,44 @@ namespace Gum.Wireframe
 
         private void AdjustOffsetsByOrigin(ref float unitOffsetX, ref float unitOffsetY)
         {
+            float offsetX = 0;
+            float offsetY = 0;
 
             if (mXOrigin == HorizontalAlignment.Center)
             {
-                unitOffsetX -= mContainedObjectAsIpso.Width / 2.0f;
+                offsetX -= mContainedObjectAsIpso.Width / 2.0f;
             }
             else if (mXOrigin == HorizontalAlignment.Right)
             {
-                unitOffsetX -= mContainedObjectAsIpso.Width;
+                offsetX -= mContainedObjectAsIpso.Width;
             }
             // no need to handle left
 
 
             if (mYOrigin == VerticalAlignment.Center)
             {
-                unitOffsetY -= mContainedObjectAsIpso.Height / 2.0f;
+                offsetY -= mContainedObjectAsIpso.Height / 2.0f;
             }
             else if (mYOrigin == VerticalAlignment.Bottom)
             {
-                unitOffsetY -= mContainedObjectAsIpso.Height;
+                offsetY -= mContainedObjectAsIpso.Height;
             }
             // no need to handle top
+
+            // Adjust offsets by rotation
+            if (mRotation != 0)
+            {
+                var matrix = Matrix.CreateRotationZ(-MathHelper.ToRadians(mRotation));
+
+                var unrotatedX = offsetX;
+                var unrotatedY = offsetY;
+
+                offsetX = matrix.Right.X * unrotatedX + matrix.Up.X * unrotatedY;
+                offsetY = matrix.Right.Y * unrotatedX + matrix.Up.Y * unrotatedY;
+            }
+
+            unitOffsetX += offsetX;
+            unitOffsetY += offsetY;
         }
 
         private void AdjustParentOriginOffsetsByUnits(float parentWidth, float parentHeight,
@@ -2195,6 +2255,9 @@ namespace Gum.Wireframe
                         toReturn = true;
                     }
                     break;
+                case "Rotation":
+                    this.Rotation = (float)value;
+                    break;
                 case "Width":
                     this.Width = (float)value;
                     toReturn = true;
@@ -2429,13 +2492,13 @@ namespace Gum.Wireframe
             }
 
             // see if an atlas exists:
-            var atlasedTexture = global::RenderingLibrary.Content.LoaderManager.Self.TryLoadContent<AtlasedTexture>(valueAsString);
+            //var atlasedTexture = global::RenderingLibrary.Content.LoaderManager.Self.TryLoadContent<AtlasedTexture>(valueAsString);
 
-            if (atlasedTexture != null)
-            {
-                UpdateLayout();
-            }
-            else
+            //if (atlasedTexture != null)
+            //{
+            //    UpdateLayout();
+            //}
+            //else
             { 
                 if (ToolsUtilities.FileManager.FileExists(valueAsString))
                 {

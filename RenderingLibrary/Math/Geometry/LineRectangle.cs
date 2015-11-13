@@ -17,7 +17,10 @@ namespace RenderingLibrary.Math.Geometry
         float mWidth = 32;
         float mHeight = 32;
 
+        // Does position not update points? Is this a bug?
         public Vector2 Position;
+
+        float mRotation;
 
         LinePrimitive mLinePrimitive;
 
@@ -82,7 +85,18 @@ namespace RenderingLibrary.Math.Geometry
         }
 
 
-        public float Rotation { get; set; }
+        public float Rotation
+        {
+            get
+            {
+                return mRotation;
+            }
+            set
+            {
+                mRotation = value;
+                UpdatePoints();
+            }
+        }
 
         public float Width
         {
@@ -229,10 +243,14 @@ namespace RenderingLibrary.Math.Geometry
 
         public static void UpdateLinePrimitive(LinePrimitive linePrimitive, IPositionedSizedObject ipso)
         {
+            Matrix matrix = Matrix.CreateRotationZ(-MathHelper.ToRadians(ipso.Rotation));
+
+            
+
             linePrimitive.Replace(0, Vector2.Zero);
-            linePrimitive.Replace(1, new Vector2(ipso.Width, 0));
-            linePrimitive.Replace(2, new Vector2(ipso.Width, ipso.Height));
-            linePrimitive.Replace(3, new Vector2(0, ipso.Height));
+            linePrimitive.Replace(1, Vector2.Transform(new Vector2(ipso.Width, 0), matrix) );
+            linePrimitive.Replace(2, Vector2.Transform(new Vector2(ipso.Width, ipso.Height), matrix) );
+            linePrimitive.Replace(3, Vector2.Transform(new Vector2(0, ipso.Height), matrix) );
             linePrimitive.Replace(4, Vector2.Zero); // close back on itself
 
         }

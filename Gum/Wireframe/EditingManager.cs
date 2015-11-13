@@ -999,14 +999,19 @@ namespace Gum.Wireframe
         {
             nameWithInstance = baseVariableName;
 
-            if (instanceSave != null)
+            currentValue = null;
+
+            if (SelectedState.Self.SelectedStateSave != null)
             {
-                nameWithInstance = instanceSave.Name + "." + baseVariableName;
-                currentValue = SelectedState.Self.SelectedStateSave.GetValueRecursive(nameWithInstance);
-            }
-            else
-            {
-                currentValue = SelectedState.Self.SelectedStateSave.GetValueRecursive(nameWithInstance);
+                if (instanceSave != null)
+                {
+                    nameWithInstance = instanceSave.Name + "." + baseVariableName;
+                    currentValue = SelectedState.Self.SelectedStateSave.GetValueRecursive(nameWithInstance);
+                }
+                else
+                {
+                    currentValue = SelectedState.Self.SelectedStateSave.GetValueRecursive(nameWithInstance);
+                }
             }
 
             return currentValue;

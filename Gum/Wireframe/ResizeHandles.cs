@@ -6,6 +6,7 @@ using RenderingLibrary.Math.Geometry;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using Gum.Converters;
+using Microsoft.Xna.Framework;
 
 namespace Gum.Wireframe
 {
@@ -35,6 +36,8 @@ namespace Gum.Wireframe
         float mY;
         float mWidth;
         float mHeight;
+
+        float mRotation;
 
         LineCircle[] mHandles = new LineCircle[8];
 
@@ -169,6 +172,8 @@ namespace Gum.Wireframe
             this.mWidth = ipso.Width;
             this.mHeight = ipso.Height;
 
+            this.mRotation = ipso.Rotation;
+
             if (ipso is GraphicalUiElement)
             {
                 var asGue = ipso as GraphicalUiElement;
@@ -228,7 +233,12 @@ namespace Gum.Wireframe
 
         public void SetValuesFrom(IEnumerable<IPositionedSizedObject> ipsoList)
         {
-            if (ipsoList.Count() != 0)
+            var count = ipsoList.Count();
+            if(count == 1)
+            {
+                SetValuesFrom(ipsoList.First());
+            }
+            else if (ipsoList.Count() != 0)
             {
                 var first = ipsoList.FirstOrDefault();
 
@@ -278,29 +288,44 @@ namespace Gum.Wireframe
 
         private void UpdateToProperties()
         {
-            mHandles[0].X = X;
-            mHandles[0].Y = Y;
+            mHandles[0].X = 0;
+            mHandles[0].Y = 0;
 
-            mHandles[1].X = X + Width/2.0f;
-            mHandles[1].Y = Y;
+            float sin = (float)System.Math.Sin(mRotation);
+            float cos = (float)System.Math.Cos(mRotation);
 
-            mHandles[2].X = X + Width;
-            mHandles[2].Y = Y;
+            mHandles[1].X = Width/2.0f;
+            mHandles[1].Y = 0;
 
-            mHandles[3].X = X + Width;
-            mHandles[3].Y = Y + Height / 2.0f;
+            mHandles[2].X = Width;
+            mHandles[2].Y = 0;
 
-            mHandles[4].X = X + Width;
-            mHandles[4].Y = Y + Height;
+            mHandles[3].X = Width;
+            mHandles[3].Y = Height / 2.0f;
 
-            mHandles[5].X = X + Width/2.0f;
-            mHandles[5].Y = Y + Height;
+            mHandles[4].X = Width;
+            mHandles[4].Y = Height;
 
-            mHandles[6].X = X;
-            mHandles[6].Y = Y + Height;
+            mHandles[5].X = Width/2.0f;
+            mHandles[5].Y = Height;
 
-            mHandles[7].X = X;
-            mHandles[7].Y = Y + Height/2.0f;
+            mHandles[6].X = 0;
+            mHandles[6].Y = Height;
+
+            mHandles[7].X = 0;
+            mHandles[7].Y = Height/2.0f;
+
+            Matrix rotationMatrix = Matrix.CreateRotationZ(-MathHelper.ToRadians( mRotation ));
+
+
+            foreach(var handle in mHandles)
+            {
+                var xComponent = handle.X * rotationMatrix.Right;
+                var yComponent = handle.Y * rotationMatrix.Up;
+
+                handle.X = X + xComponent.X + yComponent.X;
+                handle.Y = Y + xComponent.Y + yComponent.Y;
+            }
 
         }
 

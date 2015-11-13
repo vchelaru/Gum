@@ -115,6 +115,8 @@ namespace Gum.Wireframe
 
             rectangle.Width = pso.Width + adjustedSelectionBorder * 2;
             rectangle.Height = pso.Height + adjustedSelectionBorder * 2;
+
+            rectangle.Rotation = pso.Rotation;
         }
 
         LineRectangle GetOrMakeRectangleAtIndex(int i)

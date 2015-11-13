@@ -458,6 +458,8 @@ namespace Gum.Wireframe
 
                 mOverlaySprite.FlipHorizontal = HighlightedSprite.FlipHorizontal;
                 mOverlaySprite.FlipVertical = HighlightedSprite.FlipVertical;
+
+                mOverlaySprite.Rotation = HighlightedSprite.Rotation;
             }
             else if (HighlightedNineSlice != null)
             {
@@ -483,6 +485,7 @@ namespace Gum.Wireframe
                 mOverlayNineSlice.Green = HighlightedNineSlice.Green;
                 mOverlayNineSlice.Blue = HighlightedNineSlice.Blue;
 
+                mOverlayNineSlice.Rotation = HighlightedNineSlice.Rotation;
             }
             else if (HighlightedLineRectangle != null)
             {
@@ -494,6 +497,8 @@ namespace Gum.Wireframe
 
                 overlay.Width = HighlightedLineRectangle.Width;
                 overlay.Height = HighlightedLineRectangle.Height;
+
+                overlay.Rotation = HighlightedLineRectangle.Rotation;
             }
         }
 
@@ -507,10 +512,7 @@ namespace Gum.Wireframe
 
             // First check if we're over the current
             GraphicalUiElement selectedRepresentation = WireframeObjectManager.Self.GetSelectedRepresentation();
-            if (InputLibrary.Keyboard.Self.KeyDown(Microsoft.Xna.Framework.Input.Keys.Space))
-            {
-                int m = 3;
-            }
+
             int indexToStartAt = -1;
             if (skipSelected)
             {

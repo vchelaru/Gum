@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -22,6 +23,11 @@ namespace RenderingLibrary
 
     public static class IPositionedSizedObjectExtensionMethods
     {
+        public static Matrix GetRotationMatrix(this IPositionedSizedObject ipso)
+        {
+            return Matrix.CreateRotationZ(-MathHelper.ToRadians(ipso.Rotation));
+        }
+        
         public static float GetAbsoluteX(this IPositionedSizedObject ipso)
         {
             if (ipso.Parent == null)
@@ -71,8 +77,17 @@ namespace RenderingLibrary
             float absoluteX = ipso.GetAbsoluteX();
             float absoluteY = ipso.GetAbsoluteY();
 
+            // put the cursor in object space:
+            x -= absoluteX;
+            y -= absoluteY;
+
+            // normally it's negative, but we are going to * -1 to rotate the other way
+            var matrix = Matrix.CreateRotationZ(-MathHelper.ToRadians(ipso.Rotation) * -1);
+
+            var relativePosition = new Vector2(x, y);
+            relativePosition = Vector2.Transform(relativePosition, matrix);
             return
-                x > absoluteX && y > absoluteY && x < absoluteX + ipso.Width && y < absoluteY + ipso.Height;
+                relativePosition.X > 0 && relativePosition.Y > 0 && relativePosition.X < ipso.Width && relativePosition.Y < ipso.Height;
         }
 
 
