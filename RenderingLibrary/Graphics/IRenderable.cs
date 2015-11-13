@@ -12,7 +12,7 @@ namespace RenderingLibrary.Graphics
 
         bool Wrap { get; }
 
-        void Render(SpriteBatch spriteBatch, SystemManagers managers);
+        void Render(SpriteRenderer spriteRenderer, SystemManagers managers);
 
         float Z { get; set; }
     }

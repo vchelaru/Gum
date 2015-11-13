@@ -373,24 +373,24 @@ namespace RenderingLibrary.Graphics
         }
 
 
-        public Texture2D RenderToTexture2D(string whatToRender, SystemManagers managers)
+        public Texture2D RenderToTexture2D(string whatToRender, SystemManagers managers, object objectRequestingRender)
         {
             string[] lines = whatToRender.Split('\n');
 
-            return RenderToTexture2D(lines, HorizontalAlignment.Left, managers);
+            return RenderToTexture2D(lines, HorizontalAlignment.Left, managers, null, objectRequestingRender);
         }
 
-        public Texture2D RenderToTexture2D(string whatToRender, HorizontalAlignment horizontalAlignment, SystemManagers managers)
+        public Texture2D RenderToTexture2D(string whatToRender, HorizontalAlignment horizontalAlignment, SystemManagers managers, object objectRequestingRender)
         {
             string[] lines = whatToRender.Split('\n');
 
-            return RenderToTexture2D(lines, horizontalAlignment, managers);
+            return RenderToTexture2D(lines, horizontalAlignment, managers, null, objectRequestingRender);
         }
 
         // To help out the GC, we're going to just use a Color that's 2048x2048
         static Color[] mColorBuffer = new Color[2048 * 2048];
 
-        public Texture2D RenderToTexture2D(IEnumerable<string> lines, HorizontalAlignment horizontalAlignment, SystemManagers managers, Texture2D toReplace = null)
+        public Texture2D RenderToTexture2D(IEnumerable<string> lines, HorizontalAlignment horizontalAlignment, SystemManagers managers, Texture2D toReplace, object objectRequestingRender)
         {
             bool useImageData = false;
             if (useImageData)
@@ -399,12 +399,12 @@ namespace RenderingLibrary.Graphics
             }
             else
             {
-                return RenderToTexture2DUsingRenderStates(lines, horizontalAlignment, managers, toReplace);
+                return RenderToTexture2DUsingRenderStates(lines, horizontalAlignment, managers, toReplace, objectRequestingRender);
 
             }
         }
 
-        private Texture2D RenderToTexture2DUsingRenderStates(IEnumerable<string> lines, HorizontalAlignment horizontalAlignment, SystemManagers managers, Texture2D toReplace = null)
+        private Texture2D RenderToTexture2DUsingRenderStates(IEnumerable<string> lines, HorizontalAlignment horizontalAlignment, SystemManagers managers, Texture2D toReplace, object objectRequestingChange)
         {
             if (managers == null)
             {
@@ -446,10 +446,10 @@ namespace RenderingLibrary.Graphics
                 }
                 managers.Renderer.GraphicsDevice.SetRenderTarget(renderTarget);
 
-                SpriteBatch spriteBatch = managers.Renderer.SpriteBatch;
+                var spriteRenderer = managers.Renderer.SpriteRenderer;
                 {
                     managers.Renderer.GraphicsDevice.Clear(Color.Transparent);
-                    spriteBatch.Begin();
+                    spriteRenderer.Begin();
                     int lineNumber = 0;
 
                     foreach (string line in lines)
@@ -491,7 +491,7 @@ namespace RenderingLibrary.Graphics
 
                             Rectangle destinationRectangle = new Rectangle(point.X, point.Y, sourceWidth, sourceHeight);
 
-                            spriteBatch.Draw(mTextures[pageIndex], destinationRectangle, sourceRectangle, Color.White);
+                            spriteRenderer.Draw(mTextures[pageIndex], destinationRectangle, sourceRectangle, Color.White, objectRequestingChange);
 
                             point.X -= xOffset;
                             point.X += characterInfo.GetXAdvanceInPixels(LineHeightInPixels);
@@ -504,7 +504,7 @@ namespace RenderingLibrary.Graphics
                         point.X = 0;
                         lineNumber++;
                     }
-                    spriteBatch.End();
+                    spriteRenderer.End();
                 }
 
                 managers.Renderer.GraphicsDevice.SetRenderTarget(null);

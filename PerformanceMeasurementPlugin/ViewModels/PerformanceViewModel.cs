@@ -19,7 +19,8 @@ namespace PerformanceMeasurementPlugin.ViewModels
             {
                 if (SystemManagers.Default != null)
                 {
-                    return SystemManagers.Default.Renderer.DrawCalls;
+                    // to do: need to replace this with proper calls
+                    return -1;
                 }
                 else
                 {

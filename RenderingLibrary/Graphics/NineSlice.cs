@@ -370,7 +370,7 @@ namespace RenderingLibrary.Graphics
             RefreshSpriteDimensions();
         }
 
-        void IRenderable.Render(SpriteBatch spriteBatch, SystemManagers managers)
+        void IRenderable.Render(SpriteRenderer spriteRenderer, SystemManagers managers)
         {
             if (this.AbsoluteVisible && Width > 0 && Height > 0)
             {
@@ -415,28 +415,28 @@ namespace RenderingLibrary.Graphics
                 mBottomRightSprite.X = mBottomSprite.X + mBottomSprite.Width;
                 mBottomRightSprite.Y = y;
 
-                Render(mTopLeftSprite, managers, spriteBatch);
+                Render(mTopLeftSprite, managers, spriteRenderer);
                 if (this.mCenterSprite.Width > 0)
                 {
-                    Render(mTopSprite, managers, spriteBatch);
-                    Render(mBottomSprite, managers, spriteBatch);
+                    Render(mTopSprite, managers, spriteRenderer);
+                    Render(mBottomSprite, managers, spriteRenderer);
 
                     if (this.mCenterSprite.Height > 0)
                     {
-                        Render(mCenterSprite, managers, spriteBatch);
+                        Render(mCenterSprite, managers, spriteRenderer);
                     }
 
                 }
                 if (this.mCenterSprite.Height > 0)
                 {
-                    Render(mLeftSprite, managers, spriteBatch);
-                    Render(mRightSprite, managers, spriteBatch);
+                    Render(mLeftSprite, managers, spriteRenderer);
+                    Render(mRightSprite, managers, spriteRenderer);
                 }
 
 
-                Render(mTopRightSprite, managers, spriteBatch);
-                Render(mBottomLeftSprite, managers, spriteBatch);
-                Render(mBottomRightSprite, managers, spriteBatch);
+                Render(mTopRightSprite, managers, spriteRenderer);
+                Render(mBottomLeftSprite, managers, spriteRenderer);
+                Render(mBottomRightSprite, managers, spriteRenderer);
             }
         }
 
@@ -653,9 +653,9 @@ namespace RenderingLibrary.Graphics
             }
         }
 
-        void Render(Sprite sprite, SystemManagers managers, SpriteBatch spriteBatch)
+        void Render(Sprite sprite, SystemManagers managers, SpriteRenderer spriteRenderer)
         {
-            Sprite.Render(managers, spriteBatch, sprite, sprite.Texture, sprite.Color, 
+            Sprite.Render(managers, spriteRenderer, sprite, sprite.Texture, sprite.Color, 
                 sprite.SourceRectangle, sprite.FlipHorizontal, sprite.FlipVertical, sprite.Rotation, treat0AsFullDimensions:false);
 
         }

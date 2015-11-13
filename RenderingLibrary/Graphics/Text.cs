@@ -581,7 +581,7 @@ namespace RenderingLibrary.Graphics
                     //    mTextureToRender = null;
                     //}
 
-                    var returnedRenderTarget = fontToUse.RenderToTexture2D(WrappedText, this.HorizontalAlignment, mManagers, mTextureToRender);
+                    var returnedRenderTarget = fontToUse.RenderToTexture2D(WrappedText, this.HorizontalAlignment, mManagers, mTextureToRender, this);
                     bool isNewInstance = returnedRenderTarget != mTextureToRender;
 
                     if (isNewInstance && mTextureToRender != null)
@@ -629,7 +629,7 @@ namespace RenderingLibrary.Graphics
         }
 
 
-        public void Render(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch, SystemManagers managers)
+        public void Render(SpriteRenderer spriteRenderer, SystemManagers managers)
         {
             if (AbsoluteVisible)
             {
@@ -642,21 +642,21 @@ namespace RenderingLibrary.Graphics
                 //}
                 if (RenderBoundary)
                 {
-                    LineRectangle.RenderLinePrimitive(mBounds, spriteBatch, this, managers, false);
+                    LineRectangle.RenderLinePrimitive(mBounds, spriteRenderer, this, managers, false);
                 }
 
                 if (mTextureToRender == null)
                 {
-                    RenderUsingSpriteFont(spriteBatch);
+                    RenderUsingSpriteFont(spriteRenderer);
                 }
                 else
                 {
-                    RenderUsingBitmapFont(spriteBatch, managers);
+                    RenderUsingBitmapFont(spriteRenderer, managers);
                 }
             }
         }
 
-        private void RenderUsingBitmapFont(SpriteBatch spriteBatch, SystemManagers managers)
+        private void RenderUsingBitmapFont(SpriteRenderer spriteRenderer, SystemManagers managers)
         {
             if (mTempForRendering == null)
             {
@@ -689,13 +689,13 @@ namespace RenderingLibrary.Graphics
                 mTempForRendering.Y += this.EffectiveHeight - mTempForRendering.Height;
             }
 
-            Sprite.Render(managers, spriteBatch, mTempForRendering, mTextureToRender,
+            Sprite.Render(managers, spriteRenderer, mTempForRendering, mTextureToRender,
                 new Color(mRed, mGreen, mBlue, mAlpha), null, false, false, Rotation, treat0AsFullDimensions: false);
         }
 
         IPositionedSizedObject mTempForRendering;
 
-        private void RenderUsingSpriteFont(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
+        private void RenderUsingSpriteFont(SpriteRenderer spriteRenderer)
         {
 
             Vector2 offset = new Vector2(this.Renderer.Camera.RenderingXOffset, Renderer.Camera.RenderingYOffset);
@@ -751,7 +751,7 @@ namespace RenderingLibrary.Graphics
 
                     offset.X = (int)offset.X; // so we don't have half-pixels that render weird
 
-                    spriteBatch.DrawString(font, line, offset, Color);
+                    spriteRenderer.DrawString(font, line, offset, Color, this);
                     offsetY += LoaderManager.Self.DefaultFont.LineSpacing;
                 }
             }

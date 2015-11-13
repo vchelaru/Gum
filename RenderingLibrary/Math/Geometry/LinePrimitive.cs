@@ -138,14 +138,14 @@ namespace RenderingLibrary.Math.Geometry
         /// <summary>
         /// Renders the primtive line object.
         /// </summary>
-        /// <param name="spriteBatch">The sprite batch to use to render the primitive line object.</param>
-        public void Render(SpriteBatch spriteBatch, SystemManagers managers)
+        /// <param name="spriteRenderer">The sprite renderer to use to render the primitive line object.</param>
+        public void Render(SpriteRenderer spriteRenderer, SystemManagers managers)
         {
-            Render(spriteBatch, managers, mTexture, .2f);
+            Render(spriteRenderer, managers, mTexture, .2f);
         }
 
 
-        public void Render(SpriteBatch spriteBatch, SystemManagers managers, Texture2D textureToUse, float repetitionsPerLength)
+        public void Render(SpriteRenderer spriteRenderer, SystemManagers managers, Texture2D textureToUse, float repetitionsPerLength)
         {
             if (mVectors.Count < 2)
                 return;
@@ -195,7 +195,7 @@ namespace RenderingLibrary.Math.Geometry
                     textureToUse.Height);
 
                 // stretch the pixel between the two vectors
-                spriteBatch.Draw(textureToUse,
+                spriteRenderer.Draw(textureToUse,
                     offset + Position + vector1,
                     sourceRectangle,
                     Color,
@@ -203,7 +203,8 @@ namespace RenderingLibrary.Math.Geometry
                     Vector2.Zero,
                     new Vector2(distance / ((float)repetitions * textureToUse.Width), 1/renderer.CurrentZoom),
                     SpriteEffects.None,
-                    Depth);
+                    Depth,
+                    this);
 
                 i += extraStep;
             }

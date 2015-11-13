@@ -147,11 +147,11 @@ namespace RenderingLibrary.Math.Geometry
 
 
 
-        public void Render(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch, SystemManagers managers)
+        public void Render(SpriteRenderer spriteRenderer, SystemManagers managers)
         {
             if (Visible)
             {
-                mLinePrimitive.Render(spriteBatch, managers);
+                mLinePrimitive.Render(spriteRenderer, managers);
             }
         }
 

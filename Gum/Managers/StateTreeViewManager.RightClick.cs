@@ -29,9 +29,15 @@ namespace Gum.Managers
 
             if (SelectedState.Self.SelectedStateSave != null)
             {
+                mMenuStrip.Items.Add("-");
+
                 AddMenuItem("Rename State", RenameStateClick);
 
                 AddMenuItem("Duplicate State", DuplicateStateClick);
+
+                AddMenuItem("Delete " + SelectedState.Self.SelectedStateSave.Name, DeleteStateClick);
+
+                mMenuStrip.Items.Add("-");
 
 
                 if (SelectedState.Self.SelectedStateSave != SelectedState.Self.SelectedElement.DefaultState)
@@ -41,6 +47,23 @@ namespace Gum.Managers
                     AddMoveToCategoryItems();
                 }
             }
+            if(SelectedState.Self.SelectedStateCategorySave != null)
+            {
+
+                mMenuStrip.Items.Add("-");
+
+                AddMenuItem("Delete " + SelectedState.Self.SelectedStateCategorySave.Name, DeleteCategoryClick);
+            }
+        }
+
+        private void DeleteCategoryClick()
+        {
+            GumCommands.Self.Edit.RemoveStateCategory(SelectedState.Self.SelectedStateCategorySave);
+        }
+
+        private void DeleteStateClick()
+        {
+            GumCommands.Self.Edit.RemoveState(SelectedState.Self.SelectedStateSave);
         }
 
         private void AddMoveToCategoryItems()

@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary.Content;
+using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,12 +20,27 @@ namespace RenderingLibrary.Content
 
         Dictionary<string, IDisposable> disposables = new Dictionary<string,IDisposable>();
 
+        List<Atlas> atlases = new List<Atlas>();
+
         public T LoadContent<T>(string contentName)
         {
             if(typeof(T) == typeof(Texture2D))
             {
                 var texture = LoaderManager.Self.Load(contentName, SystemManagers);
                 return (T)(object)texture;
+            }
+            else if(typeof(T) == (typeof(AtlasedTexture)))
+            {
+                foreach(var atlas in atlases)
+                {
+                    if(atlas.Contains(contentName))
+                    {
+                        var asObject = (object)atlas.Get(contentName);
+                        return (T)(asObject);
+                    }
+                }
+
+                return default(T);
             }
             else
             {
@@ -64,6 +80,11 @@ namespace RenderingLibrary.Content
             {
                 disposables.Add(contentName, disposable);
             }
+        }
+
+        public void AddAtlas(Atlas atlas)
+        {
+            atlases.Add(atlas);
         }
     }
 }

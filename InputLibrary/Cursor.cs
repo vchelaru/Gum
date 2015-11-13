@@ -236,13 +236,20 @@ namespace InputLibrary
             {
                 mControl.Cursor = mSetCursor;
                 WinCursor.Current = mSetCursor;
-                Application.DoEvents();
+
+                // I don't know why this call is here,
+                // but it causes crashes when moving objects
+                // with the keyboard in Gum. Commenting this out
+                // seems to solve the bug, and everything still works
+                // fine.
+                //Application.DoEvents();
             }
             else if (mControl.Cursor != Cursors.Arrow)
             {
                 mControl.Cursor = Cursors.Arrow;
                 WinCursor.Current = Cursors.Arrow;
-                Application.DoEvents();
+                // 
+                //Application.DoEvents();
             }
         }
     }

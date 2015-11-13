@@ -238,17 +238,17 @@ namespace RenderingLibrary.Math.Geometry
         }
 
 
-        void IRenderable.Render(SpriteBatch spriteBatch, SystemManagers managers)
+        void IRenderable.Render(SpriteRenderer spriteRenderer, SystemManagers managers)
         {
             if (AbsoluteVisible && LocalVisible)
             {
                 // todo - add rotation
-                RenderLinePrimitive(mLinePrimitive, spriteBatch, this, managers, IsDotted);
+                RenderLinePrimitive(mLinePrimitive, spriteRenderer, this, managers, IsDotted);
             }
         }
 
 
-        public static void RenderLinePrimitive(LinePrimitive linePrimitive, SpriteBatch spriteBatch, IPositionedSizedObject ipso, SystemManagers managers, bool isDotted)
+        public static void RenderLinePrimitive(LinePrimitive linePrimitive, SpriteRenderer spriteRenderer, IPositionedSizedObject ipso, SystemManagers managers, bool isDotted)
         {
             linePrimitive.Position.X = ipso.GetAbsoluteX();
             linePrimitive.Position.Y = ipso.GetAbsoluteY();
@@ -270,7 +270,7 @@ namespace RenderingLibrary.Math.Geometry
                 textureToUse = renderer.DottedLineTexture;
             }
 
-            linePrimitive.Render(spriteBatch, managers, textureToUse, .2f * renderer.Camera.Zoom);
+            linePrimitive.Render(spriteRenderer, managers, textureToUse, .2f * renderer.Camera.Zoom);
         }
 
         #endregion

@@ -155,7 +155,7 @@ namespace RenderingLibrary.Graphics
         }
 
 
-        void IRenderable.Render(SpriteBatch spriteBatch, SystemManagers managers)
+        void IRenderable.Render(SpriteRenderer spriteRenderer, SystemManagers managers)
         {
             if (this.AbsoluteVisible && this.Width > 0 && this.Height > 0)
             {
@@ -169,7 +169,7 @@ namespace RenderingLibrary.Graphics
                     renderer = managers.Renderer;
                 }
 
-                Sprite.Render(managers, spriteBatch, this,
+                Sprite.Render(managers, spriteRenderer, this,
                     renderer.SinglePixelTexture,
                     this.Color, null, false, false, Rotation);
 

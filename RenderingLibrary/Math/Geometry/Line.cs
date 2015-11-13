@@ -184,7 +184,7 @@ namespace RenderingLibrary.Math.Geometry
             mParent = parent;
         }
 
-        void IRenderable.Render(SpriteBatch spriteBatch, SystemManagers managers)
+        void IRenderable.Render(SpriteRenderer spriteRenderer, SystemManagers managers)
         {
             UpdatePoints();
             if (Visible)
@@ -197,7 +197,7 @@ namespace RenderingLibrary.Math.Geometry
                     textureToUse = AssociatedRenderer.DottedLineTexture;
                 }
 
-                mLinePrimitive.Render(spriteBatch, managers, textureToUse, .2f * AssociatedRenderer.Camera.Zoom);
+                mLinePrimitive.Render(spriteRenderer, managers, textureToUse, .2f * AssociatedRenderer.Camera.Zoom);
             }
         }
 

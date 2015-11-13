@@ -425,7 +425,7 @@ namespace StateAnimationPlugin.ViewModels
 
                 var relativeTime = animationTime - keyframe.Time;
 
-                var stateFromAnimation = keyframe.SubAnimationViewModel.GetStateToSet(relativeTime, element, false);
+                var stateFromAnimation = keyframe.SubAnimationViewModel.GetStateToSet(relativeTime, subAnimationElement, false);
 
                 if(stateFromAnimation != null)
                 {

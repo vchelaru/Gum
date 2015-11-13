@@ -216,11 +216,11 @@ namespace RenderingLibrary.Math.Geometry
             return distanceSquared <= radiusSquared;
         }
 
-        void IRenderable.Render(SpriteBatch spriteBatch, SystemManagers managers)
+        void IRenderable.Render(SpriteRenderer spriteRenderer, SystemManagers managers)
         {
             if (AbsoluteVisible)
             {
-                mLinePrimitive.Render(spriteBatch, managers);
+                mLinePrimitive.Render(spriteRenderer, managers);
             }
         }
         #endregion

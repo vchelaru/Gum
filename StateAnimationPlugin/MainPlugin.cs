@@ -157,7 +157,10 @@ namespace StateAnimationPlugin
 
             var animationTime = mCurrentViewModel.DisplayedAnimationTime;
 
-            mCurrentViewModel.SelectedAnimation.SetStateAtTime(animationTime, SelectedState.Self.SelectedElement, defaultIfNull:true);
+            var animation = mCurrentViewModel.SelectedAnimation;
+            var element = SelectedState.Self.SelectedElement;
+
+            animation.SetStateAtTime(animationTime, element, defaultIfNull:true);
         }
 
 

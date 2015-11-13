@@ -137,6 +137,12 @@ namespace RenderingLibrary.Graphics
             }
         }
 
+        public AtlasedTexture AtlasedTexture
+        {
+            get;
+            set;
+        }
+
         public IAnimation Animation
         {
             get;
@@ -276,23 +282,32 @@ namespace RenderingLibrary.Graphics
             }
         }
 
-        void IRenderable.Render(SpriteBatch spriteBatch, SystemManagers managers)
+        void IRenderable.Render(SpriteRenderer spriteRenderer, SystemManagers managers)
         {
             if (this.AbsoluteVisible && Width > 0 && Height > 0)
             {
                 bool shouldTileByMultipleCalls = this.Wrap && (this as IRenderable).Wrap == false;
                 if (shouldTileByMultipleCalls && this.Texture != null)
                 {
-                    RenderTiledSprite(spriteBatch, managers);
+                    RenderTiledSprite(spriteRenderer, managers);
                 }
                 else
                 {
-                    Render(managers, spriteBatch, this, Texture, Color, SourceRectangle, FlipHorizontal, FlipVertical, Rotation);
+                    Rectangle? sourceRectangle = SourceRectangle;
+                    Texture2D texture = Texture;
+                    if(AtlasedTexture != null)
+                    {
+                        texture = AtlasedTexture.Texture;
+
+                        sourceRectangle = AtlasedTexture.SourceRectangle;
+                    }
+
+                    Render(managers, spriteRenderer, this, texture, Color, sourceRectangle, FlipHorizontal, FlipVertical, Rotation);
                 }
             }
         }
 
-        private void RenderTiledSprite(SpriteBatch spriteBatch, SystemManagers managers)
+        private void RenderTiledSprite(SpriteRenderer spriteRenderer, SystemManagers managers)
         {
             float texelsWide = this.Texture.Width;
             if (SourceRectangle.HasValue)
@@ -420,7 +435,7 @@ namespace RenderingLibrary.Graphics
                             sourceWidth,
                             sourceHeight);
                         //this.Width = thisWidth ;
-                        Render(managers, spriteBatch, this, Texture, Color, SourceRectangle, FlipHorizontal, FlipVertical);
+                        Render(managers, spriteRenderer, this, Texture, Color, SourceRectangle, FlipHorizontal, FlipVertical);
                         startingX = System.Math.Max(0, startingX);
                         startingX += this.Width;
 
@@ -439,16 +454,16 @@ namespace RenderingLibrary.Graphics
             }
         }
 
-        public static void Render(SystemManagers managers, SpriteBatch spriteBatch, IPositionedSizedObject ipso, Texture2D texture)
+        public static void Render(SystemManagers managers, SpriteRenderer spriteRenderer, IPositionedSizedObject ipso, Texture2D texture)
         {
             Color color = new Color(1.0f, 1.0f, 1.0f, 1.0f); // White
 
-            Render(managers, spriteBatch, ipso, texture, color);
+            Render(managers, spriteRenderer, ipso, texture, color);
         }
 
 
-        public static void Render(SystemManagers managers, SpriteBatch spriteBatch,
-            IPositionedSizedObject ipso, Texture2D texture, Color color,
+        public static void Render(SystemManagers managers, SpriteRenderer spriteRenderer,
+            IPositionedSizedObject ipso, Texture2D texture, Color color, 
             Rectangle? sourceRectangle = null,
             bool flipHorizontal = false,
             bool flipVertical = false,
@@ -515,7 +530,7 @@ namespace RenderingLibrary.Graphics
                     throw new ObjectDisposedException("Texture is disposed.  Texture name: " + textureToUse.Name + ", sprite scale: " + scale);
                 }
 
-                spriteBatch.Draw(textureToUse,
+                spriteRenderer.Draw(textureToUse,
                     new Vector2(ipso.GetAbsoluteX(), ipso.GetAbsoluteY()),
                     sourceRectangle,
                     color,
@@ -523,7 +538,8 @@ namespace RenderingLibrary.Graphics
                     Vector2.Zero,
                     scale,
                     effects,
-                    0);
+                    0,
+                    ipso);
             }
             else
             {
@@ -543,14 +559,15 @@ namespace RenderingLibrary.Graphics
                     height);
 
 
-                spriteBatch.Draw(textureToUse,
+                spriteRenderer.Draw(textureToUse,
                     destinationRectangle,
                     sourceRectangle,
                     color,
                     rotationInDegrees/360.0f,
                     Vector2.Zero,
                     effects,
-                    0
+                    0,
+                    ipso
                     );
             }
         }

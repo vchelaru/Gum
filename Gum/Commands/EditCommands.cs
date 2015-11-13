@@ -41,6 +41,27 @@ namespace Gum.Commands
 
         }
 
+        public void RemoveState(StateSave stateSave)
+        {
+            var response = MessageBox.Show($"Are you sure you want to delete the state {stateSave.Name}?", "Delete state?", MessageBoxButtons.YesNo);
+
+            if (response == DialogResult.Yes)
+            {
+                ObjectRemover.Self.Remove(stateSave);
+            }
+        }
+
+
+        public void RemoveStateCategory( StateSaveCategory category)
+        {
+            var response = MessageBox.Show($"Are you sure you want to delete the category {category.Name}?", "Delete category?", MessageBoxButtons.YesNo);
+
+            if (response == DialogResult.Yes)
+            {
+                ObjectRemover.Self.Remove(category);
+            }
+        }
+
         public void AddCategory()
         {
             StateTreeViewManager.Self.AddStateCategoryClick();

@@ -254,9 +254,9 @@ namespace Gum.Wireframe
             get { return mContainedObjectAsRenderable.Wrap; }
         }
 
-        void IRenderable.Render(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch, SystemManagers managers)
+        void IRenderable.Render(SpriteRenderer spriteRenderer, SystemManagers managers)
         {
-            mContainedObjectAsRenderable.Render(spriteBatch, managers);
+            mContainedObjectAsRenderable.Render(spriteRenderer, managers);
         }
 
         float IRenderable.Z
@@ -794,7 +794,15 @@ namespace Gum.Wireframe
 
             if (containedObject is global::RenderingLibrary.Math.Geometry.LineRectangle)
             {
-                if (this.ElementSave != null && ElementSave.Name == "Container")
+                // All elements use line rectangles to draw themselves, but we don't
+                // want them to show up in runtime (usually). We have a LocalVisible bool
+                // which can be set to false to prevent the rectangles from drawing.
+                // Update: We used to only set the LocalVisible if the object was a container,
+                // but elements also inherit from container. We could check the base type, but then
+                // elements that inherit from other elements would still show up. We'll ignore the element
+                // name and just set LineRectangles to invisible if we're dealing with elements, no matter what.
+                //if (this.ElementSave != null && ElementSave.Name == "Container")
+                if (this.ElementSave != null)
                 {
                     (containedObject as global::RenderingLibrary.Math.Geometry.LineRectangle).LocalVisible = ShowLineRectangles;
                 }
@@ -1586,7 +1594,7 @@ namespace Gum.Wireframe
 
             if (mYUnits == GeneralUnitType.Percentage)
             {
-                unitOffsetX = parentWidth * mX / 100.0f;
+                unitOffsetY = parentHeight * mY / 100.0f;
             }
             else if (mYUnits == GeneralUnitType.PercentageOfFile)
             {
@@ -2305,21 +2313,7 @@ namespace Gum.Wireframe
 
                 if (propertyName == "SourceFile")
                 {
-                    string valueAsString = value as string;
-
-                    if (ToolsUtilities.FileManager.IsRelative(valueAsString))
-                    {
-                        valueAsString = ToolsUtilities.FileManager.RelativeDirectory + valueAsString;
-
-                        valueAsString = ToolsUtilities.FileManager.RemoveDotDotSlash(valueAsString);
-                    }
-
-                    if (ToolsUtilities.FileManager.FileExists(valueAsString))
-                    {
-                        sprite.Texture = global::RenderingLibrary.Content.LoaderManager.Self.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(valueAsString);
-                        UpdateLayout();
-                    }
-                    handled = true;
+                    handled = AssignSourceFileOnSprite(value, sprite);
                 }
                 else if (propertyName == "Alpha")
                 {
@@ -2420,6 +2414,37 @@ namespace Gum.Wireframe
                     }
                 }
             }
+        }
+
+        private bool AssignSourceFileOnSprite(object value, Sprite sprite)
+        {
+            bool handled;
+            string valueAsString = value as string;
+
+            if (ToolsUtilities.FileManager.IsRelative(valueAsString))
+            {
+                valueAsString = ToolsUtilities.FileManager.RelativeDirectory + valueAsString;
+
+                valueAsString = ToolsUtilities.FileManager.RemoveDotDotSlash(valueAsString);
+            }
+
+            // see if an atlas exists:
+            var atlasedTexture = global::RenderingLibrary.Content.LoaderManager.Self.TryLoadContent<AtlasedTexture>(valueAsString);
+
+            if (atlasedTexture != null)
+            {
+                UpdateLayout();
+            }
+            else
+            { 
+                if (ToolsUtilities.FileManager.FileExists(valueAsString))
+                {
+                    sprite.Texture = global::RenderingLibrary.Content.LoaderManager.Self.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(valueAsString);
+                    UpdateLayout();
+                }
+            }
+            handled = true;
+            return handled;
         }
 
         private bool TrySetPropertyOnText(string propertyName, object value)
