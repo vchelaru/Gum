@@ -36,9 +36,9 @@ namespace Gum.Commands
             PropertyGridManager.Self.RefreshUI(force:force);
         }
 
-        public void AddControl(System.Windows.Controls.UserControl control, string tabTitle)
+        public void AddControl(System.Windows.Controls.UserControl control, string tabTitle, TabLocation tabLocation = TabLocation.Center)
         {
-            mMainWindow.AddWpfControl(control, tabTitle);
+            mMainWindow.AddWpfControl(control, tabTitle, tabLocation);
         }
 
         public void PrintOutput(string output)

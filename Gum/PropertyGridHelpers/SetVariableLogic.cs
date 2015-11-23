@@ -16,6 +16,7 @@ using Gum.Converters;
 using RenderingLibrary.Content;
 using CommonFormsAndControls.Forms;
 using ToolsUtilities;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace Gum.PropertyGridHelpers
 {
@@ -62,11 +63,15 @@ namespace Gum.PropertyGridHelpers
                 // I think this code makes things REALLY slow - we only want to refresh one of the tree nodes:
                 //ElementTreeViewManager.Self.RefreshUI();
 
+                // Need to record undo before refreshing and reselecting the UI
+                Undo.UndoManager.Self.RecordUndo();
+
                 if (refresh)
                 {
                     GumCommands.Self.GuiCommands.RefreshElementTreeView(SelectedState.Self.SelectedElement);
                 }
             }
+
 
             if (refresh)
             {
@@ -136,90 +141,103 @@ namespace Gum.PropertyGridHelpers
             //PropertyGridManager.Self.RefreshUI(force: true);
         }
 
-        private void ReactIfChangedMemberIsUnitType(ElementSave parentElement, string changedMember, object oldValue)
+        private void ReactIfChangedMemberIsUnitType(ElementSave parentElement, string changedMember, object oldValueAsObject)
         {
-            StateSave stateSave = SelectedState.Self.SelectedStateSave;
-
-            IPositionedSizedObject currentIpso =
-                WireframeObjectManager.Self.GetSelectedRepresentation();
-
-            float parentWidth = ObjectFinder.Self.GumProjectSave.DefaultCanvasWidth;
-            float parentHeight = ObjectFinder.Self.GumProjectSave.DefaultCanvasHeight;
-
-            float fileWidth = 0;
-            float fileHeight = 0;
-
-            if (currentIpso != null)
-            {
-                currentIpso.GetFileWidthAndHeight(out fileWidth, out fileHeight);
-                if (currentIpso.Parent != null)
-                {
-                    parentWidth = currentIpso.Parent.Width;
-                    parentHeight = currentIpso.Parent.Height;
-                }
-            }
-
-
-            float outX = 0;
-            float outY = 0;
-            float valueToSet = 0;
-            string variableToSet = null;
-
-            bool isWidthOrHeight = false;
-
             bool wasAnythingSet = false;
+            string variableToSet = null;
+            StateSave stateSave = SelectedState.Self.SelectedStateSave;
+            float valueToSet = 0;
 
             if (changedMember == "X Units" || changedMember == "Y Units" || changedMember == "Width Units" || changedMember == "Height Units")
             {
-                object unitType = EditingManager.GetCurrentValueForVariable(changedMember, SelectedState.Self.SelectedInstance);
-                XOrY xOrY = XOrY.X;
-                if (changedMember == "X Units")
-                {
-                    variableToSet = "X";
-                    xOrY = XOrY.X;
-                }
-                else if (changedMember == "Y Units")
-                {
-                    variableToSet = "Y";
-                    xOrY = XOrY.Y;
-                }
-                else if (changedMember == "Width Units")
-                {
-                    variableToSet = "Width";
-                    isWidthOrHeight = true;
-                    xOrY = XOrY.X;
+                GeneralUnitType oldValue;
 
-                }
-                else if (changedMember == "Height Units")
+                if (UnitConverter.TryConvertToGeneralUnit(oldValueAsObject, out oldValue))
                 {
-                    variableToSet = "Height";
-                    isWidthOrHeight = true;
-                    xOrY = XOrY.Y;
-                }
 
 
 
-                float valueOnObject = 0;
-                if(stateSave.TryGetValue<float>(GetQualifiedName(variableToSet), out valueOnObject))
-                {
+                    IPositionedSizedObject currentIpso =
+                        WireframeObjectManager.Self.GetSelectedRepresentation();
 
-                    if (xOrY == XOrY.X)
+                    float parentWidth = ObjectFinder.Self.GumProjectSave.DefaultCanvasWidth;
+                    float parentHeight = ObjectFinder.Self.GumProjectSave.DefaultCanvasHeight;
+
+                    float fileWidth = 0;
+                    float fileHeight = 0;
+
+                    if (currentIpso != null)
                     {
-                        UnitConverter.Self.ConvertToPixelCoordinates(
-                            valueOnObject, 0, oldValue, null, parentWidth, parentHeight, fileWidth, fileHeight, out outX, out outY);
-
-                        UnitConverter.Self.ConvertToUnitTypeCoordinates(
-                            outX, outY, unitType, null, parentWidth, parentHeight, fileWidth, fileHeight, out valueToSet, out outY);
+                        currentIpso.GetFileWidthAndHeight(out fileWidth, out fileHeight);
+                        if (currentIpso.Parent != null)
+                        {
+                            parentWidth = currentIpso.Parent.Width;
+                            parentHeight = currentIpso.Parent.Height;
+                        }
                     }
-                    else
+
+
+                    float outX = 0;
+                    float outY = 0;
+
+                    bool isWidthOrHeight = false;
+
+                    
+                    object unitTypeAsObject = EditingManager.GetCurrentValueForVariable(changedMember, SelectedState.Self.SelectedInstance);
+                    GeneralUnitType unitType = UnitConverter.ConvertToGeneralUnit(unitTypeAsObject);
+
+
+                    XOrY xOrY = XOrY.X;
+                    if (changedMember == "X Units")
                     {
-                        UnitConverter.Self.ConvertToPixelCoordinates(
-                            0, valueOnObject, null, oldValue, parentWidth, parentHeight, fileWidth, fileHeight, out outX, out outY);
-
-                        UnitConverter.Self.ConvertToUnitTypeCoordinates(
-                            outX, outY, null, unitType, parentWidth, parentHeight, fileWidth, fileHeight, out outX, out valueToSet);
+                        variableToSet = "X";
+                        xOrY = XOrY.X;
                     }
-                    wasAnythingSet = true;
+                    else if (changedMember == "Y Units")
+                    {
+                        variableToSet = "Y";
+                        xOrY = XOrY.Y;
+                    }
+                    else if (changedMember == "Width Units")
+                    {
+                        variableToSet = "Width";
+                        isWidthOrHeight = true;
+                        xOrY = XOrY.X;
+
+                    }
+                    else if (changedMember == "Height Units")
+                    {
+                        variableToSet = "Height";
+                        isWidthOrHeight = true;
+                        xOrY = XOrY.Y;
+                    }
+
+
+
+                    float valueOnObject = 0;
+                    if (stateSave.TryGetValue<float>(GetQualifiedName(variableToSet), out valueOnObject))
+                    {
+
+                        var defaultUnitType = GeneralUnitType.PixelsFromSmall;
+
+                        if (xOrY == XOrY.X)
+                        {
+                            UnitConverter.Self.ConvertToPixelCoordinates(
+                                valueOnObject, 0, oldValue, defaultUnitType, parentWidth, parentHeight, fileWidth, fileHeight, out outX, out outY);
+
+                            UnitConverter.Self.ConvertToUnitTypeCoordinates(
+                                outX, outY, unitType, defaultUnitType, parentWidth, parentHeight, fileWidth, fileHeight, out valueToSet, out outY);
+                        }
+                        else
+                        {
+                            UnitConverter.Self.ConvertToPixelCoordinates(
+                                0, valueOnObject, defaultUnitType, oldValue, parentWidth, parentHeight, fileWidth, fileHeight, out outX, out outY);
+
+                            UnitConverter.Self.ConvertToUnitTypeCoordinates(
+                                outX, outY, defaultUnitType, unitType, parentWidth, parentHeight, fileWidth, fileHeight, out outX, out valueToSet);
+                        }
+                        wasAnythingSet = true;
+                    }
                 }
             }
 
@@ -362,7 +380,7 @@ namespace Gum.PropertyGridHelpers
 
                         if (System.IO.File.Exists(absolute))
                         {
-                            var texture = LoaderManager.Self.Load(absolute, null);
+                            var texture = LoaderManager.Self.LoadContent<Texture2D>(absolute);
 
                             if (texture != null && instance != null)
                             {

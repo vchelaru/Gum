@@ -18,7 +18,9 @@ namespace Gum.Managers
         PixelsFromRight,
         PixelsFromBottom,
         PixelsFromCenterX,
-        PixelsFromCenterY
+        PixelsFromCenterY,
+        PixelsFromCenterYInverted
+
 
     }
 }
@@ -33,7 +35,8 @@ namespace Gum.Converters
         PixelsFromLarge,
         PixelsFromMiddle,
         Percentage,
-        PercentageOfFile
+        PercentageOfFile,
+        PixelsFromMiddleInverted
     }
 
     public static class GeneralUnitTypeExtensions
@@ -42,6 +45,7 @@ namespace Gum.Converters
         {
             return unitType == GeneralUnitType.PixelsFromSmall ||
                 unitType == GeneralUnitType.PixelsFromMiddle ||
+                unitType == GeneralUnitType.PixelsFromMiddleInverted ||
                 unitType == GeneralUnitType.PixelsFromLarge;
         }
 
@@ -65,82 +69,55 @@ namespace Gum.Converters
         }
 
 
-        public void ConvertToPixelCoordinates(float relativeX, float relativeY, object xUnitType, object yUnitType, float parentWidth, float parentHeight, 
+        public void ConvertToPixelCoordinates(float relativeX, float relativeY, GeneralUnitType generalX, GeneralUnitType generalY, float parentWidth, float parentHeight, 
             float fileWidth, float fileHeight, out float absoluteX, out float absoluteY)
         {
-            try
+            absoluteX = relativeX;
+            absoluteY = relativeY;
+
+            if (generalX == GeneralUnitType.Percentage)
             {
-                GeneralUnitType generalX = GeneralUnitType.PixelsFromSmall;
-                if (xUnitType != null)
-                {
-                    generalX = ConvertToGeneralUnit(xUnitType);
-                }
-
-                GeneralUnitType generalY = GeneralUnitType.PixelsFromSmall;
-                if (yUnitType != null)
-                {
-                    generalY = ConvertToGeneralUnit(yUnitType);
-                }
-
-                absoluteX = relativeX;
-                absoluteY = relativeY;
-
-                if (generalX == GeneralUnitType.Percentage)
-                {
-                    absoluteX = parentWidth * relativeX / 100.0f;
-                }
-                else if (generalX == GeneralUnitType.PixelsFromMiddle)
-                {
-                    absoluteX = parentWidth / 2.0f + relativeX;
-                }
-                else if (generalX == GeneralUnitType.PixelsFromLarge)
-                {
-                    absoluteX = parentWidth + relativeX;
-                }
-                else if (generalX == GeneralUnitType.PercentageOfFile)
-                {
-                    absoluteX = fileWidth * relativeX / 100.0f;
-                }
-
-
-                if (generalY == GeneralUnitType.Percentage)
-                {
-                    absoluteY = parentHeight * relativeY / 100.0f;
-                }
-                else if (generalY == GeneralUnitType.PixelsFromMiddle)
-                {
-                    absoluteY = parentHeight / 2.0f + relativeY;
-                }
-                else if (generalY == GeneralUnitType.PixelsFromLarge)
-                {
-                    absoluteY = parentHeight + relativeY;
-                }
-                else if (generalY == GeneralUnitType.PercentageOfFile)
-                {
-                    absoluteY = fileHeight * relativeY / 100.0f;
-                }
+                absoluteX = parentWidth * relativeX / 100.0f;
             }
-            catch (Exception e)
+            else if (generalX == GeneralUnitType.PixelsFromMiddle)
             {
-                throw e;
+                absoluteX = parentWidth / 2.0f + relativeX;
+            }
+            else if (generalX == GeneralUnitType.PixelsFromLarge)
+            {
+                absoluteX = parentWidth + relativeX;
+            }
+            else if (generalX == GeneralUnitType.PercentageOfFile)
+            {
+                absoluteX = fileWidth * relativeX / 100.0f;
+            }
+
+
+            if (generalY == GeneralUnitType.Percentage)
+            {
+                absoluteY = parentHeight * relativeY / 100.0f;
+            }
+            else if (generalY == GeneralUnitType.PixelsFromMiddle)
+            {
+                absoluteY = parentHeight / 2.0f + relativeY;
+            }
+            else if(generalY == GeneralUnitType.PixelsFromMiddleInverted)
+            {
+                absoluteY = parentHeight / 2.0f - relativeY;
+            }
+            else if (generalY == GeneralUnitType.PixelsFromLarge)
+            {
+                absoluteY = parentHeight + relativeY;
+            }
+            else if (generalY == GeneralUnitType.PercentageOfFile)
+            {
+                absoluteY = fileHeight * relativeY / 100.0f;
             }
         }
 
 
-        public void ConvertToUnitTypeCoordinates(float absoluteX, float absoluteY, object xUnitType, object yUnitType, float parentWidth, float parentHeight, float fileWidth, float fileHeight, out float relativeX, out float relativeY)
+        public void ConvertToUnitTypeCoordinates(float absoluteX, float absoluteY, GeneralUnitType generalX, GeneralUnitType generalY, float parentWidth, float parentHeight, float fileWidth, float fileHeight, out float relativeX, out float relativeY)
         {
-            GeneralUnitType generalX = GeneralUnitType.PixelsFromSmall;
-            if (xUnitType != null)
-            {
-                generalX = ConvertToGeneralUnit(xUnitType);
-            }
-
-            GeneralUnitType generalY = GeneralUnitType.PixelsFromSmall;
-            if (yUnitType != null)
-            {
-                generalY = ConvertToGeneralUnit(yUnitType);
-            }
-
             relativeX = absoluteX;
             relativeY = absoluteY;
 
@@ -169,6 +146,10 @@ namespace Gum.Converters
             {
                 relativeY = absoluteY - parentHeight / 2.0f;
             }
+            else if(generalY == GeneralUnitType.PixelsFromMiddleInverted)
+            {
+                relativeY = -absoluteY - parentHeight / 2.0f;
+            }
             else if (generalY == GeneralUnitType.PixelsFromLarge)
             {
                 relativeY = absoluteY - parentHeight;
@@ -180,60 +161,79 @@ namespace Gum.Converters
 
         }
 
-
-        public static GeneralUnitType ConvertToGeneralUnit(object specificUnit)
+        public static bool TryConvertToGeneralUnit(object unitType, out GeneralUnitType result)
         {
-            if (specificUnit is PositionUnitType)
+            result = GeneralUnitType.PixelsFromSmall;
+            try
             {
-                PositionUnitType asPut = (PositionUnitType)specificUnit;
-
-                switch (asPut)
-                {
-                    case PositionUnitType.PercentageHeight:
-                    case PositionUnitType.PercentageWidth:
-                        return GeneralUnitType.Percentage;
-                    case PositionUnitType.PixelsFromLeft:
-                    case PositionUnitType.PixelsFromTop:
-                        return GeneralUnitType.PixelsFromSmall;
-                    case PositionUnitType.PixelsFromRight:
-                    case PositionUnitType.PixelsFromBottom:
-                        return GeneralUnitType.PixelsFromLarge;
-                    case PositionUnitType.PixelsFromCenterX:
-                        return GeneralUnitType.PixelsFromMiddle;
-                    case PositionUnitType.PixelsFromCenterY:
-                        return GeneralUnitType.PixelsFromMiddle;
-                    default:
-                        throw new NotImplementedException();
-                }
+                result = ConvertToGeneralUnit(unitType);
+                return true;
             }
-
-            else if (specificUnit is DimensionUnitType)
+            catch
             {
-                DimensionUnitType asDut = (DimensionUnitType)specificUnit;
-
-                switch(asDut)
-                {
-                    case DimensionUnitType.Absolute:
-                        return GeneralUnitType.PixelsFromSmall;
-                    case DimensionUnitType.Percentage:
-                        return GeneralUnitType.Percentage;
-                    case DimensionUnitType.RelativeToContainer:
-                        return GeneralUnitType.PixelsFromLarge;
-                    case DimensionUnitType.PercentageOfSourceFile:
-                        return GeneralUnitType.PercentageOfFile;
-                    default:
-                        throw new NotImplementedException();
-                }
+                return false;
             }
-            else if(specificUnit == null)
-            {
-                // If none is specified, use the default:
-                return GeneralUnitType.PixelsFromSmall;
-            }
-
-            throw new NotImplementedException("specific unit not supported: " + specificUnit);
         }
 
+        public static GeneralUnitType ConvertToGeneralUnit(object unitType)
+        {
+            if(unitType == null)
+            {
+                return GeneralUnitType.PixelsFromSmall;
+            }
+            else if(unitType is PositionUnitType)
+            {
+                return ConvertToGeneralUnit((PositionUnitType) unitType);
+            }
+            else if(unitType is DimensionUnitType)
+            {
+                return ConvertToGeneralUnit((DimensionUnitType)unitType);
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
+        }
 
+        public static GeneralUnitType ConvertToGeneralUnit(PositionUnitType unitType)
+        {
+            switch (unitType)
+            {
+                case PositionUnitType.PercentageHeight:
+                case PositionUnitType.PercentageWidth:
+                    return GeneralUnitType.Percentage;
+                case PositionUnitType.PixelsFromLeft:
+                case PositionUnitType.PixelsFromTop:
+                    return GeneralUnitType.PixelsFromSmall;
+                case PositionUnitType.PixelsFromRight:
+                case PositionUnitType.PixelsFromBottom:
+                    return GeneralUnitType.PixelsFromLarge;
+                case PositionUnitType.PixelsFromCenterX:
+                    return GeneralUnitType.PixelsFromMiddle;
+                case PositionUnitType.PixelsFromCenterY:
+                    return GeneralUnitType.PixelsFromMiddle;
+                case PositionUnitType.PixelsFromCenterYInverted:
+                    return GeneralUnitType.PixelsFromMiddleInverted;
+                default:
+                    throw new NotImplementedException();
+            }
+        }
+
+        public static GeneralUnitType ConvertToGeneralUnit(DimensionUnitType unitType)
+        { 
+            switch (unitType)
+            {
+                case DimensionUnitType.Absolute:
+                    return GeneralUnitType.PixelsFromSmall;
+                case DimensionUnitType.Percentage:
+                    return GeneralUnitType.Percentage;
+                case DimensionUnitType.RelativeToContainer:
+                    return GeneralUnitType.PixelsFromLarge;
+                case DimensionUnitType.PercentageOfSourceFile:
+                    return GeneralUnitType.PercentageOfFile;
+                default:
+                    throw new NotImplementedException();
+            }
+        }
     }
 }

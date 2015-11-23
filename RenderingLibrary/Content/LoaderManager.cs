@@ -183,6 +183,37 @@ namespace RenderingLibrary.Content
             return toReturn;
         }
 
+        
+        public T TryLoadContent<T>( string contentName)
+        {
+
+#if DEBUG
+            if (this.ContentLoader == null)
+            {
+                throw new Exception("The content loader is null - you must set it prior to calling LoadContent.");
+            }
+#endif
+            return ContentLoader.TryLoadContent<T>(contentName);
+        }
+
+        public T LoadContent<T>(string contentName)
+        {
+#if DEBUG
+            if(this.ContentLoader == null)
+            {
+                throw new Exception("The content loader is null - you must set it prior to calling LoadContent.");
+            }
+#endif
+
+            return ContentLoader.LoadContent<T>(contentName);
+        }
+
+        public SpriteFont LoadSpriteFont(string fileName)
+        {
+            return mContentManager.Load<SpriteFont>(fileName);
+
+        }
+
         /// <summary>
         /// Loads a Texture2D from a file name.  Supports
         /// .tga, png, jpg, and .gif.
@@ -192,8 +223,10 @@ namespace RenderingLibrary.Content
         /// GraphicsDevice is needed to load Texture2D's.  If "null" is passed, then the singleton
         /// Renderer will be used.  </param>
         /// <returns></returns>
+        // TODO: Need to remove this to ContentLoader, but that would
+        // require moving the cached textures there too
         [Obsolete("Use LoadContent instead")]
-        public Texture2D Load(string fileName, SystemManagers managers)
+        internal Texture2D Load(string fileName, SystemManagers managers)
         {
             string fileNameStandardized = FileManager.Standardize(fileName, false, false);
 
@@ -267,24 +300,6 @@ namespace RenderingLibrary.Content
                 }
             }
             return toReturn;
-        }
-
-        public T LoadContent<T>(string contentName)
-        {
-#if DEBUG
-            if(this.ContentLoader == null)
-            {
-                throw new Exception("The content loader is null - you must set it prior to calling LoadContent.");
-            }
-#endif
-
-            return ContentLoader.LoadContent<T>(contentName);
-        }
-
-        public SpriteFont LoadSpriteFont(string fileName)
-        {
-            return mContentManager.Load<SpriteFont>(fileName);
-
         }
 
         #endregion

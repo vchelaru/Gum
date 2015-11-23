@@ -447,6 +447,9 @@ namespace Gum.Wireframe
             }
         }
 
+        /// <summary>
+        /// The ScreenSave or Component which contains this instance.
+        /// </summary>
         public GraphicalUiElement ParentGue
         {
             get
@@ -859,8 +862,10 @@ namespace Gum.Wireframe
         {
             return (mWidthUnit == DimensionUnitType.Absolute || mWidthUnit == DimensionUnitType.PercentageOfSourceFile) &&
                 (mHeightUnit == DimensionUnitType.Absolute || mHeightUnit == DimensionUnitType.PercentageOfSourceFile) &&
-                (mXUnits == GeneralUnitType.PixelsFromLarge || mXUnits == GeneralUnitType.PixelsFromMiddle || mXUnits == GeneralUnitType.PixelsFromSmall) &&
-                (mYUnits == GeneralUnitType.PixelsFromLarge || mYUnits == GeneralUnitType.PixelsFromMiddle || mYUnits == GeneralUnitType.PixelsFromSmall);
+                (mXUnits == GeneralUnitType.PixelsFromLarge || mXUnits == GeneralUnitType.PixelsFromMiddle || mXUnits == GeneralUnitType.PixelsFromSmall || mXUnits == GeneralUnitType.PixelsFromMiddleInverted) &&
+                (mYUnits == GeneralUnitType.PixelsFromLarge || mYUnits == GeneralUnitType.PixelsFromMiddle || mYUnits == GeneralUnitType.PixelsFromSmall || mYUnits == GeneralUnitType.PixelsFromMiddleInverted);
+
+             
         }
 
         float GetRequiredParentWidth()
@@ -993,8 +998,16 @@ namespace Gum.Wireframe
 
         bool GetIfShouldCallUpdateOnParent()
         {
-            return this.ParentGue != null &&
-                    (ParentGue.GetIfDimensionsDependOnChildren() || ParentGue.ChildrenLayout != Gum.Managers.ChildrenLayout.Regular);
+            var asGue = this.Parent as GraphicalUiElement;
+
+            if(asGue != null)
+            {
+                return asGue.GetIfDimensionsDependOnChildren() || asGue.ChildrenLayout != Gum.Managers.ChildrenLayout.Regular;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         public void UpdateLayout(bool updateParent, int childrenUpdateDepth)
@@ -1014,10 +1027,14 @@ namespace Gum.Wireframe
                     mContainedObjectAsIpso.Parent = mParent;
                 }
 
+                // Not sure why we use the ParentGue and not the Parent itself...
+                // We want to do it on the actual Parent so that objects attached to components
+                // should update the components
                 if (updateParent && GetIfShouldCallUpdateOnParent())
                 {
+                    var asGue = this.Parent as GraphicalUiElement;
                     // Just climb up one and update from there
-                    this.ParentGue.UpdateLayout(true, childrenUpdateDepth + 1);
+                    asGue.UpdateLayout(true, childrenUpdateDepth + 1);
                     ChildrenUpdatingParentLayoutCalls++;
                 }
                 else
@@ -1359,9 +1376,9 @@ namespace Gum.Wireframe
             bool throwaway1;
             bool throwaway2;
 
-            bool wrap = false;
+            bool wrap = (Parent as GraphicalUiElement).Wrap;
 
-            GetParentOffsets(true, false, parentWidth, parentHeight, out parentOriginOffsetX, out parentOriginOffsetY,
+            GetParentOffsets(wrap, false, parentWidth, parentHeight, out parentOriginOffsetX, out parentOriginOffsetY,
                 out throwaway1, out throwaway2);
         }
 
@@ -1614,7 +1631,7 @@ namespace Gum.Wireframe
                     unitOffsetY = parentHeight;
                     wasHandledY = true;
                 }
-                else if (mYUnits == GeneralUnitType.PixelsFromMiddle)
+                else if (mYUnits == GeneralUnitType.PixelsFromMiddle || mYUnits == GeneralUnitType.PixelsFromMiddleInverted)
                 {
                     unitOffsetY = parentHeight / 2.0f;
                     wasHandledY = true;
@@ -1677,6 +1694,10 @@ namespace Gum.Wireframe
                     unitOffsetY = 64 * mY / 100.0f;
                 }
             }
+            else if(mYUnits == GeneralUnitType.PixelsFromMiddleInverted)
+            {
+                unitOffsetY += -mY;
+            }
             else
             {
                 unitOffsetY += mY;
@@ -1720,18 +1741,26 @@ namespace Gum.Wireframe
                 {
                     Sprite sprite = mContainedObjectAsRenderable as Sprite;
 
-                    if (sprite.Texture != null)
+                    if (sprite.AtlasedTexture != null)
+                    {
+                        var atlasedTexture = sprite.AtlasedTexture;
+                        heightToSet = atlasedTexture.SourceRectangle.Height * mHeight / 100.0f;
+                        wasSet = true;
+                    }
+                    else if (sprite.Texture != null)
                     {
                         heightToSet = sprite.Texture.Height * mHeight / 100.0f;
-
-                        // If the address is dimension based, then that means texture coords depend on dimension...but we
-                        // can't make dimension based on texture coords as that would cause a circular 
-                        if (sprite.SourceRectangle.HasValue && mTextureAddress != TextureAddress.DimensionsBased)
-                        {
-                            heightToSet = (sprite.SourceRectangle.Value.Bottom - sprite.SourceRectangle.Value.Top) * mHeight / 100.0f;
-                        }
-
                         wasSet = true;
+                    }
+
+                    if (wasSet)
+                    {
+                        // If the address is dimension based, then that means texture coords depend on dimension...but we
+                        // can't make dimension based on texture coords as that would cause a circular reference
+                        if (sprite.EffectiveRectangle.HasValue && mTextureAddress != TextureAddress.DimensionsBased)
+                        {
+                            heightToSet = sprite.EffectiveRectangle.Value.Height * mHeight / 100.0f;
+                        }
                     }
                 }
 
@@ -1778,18 +1807,27 @@ namespace Gum.Wireframe
                 {
                     Sprite sprite = mContainedObjectAsRenderable as Sprite;
 
-                    if (sprite.Texture != null)
+                    if (sprite.AtlasedTexture != null)
+                    {
+                        var atlasedTexture = sprite.AtlasedTexture;
+                        widthToSet = atlasedTexture.SourceRectangle.Width * mWidth / 100.0f;
+                        wasSet = true;
+                    }
+
+                    else if (sprite.Texture != null)
                     {
                         widthToSet = sprite.Texture.Width * mWidth / 100.0f;
+                        wasSet = true;
+                    }
 
+                    if (wasSet)
+                    {
                         // If the address is dimension based, then that means texture coords depend on dimension...but we
                         // can't make dimension based on texture coords as that would cause a circular reference
-                        if (sprite.SourceRectangle.HasValue && mTextureAddress != TextureAddress.DimensionsBased)
+                        if (sprite.EffectiveRectangle.HasValue && mTextureAddress != TextureAddress.DimensionsBased)
                         {
-                            widthToSet = (sprite.SourceRectangle.Value.Right - sprite.SourceRectangle.Value.Left) * mWidth / 100.0f;
+                            widthToSet = sprite.EffectiveRectangle.Value.Width * mWidth / 100.0f;
                         }
-
-                        wasSet = true;
                     }
                 }
 
@@ -1804,6 +1842,7 @@ namespace Gum.Wireframe
             }
             mContainedObjectAsIpso.Width = widthToSet;
         }
+
 
         public override string ToString()
         {
@@ -2042,23 +2081,25 @@ namespace Gum.Wireframe
 
             if (mSortableLayer != null)
             {
-                throw new NotImplementedException();
+                // all renderables are part of the mSortableLayer, so we
+                // just move the mSortableLayer and everything comes along with it:
+                mManagers.Renderer.RemoveLayer(mSortableLayer);
+                mManagers.Renderer.AddLayer(mSortableLayer, layer);
             }
-
-
-
-            // This may be a Screen
-            if (mContainedObjectAsRenderable != null)
+            else
             {
-                layerToRemoveFrom.Remove(mContainedObjectAsRenderable);
-                layerToAddTo.Add(mContainedObjectAsRenderable);
-            }
+                // This may be a Screen
+                if (mContainedObjectAsRenderable != null)
+                {
+                    layerToRemoveFrom.Remove(mContainedObjectAsRenderable);
+                    layerToAddTo.Add(mContainedObjectAsRenderable);
+                }
 
-            foreach (var contained in this.mWhatThisContains)
-            {
-                contained.MoveToLayer(layer);
+                foreach (var contained in this.mWhatThisContains)
+                {
+                    contained.MoveToLayer(layer);
+                }
             }
-
         }
 
         public void RemoveFromManagers()
@@ -2478,32 +2519,42 @@ namespace Gum.Wireframe
                 }
             }
         }
-
         private bool AssignSourceFileOnSprite(object value, Sprite sprite)
         {
             bool handled;
             string valueAsString = value as string;
 
-            if (ToolsUtilities.FileManager.IsRelative(valueAsString))
+            if (string.IsNullOrEmpty(valueAsString))
             {
-                valueAsString = ToolsUtilities.FileManager.RelativeDirectory + valueAsString;
+                sprite.Texture = null;
+                sprite.AtlasedTexture = null;
 
-                valueAsString = ToolsUtilities.FileManager.RemoveDotDotSlash(valueAsString);
+                UpdateLayout();
             }
-
-            // see if an atlas exists:
-            //var atlasedTexture = global::RenderingLibrary.Content.LoaderManager.Self.TryLoadContent<AtlasedTexture>(valueAsString);
-
-            //if (atlasedTexture != null)
-            //{
-            //    UpdateLayout();
-            //}
-            //else
-            { 
-                if (ToolsUtilities.FileManager.FileExists(valueAsString))
+            else
+            {
+                if (ToolsUtilities.FileManager.IsRelative(valueAsString))
                 {
-                    sprite.Texture = global::RenderingLibrary.Content.LoaderManager.Self.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(valueAsString);
+                    valueAsString = ToolsUtilities.FileManager.RelativeDirectory + valueAsString;
+
+                    valueAsString = ToolsUtilities.FileManager.RemoveDotDotSlash(valueAsString);
+                }
+
+                // see if an atlas exists:
+                var atlasedTexture = global::RenderingLibrary.Content.LoaderManager.Self.TryLoadContent<AtlasedTexture>(valueAsString);
+
+                if (atlasedTexture != null)
+                {
+                    sprite.AtlasedTexture = atlasedTexture;
                     UpdateLayout();
+                }
+                else
+                {
+                    if (ToolsUtilities.FileManager.FileExists(valueAsString))
+                    {
+                        sprite.Texture = global::RenderingLibrary.Content.LoaderManager.Self.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(valueAsString);
+                        UpdateLayout();
+                    }
                 }
             }
             handled = true;

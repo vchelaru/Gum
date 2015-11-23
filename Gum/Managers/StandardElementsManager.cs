@@ -501,6 +501,7 @@ namespace Gum.Managers
             xUnitsExclusions.Add(PositionUnitType.PercentageHeight);
             xUnitsExclusions.Add(PositionUnitType.PixelsFromBottom);
             xUnitsExclusions.Add(PositionUnitType.PixelsFromCenterY);
+            xUnitsExclusions.Add(PositionUnitType.PixelsFromCenterYInverted);
 
             List<object> yUnitsExclusions = new List<object>();
             yUnitsExclusions.Add(PositionUnitType.PixelsFromLeft);

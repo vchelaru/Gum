@@ -14,5 +14,8 @@ namespace RenderingLibrary.Content
 
 
         T LoadContent<T>(string contentName);
+
+        T TryLoadContent<T>(string contentName);
+
     }
 }

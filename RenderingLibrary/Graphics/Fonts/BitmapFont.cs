@@ -103,7 +103,7 @@ namespace RenderingLibrary.Graphics
         public BitmapFont(string textureFile, string fontFile, SystemManagers managers)
         {
             mTextures = new Texture2D[1];
-            mTextures[0] = LoaderManager.Self.Load(textureFile, managers);
+            mTextures[0] = LoaderManager.Self.LoadContent<Texture2D>(textureFile);
 
             mTextureNames[0] = mTextures[0].Name;
 

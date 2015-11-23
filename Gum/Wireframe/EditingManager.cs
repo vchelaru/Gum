@@ -375,11 +375,10 @@ namespace Gum.Wireframe
 
                 if (hasChangeOccurred)
                 {
-                    UpdateSelectedObjectsPositionAndDimensions();
+                    //UpdateSelectedObjectsPositionAndDimensions();
 
                     PropertyGridManager.Self.RefreshUI();
-                    // I don't think we need to do this anymore, the SelectionManager handles its own updates automatically
-                    //SelectionManager.Self.ShowSizeHandlesFor(WireframeObjectManager.Self.GetSelectedRepresentation());
+
                     mHasChangedAnythingSinceLastPush = true;
                 }
             }
@@ -387,53 +386,55 @@ namespace Gum.Wireframe
 
 
 
-        public void UpdateSelectedObjectsPositionAndDimensions()
-        {
-            var elementStack = SelectedState.Self.GetTopLevelElementStack();
-            if (SelectedState.Self.SelectedInstances.GetCount() != 0)
-            {
-                foreach (var instance in SelectedState.Self.SelectedInstances)
-                {
-                    RefreshPositionsAndScalesForInstance(instance, elementStack);
-                }
+        //public void UpdateSelectedObjectsPositionAndDimensions()
+        //{
+        //    var elementStack = SelectedState.Self.GetTopLevelElementStack();
+        //    if (SelectedState.Self.SelectedInstances.GetCount() != 0)
+        //    {
+        //        //// Can we just update layout it?
+        //        //foreach (var instance in SelectedState.Self.SelectedInstances)
+        //        //{
+        //        //    RefreshPositionsAndScalesForInstance(instance, elementStack);
+        //        //}
 
-                foreach (var ipso in SelectedState.Self.SelectedIpsos)
-                {
-                    GraphicalUiElement asGue = ipso as GraphicalUiElement;
-                    if (asGue != null)
-                    {
-                        RecursiveVariableFinder rvf = new RecursiveVariableFinder(asGue.Tag as InstanceSave, SelectedState.Self.SelectedElement);
-                        asGue.SetGueValues(rvf);
-                    }
-                }
-            }
-            else
-            {
-                GraphicalUiElement ipso = WireframeObjectManager.Self.GetSelectedRepresentation();
+        //        foreach (var ipso in SelectedState.Self.SelectedIpsos)
+        //        {
+        //            GraphicalUiElement asGue = ipso as GraphicalUiElement;
+        //            if (asGue != null)
+        //            {
+        //                asGue.UpdateLayout();
+        //                //RecursiveVariableFinder rvf = new RecursiveVariableFinder(asGue.Tag as InstanceSave, SelectedState.Self.SelectedElement);
+        //                //asGue.SetGueValues(rvf);
+        //            }
+        //        }
+        //    }
+        //    else
+        //    {
+        //        GraphicalUiElement ipso = WireframeObjectManager.Self.GetSelectedRepresentation();
 
-                if (ipso != null)
-                {
-                    ElementSave elementSave = SelectedState.Self.SelectedElement;
+        //        if (ipso != null)
+        //        {
+        //            ElementSave elementSave = SelectedState.Self.SelectedElement;
 
-                    var state = elementSave.DefaultState;
-                    if(SelectedState.Self.SelectedStateSave != null)
-                    {
-                        state = SelectedState.Self.SelectedStateSave;
-                    }
-                    RecursiveVariableFinder rvf = new RecursiveVariableFinder(state);
-                    (ipso as GraphicalUiElement).SetGueValues(rvf);
-                }
-                else if(SelectedState.Self.SelectedElement != null)
-                {
-                    foreach (var instance in SelectedState.Self.SelectedElement.Instances)
-                    {
-                        RefreshPositionsAndScalesForInstance(instance, elementStack);
-                    }
-                }
-            }
+        //            var state = elementSave.DefaultState;
+        //            if(SelectedState.Self.SelectedStateSave != null)
+        //            {
+        //                state = SelectedState.Self.SelectedStateSave;
+        //            }
+        //            RecursiveVariableFinder rvf = new RecursiveVariableFinder(state);
+        //            (ipso as GraphicalUiElement).SetGueValues(rvf);
+        //        }
+        //        else if(SelectedState.Self.SelectedElement != null)
+        //        {
+        //            foreach (var instance in SelectedState.Self.SelectedElement.Instances)
+        //            {
+        //                RefreshPositionsAndScalesForInstance(instance, elementStack);
+        //            }
+        //        }
+        //    }
 
-            GuiCommands.Self.RefreshWireframe();
-        }
+        //    GuiCommands.Self.RefreshWireframe();
+        //}
 
         public void RefreshPositionsAndScalesForInstance(InstanceSave instance, List<ElementWithState> elementStack)
         {
@@ -486,7 +487,7 @@ namespace Gum.Wireframe
 
             if (hasChangeOccurred)
             {
-                UpdateSelectedObjectsPositionAndDimensions();
+                //UpdateSelectedObjectsPositionAndDimensions();
                 PropertyGridManager.Self.RefreshUI();
 
                 // I don't think we need this anymore because they're updated automatically in SelectionManager
@@ -510,22 +511,50 @@ namespace Gum.Wireframe
             if (changeXMultiplier != 0 && cursorXChange != 0)
             {
                 hasChangeOccurred = true;
-                float value = ModifyVariable("X", cursorXChange * changeXMultiplier, instanceSave);
+                if (instanceSave != null)
+                {
+                    ModifyVariable("X", cursorXChange * changeXMultiplier, instanceSave);
+                }
+                else
+                {
+                    ModifyVariable("X", cursorXChange * changeXMultiplier, elementStack.Last().Element);
+                }
             }
             if (changeYMultiplier != 0 && cursorYChange != 0)
             {
                 hasChangeOccurred = true;
-                float value = ModifyVariable("Y", cursorYChange * changeYMultiplier, instanceSave);
+                if (instanceSave != null)
+                {
+                    ModifyVariable("Y", cursorYChange * changeYMultiplier, instanceSave);
+                }
+                else
+                {
+                    ModifyVariable("Y", cursorYChange * changeYMultiplier, elementStack.Last().Element);
+                }
             }
             if (heightMultiplier != 0 && cursorYChange != 0)
             {
                 hasChangeOccurred = true;
-                float value = ModifyVariable("Height", cursorYChange * heightMultiplier, instanceSave);
+                if (instanceSave != null)
+                {
+                    ModifyVariable("Height", cursorYChange * heightMultiplier, instanceSave);
+                }
+                else
+                {
+                    ModifyVariable("Height", cursorYChange * heightMultiplier, elementStack.Last().Element);
+                }
             }
             if (widthMultiplier != 0 && cursorXChange != 0)
             {
                 hasChangeOccurred = true;
-                float value = ModifyVariable("Width", cursorXChange * widthMultiplier, instanceSave);
+                if (instanceSave != null)
+                {
+                    ModifyVariable("Width", cursorXChange * widthMultiplier, instanceSave);
+                }
+                else
+                {
+                    ModifyVariable("Width", cursorXChange * widthMultiplier, elementStack.Last().Element);
+                }
             }
             return hasChangeOccurred;
         }
@@ -826,6 +855,11 @@ namespace Gum.Wireframe
 
             float newValue = currentValue + modificationAmount;
             SelectedState.Self.SelectedStateSave.SetValue(nameWithInstance, newValue, instanceSave, "float");
+
+            var ipso = WireframeObjectManager.Self.GetRepresentation(instanceSave, null);
+
+            ipso.SetProperty(baseVariableName, newValue);
+
             return newValue;
         }
 
@@ -844,6 +878,12 @@ namespace Gum.Wireframe
 
             float newValue = currentValue + modificationAmount;
             SelectedState.Self.SelectedStateSave.SetValue(baseVariableName, newValue, null, "float");
+
+            
+            var ipso = WireframeObjectManager.Self.GetRepresentation(elementSave);
+            ipso.SetProperty(baseVariableName, newValue);
+
+
             return newValue;
         }
 
@@ -951,8 +991,11 @@ namespace Gum.Wireframe
                 yAmount = amount;
             }
 
-
-            if (generalUnitType != GeneralUnitType.PixelsFromLarge && generalUnitType != GeneralUnitType.PixelsFromMiddle && generalUnitType != GeneralUnitType.PixelsFromSmall)
+            if(generalUnitType == GeneralUnitType.PixelsFromMiddleInverted)
+            {
+                return amount * -1;
+            }
+            else if (generalUnitType != GeneralUnitType.PixelsFromLarge && generalUnitType != GeneralUnitType.PixelsFromMiddle && generalUnitType != GeneralUnitType.PixelsFromSmall)
             {
 
                 float parentWidth;
@@ -969,7 +1012,9 @@ namespace Gum.Wireframe
                     ProjectManager.Self.GumProjectSave.DefaultCanvasWidth, ProjectManager.Self.GumProjectSave.DefaultCanvasHeight,
                     out parentWidth, out parentHeight);
 
-                UnitConverter.Self.ConvertToUnitTypeCoordinates(xAmount, yAmount, unitsVariableAsObject, unitsVariableAsObject, parentWidth, parentHeight, fileWidth, fileHeight,
+                var unitsVariable = UnitConverter.ConvertToGeneralUnit(unitsVariableAsObject);
+
+                UnitConverter.Self.ConvertToUnitTypeCoordinates(xAmount, yAmount, unitsVariable, unitsVariable, parentWidth, parentHeight, fileWidth, fileHeight,
                     out outX, out outY);
 
                 if (baseVariableName == "X" || baseVariableName == "Width")

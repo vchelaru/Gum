@@ -19,6 +19,12 @@ using Gum.PropertyGridHelpers;
 
 namespace Gum
 {
+    public enum TabLocation
+    {
+        Center,
+        Right
+    }
+
     public partial class MainWindow : Form
     {
         public MainWindow()
@@ -317,7 +323,7 @@ namespace Gum
             ElementTreeViewManager.Self.OnSelect(ObjectTreeView.SelectedNode);
         }
 
-        public void AddWpfControl(System.Windows.Controls.UserControl control, string tabTitle)
+        public void AddWpfControl(System.Windows.Controls.UserControl control, string tabTitle, TabLocation tabLocation = TabLocation.Center)
         {
             System.Windows.Forms.Integration.ElementHost wpfHost;
             wpfHost = new System.Windows.Forms.Integration.ElementHost();
@@ -334,7 +340,18 @@ namespace Gum
             tabPage.Text = tabTitle;
             tabPage.UseVisualStyleBackColor = true;
 
-            this.PropertyGridTab.Controls.Add(tabPage);
+            if (tabLocation == TabLocation.Center)
+            {
+                this.MiddleTabControl.Controls.Add(tabPage);
+            }
+            else if(tabLocation == TabLocation.Right)
+            {
+                this.RightTabControl.Controls.Add(tabPage);
+            }
+            else
+            {
+                throw new NotImplementedException($"Tab location {tabLocation} not supported");
+            }
         }
 
         private void findFileReferencesToolStripMenuItem_Click(object sender, EventArgs e)

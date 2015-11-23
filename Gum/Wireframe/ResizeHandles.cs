@@ -214,21 +214,27 @@ namespace Gum.Wireframe
 
             if (shouldShowOffsetLine)
             {
-                var gueParent = asGue.Parent as GraphicalUiElement;
-
-                float parentOriginOffsetX;
-                float parentOriginOffsetY;
-                asGue.GetParentOffsets(out parentOriginOffsetX, out parentOriginOffsetY);
-
-                mOriginLine.X = parentOriginOffsetX + asGue.Parent.GetAbsoluteX();
-                mOriginLine.Y = parentOriginOffsetY + asGue.Parent.GetAbsoluteY();
-
-                mOriginLine.RelativePoint.X = asGue.AbsoluteX - mOriginLine.X;
-                mOriginLine.RelativePoint.Y = asGue.AbsoluteY - mOriginLine.Y;
+                UpdateOriginLine(asGue);
             }
 
 
 
+        }
+
+        private void UpdateOriginLine(GraphicalUiElement asGue)
+        {
+            var gueParent = asGue.Parent as GraphicalUiElement;
+
+            float parentOriginOffsetX;
+            float parentOriginOffsetY;
+            asGue.GetParentOffsets(out parentOriginOffsetX, out parentOriginOffsetY);
+
+
+            mOriginLine.X = parentOriginOffsetX + asGue.Parent.GetAbsoluteX();
+            mOriginLine.Y = parentOriginOffsetY + asGue.Parent.GetAbsoluteY();
+
+            mOriginLine.RelativePoint.X = asGue.AbsoluteX - mOriginLine.X;
+            mOriginLine.RelativePoint.Y = asGue.AbsoluteY - mOriginLine.Y;
         }
 
         public void SetValuesFrom(IEnumerable<IPositionedSizedObject> ipsoList)

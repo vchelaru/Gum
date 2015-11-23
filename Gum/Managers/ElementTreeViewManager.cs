@@ -61,7 +61,18 @@ namespace Gum.Managers
 
         public TreeNode SelectedNode
         {
-            get { return mTreeView.SelectedNode; }
+            get
+            {
+                // This could be called before the tree is created:
+                if (mTreeView == null)
+                {
+                    return null;
+                }
+                else
+                {
+                    return mTreeView.SelectedNode;
+                }
+            }
             set
             {
                 mTreeView.SelectedNode = value;

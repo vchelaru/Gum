@@ -30,11 +30,14 @@ namespace Gum.Wireframe
                     float absoluteX;
                     float absoluteY;
 
+                    var xUnitType = UnitConverter.ConvertToGeneralUnit(guideRectangle.XUnitType);
+                    var yUnitType = UnitConverter.ConvertToGeneralUnit(guideRectangle.YUnitType);
+
                     UnitConverter.Self.ConvertToPixelCoordinates(
                         guideRectangle.X,
                         guideRectangle.Y,
-                        guideRectangle.XUnitType,
-                        guideRectangle.YUnitType,
+                        xUnitType,
+                        yUnitType,
                         ObjectFinder.Self.GumProjectSave.DefaultCanvasWidth,
                         ObjectFinder.Self.GumProjectSave.DefaultCanvasHeight,
                         0, 0,
@@ -44,13 +47,16 @@ namespace Gum.Wireframe
                     rectangle.X = absoluteX;
                     rectangle.Y = absoluteY;
 
+                    xUnitType = UnitConverter.ConvertToGeneralUnit(guideRectangle.WidthUnitType);
+                    yUnitType = UnitConverter.ConvertToGeneralUnit(guideRectangle.HeightUnitType);
+
                     float absoluteWidth;
                     float absoluteHeight;
                     UnitConverter.Self.ConvertToPixelCoordinates(
                         guideRectangle.Width,
                         guideRectangle.Height,
-                        guideRectangle.WidthUnitType,
-                        guideRectangle.HeightUnitType,
+                        xUnitType,
+                        yUnitType,
                         ObjectFinder.Self.GumProjectSave.DefaultCanvasWidth,
                         ObjectFinder.Self.GumProjectSave.DefaultCanvasHeight,
                         0, 0,

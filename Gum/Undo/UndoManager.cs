@@ -22,10 +22,27 @@ namespace Gum.Undo
 
         ElementSave mRecordedElementSave;
 
+        public event EventHandler UndosChanged;
+
         //StateSave mRecordedStateSave;
         //List<InstanceSave> mRecordedInstanceList;
 
         #endregion
+
+        public IEnumerable<ElementSave> CurrentUndoStack
+        {
+            get
+            {
+                Stack<ElementSave> stack = null;
+
+                if (SelectedState.Self.SelectedElement != null && mUndos.ContainsKey(SelectedState.Self.SelectedElement))
+                {
+                    stack = mUndos[SelectedState.Self.SelectedElement];
+                }
+
+                return stack;
+            }
+        }
 
         public static UndoManager Self
         {
@@ -111,11 +128,14 @@ namespace Gum.Undo
 
                     stack.Push(mRecordedElementSave);
                     RecordState();
+
+                    UndosChanged?.Invoke(this, null);
                 }
 
+
+                PrintStatus("RecordUndo");
             }
 
-            PrintStatus("RecordUndo");
         }
 
         public void PerformUndo()
@@ -162,6 +182,8 @@ namespace Gum.Undo
 
                 RecordState();
 
+
+                UndosChanged?.Invoke(this, null);
 
                 GumCommands.Self.GuiCommands.RefreshElementTreeView();
                 SelectedState.Self.UpdateToSelectedStateSave();

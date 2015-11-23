@@ -187,6 +187,11 @@
     </Compile>
     <Compile Include="Plugins\AlignmentButtons\AlignmentMainPlugin.cs" />
     <Compile Include="Plugins\BaseClasses\InternalPlugin.cs" />
+    <Compile Include="Plugins\Undos\MainPlugin.cs" />
+    <Compile Include="Plugins\Undos\UndoDisplay.xaml.cs">
+      <DependentUpon>UndoDisplay.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Plugins\Undos\UndosViewModel.cs" />
     <Compile Include="PropertyGridHelpers\Converters\AvailableGuidesTypeConverter.cs" />
     <Compile Include="Input\CursorExtensionMethods.cs" />
     <Compile Include="Managers\DragDropManager.cs" />
@@ -397,6 +402,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="Plugins\AlignmentButtons\AlignmentControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Plugins\Undos\UndoDisplay.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
