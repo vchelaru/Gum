@@ -546,14 +546,21 @@ namespace RenderingLibrary.Graphics
 
 
         public static void Render(SystemManagers managers, SpriteRenderer spriteRenderer,
-            IPositionedSizedObject ipso, Texture2D texture, Color color, 
+            IPositionedSizedObject ipso, Texture2D texture, Color color,
             Rectangle? sourceRectangle = null,
             bool flipHorizontal = false,
             bool flipVertical = false,
             float rotationInDegrees = 0,
-            bool treat0AsFullDimensions = false
+            bool treat0AsFullDimensions = false,
+            // In the case of Text objects, we send in a line rectangle, but we want the Text object to be the owner of any resulting render states
+            object objectCausingRenering = null
             )
         {
+            if (objectCausingRenering == null)
+            {
+                objectCausingRenering = ipso;
+            }
+
             Renderer renderer = null;
             if (managers == null)
             {
@@ -586,6 +593,18 @@ namespace RenderingLibrary.Graphics
                 effects |= SpriteEffects.FlipVertically;
             }
 
+            var modifiedColor = color;
+
+            if (Renderer.NormalBlendState == BlendState.AlphaBlend)
+            {
+                // we are using premult textures, so we need to premult the color:
+                var alphaRatio = color.A / 255.0f;
+
+                modifiedColor.R = (byte)(color.R * alphaRatio);
+                modifiedColor.G = (byte)(color.G * alphaRatio);
+                modifiedColor.B = (byte)(color.B * alphaRatio);
+            }
+
             if ((ipso.Width > 0 && ipso.Height > 0) || treat0AsFullDimensions == false)
             {
                 Vector2 scale = Vector2.One;
@@ -616,13 +635,13 @@ namespace RenderingLibrary.Graphics
                 spriteRenderer.Draw(textureToUse,
                     new Vector2(ipso.GetAbsoluteX(), ipso.GetAbsoluteY()),
                     sourceRectangle,
-                    color,
-                    Microsoft.Xna.Framework.MathHelper.TwoPi * -rotationInDegrees/360.0f,
+                    modifiedColor,
+                    Microsoft.Xna.Framework.MathHelper.TwoPi * -rotationInDegrees / 360.0f,
                     Vector2.Zero,
                     scale,
                     effects,
                     0,
-                    ipso);
+                    objectCausingRenering);
             }
             else
             {
@@ -645,12 +664,12 @@ namespace RenderingLibrary.Graphics
                 spriteRenderer.Draw(textureToUse,
                     destinationRectangle,
                     sourceRectangle,
-                    color,
-                    rotationInDegrees/360.0f,
+                    modifiedColor,
+                    rotationInDegrees / 360.0f,
                     Vector2.Zero,
                     effects,
                     0,
-                    ipso
+                    objectCausingRenering
                     );
             }
         }

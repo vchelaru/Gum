@@ -9,6 +9,13 @@ using System.Drawing;
 
 namespace Gum.Settings
 {
+    public class RecentProjectReference
+    {
+        public DateTime LastTimeOpened;
+        public string AbsoluteFileName;
+    }
+
+
     public class GeneralSettingsFile
     {
         #region Properties
@@ -45,7 +52,7 @@ namespace Gum.Settings
             }
         }
 
-        public List<string> RecentProjects
+        public List<RecentProjectReference> RecentProjects
         {
             get;
             set;
@@ -93,7 +100,7 @@ namespace Gum.Settings
             LeftAndEverythingSplitterDistance = 196;
             PreviewSplitterDistance = 558;
             StatesAndVariablesSplitterDistance = 119;
-            RecentProjects = new List<string>();
+            RecentProjects = new List<RecentProjectReference>();
         }
 
         public static GeneralSettingsFile LoadOrCreateNew()
@@ -126,13 +133,19 @@ namespace Gum.Settings
 
         public void AddToRecentFilesIfNew(string file)
         {
-            if (!RecentProjects.Contains(file))
-                RecentProjects.Add(file);
+            var item = RecentProjects.FirstOrDefault(candidate => candidate.AbsoluteFileName == file);
+
+            if(item == null)
+            {
+                item = new RecentProjectReference();
+                item.AbsoluteFileName = file;
+                RecentProjects.Add(item);
+            }
+
+            item.LastTimeOpened = DateTime.Now;
 
             const int maxFileCount = 20;
-
-            if (RecentProjects.Count > maxFileCount)
-                RecentProjects.RemoveRange(0, RecentProjects.Count - maxFileCount);
+            RecentProjects = RecentProjects.OrderByDescending(contained => contained.LastTimeOpened).Take(maxFileCount).ToList();
         }
 
         #endregion

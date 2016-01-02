@@ -792,11 +792,18 @@ namespace Gum.Wireframe
         private float GetXMultiplierForLeft(InstanceSave instanceSave, IPositionedSizedObject ipso)
         {
             object xOriginAsObject = GetCurrentValueForVariable("X Origin", instanceSave);
+            bool shouldContiue = xOriginAsObject != null;
+            if (shouldContiue)
+            {
+                HorizontalAlignment xOrigin = (HorizontalAlignment)xOriginAsObject;
 
-            HorizontalAlignment xOrigin = (HorizontalAlignment)xOriginAsObject;
-
-            float ratioOver = GetRatioXOverInSelection(ipso, xOrigin);
-            return 1 - ratioOver;
+                float ratioOver = GetRatioXOverInSelection(ipso, xOrigin);
+                return 1 - ratioOver;
+            }
+            else
+            {
+                return 0;
+            }
         }
 
 
@@ -804,35 +811,55 @@ namespace Gum.Wireframe
         private float GetYMultiplierForTop(InstanceSave instanceSave, IPositionedSizedObject ipso)
         {
             object yOriginAsObject = GetCurrentValueForVariable("Y Origin", instanceSave);
+            bool shouldContiue = yOriginAsObject != null;
+            if (shouldContiue)
+            {
+                VerticalAlignment yOrigin = (VerticalAlignment)yOriginAsObject;
 
-            VerticalAlignment yOrigin = (VerticalAlignment)yOriginAsObject;
-
-            float ratioOver = GetRatioYDownInSelection(ipso, yOrigin);
-            return 1 - ratioOver;
+                float ratioOver = GetRatioYDownInSelection(ipso, yOrigin);
+                return 1 - ratioOver;
+            }
+            else
+            {
+                return 0;
+            }
         }
 
         private float GetYMultiplierForBottom(InstanceSave instanceSave, IPositionedSizedObject ipso)
         {
             object yOriginAsObject = GetCurrentValueForVariable("Y Origin", instanceSave);
+            bool shouldContiue = yOriginAsObject != null;
+            if (shouldContiue)
+            {
+                VerticalAlignment yOrigin = (VerticalAlignment)yOriginAsObject;
 
-            VerticalAlignment yOrigin = (VerticalAlignment)yOriginAsObject;
+                float ratioOver = GetRatioYDownInSelection(ipso, yOrigin);
 
-            float ratioOver = GetRatioYDownInSelection(ipso, yOrigin);
-
-            return 0 + ratioOver;
+                return 0 + ratioOver;
+            }
+            else
+            {
+                return 0;
+            }
         }
 
         private float GetXMultiplierForRight(InstanceSave instanceSave, IPositionedSizedObject ipso)
         {
             object xOriginAsObject = GetCurrentValueForVariable("X Origin", instanceSave);
-            if (!(xOriginAsObject is HorizontalAlignment))
-            {
-                int m = 3;
-            }
-            HorizontalAlignment xOrigin = (HorizontalAlignment)xOriginAsObject;
-            float ratioOver = GetRatioXOverInSelection(ipso, xOrigin);
 
-            return 0 + ratioOver;
+            bool shouldContiue = xOriginAsObject != null;
+
+            if (shouldContiue)
+            {
+                HorizontalAlignment xOrigin = (HorizontalAlignment)xOriginAsObject;
+                float ratioOver = GetRatioXOverInSelection(ipso, xOrigin);
+
+                return 0 + ratioOver;
+            }
+            else
+            {
+                return 0;
+            }
         }
 
         private float ModifyVariable(string baseVariableName, float modificationAmount, InstanceSave instanceSave)
@@ -842,25 +869,41 @@ namespace Gum.Wireframe
             object currentValueAsObject;
             GetCurrentValueForVariable(baseVariableName, instanceSave, out nameWithInstance, out currentValueAsObject);
 
-            float currentValue = (float)currentValueAsObject;
+            bool shouldContinue = true;
 
-            string unitsVariableName = baseVariableName + " Units";
-            string unitsNameWithInstance;
-            object unitsVariableAsObject;
-            GetCurrentValueForVariable(unitsVariableName, instanceSave, out unitsNameWithInstance, out unitsVariableAsObject);
+            if(SelectedState.Self.CustomCurrentStateSave != null && currentValueAsObject == null)
+            {
+                // This is okay, we will do nothing here:
+                shouldContinue = false;
+            }
 
-            currentValue = AdjustCurrentValueIfScale(currentValue, baseVariableName, unitsVariableAsObject);
+            if (shouldContinue)
+            {
 
-            modificationAmount = AdjustAmountAccordingToUnitType(baseVariableName, modificationAmount, unitsVariableAsObject);
+                float currentValue = (float)currentValueAsObject;
 
-            float newValue = currentValue + modificationAmount;
-            SelectedState.Self.SelectedStateSave.SetValue(nameWithInstance, newValue, instanceSave, "float");
+                string unitsVariableName = baseVariableName + " Units";
+                string unitsNameWithInstance;
+                object unitsVariableAsObject;
+                GetCurrentValueForVariable(unitsVariableName, instanceSave, out unitsNameWithInstance, out unitsVariableAsObject);
 
-            var ipso = WireframeObjectManager.Self.GetRepresentation(instanceSave, null);
+                currentValue = AdjustCurrentValueIfScale(currentValue, baseVariableName, unitsVariableAsObject);
 
-            ipso.SetProperty(baseVariableName, newValue);
+                modificationAmount = AdjustAmountAccordingToUnitType(baseVariableName, modificationAmount, unitsVariableAsObject);
 
-            return newValue;
+                float newValue = currentValue + modificationAmount;
+                SelectedState.Self.SelectedStateSave.SetValue(nameWithInstance, newValue, instanceSave, "float");
+
+                var ipso = WireframeObjectManager.Self.GetRepresentation(instanceSave, null);
+
+                ipso.SetProperty(baseVariableName, newValue);
+
+                return newValue;
+            }
+            else
+            {
+                return 0;
+            }
         }
 
         private float ModifyVariable(string baseVariableName, float modificationAmount, ElementSave elementSave)

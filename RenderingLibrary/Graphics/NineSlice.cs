@@ -33,19 +33,22 @@ namespace RenderingLibrary.Graphics
 
         List<IPositionedSizedObject> mChildren = new List<IPositionedSizedObject>();
 
+        //Sprites which make up NineSlice indexed by NineSliceSections enum
+        private Sprite[] mSprites;
+
         Vector2 Position;
 
         IPositionedSizedObject mParent;
 
-        Sprite mTopLeftSprite = new Sprite(null);
-        Sprite mTopSprite = new Sprite(null);
-        Sprite mTopRightSprite = new Sprite(null);
-        Sprite mRightSprite = new Sprite(null);
-        Sprite mBottomRightSprite = new Sprite(null);
-        Sprite mBottomSprite = new Sprite(null);
-        Sprite mBottomLeftSprite = new Sprite(null);
-        Sprite mLeftSprite = new Sprite(null);
-        Sprite mCenterSprite = new Sprite(null);
+  //      Sprite mTopLeftSprite = new Sprite(null);
+  //      Sprite mTopSprite = new Sprite(null);
+  //      Sprite mTopRightSprite = new Sprite(null);
+  //      Sprite mRightSprite = new Sprite(null);
+  //      Sprite mBottomRightSprite = new Sprite(null);
+  //      Sprite mBottomSprite = new Sprite(null);
+  //      Sprite mBottomLeftSprite = new Sprite(null);
+  //      Sprite mLeftSprite = new Sprite(null);
+  //      Sprite mCenterSprite = new Sprite(null);
 
         int mFullOutsideWidth;
         int mFullInsideWidth;
@@ -189,48 +192,48 @@ namespace RenderingLibrary.Graphics
 
         public Texture2D TopLeftTexture 
         {
-            get { return mTopLeftSprite.Texture; }
-            set { mTopLeftSprite.Texture = value; }
+            get { return mSprites[(int)NineSliceSections.TopLeft].Texture; }
+            set { mSprites[(int) NineSliceSections.TopLeft].Texture = value; }
         }
         public Texture2D TopTexture 
         {
-            get { return mTopSprite.Texture; }
-            set { mTopSprite.Texture = value; }
+            get { return mSprites[(int)NineSliceSections.Top].Texture; }
+            set { mSprites[(int)NineSliceSections.Top].Texture = value; }
         }
         public Texture2D TopRightTexture 
         {
-            get { return mTopRightSprite.Texture; }
-            set { mTopRightSprite.Texture = value; }
+            get { return mSprites[(int)NineSliceSections.TopRight].Texture; }
+            set { mSprites[(int)NineSliceSections.TopRight].Texture = value; }
         }
         public Texture2D RightTexture 
         {
-            get { return mRightSprite.Texture; }
-            set { mRightSprite.Texture = value; }
+            get { return mSprites[(int)NineSliceSections.Right].Texture; }
+            set { mSprites[(int)NineSliceSections.Right].Texture = value; }
         }
         public Texture2D BottomRightTexture 
         {
-            get { return mBottomRightSprite.Texture; }
-            set { mBottomRightSprite.Texture = value; }
+            get { return mSprites[(int)NineSliceSections.BottomRight].Texture; }
+            set { mSprites[(int)NineSliceSections.BottomRight].Texture = value; }
         }
         public Texture2D BottomTexture 
         {
-            get { return mBottomSprite.Texture; }
-            set { mBottomSprite.Texture = value; }
+            get { return mSprites[(int)NineSliceSections.Bottom].Texture; }
+            set { mSprites[(int)NineSliceSections.Bottom].Texture = value; }
         }
         public Texture2D BottomLeftTexture
         {
-            get { return mBottomLeftSprite.Texture; }
-            set { mBottomLeftSprite.Texture = value; }
+            get { return mSprites[(int)NineSliceSections.BottomLeft].Texture; }
+            set { mSprites[(int)NineSliceSections.BottomLeft].Texture = value; }
         }
         public Texture2D LeftTexture
         {
-            get { return mLeftSprite.Texture; }
-            set { mLeftSprite.Texture = value; }
+            get { return mSprites[(int)NineSliceSections.Left].Texture; }
+            set { mSprites[(int)NineSliceSections.Left].Texture = value; }
         }
         public Texture2D CenterTexture 
         {
-            get { return mCenterSprite.Texture; }
-            set { mCenterSprite.Texture = value; }
+            get { return mSprites[(int)NineSliceSections.Center].Texture; }
+            set { mSprites[(int)NineSliceSections.Center].Texture = value; }
         }
 
         public bool Wrap
@@ -299,19 +302,19 @@ namespace RenderingLibrary.Graphics
         {
             get
             {
-                return mCenterSprite.Color;
+                return mSprites[(int)NineSliceSections.Center].Color;
             }
             set
             {
-                mTopLeftSprite.Color = value;
-                mTopSprite.Color = value;
-                mTopRightSprite.Color = value;
-                mRightSprite.Color = value;
-                mBottomRightSprite.Color = value;
-                mBottomSprite.Color = value;
-                mBottomLeftSprite.Color = value;
-                mLeftSprite.Color = value;
-                mCenterSprite.Color = value;
+                mSprites[(int)NineSliceSections.TopLeft].Color = value;
+                mSprites[(int)NineSliceSections.Top].Color = value;
+                mSprites[(int)NineSliceSections.TopRight].Color = value;
+                mSprites[(int)NineSliceSections.Right].Color = value;
+                mSprites[(int)NineSliceSections.BottomRight].Color = value;
+                mSprites[(int)NineSliceSections.Bottom].Color = value;
+                mSprites[(int)NineSliceSections.BottomLeft].Color = value;
+                mSprites[(int)NineSliceSections.Left].Color = value;
+                mSprites[(int)NineSliceSections.Center].Color = value;
             }
         }
 
@@ -319,19 +322,19 @@ namespace RenderingLibrary.Graphics
         {
             get
             {
-                return mCenterSprite.BlendState;
+                return mSprites[(int)NineSliceSections.Center].BlendState;
             }
             set
             {
-                mTopLeftSprite.BlendState = value;
-                mTopSprite.BlendState = value;
-                mTopRightSprite.BlendState = value;
-                mRightSprite.BlendState = value;
-                mBottomRightSprite.BlendState = value;
-                mBottomSprite.BlendState = value;
-                mBottomLeftSprite.BlendState = value;
-                mLeftSprite.BlendState = value;
-                mCenterSprite.BlendState = value;
+                mSprites[(int)NineSliceSections.TopLeft].BlendState = value;
+                mSprites[(int)NineSliceSections.Top].BlendState = value;
+                mSprites[(int)NineSliceSections.TopRight].BlendState = value;
+                mSprites[(int)NineSliceSections.Right].BlendState = value;
+                mSprites[(int)NineSliceSections.BottomRight].BlendState = value;
+                mSprites[(int)NineSliceSections.Bottom].BlendState = value;
+                mSprites[(int)NineSliceSections.BottomLeft].BlendState = value;
+                mSprites[(int)NineSliceSections.Left].BlendState = value;
+                mSprites[(int)NineSliceSections.Center].BlendState = value;
             }
         }
 
@@ -342,7 +345,7 @@ namespace RenderingLibrary.Graphics
             get { return mChildren; }
         }
 
-        public static Dictionary<NineSliceSections, string> PossibleNineSliceEndings
+        public static string[] PossibleNineSliceEndings
         {
             get;
             private set;
@@ -350,12 +353,12 @@ namespace RenderingLibrary.Graphics
 
         public float OutsideSpriteWidth
         {
-            get { return mTopLeftSprite.EffectiveWidth; }
+            get { return mSprites[(int)NineSliceSections.TopLeft].EffectiveWidth; }
         }
 
         public float OutsideSpriteHeight
         {
-            get { return mTopLeftSprite.EffectiveHeight; }
+            get { return mSprites[(int)NineSliceSections.TopLeft].EffectiveHeight; }
         }
 
         #endregion
@@ -372,112 +375,104 @@ namespace RenderingLibrary.Graphics
 
         void IRenderable.Render(SpriteRenderer spriteRenderer, SystemManagers managers)
         {
-            if (this.AbsoluteVisible && Width > 0 && Height > 0)
+            if (AbsoluteVisible && Width > 0 && Height > 0)
             {
-                
-
-
                 RefreshSourceRectangles();
-
 
                 RefreshSpriteDimensions();
 
                 float y = this.GetAbsoluteY();
 
-                mTopLeftSprite.X = this.GetAbsoluteX() ;
-                mTopLeftSprite.Y = y;
+                mSprites[(int)NineSliceSections.TopLeft].X = this.GetAbsoluteX();
+                mSprites[(int)NineSliceSections.TopLeft].Y = y;
 
-                mTopSprite.X = mTopLeftSprite.X + mTopLeftSprite.EffectiveWidth;
-                mTopSprite.Y = y;
+                mSprites[(int)NineSliceSections.Top].X = mSprites[(int)NineSliceSections.TopLeft].X + mSprites[(int)NineSliceSections.TopLeft].EffectiveWidth;
+                mSprites[(int)NineSliceSections.Top].Y = y;
 
-                mTopRightSprite.X = mTopSprite.X + mTopSprite.Width;
-                mTopRightSprite.Y = y;
+                mSprites[(int)NineSliceSections.TopRight].X = mSprites[(int)NineSliceSections.Top].X + mSprites[(int)NineSliceSections.Top].Width;
+                mSprites[(int)NineSliceSections.TopRight].Y = y;
 
-                y = mTopLeftSprite.Y + mTopLeftSprite.EffectiveHeight;
+                y = mSprites[(int)NineSliceSections.TopLeft].Y + mSprites[(int)NineSliceSections.TopLeft].EffectiveHeight;
 
-                mLeftSprite.X = this.GetAbsoluteX();
-                mLeftSprite.Y = y;
+                mSprites[(int)NineSliceSections.Left].X = this.GetAbsoluteX();
+                mSprites[(int)NineSliceSections.Left].Y = y;
 
-                mCenterSprite.X = mLeftSprite.X + mLeftSprite.EffectiveWidth;
-                mCenterSprite.Y = y;
+                mSprites[(int)NineSliceSections.Center].X = mSprites[(int)NineSliceSections.Left].X + mSprites[(int)NineSliceSections.Left].EffectiveWidth;
+                mSprites[(int)NineSliceSections.Center].Y = y;
 
-                mRightSprite.X = mCenterSprite.X + mCenterSprite.Width;
-                mRightSprite.Y = y;
+                mSprites[(int)NineSliceSections.Right].X = mSprites[(int)NineSliceSections.Center].X + mSprites[(int)NineSliceSections.Center].Width;
+                mSprites[(int)NineSliceSections.Right].Y = y;
 
-                y = mLeftSprite.Y + mLeftSprite.Height;
+                y = mSprites[(int)NineSliceSections.Left].Y + mSprites[(int)NineSliceSections.Left].Height;
 
-                mBottomLeftSprite.X = this.GetAbsoluteX();
-                mBottomLeftSprite.Y = y;
+                mSprites[(int)NineSliceSections.BottomLeft].X = this.GetAbsoluteX();
+                mSprites[(int)NineSliceSections.BottomLeft].Y = y;
 
-                mBottomSprite.X = mBottomLeftSprite.X + mBottomLeftSprite.EffectiveWidth;
-                mBottomSprite.Y = y;
+                mSprites[(int)NineSliceSections.Bottom].X = mSprites[(int)NineSliceSections.BottomLeft].X + mSprites[(int)NineSliceSections.BottomLeft].EffectiveWidth;
+                mSprites[(int)NineSliceSections.Bottom].Y = y;
 
-                mBottomRightSprite.X = mBottomSprite.X + mBottomSprite.Width;
-                mBottomRightSprite.Y = y;
+                mSprites[(int)NineSliceSections.BottomRight].X = mSprites[(int)NineSliceSections.Bottom].X + mSprites[(int)NineSliceSections.Bottom].Width;
+                mSprites[(int)NineSliceSections.BottomRight].Y = y;
 
-                Render(mTopLeftSprite, managers, spriteRenderer);
-                if (this.mCenterSprite.Width > 0)
+                Render(mSprites[(int)NineSliceSections.TopLeft], managers, spriteRenderer);
+                if (mSprites[(int)NineSliceSections.Center].Width > 0)
                 {
-                    Render(mTopSprite, managers, spriteRenderer);
-                    Render(mBottomSprite, managers, spriteRenderer);
+                    Render(mSprites[(int)NineSliceSections.Top], managers, spriteRenderer);
+                    Render(mSprites[(int)NineSliceSections.Bottom], managers, spriteRenderer);
 
-                    if (this.mCenterSprite.Height > 0)
+                    if (mSprites[(int)NineSliceSections.Center].Height > 0)
                     {
-                        Render(mCenterSprite, managers, spriteRenderer);
+                        Render(mSprites[(int)NineSliceSections.Center], managers, spriteRenderer);
                     }
 
                 }
-                if (this.mCenterSprite.Height > 0)
+                if (mSprites[(int)NineSliceSections.Center].Height > 0)
                 {
-                    Render(mLeftSprite, managers, spriteRenderer);
-                    Render(mRightSprite, managers, spriteRenderer);
+                    Render(mSprites[(int)NineSliceSections.Left], managers, spriteRenderer);
+                    Render(mSprites[(int)NineSliceSections.Right], managers, spriteRenderer);
                 }
 
-
-                Render(mTopRightSprite, managers, spriteRenderer);
-                Render(mBottomLeftSprite, managers, spriteRenderer);
-                Render(mBottomRightSprite, managers, spriteRenderer);
+                Render(mSprites[(int)NineSliceSections.TopRight], managers, spriteRenderer);
+                Render(mSprites[(int)NineSliceSections.BottomLeft], managers, spriteRenderer);
+                Render(mSprites[(int)NineSliceSections.BottomRight], managers, spriteRenderer);
             }
         }
 
         private void RefreshSpriteDimensions()
         {
-
-            bool usesMulti = mTopLeftSprite.Texture != mTopSprite.Texture;
+            bool usesMulti = mSprites[(int)NineSliceSections.TopLeft].Texture != mSprites[(int)NineSliceSections.Top].Texture;
 
             float desiredMiddleWidth = 0;
             float desiredMiddleHeight = 0;
-
 
             if (usesMulti == false)
             {
                 float fullWidth = mFullOutsideWidth * 2 + mFullInsideWidth;
                 if (Width >= fullWidth)
                 {
-                    desiredMiddleWidth = this.Width - mTopLeftSprite.EffectiveWidth - mTopRightSprite.EffectiveWidth;
+                    desiredMiddleWidth = Width - mSprites[(int)NineSliceSections.TopLeft].EffectiveWidth - mSprites[(int)NineSliceSections.TopRight].EffectiveWidth;
 
-                    mTopLeftSprite.Width = mTopRightSprite.Width = mLeftSprite.Width = mRightSprite.Width =
-                        mBottomLeftSprite.Width = mBottomRightSprite.Width = mFullOutsideWidth;
+                    mSprites[(int)NineSliceSections.TopLeft].Width = mSprites[(int)NineSliceSections.TopRight].Width = mSprites[(int)NineSliceSections.Left].Width = mSprites[(int)NineSliceSections.Right].Width =
+                        mSprites[(int)NineSliceSections.BottomLeft].Width = mSprites[(int)NineSliceSections.BottomRight].Width = mFullOutsideWidth;
                 }
                 else if (Width >= mFullOutsideWidth * 2)
                 {
                     desiredMiddleWidth = this.Width - mFullOutsideWidth * 2;
 
-                    mTopLeftSprite.Width = mTopRightSprite.Width = mLeftSprite.Width = mRightSprite.Width =
-                         mBottomLeftSprite.Width = mBottomRightSprite.Width = mFullOutsideWidth;
+                    mSprites[(int)NineSliceSections.TopLeft].Width = mSprites[(int)NineSliceSections.TopRight].Width = mSprites[(int)NineSliceSections.Left].Width = mSprites[(int)NineSliceSections.Right].Width =
+                         mSprites[(int)NineSliceSections.BottomLeft].Width = mSprites[(int)NineSliceSections.BottomRight].Width = mFullOutsideWidth;
                 }
                 else
                 {
                     desiredMiddleWidth = 0;
-                    mTopLeftSprite.Width = mTopRightSprite.Width = mLeftSprite.Width = mRightSprite.Width =
-                        mBottomLeftSprite.Width = mBottomRightSprite.Width = Width / 2.0f;
+                    mSprites[(int)NineSliceSections.TopLeft].Width = mSprites[(int)NineSliceSections.TopRight].Width = mSprites[(int)NineSliceSections.Left].Width = mSprites[(int)NineSliceSections.Right].Width =
+                        mSprites[(int)NineSliceSections.BottomLeft].Width = mSprites[(int)NineSliceSections.BottomRight].Width = Width / 2.0f;
                 }
-
 
                 float fullHeight = mFullOutsideHeight * 2 + mFullInsideHeight;
                 if (Height >= fullHeight)
                 {
-                    desiredMiddleHeight = this.Height - mTopLeftSprite.EffectiveHeight - mTopRightSprite.EffectiveHeight;
+                    desiredMiddleHeight = this.Height - mSprites[(int)NineSliceSections.TopLeft].EffectiveHeight - mSprites[(int)NineSliceSections.TopRight].EffectiveHeight;
                 }
                 else if (Height >= mFullOutsideHeight * 2)
                 {
@@ -490,60 +485,256 @@ namespace RenderingLibrary.Graphics
             }
             else
             {
-                desiredMiddleWidth = this.Width - mTopLeftSprite.EffectiveWidth - mTopRightSprite.EffectiveWidth;
-                desiredMiddleHeight = this.Height - this.mTopLeftSprite.EffectiveHeight - this.mBottomLeftSprite.EffectiveHeight;
+                desiredMiddleWidth = Width - mSprites[(int)NineSliceSections.TopLeft].EffectiveWidth - mSprites[(int)NineSliceSections.TopRight].EffectiveWidth;
+                desiredMiddleHeight = Height - mSprites[(int)NineSliceSections.TopLeft].EffectiveHeight - this.mSprites[(int)NineSliceSections.BottomLeft].EffectiveHeight;
             }
 
-            this.mTopSprite.Width = desiredMiddleWidth;
-            this.mCenterSprite.Width = desiredMiddleWidth;
-            this.mBottomSprite.Width = desiredMiddleWidth;
+            mSprites[(int)NineSliceSections.Top].Width = desiredMiddleWidth;
+            mSprites[(int)NineSliceSections.Center].Width = desiredMiddleWidth;
+            mSprites[(int)NineSliceSections.Bottom].Width = desiredMiddleWidth;
 
-            this.mLeftSprite.Height = desiredMiddleHeight;
-            this.mCenterSprite.Height = desiredMiddleHeight;
-            this.mRightSprite.Height = desiredMiddleHeight;
+            mSprites[(int)NineSliceSections.Left].Height = desiredMiddleHeight;
+            mSprites[(int)NineSliceSections.Center].Height = desiredMiddleHeight;
+            mSprites[(int)NineSliceSections.Right].Height = desiredMiddleHeight;
         }
 
         private void RefreshSourceRectangles()
         {
-            bool useMulti = mTopLeftSprite.Texture != mTopSprite.Texture;
+            bool useMulti;
+            var useAtlas = mSprites[(int) NineSliceSections.TopLeft].AtlasedTexture != null;
+
+            if (useAtlas)
+            {
+                useMulti = mSprites[(int) NineSliceSections.TopLeft].AtlasedTexture.Name !=
+                           mSprites[(int) NineSliceSections.Top].AtlasedTexture.Name;
+            }
+            else //not using atlas
+            {
+                useMulti = mSprites[(int)NineSliceSections.TopLeft].Texture != mSprites[(int)NineSliceSections.Top].Texture;
+            }
 
             if (useMulti)
             {
-                if (mTopLeftSprite.Texture == null)
+                if ((!useAtlas && mSprites[(int)NineSliceSections.TopLeft].Texture == null) ||
+                    (useAtlas && mSprites[(int)NineSliceSections.TopLeft].AtlasedTexture == null))
                 {
-                    mTopLeftSprite.SourceRectangle = null;
-                    mTopSprite.SourceRectangle = null;
-                    mTopRightSprite.SourceRectangle = null;
-
-                    mLeftSprite.SourceRectangle = null;
-                    mCenterSprite.SourceRectangle = null;
-                    mRightSprite.SourceRectangle = null;
-
-                    mBottomLeftSprite.SourceRectangle = null;
-                    mBottomSprite.SourceRectangle = null;
-                    mBottomRightSprite.SourceRectangle = null;
+                    for (var sprite = 0; sprite < mSprites.Count(); sprite++)
+                    {
+                        mSprites[sprite].SourceRectangle = null;
+                    }
                 }
                 else
                 {
-                    mFullOutsideWidth = mTopLeftSprite.Texture.Width;
-                    mFullInsideWidth = mTopLeftSprite.Texture.Width - (mFullOutsideWidth * 2);
+                    for (var sprite = 0; sprite < mSprites.Count(); sprite++)
+                    {
+                        if (useAtlas)
+                        {
+                            if (sprite == (int) NineSliceSections.TopLeft)
+                            {
+                                mFullOutsideWidth = mSprites[sprite].AtlasedTexture.SourceRectangle.Width;
+                                mFullInsideWidth = mSprites[sprite].AtlasedTexture.SourceRectangle.Width - (mFullOutsideWidth * 2);
+                            }
+                        }
+                        else
+                        {
+                            mFullOutsideWidth = mSprites[(int)NineSliceSections.TopLeft].Texture.Width;
+                            mFullInsideWidth = mSprites[(int)NineSliceSections.TopLeft].Texture.Width - (mFullOutsideWidth * 2);
 
-                    mTopLeftSprite.SourceRectangle = new Rectangle(0, 0, mTopLeftSprite.Texture.Width, mTopLeftSprite.Texture.Height);
-                    mTopSprite.SourceRectangle = new Rectangle(0, 0, mTopSprite.Texture.Width, mTopSprite.Texture.Height);
-                    mTopRightSprite.SourceRectangle = new Rectangle(0, 0, mTopRightSprite.Texture.Width, mTopRightSprite.Texture.Height);
+                            mSprites[sprite].SourceRectangle = new Rectangle(0, 0, mSprites[sprite].Texture.Width, mSprites[sprite].Texture.Height);
+                        }
+                    }
 
-                    mLeftSprite.SourceRectangle = new Rectangle(0, 0, mLeftSprite.Texture.Width, mLeftSprite.Texture.Height);
-                    mCenterSprite.SourceRectangle = new Rectangle(0, 0, mCenterSprite.Texture.Width, mCenterSprite.Texture.Height);
-                    mRightSprite.SourceRectangle = new Rectangle(0, 0, mRightSprite.Texture.Width, mRightSprite.Texture.Height);
-
-                    mBottomLeftSprite.SourceRectangle = new Rectangle(0, 0, mBottomLeftSprite.Texture.Width, mBottomLeftSprite.Texture.Height);
-                    mBottomSprite.SourceRectangle = new Rectangle(0, 0, mBottomSprite.Texture.Width, mBottomSprite.Texture.Height);
-                    mBottomRightSprite.SourceRectangle = new Rectangle(0, 0, mBottomRightSprite.Texture.Width, mBottomRightSprite.Texture.Height);
                 }
             }
-            else if(mTopLeftSprite.Texture != null)
+            else if ((!useAtlas && mSprites[(int) NineSliceSections.TopLeft].Texture != null) ||
+                     (useAtlas && mSprites[(int) NineSliceSections.TopLeft].AtlasedTexture != null))
             {
-                var texture = mTopLeftSprite.Texture;
+                int leftCoordinate;
+                int rightCoordinate;
+                int topCoordinate;
+                int bottomCoordinate;
+
+                if (useAtlas)
+                {
+                    var atlasedTexture = mSprites[(int) NineSliceSections.TopLeft].AtlasedTexture;
+
+                    leftCoordinate = atlasedTexture.SourceRectangle.Left;
+                    rightCoordinate = atlasedTexture.SourceRectangle.Right;
+                    topCoordinate = atlasedTexture.SourceRectangle.Top;
+                    bottomCoordinate = atlasedTexture.SourceRectangle.Bottom;
+                }
+                else
+                {
+                    var texture = mSprites[(int)NineSliceSections.TopLeft].Texture;
+
+                    leftCoordinate = 0;
+                    rightCoordinate = texture.Width;
+                    topCoordinate = 0;
+                    bottomCoordinate = texture.Height;
+                }
+
+
+                if (SourceRectangle.HasValue)
+                {
+                    leftCoordinate = SourceRectangle.Value.Left;
+                    rightCoordinate = SourceRectangle.Value.Right;
+                    topCoordinate = SourceRectangle.Value.Top;
+                    bottomCoordinate = SourceRectangle.Value.Bottom;
+                }
+
+                int usedWidth = rightCoordinate - leftCoordinate;
+                int usedHeight = bottomCoordinate - topCoordinate;
+
+                mFullOutsideWidth = (usedWidth + 1) / 3;
+                mFullInsideWidth = usedWidth - (mFullOutsideWidth * 2);
+
+                mFullOutsideHeight = (usedHeight + 1) / 3;
+                mFullInsideHeight = usedHeight - (mFullOutsideHeight * 2);
+
+                int outsideWidth = System.Math.Min(mFullOutsideWidth, RenderingLibrary.Math.MathFunctions.RoundToInt(Width / 2)); ;
+                int outsideHeight = System.Math.Min(mFullOutsideHeight, RenderingLibrary.Math.MathFunctions.RoundToInt(Height / 2));
+                int insideWidth = mFullInsideWidth;
+                int insideHeight = mFullInsideHeight;
+
+                mSprites[(int)NineSliceSections.TopLeft].SourceRectangle = new Rectangle(
+                    leftCoordinate + 0,
+                    topCoordinate + 0,
+                    outsideWidth,
+                    outsideHeight);
+                mSprites[(int)NineSliceSections.Top].SourceRectangle = new Rectangle(
+                    leftCoordinate + outsideWidth,
+                    topCoordinate + 0,
+                    insideWidth,
+                    outsideHeight);
+                mSprites[(int)NineSliceSections.TopRight].SourceRectangle = new Rectangle(
+                    leftCoordinate + insideWidth + outsideWidth,
+                    topCoordinate + 0,
+                    outsideWidth,
+                    outsideHeight);
+
+                mSprites[(int)NineSliceSections.Left].SourceRectangle = new Rectangle(
+                    leftCoordinate + 0,
+                    topCoordinate + outsideHeight,
+                    outsideWidth,
+                    insideHeight);
+                mSprites[(int)NineSliceSections.Center].SourceRectangle = new Rectangle(
+                    leftCoordinate + outsideWidth,
+                    topCoordinate + outsideHeight,
+                    insideWidth,
+                    insideHeight);
+                mSprites[(int)NineSliceSections.Right].SourceRectangle = new Rectangle(
+                    leftCoordinate + outsideWidth + insideWidth,
+                    topCoordinate + outsideHeight,
+                    outsideWidth,
+                    insideHeight);
+
+                mSprites[(int)NineSliceSections.BottomLeft].SourceRectangle = new Rectangle(
+                    leftCoordinate + 0,
+                    topCoordinate + outsideHeight + insideHeight,
+                    outsideWidth,
+                    outsideHeight);
+                mSprites[(int)NineSliceSections.Bottom].SourceRectangle = new Rectangle(
+                    leftCoordinate + outsideWidth,
+                    topCoordinate + outsideHeight + insideHeight,
+                    insideWidth,
+                    outsideHeight);
+                mSprites[(int)NineSliceSections.BottomRight].SourceRectangle = new Rectangle(
+                    leftCoordinate + outsideWidth + insideWidth,
+                    topCoordinate + outsideHeight + insideHeight,
+                    outsideWidth,
+                    outsideHeight);
+            }
+
+            //top
+            var tempRect = mSprites[(int) NineSliceSections.Top].SourceRectangle;
+            if (!mSprites[(int)NineSliceSections.Top].SourceRectangle.HasValue && useAtlas)
+                tempRect = mSprites[(int) NineSliceSections.Top].AtlasedTexture.SourceRectangle;
+
+            if (tempRect.HasValue)
+            {
+                mSprites[(int)NineSliceSections.Top].Height = tempRect.Value.Height;
+                mSprites[(int)NineSliceSections.TopLeft].Height = mSprites[(int)NineSliceSections.Top].Height;
+                mSprites[(int)NineSliceSections.TopRight].Height = mSprites[(int)NineSliceSections.Top].Height;
+            }
+
+            //bottom
+            tempRect = mSprites[(int)NineSliceSections.Bottom].SourceRectangle;
+            if (!mSprites[(int)NineSliceSections.Bottom].SourceRectangle.HasValue && useAtlas)
+                tempRect = mSprites[(int)NineSliceSections.Bottom].AtlasedTexture.SourceRectangle;
+
+            if (tempRect.HasValue)
+            {
+                mSprites[(int)NineSliceSections.Bottom].Height = tempRect.Value.Height;
+                mSprites[(int)NineSliceSections.BottomRight].Height = mSprites[(int)NineSliceSections.Bottom].Height;
+                mSprites[(int)NineSliceSections.BottomLeft].Height = mSprites[(int)NineSliceSections.Bottom].Height;
+            }
+
+            //left
+            tempRect = mSprites[(int)NineSliceSections.Left].SourceRectangle;
+            if (!mSprites[(int)NineSliceSections.Left].SourceRectangle.HasValue && useAtlas)
+                tempRect = mSprites[(int)NineSliceSections.Left].AtlasedTexture.SourceRectangle;
+
+            if (tempRect.HasValue)
+            {
+                mSprites[(int)NineSliceSections.Left].Width = tempRect.Value.Width;
+                mSprites[(int)NineSliceSections.TopLeft].Width = mSprites[(int)NineSliceSections.Left].Width;
+                mSprites[(int)NineSliceSections.BottomLeft].Width = mSprites[(int)NineSliceSections.Left].Width;
+            }
+
+            //right
+            tempRect = mSprites[(int)NineSliceSections.Right].SourceRectangle;
+            if (!mSprites[(int)NineSliceSections.Right].SourceRectangle.HasValue && useAtlas)
+                tempRect = mSprites[(int)NineSliceSections.Right].AtlasedTexture.SourceRectangle;
+
+            if (tempRect.HasValue)
+            {
+                mSprites[(int)NineSliceSections.Right].Width = tempRect.Value.Width;
+                mSprites[(int)NineSliceSections.TopRight].Width = mSprites[(int)NineSliceSections.Right].Width;
+                mSprites[(int)NineSliceSections.BottomRight].Width = mSprites[(int)NineSliceSections.Right].Width;
+            }
+        }
+
+        private void OldRefreshSourceRectangles()
+        {
+            bool useMulti = mSprites[(int)NineSliceSections.TopLeft].Texture != mSprites[(int)NineSliceSections.Top].Texture;
+
+            if (useMulti)
+            {
+                if (mSprites[(int)NineSliceSections.TopLeft].Texture == null)
+                {
+                    mSprites[(int)NineSliceSections.TopLeft].SourceRectangle = null;
+                    mSprites[(int)NineSliceSections.Top].SourceRectangle = null;
+                    mSprites[(int)NineSliceSections.TopRight].SourceRectangle = null;
+
+                    mSprites[(int)NineSliceSections.Left].SourceRectangle = null;
+                    mSprites[(int)NineSliceSections.Center].SourceRectangle = null;
+                    mSprites[(int)NineSliceSections.Right].SourceRectangle = null;
+
+                    mSprites[(int)NineSliceSections.BottomLeft].SourceRectangle = null;
+                    mSprites[(int)NineSliceSections.Bottom].SourceRectangle = null;
+                    mSprites[(int)NineSliceSections.BottomRight].SourceRectangle = null;
+                }
+                else
+                {
+                    mFullOutsideWidth = mSprites[(int)NineSliceSections.TopLeft].Texture.Width;
+                    mFullInsideWidth = mSprites[(int)NineSliceSections.TopLeft].Texture.Width - (mFullOutsideWidth * 2);
+
+                    mSprites[(int)NineSliceSections.TopLeft].SourceRectangle = new Rectangle(0, 0, mSprites[(int)NineSliceSections.TopLeft].Texture.Width, mSprites[(int)NineSliceSections.TopLeft].Texture.Height);
+                    mSprites[(int)NineSliceSections.Top].SourceRectangle = new Rectangle(0, 0, mSprites[(int)NineSliceSections.Top].Texture.Width, mSprites[(int)NineSliceSections.Top].Texture.Height);
+                    mSprites[(int)NineSliceSections.TopRight].SourceRectangle = new Rectangle(0, 0, mSprites[(int)NineSliceSections.TopRight].Texture.Width, mSprites[(int)NineSliceSections.TopRight].Texture.Height);
+
+                    mSprites[(int)NineSliceSections.Left].SourceRectangle = new Rectangle(0, 0, mSprites[(int)NineSliceSections.Left].Texture.Width, mSprites[(int)NineSliceSections.Left].Texture.Height);
+                    mSprites[(int)NineSliceSections.Center].SourceRectangle = new Rectangle(0, 0, mSprites[(int)NineSliceSections.Center].Texture.Width, mSprites[(int)NineSliceSections.Center].Texture.Height);
+                    mSprites[(int)NineSliceSections.Right].SourceRectangle = new Rectangle(0, 0, mSprites[(int)NineSliceSections.Right].Texture.Width, mSprites[(int)NineSliceSections.Right].Texture.Height);
+
+                    mSprites[(int)NineSliceSections.BottomLeft].SourceRectangle = new Rectangle(0, 0, mSprites[(int)NineSliceSections.BottomLeft].Texture.Width, mSprites[(int)NineSliceSections.BottomLeft].Texture.Height);
+                    mSprites[(int)NineSliceSections.Bottom].SourceRectangle = new Rectangle(0, 0, mSprites[(int)NineSliceSections.Bottom].Texture.Width, mSprites[(int)NineSliceSections.Bottom].Texture.Height);
+                    mSprites[(int)NineSliceSections.BottomRight].SourceRectangle = new Rectangle(0, 0, mSprites[(int)NineSliceSections.BottomRight].Texture.Width, mSprites[(int)NineSliceSections.BottomRight].Texture.Height);
+                }
+            }
+            else if(mSprites[(int)NineSliceSections.TopLeft].Texture != null)
+            {
+                var texture = mSprites[(int)NineSliceSections.TopLeft].Texture;
 
                 int leftCoordinate = 0;
                 int rightCoordinate = texture.Width;
@@ -567,97 +758,97 @@ namespace RenderingLibrary.Graphics
                 mFullOutsideHeight = (usedHeight + 1) / 3;
                 mFullInsideHeight = usedHeight - (mFullOutsideHeight * 2);
 
-                int outsideWidth = System.Math.Min(mFullOutsideWidth, RenderingLibrary.Math.MathFunctions.RoundToInt( this.Width / 2)); ;
-                int outsideHeight = System.Math.Min(mFullOutsideHeight, RenderingLibrary.Math.MathFunctions.RoundToInt(this.Height / 2));
+                int outsideWidth = System.Math.Min(mFullOutsideWidth, RenderingLibrary.Math.MathFunctions.RoundToInt(Width / 2)); ;
+                int outsideHeight = System.Math.Min(mFullOutsideHeight, RenderingLibrary.Math.MathFunctions.RoundToInt(Height / 2));
                 int insideWidth = mFullInsideWidth;
                 int insideHeight = mFullInsideHeight;
 
-                
-
-
-                mTopLeftSprite.SourceRectangle = new Rectangle(
+                mSprites[(int)NineSliceSections.TopLeft].SourceRectangle = new Rectangle(
                     leftCoordinate + 0,
                     topCoordinate + 0,
                     outsideWidth,
                     outsideHeight);
-                mTopSprite.SourceRectangle = new Rectangle(
+                mSprites[(int)NineSliceSections.Top].SourceRectangle = new Rectangle(
                     leftCoordinate + outsideWidth,
                     topCoordinate + 0,
                     insideWidth,
                     outsideHeight);
-                mTopRightSprite.SourceRectangle = new Rectangle(
+                mSprites[(int)NineSliceSections.TopRight].SourceRectangle = new Rectangle(
                     leftCoordinate + insideWidth + outsideWidth,
                     topCoordinate + 0,
                     outsideWidth,
                     outsideHeight);
 
-                mLeftSprite.SourceRectangle = new Rectangle(
+                mSprites[(int)NineSliceSections.Left].SourceRectangle = new Rectangle(
                     leftCoordinate + 0,
                     topCoordinate + outsideHeight,
                     outsideWidth,
                     insideHeight);
-                mCenterSprite.SourceRectangle = new Rectangle(
+                mSprites[(int)NineSliceSections.Center].SourceRectangle = new Rectangle(
                     leftCoordinate + outsideWidth,
                     topCoordinate + outsideHeight,
                     insideWidth,
                     insideHeight);
-                mRightSprite.SourceRectangle = new Rectangle(
+                mSprites[(int)NineSliceSections.Right].SourceRectangle = new Rectangle(
                     leftCoordinate + outsideWidth + insideWidth,
                     topCoordinate + outsideHeight,
                     outsideWidth,
                     insideHeight);
 
-                mBottomLeftSprite.SourceRectangle = new Rectangle(
+                mSprites[(int)NineSliceSections.BottomLeft].SourceRectangle = new Rectangle(
                     leftCoordinate + 0,
                     topCoordinate + outsideHeight + insideHeight,
                     outsideWidth,
                     outsideHeight);
-                mBottomSprite.SourceRectangle = new Rectangle(
+                mSprites[(int)NineSliceSections.Bottom].SourceRectangle = new Rectangle(
                     leftCoordinate + outsideWidth,
                     topCoordinate + outsideHeight + insideHeight,
                     insideWidth,
                     outsideHeight);
-                mBottomRightSprite.SourceRectangle = new Rectangle(
+                mSprites[(int)NineSliceSections.BottomRight].SourceRectangle = new Rectangle(
                     leftCoordinate + outsideWidth + insideWidth,
                     topCoordinate + outsideHeight + insideHeight,
                     outsideWidth,
                     outsideHeight);
             }
 
-            if(mTopSprite.SourceRectangle.HasValue)
+            if(mSprites[(int)NineSliceSections.Top].SourceRectangle.HasValue)
             {
-                mTopSprite.Height = mTopSprite.SourceRectangle.Value.Height;
-                mTopLeftSprite.Height = mTopSprite.Height;
-                mTopRightSprite.Height = mTopSprite.Height;
+                mSprites[(int)NineSliceSections.Top].Height = mSprites[(int)NineSliceSections.Top].SourceRectangle.Value.Height;
+                mSprites[(int)NineSliceSections.TopLeft].Height = mSprites[(int)NineSliceSections.Top].Height;
+                mSprites[(int)NineSliceSections.TopRight].Height = mSprites[(int)NineSliceSections.Top].Height;
 
             }
-            if (mBottomSprite.SourceRectangle.HasValue)
+            if (mSprites[(int)NineSliceSections.Bottom].SourceRectangle.HasValue)
             {
-                mBottomSprite.Height = mBottomSprite.SourceRectangle.Value.Height;
-                mBottomRightSprite.Height = mBottomSprite.Height;
-                mBottomLeftSprite.Height = mBottomSprite.Height;
+                mSprites[(int)NineSliceSections.Bottom].Height = mSprites[(int)NineSliceSections.Bottom].SourceRectangle.Value.Height;
+                mSprites[(int)NineSliceSections.BottomRight].Height = mSprites[(int)NineSliceSections.Bottom].Height;
+                mSprites[(int)NineSliceSections.BottomLeft].Height = mSprites[(int)NineSliceSections.Bottom].Height;
             }
 
-            if (mLeftSprite.SourceRectangle.HasValue)
+            if (mSprites[(int)NineSliceSections.Left].SourceRectangle.HasValue)
             {
-                mLeftSprite.Width = mLeftSprite.SourceRectangle.Value.Width;
-                mTopLeftSprite.Width = mLeftSprite.Width;
-                mBottomLeftSprite.Width = mLeftSprite.Width;
+                mSprites[(int)NineSliceSections.Left].Width = mSprites[(int)NineSliceSections.Left].SourceRectangle.Value.Width;
+                mSprites[(int)NineSliceSections.TopLeft].Width = mSprites[(int)NineSliceSections.Left].Width;
+                mSprites[(int)NineSliceSections.BottomLeft].Width = mSprites[(int)NineSliceSections.Left].Width;
             }
 
-            if(mRightSprite.SourceRectangle.HasValue)
+            if(mSprites[(int)NineSliceSections.Right].SourceRectangle.HasValue)
             {
-                mRightSprite.Width = mRightSprite.SourceRectangle.Value.Width;
-                mTopRightSprite.Width = mRightSprite.Width;
-                mBottomRightSprite.Width = mRightSprite.Width;
+                mSprites[(int)NineSliceSections.Right].Width = mSprites[(int)NineSliceSections.Right].SourceRectangle.Value.Width;
+                mSprites[(int)NineSliceSections.TopRight].Width = mSprites[(int)NineSliceSections.Right].Width;
+                mSprites[(int)NineSliceSections.BottomRight].Width = mSprites[(int)NineSliceSections.Right].Width;
             }
         }
 
         void Render(Sprite sprite, SystemManagers managers, SpriteRenderer spriteRenderer)
         {
-            Sprite.Render(managers, spriteRenderer, sprite, sprite.Texture, sprite.Color, 
-                sprite.SourceRectangle, sprite.FlipHorizontal, sprite.FlipVertical, sprite.Rotation, treat0AsFullDimensions:false);
+            var texture = sprite.Texture;
+            var sourceRectangle = sprite.EffectiveRectangle;
+            if (sprite.AtlasedTexture != null) texture = sprite.AtlasedTexture.Texture;
 
+            Sprite.Render(managers, spriteRenderer, sprite, texture, sprite.Color, 
+                sourceRectangle, sprite.FlipHorizontal, sprite.FlipVertical, sprite.Rotation, treat0AsFullDimensions:false);
         }
 
         void IPositionedSizedObject.SetParentDirect(IPositionedSizedObject parent)
@@ -701,44 +892,67 @@ namespace RenderingLibrary.Graphics
 
         static NineSlice()
         {
-            PossibleNineSliceEndings = new Dictionary<NineSliceSections, string>()
-            {
-                {NineSliceSections.Center, "_center"},
-                {NineSliceSections.Left, "_left"},
-                {NineSliceSections.Right, "_right"},
-                {NineSliceSections.TopLeft, "_topLeft"},
-                {NineSliceSections.Top, "_topCenter"},
-                {NineSliceSections.TopRight, "_topRight"},
-                {NineSliceSections.BottomLeft, "_bottomLeft"},
-                {NineSliceSections.Bottom, "_bottomCenter"},
-                {NineSliceSections.BottomRight, "_bottomRight"}
-            };
+            PossibleNineSliceEndings = new string[9];
+            PossibleNineSliceEndings[(int) NineSliceSections.Center] = "_center";
+            PossibleNineSliceEndings[(int) NineSliceSections.Left] = "_left";
+            PossibleNineSliceEndings[(int) NineSliceSections.Right] = "_right";
+            PossibleNineSliceEndings[(int) NineSliceSections.TopLeft] = "_topLeft";
+            PossibleNineSliceEndings[(int) NineSliceSections.Top] = "_topCenter";
+            PossibleNineSliceEndings[(int) NineSliceSections.TopRight] = "_topRight";
+            PossibleNineSliceEndings[(int) NineSliceSections.BottomLeft] = "_bottomLeft";
+            PossibleNineSliceEndings[(int) NineSliceSections.Bottom] = "_bottomCenter";
+            PossibleNineSliceEndings[(int) NineSliceSections.BottomRight] = "_bottomRight";
 
         }
 
         public NineSlice()
         {
             Visible = true;
+
+            mSprites = new Sprite[9];
+            for (var sprite = 0; sprite < 9; sprite++)
+            {
+                mSprites[sprite] = new Sprite(null);
+            }
+        }
+
+        /// <summary>
+        /// Loads given texture(s) from atlas.
+        /// </summary>
+        /// <param name="valueAsString"></param>
+        /// <param name="atlasedTexture"></param>
+        public void LoadAtlasedTexture(string valueAsString, AtlasedTexture atlasedTexture)
+        {
+            //if made up of seperate textures
+            if (GetIfShouldUsePattern(valueAsString))
+            {
+                SetTexturesUsingPattern(valueAsString, SystemManagers.Default, true);
+            }
+            else //single texture
+            {
+                foreach (var sprite in mSprites)
+                {
+                    sprite.AtlasedTexture = atlasedTexture;
+                }   
+            }
         }
 
         public void SetSingleTexture(Texture2D texture)
         {
-            TopLeftTexture = texture;
-            TopTexture = texture;
-            TopRightTexture = texture;
-
-            LeftTexture = texture;
-            CenterTexture = texture;
-            RightTexture = texture;
-
-            BottomLeftTexture = texture;
-            BottomTexture = texture;
-            BottomRightTexture = texture;
+            foreach (var sprite in mSprites)
+            {
+                sprite.Texture = texture;
+            }
         }
 
-        public void SetTexturesUsingPattern(string anyOf9Textures, SystemManagers managers)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="anyOf9Textures"></param>
+        /// <param name="managers"></param>
+        /// <param name="inAtlas">True if textures are atlased.</param>
+        public void SetTexturesUsingPattern(string anyOf9Textures, SystemManagers managers, bool inAtlas)
         {
-
             string absoluteTexture = anyOf9Textures;
 
             if(FileManager.IsRelative(absoluteTexture))
@@ -754,29 +968,26 @@ namespace RenderingLibrary.Graphics
             string error;
             if (!string.IsNullOrEmpty(bareTexture))
             {
-                TopLeftTexture = LoaderManager.Self.LoadOrInvalid(
-                    bareTexture + NineSlice.PossibleNineSliceEndings[NineSliceSections.TopLeft] + "." + extension, managers, out error);
-                TopTexture = LoaderManager.Self.LoadOrInvalid(
-                    bareTexture + NineSlice.PossibleNineSliceEndings[NineSliceSections.Top] + "." + extension, managers, out error);
-                TopRightTexture = LoaderManager.Self.LoadOrInvalid(
-                    bareTexture + NineSlice.PossibleNineSliceEndings[NineSliceSections.TopRight] + "." + extension, managers, out error);
+                if (inAtlas)
+                {
+                    //loop through all nine sprite names
+                    for (var sprite = 0; sprite < PossibleNineSliceEndings.Count(); sprite++)
+                    {
+                        var atlasedTexture = LoaderManager.Self.TryLoadContent<AtlasedTexture>
+                            (bareTexture + PossibleNineSliceEndings[sprite] + "." + extension);
 
-                LeftTexture = LoaderManager.Self.LoadOrInvalid(
-                    bareTexture + NineSlice.PossibleNineSliceEndings[NineSliceSections.Left] + "." + extension, managers, out error);
-                CenterTexture = LoaderManager.Self.LoadOrInvalid(
-                    bareTexture + NineSlice.PossibleNineSliceEndings[NineSliceSections.Center] + "." + extension, managers, out error);
-                RightTexture = LoaderManager.Self.LoadOrInvalid(
-                    bareTexture + NineSlice.PossibleNineSliceEndings[NineSliceSections.Right] + "." + extension, managers, out error);
-
-                BottomLeftTexture = LoaderManager.Self.LoadOrInvalid(
-                    bareTexture + NineSlice.PossibleNineSliceEndings[NineSliceSections.BottomLeft] + "." + extension, managers, out error);
-                BottomTexture = LoaderManager.Self.LoadOrInvalid(
-                    bareTexture + NineSlice.PossibleNineSliceEndings[NineSliceSections.Bottom] + "." + extension, managers, out error);
-                BottomRightTexture = LoaderManager.Self.LoadOrInvalid(
-                    bareTexture + NineSlice.PossibleNineSliceEndings[NineSliceSections.BottomRight] + "." + extension, managers, out error);
+                        if (atlasedTexture != null) mSprites[sprite].AtlasedTexture = atlasedTexture;
+                    }
+                }
+                else
+                {
+                    for (var sprite = 0; sprite < PossibleNineSliceEndings.Count(); sprite++)
+                    {
+                        mSprites[sprite].Texture = LoaderManager.Self.LoadOrInvalid(
+                            bareTexture + PossibleNineSliceEndings[sprite] + "." + extension, managers, out error);
+                    }
+                }
             }
-
-
         }
 
 
@@ -785,9 +996,9 @@ namespace RenderingLibrary.Graphics
             bool usePattern = false;
 
             string withoutExtension = FileManager.RemoveExtension(absoluteTexture);
-            foreach (var kvp in NineSlice.PossibleNineSliceEndings)
+            foreach (var kvp in PossibleNineSliceEndings)
             {
-                if (withoutExtension.EndsWith(kvp.Value, StringComparison.OrdinalIgnoreCase))
+                if (withoutExtension.EndsWith(kvp, StringComparison.OrdinalIgnoreCase))
                 {
                     usePattern = true;
                     break;
@@ -805,11 +1016,11 @@ namespace RenderingLibrary.Graphics
 
             string toReturn = withoutExtension;
 
-            foreach (var kvp in NineSlice.PossibleNineSliceEndings)
+            foreach (var kvp in PossibleNineSliceEndings)
             {
-                if (withoutExtension.EndsWith(kvp.Value, StringComparison.OrdinalIgnoreCase))
+                if (withoutExtension.EndsWith(kvp, StringComparison.OrdinalIgnoreCase))
                 {
-                    toReturn = withoutExtension.Substring(0, withoutExtension.Length - kvp.Value.Length);
+                    toReturn = withoutExtension.Substring(0, withoutExtension.Length - kvp.Length);
                     break;
                 }
             }

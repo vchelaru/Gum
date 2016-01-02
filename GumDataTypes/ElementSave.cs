@@ -25,6 +25,13 @@ namespace Gum.DataTypes
             set;
         }
 
+        [XmlIgnore]
+        public string FileName
+        {
+            get;
+            set;
+        }
+
         [XmlElement("State")]
         public List<StateSave> States
         {

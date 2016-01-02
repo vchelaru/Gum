@@ -19,6 +19,7 @@ namespace StateAnimationPlugin.ViewModels
 
         string mStateName;
         string mAnimationName;
+        string mEventName;
         AnimationViewModel mSubAnimationViewModel;
 
         float mTime;
@@ -29,7 +30,7 @@ namespace StateAnimationPlugin.ViewModels
 
         static BitmapFrame mStateBitmap;
         static BitmapFrame mAnimationBitmap;
-
+        static BitmapFrame mEventBitmap;
         #endregion
 
         #region Properties
@@ -54,6 +55,19 @@ namespace StateAnimationPlugin.ViewModels
             }
         }
 
+        public string EventName
+        {
+            get
+            {
+                return mEventName;
+            }
+            set
+            {
+                mEventName = value;
+                OnPropertyChanged("mEventName");
+            }
+        }
+
         public AnimationViewModel SubAnimationViewModel
         {
             get { return mSubAnimationViewModel; }
@@ -68,9 +82,13 @@ namespace StateAnimationPlugin.ViewModels
                 {
                     return StateName;
                 }
-                else
+                else if(!string.IsNullOrEmpty(AnimationName))
                 {
                     return AnimationName;
+                }
+                else
+                {
+                    return EventName;
                 }
             }
         }
@@ -127,13 +145,19 @@ namespace StateAnimationPlugin.ViewModels
         {
             get
             {
+                var timeAsString = Time.ToString("0.00");
+
                 if (!string.IsNullOrEmpty(StateName))
                 {
-                    return StateName + " (" + Time.ToString("0.00") + ")";
+                    return StateName + " (" + timeAsString + ")";
+                }
+                else if(!string.IsNullOrEmpty(AnimationName))
+                {
+                    return AnimationName + " (" + timeAsString + ")";
                 }
                 else
                 {
-                    return AnimationName + " (" + Time.ToString("0.00") + ")";
+                    return $"{EventName} ({timeAsString})";
                 }
             }
         }
@@ -148,7 +172,7 @@ namespace StateAnimationPlugin.ViewModels
         {
             get
             {
-                if(HasValidState)
+                if(HasValidState || !string.IsNullOrEmpty(EventName))
                 {
                     return System.Windows.Visibility.Collapsed;
                 }
@@ -163,6 +187,10 @@ namespace StateAnimationPlugin.ViewModels
         {
             get
             {
+                if (!string.IsNullOrEmpty(EventName))
+                {
+                    return Brushes.DarkBlue;
+                }
                 if (HasValidState)
                 {
                     return Brushes.Black;
@@ -206,9 +234,13 @@ namespace StateAnimationPlugin.ViewModels
                 {
                     return mStateBitmap;
                 }
-                else
+                else if(!string.IsNullOrEmpty(AnimationName))
                 {
                     return mAnimationBitmap;
+                }
+                else
+                {
+                    return mEventBitmap;
                 }
             }
         }
@@ -227,6 +259,8 @@ namespace StateAnimationPlugin.ViewModels
         {
             mStateBitmap = BitmapLoader.Self.LoadImage("StateAnimationIcon.png");
             mAnimationBitmap = BitmapLoader.Self.LoadImage("ReferencedAnimationIcon.png");
+            mEventBitmap = BitmapLoader.Self.LoadImage("NamedEventIcon.png");
+
         }
 
         public static AnimatedKeyframeViewModel FromSave(AnimatedStateSave save)
@@ -248,6 +282,15 @@ namespace StateAnimationPlugin.ViewModels
             toReturn.AnimationName = save.Name;
             toReturn.Time = save.Time;
             // There's no easing/interpolation supported for animation references
+
+            return toReturn;
+        }
+
+        public static AnimatedKeyframeViewModel FromSave(NamedEventSave save)
+        {
+            AnimatedKeyframeViewModel toReturn = new AnimatedKeyframeViewModel();
+            toReturn.EventName = save.Name;
+            toReturn.Time = save.Time;
 
             return toReturn;
         }
@@ -285,6 +328,21 @@ namespace StateAnimationPlugin.ViewModels
             return toReturn;
         }
 
+        public NamedEventSave ToEventSave()
+        {
+            NamedEventSave toReturn = new NamedEventSave();
+
+            if(string.IsNullOrEmpty(EventName))
+            {
+                throw new InvalidOperationException("Could not convert this to a NamedEventSave because it doesn't have a valid EventName");
+            }
+
+            toReturn.Name = this.EventName;
+            toReturn.Time = this.Time;
+
+            return toReturn;
+        }
+
 
         private void OnPropertyChanged(string property)
         {
@@ -297,7 +355,7 @@ namespace StateAnimationPlugin.ViewModels
 
         public override string ToString()
         {
-            return StateName + " (" + Time.ToString("0.00") + ")";
+            return DisplayString;
         }
 
 

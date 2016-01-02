@@ -136,6 +136,14 @@ namespace StateAnimationPlugin.ViewModels
             AnimationViewModel toReturn = new AnimationViewModel();
             toReturn.Name = save.Name;
             toReturn.mLoops = save.Loops;
+
+            foreach(var eventSave in save.Events)
+            {
+                var newViewModel = AnimatedKeyframeViewModel.FromSave(eventSave);
+
+                toReturn.Keyframes.Add(newViewModel);
+            }
+
             foreach(var stateSave in save.States)
             {
                 var foundState = element.AllStates.FirstOrDefault(item => item.Name == stateSave.StateName);
@@ -214,9 +222,13 @@ namespace StateAnimationPlugin.ViewModels
                 {
                     toReturn.States.Add(state.ToAnimatedStateSave());
                 }
-                else
+                else if(!string.IsNullOrEmpty(state.AnimationName))
                 {
                     toReturn.Animations.Add(state.ToAnimationReferenceSave());
+                }
+                else
+                {
+                    toReturn.Events.Add(state.ToEventSave());
                 }
             }
 

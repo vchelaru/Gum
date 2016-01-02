@@ -101,6 +101,7 @@ namespace Gum.DataTypes
             {
                 StateSave stateToAdd = defaultState.Clone();
                 elementSave.States.Add(stateToAdd);
+                wasModified = true;
             }
             else if (elementSave.States.Count != 0 && defaultState != null)
             {

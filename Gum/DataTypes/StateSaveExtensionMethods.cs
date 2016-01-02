@@ -8,6 +8,11 @@ using System.Collections;
 using ToolsUtilities;
 using Gum.Wireframe;
 
+#if GUM
+using Gum.Plugins;
+
+#endif
+
 //using Gum.Reflection;
 
 
@@ -200,7 +205,7 @@ namespace Gum.DataTypes.Variables
         }
 
 
-        public static void ReactToInstanceNameChange(this StateSave stateSave, string oldName, string newName)
+        public static void ReactToInstanceNameChange(this StateSave stateSave, InstanceSave instanceSave, string oldName, string newName)
         {
             foreach (VariableSave variable in stateSave.Variables)
             {
@@ -227,6 +232,11 @@ namespace Gum.DataTypes.Variables
                     }
                 }
             }
+
+#if GUM
+            PluginManager.Self.InstanceRename(instanceSave, oldName);
+#endif
+
         }
 
 

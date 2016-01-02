@@ -23,7 +23,7 @@ namespace Gum.RenderingLibrary
             switch (blend)
             {
                 case Blend.Normal:
-                    return BlendState.NonPremultiplied;
+                    return global::RenderingLibrary.Graphics.Renderer.NormalBlendState;
                 case Blend.Additive:
                     return BlendState.Additive;
                 case Blend.Replace:

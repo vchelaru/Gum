@@ -71,6 +71,26 @@ namespace StateAnimationPlugin
                 RefreshViewModel();
             };
 
+            this.InstanceRename += HandleInstanceRename;
+            this.StateRename += HandleStateRename;
+        }
+
+        private void HandleInstanceRename(InstanceSave instanceSave, string oldName)
+        {
+            if (mCurrentViewModel == null)
+            {
+                CreateViewModel();
+            }
+            RenameManager.Self.HandleRename(instanceSave, oldName, mCurrentViewModel);
+        }
+
+        private void HandleStateRename(StateSave stateSave, string oldName)
+        {
+            if(mCurrentViewModel == null)
+            {
+                CreateViewModel();
+            }
+            RenameManager.Self.HandleRename(stateSave, oldName, mCurrentViewModel);
         }
 
         private void CreateMenuItems()
@@ -99,16 +119,24 @@ namespace StateAnimationPlugin
                     mMainWindow.Focus();
                 }
 
-
-
                 RefreshViewModel();
             }
         }
 
         private void RefreshViewModel()
         {
+            CreateViewModel();
+
+            if (mMainWindow != null)
+            {
+                mMainWindow.DataContext = mCurrentViewModel;
+            }
+        }
+
+        private void CreateViewModel()
+        {
             ElementSave currentlyReferencedElement = null;
-            if(mCurrentViewModel != null)
+            if (mCurrentViewModel != null)
             {
                 currentlyReferencedElement = mCurrentViewModel.Element;
             }
@@ -126,10 +154,6 @@ namespace StateAnimationPlugin
                 }
 
 
-            }
-            if (mMainWindow != null)
-            {
-                mMainWindow.DataContext = mCurrentViewModel;
             }
         }
 

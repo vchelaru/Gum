@@ -140,6 +140,9 @@ namespace Gum.Managers
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "CustomFontFile", Category = "Font", IsFile = true });
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 1.0f, Name = "Font Scale", Category = "Font" });
 
+            stateSave.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation" });
+
+
             AddStateVariable(stateSave);
 
             AddColorVariables(stateSave, includeAlpha:true);
@@ -251,8 +254,13 @@ namespace Gum.Managers
 
             AddDimensionsVariables(stateSave, 50, 50, DimensionVariableAction.ExcludeFileOptions);
 
+            stateSave.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation" });
+
+
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
             AddColorVariables(stateSave, true);
+
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "Blend", Value = Blend.Normal, Name = "Blend", Category = "Rendering" });
 
             AddStateVariable(stateSave);
 

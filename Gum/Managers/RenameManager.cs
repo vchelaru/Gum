@@ -71,7 +71,7 @@ namespace Gum.Managers
 
                         foreach (StateSave stateSave in SelectedState.Self.SelectedElement.AllStates)
                         {
-                            stateSave.ReactToInstanceNameChange(oldName, newName);
+                            stateSave.ReactToInstanceNameChange(instance, oldName, newName);
                         }
 
                         foreach (var eventSave in SelectedState.Self.SelectedElement.Events)

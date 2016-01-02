@@ -89,12 +89,12 @@ namespace WpfDataUi.Controls
 
             mTextBoxLogic.RefreshDisplay();
 
+
             this.Label.Content = InstanceMember.DisplayName;
             this.RefreshContextMenu(TextBox.ContextMenu);
 
             SuppressSettingProperty = false;
         }
-
         public ApplyValueResult TrySetValueOnUi(object valueOnInstance)
         {
             this.TextBox.Text = valueOnInstance.ToString();

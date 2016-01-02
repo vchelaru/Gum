@@ -240,8 +240,8 @@ namespace Gum.Managers
                 throw new ArgumentNullException("elementSave");
             }
 #endif
-
-            string name = elementSave.Name + "Instance";
+            // remove the path - we dont want folders to be part of the name
+            string name = FileManager.RemovePath( elementSave.Name ) + "Instance";
             IEnumerable<string> existingNames = element.Instances.Select(i => i.Name);
 
             return StringFunctions.MakeStringUnique(name, existingNames);

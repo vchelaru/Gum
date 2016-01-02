@@ -10,15 +10,18 @@ namespace RenderingLibrary.Graphics
 
     public class AtlasedTexture
     {
-        public AtlasedTexture(Texture2D texture, Rectangle sourceRect, Vector2 size, Vector2 pivotPoint, bool isRotated)
+        public AtlasedTexture(string name, Texture2D texture, Rectangle sourceRect, Vector2 size, Vector2 pivotPoint, bool isRotated)
         {
-            this.Texture = texture;
-            this.SourceRectangle = sourceRect;
-            this.Size = size;
-            this.Origin = isRotated ? new Vector2(sourceRect.Width * (1 - pivotPoint.Y), sourceRect.Height * pivotPoint.X)
+            Name = name;
+            Texture = texture;
+            SourceRectangle = sourceRect;
+            Size = size;
+            Origin = isRotated ? new Vector2(sourceRect.Width * (1 - pivotPoint.Y), sourceRect.Height * pivotPoint.X)
                                     : new Vector2(sourceRect.Width * pivotPoint.X, sourceRect.Height * pivotPoint.Y);
-            this.IsRotated = isRotated;
+            IsRotated = isRotated;
         }
+
+        public string Name { get; private set; }
 
         public Texture2D Texture { get; private set; }
 

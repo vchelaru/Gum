@@ -10,7 +10,7 @@ using Gum.Converters;
 using GumDataTypes.Variables;
 using Microsoft.Xna.Framework;
 using RenderingLibrary.Math.Geometry;
-
+using Gum.RenderingLibrary;
 
 namespace Gum.Wireframe
 {
@@ -2029,13 +2029,13 @@ namespace Gum.Wireframe
                 {
                     managers.SpriteManager.Add(mContainedObjectAsRenderable as NineSlice, layer);
                 }
-                else if (mContainedObjectAsRenderable is global::RenderingLibrary.Math.Geometry.LineRectangle)
+                else if (mContainedObjectAsRenderable is LineRectangle)
                 {
-                    managers.ShapeManager.Add(mContainedObjectAsRenderable as global::RenderingLibrary.Math.Geometry.LineRectangle, layer);
+                    managers.ShapeManager.Add(mContainedObjectAsRenderable as LineRectangle, layer);
                 }
-                else if (mContainedObjectAsRenderable is global::RenderingLibrary.Graphics.SolidRectangle)
+                else if (mContainedObjectAsRenderable is SolidRectangle)
                 {
-                    managers.ShapeManager.Add(mContainedObjectAsRenderable as global::RenderingLibrary.Graphics.SolidRectangle, layer);
+                    managers.ShapeManager.Add(mContainedObjectAsRenderable as SolidRectangle, layer);
                 }
                 else if (mContainedObjectAsRenderable is Text)
                 {
@@ -2411,6 +2411,21 @@ namespace Gum.Wireframe
             {
                 handled = TrySetPropertyOnText(propertyName, value);
             }
+            else if (mContainedObjectAsRenderable is SolidRectangle)
+            {
+                var solidRect = mContainedObjectAsRenderable as SolidRectangle;
+
+                if (propertyName == "Blend")
+                {
+                    var valueAsGumBlend = (RenderingLibrary.Blend)value;
+
+                    var valueAsXnaBlend = valueAsGumBlend.ToBlendState();
+
+                    solidRect.BlendState = valueAsXnaBlend;
+
+                    handled = true;
+                }
+            }
             else if (mContainedObjectAsRenderable is Sprite)
             {
                 var sprite = mContainedObjectAsRenderable as Sprite;
@@ -2443,6 +2458,16 @@ namespace Gum.Wireframe
                     sprite.Blue = valueAsInt;
                     handled = true;
                 }
+                else if (propertyName == "Blend")
+                {
+                    var valueAsGumBlend = (RenderingLibrary.Blend)value;
+
+                    var valueAsXnaBlend = valueAsGumBlend.ToBlendState();
+
+                    sprite.BlendState = valueAsXnaBlend;
+
+                    handled = true;
+                }
                 if (!handled)
                 {
                     int m = 3;
@@ -2454,28 +2479,32 @@ namespace Gum.Wireframe
 
                 if (propertyName == "SourceFile")
                 {
-
                     string valueAsString = value as string;
 
                     if (ToolsUtilities.FileManager.IsRelative(valueAsString))
                     {
                         valueAsString = ToolsUtilities.FileManager.RelativeDirectory + valueAsString;
-
                         valueAsString = ToolsUtilities.FileManager.RemoveDotDotSlash(valueAsString);
                     }
 
-                    if (ToolsUtilities.FileManager.FileExists(valueAsString))
+                    //check if part of atlas
+                    //Note: assumes that if this filename is in an atlas that all 9 are in an atlas
+                    var atlasedTexture = global::RenderingLibrary.Content.LoaderManager.Self.TryLoadContent<AtlasedTexture>(valueAsString);
+                    if (atlasedTexture != null)
+                    {
+                        nineSlice.LoadAtlasedTexture(valueAsString, atlasedTexture);
+                    }
+                    else if (ToolsUtilities.FileManager.FileExists(valueAsString))
                     {
                         if (NineSlice.GetIfShouldUsePattern(valueAsString))
                         {
-                            nineSlice.SetTexturesUsingPattern(valueAsString, SystemManagers.Default);
-
+                            nineSlice.SetTexturesUsingPattern(valueAsString, SystemManagers.Default, false);
                         }
                         else
                         {
                             var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
 
-                            Microsoft.Xna.Framework.Graphics.Texture2D texture = 
+                            Microsoft.Xna.Framework.Graphics.Texture2D texture =
                                 global::RenderingLibrary.Content.LoaderManager.Self.InvalidTexture;
 
                             try
@@ -2483,7 +2512,7 @@ namespace Gum.Wireframe
                                 texture =
                                     loaderManager.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(valueAsString);
                             }
-                            catch(Exception e)
+                            catch (Exception e)
                             {
                                 // do nothing?
                             }
@@ -2493,7 +2522,16 @@ namespace Gum.Wireframe
                     }
                     handled = true;
                 }
+                else if (propertyName == "Blend")
+                {
+                    var valueAsGumBlend = (RenderingLibrary.Blend)value;
 
+                    var valueAsXnaBlend = valueAsGumBlend.ToBlendState();
+
+                    nineSlice.BlendState = valueAsXnaBlend;
+
+                    handled = true;
+                }
             }
 
             // If special case didn't work, let's try reflection
@@ -2519,6 +2557,7 @@ namespace Gum.Wireframe
                 }
             }
         }
+
         private bool AssignSourceFileOnSprite(object value, Sprite sprite)
         {
             bool handled;
@@ -2600,6 +2639,15 @@ namespace Gum.Wireframe
             {
                 OutlineThickness = (int)value;
                 UpdateToFontValues();
+            }
+            else if (propertyName == "Blend")
+            {
+                var valueAsGumBlend = (RenderingLibrary.Blend)value;
+
+                var valueAsXnaBlend = valueAsGumBlend.ToBlendState();
+
+                var text = mContainedObjectAsRenderable as Text;
+                text.BlendState = valueAsXnaBlend;
             }
             return handled;
         }

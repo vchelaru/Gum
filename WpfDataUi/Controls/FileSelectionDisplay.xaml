@@ -8,7 +8,13 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition Name="FirstColumn" Width="{Binding FirstGridLength}"></ColumnDefinition>
             <ColumnDefinition Width="*"></ColumnDefinition>
-        </Grid.ColumnDefinitions>    
+        </Grid.ColumnDefinitions>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"></RowDefinition>
+            <RowDefinition Height="Auto"></RowDefinition>
+        </Grid.RowDefinitions>
+        
         <Label x:Name="Label" MinWidth="100">Property Label:</Label>        
         
         <TextBox Grid.Column="1" x:Name="TextBox" 
@@ -23,6 +29,6 @@
                 Width="24"
                 HorizontalAlignment="Right" Click="Button_Click_1" VerticalAlignment="Center"
                 >...</Button>
-        
+
     </Grid>
 </UserControl>

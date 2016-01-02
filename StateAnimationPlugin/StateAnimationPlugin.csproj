@@ -64,12 +64,14 @@
     <Compile Include="Managers\AnimationCollectionViewModelManager.cs" />
     <Compile Include="MainPlugin.cs" />
     <Compile Include="Managers\BitmapLoader.cs" />
+    <Compile Include="Managers\RenameManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SaveClasses\AnimatedStateSave.cs" />
     <Compile Include="SaveClasses\AnimationReferenceSave.cs" />
     <Compile Include="SaveClasses\AnimationSave.cs" />
     <Compile Include="SaveClasses\ElementAnimationReferenceSave.cs" />
     <Compile Include="SaveClasses\ElementAnimationsSave.cs" />
+    <Compile Include="SaveClasses\NamedEventSave.cs" />
     <Compile Include="Validation\NameValidator.cs" />
     <Compile Include="ViewModels\AnimatedKeyframeViewModel.cs" />
     <Compile Include="ViewModels\AnimationContainerViewModel.cs" />
@@ -165,6 +167,9 @@
   <ItemGroup>
     <EmbeddedResource Include="Resources\ReferencedAnimationIcon.png" />
     <EmbeddedResource Include="Resources\StateAnimationIcon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\NamedEventIcon.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

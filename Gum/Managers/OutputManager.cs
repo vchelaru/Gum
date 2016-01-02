@@ -50,7 +50,15 @@ namespace Gum.Managers
         private void ScrollToBottom()
         {
             mRichTextBox.Select(mRichTextBox.TextLength, 0);
-            mRichTextBox.ScrollToCaret();
+
+            try
+            {
+                mRichTextBox.ScrollToCaret();
+            }
+            catch
+            {
+                // do nothing
+            }
         }
     }
 }

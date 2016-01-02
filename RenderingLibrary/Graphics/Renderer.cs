@@ -149,6 +149,19 @@ namespace RenderingLibrary.Graphics
             }
         }
 
+        /// <summary>
+        /// Controls which XNA BlendState is used for the Rendering Library's Blend.Normal value.
+        /// </summary>
+        /// <remarks>
+        /// This should be either NonPremultiplied (if textures do not use premultiplied alpha), or
+        /// AlphaBlend if using premultiplied alpha textures.
+        /// </remarks>
+        public static BlendState NormalBlendState
+        {
+            get;
+            set;
+        } = BlendState.NonPremultiplied;
+
         #endregion
 
         #region Methods
@@ -169,6 +182,7 @@ namespace RenderingLibrary.Graphics
             mSinglePixelTexture = new Texture2D(mGraphicsDevice, 1, 1, false, SurfaceFormat.Color);
             Color[] pixels = new Color[1];
             pixels[0] = Color.White;
+            mSinglePixelTexture.Name = "Rendering Library Single Pixel Texture";
             mSinglePixelTexture.SetData<Color>(pixels);
 
             mDottedLineTexture = new Texture2D(mGraphicsDevice, 2, 1, false, SurfaceFormat.Color);

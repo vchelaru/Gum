@@ -19,6 +19,8 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 using StateAnimationPlugin.Validation;
+using Gum.Managers;
+using StateAnimationPlugin.Managers;
 
 namespace StateAnimationPlugin.Views
 {
@@ -150,6 +152,11 @@ namespace StateAnimationPlugin.Views
         private void AddSubAnimationButton_Click(object sender, RoutedEventArgs e)
         {
             SubAnimationSelectionWindow window = new SubAnimationSelectionWindow();
+
+            window.AnimationToExclude = this.ViewModel.SelectedAnimation;
+
+            window.AnimationContainers = CreateAnimationContainers();
+
             var result = window.ShowDialog();
 
             if (result.HasValue && result.Value && window.SelectedAnimation != null)
@@ -185,6 +192,62 @@ namespace StateAnimationPlugin.Views
 
                 ViewModel.SelectedAnimation.Keyframes.BubbleSort();
             }
+        }
+
+        private void AddNamedEventButton_Click(object sender, RoutedEventArgs e)
+        {
+            var textInputWindow = new TextInputWindow();
+            textInputWindow.Message = "Enter new event name";
+            var result = textInputWindow.ShowDialog();
+
+            if(result == System.Windows.Forms.DialogResult.OK)
+            {
+                AnimatedKeyframeViewModel newVm = new AnimatedKeyframeViewModel();
+
+                newVm.EventName = textInputWindow.Result;
+
+                if (ViewModel.SelectedAnimation.SelectedKeyframe != null)
+                {
+                    // put this after the current animation
+                    newVm.Time = ViewModel.SelectedAnimation.SelectedKeyframe.Time + 1f;
+                }
+                else if (ViewModel.SelectedAnimation.Keyframes.Count != 0)
+                {
+                    newVm.Time = ViewModel.SelectedAnimation.Keyframes.Last().Time + 1f;
+                }
+
+
+                ViewModel.SelectedAnimation.Keyframes.Add(newVm);
+
+                ViewModel.SelectedAnimation.Keyframes.BubbleSort();
+            }
+        }
+
+        private List<AnimationContainerViewModel> CreateAnimationContainers()
+        {
+
+            var AnimationContainers = new List<AnimationContainerViewModel>();
+
+            var acvm = new AnimationContainerViewModel(
+                SelectedState.Self.SelectedElement, null
+                );
+            AnimationContainers.Add(acvm);
+
+            foreach (var instance in SelectedState.Self.SelectedElement.Instances)
+            {
+                var instanceElement = ObjectFinder.Self.GetElementSave(instance);
+                if (instanceElement != null)
+                {
+                    var animationSave = AnimationCollectionViewModelManager.Self.GetElementAnimationsSave(instanceElement);
+                    if (animationSave != null && animationSave.Animations.Count != 0)
+                    {
+                        acvm = new AnimationContainerViewModel(SelectedState.Self.SelectedElement, instance);
+                        AnimationContainers.Add(acvm);
+                    }
+                }
+            }
+
+            return AnimationContainers;
         }
 
         private void LoopToggleClick(object sender, RoutedEventArgs e)

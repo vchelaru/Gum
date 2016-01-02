@@ -104,14 +104,11 @@
                     </ListBox.ItemTemplate>
                     
               </ListBox>
-              <Grid Grid.Row="1">
-                <Grid.ColumnDefinitions>
-                  <ColumnDefinition></ColumnDefinition>
-                  <ColumnDefinition></ColumnDefinition>
-                </Grid.ColumnDefinitions>
+              <StackPanel Grid.Row="1">
                 <Button x:Name="AddStateButton" Click="AddStateButton_Click">Add State</Button>
-                <Button x:Name="AddSubAnimationButton" Click="AddSubAnimationButton_Click" Grid.Column="1">Add Sub-animation</Button>
-              </Grid>
+                    <Button x:Name="AddSubAnimationButton" Click="AddSubAnimationButton_Click" Grid.Column="1">Add Sub-animation</Button>
+                    <Button x:Name="AddNamedEvent" Click="AddNamedEventButton_Click" Grid.Column="1">Add Named Event</Button>
+              </StackPanel>
             </Grid>
             
             <views:StateView 

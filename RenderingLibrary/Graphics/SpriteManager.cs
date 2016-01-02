@@ -67,6 +67,14 @@ namespace RenderingLibrary.Graphics
             }
         }
 
+        public IEnumerable<Sprite> Sprites
+        {
+            get
+            {
+                return mSprites;
+            }
+        }
+
         #endregion
 
         public void Add(Sprite sprite, Layer layer = null)

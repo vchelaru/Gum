@@ -15,11 +15,20 @@ namespace RenderingLibrary.Graphics
         IPositionedSizedObject mParent;
 
         List<IPositionedSizedObject> mChildren;
+        private static Texture2D mTexture;
+        private static Rectangle mSourceRect;
+
         public Color Color;
 
         #endregion
 
         #region Properties
+        public static string AtlasedTextureName { get; set; }
+
+        public static Texture2D Texture
+        {
+            get { return mTexture; }
+        }
 
         public bool Wrap
         {
@@ -90,10 +99,7 @@ namespace RenderingLibrary.Graphics
 
         public object Tag { get; set; }
 
-        public BlendState BlendState
-        {
-            get { return BlendState.NonPremultiplied; }
-        }
+        public BlendState BlendState { get; set; }
 
 
         public int Alpha
@@ -152,8 +158,39 @@ namespace RenderingLibrary.Graphics
             mChildren = new List<IPositionedSizedObject>();
             Color = Color.White;
             Visible = true;
+
+            if (mTexture == null && !string.IsNullOrEmpty(AtlasedTextureName)) mTexture = GetAtlasedTexture();
         }
 
+        /// <summary>
+        /// Checks if the Colored Rectangle texture is located in a loaded atlas.
+        /// </summary>
+        /// <returns>Returns atlased texture if it exists.</returns>
+        private Texture2D GetAtlasedTexture()
+        {
+            Texture2D texture = null;
+
+            if (ToolsUtilities.FileManager.IsRelative(AtlasedTextureName))
+            {
+                AtlasedTextureName = ToolsUtilities.FileManager.RelativeDirectory + AtlasedTextureName;
+
+                AtlasedTextureName = ToolsUtilities.FileManager.RemoveDotDotSlash(AtlasedTextureName);
+            }
+
+            // see if an atlas exists:
+            var atlasedTexture =
+                global::RenderingLibrary.Content.LoaderManager.Self.TryLoadContent<AtlasedTexture>(AtlasedTextureName);
+
+            if (atlasedTexture != null)
+            {
+                mSourceRect = new Rectangle(atlasedTexture.SourceRectangle.Left + 1,
+                    atlasedTexture.SourceRectangle.Top + 1, 1, 1);
+
+                texture = atlasedTexture.Texture;
+            }
+
+            return texture;
+        }
 
         void IRenderable.Render(SpriteRenderer spriteRenderer, SystemManagers managers)
         {
@@ -169,10 +206,15 @@ namespace RenderingLibrary.Graphics
                     renderer = managers.Renderer;
                 }
 
-                Sprite.Render(managers, spriteRenderer, this,
-                    renderer.SinglePixelTexture,
-                    this.Color, null, false, false, Rotation);
+                var texture = renderer.SinglePixelTexture;
+                Rectangle? sourceRect = null;
+                if (mTexture != null)
+                {
+                    texture = mTexture;
+                    sourceRect = mSourceRect;
+                }
 
+                Sprite.Render(managers, spriteRenderer, this, texture, Color, sourceRect, false, false, Rotation);
             }
         }
 

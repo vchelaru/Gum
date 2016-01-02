@@ -46,6 +46,14 @@ namespace RenderingLibrary.Graphics
                 }
             }
         }
+
+        public IEnumerable<Text> Texts
+        {
+            get
+            {
+                return mTexts;
+            }
+        }
         #endregion
 
         public void Add(Text text)

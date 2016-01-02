@@ -11,13 +11,10 @@ namespace StateAnimationPlugin.SaveClasses
 
         public string Name { get; set; }
 
-        public List<AnimatedStateSave> States { get; set; }
-        public List<AnimationReferenceSave> Animations { get; set; }
-        public AnimationSave()
-        {
-            States = new List<AnimatedStateSave>();
-            Animations = new List<AnimationReferenceSave>();
-        }
+        public List<AnimatedStateSave> States { get; set; } = new List<AnimatedStateSave>();
+        public List<AnimationReferenceSave> Animations { get; set; } = new List<AnimationReferenceSave>();
+        public List<NamedEventSave> Events { get; set; } = new List<NamedEventSave>();
+        
 
         public override string ToString()
         {

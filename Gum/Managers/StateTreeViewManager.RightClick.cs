@@ -9,6 +9,7 @@ using Gum.ToolCommands;
 using System.Windows.Forms;
 using Gum.Commands;
 using ToolsUtilities;
+using Gum.Plugins;
 
 namespace Gum.Managers
 {
@@ -51,6 +52,9 @@ namespace Gum.Managers
             {
 
                 mMenuStrip.Items.Add("-");
+
+                AddMenuItem("Rename Category", RenameCategoryClick);
+
 
                 AddMenuItem("Delete " + SelectedState.Self.SelectedStateCategorySave.Name, DeleteCategoryClick);
             }
@@ -207,16 +211,42 @@ namespace Gum.Managers
         private static void RenameStateClick()
         {
             TextInputWindow tiw = new TextInputWindow();
-            tiw.Message = "Enter new name";
+            tiw.Message = "Enter new state name";
             tiw.Result = SelectedState.Self.SelectedStateSave.Name;
             var result = tiw.ShowDialog();
 
             if (result == DialogResult.OK)
             {
+                string oldName = SelectedState.Self.SelectedStateSave.Name;
+
                 SelectedState.Self.SelectedStateSave.Name = tiw.Result;
                 GumCommands.Self.GuiCommands.RefreshStateTreeView();
                 // I don't think we need to save the project when renaming a state:
                 //GumCommands.Self.FileCommands.TryAutoSaveProject();
+
+                PluginManager.Self.StateRename(SelectedState.Self.SelectedStateSave, oldName);
+
+                GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+            }
+        }
+
+        private static void RenameCategoryClick()
+        {
+            TextInputWindow tiw = new TextInputWindow();
+            tiw.Message = "Enter new category name";
+            tiw.Result = SelectedState.Self.SelectedStateCategorySave.Name;
+            var result = tiw.ShowDialog();
+
+            if (result == DialogResult.OK)
+            {
+                string oldName = SelectedState.Self.SelectedStateCategorySave.Name;
+
+                SelectedState.Self.SelectedStateCategorySave.Name = tiw.Result;
+                GumCommands.Self.GuiCommands.RefreshStateTreeView();
+                // I don't think we need to save the project when renaming a state:
+                //GumCommands.Self.FileCommands.TryAutoSaveProject();
+
+                //PluginManager.Self.CategoryRename(SelectedState.Self.SelectedStateCategorySave, oldName);
 
                 GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
             }

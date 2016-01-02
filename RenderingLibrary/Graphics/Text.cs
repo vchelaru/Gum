@@ -336,10 +336,7 @@ namespace RenderingLibrary.Graphics
 
         public object Tag { get; set; }
 
-        public BlendState BlendState
-        {
-            get { return BlendState.NonPremultiplied; }
-        }
+        public BlendState BlendState { get; set; }
 
         Renderer Renderer
         {
@@ -599,6 +596,8 @@ namespace RenderingLibrary.Graphics
                     if (isNewInstance && mTextureToRender is RenderTarget2D)
                     {
                         (mTextureToRender as RenderTarget2D).ContentLost += SetNeedsRefresh;
+                        mTextureToRender.Name = "Render Target for Text " + this.Name;
+
                     }
                 }
                 else if (mBitmapFont == null)
@@ -690,7 +689,7 @@ namespace RenderingLibrary.Graphics
             }
 
             Sprite.Render(managers, spriteRenderer, mTempForRendering, mTextureToRender,
-                new Color(mRed, mGreen, mBlue, mAlpha), null, false, false, Rotation, treat0AsFullDimensions: false);
+                new Color(mRed, mGreen, mBlue, mAlpha), null, false, false, Rotation, treat0AsFullDimensions: false, objectCausingRenering:this);
         }
 
         IPositionedSizedObject mTempForRendering;

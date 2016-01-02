@@ -796,6 +796,29 @@ namespace Gum.Plugins
                 );
         }
 
+        internal void StateRename(StateSave stateSave, string oldName)
+        {
+            CallMethodOnPlugin(
+                delegate (PluginBase plugin)
+                {
+                    plugin.CallStateRename(stateSave, oldName);
+                },
+                "StateRename"
+                );
+        }
+
+        internal void InstanceRename(InstanceSave instanceSave, string oldName)
+        {
+            CallMethodOnPlugin(
+                delegate (PluginBase plugin)
+                {
+                    plugin.CallInstanceRename(instanceSave, oldName);
+                },
+                "InstanceRename"
+                );
+
+        }
+
         internal void GuidesChanged()
         {
             CallMethodOnPlugin(

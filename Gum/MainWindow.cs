@@ -304,10 +304,10 @@ namespace Gum
         {
             this.loadRecentToolStripMenuItem.DropDownItems.Clear();
 
-            foreach (var item in ProjectManager.Self.GeneralSettingsFile.RecentProjects)
+            foreach (var item in ProjectManager.Self.GeneralSettingsFile.RecentProjects.OrderByDescending(item=>item.LastTimeOpened))
             {
                 ToolStripMenuItem menuItem = new ToolStripMenuItem();
-                menuItem.Text = item;
+                menuItem.Text = item.AbsoluteFileName;
 
                 this.loadRecentToolStripMenuItem.DropDownItems.Add(menuItem);
 

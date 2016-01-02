@@ -77,7 +77,26 @@ namespace StateAnimationPlugin.Views
                                 toReturn.Name = item.Name;
                                 toReturn.ContainingInstance = SelectedContainer.InstanceSave;
 
-                                yield return toReturn;
+                                bool shouldSkip = false;
+
+                                // Right now we're just checking to make sure an animation doesn't
+                                // reference itself, but that doesn't prevent A referending B referencing A
+                                // Eventually we need a deeper reursive check.
+
+                                // skip if...
+                                shouldSkip =
+                                    // we selected an animation that isn't on an instance (if it is, then
+                                    // there is no chance of it being recursive)...
+                                    SelectedContainer.InstanceSave == null &&
+                                    // And there is something to exclude...
+                                    AnimationToExclude != null &&
+                                    // and the names match
+                                    toReturn.Name == AnimationToExclude.Name;
+
+                                if(!shouldSkip)
+                                {
+                                    yield return toReturn;
+                                }
                             }
                         }
                         
@@ -112,6 +131,7 @@ namespace StateAnimationPlugin.Views
             get;
             set;
         }
+        public AnimationViewModel AnimationToExclude { get; internal set; }
 
         #endregion
 
@@ -121,26 +141,6 @@ namespace StateAnimationPlugin.Views
         {
             InitializeComponent();
 
-            AnimationContainers = new List<AnimationContainerViewModel>();
-
-            var acvm = new AnimationContainerViewModel(
-                SelectedState.Self.SelectedElement, null
-                );
-            AnimationContainers.Add(acvm);
-
-            foreach(var instance in SelectedState.Self.SelectedElement.Instances)
-            {
-                var instanceElement = ObjectFinder.Self.GetElementSave(instance);
-                if (instanceElement != null)
-                {
-                    var animationSave = AnimationCollectionViewModelManager.Self.GetElementAnimationsSave(instanceElement);
-                    if (animationSave != null && animationSave.Animations.Count != 0)
-                    {
-                        acvm = new AnimationContainerViewModel(SelectedState.Self.SelectedElement, instance);
-                        AnimationContainers.Add(acvm);
-                    }
-                }
-            }
 
 
             this.ContainersListBox.DataContext = this;

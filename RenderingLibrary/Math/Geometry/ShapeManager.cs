@@ -53,6 +53,13 @@ namespace RenderingLibrary.Math.Geometry
                 }
             }
         }
+
+
+        public IEnumerable<LineRectangle> Rectangles { get { return mRectangles; } }
+        public IEnumerable<SolidRectangle> SolidRectangles { get { return mSolidRectangles; } }
+        public IEnumerable<LineCircle> Circles { get { return mCircles; } }
+        public IEnumerable<LineGrid> Grids { get { return mGrids; } }
+        public IEnumerable<Line> Lines { get { return mLines; } }
         #endregion
 
         public void Add(LineRectangle lineRectangle)

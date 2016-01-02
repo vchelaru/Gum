@@ -23,6 +23,11 @@ namespace Gum.Plugins.BaseClasses
         public event Action<DeleteOptionsWindow, object> DeleteOptionsWindowShow;
         public event Action<DeleteOptionsWindow, object> DeleteConfirm;
         public event Action<ElementSave, string> ElementRename;
+        /// <summary>
+        /// Action raised when an event is renamed. String parameter is the State's old name.
+        /// </summary>
+        public event Action<StateSave, string> StateRename;
+        public event Action<InstanceSave, string> InstanceRename;
         public event Action<VariableSave, List<Attribute>> FillVariableAttributes;
         public event Action<string, StateSave> AddAndRemoveVariablesForType;
         public event Func<VariableSave, RecursiveVariableFinder, bool> VariableExcluded;
@@ -142,6 +147,20 @@ namespace Gum.Plugins.BaseClasses
             {
                 ElementRename(elementSave, oldName);
             }
+        }
+
+        public void CallStateRename(StateSave stateSave, string oldName)
+        {
+
+            if (StateRename != null)
+            {
+                StateRename(stateSave, oldName);
+            }
+        }
+
+        public void CallInstanceRename(InstanceSave instanceSave, string oldName)
+        {
+            InstanceRename?.Invoke(instanceSave, oldName);
         }
 
         public void CallFillVariableAttributes(VariableSave variableSave, List<Attribute> listToFill)

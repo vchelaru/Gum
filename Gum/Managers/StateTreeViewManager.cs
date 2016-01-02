@@ -183,45 +183,12 @@ namespace Gum.Managers
 
                 foreach(var state in element.AllStates)
                 {
-                    string stateName = state.Name;
-                    if (string.IsNullOrEmpty(stateName))
-                    {
-                        stateName = "Default";
-                    }
+                    wasAnythingSelected = UpdateStateTreeNode(lastStateSave, instance, wasAnythingSelected, state);
+                }
 
-                    var node = GetTreeNodeForTag(state);
-
-                    if (node.Text != stateName)
-                    {
-                        node.Text = stateName;
-                    }
-                    if (node.Tag != state)
-                    {
-                        node.Tag = state;
-                    }
-
-                    node.ImageIndex = ElementTreeViewManager.StateImageIndex;
-
-                    if (state == lastStateSave)
-                    {
-
-                        SelectedState.Self.SelectedStateSave = state;
-
-                        wasAnythingSelected = true;
-                    }
-                    else if (!node.IsSelected && mTreeView.SelectedNode != node)
-                    {
-                        System.Drawing.Color desiredColor = System.Drawing.Color.White;
-                        if (instance != null && state.Variables.Any(item => item.Name.StartsWith(instance.Name + ".")))
-                        {
-                            desiredColor = System.Drawing.Color.Yellow;
-                        }
-
-                        if (node.BackColor != desiredColor)
-                        {
-                            node.BackColor = desiredColor;
-                        }
-                    }
+                foreach(var category in element.Categories)
+                {
+                    UpdateCategoryTreeNode(category);
                 }
 
                 // Victor Chelaru
@@ -235,7 +202,7 @@ namespace Gum.Managers
                 //    // were never loaded
                 //    element.States.Count > 0)
                 //{
-                    
+
                 //    SelectedState.Self.SelectedStateSave = element.States[0];
 
                 //}
@@ -246,6 +213,61 @@ namespace Gum.Managers
             }
 
 
+        }
+
+        private void UpdateCategoryTreeNode(StateSaveCategory category)
+        {
+            var node = GetTreeNodeForTag(category);
+
+            if (node.Text != category.Name)
+            {
+                node.Text = category.Name;
+            }
+        }
+
+        private bool UpdateStateTreeNode(StateSave lastStateSave, InstanceSave instance, bool wasAnythingSelected, StateSave state)
+        {
+            string stateName = state.Name;
+            if (string.IsNullOrEmpty(stateName))
+            {
+                stateName = "Default";
+            }
+
+            var node = GetTreeNodeForTag(state);
+
+            if (node.Text != stateName)
+            {
+                node.Text = stateName;
+            }
+            if (node.Tag != state)
+            {
+                node.Tag = state;
+            }
+
+            node.ImageIndex = ElementTreeViewManager.StateImageIndex;
+
+            if (state == lastStateSave)
+            {
+
+                SelectedState.Self.SelectedStateSave = state;
+
+                wasAnythingSelected = true;
+            }
+            else if (!node.IsSelected && mTreeView.SelectedNode != node)
+            {
+                System.Drawing.Color desiredColor = System.Drawing.Color.White;
+                if (instance != null && state.Variables.Any(item => item.Name.StartsWith(instance.Name + ".")))
+                {
+                    desiredColor = System.Drawing.Color.Yellow;
+                }
+
+                if (node.BackColor != desiredColor)
+                {
+                    node.BackColor = desiredColor;
+                }
+            }
+
+            return wasAnythingSelected;
         }
 
         private void AddNeededNodes(ElementSave element)

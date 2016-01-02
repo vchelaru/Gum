@@ -44,7 +44,8 @@ namespace Gum.DataTypes
 
             foreach (ScreenSave screenSave in gumProjectSave.Screens)
             {
-                wasModified = screenSave.Initialize(null) || wasModified;
+                var stateSave = StandardElementsManager.Self.GetDefaultStateFor("Screen");
+                wasModified = screenSave.Initialize(stateSave) || wasModified;
             }
 
             
