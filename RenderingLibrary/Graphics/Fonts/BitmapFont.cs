@@ -7,6 +7,7 @@ using RenderingLibrary.Content;
 using Microsoft.Xna.Framework;
 using System.Collections;
 using RenderingLibrary.Math;
+using RenderingLibrary.Math.Geometry;
 using ToolsUtilities;
 
 namespace RenderingLibrary.Graphics
@@ -26,9 +27,16 @@ namespace RenderingLibrary.Graphics
 
         int mOutlineThickness;
 
+        private AtlasedTexture mAtlasedTexture;
+        private LineRectangle mCharRect;
         #endregion
 
         #region Properties
+
+        public AtlasedTexture AtlasedTexture
+        {
+            get { return mAtlasedTexture; }
+        }
 
         public Texture2D Texture
         {
@@ -79,21 +87,28 @@ namespace RenderingLibrary.Graphics
 
             mTextures = new Texture2D[texturesToLoad.Length];
 
-
             string directory = FileManager.GetDirectory(fontFile);
 
             for (int i = 0; i < mTextures.Length; i++)
             {
-                if (FileManager.IsRelative(texturesToLoad[i]))
+                AtlasedTexture atlasedTexture = CheckForLoadedAtlasTexture(directory + texturesToLoad[i]);
+                if (atlasedTexture != null)
                 {
-
-                    //mTextures[i] = LoaderManager.Self.Load(directory + texturesToLoad[i], managers);
-                    mTextures[i] = LoaderManager.Self.LoadContent<Texture2D>(directory + texturesToLoad[i]);
+                    mAtlasedTexture = atlasedTexture;
+                    mTextures[i] = mAtlasedTexture.Texture;
                 }
                 else
                 {
-                    //mTextures[i] = LoaderManager.Self.Load(texturesToLoad[i], managers);
-                    mTextures[i] = LoaderManager.Self.LoadContent<Texture2D>(texturesToLoad[i]);
+                    if (FileManager.IsRelative(texturesToLoad[i]))
+                    {
+                        //mTextures[i] = LoaderManager.Self.Load(directory + texturesToLoad[i], managers);
+                        mTextures[i] = LoaderManager.Self.LoadContent<Texture2D>(directory + texturesToLoad[i]);
+                    }
+                    else
+                    {
+                        //mTextures[i] = LoaderManager.Self.Load(texturesToLoad[i], managers);
+                        mTextures[i] = LoaderManager.Self.LoadContent<Texture2D>(texturesToLoad[i]);
+                    }
                 }
             } 
             
@@ -103,7 +118,17 @@ namespace RenderingLibrary.Graphics
         public BitmapFont(string textureFile, string fontFile, SystemManagers managers)
         {
             mTextures = new Texture2D[1];
-            mTextures[0] = LoaderManager.Self.LoadContent<Texture2D>(textureFile);
+
+            var atlasedTexture = CheckForLoadedAtlasTexture(FileManager.GetDirectory(fontFile) + textureFile);
+            if (atlasedTexture != null)
+            {
+                mAtlasedTexture = atlasedTexture;
+                mTextures[0] = mAtlasedTexture.Texture;
+            }
+            else
+            {
+                mTextures[0] = LoaderManager.Self.LoadContent<Texture2D>(textureFile);
+            }
 
             mTextureNames[0] = mTextures[0].Name;
 
@@ -305,7 +330,7 @@ namespace RenderingLibrary.Graphics
 
             if (mTextures.Length > 0)
             {
-
+                //ToDo: Atlas support  **************************************************************
                 BitmapCharacterInfo space = FillBitmapCharacterInfo(' ', fontPattern,
                    mTextures[0].Width, mTextures[0].Height, mLineHeightInPixels, 0);
 
@@ -319,7 +344,7 @@ namespace RenderingLibrary.Graphics
                 {
 
                     int ID = StringFunctions.GetIntAfter("char id=", fontPattern, index);
-
+                    //ToDo: Atlas support   *************************************************************
                     mCharacterInfo[ID] = FillBitmapCharacterInfo(ID, fontPattern, mTextures[0].Width,
                         mTextures[0].Height, mLineHeightInPixels, index);
 
@@ -390,6 +415,16 @@ namespace RenderingLibrary.Graphics
         // To help out the GC, we're going to just use a Color that's 2048x2048
         static Color[] mColorBuffer = new Color[2048 * 2048];
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="lines"></param>
+        /// <param name="horizontalAlignment"></param>
+        /// <param name="managers"></param>
+        /// <param name="toReplace"></param>
+        /// <param name="objectRequestingRender"></param>
+        /// <param name="charLocations">Used to store char locations for drawing directly to screen.</param>
+        /// <returns></returns>
         public Texture2D RenderToTexture2D(IEnumerable<string> lines, HorizontalAlignment horizontalAlignment, SystemManagers managers, Texture2D toReplace, object objectRequestingRender)
         {
             bool useImageData = false;
@@ -404,7 +439,8 @@ namespace RenderingLibrary.Graphics
             }
         }
 
-        private Texture2D RenderToTexture2DUsingRenderStates(IEnumerable<string> lines, HorizontalAlignment horizontalAlignment, SystemManagers managers, Texture2D toReplace, object objectRequestingChange)
+        private Texture2D RenderToTexture2DUsingRenderStates(IEnumerable<string> lines, HorizontalAlignment horizontalAlignment, 
+            SystemManagers managers, Texture2D toReplace, object objectRequestingChange)
         {
             if (managers == null)
             {
@@ -418,10 +454,7 @@ namespace RenderingLibrary.Graphics
             }
             ///////////////// End early out //////////////////////
 
-
             RenderTarget2D renderTarget = null;
-
-
 
             Point point = new Point();
             int requiredWidth;
@@ -429,83 +462,51 @@ namespace RenderingLibrary.Graphics
             List<int> widths;
             GetRequiredWithAndHeight(lines, out requiredWidth, out requiredHeight, out widths);
 
-
             if (requiredWidth != 0)
             {
-
                 var oldViewport = managers.Renderer.GraphicsDevice.Viewport;
                 if (toReplace != null && requiredWidth == toReplace.Width && requiredHeight == toReplace.Height)
                 {
                     renderTarget = toReplace as RenderTarget2D;
-
                 }
                 else
                 {
                     renderTarget = new RenderTarget2D(managers.Renderer.GraphicsDevice, requiredWidth, requiredHeight);
-
                 }
                 managers.Renderer.GraphicsDevice.SetRenderTarget(renderTarget);
 
                 var spriteRenderer = managers.Renderer.SpriteRenderer;
+                managers.Renderer.GraphicsDevice.Clear(Color.Transparent);
+                spriteRenderer.Begin();
+                int lineNumber = 0;
+
+                foreach (string line in lines)
                 {
-                    managers.Renderer.GraphicsDevice.Clear(Color.Transparent);
-                    spriteRenderer.Begin();
-                    int lineNumber = 0;
+                    // scoot over to leave room for the outline
+                    point.X = mOutlineThickness;
 
-                    foreach (string line in lines)
+                    if (horizontalAlignment == HorizontalAlignment.Right)
                     {
-                        // scoot over to leave room for the outline
-                        point.X = mOutlineThickness;
-
-                        if (horizontalAlignment == HorizontalAlignment.Right)
-                        {
-                            point.X = requiredWidth - widths[lineNumber];
-                        }
-                        else if (horizontalAlignment == HorizontalAlignment.Center)
-                        {
-                            point.X = (requiredWidth - widths[lineNumber]) / 2;
-                        }
-
-                        foreach (char c in line)
-                        {
-                            BitmapCharacterInfo characterInfo = GetCharacterInfo(c);
-
-                            int sourceLeft = characterInfo.GetPixelLeft(Texture);
-                            int sourceTop = characterInfo.GetPixelTop(Texture);
-                            int sourceWidth = characterInfo.GetPixelRight(Texture) - sourceLeft;
-                            int sourceHeight = characterInfo.GetPixelBottom(Texture) - sourceTop;
-
-
-                            int distanceFromTop = characterInfo.GetPixelDistanceFromTop(LineHeightInPixels);
-
-                            // There could be some offset for this character
-                            int xOffset = characterInfo.GetPixelXOffset(LineHeightInPixels);
-                            point.X += xOffset;
-
-                            point.Y = lineNumber * LineHeightInPixels + distanceFromTop;
-
-                            Microsoft.Xna.Framework.Rectangle sourceRectangle = new Microsoft.Xna.Framework.Rectangle(
-                                sourceLeft, sourceTop, sourceWidth, sourceHeight);
-
-                            int pageIndex = characterInfo.PageNumber;
-
-                            Rectangle destinationRectangle = new Rectangle(point.X, point.Y, sourceWidth, sourceHeight);
-
-                            spriteRenderer.Draw(mTextures[pageIndex], destinationRectangle, sourceRectangle, Color.White, objectRequestingChange);
-
-                            point.X -= xOffset;
-                            point.X += characterInfo.GetXAdvanceInPixels(LineHeightInPixels);
-
-
-
-
-                        }
-
-                        point.X = 0;
-                        lineNumber++;
+                        point.X = requiredWidth - widths[lineNumber];
                     }
-                    spriteRenderer.End();
+                    else if (horizontalAlignment == HorizontalAlignment.Center)
+                    {
+                        point.X = (requiredWidth - widths[lineNumber])/2;
+                    }
+
+                    foreach (char c in line)
+                    {
+                        Rectangle destRect;
+                        int pageIndex;
+                        var sourceRect = GetCharacterRect(c, lineNumber, ref point, out destRect, out pageIndex);
+
+                        spriteRenderer.Draw(mTextures[pageIndex], destRect, sourceRect, Color.White, objectRequestingChange);
+                    }
+                    point.X = 0;
+                    lineNumber++;
                 }
+
+                spriteRenderer.End();
 
                 managers.Renderer.GraphicsDevice.SetRenderTarget(null);
                 managers.Renderer.GraphicsDevice.Viewport = oldViewport;
@@ -513,6 +514,105 @@ namespace RenderingLibrary.Graphics
             }
 
             return renderTarget;
+        }
+
+        /// <summary>
+        /// Used for rendering directly to screen with an atlased texture.
+        /// </summary>
+        public void RenderAtlasedTextureToScreen(List<string> lines, HorizontalAlignment horizontalAlignment,
+            float textureToRenderHeight, Color color, float rotation, float fontScale, SystemManagers managers, SpriteRenderer spriteRenderer,
+            object objectRequestingChange)
+        {
+            var textObject = (Text)objectRequestingChange;
+            var point = new Point();
+            int requiredWidth;
+            int requiredHeight;
+            List<int> widths;
+            GetRequiredWithAndHeight(lines, out requiredWidth, out requiredHeight, out widths);
+
+            int lineNumber = 0;
+
+            if (mCharRect == null) mCharRect = new LineRectangle(managers);
+
+            var yoffset = 0f;
+            if (textObject.VerticalAlignment == Graphics.VerticalAlignment.Center)
+            {
+                yoffset = (textObject.EffectiveHeight - textureToRenderHeight) / 2.0f;
+            }
+            else if (textObject.VerticalAlignment == Graphics.VerticalAlignment.Bottom)
+            {
+                yoffset = textObject.EffectiveHeight - textureToRenderHeight * fontScale;
+            }
+
+            foreach (string line in lines)
+            {
+                // scoot over to leave room for the outline
+                point.X = mOutlineThickness;
+
+                if (horizontalAlignment == HorizontalAlignment.Right)
+                {
+                    point.X = (int)(textObject.Width - widths[lineNumber] * fontScale);
+                }
+                else if (horizontalAlignment == HorizontalAlignment.Center)
+                {
+                    point.X = (int)(textObject.Width - widths[lineNumber] * fontScale) / 2;
+                }
+
+                foreach (char c in line)
+                {
+                    Rectangle destRect;
+                    int pageIndex;
+                    var sourceRect = GetCharacterRect(c, lineNumber, ref point, out destRect, out pageIndex, textObject.FontScale);
+
+                    var origin = new Point((int)textObject.X, (int)(textObject.Y + yoffset));
+                    var rotate = (float)-(textObject.Rotation * System.Math.PI / 180f);
+
+                    var rotatingPoint = new Point(origin.X + destRect.X, origin.Y + destRect.Y);
+                    MathFunctions.RotatePointAroundPoint(new Point(origin.X, origin.Y), ref rotatingPoint, rotate);
+
+                    mCharRect.X = rotatingPoint.X;
+                    mCharRect.Y = rotatingPoint.Y;
+                    mCharRect.Width = destRect.Width;
+                    mCharRect.Height = destRect.Height;
+                    mCharRect.Parent = textObject.Parent;
+
+                    Sprite.Render(managers, spriteRenderer, mCharRect, mTextures[0], color, sourceRect, false, false, rotation,
+                        treat0AsFullDimensions: false, objectCausingRenering: objectRequestingChange);
+                }
+                point.X = 0;
+                lineNumber++;
+            }
+        }
+
+        public Rectangle GetCharacterRect(char c, int lineNumber, ref Point point, out Rectangle destinationRectangle,
+            out int pageIndex, float fontScale = 1)
+        {
+            BitmapCharacterInfo characterInfo = GetCharacterInfo(c);
+
+            int sourceLeft = characterInfo.GetPixelLeft(Texture);
+            int sourceTop = characterInfo.GetPixelTop(Texture);
+            int sourceWidth = characterInfo.GetPixelRight(Texture) - sourceLeft;
+            int sourceHeight = characterInfo.GetPixelBottom(Texture) - sourceTop;
+
+            int distanceFromTop = characterInfo.GetPixelDistanceFromTop(LineHeightInPixels);
+
+            // There could be some offset for this character
+            int xOffset = characterInfo.GetPixelXOffset(LineHeightInPixels);
+            point.X += (int)(xOffset * fontScale);
+
+            point.Y = (int)((lineNumber * LineHeightInPixels + distanceFromTop) * fontScale);
+
+            var sourceRectangle = new Microsoft.Xna.Framework.Rectangle(
+                sourceLeft, sourceTop, sourceWidth, sourceHeight);
+
+            pageIndex = characterInfo.PageNumber;
+
+            destinationRectangle = new Rectangle(point.X, point.Y, (int)(sourceWidth * fontScale), (int)(sourceHeight * fontScale));
+
+            point.X -= (int)(xOffset * fontScale);
+            point.X += (int)(characterInfo.GetXAdvanceInPixels(LineHeightInPixels) * fontScale);
+
+            return sourceRectangle;
         }
 
         public void GetRequiredWithAndHeight(IEnumerable lines, out int requiredWidth, out int requiredHeight)
@@ -690,6 +790,21 @@ namespace RenderingLibrary.Graphics
 
         #region Private Methods
 
+        private AtlasedTexture CheckForLoadedAtlasTexture(string filename)
+        {
+            if (ToolsUtilities.FileManager.IsRelative(filename))
+            {
+                filename = ToolsUtilities.FileManager.RelativeDirectory + filename;
+
+                filename = ToolsUtilities.FileManager.RemoveDotDotSlash(filename);
+            }
+
+            // see if an atlas exists:
+            var atlasedTexture = global::RenderingLibrary.Content.LoaderManager.Self.TryLoadContent<AtlasedTexture>(filename);
+
+            return atlasedTexture;
+        }
+
         private BitmapCharacterInfo FillBitmapCharacterInfo(int characterID, string fontString, int textureWidth,
             int textureHeight, int lineHeightInPixels, int startingIndex)
         {
@@ -699,14 +814,32 @@ namespace RenderingLibrary.Graphics
 
             if (indexOfID != -1)
             {
-                characterInfoToReturn.TULeft =
-                    StringFunctions.GetIntAfter("x=", fontString, indexOfID) / (float)textureWidth;
-                characterInfoToReturn.TVTop =
-                    StringFunctions.GetIntAfter("y=", fontString, indexOfID) / (float)textureHeight;
-                characterInfoToReturn.TURight = characterInfoToReturn.TULeft +
-                    StringFunctions.GetIntAfter("width=", fontString, indexOfID) / (float)textureWidth;
-                characterInfoToReturn.TVBottom = characterInfoToReturn.TVTop +
-                    StringFunctions.GetIntAfter("height=", fontString, indexOfID) / (float)textureHeight;
+                if (mAtlasedTexture != null)
+                {
+                    characterInfoToReturn.TULeft = (mAtlasedTexture.SourceRectangle.X +
+                                                   StringFunctions.GetIntAfter("x=", fontString, indexOfID)) /
+                                                   (float)textureWidth;
+                    characterInfoToReturn.TURight = characterInfoToReturn.TULeft +
+                                                    StringFunctions.GetIntAfter("width=", fontString, indexOfID) /
+                                                    (float)textureWidth;
+                    characterInfoToReturn.TVTop = (mAtlasedTexture.SourceRectangle.Y +
+                                                   StringFunctions.GetIntAfter("y=", fontString, indexOfID)) /
+                                                  (float)textureHeight;
+                    characterInfoToReturn.TVBottom = characterInfoToReturn.TVTop +
+                                                     StringFunctions.GetIntAfter("height=", fontString, indexOfID) /
+                                                     (float)textureHeight;
+                }
+                else
+                {
+                    characterInfoToReturn.TULeft =
+                        StringFunctions.GetIntAfter("x=", fontString, indexOfID) / (float)textureWidth;
+                    characterInfoToReturn.TVTop =
+                        StringFunctions.GetIntAfter("y=", fontString, indexOfID) / (float)textureHeight;
+                    characterInfoToReturn.TURight = characterInfoToReturn.TULeft +
+                        StringFunctions.GetIntAfter("width=", fontString, indexOfID) / (float)textureWidth;
+                    characterInfoToReturn.TVBottom = characterInfoToReturn.TVTop +
+                        StringFunctions.GetIntAfter("height=", fontString, indexOfID) / (float)textureHeight;
+                }
 
                 characterInfoToReturn.DistanceFromTopOfLine = // 1 sclY means 2 height
                     2 * StringFunctions.GetIntAfter("yoffset=", fontString, indexOfID) / (float)lineHeightInPixels;

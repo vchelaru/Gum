@@ -1,0 +1,59 @@
+﻿<UserControl x:Class="Gum.Plugins.AlignmentButtons.AnchorControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:Gum.Plugins.AlignmentButtons"
+             mc:Ignorable="d" >
+    <GroupBox Header="Anchor" VerticalAlignment="Top">
+
+        <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"></RowDefinition>
+            <RowDefinition Height="Auto"></RowDefinition>
+            <RowDefinition Height="Auto"></RowDefinition>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"></ColumnDefinition>
+            <ColumnDefinition Width="Auto"></ColumnDefinition>
+            <ColumnDefinition Width="Auto"></ColumnDefinition>
+        </Grid.ColumnDefinitions>
+
+
+        <Button x:Name="TopLeftButton" Click="TopLeftButton_Click" Grid.Row="0" Grid.Column="0" Margin="3">
+            <Image Source="/Gum;component/Content/Icons/AnchorPlugin/TopLeft.png" Height="32" Width="32"/>
+        </Button>
+        <Button x:Name="TopButton" Click="TopButton_Click" Grid.Row="0" Grid.Column="1" Margin="3">
+            <Image Source="/Gum;component/Content/Icons/AnchorPlugin/TopMiddle.png" Height="32" Width="32"/>
+        </Button>
+        <Button x:Name="TopRightButton" Click="TopRightButton_Click" Grid.Row="0" Grid.Column="2" Margin="3">
+            <Image Source="/Gum;component/Content/Icons/AnchorPlugin/TopRight.png" Height="32" Width="32"/>
+        </Button>
+
+        
+        <Button x:Name="LeftButton" Click="MiddleLeftButton_Click" Grid.Row="1" Grid.Column="0" Margin="3">
+            <Image Source="/Gum;component/Content/Icons/AnchorPlugin/MiddleLeft.png" Height="32" Width="32"/>
+        </Button>
+        <Button x:Name="FillButton" Click="MiddleMiddleButton_Click" Grid.Row="1" Grid.Column="1" Margin="3">
+            <Image Source="/Gum;component/Content/Icons/AnchorPlugin/MiddleMiddle.png" Height="32" Width="32"/>
+        </Button>
+        <Button x:Name="RightButton" Click="MiddleRightButton_Click" Grid.Row="1" Grid.Column="2" Margin="3">
+            <Image Source="/Gum;component/Content/Icons/AnchorPlugin/MiddleRight.png" Height="32" Width="32"/>
+        </Button>
+
+
+        <Button x:Name="BottomLeftButton" Click="BottomLeftButton_Click" Grid.Row="2" Grid.Column="0" Margin="3">
+            <Image Source="/Gum;component/Content/Icons/AnchorPlugin/BottomLeft.png" Height="32" Width="32"/>
+        </Button>
+        <Button x:Name="BottomButton" Click="BottomMiddleButton_Click" Grid.Row="2" Grid.Column="1" Margin="3">
+            <Image Source="/Gum;component/Content/Icons/AnchorPlugin/BottomMiddle.png" Height="32" Width="32"/>
+        </Button>
+        <Button x:Name="BottomRightButton" Click="BottomRightButton_Click" Grid.Row="2" Grid.Column="2" Margin="3">
+            <Image Source="/Gum;component/Content/Icons/AnchorPlugin/BottomRight.png" Height="32" Width="32"/>
+        </Button>
+
+
+    </Grid>
+    </GroupBox>
+
+</UserControl>

@@ -13,7 +13,8 @@ namespace Gum.Plugins.AlignmentButtons
     {
         public override void StartUp()
         {
-            GumCommands.Self.GuiCommands.AddControl(new Gum.Plugins.AlignmentButtons.AlignmentControl(), "Alignment");
+            GumCommands.Self.GuiCommands.AddControl(
+                new Gum.Plugins.AlignmentButtons.AlignmentPluginControl(), "Alignment");
 
         }
     }

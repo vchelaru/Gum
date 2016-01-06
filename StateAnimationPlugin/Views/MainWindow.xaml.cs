@@ -113,10 +113,21 @@ namespace StateAnimationPlugin.Views
                 lbmb.RequiresSelection = true;
                 lbmb.Message = "Select a state";
 
-                foreach (var state in SelectedState.Self.SelectedElement.AllStates)
+                var element = SelectedState.Self.SelectedElement;
+
+                foreach (var state in element.States)
                 {
                     lbmb.Items.Add(state.Name);
                 }
+
+                foreach(var category in element.Categories)
+                {
+                    foreach(var state in category.States)
+                    {
+                        lbmb.Items.Add(category.Name + "/" + state.Name);
+                    }
+                }
+
 
                 var dialogResult = lbmb.ShowDialog();
 

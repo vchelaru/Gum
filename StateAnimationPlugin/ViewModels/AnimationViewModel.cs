@@ -146,7 +146,7 @@ namespace StateAnimationPlugin.ViewModels
 
             foreach(var stateSave in save.States)
             {
-                var foundState = element.AllStates.FirstOrDefault(item => item.Name == stateSave.StateName);
+                var foundState = GetStateFromCategorizedName(stateSave.StateName, element);
 
                 var newAnimatedStateViewModel = AnimatedKeyframeViewModel.FromSave(stateSave);
 
@@ -174,7 +174,7 @@ namespace StateAnimationPlugin.ViewModels
                 }
                 else
                 {
-                    var instance = element.Instances.FirstOrDefault(item => item.Name == animationReference.SourceObject);
+                    var instance =  element.Instances.FirstOrDefault(item => item.Name == animationReference.SourceObject);
 
                     if(instance != null)
                     {
@@ -311,6 +311,26 @@ namespace StateAnimationPlugin.ViewModels
             mIsInMiddleOfSort = false;
         }
 
+
+        static StateSave GetStateFromCategorizedName(string categorizedName, ElementSave element)
+        {
+            if(categorizedName.Contains("/"))
+            {
+                var names = categorizedName.Split('/');
+
+                string category = names[0];
+                string stateName = names[1];
+
+                return element
+                    .Categories.FirstOrDefault(item => item.Name == category)
+                    ?.States.FirstOrDefault(item => item.Name == stateName);
+            }
+            else
+            {
+                return element.States.FirstOrDefault(item => item.Name == categorizedName);
+            }
+        }
+
         /// <summary>
         /// Perofrms a sequential, cumulative combination of all states along an animation.
         /// As an animation plays each state (keyframe) combines with the previous
@@ -330,7 +350,7 @@ namespace StateAnimationPlugin.ViewModels
 
             foreach(var animatedState in this.Keyframes.Where(item=>!string.IsNullOrEmpty(item.StateName)))
             {
-                var originalState = element.AllStates.FirstOrDefault(item => item.Name == animatedState.StateName);
+                var originalState = GetStateFromCategorizedName(animatedState.StateName, element);
 
                 if (originalState != null)
                 {

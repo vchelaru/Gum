@@ -111,6 +111,9 @@ namespace RenderingLibrary.Graphics
                 UpdateWrappedText();
                 mNeedsBitmapFontRefresh = true;
 
+                // Update dimensions for anything that needs the dimensions immediately:
+                UpdatePreRenderDimensions();
+
                 //UpdateTextureToRender();
             }
         }
@@ -578,7 +581,8 @@ namespace RenderingLibrary.Graphics
                     //    mTextureToRender = null;
                     //}
 
-                    var returnedRenderTarget = fontToUse.RenderToTexture2D(WrappedText, this.HorizontalAlignment, mManagers, mTextureToRender, this);
+                    var returnedRenderTarget = fontToUse.RenderToTexture2D(WrappedText, this.HorizontalAlignment,
+                        mManagers, mTextureToRender, this);
                     bool isNewInstance = returnedRenderTarget != mTextureToRender;
 
                     if (isNewInstance && mTextureToRender != null)
@@ -688,8 +692,18 @@ namespace RenderingLibrary.Graphics
                 mTempForRendering.Y += this.EffectiveHeight - mTempForRendering.Height;
             }
 
-            Sprite.Render(managers, spriteRenderer, mTempForRendering, mTextureToRender,
-                new Color(mRed, mGreen, mBlue, mAlpha), null, false, false, Rotation, treat0AsFullDimensions: false, objectCausingRenering:this);
+            if (mBitmapFont.AtlasedTexture != null)
+            {
+                mBitmapFont.RenderAtlasedTextureToScreen(mWrappedText, this.HorizontalAlignment, mTextureToRender.Height,
+                    new Color(mRed, mGreen, mBlue, mAlpha), Rotation, mFontScale, managers,spriteRenderer, this);
+            }
+            else
+            {
+                Sprite.Render(managers, spriteRenderer, mTempForRendering, mTextureToRender,
+                    new Color(mRed, mGreen, mBlue, mAlpha), null, false, false, Rotation, treat0AsFullDimensions: false,
+                    objectCausingRenering: this);
+                
+            }
         }
 
         IPositionedSizedObject mTempForRendering;

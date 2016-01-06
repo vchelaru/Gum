@@ -185,8 +185,14 @@
     <Compile Include="Managers\PropertyGridManager.Events.cs" />
     <Compile Include="Managers\RenameManager.cs" />
     <Compile Include="Managers\Singleton.cs" />
-    <Compile Include="Plugins\AlignmentButtons\AlignmentControl.xaml.cs">
-      <DependentUpon>AlignmentControl.xaml</DependentUpon>
+    <Compile Include="Plugins\AlignmentButtons\AlignmentPluginControl.xaml.cs">
+      <DependentUpon>AlignmentPluginControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Plugins\AlignmentButtons\AnchorControl.xaml.cs">
+      <DependentUpon>AnchorControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Plugins\AlignmentButtons\DockControl.xaml.cs">
+      <DependentUpon>DockControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Plugins\AlignmentButtons\AlignmentMainPlugin.cs" />
     <Compile Include="Plugins\BaseClasses\InternalPlugin.cs" />
@@ -384,6 +390,15 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
     <None Include="Launcher.exe" />
+    <Resource Include="Content\Icons\AnchorPlugin\BottomLeft.png" />
+    <Resource Include="Content\Icons\AnchorPlugin\BottomMiddle.png" />
+    <Resource Include="Content\Icons\AnchorPlugin\BottomRight.png" />
+    <Resource Include="Content\Icons\AnchorPlugin\MiddleLeft.png" />
+    <Resource Include="Content\Icons\AnchorPlugin\MiddleMiddle.png" />
+    <Resource Include="Content\Icons\AnchorPlugin\MiddleRight.png" />
+    <Resource Include="Content\Icons\AnchorPlugin\TopLeft.png" />
+    <Resource Include="Content\Icons\AnchorPlugin\TopMiddle.png" />
+    <Resource Include="Content\Icons\AnchorPlugin\TopRight.png" />
     <Content Include="Libraries\TargaImage.dll" />
     <Content Include="Libraries\TargaImage.xml" />
     <None Include="Content\InvalidTexture.png">
@@ -404,7 +419,15 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Plugins\AlignmentButtons\AlignmentControl.xaml">
+    <Page Include="Plugins\AlignmentButtons\AlignmentPluginControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Plugins\AlignmentButtons\AnchorControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Plugins\AlignmentButtons\DockControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Microsoft.Xna.Framework;
 
 namespace RenderingLibrary.Math
 {
@@ -32,6 +33,49 @@ namespace RenderingLibrary.Math
         {
             // see the other RoundToInt for information on why we add .5
             return (int)(System.Math.Round(doubleToRound) + (System.Math.Sign(doubleToRound) * .5f));
+
+        }
+
+        /// <summary>
+        /// Rotates a Point around another Point by a given number of radians.
+        /// </summary>
+        /// <param name="basePoint">Point to rotate around.</param>
+        /// <param name="pointToRotate">Point to rotate (changes position).</param>
+        /// <param name="radiansToChangeBy">Radians to rotate by.</param>
+        public static void RotatePointAroundPoint(Point basePoint, ref Point pointToRotate, float radiansToChangeBy)
+        {
+            double xDistance = pointToRotate.X - basePoint.X;
+            double yDistance = pointToRotate.Y - basePoint.Y;
+            if (xDistance == 0 && yDistance == 0)
+                return;
+
+            double distance = xDistance * xDistance + yDistance * yDistance;
+            distance = (float)System.Math.Pow(distance, .5);
+
+            double angle = System.Math.Atan(yDistance / xDistance);
+            if (xDistance < 0.0f) angle += (float)System.Math.PI;
+            angle += radiansToChangeBy;
+
+            pointToRotate.X = (int)(System.Math.Cos(angle) * distance + basePoint.X);
+            pointToRotate.Y = (int)(System.Math.Sin(angle) * distance + basePoint.Y);
+
+        }
+
+        public static void RotatePointAroundPoint(Vector3 basePoint, ref Vector3 pointToRotate, float radiansToChangeBy)
+        {
+            double xDistance = pointToRotate.X - basePoint.X;
+            double yDistance = pointToRotate.Y - basePoint.Y;
+            if (xDistance == 0 && yDistance == 0)
+                return;
+
+            double distance = xDistance * xDistance + yDistance * yDistance;
+            distance = (float)System.Math.Pow(distance, .5);
+
+            double angle = System.Math.Atan2(yDistance, xDistance);
+            angle += radiansToChangeBy;
+
+            pointToRotate.X = (float)(System.Math.Cos(angle) * distance + basePoint.X);
+            pointToRotate.Y = (float)(System.Math.Sin(angle) * distance + basePoint.Y);
 
         }
     }
