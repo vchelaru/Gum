@@ -659,8 +659,6 @@ namespace Gum.Managers
 
                 mTreeView.CallAfterClickSelect(null, new TreeViewEventArgs(treeNode));
             }
-
-            ProjectVerifier.Self.AssertSelectedIpsosArePartOfRenderer();
         }
 
         private void Select(List<TreeNode> treeNodes)
@@ -672,7 +670,6 @@ namespace Gum.Managers
                 treeNodes[0].EnsureVisible();
                 mTreeView.CallAfterClickSelect(null, new TreeViewEventArgs(treeNodes[0]));
             }
-            ProjectVerifier.Self.AssertSelectedIpsosArePartOfRenderer();
         }
 
         public void RefreshUI(ElementSave elementSave)

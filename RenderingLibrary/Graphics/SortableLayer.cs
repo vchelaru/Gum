@@ -32,5 +32,8 @@ namespace RenderingLibrary.Graphics
             set;
         }
 
+        void IRenderable.PreRender() { }
+
+
     }
 }

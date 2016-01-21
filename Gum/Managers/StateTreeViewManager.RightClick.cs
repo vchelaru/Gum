@@ -38,14 +38,21 @@ namespace Gum.Managers
 
                 AddMenuItem("Delete " + SelectedState.Self.SelectedStateSave.Name, DeleteStateClick);
 
-                mMenuStrip.Items.Add("-");
-
-
                 if (SelectedState.Self.SelectedStateSave != SelectedState.Self.SelectedElement.DefaultState)
                 {
+                    mMenuStrip.Items.Add("-");
+
                     AddMenuItem("Make Default", MakeDefaultClick);
 
                     AddMoveToCategoryItems();
+
+                    mMenuStrip.Items.Add("-");
+
+                    if (GetIfCanMoveUp(SelectedState.Self.SelectedStateSave, SelectedState.Self.SelectedStateCategorySave))
+                    {
+                        AddMenuItem("^ Move Up", MoveUpClick);
+                    }
+                    AddMenuItem("v Move Down", MoveDownClick);
                 }
             }
             if(SelectedState.Self.SelectedStateCategorySave != null)
@@ -59,6 +66,74 @@ namespace Gum.Managers
                 AddMenuItem("Delete " + SelectedState.Self.SelectedStateCategorySave.Name, DeleteCategoryClick);
             }
         }
+
+        private void MoveUpClick()
+        {
+            MoveStateInDirection(-1);
+        }
+
+        private void MoveDownClick()
+        {
+            MoveStateInDirection(1);
+        }
+
+        private void MoveStateInDirection(int direction)
+        {
+            var state = SelectedState.Self.SelectedStateSave;
+            var list = SelectedState.Self.SelectedElement.States;
+            if(SelectedState.Self.SelectedStateCategorySave != null)
+            {
+                list = SelectedState.Self.SelectedStateCategorySave.States;
+            }
+
+            if(list != null && list.Contains(state))
+            {
+                int oldIndex = list.IndexOf(state);
+
+                bool shouldSave = false;
+
+                if(direction == -1 && GetIfCanMoveUp(state, SelectedState.Self.SelectedStateCategorySave))
+                {
+                    list.RemoveAt(oldIndex);
+                    list.Insert(oldIndex - 1, state);
+                    shouldSave = true;
+                }
+                else if(direction == 1 &&  oldIndex != list.Count-1)
+                {
+                    list.RemoveAt(oldIndex);
+                    list.Insert(oldIndex + 1, state);
+                    shouldSave = true;
+                }
+
+                if(shouldSave)
+                {
+                    GumCommands.Self.GuiCommands.RefreshStateTreeView();
+
+                    GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+                }
+            }
+        }
+
+        bool GetIfCanMoveUp(StateSave state, StateSaveCategory category)
+        {
+            var list = SelectedState.Self.SelectedElement.States;
+            if (category != null)
+            {
+                list = category.States;
+            }
+
+            int stateIndex = list.IndexOf(state);
+
+            int indexToBeGreaterThan = 0;
+            if (category == null)
+            {
+                // Uncategorized, so it can't move up above the Default state
+                indexToBeGreaterThan = 1;
+            }
+
+            return stateIndex > indexToBeGreaterThan;
+        }
+
 
         private void DeleteCategoryClick()
         {

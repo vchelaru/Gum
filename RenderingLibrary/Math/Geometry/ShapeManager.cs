@@ -146,12 +146,12 @@ namespace RenderingLibrary.Math.Geometry
             Renderer.RemoveRenderable(solidRectangle);
         }
 
-        public void Remove(LineGrid lineGrid)
-        {           
-            // todo:  Need to make this remove from whatever Layer the line rectangle is on
-            mGrids.Remove(lineGrid);
-            Renderer.RemoveRenderable(lineGrid);
-        }
+        //public void Remove(LineGrid lineGrid)
+        //{           
+        //    // todo:  Need to make this remove from whatever Layer the line rectangle is on
+        //    mGrids.Remove(lineGrid);
+        //    Renderer.RemoveRenderable(lineGrid);
+        //}
 
         public void Remove(LineCircle lineCircle)
         {

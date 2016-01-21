@@ -274,6 +274,7 @@
     <Compile Include="Wireframe\EditingManager.cs" />
     <Compile Include="Wireframe\EditingManager.RightClick.cs" />
     <Compile Include="Wireframe\ElementWithState.cs" />
+    <Compile Include="Wireframe\GrabbedInitialState.cs" />
     <Compile Include="Wireframe\GraphicalOutline.cs" />
     <Compile Include="Wireframe\InterpolatingColor.cs" />
     <Compile Include="Wireframe\PlatformDetails.cs" />

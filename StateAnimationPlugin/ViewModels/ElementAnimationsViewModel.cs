@@ -23,6 +23,7 @@ namespace StateAnimationPlugin.ViewModels
         ObservableCollection<AnimationViewModel> mAnimations;
 
         double mDisplayedAnimationTime;
+        double timeAnimationStarted;
 
         // 50 isn't smooth enough, we want more fps!
         //const int mTimerFrequencyInMs = 50;
@@ -32,6 +33,7 @@ namespace StateAnimationPlugin.ViewModels
 
         BitmapFrame mPlayBitmap;
         BitmapFrame mStopBitmap;
+
 
 
         #endregion
@@ -205,8 +207,8 @@ namespace StateAnimationPlugin.ViewModels
 
         private void HandlePlayTimerTick(object sender, EventArgs e)
         {
-            var newValue = DisplayedAnimationTime + mTimerFrequencyInMs / 1000.0;
-
+            var currentTime = Gum.Wireframe.TimeManager.Self.CurrentTime;
+            var newValue = currentTime - timeAnimationStarted;
 
             if (SelectedAnimation != null)
             {
@@ -215,7 +217,15 @@ namespace StateAnimationPlugin.ViewModels
                 {
                     if (this.SelectedAnimation.Loops)
                     {
-                        newValue = 0;
+                        if (this.SelectedAnimation.Length == 0)
+                        {
+                            newValue = 0;
+                        }
+                        else
+                        {
+                            newValue = newValue % this.SelectedAnimation.Length;
+                            timeAnimationStarted = Gum.Wireframe.TimeManager.Self.CurrentTime - newValue;
+                        }
                     }
                     else
                     {
@@ -234,6 +244,7 @@ namespace StateAnimationPlugin.ViewModels
 
             if(mPlayTimer.IsEnabled)
             {
+                timeAnimationStarted = Gum.Wireframe.TimeManager.Self.CurrentTime;
                 DisplayedAnimationTime = 0;
             }
 

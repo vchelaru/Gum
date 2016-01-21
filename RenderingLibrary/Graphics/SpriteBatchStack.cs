@@ -168,8 +168,15 @@ namespace RenderingLibrary.Graphics
             newParameters.RasterizerState = rasterizerState;
             newParameters.Effect = effect;
             newParameters.TransformMatrix = transformMatrix;
-            newParameters.ScissorRectangle = scissorRectangle;
 
+            try
+            {
+                newParameters.ScissorRectangle = scissorRectangle;
+            }
+            catch(Exception e)
+            {
+                throw new Exception("Could not set scissor rectangle to:" + scissorRectangle.ToString(), e);
+            }
             if (currentParameters != null)
             {
                 beginParametersUsedThisFrame.Add(currentParameters.Value);
@@ -182,8 +189,14 @@ namespace RenderingLibrary.Graphics
                 SpriteBatch.End();
             }
 
-            SpriteBatch.GraphicsDevice.ScissorRectangle = scissorRectangle;
-
+            try
+            {
+                SpriteBatch.GraphicsDevice.ScissorRectangle = scissorRectangle;
+            }
+            catch(Exception e)
+            {
+                throw new Exception("Error trying to set scissor rectangle:" + scissorRectangle.ToString());
+            }
             beginEndState = SpriteBatchBeginEndState.Began;
             SpriteBatch.Begin(sortMode, blendState, samplerState, depthStencilState, rasterizerState, effect, transformMatrix);
 

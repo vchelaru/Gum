@@ -158,7 +158,7 @@ namespace Gum.Wireframe
 
             Texture2D texture = imageData.ToTexture2D(false);
             mBackgroundSprite = new Sprite(texture);
-
+            mBackgroundSprite.Name = "Background checkerboard Sprite";
             mBackgroundSprite.Wrap = true;
             mBackgroundSprite.X = -4096;
             mBackgroundSprite.Y = -4096;
@@ -267,7 +267,7 @@ namespace Gum.Wireframe
             return null;
         }
 
-        public GraphicalUiElement GetRepresentation(InstanceSave instanceSave, List<ElementWithState> elementStack)
+        public GraphicalUiElement GetRepresentation(InstanceSave instanceSave, List<ElementWithState> elementStack = null)
         {
             if (instanceSave != null)
             {
@@ -293,7 +293,7 @@ namespace Gum.Wireframe
         /// </summary>
         /// <param name="representation">The representation in question.</param>
         /// <returns>The InstanceSave or null if one isn't found.</returns>
-        public InstanceSave GetInstance(IPositionedSizedObject representation, InstanceFetchType fetchType, List<ElementWithState> elementStack)
+        public InstanceSave GetInstance(IRenderableIpso representation, InstanceFetchType fetchType, List<ElementWithState> elementStack)
         {
             ElementSave selectedElement = SelectedState.Self.SelectedElement;
 
@@ -306,7 +306,7 @@ namespace Gum.Wireframe
             return GetInstance(representation, selectedElement, prefix, fetchType, elementStack);
         }
 
-        public InstanceSave GetInstance(IPositionedSizedObject representation, ElementSave instanceContainer, string prefix, InstanceFetchType fetchType, List<ElementWithState> elementStack)
+        public InstanceSave GetInstance(IRenderableIpso representation, ElementSave instanceContainer, string prefix, InstanceFetchType fetchType, List<ElementWithState> elementStack)
         {
             if (instanceContainer == null)
             {
@@ -357,7 +357,7 @@ namespace Gum.Wireframe
             return toReturn;
         }
 
-        private string StripGuideOrParentNameIfNecessaryName(string qualifiedName, IPositionedSizedObject representation)
+        private string StripGuideOrParentNameIfNecessaryName(string qualifiedName, IRenderableIpso representation)
         {
             foreach (NamedRectangle rectangle in ObjectFinder.Self.GumProjectSave.Guides)
             {
@@ -402,7 +402,7 @@ namespace Gum.Wireframe
             return null;
         }
 
-        public T GetIpsoAt<T>(float x, float y, IList<T> list) where T : IPositionedSizedObject
+        public T GetIpsoAt<T>(float x, float y, IList<T> list) where T : IRenderableIpso
         {
             foreach (T ipso in list)
             {
@@ -439,7 +439,7 @@ namespace Gum.Wireframe
             return toReturn;
         }
 
-        private void GetRequiredDimensionsFromContents(IPositionedSizedObject parentIpso, out float requiredWidth, out float requiredHeight)
+        private void GetRequiredDimensionsFromContents(IRenderableIpso parentIpso, out float requiredWidth, out float requiredHeight)
         {
             requiredWidth = 0;
             requiredHeight = 0;

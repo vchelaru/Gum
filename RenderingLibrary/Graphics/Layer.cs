@@ -10,15 +10,15 @@ namespace RenderingLibrary.Graphics
     {
         #region Fields
 
-        List<IRenderable> mRenderables = new List<IRenderable>();
+        List<IRenderableIpso> mRenderables = new List<IRenderableIpso>();
 
-        ReadOnlyCollection<IRenderable> mRenderablesReadOnly;
+        ReadOnlyCollection<IRenderableIpso> mRenderablesReadOnly;
 
         #endregion
 
         #region Properties
 
-        public IPositionedSizedObject ScissorIpso { get; set; }
+        public IRenderableIpso ScissorIpso { get; set; }
 
         public LayerCameraSettings LayerCameraSettings
         {
@@ -32,7 +32,7 @@ namespace RenderingLibrary.Graphics
             set;
         }
 
-        public ReadOnlyCollection<IRenderable> Renderables
+        public ReadOnlyCollection<IRenderableIpso> Renderables
         {
             get
             {
@@ -40,13 +40,13 @@ namespace RenderingLibrary.Graphics
             }
         }
 
-        internal List<IRenderable> RenderablesWriteable
-        {
-            get
-            {
-                return mRenderables;
-            }
-        }
+        //internal List<IRenderableIpso> RenderablesWriteable
+        //{
+        //    get
+        //    {
+        //        return mRenderables;
+        //    }
+        //}
 
         public Layer ParentLayer
         {
@@ -58,10 +58,10 @@ namespace RenderingLibrary.Graphics
 
         public Layer()
         {
-            mRenderablesReadOnly = new ReadOnlyCollection<IRenderable>(mRenderables);
+            mRenderablesReadOnly = new ReadOnlyCollection<IRenderableIpso>(mRenderables);
         }
 
-        public void Add(IRenderable renderable)
+        public void Add(IRenderableIpso renderable)
         {
             lock (mRenderables)
             {
@@ -69,7 +69,7 @@ namespace RenderingLibrary.Graphics
             }
         }
 
-        public void Remove(IRenderable renderable)
+        public void Remove(IRenderableIpso renderable)
         {
             mRenderables.Remove(renderable);
         }
@@ -141,80 +141,5 @@ namespace RenderingLibrary.Graphics
             return false;
         }
 
-        internal Microsoft.Xna.Framework.Rectangle GetScissorRectangleFor(Camera camera)
-        {
-            var ipso = ScissorIpso;
-
-            if (ipso == null)
-            {
-                return new Microsoft.Xna.Framework.Rectangle(
-                    0,0,
-                    camera.ClientWidth,
-                    camera.ClientHeight
-
-                    );
-            }
-            else
-            {
-
-                float worldX = ipso.GetAbsoluteLeft();
-                float worldY = ipso.GetAbsoluteTop();
-
-                float screenX;
-                float screenY;
-                camera.WorldToScreen(worldX, worldY, out screenX, out screenY);
-
-                int left = global::RenderingLibrary.Math.MathFunctions.RoundToInt(screenX);
-                int top = global::RenderingLibrary.Math.MathFunctions.RoundToInt(screenY);
-
-                worldX = ipso.GetAbsoluteRight();
-                worldY = ipso.GetAbsoluteBottom();
-                camera.WorldToScreen(worldX, worldY, out screenX, out screenY);
-
-                int right = global::RenderingLibrary.Math.MathFunctions.RoundToInt(screenX);
-                int bottom = global::RenderingLibrary.Math.MathFunctions.RoundToInt(screenY);
-
-
-
-                left = System.Math.Max(0, left);
-                top = System.Math.Max(0, top);
-                right = System.Math.Max(0, right);
-                bottom = System.Math.Max(0, bottom);
-
-                left = System.Math.Min(left, camera.ClientWidth);
-                right = System.Math.Min(right, camera.ClientWidth);
-
-                top = System.Math.Min(top, camera.ClientHeight);
-                bottom = System.Math.Min(bottom, camera.ClientHeight);
-
-
-
-                if (ParentLayer != null)
-                {
-                    var parentRectangle = ParentLayer.GetScissorRectangleFor(camera);
-                    if(top > parentRectangle.Bottom)
-                    {
-                        int m = 3;
-                    }
-                    left = System.Math.Max(left, parentRectangle.Left);
-                    right = System.Math.Min(right, parentRectangle.Right);
-                    top = System.Math.Max(top, parentRectangle.Top);
-                    bottom = System.Math.Min(bottom, parentRectangle.Bottom);
-                }
-
-                int width = System.Math.Max(0, right - left);
-                int height = System.Math.Max(0, bottom - top);
-
-
-                Microsoft.Xna.Framework.Rectangle thisRectangle = new Microsoft.Xna.Framework.Rectangle(
-                    left,
-                    top,
-                    width,
-                    height);
-
-                return thisRectangle;
-            }
-
-        }
     }
 }

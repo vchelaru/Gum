@@ -26,19 +26,19 @@ namespace RenderingLibrary.Graphics
 
     #endregion
 
-    public class NineSlice : IPositionedSizedObject, IRenderable, IVisible
+    public class NineSlice : IRenderableIpso, IVisible
     {
         #region Fields
 
 
-        List<IPositionedSizedObject> mChildren = new List<IPositionedSizedObject>();
+        List<IRenderableIpso> mChildren = new List<IRenderableIpso>();
 
         //Sprites which make up NineSlice indexed by NineSliceSections enum
         private Sprite[] mSprites;
 
         Vector2 Position;
 
-        IPositionedSizedObject mParent;
+        IRenderableIpso mParent;
 
   //      Sprite mTopLeftSprite = new Sprite(null);
   //      Sprite mTopSprite = new Sprite(null);
@@ -166,6 +166,14 @@ namespace RenderingLibrary.Graphics
             }
         }
 
+        bool IRenderableIpso.ClipsChildren
+        {
+            get
+            {
+                return false;
+            }
+        }
+
         float IPositionedSizedObject.Width
         {
             get
@@ -278,7 +286,7 @@ namespace RenderingLibrary.Graphics
             set;
         }
 
-        public IPositionedSizedObject Parent
+        public IRenderableIpso Parent
         {
             get { return mParent; }
             set
@@ -340,7 +348,7 @@ namespace RenderingLibrary.Graphics
 
 
 
-        public List<IPositionedSizedObject> Children
+        public List<IRenderableIpso> Children
         {
             get { return mChildren; }
         }
@@ -851,7 +859,7 @@ namespace RenderingLibrary.Graphics
                 sourceRectangle, sprite.FlipHorizontal, sprite.FlipVertical, sprite.Rotation, treat0AsFullDimensions:false);
         }
 
-        void IPositionedSizedObject.SetParentDirect(IPositionedSizedObject parent)
+        void IRenderableIpso.SetParentDirect(IRenderableIpso parent)
         {
             mParent = parent;
         }
@@ -884,7 +892,7 @@ namespace RenderingLibrary.Graphics
         {
             get
             {
-                return ((IPositionedSizedObject)this).Parent as IVisible;
+                return ((IRenderableIpso)this).Parent as IVisible;
             }
         }
 
@@ -913,6 +921,7 @@ namespace RenderingLibrary.Graphics
             for (var sprite = 0; sprite < 9; sprite++)
             {
                 mSprites[sprite] = new Sprite(null);
+                mSprites[sprite].Name = "Unnamed nineslice Sprite" + sprite;
             }
         }
 
@@ -1031,6 +1040,7 @@ namespace RenderingLibrary.Graphics
             return toReturn;
         }
 
+        void IRenderable.PreRender() { }
         #endregion
 
 

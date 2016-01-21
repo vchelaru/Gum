@@ -16,8 +16,10 @@ namespace Gum.Wireframe
 {
 
 
-    public partial class GraphicalUiElement : IRenderable, IPositionedSizedObject, IVisible
+    public partial class GraphicalUiElement : IRenderableIpso, IVisible
     {
+
+
         #region Fields
 
 
@@ -27,9 +29,8 @@ namespace Gum.Wireframe
 
         public static bool ShowLineRectangles = true;
 
-        IRenderable mContainedObjectAsRenderable;
         // to save on casting:
-        IPositionedSizedObject mContainedObjectAsIpso;
+        IRenderableIpso mContainedObjectAsIpso;
         IVisible mContainedObjectAsIVisible;
 
         GraphicalUiElement mWhatContainsThis;
@@ -70,7 +71,7 @@ namespace Gum.Wireframe
         static float mCanvasWidth = 800;
         static float mCanvasHeight = 600;
 
-        IPositionedSizedObject mParent;
+        IRenderableIpso mParent;
 
 
         bool mIsLayoutSuspended = false;
@@ -145,13 +146,17 @@ namespace Gum.Wireframe
         {
             get
             {
-#if DEBUG
+                // this used to throw an exception, but 
+                // the screen is an IPSO which may be considered
+                // the effective parent of an element.
                 if (mContainedObjectAsIpso == null)
                 {
-                    int m = 3;
+                    return 0;
                 }
-#endif
-                return mContainedObjectAsIpso.X;
+                else
+                {
+                    return mContainedObjectAsIpso.X;
+                }
             }
             set
             {
@@ -163,24 +168,18 @@ namespace Gum.Wireframe
         {
             get
             {
-                return mContainedObjectAsIpso.Y;
-
+                if (mContainedObjectAsIpso == null)
+                {
+                    return 0;
+                }
+                else
+                {
+                    return mContainedObjectAsIpso.Y;
+                }
             }
             set
             {
                 mContainedObjectAsIpso.Y = value;
-            }
-        }
-
-        float IPositionedSizedObject.Z
-        {
-            get
-            {
-                return mContainedObjectAsIpso.Z;
-            }
-            set
-            {
-                mContainedObjectAsIpso.Z = value;
             }
         }
 
@@ -223,43 +222,45 @@ namespace Gum.Wireframe
             }
         }
 
-        void IPositionedSizedObject.SetParentDirect(IPositionedSizedObject parent)
+        void IRenderableIpso.SetParentDirect(IRenderableIpso parent)
         {
             mContainedObjectAsIpso.SetParentDirect(parent);
         }
 
         #endregion
 
+
+        public float Z
+        {
+            get
+            {
+                return ((IPositionedSizedObject)mContainedObjectAsIpso).Z;
+            }
+            set
+            {
+                ((IPositionedSizedObject)mContainedObjectAsIpso).Z = value;
+            }
+        }
+
+
         #region IRenderable properties
 
 
         Microsoft.Xna.Framework.Graphics.BlendState IRenderable.BlendState
         {
-            get { return mContainedObjectAsRenderable.BlendState; }
+            get { return mContainedObjectAsIpso.BlendState; }
         }
 
         bool IRenderable.Wrap
         {
-            get { return mContainedObjectAsRenderable.Wrap; }
+            get { return mContainedObjectAsIpso.Wrap; }
         }
 
         void IRenderable.Render(SpriteRenderer spriteRenderer, SystemManagers managers)
         {
-            mContainedObjectAsRenderable.Render(spriteRenderer, managers);
+            mContainedObjectAsIpso.Render(spriteRenderer, managers);
         }
-
-        float IRenderable.Z
-        {
-            get
-            {
-                return mContainedObjectAsRenderable.Z;
-            }
-            set
-            {
-                mContainedObjectAsRenderable.Z = value;
-            }
-        }
-
+        
         /// <summary>
         /// Used for clipping.
         /// </summary>
@@ -425,7 +426,7 @@ namespace Gum.Wireframe
             }
         }
 
-        public IPositionedSizedObject Parent
+        public IRenderableIpso Parent
         {
             get { return mParent; }
             set
@@ -493,13 +494,13 @@ namespace Gum.Wireframe
         {
             get
             {
-                if (mContainedObjectAsRenderable is GraphicalUiElement)
+                if (mContainedObjectAsIpso is GraphicalUiElement)
                 {
-                    return ((GraphicalUiElement)mContainedObjectAsRenderable).RenderableComponent;
+                    return ((GraphicalUiElement)mContainedObjectAsIpso).RenderableComponent;
                 }
                 else
                 {
-                    return mContainedObjectAsRenderable;
+                    return mContainedObjectAsIpso;
                 }
 
             }
@@ -533,7 +534,7 @@ namespace Gum.Wireframe
             }
         }
 
-        public List<IPositionedSizedObject> Children
+        public List<IRenderableIpso> Children
         {
             get
             {
@@ -817,6 +818,7 @@ namespace Gum.Wireframe
             {
                 mWhatContainsThis.mWhatThisContains.Add(this);
 
+                // I don't think we want to do this. 
                 if (whatContainsThis.mContainedObjectAsIpso != null)
                 {
                     this.Parent = whatContainsThis;
@@ -830,10 +832,9 @@ namespace Gum.Wireframe
             {
                 throw new ArgumentException("The argument containedObject cannot be 'this'");
             }
-
-            mContainedObjectAsRenderable = containedObject;
-            mContainedObjectAsIpso = mContainedObjectAsRenderable as IPositionedSizedObject;
-            mContainedObjectAsIVisible = mContainedObjectAsRenderable as IVisible;
+            
+            mContainedObjectAsIpso = containedObject as IRenderableIpso;
+            mContainedObjectAsIVisible = containedObject as IVisible;
 
             if (containedObject is global::RenderingLibrary.Math.Geometry.LineRectangle)
             {
@@ -995,6 +996,14 @@ namespace Gum.Wireframe
             UpdateLayout(updateParent, value);
         }
 
+        void IRenderable.PreRender()
+        {
+            if(mContainedObjectAsIpso != null)
+            {
+                mContainedObjectAsIpso.PreRender();
+            }
+        }
+
 
         bool GetIfShouldCallUpdateOnParent()
         {
@@ -1024,7 +1033,14 @@ namespace Gum.Wireframe
                 // in the updates.
                 if (mContainedObjectAsIpso != null)
                 {
-                    mContainedObjectAsIpso.Parent = mParent;
+                    // If we assign the Parent, then the Parent will have the 
+                    // mContainedObjectAsIpso added to its children, which will
+                    // result in it being rendered. But this GraphicalUiElement is
+                    // already a child of the Parent, so adding the mContainedObjectAsIpso
+                    // as well would result in a double-render. Instead, we'll set the parent
+                    // direct, so the parent doesn't know about this child:
+                    //mContainedObjectAsIpso.Parent = mParent;
+                    mContainedObjectAsIpso.SetParentDirect(mParent);
                 }
 
                 // Not sure why we use the ParentGue and not the Parent itself...
@@ -1068,6 +1084,11 @@ namespace Gum.Wireframe
 
                     if (mContainedObjectAsIpso != null)
                     {
+                        if(mContainedObjectAsIpso is LineRectangle)
+                        {
+                            (mContainedObjectAsIpso as LineRectangle).ClipsChildren = ClipsChildren;
+                        }
+
                         float widthBefore = 0;
                         float heightBefore = 0;
                         if (this.mContainedObjectAsIpso != null)
@@ -1081,14 +1102,14 @@ namespace Gum.Wireframe
                         // However, if the texture coordinates depend on the dimensions
                         // (like for a tiling background) then this also needs to be set
                         // after UpdateDimensions. 
-                        if (mContainedObjectAsRenderable is Sprite || mContainedObjectAsRenderable is NineSlice)
+                        if (mContainedObjectAsIpso is Sprite || mContainedObjectAsIpso is NineSlice)
                         {
                             UpdateTextureCoordinatesNotDimensionBased();
                         }
 
                         UpdateDimensions(parentWidth, parentHeight);
 
-                        if (mContainedObjectAsRenderable is Sprite || mContainedObjectAsRenderable is NineSlice)
+                        if (mContainedObjectAsIpso is Sprite || mContainedObjectAsIpso is NineSlice)
                         {
                             UpdateTextureCoordinatesDimensionBased();
                         }
@@ -1111,10 +1132,11 @@ namespace Gum.Wireframe
 
                         // See the above call to UpdateTextureCoordiantes
                         // on why this is called both before and after UpdateDimensions
-                        if (mContainedObjectAsRenderable is Sprite)
+                        if (mContainedObjectAsIpso is Sprite)
                         {
                             UpdateTextureCoordinatesNotDimensionBased();
                         }
+
 
                         UpdatePosition(parentWidth, parentHeight);
                     }
@@ -1189,7 +1211,7 @@ namespace Gum.Wireframe
                 parentWidth = Parent.Width;
                 parentHeight = Parent.Height;
             }
-            else if (this.ParentGue != null && this.ParentGue.mContainedObjectAsRenderable != null)
+            else if (this.ParentGue != null && this.ParentGue.mContainedObjectAsIpso != null)
             {
                 parentWidth = this.ParentGue.mContainedObjectAsIpso.Width;
                 parentHeight = this.ParentGue.mContainedObjectAsIpso.Height;
@@ -1198,9 +1220,9 @@ namespace Gum.Wireframe
 
         private void UpdateTextureCoordinatesDimensionBased()
         {
-            if (mContainedObjectAsRenderable is Sprite)
+            if (mContainedObjectAsIpso is Sprite)
             {
-                var sprite = mContainedObjectAsRenderable as Sprite;
+                var sprite = mContainedObjectAsIpso as Sprite;
                 var textureAddress = mTextureAddress;
                 switch (textureAddress)
                 {
@@ -1220,9 +1242,9 @@ namespace Gum.Wireframe
                         break;
                 }
             }
-            else if (mContainedObjectAsRenderable is NineSlice)
+            else if (mContainedObjectAsIpso is NineSlice)
             {
-                var nineSlice = mContainedObjectAsRenderable as NineSlice;
+                var nineSlice = mContainedObjectAsIpso as NineSlice;
                 var textureAddress = mTextureAddress;
                 switch (textureAddress)
                 {
@@ -1248,9 +1270,9 @@ namespace Gum.Wireframe
 
         private void UpdateTextureCoordinatesNotDimensionBased()
         {
-            if (mContainedObjectAsRenderable is Sprite)
+            if (mContainedObjectAsIpso is Sprite)
             {
-                var sprite = mContainedObjectAsRenderable as Sprite;
+                var sprite = mContainedObjectAsIpso as Sprite;
                 var textureAddress = mTextureAddress;
                 switch (textureAddress)
                 {
@@ -1273,9 +1295,9 @@ namespace Gum.Wireframe
                         break;
                 }
             }
-            else if(mContainedObjectAsRenderable is NineSlice)
+            else if(mContainedObjectAsIpso is NineSlice)
             {
-                var nineSlice = mContainedObjectAsRenderable as NineSlice;
+                var nineSlice = mContainedObjectAsIpso as NineSlice;
                 var textureAddress = mTextureAddress;
                 switch (textureAddress)
                 {
@@ -1376,13 +1398,18 @@ namespace Gum.Wireframe
             bool throwaway1;
             bool throwaway2;
 
-            bool wrap = (Parent as GraphicalUiElement).Wrap;
+            bool wrap = false;
+            if (EffectiveParentGue != null)
+            {
+                wrap = (EffectiveParentGue as GraphicalUiElement).Wrap;
+            }
 
             GetParentOffsets(wrap, false, parentWidth, parentHeight, out parentOriginOffsetX, out parentOriginOffsetY,
                 out throwaway1, out throwaway2);
         }
 
-        private void GetParentOffsets(bool canWrap, bool shouldWrap, float parentWidth, float parentHeight, out float parentOriginOffsetX, out float parentOriginOffsetY, out bool wasHandledX, out bool wasHandledY)
+        private void GetParentOffsets(bool canWrap, bool shouldWrap, float parentWidth, float parentHeight, out float parentOriginOffsetX, out float parentOriginOffsetY, 
+            out bool wasHandledX, out bool wasHandledY)
         {
             parentOriginOffsetX = 0;
             parentOriginOffsetY = 0;
@@ -1486,9 +1513,9 @@ namespace Gum.Wireframe
                 if (shouldWrap)
                 {
                     int currentIndex = thisIndex - 1;
-                    IPositionedSizedObject minimumItem = siblings[currentIndex] as IPositionedSizedObject;
+                    IRenderableIpso minimumItem = siblings[currentIndex] as IRenderableIpso;
 
-                    Func<IPositionedSizedObject, float> getAbsoluteValueFunc = null;
+                    Func<IRenderableIpso, float> getAbsoluteValueFunc = null;
 
                     if (parentGue.ChildrenLayout == Gum.Managers.ChildrenLayout.LeftToRightStack)
                     {
@@ -1504,7 +1531,7 @@ namespace Gum.Wireframe
 
                     while (currentIndex > -1)
                     {
-                        var candidate = siblings[currentIndex] as IPositionedSizedObject;
+                        var candidate = siblings[currentIndex] as IRenderableIpso;
 
                         if (getAbsoluteValueFunc(candidate) < minValue)
                         {
@@ -1649,9 +1676,9 @@ namespace Gum.Wireframe
             {
                 bool wasSet = false;
 
-                if (mContainedObjectAsRenderable is Sprite)
+                if (mContainedObjectAsIpso is Sprite)
                 {
-                    Sprite sprite = mContainedObjectAsRenderable as Sprite;
+                    Sprite sprite = mContainedObjectAsIpso as Sprite;
 
                     if (sprite.Texture != null)
                     {
@@ -1679,9 +1706,9 @@ namespace Gum.Wireframe
                 bool wasSet = false;
 
 
-                if (mContainedObjectAsRenderable is Sprite)
+                if (mContainedObjectAsIpso is Sprite)
                 {
-                    Sprite sprite = mContainedObjectAsRenderable as Sprite;
+                    Sprite sprite = mContainedObjectAsIpso as Sprite;
 
                     if (sprite.Texture != null)
                     {
@@ -1737,9 +1764,9 @@ namespace Gum.Wireframe
             {
                 bool wasSet = false;
 
-                if (mContainedObjectAsRenderable is Sprite)
+                if (mContainedObjectAsIpso is Sprite)
                 {
-                    Sprite sprite = mContainedObjectAsRenderable as Sprite;
+                    Sprite sprite = mContainedObjectAsIpso as Sprite;
 
                     if (sprite.AtlasedTexture != null)
                     {
@@ -1803,9 +1830,9 @@ namespace Gum.Wireframe
             {
                 bool wasSet = false;
 
-                if (mContainedObjectAsRenderable is Sprite)
+                if (mContainedObjectAsIpso is Sprite)
                 {
-                    Sprite sprite = mContainedObjectAsRenderable as Sprite;
+                    Sprite sprite = mContainedObjectAsIpso as Sprite;
 
                     if (sprite.AtlasedTexture != null)
                     {
@@ -1923,36 +1950,34 @@ namespace Gum.Wireframe
             if (mManagers == null)
             {
                 mLayer = layer;
-
-                // Set the managers first because it's used by the clip region
                 mManagers = managers;
-
-                // If this clips children...
-                if (ClipsChildren)
-                {
-                    // Then let's use a new Layer...
-                    if (mSortableLayer == null)
-                    {
-                        mSortableLayer = new SortableLayer();
-
-                    }
-
-                    mSortableLayer.ParentLayer = layer;
-
-                    mManagers.Renderer.AddLayer(mSortableLayer, layer);
-
-                    // Now we'll just set layer to mSortableLayer so everything goes on as normal
-                    layer = mSortableLayer;
-
-                    UpdateLayerScissor();
-                }
 
                 AddContainedRenderableToManagers(managers, layer);
 
                 // Custom should be called before children have their Custom called
                 CustomAddToManagers();
 
-                AddChildren(managers, layer);
+                // that means this is a screen, so the children need to be added directly to managers
+                if (this.mContainedObjectAsIpso == null)
+                {
+                    AddChildren(managers, layer);
+                }
+                else
+                {
+                    CustomAddChildren();
+                }
+            }
+        }
+
+
+        private void CustomAddChildren()
+        {
+            foreach (var child in this.mWhatThisContains)
+            {
+                child.mManagers = this.mManagers;
+                child.CustomAddToManagers();
+
+                child.CustomAddChildren();
             }
         }
 
@@ -1986,6 +2011,14 @@ namespace Gum.Wireframe
                         {
                             (child as GraphicalUiElement).AddToManagers(managers, layer);
                         }
+                        else
+                        {
+                            child.mManagers = this.mManagers;
+
+                            child.CustomAddToManagers();
+
+                            child.CustomAddChildren();
+                        }
                     }
                 }
             }
@@ -1995,9 +2028,19 @@ namespace Gum.Wireframe
                 {
                     if (child is GraphicalUiElement)
                     {
+                        var childGue = child as GraphicalUiElement;
+
                         if (child.Parent == null || child.Parent == this)
                         {
-                            (child as GraphicalUiElement).AddToManagers(managers, layer);
+                            childGue.AddToManagers(managers, layer);
+                        }
+                        else
+                        {
+                            childGue.mManagers = this.mManagers;
+
+                            childGue.CustomAddToManagers();
+
+                            childGue.CustomAddChildren();
                         }
                     }
                 }
@@ -2005,11 +2048,21 @@ namespace Gum.Wireframe
                 // If a Component contains a child and that child is parented to the screen bounds then we should still add it
                 foreach (var child in this.mWhatThisContains)
                 {
+                    var childGue = child as GraphicalUiElement;
+
                     // We'll check if this child has a parent, and if that parent isn't part of this component. If not, then
                     // we'll add it
                     if (child.Parent != null && this.mWhatThisContains.Contains(child.Parent) == false)
                     {
-                        (child as GraphicalUiElement).AddToManagers(managers, layer);
+                        childGue.AddToManagers(managers, layer);
+                    }
+                    else
+                    {
+                        childGue.mManagers = this.mManagers;
+
+                        childGue.CustomAddToManagers();
+
+                        childGue.CustomAddChildren();
                     }
                 }
             }
@@ -2018,32 +2071,32 @@ namespace Gum.Wireframe
         private void AddContainedRenderableToManagers(SystemManagers managers, Layer layer)
         {
             // This may be a Screen
-            if (mContainedObjectAsRenderable != null)
+            if (mContainedObjectAsIpso != null)
             {
 
-                if (mContainedObjectAsRenderable is Sprite)
+                if (mContainedObjectAsIpso is Sprite)
                 {
-                    managers.SpriteManager.Add(mContainedObjectAsRenderable as Sprite, layer);
+                    managers.SpriteManager.Add(mContainedObjectAsIpso as Sprite, layer);
                 }
-                else if (mContainedObjectAsRenderable is NineSlice)
+                else if (mContainedObjectAsIpso is NineSlice)
                 {
-                    managers.SpriteManager.Add(mContainedObjectAsRenderable as NineSlice, layer);
+                    managers.SpriteManager.Add(mContainedObjectAsIpso as NineSlice, layer);
                 }
-                else if (mContainedObjectAsRenderable is LineRectangle)
+                else if (mContainedObjectAsIpso is LineRectangle)
                 {
-                    managers.ShapeManager.Add(mContainedObjectAsRenderable as LineRectangle, layer);
+                    managers.ShapeManager.Add(mContainedObjectAsIpso as LineRectangle, layer);
                 }
-                else if (mContainedObjectAsRenderable is SolidRectangle)
+                else if (mContainedObjectAsIpso is SolidRectangle)
                 {
-                    managers.ShapeManager.Add(mContainedObjectAsRenderable as SolidRectangle, layer);
+                    managers.ShapeManager.Add(mContainedObjectAsIpso as SolidRectangle, layer);
                 }
-                else if (mContainedObjectAsRenderable is Text)
+                else if (mContainedObjectAsIpso is Text)
                 {
-                    managers.TextManager.Add(mContainedObjectAsRenderable as Text, layer);
+                    managers.TextManager.Add(mContainedObjectAsIpso as Text, layer);
                 }
-                else if (mContainedObjectAsRenderable is LineCircle)
+                else if (mContainedObjectAsIpso is LineCircle)
                 {
-                    managers.ShapeManager.Add(mContainedObjectAsRenderable as LineCircle, layer);
+                    managers.ShapeManager.Add(mContainedObjectAsIpso as LineCircle, layer);
                 }
                 else
                 {
@@ -2079,20 +2132,20 @@ namespace Gum.Wireframe
                 layerToAddTo = mManagers.Renderer.Layers[0];
             }
 
-            if (mSortableLayer != null)
-            {
-                // all renderables are part of the mSortableLayer, so we
-                // just move the mSortableLayer and everything comes along with it:
-                mManagers.Renderer.RemoveLayer(mSortableLayer);
-                mManagers.Renderer.AddLayer(mSortableLayer, layer);
-            }
-            else
+            //if (mSortableLayer != null)
+            //{
+            //    // all renderables are part of the mSortableLayer, so we
+            //    // just move the mSortableLayer and everything comes along with it:
+            //    mManagers.Renderer.RemoveLayer(mSortableLayer);
+            //    mManagers.Renderer.AddLayer(mSortableLayer, layer);
+            //}
+            //else
             {
                 // This may be a Screen
-                if (mContainedObjectAsRenderable != null)
+                if (mContainedObjectAsIpso != null)
                 {
-                    layerToRemoveFrom.Remove(mContainedObjectAsRenderable);
-                    layerToAddTo.Add(mContainedObjectAsRenderable);
+                    layerToRemoveFrom.Remove(mContainedObjectAsIpso);
+                    layerToAddTo.Add(mContainedObjectAsIpso);
                 }
 
                 foreach (var contained in this.mWhatThisContains)
@@ -2120,31 +2173,31 @@ namespace Gum.Wireframe
                     mManagers.Renderer.RemoveLayer(this.mSortableLayer);
                 }
 
-                if (mContainedObjectAsRenderable is Sprite)
+                if (mContainedObjectAsIpso is Sprite)
                 {
-                    mManagers.SpriteManager.Remove(mContainedObjectAsRenderable as Sprite);
+                    mManagers.SpriteManager.Remove(mContainedObjectAsIpso as Sprite);
                 }
-                else if (mContainedObjectAsRenderable is NineSlice)
+                else if (mContainedObjectAsIpso is NineSlice)
                 {
-                    mManagers.SpriteManager.Remove(mContainedObjectAsRenderable as NineSlice);
+                    mManagers.SpriteManager.Remove(mContainedObjectAsIpso as NineSlice);
                 }
-                else if (mContainedObjectAsRenderable is global::RenderingLibrary.Math.Geometry.LineRectangle)
+                else if (mContainedObjectAsIpso is global::RenderingLibrary.Math.Geometry.LineRectangle)
                 {
-                    mManagers.ShapeManager.Remove(mContainedObjectAsRenderable as global::RenderingLibrary.Math.Geometry.LineRectangle);
+                    mManagers.ShapeManager.Remove(mContainedObjectAsIpso as global::RenderingLibrary.Math.Geometry.LineRectangle);
                 }
-                else if (mContainedObjectAsRenderable is global::RenderingLibrary.Graphics.SolidRectangle)
+                else if (mContainedObjectAsIpso is global::RenderingLibrary.Graphics.SolidRectangle)
                 {
-                    mManagers.ShapeManager.Remove(mContainedObjectAsRenderable as global::RenderingLibrary.Graphics.SolidRectangle);
+                    mManagers.ShapeManager.Remove(mContainedObjectAsIpso as global::RenderingLibrary.Graphics.SolidRectangle);
                 }
-                else if (mContainedObjectAsRenderable is Text)
+                else if (mContainedObjectAsIpso is Text)
                 {
-                    mManagers.TextManager.Remove(mContainedObjectAsRenderable as Text);
+                    mManagers.TextManager.Remove(mContainedObjectAsIpso as Text);
                 }
-                else if(mContainedObjectAsRenderable is LineCircle)
+                else if(mContainedObjectAsIpso is LineCircle)
                 {
-                    mManagers.ShapeManager.Remove(mContainedObjectAsRenderable as LineCircle);
+                    mManagers.ShapeManager.Remove(mContainedObjectAsIpso as LineCircle);
                 }
-                else if (mContainedObjectAsRenderable != null)
+                else if (mContainedObjectAsIpso != null)
                 {
                     throw new NotImplementedException();
                 }
@@ -2251,7 +2304,7 @@ namespace Gum.Wireframe
             {
                 // success, do nothing, but it's in an else if to prevent the following else if's from evaluating
             }
-            else if (this.mContainedObjectAsRenderable != null)
+            else if (this.mContainedObjectAsIpso != null)
             {
                 SetPropertyOnRenderable(propertyName, value);
 
@@ -2364,6 +2417,11 @@ namespace Gum.Wireframe
                     break;
                 case "Wrap":
                     this.Wrap = (bool)value;
+                    toReturn = true;
+                    break;
+                case "Wraps Children":
+                    this.WrapsChildren = (bool)value;
+                    toReturn = true;
                     break;
             }
 
@@ -2407,13 +2465,13 @@ namespace Gum.Wireframe
             bool handled = false;
 
             // First try special-casing.  
-            if (mContainedObjectAsRenderable is Text)
+            if (mContainedObjectAsIpso is Text)
             {
                 handled = TrySetPropertyOnText(propertyName, value);
             }
-            else if (mContainedObjectAsRenderable is SolidRectangle)
+            else if (mContainedObjectAsIpso is SolidRectangle)
             {
-                var solidRect = mContainedObjectAsRenderable as SolidRectangle;
+                var solidRect = mContainedObjectAsIpso as SolidRectangle;
 
                 if (propertyName == "Blend")
                 {
@@ -2426,9 +2484,9 @@ namespace Gum.Wireframe
                     handled = true;
                 }
             }
-            else if (mContainedObjectAsRenderable is Sprite)
+            else if (mContainedObjectAsIpso is Sprite)
             {
-                var sprite = mContainedObjectAsRenderable as Sprite;
+                var sprite = mContainedObjectAsIpso as Sprite;
 
                 if (propertyName == "SourceFile")
                 {
@@ -2473,9 +2531,9 @@ namespace Gum.Wireframe
                     int m = 3;
                 }
             }
-            else if (mContainedObjectAsRenderable is NineSlice)
+            else if (mContainedObjectAsIpso is NineSlice)
             {
-                var nineSlice = mContainedObjectAsRenderable as NineSlice;
+                var nineSlice = mContainedObjectAsIpso as NineSlice;
 
                 if (propertyName == "SourceFile")
                 {
@@ -2543,7 +2601,7 @@ namespace Gum.Wireframe
                 }
                 else
                 {
-                    System.Reflection.PropertyInfo propertyInfo = mContainedObjectAsRenderable.GetType().GetProperty(propertyName);
+                    System.Reflection.PropertyInfo propertyInfo = mContainedObjectAsIpso.GetType().GetProperty(propertyName);
 
                     if (propertyInfo != null && propertyInfo.CanWrite)
                     {
@@ -2552,7 +2610,7 @@ namespace Gum.Wireframe
                         {
                             value = System.Convert.ChangeType(value, propertyInfo.PropertyType);
                         }
-                        propertyInfo.SetValue(mContainedObjectAsRenderable, value, null);
+                        propertyInfo.SetValue(mContainedObjectAsIpso, value, null);
                     }
                 }
             }
@@ -2606,12 +2664,12 @@ namespace Gum.Wireframe
 
             if (propertyName == "Text")
             {
-                ((Text)mContainedObjectAsRenderable).RawText = value as string;
+                ((Text)mContainedObjectAsIpso).RawText = value as string;
                 handled = true;
             }
             else if (propertyName == "Font Scale")
             {
-                ((Text)mContainedObjectAsRenderable).FontScale = (float)value;
+                ((Text)mContainedObjectAsIpso).FontScale = (float)value;
             }
             else if (propertyName == "Font")
             {
@@ -2646,7 +2704,7 @@ namespace Gum.Wireframe
 
                 var valueAsXnaBlend = valueAsGumBlend.ToBlendState();
 
-                var text = mContainedObjectAsRenderable as Text;
+                var text = mContainedObjectAsIpso as Text;
                 text.BlendState = valueAsXnaBlend;
             }
             return handled;
@@ -2709,7 +2767,7 @@ namespace Gum.Wireframe
                 }
             }
 
-            var text = this.mContainedObjectAsRenderable as Text;
+            var text = this.mContainedObjectAsIpso as Text;
 
             text.BitmapFont = font;
 
@@ -2818,7 +2876,7 @@ namespace Gum.Wireframe
 
         public void GetUsedTextures(List<Microsoft.Xna.Framework.Graphics.Texture2D> listToFill)
         {
-            var renderable = this.mContainedObjectAsRenderable;
+            var renderable = this.mContainedObjectAsIpso;
 
             if (renderable is Sprite)
             {

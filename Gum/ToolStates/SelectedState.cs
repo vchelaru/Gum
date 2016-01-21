@@ -464,8 +464,6 @@ namespace Gum.ToolStates
             PropertyGridManager.Self.RefreshUI();
 
             MenuStripManager.Self.RefreshUI();
-
-            ProjectVerifier.Self.AssertSelectedIpsosArePartOfRenderer();
         }
 
         public void UpdateToSelectedInstanceSave()

@@ -217,6 +217,7 @@ namespace Gum.Wireframe
         private void CreateVisualRepresentation()
         {
             mOffsetSprite = new Sprite(null);
+            mOffsetSprite.Name = "Ruler offset sprite";
 
             mRectangle = new SolidRectangle();
             mRectangle.Color = Color.Yellow;

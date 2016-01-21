@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,23 +16,21 @@ namespace RenderingLibrary
         float Width { get; set; }
         float Height { get; set; }
         string Name { get; set; }
-        IPositionedSizedObject Parent { get; set; }
-        List<IPositionedSizedObject> Children{ get; }
-        void SetParentDirect(IPositionedSizedObject newParent);
         object Tag { get; set; }
     }
 
     public static class IPositionedSizedObjectExtensionMethods
     {
-        public static Matrix GetRotationMatrix(this IPositionedSizedObject ipso)
+        public static Matrix GetRotationMatrix(this IRenderableIpso ipso)
         {
             return Matrix.CreateRotationZ(-MathHelper.ToRadians(ipso.Rotation));
         }
         
-        public static float GetAbsoluteX(this IPositionedSizedObject ipso)
+        public static float GetAbsoluteX(this IRenderableIpso ipso)
         {
             if (ipso.Parent == null)
             {
+
                 return ipso.X;
             }
             else
@@ -40,7 +39,7 @@ namespace RenderingLibrary
             }
         }
 
-        public static float GetAbsoluteY(this IPositionedSizedObject ipso)
+        public static float GetAbsoluteY(this IRenderableIpso ipso)
         {
             if (ipso.Parent == null)
             {
@@ -52,27 +51,27 @@ namespace RenderingLibrary
             }
         }
 
-        public static float GetAbsoluteLeft(this IPositionedSizedObject ipso)
+        public static float GetAbsoluteLeft(this IRenderableIpso ipso)
         {
             return ipso.GetAbsoluteX();
         }
 
-        public static float GetAbsoluteTop(this IPositionedSizedObject ipso)
+        public static float GetAbsoluteTop(this IRenderableIpso ipso)
         {
             return ipso.GetAbsoluteY();
         }
 
-        public static float GetAbsoluteRight(this IPositionedSizedObject ipso)
+        public static float GetAbsoluteRight(this IRenderableIpso ipso)
         {
             return ipso.GetAbsoluteX() + ipso.Width;
         }
 
-        public static float GetAbsoluteBottom(this IPositionedSizedObject ipso)
+        public static float GetAbsoluteBottom(this IRenderableIpso ipso)
         {
             return ipso.GetAbsoluteY() + ipso.Height;
         }
 
-        public static bool HasCursorOver(this IPositionedSizedObject ipso, float x, float y)
+        public static bool HasCursorOver(this IRenderableIpso ipso, float x, float y)
         {
             float absoluteX = ipso.GetAbsoluteX();
             float absoluteY = ipso.GetAbsoluteY();
@@ -91,7 +90,7 @@ namespace RenderingLibrary
         }
 
 
-        public static IPositionedSizedObject GetTopParent(this IPositionedSizedObject ipso)
+        public static IRenderableIpso GetTopParent(this IRenderableIpso ipso)
         {
             if (ipso.Parent == null)
             {

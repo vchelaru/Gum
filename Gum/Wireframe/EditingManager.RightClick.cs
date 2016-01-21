@@ -336,8 +336,6 @@ namespace Gum.Wireframe
             WireframeObjectManager.Self.RefreshAll(true);
 
             SelectionManager.Self.Refresh();
-
-            ProjectVerifier.Self.AssertSelectedIpsosArePartOfRenderer();
         }
 
 

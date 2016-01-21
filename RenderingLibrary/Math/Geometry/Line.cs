@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace RenderingLibrary.Math.Geometry
 {
-    public class Line : IRenderable, IPositionedSizedObject
+    public class Line : IRenderableIpso
     {
         #region Fields
 
@@ -17,9 +17,9 @@ namespace RenderingLibrary.Math.Geometry
         public Vector2 RelativePoint;
 
 
-        IPositionedSizedObject mParent;
+        IRenderableIpso mParent;
 
-        List<IPositionedSizedObject> mChildren;
+        List<IRenderableIpso> mChildren;
         SystemManagers mManagers;
 
         #endregion
@@ -88,7 +88,15 @@ namespace RenderingLibrary.Math.Geometry
             set;
         }
 
-        public IPositionedSizedObject Parent
+
+        bool IRenderableIpso.ClipsChildren
+        {
+            get
+            {
+                return false;
+            }
+        }
+        public IRenderableIpso Parent
         {
             get { return mParent; }
             set
@@ -108,7 +116,7 @@ namespace RenderingLibrary.Math.Geometry
             }
         }
 
-        public List<IPositionedSizedObject> Children
+        public List<IRenderableIpso> Children
         {
             get { return mChildren; }
         }
@@ -162,7 +170,7 @@ namespace RenderingLibrary.Math.Geometry
                 mLinePrimitive = new LinePrimitive(Renderer.Self.SinglePixelTexture);
             }
 
-            mChildren = new List<IPositionedSizedObject>();
+            mChildren = new List<IRenderableIpso>();
             UpdatePoints();
         }
 
@@ -179,7 +187,7 @@ namespace RenderingLibrary.Math.Geometry
             mLinePrimitive.Position.Y = this.GetAbsoluteY() ;
         }
 
-        void IPositionedSizedObject.SetParentDirect(IPositionedSizedObject parent)
+        void IRenderableIpso.SetParentDirect(IRenderableIpso parent)
         {
             mParent = parent;
         }
@@ -200,6 +208,8 @@ namespace RenderingLibrary.Math.Geometry
                 mLinePrimitive.Render(spriteRenderer, managers, textureToUse, .2f * AssociatedRenderer.Camera.Zoom);
             }
         }
+
+        void IRenderable.PreRender() { }
 
     }
 }

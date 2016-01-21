@@ -13,7 +13,7 @@ namespace Gum.RenderingLibrary
 {
     public static class IPositionedSizedObjectExtensionMethods
     {
-        public static void GetParentWidthAndHeight(this IPositionedSizedObject ipso, float canvasWidth, float canvasHeight, out float parentWidth, out float parentHeight)
+        public static void GetParentWidthAndHeight(this IRenderableIpso ipso, float canvasWidth, float canvasHeight, out float parentWidth, out float parentHeight)
         {
 
 
@@ -29,7 +29,7 @@ namespace Gum.RenderingLibrary
             }
         }
 
-        public static void GetFileWidthAndHeight(this IPositionedSizedObject ipso, out float fileWidth, out float fileHeight)
+        public static void GetFileWidthAndHeight(this IRenderableIpso ipso, out float fileWidth, out float fileHeight)
         {
             fileWidth = 0;
             fileHeight = 0;
@@ -56,11 +56,11 @@ namespace Gum.RenderingLibrary
             }
         }
 
-        public static string GetQualifiedPrefixWithDot(IPositionedSizedObject ipso, ElementSave elementSaveForIpso, ElementSave containerElement)
+        public static string GetQualifiedPrefixWithDot(IRenderableIpso ipso, ElementSave elementSaveForIpso, ElementSave containerElement)
         {
             string qualifiedVariablePrefixWithDot = ipso.Name + ".";
 
-            IPositionedSizedObject parent = ipso.Parent;
+            IRenderableIpso parent = ipso.Parent;
 
             while (parent != null)
             {
@@ -110,10 +110,10 @@ namespace Gum.RenderingLibrary
         }
 
                 
-        public static string GetAttachmentQualifiedName(this IPositionedSizedObject ipso, List<ElementWithState> elementStack)
+        public static string GetAttachmentQualifiedName(this IRenderableIpso ipso, List<ElementWithState> elementStack)
         {
-            IPositionedSizedObject parent = ipso.Parent;
-            IPositionedSizedObject child = ipso;
+            IRenderableIpso parent = ipso.Parent;
+            IRenderableIpso child = ipso;
 
             while (parent != null)
             {

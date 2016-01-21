@@ -174,10 +174,11 @@ namespace Gum.Managers
 
             if (element != null)
             {
-
                 RemoveUnnecessaryNodes(element);
 
                 AddNeededNodes(element);
+
+                FixNodeOrder(element);
 
                 bool wasAnythingSelected = false;
 
@@ -191,21 +192,6 @@ namespace Gum.Managers
                     UpdateCategoryTreeNode(category);
                 }
 
-                // Victor Chelaru
-                // April 26, 2014
-                // I think this code would select a 
-                // state if the selected node was deleted.
-                // But we don't want to do this now since Gum
-                // supports state categories.
-                //if (wasAnythingSelected == false && element.States != null && 
-                //    // The user could be selecting an object that has a missing XML file, so states
-                //    // were never loaded
-                //    element.States.Count > 0)
-                //{
-
-                //    SelectedState.Self.SelectedStateSave = element.States[0];
-
-                //}
             }
             else
             {
@@ -213,6 +199,86 @@ namespace Gum.Managers
             }
 
 
+        }
+
+        private TreeNodeCollection ParentOf(TreeNode node)
+        {
+            var toReturn = mTreeView.Nodes;
+
+            if(node.Parent != null)
+            {
+                toReturn = node.Parent.Nodes;
+            }
+
+            return toReturn;
+        }
+
+        private void FixNodeOrder(ElementSave element)
+        {
+            // first make sure categories come first
+            int desiredIndex = 0;
+
+            foreach(var category in element.Categories.OrderBy(item=>item.Name))
+            {
+                var node = GetTreeNodeForTag(category);
+
+                var parent = ParentOf(node);
+
+                var nodeIndex = parent.IndexOf(node);
+
+                if(nodeIndex != desiredIndex)
+                {
+                    parent.Remove(node);
+                    parent.Insert(desiredIndex, node);
+                }
+
+
+                FixNodeOrderInCategory(category);
+
+                desiredIndex++;
+            }
+
+            // do uncategorized states
+            for (int i = 0; i < element.States.Count; i++)
+            {
+                var state = element.States[i];
+
+                var node = GetTreeNodeForTag(state);
+
+                var parent = ParentOf(node);
+
+                int nodeIndex = parent.IndexOf(node);
+
+
+                if(nodeIndex != desiredIndex)
+                {
+                    parent.Remove(node);
+                    parent.Insert(desiredIndex, node);
+                }
+
+                desiredIndex++;
+            }
+
+
+        }
+
+        private void FixNodeOrderInCategory(StateSaveCategory category)
+        {
+            for(int i = 0; i< category.States.Count; i++)
+            {
+                var state = category.States[i];
+                var node = GetTreeNodeForTag(state);
+
+                var parent = ParentOf(node);
+
+                var nodeIndex = parent.IndexOf(node);
+
+                if(nodeIndex != i)
+                {
+                    parent.Remove(node);
+                    parent.Insert(i, node);
+                }
+            }
         }
 
         private void UpdateCategoryTreeNode(StateSaveCategory category)
@@ -343,14 +409,9 @@ namespace Gum.Managers
 
                     if(shouldRemove)
                     {
-                        if (node.Parent == null)
-                        {
-                            mTreeView.Nodes.Remove(node);
-                        }
-                        else
-                        {
-                            node.Parent.Nodes.Remove(node);
-                        }
+                        var parent = ParentOf(node);
+
+                        parent.Remove(node);
                     }
                 }
                 else if (node.Tag is StateSaveCategory && element.Categories.Contains(node.Tag as StateSaveCategory) == false)

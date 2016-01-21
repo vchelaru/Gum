@@ -16,6 +16,7 @@ using Gum.ToolStates;
 using Gum.DataTypes.Variables;
 using Gum.ToolCommands;
 using RenderingLibrary.Graphics;
+using Gum.PropertyGridHelpers;
 
 namespace Gum.Managers
 {
@@ -112,6 +113,15 @@ namespace Gum.Managers
 
                         HandleDroppedElementInElement(draggedAsElementSave, targetInstance.ParentContainer, out handled);
                     }
+                    else if(treeNodeDroppedOn.IsTopComponentContainerTreeNode())
+                    {
+                        HandleDroppedElementOnTopComponentTreeNode(draggedAsElementSave, out handled);
+
+                    }
+                    else if(treeNodeDroppedOn.IsPartOfComponentsFolderStructure())
+                    {
+                        HandleDroppedElementOnFolder(draggedAsElementSave, treeNodeDroppedOn, out handled);
+                    }
                     else
                     {
                         MessageBox.Show("You must drop " + draggedAsElementSave.Name + " on either a Screen or an Component");
@@ -121,6 +131,46 @@ namespace Gum.Managers
                 {
                     HandleDroppedInstance(draggedObject, targetTag);
                 }
+            }
+        }
+
+        private void HandleDroppedElementOnFolder(ElementSave draggedAsElementSave, TreeNode treeNodeDroppedOn, out bool handled)
+        {
+            var fullFolderPath = treeNodeDroppedOn.GetFullFilePath();
+
+            var fullElementFilePath = FileManager.GetDirectory( draggedAsElementSave.GetFullPathXmlFile());
+
+            handled = false;
+
+            if(FileManager.Standardize(fullFolderPath) != FileManager.Standardize(fullElementFilePath))
+            {
+                var projectFolder = FileManager.GetDirectory(ProjectManager.Self.GumProjectSave.FullFileName);
+
+                string nodeRelativeToProject = FileManager.MakeRelative(fullFolderPath, projectFolder + draggedAsElementSave.Subfolder + "\\", preserveCase:true);
+
+                string oldName = draggedAsElementSave.Name;
+                draggedAsElementSave.Name = nodeRelativeToProject + FileManager.RemovePath(draggedAsElementSave.Name);
+                RenameManager.Self.HandleRename(draggedAsElementSave, (InstanceSave)null, oldName);
+
+                handled = true;
+            }
+
+        }
+
+        private void HandleDroppedElementOnTopComponentTreeNode(ElementSave draggedAsElementSave, out bool handled)
+        {
+            handled = false;
+            string name = draggedAsElementSave.Name;
+
+            string currentDirectory = FileManager.GetDirectory(draggedAsElementSave.Name);
+
+            if(!string.IsNullOrEmpty(currentDirectory))
+            {
+                // It's in a directory, we're going to move it out
+                draggedAsElementSave.Name = FileManager.RemovePath(name);
+                RenameManager.Self.HandleRename(draggedAsElementSave, (InstanceSave)null, name);
+
+                handled = true;
             }
         }
 
@@ -134,15 +184,35 @@ namespace Gum.Managers
                 targetElementSave = ((InstanceSave)targetTag).ParentContainer;
             }
 
-            // We aren't going to allow drag+drop within the same element - that may cause
-            // unexpected copy/paste if the user didn't mean to drag, and we may want to support
-            // reordering.
-            if (targetElementSave != null && targetElementSave != draggedAsInstanceSave.ParentContainer)
+
+            bool isSameElement = draggedAsInstanceSave != null && targetElementSave == draggedAsInstanceSave.ParentContainer;
+
+            if (targetElementSave != null)
             {
-                List<InstanceSave> instances = new List<InstanceSave>() { draggedAsInstanceSave };
-                EditingManager.Self.PasteInstanceSaves(instances,
-                    draggedAsInstanceSave.ParentContainer.DefaultState.Clone(),
-                    targetElementSave);
+                // We aren't going to allow drag+drop within the same element - that may cause
+                // unexpected copy/paste if the user didn't mean to drag, and we may want to support
+                // reordering.
+                if (isSameElement)
+                {
+                    if(targetTag is InstanceSave && targetTag != draggedAsInstanceSave)
+                    {
+                        // setting the parent:
+                        var parentName = (targetTag as InstanceSave).Name;
+
+                        string variableName = draggedAsInstanceSave.Name + ".Parent";
+
+                        var oldValue = SelectedState.Self.SelectedStateSave.GetValue(variableName) as string;
+                        SelectedState.Self.SelectedStateSave.SetValue(variableName, parentName, "string");
+                        SetVariableLogic.Self.PropertyValueChanged("Parent", oldValue);
+                    }
+                }
+                else
+                {
+                    List<InstanceSave> instances = new List<InstanceSave>() { draggedAsInstanceSave };
+                    EditingManager.Self.PasteInstanceSaves(instances,
+                        draggedAsInstanceSave.ParentContainer.DefaultState.Clone(),
+                        targetElementSave);
+                }
             }
         }
 

@@ -132,6 +132,8 @@ namespace Gum.DataTypes
         public GumProjectSave()
         {
             ShowOutlines = true;
+            // I think people want this on by default:
+            RestrictToUnitValues = true;
 
             Guides = new List<GuideRectangle>();
 

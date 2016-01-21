@@ -23,8 +23,6 @@ namespace Gum.Managers
             PropertyGridManager.Self.RefreshUI();
             WireframeObjectManager.Self.RefreshAll(true);
             SelectionManager.Self.Refresh();
-
-            ProjectVerifier.Self.AssertSelectedIpsosArePartOfRenderer();
         }
 
         public void Remove(StateSaveCategory category)
@@ -36,8 +34,6 @@ namespace Gum.Managers
             PropertyGridManager.Self.RefreshUI();
             WireframeObjectManager.Self.RefreshAll(true);
             SelectionManager.Self.Refresh();
-
-            ProjectVerifier.Self.AssertSelectedIpsosArePartOfRenderer();
         }
 
 

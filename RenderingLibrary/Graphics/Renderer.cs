@@ -7,6 +7,8 @@ using RenderingLibrary.Math.Geometry;
 using Microsoft.Xna.Framework;
 using System.IO;
 using System.Collections.ObjectModel;
+using RenderingLibrary.Math;
+using RenderingLibrary;
 
 namespace RenderingLibrary.Graphics
 {
@@ -15,10 +17,14 @@ namespace RenderingLibrary.Graphics
         public BlendState BlendState;
         public bool Filtering;
         public bool Wrap;
+
+        public Rectangle? ClipRectangle;
     }
 
     public class Renderer
     {
+        public static bool RenderUsingHierarchy = true;
+
         #region Fields
 
 
@@ -204,15 +210,15 @@ namespace RenderingLibrary.Graphics
         }
 
 
-        public void AddLayer(SortableLayer sortableLayer, Layer masterLayer)
-        {
-            if (masterLayer == null)
-            {
-                masterLayer = LayersWritable[0];
-            }
+        //public void AddLayer(SortableLayer sortableLayer, Layer masterLayer)
+        //{
+        //    if (masterLayer == null)
+        //    {
+        //        masterLayer = LayersWritable[0];
+        //    }
 
-            masterLayer.Add(sortableLayer);
-        }
+        //    masterLayer.Add(sortableLayer);
+        //}
 
         public void Draw(SystemManagers managers)
         {
@@ -222,8 +228,6 @@ namespace RenderingLibrary.Graphics
             {
                 managers = SystemManagers.Default;
             }
-            // Before we draw, make sure all Text objects have their text updated
-            managers.TextManager.RenderTextTextures();
 
             Draw(managers, mLayers);
 
@@ -262,15 +266,19 @@ namespace RenderingLibrary.Graphics
                 mRenderStateVariables.BlendState = BlendState.NonPremultiplied;
                 mRenderStateVariables.Wrap = false;
 
+                foreach (Layer layer in layers)
+                {
+                    PreRender(layer.Renderables);
+                }
 
                 foreach (Layer layer in layers)
                 {
-                    RenderLayer(managers, layer);
+                    RenderLayer(managers, layer, prerender:false);
                 }
             }
         }
 
-        internal void RenderLayer(SystemManagers managers, Layer layer)
+        internal void RenderLayer(SystemManagers managers, Layer layer, bool prerender = true)
         {
             //////////////////Early Out////////////////////////////////
             if (layer.Renderables.Count == 0)
@@ -279,27 +287,120 @@ namespace RenderingLibrary.Graphics
             }
             ///////////////End Early Out///////////////////////////////
 
-            // If the Layer's clip region has no width or height, then let's
-            // skip over rendering it, otherwise XNA crashes:
-            var clipRegion = layer.GetScissorRectangleFor(managers.Renderer.Camera);
-
-            if (clipRegion.Width != 0 && clipRegion.Height != 0)
+            if (prerender)
             {
-                spriteRenderer.BeginSpriteBatch(mRenderStateVariables, layer, BeginType.Push, mCamera);
+                PreRender(layer.Renderables);
+            }
 
-                layer.SortRenderables();
+            spriteRenderer.BeginSpriteBatch(mRenderStateVariables, layer, BeginType.Push, mCamera);
 
-                foreach (IRenderable renderable in layer.RenderablesWriteable)
-                {
-                    AdjustRenderStates(mRenderStateVariables, layer, renderable);
-                    renderable.Render(spriteRenderer, managers);
-                }
+            layer.SortRenderables();
 
-                spriteRenderer.EndSpriteBatch();
+            Render(layer.Renderables, managers, layer);
+
+            spriteRenderer.EndSpriteBatch();
+        }
+
+        private void PreRender(IEnumerable<IRenderableIpso> renderables)
+        {
+            if(renderables == null)
+            {
+                throw new ArgumentNullException("renderables");
+            }
+
+            foreach(var renderable in renderables)
+            {
+                renderable.PreRender();
+                PreRender(renderable.Children);
             }
         }
 
-        private void AdjustRenderStates(RenderStateVariables renderState, Layer layer, IRenderable renderable)
+        private void Render(IEnumerable<IRenderableIpso> whatToRender, SystemManagers managers, Layer layer)
+        {
+            foreach(var renderable in whatToRender)
+            {
+                var oldClip = mRenderStateVariables.ClipRectangle;
+                AdjustRenderStates(mRenderStateVariables, layer, renderable);
+                bool didClipChange = oldClip != mRenderStateVariables.ClipRectangle;
+
+                renderable.Render(spriteRenderer, managers);
+
+
+                if (RenderUsingHierarchy)
+                {
+                    Render(renderable.Children, managers, layer);
+                }
+
+                if(didClipChange)
+                {
+                    mRenderStateVariables.ClipRectangle = oldClip;
+                    spriteRenderer.BeginSpriteBatch(mRenderStateVariables, layer, BeginType.Begin, mCamera);
+                }
+            }
+        }
+
+        internal Microsoft.Xna.Framework.Rectangle GetScissorRectangleFor(Camera camera, IRenderableIpso ipso)
+        {
+            if (ipso == null)
+            {
+                return new Microsoft.Xna.Framework.Rectangle(
+                    0, 0,
+                    camera.ClientWidth,
+                    camera.ClientHeight
+
+                    );
+            }
+            else
+            {
+
+                float worldX = ipso.GetAbsoluteLeft();
+                float worldY = ipso.GetAbsoluteTop();
+
+                float screenX;
+                float screenY;
+                camera.WorldToScreen(worldX, worldY, out screenX, out screenY);
+
+                int left = global::RenderingLibrary.Math.MathFunctions.RoundToInt(screenX);
+                int top = global::RenderingLibrary.Math.MathFunctions.RoundToInt(screenY);
+
+                worldX = ipso.GetAbsoluteRight();
+                worldY = ipso.GetAbsoluteBottom();
+                camera.WorldToScreen(worldX, worldY, out screenX, out screenY);
+
+                int right = global::RenderingLibrary.Math.MathFunctions.RoundToInt(screenX);
+                int bottom = global::RenderingLibrary.Math.MathFunctions.RoundToInt(screenY);
+
+
+
+                left = System.Math.Max(0, left);
+                top = System.Math.Max(0, top);
+                right = System.Math.Max(0, right);
+                bottom = System.Math.Max(0, bottom);
+
+                left = System.Math.Min(left, camera.ClientWidth);
+                right = System.Math.Min(right, camera.ClientWidth);
+
+                top = System.Math.Min(top, camera.ClientHeight);
+                bottom = System.Math.Min(bottom, camera.ClientHeight);
+
+
+                int width = System.Math.Max(0, right - left);
+                int height = System.Math.Max(0, bottom - top);
+
+
+                Microsoft.Xna.Framework.Rectangle thisRectangle = new Microsoft.Xna.Framework.Rectangle(
+                    left,
+                    top,
+                    width,
+                    height);
+
+                return thisRectangle;
+            }
+
+        }
+
+
+        private void AdjustRenderStates(RenderStateVariables renderState, Layer layer, IRenderableIpso renderable)
         {
             BlendState renderBlendState = renderable.BlendState;
             bool wrap = renderable.Wrap;
@@ -322,6 +423,27 @@ namespace RenderingLibrary.Graphics
                 shouldResetStates = true;
             }
 
+            if (renderable.ClipsChildren)
+            {
+                Rectangle clipRectangle = GetScissorRectangleFor(Camera, renderable);
+
+                if (renderState.ClipRectangle == null || clipRectangle != renderState.ClipRectangle.Value)
+                {
+                    //todo: Don't just overwrite it, constrain this rect to the existing one, if it's not null: 
+
+                    var adjustedRectangle = clipRectangle;
+                    if (renderState.ClipRectangle != null)
+                    {
+                        adjustedRectangle = ConstrainRectangle(clipRectangle, renderState.ClipRectangle.Value);
+                    }
+
+
+                    renderState.ClipRectangle = adjustedRectangle;
+                    shouldResetStates = true;
+                }
+
+            }
+
 
             if (shouldResetStates)
             {
@@ -329,24 +451,32 @@ namespace RenderingLibrary.Graphics
             }
         }
 
+        private Rectangle ConstrainRectangle(Rectangle childRectangle, Rectangle parentRectangle)
+        {
+            int x = System.Math.Max(childRectangle.X, parentRectangle.X);
+            int y = System.Math.Max(childRectangle.Y, parentRectangle.Y);
 
+            int right = System.Math.Min(childRectangle.Right, parentRectangle.Right);
+            int bottom = System.Math.Min(childRectangle.Bottom, parentRectangle.Bottom);
 
+            return new Rectangle(x, y, right - x, bottom - y);
+        }
 
-        internal void RemoveRenderable(IRenderable renderable)
+        internal void RemoveRenderable(IRenderableIpso renderable)
         {
             foreach (Layer layer in this.Layers)
             {
                 if (layer.Renderables.Contains(renderable))
                 {
-                    layer.RenderablesWriteable.Remove(renderable);
+                    layer.Remove(renderable);
                 }
             }
         }
 
-        public void RemoveLayer(SortableLayer sortableLayer)
-        {
-            RemoveRenderable(sortableLayer);
-        }
+        //public void RemoveLayer(SortableLayer sortableLayer)
+        //{
+        //    RemoveRenderable(sortableLayer);
+        //}
 
         public void RemoveLayer(Layer layer)
         {

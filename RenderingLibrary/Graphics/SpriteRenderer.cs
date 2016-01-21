@@ -56,13 +56,24 @@ namespace RenderingLibrary.Graphics
 
             SamplerState samplerState = GetSamplerState(renderStates);
 
-            RasterizerState rasterizerState = GetRasterizerState(renderStates, layer);
+
+            bool isFullscreen = renderStates.ClipRectangle == null;
+
+            RasterizerState rasterizerState;
+            if (isFullscreen)
+            {
+                rasterizerState = scissorTestDisabled;
+            }
+            else
+            {
+                rasterizerState = scissorTestEnabled;
+            }
 
 
             Rectangle scissorRectangle = new Rectangle();
             if (rasterizerState.ScissorTestEnable)
             {
-                scissorRectangle = layer.GetScissorRectangleFor(camera);
+                scissorRectangle = renderStates.ClipRectangle.Value;
             }
 
 
@@ -154,20 +165,6 @@ namespace RenderingLibrary.Graphics
             return samplerState;
         }
 
-
-        private RasterizerState GetRasterizerState(RenderStateVariables renderStates, Layer layer)
-        {
-            bool isFullscreen = layer.ScissorIpso == null;
-
-            if (isFullscreen)
-            {
-                return scissorTestDisabled;
-            }
-            else
-            {
-                return scissorTestEnabled;
-            }
-        }
 
         private void CreateRasterizerStates()
         {

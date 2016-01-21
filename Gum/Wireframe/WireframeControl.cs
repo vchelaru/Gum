@@ -202,6 +202,7 @@ namespace Gum.Wireframe
                 InputLibrary.Keyboard.Self.Initialize(this);
 
                 mScreenBounds = new LineRectangle();
+                mScreenBounds.Name = "Gum Screen Bounds";
                 mScreenBounds.Width = 800;
                 mScreenBounds.Height = 600;
                 mScreenBounds.Color = ScreenBoundsColor;
@@ -257,7 +258,6 @@ namespace Gum.Wireframe
 #endif
                 {
                     InputLibrary.Cursor.Self.StartCursorSettingFrameStart();
-                    ProjectVerifier.Self.AssertSelectedIpsosArePartOfRenderer();
                     TimeManager.Self.Activity();
 
                     SpriteManager.Self.Activity(TimeManager.Self.CurrentTime);

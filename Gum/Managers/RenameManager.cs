@@ -7,6 +7,7 @@ using Gum.ToolStates;
 using Gum.DataTypes.Variables;
 using System.Windows.Forms;
 using Gum.Plugins;
+using ToolsUtilities;
 
 namespace Gum.Managers
 {
@@ -95,6 +96,8 @@ namespace Gum.Managers
                     {
                         // If we got here that means all went okay, so we should delete the old files
                         string oldXml = elementSave.GetFullPathXmlFile(oldName);
+                        string newXml = elementSave.GetFullPathXmlFile();
+
                         // Delete the XML.
                         // If the file doesn't
                         // exist, no biggie - we
@@ -109,7 +112,20 @@ namespace Gum.Managers
 
                         GumCommands.Self.FileCommands.TryAutoSaveProject();
 
-                        GumCommands.Self.GuiCommands.RefreshElementTreeView(elementSave);
+                        var oldDirectory = FileManager.GetDirectory(oldXml);
+                        var newDirectory = FileManager.GetDirectory(newXml);
+
+                        bool didMoveToNewDirectory = oldDirectory != newDirectory;
+
+                        if (didMoveToNewDirectory)
+                        {
+                            // refresh the entire tree view because the node is moving:
+                            GumCommands.Self.GuiCommands.RefreshElementTreeView();
+                        }
+                        else
+                        {
+                            GumCommands.Self.GuiCommands.RefreshElementTreeView(elementSave);
+                        }
                     }
                 }
 

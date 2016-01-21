@@ -165,7 +165,7 @@ namespace Gum.Wireframe
             return ResizeSide.None;
         }
 
-        public void SetValuesFrom(IPositionedSizedObject ipso)
+        public void SetValuesFrom(IRenderableIpso ipso)
         {
             this.mX = ipso.GetAbsoluteX();
             this.mY = ipso.GetAbsoluteY();
@@ -179,6 +179,8 @@ namespace Gum.Wireframe
                 var asGue = ipso as GraphicalUiElement;
 
                 SetOriginXPosition(asGue);
+
+                UpdateOriginLine(asGue);
             }
 
 
@@ -187,15 +189,15 @@ namespace Gum.Wireframe
 
         private void SetOriginXPosition(GraphicalUiElement asGue)
         {
+            float absoluteX = asGue.AbsoluteX;
+            float absoluteY = asGue.AbsoluteY;
+
             IPositionedSizedObject asIpso = asGue;
             float zoom = Renderer.Self.Camera.Zoom;
 
             float offset = RadiusAtNoZoom * 1.5f / zoom;
 
 
-
-            float absoluteX = asGue.AbsoluteX;
-            float absoluteY = asGue.AbsoluteY;
 
             mXLine1.X = absoluteX - offset;
             mXLine1.Y = absoluteY - offset;
@@ -208,36 +210,47 @@ namespace Gum.Wireframe
 
 
 
-            bool shouldShowOffsetLine = asGue.Parent != null && asGue.Parent is GraphicalUiElement;
-
-            mOriginLine.Visible = shouldShowOffsetLine;
-
-            if (shouldShowOffsetLine)
-            {
-                UpdateOriginLine(asGue);
-            }
-
-
 
         }
 
         private void UpdateOriginLine(GraphicalUiElement asGue)
         {
-            var gueParent = asGue.Parent as GraphicalUiElement;
+            var parent = asGue.EffectiveParentGue;
 
+
+            mOriginLine.Visible = true;
+
+            // The child's position is relative
+            // to the parent, but not always the
+            // top left - depending on the XUnits
+            // and YUnits. ParentOriginOffset contains
+            // the point that the child is relative to, 
+            // relative to the top-left of the parent.
+            // In other words, if the child's XUnits is
+            // PixelsFromRight, then the parentOriginOffsetX
+            // will be the width of the parent.
             float parentOriginOffsetX;
             float parentOriginOffsetY;
             asGue.GetParentOffsets(out parentOriginOffsetX, out parentOriginOffsetY);
 
+            float parentAbsoluteX = 0;
+            float parentAbsoluteY = 0;
 
-            mOriginLine.X = parentOriginOffsetX + asGue.Parent.GetAbsoluteX();
-            mOriginLine.Y = parentOriginOffsetY + asGue.Parent.GetAbsoluteY();
+            if (parent != null)
+            {
+                parentAbsoluteX = parent.GetAbsoluteX();
+                parentAbsoluteY = parent.GetAbsoluteY();
+
+            }
+
+            mOriginLine.X = parentOriginOffsetX + parentAbsoluteX;
+            mOriginLine.Y = parentOriginOffsetY + parentAbsoluteY;
 
             mOriginLine.RelativePoint.X = asGue.AbsoluteX - mOriginLine.X;
             mOriginLine.RelativePoint.Y = asGue.AbsoluteY - mOriginLine.Y;
         }
 
-        public void SetValuesFrom(IEnumerable<IPositionedSizedObject> ipsoList)
+        public void SetValuesFrom(IEnumerable<IRenderableIpso> ipsoList)
         {
             var count = ipsoList.Count();
             if(count == 1)

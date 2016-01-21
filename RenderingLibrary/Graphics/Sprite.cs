@@ -10,14 +10,14 @@ using System.Collections.ObjectModel;
 
 namespace RenderingLibrary.Graphics
 {
-    public class Sprite : IPositionedSizedObject, IRenderable, IVisible
+    public class Sprite : IRenderableIpso, IVisible
     {
         #region Fields
 
         Vector2 Position;
-        IPositionedSizedObject mParent;
+        IRenderableIpso mParent;
 
-        List<IPositionedSizedObject> mChildren;
+        List<IRenderableIpso> mChildren;
 
         public Color Color = Color.White;
 
@@ -84,7 +84,15 @@ namespace RenderingLibrary.Graphics
             set;
         }
 
-        public IPositionedSizedObject Parent
+
+        bool IRenderableIpso.ClipsChildren
+        {
+            get
+            {
+                return false;
+            }
+        }
+        public IRenderableIpso Parent
         {
             get { return mParent; }
             set
@@ -157,7 +165,7 @@ namespace RenderingLibrary.Graphics
             set;
         }
 
-        public List<IPositionedSizedObject> Children
+        public List<IRenderableIpso> Children
         {
             get { return mChildren; }
         }
@@ -286,7 +294,7 @@ namespace RenderingLibrary.Graphics
         {
             this.Visible = true;
             BlendState = BlendState.NonPremultiplied;
-            mChildren = new List<IPositionedSizedObject>();
+            mChildren = new List<IRenderableIpso>();
 
             Texture = texture;
         }
@@ -537,7 +545,7 @@ namespace RenderingLibrary.Graphics
 
 
 
-        public static void Render(SystemManagers managers, SpriteRenderer spriteRenderer, IPositionedSizedObject ipso, Texture2D texture)
+        public static void Render(SystemManagers managers, SpriteRenderer spriteRenderer, IRenderableIpso ipso, Texture2D texture)
         {
             Color color = new Color(1.0f, 1.0f, 1.0f, 1.0f); // White
 
@@ -546,7 +554,7 @@ namespace RenderingLibrary.Graphics
 
 
         public static void Render(SystemManagers managers, SpriteRenderer spriteRenderer,
-            IPositionedSizedObject ipso, Texture2D texture, Color color,
+            IRenderableIpso ipso, Texture2D texture, Color color,
             Rectangle? sourceRectangle = null,
             bool flipHorizontal = false,
             bool flipVertical = false,
@@ -676,15 +684,17 @@ namespace RenderingLibrary.Graphics
 
         public override string ToString()
         {
-            return Name;
+            return Name + " (Sprite)";
         }
 
         #endregion
 
-        void IPositionedSizedObject.SetParentDirect(IPositionedSizedObject parent)
+        void IRenderableIpso.SetParentDirect(IRenderableIpso parent)
         {
             mParent = parent;
         }
+
+        void IRenderable.PreRender() { }
 
         #region IVisible Implementation
 
@@ -713,10 +723,11 @@ namespace RenderingLibrary.Graphics
         {
             get
             {
-                return ((IPositionedSizedObject)this).Parent as IVisible;
+                return ((IRenderableIpso)this).Parent as IVisible;
             }
         }
 
         #endregion
+
     }
 }

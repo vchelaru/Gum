@@ -1,4 +1,5 @@
-﻿using System;
+﻿using StateAnimationPlugin.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,7 +9,8 @@ namespace StateAnimationPlugin.Validation
 {
     public static class NameValidator
     {
-        public static bool IsAnimationNameValid(string animationName, out string whyNotValid)
+        public static bool IsAnimationNameValid(string animationName,
+            IEnumerable<AnimationViewModel> existingAnimations, out string whyNotValid)
         {
             whyNotValid = null;
 
@@ -24,6 +26,10 @@ namespace StateAnimationPlugin.Validation
             else if (animationName.IndexOfAny(Gum.Managers.NameVerifier.InvalidCharacters) != -1)
             {
                 whyNotValid = "The name can't contain invalid character " + animationName[animationName.IndexOfAny(Gum.Managers.NameVerifier.InvalidCharacters)];
+            }
+            else if(existingAnimations.Any(item=>item.Name.Equals(animationName, StringComparison.InvariantCultureIgnoreCase)))
+            {
+                whyNotValid = $"The name \"{animationName}\" is already being used.";
             }
 
 

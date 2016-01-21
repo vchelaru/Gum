@@ -7,14 +7,14 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace RenderingLibrary.Graphics
 {
-    public class SolidRectangle : IPositionedSizedObject, IRenderable, IVisible
+    public class SolidRectangle : IRenderableIpso, IVisible
     {
         #region Fields
         
         Vector2 Position;
-        IPositionedSizedObject mParent;
+        IRenderableIpso mParent;
 
-        List<IPositionedSizedObject> mChildren;
+        List<IRenderableIpso> mChildren;
         private static Texture2D mTexture;
         private static Rectangle mSourceRect;
 
@@ -70,7 +70,15 @@ namespace RenderingLibrary.Graphics
             set;
         }
 
-        public IPositionedSizedObject Parent
+
+        bool IRenderableIpso.ClipsChildren
+        {
+            get
+            {
+                return false;
+            }
+        }
+        public IRenderableIpso Parent
         {
             get { return mParent; }
             set
@@ -92,7 +100,7 @@ namespace RenderingLibrary.Graphics
 
         public float Rotation { get; set; }
 
-        public List<IPositionedSizedObject> Children
+        public List<IRenderableIpso> Children
         {
             get { return mChildren; }
         }
@@ -155,7 +163,7 @@ namespace RenderingLibrary.Graphics
 
         public SolidRectangle()
         {
-            mChildren = new List<IPositionedSizedObject>();
+            mChildren = new List<IRenderableIpso>();
             Color = Color.White;
             Visible = true;
 
@@ -238,19 +246,26 @@ namespace RenderingLibrary.Graphics
         {
             get
             {
-                return ((IPositionedSizedObject)this).Parent as IVisible;
+                return ((IRenderableIpso)this).Parent as IVisible;
             }
         }
 
-        void IPositionedSizedObject.SetParentDirect(IPositionedSizedObject parent)
+        void IRenderableIpso.SetParentDirect(IRenderableIpso parent)
         {
             mParent = parent;
         }
+
+        void IRenderable.PreRender() { }
 
         public bool Visible
         {
             get;
             set;
+        }
+
+        public override string ToString()
+        {
+            return Name + " (SolidRectangle)";
         }
     }
 }

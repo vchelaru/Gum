@@ -17,6 +17,7 @@ using RenderingLibrary.Content;
 using CommonFormsAndControls.Forms;
 using ToolsUtilities;
 using Microsoft.Xna.Framework.Graphics;
+using RenderingLibrary.Graphics;
 
 namespace Gum.PropertyGridHelpers
 {
@@ -157,7 +158,7 @@ namespace Gum.PropertyGridHelpers
 
 
 
-                    IPositionedSizedObject currentIpso =
+                    IRenderableIpso currentIpso =
                         WireframeObjectManager.Self.GetSelectedRepresentation();
 
                     float parentWidth = ObjectFinder.Self.GumProjectSave.DefaultCanvasWidth;

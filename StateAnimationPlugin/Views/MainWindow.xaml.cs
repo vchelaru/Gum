@@ -62,13 +62,13 @@ namespace StateAnimationPlugin.Views
             }
 
             string whyIsntValid = null;
-
             if(!string.IsNullOrEmpty(whyIsntValid))
             {
                 MessageBox.Show(whyIsntValid);
             }
             else
             {
+
                 TextInputWindow tiw = new TextInputWindow();
                 tiw.Message = "Enter new animation name:";
 
@@ -77,7 +77,7 @@ namespace StateAnimationPlugin.Views
                 if(dialogResult == System.Windows.Forms.DialogResult.OK)
                 {
                     string whyInvalid;
-                    if (!NameValidator.IsAnimationNameValid(tiw.Result, out whyInvalid))
+                    if (!NameValidator.IsAnimationNameValid(tiw.Result, this.ViewModel.Animations, out whyInvalid))
                     {
                         MessageBox.Show(whyInvalid);
                     }

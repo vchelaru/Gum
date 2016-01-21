@@ -15,17 +15,17 @@ namespace RenderingLibrary.Math.Geometry
         TopLeft
     }
 
-    public class LineCircle : IVisible, IRenderable, IPositionedSizedObject
+    public class LineCircle : IVisible, IRenderableIpso
     {
         #region Fields
         float mRadius;
         LinePrimitive mLinePrimitive;
 
-        IPositionedSizedObject mParent;
+        IRenderableIpso mParent;
 
         bool mVisible;
 
-        List<IPositionedSizedObject> mChildren;
+        List<IRenderableIpso> mChildren;
 
         CircleOrigin mCircleOrigin;
 
@@ -127,6 +127,13 @@ namespace RenderingLibrary.Math.Geometry
         }
 
 
+        bool IRenderableIpso.ClipsChildren
+        {
+            get
+            {
+                return false;
+            }
+        }
 
         public float Rotation
         {
@@ -177,7 +184,7 @@ namespace RenderingLibrary.Math.Geometry
         public LineCircle(SystemManagers managers)
         {
 
-            mChildren = new List<IPositionedSizedObject>();
+            mChildren = new List<IRenderableIpso>();
 
             mRadius = 32;
             Visible = true;
@@ -226,7 +233,7 @@ namespace RenderingLibrary.Math.Geometry
         #endregion
 
 
-        public IPositionedSizedObject Parent
+        public IRenderableIpso Parent
         {
             get { return mParent; }
             set
@@ -246,12 +253,12 @@ namespace RenderingLibrary.Math.Geometry
             }
         }
 
-        public List<IPositionedSizedObject> Children
+        public List<IRenderableIpso> Children
         {
             get { return mChildren; }
         }
 
-        void IPositionedSizedObject.SetParentDirect(IPositionedSizedObject parent)
+        void IRenderableIpso.SetParentDirect(IRenderableIpso parent)
         {
             mParent = parent;
         }
@@ -277,8 +284,11 @@ namespace RenderingLibrary.Math.Geometry
         {
             get
             {
-                return ((IPositionedSizedObject)this).Parent as IVisible;
+                return ((IRenderableIpso)this).Parent as IVisible;
             }
         }
+
+        void IRenderable.PreRender() { }
+
     }
 }

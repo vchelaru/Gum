@@ -90,6 +90,7 @@
     <Compile Include="Graphics\IAnimation.cs" />
     <Compile Include="Graphics\ImageData.cs" />
     <Compile Include="Graphics\IRenderable.cs" />
+    <Compile Include="Graphics\IRenderableIpso.cs" />
     <Compile Include="Graphics\IVisible.cs" />
     <Compile Include="Graphics\Layer.cs" />
     <Compile Include="Graphics\LayerCameraSettings.cs" />

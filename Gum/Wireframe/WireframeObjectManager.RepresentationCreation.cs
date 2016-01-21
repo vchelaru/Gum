@@ -91,7 +91,7 @@ namespace Gum.Wireframe
                     RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(SelectedState.Self.SelectedStateSaveOrDefault);
 
                     string guide = rvf.GetValue<string>("Guide");
-                    SetGuideParent(null, rootIpso, guide, true);
+                    SetGuideParent(null, rootIpso, guide);
                 }
 
                 foreach (var exposedVariable in elementSave.DefaultState.Variables.Where(item => !string.IsNullOrEmpty(item.ExposedAsName)))
@@ -158,15 +158,6 @@ namespace Gum.Wireframe
                 if (rootIpso != null)
                 {
                     rootIpso.AddToManagers();
-
-                    if (rootIpso.ElementSave is ScreenSave)
-                    {
-                        // If it's a screen and it hasn't been added yet, we need to add it.
-                        foreach (var item in rootIpso.ContainedElements.Where(candidate => candidate.Managers == null))
-                        {
-                            item.AddToManagers();
-                        }
-                    }
                 }
             }
             GraphicalUiElement.IsAllLayoutSuspended = false;
@@ -259,7 +250,7 @@ namespace Gum.Wireframe
                 string guide = rvf.GetValue<string>("Guide");
                 string parent = rvf.GetValue<string>(instance.Name + ".Parent");
 
-                SetGuideParent(container, graphicalElement, guide, container == null || parent == AvailableInstancesConverter.ScreenBoundsName);
+                SetGuideParent(container, graphicalElement, guide);
             }
 
             if (baseElement != null)
@@ -313,7 +304,7 @@ namespace Gum.Wireframe
                 RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(selectedState);
 
                 string guide = rvf.GetValue<string>("Guide");
-                SetGuideParent(parentIpso, rootIpso, guide, false);
+                SetGuideParent(parentIpso, rootIpso, guide);
 
                 ElementWithState elementWithState = new ElementWithState(baseComponentSave);
                 var tempRvf = new DataTypes.RecursiveVariableFinder(instance, elementStack);
@@ -357,7 +348,7 @@ namespace Gum.Wireframe
 
                     if (!string.IsNullOrEmpty(parentName) && parentName != AvailableInstancesConverter.ScreenBoundsName)
                     {
-                        IPositionedSizedObject newParent = siblings.FirstOrDefault(item => item.Name == parentName);
+                        IRenderableIpso newParent = siblings.FirstOrDefault(item => item.Name == parentName);
 
                         // This may have bad XML so if it doesn't exist, then let's ignore this:
                         if (newParent != null)
@@ -384,7 +375,7 @@ namespace Gum.Wireframe
             return graphicalUiElement;
         }
 
-        private void SetGuideParent(GraphicalUiElement parentIpso, GraphicalUiElement ipso, string guideName, bool setParentToBoundsIfNoGuide)
+        private void SetGuideParent(GraphicalUiElement parentIpso, GraphicalUiElement ipso, string guideName)
         {
             // I dont't think we want to do this anymore because it should be handled by the GraphicalUiElement
             if (parentIpso != null && (parentIpso.Tag == null || parentIpso.Tag is ScreenSave == false))
@@ -394,17 +385,18 @@ namespace Gum.Wireframe
 
             if (!string.IsNullOrEmpty(guideName))
             {
-                IPositionedSizedObject guideIpso = GetGuide(guideName);
+                IRenderableIpso guideIpso = GetGuide(guideName);
 
                 if (guideIpso != null)
                 {
                     ipso.Parent = guideIpso;
                 }
             }
-            else if (setParentToBoundsIfNoGuide) 
-            {
-                ipso.Parent = mWireframeControl.ScreenBounds;
-            }
+            // don't do this because it causes double render.
+            //else if (setParentToBoundsIfNoGuide) 
+            //{
+            //    ipso.Parent = mWireframeControl.ScreenBounds;
+            //}
         }
     }
 }

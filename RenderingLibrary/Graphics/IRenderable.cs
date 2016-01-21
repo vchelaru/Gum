@@ -14,6 +14,9 @@ namespace RenderingLibrary.Graphics
 
         void Render(SpriteRenderer spriteRenderer, SystemManagers managers);
 
-        float Z { get; set; }
+        /// <summary>
+        /// Perform logic which needs to occur before a SpriteBatch has been started
+        /// </summary>
+        void PreRender();
     }
 }

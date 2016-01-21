@@ -10,7 +10,7 @@ using System.Collections.ObjectModel;
 
 namespace RenderingLibrary.Math.Geometry
 {
-    public class LineRectangle : IVisible, IPositionedSizedObject, IRenderable
+    public class LineRectangle : IVisible, IRenderableIpso
     {
         #region Fields
 
@@ -24,10 +24,10 @@ namespace RenderingLibrary.Math.Geometry
 
         LinePrimitive mLinePrimitive;
 
-        List<IPositionedSizedObject> mChildren;
+        List<IRenderableIpso> mChildren;
 
 
-        IPositionedSizedObject mParent;
+        IRenderableIpso mParent;
 
 
         SystemManagers mManagers;
@@ -85,6 +85,12 @@ namespace RenderingLibrary.Math.Geometry
         }
 
 
+        public bool ClipsChildren
+        {
+            get;
+            set;
+        }
+
         public float Rotation
         {
             get
@@ -108,7 +114,7 @@ namespace RenderingLibrary.Math.Geometry
             }
         }
 
-        public IPositionedSizedObject Parent
+        public IRenderableIpso Parent
         {
             get { return mParent; }
             set
@@ -157,7 +163,7 @@ namespace RenderingLibrary.Math.Geometry
             }
         }
 
-        public List<IPositionedSizedObject> Children
+        public List<IRenderableIpso> Children
         {
             get { return mChildren; }
         }
@@ -211,7 +217,7 @@ namespace RenderingLibrary.Math.Geometry
 
             mManagers = managers;
 
-            mChildren = new List<IPositionedSizedObject>();
+            mChildren = new List<IRenderableIpso>();
 
             Visible = true;
             Renderer renderer = null;
@@ -262,11 +268,12 @@ namespace RenderingLibrary.Math.Geometry
             {
                 // todo - add rotation
                 RenderLinePrimitive(mLinePrimitive, spriteRenderer, this, managers, IsDotted);
+
             }
         }
 
 
-        public static void RenderLinePrimitive(LinePrimitive linePrimitive, SpriteRenderer spriteRenderer, IPositionedSizedObject ipso, SystemManagers managers, bool isDotted)
+        public static void RenderLinePrimitive(LinePrimitive linePrimitive, SpriteRenderer spriteRenderer, IRenderableIpso ipso, SystemManagers managers, bool isDotted)
         {
             linePrimitive.Position.X = ipso.GetAbsoluteX();
             linePrimitive.Position.Y = ipso.GetAbsoluteY();
@@ -293,10 +300,12 @@ namespace RenderingLibrary.Math.Geometry
 
         #endregion
 
-        void IPositionedSizedObject.SetParentDirect(IPositionedSizedObject parent)
+        void IRenderableIpso.SetParentDirect(IRenderableIpso parent)
         {
             mParent = parent;
         }
+
+        void IRenderable.PreRender() { }
 
         #region IVisible Members
 
@@ -320,10 +329,15 @@ namespace RenderingLibrary.Math.Geometry
         {
             get
             {
-                return ((IPositionedSizedObject)this).Parent as IVisible;
+                return ((IRenderableIpso)this).Parent as IVisible;
             }
         }
 
         #endregion
+
+        public override string ToString()
+        {
+            return Name + " (LineRectangle)";
+        }
     }
 }

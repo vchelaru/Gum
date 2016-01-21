@@ -32,7 +32,7 @@ namespace RenderingLibrary.Graphics
 
     #endregion
 
-    public class Text : IPositionedSizedObject, IRenderable, IVisible
+    public class Text : IRenderableIpso, IVisible
     {
         #region Fields
 
@@ -66,9 +66,9 @@ namespace RenderingLibrary.Graphics
         BitmapFont mBitmapFont;
         Texture2D mTextureToRender;
 
-        IPositionedSizedObject mParent;
+        IRenderableIpso mParent;
 
-        List<IPositionedSizedObject> mChildren;
+        List<IRenderableIpso> mChildren;
 
         int mAlpha = 255;
         int mRed = 255;
@@ -81,7 +81,7 @@ namespace RenderingLibrary.Graphics
 
         SystemManagers mManagers;
 
-        bool mNeedsBitmapFontRefresh = false;
+        bool mNeedsBitmapFontRefresh = true;
 
         #endregion
 
@@ -107,14 +107,13 @@ namespace RenderingLibrary.Graphics
             }
             set
             {
-                mRawText = value;
-                UpdateWrappedText();
-                mNeedsBitmapFontRefresh = true;
+                if (mRawText != value)
+                {
+                    mRawText = value;
+                    UpdateWrappedText();
 
-                // Update dimensions for anything that needs the dimensions immediately:
-                UpdatePreRenderDimensions();
-
-                //UpdateTextureToRender();
+                    UpdatePreRenderDimensions();
+                }
             }
         }
 
@@ -242,6 +241,15 @@ namespace RenderingLibrary.Graphics
             }
         }
 
+
+        bool IRenderableIpso.ClipsChildren
+        {
+            get
+            {
+                return false;
+            }
+        }
+
         public HorizontalAlignment HorizontalAlignment
         {
             get;
@@ -254,7 +262,7 @@ namespace RenderingLibrary.Graphics
             set;
         }
 
-        public IPositionedSizedObject Parent
+        public IRenderableIpso Parent
         {
             get { return mParent; }
             set
@@ -297,7 +305,7 @@ namespace RenderingLibrary.Graphics
             }
         }
 
-        public List<IPositionedSizedObject> Children
+        public List<IRenderableIpso> Children
         {
             get { return mChildren; }
         }
@@ -406,7 +414,7 @@ namespace RenderingLibrary.Graphics
             RenderBoundary = RenderBoundaryDefault;
 
             mManagers = managers;
-            mChildren = new List<IPositionedSizedObject>();
+            mChildren = new List<IRenderableIpso>();
 
             mRawText = text;
             mNeedsBitmapFontRefresh = true;
@@ -528,7 +536,7 @@ namespace RenderingLibrary.Graphics
             //}
             //else
             {
-                mNeedsBitmapFontRefresh = true;
+               mNeedsBitmapFontRefresh = true;
             }
         }
 
@@ -558,8 +566,13 @@ namespace RenderingLibrary.Graphics
         {
             if (mNeedsBitmapFontRefresh)
             {
-                UpdateTextureToRender();
+               UpdateTextureToRender();
             }
+        }
+
+        void IRenderable.PreRender()
+        {
+            TryUpdateTextureToRender();
         }
 
         public void UpdateTextureToRender()
@@ -670,7 +683,8 @@ namespace RenderingLibrary.Graphics
             mTempForRendering.Y = this.Y;
             mTempForRendering.Width = this.mTextureToRender.Width * mFontScale;
             mTempForRendering.Height = this.mTextureToRender.Height * mFontScale;
-            mTempForRendering.Parent = this.Parent;
+
+            //mTempForRendering.Parent = this.Parent;
 
             float widthDifference = this.EffectiveWidth - mTempForRendering.Width;
 
@@ -692,7 +706,14 @@ namespace RenderingLibrary.Graphics
                 mTempForRendering.Y += this.EffectiveHeight - mTempForRendering.Height;
             }
 
-            if (mBitmapFont.AtlasedTexture != null)
+            if(this.Parent != null)
+            {
+                mTempForRendering.X += Parent.GetAbsoluteX();
+                mTempForRendering.Y += Parent.GetAbsoluteY();
+
+            }
+
+            if (mBitmapFont?.AtlasedTexture != null)
             {
                 mBitmapFont.RenderAtlasedTextureToScreen(mWrappedText, this.HorizontalAlignment, mTextureToRender.Height,
                     new Color(mRed, mGreen, mBlue, mAlpha), Rotation, mFontScale, managers,spriteRenderer, this);
@@ -706,7 +727,7 @@ namespace RenderingLibrary.Graphics
             }
         }
 
-        IPositionedSizedObject mTempForRendering;
+        IRenderableIpso mTempForRendering;
 
         private void RenderUsingSpriteFont(SpriteRenderer spriteRenderer)
         {
@@ -813,7 +834,7 @@ namespace RenderingLibrary.Graphics
         }
         #endregion
 
-        void IPositionedSizedObject.SetParentDirect(IPositionedSizedObject parent)
+        void IRenderableIpso.SetParentDirect(IRenderableIpso parent)
         {
             mParent = parent;
         }
@@ -845,7 +866,7 @@ namespace RenderingLibrary.Graphics
         {
             get
             {
-                return ((IPositionedSizedObject)this).Parent as IVisible;
+                return ((IRenderableIpso)this).Parent as IVisible;
             }
         }
 

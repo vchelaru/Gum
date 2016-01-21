@@ -65,47 +65,5 @@ namespace Gum.Debug
                 throw new Exception("Could not find Component " + componentSave + " in the project");
             }
         }
-
-
-        public void AssertSelectedIpsosArePartOfRenderer()
-        {
-            foreach (IPositionedSizedObject ipso in SelectionManager.Self.SelectedIpsos)
-            {
-                AssertIsPartOfRenderer(ipso);
-            }
-        }
-
-        public void AssertIsPartOfRenderer(IPositionedSizedObject ipso)
-        {
-            if (ipso != null)
-            {
-                var whatToTest = ipso as IRenderable;
-                if (whatToTest is GraphicalUiElement)
-                {
-                    whatToTest = ((GraphicalUiElement)whatToTest).RenderableComponent;
-                }
-                bool found = false;
-
-                if (whatToTest == null)
-                {
-                    found = true;
-                }
-                else
-                {
-                    foreach (var layer in Renderer.Self.Layers)
-                    {
-                        if (layer.ContainsRenderable(whatToTest))
-                        {
-                            found = true;
-                        }
-                    }
-                }
-                if (!found)
-                {
-                    throw new Exception("Argument is not part of Renderer");
-                }
-            }
-        }
-
     }
 }

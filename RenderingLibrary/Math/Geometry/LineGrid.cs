@@ -4,10 +4,11 @@ using System.Linq;
 using System.Text;
 using RenderingLibrary.Graphics;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace RenderingLibrary.Math.Geometry
 {
-    public class LineGrid : IRenderable
+    public class LineGrid : IRenderableIpso
     {
         #region Fields
 
@@ -96,6 +97,133 @@ namespace RenderingLibrary.Math.Geometry
             get { return true; }
         }
 
+        bool IRenderableIpso.ClipsChildren
+        {
+            get
+            {
+                return false;
+            }
+        }
+
+        IRenderableIpso IRenderableIpso.Parent
+        {
+            get
+            {
+                return null;
+            }
+
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public List<IRenderableIpso> Children
+        {
+            get;
+            private set;
+        } = new List<IRenderableIpso>();
+
+        BlendState IRenderable.BlendState
+        {
+            get
+            {
+                return BlendState.AlphaBlend;
+            }
+        }
+
+        bool IRenderable.Wrap
+        {
+            get
+            {
+                return false;
+            }
+        }
+
+        float IPositionedSizedObject.X
+        {
+            get
+            {
+                return 0;
+            }
+
+            set
+            {
+            }
+        }
+
+        float IPositionedSizedObject.Y
+        {
+            get
+            {
+                return 0;
+            }
+
+            set
+            {
+            }
+        }
+
+        float IPositionedSizedObject.Z
+        {
+            get
+            {
+                return 0;
+            }
+
+            set
+            {
+            }
+        }
+
+        float IPositionedSizedObject.Rotation
+        {
+            get
+            {
+                return 0;
+            }
+
+            set
+            {
+            }
+        }
+
+        float IPositionedSizedObject.Width
+        {
+            get
+            {
+                return 0;
+            }
+
+            set
+            {
+            }
+        }
+
+        float IPositionedSizedObject.Height
+        {
+            get
+            {
+                return 0;
+            }
+
+            set
+            {
+            }
+        }
+
+        string IPositionedSizedObject.Name
+        {
+            get;
+            set;
+        }
+
+        object IPositionedSizedObject.Tag
+        {
+            get;
+            set;
+        }
+
 
         #endregion
 
@@ -145,6 +273,7 @@ namespace RenderingLibrary.Math.Geometry
         }
 
 
+        void IRenderable.PreRender() { }
 
 
         public void Render(SpriteRenderer spriteRenderer, SystemManagers managers)
@@ -155,5 +284,10 @@ namespace RenderingLibrary.Math.Geometry
             }
         }
 
+        void IRenderableIpso.SetParentDirect(IRenderableIpso newParent)
+        {
+            throw new NotImplementedException();
+        }
+        
     }
 }

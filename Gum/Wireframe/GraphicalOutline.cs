@@ -53,44 +53,49 @@ namespace Gum.Wireframe
 
             if (mHighlightedIpso.Component is NineSlice)
             {
-                NineSlice nineSlice = mHighlightedIpso.Component as NineSlice;
+                CreateNineSliceSplitLines();
+            }
+        }
 
-                float topHeight = 0;
-                float centerHeight = 0;
-                float bottomHeight = 0;
+        private void CreateNineSliceSplitLines()
+        {
+            NineSlice nineSlice = mHighlightedIpso.Component as NineSlice;
 
-                float leftWidth = 0;
-                float rightWidth = 0;
-                float centerWidth = 0;
+            float topHeight = 0;
+            float centerHeight = 0;
+            float bottomHeight = 0;
 
-                if (nineSlice.TopTexture != null && nineSlice.BottomTexture != null && 
-                    nineSlice.LeftTexture != null && nineSlice.RightTexture != null)
-                {
-                    topHeight = nineSlice.OutsideSpriteHeight;
+            float leftWidth = 0;
+            float rightWidth = 0;
+            float centerWidth = 0;
 
-                    bottomHeight = nineSlice.OutsideSpriteHeight;
+            if (nineSlice.TopTexture != null && nineSlice.BottomTexture != null &&
+                nineSlice.LeftTexture != null && nineSlice.RightTexture != null)
+            {
+                topHeight = nineSlice.OutsideSpriteHeight;
 
-                    leftWidth = nineSlice.OutsideSpriteWidth;
+                bottomHeight = nineSlice.OutsideSpriteHeight;
 
-                    rightWidth = nineSlice.OutsideSpriteWidth;
+                leftWidth = nineSlice.OutsideSpriteWidth;
 
-                    centerHeight = nineSlice.Height - (topHeight + bottomHeight);
-                    centerWidth = nineSlice.Width - (leftWidth + rightWidth);
+                rightWidth = nineSlice.OutsideSpriteWidth;
 
-                    LineRectangle tallRectangle = GetOrMakeRectangleAtIndex(1);
-                    tallRectangle.Color = Color.Red;
-                    tallRectangle.X = nineSlice.GetAbsoluteX() + leftWidth;
-                    tallRectangle.Y = nineSlice.GetAbsoluteY();
-                    tallRectangle.Width = centerWidth;
-                    tallRectangle.Height = nineSlice.Height;
+                centerHeight = nineSlice.Height - (topHeight + bottomHeight);
+                centerWidth = nineSlice.Width - (leftWidth + rightWidth);
 
-                    LineRectangle wideRectangle = GetOrMakeRectangleAtIndex(2);
-                    wideRectangle.Color = Color.Red;
-                    wideRectangle.X = nineSlice.GetAbsoluteX();
-                    wideRectangle.Y = nineSlice.GetAbsoluteY() + topHeight;
-                    wideRectangle.Width = nineSlice.Width;
-                    wideRectangle.Height = centerHeight;
-                }
+                LineRectangle tallRectangle = GetOrMakeRectangleAtIndex(1);
+                tallRectangle.Color = Color.Red;
+                tallRectangle.X = nineSlice.GetAbsoluteX() + leftWidth;
+                tallRectangle.Y = nineSlice.GetAbsoluteY();
+                tallRectangle.Width = centerWidth;
+                tallRectangle.Height = nineSlice.Height;
+
+                LineRectangle wideRectangle = GetOrMakeRectangleAtIndex(2);
+                wideRectangle.Color = Color.Red;
+                wideRectangle.X = nineSlice.GetAbsoluteX();
+                wideRectangle.Y = nineSlice.GetAbsoluteY() + topHeight;
+                wideRectangle.Width = nineSlice.Width;
+                wideRectangle.Height = centerHeight;
             }
         }
 
@@ -105,7 +110,7 @@ namespace Gum.Wireframe
             mUiLayer = uiLayer;
         }
 
-        private void SetLineRectangleAroundIpso(LineRectangle rectangle, IPositionedSizedObject pso)
+        private void SetLineRectangleAroundIpso(LineRectangle rectangle, IRenderableIpso pso)
         {
             float adjustedSelectionBorder = SelectionBorder / Renderer.Self.Camera.Zoom;
 
@@ -130,6 +135,7 @@ namespace Gum.Wireframe
             {
 
                 LineRectangle newRect = new LineRectangle();
+                newRect.Name = "Highlight Rectangle";
                 newRect.Color = Color.Yellow;
                 newRect.Visible = true;
                 mHighlightRectangles.Add(newRect);

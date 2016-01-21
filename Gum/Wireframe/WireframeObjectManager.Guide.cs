@@ -7,6 +7,7 @@ using Gum.Managers;
 using Gum.DataTypes;
 using RenderingLibrary;
 using Gum.Converters;
+using RenderingLibrary.Graphics;
 
 namespace Gum.Wireframe
 {
@@ -88,7 +89,7 @@ namespace Gum.Wireframe
             mGuideRectangles.Clear();
         }
 
-        public IPositionedSizedObject GetGuide(string guideName)
+        public IRenderableIpso GetGuide(string guideName)
         {
             foreach (LineRectangle lineRectangle in mGuideRectangles)
             {

@@ -24,13 +24,11 @@ namespace Gum.Wireframe
 
         static EditingManager mSelf;
 
+        GrabbedInitialState grabbedInitialState = new GrabbedInitialState();
+
         ResizeSide mSideGrabbed = ResizeSide.None;
         bool mHasGrabbed = false;
         bool mHasChangedAnythingSinceLastPush = false;
-
-        bool mHasMovedEnoughSincePush = false;
-        float mXPush = 0;
-        float mYPush = 0;
 
         float mAspectRatioOnGrab;
         #endregion
@@ -89,29 +87,12 @@ namespace Gum.Wireframe
 
                 ClickActivity();
 
-                CheckIfHasMovedEnough();
-
                 HandlesActivity();
 
                 BodyGrabbingActivity();
             }
         }
-
-        private void CheckIfHasMovedEnough()
-        {
-            float pixelsToMoveBeforeApplying = 6;
-            Cursor cursor = InputLibrary.Cursor.Self;
-
-            if (cursor.PrimaryDown)
-            {
-                mHasMovedEnoughSincePush |=
-                    Math.Abs(cursor.X - mXPush) > pixelsToMoveBeforeApplying ||
-                    Math.Abs(cursor.Y - mYPush) > pixelsToMoveBeforeApplying;
-
-
-            }
-        }
-
+        
         private void ClickActivity()
         {
             Cursor cursor = InputLibrary.Cursor.Self;
@@ -123,6 +104,49 @@ namespace Gum.Wireframe
 
             if (cursor.PrimaryClick && mHasChangedAnythingSinceLastPush)
             {
+
+                bool isShiftDown = InputLibrary.Keyboard.Self.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift) ||
+                    InputLibrary.Keyboard.Self.KeyDown(Microsoft.Xna.Framework.Input.Keys.RightShift);
+
+                if(isShiftDown)
+                {
+                    var axis = grabbedInitialState.AxisMovedFurthestAlong;
+
+                    bool isElementSelected = SelectedState.Self.SelectedInstances.Count() == 0 &&
+                            (SelectedState.Self.SelectedComponent != null || SelectedState.Self.SelectedStandardElement != null);
+
+                    if (axis == XOrY.X)
+                    {
+                        if (isElementSelected)
+                        {
+                            SelectedState.Self.SelectedStateSave.SetValue("Y", grabbedInitialState.ComponentPosition.Y, null, "float");
+                        }
+                        else
+                        {
+                            foreach(var instance in SelectedState.Self.SelectedInstances)
+                            {
+                                SelectedState.Self.SelectedStateSave.SetValue(instance.Name + ".Y", grabbedInitialState.InstancePositions[instance].Y, instance, "float");
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (isElementSelected)
+                        {
+                            SelectedState.Self.SelectedStateSave.SetValue("X", grabbedInitialState.ComponentPosition.Y, null, "float");
+                        }
+                        else
+                        {
+                            foreach (var instance in SelectedState.Self.SelectedInstances)
+                            {
+                                SelectedState.Self.SelectedStateSave.SetValue(instance.Name + ".X", grabbedInitialState.InstancePositions[instance].X, instance, "float");
+                            }
+                        }
+                    }
+
+                    GumCommands.Self.GuiCommands.RefreshPropertyGrid();
+                }
+
                 // let's snap everything
                 if (RestrictToUnitValues)
                 {
@@ -300,9 +324,9 @@ namespace Gum.Wireframe
             if (cursor.PrimaryPush)
             {
                 mHasChangedAnythingSinceLastPush = false;
-                mXPush = cursor.X;
-                mYPush = cursor.Y;
-                mHasMovedEnoughSincePush = false;
+
+                grabbedInitialState.HandlePush();
+
                 mHasGrabbed = SelectionManager.Self.HasSelection;
 
                 if (mHasGrabbed)
@@ -315,7 +339,8 @@ namespace Gum.Wireframe
         private void BodyGrabbingActivity()
         {
             Cursor cursor = InputLibrary.Cursor.Self;
-            if (SelectionManager.Self.IsOverBody && cursor.PrimaryDown && mHasGrabbed && mHasMovedEnoughSincePush)
+            if (SelectionManager.Self.IsOverBody && cursor.PrimaryDown && mHasGrabbed && 
+                grabbedInitialState.HasMovedEnough)
             {
                 float xToMoveBy = Cursor.Self.XChange / Renderer.Self.Camera.Zoom;
                 float yToMoveBy = Cursor.Self.YChange / Renderer.Self.Camera.Zoom;
@@ -335,6 +360,10 @@ namespace Gum.Wireframe
             {
                 bool hasChangeOccurred = false;
 
+                bool isShiftDown = InputLibrary.Keyboard.Self.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift) ||
+                    InputLibrary.Keyboard.Self.KeyDown(Microsoft.Xna.Framework.Input.Keys.RightShift);
+
+
                 if (SelectedState.Self.SelectedInstances.Count() == 0 && 
                     (SelectedState.Self.SelectedComponent != null || SelectedState.Self.SelectedStandardElement != null))
                 {
@@ -347,6 +376,25 @@ namespace Gum.Wireframe
                     {
                         hasChangeOccurred = true;
                         ModifyVariable("Y", yToMoveBy, SelectedState.Self.SelectedElement);
+                    }
+
+                    if(isShiftDown)
+                    {
+                        var xOrY = grabbedInitialState.AxisMovedFurthestAlong;
+
+                        if(xOrY == XOrY.X)
+                        {
+                            var gue = WireframeObjectManager.Self.GetRepresentation(SelectedState.Self.SelectedElement);
+
+                            gue.Y = grabbedInitialState.ComponentPosition.Y;
+                        }
+                        else
+                        {
+
+                            var gue = WireframeObjectManager.Self.GetRepresentation(SelectedState.Self.SelectedElement);
+
+                            gue.X = grabbedInitialState.ComponentPosition.X;
+                        }
                     }
                 }
                 else
@@ -368,6 +416,25 @@ namespace Gum.Wireframe
                             {
                                 hasChangeOccurred = true;
                                 float value = ModifyVariable("Y", yToMoveBy, instance);
+                            }
+
+                            if (isShiftDown)
+                            {
+                                var xOrY = grabbedInitialState.AxisMovedFurthestAlong;
+
+                                if (xOrY == XOrY.X)
+                                {
+                                    var gue = WireframeObjectManager.Self.GetRepresentation(instance);
+
+                                    gue.Y = grabbedInitialState.InstancePositions[instance].Y;
+                                }
+                                else
+                                {
+
+                                    var gue = WireframeObjectManager.Self.GetRepresentation(instance);
+
+                                    gue.X = grabbedInitialState.InstancePositions[instance].X;
+                                }
                             }
                         }
                     }
@@ -450,8 +517,8 @@ namespace Gum.Wireframe
             {
                 mSideGrabbed = SelectionManager.Self.SideOver;
             }
-            if (cursor.PrimaryDown && mHasMovedEnoughSincePush)
-            {
+            if (cursor.PrimaryDown && grabbedInitialState.HasMovedEnough)
+            { 
                 SideGrabbingActivity();
             }
             if (cursor.PrimaryClick)
@@ -570,7 +637,7 @@ namespace Gum.Wireframe
 
                 if (supportsShift && instanceSave != null)
                 {
-                    IPositionedSizedObject ipso = WireframeObjectManager.Self.GetRepresentation(instanceSave, elementStack);
+                    IRenderableIpso ipso = WireframeObjectManager.Self.GetRepresentation(instanceSave, elementStack);
 
                     Cursor cursor = Cursor.Self;
                     float cursorX = cursor.GetWorldX();
@@ -942,7 +1009,7 @@ namespace Gum.Wireframe
         {
             if (currentValue == 0 && (baseVariableName == "Width" || baseVariableName == "Height"))
             {
-                IPositionedSizedObject selectedIpso = SelectionManager.Self.SelectedIpso;
+                IRenderableIpso selectedIpso = SelectionManager.Self.SelectedIpso;
 
                 if ((DimensionUnitType)unitsValue == DimensionUnitType.Absolute)
                 {
@@ -1049,7 +1116,7 @@ namespace Gum.Wireframe
                 float outY;
 
 
-                IPositionedSizedObject ipso = WireframeObjectManager.Self.GetSelectedRepresentation();
+                IRenderableIpso ipso = WireframeObjectManager.Self.GetSelectedRepresentation();
                 ipso.GetFileWidthAndHeight(out fileWidth, out fileHeight);
                 ipso.GetParentWidthAndHeight(
                     ProjectManager.Self.GumProjectSave.DefaultCanvasWidth, ProjectManager.Self.GumProjectSave.DefaultCanvasHeight,

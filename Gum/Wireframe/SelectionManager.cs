@@ -279,17 +279,20 @@ namespace Gum.Wireframe
             mGraphicalOutline = new GraphicalOutline(mUiLayer);
 
             mOverlaySolidRectangle = new SolidRectangle();
+            mOverlaySolidRectangle.Name = "Overlay SolidRectangle";
             mOverlaySolidRectangle.Color = Color.LightGreen;
             mOverlaySolidRectangle.Color.A = 100;
             mOverlaySolidRectangle.Visible = false;
             ShapeManager.Self.Add(mOverlaySolidRectangle, mUiLayer);
 
             mOverlaySprite = new Sprite(null);
+            mOverlaySprite.Name = "Overlay Sprite";
             mOverlaySprite.BlendState = BlendState.Additive;
             mOverlaySprite.Visible = false;
             SpriteManager.Self.Add(mOverlaySprite, mUiLayer);
 
             mOverlayNineSlice = new NineSlice();
+            mOverlayNineSlice.Name = "Overlay NineSlice";
             mOverlayNineSlice.BlendState = BlendState.Additive;
             mOverlayNineSlice.Visible = false;
             SpriteManager.Self.Add(mOverlayNineSlice, mUiLayer);
@@ -303,24 +306,17 @@ namespace Gum.Wireframe
         {
             try
             {
-                ProjectVerifier.Self.AssertSelectedIpsosArePartOfRenderer();
-
                 if (Cursor.IsInWindow && SelectedState.Self.SelectedElement != null)
                 {
                     HighlightActivity(container);
-                    ProjectVerifier.Self.AssertSelectedIpsosArePartOfRenderer();
 
                     SelectionActivity();
-                    ProjectVerifier.Self.AssertSelectedIpsosArePartOfRenderer();
                 }
                 else if (!Cursor.IsInWindow)
                 {
                     // the element view window can also highlight, so we don't want to do this:
                     //HighlightedIpso = null;
                 }
-
-                ProjectVerifier.Self.AssertSelectedIpsosArePartOfRenderer();
-
             }
             catch (Exception e)
             {
@@ -463,29 +459,7 @@ namespace Gum.Wireframe
             }
             else if (HighlightedNineSlice != null)
             {
-                mOverlayNineSlice.Visible = true;
-                mOverlayNineSlice.X = HighlightedNineSlice.GetAbsoluteX();
-                mOverlayNineSlice.Y = HighlightedNineSlice.GetAbsoluteY();
-
-                mOverlayNineSlice.Width = HighlightedNineSlice.Width;
-                mOverlayNineSlice.Height = HighlightedNineSlice.Height;
-                mOverlayNineSlice.TopLeftTexture = HighlightedNineSlice.TopLeftTexture;
-                mOverlayNineSlice.TopTexture = HighlightedNineSlice.TopTexture;
-                mOverlayNineSlice.TopRightTexture = HighlightedNineSlice.TopRightTexture;
-
-                mOverlayNineSlice.LeftTexture = HighlightedNineSlice.LeftTexture;
-                mOverlayNineSlice.CenterTexture = HighlightedNineSlice.CenterTexture;
-                mOverlayNineSlice.RightTexture = HighlightedNineSlice.RightTexture;
-
-                mOverlayNineSlice.BottomLeftTexture = HighlightedNineSlice.BottomLeftTexture;
-                mOverlayNineSlice.BottomTexture = HighlightedNineSlice.BottomTexture;
-                mOverlayNineSlice.BottomRightTexture = HighlightedNineSlice.BottomRightTexture;
-
-                mOverlayNineSlice.Red = HighlightedNineSlice.Red;
-                mOverlayNineSlice.Green = HighlightedNineSlice.Green;
-                mOverlayNineSlice.Blue = HighlightedNineSlice.Blue;
-
-                mOverlayNineSlice.Rotation = HighlightedNineSlice.Rotation;
+                SetNineSliceOverlay();
             }
             else if (HighlightedLineRectangle != null)
             {
@@ -502,8 +476,36 @@ namespace Gum.Wireframe
             }
         }
 
+        private void SetNineSliceOverlay()
+        {
 
+            mOverlayNineSlice.Visible = true;
+            mOverlayNineSlice.X = HighlightedNineSlice.GetAbsoluteX();
+            mOverlayNineSlice.Y = HighlightedNineSlice.GetAbsoluteY();
 
+            mOverlayNineSlice.Width = HighlightedNineSlice.Width;
+            mOverlayNineSlice.Height = HighlightedNineSlice.Height;
+            mOverlayNineSlice.TopLeftTexture = HighlightedNineSlice.TopLeftTexture;
+            mOverlayNineSlice.TopTexture = HighlightedNineSlice.TopTexture;
+            mOverlayNineSlice.TopRightTexture = HighlightedNineSlice.TopRightTexture;
+
+            mOverlayNineSlice.LeftTexture = HighlightedNineSlice.LeftTexture;
+            mOverlayNineSlice.CenterTexture = HighlightedNineSlice.CenterTexture;
+            mOverlayNineSlice.RightTexture = HighlightedNineSlice.RightTexture;
+
+            mOverlayNineSlice.BottomLeftTexture = HighlightedNineSlice.BottomLeftTexture;
+            mOverlayNineSlice.BottomTexture = HighlightedNineSlice.BottomTexture;
+            mOverlayNineSlice.BottomRightTexture = HighlightedNineSlice.BottomRightTexture;
+
+            mOverlayNineSlice.Red = HighlightedNineSlice.Red;
+            mOverlayNineSlice.Green = HighlightedNineSlice.Green;
+            mOverlayNineSlice.Blue = HighlightedNineSlice.Blue;
+
+            mOverlayNineSlice.SourceRectangle = HighlightedNineSlice.SourceRectangle;
+
+            mOverlayNineSlice.Rotation = HighlightedNineSlice.Rotation;
+
+        }
 
         public GraphicalUiElement GetRepresentationAt(float x, float y, bool skipSelected, List<ElementWithState> elementStack)
         {
@@ -771,9 +773,8 @@ namespace Gum.Wireframe
                     elementStack.Add(new ElementWithState(SelectedState.Self.SelectedElement));
 
 
-                    IPositionedSizedObject representation =
+                    IRenderableIpso representation =
                         GetRepresentationAt(x, y, Cursor.PrimaryDoubleClick, elementStack);
-                    ProjectVerifier.Self.AssertIsPartOfRenderer(representation);
                     bool hasChanged = true;
 
                     if (representation != null)
@@ -857,8 +858,6 @@ namespace Gum.Wireframe
                             SelectedIpso = representation as GraphicalUiElement;
                         }
                     }
-                    ProjectVerifier.Self.AssertSelectedIpsosArePartOfRenderer();
-
                 }
             }
             catch (Exception e)
@@ -869,13 +868,13 @@ namespace Gum.Wireframe
 
         }
 
-        private static void GetElementOrInstanceForIpso(IPositionedSizedObject representation, List<ElementWithState> elementStack,
+        private static void GetElementOrInstanceForIpso(IRenderableIpso representation, List<ElementWithState> elementStack,
                                                         out InstanceSave selectedInstance, out ElementSave selectedElement)
         {
             selectedInstance = null;
             selectedElement = null;
 
-            IPositionedSizedObject ipsoToUse = representation;
+            IRenderableIpso ipsoToUse = representation;
 
             while (ipsoToUse != null && ipsoToUse.Parent != null && WireframeObjectManager.Self.AllIpsos.Contains(ipsoToUse) == false)
             {
@@ -904,7 +903,7 @@ namespace Gum.Wireframe
             }
         }
 
-        public void ShowSizeHandlesFor(IPositionedSizedObject representation)
+        public void ShowSizeHandlesFor(IRenderableIpso representation)
         {
             mResizeHandles.Visible = true;
             mResizeHandles.SetValuesFrom(representation);

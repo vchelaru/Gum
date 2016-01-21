@@ -456,7 +456,6 @@ namespace RenderingLibrary.Graphics
 
             RenderTarget2D renderTarget = null;
 
-            Point point = new Point();
             int requiredWidth;
             int requiredHeight;
             List<int> widths;
@@ -473,39 +472,17 @@ namespace RenderingLibrary.Graphics
                 {
                     renderTarget = new RenderTarget2D(managers.Renderer.GraphicsDevice, requiredWidth, requiredHeight);
                 }
+
+                managers.Renderer.GraphicsDevice.Viewport = new Viewport(0, 0, requiredWidth, requiredHeight);
+
                 managers.Renderer.GraphicsDevice.SetRenderTarget(renderTarget);
 
                 var spriteRenderer = managers.Renderer.SpriteRenderer;
                 managers.Renderer.GraphicsDevice.Clear(Color.Transparent);
                 spriteRenderer.Begin();
-                int lineNumber = 0;
 
-                foreach (string line in lines)
-                {
-                    // scoot over to leave room for the outline
-                    point.X = mOutlineThickness;
-
-                    if (horizontalAlignment == HorizontalAlignment.Right)
-                    {
-                        point.X = requiredWidth - widths[lineNumber];
-                    }
-                    else if (horizontalAlignment == HorizontalAlignment.Center)
-                    {
-                        point.X = (requiredWidth - widths[lineNumber])/2;
-                    }
-
-                    foreach (char c in line)
-                    {
-                        Rectangle destRect;
-                        int pageIndex;
-                        var sourceRect = GetCharacterRect(c, lineNumber, ref point, out destRect, out pageIndex);
-
-                        spriteRenderer.Draw(mTextures[pageIndex], destRect, sourceRect, Color.White, objectRequestingChange);
-                    }
-                    point.X = 0;
-                    lineNumber++;
-                }
-
+                DrawLines(lines, horizontalAlignment, objectRequestingChange, requiredWidth, widths, spriteRenderer);
+                
                 spriteRenderer.End();
 
                 managers.Renderer.GraphicsDevice.SetRenderTarget(null);
@@ -514,6 +491,41 @@ namespace RenderingLibrary.Graphics
             }
 
             return renderTarget;
+        }
+
+        private Point DrawLines(IEnumerable<string> lines, HorizontalAlignment horizontalAlignment, object objectRequestingChange, int requiredWidth, List<int> widths, SpriteRenderer spriteRenderer)
+        {
+            Point point = new Point();
+
+            int lineNumber = 0;
+
+            foreach (string line in lines)
+            {
+                // scoot over to leave room for the outline
+                point.X = mOutlineThickness;
+
+                if (horizontalAlignment == HorizontalAlignment.Right)
+                {
+                    point.X = requiredWidth - widths[lineNumber];
+                }
+                else if (horizontalAlignment == HorizontalAlignment.Center)
+                {
+                    point.X = (requiredWidth - widths[lineNumber]) / 2;
+                }
+
+                foreach (char c in line)
+                {
+                    Rectangle destRect;
+                    int pageIndex;
+                    var sourceRect = GetCharacterRect(c, lineNumber, ref point, out destRect, out pageIndex);
+
+                    spriteRenderer.Draw(mTextures[pageIndex], destRect, sourceRect, Color.White, objectRequestingChange);
+                }
+                point.X = 0;
+                lineNumber++;
+            }
+
+            return point;
         }
 
         /// <summary>
@@ -574,7 +586,12 @@ namespace RenderingLibrary.Graphics
                     mCharRect.Y = rotatingPoint.Y;
                     mCharRect.Width = destRect.Width;
                     mCharRect.Height = destRect.Height;
-                    mCharRect.Parent = textObject.Parent;
+
+                    if(textObject.Parent != null)
+                    {
+                        mCharRect.X += textObject.Parent.GetAbsoluteX();
+                        mCharRect.Y += textObject.Parent.GetAbsoluteY();
+                    }
 
                     Sprite.Render(managers, spriteRenderer, mCharRect, mTextures[0], color, sourceRect, false, false, rotation,
                         treat0AsFullDimensions: false, objectCausingRenering: objectRequestingChange);
