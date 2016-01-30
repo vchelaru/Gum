@@ -26,3 +26,4 @@ CommonFormsAndControls/obj/
 ContentLibrary/bin/
 XnaAndWinforms/bin/
 CsvLibrary/bin/
+*.cache

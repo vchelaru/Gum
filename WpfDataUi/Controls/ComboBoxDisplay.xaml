@@ -6,7 +6,7 @@
              mc:Ignorable="d" 
              Height="26"
              d:DesignHeight="300" d:DesignWidth="300">
-    <Grid>
+    <Grid x:Name="MainGrid">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="{Binding FirstGridLength}"></ColumnDefinition>
             <ColumnDefinition Width="*"></ColumnDefinition>

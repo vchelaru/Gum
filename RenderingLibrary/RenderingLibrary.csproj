@@ -122,12 +122,6 @@
     <Compile Include="SystemManagers.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ToolsUtilities\ToolsUtilities.csproj">
-      <Project>{b941a93f-6093-4dc6-ad11-91a058b6c2cc}</Project>
-      <Name>ToolsUtilities</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Content\BmfcTemplate.bmfc">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -138,6 +132,12 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Libraries\bmfont.exe" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ToolsUtilities\ToolsUtilities.csproj">
+      <Project>{b941a93f-6093-4dc6-ad11-91a058b6c2cc}</Project>
+      <Name>ToolsUtilities</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

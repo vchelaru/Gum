@@ -62,7 +62,9 @@ namespace XnaAndWinforms
             parameters.IsFullScreen = false;
 
             graphicsDevice = new GraphicsDevice(GraphicsAdapter.DefaultAdapter,
-                                                GraphicsProfile.Reach,
+                                                // It's 2016, so pretty much every computer should support hidef
+                                                // We do this to support 4k textures
+                                                GraphicsProfile.HiDef,
                                                 parameters);
         }
 

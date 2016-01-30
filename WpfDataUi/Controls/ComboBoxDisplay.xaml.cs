@@ -67,11 +67,37 @@ namespace WpfDataUi.Controls
             }
         }
 
+        protected Grid Grid
+        {
+            get;
+            private set;
+        }
+
+        private ComboBox ComboBox
+        {
+            get;
+            set;
+        }
+
+        private Label Label
+        {
+            get;
+            set;
+        }
+
         #endregion
 
         public ComboBoxDisplay()
         {
-            InitializeComponent();
+
+            // So this used to use WPF, but it turns out that inheriting from 
+            // this class and instantiating the derived class causes a crash, as 
+            // discussed here:
+            // http://stackoverflow.com/questions/7646331/the-component-does-not-have-a-resource-identified-by-the-uri
+            // I tried rebuilding, deleting folders, restarting Visual Studio, no go. So I guess I'm going to C# it
+            //InitializeComponent();
+            CreateLayout();
+            
 
 
             if (mUnmodifiedBrush == null)
@@ -82,11 +108,47 @@ namespace WpfDataUi.Controls
             this.ComboBox.DataContext = this;
 
             this.RefreshContextMenu(ComboBox.ContextMenu);
+
         }
+        
+        private void CreateLayout()
+        {
+            Grid = new Grid();
+            var firstColumnDefinition = new ColumnDefinition();
+            firstColumnDefinition.SetBinding(ColumnDefinition.WidthProperty, "FirstGridLength");
+            Grid.ColumnDefinitions.Add(firstColumnDefinition);
+            Grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
 
+            Label = new Label
+            {
+                Name="Label",
+                VerticalAlignment = VerticalAlignment.Center,
+                Content = "Property Label:"
+            };
+            Grid.Children.Add(Label);
 
+            ComboBox = new ComboBox
+            {
+                Name="ComboBox",
+                VerticalAlignment = VerticalAlignment.Center,
+                VerticalContentAlignment = VerticalAlignment.Center,
+                Height=22,
+                MinWidth = 60
+            };
+            ComboBox.ContextMenu = new ContextMenu();
+            //ComboBox.SetBinding(TextBlock.ForegroundProperty, "DesiredForegroundBrush");
 
+            //TextBlock.SetForeground(ComboBox, asdf);
+            //var textBlock = FindVisualChildByName<TextBlock>(ComboBox, "TextBlock");
+            //textBlock.SetBinding(TextBlock.ForegroundProperty, "DesiredForegroundBrush");
+            //ComboBox.SelectionChanged += ComboBox_SelectionChanged;
 
+            Grid.SetColumn(ComboBox, 1);
+            Grid.Children.Add(ComboBox);
+
+            this.Content = Grid;
+        }
+        
 
         public void Refresh()
         {
@@ -116,6 +178,9 @@ namespace WpfDataUi.Controls
             {
 
             }
+
+
+            TextBlock.SetForeground(ComboBox, DesiredForegroundBrush);
 
             this.RefreshContextMenu(ComboBox.ContextMenu);
 
@@ -147,9 +212,11 @@ namespace WpfDataUi.Controls
             // reduced by the converter.  In that case we 
             // want to show the reduced set instead of the
             // entire enum
-            if (InstanceMember.CustomOptions != null && InstanceMember.CustomOptions.Count != 0)
+            if (InstanceMember.CustomOptions != null)
             {
-
+                // Used to check for this:
+                //  && InstanceMember.CustomOptions.Count != 0
+                // But I see no reason - if there's no option, we just don't show any in the combo box
                 foreach (var item in InstanceMember.CustomOptions)
                 {
                     this.ComboBox.Items.Add(item);
