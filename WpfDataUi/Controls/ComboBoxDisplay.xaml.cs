@@ -141,7 +141,8 @@ namespace WpfDataUi.Controls
             //TextBlock.SetForeground(ComboBox, asdf);
             //var textBlock = FindVisualChildByName<TextBlock>(ComboBox, "TextBlock");
             //textBlock.SetBinding(TextBlock.ForegroundProperty, "DesiredForegroundBrush");
-            //ComboBox.SelectionChanged += ComboBox_SelectionChanged;
+            ComboBox.SelectionChanged += ComboBox_SelectionChanged;
+
 
             Grid.SetColumn(ComboBox, 1);
             Grid.Children.Add(ComboBox);
@@ -254,6 +255,8 @@ namespace WpfDataUi.Controls
             {
                 PropertyChanged(this, new PropertyChangedEventArgs("DesiredForegroundBrush"));
             }
+            TextBlock.SetForeground(ComboBox, DesiredForegroundBrush);
+
         }
 
 

@@ -78,5 +78,10 @@ namespace RenderingLibrary.Math
             pointToRotate.Y = (float)(System.Math.Sin(angle) * distance + basePoint.Y);
 
         }
+
+        public static float RoundFloat(float valueToRound, float multipleOf)
+        {
+            return ((int)(System.Math.Sign(valueToRound) * .5f + valueToRound / multipleOf)) * multipleOf;
+        }
     }
 }
