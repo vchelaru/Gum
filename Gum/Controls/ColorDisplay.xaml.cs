@@ -126,10 +126,10 @@ namespace Gum.Controls.DataUi
                 if (mInstancePropertyType == typeof(Microsoft.Xna.Framework.Color))
                 {
                     Microsoft.Xna.Framework.Color colorToReturn = new Microsoft.Xna.Framework.Color(
-                        ColorPicker.SelectedColor.R,
-                        ColorPicker.SelectedColor.G,
-                        ColorPicker.SelectedColor.B,
-                        ColorPicker.SelectedColor.A);
+                        ColorPicker.SelectedColor.Value.R,
+                        ColorPicker.SelectedColor.Value.G,
+                        ColorPicker.SelectedColor.Value.B,
+                        ColorPicker.SelectedColor.Value.A);
 
                     result = ApplyValueResult.Success;
 
@@ -154,7 +154,7 @@ namespace Gum.Controls.DataUi
             }
         }
 
-        private void HandleColorChange(object sender, RoutedPropertyChangedEventArgs<Color> e)
+        private void HandleColorChange(object sender, RoutedPropertyChangedEventArgs<Color?> e)
         {
             var settingResult = this.TrySetValueOnInstance();
 

@@ -15,6 +15,8 @@
 
 
         <Label x:Name="Label" MinWidth="100">Property Label:</Label>
+
+        <!--If this isn't avaiable, try "unblocking" your dlls: https://wpftoolkit.codeplex.com/discussions/572836-->
         <xctk:ColorPicker Grid.Column="1" Width="60"
                           Name="ColorPicker" 
                           SelectedColorChanged="HandleColorChange" VerticalAlignment="Center">
