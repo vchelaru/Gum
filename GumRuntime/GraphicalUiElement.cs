@@ -234,7 +234,14 @@ namespace Gum.Wireframe
         {
             get
             {
-                return ((IPositionedSizedObject)mContainedObjectAsIpso).Z;
+                if (mContainedObjectAsIpso == null)
+                {
+                    return 0;
+                }
+                else
+                {
+                    return mContainedObjectAsIpso.Z;
+                }
             }
             set
             {
@@ -526,7 +533,14 @@ namespace Gum.Wireframe
         {
             get
             {
-                return mContainedObjectAsIpso.Name;
+                if (mContainedObjectAsIpso != null)
+                {
+                    return mContainedObjectAsIpso.Name;
+                }
+                else
+                {
+                    return null;
+                }
             }
             set
             {
