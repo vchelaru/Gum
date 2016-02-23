@@ -59,8 +59,10 @@ namespace WpfDataUi
                             0),
                         0) as Grid;
 
-            headerGrid.Visibility = visible ? Visibility.Collapsed : Visibility.Visible;
-
+            if (headerGrid != null)
+            {
+                headerGrid.Visibility = visible ? Visibility.Collapsed : Visibility.Visible;
+            }
             //headerGrid.Children[0].Visibility = visible ? Visibility.Collapsed : Visibility.Visible; // Hide or show the Ellipse
             //headerGrid.Children[1].Visibility = visible ? Visibility.Collapsed : Visibility.Visible; // Hide or show the Arrow
             //headerGrid.Children[2].SetValue(Grid.ColumnProperty, visible ? 0 : 1); // If the Arrow is not visible, then shift the Header Content to the first column.
