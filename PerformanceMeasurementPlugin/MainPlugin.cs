@@ -14,6 +14,7 @@ namespace PerformanceMeasurementPlugin
     [Export(typeof(PluginBase))]
     public class MainPlugin : PluginBase
     {
+        PerformanceView view;
 
         public override string FriendlyName
         {
@@ -22,18 +23,19 @@ namespace PerformanceMeasurementPlugin
 
         public override Version Version
         {
-            get { return new Version(1, 0); }
+            get { return new Version(1, 1); }
         }
 
         public override void StartUp()
         {
-            PerformanceView view = new PerformanceView();
+            view = new PerformanceView();
             view.DataContext = new PerformanceViewModel();
             GumCommands.Self.GuiCommands.AddControl(view, "Performance");
         }
 
         public override bool ShutDown(Gum.Plugins.PluginShutDownReason shutDownReason)
         {
+            GumCommands.Self.GuiCommands.RemoveControl(view);
             return true;
         }
     }

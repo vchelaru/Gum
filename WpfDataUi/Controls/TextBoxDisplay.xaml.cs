@@ -81,15 +81,19 @@ namespace WpfDataUi.Controls
 
         public void Refresh()
         {
+            // If the user is editing a value, we don't want to change
+            // the value under the cursor
+            if (this.TextBox.IsFocused == false)
+            {
+                SuppressSettingProperty = true;
 
-            SuppressSettingProperty = true;
+                mTextBoxLogic.RefreshDisplay();
 
-            mTextBoxLogic.RefreshDisplay();
+                this.Label.Text = InstanceMember.DisplayName;
+                this.RefreshContextMenu(TextBox.ContextMenu);
 
-            this.Label.Text = InstanceMember.DisplayName;
-            this.RefreshContextMenu(TextBox.ContextMenu);
-
-            SuppressSettingProperty = false;
+                SuppressSettingProperty = false;
+            }
         }
 
         public ApplyValueResult TrySetValueOnUi(object valueOnInstance)

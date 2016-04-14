@@ -37,22 +37,13 @@ namespace Gum.Plugins.AlignmentButtons
 
                 string instancePrefix = instance.Name + ".";
 
-                state.SetValue(instancePrefix + "X", 0.0f, "float");
-                state.SetValue(instancePrefix + "X Origin",
-                    global::RenderingLibrary.Graphics.HorizontalAlignment.Center, "HorizontalAlignment");
-                state.SetValue(instancePrefix + "X Units",
-                   PositionUnitType.PixelsFromCenterX, typeof(Gum.Managers.PositionUnitType).Name);
+                SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
+                SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Top, PositionUnitType.PixelsFromTop);
 
                 state.SetValue(instancePrefix + "Width", 0.0f, "float");
                 state.SetValue(instancePrefix + "Width Units",
                     DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
 
-
-                state.SetValue(instancePrefix + "Y", 0.0f, "float");
-                state.SetValue(instancePrefix + "Y Origin",
-                    global::RenderingLibrary.Graphics.VerticalAlignment.Top, typeof(global::RenderingLibrary.Graphics.VerticalAlignment).Name);
-                state.SetValue(instancePrefix + "Y Units",
-                    PositionUnitType.PixelsFromTop, typeof(PositionUnitType).Name);
 
                 RefreshAndSave();
             }
@@ -71,22 +62,12 @@ namespace Gum.Plugins.AlignmentButtons
 
                     string instancePrefix = instance.Name + ".";
 
-                    state.SetValue(instancePrefix + "X", 0.0f, "float");
-                    state.SetValue(instancePrefix + "X Origin",
-                        global::RenderingLibrary.Graphics.HorizontalAlignment.Left, "HorizontalAlignment");
-                    state.SetValue(instancePrefix + "X Units",
-                       PositionUnitType.PixelsFromLeft, typeof(Gum.Managers.PositionUnitType).Name);
+                    SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Left, PositionUnitType.PixelsFromLeft);
+                    SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
 
                     state.SetValue(instancePrefix + "Height", 0.0f, "float");
                     state.SetValue(instancePrefix + "Height Units",
                         DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
-
-
-                    state.SetValue(instancePrefix + "Y", 0.0f, "float");
-                    state.SetValue(instancePrefix + "Y Origin",
-                        global::RenderingLibrary.Graphics.VerticalAlignment.Center, typeof(global::RenderingLibrary.Graphics.VerticalAlignment).Name);
-                    state.SetValue(instancePrefix + "Y Units",
-                        PositionUnitType.PixelsFromCenterY, typeof(PositionUnitType).Name);
 
                     RefreshAndSave();
                 }
@@ -103,11 +84,8 @@ namespace Gum.Plugins.AlignmentButtons
 
                 string instancePrefix = instance.Name + ".";
 
-                state.SetValue(instancePrefix + "X", 0.0f, "float");
-                state.SetValue(instancePrefix + "X Origin",
-                    global::RenderingLibrary.Graphics.HorizontalAlignment.Center, "HorizontalAlignment");
-                state.SetValue(instancePrefix + "X Units",
-                   PositionUnitType.PixelsFromCenterX, typeof(Gum.Managers.PositionUnitType).Name);
+                SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
+                SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
 
                 state.SetValue(instancePrefix + "Width", 0.0f, "float");
                 state.SetValue(instancePrefix + "Width Units",
@@ -117,11 +95,6 @@ namespace Gum.Plugins.AlignmentButtons
                 state.SetValue(instancePrefix + "Height Units",
                     DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
 
-                state.SetValue(instancePrefix + "Y", 0.0f, "float");
-                state.SetValue(instancePrefix + "Y Origin",
-                    global::RenderingLibrary.Graphics.VerticalAlignment.Center, typeof(global::RenderingLibrary.Graphics.VerticalAlignment).Name);
-                state.SetValue(instancePrefix + "Y Units",
-                    PositionUnitType.PixelsFromCenterY, typeof(PositionUnitType).Name);
 
                 RefreshAndSave();
             }
@@ -137,22 +110,14 @@ namespace Gum.Plugins.AlignmentButtons
 
                 string instancePrefix = instance.Name + ".";
 
-                state.SetValue(instancePrefix + "X", 0.0f, "float");
-                state.SetValue(instancePrefix + "X Origin",
-                    global::RenderingLibrary.Graphics.HorizontalAlignment.Right, "HorizontalAlignment");
-                state.SetValue(instancePrefix + "X Units",
-                   PositionUnitType.PixelsFromRight, typeof(Gum.Managers.PositionUnitType).Name);
+                SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Right, PositionUnitType.PixelsFromRight);
+                SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
 
                 state.SetValue(instancePrefix + "Height", 0.0f, "float");
                 state.SetValue(instancePrefix + "Height Units",
                     DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
 
 
-                state.SetValue(instancePrefix + "Y", 0.0f, "float");
-                state.SetValue(instancePrefix + "Y Origin",
-                    global::RenderingLibrary.Graphics.VerticalAlignment.Center, typeof(global::RenderingLibrary.Graphics.VerticalAlignment).Name);
-                state.SetValue(instancePrefix + "Y Units",
-                    PositionUnitType.PixelsFromCenterY, typeof(PositionUnitType).Name);
 
                 RefreshAndSave();
             }
@@ -168,27 +133,57 @@ namespace Gum.Plugins.AlignmentButtons
 
                 string instancePrefix = instance.Name + ".";
 
-                state.SetValue(instancePrefix + "X", 0.0f, "float");
-                state.SetValue(instancePrefix + "X Origin",
-                    global::RenderingLibrary.Graphics.HorizontalAlignment.Center, "HorizontalAlignment");
-                state.SetValue(instancePrefix + "X Units",
-                   PositionUnitType.PixelsFromCenterX, typeof(Gum.Managers.PositionUnitType).Name);
+                SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
+                SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Bottom, PositionUnitType.PixelsFromBottom);
 
                 state.SetValue(instancePrefix + "Width", 0.0f, "float");
                 state.SetValue(instancePrefix + "Width Units",
                     DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
 
 
-                state.SetValue(instancePrefix + "Y", 0.0f, "float");
-                state.SetValue(instancePrefix + "Y Origin",
-                    global::RenderingLibrary.Graphics.VerticalAlignment.Bottom, typeof(global::RenderingLibrary.Graphics.VerticalAlignment).Name);
-                state.SetValue(instancePrefix + "Y Units",
-                    PositionUnitType.PixelsFromBottom, typeof(PositionUnitType).Name);
-
                 RefreshAndSave();
             }
         }
 
+        private void SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment alignment, PositionUnitType xUnits)
+        {
+            var state = SelectedState.Self.SelectedStateSave;
+            var instance = SelectedState.Self.SelectedInstance;
+            string instancePrefix = instance.Name + ".";
+
+
+            state.SetValue(instancePrefix + "X", 0.0f, "float");
+            state.SetValue(instancePrefix + "X Origin",
+                alignment, "HorizontalAlignment");
+            state.SetValue(instancePrefix + "X Units",
+               xUnits, typeof(Gum.Managers.PositionUnitType).Name);
+
+            if (instance != null && instance.BaseType == "Text")
+            {
+                state.SetValue(instancePrefix + "HorizontalAlignment", alignment, "HorizontalAlignment");
+            }
+
+        }
+
+
+        private void SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment alignment, PositionUnitType yUnits)
+        {
+            var state = SelectedState.Self.SelectedStateSave;
+            var instance = SelectedState.Self.SelectedInstance;
+            string instancePrefix = instance.Name + ".";
+
+            state.SetValue(instancePrefix + "Y", 0.0f, "float");
+            state.SetValue(instancePrefix + "Y Origin",
+                alignment, typeof(global::RenderingLibrary.Graphics.VerticalAlignment).Name);
+            state.SetValue(instancePrefix + "Y Units",
+                yUnits, typeof(PositionUnitType).Name);
+
+            if (instance != null && instance.BaseType == "Text")
+            {
+                state.SetValue(instancePrefix + "VerticalAlignment", alignment, "VerticalAlignment");
+            }
+
+        }
 
         private static void RefreshAndSave()
         {

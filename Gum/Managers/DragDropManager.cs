@@ -17,6 +17,7 @@ using Gum.DataTypes.Variables;
 using Gum.ToolCommands;
 using RenderingLibrary.Graphics;
 using Gum.PropertyGridHelpers;
+using System.Drawing;
 
 namespace Gum.Managers
 {
@@ -354,6 +355,11 @@ namespace Gum.Managers
                     string fileName = FileManager.MakeRelative(files[0], FileLocations.Self.ProjectFolder);
 
                     MultiButtonMessageBox mbmb = new MultiButtonMessageBox();
+                    mbmb.StartPosition = FormStartPosition.Manual;
+                    
+                    mbmb.Location = new Point(MainWindow.MousePosition.X - mbmb.Width / 2,
+                         MainWindow.MousePosition.Y - mbmb.Height / 2);
+
                     mbmb.MessageText = "What do you want to do with the file " + fileName;
 
                     mbmb.AddButton("Set source file on " + instance.Name, DialogResult.OK);

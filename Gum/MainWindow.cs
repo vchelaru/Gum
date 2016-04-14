@@ -354,6 +354,49 @@ namespace Gum
             }
         }
 
+        public void RemoveWpfControl(System.Windows.Controls.UserControl control)
+        {
+            List<Control> controls = new List<Control>();
+
+            bool found = false;
+
+            foreach(var uncastedTabPage in this.MiddleTabControl.Controls)
+            {
+                var tabPage = uncastedTabPage as TabPage;
+
+                if(tabPage != null && DoesTabContainControl(tabPage, control))
+                {
+                    this.MiddleTabControl.Controls.Remove(tabPage);
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found)
+            {
+                foreach (var uncastedTabPage in this.RightTabControl.Controls)
+                {
+                    var tabPage = uncastedTabPage as TabPage;
+
+                    if (tabPage != null && DoesTabContainControl(tabPage, control))
+                    {
+                        this.MiddleTabControl.Controls.Remove(tabPage);
+                        found = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        bool DoesTabContainControl(TabPage tabPage, System.Windows.Controls.UserControl control)
+        {
+            var foundHost = tabPage.Controls
+                .FirstOrDefault(item => item is System.Windows.Forms.Integration.ElementHost)
+                as System.Windows.Forms.Integration.ElementHost;
+
+            return foundHost != null && foundHost.Child == control;
+        }
+
         private void findFileReferencesToolStripMenuItem_Click(object sender, EventArgs e)
         {
             CommonFormsAndControls.TextInputWindow tiw = new CommonFormsAndControls.TextInputWindow();

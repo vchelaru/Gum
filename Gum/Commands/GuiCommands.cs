@@ -41,6 +41,11 @@ namespace Gum.Commands
             mMainWindow.AddWpfControl(control, tabTitle, tabLocation);
         }
 
+        public void RemoveControl(System.Windows.Controls.UserControl control)
+        {
+            mMainWindow.RemoveWpfControl(control);
+        }
+
         public void PrintOutput(string output)
         {
             OutputManager.Self.AddOutput(output);

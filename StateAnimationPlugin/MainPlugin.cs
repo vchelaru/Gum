@@ -111,6 +111,8 @@ namespace StateAnimationPlugin
                 if(mMainWindow == null || mMainWindow.IsVisible == false)
                 {
                     mMainWindow = new MainWindow();
+                    // This fixes an issue where embedded wpf text boxes don't get input, as explained here:
+                    // http://stackoverflow.com/questions/835878/wpf-textbox-not-accepting-input-when-in-elementhost-in-window-forms
                     ElementHost.EnableModelessKeyboardInterop(mMainWindow);
                     mMainWindow.Show();
                 }

@@ -183,6 +183,12 @@ namespace Gum.Plugins.AlignmentButtons
                 alignment, "HorizontalAlignment");
             state.SetValue(instancePrefix + "X Units",
                xUnits, typeof(Gum.Managers.PositionUnitType).Name);
+
+            if(instance != null && instance.BaseType == "Text")
+            {
+                state.SetValue(instancePrefix + "HorizontalAlignment", alignment, "HorizontalAlignment");
+            }
+
         }
 
         private void SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment alignment, PositionUnitType yUnits)
@@ -196,9 +202,13 @@ namespace Gum.Plugins.AlignmentButtons
                 alignment, typeof(global::RenderingLibrary.Graphics.VerticalAlignment).Name);
             state.SetValue(instancePrefix + "Y Units",
                 yUnits, typeof(PositionUnitType).Name);
+
+            if (instance != null && instance.BaseType == "Text")
+            {
+                state.SetValue(instancePrefix + "VerticalAlignment", alignment, "VerticalAlignment");
+            }
+
         }
-
-
 
         private static void RefreshAndSave()
         {

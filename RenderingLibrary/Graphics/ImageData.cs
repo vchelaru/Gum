@@ -510,7 +510,12 @@ namespace RenderingLibrary.Graphics
 
         public void ToTexture2D(Texture2D textureToFill)
         {
-            lock (Renderer.Self.GraphicsDevice)
+            var managers = mManagers;
+            if(managers == null)
+            {
+                managers = SystemManagers.Default;
+            }
+            lock (managers.Renderer.GraphicsDevice)
             {
                 textureToFill.SetData<Color>(this.mData, 0, textureToFill.Width * textureToFill.Height);
             }
