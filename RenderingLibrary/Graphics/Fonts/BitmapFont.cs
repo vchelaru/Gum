@@ -472,10 +472,20 @@ namespace RenderingLibrary.Graphics
                 {
                     renderTarget = new RenderTarget2D(managers.Renderer.GraphicsDevice, requiredWidth, requiredHeight);
                 }
-
-                managers.Renderer.GraphicsDevice.Viewport = new Viewport(0, 0, requiredWidth, requiredHeight);
-
+                // render target has to be set before setting the viewport
                 managers.Renderer.GraphicsDevice.SetRenderTarget(renderTarget);
+
+                var viewportToSet = new Viewport(0, 0, requiredWidth, requiredHeight);
+                try
+                {
+                    managers.Renderer.GraphicsDevice.Viewport = viewportToSet;
+                }
+                catch(Exception exception)
+                {
+                    throw new Exception("Error setting graphics device when rendering bitmap font. used values:\n" +
+                        $"requiredWidth:{requiredWidth}\nrequiredHeight:{requiredHeight}", exception);
+                }
+
 
                 var spriteRenderer = managers.Renderer.SpriteRenderer;
                 managers.Renderer.GraphicsDevice.Clear(Color.Transparent);
