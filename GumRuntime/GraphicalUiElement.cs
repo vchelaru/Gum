@@ -2162,10 +2162,12 @@ namespace Gum.Wireframe
                     layerToAddTo.Add(mContainedObjectAsIpso);
                 }
 
-                foreach (var contained in this.mWhatThisContains)
-                {
-                    contained.MoveToLayer(layer);
-                }
+                // We don't want to move the children to a layer, because the children
+                // are drawn hierarchically
+                //foreach (var contained in this.mWhatThisContains)
+                //{
+                //    contained.MoveToLayer(layer);
+                //}
             }
         }
 
