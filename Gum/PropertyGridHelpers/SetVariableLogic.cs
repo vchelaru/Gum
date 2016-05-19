@@ -258,84 +258,105 @@ namespace Gum.PropertyGridHelpers
         {
             VariableSave variable = SelectedState.Self.SelectedVariableSave;
             // Eventually need to handle tunneled variables
+
+            
+
             if (variable != null && variable.GetRootName() == "SourceFile")
             {
                 string value = variable.Value as string;
 
-                if(!string.IsNullOrEmpty(value))
+                var extension = FileManager.GetExtension(value);
+
+                var isValidExtension = extension == "gif" ||
+                    extension == "jpg" ||
+                    extension == "png";
+
+                if (isValidExtension)
                 {
-                    // See if this is relative to the project
-                    bool isRelativeToProject = !value.StartsWith("../") && !value.StartsWith("..\\");
 
-                    if (!isRelativeToProject)
+                    if (!string.IsNullOrEmpty(value))
                     {
-                        // Ask the user what to do - make it relative?
-                        MultiButtonMessageBox mbmb = new 
-                            MultiButtonMessageBox();
+                        // See if this is relative to the project
+                        bool isRelativeToProject = !value.StartsWith("../") && !value.StartsWith("..\\");
 
-                        mbmb.MessageText = "The file\n" + value + "\nis not relative to the project.  What would you like to do?";
-                        mbmb.AddButton("Reference the file in its current location", DialogResult.OK);
-                        mbmb.AddButton("Copy the file relative to the Gum project and reference the copy", DialogResult.Yes);
-
-                        var dialogResult = mbmb.ShowDialog();
-
-                        bool shouldCopy = false;
-
-                        string directory = FileManager.GetDirectory(ProjectManager.Self.GumProjectSave.FullFileName);
-                        string targetAbsoluteFile = directory + FileManager.RemovePath(value);
-
-                        if(dialogResult == DialogResult.Yes)
+                        if (!isRelativeToProject)
                         {
-                            shouldCopy = true;
-
-                            // If the destination already exists, we gotta ask the user what they want to do.
-                            if (System.IO.File.Exists(targetAbsoluteFile))
-                            {
-                                mbmb = new MultiButtonMessageBox();
-                                mbmb.MessageText = "The destination file already exists.  Would you like to overwrite it?";
-                                mbmb.AddButton("Yes", DialogResult.Yes);
-                                mbmb.AddButton("No, use the original file", DialogResult.No);
-
-                                shouldCopy = mbmb.ShowDialog() == DialogResult.Yes;
-                            }
-                         
-                        }
-
-                        if (shouldCopy)
-                        {
-
-                            try
-                            {
-
-                                string sourceAbsoluteFile =
-                                    directory + value;
-                                sourceAbsoluteFile = FileManager.RemoveDotDotSlash(sourceAbsoluteFile);
-
-                                System.IO.File.Copy(sourceAbsoluteFile, targetAbsoluteFile, overwrite:true);
-
-                                variable.Value = FileManager.RemovePath(value);
-
-                            }
-                            catch (Exception e)
-                            {
-                                MessageBox.Show("Error copying file:\n" + e.ToString());
-                            }
+                            TryCopyFileLocally(variable, value);
                         }
                     }
 
 
+                    StateSave stateSave = SelectedState.Self.SelectedStateSave;
 
+                    RecursiveVariableFinder rvf = new RecursiveVariableFinder(stateSave);
+
+                    stateSave.SetValue("AnimationFrames", new List<string>());
                 }
+                else
+                {
 
+                    MessageBox.Show("The extension " + extension + " is not supported for textures");
 
-                StateSave stateSave = SelectedState.Self.SelectedStateSave;
+                    variable.Value = oldValue;
+                }
+            }
 
-                RecursiveVariableFinder rvf = new RecursiveVariableFinder(stateSave);
+        }
 
-                stateSave.SetValue("AnimationFrames", new List<string>());
+        private static void TryCopyFileLocally(VariableSave variable, string value)
+        {
+            // Ask the user what to do - make it relative?
+            MultiButtonMessageBox mbmb = new
+                MultiButtonMessageBox();
+
+            mbmb.MessageText = "The file\n" + value + "\nis not relative to the project.  What would you like to do?";
+            mbmb.AddButton("Reference the file in its current location", DialogResult.OK);
+            mbmb.AddButton("Copy the file relative to the Gum project and reference the copy", DialogResult.Yes);
+
+            var dialogResult = mbmb.ShowDialog();
+
+            bool shouldCopy = false;
+
+            string directory = FileManager.GetDirectory(ProjectManager.Self.GumProjectSave.FullFileName);
+            string targetAbsoluteFile = directory + FileManager.RemovePath(value);
+
+            if (dialogResult == DialogResult.Yes)
+            {
+                shouldCopy = true;
+
+                // If the destination already exists, we gotta ask the user what they want to do.
+                if (System.IO.File.Exists(targetAbsoluteFile))
+                {
+                    mbmb = new MultiButtonMessageBox();
+                    mbmb.MessageText = "The destination file already exists.  Would you like to overwrite it?";
+                    mbmb.AddButton("Yes", DialogResult.Yes);
+                    mbmb.AddButton("No, use the original file", DialogResult.No);
+
+                    shouldCopy = mbmb.ShowDialog() == DialogResult.Yes;
+                }
 
             }
 
+            if (shouldCopy)
+            {
+
+                try
+                {
+
+                    string sourceAbsoluteFile =
+                        directory + value;
+                    sourceAbsoluteFile = FileManager.RemoveDotDotSlash(sourceAbsoluteFile);
+
+                    System.IO.File.Copy(sourceAbsoluteFile, targetAbsoluteFile, overwrite: true);
+
+                    variable.Value = FileManager.RemovePath(value);
+
+                }
+                catch (Exception e)
+                {
+                    MessageBox.Show("Error copying file:\n" + e.ToString());
+                }
+            }
         }
 
         private void ReactIfChangedMemberIsParent(ElementSave parentElement, string changedMember, object oldValue)
