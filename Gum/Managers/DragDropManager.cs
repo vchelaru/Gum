@@ -85,16 +85,18 @@ namespace Gum.Managers
                 }
             }
         }
+        
 
-        private void HandleDroppedItemOnTreeView(object draggedObject, TreeNode treeNodeDroppedOn)
+        private void HandleDroppedItemOnTreeView(object draggedComponentOrElement, TreeNode treeNodeDroppedOn)
         {
+            Console.WriteLine($"Dropping{draggedComponentOrElement} on {treeNodeDroppedOn}");
             if (treeNodeDroppedOn != null)
             {
                 object targetTag = treeNodeDroppedOn.Tag;
 
-                if (draggedObject is ElementSave)
+                if (draggedComponentOrElement is ElementSave)
                 {
-                    ElementSave draggedAsElementSave = draggedObject as ElementSave;
+                    ElementSave draggedAsElementSave = draggedComponentOrElement as ElementSave;
 
                     // User dragged an element save - so they want to take something like a
                     // text object and make an instance in another element like a Screen
@@ -128,9 +130,9 @@ namespace Gum.Managers
                         MessageBox.Show("You must drop " + draggedAsElementSave.Name + " on either a Screen or an Component");
                     }
                 }
-                else if (draggedObject is InstanceSave)
+                else if (draggedComponentOrElement is InstanceSave)
                 {
-                    HandleDroppedInstance(draggedObject, targetTag);
+                    HandleDroppedInstance(draggedComponentOrElement, targetTag);
                 }
             }
         }
@@ -247,22 +249,58 @@ namespace Gum.Managers
         {
             InstanceSave newInstance = null;
 
+            string errorMessage = null;
+
             handled = false;
-            if (target == null)
+
+            errorMessage = GetErrorMessage(draggedAsElementSave, target, errorMessage);
+
+            if (!string.IsNullOrEmpty(errorMessage))
             {
-                MessageBox.Show("No Screen or Component selected");
-            }
-            else if (target is StandardElementSave)
-            {
-                MessageBox.Show("Standard types can't contain objects");
-            }
-            else if (draggedAsElementSave is ScreenSave)
-            {
-                MessageBox.Show("Screens can't be dropped into other Screens or Components");
+                MessageBox.Show(errorMessage);
             }
             else
             {
-                bool canAdd = true;
+#if DEBUG
+                if (draggedAsElementSave == null)
+                {
+                    throw new Exception("DraggedAsElementSave is null and it shouldn't be.  For vic - try to put this exception earlier to see what's up.");
+                }
+#endif
+
+                string name = GetUniqueNameForNewInstance(draggedAsElementSave, target);
+
+                // First we want to re-select the target so that it is highlighted in the tree view and not
+                // the object we dragged off.  This is so that plugins can properly use the SelectedElement.
+                ElementTreeViewManager.Self.Select(target);
+
+                newInstance = ElementTreeViewManager.Self.AddInstance(name, draggedAsElementSave.Name, target);
+                handled = true;
+            }
+
+            return newInstance;
+        }
+
+        private static string GetErrorMessage(ElementSave draggedAsElementSave, ElementSave target, string errorMessage)
+        {
+            if (target == null)
+            {
+                errorMessage = "No Screen or Component selected";
+            }
+
+            if (errorMessage == null && target is StandardElementSave)
+            {
+                // do nothing, it's annoying:
+                errorMessage = "Standard types can't contain objects";
+            }
+
+            if (errorMessage == null && draggedAsElementSave is ScreenSave)
+            {
+                errorMessage = "Screens can't be dropped into other Screens or Components";
+            }
+
+            if (errorMessage == null)
+            {
 
                 if (draggedAsElementSave is ComponentSave && target is ComponentSave)
                 {
@@ -270,37 +308,18 @@ namespace Gum.Managers
 
                     if (!targetAsComponentSave.CanContainInstanceOfType(draggedAsElementSave.Name))
                     {
-                        MessageBox.Show("Can't add instance of " + draggedAsElementSave.Name + " in " + targetAsComponentSave.Name);
-                        canAdd = false;
+                        errorMessage = "Can't add instance of " + draggedAsElementSave.Name + " in " + targetAsComponentSave.Name;
                     }
-                }
-                if (target.IsSourceFileMissing)
-                {
-                    MessageBox.Show("The source file for " + target.Name + " is missing, so it cannot be edited");
-                    canAdd = false;
-                }
-
-                if (canAdd)
-                {
-#if DEBUG
-                    if(draggedAsElementSave == null)
-                    {
-                        throw new Exception("DraggedAsElementSave is null and it shouldn't be.  For vic - try to put this exception earlier to see what's up.");
-                    }
-#endif
-
-                    string name = GetUniqueNameForNewInstance(draggedAsElementSave, target);
-
-                    // First we want to re-select the target so that it is highlighted in the tree view and not
-                    // the object we dragged off.  This is so that plugins can properly use the SelectedElement.
-                    ElementTreeViewManager.Self.Select(target);
-
-                    newInstance = ElementTreeViewManager.Self.AddInstance(name, draggedAsElementSave.Name, target);
-                    handled = true;
                 }
             }
 
-            return newInstance;
+
+            if (errorMessage == null && target.IsSourceFileMissing)
+            {
+                errorMessage = "The source file for " + target.Name + " is missing, so it cannot be edited";
+            }
+
+            return errorMessage;
         }
 
         private static string GetUniqueNameForNewInstance(ElementSave elementSave, ElementSave element)

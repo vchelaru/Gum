@@ -78,7 +78,7 @@ namespace Gum.Undo
                 }
             }
 
-            PrintStatus("RecordState");
+            //PrintStatus("RecordState");
         }
 
         public void RecordUndo()
@@ -133,7 +133,7 @@ namespace Gum.Undo
                 }
 
 
-                PrintStatus("RecordUndo");
+                //PrintStatus("RecordUndo");
             }
 
         }
@@ -196,7 +196,7 @@ namespace Gum.Undo
                     WireframeObjectManager.Self.RefreshAll(true);
                 }
 
-                PrintStatus("PerformUndo");
+                //PrintStatus("PerformUndo");
 
                 // If an instance is removed
                 // through an undo and if that

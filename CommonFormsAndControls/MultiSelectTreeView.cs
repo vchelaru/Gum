@@ -96,7 +96,9 @@ namespace CommonFormsAndControls
 				if (value != null)
 				{
 					ReactToClickedNode(value);
-					OnAfterSelect(new TreeViewEventArgs(mSelectedNode));
+
+                    // ReactToClickedNode has event raising already, so this results in the event being raised twice:
+					//OnAfterSelect(new TreeViewEventArgs(mSelectedNode));
 				}
 			}
         }

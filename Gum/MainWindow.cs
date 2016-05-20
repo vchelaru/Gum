@@ -29,6 +29,13 @@ namespace Gum
     {
         public MainWindow()
         {
+#if DEBUG
+            // This suppresses annoying, useless output from WPF, as explained here:
+            http://weblogs.asp.net/akjoshi/resolving-un-harmful-binding-errors-in-wpf
+            System.Diagnostics.PresentationTraceSources.DataBindingSource.Switch.Level = System.Diagnostics.SourceLevels.Critical;
+#endif
+
+
             InitializeComponent();
 
             GumCommands.Self.Initialize(this);
