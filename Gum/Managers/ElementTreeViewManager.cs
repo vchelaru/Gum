@@ -328,6 +328,10 @@ namespace Gum.Managers
 
                 //AddAndRemoveFolderNodes(currentDirectory, this.mTreeView.Nodes);
             }
+            else
+            {
+                RootComponentsTreeNode.Nodes.Clear();
+            }
         }
 
         private void AddAndRemoveFolderNodes(string currentDirectory, TreeNodeCollection nodesToAddTo)
