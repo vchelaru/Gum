@@ -2838,6 +2838,21 @@ namespace Gum.Wireframe
             }
         }
 
+        public void ApplyState(string categoryName, string stateName)
+        {
+            if(mCategories.ContainsKey(categoryName))
+            {
+                var category = mCategories[categoryName];
+
+                var state = category.States.FirstOrDefault(item => item.Name == stateName);
+
+                if(state != null)
+                {
+                    ApplyState(state);
+                }
+            }
+        }
+
         public void ApplyState(DataTypes.Variables.StateSave state)
         {
             this.SuspendLayout(true);
