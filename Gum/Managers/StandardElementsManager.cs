@@ -141,7 +141,7 @@ namespace Gum.Managers
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 1.0f, Name = "Font Scale", Category = "Font" });
 
             stateSave.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation" });
-
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "HasEvents", Category = "Behavior", CanOnlyBeSetInDefaultState = true });
 
             AddStateVariable(stateSave);
 
@@ -189,6 +189,8 @@ namespace Gum.Managers
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0.0f, Name = "Texture Height Scale", Category = "Source" });
 
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "Wrap", Category = "Source" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "HasEvents", Category = "Behavior", CanOnlyBeSetInDefaultState = true });
+
 
             AddColorVariables(stateSave);
 
@@ -230,6 +232,8 @@ namespace Gum.Managers
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "ChildrenLayout", Value = ChildrenLayout.Regular, Name = "Children Layout" });
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "Wraps Children" });
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "Clips Children" });
+
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "HasEvents", Category = "Behavior", CanOnlyBeSetInDefaultState = true });
 #if GUM
             PluginManager.Self.ModifyDefaultStandardState("Container", stateSave);
 #endif
@@ -261,7 +265,7 @@ namespace Gum.Managers
             AddColorVariables(stateSave, true);
 
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "Blend", Value = Blend.Normal, Name = "Blend", Category = "Rendering" });
-
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "HasEvents", Category = "Behavior", CanOnlyBeSetInDefaultState = true });
             AddStateVariable(stateSave);
 
 #if GUM
@@ -291,7 +295,7 @@ namespace Gum.Managers
 
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
             //AddColorVariables(stateSave, true);
-
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "HasEvents", Category = "Behavior", CanOnlyBeSetInDefaultState = true });
             AddStateVariable(stateSave);
 
 #if GUM
@@ -317,7 +321,7 @@ namespace Gum.Managers
 
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
             //AddColorVariables(stateSave, true);
-
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "HasEvents", Category = "Behavior", CanOnlyBeSetInDefaultState = true });
             AddStateVariable(stateSave);
 
 #if GUM
@@ -352,7 +356,7 @@ namespace Gum.Managers
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "Texture Left", Category = "Source" });
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "Texture Width", Category = "Source" });
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "Texture Height", Category = "Source" });
-
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "HasEvents", Category = "Behavior", CanOnlyBeSetInDefaultState = true });
             AddStateVariable(stateSave);
 
 

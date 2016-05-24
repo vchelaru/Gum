@@ -80,7 +80,11 @@ namespace Gum.ToolCommands
                 yVariable.SetsValue = false;
             }
 
-
+            var hasEventsVariable = componentSave.DefaultState.GetVariableSave("HasEvents");
+            if(hasEventsVariable != null)
+            {
+                hasEventsVariable.Value = true;
+            }
 
             return componentSave;
         }
