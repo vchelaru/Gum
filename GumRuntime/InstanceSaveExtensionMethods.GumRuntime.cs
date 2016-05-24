@@ -66,12 +66,12 @@ namespace GumRuntime
                     break;
 
                 case "Rectangle":
-                    LineRectangle rectangle = new LineRectangle();
+                    LineRectangle rectangle = new LineRectangle(systemManagers);
                     rectangle.IsDotted = false;
                     containedObject = rectangle;
                     break;
                 case "Circle":
-                    LineCircle circle = new LineCircle();
+                    LineCircle circle = new LineCircle(systemManagers);
                     circle.CircleOrigin = CircleOrigin.TopLeft;
                     containedObject = circle;
                     break;
