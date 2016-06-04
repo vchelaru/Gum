@@ -188,6 +188,14 @@ namespace RenderingLibrary.Graphics
                 {
                     return Width;
                 }
+                // If there is a prerendered width/height, then that means that
+                // the width/height has updated but it hasn't yet made its way to the
+                // texture. This could happen when the text already has a texture, so give
+                // priority to the prerendered values as they may be more up-to-date.
+                else if (mPreRenderWidth.HasValue)
+                {
+                    return mPreRenderWidth.Value;
+                }
                 else if (mTextureToRender != null)
                 {
                     if (mTextureToRender.Width == 0)
@@ -198,10 +206,6 @@ namespace RenderingLibrary.Graphics
                     {
                         return mTextureToRender.Width * mFontScale;
                     }
-                }
-                else if (mPreRenderWidth.HasValue)
-                {
-                    return mPreRenderWidth.Value;
                 }
                 else
                 {
@@ -219,6 +223,11 @@ namespace RenderingLibrary.Graphics
                 {
                     return Height;
                 }
+                // See EffectiveWidth for an explanation of why the prerendered values need to come first
+                else if (mPreRenderHeight.HasValue)
+                {
+                    return mPreRenderHeight.Value;
+                }
                 else if (mTextureToRender != null)
                 {
                     if (mTextureToRender.Height == 0)
@@ -229,10 +238,6 @@ namespace RenderingLibrary.Graphics
                     {
                         return mTextureToRender.Height * mFontScale;
                     }
-                }
-                else if (mPreRenderHeight.HasValue)
-                {
-                    return mPreRenderHeight.Value;
                 }
                 else
                 {
