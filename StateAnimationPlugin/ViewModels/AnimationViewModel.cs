@@ -493,7 +493,9 @@ namespace StateAnimationPlugin.ViewModels
                 }
 
                 Gum.ToolStates.SelectedState.Self.CustomCurrentStateSave = stateVmAfter.CachedCumulativeState;
-                stateToSet = Gum.ToolStates.SelectedState.Self.CustomCurrentStateSave.Clone();
+
+                // The custom state can be null if the animation window references states which don't exist:
+                stateToSet = Gum.ToolStates.SelectedState.Self.CustomCurrentStateSave?.Clone();
             }
             else if (stateVmBefore != null && stateVmAfter == null)
             {
