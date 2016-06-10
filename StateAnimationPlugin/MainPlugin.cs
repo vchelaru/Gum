@@ -73,7 +73,9 @@ namespace StateAnimationPlugin
 
             this.InstanceRename += HandleInstanceRename;
             this.StateRename += HandleStateRename;
+            this.CategoryRename += HandleCategoryRename;
         }
+
 
         private void HandleInstanceRename(InstanceSave instanceSave, string oldName)
         {
@@ -93,6 +95,16 @@ namespace StateAnimationPlugin
             RenameManager.Self.HandleRename(stateSave, oldName, mCurrentViewModel);
         }
 
+        private void HandleCategoryRename(StateSaveCategory category, string oldName)
+        {
+            if (mCurrentViewModel == null)
+            {
+                CreateViewModel();
+            }
+
+            RenameManager.Self.HandleRename(category, oldName, mCurrentViewModel);
+
+        }
         private void CreateMenuItems()
         {
             var menuItem = AddMenuItem(new List<string> { "State Animation", "View Animations" });

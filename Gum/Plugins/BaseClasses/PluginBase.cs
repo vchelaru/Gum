@@ -27,6 +27,7 @@ namespace Gum.Plugins.BaseClasses
         /// Action raised when an event is renamed. String parameter is the State's old name.
         /// </summary>
         public event Action<StateSave, string> StateRename;
+        public event Action<StateSaveCategory, string> CategoryRename;
         public event Action<InstanceSave, string> InstanceRename;
         public event Action<VariableSave, List<Attribute>> FillVariableAttributes;
         public event Action<string, StateSave> AddAndRemoveVariablesForType;
@@ -155,6 +156,14 @@ namespace Gum.Plugins.BaseClasses
             if (StateRename != null)
             {
                 StateRename(stateSave, oldName);
+            }
+        }
+
+        public void CallStateCategoryRename(StateSaveCategory category, string oldName)
+        {
+            if(CategoryRename != null)
+            {
+                CategoryRename(category, oldName);
             }
         }
 

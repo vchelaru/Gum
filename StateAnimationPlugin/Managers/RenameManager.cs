@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ToolsUtilities;
 
 namespace StateAnimationPlugin.Managers
 {
@@ -44,6 +45,20 @@ namespace StateAnimationPlugin.Managers
                     if(keyframe.StateName == oldName)
                     {
                         keyframe.StateName = stateSave.Name;
+                    }
+                }
+            }
+        }
+
+        public void HandleRename(StateSaveCategory category, string oldName, ElementAnimationsViewModel viewModel)
+        {
+            foreach (var animation in viewModel.Animations)
+            {
+                foreach (var keyframe in animation.Keyframes)
+                {
+                    if(keyframe.StateName != null && keyframe.StateName.StartsWith(oldName + "/"))
+                    {
+                        keyframe.StateName = category.Name + "/" + FileManager.RemovePath(keyframe.StateName);
                     }
                 }
             }

@@ -807,6 +807,17 @@ namespace Gum.Plugins
                 );
         }
 
+        internal void CategoryRename(StateSaveCategory category, string oldName)
+        {
+            CallMethodOnPlugin(
+                delegate (PluginBase plugin)
+                {
+                    plugin.CallStateCategoryRename(category, oldName);
+                },
+                "CategoryRename"
+                );
+        }
+
         internal void InstanceRename(InstanceSave instanceSave, string oldName)
         {
             CallMethodOnPlugin(

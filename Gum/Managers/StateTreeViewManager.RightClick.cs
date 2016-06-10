@@ -321,7 +321,7 @@ namespace Gum.Managers
                 // I don't think we need to save the project when renaming a state:
                 //GumCommands.Self.FileCommands.TryAutoSaveProject();
 
-                //PluginManager.Self.CategoryRename(SelectedState.Self.SelectedStateCategorySave, oldName);
+                PluginManager.Self.CategoryRename(SelectedState.Self.SelectedStateCategorySave, oldName);
 
                 GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
             }

@@ -463,6 +463,17 @@ namespace RenderingLibrary.Graphics
 
             if (requiredWidth != 0)
             {
+#if DEBUG
+                foreach (var texture in this.Textures)
+                {
+                    if (texture.IsDisposed)
+                    {
+                        string message =
+                            $"The font:\n{this.FontFile}\nis disposed";
+                        throw new InvalidOperationException(message);
+                    }
+                }
+#endif
                 var oldViewport = managers.Renderer.GraphicsDevice.Viewport;
                 if (toReplace != null && requiredWidth == toReplace.Width && requiredHeight == toReplace.Height)
                 {

@@ -2135,7 +2135,7 @@ namespace Gum.Wireframe
         public void MoveToLayer(Layer layer)
         {
             var layerToRemoveFrom = mLayer;
-            if (mLayer == null)
+            if (mLayer == null && mManagers != null)
             {
                 layerToRemoveFrom = mManagers.Renderer.Layers[0];
             }
@@ -2158,7 +2158,10 @@ namespace Gum.Wireframe
                 // This may be a Screen
                 if (mContainedObjectAsIpso != null)
                 {
-                    layerToRemoveFrom.Remove(mContainedObjectAsIpso);
+                    if(layerToRemoveFrom != null)
+                    {
+                        layerToRemoveFrom.Remove(mContainedObjectAsIpso);
+                    }
                     layerToAddTo.Add(mContainedObjectAsIpso);
                 }
 
@@ -2778,7 +2781,10 @@ namespace Gum.Wireframe
 
                             contentLoader.AddDisposable(fullFileName, font);
                         }
-
+                        if (font.Textures.Any(item => item.IsDisposed))
+                        {
+                            throw new InvalidOperationException("The returned font has a disposed texture");
+                        }
                     }
                 }
             }

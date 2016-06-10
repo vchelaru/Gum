@@ -90,7 +90,7 @@ namespace Gum.Wireframe
         private void RecordInitialPositions()
         {
             InstancePositions.Clear();
-            if(SelectedState.Self.SelectedInstances.Count() == 0)
+            if(SelectedState.Self.SelectedInstances.Count() == 0 && SelectedState.Self.SelectedElement != null)
             {
                 var ipso = WireframeObjectManager.Self.GetRepresentation(SelectedState.Self.SelectedElement);
 
