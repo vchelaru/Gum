@@ -339,6 +339,10 @@ namespace RenderingLibrary.Graphics
                     mCharacterInfo[i] = space;
                 }
 
+                // Make the tab character be equivalent to 4 spaces:
+                mCharacterInfo['t'].ScaleX = space.ScaleX * 4;
+                mCharacterInfo['t'].Spacing = space.Spacing * 4;
+
                 index = fontPattern.IndexOf("char id=");
                 while (index != -1)
                 {
