@@ -305,6 +305,8 @@ namespace Gum.PropertyGridHelpers
 
                     // Now the variable should be created so we can access it
                     variableSave = VariableSave;
+                    // Since it's newly-created, there is no value being set:
+                    variableSave.SetsValue = false;
                     tempVariable = true;
                 }
             }
