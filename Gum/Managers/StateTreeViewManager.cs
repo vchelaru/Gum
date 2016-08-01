@@ -19,7 +19,7 @@ namespace Gum.Managers
 
         MultiSelectTreeView mTreeView;
 
-        ElementSave mLastElementRefreshedTo;
+        IStateContainer mLastElementRefreshedTo;
         ContextMenuStrip mMenuStrip;
 
         #endregion
@@ -130,7 +130,7 @@ namespace Gum.Managers
             SelectedState.Self.CustomCurrentStateSave = null;
             SelectedState.Self.UpdateToSelectedStateSave();
             // refreshes the yellow highlights
-            StateTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedElement);
+            StateTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedStateContainer);
         }
 
         public void Select(StateSave stateSave)
@@ -161,33 +161,33 @@ namespace Gum.Managers
             }
         }
 
-        public void RefreshUI(ElementSave element)
+        public void RefreshUI(IStateContainer stateContainer)
         {
 
-            bool changed = element != mLastElementRefreshedTo;
+            bool changed = stateContainer != mLastElementRefreshedTo;
 
-            mLastElementRefreshedTo = element;
+            mLastElementRefreshedTo = stateContainer;
 
             StateSave lastStateSave = SelectedState.Self.SelectedStateSave;
             InstanceSave instance = SelectedState.Self.SelectedInstance;
 
 
-            if (element != null)
+            if (stateContainer != null)
             {
-                RemoveUnnecessaryNodes(element);
+                RemoveUnnecessaryNodes(stateContainer);
 
-                AddNeededNodes(element);
+                AddNeededNodes(stateContainer);
 
-                FixNodeOrder(element);
+                FixNodeOrder(stateContainer);
 
                 bool wasAnythingSelected = false;
 
-                foreach(var state in element.AllStates)
+                foreach(var state in stateContainer.AllStates)
                 {
                     wasAnythingSelected = UpdateStateTreeNode(lastStateSave, instance, wasAnythingSelected, state);
                 }
 
-                foreach(var category in element.Categories)
+                foreach(var category in stateContainer.Categories)
                 {
                     UpdateCategoryTreeNode(category);
                 }
@@ -213,12 +213,12 @@ namespace Gum.Managers
             return toReturn;
         }
 
-        private void FixNodeOrder(ElementSave element)
+        private void FixNodeOrder(IStateContainer stateContainer)
         {
             // first make sure categories come first
             int desiredIndex = 0;
 
-            foreach(var category in element.Categories.OrderBy(item=>item.Name))
+            foreach(var category in stateContainer.Categories.OrderBy(item=>item.Name))
             {
                 var node = GetTreeNodeForTag(category);
 
@@ -239,9 +239,10 @@ namespace Gum.Managers
             }
 
             // do uncategorized states
-            for (int i = 0; i < element.States.Count; i++)
+            for (int i = 0; i < stateContainer.UncategorizedStates.Count(); i++)
             {
-                var state = element.States[i];
+                
+                var state = stateContainer.UncategorizedStates.ElementAt(i);
 
                 var node = GetTreeNodeForTag(state);
 
@@ -336,9 +337,9 @@ namespace Gum.Managers
             return wasAnythingSelected;
         }
 
-        private void AddNeededNodes(ElementSave element)
+        private void AddNeededNodes(IStateContainer stateContainer)
         {
-            foreach (var category in element.Categories)
+            foreach (var category in stateContainer.Categories)
             {
                 if (GetTreeNodeForTag(category) == null)
                 {
@@ -348,7 +349,7 @@ namespace Gum.Managers
                 }
             }
 
-            foreach (var state in element.States)
+            foreach (var state in stateContainer.UncategorizedStates)
             {
                 // uncategorized
                 if (GetTreeNodeForTag(state) == null)
@@ -359,7 +360,7 @@ namespace Gum.Managers
                 }
             }
 
-            foreach (var category in element.Categories)
+            foreach (var category in stateContainer.Categories)
             {
                 foreach (var state in category.States)
                 {
@@ -378,7 +379,7 @@ namespace Gum.Managers
 
         }
 
-        private void RemoveUnnecessaryNodes(ElementSave element)
+        private void RemoveUnnecessaryNodes(IStateContainer stateContainer)
         {
             var allNodes = mTreeView.Nodes.AllNodes().ToList();
 
@@ -387,7 +388,7 @@ namespace Gum.Managers
                 if (node.Tag is StateSave)
                 {
                     // First check to see if this doesn't exist at all...
-                    bool shouldRemove = element.AllStates.Contains(node.Tag as StateSave) == false;
+                    bool shouldRemove = stateContainer.AllStates.Contains(node.Tag as StateSave) == false;
 
                     // ... and if it does exist, see if it's part of the wrong category
                     if(!shouldRemove)
@@ -403,7 +404,7 @@ namespace Gum.Managers
                         }
                         else
                         {
-                            shouldRemove = element.Categories.Any(item => item.States.Contains(node.Tag as StateSave));
+                            shouldRemove = stateContainer.Categories.Any(item => item.States.Contains(node.Tag as StateSave));
                         }
                     }
 
@@ -414,7 +415,7 @@ namespace Gum.Managers
                         parent.Remove(node);
                     }
                 }
-                else if (node.Tag is StateSaveCategory && element.Categories.Contains(node.Tag as StateSaveCategory) == false)
+                else if (node.Tag is StateSaveCategory && stateContainer.Categories.Contains(node.Tag as StateSaveCategory) == false)
                 {
                     if (node.Parent == null)
                     {

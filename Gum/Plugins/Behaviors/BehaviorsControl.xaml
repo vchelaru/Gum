@@ -1,0 +1,46 @@
+﻿<UserControl x:Class="Gum.Plugins.Behaviors.BehaviorsControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:Gum.Plugins.Behaviors"
+             mc:Ignorable="d" 
+             d:DesignHeight="300" d:DesignWidth="300">
+    <Grid>
+        <Grid Visibility="{Binding AddedListVisibility}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"></RowDefinition>
+                <RowDefinition Height="Auto"></RowDefinition>
+            </Grid.RowDefinitions>
+            <ListBox ItemsSource="{Binding AddedBehaviors}">
+            </ListBox>
+            <Button Grid.Row="1" Click="HandleEditClick">Edit</Button>
+                
+        </Grid>
+
+        
+        
+        <Grid Visibility="{Binding EditListVisibility}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition></ColumnDefinition>
+                <ColumnDefinition></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"></RowDefinition>
+                <RowDefinition Height="Auto"></RowDefinition>
+            </Grid.RowDefinitions>
+
+            <ListBox Grid.ColumnSpan="2" ItemsSource="{Binding AllBehaviors}">
+                <ListBox.ItemTemplate>
+                    <HierarchicalDataTemplate>
+                        <CheckBox Content="{Binding Name}" IsChecked="{Binding IsChecked}"/>
+                    </HierarchicalDataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <Button Grid.Row="1" Click="OkClick">OK</Button>
+            <Button Grid.Row="1" Click="CancelClick" Grid.Column="1">Cancel</Button>
+        </Grid>
+
+    </Grid>
+</UserControl>

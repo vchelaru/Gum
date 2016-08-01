@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Gum.Commands;
+using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using Gum.Managers;
 
 namespace Gum
@@ -46,5 +48,6 @@ namespace Gum
         {
             GuiCommands.Initialize(mainWindow);
         }
+        
     }
 }

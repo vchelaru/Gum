@@ -16,6 +16,8 @@ using Gum.Gui.Forms;
 using Gum.Undo;
 using Gum.Debug;
 using Gum.PropertyGridHelpers;
+using System.Windows.Forms.Integration;
+using Gum.DataTypes;
 
 namespace Gum
 {
@@ -125,11 +127,13 @@ namespace Gum
         {
             if (SelectedState.Self.SelectedStateSave != null)
             {
-                ObjectRemover.Self.Remove(SelectedState.Self.SelectedStateSave);
+                GumCommands.Self.Edit.RemoveState(
+                    SelectedState.Self.SelectedStateSave, SelectedState.Self.SelectedStateContainer);
             }
             else if (SelectedState.Self.SelectedStateCategorySave != null)
             {
-                ObjectRemover.Self.Remove(SelectedState.Self.SelectedStateCategorySave);
+                GumCommands.Self.Edit.RemoveStateCategory(
+                    SelectedState.Self.SelectedStateCategorySave, SelectedState.Self.SelectedStateContainer as IStateCategoryListContainer);
             }
         }
 
@@ -332,32 +336,83 @@ namespace Gum
 
         public void AddWpfControl(System.Windows.Controls.UserControl control, string tabTitle, TabLocation tabLocation = TabLocation.Center)
         {
-            System.Windows.Forms.Integration.ElementHost wpfHost;
-            wpfHost = new System.Windows.Forms.Integration.ElementHost();
-            wpfHost.Dock = DockStyle.Fill;
-            wpfHost.Child = control;
+            TabPage existingTabPage;
+            TabControl existingTabControl;
+            GetContainers(control, out existingTabPage, out existingTabControl);
 
-            System.Windows.Forms.TabPage tabPage = new TabPage();
+            bool alreadyExists = existingTabControl != null;
 
-            tabPage.Controls.Add(wpfHost);
-            tabPage.Location = new System.Drawing.Point(4, 22);
-            tabPage.Padding = new System.Windows.Forms.Padding(3);
-            tabPage.Size = new System.Drawing.Size(230, 463);
-            tabPage.TabIndex = 1;
-            tabPage.Text = tabTitle;
-            tabPage.UseVisualStyleBackColor = true;
-
-            if (tabLocation == TabLocation.Center)
+            if (!alreadyExists)
             {
-                this.MiddleTabControl.Controls.Add(tabPage);
+
+                System.Windows.Forms.Integration.ElementHost wpfHost;
+                wpfHost = new System.Windows.Forms.Integration.ElementHost();
+                wpfHost.Dock = DockStyle.Fill;
+                wpfHost.Child = control;
+
+                System.Windows.Forms.TabPage tabPage = new TabPage();
+
+                tabPage.Controls.Add(wpfHost);
+                tabPage.Location = new System.Drawing.Point(4, 22);
+                tabPage.Padding = new System.Windows.Forms.Padding(3);
+                tabPage.Size = new System.Drawing.Size(230, 463);
+                tabPage.TabIndex = 1;
+                tabPage.Text = tabTitle;
+                tabPage.UseVisualStyleBackColor = true;
+
+                if (tabLocation == TabLocation.Center)
+                {
+                    this.MiddleTabControl.Controls.Add(tabPage);
+                }
+                else if (tabLocation == TabLocation.Right)
+                {
+                    this.RightTabControl.Controls.Add(tabPage);
+                }
+                else
+                {
+                    throw new NotImplementedException($"Tab location {tabLocation} not supported");
+                }
+
             }
-            else if(tabLocation == TabLocation.Right)
+        }
+        
+        private void GetContainers(System.Windows.Controls.UserControl control, out TabPage tabPage, out TabControl tabControl)
+        {
+            tabPage = null;
+            tabControl = null;
+
+            foreach (var uncastedTabPage in this.MiddleTabControl.Controls)
             {
-                this.RightTabControl.Controls.Add(tabPage);
+                tabPage = uncastedTabPage as TabPage;
+
+                if (tabPage != null && DoesTabContainControl(tabPage, control))
+                {
+                    tabControl = this.MiddleTabControl;
+
+                    break;
+                }
+                else
+                {
+                    tabPage = null;
+                }
             }
-            else
+
+            if (tabControl == null)
             {
-                throw new NotImplementedException($"Tab location {tabLocation} not supported");
+                foreach (var uncastedTabPage in this.RightTabControl.Controls)
+                {
+                    tabPage = uncastedTabPage as TabPage;
+
+                    if (tabPage != null && DoesTabContainControl(tabPage, control))
+                    {
+                        tabControl = this.RightTabControl;
+                        break;
+                    }
+                    else
+                    {
+                        tabPage = null;
+                    }
+                }
             }
         }
 
@@ -365,33 +420,21 @@ namespace Gum
         {
             List<Control> controls = new List<Control>();
 
-            bool found = false;
-
-            foreach(var uncastedTabPage in this.MiddleTabControl.Controls)
+            TabControl tabControl = null;
+            TabPage tabPage = null;
+            GetContainers(control, out tabPage, out tabControl);
+            
+            if(tabControl != null)
             {
-                var tabPage = uncastedTabPage as TabPage;
-
-                if(tabPage != null && DoesTabContainControl(tabPage, control))
+                foreach(var controlInTabPage in tabPage.Controls)
                 {
-                    this.MiddleTabControl.Controls.Remove(tabPage);
-                    found = true;
-                    break;
-                }
-            }
-
-            if (!found)
-            {
-                foreach (var uncastedTabPage in this.RightTabControl.Controls)
-                {
-                    var tabPage = uncastedTabPage as TabPage;
-
-                    if (tabPage != null && DoesTabContainControl(tabPage, control))
+                    if(controlInTabPage is ElementHost)
                     {
-                        this.MiddleTabControl.Controls.Remove(tabPage);
-                        found = true;
-                        break;
+                        (controlInTabPage as ElementHost).Child = null;
                     }
                 }
+                tabPage.Controls.Clear();
+                tabControl.Controls.Remove(tabPage);
             }
         }
 

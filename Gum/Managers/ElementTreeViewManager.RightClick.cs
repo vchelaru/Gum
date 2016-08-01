@@ -271,7 +271,16 @@ namespace Gum.Managers
                         mMenuStrip.Items.Add("Delete Folder", null, HandleDeleteFolder);
                     }
                 }
+                else if(SelectedNode.IsTopBehaviorTreeNode())
+                {
+                    mMenuStrip.Items.Add("Add Behavior", null, HandleAddBehavior);
+                }
             }
+        }
+
+        private void HandleAddBehavior(object sender, EventArgs e)
+        {
+            GumCommands.Self.Edit.AddBehavior();
         }
 
         public void AddScreenClick(object sender, EventArgs e)
@@ -330,58 +339,7 @@ namespace Gum.Managers
 
         public void AddComponentClick(object sender, EventArgs e)
         {
-            if (ObjectFinder.Self.GumProjectSave == null || string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave.FullFileName))
-            {
-                MessageBox.Show("You must first save the project before adding a new component");
-            }
-            else
-            {
-                TextInputWindow tiw = new TextInputWindow();
-                tiw.Message = "Enter new Component name:";
-
-                if (tiw.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-                {
-                    string name = tiw.Result;
-
-                    string whyNotValid;
-
-                    if (!NameVerifier.Self.IsComponentNameValid(name, null, out whyNotValid))
-                    {
-                        MessageBox.Show(whyNotValid);
-                    }
-                    else
-                    {
-                        TreeNode nodeToAddTo = ElementTreeViewManager.Self.SelectedNode;
-
-                        while (nodeToAddTo != null && nodeToAddTo.Tag is ComponentSave && nodeToAddTo.Parent != null)
-                        {
-                            nodeToAddTo = nodeToAddTo.Parent;
-                        }
-
-                        if (nodeToAddTo == null || !nodeToAddTo.IsPartOfComponentsFolderStructure())
-                        {
-                            nodeToAddTo = RootComponentsTreeNode;
-                        }
-
-                        string path = nodeToAddTo.GetFullFilePath();
-
-                        string relativeToComponents = FileManager.MakeRelative(path,
-                            FileLocations.Self.ComponentsFolder);
-
-
-
-                        ComponentSave componentSave = ProjectCommands.Self.AddComponent(relativeToComponents + name);
-
-
-                        GumCommands.Self.GuiCommands.RefreshElementTreeView();
-
-                        SelectedState.Self.SelectedComponent = componentSave;
-
-                        GumCommands.Self.FileCommands.TryAutoSaveProject();
-                        GumCommands.Self.FileCommands.TryAutoSaveElement(componentSave);
-                    }
-                }
-            }
+            GumCommands.Self.Edit.AddComponent();
         }
 
         public void ImportScreenClick(object sender, EventArgs e)
@@ -559,7 +517,7 @@ namespace Gum.Managers
             instanceSave.BaseType = type;
 
             TreeNode treeNodeForElement = GetTreeNodeFor(elementToAddTo);
-            RefreshUI(treeNodeForElement);
+            RefreshUi(treeNodeForElement);
 
             Wireframe.WireframeObjectManager.Self.RefreshAll(true);
             //SelectedState.Self.SelectedInstance = instanceSave;

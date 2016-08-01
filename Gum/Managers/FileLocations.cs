@@ -39,6 +39,14 @@ namespace Gum.Managers
             }
         }
 
+        public string BehaviorsFolder
+        {
+            get
+            {
+                return ProjectFolder + "Behaviors\\";
+            }
+        }
+
         public string ProjectFolder 
         {
             get

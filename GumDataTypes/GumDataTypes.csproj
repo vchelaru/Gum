@@ -55,6 +55,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Behaviors\BehaviorReference.cs" />
+    <Compile Include="Behaviors\BehaviorSave.cs" />
+    <Compile Include="Behaviors\ElementBehaviorReference.cs" />
     <Compile Include="ComponentSave.cs" />
     <Compile Include="CustomPropertySave.cs" />
     <Compile Include="DimensionUnitType.cs" />
@@ -64,6 +67,7 @@
     <Compile Include="GuideRectangle.cs" />
     <Compile Include="GumProjectSave.cs" />
     <Compile Include="InstanceSave.cs" />
+    <Compile Include="IStateContainer.cs" />
     <Compile Include="NamedRectangle.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ScreenSave.cs" />

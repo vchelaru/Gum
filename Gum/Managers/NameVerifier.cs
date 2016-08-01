@@ -1,4 +1,5 @@
 ﻿using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using System;
 using System.Collections.Generic;
@@ -92,6 +93,17 @@ namespace Gum.Managers
                 IsNameAlreadyUsed(variableName, null, elementSave, out whyNotValid);
             }
 
+            return string.IsNullOrEmpty(whyNotValid);
+        }
+
+        public bool IsBehaviorNameValid(string behaviorName, BehaviorSave behaviorSave, out string whyNotValid)
+        {
+            IsNameValidCommon(behaviorName, out whyNotValid);
+
+            if(string.IsNullOrEmpty(whyNotValid))
+            {
+                // need to check for duplicate names eventually
+            }
             return string.IsNullOrEmpty(whyNotValid);
         }
 

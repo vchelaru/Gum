@@ -261,26 +261,26 @@ namespace Gum.DataTypes
             switch (type)
             {
                 case "string":
-                    return false;
-                    //break;
                 case "int":
-                    return false;
-
-                    //break;
                 case "float":
-                    return false;
-
-                    //break;
                 case "bool":
-                    return false;
+                case "decimal":
+                case "double":
 
+                    return false;
                     //break;
             }
 
             return true;
         }
 
-        public static void FixEnumerations(this VariableSave variableSave)
+        /// <summary>
+        /// Converts integer values to their corresponding enumeration values. This should be called
+        /// after variable saves are loaded from XML.
+        /// </summary>
+        /// <param name="variableSave">The VariableSave to fix.</param>
+        /// <returns>Whether any changes were made.</returns>
+        public static bool FixEnumerations(this VariableSave variableSave)
         {
 
 #if GUM
@@ -289,8 +289,9 @@ namespace Gum.DataTypes
                 Array array = Enum.GetValues(variableSave.GetRuntimeType());
 
                 variableSave.Value = array.GetValue((int)variableSave.Value);
-
+                return true;
             }
+            return false;
 #else
             if(variableSave.Value != null && variableSave.Value is int)
             {
@@ -299,39 +300,40 @@ namespace Gum.DataTypes
                     case "DimensionUnitType":
                     case "Gum.DataTypes.DimensionUnitType":
                         variableSave.Value = (Gum.DataTypes.DimensionUnitType)variableSave.Value;
-                        break;
+                        
+                        return true;
                     case "VerticalAlignment":
                     case "RenderingLibrary.Graphics.VerticalAlignment":
 
                         variableSave.Value = (global::RenderingLibrary.Graphics.VerticalAlignment)variableSave.Value;
-                        break;
+                        return true;
                     case "HorizontalAlignment":
                     case "RenderingLibrary.Graphics.HorizontalAlignment":
                         variableSave.Value = (global::RenderingLibrary.Graphics.HorizontalAlignment)variableSave.Value;
-                        break;
+                        return true;
                     case "PositionUnitType":
                     case "Gum.Managers.PositionUnitType":
                         variableSave.Value = (Gum.Managers.PositionUnitType)variableSave.Value;
-                        break;
+                        return true;
                     case "GeneralUnitType":
                     case "Gum.Converters.GeneralUnitType":
                         variableSave.Value = (Gum.Converters.GeneralUnitType)variableSave.Value;
-                        break;
+                        return true;
                     case "Gum.RenderingLibrary.Blend":
                     case "Blend":
                         variableSave.Value = (Gum.RenderingLibrary.Blend)variableSave.Value;
-                        break;
+                        return true;
                     case "Gum.Managers.TextureAddress":
                     case "TextureAddress":
                     
                         variableSave.Value = (TextureAddress)variableSave.Value;
-                        break;
+                        return true;
                     case "Gum.Managers.ChildrenLayout":         
                     case "ChildrenLayout":
                         variableSave.Value = (ChildrenLayout)variableSave.Value;
-                        break;
+                        return true;
                     default:
-                        break;
+                        return false;
                 }
             
             }

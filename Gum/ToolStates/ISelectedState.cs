@@ -8,6 +8,7 @@ using System.Windows.Forms;
 using System.Collections.ObjectModel;
 using RenderingLibrary;
 using Gum.Wireframe;
+using Gum.DataTypes.Behaviors;
 
 namespace Gum.ToolStates
 {
@@ -15,6 +16,8 @@ namespace Gum.ToolStates
     {
         ScreenSave SelectedScreen { get; set; }
         ElementSave SelectedElement { get; set; }
+        IStateContainer SelectedStateContainer { get; }
+        BehaviorSave SelectedBehavior { get; set; }
         StateSave CustomCurrentStateSave{ get; set; }
         StateSave SelectedStateSave { get; set; }
         StateSave SelectedStateSaveOrDefault { get;}
@@ -35,5 +38,7 @@ namespace Gum.ToolStates
 
         void UpdateToSelectedElement();
         void UpdateToSelectedInstanceSave();
+        void UpdateToSelectedBehavior();
+
     }
 }

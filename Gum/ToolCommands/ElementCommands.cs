@@ -54,7 +54,8 @@ namespace Gum.ToolCommands
 
         public StateSave AddState(ElementSave elementToAddTo, StateSaveCategory category, string name)
         {
-            if (elementToAddTo == null)
+            // elementToAddTo may be null if category is not null
+            if (elementToAddTo == null && category == null)
             {
                 throw new Exception("Could not add state named " + name + " because no element is selected");
             }
@@ -79,11 +80,11 @@ namespace Gum.ToolCommands
             }
         }
 
-        public StateSaveCategory AddCategory(ElementSave elementToAddTo, string name)
+        public StateSaveCategory AddCategory(IStateCategoryListContainer objectToAddTo, string name)
         {
-            if (elementToAddTo == null)
+            if (objectToAddTo == null)
             {
-                throw new Exception("Could not add category " + name + " because no element is selected");
+                throw new Exception("Could not add category " + name + " because no element or behavior is selected");
             }
 
 
@@ -91,19 +92,23 @@ namespace Gum.ToolCommands
             StateSaveCategory category = new StateSaveCategory();
             category.Name = name;
 
-            elementToAddTo.Categories.Add(category);
+            objectToAddTo.Categories.Add(category);
 
             string categoryName = category.Name + "State";
 
+            if(objectToAddTo is ElementSave)
+            {
+                var elementToAddTo = objectToAddTo as ElementSave;
+                elementToAddTo.DefaultState.Variables.Add(new VariableSave() { Name = categoryName, Type = categoryName, Value = null
+    #if GUM
+    ,             CustomTypeConverter = new Gum.PropertyGridHelpers.Converters.AvailableStatesConverter(category.Name)
+    #endif    
+                });
 
-            elementToAddTo.DefaultState.Variables.Add(new VariableSave() { Name = categoryName, Type = categoryName, Value = null
-#if GUM
-,             CustomTypeConverter = new Gum.PropertyGridHelpers.Converters.AvailableStatesConverter(category.Name)
-#endif    
-            });
+                elementToAddTo.DefaultState.Variables.Sort((first, second) => first.Name.CompareTo(second.Name));
+            }
 
 
-            elementToAddTo.DefaultState.Variables.Sort((first, second) => first.Name.CompareTo(second.Name));
 
             return category;
         }

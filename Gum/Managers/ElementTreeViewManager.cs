@@ -12,6 +12,7 @@ using Gum.Debug;
 using ToolsUtilities;
 using Gum.Events;
 using Gum.Wireframe;
+using Gum.DataTypes.Behaviors;
 
 namespace Gum.Managers
 {
@@ -27,6 +28,7 @@ namespace Gum.Managers
         public const int StandardElementImageIndex = 5;
         public const int ExclamationIndex = 6;
         public const int StateImageIndex = 7;
+        public const int BehaviorImageIndex = 8;
 
         static ElementTreeViewManager mSelf;
 
@@ -35,6 +37,7 @@ namespace Gum.Managers
         TreeNode mScreensTreeNode;
         TreeNode mComponentsTreeNode;
         TreeNode mStandardElementsTreeNode;
+        TreeNode mBehaviorsTreeNode;
 
         /// <summary>
         /// Used to store off what was previously selected
@@ -151,6 +154,11 @@ namespace Gum.Managers
             return null;
         }
 
+        public TreeNode GetTreeNodeFor(BehaviorSave behavior)
+        {
+            return GetTreeNodeForTag(behavior, RootBehaviorsTreeNode);
+        }
+
         public TreeNode GetTreeNodeFor(string absoluteDirectory)
         {
             string relative = FileManager.MakeRelative(absoluteDirectory,
@@ -176,6 +184,12 @@ namespace Gum.Managers
                 string modifiedRelative = relative.Substring("standards\\".Length);
 
                 return GetTreeNodeFor(modifiedRelative, mStandardElementsTreeNode);
+            }
+            else if(relative.StartsWith("behaviors\\"))
+            {
+                string modifiedRelative = relative.Substring("behaviors\\".Length);
+
+                return GetTreeNodeFor(modifiedRelative, mBehaviorsTreeNode);
             }
 
             return null;
@@ -225,6 +239,10 @@ namespace Gum.Managers
                 else if (tag is StandardElementSave)
                 {
                     container = RootStandardElementsTreeNode;
+                }
+                else if(tag is BehaviorSave)
+                {
+                    container = RootBehaviorsTreeNode;
                 }
             }
 
@@ -282,6 +300,14 @@ namespace Gum.Managers
             }
         }
 
+        public TreeNode RootBehaviorsTreeNode
+        {
+            get
+            {
+                return mBehaviorsTreeNode;
+            }
+        }
+
         public void Initialize(MultiSelectTreeView treeView)
         {
             mTreeView = treeView;
@@ -319,12 +345,14 @@ namespace Gum.Managers
                 Directory.CreateDirectory(mStandardElementsTreeNode.GetFullFilePath());
                 Directory.CreateDirectory(mScreensTreeNode.GetFullFilePath());
                 Directory.CreateDirectory(mComponentsTreeNode.GetFullFilePath());
+                Directory.CreateDirectory(mBehaviorsTreeNode.GetFullFilePath());
 
 
                 // add folders to the screens, entities, and standard elements
                 AddAndRemoveFolderNodes(mStandardElementsTreeNode.GetFullFilePath(), mStandardElementsTreeNode.Nodes);
                 AddAndRemoveFolderNodes(mScreensTreeNode.GetFullFilePath(), mScreensTreeNode.Nodes);
                 AddAndRemoveFolderNodes(mComponentsTreeNode.GetFullFilePath(), mComponentsTreeNode.Nodes);
+                AddAndRemoveFolderNodes(mBehaviorsTreeNode.GetFullFilePath(), mBehaviorsTreeNode.Nodes);
 
                 //AddAndRemoveFolderNodes(currentDirectory, this.mTreeView.Nodes);
             }
@@ -383,6 +411,7 @@ namespace Gum.Managers
             // Save off old selected stuff
             InstanceSave selectedInstance = SelectedState.Self.SelectedInstance;
             ElementSave selectedElement = SelectedState.Self.SelectedElement;
+            BehaviorSave selectedBehavior = SelectedState.Self.SelectedBehavior;
 
 
             if (!string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave.FullFileName))
@@ -394,8 +423,7 @@ namespace Gum.Managers
                     currentDirectory = folderTreeNode.GetFullFilePath();
                 }
             }
-
-            // todo - now use this 
+            
 
 
             #region Add nodes that haven't been added yet
@@ -433,7 +461,16 @@ namespace Gum.Managers
                 }
             }
 
+            foreach(BehaviorSave behaviorSave in ProjectManager.Self.GumProjectSave.Behaviors)
+            {
+                if(GetTreeNodeFor(behaviorSave) == null)
+                {
+                    string fullPath = FileLocations.Self.BehaviorsFolder + FileManager.GetDirectory(behaviorSave.Name);
+                    TreeNode parentNode = GetTreeNodeFor(fullPath);
 
+                    AddTreeNodeForBehavior(behaviorSave, parentNode, BehaviorImageIndex);
+                }
+            }
 
             #endregion
 
@@ -478,23 +515,41 @@ namespace Gum.Managers
                 }
             }
 
+            for(int i = mBehaviorsTreeNode.Nodes.Count - 1; i > -1; i--)
+            {
+                BehaviorSave behavior = mBehaviorsTreeNode.Nodes[i].Tag as BehaviorSave;
+
+                if(behavior != null)
+                {
+                    if(!ProjectManager.Self.GumProjectSave.Behaviors.Contains(behavior))
+                    {
+                        mBehaviorsTreeNode.Nodes.RemoveAt(i);
+                    }
+                }
+            }
+
             #endregion
 
             #region Update the nodes
 
             foreach (TreeNode treeNode in mScreensTreeNode.Nodes)
             {
-                RefreshUI(treeNode);
+                RefreshUi(treeNode);
             }
 
             foreach (TreeNode treeNode in mComponentsTreeNode.Nodes)
             {
-                RefreshUI(treeNode);
+                RefreshUi(treeNode);
             }
 
             foreach (TreeNode treeNode in mStandardElementsTreeNode.Nodes)
             {
-                RefreshUI(treeNode);
+                RefreshUi(treeNode);
+            }
+
+            foreach(TreeNode treeNode in mBehaviorsTreeNode.Nodes)
+            {
+                RefreshUi(treeNode);
             }
 
             #endregion
@@ -505,13 +560,18 @@ namespace Gum.Managers
 
             mStandardElementsTreeNode.Nodes.SortByName();
 
+            mBehaviorsTreeNode.Nodes.SortByName();
+
             #region Re-select whatever was selected before
 
             if (selectedInstance != null)
             {
                 SelectedState.Self.SelectedInstance = selectedInstance;
             }
-
+            if(selectedBehavior != null)
+            {
+                SelectedState.Self.SelectedBehavior = selectedBehavior;
+            }
             #endregion
         }
 
@@ -525,6 +585,20 @@ namespace Gum.Managers
                 treeNode.ImageIndex = defaultImageIndex;
 
             treeNode.Tag = element;
+
+            parentNode.Nodes.Add(treeNode);
+        }
+
+        private static void AddTreeNodeForBehavior(BehaviorSave behavior, TreeNode parentNode, int defaultImageIndex)
+        {
+            TreeNode treeNode = new TreeNode();
+
+            if (behavior.IsSourceFileMissing)
+                treeNode.ImageIndex = ExclamationIndex;
+            else
+                treeNode.ImageIndex = defaultImageIndex;
+
+            treeNode.Tag = behavior;
 
             parentNode.Nodes.Add(treeNode);
         }
@@ -544,6 +618,10 @@ namespace Gum.Managers
                 mStandardElementsTreeNode = new TreeNode("Standard");
                 mStandardElementsTreeNode.ImageIndex = FolderImageIndex;
                 mTreeView.Nodes.Add(mStandardElementsTreeNode);
+
+                mBehaviorsTreeNode = new TreeNode("Behaviors");
+                mBehaviorsTreeNode.ImageIndex = FolderImageIndex;
+                mTreeView.Nodes.Add(mBehaviorsTreeNode);
             }
         }
 
@@ -555,6 +633,11 @@ namespace Gum.Managers
             if (mRecordedSelectedObject == null)
             {
                 mRecordedSelectedObject = SelectedState.Self.SelectedElement;
+            }
+
+            if(mRecordedSelectedObject == null)
+            {
+                mRecordedSelectedObject = SelectedState.Self.SelectedBehavior;
             }
         }
 
@@ -569,6 +652,10 @@ namespace Gum.Managers
                 else if (mRecordedSelectedObject is ElementSave)
                 {
                     SelectedState.Self.SelectedElement = mRecordedSelectedObject as ElementSave;
+                }
+                else if(mRecordedSelectedObject is BehaviorSave)
+                {
+                    SelectedState.Self.SelectedBehavior = mRecordedSelectedObject as BehaviorSave;
                 }
             }
         }
@@ -607,6 +694,16 @@ namespace Gum.Managers
             else
             {
                 Select((TreeNode)null);
+            }
+        }
+
+        public void Select(BehaviorSave behavior)
+        {
+            if(behavior != null)
+            {
+                var treeNode = GetTreeNodeFor(behavior);
+
+                Select(treeNode);
             }
         }
 
@@ -676,19 +773,31 @@ namespace Gum.Managers
             }
         }
 
-        public void RefreshUI(ElementSave elementSave)
+        public void RefreshUi(ElementSave elementSave)
         {
             TreeNode foundNode = GetTreeNodeFor(elementSave);
 
             if (foundNode != null)
             {
                 RecordSelection();
-                RefreshUI(foundNode);
+                RefreshUi(foundNode);
                 SelectRecordedSelection();
             }
         }
 
-        void RefreshUI(TreeNode node)
+        public void RefreshUi(IStateContainer stateContainer)
+        {
+            var foundNode = GetTreeNodeForTag(stateContainer);
+
+            if(foundNode != null)
+            {
+                RecordSelection();
+                RefreshUi(foundNode);
+                SelectRecordedSelection();
+            }
+        }
+
+        void RefreshUi(TreeNode node)
         {
             if (node.Tag is ElementSave)
             {
@@ -710,10 +819,15 @@ namespace Gum.Managers
                 InstanceSave instanceSave = node.Tag as InstanceSave;
                 node.Text = instanceSave.Name;
             }
+            else if(node.Tag is BehaviorSave)
+            {
+                var behavior = node.Tag as BehaviorSave;
+                node.Text = behavior.Name;
+            }
 
             foreach (TreeNode treeNode in node.Nodes)
             {
-                RefreshUI(treeNode);
+                RefreshUi(treeNode);
             }
         }
 
@@ -802,6 +916,10 @@ namespace Gum.Managers
                 SelectedState.Self.UpdateToSelectedInstanceSave();
 
                 GumEvents.Self.CallInstanceSelected();
+            }
+            else if(selectedObject is BehaviorSave)
+            {
+                SelectedState.Self.UpdateToSelectedBehavior();
             }
         }
 
@@ -923,6 +1041,11 @@ namespace Gum.Managers
             return treeNode.Tag is ComponentSave;
         }
 
+        public static bool IsBehaviorTreeNode(this TreeNode treeNode)
+        {
+            return treeNode.Tag is BehaviorSave;
+        }
+
         public static bool IsStandardElementTreeNode(this TreeNode treeNode)
         {
             return treeNode.Tag is StandardElementSave;
@@ -948,6 +1071,11 @@ namespace Gum.Managers
             return treeNode.Parent == null && treeNode.Text == "Screens";
         }
 
+        public static bool IsTopBehaviorTreeNode(this TreeNode treeNode)
+        {
+            return treeNode.Parent == null && treeNode.Text == "Behaviors";
+        }
+
         public static bool IsTopComponentContainerTreeNode(this TreeNode treeNode)
         {
             return treeNode.Parent == null && treeNode.Text == "Components";
@@ -962,7 +1090,9 @@ namespace Gum.Managers
         {
             if (treeNode.IsTopComponentContainerTreeNode() ||
                 treeNode.IsTopStandardElementTreeNode() ||
-                treeNode.IsTopScreenContainerTreeNode())
+                treeNode.IsTopScreenContainerTreeNode() ||
+                treeNode.IsTopBehaviorTreeNode()
+                )
             {
                 if (ProjectManager.Self.GumProjectSave == null ||
                     string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave.FullFileName))
@@ -986,6 +1116,10 @@ namespace Gum.Managers
                     {
                         return projectDirectory + ElementReference.ScreenSubfolder + "\\";
                     }
+                    else if(treeNode.IsTopBehaviorTreeNode())
+                    {
+                        return projectDirectory + BehaviorReference.Subfolder + "\\";
+                    }
                     throw new InvalidOperationException();
                 }
             }
@@ -995,6 +1129,11 @@ namespace Gum.Managers
             {
                 ElementSave element = treeNode.Tag as ElementSave;
                 return treeNode.Parent.GetFullFilePath() + treeNode.Text + "." + element.FileExtension;
+            }
+            else if(treeNode.IsBehaviorTreeNode())
+            {
+                var behavior = treeNode.Tag as BehaviorSave;
+                return treeNode.Parent.GetFullFilePath() + treeNode.Text + "." + BehaviorReference.Extension;
             }
             else
             {

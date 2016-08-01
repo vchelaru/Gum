@@ -10,6 +10,7 @@ using System.Windows.Forms;
 using Gum.Commands;
 using ToolsUtilities;
 using Gum.Plugins;
+using Gum.DataTypes;
 
 namespace Gum.Managers
 {
@@ -55,7 +56,11 @@ namespace Gum.Managers
                     AddMenuItem("v Move Down", MoveDownClick);
                 }
             }
-            if(SelectedState.Self.SelectedStateCategorySave != null)
+            // We used to show the category editing commands if a state was selected 
+            // (if a state is selected, a category is implicitly selected too). Now we
+            // check if a category is highlighted (not state)
+            //if(SelectedState.Self.SelectedStateCategorySave != null)
+            if(SelectedState.Self.SelectedStateCategorySave != null && SelectedState.Self.SelectedStateSave == null)
             {
 
                 mMenuStrip.Items.Add("-");
@@ -137,12 +142,16 @@ namespace Gum.Managers
 
         private void DeleteCategoryClick()
         {
-            GumCommands.Self.Edit.RemoveStateCategory(SelectedState.Self.SelectedStateCategorySave);
+            GumCommands.Self.Edit.RemoveStateCategory(
+                SelectedState.Self.SelectedStateCategorySave,
+                SelectedState.Self.SelectedStateContainer as IStateCategoryListContainer);
         }
 
         private void DeleteStateClick()
         {
-            GumCommands.Self.Edit.RemoveState(SelectedState.Self.SelectedStateSave);
+            GumCommands.Self.Edit.RemoveState(
+                SelectedState.Self.SelectedStateSave,
+                SelectedState.Self.SelectedStateContainer);
         }
 
         private void AddMoveToCategoryItems()
@@ -199,33 +208,6 @@ namespace Gum.Managers
         internal void AddStateClick()
         {
             GumCommands.Self.Edit.AddState();
-        }
-
-        internal void AddStateCategoryClick()
-        {
-            if (SelectedState.Self.SelectedElement == null)
-            {
-                MessageBox.Show("You must first select an element to add a state category");
-            }
-            else
-            {
-                TextInputWindow tiw = new TextInputWindow();
-                tiw.Message = "Enter new category name:";
-
-                if (tiw.ShowDialog() == DialogResult.OK)
-                {
-                    string name = tiw.Result;
-
-                    StateSaveCategory category = ElementCommands.Self.AddCategory(
-                        SelectedState.Self.SelectedElement, name);
-
-                    RefreshUI(SelectedState.Self.SelectedElement);
-
-                    SelectedState.Self.SelectedStateCategorySave = category;
-
-                    GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
-                }
-            }
         }
 
         private static void MakeDefaultClick()
@@ -285,46 +267,15 @@ namespace Gum.Managers
 
         private static void RenameStateClick()
         {
-            TextInputWindow tiw = new TextInputWindow();
-            tiw.Message = "Enter new state name";
-            tiw.Result = SelectedState.Self.SelectedStateSave.Name;
-            var result = tiw.ShowDialog();
-
-            if (result == DialogResult.OK)
-            {
-                string oldName = SelectedState.Self.SelectedStateSave.Name;
-
-                SelectedState.Self.SelectedStateSave.Name = tiw.Result;
-                GumCommands.Self.GuiCommands.RefreshStateTreeView();
-                // I don't think we need to save the project when renaming a state:
-                //GumCommands.Self.FileCommands.TryAutoSaveProject();
-
-                PluginManager.Self.StateRename(SelectedState.Self.SelectedStateSave, oldName);
-
-                GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
-            }
+            GumCommands.Self.Edit.RenameState(SelectedState.Self.SelectedStateSave,
+                SelectedState.Self.SelectedStateContainer);
         }
 
         private static void RenameCategoryClick()
         {
-            TextInputWindow tiw = new TextInputWindow();
-            tiw.Message = "Enter new category name";
-            tiw.Result = SelectedState.Self.SelectedStateCategorySave.Name;
-            var result = tiw.ShowDialog();
-
-            if (result == DialogResult.OK)
-            {
-                string oldName = SelectedState.Self.SelectedStateCategorySave.Name;
-
-                SelectedState.Self.SelectedStateCategorySave.Name = tiw.Result;
-                GumCommands.Self.GuiCommands.RefreshStateTreeView();
-                // I don't think we need to save the project when renaming a state:
-                //GumCommands.Self.FileCommands.TryAutoSaveProject();
-
-                PluginManager.Self.CategoryRename(SelectedState.Self.SelectedStateCategorySave, oldName);
-
-                GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
-            }
+            GumCommands.Self.Edit.RenameStateCategory(
+                SelectedState.Self.SelectedStateCategorySave, 
+                SelectedState.Self.SelectedElement);
         }
 
         private static void MoveToCategory(string categoryNameToMoveTo)

@@ -12,6 +12,7 @@ using Gum.Debug;
 using System.Collections.ObjectModel;
 using Gum.Events;
 using RenderingLibrary;
+using Gum.DataTypes.Behaviors;
 
 namespace Gum.ToolStates
 {
@@ -107,6 +108,62 @@ namespace Gum.ToolStates
                 {
                     ElementTreeViewManager.Self.Select(value);
                 }
+            }
+        }
+
+        public BehaviorSave SelectedBehavior
+        {
+            get
+            {
+                TreeNode treeNode = ElementTreeViewManager.Self.SelectedNode;
+
+                if (treeNode != null && treeNode.IsBehaviorTreeNode())
+                {
+                    return treeNode.Tag as BehaviorSave;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            set
+            {
+                if (value != SelectedBehavior)
+                {
+                    if (value != null)
+                    {
+                        ElementTreeViewManager.Self.Select(value);
+                    }
+                    else if (value == null && SelectedBehavior != null)
+                    {
+                        ElementTreeViewManager.Self.SelectedNode = null;
+                    }
+                }
+            }
+        }
+
+        public IStateContainer SelectedStateContainer
+        {
+            get
+            {
+                if(SelectedComponent != null)
+                {
+                    return SelectedComponent;
+                }
+                else if(SelectedScreen != null)
+                {
+                    return SelectedScreen;
+                }
+                else if(SelectedStandardElement != null)
+                {
+                    return SelectedStandardElement;
+                }
+                else if(SelectedBehavior != null)
+                {
+                    return SelectedBehavior;
+                }
+
+                return null;
             }
         }
 
@@ -410,7 +467,10 @@ namespace Gum.ToolStates
 
         }
 
+
         #endregion
+
+        #region Methods
 
         private SelectedState()
         {
@@ -443,6 +503,19 @@ namespace Gum.ToolStates
 
             PluginManager.Self.ElementSelected(SelectedElement);
 
+        }
+
+        public void UpdateToSelectedBehavior()
+        {
+            StateTreeViewManager.Self.RefreshUI(SelectedBehavior);
+
+            PropertyGridManager.Self.RefreshUI();
+
+            WireframeObjectManager.Self.RefreshAll(false);
+
+            MenuStripManager.Self.RefreshUI();
+
+            // todo - plugins selection
         }
 
         public void UpdateToSelectedStateSave()
@@ -516,6 +589,8 @@ namespace Gum.ToolStates
 
             return toReturn;
         }
+
+        #endregion
 
     }
 

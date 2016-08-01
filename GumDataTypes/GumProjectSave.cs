@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Gum.DataTypes.Behaviors;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -104,6 +105,12 @@ namespace Gum.DataTypes
             set;
         }
 
+        [XmlIgnore]
+        public List<BehaviorSave> Behaviors
+        {
+            get; set;
+        } = new List<BehaviorSave>();
+
         [XmlElement("ScreenReference")]
         public List<ElementReference> ScreenReferences
         {
@@ -120,6 +127,13 @@ namespace Gum.DataTypes
 
         [XmlElement("StandardElementReference")]
         public List<ElementReference> StandardElementReferences
+        {
+            get;
+            set;
+        }
+
+        [XmlElement("BehaviorReference")]
+        public List<BehaviorReference> BehaviorReferences
         {
             get;
             set;
@@ -213,6 +227,7 @@ namespace Gum.DataTypes
             Screens.Clear();
             Components.Clear();
             StandardElements.Clear();
+            Behaviors.Clear();
 
             foreach (ElementReference reference in ScreenReferences)
             {
@@ -263,6 +278,24 @@ namespace Gum.DataTypes
                 if (toAdd != null)
                 {
                     StandardElements.Add(toAdd);
+                }
+            }
+
+            foreach(var reference in BehaviorReferences)
+            {
+                BehaviorSave toAdd = null;
+
+                try
+                {
+                    toAdd = reference.ToBehaviorSave(projectRootDirectory);
+                }
+                catch (Exception e)
+                {
+                    errors += "\nError loading " + reference.Name + ":\n" + e.Message;
+                }
+                if (toAdd != null)
+                {
+                    Behaviors.Add(toAdd);
                 }
             }
 

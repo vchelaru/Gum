@@ -20,6 +20,10 @@ namespace Gum.DataTypes.Variables
 {
     public static class StateSaveExtensionMethods
     {
+        /// <summary>
+        /// Fixes enumeration values and sorts all variables alphabetically
+        /// </summary>
+        /// <param name="stateSave">The state to initialize.</param>
         public static void Initialize(this StateSave stateSave)
         {
             foreach (VariableSave variable in stateSave.Variables)

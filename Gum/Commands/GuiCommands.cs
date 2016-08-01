@@ -40,6 +40,7 @@ namespace Gum.Commands
         {
             mMainWindow.AddWpfControl(control, tabTitle, tabLocation);
         }
+        
 
         public void RemoveControl(System.Windows.Controls.UserControl control)
         {
@@ -58,7 +59,7 @@ namespace Gum.Commands
 
         public void RefreshElementTreeView(ElementSave element)
         {
-            ElementTreeViewManager.Self.RefreshUI(element);
+            ElementTreeViewManager.Self.RefreshUi(element);
         }
     }
 }

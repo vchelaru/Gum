@@ -9,7 +9,7 @@ using ToolsUtilities;
 namespace Gum.DataTypes
 {
 
-    public abstract class ElementSave
+    public abstract class ElementSave : IStateContainer, IStateCategoryListContainer
     {
 
         #region Properties
@@ -32,6 +32,7 @@ namespace Gum.DataTypes
             set;
         }
 
+        IEnumerable<StateSave> IStateContainer.UncategorizedStates => States;
         [XmlElement("State")]
         public List<StateSave> States
         {
@@ -39,12 +40,14 @@ namespace Gum.DataTypes
             set;
         }
 
+        IEnumerable<StateSaveCategory> IStateContainer.Categories => Categories;
         [XmlElement("Category")]
         public List<StateSaveCategory> Categories
         {
             get;
             set;
         }
+
 
         [XmlElement("Instance")]
         public List<InstanceSave> Instances

@@ -22,11 +22,12 @@ namespace Gum.DataTypes
             gumProjectSave.ScreenReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
             gumProjectSave.ComponentReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
             gumProjectSave.StandardElementReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
+            gumProjectSave.BehaviorReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
 
             gumProjectSave.Screens.Sort((first, second) => first.Name.CompareTo(second.Name));
             gumProjectSave.Components.Sort((first, second) => first.Name.CompareTo(second.Name));
             gumProjectSave.StandardElements.Sort((first, second) => first.Name.CompareTo(second.Name));
-
+            gumProjectSave.Behaviors.Sort((first, second) => first.Name.CompareTo(second.Name));
 
             // Do StandardElements first
             // because the values here are
@@ -78,6 +79,15 @@ namespace Gum.DataTypes
                 }
 
                 if(componentSave.Initialize(StandardElementsManager.Self.DefaultStates["Component"]))
+                {
+                    wasModified = true;
+                }
+            }
+
+            foreach (var behavior in gumProjectSave.Behaviors)
+            {
+
+                if (behavior.Initialize())
                 {
                     wasModified = true;
                 }
@@ -159,7 +169,13 @@ namespace Gum.DataTypes
             {
                 RemoveDuplicateVariables(element);
             }
-
+            foreach(var behavior in gumProjectSave.Behaviors)
+            {
+                foreach(var state in behavior.AllStates)
+                {
+                    RemoveDuplicateVariables(state);
+                }
+            }
 
         }
 
@@ -167,23 +183,28 @@ namespace Gum.DataTypes
         {
             foreach (var state in element.AllStates)
             {
-                List<string> alreadyVisitedVariables = new List<string>();
+                RemoveDuplicateVariables(state);
 
-                for (int i = 0; i < state.Variables.Count; i++)
+            }
+        }
+
+        private static void RemoveDuplicateVariables(StateSave state)
+        {
+            List<string> alreadyVisitedVariables = new List<string>();
+
+            for (int i = 0; i < state.Variables.Count; i++)
+            {
+                string variableName = state.Variables[i].Name;
+
+                if (alreadyVisitedVariables.Contains(variableName))
                 {
-                    string variableName = state.Variables[i].Name;
-
-                    if (alreadyVisitedVariables.Contains(variableName))
-                    {
-                        state.Variables.RemoveAt(i);
-                        i--;
-                    }
-                    else
-                    {
-                        alreadyVisitedVariables.Add(variableName);
-                    }
+                    state.Variables.RemoveAt(i);
+                    i--;
                 }
-
+                else
+                {
+                    alreadyVisitedVariables.Add(variableName);
+                }
             }
         }
 

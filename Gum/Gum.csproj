@@ -125,6 +125,7 @@
     <Compile Include="Controls\ColorDisplay.xaml.cs">
       <DependentUpon>ColorDisplay.xaml</DependentUpon>
     </Compile>
+    <Compile Include="DataTypes\BehaviorSaveExtensionMethods.cs" />
     <Compile Include="DataTypes\ComponentSaveExtensionMethods.cs" />
     <Compile Include="DataTypes\ElementSaveExtensionMethods.cs" />
     <Compile Include="DataTypes\GumProjectSaveExtensionMethods.cs" />
@@ -185,6 +186,7 @@
     <Compile Include="Managers\PropertyGridManager.Events.cs" />
     <Compile Include="Managers\RenameManager.cs" />
     <Compile Include="Managers\Singleton.cs" />
+    <Compile Include="Mvvm\ViewModel.cs" />
     <Compile Include="Plugins\AlignmentButtons\AlignmentPluginControl.xaml.cs">
       <DependentUpon>AlignmentPluginControl.xaml</DependentUpon>
     </Compile>
@@ -196,6 +198,12 @@
     </Compile>
     <Compile Include="Plugins\AlignmentButtons\AlignmentMainPlugin.cs" />
     <Compile Include="Plugins\BaseClasses\InternalPlugin.cs" />
+    <Compile Include="Plugins\Behaviors\BehaviorsControl.xaml.cs">
+      <DependentUpon>BehaviorsControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Plugins\Behaviors\BehaviorsViewModel.cs" />
+    <Compile Include="Plugins\Behaviors\CheckListBehaviorItem.cs" />
+    <Compile Include="Plugins\Behaviors\MainPlugin.cs" />
     <Compile Include="Plugins\Undos\MainPlugin.cs" />
     <Compile Include="Plugins\Undos\UndoDisplay.xaml.cs">
       <DependentUpon>UndoDisplay.xaml</DependentUpon>
@@ -429,6 +437,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Plugins\AlignmentButtons\DockControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Plugins\Behaviors\BehaviorsControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

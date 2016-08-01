@@ -80,9 +80,9 @@
             this.WireframeContextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.WireframeEditControl = new FlatRedBall.AnimationEditorForms.Controls.WireframeEditControl();
             this.panel2 = new System.Windows.Forms.Panel();
-            this.OutputTextBox = new System.Windows.Forms.RichTextBox();
             this.RightTabControl = new System.Windows.Forms.TabControl();
             this.tabPage3 = new System.Windows.Forms.TabPage();
+            this.OutputTextBox = new System.Windows.Forms.RichTextBox();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.LeftAndEverythingContainer)).BeginInit();
             this.LeftAndEverythingContainer.Panel1.SuspendLayout();
@@ -374,6 +374,7 @@
             this.ElementTreeImages.Images.SetKeyName(5, "StandardElement.png");
             this.ElementTreeImages.Images.SetKeyName(6, "redExclamation.png");
             this.ElementTreeImages.Images.SetKeyName(7, "state.png");
+            this.ElementTreeImages.Images.SetKeyName(8, "behavior.png");
             // 
             // VariablesAndEverythingElse
             // 
@@ -592,15 +593,6 @@
             this.panel2.Size = new System.Drawing.Size(630, 105);
             this.panel2.TabIndex = 0;
             // 
-            // OutputTextBox
-            // 
-            this.OutputTextBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.OutputTextBox.Location = new System.Drawing.Point(3, 3);
-            this.OutputTextBox.Name = "OutputTextBox";
-            this.OutputTextBox.Size = new System.Drawing.Size(616, 73);
-            this.OutputTextBox.TabIndex = 0;
-            this.OutputTextBox.Text = "";
-            // 
             // RightTabControl
             // 
             this.RightTabControl.Controls.Add(this.tabPage3);
@@ -621,6 +613,15 @@
             this.tabPage3.TabIndex = 0;
             this.tabPage3.Text = "Output";
             this.tabPage3.UseVisualStyleBackColor = true;
+            // 
+            // OutputTextBox
+            // 
+            this.OutputTextBox.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.OutputTextBox.Location = new System.Drawing.Point(3, 3);
+            this.OutputTextBox.Name = "OutputTextBox";
+            this.OutputTextBox.Size = new System.Drawing.Size(616, 73);
+            this.OutputTextBox.TabIndex = 0;
+            this.OutputTextBox.Text = "";
             // 
             // MainWindow
             // 
