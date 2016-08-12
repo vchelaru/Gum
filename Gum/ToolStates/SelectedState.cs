@@ -13,6 +13,7 @@ using System.Collections.ObjectModel;
 using Gum.Events;
 using RenderingLibrary;
 using Gum.DataTypes.Behaviors;
+using Gum.Controls;
 
 namespace Gum.ToolStates
 {
@@ -23,6 +24,8 @@ namespace Gum.ToolStates
         static ISelectedState mSelf;
 
         VariableSave mSelectedVariableSave;
+
+        StateView stateView;
         
 
         #endregion
@@ -467,6 +470,17 @@ namespace Gum.ToolStates
 
         }
 
+        public StateStackingMode StateStackingMode
+        {
+            get
+            {
+                return stateView.StateStackingMode;
+            }
+            set
+            {
+                stateView.StateStackingMode = value;
+            }
+        }
 
         #endregion
 
@@ -475,6 +489,14 @@ namespace Gum.ToolStates
         private SelectedState()
         {
 
+        }
+
+        public void Initialize(StateView stateView)
+        {
+            this.stateView = stateView;
+
+            // I don't think we need to do anything here yet, but we may want to know
+            // when the state stacking mode changes..
         }
 
         public void UpdateToSelectedElement()
@@ -520,8 +542,18 @@ namespace Gum.ToolStates
 
         public void UpdateToSelectedStateSave()
         {
+            if(StateStackingMode == StateStackingMode.SingleState)
+            {
+                // reset everything. This is slow, but is easy
+                WireframeObjectManager.Self.RefreshAll(true);
+            }
+            else
+            {
+                var currentGue = WireframeObjectManager.Self.GetSelectedRepresentation();
 
-            WireframeObjectManager.Self.RefreshAll(true);
+                // Applying a state just stacks it on top of the current
+                currentGue.ApplyState(this.SelectedStateSave);
+            }
 
             SelectionManager.Self.Refresh();
 

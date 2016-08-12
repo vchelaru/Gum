@@ -125,6 +125,12 @@
     <Compile Include="Controls\ColorDisplay.xaml.cs">
       <DependentUpon>ColorDisplay.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\StateView.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\StateView.Designer.cs">
+      <DependentUpon>StateView.cs</DependentUpon>
+    </Compile>
     <Compile Include="DataTypes\BehaviorSaveExtensionMethods.cs" />
     <Compile Include="DataTypes\ComponentSaveExtensionMethods.cs" />
     <Compile Include="DataTypes\ElementSaveExtensionMethods.cs" />
@@ -274,6 +280,7 @@
     <Compile Include="ToolStates\ISelectedState.cs" />
     <Compile Include="ToolStates\ProjectState.cs" />
     <Compile Include="ToolStates\SelectedState.cs" />
+    <Compile Include="ToolStates\StateStackingMode.cs" />
     <Compile Include="Undo\UndoManager.cs" />
     <Compile Include="Undo\StateSaveMemento.cs" />
     <Compile Include="Undo\UndoObject.cs" />
@@ -294,6 +301,9 @@
     <Compile Include="Wireframe\WireframeObjectManager.cs" />
     <Compile Include="Wireframe\WireframeObjectManager.Guide.cs" />
     <Compile Include="Wireframe\WireframeObjectManager.RepresentationCreation.cs" />
+    <EmbeddedResource Include="Controls\StateView.resx">
+      <DependentUpon>StateView.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Gui\Controls\GuideListDisplay.resx">
       <DependentUpon>GuideListDisplay.cs</DependentUpon>
       <SubType>Designer</SubType>

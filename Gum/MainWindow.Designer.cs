@@ -62,8 +62,7 @@
             this.ElementTreeImages = new System.Windows.Forms.ImageList(this.components);
             this.VariablesAndEverythingElse = new System.Windows.Forms.SplitContainer();
             this.StatesAndVariablesContainer = new System.Windows.Forms.SplitContainer();
-            this.StateTreeView = new CommonFormsAndControls.MultiSelectTreeView();
-            this.StateContextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.tabControl1 = new System.Windows.Forms.TabControl();
             this.MiddleTabControl = new System.Windows.Forms.TabControl();
             this.tabPage2 = new System.Windows.Forms.TabPage();
             this.VariableHost = new System.Windows.Forms.Integration.ElementHost();
@@ -83,6 +82,7 @@
             this.RightTabControl = new System.Windows.Forms.TabControl();
             this.tabPage3 = new System.Windows.Forms.TabPage();
             this.OutputTextBox = new System.Windows.Forms.RichTextBox();
+            this.StateContextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.LeftAndEverythingContainer)).BeginInit();
             this.LeftAndEverythingContainer.Panel1.SuspendLayout();
@@ -404,7 +404,7 @@
             // 
             // StatesAndVariablesContainer.Panel1
             // 
-            this.StatesAndVariablesContainer.Panel1.Controls.Add(this.StateTreeView);
+            this.StatesAndVariablesContainer.Panel1.Controls.Add(this.tabControl1);
             // 
             // StatesAndVariablesContainer.Panel2
             // 
@@ -413,28 +413,14 @@
             this.StatesAndVariablesContainer.SplitterDistance = 119;
             this.StatesAndVariablesContainer.TabIndex = 0;
             // 
-            // StateTreeView
+            // tabControl1
             // 
-            this.StateTreeView.AlwaysHaveOneNodeSelected = true;
-            this.StateTreeView.ContextMenuStrip = this.StateContextMenuStrip;
-            this.StateTreeView.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.StateTreeView.ImageIndex = 0;
-            this.StateTreeView.ImageList = this.ElementTreeImages;
-            this.StateTreeView.Location = new System.Drawing.Point(0, 0);
-            this.StateTreeView.MultiSelectBehavior = CommonFormsAndControls.MultiSelectBehavior.CtrlDown;
-            this.StateTreeView.Name = "StateTreeView";
-            this.StateTreeView.SelectedImageIndex = 0;
-            this.StateTreeView.SelectedNodes = ((System.Collections.Generic.List<System.Windows.Forms.TreeNode>)(resources.GetObject("StateTreeView.SelectedNodes")));
-            this.StateTreeView.Size = new System.Drawing.Size(242, 119);
-            this.StateTreeView.TabIndex = 0;
-            this.StateTreeView.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.StateTreeView_AfterSelect);
-            this.StateTreeView.KeyDown += new System.Windows.Forms.KeyEventHandler(this.StateTreeView_KeyDown);
-            this.StateTreeView.MouseClick += new System.Windows.Forms.MouseEventHandler(this.StateTreeView_MouseClick);
-            // 
-            // StateContextMenuStrip
-            // 
-            this.StateContextMenuStrip.Name = "StateContextMenuStrip";
-            this.StateContextMenuStrip.Size = new System.Drawing.Size(61, 4);
+            this.tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tabControl1.Location = new System.Drawing.Point(0, 0);
+            this.tabControl1.Name = "tabControl1";
+            this.tabControl1.SelectedIndex = 0;
+            this.tabControl1.Size = new System.Drawing.Size(242, 119);
+            this.tabControl1.TabIndex = 1;
             // 
             // MiddleTabControl
             // 
@@ -623,6 +609,11 @@
             this.OutputTextBox.TabIndex = 0;
             this.OutputTextBox.Text = "";
             // 
+            // StateContextMenuStrip
+            // 
+            this.StateContextMenuStrip.Name = "StateContextMenuStrip";
+            this.StateContextMenuStrip.Size = new System.Drawing.Size(61, 4);
+            // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -677,7 +668,6 @@
         private System.Windows.Forms.SplitContainer VariablesAndEverythingElse;
         private System.Windows.Forms.SplitContainer StatesAndVariablesContainer;
         private System.Windows.Forms.SplitContainer PreviewSplitContainer;
-        private CommonFormsAndControls.MultiSelectTreeView StateTreeView;
         private System.Windows.Forms.PropertyGrid VariablePropertyGrid;
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.Panel panel2;
@@ -721,6 +711,7 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.TabControl RightTabControl;
         private System.Windows.Forms.TabPage tabPage3;
+        private System.Windows.Forms.TabControl tabControl1;
     }
 }
 

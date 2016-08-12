@@ -18,17 +18,23 @@ using Gum.Debug;
 using Gum.PropertyGridHelpers;
 using System.Windows.Forms.Integration;
 using Gum.DataTypes;
+using Gum.Controls;
 
 namespace Gum
 {
     public enum TabLocation
     {
+        [Obsolete("Use either CenterTop or CenterBottom")]
         Center,
-        Right
+        Right,
+        CenterTop, 
+        CenterBottom
     }
 
     public partial class MainWindow : Form
     {
+        StateView stateView;
+
         public MainWindow()
         {
 #if DEBUG
@@ -40,13 +46,16 @@ namespace Gum
 
             InitializeComponent();
 
+            stateView = new StateView();
+            this.AddWinformsControl(stateView, "States", TabLocation.CenterTop);
+
             GumCommands.Self.Initialize(this);
 
             TypeManager.Self.Initialize();
             PluginManager.Self.Initialize(this);
             
             ElementTreeViewManager.Self.Initialize(this.ObjectTreeView);
-            StateTreeViewManager.Self.Initialize(this.StateTreeView, StateContextMenuStrip);
+            StateTreeViewManager.Self.Initialize(this.stateView.TreeView, StateContextMenuStrip);
             PropertyGridManager.Self.Initialize(this.VariablePropertyGrid, 
                 ((TestWpfControl)this.VariableHost.Child).DataGrid,
                 ((TestWpfControl)this.EventsHost.Child).DataGrid
@@ -334,6 +343,18 @@ namespace Gum
             ElementTreeViewManager.Self.OnSelect(ObjectTreeView.SelectedNode);
         }
 
+        public void AddWinformsControl(Control control, string tabTitle, TabLocation tabLocation)
+        {
+            // todo: check if control has already been added. Right now this can't be done trough the Gum commands
+            // so it's only used "internally", so no checking is being done.
+            var tabControl = GetTabFromLocation(tabLocation);
+            var tabPage = CreateTabPage(tabTitle);
+            control.Dock = DockStyle.Fill;
+            tabControl.Controls.Add(tabPage);
+
+            tabPage.Controls.Add(control);
+        }
+
         public void AddWpfControl(System.Windows.Controls.UserControl control, string tabTitle, TabLocation tabLocation = TabLocation.Center)
         {
             TabPage existingTabPage;
@@ -350,32 +371,52 @@ namespace Gum
                 wpfHost.Dock = DockStyle.Fill;
                 wpfHost.Child = control;
 
-                System.Windows.Forms.TabPage tabPage = new TabPage();
+                TabPage tabPage = CreateTabPage(tabTitle);
+
+                TabControl tabControl = GetTabFromLocation(tabLocation);
+                tabControl.Controls.Add(tabPage);
 
                 tabPage.Controls.Add(wpfHost);
-                tabPage.Location = new System.Drawing.Point(4, 22);
-                tabPage.Padding = new System.Windows.Forms.Padding(3);
-                tabPage.Size = new System.Drawing.Size(230, 463);
-                tabPage.TabIndex = 1;
-                tabPage.Text = tabTitle;
-                tabPage.UseVisualStyleBackColor = true;
-
-                if (tabLocation == TabLocation.Center)
-                {
-                    this.MiddleTabControl.Controls.Add(tabPage);
-                }
-                else if (tabLocation == TabLocation.Right)
-                {
-                    this.RightTabControl.Controls.Add(tabPage);
-                }
-                else
-                {
-                    throw new NotImplementedException($"Tab location {tabLocation} not supported");
-                }
 
             }
         }
-        
+
+        private static TabPage CreateTabPage(string tabTitle)
+        {
+            System.Windows.Forms.TabPage tabPage = new TabPage();
+            tabPage.Location = new System.Drawing.Point(4, 22);
+            tabPage.Padding = new System.Windows.Forms.Padding(3);
+            tabPage.Size = new System.Drawing.Size(230, 463);
+            tabPage.TabIndex = 1;
+            tabPage.Text = tabTitle;
+            tabPage.UseVisualStyleBackColor = true;
+            return tabPage;
+        }
+
+        private TabControl GetTabFromLocation(TabLocation tabLocation)
+        {
+            TabControl tabControl = null;
+
+            switch (tabLocation)
+            {
+                case TabLocation.Center:
+                case TabLocation.CenterBottom:
+                    tabControl = this.MiddleTabControl;
+                    break;
+                case TabLocation.Right:
+                    tabControl = this.RightTabControl;
+
+                    break;
+                case TabLocation.CenterTop:
+                    tabControl = this.tabControl1;
+                    break;
+                default:
+                    throw new NotImplementedException($"Tab location {tabLocation} not supported");
+            }
+
+            return tabControl;
+        }
+
         private void GetContainers(System.Windows.Controls.UserControl control, out TabPage tabPage, out TabControl tabControl)
         {
             tabPage = null;
