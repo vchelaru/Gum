@@ -95,6 +95,13 @@ namespace Gum.Managers
 
         bool isInRefresh = false;
 
+        /// <summary>
+        /// Attempts to refresh the grid. The grid will only refresh if a new element, instance, or state
+        /// have been selected since the last refresh. If only values have changed, then a true value can be passed
+        /// to force a refresh.
+        /// </summary>
+        /// <param name="force">Whether to force the refresh. If this is true, the grid will refresh. If this
+        /// is false, the refresh will only happen if a new element, state, or instance has been selected.</param>
         public async void RefreshUI(bool force = false)
         {
             if (isInRefresh)
@@ -149,6 +156,15 @@ namespace Gum.Managers
 
         static int SimultaneousCalls = 0;
 
+        /// <summary>
+        /// Refreshes the property grid for the argument element, state, and instance. This will only refresh the grid
+        /// if the element, state, or instance values have changed since the last time this function was called, or if
+        /// force is true.
+        /// </summary>
+        /// <param name="element">The element to display. The properties on this element may not be displayed if the instance is not null.</param>
+        /// <param name="state">The state to display.</param>
+        /// <param name="instance">The instance to display. May be null.</param>
+        /// <param name="force">Whether to refresh even if the element, state, and instance have not changed.</param>
         private void RefreshDataGrid(ElementSave element, StateSave state, InstanceSave instance, bool force = false)
         {
 

@@ -104,6 +104,25 @@ namespace Gum.Wireframe
             }
         }
 
+        /// <summary>
+        /// Returns this instance's SystemManagers, or climbs up the parent/child relationship
+        /// until a non-null SystemsManager is found. Otherwise, returns null.
+        /// </summary>
+        public SystemManagers EffectiveManagers
+        {
+            get
+            {
+                if(mManagers != null)
+                {
+                    return mManagers;
+                }
+                else 
+                {
+                    return this.ParentGue?.EffectiveManagers;
+                }
+            }
+        }
+
         public bool Visible
         {
             get

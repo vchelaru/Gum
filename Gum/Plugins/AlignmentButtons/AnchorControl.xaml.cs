@@ -203,7 +203,7 @@ namespace Gum.Plugins.AlignmentButtons
             state.SetValue(instancePrefix + "Y Units",
                 yUnits, typeof(PositionUnitType).Name);
 
-            if (instance != null && instance.BaseType == "Text")
+            if (instance.BaseType == "Text")
             {
                 state.SetValue(instancePrefix + "VerticalAlignment", alignment, "VerticalAlignment");
             }
@@ -212,7 +212,7 @@ namespace Gum.Plugins.AlignmentButtons
 
         private static void RefreshAndSave()
         {
-            GumCommands.Self.GuiCommands.RefreshPropertyGrid();
+            GumCommands.Self.GuiCommands.RefreshPropertyGrid(force:true);
             GumCommands.Self.WireframeCommands.Refresh();
             GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
         }
