@@ -474,6 +474,10 @@ namespace Gum.ToolStates
         {
             get
             {
+                if(stateView == null)
+                {
+                    throw new Exception("Need to call Initialize first");
+                }
                 return stateView.StateStackingMode;
             }
             set

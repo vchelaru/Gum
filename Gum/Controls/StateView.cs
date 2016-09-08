@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Gum.Managers;
 using Gum.ToolStates;
 
 namespace Gum.Controls
@@ -44,6 +45,11 @@ namespace Gum.Controls
         public StateView()
         {
             InitializeComponent();
+
+            this.TreeView.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.StateTreeView_AfterSelect);
+            this.TreeView.KeyDown += new System.Windows.Forms.KeyEventHandler(this.StateTreeView_KeyDown);
+            this.TreeView.MouseClick += new System.Windows.Forms.MouseEventHandler(this.StateTreeView_MouseClick);
+
         }
 
         private void SingleStateRadio_CheckedChanged(object sender, EventArgs e)
@@ -55,5 +61,24 @@ namespace Gum.Controls
         {
             StateStackingModeChange?.Invoke(this, null);
         }
+
+        private void StateTreeView_AfterSelect(object sender, TreeViewEventArgs e)
+        {
+            StateTreeViewManager.Self.OnSelect();
+        }
+
+        private void StateTreeView_MouseClick(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Right)
+            {
+                StateTreeViewManager.Self.PopulateMenuStrip();
+            }
+        }
+
+        private void StateTreeView_KeyDown(object sender, KeyEventArgs e)
+        {
+            StateTreeViewManager.Self.HandleKeyDown(e);
+        }
+
     }
 }

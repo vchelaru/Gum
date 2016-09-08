@@ -49,6 +49,7 @@ namespace Gum
             stateView = new StateView();
             this.AddWinformsControl(stateView, "States", TabLocation.CenterTop);
 
+            ((SelectedState)SelectedState.Self).Initialize(stateView);
             GumCommands.Self.Initialize(this);
 
             TypeManager.Self.Initialize();
@@ -105,11 +106,6 @@ namespace Gum
         private void instanceToolStripMenuItem_Click(object sender, EventArgs e)
         {
             ElementTreeViewManager.Self.AddInstanceClick(sender, e);
-        }
-
-        private void StateTreeView_AfterSelect(object sender, TreeViewEventArgs e)
-        {
-            StateTreeViewManager.Self.OnSelect();
         }
 
         private void loadProjectToolStripMenuItem_Click(object sender, EventArgs e)
@@ -275,19 +271,6 @@ namespace Gum
         private void newProjectToolStripMenuItem_Click(object sender, EventArgs e)
         {
             GumCommands.Self.FileCommands.NewProject();
-        }
-
-        private void StateTreeView_MouseClick(object sender, MouseEventArgs e)
-        {
-            if (e.Button == MouseButtons.Right)
-            {
-                StateTreeViewManager.Self.PopulateMenuStrip();
-            }
-        }
-
-        private void StateTreeView_KeyDown(object sender, KeyEventArgs e)
-        {
-            StateTreeViewManager.Self.HandleKeyDown(e);
         }
 
         private void clearFontCacheToolStripMenuItem_Click(object sender, EventArgs e)

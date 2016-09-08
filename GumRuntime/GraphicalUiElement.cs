@@ -457,6 +457,12 @@ namespace Gum.Wireframe
             get { return mParent; }
             set
             {
+#if DEBUG
+                if (value == this)
+                {
+                    throw new InvalidOperationException("Cannot attach an object to itself");
+                }
+#endif
                 if (mParent != value)
                 {
                     if (mParent != null && mParent.Children != null)
