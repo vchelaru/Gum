@@ -30,182 +30,164 @@ namespace Gum.Plugins.AlignmentButtons
 
         private void TopLeftButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            if (SelectedState.Self.SelectedInstance != null)
-            {
-                SetXValues(
-                    global::RenderingLibrary.Graphics.HorizontalAlignment.Left,
-                    PositionUnitType.PixelsFromLeft);
+            SetXValues(
+                global::RenderingLibrary.Graphics.HorizontalAlignment.Left,
+                PositionUnitType.PixelsFromLeft);
                 
-                SetYValues(
-                    global::RenderingLibrary.Graphics.VerticalAlignment.Top,
-                    PositionUnitType.PixelsFromTop);
+            SetYValues(
+                global::RenderingLibrary.Graphics.VerticalAlignment.Top,
+                PositionUnitType.PixelsFromTop);
 
-                RefreshAndSave();
-            }
+            RefreshAndSave();
         }
 
         private void TopButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            if (SelectedState.Self.SelectedInstance != null)
-            {
-                SetXValues(
-                    global::RenderingLibrary.Graphics.HorizontalAlignment.Center,
-                    PositionUnitType.PixelsFromCenterX);
+            SetXValues(
+                global::RenderingLibrary.Graphics.HorizontalAlignment.Center,
+                PositionUnitType.PixelsFromCenterX);
 
-                SetYValues(
-                    global::RenderingLibrary.Graphics.VerticalAlignment.Top,
-                    PositionUnitType.PixelsFromTop);
+            SetYValues(
+                global::RenderingLibrary.Graphics.VerticalAlignment.Top,
+                PositionUnitType.PixelsFromTop);
 
-                RefreshAndSave();
-            }
+            RefreshAndSave();
         }
 
         private void TopRightButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            if (SelectedState.Self.SelectedInstance != null)
-            {
-                SetXValues(
-                    global::RenderingLibrary.Graphics.HorizontalAlignment.Right,
-                    PositionUnitType.PixelsFromRight);
+            SetXValues(
+                global::RenderingLibrary.Graphics.HorizontalAlignment.Right,
+                PositionUnitType.PixelsFromRight);
 
-                SetYValues(
-                    global::RenderingLibrary.Graphics.VerticalAlignment.Top,
-                    PositionUnitType.PixelsFromTop);
+            SetYValues(
+                global::RenderingLibrary.Graphics.VerticalAlignment.Top,
+                PositionUnitType.PixelsFromTop);
 
-                RefreshAndSave();
-            }
+            RefreshAndSave();
         }
 
         private void MiddleLeftButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            if (SelectedState.Self.SelectedInstance != null)
-            {
-                SetXValues(
-                    global::RenderingLibrary.Graphics.HorizontalAlignment.Left,
-                    PositionUnitType.PixelsFromLeft);
+            SetXValues(
+                global::RenderingLibrary.Graphics.HorizontalAlignment.Left,
+                PositionUnitType.PixelsFromLeft);
 
-                SetYValues(
-                    global::RenderingLibrary.Graphics.VerticalAlignment.Center,
-                    PositionUnitType.PixelsFromCenterY);
+            SetYValues(
+                global::RenderingLibrary.Graphics.VerticalAlignment.Center,
+                PositionUnitType.PixelsFromCenterY);
 
-                RefreshAndSave();
-            }
+            RefreshAndSave();
         }
 
         private void MiddleMiddleButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            if (SelectedState.Self.SelectedInstance != null)
-            {
-                SetXValues(
-                    global::RenderingLibrary.Graphics.HorizontalAlignment.Center,
-                    PositionUnitType.PixelsFromCenterX);
+            SetXValues(
+                global::RenderingLibrary.Graphics.HorizontalAlignment.Center,
+                PositionUnitType.PixelsFromCenterX);
 
-                SetYValues(
-                    global::RenderingLibrary.Graphics.VerticalAlignment.Center,
-                    PositionUnitType.PixelsFromCenterY);
+            SetYValues(
+                global::RenderingLibrary.Graphics.VerticalAlignment.Center,
+                PositionUnitType.PixelsFromCenterY);
 
-                RefreshAndSave();
-            }
+            RefreshAndSave();
         }
 
         private void MiddleRightButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            if (SelectedState.Self.SelectedInstance != null)
-            {
-                SetXValues(
-                    global::RenderingLibrary.Graphics.HorizontalAlignment.Right,
-                    PositionUnitType.PixelsFromRight);
+            SetXValues(
+                global::RenderingLibrary.Graphics.HorizontalAlignment.Right,
+                PositionUnitType.PixelsFromRight);
 
-                SetYValues(
-                    global::RenderingLibrary.Graphics.VerticalAlignment.Center,
-                    PositionUnitType.PixelsFromCenterY);
+            SetYValues(
+                global::RenderingLibrary.Graphics.VerticalAlignment.Center,
+                PositionUnitType.PixelsFromCenterY);
 
-                RefreshAndSave();
-            }
+            RefreshAndSave();
         }
 
         private void BottomLeftButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            if (SelectedState.Self.SelectedInstance != null)
-            {
-                SetXValues(
-                    global::RenderingLibrary.Graphics.HorizontalAlignment.Left,
-                    PositionUnitType.PixelsFromLeft);
+            SetXValues(
+                global::RenderingLibrary.Graphics.HorizontalAlignment.Left,
+                PositionUnitType.PixelsFromLeft);
 
-                SetYValues(
-                    global::RenderingLibrary.Graphics.VerticalAlignment.Bottom,
-                    PositionUnitType.PixelsFromBottom);
+            SetYValues(
+                global::RenderingLibrary.Graphics.VerticalAlignment.Bottom,
+                PositionUnitType.PixelsFromBottom);
 
-                RefreshAndSave();
-            }
+            RefreshAndSave();
         }
 
         private void BottomMiddleButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            if (SelectedState.Self.SelectedInstance != null)
-            {
-                SetXValues(
-                    global::RenderingLibrary.Graphics.HorizontalAlignment.Center,
-                    PositionUnitType.PixelsFromCenterX);
+            SetXValues(
+                global::RenderingLibrary.Graphics.HorizontalAlignment.Center,
+                PositionUnitType.PixelsFromCenterX);
 
-                SetYValues(
-                    global::RenderingLibrary.Graphics.VerticalAlignment.Bottom,
-                    PositionUnitType.PixelsFromBottom);
+            SetYValues(
+                global::RenderingLibrary.Graphics.VerticalAlignment.Bottom,
+                PositionUnitType.PixelsFromBottom);
 
-                RefreshAndSave();
-            }
+            RefreshAndSave();
         }
 
         private void BottomRightButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            if (SelectedState.Self.SelectedInstance != null)
-            {
-                SetXValues(
-                    global::RenderingLibrary.Graphics.HorizontalAlignment.Right,
-                    PositionUnitType.PixelsFromRight);
+            SetXValues(
+                global::RenderingLibrary.Graphics.HorizontalAlignment.Right,
+                PositionUnitType.PixelsFromRight);
 
-                SetYValues(
-                    global::RenderingLibrary.Graphics.VerticalAlignment.Bottom,
-                    PositionUnitType.PixelsFromBottom);
+            SetYValues(
+                global::RenderingLibrary.Graphics.VerticalAlignment.Bottom,
+                PositionUnitType.PixelsFromBottom);
 
-                RefreshAndSave();
-            }
+            RefreshAndSave();
         }
 
         private void SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment alignment, PositionUnitType xUnits)
         {
             var state = SelectedState.Self.SelectedStateSave;
-            var instance = SelectedState.Self.SelectedInstance;
-            string instancePrefix = instance.Name + ".";
+            string prefix = GetVariablePrefix();
 
-            state.SetValue(instancePrefix + "X", 0.0f, "float");
-            state.SetValue(instancePrefix + "X Origin",
+            state.SetValue(prefix + "X", 0.0f, "float");
+            state.SetValue(prefix + "X Origin",
                 alignment, "HorizontalAlignment");
-            state.SetValue(instancePrefix + "X Units",
+            state.SetValue(prefix + "X Units",
                xUnits, typeof(Gum.Managers.PositionUnitType).Name);
 
-            if(instance != null && instance.BaseType == "Text")
+            if (SelectedState.Self.SelectedInstance?.BaseType == "Text")
             {
-                state.SetValue(instancePrefix + "HorizontalAlignment", alignment, "HorizontalAlignment");
+                state.SetValue(prefix + "HorizontalAlignment", alignment, "HorizontalAlignment");
             }
 
+        }
+
+        private static string GetVariablePrefix()
+        {
+            string prefix = "";
+            var instance = SelectedState.Self.SelectedInstance;
+            if (instance != null)
+            {
+                prefix = instance.Name + ".";
+            }
+            return prefix;
         }
 
         private void SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment alignment, PositionUnitType yUnits)
         {
             var state = SelectedState.Self.SelectedStateSave;
-            var instance = SelectedState.Self.SelectedInstance;
-            string instancePrefix = instance.Name + ".";
+            string prefix = GetVariablePrefix();
 
-            state.SetValue(instancePrefix + "Y", 0.0f, "float");
-            state.SetValue(instancePrefix + "Y Origin",
+            state.SetValue(prefix + "Y", 0.0f, "float");
+            state.SetValue(prefix + "Y Origin",
                 alignment, typeof(global::RenderingLibrary.Graphics.VerticalAlignment).Name);
-            state.SetValue(instancePrefix + "Y Units",
+            state.SetValue(prefix + "Y Units",
                 yUnits, typeof(PositionUnitType).Name);
 
-            if (instance.BaseType == "Text")
+            if (SelectedState.Self.SelectedInstance?.BaseType == "Text")
             {
-                state.SetValue(instancePrefix + "VerticalAlignment", alignment, "VerticalAlignment");
+                state.SetValue(prefix + "VerticalAlignment", alignment, "VerticalAlignment");
             }
 
         }

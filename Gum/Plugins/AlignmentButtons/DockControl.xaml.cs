@@ -29,138 +29,99 @@ namespace Gum.Plugins.AlignmentButtons
 
         private void TopButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            if(SelectedState.Self.SelectedInstance != null)
-            {
-                var instance = SelectedState.Self.SelectedInstance;
+            var state = SelectedState.Self.SelectedStateSave;
+            string prefix = GetVariablePrefix();
 
-                var state = SelectedState.Self.SelectedStateSave;
+            SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
+            SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Top, PositionUnitType.PixelsFromTop);
 
-                string instancePrefix = instance.Name + ".";
-
-                SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
-                SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Top, PositionUnitType.PixelsFromTop);
-
-                state.SetValue(instancePrefix + "Width", 0.0f, "float");
-                state.SetValue(instancePrefix + "Width Units",
-                    DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
+            state.SetValue(prefix + "Width", 0.0f, "float");
+            state.SetValue(prefix + "Width Units",
+                DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
 
 
-                RefreshAndSave();
-            }
+            RefreshAndSave();
         }
 
 
         private void LeftButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            if (SelectedState.Self.SelectedInstance != null)
-            {
-                if (SelectedState.Self.SelectedInstance != null)
-                {
-                    var instance = SelectedState.Self.SelectedInstance;
+            var state = SelectedState.Self.SelectedStateSave;
+            string prefix = GetVariablePrefix();
 
-                    var state = SelectedState.Self.SelectedStateSave;
+            SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Left, PositionUnitType.PixelsFromLeft);
+            SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
 
-                    string instancePrefix = instance.Name + ".";
+            state.SetValue(prefix + "Height", 0.0f, "float");
+            state.SetValue(prefix + "Height Units",
+                DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
 
-                    SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Left, PositionUnitType.PixelsFromLeft);
-                    SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
-
-                    state.SetValue(instancePrefix + "Height", 0.0f, "float");
-                    state.SetValue(instancePrefix + "Height Units",
-                        DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
-
-                    RefreshAndSave();
-                }
-            }
+            RefreshAndSave();
         }
 
         private void FillButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            if (SelectedState.Self.SelectedInstance != null)
-            {
-                var instance = SelectedState.Self.SelectedInstance;
+            var state = SelectedState.Self.SelectedStateSave;
+            string prefix = GetVariablePrefix();
 
-                var state = SelectedState.Self.SelectedStateSave;
+            SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
+            SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
 
-                string instancePrefix = instance.Name + ".";
+            state.SetValue(prefix + "Width", 0.0f, "float");
+            state.SetValue(prefix + "Width Units",
+                DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
 
-                SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
-                SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
+            state.SetValue(prefix + "Height", 0.0f, "float");
+            state.SetValue(prefix + "Height Units",
+                DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
 
-                state.SetValue(instancePrefix + "Width", 0.0f, "float");
-                state.SetValue(instancePrefix + "Width Units",
-                    DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
-
-                state.SetValue(instancePrefix + "Height", 0.0f, "float");
-                state.SetValue(instancePrefix + "Height Units",
-                    DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
-
-
-                RefreshAndSave();
-            }
+            RefreshAndSave();
         }
 
         private void RightButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            if (SelectedState.Self.SelectedInstance != null)
-            {
-                var instance = SelectedState.Self.SelectedInstance;
+            var state = SelectedState.Self.SelectedStateSave;
+            string prefix = GetVariablePrefix();
 
-                var state = SelectedState.Self.SelectedStateSave;
+            SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Right, PositionUnitType.PixelsFromRight);
+            SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
 
-                string instancePrefix = instance.Name + ".";
+            state.SetValue(prefix + "Height", 0.0f, "float");
+            state.SetValue(prefix + "Height Units",
+                DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
 
-                SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Right, PositionUnitType.PixelsFromRight);
-                SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
-
-                state.SetValue(instancePrefix + "Height", 0.0f, "float");
-                state.SetValue(instancePrefix + "Height Units",
-                    DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
-
-
-
-                RefreshAndSave();
-            }
+            RefreshAndSave();
         }
 
         private void BottomButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            if (SelectedState.Self.SelectedInstance != null)
-            {
-                var instance = SelectedState.Self.SelectedInstance;
+            var state = SelectedState.Self.SelectedStateSave;
+            string prefix = GetVariablePrefix();
 
-                var state = SelectedState.Self.SelectedStateSave;
+            SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
+            SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Bottom, PositionUnitType.PixelsFromBottom);
 
-                string instancePrefix = instance.Name + ".";
+            state.SetValue(prefix + "Width", 0.0f, "float");
+            state.SetValue(prefix + "Width Units",
+                DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
 
-                SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
-                SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Bottom, PositionUnitType.PixelsFromBottom);
-
-                state.SetValue(instancePrefix + "Width", 0.0f, "float");
-                state.SetValue(instancePrefix + "Width Units",
-                    DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
-
-
-                RefreshAndSave();
-            }
+            RefreshAndSave();
         }
 
         private void SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment alignment, PositionUnitType xUnits)
         {
             var state = SelectedState.Self.SelectedStateSave;
-            var instance = SelectedState.Self.SelectedInstance;
-            string instancePrefix = instance.Name + ".";
+            string prefix = GetVariablePrefix();
 
-
-            state.SetValue(instancePrefix + "X", 0.0f, "float");
-            state.SetValue(instancePrefix + "X Origin",
+            state.SetValue(prefix + "X", 0.0f, "float");
+            state.SetValue(prefix + "X Origin",
                 alignment, "HorizontalAlignment");
-            state.SetValue(instancePrefix + "X Units",
+            state.SetValue(prefix + "X Units",
                xUnits, typeof(Gum.Managers.PositionUnitType).Name);
 
-            if (instance != null && instance.BaseType == "Text")
+            if (SelectedState.Self.SelectedInstance?.BaseType == "Text")
             {
-                state.SetValue(instancePrefix + "HorizontalAlignment", alignment, "HorizontalAlignment");
+                state.SetValue(prefix + "HorizontalAlignment", alignment, "HorizontalAlignment");
             }
 
         }
@@ -169,20 +130,30 @@ namespace Gum.Plugins.AlignmentButtons
         private void SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment alignment, PositionUnitType yUnits)
         {
             var state = SelectedState.Self.SelectedStateSave;
-            var instance = SelectedState.Self.SelectedInstance;
-            string instancePrefix = instance.Name + ".";
+            string prefix = GetVariablePrefix();
 
-            state.SetValue(instancePrefix + "Y", 0.0f, "float");
-            state.SetValue(instancePrefix + "Y Origin",
+            state.SetValue(prefix + "Y", 0.0f, "float");
+            state.SetValue(prefix + "Y Origin",
                 alignment, typeof(global::RenderingLibrary.Graphics.VerticalAlignment).Name);
-            state.SetValue(instancePrefix + "Y Units",
+            state.SetValue(prefix + "Y Units",
                 yUnits, typeof(PositionUnitType).Name);
 
-            if (instance != null && instance.BaseType == "Text")
+            if (SelectedState.Self.SelectedInstance?.BaseType == "Text")
             {
-                state.SetValue(instancePrefix + "VerticalAlignment", alignment, "VerticalAlignment");
+                state.SetValue(prefix + "VerticalAlignment", alignment, "VerticalAlignment");
             }
 
+        }
+
+        private static string GetVariablePrefix()
+        {
+            string prefix = "";
+            var instance = SelectedState.Self.SelectedInstance;
+            if (instance != null)
+            {
+                prefix = instance.Name + ".";
+            }
+            return prefix;
         }
 
         private static void RefreshAndSave()
