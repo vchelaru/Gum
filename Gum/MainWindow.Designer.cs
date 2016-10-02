@@ -82,7 +82,6 @@
             this.RightTabControl = new System.Windows.Forms.TabControl();
             this.tabPage3 = new System.Windows.Forms.TabPage();
             this.OutputTextBox = new System.Windows.Forms.RichTextBox();
-            this.StateContextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.LeftAndEverythingContainer)).BeginInit();
             this.LeftAndEverythingContainer.Panel1.SuspendLayout();
@@ -199,8 +198,7 @@
             this.addToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.screenToolStripMenuItem,
             this.componentToolStripMenuItem,
-            this.instanceToolStripMenuItem,
-            this.stateToolStripMenuItem});
+            this.instanceToolStripMenuItem});
             this.addToolStripMenuItem.Name = "addToolStripMenuItem";
             this.addToolStripMenuItem.Size = new System.Drawing.Size(167, 22);
             this.addToolStripMenuItem.Text = "Add";
@@ -609,11 +607,6 @@
             this.OutputTextBox.TabIndex = 0;
             this.OutputTextBox.Text = "";
             // 
-            // StateContextMenuStrip
-            // 
-            this.StateContextMenuStrip.Name = "StateContextMenuStrip";
-            this.StateContextMenuStrip.Size = new System.Drawing.Size(61, 4);
-            // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -693,7 +686,6 @@
         public System.Windows.Forms.FlowLayoutPanel ToolbarPanel;
         private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem newProjectToolStripMenuItem;
-        private System.Windows.Forms.ContextMenuStrip StateContextMenuStrip;
         private System.Windows.Forms.RichTextBox OutputTextBox;
         private System.Windows.Forms.TabControl MiddleTabControl;
         private System.Windows.Forms.TabPage tabPage1;

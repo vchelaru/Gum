@@ -85,8 +85,28 @@ namespace RenderingLibrary
 
             var relativePosition = new Vector2(x, y);
             relativePosition = Vector2.Transform(relativePosition, matrix);
-            return
-                relativePosition.X > 0 && relativePosition.Y > 0 && relativePosition.X < ipso.Width && relativePosition.Y < ipso.Height;
+
+            bool isXInRange = false;
+            if(ipso.Width < 0)
+            {
+                isXInRange = relativePosition.X < 0 && relativePosition.X > ipso.Width;
+            }
+            else
+            {
+                isXInRange = relativePosition.X > 0 && relativePosition.X < ipso.Width;
+            }
+
+            bool isYInRange = false;
+            if(ipso.Height < 0)
+            {
+                isYInRange = relativePosition.Y < 0 && relativePosition.Y > ipso.Height;
+            }
+            else
+            {
+                isYInRange = relativePosition.Y > 0 && relativePosition.Y < ipso.Height;
+            }
+
+            return isXInRange && isYInRange;
         }
 
 

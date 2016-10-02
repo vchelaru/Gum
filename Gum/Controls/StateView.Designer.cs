@@ -28,12 +28,14 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(StateView));
             this.multiSelectTreeView1 = new CommonFormsAndControls.MultiSelectTreeView();
             this.TreeView = new CommonFormsAndControls.MultiSelectTreeView();
             this.panel1 = new System.Windows.Forms.Panel();
-            this.SingleStateRadio = new System.Windows.Forms.RadioButton();
             this.StackStateRadio = new System.Windows.Forms.RadioButton();
+            this.SingleStateRadio = new System.Windows.Forms.RadioButton();
+            this.StateContextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -50,6 +52,7 @@
             // TreeView
             // 
             this.TreeView.AlwaysHaveOneNodeSelected = false;
+            this.TreeView.ContextMenuStrip = this.StateContextMenuStrip;
             this.TreeView.Dock = System.Windows.Forms.DockStyle.Fill;
             this.TreeView.Location = new System.Drawing.Point(0, 52);
             this.TreeView.MultiSelectBehavior = CommonFormsAndControls.MultiSelectBehavior.CtrlDown;
@@ -68,6 +71,17 @@
             this.panel1.Size = new System.Drawing.Size(150, 52);
             this.panel1.TabIndex = 2;
             // 
+            // StackStateRadio
+            // 
+            this.StackStateRadio.AutoSize = true;
+            this.StackStateRadio.Location = new System.Drawing.Point(4, 27);
+            this.StackStateRadio.Name = "StackStateRadio";
+            this.StackStateRadio.Size = new System.Drawing.Size(99, 17);
+            this.StackStateRadio.TabIndex = 1;
+            this.StackStateRadio.Text = "Combine States";
+            this.StackStateRadio.UseVisualStyleBackColor = true;
+            this.StackStateRadio.CheckedChanged += new System.EventHandler(this.StackStateRadio_CheckedChanged);
+            // 
             // SingleStateRadio
             // 
             this.SingleStateRadio.AutoSize = true;
@@ -81,16 +95,10 @@
             this.SingleStateRadio.UseVisualStyleBackColor = true;
             this.SingleStateRadio.CheckedChanged += new System.EventHandler(this.SingleStateRadio_CheckedChanged);
             // 
-            // StackStateRadio
+            // StateContextMenuStrip
             // 
-            this.StackStateRadio.AutoSize = true;
-            this.StackStateRadio.Location = new System.Drawing.Point(4, 27);
-            this.StackStateRadio.Name = "StackStateRadio";
-            this.StackStateRadio.Size = new System.Drawing.Size(99, 17);
-            this.StackStateRadio.TabIndex = 1;
-            this.StackStateRadio.Text = "Combine States";
-            this.StackStateRadio.UseVisualStyleBackColor = true;
-            this.StackStateRadio.CheckedChanged += new System.EventHandler(this.StackStateRadio_CheckedChanged);
+            this.StateContextMenuStrip.Name = "StateContextMenuStrip";
+            this.StateContextMenuStrip.Size = new System.Drawing.Size(61, 4);
             // 
             // StateView
             // 
@@ -113,5 +121,6 @@
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.RadioButton StackStateRadio;
         private System.Windows.Forms.RadioButton SingleStateRadio;
+        public System.Windows.Forms.ContextMenuStrip StateContextMenuStrip;
     }
 }
