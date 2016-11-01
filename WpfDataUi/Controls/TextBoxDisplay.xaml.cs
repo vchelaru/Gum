@@ -79,11 +79,12 @@ namespace WpfDataUi.Controls
             this.RefreshContextMenu(TextBox.ContextMenu);
         }
 
-        public void Refresh()
+        public void Refresh(bool forceRefreshEvenIfFocused = false)
         {
             // If the user is editing a value, we don't want to change
             // the value under the cursor
-            if (this.TextBox.IsFocused == false)
+            // If we're default, then go ahead and change the value
+            if (this.TextBox.IsFocused == false || forceRefreshEvenIfFocused || mTextBoxLogic.InstanceMember.IsDefault)
             {
                 SuppressSettingProperty = true;
 

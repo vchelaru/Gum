@@ -73,7 +73,7 @@ namespace WpfDataUi.Controls
             this.RefreshContextMenu(CheckBox.ContextMenu);
         }
 
-        public void Refresh()
+        public void Refresh(bool forceRefreshEvenIfFocused = false)
         {
             SuppressSettingProperty = true;
 

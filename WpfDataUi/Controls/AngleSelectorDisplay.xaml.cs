@@ -191,7 +191,7 @@ namespace WpfDataUi.Controls
             Ellipse_MouseMove_1(null, null);
         }
 
-        public void Refresh()
+        public void Refresh(bool forceRefreshEvenIfFocused = false)
         {
             SuppressSettingProperty = true;
 

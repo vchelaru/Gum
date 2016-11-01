@@ -22,7 +22,7 @@ namespace WpfDataUi
     {
         InstanceMember InstanceMember { get; set; }
         bool SuppressSettingProperty { get; set; }
-        void Refresh();
+        void Refresh(bool forceRefreshEvenIfFocused = false);
 
         ApplyValueResult TryGetValueOnUi(out object result);
         ApplyValueResult TrySetValueOnUi(object value);

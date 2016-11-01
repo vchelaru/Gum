@@ -151,7 +151,7 @@ namespace WpfDataUi.Controls
         }
         
 
-        public void Refresh()
+        public void Refresh(bool forceRefreshEvenIfFocused = false)
         {
             if (this.HasEnoughInformationToWork())
             {

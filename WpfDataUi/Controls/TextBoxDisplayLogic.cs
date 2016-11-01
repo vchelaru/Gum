@@ -39,8 +39,14 @@ namespace WpfDataUi.Controls
             if (e.Key == Key.Enter)
             {
                 e.Handled = true;
-                TryApplyToInstance();
+                var result = TryApplyToInstance();
+
                 TextAtStartOfEditing = mAssociatedTextBox.Text;
+
+                if(result == ApplyValueResult.Success)
+                {
+                    mContainer.Refresh(forceRefreshEvenIfFocused: true);
+                }
 
             }
             else if (e.Key == Key.Escape)

@@ -82,7 +82,7 @@ namespace WpfDataUi.Controls
         }
 
 
-        public void Refresh()
+        public void Refresh(bool forceRefreshEvenIfFocused = false)
         {
 
             SuppressSettingProperty = true;

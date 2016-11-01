@@ -69,7 +69,7 @@ namespace Gum.Controls.DataUi
             InitializeComponent();
         }
 
-        public void Refresh()
+        public void Refresh(bool forceRefreshEvenIfFocused = false)
         {
             SuppressSettingProperty = true;
 
