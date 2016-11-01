@@ -93,6 +93,19 @@ namespace Gum.Wireframe
             }
         }
         
+        
+        bool GetIsShiftDown()
+        {
+            return InputLibrary.Keyboard.Self.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift) ||
+                    InputLibrary.Keyboard.Self.KeyDown(Microsoft.Xna.Framework.Input.Keys.RightShift);
+        }    
+
+        bool GetIsAltDown()
+        {
+            return InputLibrary.Keyboard.Self.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftAlt) ||
+                    InputLibrary.Keyboard.Self.KeyDown(Microsoft.Xna.Framework.Input.Keys.RightAlt);
+        }
+
         private void ClickActivity()
         {
             Cursor cursor = InputLibrary.Cursor.Self;
@@ -105,10 +118,10 @@ namespace Gum.Wireframe
             if (cursor.PrimaryClick && mHasChangedAnythingSinceLastPush)
             {
 
-                bool isShiftDown = InputLibrary.Keyboard.Self.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift) ||
-                    InputLibrary.Keyboard.Self.KeyDown(Microsoft.Xna.Framework.Input.Keys.RightShift);
+                bool isShiftDown = GetIsShiftDown();
 
-                if(isShiftDown)
+                // If the user resized with a shift, then released, we don't want to apply this, because they are not doing axis constrained movement
+                if(isShiftDown && mSideGrabbed == ResizeSide.None)
                 {
                     var axis = grabbedInitialState.AxisMovedFurthestAlong;
 
@@ -363,6 +376,9 @@ namespace Gum.Wireframe
                 bool isShiftDown = InputLibrary.Keyboard.Self.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift) ||
                     InputLibrary.Keyboard.Self.KeyDown(Microsoft.Xna.Framework.Input.Keys.RightShift);
 
+                Cursor cursor = InputLibrary.Cursor.Self;
+                bool isGrabbedByMouseCursor = cursor.PrimaryDown && mSideGrabbed == ResizeSide.None;
+
 
                 if (SelectedState.Self.SelectedInstances.Count() == 0 && 
                     (SelectedState.Self.SelectedComponent != null || SelectedState.Self.SelectedStandardElement != null))
@@ -378,7 +394,7 @@ namespace Gum.Wireframe
                         ModifyVariable("Y", yToMoveBy, SelectedState.Self.SelectedElement);
                     }
 
-                    if(isShiftDown)
+                    if(isShiftDown && isGrabbedByMouseCursor)
                     {
                         var xOrY = grabbedInitialState.AxisMovedFurthestAlong;
 
@@ -418,7 +434,7 @@ namespace Gum.Wireframe
                                 float value = ModifyVariable("Y", yToMoveBy, instance);
                             }
 
-                            if (isShiftDown)
+                            if (isShiftDown && isGrabbedByMouseCursor)
                             {
                                 var xOrY = grabbedInitialState.AxisMovedFurthestAlong;
 
@@ -805,27 +821,27 @@ namespace Gum.Wireframe
             {
                 heightMultiplier *= (ipso.Height / SelectionManager.Self.ResizeHandles.Height);
             }
+
+            if(GetIsAltDown())
+            {
+                if(widthMultiplier != 0)
+                {
+                    // user grabbed a corner that can change width, so adjust the x multiplier
+                    changeXMultiplier = (changeXMultiplier - .5f) * 2;
+                }
+
+                if(heightMultiplier != 0)
+                {
+                    changeYMultiplier = (changeYMultiplier - .5f) * 2;
+                }
+
+                heightMultiplier *= 2;
+                widthMultiplier *= 2;
+            }
         }
 
         private static float GetRatioXOverInSelection(IPositionedSizedObject ipso, HorizontalAlignment horizontalAlignment)
         {
-
-            //float handleLeft = SelectionManager.Self.ResizeHandles.X;
-            //float handleWidth = SelectionManager.Self.ResizeHandles.Width;
-
-            //float ipsoXToUse = ipso.GetAbsoluteX();
-
-            //if (horizontalAlignment == HorizontalAlignment.Center)
-            //{
-            //    ipsoXToUse += ipso.Width / 2.0f;
-            //}
-            //else if (horizontalAlignment == HorizontalAlignment.Right)
-            //{
-            //    ipsoXToUse += ipso.Width;
-            //}
-
-            //return (ipsoXToUse - handleLeft) / handleWidth;
-            // Isn't this easier?
             if (horizontalAlignment == HorizontalAlignment.Left)
             {
                 return 0;
@@ -865,7 +881,10 @@ namespace Gum.Wireframe
                 HorizontalAlignment xOrigin = (HorizontalAlignment)xOriginAsObject;
 
                 float ratioOver = GetRatioXOverInSelection(ipso, xOrigin);
-                return 1 - ratioOver;
+                float toReturn = 1 - ratioOver;
+
+
+                return toReturn;
             }
             else
             {
@@ -884,7 +903,11 @@ namespace Gum.Wireframe
                 VerticalAlignment yOrigin = (VerticalAlignment)yOriginAsObject;
 
                 float ratioOver = GetRatioYDownInSelection(ipso, yOrigin);
-                return 1 - ratioOver;
+                float toReturn = 1 - ratioOver;
+
+
+
+                return toReturn;
             }
             else
             {
@@ -902,7 +925,9 @@ namespace Gum.Wireframe
 
                 float ratioOver = GetRatioYDownInSelection(ipso, yOrigin);
 
-                return 0 + ratioOver;
+                var toReturn = 0 + ratioOver;
+
+                return toReturn;
             }
             else
             {
@@ -921,7 +946,14 @@ namespace Gum.Wireframe
                 HorizontalAlignment xOrigin = (HorizontalAlignment)xOriginAsObject;
                 float ratioOver = GetRatioXOverInSelection(ipso, xOrigin);
 
-                return 0 + ratioOver;
+                var toReturn = 0 + ratioOver;
+
+                if(GetIsShiftDown())
+                {
+                    toReturn = (toReturn - .5f) * 2;
+                }
+
+                return toReturn;
             }
             else
             {
