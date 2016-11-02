@@ -26,7 +26,7 @@ namespace ToolsUtilities
         #region Fields
 
         static string mRelativeDirectory =
-#if WINDOWS_8
+#if WINDOWS_8 || UWP
             "./";
 #else
             Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location).ToLower().Replace("/", "\\") + "\\";
@@ -93,7 +93,7 @@ namespace ToolsUtilities
         {
             if (!ignoreExtensions)
             {
-#if ANDROID || IOS || WINDOWS_8
+#if ANDROID || IOS || WINDOWS_8 
 				try
                 {
 					fileName = Standardize(fileName);
@@ -116,7 +116,7 @@ namespace ToolsUtilities
             }
             else
             {
-#if WINDOWS_8
+#if WINDOWS_8 || UWP
                 throw new NotImplementedException();
 #else
                 fileName = Standardize(fileName);
@@ -145,7 +145,7 @@ namespace ToolsUtilities
 
         public static string FromFileText(string fileName)
         {
-#if WINDOWS_8
+#if WINDOWS_8 || UWP
             return FromFileText(fileName, Encoding.UTF8);
 
 #else
@@ -188,7 +188,7 @@ namespace ToolsUtilities
                 using (System.IO.StreamReader sr = new StreamReader(fileStream, encoding))
                 {
                     containedText = sr.ReadToEnd();
-#if !WINDOWS_8
+#if !WINDOWS_8 && !UWP
                     sr.Close();
 #endif
                 }
@@ -635,7 +635,7 @@ namespace ToolsUtilities
                     throw new IOException("Could not deserialize the XML file"
                         + Environment.NewLine + fileName, e);
                 }
-#if !WINDOWS_8
+#if !WINDOWS_8 && !UWP
                 stream.Close();
 #endif
             }
@@ -740,7 +740,7 @@ namespace ToolsUtilities
     // Stuff that only works on desktop (and not Windows RT)
     public static partial class FileManager
     {
-#if !WINDOWS_8
+#if !WINDOWS_8  && !UWP
         public static void CopyFilesRecursively(string source, string target)
         {
             DirectoryInfo sourceDirectory = new DirectoryInfo(source);

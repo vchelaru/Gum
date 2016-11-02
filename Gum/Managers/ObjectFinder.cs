@@ -44,7 +44,7 @@ namespace Gum.Managers
                 {
                     // Since the screen name may come from a file we want to ignore case:
                     //if (screenSave.Name == screenName)
-                    if (screenSave.Name.Equals(screenName, StringComparison.InvariantCultureIgnoreCase))
+                    if (screenSave.Name.Equals(screenName, StringComparison.OrdinalIgnoreCase))
                     {
                         return screenSave;
                     }
@@ -66,7 +66,7 @@ namespace Gum.Managers
                     // Since the component name may come from a file name we want
                     // to ignore case:
                     //if (componentSave.Name == componentName)
-                    if (componentSave.Name.Equals(componentName, StringComparison.InvariantCultureIgnoreCase))
+                    if (componentSave.Name.Equals(componentName, StringComparison.OrdinalIgnoreCase))
                     {
                         return componentSave;
                     }

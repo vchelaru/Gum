@@ -11,6 +11,7 @@ using GumDataTypes.Variables;
 using Microsoft.Xna.Framework;
 using RenderingLibrary.Math.Geometry;
 using Gum.RenderingLibrary;
+using System.Reflection;
 
 namespace Gum.Wireframe
 {

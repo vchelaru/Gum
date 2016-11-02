@@ -12,14 +12,19 @@ namespace Gum.DataTypes.Variables
     {
         #region Properties
 
+#if !UWP
         [Browsable(false)]
+#endif
         public string Name
         {
             get;
             set;
         }
 
+#if !UWP
+
         [Browsable(false)]
+#endif
         [XmlElement("Variable")]
         public List<VariableSave> Variables
         {
@@ -27,7 +32,9 @@ namespace Gum.DataTypes.Variables
             set;
         }
 
+#if !UWP
         [Browsable(false)]
+#endif
         [XmlElement("VariableList")]
         public List<VariableListSave> VariableLists
         {
@@ -35,7 +42,9 @@ namespace Gum.DataTypes.Variables
             set;
         }
 
+#if !UWP
         [Browsable(false)]
+#endif
         [XmlIgnore]
         public ElementSave ParentContainer
         {

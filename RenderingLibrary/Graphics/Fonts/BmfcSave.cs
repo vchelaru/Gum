@@ -16,7 +16,7 @@ namespace RenderingLibrary.Graphics.Fonts
 
         public void Save(string fileName)
         {
-#if WINDOWS_8
+#if WINDOWS_8 || UWP
             throw new NotImplementedException();
 #else
             var assembly2 = Assembly.GetEntryAssembly();
@@ -80,7 +80,7 @@ namespace RenderingLibrary.Graphics.Fonts
 
 
         // tool-necessary implementations
-#if !WINDOWS_8
+#if !WINDOWS_8 && !UWP
         public static void CreateBitmapFontFilesIfNecessary(int fontSize, string fontName, int outline)
         {
             BmfcSave bmfcSave = new BmfcSave();

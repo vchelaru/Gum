@@ -303,7 +303,7 @@ namespace Gum.DataTypes
 
         }
 
-#if !WINDOWS_8
+#if !WINDOWS_8 && !UWP
         public void Save(string fileName, bool saveElements)
         {
             FileManager.XmlSerialize(this, fileName);
@@ -350,7 +350,9 @@ namespace Gum.DataTypes
                     catch (Exception e)
                     {
                         exception = e;
+#if !WINDOWS8 && !UWP
                         System.Threading.Thread.Sleep(msBetweenSaves);
+#endif
                         numberOfTimesTried++;
                     }
                 }

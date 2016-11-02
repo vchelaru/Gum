@@ -58,7 +58,7 @@ namespace RenderingLibrary
         {
             get
             {
-#if WINDOWS_8
+#if WINDOWS_8 || UWP
                 int threadId = Environment.CurrentManagedThreadId;
 #else
                 int threadId = System.Threading.Thread.CurrentThread.ManagedThreadId;
@@ -92,7 +92,7 @@ namespace RenderingLibrary
 
         public void Initialize(GraphicsDevice graphicsDevice)
         {
-#if WINDOWS_8
+#if WINDOWS_8 || UWP
             mPrimaryThreadId = Environment.CurrentManagedThreadId;
 #else
             mPrimaryThreadId = System.Threading.Thread.CurrentThread.ManagedThreadId;
@@ -116,7 +116,7 @@ namespace RenderingLibrary
         {
             SystemManagers systemManagers = new SystemManagers();
 
-#if WINDOWS_8
+#if WINDOWS_8 || UWP
             systemManagers.mPrimaryThreadId = Environment.CurrentManagedThreadId;
 #else
             systemManagers.mPrimaryThreadId = System.Threading.Thread.CurrentThread.ManagedThreadId;

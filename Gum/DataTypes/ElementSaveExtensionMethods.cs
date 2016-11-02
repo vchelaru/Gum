@@ -132,7 +132,7 @@ namespace Gum.DataTypes
                         // editor so we don't want to mark the object as modified
                         // when these properties are set.
                         existingVariable.Category = variableSave.Category;
-#if !WINDOWS_8
+#if !WINDOWS_8 && !UWP
                         existingVariable.CustomTypeConverter = variableSave.CustomTypeConverter;
 #endif
                         existingVariable.ExcludedValuesForEnum.Clear();
