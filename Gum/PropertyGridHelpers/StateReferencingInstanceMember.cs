@@ -133,7 +133,7 @@ namespace Gum.PropertyGridHelpers
         {
             get
             {
-                if(CustomOptions.Count != 0)
+                if(CustomOptions != null && CustomOptions.Count != 0)
                 {
                     return typeof(WpfDataUi.Controls.ComboBoxDisplay);
                 }

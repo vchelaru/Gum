@@ -20,6 +20,9 @@ namespace WpfDataUi.Controls
         public InstanceMember InstanceMember { get; set; }
         public Type InstancePropertyType { get; set; }
 
+        public decimal? MinValue { get; set; }
+        public decimal? MaxValue { get; set; }
+
         public TextBoxDisplayLogic(IDataUi container, TextBox textBox)
         {
             mAssociatedTextBox = textBox;
@@ -34,11 +37,36 @@ namespace WpfDataUi.Controls
             HasUserChangedAnything = true;
         }
 
+        public void ClampTextBoxValuesToMinMax()
+        {
+            bool shouldClamp = MinValue.HasValue || MaxValue.HasValue;
+
+            if(shouldClamp)
+            {
+                decimal parsedDecimal;
+
+                if(decimal.TryParse(mAssociatedTextBox.Text, out parsedDecimal))
+                {
+                    if (MinValue.HasValue && parsedDecimal < MinValue)
+                    {
+                        mAssociatedTextBox.Text = MinValue.ToString();
+                    }
+                    if(MaxValue.HasValue && parsedDecimal > MaxValue)
+                    {
+                        mAssociatedTextBox.Text = MaxValue.ToString();
+                    }
+                }
+            }
+        }
+
         private void HandlePreviewKeydown(object sender, System.Windows.Input.KeyEventArgs e)
         {
             if (e.Key == Key.Enter)
             {
                 e.Handled = true;
+
+                ClampTextBoxValuesToMinMax();
+
                 var result = TryApplyToInstance();
 
                 TextAtStartOfEditing = mAssociatedTextBox.Text;
@@ -120,6 +148,58 @@ namespace WpfDataUi.Controls
             
         }
 
+        public string ConvertNumberToString(object value)
+        {
+            string text = value.ToString();
+
+            if(value is float)
+            {
+
+                // I came to this method through a lot of trial and error.
+                // Initially I just used ToString, but that introduces exponential
+                // notation, which is confusing and weird for tools to display.
+                // I then tried ToString("f0"), which gets rid of exponents, but also
+                // truncates at 0 decimals.
+                // So I did ToString("#.##############") which will display as many decimals
+                // as it can, but this takes numbers like 21.2 and instead shows 21.199997
+                // or something. I really want ToString to do ToString unless there is an exponent, and if so
+                // then let's fall back to a version that does not show exponents. Which we do depends on if
+                // the shown exponent is positive (really large number, abs greater than 1) or really small
+                float floatValue = (float)value;
+                text = floatValue.ToString();
+                if (text.Contains("E"))
+                {
+                    if (Math.Abs(floatValue) > 1)
+                    {
+                        // truncating decimals:
+                        text = (floatValue).ToString("f0");
+                    }
+                    else
+                    {
+                        text = (floatValue).ToString("0.################################");
+                    }
+                }
+            }
+            if(value is double)
+            {
+                double doubleValue = (double)value;
+                text = doubleValue.ToString();
+                if (text.Contains("e"))
+                {
+                    if (Math.Abs(doubleValue) > 1)
+                    {
+                        // truncating decimals:
+                        text = (doubleValue).ToString("f0");
+                    }
+                    else
+                    {
+                        text = (doubleValue).ToString("#.################################");
+                    }
+                }
+            }
+
+            return text;
+        }
 
         private bool GetIfConverterCanConvert(TypeConverter converter)
         {

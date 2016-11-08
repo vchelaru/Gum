@@ -118,7 +118,7 @@ namespace WpfDataUi
                 }
             }
 
-            if(controlToAdd == null && instanceMember.CustomOptions.Count != 0)
+            if(controlToAdd == null && instanceMember.CustomOptions != null && instanceMember.CustomOptions.Count != 0)
             {
                 controlToAdd = new ComboBoxDisplay();
             }
@@ -131,6 +131,8 @@ namespace WpfDataUi
 
             IDataUi display = (IDataUi)controlToAdd;
             display.InstanceMember = instanceMember;
+
+            instanceMember.CallUiCreated(controlToAdd);
 
             return controlToAdd;
         }

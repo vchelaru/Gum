@@ -87,6 +87,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Controls\SliderDisplay.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Controls\TextBoxDisplay.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -107,6 +111,9 @@
       <DependentUpon>CheckBoxDisplay.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\ComboBoxDisplay.xaml.cs">
+    </Compile>
+    <Compile Include="Controls\SliderDisplay.xaml.cs">
+      <DependentUpon>SliderDisplay.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\TextBoxDisplay.xaml.cs">
       <DependentUpon>TextBoxDisplay.xaml</DependentUpon>

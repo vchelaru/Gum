@@ -84,7 +84,10 @@ namespace WpfDataUi.Controls
             // If the user is editing a value, we don't want to change
             // the value under the cursor
             // If we're default, then go ahead and change the value
-            if (this.TextBox.IsFocused == false || forceRefreshEvenIfFocused || mTextBoxLogic.InstanceMember.IsDefault)
+            bool canRefresh =
+                this.TextBox.IsFocused == false || forceRefreshEvenIfFocused || mTextBoxLogic.InstanceMember.IsDefault;
+
+            if (canRefresh)
             {
                 SuppressSettingProperty = true;
 
@@ -99,7 +102,8 @@ namespace WpfDataUi.Controls
 
         public ApplyValueResult TrySetValueOnUi(object valueOnInstance)
         {
-            this.TextBox.Text = valueOnInstance.ToString();
+            this.TextBox.Text = mTextBoxLogic.ConvertNumberToString(valueOnInstance);
+
             return ApplyValueResult.Success;
         }
 
@@ -110,7 +114,7 @@ namespace WpfDataUi.Controls
 
         private void HandlePropertyChange(object sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == "Value")
+            if (e.PropertyName == nameof(InstanceMember.Value))
             {
                 this.Refresh();
 

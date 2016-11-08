@@ -27,3 +27,6 @@ ContentLibrary/bin/
 XnaAndWinforms/bin/
 CsvLibrary/bin/
 *.cache
+WpfDataUi/SampleProject/SampleProject/bin/Debug/WpfDataUi.pdb
+WpfDataUi/SampleProject/SampleProject/bin/
+WpfDataUi/SampleProject/SampleProject/obj/

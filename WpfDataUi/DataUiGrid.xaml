@@ -9,7 +9,7 @@
              d:DesignHeight="300" d:DesignWidth="300"
              >
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
         <ItemsControl Name="InternalControl" ItemsSource="{Binding Categories}">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
@@ -17,9 +17,10 @@
                     <Expander Header="{Binding Name}" Visibility="{Binding Visibility}" 
                               FontSize="{Binding FontSize}" 
                               IsExpanded="True" BorderBrush="DarkGray" Margin="1"
+                              
                               local:DataGridAttachedProperties.HideExpanderArrow="{Binding HideHeader}"
                               >
-                        <ItemsControl ItemsSource="{Binding Members}">
+                        <ItemsControl ItemsSource="{Binding Members}" Focusable="False">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <DataUi:SingleDataUiContainer FontSize="12" Margin="3,0,3,0" Background="{Binding BackgroundColor}"/>

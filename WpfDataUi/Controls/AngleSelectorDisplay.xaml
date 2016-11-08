@@ -42,7 +42,8 @@
 
         </Canvas>
         <Grid Grid.Column="2">
-            <TextBox x:Name="TextBox" MinWidth="50" Height="24" PreviewKeyDown="TextBox_PreviewKeyDown_1" 
+            <TextBox x:Name="TextBox" MinWidth="50" Height="24" 
+                     PreviewKeyDown="TextBox_PreviewKeyDown_1" 
                      LostFocus="TextBox_LostFocus_1"
                      Margin="0,0,13,0"
                      />

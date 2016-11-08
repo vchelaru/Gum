@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media;
 using WpfDataUi.EventArguments;
 
@@ -168,6 +169,7 @@ namespace WpfDataUi.DataTypes
 
         }
 
+
         public virtual bool IsReadOnly 
         {
             get
@@ -232,12 +234,20 @@ namespace WpfDataUi.DataTypes
             }
         }
 
-        List<object> backingList = new List<object>();
+        // Used to "new" this up, but doing so makes combo boxes
+        // have no options. If this is null, combo box displayers
+        // use the default full enum list.
+        //List<object> backingList = new List<object>();
+        IList<object> backingList;
         public virtual IList<object> CustomOptions
         {
             get
             {
                 return backingList;
+            }
+            set
+            {
+                backingList = value;
             }
         }
 
@@ -253,6 +263,8 @@ namespace WpfDataUi.DataTypes
         #region Events
         public EventHandler BeforeSetByUi;
         public EventHandler AfterSetByUi;
+
+        public event Action<UserControl> UiCreated;
 
         /// <summary>
         /// Action which is called whenever an error occurs when the user enters a value.
@@ -271,6 +283,9 @@ namespace WpfDataUi.DataTypes
         /// Allows the InstanceMenber to define its own custom logic for getting a value.
         /// This requires a CustomSetEvent to be functional.
         /// </summary>
+        /// <remarks>
+        /// The object passed in is the container of this member - which usually is the Instance of the DataGrid.
+        /// </remarks>
         public event Func<object, object> CustomGetEvent;
         public event Func<object, Type> CustomGetTypeEvent;
 
@@ -351,6 +366,11 @@ namespace WpfDataUi.DataTypes
                     dataUi.TrySetValueOnUi(args.OverridingValue);
                 }
             }
+        }
+
+        internal void CallUiCreated(UserControl control)
+        {
+            UiCreated?.Invoke(control);
         }
 
         #endregion

@@ -30,9 +30,11 @@ namespace WpfDataUi.Controls
     {
         #region Fields
         InstanceMember mInstanceMember;
+
+        TextBoxDisplayLogic mTextBoxLogic;
+
         float mAngle;
         #endregion
-
 
         #region Properties
 
@@ -83,6 +85,8 @@ namespace WpfDataUi.Controls
             }
             set
             {
+                mTextBoxLogic.InstanceMember = value;
+
                 bool valueChanged = mInstanceMember != value;
 
                 mInstanceMember = value;
@@ -118,24 +122,24 @@ namespace WpfDataUi.Controls
 
         #region Events
 
-
         public event PropertyChangedEventHandler PropertyChanged;
 
-
         #endregion
-
 
         #region Constructor
 
         public AngleSelectorDisplay()
         {
-
             TypeToPushToInstance = AngleType.Radians;
+
             InitializeComponent();
 
             Line.DataContext = this;
-        }
 
+            mTextBoxLogic = new TextBoxDisplayLogic(this, this.TextBox);
+
+            // do we have to refresh the context menu? We do in the TextBoxDisplay
+        }
 
         #endregion
 
@@ -155,7 +159,8 @@ namespace WpfDataUi.Controls
         {
             if (e.Key == Key.Enter)
             {
-                e.Handled = true;
+                // don't handle it, let the text box display logic handle it too:
+                //e.Handled = true;
                 ApplyTextBoxText();
                 //mTextAtStartOfEditing = TextBox.Text;
 
@@ -169,6 +174,10 @@ namespace WpfDataUi.Controls
             {
                 Angle = value;
             }
+
+            // This also applies to instance, but it stores
+            // the value in the text box logic so ESC works properly
+            mTextBoxLogic.TryApplyToInstance();
         }
 
         private void TextBox_LostFocus_1(object sender, RoutedEventArgs e)
