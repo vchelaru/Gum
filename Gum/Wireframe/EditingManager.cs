@@ -1043,9 +1043,13 @@ namespace Gum.Wireframe
             {
                 IRenderableIpso selectedIpso = SelectionManager.Self.SelectedIpso;
 
+                // absolute 0 used to mean using the parent's width/height, but not anymore, since we have a stanard size
                 if ((DimensionUnitType)unitsValue == DimensionUnitType.Absolute)
                 {
-
+                    // don't do anything anymore
+                }
+                if((DimensionUnitType)unitsValue == DimensionUnitType.RelativeToChildren)
+                {
                     if (baseVariableName == "Width")
                     {
                         currentValue = selectedIpso.Width;

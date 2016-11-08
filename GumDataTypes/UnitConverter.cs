@@ -224,6 +224,7 @@ namespace Gum.Converters
             switch (unitType)
             {
                 case DimensionUnitType.Absolute:
+                case DimensionUnitType.RelativeToChildren:
                     return GeneralUnitType.PixelsFromSmall;
                 case DimensionUnitType.Percentage:
                     return GeneralUnitType.Percentage;

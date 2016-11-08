@@ -113,11 +113,11 @@ namespace Gum.Wireframe
         {
             get
             {
-                if(mManagers != null)
+                if (mManagers != null)
                 {
                     return mManagers;
                 }
-                else 
+                else
                 {
                     return this.ParentGue?.EffectiveManagers;
                 }
@@ -287,7 +287,7 @@ namespace Gum.Wireframe
         {
             mContainedObjectAsIpso.Render(spriteRenderer, managers);
         }
-        
+
         /// <summary>
         /// Used for clipping.
         /// </summary>
@@ -872,7 +872,7 @@ namespace Gum.Wireframe
             {
                 throw new ArgumentException("The argument containedObject cannot be 'this'");
             }
-            
+
             mContainedObjectAsIpso = containedObject as IRenderableIpso;
             mContainedObjectAsIVisible = containedObject as IVisible;
 
@@ -901,8 +901,8 @@ namespace Gum.Wireframe
 
         bool IsAllLayoutAbsolute()
         {
-            return (mWidthUnit == DimensionUnitType.Absolute || mWidthUnit == DimensionUnitType.PercentageOfSourceFile) &&
-                (mHeightUnit == DimensionUnitType.Absolute || mHeightUnit == DimensionUnitType.PercentageOfSourceFile) &&
+            return (mWidthUnit == DimensionUnitType.Absolute || mWidthUnit == DimensionUnitType.PercentageOfSourceFile || mWidthUnit == DimensionUnitType.RelativeToChildren) &&
+                (mHeightUnit == DimensionUnitType.Absolute || mHeightUnit == DimensionUnitType.PercentageOfSourceFile || mHeightUnit == DimensionUnitType.RelativeToChildren) &&
                 (mXUnits == GeneralUnitType.PixelsFromLarge || mXUnits == GeneralUnitType.PixelsFromMiddle || mXUnits == GeneralUnitType.PixelsFromSmall || mXUnits == GeneralUnitType.PixelsFromMiddleInverted) &&
                 (mYUnits == GeneralUnitType.PixelsFromLarge || mYUnits == GeneralUnitType.PixelsFromMiddle || mYUnits == GeneralUnitType.PixelsFromSmall || mYUnits == GeneralUnitType.PixelsFromMiddleInverted);
 
@@ -1022,8 +1022,8 @@ namespace Gum.Wireframe
             // If this is a Screen, then it doesn't have a size. Screens cannot depend on children:
             bool isScreen = ElementSave != null && ElementSave is ScreenSave;
             return !isScreen &&
-                ((this.WidthUnits == DimensionUnitType.Absolute && this.mWidth == 0) ||
-                (this.HeightUnits == DimensionUnitType.Absolute && this.mHeight == 0));
+                ((this.WidthUnits == DimensionUnitType.RelativeToChildren) ||
+                (this.HeightUnits == DimensionUnitType.RelativeToChildren));
         }
 
         public void UpdateLayout(bool updateParent, bool updateChildren)
@@ -1782,7 +1782,7 @@ namespace Gum.Wireframe
         {
             float heightToSet = mHeight;
 
-            if (mHeightUnit == DimensionUnitType.Absolute && heightToSet == 0)
+            if (mHeightUnit == DimensionUnitType.RelativeToChildren)
             {
                 float maxHeight = 0;
                 foreach (var element in this.mWhatThisContains)
@@ -1794,7 +1794,7 @@ namespace Gum.Wireframe
                     }
                 }
 
-                heightToSet = maxHeight;
+                heightToSet = maxHeight + mHeight;
             }
             else if (mHeightUnit == DimensionUnitType.Percentage)
             {
@@ -1848,7 +1848,7 @@ namespace Gum.Wireframe
         {
             float widthToSet = mWidth;
 
-            if (mWidthUnit == DimensionUnitType.Absolute && widthToSet == 0)
+            if (mWidthUnit == DimensionUnitType.RelativeToChildren)
             {
                 float maxWidth = 0;
                 foreach (var element in this.mWhatThisContains)
@@ -1860,7 +1860,7 @@ namespace Gum.Wireframe
                     }
                 }
 
-                widthToSet = maxWidth;
+                widthToSet = maxWidth + mWidth;
             }
             else if (mWidthUnit == DimensionUnitType.Percentage)
             {
