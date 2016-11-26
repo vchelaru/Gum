@@ -25,16 +25,30 @@ namespace Gum.PropertyGridHelpers.Excluders
 
             bool shouldExclude = false;
 
+            string nameOfInstanceOwningVariable = variable.SourceObject;
+
+            // Victor Chelaru November 26, 2016
+            // We need to consider the owner of
+            // the variable (the SourceObject) because
+            // if this is an exposed variable, we don't
+            // want to check the Texture Address of the container
+            // if the variable is exposing a child.
+            string prefix = "";
+            if(!string.IsNullOrEmpty(nameOfInstanceOwningVariable))
+            {
+                prefix = nameOfInstanceOwningVariable + ".";
+            }
+
             if (rootName == "Texture Top" || rootName == "Texture Left")
             {
-                var addressMode = rvf.GetValue<TextureAddress>("Texture Address");
+                var addressMode = rvf.GetValue<TextureAddress>($"{prefix}Texture Address");
 
                 shouldExclude = addressMode == TextureAddress.EntireTexture;
             }
 
             if (rootName == "Texture Width" || rootName == "Texture Height")
             {
-                var addressMode = rvf.GetValue<TextureAddress>("Texture Address");
+                var addressMode = rvf.GetValue<TextureAddress>($"{prefix}Texture Address");
 
                 shouldExclude = addressMode == TextureAddress.EntireTexture ||
                     addressMode == TextureAddress.DimensionsBased;
@@ -42,7 +56,7 @@ namespace Gum.PropertyGridHelpers.Excluders
 
             if (rootName == "Texture Width Scale" || rootName == "Texture Height Scale")
             {
-                var addressMode = rvf.GetValue<TextureAddress>("Texture Address");
+                var addressMode = rvf.GetValue<TextureAddress>($"{prefix}Texture Address");
 
                 shouldExclude = addressMode == TextureAddress.EntireTexture ||
                     addressMode == TextureAddress.Custom;

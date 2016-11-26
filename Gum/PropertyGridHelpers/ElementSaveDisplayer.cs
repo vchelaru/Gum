@@ -32,9 +32,9 @@ namespace Gum.PropertyGridHelpers
 
         #endregion
 
-
         public override System.ComponentModel.PropertyDescriptorCollection GetProperties(Attribute[] attributes)
         {
+            // search terms: display properties, display variables, show variables, variable display, variable displayer
             PropertyDescriptorCollection pdc =
                 TypeDescriptor.GetProperties(this, true);
 
@@ -106,7 +106,8 @@ namespace Gum.PropertyGridHelpers
             // if component
             if (instanceSave == null && elementSave as ComponentSave != null)
             {
-                foreach(var item in StandardElementsManager.Self.GetDefaultStateFor("Component").Variables)
+                var variables = StandardElementsManager.Self.GetDefaultStateFor("Component").Variables;
+                foreach (var item in variables)
                 {
 
                     pdc = TryDisplayVariableSave(pdc, elementSave, instanceSave, amountToDisplay, null, item);

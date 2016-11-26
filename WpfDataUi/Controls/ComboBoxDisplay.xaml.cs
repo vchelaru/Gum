@@ -232,10 +232,10 @@ namespace WpfDataUi.Controls
                 }
 
             }
-            else
-            {
-                throw new NotImplementedException();
-            }
+            //else
+            //{
+            //    throw new NotImplementedException();
+            //}
             this.SuppressSettingProperty = false;
         }
 
