@@ -118,6 +118,17 @@ namespace Gum.Managers
             {
                 whyNotValid = "The name can't contain invalid character " + name[name.IndexOfAny(InvalidCharacters)];
             }
+
+            if(string.IsNullOrEmpty(whyNotValid) && name.StartsWith(" "))
+            {
+                whyNotValid = "The name can't begin with a space";
+            }
+
+
+            if (string.IsNullOrEmpty(whyNotValid) && name.EndsWith(" "))
+            {
+                whyNotValid = "The name can't end with a space";
+            }
         }
 
         private void IsNameAlreadyUsed(string name, object objectToIgnore, ElementSave elementSave, out string whyNotValid)
