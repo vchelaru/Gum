@@ -68,6 +68,35 @@ namespace Gum.Converters
             get { return mSelf; }
         }
 
+        public float ConvertXPosition(float xToConvert, GeneralUnitType fromUnit, GeneralUnitType toUnit, float parentWidth)
+        {
+            float throwaway = 0;
+            float pixelX;
+
+            // convert from whatever unit to pixel:
+            ConvertToPixelCoordinates(xToConvert, 0, fromUnit, GeneralUnitType.PixelsFromLarge, parentWidth, 0, 0, 0, out pixelX, out throwaway);
+
+            float convertedX;
+            // now from pixel back to whatever unit type:
+            ConvertToUnitTypeCoordinates(pixelX, 0, toUnit, GeneralUnitType.PixelsFromLarge, parentWidth, 0, 0, 0, out convertedX, out throwaway);
+
+            return convertedX;
+        }
+
+        public float ConvertYPosition(float yToConvert, GeneralUnitType fromUnit, GeneralUnitType toUnit, float parentHeight)
+        {
+            float throwaway = 0;
+            float pixelY;
+
+            // convert from whatever unit to pixel:
+            ConvertToPixelCoordinates(0, yToConvert, GeneralUnitType.PixelsFromLarge, fromUnit, 0, parentHeight, 0, 0, out throwaway, out pixelY);
+
+            float convertedY;
+            // now from pixel back to whatever unit type:
+            ConvertToUnitTypeCoordinates(0, pixelY, GeneralUnitType.PixelsFromLarge, toUnit, 0, parentHeight, 0, 0, out throwaway, out convertedY);
+
+            return convertedY;
+        }
 
         public void ConvertToPixelCoordinates(float relativeX, float relativeY, GeneralUnitType generalX, GeneralUnitType generalY, float parentWidth, float parentHeight, 
             float fileWidth, float fileHeight, out float absoluteX, out float absoluteY)

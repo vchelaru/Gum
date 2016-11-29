@@ -18,6 +18,7 @@ using Gum.ToolCommands;
 using RenderingLibrary.Graphics;
 using Gum.PropertyGridHelpers;
 using System.Drawing;
+using Gum.Converters;
 
 namespace Gum.Managers
 {
@@ -470,18 +471,45 @@ namespace Gum.Managers
 
         private static void SetInstanceToPosition(float worldX, float worldY, InstanceSave instance)
         {
-            float parentX = 0;
-            float parentY = 0;
-            if (SelectedState.Self.SelectedComponent != null)
+            var component = SelectedState.Self.SelectedComponent;
+
+            float xToSet = worldX;
+            float yToSet = worldY;
+
+            float containerLeft = 0;
+            float containerTop = 0;
+
+            float containerWidth = ProjectState.Self.GumProjectSave.DefaultCanvasWidth;
+            float containerHeight = ProjectState.Self.GumProjectSave.DefaultCanvasHeight;
+
+            if (component != null)
             {
-                parentX = (float)SelectedState.Self.SelectedStateSave.GetValueRecursive("X");
-                parentY = (float)SelectedState.Self.SelectedStateSave.GetValueRecursive("Y");
+                var runtime = Wireframe.WireframeObjectManager.Self.GetRepresentation(component);
+                containerLeft = runtime.GetAbsoluteLeft();
+                containerTop = runtime.GetAbsoluteTop();
+
+                containerWidth = runtime.Width;
+                containerHeight = runtime.Height;
+                
+            }
+            else
+            {
+                // leave default
             }
 
-            // This thing may be left or center aligned so we should account for that
+            var differenceX = worldX - containerLeft;
+            var instanceXUnits = (PositionUnitType)SelectedState.Self.SelectedStateSave.GetValueRecursive($"{instance.Name}.X Units");
+            var asGeneralXUnitType = UnitConverter.ConvertToGeneralUnit(instanceXUnits);
+            xToSet = UnitConverter.Self.ConvertXPosition(differenceX, GeneralUnitType.PixelsFromSmall, asGeneralXUnitType, containerWidth);
 
-            SelectedState.Self.SelectedStateSave.SetValue(instance.Name + ".X", worldX - parentX);
-            SelectedState.Self.SelectedStateSave.SetValue(instance.Name + ".Y", worldY - parentY);
+            var differenceY = worldY - containerTop;
+            var instanceYUnits = (PositionUnitType)SelectedState.Self.SelectedStateSave.GetValueRecursive($"{instance.Name}.Y Units");
+            var asGeneralYUnitType = UnitConverter.ConvertToGeneralUnit(instanceYUnits);
+            yToSet = UnitConverter.Self.ConvertYPosition(differenceY, GeneralUnitType.PixelsFromSmall, asGeneralYUnitType, containerHeight);
+
+
+            SelectedState.Self.SelectedStateSave.SetValue(instance.Name + ".X", xToSet);
+            SelectedState.Self.SelectedStateSave.SetValue(instance.Name + ".Y", yToSet);
         }
     }
 }
