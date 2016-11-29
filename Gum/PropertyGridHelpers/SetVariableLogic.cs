@@ -105,7 +105,7 @@ namespace Gum.PropertyGridHelpers
 
             ReactIfChangedMemberIsTextureAddress(parentElement, changedMember, oldValue);
 
-            ReactIfChangedMemberIsParent(parentElement, changedMember, oldValue);
+            ReactIfChangedMemberIsParent(parentElement, instance, changedMember, oldValue);
 
             PluginManager.Self.VariableSet(parentElement, instance, changedMember, oldValue);
         }
@@ -359,8 +359,10 @@ namespace Gum.PropertyGridHelpers
             }
         }
 
-        private void ReactIfChangedMemberIsParent(ElementSave parentElement, string changedMember, object oldValue)
+        private void ReactIfChangedMemberIsParent(ElementSave parentElement, InstanceSave instance, string changedMember, object oldValue)
         {
+            bool isValidAssignment = true;
+
             VariableSave variable = SelectedState.Self.SelectedVariableSave;
             // Eventually need to handle tunneled variables
             if (variable != null && changedMember == "Parent")
@@ -370,8 +372,64 @@ namespace Gum.PropertyGridHelpers
                     variable.Value = null;
                 }
 
-                GumCommands.Self.GuiCommands.RefreshElementTreeView(parentElement);
+                if(variable.Value != null)
+                {
+                    var newParent = parentElement.Instances.FirstOrDefault(item => item.Name == variable.Value as string);
+                    var newValue = variable.Value;
+                    // unset it before finding recursive children, in case there is a circular reference:
+                    variable.Value = null;
+                    var childrenInstances = GetRecursiveChildrenOf(parentElement, instance);
+
+                    if(childrenInstances.Contains(newParent))
+                    {
+                        // uh oh, circular referenced detected, don't allow it!
+                        MessageBox.Show("This parent assignment would produce a circular reference, which is not allowed.");
+                        variable.Value = oldValue;
+                        isValidAssignment = false;
+                    }
+                    else
+                    {
+                        // set it back:
+                        variable.Value = newValue;
+                    }
+                }
+
+                if(isValidAssignment)
+                {
+                    GumCommands.Self.GuiCommands.RefreshElementTreeView(parentElement);
+                }
+                else
+                {
+                    GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);
+                }
             }
+        }
+
+        private List<InstanceSave> GetRecursiveChildrenOf(ElementSave parent, InstanceSave instance)
+        {
+            var defaultState = parent.DefaultState;
+            List<InstanceSave> toReturn = new List<InstanceSave>();
+            List<InstanceSave> directChildren = new List<InstanceSave>();
+            foreach(var potentialChild in parent.Instances)
+            {
+                var foundParentVariable = defaultState.Variables
+                    .FirstOrDefault(item => item.Name == $"{potentialChild.Name}.Parent" && item.Value as string == instance.Name);
+
+                if(foundParentVariable != null)
+                {
+                    directChildren.Add(potentialChild);
+                }
+            }
+
+            toReturn.AddRange(directChildren);
+
+            foreach(var child in directChildren)
+            {
+                var childrenOfChild = GetRecursiveChildrenOf(parent, child);
+                toReturn.AddRange(childrenOfChild);
+            }
+
+            return toReturn;
         }
 
         private void ReactIfChangedMemberIsTextureAddress(ElementSave parentElement, string changedMember, object oldValue)
