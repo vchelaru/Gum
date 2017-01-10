@@ -833,8 +833,8 @@ namespace RenderingLibrary.Graphics
                     mBitmapFont.GetRequiredWithAndHeight(lines, out requiredWidth, out requiredHeight);
                 }
 
-                mPreRenderWidth = requiredWidth;
-                mPreRenderHeight = requiredHeight;
+                mPreRenderWidth = (int)(requiredWidth * FontScale + .5f);
+                mPreRenderHeight = (int)(requiredHeight * FontScale + .5f);
             }
         }
         #endregion

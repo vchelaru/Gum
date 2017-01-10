@@ -892,7 +892,10 @@ namespace Gum.Wireframe
                 }
             }
 
-            UpdateLayout();
+            if (containedObject != null)
+            {
+                UpdateLayout();
+            }
         }
 
         #endregion
@@ -1188,7 +1191,15 @@ namespace Gum.Wireframe
                         {
                             foreach (var child in this.mWhatThisContains)
                             {
-                                child.UpdateLayout(false, childrenUpdateDepth - 1);
+                                // Victor Chelaru
+                                // January 10, 2017
+                                // I think we may not want to update any children which
+                                // have parents, because they'll get updated through their
+                                // parents...
+                                if(child.Parent == null || child.Parent == this)
+                                {
+                                    child.UpdateLayout(false, childrenUpdateDepth - 1);
+                                }
                             }
                         }
                         else

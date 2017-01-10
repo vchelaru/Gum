@@ -30,30 +30,71 @@ namespace RenderingLibrary
 
         public float AbsoluteTop
         {
-            get { return Y - (ClientHeight / 2.0f) / Zoom; }
+            get
+            {
+                if(this.CameraCenterOnScreen == CameraCenterOnScreen.Center)
+                {
+                    return Y - (ClientHeight / 2.0f) / Zoom;
+                }
+                else
+                {
+                    return Y;
+                }
+            }
             set
             {
-                Y = value + (ClientHeight / 2.0f) / Zoom;
+                if(this.CameraCenterOnScreen == CameraCenterOnScreen.Center)
+                {
+                    Y = value + (ClientHeight / 2.0f) / Zoom;
+                }
+                else
+                {
+                    Y = value;
+                }
             }
         }
 
         public float AbsoluteBottom
         {
-            get { return Y + (ClientHeight / 2.0f) / Zoom; }
+            get
+            {
+                return AbsoluteTop + ClientHeight / Zoom;
+            }
         }
 
         public float AbsoluteLeft
         {
-            get { return X - (ClientWidth / 2.0f) / Zoom; }
+            get
+            {
+                if(this.CameraCenterOnScreen == CameraCenterOnScreen.Center)
+                {
+                    return X - (ClientWidth / 2.0f) / Zoom;
+                }
+                else
+                {
+                    return X;
+                }
+            }
             set
             {
-                X = value + (ClientWidth / 2.0f) / Zoom;
+                if(this.CameraCenterOnScreen == CameraCenterOnScreen.Center)
+                {
+                    X = value + (ClientWidth / 2.0f) / Zoom;
+                }
+                else
+                {
+                    X = value;
+                }
             }
         }
 
         public float AbsoluteRight
         {
-            get { return X + (ClientWidth / 2.0f) / Zoom; }
+            get
+            {
+
+                return AbsoluteLeft + ClientWidth / Zoom;
+            }
         }
 
 
