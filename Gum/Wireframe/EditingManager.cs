@@ -892,8 +892,6 @@ namespace Gum.Wireframe
             }
         }
 
-
-
         private float GetYMultiplierForTop(InstanceSave instanceSave, IPositionedSizedObject ipso)
         {
             object yOriginAsObject = GetCurrentValueForVariable("Y Origin", instanceSave);
@@ -947,11 +945,6 @@ namespace Gum.Wireframe
                 float ratioOver = GetRatioXOverInSelection(ipso, xOrigin);
 
                 var toReturn = 0 + ratioOver;
-
-                if(GetIsShiftDown())
-                {
-                    toReturn = (toReturn - .5f) * 2;
-                }
 
                 return toReturn;
             }
