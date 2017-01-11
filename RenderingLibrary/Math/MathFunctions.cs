@@ -83,5 +83,22 @@ namespace RenderingLibrary.Math
         {
             return ((int)(System.Math.Sign(valueToRound) * .5f + valueToRound / multipleOf)) * multipleOf;
         }
+
+        public static void RotateVector(ref Vector2 vector2, float radians)
+        {
+            if(vector2.X == 0 && vector2.Y == 0)
+            {
+                // do nothing
+            }
+            else
+            {
+                var angle = System.Math.Atan2(vector2.Y, vector2.X);
+                var length = vector2.Length();
+                angle += radians;
+
+                vector2.X = length * (float)System.Math.Cos(angle);
+                vector2.Y = length * (float)System.Math.Sin(angle);
+            }
+        }
     }
 }

@@ -123,7 +123,17 @@ namespace RenderingLibrary
 
         }
 
-
+        public static float GetAbsoluteRotation(this IRenderableIpso ipso)
+        {
+            if(ipso.Parent == null)
+            {
+                return ipso.Rotation;
+            }
+            else
+            {
+                return ipso.Rotation + ipso.Parent.GetAbsoluteRotation();
+            }
+        }
 
         //public static void (this IPositionedSizedObject instance, IPositionedSizedObject newParent)
         //{

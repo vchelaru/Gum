@@ -15,6 +15,7 @@ using Gum.Events;
 using Gum.Input;
 using Gum.RenderingLibrary;
 using RenderingLibrary.Math;
+using Microsoft.Xna.Framework;
 
 namespace Gum.Wireframe
 {
@@ -591,30 +592,55 @@ namespace Gum.Wireframe
 
             bool hasChangeOccurred = false;
 
-            if (changeXMultiplier != 0 && cursorXChange != 0)
+            Vector2 reposition = new Vector2(cursorXChange * changeXMultiplier,-cursorYChange * changeYMultiplier);
+            // invert Y so up is positive
+            reposition.Y *= -1;
+
+            GraphicalUiElement representation = null;
+
+            if(instanceSave != null)
+            {
+                representation = WireframeObjectManager.Self.GetRepresentation(instanceSave);
+            }
+            else
+            {
+                representation = WireframeObjectManager.Self.GetRepresentation(elementStack.Last().Element);
+            }
+
+            float rotation = MathHelper.ToRadians(representation?.GetAbsoluteRotation() ?? 0);
+
+            MathFunctions.RotateVector(ref reposition, rotation);
+
+            // flip Y back
+            reposition.Y *= -1;
+
+            if (reposition.X != 0)
             {
                 hasChangeOccurred = true;
                 if (instanceSave != null)
                 {
-                    ModifyVariable("X", cursorXChange * changeXMultiplier, instanceSave);
+                    ModifyVariable("X", reposition.X, instanceSave);
                 }
                 else
                 {
-                    ModifyVariable("X", cursorXChange * changeXMultiplier, elementStack.Last().Element);
+                    ModifyVariable("X", reposition.X, elementStack.Last().Element);
                 }
             }
-            if (changeYMultiplier != 0 && cursorYChange != 0)
+            if (reposition.Y != 0)
             {
                 hasChangeOccurred = true;
                 if (instanceSave != null)
                 {
-                    ModifyVariable("Y", cursorYChange * changeYMultiplier, instanceSave);
+                    ModifyVariable("Y", reposition.Y, instanceSave);
                 }
                 else
                 {
-                    ModifyVariable("Y", cursorYChange * changeYMultiplier, elementStack.Last().Element);
+                    ModifyVariable("Y", reposition.Y, elementStack.Last().Element);
                 }
             }
+
+
+
             if (heightMultiplier != 0 && cursorYChange != 0)
             {
                 hasChangeOccurred = true;
