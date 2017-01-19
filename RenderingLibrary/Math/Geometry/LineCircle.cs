@@ -39,29 +39,9 @@ namespace RenderingLibrary.Math.Geometry
             set;
         }
 
-        public float X
-        {
-            get
-            {
-                return mLinePrimitive.Position.X;
-            }
-            set
-            {
-                mLinePrimitive.Position.X = value;
-            }
-        }
+        public float X { get; set; }
 
-        public float Y
-        {
-            get
-            {
-                return mLinePrimitive.Position.Y;
-            }
-            set
-            {
-                mLinePrimitive.Position.Y = value;
-            }
-        }
+        public float Y { get; set; }
 
         public float Z
         {
@@ -227,6 +207,8 @@ namespace RenderingLibrary.Math.Geometry
         {
             if (AbsoluteVisible)
             {
+                mLinePrimitive.Position.X = this.GetAbsoluteLeft();
+                mLinePrimitive.Position.Y = this.GetAbsoluteTop();
                 mLinePrimitive.Render(spriteRenderer, managers);
             }
         }

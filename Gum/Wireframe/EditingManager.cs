@@ -592,7 +592,7 @@ namespace Gum.Wireframe
 
             bool hasChangeOccurred = false;
 
-            Vector2 reposition = new Vector2(cursorXChange * changeXMultiplier,-cursorYChange * changeYMultiplier);
+            Vector2 reposition = new Vector2(cursorXChange * changeXMultiplier,cursorYChange * changeYMultiplier);
             // invert Y so up is positive
             reposition.Y *= -1;
 
