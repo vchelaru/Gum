@@ -1,4 +1,5 @@
-﻿using Gum.DataTypes.Variables;
+﻿using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using Gum.ToolStates;
 using RenderingLibrary;
 using RenderingLibrary.Content;
@@ -66,14 +67,14 @@ namespace Gum.Managers
             }
         }
 
-        internal void ReactToFontValueSet()
+        internal void ReactToFontValueSet(InstanceSave instance)
         {
             StateSave stateSave = SelectedState.Self.SelectedStateSave;
 
             string prefix = "";
-            if (SelectedState.Self.SelectedInstance != null)
+            if (instance != null)
             {
-                prefix = SelectedState.Self.SelectedInstance.Name + ".";
+                prefix = instance + ".";
             }
 
             object fontSizeAsObject = stateSave.GetValueRecursive(prefix + "FontSize");

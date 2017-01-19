@@ -33,16 +33,15 @@ namespace Gum.PropertyGridHelpers
 
         public void PropertyValueChanged(string changedMember, object oldValue, bool refresh = true)
         {
-            object selectedObject = SelectedState.Self.SelectedStateSave;
+            var selectedStateSave = SelectedState.Self.SelectedStateSave;
 
-            // We used to suppress
-            // saving - not sure why.
-            //bool saveProject = true;
+            ElementSave parentElement = null;
+            InstanceSave instance = null;
 
-            if (selectedObject is StateSave)
+            if (selectedStateSave != null)
             {
-                ElementSave parentElement = ((StateSave)selectedObject).ParentContainer;
-                InstanceSave instance = SelectedState.Self.SelectedInstance;
+                parentElement = selectedStateSave.ParentContainer;
+                instance = SelectedState.Self.SelectedInstance;
 
                 if (instance != null)
                 {
@@ -52,40 +51,34 @@ namespace Gum.PropertyGridHelpers
                 {
                     SelectedState.Self.SelectedVariableSave = SelectedState.Self.SelectedStateSave.GetVariableSave(changedMember);
                 }
-                // Why do we do this before reacting to names?  I think we want to do it after
-                //ElementTreeViewManager.Self.RefreshUI();
+            }
+            PropertyValueChanged(changedMember, oldValue, parentElement, instance, refresh);
+        }
+
+        public void PropertyValueChanged(string changedMember, object oldValue, ElementSave parentElement, InstanceSave instance, bool refresh)
+        {
+            if (parentElement != null)
+            {
+
                 ReactToChangedMember(changedMember, oldValue, parentElement, instance);
-
-
-
-                // This used to be above the React methods but
-                // we probably want to referesh the UI after everything
-                // else has changed, don't we?
-                // I think this code makes things REALLY slow - we only want to refresh one of the tree nodes:
-                //ElementTreeViewManager.Self.RefreshUI();
 
                 // Need to record undo before refreshing and reselecting the UI
                 Undo.UndoManager.Self.RecordUndo();
 
                 if (refresh)
                 {
-                    GumCommands.Self.GuiCommands.RefreshElementTreeView(SelectedState.Self.SelectedElement);
+                    GumCommands.Self.GuiCommands.RefreshElementTreeView(parentElement);
                 }
-            }
 
 
-            if (refresh)
-            {
-                // Save the change
-                if (SelectedState.Self.SelectedElement != null)
+                if (refresh)
                 {
                     GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+
+                    // Inefficient but let's do this for now - we can make it more efficient later
+                    WireframeObjectManager.Self.RefreshAll(true);
+                    SelectionManager.Self.Refresh();
                 }
-
-
-                // Inefficient but let's do this for now - we can make it more efficient later
-                WireframeObjectManager.Self.RefreshAll(true);
-                SelectionManager.Self.Refresh();
             }
         }
 
@@ -95,7 +88,7 @@ namespace Gum.PropertyGridHelpers
 
             ReactIfChangedMemberIsBaseType(parentElement, changedMember, oldValue);
 
-            ReactIfChangedMemberIsFont(parentElement, changedMember, oldValue);
+            ReactIfChangedMemberIsFont(parentElement, instance, changedMember, oldValue);
 
             ReactIfChangedMemberIsCustomFont(parentElement, changedMember, oldValue);
 
@@ -128,11 +121,11 @@ namespace Gum.PropertyGridHelpers
             }
         }
 
-        private void ReactIfChangedMemberIsFont(ElementSave parentElement, string changedMember, object oldValue)
+        private void ReactIfChangedMemberIsFont(ElementSave parentElement, InstanceSave instance, string changedMember, object oldValue)
         {
             if (changedMember == "Font" || changedMember == "FontSize")
             {
-                FontManager.Self.ReactToFontValueSet();
+                FontManager.Self.ReactToFontValueSet(instance);
             }
         }
 

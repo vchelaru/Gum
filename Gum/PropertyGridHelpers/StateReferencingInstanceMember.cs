@@ -388,7 +388,38 @@ namespace Gum.PropertyGridHelpers
 
                 mPropertyDescriptor.SetValue(instance, value);
 
-                SetVariableLogic.Self.PropertyValueChanged(RootVariableName, oldValue);
+                string name = RootVariableName;
+
+                bool handledByExposedVariable = false;
+
+                // This might be a tunneled variable, and we want to react to the 
+                // change using the underlying variable if so:
+                if(instance is ElementSave)
+                {
+                    var elementSave = instance as ElementSave;
+                    var variable = elementSave.DefaultState.Variables
+                        .FirstOrDefault(item => item.ExposedAsName == RootVariableName);
+                    if(variable != null)
+                    {
+                        var sourceObjectName = variable.SourceObject;
+
+                        name = variable.Name;
+                        var instanceInElement = elementSave.Instances
+                            .FirstOrDefault(item => item.Name == sourceObjectName);
+
+                        if(instanceInElement != null)
+                        {
+                            handledByExposedVariable = true;
+                            SetVariableLogic.Self.PropertyValueChanged(variable.GetRootName(), oldValue, elementSave, instanceInElement, true);
+                        }
+                        
+                    }
+                }
+
+                if(!handledByExposedVariable)
+                {
+                    SetVariableLogic.Self.PropertyValueChanged(name, oldValue);
+                }
             }
             else
             {

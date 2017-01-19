@@ -97,44 +97,49 @@ namespace Gum.Managers
 
                 if (draggedComponentOrElement is ElementSave)
                 {
-                    ElementSave draggedAsElementSave = draggedComponentOrElement as ElementSave;
-
-                    // User dragged an element save - so they want to take something like a
-                    // text object and make an instance in another element like a Screen
-                    bool handled;
-
-                    if (targetTag is ElementSave)
-                    {
-                        HandleDroppedElementInElement(draggedAsElementSave, targetTag as ElementSave, out handled);
-                    }
-                    else if (targetTag is InstanceSave)
-                    {
-                        // The user dropped it on an instance save, but he likely meant to drop
-                        // it as an object under the current element.
-
-                        InstanceSave targetInstance = targetTag as InstanceSave;
-
-
-                        HandleDroppedElementInElement(draggedAsElementSave, targetInstance.ParentContainer, out handled);
-                    }
-                    else if(treeNodeDroppedOn.IsTopComponentContainerTreeNode())
-                    {
-                        HandleDroppedElementOnTopComponentTreeNode(draggedAsElementSave, out handled);
-
-                    }
-                    else if(treeNodeDroppedOn.IsPartOfComponentsFolderStructure())
-                    {
-                        HandleDroppedElementOnFolder(draggedAsElementSave, treeNodeDroppedOn, out handled);
-                    }
-                    else
-                    {
-                        MessageBox.Show("You must drop " + draggedAsElementSave.Name + " on either a Screen or an Component");
-                    }
+                    HandleDroppedElementSave(draggedComponentOrElement, treeNodeDroppedOn, targetTag);
                 }
                 else if (draggedComponentOrElement is InstanceSave)
                 {
                     HandleDroppedInstance(draggedComponentOrElement, targetTag);
                 }
+            }
+        }
+
+        private void HandleDroppedElementSave(object draggedComponentOrElement, TreeNode treeNodeDroppedOn, object targetTag)
+        {
+            ElementSave draggedAsElementSave = draggedComponentOrElement as ElementSave;
+
+            // User dragged an element save - so they want to take something like a
+            // text object and make an instance in another element like a Screen
+            bool handled;
+
+            if (targetTag is ElementSave)
+            {
+                HandleDroppedElementInElement(draggedAsElementSave, targetTag as ElementSave, out handled);
+            }
+            else if (targetTag is InstanceSave)
+            {
+                // The user dropped it on an instance save, but he likely meant to drop
+                // it as an object under the current element.
+
+                InstanceSave targetInstance = targetTag as InstanceSave;
+
+
+                HandleDroppedElementInElement(draggedAsElementSave, targetInstance.ParentContainer, out handled);
+            }
+            else if (treeNodeDroppedOn.IsTopComponentContainerTreeNode())
+            {
+                HandleDroppedElementOnTopComponentTreeNode(draggedAsElementSave, out handled);
+
+            }
+            else if (treeNodeDroppedOn.IsPartOfComponentsFolderStructure())
+            {
+                HandleDroppedElementOnFolder(draggedAsElementSave, treeNodeDroppedOn, out handled);
+            }
+            else
+            {
+                MessageBox.Show("You must drop " + draggedAsElementSave.Name + " on either a Screen or an Component");
             }
         }
 
@@ -205,8 +210,12 @@ namespace Gum.Managers
 
                         string variableName = draggedAsInstanceSave.Name + ".Parent";
 
-                        var oldValue = SelectedState.Self.SelectedStateSave.GetValue(variableName) as string;
-                        SelectedState.Self.SelectedStateSave.SetValue(variableName, parentName, "string");
+                        // Since the Parent property can only be set in the default state, we will
+                        // set the Parent variable on that instead of the SelectedState.Self.SelectedStateSave
+                        var stateToAssignOn = targetElementSave.DefaultState;
+
+                        var oldValue = stateToAssignOn.GetValue(variableName) as string;
+                        stateToAssignOn.SetValue(variableName, parentName, "string");
                         SetVariableLogic.Self.PropertyValueChanged("Parent", oldValue);
                     }
                 }
