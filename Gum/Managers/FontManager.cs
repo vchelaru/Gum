@@ -74,7 +74,7 @@ namespace Gum.Managers
             string prefix = "";
             if (instance != null)
             {
-                prefix = instance + ".";
+                prefix = instance.Name + ".";
             }
 
             object fontSizeAsObject = stateSave.GetValueRecursive(prefix + "FontSize");
