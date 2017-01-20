@@ -681,7 +681,7 @@ namespace RenderingLibrary.Graphics
                 requiredWidth = System.Math.Max(lineWidth, requiredWidth);
             }
 
-            const int MaxWidthAndHeight = 2048; // change this later?
+            const int MaxWidthAndHeight = 4096; // change this later?
             requiredWidth = System.Math.Min(requiredWidth, MaxWidthAndHeight);
             requiredHeight = System.Math.Min(requiredHeight, MaxWidthAndHeight);
             if(requiredWidth != 0 && mOutlineThickness != 0)
