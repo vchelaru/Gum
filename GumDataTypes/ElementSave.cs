@@ -32,7 +32,7 @@ namespace Gum.DataTypes
             set;
         }
 
-        IEnumerable<StateSave> IStateContainer.UncategorizedStates => States;
+        IList<StateSave> IStateContainer.UncategorizedStates => States;
         [XmlElement("State")]
         public List<StateSave> States
         {

@@ -243,6 +243,11 @@ namespace Gum.Managers
                     mDeleteObject.Text = "Delete " + SelectedState.Self.SelectedElement.ToString();
                     mMenuStrip.Items.Add(mDeleteObject);
                 }
+                else if(SelectedState.Self.SelectedBehavior != null)
+                {
+                    mDeleteObject.Text = "Delete " + SelectedState.Self.SelectedBehavior.ToString();
+                    mMenuStrip.Items.Add(mDeleteObject);
+                }
                 else if (SelectedState.Self.SelectedStandardElement != null)
                 {
                     mMenuStrip.Items.Add(mSaveObject);

@@ -14,6 +14,7 @@ using Gum.DataTypes.Variables;
 using Gum.Gui.Plugins;
 using Gum.Gui.Forms;
 using ToolsUtilities;
+using Gum.DataTypes.Behaviors;
 
 namespace Gum.Plugins
 {
@@ -910,7 +911,7 @@ namespace Gum.Plugins
                 {
                     plugin.CallVariableSet(parentElement, instance, changedMember, oldValue);
                 },
-                "GetAttributesFor"
+                nameof(VariableSet)
             );
 
         }
@@ -922,7 +923,19 @@ namespace Gum.Plugins
                 {
                     plugin.CallElementSelected(elementSave);
                 },
-                "ElementSelected"
+                nameof(ElementSelected)
+            );
+
+        }
+
+        internal void BehaviorSelected(BehaviorSave behaviorSave)
+        {
+            CallMethodOnPlugin(
+                delegate (PluginBase plugin)
+                {
+                    plugin.CallBehaviorSelected(behaviorSave);
+                },
+                nameof(BehaviorSelected)
             );
 
         }

@@ -6,6 +6,7 @@ using Gum.DataTypes;
 using Gum.Gui.Forms;
 using Gum.DataTypes.Variables;
 using System.Windows.Forms;
+using Gum.DataTypes.Behaviors;
 
 namespace Gum.Plugins.BaseClasses
 {
@@ -42,6 +43,7 @@ namespace Gum.Plugins.BaseClasses
         /// </summary>
         public event Action<ElementSave, InstanceSave, string, object> VariableSet;
         public event Action<ElementSave> ElementSelected;
+        public event Action<BehaviorSave> BehaviorSelected;
         public event Action<ElementSave, InstanceSave> InstanceSelected;
         public event Action<ElementSave, InstanceSave> InstanceAdd;
         public event Action<ElementSave, InstanceSave> InstanceDelete;
@@ -204,6 +206,11 @@ namespace Gum.Plugins.BaseClasses
             {
                 ElementSelected(element);
             }
+        }
+
+        public void CallBehaviorSelected(BehaviorSave behavior)
+        {
+            BehaviorSelected?.Invoke(behavior);
         }
 
         public void CallInstanceSelected(ElementSave elementSave, InstanceSave instance)

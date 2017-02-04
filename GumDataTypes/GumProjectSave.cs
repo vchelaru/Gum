@@ -30,6 +30,10 @@ namespace Gum.DataTypes
         }
     }
 
+    /// <summary>
+    /// Represents the data stored in a .gumx file. GumProjectSave
+    /// instances can be XML Serialized to a .gumx file.
+    /// </summary>
     public class GumProjectSave
     {
         #region Fields
@@ -83,6 +87,15 @@ namespace Gum.DataTypes
             get;
             set;
         }
+
+        // A note about References vs. the Lists:
+        // The References are the names of the files
+        // referenced by the .gumx. The non-reference
+        // lists are the loaded elements. If a GumProjectSave
+        // is deserialized, only the references are populated. If
+        // the Load method is called, then all references will be used
+        // to populate the actual instances.
+
 
         [XmlIgnore]
         public List<ScreenSave> Screens

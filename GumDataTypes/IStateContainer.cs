@@ -8,7 +8,7 @@ namespace Gum.DataTypes
 {
     public interface IStateContainer
     {
-        IEnumerable<StateSave> UncategorizedStates
+        IList<StateSave> UncategorizedStates
         {
             get;
         }

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using Gum.DataTypes;
 using Gum.Managers;
+using Gum.DataTypes.Behaviors;
 
 namespace Gum.ToolCommands
 {
@@ -114,6 +115,17 @@ namespace Gum.ToolCommands
             RemoveElementReferencesFromList(name, references);
 
             gps.Screens.Remove(asScreenSave);
+        }
+
+        internal void RemoveBehavior(BehaviorSave behavior)
+        {
+            GumProjectSave gps = ProjectManager.Self.GumProjectSave;
+            string name = behavior.Name;
+            List<BehaviorReference> references = gps.BehaviorReferences;
+
+            references.RemoveAll(item => item.Name == behavior.Name);
+
+            gps.Behaviors.Remove(behavior);
         }
 
 

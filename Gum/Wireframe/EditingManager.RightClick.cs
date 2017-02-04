@@ -12,6 +12,7 @@ using Gum.ToolCommands;
 using ToolsUtilities;
 using Gum.Debug;
 using Gum.Gui.Forms;
+using Gum.DataTypes.Behaviors;
 
 namespace Gum.Wireframe
 {
@@ -233,12 +234,23 @@ namespace Gum.Wireframe
                     EditingManager.Self.RemoveSelectedElement();
                 }
             }
+            else if(SelectedState.Self.SelectedBehavior != null)
+            {
+                DialogResult result = ShowDeleteDialog(SelectedState.Self.SelectedBehavior, out optionsWindow);
 
+                if (result == DialogResult.Yes || result == DialogResult.OK)
+                {
+                    objectDeleted = SelectedState.Self.SelectedBehavior;
+                    // We need to remove the reference
+                    EditingManager.Self.RemoveSelectedBehavior();
+                }
+            }
             if (objectDeleted != null)
             {
                 PluginManager.Self.DeleteConfirm(optionsWindow, objectDeleted);
             }
         }
+
 
         DialogResult ShowDeleteDialog(object objectToDelete, out DeleteOptionsWindow optionsWindow)
         {
@@ -254,6 +266,10 @@ namespace Gum.Wireframe
             else if (objectToDelete is InstanceSave)
             {
                 titleText = "Delete Instance?";
+            }
+            else if(objectToDelete is BehaviorSave)
+            {
+                titleText = "Delete Behavior?";
             }
             else
             {
@@ -714,6 +730,21 @@ namespace Gum.Wireframe
             StateTreeViewManager.Self.RefreshUI(null);
             PropertyGridManager.Self.RefreshUI();
             Wireframe.WireframeObjectManager.Self.RefreshAll(true);
+
+            GumCommands.Self.FileCommands.TryAutoSaveProject();
+        }
+
+
+        private void RemoveSelectedBehavior()
+        {
+            var behavior = SelectedState.Self.SelectedBehavior;
+            ProjectCommands.Self.RemoveBehavior(behavior);
+
+            GumCommands.Self.GuiCommands.RefreshElementTreeView();
+            StateTreeViewManager.Self.RefreshUI(null);
+            PropertyGridManager.Self.RefreshUI();
+            // I don't think we have to refresh the wireframe since nothing is being shown
+            //Wireframe.WireframeObjectManager.Self.RefreshAll(true);
 
             GumCommands.Self.FileCommands.TryAutoSaveProject();
         }

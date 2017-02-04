@@ -541,7 +541,12 @@ namespace Gum.ToolStates
 
             MenuStripManager.Self.RefreshUI();
 
-            // todo - plugins selection
+            // Although plugins could just listen for behavior changes, and
+            // assume that means no elements are selected, that's a bit of a pain.
+            // A behavior may just care about whether an element is selected or not.
+            PluginManager.Self.ElementSelected(null);
+            PluginManager.Self.BehaviorSelected(SelectedBehavior);
+
         }
 
         public void UpdateToSelectedStateSave()

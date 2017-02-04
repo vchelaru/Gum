@@ -113,9 +113,10 @@ namespace Gum.ToolCommands
             return category;
         }
 
-        public void RemoveState(StateSave stateSave, ElementSave elementToRemoveFrom)
+        public void RemoveState(StateSave stateSave, IStateContainer elementToRemoveFrom)
         {
-            elementToRemoveFrom.States.Remove(stateSave);
+            
+            elementToRemoveFrom.UncategorizedStates.Remove(stateSave);
 
             foreach (var category in elementToRemoveFrom.Categories.Where(item => item.States.Contains(stateSave)))
             {
@@ -125,7 +126,7 @@ namespace Gum.ToolCommands
             GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
         }
 
-        public void RemoveStateCategory(StateSaveCategory category, ElementSave elementToRemoveFrom)
+        public void RemoveStateCategory(StateSaveCategory category, IStateCategoryListContainer elementToRemoveFrom)
         {
             elementToRemoveFrom.Categories.Remove(category);
 

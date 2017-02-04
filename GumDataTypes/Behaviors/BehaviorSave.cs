@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Xml.Serialization;
+using ToolsUtilities;
 
 namespace Gum.DataTypes.Behaviors
 {
@@ -19,7 +20,7 @@ namespace Gum.DataTypes.Behaviors
         }
 
         static List<StateSave> EmptyList = new List<StateSave>();
-        IEnumerable<StateSave> IStateContainer.UncategorizedStates => EmptyList;
+        IList<StateSave> IStateContainer.UncategorizedStates => EmptyList;
 
 
         IEnumerable<StateSaveCategory> IStateContainer.Categories => Categories;
@@ -39,5 +40,15 @@ namespace Gum.DataTypes.Behaviors
             return Name;
         }
 
+
+        public void Save(string fileName)
+        {
+#if WINDOWS_8 || UWP
+
+            throw new NotImplementedException();
+#else
+            FileManager.XmlSerialize(this.GetType(), this, fileName);
+#endif
+        }
     }
 }

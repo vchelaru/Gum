@@ -18,8 +18,8 @@ namespace Gum.Managers
         {
             bool shouldProgress = TryAskForRemovalConfirmation(stateSave, SelectedState.Self.SelectedElement);
 
-            ElementCommands.Self.RemoveState(stateSave, SelectedState.Self.SelectedElement);
-            StateTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedElement);
+            ElementCommands.Self.RemoveState(stateSave, SelectedState.Self.SelectedStateContainer);
+            StateTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedStateContainer);
             PropertyGridManager.Self.RefreshUI();
             WireframeObjectManager.Self.RefreshAll(true);
             SelectionManager.Self.Refresh();
@@ -29,8 +29,8 @@ namespace Gum.Managers
         {
             bool shouldProgress = TryAskForRemovalConfirmation(category, SelectedState.Self.SelectedElement);
 
-            ElementCommands.Self.RemoveStateCategory(category, SelectedState.Self.SelectedElement);
-            StateTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedElement);
+            ElementCommands.Self.RemoveStateCategory(category, SelectedState.Self.SelectedStateContainer as IStateCategoryListContainer);
+            StateTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedStateContainer);
             PropertyGridManager.Self.RefreshUI();
             WireframeObjectManager.Self.RefreshAll(true);
             SelectionManager.Self.Refresh();

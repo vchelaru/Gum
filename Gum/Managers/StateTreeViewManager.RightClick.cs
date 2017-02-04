@@ -39,7 +39,9 @@ namespace Gum.Managers
 
                 AddMenuItem("Delete " + SelectedState.Self.SelectedStateSave.Name, DeleteStateClick);
 
-                if (SelectedState.Self.SelectedStateSave != SelectedState.Self.SelectedElement.DefaultState)
+
+
+                if (SelectedState.Self.SelectedElement != null && SelectedState.Self.SelectedStateSave != SelectedState.Self.SelectedElement.DefaultState)
                 {
                     mMenuStrip.Items.Add("-");
 
@@ -253,7 +255,7 @@ namespace Gum.Managers
             }
 
 
-            while (SelectedState.Self.SelectedElement.AllStates.Any(item => item != newState && item.Name == newState.Name))
+            while (SelectedState.Self.SelectedStateContainer.AllStates.Any(item => item != newState && item.Name == newState.Name))
             {
                 newState.Name = StringFunctions.IncrementNumberAtEnd(newState.Name);
             }
