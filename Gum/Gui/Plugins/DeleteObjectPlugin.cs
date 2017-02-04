@@ -7,6 +7,7 @@ using System.ComponentModel.Composition;
 using System.Windows.Forms;
 using Gum.DataTypes;
 using System.Drawing;
+using Gum.DataTypes.Behaviors;
 
 namespace Gum.Gui.Plugins
 {
@@ -55,6 +56,12 @@ namespace Gum.Gui.Plugins
                 ElementSave asElement = deletedObject as ElementSave;
 
                 return asElement.GetFullPathXmlFile();
+            }
+            else if(deletedObject is BehaviorSave)
+            {
+                var asBehaviorSave = deletedObject as BehaviorSave;
+
+                return asBehaviorSave.GetFullPathXmlFile();
             }
             else if (deletedObject is InstanceSave)
             {
