@@ -5,8 +5,25 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:WpfDataUi="clr-namespace:WpfDataUi;assembly=WpfDataUi"
              mc:Ignorable="d" 
-             d:DesignHeight="300" d:DesignWidth="300">
+             d:DesignHeight="200" d:DesignWidth="300">
     <Grid>
-        <WpfDataUi:DataUiGrid Name="DataGrid"></WpfDataUi:DataUiGrid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" MaxHeight="200"></RowDefinition>
+            <RowDefinition Height="*"></RowDefinition>
+        </Grid.RowDefinitions>
+        
+        <Label Visibility="{Binding HasErrors}" Content="{Binding ErrorInformation}" ></Label>
+        <Grid Grid.Row="1">
+            <WpfDataUi:DataUiGrid Grid.Row="1" Name="DataGrid" Visibility="{Binding ShowShowVariableGrid}"></WpfDataUi:DataUiGrid>
+            <Grid Visibility="{Binding ShowBehaviorUi}">
+                <Grid.RowDefinitions>
+                    <RowDefinition></RowDefinition>
+                    <RowDefinition Height="Auto"></RowDefinition>
+                </Grid.RowDefinitions>
+                <ListBox ItemsSource="{Binding BehaviorVariables}" SelectionChanged="ListBox_SelectionChanged" 
+                         SelectedItem="{Binding SelectedBehaviorVariable}"></ListBox>
+                <Button Grid.Row="2" Click="HandleAddVariableClicked">Add Variable</Button>
+            </Grid>
+        </Grid>
     </Grid>
 </UserControl>

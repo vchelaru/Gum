@@ -44,10 +44,10 @@
             this.screenToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.componentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.instanceToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.stateToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.RemoveElementMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.RemoveStateMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.RemoveVariableMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.projectPropertiesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.contentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.clearFontCacheToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -56,6 +56,7 @@
             this.managePluginsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.stateToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.LeftAndEverythingContainer = new System.Windows.Forms.SplitContainer();
             this.ObjectTreeView = new CommonFormsAndControls.MultiSelectTreeView();
             this.ElementMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
@@ -224,18 +225,12 @@
             this.instanceToolStripMenuItem.Text = "Object";
             this.instanceToolStripMenuItem.Click += new System.EventHandler(this.instanceToolStripMenuItem_Click);
             // 
-            // stateToolStripMenuItem
-            // 
-            this.stateToolStripMenuItem.Name = "stateToolStripMenuItem";
-            this.stateToolStripMenuItem.Size = new System.Drawing.Size(138, 22);
-            this.stateToolStripMenuItem.Text = "State";
-            this.stateToolStripMenuItem.Click += new System.EventHandler(this.stateToolStripMenuItem_Click);
-            // 
             // removeToolStripMenuItem
             // 
             this.removeToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.RemoveElementMenuItem,
-            this.RemoveStateMenuItem});
+            this.RemoveStateMenuItem,
+            this.RemoveVariableMenuItem});
             this.removeToolStripMenuItem.Name = "removeToolStripMenuItem";
             this.removeToolStripMenuItem.Size = new System.Drawing.Size(167, 22);
             this.removeToolStripMenuItem.Text = "Remove";
@@ -243,16 +238,20 @@
             // RemoveElementMenuItem
             // 
             this.RemoveElementMenuItem.Name = "RemoveElementMenuItem";
-            this.RemoveElementMenuItem.Size = new System.Drawing.Size(117, 22);
+            this.RemoveElementMenuItem.Size = new System.Drawing.Size(152, 22);
             this.RemoveElementMenuItem.Text = "Element";
-            this.RemoveElementMenuItem.Click += new System.EventHandler(this.RemoveElementMenuItem_Click);
             // 
             // RemoveStateMenuItem
             // 
             this.RemoveStateMenuItem.Name = "RemoveStateMenuItem";
-            this.RemoveStateMenuItem.Size = new System.Drawing.Size(117, 22);
+            this.RemoveStateMenuItem.Size = new System.Drawing.Size(152, 22);
             this.RemoveStateMenuItem.Text = "State";
-            this.RemoveStateMenuItem.Click += new System.EventHandler(this.RemoveStateOrCategoryMenuItem_Click);
+            // 
+            // RemoveVariableMenuItem
+            // 
+            this.RemoveVariableMenuItem.Name = "RemoveVariableMenuItem";
+            this.RemoveVariableMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.RemoveVariableMenuItem.Text = "Variable";
             // 
             // projectPropertiesToolStripMenuItem
             // 
@@ -313,6 +312,13 @@
             this.aboutToolStripMenuItem.Size = new System.Drawing.Size(116, 22);
             this.aboutToolStripMenuItem.Text = "About...";
             this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
+            // 
+            // stateToolStripMenuItem
+            // 
+            this.stateToolStripMenuItem.Name = "stateToolStripMenuItem";
+            this.stateToolStripMenuItem.Size = new System.Drawing.Size(138, 22);
+            this.stateToolStripMenuItem.Text = "State";
+            this.stateToolStripMenuItem.Click += new System.EventHandler(this.stateToolStripMenuItem_Click);
             // 
             // LeftAndEverythingContainer
             // 
@@ -704,6 +710,7 @@
         private System.Windows.Forms.TabControl RightTabControl;
         private System.Windows.Forms.TabPage tabPage3;
         private System.Windows.Forms.TabControl tabControl1;
+        private System.Windows.Forms.ToolStripMenuItem RemoveVariableMenuItem;
     }
 }
 

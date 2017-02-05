@@ -486,6 +486,19 @@ namespace Gum.ToolStates
             }
         }
 
+        public VariableSave SelectedBehaviorVariable
+        {
+            get
+            {
+                return PropertyGridManager.Self.SelectedBehaviorVariable;
+            }
+
+            set
+            {
+                PropertyGridManager.Self.SelectedBehaviorVariable = value;
+            }
+        }
+
         #endregion
 
         #region Methods
@@ -547,6 +560,11 @@ namespace Gum.ToolStates
             PluginManager.Self.ElementSelected(null);
             PluginManager.Self.BehaviorSelected(SelectedBehavior);
 
+        }
+
+        public void UpdateToSelectedBehaviorVariable()
+        {
+            MenuStripManager.Self.RefreshUI();
         }
 
         public void UpdateToSelectedStateSave()

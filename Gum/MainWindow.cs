@@ -58,12 +58,13 @@ namespace Gum
             ElementTreeViewManager.Self.Initialize(this.ObjectTreeView);
             StateTreeViewManager.Self.Initialize(this.stateView.TreeView, this.stateView.StateContextMenuStrip);
             PropertyGridManager.Self.Initialize(this.VariablePropertyGrid, 
-                ((TestWpfControl)this.VariableHost.Child).DataGrid,
+                ((TestWpfControl)this.VariableHost.Child),
                 ((TestWpfControl)this.EventsHost.Child).DataGrid
                 
                 );
             StandardElementsManager.Self.Initialize();
-            MenuStripManager.Self.Initialize(RemoveElementMenuItem, RemoveStateMenuItem);
+            MenuStripManager.Self.Initialize(
+                RemoveElementMenuItem, RemoveStateMenuItem, RemoveVariableMenuItem);
             GuiCommands.Self.Initialize(wireframeControl1);
             Wireframe.WireframeObjectManager.Self.Initialize(WireframeEditControl, wireframeControl1);
 
@@ -121,25 +122,6 @@ namespace Gum
         private void stateToolStripMenuItem_Click(object sender, EventArgs e)
         {
             StateTreeViewManager.Self.AddStateClick();
-        }
-
-        private void RemoveElementMenuItem_Click(object sender, EventArgs e)
-        {
-            EditingManager.Self.RemoveSelectedElement();
-        }
-
-        private void RemoveStateOrCategoryMenuItem_Click(object sender, EventArgs e)
-        {
-            if (SelectedState.Self.SelectedStateSave != null)
-            {
-                GumCommands.Self.Edit.RemoveState(
-                    SelectedState.Self.SelectedStateSave, SelectedState.Self.SelectedStateContainer);
-            }
-            else if (SelectedState.Self.SelectedStateCategorySave != null)
-            {
-                GumCommands.Self.Edit.RemoveStateCategory(
-                    SelectedState.Self.SelectedStateCategorySave, SelectedState.Self.SelectedStateContainer as IStateCategoryListContainer);
-            }
         }
 
         private void ObjectTreeView_MouseClick(object sender, MouseEventArgs e)

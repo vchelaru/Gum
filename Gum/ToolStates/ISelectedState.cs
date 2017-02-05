@@ -31,6 +31,7 @@ namespace Gum.ToolStates
         string SelectedVariableName { get; }
         StandardElementSave SelectedStandardElement { get; set; }
         VariableSave SelectedVariableSave { get; set;  }
+        VariableSave SelectedBehaviorVariable { get; set; }
         TreeNode SelectedTreeNode { get; }
         RecursiveVariableFinder SelectedRecursiveVariableFinder { get; }
         StateStackingMode StateStackingMode { get; set; }
@@ -41,6 +42,7 @@ namespace Gum.ToolStates
         void UpdateToSelectedElement();
         void UpdateToSelectedInstanceSave();
         void UpdateToSelectedBehavior();
+        void UpdateToSelectedBehaviorVariable();
 
     }
 }

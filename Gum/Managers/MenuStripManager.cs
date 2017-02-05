@@ -5,6 +5,7 @@ using System.Text;
 using System.Windows.Forms;
 using Gum.ToolStates;
 using Gum.DataTypes;
+using Gum.Wireframe;
 
 namespace Gum.Managers
 {
@@ -14,6 +15,7 @@ namespace Gum.Managers
 
         ToolStripMenuItem mRemoveElement;
         ToolStripMenuItem mRemoveState;
+        ToolStripMenuItem removeVariable;
 
         static MenuStripManager mSelf;
 
@@ -36,13 +38,27 @@ namespace Gum.Managers
         #endregion
 
 
-        public void Initialize(ToolStripMenuItem removeElement, ToolStripMenuItem removeState)
+        public void Initialize(ToolStripMenuItem removeElement, ToolStripMenuItem removeState,
+            ToolStripMenuItem removeVariable)
         {
             mRemoveState = removeState;
+            mRemoveState.Click += RemoveStateOrCategoryClicked;
+
             mRemoveElement = removeElement;
+            mRemoveElement.Click += RemoveElementClicked;
+
+            this.removeVariable = removeVariable;
+            this.removeVariable.Click += HanldeRemoveBehaviorVariableClicked;
 
             RefreshUI();
 
+        }
+
+        private void HanldeRemoveBehaviorVariableClicked(object sender, EventArgs e)
+        {
+            GumCommands.Self.Edit.RemoveBehaviorVariable(
+                SelectedState.Self.SelectedBehavior,
+                SelectedState.Self.SelectedBehaviorVariable);
         }
 
         public void RefreshUI()
@@ -74,6 +90,38 @@ namespace Gum.Managers
                 mRemoveElement.Enabled = false;
             }
 
+            if(SelectedState.Self.SelectedBehaviorVariable != null)
+            {
+                removeVariable.Text = SelectedState.Self.SelectedBehaviorVariable.ToString();
+                removeVariable.Enabled = true;
+            }
+            else
+            {
+                removeVariable.Text = "<no behavior variable selected>";
+                removeVariable.Enabled = false;
+            }
+
+        }
+
+
+        private void RemoveElementClicked(object sender, EventArgs e)
+        {
+            EditingManager.Self.RemoveSelectedElement();
+        }
+
+        private void RemoveStateOrCategoryClicked(object sender, EventArgs e)
+        {
+            if (SelectedState.Self.SelectedStateSave != null)
+            {
+                GumCommands.Self.Edit.RemoveState(
+                    SelectedState.Self.SelectedStateSave, SelectedState.Self.SelectedStateContainer);
+            }
+            else if (SelectedState.Self.SelectedStateCategorySave != null)
+            {
+                GumCommands.Self.Edit.RemoveStateCategory(
+                    SelectedState.Self.SelectedStateCategorySave, SelectedState.Self.SelectedStateContainer as IStateCategoryListContainer);
+            }
         }
     }
+
 }

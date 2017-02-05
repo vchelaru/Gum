@@ -375,5 +375,12 @@ namespace Gum.Commands
                 }
             }
         }
+
+        public void RemoveBehaviorVariable(BehaviorSave container, VariableSave variable)
+        {
+            container.RequiredVariables.Variables.Remove(variable);
+            GumCommands.Self.FileCommands.TryAutoSaveBehavior(container);
+            PropertyGridManager.Self.RefreshUI();
+        }
     }
 }

@@ -192,6 +192,7 @@
     <Compile Include="Managers\PropertyGridManager.Events.cs" />
     <Compile Include="Managers\RenameManager.cs" />
     <Compile Include="Managers\Singleton.cs" />
+    <Compile Include="Mvvm\ObservableCollectionExtensions.cs" />
     <Compile Include="Mvvm\ViewModel.cs" />
     <Compile Include="Plugins\AlignmentButtons\AlignmentPluginControl.xaml.cs">
       <DependentUpon>AlignmentPluginControl.xaml</DependentUpon>
@@ -215,6 +216,10 @@
       <DependentUpon>UndoDisplay.xaml</DependentUpon>
     </Compile>
     <Compile Include="Plugins\Undos\UndosViewModel.cs" />
+    <Compile Include="Plugins\VariableGrid\AddVariableWindow.xaml.cs">
+      <DependentUpon>AddVariableWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Plugins\VariableGrid\MainControlViewModel.cs" />
     <Compile Include="PropertyGridHelpers\Converters\AvailableGuidesTypeConverter.cs" />
     <Compile Include="Input\CursorExtensionMethods.cs" />
     <Compile Include="Managers\DragDropManager.cs" />
@@ -455,6 +460,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Plugins\Undos\UndoDisplay.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Plugins\VariableGrid\AddVariableWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

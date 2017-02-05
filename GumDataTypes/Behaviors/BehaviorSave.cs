@@ -22,6 +22,7 @@ namespace Gum.DataTypes.Behaviors
         static List<StateSave> EmptyList = new List<StateSave>();
         IList<StateSave> IStateContainer.UncategorizedStates => EmptyList;
 
+        public StateSave RequiredVariables { get; set; } = new StateSave();
 
         IEnumerable<StateSaveCategory> IStateContainer.Categories => Categories;
         [XmlElement("Category")]

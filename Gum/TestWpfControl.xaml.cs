@@ -19,6 +19,10 @@ namespace Gum
     /// </summary>
     public partial class TestWpfControl : UserControl
     {
+        public event EventHandler AddVariableClicked;
+
+        public event EventHandler SelectedBehaviorVariableChanged;
+
         public object Instance
         {
             get { return DataGrid.Instance; }
@@ -29,6 +33,16 @@ namespace Gum
         public TestWpfControl()
         {
             InitializeComponent();
+        }
+
+        private void HandleAddVariableClicked(object sender, RoutedEventArgs e)
+        {
+            AddVariableClicked?.Invoke(this, null);
+        }
+
+        private void ListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            SelectedBehaviorVariableChanged?.Invoke(this, null);
         }
     }
 }

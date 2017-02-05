@@ -107,6 +107,13 @@ namespace Gum.Managers
             return string.IsNullOrEmpty(whyNotValid);
         }
 
+        public bool IsVariableNameValid(string name, out string whyNotValid)
+        {
+            IsNameValidCommon(name, out whyNotValid);
+            return string.IsNullOrEmpty(whyNotValid);
+
+        }
+
         private void IsNameValidCommon(string name, out string whyNotValid)
         {
             whyNotValid = null;

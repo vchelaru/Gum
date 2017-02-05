@@ -44,84 +44,22 @@ namespace Gum.Managers
                 eventsOnThisCategory.Name = "Events on this";
                 mEventsDataGrid.Categories.Add(eventsOnThisCategory);
 
-                if (SelectedState.Self.SelectedInstance != null)
-                {
-                    RefreshEventsForInstance(selectedInstance, selectedElement);
-                }
-                else if(selectedElement != null)
-                {
-                    RefreshEventsForElement(selectedElement);
+                //if (SelectedState.Self.SelectedInstance != null)
+                //{
+                //    RefreshEventsForInstance(selectedInstance, selectedElement);
+                //}
+                //else if(selectedElement != null)
+                //{
+                //    RefreshEventsForElement(selectedElement);
 
-                }
+                //}
 
                 mEventsDataGrid.Visibility = System.Windows.Visibility.Visible;
 
                 mEventsDataGrid.Refresh();
             }
         }
-
-        private void RefreshEventsForElement(ElementSave selectedElement)
-        {
-            EventsViewModel viewModel = new EventsViewModel();
-
-            viewModel.InstanceSave = null;
-            viewModel.ElementSave = selectedElement;
-
-            mEventsDataGrid.Instance = viewModel;
-            mEventsDataGrid.MembersToIgnore.Add("InstanceSave");
-            mEventsDataGrid.MembersToIgnore.Add("ElementSave");
-            mEventsDataGrid.Categories[0].Name = "Events on this";
-
-            MemberCategory exposed = new MemberCategory();
-            exposed.Name = "Exposed";
-
-            var exposedEvents = SelectedState.Self.SelectedElement.Events.Where(item => !string.IsNullOrEmpty(item.ExposedAsName));
-
-            foreach (var eventSave in exposedEvents)
-            {
-                EventInstanceMember instanceMember = new EventInstanceMember(
-                    SelectedState.Self.SelectedElement,
-                    SelectedState.Self.SelectedInstance,
-                    eventSave);
-
-                var local = eventSave;
-
-                instanceMember.ContextMenuEvents.Add(
-                    "Rename",
-                    delegate
-                    {
-                        TextInputWindow tiw = new TextInputWindow();
-                        tiw.Message = "Enter new name";
-                        tiw.Result = local.ExposedAsName;
-
-                        if (tiw.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-                        {
-                            bool isValid = true;
-
-                            // todo:
-                            //string whyNotValid = null;
-                            //isValid = NameVerifier.Self.IsEventNameValid(tiw.Result, out whyNotValid);
-
-                            if (isValid)
-                            {
-                                string oldName = local.ExposedAsName;
-                                local.ExposedAsName = tiw.Result;
-                                RenameManager.Self.HandleRename(selectedElement, local, oldName);
-                                GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
-                                GumCommands.Self.GuiCommands.RefreshPropertyGrid();
-                            }
-                        }
-
-                    });
-
-
-                exposed.Members.Add(instanceMember);
-
-
-            }
-
-            mEventsDataGrid.Categories.Add(exposed);
-        }
+        
 
         private void RefreshEventsForInstance(InstanceSave selectedInstance, ElementSave selectedElement)
         {

@@ -22,6 +22,8 @@ using System.Threading.Tasks;
 using System.Threading;
 using System.Collections.ObjectModel;
 using WpfDataUi;
+using Gum.Plugins.VariableGrid;
+using Gum.DataTypes.Behaviors;
 
 namespace Gum.Managers
 {
@@ -45,6 +47,7 @@ namespace Gum.Managers
         InstanceSave mLastInstance;
         StateSave mLastState;
 
+        MainControlViewModel variableViewModel;
 
         #endregion
 
@@ -78,12 +81,28 @@ namespace Gum.Managers
             }
         }
 
+        public VariableSave SelectedBehaviorVariable
+        {
+            get
+            {
+                return this.variableViewModel.EffectiveSelectedBehaviorVariable;
+            }
+            set
+            {
+                this.variableViewModel.SelectedBehaviorVariable = value;
+            }
+        }
+
         #endregion
 
 
-        public void Initialize(PropertyGrid propertyGrid, DataUiGrid variablesDataUiGrid, DataUiGrid eventsDataUiGrid)
+        public void Initialize(PropertyGrid propertyGrid, TestWpfControl variablesDataUiGrid, DataUiGrid eventsDataUiGrid)
         {
-            mVariablesDataGrid = variablesDataUiGrid;
+            mVariablesDataGrid = variablesDataUiGrid.DataGrid;
+            variableViewModel = new Plugins.VariableGrid.MainControlViewModel();
+            variablesDataUiGrid.DataContext = variableViewModel;
+            variablesDataUiGrid.SelectedBehaviorVariableChanged += HandleBehaviorVariableSelected;
+            variablesDataUiGrid.AddVariableClicked += HandleAddVariable;
 
             InitializeEvents(eventsDataUiGrid);
 
@@ -91,6 +110,45 @@ namespace Gum.Managers
             mPropertyGrid.PropertySort = PropertySort.Categorized;
 
             InitializeRightClickMenu();
+        }
+
+        private void HandleBehaviorVariableSelected(object sender, EventArgs e)
+        {
+            SelectedState.Self.UpdateToSelectedBehaviorVariable();
+        }
+
+        private void HandleAddVariable(object sender, EventArgs e)
+        {
+            var window = new AddVariableWindow();
+
+            var result = window.ShowDialog();
+
+            if(result == true)
+            {
+                var type = window.SelectedType;
+                var name = window.EnteredName;
+
+                string whyNotValid;
+                bool isValid = NameVerifier.Self.IsVariableNameValid(
+                    name, out whyNotValid);
+
+                if(!isValid)
+                {
+                    MessageBox.Show(whyNotValid);
+                }
+                else
+                {
+                    var behavior = SelectedState.Self.SelectedBehavior;
+
+                    var newVariable = new VariableSave();
+                    newVariable.Name = name;
+                    newVariable.Type = type;
+
+                    behavior.RequiredVariables.Variables.Add(newVariable);
+                    GumCommands.Self.GuiCommands.RefreshPropertyGrid();
+                    GumCommands.Self.FileCommands.TryAutoSaveBehavior(behavior);
+                }
+            }
         }
 
         bool isInRefresh = false;
@@ -110,6 +168,11 @@ namespace Gum.Managers
 
             isInRefresh = true;
 
+            bool showVariableGrid = SelectedState.Self.SelectedElement != null ||
+                SelectedState.Self.SelectedInstance != null;
+            variableViewModel.ShowVariableGrid = showVariableGrid ?
+                System.Windows.Visibility.Visible : System.Windows.Visibility.Hidden;
+
             if (SelectedState.Self.SelectedInstances.GetCount() > 1)
             {
                 // I don't know if we want to eventually show these
@@ -125,6 +188,7 @@ namespace Gum.Managers
                 var element = SelectedState.Self.SelectedElement;
                 var state = SelectedState.Self.SelectedStateSave;
                 var instance = SelectedState.Self.SelectedInstance;
+                var behaviorSave = SelectedState.Self.SelectedBehavior;
 
                 bool shouldMakeYellow = element != null && state != element.DefaultState;
 
@@ -133,16 +197,7 @@ namespace Gum.Managers
 
 
                 //Task task = new Task(() => RefreshDataGrid(element, state, instance));
-                RefreshDataGrid(element, state, instance, force);
-                //task.Start();
-
-                //mDataGrid.Visibility = System.Windows.Visibility.Visible;
-
-                //ThreadStart threadStart = new ThreadStart(
-                //    () => RefreshDataGrid(element, state, instance));
-
-                //System.Threading.Thread thread = new System.Threading.Thread(threadStart);
-                //thread.Start();
+                RefreshDataGrid(element, state, instance, behaviorSave, force);
             }
 
             RefreshEventsUi();
@@ -165,7 +220,7 @@ namespace Gum.Managers
         /// <param name="state">The state to display.</param>
         /// <param name="instance">The instance to display. May be null.</param>
         /// <param name="force">Whether to refresh even if the element, state, and instance have not changed.</param>
-        private void RefreshDataGrid(ElementSave element, StateSave state, InstanceSave instance, bool force = false)
+        private void RefreshDataGrid(ElementSave element, StateSave state, InstanceSave instance, BehaviorSave behaviorSave, bool force = false)
         {
 
             bool hasChangedObjectShowing = element != mLastElement || instance != mLastInstance || state != mLastState ||
@@ -240,9 +295,70 @@ namespace Gum.Managers
                 }
             }
 
+            RefreshErrors(element);
+
+            RefreshBehaviorUi(behaviorSave);
 
             mVariablesDataGrid.Refresh();
             
+        }
+
+        private void RefreshBehaviorUi(BehaviorSave behaviorSave)
+        {
+
+            this.variableViewModel.BehaviorVariables.Clear();
+            if(behaviorSave != null)
+            {
+                this.variableViewModel.BehaviorVariables.AddRange(behaviorSave.RequiredVariables.Variables);
+            }
+
+
+            this.variableViewModel.ShowBehaviorUi = behaviorSave != null ?
+                System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
+        }
+
+        private void RefreshErrors(ElementSave element)
+        {
+            var asComponent = element as ComponentSave;
+
+            if(asComponent != null)
+            {
+                var behaviors = ProjectState.Self.GumProjectSave.Behaviors;
+                var behaviorReferences = asComponent.Behaviors;
+
+                string message = null;
+
+                foreach(var behaviorReference in behaviorReferences)
+                {
+                    var foundBehavior = behaviors.FirstOrDefault(item => item.Name == behaviorReference.BehaviorName);
+
+                    if(foundBehavior != null)
+                    {
+                        var requiredVariables = foundBehavior.RequiredVariables.Variables;
+
+                        foreach(var requiredVariable in requiredVariables)
+                        {
+                            bool existsInComponent = asComponent.DefaultState.Variables
+                                .Any(item =>
+                                    item.Name == requiredVariable.Name &&
+                                    item.Type == requiredVariable.Type);
+
+                            if(!existsInComponent)
+                            {
+                                message += $"Variable {requiredVariable.Name} of type {requiredVariable.Type} is required.\n";
+                            }
+                        }
+                    }
+                }
+
+                bool showError = !string.IsNullOrEmpty(message);
+                this.variableViewModel.HasErrors = showError ?
+                    System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
+
+
+
+                this.variableViewModel.ErrorInformation = message;
+            }
         }
 
         public bool DoCategoriesDiffer(IEnumerable<InstanceMember> first, IEnumerable<InstanceMember> second)
