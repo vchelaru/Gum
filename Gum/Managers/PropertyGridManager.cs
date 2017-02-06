@@ -340,7 +340,7 @@ namespace Gum.Managers
                         {
                             bool existsInComponent = asComponent.DefaultState.Variables
                                 .Any(item =>
-                                    item.Name == requiredVariable.Name &&
+                                    (item.Name == requiredVariable.Name || item.ExposedAsName == requiredVariable.Name) &&
                                     item.Type == requiredVariable.Type);
 
                             if(!existsInComponent)
