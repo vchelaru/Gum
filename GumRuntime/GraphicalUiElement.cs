@@ -914,77 +914,93 @@ namespace Gum.Wireframe
 
         float GetRequiredParentWidth()
         {
-            float positionValue = mX;
-
-            // This GUE hasn't been set yet so it can't give
-            // valid widths/heights
-            if (this.mContainedObjectAsIpso == null)
+            var effectiveParent = this.EffectiveParentGue;
+            if (effectiveParent != null && effectiveParent.ChildrenLayout == ChildrenLayout.TopToBottomStack && effectiveParent.WrapsChildren)
             {
-                return 0;
+                var asIpso = this as IPositionedSizedObject;
+                return asIpso.X + asIpso.Width;
             }
-            float smallEdge = positionValue;
-            if (mXOrigin == HorizontalAlignment.Center)
+            else
             {
-                smallEdge = positionValue - ((IPositionedSizedObject)this).Width / 2.0f;
-            }
-            else if (mXOrigin == HorizontalAlignment.Right)
-            {
-                smallEdge = positionValue - ((IPositionedSizedObject)this).Width;
-            }
+                float positionValue = mX;
 
-            float bigEdge = positionValue;
-            if (mXOrigin == HorizontalAlignment.Center)
-            {
-                bigEdge = positionValue + ((IPositionedSizedObject)this).Width / 2.0f;
+                // This GUE hasn't been set yet so it can't give
+                // valid widths/heights
+                if (this.mContainedObjectAsIpso == null)
+                {
+                    return 0;
+                }
+                float smallEdge = positionValue;
+                if (mXOrigin == HorizontalAlignment.Center)
+                {
+                    smallEdge = positionValue - ((IPositionedSizedObject)this).Width / 2.0f;
+                }
+                else if (mXOrigin == HorizontalAlignment.Right)
+                {
+                    smallEdge = positionValue - ((IPositionedSizedObject)this).Width;
+                }
+
+                float bigEdge = positionValue;
+                if (mXOrigin == HorizontalAlignment.Center)
+                {
+                    bigEdge = positionValue + ((IPositionedSizedObject)this).Width / 2.0f;
+                }
+                if (mXOrigin == HorizontalAlignment.Left)
+                {
+                    bigEdge = positionValue + ((IPositionedSizedObject)this).Width;
+                }
+
+                var units = mXUnits;
+
+                float dimensionToReturn = GetDimensionFromEdges(smallEdge, bigEdge, units);
+
+                return dimensionToReturn;
             }
-            if (mXOrigin == HorizontalAlignment.Left)
-            {
-                bigEdge = positionValue + ((IPositionedSizedObject)this).Width;
-            }
-
-            var units = mXUnits;
-
-            float dimensionToReturn = GetDimensionFromEdges(smallEdge, bigEdge, units);
-
-            return dimensionToReturn;
         }
 
         float GetRequiredParentHeight()
         {
-            float positionValue = mY;
-
-            // This GUE hasn't been set yet so it can't give
-            // valid widths/heights
-            if (this.mContainedObjectAsIpso == null)
+            var effectiveParent = this.EffectiveParentGue;
+            if(effectiveParent != null && effectiveParent.ChildrenLayout == ChildrenLayout.LeftToRightStack && effectiveParent.WrapsChildren)
             {
-                return 0;
+                var asIpso = this as IPositionedSizedObject;
+                return asIpso.Y + asIpso.Height;
             }
-            float smallEdge = positionValue;
-            if (mYOrigin == VerticalAlignment.Center)
+            else
             {
-                smallEdge = positionValue - ((IPositionedSizedObject)this).Height / 2.0f;
+                float positionValue = mY;
+
+                // This GUE hasn't been set yet so it can't give
+                // valid widths/heights
+                if (this.mContainedObjectAsIpso == null)
+                {
+                    return 0;
+                }
+                float smallEdge = positionValue;
+                if (mYOrigin == VerticalAlignment.Center)
+                {
+                    smallEdge = positionValue - ((IPositionedSizedObject)this).Height / 2.0f;
+                }
+                else if (mYOrigin == VerticalAlignment.Bottom)
+                {
+                    smallEdge = positionValue - ((IPositionedSizedObject)this).Height;
+                }
+
+                float bigEdge = positionValue;
+                if (mYOrigin == VerticalAlignment.Center)
+                {
+                    bigEdge = positionValue + ((IPositionedSizedObject)this).Height / 2.0f;
+                }
+                if (mYOrigin == VerticalAlignment.Top)
+                {
+                    bigEdge = positionValue + ((IPositionedSizedObject)this).Height;
+                }
+
+                var units = mYUnits;
+                float dimensionToReturn = GetDimensionFromEdges(smallEdge, bigEdge, units);
+
+                return dimensionToReturn;
             }
-            else if (mYOrigin == VerticalAlignment.Bottom)
-            {
-                smallEdge = positionValue - ((IPositionedSizedObject)this).Height;
-            }
-
-            float bigEdge = positionValue;
-            if (mYOrigin == VerticalAlignment.Center)
-            {
-                bigEdge = positionValue + ((IPositionedSizedObject)this).Height / 2.0f;
-            }
-            if (mYOrigin == VerticalAlignment.Top)
-            {
-                bigEdge = positionValue + ((IPositionedSizedObject)this).Height;
-            }
-
-            var units = mYUnits;
-
-            float dimensionToReturn = GetDimensionFromEdges(smallEdge, bigEdge, units);
-
-            return dimensionToReturn;
-
 
         }
 
@@ -994,6 +1010,7 @@ namespace Gum.Wireframe
             if (units == GeneralUnitType.PixelsFromSmall)
             {
                 smallEdge = 0;
+
                 bigEdge = System.Math.Max(0, bigEdge);
                 dimensionToReturn = bigEdge - smallEdge;
             }
@@ -1150,6 +1167,11 @@ namespace Gum.Wireframe
                             UpdateTextureCoordinatesNotDimensionBased();
                         }
 
+                        if(this.WidthUnits == DimensionUnitType.RelativeToChildren || this.HeightUnits == DimensionUnitType.RelativeToChildren)
+                        {
+                            UpdateChildren(childrenUpdateDepth, onlyAbsoluteLayoutChildren: true);
+                        }
+
                         UpdateDimensions(parentWidth, parentHeight);
 
                         if (mContainedObjectAsIpso is Sprite || mContainedObjectAsIpso is NineSlice)
@@ -1187,33 +1209,7 @@ namespace Gum.Wireframe
 
                     if (childrenUpdateDepth > 0)
                     {
-                        if (this.mContainedObjectAsIpso == null)
-                        {
-                            foreach (var child in this.mWhatThisContains)
-                            {
-                                // Victor Chelaru
-                                // January 10, 2017
-                                // I think we may not want to update any children which
-                                // have parents, because they'll get updated through their
-                                // parents...
-                                if(child.Parent == null || child.Parent == this)
-                                {
-                                    child.UpdateLayout(false, childrenUpdateDepth - 1);
-                                }
-                            }
-                        }
-                        else
-                        {
-                            for (int i = 0; i < this.Children.Count; i++)
-                            {
-                                var child = this.Children[i];
-
-                                if (child is GraphicalUiElement)
-                                {
-                                    (child as GraphicalUiElement).UpdateLayout(false, childrenUpdateDepth - 1);
-                                }
-                            }
-                        }
+                        UpdateChildren(childrenUpdateDepth);
                     }
 
                     // Eventually add more conditions here to make it fire less often
@@ -1228,6 +1224,42 @@ namespace Gum.Wireframe
                 }
             }
 
+        }
+
+        private void UpdateChildren(int childrenUpdateDepth, bool onlyAbsoluteLayoutChildren = false)
+        {
+            if (this.mContainedObjectAsIpso == null)
+            {
+                foreach (var child in this.mWhatThisContains)
+                {
+                    // Victor Chelaru
+                    // January 10, 2017
+                    // I think we may not want to update any children which
+                    // have parents, because they'll get updated through their
+                    // parents...
+                    if ((child.Parent == null || child.Parent == this) && 
+                        (onlyAbsoluteLayoutChildren == false || child.IsAllLayoutAbsolute()))
+                    {
+                        child.UpdateLayout(false, childrenUpdateDepth - 1);
+                    }
+                }
+            }
+            else
+            {
+                for (int i = 0; i < this.Children.Count; i++)
+                {
+                    var child = this.Children[i];
+
+                    if (child is GraphicalUiElement)
+                    {
+                        var asGue = child as GraphicalUiElement;
+                        if(onlyAbsoluteLayoutChildren == false || asGue.IsAllLayoutAbsolute())
+                        {
+                            asGue.UpdateLayout(false, childrenUpdateDepth - 1);
+                        }
+                    }
+                }
+            }
         }
 
         private void UpdateLayerScissor()
@@ -1800,8 +1832,15 @@ namespace Gum.Wireframe
                 {
                     if (element.IsAllLayoutAbsolute())
                     {
-                        var elementWidth = element.GetRequiredParentHeight();
-                        maxHeight = System.Math.Max(maxHeight, elementWidth);
+                        var elementHeight = element.GetRequiredParentHeight();
+                        if(this.ChildrenLayout == ChildrenLayout.TopToBottomStack)
+                        {
+                            maxHeight += elementHeight;
+                        }
+                        else
+                        {
+                            maxHeight = System.Math.Max(maxHeight, elementHeight);
+                        }
                     }
                 }
 
@@ -1867,7 +1906,15 @@ namespace Gum.Wireframe
                     if (element.IsAllLayoutAbsolute())
                     {
                         var elementWidth = element.GetRequiredParentWidth();
-                        maxWidth = System.Math.Max(maxWidth, elementWidth);
+
+                        if(this.ChildrenLayout == ChildrenLayout.LeftToRightStack)
+                        {
+                            maxWidth += elementWidth;
+                        }
+                        else
+                        {
+                            maxWidth = System.Math.Max(maxWidth, elementWidth);
+                        }
                     }
                 }
 
