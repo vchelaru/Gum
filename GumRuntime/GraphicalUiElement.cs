@@ -1828,18 +1828,43 @@ namespace Gum.Wireframe
             if (mHeightUnit == DimensionUnitType.RelativeToChildren)
             {
                 float maxHeight = 0;
-                foreach (var element in this.mWhatThisContains)
+
+
+                if (this.mContainedObjectAsIpso != null)
                 {
-                    if (element.IsAllLayoutAbsolute())
+                    foreach (GraphicalUiElement element in this.Children)
                     {
-                        var elementHeight = element.GetRequiredParentHeight();
-                        if(this.ChildrenLayout == ChildrenLayout.TopToBottomStack)
+                        if (element.IsAllLayoutAbsolute())
                         {
-                            maxHeight += elementHeight;
+                            var elementHeight = element.GetRequiredParentHeight();
+
+                            if (this.ChildrenLayout == ChildrenLayout.TopToBottomStack)
+                            {
+                                maxHeight += elementHeight;
+                            }
+                            else
+                            {
+                                maxHeight = System.Math.Max(maxHeight, elementHeight);
+                            }
                         }
-                        else
+                    }
+                }
+                else
+                {
+
+                    foreach (var element in this.mWhatThisContains)
+                    {
+                        if (element.IsAllLayoutAbsolute())
                         {
-                            maxHeight = System.Math.Max(maxHeight, elementHeight);
+                            var elementHeight = element.GetRequiredParentHeight();
+                            if(this.ChildrenLayout == ChildrenLayout.TopToBottomStack)
+                            {
+                                maxHeight += elementHeight;
+                            }
+                            else
+                            {
+                                maxHeight = System.Math.Max(maxHeight, elementHeight);
+                            }
                         }
                     }
                 }
@@ -1901,19 +1926,44 @@ namespace Gum.Wireframe
             if (mWidthUnit == DimensionUnitType.RelativeToChildren)
             {
                 float maxWidth = 0;
-                foreach (var element in this.mWhatThisContains)
-                {
-                    if (element.IsAllLayoutAbsolute())
-                    {
-                        var elementWidth = element.GetRequiredParentWidth();
 
-                        if(this.ChildrenLayout == ChildrenLayout.LeftToRightStack)
+                List<GraphicalUiElement> childrenToUse = mWhatThisContains;
+
+                if (this.mContainedObjectAsIpso != null)
+                {
+                    foreach (GraphicalUiElement element in this.Children)
+                    {
+                        if (element.IsAllLayoutAbsolute())
                         {
-                            maxWidth += elementWidth;
+                            var elementWidth = element.GetRequiredParentWidth();
+
+                            if (this.ChildrenLayout == ChildrenLayout.LeftToRightStack)
+                            {
+                                maxWidth += elementWidth;
+                            }
+                            else
+                            {
+                                maxWidth = System.Math.Max(maxWidth, elementWidth);
+                            }
                         }
-                        else
+                    }
+                }
+                else
+                {
+                    foreach (var element in this.mWhatThisContains)
+                    {
+                        if (element.IsAllLayoutAbsolute())
                         {
-                            maxWidth = System.Math.Max(maxWidth, elementWidth);
+                            var elementWidth = element.GetRequiredParentWidth();
+
+                            if(this.ChildrenLayout == ChildrenLayout.LeftToRightStack)
+                            {
+                                maxWidth += elementWidth;
+                            }
+                            else
+                            {
+                                maxWidth = System.Math.Max(maxWidth, elementWidth);
+                            }
                         }
                     }
                 }
