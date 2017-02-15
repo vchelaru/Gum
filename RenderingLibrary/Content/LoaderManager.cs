@@ -283,12 +283,12 @@ namespace RenderingLibrary.Content
                 {
                     using (var stream = FileManager.GetStreamForFile(fileNameStandardized))
                     {
-                        Texture2D texture = Texture2D.FromStream(renderer.GraphicsDevice,
+                        Texture2D texture = null;
+
+                        texture = Texture2D.FromStream(renderer.GraphicsDevice,
                             stream);
 
                         texture.Name = fileNameStandardized;
-
-
 
                         toReturn = texture;
 
