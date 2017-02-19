@@ -469,6 +469,7 @@ namespace Gum.Wireframe
                     if (mParent != null && mParent.Children != null)
                     {
                         mParent.Children.Remove(this);
+                        (mParent as GraphicalUiElement)?.UpdateLayout();
                     }
                     mParent = value;
                     if (mParent != null && mParent.Children != null)
