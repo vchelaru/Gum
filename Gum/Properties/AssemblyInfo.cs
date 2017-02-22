@@ -33,5 +33,6 @@ using System.Runtime.InteropServices;
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
 // 0.8.2 adds improved stacking + relative to children behavior.
+// 0.8.2.1 fixes outline thickness not creating custom fonts like it should
 [assembly: AssemblyVersion("0.8.2.0")]
 [assembly: AssemblyFileVersion("0.8.2.0")]

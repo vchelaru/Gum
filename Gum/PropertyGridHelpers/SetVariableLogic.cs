@@ -123,7 +123,7 @@ namespace Gum.PropertyGridHelpers
 
         private void ReactIfChangedMemberIsFont(ElementSave parentElement, InstanceSave instance, string changedMember, object oldValue)
         {
-            if (changedMember == "Font" || changedMember == "FontSize")
+            if (changedMember == "Font" || changedMember == "FontSize" || changedMember == "OutlineThickness")
             {
                 FontManager.Self.ReactToFontValueSet(instance);
             }

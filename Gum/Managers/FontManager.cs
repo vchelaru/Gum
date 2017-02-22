@@ -82,7 +82,7 @@ namespace Gum.Managers
             BmfcSave.CreateBitmapFontFilesIfNecessary(
                 (int)fontSizeAsObject,
                 (string)stateSave.GetValueRecursive(prefix + "Font"),
-                0);
+                (int)stateSave.GetValueRecursive(prefix + "OutlineThickness"));
         }
     }
 }

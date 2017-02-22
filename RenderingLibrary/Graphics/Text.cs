@@ -304,6 +304,7 @@ namespace RenderingLibrary.Graphics
                 mBitmapFont = value;
 
                 UpdateWrappedText();
+                UpdatePreRenderDimensions();
 
                 mNeedsBitmapFontRefresh = true;
                 //UpdateTextureToRender();

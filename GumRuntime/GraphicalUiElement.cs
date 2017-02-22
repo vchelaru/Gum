@@ -697,7 +697,9 @@ namespace Gum.Wireframe
             set;
         }
 
-
+        /// <summary>
+        /// The pixel coorinate of the top of the displayed region.
+        /// </summary>
         public int TextureTop
         {
             get
@@ -714,6 +716,10 @@ namespace Gum.Wireframe
             }
         }
 
+
+        /// <summary>
+        /// The pixel coorinate of the left of the displayed region.
+        /// </summary>
         public int TextureLeft
         {
             get
@@ -729,6 +735,11 @@ namespace Gum.Wireframe
                 }
             }
         }
+
+
+        /// <summary>
+        /// The pixel width of the displayed region.
+        /// </summary>
         public int TextureWidth
         {
             get
@@ -744,6 +755,11 @@ namespace Gum.Wireframe
                 }
             }
         }
+
+
+        /// <summary>
+        /// The pixel height of the displayed region.
+        /// </summary>
         public int TextureHeight
         {
             get
@@ -2824,33 +2840,40 @@ namespace Gum.Wireframe
             else if (propertyName == "Font Scale")
             {
                 ((Text)mContainedObjectAsIpso).FontScale = (float)value;
+                handled = true;
+
             }
             else if (propertyName == "Font")
             {
                 this.Font = value as string;
 
                 UpdateToFontValues();
+                handled = true;
             }
             else if (propertyName == "UseCustomFont")
             {
                 this.UseCustomFont = (bool)value;
                 UpdateToFontValues();
+                handled = true;
             }
 
             else if (propertyName == "CustomFontFile")
             {
                 CustomFontFile = (string)value;
                 UpdateToFontValues();
+                handled = true;
             }
             else if (propertyName == "FontSize")
             {
                 FontSize = (int)value;
                 UpdateToFontValues();
+                handled = true;
             }
             else if (propertyName == "OutlineThickness")
             {
                 OutlineThickness = (int)value;
                 UpdateToFontValues();
+                handled = true;
             }
             else if (propertyName == "Blend")
             {
@@ -2860,6 +2883,7 @@ namespace Gum.Wireframe
 
                 var text = mContainedObjectAsIpso as Text;
                 text.BlendState = valueAsXnaBlend;
+                handled = true;
             }
             return handled;
         }
