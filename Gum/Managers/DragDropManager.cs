@@ -203,21 +203,33 @@ namespace Gum.Managers
                 // reordering.
                 if (isSameElement)
                 {
-                    if(targetTag is InstanceSave && targetTag != draggedAsInstanceSave)
+                    if(targetTag != draggedAsInstanceSave)
+                    {
+
+                    }
+                    string parentName;
+                    string variableName = draggedAsInstanceSave.Name + ".Parent";
+                    if(targetTag is InstanceSave)
                     {
                         // setting the parent:
-                        var parentName = (targetTag as InstanceSave).Name;
+                        parentName = (targetTag as InstanceSave).Name;
 
-                        string variableName = draggedAsInstanceSave.Name + ".Parent";
 
-                        // Since the Parent property can only be set in the default state, we will
-                        // set the Parent variable on that instead of the SelectedState.Self.SelectedStateSave
-                        var stateToAssignOn = targetElementSave.DefaultState;
-
-                        var oldValue = stateToAssignOn.GetValue(variableName) as string;
-                        stateToAssignOn.SetValue(variableName, parentName, "string");
-                        SetVariableLogic.Self.PropertyValueChanged("Parent", oldValue);
                     }
+                    else
+                    {
+                        // drag+drop on the container, so detach:
+                        parentName = null;
+                    }
+                    // Since the Parent property can only be set in the default state, we will
+                    // set the Parent variable on that instead of the SelectedState.Self.SelectedStateSave
+                    var stateToAssignOn = targetElementSave.DefaultState;
+
+                    var oldValue = stateToAssignOn.GetValue(variableName) as string;
+                    stateToAssignOn.SetValue(variableName, parentName, "string");
+                    SetVariableLogic.Self.PropertyValueChanged("Parent", oldValue);
+
+
                 }
                 else
                 {

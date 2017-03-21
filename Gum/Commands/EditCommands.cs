@@ -60,6 +60,12 @@ namespace Gum.Commands
 
                 MessageBox.Show(message);
             }
+            else if(stateSave.ParentContainer?.DefaultState == stateSave)
+            {
+                string message =
+                    "This state cannot be removed because it is the default state.";
+                MessageBox.Show(message);
+            }
             else
             {
                 var response = MessageBox.Show($"Are you sure you want to delete the state {stateSave.Name}?", "Delete state?", MessageBoxButtons.YesNo);
@@ -334,6 +340,19 @@ namespace Gum.Commands
                     }
                 }
             }
+        }
+
+        internal void AddComponent(ComponentSave componentSave)
+        {
+
+            GumCommands.Self.Edit.AddComponent(componentSave);
+
+            GumCommands.Self.GuiCommands.RefreshElementTreeView();
+
+            SelectedState.Self.SelectedComponent = componentSave;
+
+            GumCommands.Self.FileCommands.TryAutoSaveProject();
+            GumCommands.Self.FileCommands.TryAutoSaveElement(componentSave);
         }
 
         internal void RenameStateCategory(StateSaveCategory category, ElementSave elementSave)

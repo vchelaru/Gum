@@ -38,31 +38,33 @@ namespace Gum.ToolCommands
         public ScreenSave AddScreen(string screenName)
         {
             ScreenSave screenSave = new ScreenSave();
-            screenSave.Initialize( StandardElementsManager.Self.GetDefaultStateFor("Screen") );
             screenSave.Name = screenName;
 
-            ProjectManager.Self.GumProjectSave.ScreenReferences.Add(new ElementReference { Name = screenName, ElementType = ElementType.Screen });
-            ProjectManager.Self.GumProjectSave.ScreenReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
-            ProjectManager.Self.GumProjectSave.Screens.Add(screenSave);
-            
+            AddScreen(screenSave);
 
             return screenSave;
         }
 
+        public void AddScreen(ScreenSave screenSave)
+        {
+            screenSave.Initialize(StandardElementsManager.Self.GetDefaultStateFor("Screen"));
+
+            ProjectManager.Self.GumProjectSave.ScreenReferences.Add(new ElementReference { Name = screenSave.Name, ElementType = ElementType.Screen });
+            ProjectManager.Self.GumProjectSave.ScreenReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
+            ProjectManager.Self.GumProjectSave.Screens.Add(screenSave);
+
+        }
 
         public ComponentSave AddComponent(string componentName)
         {
             ComponentSave componentSave = new ComponentSave();
-
-
-            componentSave.BaseType = "Container";
             componentSave.Name = componentName;
 
-            ProjectManager.Self.GumProjectSave.ComponentReferences.Add(new ElementReference { Name = componentName, ElementType = ElementType.Component });
-            ProjectManager.Self.GumProjectSave.ComponentReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
-            ProjectManager.Self.GumProjectSave.Components.Add(componentSave);
 
-            componentSave.InitializeDefaultAndComponentVariables();
+
+            AddComponent(componentSave);
+
+
 
 
             // components shouldn't set their positions to 0 by default, so if the
@@ -82,12 +84,24 @@ namespace Gum.ToolCommands
             }
 
             var hasEventsVariable = componentSave.DefaultState.GetVariableSave("HasEvents");
-            if(hasEventsVariable != null)
+            if (hasEventsVariable != null)
             {
                 hasEventsVariable.Value = true;
             }
 
             return componentSave;
+        }
+
+        public void AddComponent(ComponentSave componentSave)
+        {
+            componentSave.BaseType = "Container";
+
+            ProjectManager.Self.GumProjectSave.ComponentReferences.Add(new ElementReference { Name = componentSave.Name, ElementType = ElementType.Component });
+            ProjectManager.Self.GumProjectSave.ComponentReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
+            ProjectManager.Self.GumProjectSave.Components.Add(componentSave);
+
+            componentSave.InitializeDefaultAndComponentVariables();
+
         }
 
 

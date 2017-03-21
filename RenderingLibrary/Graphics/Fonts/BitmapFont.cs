@@ -99,15 +99,22 @@ namespace RenderingLibrary.Graphics
                 }
                 else
                 {
+                    string fileName;
+
                     if (FileManager.IsRelative(texturesToLoad[i]))
                     {
+                        fileName = directory + texturesToLoad[i];
+
                         //mTextures[i] = LoaderManager.Self.Load(directory + texturesToLoad[i], managers);
-                        mTextures[i] = LoaderManager.Self.LoadContent<Texture2D>(directory + texturesToLoad[i]);
                     }
                     else
                     {
                         //mTextures[i] = LoaderManager.Self.Load(texturesToLoad[i], managers);
-                        mTextures[i] = LoaderManager.Self.LoadContent<Texture2D>(texturesToLoad[i]);
+                        fileName = texturesToLoad[i];
+                    }
+                    if (ToolsUtilities.FileManager.FileExists(fileName))
+                    {
+                        mTextures[i] = LoaderManager.Self.LoadContent<Texture2D>(fileName);
                     }
                 }
             } 
@@ -328,7 +335,7 @@ namespace RenderingLibrary.Graphics
                 StringFunctions.GetIntAfter(
                 "lineHeight=", fontPattern);
 
-            if (mTextures.Length > 0)
+            if (mTextures.Length > 0 && mTextures[0] != null)
             {
                 //ToDo: Atlas support  **************************************************************
                 BitmapCharacterInfo space = FillBitmapCharacterInfo(' ', fontPattern,

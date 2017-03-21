@@ -141,6 +141,7 @@ namespace Gum.DataTypes
 #endif
         }
 
+
         public override string ToString()
         {
             if (!string.IsNullOrEmpty(BaseType))

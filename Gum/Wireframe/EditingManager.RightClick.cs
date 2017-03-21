@@ -18,9 +18,11 @@ namespace Gum.Wireframe
 {
     public enum CopyType
     {
-        Instance,
-        State
+        InstanceOrElement = 1,
+        State = 2,
     }
+
+
 
     public partial class EditingManager
     {
@@ -38,7 +40,8 @@ namespace Gum.Wireframe
 
         List<InstanceSave> mCopiedInstances = new List<InstanceSave>();
         StateSave mCopiedState = new StateSave();
-        
+        ElementSave mCopiedElement = null;
+
         CopyType mCopyType;
 
         #endregion
@@ -163,6 +166,8 @@ namespace Gum.Wireframe
                 GumCommands.Self.GuiCommands.RefreshElementTreeView();
             }
 
+            // todo: need to handle cut Element saves, but I don't want to do it yet due to the danger of losing valid data...
+
 
         }
         
@@ -171,32 +176,27 @@ namespace Gum.Wireframe
             // To make sure we didn't copy one type and paste another
             if (mCopyType == copyType)
             {
-                if (mCopyType == CopyType.Instance)
+                if (mCopyType == CopyType.InstanceOrElement)
                 {
+                    if(mCopiedElement != null)
+                    {
+                        PasteCopiedElement();
+
+                    }
                     // We need to both duplicate the InstanceSave, but we also need to duplicate all of the variables
                     // that use the copied InstanceSave.
-                    if (mCopiedInstances.Count == 0)
-                    {
-                        // do nothing
-                    }
-                    else
+                    else if (mCopiedInstances.Count != 0)
                     {
                         PasteCopiedInstanceSave();
                     }
                 }
-                else if (mCopyType == CopyType.State)
+                else if (mCopyType == CopyType.State && mCopiedState != null)
                 {
-                    if (mCopiedState != null)
-                    {
-                        PastedCopiedState();
-
-                    }
+                    PastedCopiedState();
                 }
             }
 
         }
-
-        
 
         public void HandleDelete()
         {
@@ -359,14 +359,21 @@ namespace Gum.Wireframe
         private void StoreCopiedObject(CopyType copyType)
         {
             mCopyType = copyType;
-
+            mCopiedElement = null;
             mCopiedInstances.Clear();
             mCopiedState.Variables.Clear();
             mCopiedState.VariableLists.Clear();
 
-            if (copyType == CopyType.Instance)
+            if (copyType == CopyType.InstanceOrElement)
             {
-                StoreCopiedInstances();
+                if(ProjectState.Self.Selected.SelectedInstances.Count() != 0)
+                {
+                    StoreCopiedInstances();
+                }
+                else if(ProjectState.Self.Selected.SelectedElement != null)
+                {
+                    StoreCopiedElementSave();
+                }
             }
             else if (copyType == CopyType.State)
             {
@@ -412,6 +419,21 @@ namespace Gum.Wireframe
                     {
                         mCopiedState.VariableLists.RemoveAt(i);
                     }
+                }
+            }
+        }
+
+        private void StoreCopiedElementSave()
+        {
+            if(SelectedState.Self.SelectedElement != null)
+            {
+                if (SelectedState.Self.SelectedElement is ScreenSave)
+                {
+                    mCopiedElement = ((ScreenSave)SelectedState.Self.SelectedElement).Clone();
+                }
+                else if(SelectedState.Self.SelectedElement is ComponentSave)
+                {
+                    mCopiedElement = ((ComponentSave)SelectedState.Self.SelectedElement).Clone();
                 }
             }
         }
@@ -611,7 +633,49 @@ namespace Gum.Wireframe
             GumCommands.Self.FileCommands.TryAutoSaveElement(targetElement);
         }
 
-        
+
+        private void PasteCopiedElement()
+        {
+            ElementSave toAdd;
+            
+            if(mCopiedElement is ScreenSave)
+            {
+                toAdd = ((ScreenSave)mCopiedElement).Clone();
+            }
+            else
+            {
+                toAdd = ((ComponentSave)mCopiedElement).Clone();
+            }
+
+            List<string> allElementNames = new List<string>();
+            allElementNames.AddRange(ProjectState.Self.GumProjectSave.Screens.Select(item=>item.Name.ToLowerInvariant()));
+            allElementNames.AddRange(ProjectState.Self.GumProjectSave.Components.Select(item=>item.Name.ToLowerInvariant()));
+            allElementNames.AddRange(ProjectState.Self.GumProjectSave.StandardElements.Select(item=>item.Name.ToLowerInvariant()));
+
+            while(allElementNames.Contains(toAdd.Name.ToLowerInvariant()))
+            {
+                toAdd.Name = StringFunctions.IncrementNumberAtEnd(toAdd.Name);
+            }
+
+            if(toAdd is ScreenSave)
+            {
+                ProjectCommands.Self.AddScreen(toAdd as ScreenSave);
+            }
+            else
+            {
+                ProjectCommands.Self.AddComponent(toAdd as ComponentSave);
+            }
+
+
+            GumCommands.Self.GuiCommands.RefreshElementTreeView();
+
+            SelectedState.Self.SelectedElement = toAdd;
+
+            GumCommands.Self.FileCommands.TryAutoSaveElement(toAdd);
+            GumCommands.Self.FileCommands.TryAutoSaveProject();
+        }
+
+
 
         void OnBringToFrontClick(object sender, EventArgs e)
         {

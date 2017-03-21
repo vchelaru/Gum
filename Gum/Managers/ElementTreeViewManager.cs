@@ -967,21 +967,21 @@ namespace Gum.Managers
                 // copy, ctrl c, ctrl + c
                 if (e.KeyCode == Keys.C)
                 {
-                    EditingManager.Self.OnCopy(CopyType.Instance);
+                    EditingManager.Self.OnCopy(CopyType.InstanceOrElement);
                     e.Handled = true;
                     e.SuppressKeyPress = true;
                 }
                 // paste, ctrl v, ctrl + v
                 else if (e.KeyCode == Keys.V)
                 {
-                    EditingManager.Self.OnPaste(CopyType.Instance);
+                    EditingManager.Self.OnPaste(CopyType.InstanceOrElement);
                     e.Handled = true;
                     e.SuppressKeyPress = true;
                 }
                 // cut, ctrl x, ctrl + x
                 else if (e.KeyCode == Keys.X)
                 {
-                    EditingManager.Self.OnCut(CopyType.Instance);
+                    EditingManager.Self.OnCut(CopyType.InstanceOrElement);
                     e.Handled = true;
                     e.SuppressKeyPress = true;
                 }

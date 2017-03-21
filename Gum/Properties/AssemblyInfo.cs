@@ -34,5 +34,10 @@ using System.Runtime.InteropServices;
 // [assembly: AssemblyVersion("1.0.*")]
 // 0.8.2 adds improved stacking + relative to children behavior.
 // 0.8.2.1 fixes outline thickness not creating custom fonts like it should
-[assembly: AssemblyVersion("0.8.2.0")]
-[assembly: AssemblyFileVersion("0.8.2.0")]
+// 0.8.2.2 Adds ExposesChildrenEvents property
+// 0.8.2.3
+//  - Drag+drop an instance on its parent detaches the instance from any parents
+//  - Copy/paste components now works
+//  - still working....
+[assembly: AssemblyVersion("0.8.2.2")]
+[assembly: AssemblyFileVersion("0.8.2.2")]
