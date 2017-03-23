@@ -13,17 +13,9 @@ namespace Gum.Managers
 {
     public partial class PropertyGridManager
 	{
-
-
-        void OnResetToDefaultClick(object sender, EventArgs e)
-        {
-            PropertyGridManager.Self.ResetSelectedValueToDefault();
-        }
-
+        
         private void InitializeRightClickMenu()
         {
-            mResetToDefault = new ToolStripMenuItem("Reset to default");
-            mResetToDefault.Click += OnResetToDefaultClick;
         }
 
         public void OnPropertyGridRightClick(ContextMenuStrip contextMenuStrip)

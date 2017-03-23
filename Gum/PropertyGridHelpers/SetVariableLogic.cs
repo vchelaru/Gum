@@ -252,18 +252,28 @@ namespace Gum.PropertyGridHelpers
             VariableSave variable = SelectedState.Self.SelectedVariableSave;
             // Eventually need to handle tunneled variables
 
-            
+            bool isSourcefile = variable != null && variable.GetRootName() == "SourceFile";
 
-            if (variable != null && variable.GetRootName() == "SourceFile")
+            bool isValidExtension = false;
+
+            if (isSourcefile)
             {
-                string value = variable.Value as string;
+                string value;
 
+                value = variable.Value as string;
                 var extension = FileManager.GetExtension(value);
 
-                var isValidExtension = extension == "gif" ||
+                isValidExtension = extension == "gif" ||
                     extension == "jpg" ||
                     extension == "png";
+            }
 
+            if (isSourcefile)
+            {
+
+                string value;
+
+                value = variable.Value as string;
                 if (isValidExtension)
                 {
 
@@ -274,7 +284,11 @@ namespace Gum.PropertyGridHelpers
 
                         if (!isRelativeToProject)
                         {
-                            TryCopyFileLocally(variable, value);
+                            bool shouldCopy = AskIfShouldCopy(variable, value);
+                            if(shouldCopy)
+                            {
+                                PerformCopy(variable, value);
+                            }
                         }
                     }
 
@@ -287,6 +301,7 @@ namespace Gum.PropertyGridHelpers
                 }
                 else
                 {
+                    var extension = FileManager.GetExtension(value);
 
                     MessageBox.Show("The extension " + extension + " is not supported for textures");
 
@@ -296,7 +311,7 @@ namespace Gum.PropertyGridHelpers
 
         }
 
-        private static void TryCopyFileLocally(VariableSave variable, string value)
+        private static bool AskIfShouldCopy(VariableSave variable, string value)
         {
             // Ask the user what to do - make it relative?
             MultiButtonMessageBox mbmb = new
@@ -330,26 +345,30 @@ namespace Gum.PropertyGridHelpers
 
             }
 
-            if (shouldCopy)
+            return shouldCopy;
+        }
+
+        private static void PerformCopy(VariableSave variable, string value)
+        {
+            string directory = FileManager.GetDirectory(ProjectManager.Self.GumProjectSave.FullFileName);
+            string targetAbsoluteFile = directory + FileManager.RemovePath(value);
+            try
             {
 
-                try
-                {
+                string sourceAbsoluteFile =
+                    directory + value;
+                sourceAbsoluteFile = FileManager.RemoveDotDotSlash(sourceAbsoluteFile);
 
-                    string sourceAbsoluteFile =
-                        directory + value;
-                    sourceAbsoluteFile = FileManager.RemoveDotDotSlash(sourceAbsoluteFile);
+                System.IO.File.Copy(sourceAbsoluteFile, targetAbsoluteFile, overwrite: true);
 
-                    System.IO.File.Copy(sourceAbsoluteFile, targetAbsoluteFile, overwrite: true);
+                variable.Value = FileManager.RemovePath(value);
 
-                    variable.Value = FileManager.RemovePath(value);
-
-                }
-                catch (Exception e)
-                {
-                    MessageBox.Show("Error copying file:\n" + e.ToString());
-                }
             }
+            catch (Exception e)
+            {
+                MessageBox.Show("Error copying file:\n" + e.ToString());
+            }
+            
         }
 
         private void ReactIfChangedMemberIsParent(ElementSave parentElement, InstanceSave instance, string changedMember, object oldValue)

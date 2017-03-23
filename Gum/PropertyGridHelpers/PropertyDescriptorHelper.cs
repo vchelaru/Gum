@@ -55,9 +55,25 @@ namespace Gum.DataTypes.ComponentModel
             return new PropertyDescriptorCollection(properties.ToArray());
         }
 
+        public void AddProperty(List<PropertyDescriptor> pdc, string propertyName, Type propertyType)
+        {
+            AddProperty(pdc, propertyName, propertyType, null, new Attribute[0]);
+        }
+
         public PropertyDescriptorCollection AddProperty(PropertyDescriptorCollection pdc, string propertyName, Type propertyType)
         {
             return AddProperty(pdc, propertyName, propertyType, null, new Attribute[0]);
+        }
+
+        public void AddProperty(List<PropertyDescriptor> pdc, string propertyName, Type propertyType, TypeConverter converter,
+            Attribute[] attributes)
+        {
+            InstanceSavePropertyDescriptor ppd = new InstanceSavePropertyDescriptor(
+                propertyName, propertyType, attributes);
+
+            ppd.TypeConverter = converter;
+
+            pdc.Add(ppd);
         }
 
         public PropertyDescriptorCollection AddProperty(PropertyDescriptorCollection pdc, string propertyName, Type propertyType, TypeConverter converter,

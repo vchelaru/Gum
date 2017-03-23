@@ -38,6 +38,7 @@ using System.Runtime.InteropServices;
 // 0.8.2.3
 //  - Drag+drop an instance on its parent detaches the instance from any parents
 //  - Copy/paste components now works
+//  - Gum no longer crashes when FNT file is missing PNG
 //  - still working....
 [assembly: AssemblyVersion("0.8.2.2")]
 [assembly: AssemblyFileVersion("0.8.2.2")]

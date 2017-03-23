@@ -31,8 +31,6 @@ namespace Gum.Managers
     {
         #region Fields
 
-        PropertyGrid mPropertyGrid;
-
         WpfDataUi.DataUiGrid mVariablesDataGrid;
 
         static PropertyGridManager mPropertyGridManager;
@@ -66,21 +64,6 @@ namespace Gum.Managers
         }
 
 
-        public string SelectedLabel
-        {
-            get
-            {
-                if (this.mPropertyGrid.SelectedGridItem != null)
-                {
-                    return this.mPropertyGrid.SelectedGridItem.Label;
-                }
-                else
-                {
-                    return null;
-                }
-            }
-        }
-
         public VariableSave SelectedBehaviorVariable
         {
             get
@@ -96,7 +79,7 @@ namespace Gum.Managers
         #endregion
 
 
-        public void Initialize(PropertyGrid propertyGrid, TestWpfControl variablesDataUiGrid, DataUiGrid eventsDataUiGrid)
+        public void Initialize(TestWpfControl variablesDataUiGrid, DataUiGrid eventsDataUiGrid)
         {
             mVariablesDataGrid = variablesDataUiGrid.DataGrid;
             variableViewModel = new Plugins.VariableGrid.MainControlViewModel();
@@ -105,9 +88,6 @@ namespace Gum.Managers
             variablesDataUiGrid.AddVariableClicked += HandleAddVariable;
 
             InitializeEvents(eventsDataUiGrid);
-
-            mPropertyGrid = propertyGrid;
-            mPropertyGrid.PropertySort = PropertySort.Categorized;
 
             InitializeRightClickMenu();
         }
@@ -177,7 +157,6 @@ namespace Gum.Managers
             {
                 // I don't know if we want to eventually show these
                 // but for now we'll hide the PropertyGrid:
-                mPropertyGrid.Visible = false;
                 mVariablesDataGrid.Visibility = System.Windows.Visibility.Hidden;
             }
             else
@@ -586,14 +565,6 @@ namespace Gum.Managers
 
         //    saveProject = false;
         //}
-
-        public void ResetSelectedValueToDefault()
-        {
-            GridItem gridItem = mPropertyGrid.SelectedGridItem;
-            string variableName = gridItem.Label;
-
-            ResetVariableToDefault(variableName);
-        }
 
         /// <summary>
         /// Called when the user clicks the "Make Default" menu item

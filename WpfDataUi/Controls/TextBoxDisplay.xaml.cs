@@ -121,6 +121,13 @@ namespace WpfDataUi.Controls
             }
         }
 
+        public void MakeMultiline()
+        {
+            this.TextBox.TextWrapping = TextWrapping.Wrap;
+            this.TextBox.AcceptsReturn = true;
+
+            this.TextBox.Height = 65;
+        }
 
         private void TextBox_LostFocus_1(object sender, RoutedEventArgs e)
         {

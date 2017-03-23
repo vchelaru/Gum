@@ -71,7 +71,6 @@
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.EventsHost = new System.Windows.Forms.Integration.ElementHost();
             this.testWpfControl2 = new Gum.TestWpfControl();
-            this.VariablePropertyGrid = new System.Windows.Forms.PropertyGrid();
             this.PropertyGridMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.PreviewSplitContainer = new System.Windows.Forms.SplitContainer();
             this.panel1 = new System.Windows.Forms.Panel();
@@ -238,19 +237,19 @@
             // RemoveElementMenuItem
             // 
             this.RemoveElementMenuItem.Name = "RemoveElementMenuItem";
-            this.RemoveElementMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.RemoveElementMenuItem.Size = new System.Drawing.Size(117, 22);
             this.RemoveElementMenuItem.Text = "Element";
             // 
             // RemoveStateMenuItem
             // 
             this.RemoveStateMenuItem.Name = "RemoveStateMenuItem";
-            this.RemoveStateMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.RemoveStateMenuItem.Size = new System.Drawing.Size(117, 22);
             this.RemoveStateMenuItem.Text = "State";
             // 
             // RemoveVariableMenuItem
             // 
             this.RemoveVariableMenuItem.Name = "RemoveVariableMenuItem";
-            this.RemoveVariableMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.RemoveVariableMenuItem.Size = new System.Drawing.Size(117, 22);
             this.RemoveVariableMenuItem.Text = "Variable";
             // 
             // projectPropertiesToolStripMenuItem
@@ -461,7 +460,6 @@
             // tabPage1
             // 
             this.tabPage1.Controls.Add(this.EventsHost);
-            this.tabPage1.Controls.Add(this.VariablePropertyGrid);
             this.tabPage1.Location = new System.Drawing.Point(4, 22);
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
@@ -479,20 +477,6 @@
             this.EventsHost.TabIndex = 3;
             this.EventsHost.Text = "elementHost1";
             this.EventsHost.Child = this.testWpfControl2;
-            // 
-            // VariablePropertyGrid
-            // 
-            this.VariablePropertyGrid.CategoryForeColor = System.Drawing.SystemColors.InactiveCaptionText;
-            this.VariablePropertyGrid.ContextMenuStrip = this.PropertyGridMenuStrip;
-            this.VariablePropertyGrid.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.VariablePropertyGrid.HelpVisible = false;
-            this.VariablePropertyGrid.Location = new System.Drawing.Point(3, 3);
-            this.VariablePropertyGrid.Margin = new System.Windows.Forms.Padding(0, 3, 3, 3);
-            this.VariablePropertyGrid.Name = "VariablePropertyGrid";
-            this.VariablePropertyGrid.Size = new System.Drawing.Size(228, 466);
-            this.VariablePropertyGrid.TabIndex = 2;
-            this.VariablePropertyGrid.ToolbarVisible = false;
-            this.VariablePropertyGrid.PropertyValueChanged += new System.Windows.Forms.PropertyValueChangedEventHandler(this.VariablePropertyGrid_PropertyValueChanged);
             // 
             // PropertyGridMenuStrip
             // 
@@ -667,7 +651,6 @@
         private System.Windows.Forms.SplitContainer VariablesAndEverythingElse;
         private System.Windows.Forms.SplitContainer StatesAndVariablesContainer;
         private System.Windows.Forms.SplitContainer PreviewSplitContainer;
-        private System.Windows.Forms.PropertyGrid VariablePropertyGrid;
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.Panel panel2;
         private System.Windows.Forms.ToolStripMenuItem addToolStripMenuItem;

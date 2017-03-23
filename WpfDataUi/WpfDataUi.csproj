@@ -72,6 +72,7 @@
     <Compile Include="Controls\FileSelectionDisplay.xaml.cs">
       <DependentUpon>FileSelectionDisplay.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\MultiLineTextBoxDisplay.cs" />
     <Compile Include="Controls\SingleDataUiContainer.xaml.cs">
       <DependentUpon>SingleDataUiContainer.xaml</DependentUpon>
     </Compile>

@@ -24,19 +24,19 @@ namespace Gum.PropertyGridHelpers
     }
     #endregion
 
-    public class ElementSaveDisplayer : PropertyGridDisplayer
+    public class ElementSaveDisplayer
     {
         #region Fields
+        static EditorAttribute mFileWindowAttribute = new EditorAttribute(typeof(System.Windows.Forms.Design.FileNameEditor), typeof(System.Drawing.Design.UITypeEditor));
 
         static PropertyDescriptorHelper mHelper = new PropertyDescriptorHelper();
 
         #endregion
 
-        public override System.ComponentModel.PropertyDescriptorCollection GetProperties(Attribute[] attributes)
+        public List<PropertyDescriptor> GetProperties(Attribute[] attributes)
         {
             // search terms: display properties, display variables, show variables, variable display, variable displayer
-            PropertyDescriptorCollection pdc =
-                TypeDescriptor.GetProperties(this, true);
+            List<PropertyDescriptor> pdc = new List<PropertyDescriptor>();
 
 
             StateSave stateSave = SelectedState.Self.SelectedStateSave;
@@ -45,12 +45,12 @@ namespace Gum.PropertyGridHelpers
 
             if (instanceSave != null && stateSave != null)
             {
-                pdc = DisplayCurrentInstance(pdc, instanceSave);
+                DisplayCurrentInstance(pdc, instanceSave);
 
             }
             else if (elementSave != null && stateSave != null)
             {
-                pdc = DisplayCurrentElement(pdc, elementSave, null, elementSave.States[0], null);
+                DisplayCurrentElement(pdc, elementSave, null, elementSave.States[0], null);
 
 
             }
@@ -58,7 +58,7 @@ namespace Gum.PropertyGridHelpers
             return pdc;
         }
 
-        private PropertyDescriptorCollection DisplayCurrentInstance(PropertyDescriptorCollection pdc, InstanceSave instanceSave)
+        private void DisplayCurrentInstance(List<PropertyDescriptor> pdc, InstanceSave instanceSave)
         {
             ElementSave elementSave = instanceSave.GetBaseElementSave();
 
@@ -73,13 +73,11 @@ namespace Gum.PropertyGridHelpers
                 stateToDisplay = new StateSave();
             }
 
-            pdc = DisplayCurrentElement(pdc, elementSave, instanceSave, stateToDisplay, instanceSave.Name, AmountToDisplay.ElementAndExposedOnly);
-
-            return pdc;
-
+            DisplayCurrentElement(pdc, elementSave, instanceSave, stateToDisplay, instanceSave.Name, AmountToDisplay.ElementAndExposedOnly);
+            
         }
 
-        private static PropertyDescriptorCollection DisplayCurrentElement(PropertyDescriptorCollection pdc, ElementSave elementSave, 
+        private static void DisplayCurrentElement(List<PropertyDescriptor> pdc, ElementSave elementSave, 
             InstanceSave instanceSave, StateSave defaultState, string prependedVariable, AmountToDisplay amountToDisplay = AmountToDisplay.AllVariables)
         {
             bool isDefault = SelectedState.Self.SelectedStateSave == SelectedState.Self.SelectedElement.DefaultState;
@@ -92,14 +90,14 @@ namespace Gum.PropertyGridHelpers
             bool isCustomType = (elementSave is StandardElementSave) == false;
             if (isDefault && ( isCustomType || instanceSave != null))
             {
-                pdc = AddNameAndBaseTypeProperties(pdc);
+                AddNameAndBaseTypeProperties(pdc);
             }
 
             if (instanceSave != null)
             {
                 if (isDefault)
                 {
-                    pdc = mHelper.AddProperty(pdc, "Locked", typeof(bool));
+                    mHelper.AddProperty(pdc, "Locked", typeof(bool));
                 }
             }
 
@@ -110,7 +108,7 @@ namespace Gum.PropertyGridHelpers
                 foreach (var item in variables)
                 {
 
-                    pdc = TryDisplayVariableSave(pdc, elementSave, instanceSave, amountToDisplay, null, item);
+                    TryDisplayVariableSave(pdc, elementSave, instanceSave, amountToDisplay, null, item);
                 }
             }
             // else if screen
@@ -119,7 +117,7 @@ namespace Gum.PropertyGridHelpers
                 foreach (var item in StandardElementsManager.Self.GetDefaultStateFor("Screen").Variables)
                 {
 
-                    pdc = TryDisplayVariableSave(pdc, elementSave, instanceSave, amountToDisplay, null, item);
+                    TryDisplayVariableSave(pdc, elementSave, instanceSave, amountToDisplay, null, item);
                 }
             }
 
@@ -150,7 +148,7 @@ namespace Gum.PropertyGridHelpers
             {
                 VariableSave defaultVariable = defaultState.Variables[i];
 
-                pdc = TryDisplayVariableSave(pdc, elementSave, instanceSave, amountToDisplay, ses, defaultVariable);
+                TryDisplayVariableSave(pdc, elementSave, instanceSave, amountToDisplay, ses, defaultVariable);
             }
 
             #endregion
@@ -176,7 +174,7 @@ namespace Gum.PropertyGridHelpers
 
 
 
-                    pdc = mHelper.AddProperty(pdc,
+                    mHelper.AddProperty(pdc,
                         variableList.Name,
                         type,
                         typeConverter,
@@ -190,13 +188,10 @@ namespace Gum.PropertyGridHelpers
 
 
             #endregion
-
-
-
-            return pdc;
+            
         }
 
-        private static PropertyDescriptorCollection TryDisplayVariableSave(PropertyDescriptorCollection pdc, ElementSave elementSave, InstanceSave instanceSave, 
+        private static void TryDisplayVariableSave(List<PropertyDescriptor> pdc, ElementSave elementSave, InstanceSave instanceSave, 
             AmountToDisplay amountToDisplay, StandardElementSave ses, VariableSave defaultVariable)
         {
             ElementSave container = elementSave;
@@ -232,7 +227,7 @@ namespace Gum.PropertyGridHelpers
                     name = defaultVariable.ExposedAsName;
                 }
 
-                pdc = mHelper.AddProperty(pdc,
+                mHelper.AddProperty(pdc,
                     name,
                     type,
                     typeConverter,
@@ -240,12 +235,11 @@ namespace Gum.PropertyGridHelpers
                     customAttributes
                     );
             }
-            return pdc;
         }
 
-        private static PropertyDescriptorCollection AddNameAndBaseTypeProperties(PropertyDescriptorCollection pdc)
+        private static void AddNameAndBaseTypeProperties(List<PropertyDescriptor> pdc)
         {
-            pdc = mHelper.AddProperty(pdc,
+            mHelper.AddProperty(pdc,
                 "Name", typeof(string), TypeDescriptor.GetConverter(typeof(string)), new Attribute[]
                         { 
                             new CategoryAttribute("\tObject") // \t isn't rendered, but it is sorted on.  Hack to get this property to appear first
@@ -258,13 +252,12 @@ namespace Gum.PropertyGridHelpers
             if (!isDisplayingScreen)
             {
                 // We may want to support Screens inheriting from other Screens in the future, but for now we won't allow it
-                pdc = mHelper.AddProperty(pdc,
+                mHelper.AddProperty(pdc,
                     "Base Type", typeof(string), new AvailableBaseTypeConverter(), new Attribute[]
                         { 
                             new CategoryAttribute("\tObject") // \t isn't rendered, but it is sorted on.  Hack to get this property to appear first
                         });
             }
-            return pdc;
         }
 
         private static bool GetIfShouldInclude(VariableListSave variableList, ElementSave container, InstanceSave currentInstance, StandardElementSave rootElementSave)
@@ -479,71 +472,60 @@ namespace Gum.PropertyGridHelpers
 
         private static Attribute[] GetAttributesForVariable(VariableSave defaultVariable)
         {
-            Attribute[] customAttributes = null;
+            List<Attribute> attributes = new List<Attribute>();
 
-            mListOfAttributes.Clear();
-
+            
             if (!string.IsNullOrEmpty(defaultVariable.Category))
             {
-                mListOfAttributes.Add(new CategoryAttribute(defaultVariable.Category));
+                attributes.Add(new CategoryAttribute(defaultVariable.Category));
             }
             else if (!string.IsNullOrEmpty(defaultVariable.ExposedAsName))
             {
-                mListOfAttributes.Add(new CategoryAttribute("Exposed"));
+                attributes.Add(new CategoryAttribute("Exposed"));
             }
             if (defaultVariable.IsFile)
             {
-                mListOfAttributes.Add(mFileWindowAttribute);
+                attributes.Add(mFileWindowAttribute);
             }
 
             if (defaultVariable.IsHiddenInPropertyGrid)
             {
-                mListOfAttributes.Add(new BrowsableAttribute(false));
+                attributes.Add(new BrowsableAttribute(false));
             }
 
             List<Attribute> attributesFromPlugins = PluginManager.Self.GetAttributesFor(defaultVariable);
 
             if(attributesFromPlugins.Count != 0)
             {
-                mListOfAttributes.AddRange(attributesFromPlugins);
+                attributes.AddRange(attributesFromPlugins);
             }
 
-
-            if (mListOfAttributes.Count != 0)
-            {
-                customAttributes = mListOfAttributes.ToArray();
-            }
-            else
-            {
-                customAttributes = mEmptyList;
-            }
-            return customAttributes;
+            return attributes.ToArray();
         }
 
 
         private static Attribute[] GetAttributesForVariable(VariableListSave variableList)
         {
-
-            mListOfAttributes.Clear();
+            List<Attribute> attributes = new List<Attribute>();
 
             EditorAttribute editorAttribute = new EditorAttribute(
                 //"System.Windows.Forms.Design.ListControlStringCollectionEditor, System.Design, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a", 
                 typeof(VariableListConverter),
                 typeof(UITypeEditor));
-            mListOfAttributes.Add(editorAttribute);
+            attributes.Add(editorAttribute);
 
             if (!string.IsNullOrEmpty(variableList.Category))
             {
-                mListOfAttributes.Add(new CategoryAttribute(variableList.Category));
+                attributes.Add(new CategoryAttribute(variableList.Category));
             }
 
             if (variableList.IsHiddenInPropertyGrid)
             {
-                mListOfAttributes.Add(new BrowsableAttribute(false));
+                attributes.Add(new BrowsableAttribute(false));
             }
 
 
-            return mListOfAttributes.ToArray();
+            return attributes.ToArray();
         }
     }
 }
