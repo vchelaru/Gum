@@ -123,10 +123,14 @@ namespace WpfDataUi.Controls
 
         public void MakeMultiline()
         {
+            this.Label.VerticalAlignment = VerticalAlignment.Top;
+
             this.TextBox.TextWrapping = TextWrapping.Wrap;
             this.TextBox.AcceptsReturn = true;
-
+            this.TextBox.VerticalContentAlignment = VerticalAlignment.Top;
+            this.TextBox.VerticalAlignment = VerticalAlignment.Top;
             this.TextBox.Height = 65;
+            this.mTextBoxLogic.HandlesEnter = false;
         }
 
         private void TextBox_LostFocus_1(object sender, RoutedEventArgs e)

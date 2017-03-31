@@ -61,8 +61,15 @@ namespace GumRuntime
 
                 case "Container":
 
-                    LineRectangle lineRectangle = new LineRectangle(systemManagers);
-                    containedObject = lineRectangle;
+                    if(GraphicalUiElement.ShowLineRectangles)
+                    {
+                        LineRectangle lineRectangle = new LineRectangle(systemManagers);
+                        containedObject = lineRectangle;
+                    }
+                    else
+                    {
+                        containedObject = new InvisibleRenderable();
+                    }
                     break;
 
                 case "Rectangle":

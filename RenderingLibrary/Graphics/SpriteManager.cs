@@ -14,6 +14,7 @@ namespace RenderingLibrary.Graphics
 
         List<Sprite> mSprites = new List<Sprite>();
         List<NineSlice> mNineSlices = new List<NineSlice>();
+        List<InvisibleRenderable> invisibleRenderables = new List<InvisibleRenderable>();
 
         #endregion
 
@@ -91,6 +92,20 @@ namespace RenderingLibrary.Graphics
 #endif
         }
 
+        public void Add(InvisibleRenderable renderable, Layer layer = null)
+        {
+            invisibleRenderables.Add(renderable);
+#if !TEST
+
+            if (layer == null)
+            {
+                layer = Renderer.LayersWritable[0];
+            }
+
+            layer.Add(renderable);
+#endif
+        }
+
         public void Add(NineSlice nineSlice, Layer layer = null)
         {
             mNineSlices.Add(nineSlice);
@@ -109,6 +124,12 @@ namespace RenderingLibrary.Graphics
         {
             mSprites.Remove(sprite);
             Renderer.RemoveRenderable(sprite);
+        }
+
+        public void Remove(InvisibleRenderable invisibleRenderable)
+        {
+            invisibleRenderables.Remove(invisibleRenderable);
+            Renderer.RemoveRenderable(invisibleRenderable);
         }
 
         public void Remove(NineSlice nineSlice)

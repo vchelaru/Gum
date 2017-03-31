@@ -375,9 +375,7 @@ namespace Gum.Wireframe
             graphicalUiElement.Tag = instance;
             graphicalUiElement.Component.Name = instance.Name;
             graphicalUiElement.Component.Tag = instance;
-
-            (graphicalUiElement.RenderableComponent as LineRectangle).LocalVisible =
-                GraphicalUiElement.ShowLineRectangles;
+            
             return graphicalUiElement;
         }
 

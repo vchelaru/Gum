@@ -209,7 +209,9 @@ namespace RenderingLibrary.Graphics
                 }
                 else
                 {
-                    return 32;
+                    // This causes problems when the text object has no text:
+                    //return 32;
+                    return 0;
                 }
             }
         }
@@ -475,7 +477,8 @@ namespace RenderingLibrary.Graphics
 
             if (mRawText != null)
             {
-                stringToUse = mRawText.Replace("\\n", "\n");
+                // multiline text editing in Gum can add \r's, so get rid of those:
+                stringToUse = mRawText.Replace("\r\n", "\n");
                 wordArray.AddRange(stringToUse.Split(whatToSplitOn));
             }
 
@@ -829,7 +832,7 @@ namespace RenderingLibrary.Graphics
 
                 if (this.mRawText != null)
                 {
-                    string[] lines = this.mRawText.Split('\n');
+                    string[] lines = this.mRawText.Replace("\r", "").Split('\n');
 
                     mBitmapFont.GetRequiredWithAndHeight(lines, out requiredWidth, out requiredHeight);
                 }

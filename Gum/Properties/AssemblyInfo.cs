@@ -39,6 +39,6 @@ using System.Runtime.InteropServices;
 //  - Drag+drop an instance on its parent detaches the instance from any parents
 //  - Copy/paste components now works
 //  - Gum no longer crashes when FNT file is missing PNG
-//  - still working....
-[assembly: AssemblyVersion("0.8.2.2")]
-[assembly: AssemblyFileVersion("0.8.2.2")]
+//  - Replaced how visible/invisible component boundaries worked by creating new InvisibleRenderable type
+[assembly: AssemblyVersion("0.8.3.0")]
+[assembly: AssemblyFileVersion("0.8.3.0")]

@@ -23,6 +23,8 @@ namespace WpfDataUi.Controls
         public decimal? MinValue { get; set; }
         public decimal? MaxValue { get; set; }
 
+        public bool HandlesEnter { get; set; } = true;
+
         public TextBoxDisplayLogic(IDataUi container, TextBox textBox)
         {
             mAssociatedTextBox = textBox;
@@ -61,7 +63,7 @@ namespace WpfDataUi.Controls
 
         private void HandlePreviewKeydown(object sender, System.Windows.Input.KeyEventArgs e)
         {
-            if (e.Key == Key.Enter)
+            if (e.Key == Key.Enter && (HandlesEnter))
             {
                 e.Handled = true;
 
@@ -111,7 +113,11 @@ namespace WpfDataUi.Controls
                     // Hold on, the Before set may have actually changed the value, so we should get the value again.
                     mContainer.TryGetValueOnUi(out newValue);
 
-
+                    if(newValue is string)
+                    {
+                        newValue = (newValue as string).Replace("\r", "");
+                    }
+                    // get rid of \r
                     return mContainer.TrySetValueOnInstance(newValue);
                 }
                 else

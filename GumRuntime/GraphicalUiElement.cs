@@ -893,22 +893,6 @@ namespace Gum.Wireframe
             mContainedObjectAsIpso = containedObject as IRenderableIpso;
             mContainedObjectAsIVisible = containedObject as IVisible;
 
-            if (containedObject is global::RenderingLibrary.Math.Geometry.LineRectangle)
-            {
-                // All elements use line rectangles to draw themselves, but we don't
-                // want them to show up in runtime (usually). We have a LocalVisible bool
-                // which can be set to false to prevent the rectangles from drawing.
-                // Update: We used to only set the LocalVisible if the object was a container,
-                // but elements also inherit from container. We could check the base type, but then
-                // elements that inherit from other elements would still show up. We'll ignore the element
-                // name and just set LineRectangles to invisible if we're dealing with elements, no matter what.
-                //if (this.ElementSave != null && ElementSave.Name == "Container")
-                if (this.ElementSave != null)
-                {
-                    (containedObject as global::RenderingLibrary.Math.Geometry.LineRectangle).LocalVisible = ShowLineRectangles;
-                }
-            }
-
             if (containedObject != null)
             {
                 UpdateLayout();
@@ -1221,6 +1205,8 @@ namespace Gum.Wireframe
 
 
                         UpdatePosition(parentWidth, parentHeight);
+
+                        mContainedObjectAsIpso.Rotation = this.GetAbsoluteRotation();
                     }
 
 
@@ -2263,6 +2249,10 @@ namespace Gum.Wireframe
                 {
                     managers.ShapeManager.Add(mContainedObjectAsIpso as LineCircle, layer);
                 }
+                else if(mContainedObjectAsIpso is InvisibleRenderable)
+                {
+                    managers.SpriteManager.Add(mContainedObjectAsIpso as InvisibleRenderable, layer);
+                }
                 else
                 {
                     throw new NotImplementedException();
@@ -2366,6 +2356,10 @@ namespace Gum.Wireframe
                 else if(mContainedObjectAsIpso is LineCircle)
                 {
                     mManagers.ShapeManager.Remove(mContainedObjectAsIpso as LineCircle);
+                }
+                else if(mContainedObjectAsIpso is InvisibleRenderable)
+                {
+                    mManagers.SpriteManager.Remove(mContainedObjectAsIpso as InvisibleRenderable);
                 }
                 else if (mContainedObjectAsIpso != null)
                 {

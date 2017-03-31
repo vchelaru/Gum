@@ -416,25 +416,51 @@ namespace Gum.Managers
                     }
                 }
 
-
-                MemberCategory categoryToMove = categories.FirstOrDefault(item => item.Name == "Position");
-                if (categoryToMove != null)
-                {
-                    categories.Remove(categoryToMove);
-                    categories.Insert(1, categoryToMove);
-                }
-
-                categoryToMove = categories.FirstOrDefault(item => item.Name == "Dimensions");
-                if (categoryToMove != null)
-                {
-                    categories.Remove(categoryToMove);
-                    categories.Insert(2, categoryToMove);
-                }
-
-                UpdateColorCategory(categories);
+                ReorganizeCategories(categories);
+                CustomizeVariables(categories);
             }
             return categories;
 
+        }
+
+        private void CustomizeVariables(List<MemberCategory> categories)
+        {
+            // Hack! I would like to have this set by variables, but that's going to require a ton
+            // of refatoring. We need to move off of the intermediate PropertyDescriptor class
+            MakeTextMultiline(categories);
+
+            UpdateColorCategory(categories);
+        }
+
+        private void MakeTextMultiline(List<MemberCategory> categories)
+        {
+            var category = categories.FirstOrDefault(item => item.Name == "Text");
+
+            if(category != null)
+            {
+                var member = category.Members.FirstOrDefault(item => item.DisplayName == "Text");
+                if(member != null)
+                {
+                    member.PreferredDisplayer = typeof(WpfDataUi.Controls.MultiLineTextBoxDisplay);
+                }
+            }
+        }
+
+        private static void ReorganizeCategories(List<MemberCategory> categories)
+        {
+            MemberCategory categoryToMove = categories.FirstOrDefault(item => item.Name == "Position");
+            if (categoryToMove != null)
+            {
+                categories.Remove(categoryToMove);
+                categories.Insert(1, categoryToMove);
+            }
+
+            categoryToMove = categories.FirstOrDefault(item => item.Name == "Dimensions");
+            if (categoryToMove != null)
+            {
+                categories.Remove(categoryToMove);
+                categories.Insert(2, categoryToMove);
+            }
         }
 
         private void UpdateColorCategory(List<MemberCategory> categories)
