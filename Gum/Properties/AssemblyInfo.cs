@@ -40,5 +40,9 @@ using System.Runtime.InteropServices;
 //  - Copy/paste components now works
 //  - Gum no longer crashes when FNT file is missing PNG
 //  - Replaced how visible/invisible component boundaries worked by creating new InvisibleRenderable type
+// 0.8.3.0
+//  - Fixed Drag+drop standard element into component folder crash
+//  - Added support for renaming component folders
+
 [assembly: AssemblyVersion("0.8.3.0")]
 [assembly: AssemblyFileVersion("0.8.3.0")]
