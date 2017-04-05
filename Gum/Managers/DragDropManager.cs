@@ -145,23 +145,32 @@ namespace Gum.Managers
 
         private void HandleDroppedElementOnFolder(ElementSave draggedAsElementSave, TreeNode treeNodeDroppedOn, out bool handled)
         {
-            var fullFolderPath = treeNodeDroppedOn.GetFullFilePath();
-
-            var fullElementFilePath = FileManager.GetDirectory( draggedAsElementSave.GetFullPathXmlFile());
-
-            handled = false;
-
-            if(FileManager.Standardize(fullFolderPath) != FileManager.Standardize(fullElementFilePath))
+            if(draggedAsElementSave is StandardElementSave)
             {
-                var projectFolder = FileManager.GetDirectory(ProjectManager.Self.GumProjectSave.FullFileName);
-
-                string nodeRelativeToProject = FileManager.MakeRelative(fullFolderPath, projectFolder + draggedAsElementSave.Subfolder + "\\", preserveCase:true);
-
-                string oldName = draggedAsElementSave.Name;
-                draggedAsElementSave.Name = nodeRelativeToProject + FileManager.RemovePath(draggedAsElementSave.Name);
-                RenameManager.Self.HandleRename(draggedAsElementSave, (InstanceSave)null, oldName);
-
+                MessageBox.Show("Cannot move standard elements to different folders");
                 handled = true;
+            }
+            else
+            {
+                var fullFolderPath = treeNodeDroppedOn.GetFullFilePath();
+
+                var fullElementFilePath = FileManager.GetDirectory( draggedAsElementSave.GetFullPathXmlFile());
+
+                handled = false;
+
+                if(FileManager.Standardize(fullFolderPath) != FileManager.Standardize(fullElementFilePath))
+                {
+                    var projectFolder = FileManager.GetDirectory(ProjectManager.Self.GumProjectSave.FullFileName);
+
+                    string nodeRelativeToProject = FileManager.MakeRelative(fullFolderPath, projectFolder + draggedAsElementSave.Subfolder + "\\", preserveCase:true);
+
+                    string oldName = draggedAsElementSave.Name;
+                    draggedAsElementSave.Name = nodeRelativeToProject + FileManager.RemovePath(draggedAsElementSave.Name);
+                    RenameManager.Self.HandleRename(draggedAsElementSave, (InstanceSave)null, oldName);
+
+                    handled = true;
+                }
+
             }
 
         }

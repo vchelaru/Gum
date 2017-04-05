@@ -571,6 +571,10 @@ namespace Gum.Managers
             {
                 throw new Exception("You must first call Initialize on StandardElementsManager before calling this function");
             }
+            if(!mDefaults.ContainsKey(type))
+            {
+                throw new InvalidOperationException($"Could not get the default state for type {type}");
+            }
             return mDefaults[type];
 
         }

@@ -655,7 +655,15 @@ namespace Gum.Wireframe
             {
                  if(ipso.Tag == null || ipso.Tag is ScreenSave == false)
                  {
-                     isVisible = ((IVisible)ipso).AbsoluteVisible;             
+                    // If this has no object, then just treat it as true:
+                    try
+                    {
+                        isVisible = ((IVisible)ipso).AbsoluteVisible;             
+                    }
+                    catch
+                    {
+                        isVisible = true;
+                    }
                  }
                  else
                  {
