@@ -33,5 +33,20 @@ namespace Gum.ToolStates
                 return ProjectManager.Self.GumProjectSave;
             }
         }
+
+        public string ProjectDirectory
+        {
+            get
+            {
+                if(GumProjectSave == null)
+                {
+                    return null;
+                }
+                else
+                {
+                    return ToolsUtilities.FileManager.GetDirectory(GumProjectSave.FullFileName);
+                }
+            }
+        }
     }
 }

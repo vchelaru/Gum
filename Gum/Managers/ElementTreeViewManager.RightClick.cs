@@ -262,6 +262,7 @@ namespace Gum.Managers
                     if (SelectedNode.IsScreensFolderTreeNode())
                     {
                         mMenuStrip.Items.Add("Delete Folder", null, HandleDeleteFolder);
+                        mMenuStrip.Items.Add("Rename Folder", null, HandleRenameFolder);
                     }
                 }
                 else if (SelectedNode.IsTopComponentContainerTreeNode() || SelectedNode.IsComponentsFolderTreeNode())
@@ -271,14 +272,110 @@ namespace Gum.Managers
                     mMenuStrip.Items.Add(mAddFolder);
                     mMenuStrip.Items.Add("View in explorer", null, HandleViewInExplorer);
 
-                    if (SelectedNode.IsScreensFolderTreeNode())
+                    if (SelectedNode.IsComponentsFolderTreeNode())
                     {
                         mMenuStrip.Items.Add("Delete Folder", null, HandleDeleteFolder);
+                        mMenuStrip.Items.Add("Rename Folder", null, HandleRenameFolder);
+
                     }
                 }
                 else if(SelectedNode.IsTopBehaviorTreeNode())
                 {
                     mMenuStrip.Items.Add("Add Behavior", null, HandleAddBehavior);
+                }
+            }
+        }
+
+        private void HandleRenameFolder(object sender, EventArgs e)
+        {
+            var tiw = new TextInputWindow();
+            tiw.Message = "Enter new folder name";
+            tiw.Result = SelectedNode.Text;
+            var dialogResult = tiw.ShowDialog();
+
+            if(dialogResult == DialogResult.OK && tiw.Result != SelectedNode.Text)
+            {
+                bool isValid = true;
+                string whyNotValid;
+                if(!NameVerifier.Self.IsFolderNameValid(tiw.Result, out whyNotValid))
+                {
+                    isValid = false;
+                }
+
+
+                // see if it already exists:
+                string fullFilePath = FileManager.GetDirectory( SelectedNode.GetFullFilePath()) + tiw.Result + "\\";
+
+                if(System.IO.Directory.Exists(fullFilePath))
+                {
+                    whyNotValid = $"Folder {tiw.Result} already exists.";
+                    isValid = false;
+                }
+
+                if(!isValid)
+                {
+                    MessageBox.Show(whyNotValid);
+                }
+                else
+                {
+                    string rootForElement;
+                    if(SelectedNode.IsScreensFolderTreeNode())
+                    {
+                        rootForElement = FileLocations.Self.ScreensFolder;
+                    }
+                    else if(SelectedNode.IsComponentsFolderTreeNode())
+                    {
+                        rootForElement = FileLocations.Self.ComponentsFolder;
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException();
+                    }
+
+                    string oldFullPath = SelectedNode.GetFullFilePath();
+
+                    string oldPathRelativeToElementsRoot = FileManager.MakeRelative(SelectedNode.GetFullFilePath(), rootForElement, preserveCase:true);
+                    SelectedNode.Text = tiw.Result;
+                    string newPathRelativeToElementsRoot = FileManager.MakeRelative(SelectedNode.GetFullFilePath(), rootForElement, preserveCase:true);
+
+                    if (SelectedNode.IsScreensFolderTreeNode())
+                    {
+                        foreach(var screen in ProjectState.Self.GumProjectSave.Screens)
+                        {
+                            if(screen.Name.StartsWith(oldPathRelativeToElementsRoot))
+                            {
+                                string oldVaue = screen.Name;
+                                string newName = newPathRelativeToElementsRoot + screen.Name.Substring(oldPathRelativeToElementsRoot.Length);
+
+                                screen.Name = newName;
+                                RenameManager.Self.HandleRename(screen, (InstanceSave)null, oldVaue, askAboutRename: false);
+                            }
+                        }
+                    }
+                    else if (SelectedNode.IsComponentsFolderTreeNode())
+                    {
+                        foreach (var component in ProjectState.Self.GumProjectSave.Components)
+                        {
+                            if(component.Name.ToLowerInvariant().StartsWith(oldPathRelativeToElementsRoot.ToLowerInvariant()))
+                            {
+                                string oldVaue = component.Name;
+                                string newName = newPathRelativeToElementsRoot + component.Name.Substring(oldPathRelativeToElementsRoot.Length);
+                                component.Name = newName;
+
+                                RenameManager.Self.HandleRename(component, (InstanceSave)null, oldVaue, askAboutRename:false);
+                            }
+                        }
+                    }
+
+                    bool isNowEmpty = Directory.GetFiles(oldFullPath).Length == 0;
+                    if(isNowEmpty)
+                    {
+                        Directory.Delete(oldFullPath);
+                        GumCommands.Self.GuiCommands.RefreshElementTreeView();
+
+                    }
+
+
                 }
             }
         }
