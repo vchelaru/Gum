@@ -65,6 +65,7 @@ namespace Gum.Commands
             if (!ProjectManager.Self.HaveErrorsOccurred)
             {
                 ProjectManager.Self.SaveProject(forceSaveContainedElements);
+                OutputManager.Self.AddOutput("Saved Gum project to " + ProjectState.Self.GumProjectSave.FullFileName);
             }
             else
             {
