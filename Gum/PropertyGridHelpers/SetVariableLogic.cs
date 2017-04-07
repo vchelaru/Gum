@@ -107,7 +107,7 @@ namespace Gum.PropertyGridHelpers
         {
             if (changedMember == "Name")
             {
-                RenameManager.Self.HandleRename(container, instance, (string)oldValue);
+                RenameManager.Self.HandleRename(container, instance, (string)oldValue, NameChangeAction.Rename);
             }
         }
 

@@ -11,10 +11,15 @@ using ToolsUtilities;
 
 namespace Gum.Managers
 {
+    public enum NameChangeAction
+    {
+        Move,
+        Rename
+    }
+
     public class RenameManager
     {
         static RenameManager mRenameManager;
-
 
         public static RenameManager Self
         {
@@ -30,7 +35,7 @@ namespace Gum.Managers
 
         public bool IsRenamingXmlFile { get; private set; }
 
-        public void HandleRename(ElementSave elementSave, InstanceSave instance, string oldName, bool askAboutRename = true)
+        public void HandleRename(ElementSave elementSave, InstanceSave instance, string oldName, NameChangeAction action, bool askAboutRename = true)
         {
             try
             {
@@ -38,86 +43,13 @@ namespace Gum.Managers
 
                 bool shouldContinue = true;
 
-                if (instance != null)
-                {
-                    string whyNot;
-                    if (NameVerifier.Self.IsInstanceNameValid(instance.Name, instance, elementSave, out whyNot) == false)
-                    {
-                        MessageBox.Show(whyNot);
-                        shouldContinue = false;
-                    }
-                }
+                shouldContinue = ValidateWithPopup(elementSave, instance, shouldContinue);
 
-                if (shouldContinue && IsRenamingXmlFile && askAboutRename)
-                {
-                    string message = "Are you sure you want to rename " + oldName + "?\n\n" +
-                        "This will change the file name for " + oldName + " which may break " +
-                        "external references to this object.";
-                    var result = MessageBox.Show(message, "Rename Object and File?", MessageBoxButtons.YesNo);
-
-                    shouldContinue = result == DialogResult.Yes;
-                }
-
+                shouldContinue = AskIfToRename(oldName, askAboutRename, action, shouldContinue);
 
                 if (shouldContinue)
                 {
-                    // Tell the GumProjectSave to react to the rename.
-                    // This changes the names of the ElementSave references.
-                    ProjectManager.Self.GumProjectSave.ReactToRenamed(elementSave, instance, oldName);
-
-                    foreach(var screen in ProjectState.Self.GumProjectSave.Screens)
-                    {
-                        bool shouldSave = false;
-                        foreach(var instanceInScreen in screen.Instances)
-                        {
-                            if(instanceInScreen.BaseType == oldName)
-                            {
-                                instanceInScreen.BaseType = elementSave.Name;
-                                shouldSave = true;
-                            }
-                        }
-
-                        if(shouldSave)
-                        {
-                            GumCommands.Self.FileCommands.TryAutoSaveElement(screen);
-                        }
-                    }
-
-                    foreach (var component in ProjectState.Self.GumProjectSave.Components)
-                    {
-                        bool shouldSave = false;
-                        foreach (var instanceInScreen in component.Instances)
-                        {
-                            if (instanceInScreen.BaseType == oldName)
-                            {
-                                instanceInScreen.BaseType = elementSave.Name;
-                                shouldSave = true;
-                            }
-                        }
-
-                        if (shouldSave)
-                        {
-                            GumCommands.Self.FileCommands.TryAutoSaveElement(component);
-                        }
-                    }
-
-                    if (instance != null)
-                    {
-                        string newName = SelectedState.Self.SelectedInstance.Name;
-
-                        foreach (StateSave stateSave in SelectedState.Self.SelectedElement.AllStates)
-                        {
-                            stateSave.ReactToInstanceNameChange(instance, oldName, newName);
-                        }
-
-                        foreach (var eventSave in SelectedState.Self.SelectedElement.Events)
-                        {
-                            if (eventSave.GetSourceObject() == oldName)
-                            {
-                                eventSave.Name = instance.Name + "." + eventSave.GetRootName();
-                            }
-                        }
-                    }
+                    RenameAllReferencesTo(elementSave, instance, oldName);
 
                     // Even though this gets called from the PropertyGrid methods which eventually
                     // save this object, we want to force a save here to make sure it worked.  If it
@@ -181,6 +113,107 @@ namespace Gum.Managers
             {
                 IsRenamingXmlFile = false;
             }
+        }
+
+        private static void RenameAllReferencesTo(ElementSave elementSave, InstanceSave instance, string oldName)
+        {
+            // Tell the GumProjectSave to react to the rename.
+            // This changes the names of the ElementSave references.
+            ProjectManager.Self.GumProjectSave.ReactToRenamed(elementSave, instance, oldName);
+
+            foreach (var screen in ProjectState.Self.GumProjectSave.Screens)
+            {
+                bool shouldSave = false;
+                foreach (var instanceInScreen in screen.Instances)
+                {
+                    if (instanceInScreen.BaseType == oldName)
+                    {
+                        instanceInScreen.BaseType = elementSave.Name;
+                        shouldSave = true;
+                    }
+                }
+
+                if (shouldSave)
+                {
+                    GumCommands.Self.FileCommands.TryAutoSaveElement(screen);
+                }
+            }
+
+            foreach (var component in ProjectState.Self.GumProjectSave.Components)
+            {
+                bool shouldSave = false;
+                foreach (var instanceInScreen in component.Instances)
+                {
+                    if (instanceInScreen.BaseType == oldName)
+                    {
+                        instanceInScreen.BaseType = elementSave.Name;
+                        shouldSave = true;
+                    }
+                }
+
+                if (shouldSave)
+                {
+                    GumCommands.Self.FileCommands.TryAutoSaveElement(component);
+                }
+            }
+
+            if (instance != null)
+            {
+                string newName = SelectedState.Self.SelectedInstance.Name;
+
+                foreach (StateSave stateSave in SelectedState.Self.SelectedElement.AllStates)
+                {
+                    stateSave.ReactToInstanceNameChange(instance, oldName, newName);
+                }
+
+                foreach (var eventSave in SelectedState.Self.SelectedElement.Events)
+                {
+                    if (eventSave.GetSourceObject() == oldName)
+                    {
+                        eventSave.Name = instance.Name + "." + eventSave.GetRootName();
+                    }
+                }
+            }
+        }
+
+        private bool AskIfToRename(string oldName, bool askAboutRename, NameChangeAction action, bool shouldContinue)
+        {
+            if (shouldContinue && IsRenamingXmlFile && askAboutRename)
+            {
+                string moveOrRename;
+                if(action == NameChangeAction.Move)
+                {
+                    moveOrRename = "move";
+                }
+                else
+                {
+                    moveOrRename = "rename";
+                }
+
+                string message = $"Are you sure you want to {moveOrRename} {oldName}?\n\n" +
+                    "This will change the file name for " + oldName + " which may break " +
+                    "external references to this object.";
+                var result = MessageBox.Show(message, "Rename Object and File?", MessageBoxButtons.YesNo);
+
+                shouldContinue = result == DialogResult.Yes;
+            }
+
+            return shouldContinue;
+        }
+
+        private static bool ValidateWithPopup(ElementSave elementSave, InstanceSave instance, bool shouldContinue)
+        {
+            if (instance != null)
+            {
+                string whyNot;
+                if (NameVerifier.Self.IsInstanceNameValid(instance.Name, instance, elementSave, out whyNot) == false)
+                {
+                    MessageBox.Show(whyNot);
+                    shouldContinue = false;
+                }
+            }
+
+            return shouldContinue;
         }
 
         public void HandleRename(ElementSave containerElement, EventSave eventSave, string oldName)

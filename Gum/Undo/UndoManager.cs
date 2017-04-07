@@ -170,7 +170,7 @@ namespace Gum.Undo
                 {
                     string oldName = toApplyTo.Name;
                     toApplyTo.Name = undoObject.Name;
-                    RenameManager.Self.HandleRename(toApplyTo, (InstanceSave)null, oldName);
+                    RenameManager.Self.HandleRename(toApplyTo, (InstanceSave)null, oldName, NameChangeAction.Rename, askAboutRename:false);
                 }
                 if (undoObject.BaseType != null)
                 {

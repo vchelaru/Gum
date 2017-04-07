@@ -348,7 +348,7 @@ namespace Gum.Managers
                                 string newName = newPathRelativeToElementsRoot + screen.Name.Substring(oldPathRelativeToElementsRoot.Length);
 
                                 screen.Name = newName;
-                                RenameManager.Self.HandleRename(screen, (InstanceSave)null, oldVaue, askAboutRename: false);
+                                RenameManager.Self.HandleRename(screen, (InstanceSave)null, oldVaue, NameChangeAction.Move, askAboutRename: false);
                             }
                         }
                     }
@@ -362,7 +362,7 @@ namespace Gum.Managers
                                 string newName = newPathRelativeToElementsRoot + component.Name.Substring(oldPathRelativeToElementsRoot.Length);
                                 component.Name = newName;
 
-                                RenameManager.Self.HandleRename(component, (InstanceSave)null, oldVaue, askAboutRename:false);
+                                RenameManager.Self.HandleRename(component, (InstanceSave)null, oldVaue, NameChangeAction.Move, askAboutRename:false);
                             }
                         }
                     }

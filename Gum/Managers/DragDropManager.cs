@@ -133,7 +133,11 @@ namespace Gum.Managers
                 HandleDroppedElementOnTopComponentTreeNode(draggedAsElementSave, out handled);
 
             }
-            else if (treeNodeDroppedOn.IsPartOfComponentsFolderStructure())
+            else if (draggedAsElementSave is ComponentSave && treeNodeDroppedOn.IsPartOfComponentsFolderStructure())
+            {
+                HandleDroppedElementOnFolder(draggedAsElementSave, treeNodeDroppedOn, out handled);
+            }
+            else if(draggedAsElementSave is ScreenSave && treeNodeDroppedOn.IsPartOfScreensFolderStructure())
             {
                 HandleDroppedElementOnFolder(draggedAsElementSave, treeNodeDroppedOn, out handled);
             }
@@ -166,7 +170,7 @@ namespace Gum.Managers
 
                     string oldName = draggedAsElementSave.Name;
                     draggedAsElementSave.Name = nodeRelativeToProject + FileManager.RemovePath(draggedAsElementSave.Name);
-                    RenameManager.Self.HandleRename(draggedAsElementSave, (InstanceSave)null, oldName);
+                    RenameManager.Self.HandleRename(draggedAsElementSave, (InstanceSave)null,  oldName, NameChangeAction.Move);
 
                     handled = true;
                 }
@@ -186,7 +190,7 @@ namespace Gum.Managers
             {
                 // It's in a directory, we're going to move it out
                 draggedAsElementSave.Name = FileManager.RemovePath(name);
-                RenameManager.Self.HandleRename(draggedAsElementSave, (InstanceSave)null, name);
+                RenameManager.Self.HandleRename(draggedAsElementSave, (InstanceSave)null, name, NameChangeAction.Move);
 
                 handled = true;
             }

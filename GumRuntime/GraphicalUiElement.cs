@@ -3012,7 +3012,7 @@ namespace Gum.Wireframe
             }
         }
 
-        public void ApplyState(DataTypes.Variables.StateSave state)
+        public virtual void ApplyState(DataTypes.Variables.StateSave state)
         {
             this.SuspendLayout(true);
 
