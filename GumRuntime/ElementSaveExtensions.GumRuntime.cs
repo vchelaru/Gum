@@ -170,7 +170,10 @@ namespace GumRuntime
                 }
             }
 
-            var variablesToSet = stateSave.Variables.Where(item => item.SetsValue && item.Value != null);
+            var variablesToSet = stateSave.Variables
+                .Where(item => item.SetsValue && item.Value != null)
+                // States should be applied first, then values may override states (order by sorts false first):
+                .OrderBy(item=>!item.IsState(elementSave));
 
             foreach (var variable in variablesToSet)
             {

@@ -1450,9 +1450,14 @@ namespace Gum.Wireframe
 
             AdjustOffsetsByUnits(parentWidth, parentHeight, ref unitOffsetX, ref unitOffsetY);
 #if DEBUG
-            if (float.IsNaN(unitOffsetX) || float.IsNaN(unitOffsetY))
+            if (float.IsNaN(unitOffsetX))
             {
-                throw new Exception("Invalid unit offsets");
+                throw new Exception("Invalid unitOffsetX: " + unitOffsetX);
+            }
+
+            if ( float.IsNaN(unitOffsetY))
+            {
+                throw new Exception("Invalid unitOffsetY: " + unitOffsetY);
             }
 #endif
 

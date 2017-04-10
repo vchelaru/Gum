@@ -43,6 +43,13 @@ using System.Runtime.InteropServices;
 // 0.8.3.0
 //  - Fixed Drag+drop standard element into component folder crash
 //  - Added support for renaming component folders
+// 0.8.3.1
+//  - States are always applied first, then non-state variables are applied after. This allows state variables
+//    to be overridden.
+//  - Drag+drop a file on a sprite now asks you if you want to reference in the original location or copy.
+//  - Drag+drop now registers to the undo system, so it can be undone
+//  - Drag+drop object on another object will now make it a child of the dropped-on object if dropped on
+//    an object rather than the top componet/screen.
 
-[assembly: AssemblyVersion("0.8.3.0")]
-[assembly: AssemblyFileVersion("0.8.3.0")]
+[assembly: AssemblyVersion("0.8.3.1")]
+[assembly: AssemblyFileVersion("0.8.3.1")]

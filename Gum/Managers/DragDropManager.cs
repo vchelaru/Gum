@@ -126,7 +126,11 @@ namespace Gum.Managers
                 InstanceSave targetInstance = targetTag as InstanceSave;
 
 
-                HandleDroppedElementInElement(draggedAsElementSave, targetInstance.ParentContainer, out handled);
+                var newInstance = HandleDroppedElementInElement(draggedAsElementSave, targetInstance.ParentContainer, out handled);
+
+                // Since the user dropped on another instance, let's try to parent it:
+                HandleDroppingInstanceOnTarget(targetInstance, newInstance, targetInstance.ParentContainer);
+
             }
             else if (treeNodeDroppedOn.IsTopComponentContainerTreeNode())
             {
@@ -196,14 +200,14 @@ namespace Gum.Managers
             }
         }
 
-        private static void HandleDroppedInstance(object draggedObject, object targetTag)
+        private static void HandleDroppedInstance(object draggedObject, object targetObject)
         {
             InstanceSave draggedAsInstanceSave = draggedObject as InstanceSave;
 
-            ElementSave targetElementSave = targetTag as ElementSave;
-            if (targetElementSave == null && targetTag is InstanceSave)
+            ElementSave targetElementSave = targetObject as ElementSave;
+            if (targetElementSave == null && targetObject is InstanceSave)
             {
-                targetElementSave = ((InstanceSave)targetTag).ParentContainer;
+                targetElementSave = ((InstanceSave)targetObject).ParentContainer;
             }
 
 
@@ -216,32 +220,7 @@ namespace Gum.Managers
                 // reordering.
                 if (isSameElement)
                 {
-                    if(targetTag != draggedAsInstanceSave)
-                    {
-
-                    }
-                    string parentName;
-                    string variableName = draggedAsInstanceSave.Name + ".Parent";
-                    if(targetTag is InstanceSave)
-                    {
-                        // setting the parent:
-                        parentName = (targetTag as InstanceSave).Name;
-
-
-                    }
-                    else
-                    {
-                        // drag+drop on the container, so detach:
-                        parentName = null;
-                    }
-                    // Since the Parent property can only be set in the default state, we will
-                    // set the Parent variable on that instead of the SelectedState.Self.SelectedStateSave
-                    var stateToAssignOn = targetElementSave.DefaultState;
-
-                    var oldValue = stateToAssignOn.GetValue(variableName) as string;
-                    stateToAssignOn.SetValue(variableName, parentName, "string");
-                    SetVariableLogic.Self.PropertyValueChanged("Parent", oldValue);
-
+                    HandleDroppingInstanceOnTarget(targetObject, draggedAsInstanceSave, targetElementSave);
 
                 }
                 else
@@ -252,6 +231,35 @@ namespace Gum.Managers
                         targetElementSave);
                 }
             }
+        }
+
+        private static void HandleDroppingInstanceOnTarget(object targetObject, InstanceSave dragDroppedInstance, ElementSave targetElementSave)
+        {
+            if (targetObject != dragDroppedInstance)
+            {
+
+            }
+            string parentName;
+            string variableName = dragDroppedInstance.Name + ".Parent";
+            if (targetObject is InstanceSave)
+            {
+                // setting the parent:
+                parentName = (targetObject as InstanceSave).Name;
+
+
+            }
+            else
+            {
+                // drag+drop on the container, so detach:
+                parentName = null;
+            }
+            // Since the Parent property can only be set in the default state, we will
+            // set the Parent variable on that instead of the SelectedState.Self.SelectedStateSave
+            var stateToAssignOn = targetElementSave.DefaultState;
+
+            var oldValue = stateToAssignOn.GetValue(variableName) as string;
+            stateToAssignOn.SetValue(variableName, parentName, "string");
+            SetVariableLogic.Self.PropertyValueChanged("Parent", oldValue);
         }
 
         private void HandleDroppedItemInWireframe(object draggedObject, out bool handled)
@@ -403,6 +411,9 @@ namespace Gum.Managers
                 if (!ValidExtension(files[0]))
                     return;
 
+                // This only supports drag+drop on an instance, but what if dropping on a component
+                // which inherits from Sprite, or perhaps an instance that has an exposed file variable?
+                // Not super high priority, but it's worth noting that this currently doesn't work...
                 InstanceSave instance = FindInstanceWithSourceFile(worldX, worldY);
                 if (instance != null)
                 {
@@ -424,7 +435,13 @@ namespace Gum.Managers
 
                     if (result == DialogResult.OK)
                     {
+                        var oldValue = SelectedState.Self.SelectedStateSave
+                            .GetValueOrDefault<string>(instance.Name + ".SourceFile");
+
                         SelectedState.Self.SelectedStateSave.SetValue(instance.Name + ".SourceFile", fileName, instance);
+                        ProjectState.Self.Selected.SelectedInstance = instance;
+                        SetVariableLogic.Self.PropertyValueChanged("SourceFile", oldValue);
+
                         SaveAndRefresh();
                         return;
                     }

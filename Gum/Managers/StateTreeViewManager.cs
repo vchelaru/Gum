@@ -429,6 +429,36 @@ namespace Gum.Managers
             }
         }
 
+        internal bool TryHandleCmdKey(Keys keyData)
+        {
+
+            switch (keyData)
+            {
+                // CTRL+F, control f, search focus, ctrl f, ctrl + f
+                case Keys.Alt | Keys.Up:
+
+                    MoveStateInDirection(-1);
+                    return true;
+
+                case Keys.Alt | Keys.Down:
+                    var stateSave = ProjectState.Self.Selected.SelectedStateSave;
+                    bool isDefault = stateSave != null &&
+                        stateSave == ProjectState.Self.Selected.SelectedElement.DefaultState;
+
+                    if(!isDefault)
+                    {
+                        MoveStateInDirection(1);
+                    }
+                    return true;
+                //case Keys.Alt | Keys.Shift | Keys.Down:
+                //    return RightClickHelper.MoveToBottom();
+                //case Keys.Alt | Keys.Shift | Keys.Up:
+                //    return RightClickHelper.MoveToTop();
+                default:
+                    return false;
+            }
+
+        }
 
         internal void HandleKeyDown(KeyEventArgs e)
         {

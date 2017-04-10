@@ -67,6 +67,24 @@ namespace Gum.Controls
             StateTreeViewManager.Self.OnSelect();
         }
 
+        // We have to use ProcessCmdKey to intercept the key when moving objects
+        // up and down, otherwise the built-in functionality of moving up/down kicks
+        // in and selects the node above/below the selected node
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            bool isHandled = StateTreeViewManager.Self.TryHandleCmdKey(keyData);
+
+
+            if (isHandled)
+            {
+                return true;
+            }
+            else
+            { 
+                return base.ProcessCmdKey(ref msg, keyData);
+            }
+        }
+
         private void StateTreeView_MouseClick(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Right)
@@ -74,6 +92,8 @@ namespace Gum.Controls
                 StateTreeViewManager.Self.PopulateMenuStrip();
             }
         }
+
+
 
         private void StateTreeView_KeyDown(object sender, KeyEventArgs e)
         {

@@ -53,9 +53,9 @@ namespace Gum.Managers
 
                     if (GetIfCanMoveUp(SelectedState.Self.SelectedStateSave, SelectedState.Self.SelectedStateCategorySave))
                     {
-                        AddMenuItem("^ Move Up", MoveUpClick);
+                        AddMenuItem("^ Move Up", MoveUpClick, "Alt+Up");
                     }
-                    AddMenuItem("v Move Down", MoveDownClick);
+                    AddMenuItem("v Move Down", MoveDownClick, "Alt+Down");
                 }
             }
             // We used to show the category editing commands if a state was selected 
@@ -73,6 +73,7 @@ namespace Gum.Managers
                 AddMenuItem("Delete " + SelectedState.Self.SelectedStateCategorySave.Name, DeleteCategoryClick);
             }
         }
+
 
         private void MoveUpClick()
         {
@@ -189,10 +190,11 @@ namespace Gum.Managers
             }
         }
 
-        private ToolStripMenuItem AddMenuItem(string text, Action clickAction)
+        private ToolStripMenuItem AddMenuItem(string text, Action clickAction, string shortcut = null)
         {
             var tsmi = new ToolStripMenuItem();
             tsmi.Text = text;
+            tsmi.ShortcutKeyDisplayString = shortcut;
             if(clickAction != null)
             {
                 tsmi.Click += delegate
