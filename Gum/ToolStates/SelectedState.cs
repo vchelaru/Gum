@@ -576,10 +576,14 @@ namespace Gum.ToolStates
             }
             else
             {
+
                 var currentGue = WireframeObjectManager.Self.GetSelectedRepresentation();
 
-                // Applying a state just stacks it on top of the current
-                currentGue.ApplyState(this.SelectedStateSave);
+                if(currentGue != null)
+                {
+                    // Applying a state just stacks it on top of the current
+                    currentGue.ApplyState(this.SelectedStateSave);
+                }
             }
 
             SelectionManager.Self.Refresh();
