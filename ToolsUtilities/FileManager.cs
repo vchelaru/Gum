@@ -156,23 +156,6 @@ namespace ToolsUtilities
 
         public static string FromFileText(string fileName, Encoding encoding)
         {
-#if SILVERLIGHT
-            string containedText;
-
-            Uri uri = new Uri(fileName, UriKind.Relative);
-
-            StreamResourceInfo sri = Application.GetResourceStream(uri);
-            Stream stream = sri.Stream;
-            StreamReader reader = new StreamReader(stream);
-
-            containedText = reader.ReadToEnd();
-
-            stream.Close();
-            reader.Close();
-            
-            return containedText;
-
-#else
             string containedText = "";
 
             if (IsRelative(fileName))
@@ -195,7 +178,6 @@ namespace ToolsUtilities
             }
 
             return containedText;
-#endif
         }
 
 
@@ -353,7 +335,7 @@ namespace ToolsUtilities
             }
 
 
-#if XBOX360 || ANDROID || IOS
+#if XBOX360 || ANDROID || IOS || UWP
             
 			if(fileName.Length > 1 && fileName[0] == '.' && (fileName[1] == '/' || fileName[1] == '\\'))
                 return false;
