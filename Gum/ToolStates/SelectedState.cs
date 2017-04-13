@@ -579,6 +579,11 @@ namespace Gum.ToolStates
 
                 var currentGue = WireframeObjectManager.Self.GetSelectedRepresentation();
 
+                if(currentGue == null)
+                {
+                    currentGue = WireframeObjectManager.Self.RootGue;
+                }
+
                 if(currentGue != null)
                 {
                     // Applying a state just stacks it on top of the current
