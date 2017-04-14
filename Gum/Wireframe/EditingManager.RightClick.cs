@@ -91,17 +91,26 @@ namespace Gum.Wireframe
 
             if (instance != null)
             {
-                int index = element.Instances.IndexOf(instance);
+                var siblingInstances = instance.GetSiblingsIncludingThis();
+                var thisIndex = siblingInstances.IndexOf(instance);
+                bool isLast = thisIndex == siblingInstances.Count - 1;
 
-                if (index != element.Instances.Count - 1)
+                if(!isLast)
                 {
-                    element.Instances.RemoveAt(index);
-                    element.Instances.Insert(index + 1, instance);
+                    // remove it before getting the new index, or else the removal could impact the
+                    // index.
+                    element.Instances.Remove(instance);
+                    var nextSibling = siblingInstances[thisIndex + 1];
 
+                    var nextSiblingIndexInContainer = element.Instances.IndexOf(nextSibling);
+
+                    element.Instances.Insert(nextSiblingIndexInContainer + 1, instance);
                     RefreshInResponseToReorder();
                 }
             }
         }
+
+
 
         void OnMoveBackward(object sender, EventArgs e)
         {
@@ -110,13 +119,20 @@ namespace Gum.Wireframe
 
             if (instance != null)
             {
-                int index = element.Instances.IndexOf(instance);
+                // remove it before getting the new index, or else the removal could impact the
+                // index.
+                var siblingInstances = instance.GetSiblingsIncludingThis();
+                var thisIndex = siblingInstances.IndexOf(instance);
+                bool isFirst = thisIndex == 0;
 
-                if (index != 0)
+                if (!isFirst)
                 {
-                    element.Instances.RemoveAt(index);
-                    element.Instances.Insert(index - 1, instance);
+                    element.Instances.Remove(instance);
+                    var previousSibling = siblingInstances[thisIndex - 1];
 
+                    var previousSiblingIndexInContainer = element.Instances.IndexOf(previousSibling);
+
+                    element.Instances.Insert(previousSiblingIndexInContainer, instance);
                     RefreshInResponseToReorder();
                 }
             }
@@ -697,7 +713,7 @@ namespace Gum.Wireframe
             InstanceSave instance = SelectedState.Self.SelectedInstance;
             ElementSave element = SelectedState.Self.SelectedElement;
 
-            GumCommands.Self.GuiCommands.RefreshElementTreeView();
+            GumCommands.Self.GuiCommands.RefreshElementTreeView(element);
 
 
             WireframeObjectManager.Self.RefreshAll(true);

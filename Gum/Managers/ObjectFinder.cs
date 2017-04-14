@@ -385,5 +385,28 @@ namespace Gum.Managers
                 return ObjectFinder.Self.GetElementSave(instanceSave.BaseType);
             }
         }
+
+        public static List<InstanceSave> GetSiblingsIncludingThis(this InstanceSave thisInstance)
+        {
+            var container = thisInstance.ParentContainer;
+
+            List<InstanceSave> toReturn = new List<InstanceSave>();
+
+            var defaultState = container.DefaultState;
+            var thisParentValue = defaultState.GetValueOrDefault<string>($"{thisInstance.Name}.Parent");
+
+            foreach (var instance in container.Instances)
+            {
+                var parentVariableName = $"{instance.Name}.Parent";
+                var parentVariableValue = defaultState.GetValueOrDefault<string>(parentVariableName);
+
+                if (thisParentValue == parentVariableValue)
+                {
+                    toReturn.Add(instance);
+                }
+            }
+
+            return toReturn;
+        }
     }
 }

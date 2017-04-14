@@ -811,7 +811,19 @@ namespace Gum.Managers
                     TreeNode nodeForInstance = GetTreeNodeFor(instance, node);
 
                     if (nodeForInstance == null)
-                        AddTreeNodeForInstance(instance, node);
+                    {
+                        nodeForInstance = AddTreeNodeForInstance(instance, node);
+                    }
+
+                    var siblingInstances = instance.GetSiblingsIncludingThis();
+                    var desiredIndex = siblingInstances.IndexOf(instance);
+
+                    var nodeParent = nodeForInstance.Parent;
+                    if (desiredIndex != nodeParent.Nodes.IndexOf(nodeForInstance))
+                    {
+                        nodeParent.Nodes.Remove(nodeForInstance);
+                        nodeParent.Nodes.Insert(desiredIndex, nodeForInstance);
+                    }
                 }
             }
             else if (node.Tag is InstanceSave)
