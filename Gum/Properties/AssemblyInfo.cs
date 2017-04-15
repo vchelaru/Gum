@@ -50,6 +50,8 @@ using System.Runtime.InteropServices;
 //  - Drag+drop now registers to the undo system, so it can be undone
 //  - Drag+drop object on another object will now make it a child of the dropped-on object if dropped on
 //    an object rather than the top componet/screen.
-
-[assembly: AssemblyVersion("0.8.3.1")]
-[assembly: AssemblyFileVersion("0.8.3.1")]
+// 0.8.3.2
+//  - Fixed reordering not showing up on tree views if dealing with child/parents
+// still working on this release...
+[assembly: AssemblyVersion("0.8.3.2")]
+[assembly: AssemblyFileVersion("0.8.3.2")]

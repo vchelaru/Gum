@@ -103,7 +103,7 @@ namespace RenderingLibrary.Graphics
 
                     if (FileManager.IsRelative(texturesToLoad[i]))
                     {
-                        fileName = directory + texturesToLoad[i];
+                        fileName = FileManager.RelativeDirectory + directory + texturesToLoad[i];
 
                         //mTextures[i] = LoaderManager.Self.Load(directory + texturesToLoad[i], managers);
                     }

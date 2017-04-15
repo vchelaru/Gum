@@ -2939,7 +2939,7 @@ namespace Gum.Wireframe
 
                             contentLoader.AddDisposable(fullFileName, font);
                         }
-                        if (font.Textures.Any(item => item.IsDisposed))
+                        if (font.Textures.Any(item => item?.IsDisposed == true))
                         {
                             throw new InvalidOperationException("The returned font has a disposed texture");
                         }
