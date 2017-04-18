@@ -52,6 +52,6 @@ using System.Runtime.InteropServices;
 //    an object rather than the top componet/screen.
 // 0.8.3.2
 //  - Fixed reordering not showing up on tree views if dealing with child/parents
-// still working on this release...
+//  - Fixed bug where absolute custom fonts wouldn't render properly. Not sure how this broke before
 [assembly: AssemblyVersion("0.8.3.2")]
 [assembly: AssemblyFileVersion("0.8.3.2")]
