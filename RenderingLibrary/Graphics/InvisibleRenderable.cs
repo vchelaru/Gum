@@ -34,7 +34,26 @@ namespace RenderingLibrary.Graphics
 
         public string Name { get; set; }
 
-        public IRenderableIpso Parent { get; set; }
+        IRenderableIpso mParent;
+        public IRenderableIpso Parent
+        {
+            get { return mParent; }
+            set
+            {
+                if (mParent != value)
+                {
+                    if (mParent != null)
+                    {
+                        mParent.Children.Remove(this);
+                    }
+                    mParent = value;
+                    if (mParent != null)
+                    {
+                        mParent.Children.Add(this);
+                    }
+                }
+            }
+        }
 
         public float Rotation { get; set; }
 
@@ -62,8 +81,10 @@ namespace RenderingLibrary.Graphics
         {
         }
 
-        public void SetParentDirect(IRenderableIpso newParent)
+
+        void IRenderableIpso.SetParentDirect(IRenderableIpso parent)
         {
+            mParent = parent;
         }
     }
 }

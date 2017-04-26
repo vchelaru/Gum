@@ -2,6 +2,7 @@
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using System;
+using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -50,6 +51,11 @@ namespace Gum.Managers
         {
             IsNameValidCommon(screenName, out whyNotValid);
 
+            //if (string.IsNullOrEmpty(whyNotValid))
+            //{
+            //    IsNameValidVariable(screenName, out whyNotValid);
+            //}
+
             if (string.IsNullOrEmpty(whyNotValid))
             {
                 IsNameAnExistingElement(screenName, screen, out whyNotValid);
@@ -63,6 +69,11 @@ namespace Gum.Managers
         {
             IsNameValidCommon(componentName, out whyNotValid);
 
+            //if (string.IsNullOrEmpty(whyNotValid))
+            //{
+            //    IsNameValidVariable(componentName, out whyNotValid);
+            //}
+
             if (string.IsNullOrEmpty(whyNotValid))
             {
                 IsNameAnExistingElement(componentName, component, out whyNotValid);
@@ -74,6 +85,11 @@ namespace Gum.Managers
         public bool IsInstanceNameValid(string instanceName, InstanceSave instanceSave, ElementSave elementSave, out string whyNotValid)
         {
             IsNameValidCommon(instanceName, out whyNotValid);
+
+            //if (string.IsNullOrEmpty(whyNotValid))
+            //{
+            //    IsNameValidVariable(instanceName, out whyNotValid);
+            //}
 
             if (string.IsNullOrEmpty(whyNotValid))
             {
@@ -135,6 +151,17 @@ namespace Gum.Managers
             if (string.IsNullOrEmpty(whyNotValid) && name.EndsWith(" "))
             {
                 whyNotValid = "The name can't end with a space";
+            }
+        }
+
+        private void IsNameValidVariable(string name, out string whyNotValid)
+        {
+            whyNotValid = null;
+
+            CodeDomProvider provider = CodeDomProvider.CreateProvider("C#");
+            if (provider.IsValidIdentifier(name) == false)
+            {
+                whyNotValid = "The name uses an invalid character";
             }
         }
 
