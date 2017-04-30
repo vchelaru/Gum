@@ -117,14 +117,10 @@ namespace RenderingLibrary.Math.Geometry
 
         public float Rotation
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
+            // even though it doesn't rotate itself, its children
+            // can rotate, so it should store rotation values:
+            get;
+            set;
         }
 
         public float Width

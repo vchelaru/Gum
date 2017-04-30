@@ -74,6 +74,16 @@ namespace RenderingLibrary.Graphics
             if (rasterizerState.ScissorTestEnable)
             {
                 scissorRectangle = renderStates.ClipRectangle.Value;
+
+                // make sure values of with and height are never less than 0:
+                if(scissorRectangle.Width <0)
+                {
+                    scissorRectangle.Width = 0;
+                }
+                if(scissorRectangle.Height < 0)
+                {
+                    scissorRectangle.Height = 0;
+                }
             }
 
 

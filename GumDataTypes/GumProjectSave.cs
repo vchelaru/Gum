@@ -75,6 +75,8 @@ namespace Gum.DataTypes
             set;
         }
 
+        public bool RestrictFileNamesForAndroid { get; set; } = false;
+
         public List<GuideRectangle> Guides
         {
             get;
