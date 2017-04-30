@@ -108,7 +108,7 @@ namespace Gum.PropertyGridHelpers
                 foreach (var item in variables)
                 {
                     // Don't add states here, because they're handled below from this object's Default:
-                    if(item.IsState(elementSave))
+                    if(item.IsState(elementSave) == false)
                     {
                         TryDisplayVariableSave(pdc, elementSave, instanceSave, amountToDisplay, null, item);
                     }
