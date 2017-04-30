@@ -151,15 +151,6 @@ namespace Gum
             DragDropManager.Self.OnItemDrag(e.Item);
         }
 
-        private void projectPropertiesToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            ProjectPropertyGridWindow ppgw = new ProjectPropertyGridWindow();
-
-            ppgw.Show(this);
-
-            ppgw.Location = new Point(MainWindow.MousePosition.X, MainWindow.MousePosition.Y);
-        }
-
         private void managePluginsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             PluginsWindow pluginsWindow = new PluginsWindow();
@@ -421,6 +412,19 @@ namespace Gum
                 }
             }
         }
+
+
+        internal void ShowTabForControl(System.Windows.Controls.UserControl control)
+        {
+            TabControl tabControl = null;
+            TabPage tabPage = null;
+            GetContainers(control, out tabPage, out tabControl);
+
+            var index = tabControl.TabPages.IndexOf(tabPage);
+
+            tabControl.SelectedIndex = index;
+        }
+
 
         public void RemoveWpfControl(System.Windows.Controls.UserControl control)
         {

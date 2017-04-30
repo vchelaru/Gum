@@ -149,6 +149,10 @@
     <Compile Include="Gui\Controls\GuideListDisplay.Designer.cs">
       <DependentUpon>GuideListDisplay.cs</DependentUpon>
     </Compile>
+    <Compile Include="Plugins\PropertiesWindowPlugin\MainPlugin.cs" />
+    <Compile Include="Plugins\PropertiesWindowPlugin\ProjectPropertiesControl.xaml.cs">
+      <DependentUpon>ProjectPropertiesControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Gui\Forms\UndoList.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -172,12 +176,6 @@
     </Compile>
     <Compile Include="Gui\Forms\PluginsWindow.designer.cs">
       <DependentUpon>PluginsWindow.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Gui\Forms\ProjectPropertyGridWindow.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Gui\Forms\ProjectPropertyGridWindow.Designer.cs">
-      <DependentUpon>ProjectPropertyGridWindow.cs</DependentUpon>
     </Compile>
     <Compile Include="Gui\Plugins\DeleteObjectPlugin.cs" />
     <Compile Include="Gui\Plugins\MainWindowPlugin.cs" />
@@ -211,6 +209,7 @@
     <Compile Include="Plugins\Behaviors\BehaviorsViewModel.cs" />
     <Compile Include="Plugins\Behaviors\CheckListBehaviorItem.cs" />
     <Compile Include="Plugins\Behaviors\MainPlugin.cs" />
+    <Compile Include="Plugins\PropertiesWindowPlugin\ProjectPropertiesViewModel.cs" />
     <Compile Include="Plugins\Undos\MainPlugin.cs" />
     <Compile Include="Plugins\Undos\UndoDisplay.xaml.cs">
       <DependentUpon>UndoDisplay.xaml</DependentUpon>
@@ -322,9 +321,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Gui\Forms\PluginsWindow.resx">
       <DependentUpon>PluginsWindow.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Gui\Forms\ProjectPropertyGridWindow.resx">
-      <DependentUpon>ProjectPropertyGridWindow.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Gui\Forms\UndoList.resx">
       <DependentUpon>UndoList.cs</DependentUpon>
@@ -442,6 +438,10 @@
     <Page Include="Controls\ColorDisplay.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Plugins\PropertiesWindowPlugin\ProjectPropertiesControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Plugins\AlignmentButtons\AlignmentPluginControl.xaml">
       <SubType>Designer</SubType>

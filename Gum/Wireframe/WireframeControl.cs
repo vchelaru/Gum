@@ -300,7 +300,9 @@ namespace Gum.Wireframe
             isInActivity = false;
         }
 
-
+        /// <summary>
+        /// Updates the wireframe to match the project settings - specifically the canvas width/height
+        /// </summary>
         public void UpdateToProject()
         {
             if (mScreenBounds != null && ProjectManager.Self.GumProjectSave != null)

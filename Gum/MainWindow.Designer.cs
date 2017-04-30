@@ -48,7 +48,6 @@
             this.RemoveElementMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.RemoveStateMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.RemoveVariableMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.projectPropertiesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.contentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.clearFontCacheToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.findFileReferencesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -71,7 +70,6 @@
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.EventsHost = new System.Windows.Forms.Integration.ElementHost();
             this.testWpfControl2 = new Gum.TestWpfControl();
-            this.PropertyGridMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.PreviewSplitContainer = new System.Windows.Forms.SplitContainer();
             this.panel1 = new System.Windows.Forms.Panel();
             this.ToolbarPanel = new System.Windows.Forms.FlowLayoutPanel();
@@ -82,6 +80,7 @@
             this.RightTabControl = new System.Windows.Forms.TabControl();
             this.tabPage3 = new System.Windows.Forms.TabPage();
             this.OutputTextBox = new System.Windows.Forms.RichTextBox();
+            this.PropertyGridMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.LeftAndEverythingContainer)).BeginInit();
             this.LeftAndEverythingContainer.Panel1.SuspendLayout();
@@ -174,8 +173,7 @@
             this.undoToolStripMenuItem,
             this.toolStripSeparator1,
             this.addToolStripMenuItem,
-            this.removeToolStripMenuItem,
-            this.projectPropertiesToolStripMenuItem});
+            this.removeToolStripMenuItem});
             this.editToolStripMenuItem.Name = "editToolStripMenuItem";
             this.editToolStripMenuItem.Size = new System.Drawing.Size(39, 20);
             this.editToolStripMenuItem.Text = "Edit";
@@ -184,14 +182,14 @@
             // 
             this.undoToolStripMenuItem.Name = "undoToolStripMenuItem";
             this.undoToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Z)));
-            this.undoToolStripMenuItem.Size = new System.Drawing.Size(167, 22);
+            this.undoToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.undoToolStripMenuItem.Text = "Undo";
             this.undoToolStripMenuItem.Click += new System.EventHandler(this.undoToolStripMenuItem_Click);
             // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(164, 6);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(149, 6);
             // 
             // addToolStripMenuItem
             // 
@@ -200,7 +198,7 @@
             this.componentToolStripMenuItem,
             this.instanceToolStripMenuItem});
             this.addToolStripMenuItem.Name = "addToolStripMenuItem";
-            this.addToolStripMenuItem.Size = new System.Drawing.Size(167, 22);
+            this.addToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.addToolStripMenuItem.Text = "Add";
             // 
             // screenToolStripMenuItem
@@ -231,7 +229,7 @@
             this.RemoveStateMenuItem,
             this.RemoveVariableMenuItem});
             this.removeToolStripMenuItem.Name = "removeToolStripMenuItem";
-            this.removeToolStripMenuItem.Size = new System.Drawing.Size(167, 22);
+            this.removeToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.removeToolStripMenuItem.Text = "Remove";
             // 
             // RemoveElementMenuItem
@@ -251,13 +249,6 @@
             this.RemoveVariableMenuItem.Name = "RemoveVariableMenuItem";
             this.RemoveVariableMenuItem.Size = new System.Drawing.Size(117, 22);
             this.RemoveVariableMenuItem.Text = "Variable";
-            // 
-            // projectPropertiesToolStripMenuItem
-            // 
-            this.projectPropertiesToolStripMenuItem.Name = "projectPropertiesToolStripMenuItem";
-            this.projectPropertiesToolStripMenuItem.Size = new System.Drawing.Size(167, 22);
-            this.projectPropertiesToolStripMenuItem.Text = "Project Properties";
-            this.projectPropertiesToolStripMenuItem.Click += new System.EventHandler(this.projectPropertiesToolStripMenuItem_Click);
             // 
             // contentToolStripMenuItem
             // 
@@ -478,12 +469,6 @@
             this.EventsHost.Text = "elementHost1";
             this.EventsHost.Child = this.testWpfControl2;
             // 
-            // PropertyGridMenuStrip
-            // 
-            this.PropertyGridMenuStrip.Name = "PropertyGridMenuStrip";
-            this.PropertyGridMenuStrip.Size = new System.Drawing.Size(61, 4);
-            this.PropertyGridMenuStrip.Opening += new System.ComponentModel.CancelEventHandler(this.PropertyGridMenuStrip_Opening);
-            // 
             // PreviewSplitContainer
             // 
             this.PreviewSplitContainer.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -597,6 +582,12 @@
             this.OutputTextBox.TabIndex = 0;
             this.OutputTextBox.Text = "";
             // 
+            // PropertyGridMenuStrip
+            // 
+            this.PropertyGridMenuStrip.Name = "PropertyGridMenuStrip";
+            this.PropertyGridMenuStrip.Size = new System.Drawing.Size(61, 4);
+            this.PropertyGridMenuStrip.Opening += new System.ComponentModel.CancelEventHandler(this.PropertyGridMenuStrip_Opening);
+            // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -666,7 +657,6 @@
         private Wireframe.WireframeControl wireframeControl1;
         private System.Windows.Forms.ContextMenuStrip WireframeContextMenuStrip;
         private System.Windows.Forms.ContextMenuStrip PropertyGridMenuStrip;
-        private System.Windows.Forms.ToolStripMenuItem projectPropertiesToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem pluginsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem managePluginsToolStripMenuItem;
         private System.Windows.Forms.ImageList ElementTreeImages;

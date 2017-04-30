@@ -23,6 +23,7 @@ namespace Gum.Managers
             //    ' ' 
             };
 
+        
         static NameVerifier mSelf;
 
         public static NameVerifier Self
@@ -225,5 +226,26 @@ namespace Gum.Managers
             }
         }
 
+        public bool IsNameValidAndroidFile(string name, out string whyNotValid)
+        {
+            whyNotValid = null;
+            for(int i = 0; i < name.Length; i++)
+            {
+                if(!IsValidAndroidFileCharacter(name[i]))
+                {
+                    whyNotValid = $"The character {name[i]} is not supported on Android.";
+                }
+            }
+
+            return string.IsNullOrEmpty(whyNotValid);
+        }
+
+        private bool IsValidAndroidFileCharacter(char c)
+        {
+            return (c >= 'a' && c <= 'z') ||
+                //(c >= 'A' && c <= 'Z' && allowUpperCase) ||
+                (c == '_') ||
+                (c >= '0' && c <= '9');
+        }
     }
 }

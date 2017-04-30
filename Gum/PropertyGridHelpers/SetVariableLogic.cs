@@ -94,7 +94,7 @@ namespace Gum.PropertyGridHelpers
 
             ReactIfChangedMemberIsUnitType(parentElement, changedMember, oldValue);
 
-            ReactIfChangedMemberIsTexture(parentElement, changedMember, oldValue);
+            ReactIfChangedMemberIsSourceFile(parentElement, changedMember, oldValue);
 
             ReactIfChangedMemberIsTextureAddress(parentElement, changedMember, oldValue);
 
@@ -247,35 +247,30 @@ namespace Gum.PropertyGridHelpers
             }
         }
 
-        private void ReactIfChangedMemberIsTexture(ElementSave parentElement, string changedMember, object oldValue)
+        private void ReactIfChangedMemberIsSourceFile(ElementSave parentElement, string changedMember, object oldValue)
         {
             VariableSave variable = SelectedState.Self.SelectedVariableSave;
             // Eventually need to handle tunneled variables
 
             bool isSourcefile = variable != null && variable.GetRootName() == "SourceFile";
+            
+            string errorMessage = null;
 
-            bool isValidExtension = false;
-
-            if (isSourcefile)
+            if(isSourcefile)
             {
-                string value;
+                errorMessage = GetWhySourcefileIsInvalid(variable.Value as string);
 
-                value = variable.Value as string;
-                var extension = FileManager.GetExtension(value);
-
-                isValidExtension = extension == "gif" ||
-                    extension == "jpg" ||
-                    extension == "png";
-            }
-
-            if (isSourcefile)
-            {
-
-                string value;
-
-                value = variable.Value as string;
-                if (isValidExtension)
+                if(!string.IsNullOrEmpty(errorMessage))
                 {
+                    MessageBox.Show(errorMessage);
+
+                    variable.Value = oldValue;
+                }
+                else
+                {
+                    string value;
+
+                    value = variable.Value as string;
 
                     if (!string.IsNullOrEmpty(value))
                     {
@@ -292,23 +287,41 @@ namespace Gum.PropertyGridHelpers
                         }
                     }
 
-
                     StateSave stateSave = SelectedState.Self.SelectedStateSave;
 
                     RecursiveVariableFinder rvf = new RecursiveVariableFinder(stateSave);
 
                     stateSave.SetValue("AnimationFrames", new List<string>());
                 }
-                else
+            }
+        }
+
+        private string GetWhySourcefileIsInvalid(string value)
+        {
+            string whyInvalid = null;
+
+            var extension = FileManager.GetExtension(value);
+
+            bool isValidExtension = extension == "gif" ||
+                extension == "jpg" ||
+                extension == "png";
+            if(!isValidExtension)
+            {
+                whyInvalid = "The extension " + extension + " is not supported for textures";
+            }
+
+            if(string.IsNullOrEmpty(whyInvalid))
+            {
+                var gumProject = ProjectState.Self.GumProjectSave;
+                if(gumProject.RestrictFileNamesForAndroid)
                 {
-                    var extension = FileManager.GetExtension(value);
-
-                    MessageBox.Show("The extension " + extension + " is not supported for textures");
-
-                    variable.Value = oldValue;
+                    var strippedName = 
+                        FileManager.RemovePath(FileManager.RemoveExtension(value));
+                    NameVerifier.Self.IsNameValidAndroidFile(strippedName, out whyInvalid);
                 }
             }
 
+            return whyInvalid;
         }
 
         private static bool AskIfShouldCopy(VariableSave variable, string value)

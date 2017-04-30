@@ -107,8 +107,11 @@ namespace Gum.PropertyGridHelpers
                 var variables = StandardElementsManager.Self.GetDefaultStateFor("Component").Variables;
                 foreach (var item in variables)
                 {
-
-                    TryDisplayVariableSave(pdc, elementSave, instanceSave, amountToDisplay, null, item);
+                    // Don't add states here, because they're handled below from this object's Default:
+                    if(item.IsState(elementSave))
+                    {
+                        TryDisplayVariableSave(pdc, elementSave, instanceSave, amountToDisplay, null, item);
+                    }
                 }
             }
             // else if screen
@@ -458,6 +461,11 @@ namespace Gum.PropertyGridHelpers
                         {
                             shouldInclude = true;
                         }
+                    }
+
+                    if(!shouldInclude && instanceSave == null && defaultVariable.IsState(container))
+                    {
+                        return true;
                     }
                 }
             }

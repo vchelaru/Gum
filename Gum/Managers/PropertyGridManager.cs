@@ -434,16 +434,29 @@ namespace Gum.Managers
 
         private void MakeTextMultiline(List<MemberCategory> categories)
         {
-            var category = categories.FirstOrDefault(item => item.Name == "Text");
-
-            if(category != null)
+            // This used to only make Text objects multiline, but...maybe we should make all string values multiline?
+            foreach(var category in categories)
             {
-                var member = category.Members.FirstOrDefault(item => item.DisplayName == "Text");
-                if(member != null)
+                foreach(var member in category.Members)
                 {
-                    member.PreferredDisplayer = typeof(WpfDataUi.Controls.MultiLineTextBoxDisplay);
+                    if(member.PreferredDisplayer == null && 
+                        member.PropertyType == typeof(string) &&
+                        member.Name != "Name" && member.Name.EndsWith(".Name") == false)
+                    {
+                        member.PreferredDisplayer = typeof(WpfDataUi.Controls.MultiLineTextBoxDisplay);
+                    }
                 }
             }
+            //var category = categories.FirstOrDefault(item => item.Name == "Text");
+
+            //if(category != null)
+            //{
+            //    var member = category.Members.FirstOrDefault(item => item.DisplayName == "Text");
+            //    if(member != null)
+            //    {
+            //        member.PreferredDisplayer = typeof(WpfDataUi.Controls.MultiLineTextBoxDisplay);
+            //    }
+            //}
         }
 
         private static void ReorganizeCategories(List<MemberCategory> categories)
