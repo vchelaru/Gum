@@ -53,5 +53,9 @@ using System.Runtime.InteropServices;
 // 0.8.3.2
 //  - Fixed reordering not showing up on tree views if dealing with child/parents
 //  - Fixed bug where absolute custom fonts wouldn't render properly. Not sure how this broke before
-[assembly: AssemblyVersion("0.8.3.2")]
-[assembly: AssemblyFileVersion("0.8.3.2")]
+// 0.8.3.3
+//  - Fixed clicking on a circle causing crash
+// 0.8.3.4
+//  - Fixed default text (font) not showing up.
+[assembly: AssemblyVersion("0.8.3.4")]
+[assembly: AssemblyFileVersion("0.8.3.4")]

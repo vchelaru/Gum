@@ -154,6 +154,13 @@ namespace Gum.Wireframe
                     rootIpso.SetVariablesTopLevel(elementSave, state);
                 }
 
+                if(elementSave is StandardElementSave && elementSave.Name == "Text")
+                {
+                    // We created a new Text object, so let's try generating fonts for it:
+                    FontManager.Self.ReactToFontValueSet(null);
+
+                }
+
                 // I think this has to be *after* we set varaibles because that's where clipping gets set
                 if (rootIpso != null)
                 {
@@ -189,6 +196,7 @@ namespace Gum.Wireframe
                 if (type == "Text")
                 {
                     (graphicalElement.RenderableComponent as Text).RenderBoundary = ProjectManager.Self.GeneralSettingsFile.ShowTextOutlines;
+                    FontManager.Self.ReactToFontValueSet(instance);
                 }
 
             }

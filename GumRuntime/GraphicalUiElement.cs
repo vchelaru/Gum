@@ -77,6 +77,10 @@ namespace Gum.Wireframe
 
         bool mIsLayoutSuspended = false;
 
+        // We need ThreadStatic in case screens are being loaded
+        // in the background - we don't want to interrupt the foreground
+        // layout behavior.
+        [ThreadStatic]
         public static bool IsAllLayoutSuspended = false;
 
         Dictionary<string, Gum.DataTypes.Variables.StateSave> mStates =
