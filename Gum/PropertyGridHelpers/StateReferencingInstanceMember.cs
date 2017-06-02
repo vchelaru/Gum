@@ -281,10 +281,15 @@ namespace Gum.PropertyGridHelpers
                 return;
             }
             
-
-            StateSave currentStateSave = SelectedState.Self.SelectedStateSave;
+            // Update June 1, 2017
+            // This code used to expose
+            // a variable on whatever state
+            // was selected; however, exposed
+            // variables should be exposed on the
+            // default state or else Gum doesn't properly
+            //StateSave currentStateSave = SelectedState.Self.SelectedStateSave;
+            StateSave stateToExposeOn = SelectedState.Self.SelectedElement.DefaultState;
             VariableSave variableSave = this.VariableSave;
-            bool tempVariable = false;
 
             if (variableSave == null)
             {
@@ -301,13 +306,12 @@ namespace Gum.PropertyGridHelpers
                 {
                     string variableType = variableInDefault.Type;
 
-                    currentStateSave.SetValue(variableName, null, instanceSave, variableType);
+                    stateToExposeOn.SetValue(variableName, null, instanceSave, variableType);
 
                     // Now the variable should be created so we can access it
-                    variableSave = VariableSave;
+                    variableSave = stateToExposeOn.GetVariableSave(variableName);
                     // Since it's newly-created, there is no value being set:
                     variableSave.SetsValue = false;
-                    tempVariable = true;
                 }
             }
 
@@ -336,16 +340,12 @@ namespace Gum.PropertyGridHelpers
                     else
                     {
                         variableSave.ExposedAsName = tiw.Result;
-                        tempVariable = false;
 
                         GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
                         GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);
                     }
                 }
             }
-
-            if (tempVariable)
-                currentStateSave.Variables.Remove(variableSave);
         }
 
         private void HandleUnexposeVariableClick(object sender, System.Windows.RoutedEventArgs e)

@@ -434,6 +434,14 @@ namespace Gum.ToolStates
             }
         }
 
+        public IEnumerable<TreeNode> SelectedTreeNodes
+        {
+            get
+            {
+                return ElementTreeViewManager.Self.SelectedNodes;
+            }
+        }
+
         public RecursiveVariableFinder SelectedRecursiveVariableFinder
         {
             get

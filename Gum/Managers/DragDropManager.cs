@@ -65,22 +65,36 @@ namespace Gum.Managers
             {
                 if (mDraggedItem != null)
                 {
-                    TreeNode draggedTreeNode = (TreeNode)mDraggedItem;
-                    object draggedObject = draggedTreeNode.Tag;
+                    List<TreeNode> treeNodesToDrop = new List<TreeNode>
+                    {
+                        (TreeNode)mDraggedItem
+                    };
 
+                    // The selected nodes should contain the dragged item, but I don't know for 100% certain.
+                    // If not, then we'll just use the dragged item. If it does, then we'll also add all other
+                    // selected items:
+                    if(SelectedState.Self.SelectedTreeNodes.Contains(mDraggedItem))
+                    {
+                        var whatToAdd = SelectedState.Self.SelectedTreeNodes.Where(item => item != mDraggedItem);
+                        treeNodesToDrop.AddRange(whatToAdd);
+                    }
 
                     mDraggedItem = null; // to prevent this from getting hit again if a message box is up
-
-
-                    bool handled = false;
-                    HandleDroppedItemInWireframe(draggedObject, out handled);
-
-                    if (!handled)
+                    foreach(var draggedTreeNode in treeNodesToDrop)
                     {
-                        TreeNode targetTreeNode = ElementTreeViewManager.Self.GetTreeNodeOver();
-                        if (targetTreeNode != draggedTreeNode)
+                        object draggedObject = draggedTreeNode.Tag;
+
+                        bool handled = false;
+
+                        HandleDroppedItemInWireframe(draggedObject, out handled);
+
+                        if (!handled)
                         {
-                            HandleDroppedItemOnTreeView(draggedObject, targetTreeNode);
+                            TreeNode targetTreeNode = ElementTreeViewManager.Self.GetTreeNodeOver();
+                            if (targetTreeNode != draggedTreeNode)
+                            {
+                                HandleDroppedItemOnTreeView(draggedObject, targetTreeNode);
+                            }
                         }
                     }
                 }

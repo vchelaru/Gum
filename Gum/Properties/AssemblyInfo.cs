@@ -57,5 +57,7 @@ using System.Runtime.InteropServices;
 //  - Fixed clicking on a circle causing crash
 // 0.8.3.4
 //  - Fixed default text (font) not showing up.
+//  - Fixed bug with exposing a variable on non-default state causing weird behavior
+//  - Drag+dropping multiple objects will set the parent on all selected objects
 [assembly: AssemblyVersion("0.8.3.4")]
 [assembly: AssemblyFileVersion("0.8.3.4")]

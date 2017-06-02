@@ -33,6 +33,7 @@ namespace Gum.ToolStates
         VariableSave SelectedVariableSave { get; set;  }
         VariableSave SelectedBehaviorVariable { get; set; }
         TreeNode SelectedTreeNode { get; }
+        IEnumerable<TreeNode> SelectedTreeNodes { get; }
         RecursiveVariableFinder SelectedRecursiveVariableFinder { get; }
         StateStackingMode StateStackingMode { get; set; }
 
