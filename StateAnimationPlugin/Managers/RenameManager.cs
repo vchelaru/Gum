@@ -13,6 +13,31 @@ namespace StateAnimationPlugin.Managers
 {
     class RenameManager : Singleton<RenameManager>
     {
+        public void HandleRename(ElementSave elementSave, string oldName, ElementAnimationsViewModel viewModel)
+        {
+            // save the new:
+            bool succeeded = false;
+            try
+            {
+                AnimationCollectionViewModelManager.Self.Save(viewModel);
+                succeeded = true;
+            }
+            catch
+            {
+                succeeded = false;
+            }
+
+            if(succeeded)
+            {
+                var oldFileName = AnimationCollectionViewModelManager.Self.GetAbsoluteAnimationFileNameFor(oldName);
+
+                if(System.IO.File.Exists(oldFileName))
+                {
+                    System.IO.File.Delete(oldFileName);
+                }
+            }
+        }
+
 
         public void HandleRename(InstanceSave instanceSave, string oldName, ElementAnimationsViewModel viewModel)
         {

@@ -101,9 +101,16 @@ namespace RenderingLibrary.Graphics
                 {
                     string fileName;
 
-                    if (FileManager.IsRelative(texturesToLoad[i]))
-                    {
-                        if(FileManager.IsRelative(directory))
+
+                    // fnt files treat ./ as relative, but FRB Android treats ./ as
+                    // absolute. Since the value comes directly from .fnt, we want to 
+                    // consider ./ as relative instead of whatever FRB thinks is relative:
+                    //if (FileManager.IsRelative(texturesToLoad[i]))
+                    bool isRelative = texturesToLoad[i].StartsWith("./") || FileManager.IsRelative(texturesToLoad[i]);
+
+                    if (isRelative)
+                    { 
+                        if (FileManager.IsRelative(directory))
                         {
                             fileName = FileManager.RelativeDirectory + directory + texturesToLoad[i];
                         }

@@ -11,11 +11,15 @@ using ToolsUtilities;
 
 namespace Gum.Managers
 {
+    #region Enums
+
     public enum NameChangeAction
     {
         Move,
         Rename
     }
+
+    #endregion
 
     public class RenameManager
     {

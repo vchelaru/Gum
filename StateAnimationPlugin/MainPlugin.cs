@@ -36,9 +36,10 @@ namespace StateAnimationPlugin
             get { return "State Animation Plugin"; }
         }
 
+        // 0.0.0.2: Renaming Gum file now renames its animations
         public override Version Version
         {
-            get { return new Version(0, 0, 0, 1); }
+            get { return new Version(0, 0, 0, 2); }
         }
 
         #endregion
@@ -74,8 +75,18 @@ namespace StateAnimationPlugin
             this.InstanceRename += HandleInstanceRename;
             this.StateRename += HandleStateRename;
             this.CategoryRename += HandleCategoryRename;
+            this.ElementRename += HandleElementRename;
         }
 
+        private void HandleElementRename(ElementSave element, string oldName)
+        {
+            if (mCurrentViewModel == null)
+            {
+                CreateViewModel();
+            }
+
+            RenameManager.Self.HandleRename(element, oldName, mCurrentViewModel);
+        }
 
         private void HandleInstanceRename(InstanceSave instanceSave, string oldName)
         {
