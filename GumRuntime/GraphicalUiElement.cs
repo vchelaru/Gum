@@ -2927,7 +2927,7 @@ namespace Gum.Wireframe
                 {
                     string fontName = global::RenderingLibrary.Graphics.Fonts.BmfcSave.GetFontCacheFileNameFor(FontSize, Font, OutlineThickness);
 
-                    string fullFileName = ToolsUtilities.FileManager.RelativeDirectory + fontName;
+                    string fullFileName = ToolsUtilities.FileManager.Standardize(fontName, false, true);
 
 #if ANDROID || IOS
                     fullFileName = fullFileName.ToLowerInvariant();
