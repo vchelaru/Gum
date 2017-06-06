@@ -329,6 +329,8 @@ namespace ToolsUtilities
 
         public static bool IsRelative(string fileName)
         {
+            bool relative = false;
+
             if (fileName == null)
             {
                 throw new System.ArgumentException("Cannot check if a null file name is relative.");
@@ -336,17 +338,20 @@ namespace ToolsUtilities
 
 
 #if XBOX360 || ANDROID || IOS || UWP
-            
+            // Justin Johnson 6/6/2017: this compiler flagged code might be eliminated now that 
+            // this whole method is more cross platform friendly!
 			if(fileName.Length > 1 && fileName[0] == '.' && (fileName[1] == '/' || fileName[1] == '\\'))
                 return false;
             else
                 return true;
 
 #else
-            // a non-relative directory will have a letter than a : at the beginning.
-            // for example c:/file.bmp.  If other cases arise, this may need to be changed.
-            return !(fileName.Length > 1 && (fileName[1] == ':' || fileName.StartsWith("\\\\")));
+            if(fileName.Length < 1 || !Path.IsPathRooted(fileName))
+            {
+                relative = true;
+            }
 #endif
+            return relative;
         }
 
 
@@ -565,25 +570,30 @@ namespace ToolsUtilities
 
         public static string Standardize(string fileName, bool preserveCase = false, bool makeAbsolute = false)
         {
-            // The standard used here is the backslash.
-            // This is the opposite of FlatRedBall, so be careful!
+            // Justin Johnson 6/6/2017:
+            // This used to normalize everything to backslashes, which is
+            // the opposite of FRB and breaks Mac and other platforms.
+            // Method revised to standardize on forward slash
+
+            var newFileName = fileName;
 
             if (makeAbsolute)
             {
-                if (IsRelative(fileName))
+                if (IsRelative(newFileName))
                 {
-                    fileName = (RelativeDirectory + fileName).Replace("/", "\\");
+                    newFileName = Path.Combine(RelativeDirectory, newFileName);
                 }
             }
 
-            if (preserveCase)
+            if (!preserveCase)
             {
-                return fileName.Replace('/', '\\');
+                newFileName = newFileName.ToLower();
             }
-            else
-            {
-                return fileName.Replace('/', '\\').ToLower();
-            }
+
+            // normalize slash direction
+            newFileName = newFileName.Replace(@"\", "/");
+
+            return newFileName;
         }
 
 
