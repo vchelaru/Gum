@@ -295,7 +295,7 @@ namespace Gum.Managers
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 16.0f, Name = "Height", IsHiddenInPropertyGrid = true });
 
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
-            //AddColorVariables(stateSave, true);
+            AddColorVariables(stateSave, true);
 
             AddEventVariables(stateSave);
 
@@ -322,7 +322,7 @@ namespace Gum.Managers
             AddDimensionsVariables(stateSave, 16, 16, DimensionVariableAction.ExcludeFileOptions);
 
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
-            //AddColorVariables(stateSave, true);
+            AddColorVariables(stateSave, true);
 
             AddEventVariables(stateSave);
 

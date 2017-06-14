@@ -167,27 +167,27 @@ namespace Gum.Managers
 
             relative = FileManager.Standardize(relative);
 
-            if (relative.StartsWith("screens\\"))
+            if (relative.StartsWith("screens/"))
             {
-                string modifiedRelative = relative.Substring("screens\\".Length);
+                string modifiedRelative = relative.Substring("screens/".Length);
 
                 return GetTreeNodeFor(modifiedRelative, mScreensTreeNode);
             }
-            else if (relative.StartsWith("components\\"))
+            else if (relative.StartsWith("components/"))
             {
-                string modifiedRelative = relative.Substring("components\\".Length);
+                string modifiedRelative = relative.Substring("components/".Length);
 
                 return GetTreeNodeFor(modifiedRelative, mComponentsTreeNode);
             }
-            else if (relative.StartsWith("standards\\"))
+            else if (relative.StartsWith("standards/"))
             {
-                string modifiedRelative = relative.Substring("standards\\".Length);
+                string modifiedRelative = relative.Substring("standards/".Length);
 
                 return GetTreeNodeFor(modifiedRelative, mStandardElementsTreeNode);
             }
-            else if(relative.StartsWith("behaviors\\"))
+            else if(relative.StartsWith("behaviors/"))
             {
-                string modifiedRelative = relative.Substring("behaviors\\".Length);
+                string modifiedRelative = relative.Substring("behaviors/".Length);
 
                 return GetTreeNodeFor(modifiedRelative, mBehaviorsTreeNode);
             }
@@ -577,6 +577,10 @@ namespace Gum.Managers
 
         private static void AddTreeNodeForElement(ElementSave element, TreeNode parentNode, int defaultImageIndex)
         {
+            if (parentNode == null)
+            {
+                throw new NullReferenceException($"{nameof(parentNode)} cannot be null");
+            }
             TreeNode treeNode = new TreeNode();
 
             if (element.IsSourceFileMissing)

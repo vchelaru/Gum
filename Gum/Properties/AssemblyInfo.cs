@@ -59,5 +59,8 @@ using System.Runtime.InteropServices;
 //  - Fixed default text (font) not showing up.
 //  - Fixed bug with exposing a variable on non-default state causing weird behavior
 //  - Drag+dropping multiple objects will set the parent on all selected objects
-[assembly: AssemblyVersion("0.8.3.4")]
-[assembly: AssemblyFileVersion("0.8.3.4")]
+// 0.8.4
+//  - Rectangle color can now be set
+//  - Circle color can now be set
+[assembly: AssemblyVersion("0.8.4.0")]
+[assembly: AssemblyFileVersion("0.8.4.0")]

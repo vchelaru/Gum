@@ -474,7 +474,7 @@ namespace ToolsUtilities
         {
             if (fileNameToFix.Contains(".."))
             {
-                fileNameToFix = fileNameToFix.Replace("/", "\\");
+                fileNameToFix = fileNameToFix.Replace("\\", "/");
 
                 // First let's get rid of any ..'s that are in the middle
                 // for example:
@@ -485,23 +485,23 @@ namespace ToolsUtilities
                 // 
                 // "content/background/outdoorsanim/outdoorsanim.achx"
 
-                int indexOfNextDotDotSlash = fileNameToFix.IndexOf("..\\");
+                int indexOfNextDotDotSlash = fileNameToFix.IndexOf("../");
 
                 bool shouldLoop = indexOfNextDotDotSlash > 0;
 
                 while (shouldLoop)
                 {
-                    int indexOfPreviousDirectory = fileNameToFix.LastIndexOf('\\', indexOfNextDotDotSlash - 2, indexOfNextDotDotSlash - 2);
+                    int indexOfPreviousDirectory = fileNameToFix.LastIndexOf('/', indexOfNextDotDotSlash - 2, indexOfNextDotDotSlash - 2);
 
                     fileNameToFix = fileNameToFix.Remove(indexOfPreviousDirectory + 1, indexOfNextDotDotSlash - indexOfPreviousDirectory + 2);
 
-                    indexOfNextDotDotSlash = fileNameToFix.IndexOf("..\\");
+                    indexOfNextDotDotSlash = fileNameToFix.IndexOf("../");
 
                     shouldLoop = indexOfNextDotDotSlash > 0;
                 }
             }
 
-            return fileNameToFix.Replace("/", "\\");
+            return fileNameToFix.Replace("\\", "/");
         }
 
         #region XML Docs
