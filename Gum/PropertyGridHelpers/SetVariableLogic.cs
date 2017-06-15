@@ -62,7 +62,12 @@ namespace Gum.PropertyGridHelpers
 
                 ReactToChangedMember(changedMember, oldValue, parentElement, instance);
 
-                PropagateVariablesInCategory(changedMember);
+                string qualifiedName = changedMember;
+                if(instance != null)
+                {
+                    qualifiedName = $"{instance.Name}.{changedMember}";
+                }
+                PropagateVariablesInCategory(qualifiedName);
 
                 // Need to record undo before refreshing and reselecting the UI
                 Undo.UndoManager.Self.RecordUndo();
@@ -84,7 +89,7 @@ namespace Gum.PropertyGridHelpers
             }
         }
 
-        private void PropagateVariablesInCategory( string changedMember)
+        public void PropagateVariablesInCategory( string changedMember)
         {
             var currentCategory = SelectedState.Self.SelectedStateCategorySave;
             /////////////////////Early Out//////////////////////////
