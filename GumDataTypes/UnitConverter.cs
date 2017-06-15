@@ -206,7 +206,7 @@ namespace Gum.Converters
 
         public static GeneralUnitType ConvertToGeneralUnit(object unitType)
         {
-            if(unitType == null)
+            if(unitType == null || (int)unitType == 0) 
             {
                 return GeneralUnitType.PixelsFromSmall;
             }

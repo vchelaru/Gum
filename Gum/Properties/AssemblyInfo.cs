@@ -62,5 +62,8 @@ using System.Runtime.InteropServices;
 // 0.8.4
 //  - Rectangle color can now be set
 //  - Circle color can now be set
-[assembly: AssemblyVersion("0.8.4.0")]
-[assembly: AssemblyFileVersion("0.8.4.0")]
+// 0.8.5
+//  - Setting a variable in a state in a category sets the same variable on other states in the same category,
+//    making animations much easier to create.
+[assembly: AssemblyVersion("0.8.5.0")]
+[assembly: AssemblyFileVersion("0.8.5.0")]

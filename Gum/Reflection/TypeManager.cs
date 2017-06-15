@@ -52,6 +52,11 @@ namespace Gum.Reflection
                 throw new Exception("Must call TypeManager.Initialize first");
             }
 
+            if(typeAsString == null)
+            {
+                throw new ArgumentNullException(nameof(typeAsString));
+            }
+
             bool isQualified = typeAsString.Contains(".");
 
             if (isQualified)

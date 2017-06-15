@@ -88,6 +88,11 @@ namespace WpfDataUi
 
         UserControl CreateInternalControl()
         {
+            if(InstanceMember == null)
+            {
+                throw new NullReferenceException(nameof(InstanceMember));
+            }
+
             Type type = InstanceMember.PropertyType;
 
 

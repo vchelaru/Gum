@@ -62,6 +62,8 @@ namespace Gum.PropertyGridHelpers
 
                 ReactToChangedMember(changedMember, oldValue, parentElement, instance);
 
+                PropagateVariablesInCategory(changedMember);
+
                 // Need to record undo before refreshing and reselecting the UI
                 Undo.UndoManager.Self.RecordUndo();
 
@@ -78,6 +80,43 @@ namespace Gum.PropertyGridHelpers
                     // Inefficient but let's do this for now - we can make it more efficient later
                     WireframeObjectManager.Self.RefreshAll(true);
                     SelectionManager.Self.Refresh();
+                }
+            }
+        }
+
+        private void PropagateVariablesInCategory( string changedMember)
+        {
+            var currentCategory = SelectedState.Self.SelectedStateCategorySave;
+            /////////////////////Early Out//////////////////////////
+            if(currentCategory == null)
+            {
+                return;
+            }
+            ///////////////////End Early Out////////////////////////
+
+            var defaultState = SelectedState.Self.SelectedElement.DefaultState;
+            var defaultVariable = defaultState.GetVariableSave(changedMember);
+            var defaultValue = defaultVariable.Value;
+
+            foreach(var state in currentCategory.States)
+            {
+                var existingVariable = state.GetVariableSave(changedMember);
+
+                if(existingVariable == null)
+                {
+                    VariableSave newVariable = defaultVariable.Clone();
+                    newVariable.Value = defaultValue;
+                    newVariable.SetsValue = true;
+                    newVariable.Name = changedMember;
+
+                    state.Variables.Add(newVariable);
+
+                    GumCommands.Self.GuiCommands.PrintOutput(
+                        $"Adding {changedMember} to {currentCategory.Name}/{state.Name}");
+                }
+                else if(existingVariable.SetsValue == false)
+                {
+                    existingVariable.SetsValue = true;
                 }
             }
         }

@@ -472,7 +472,7 @@ namespace Gum.PropertyGridHelpers
                     RootVariableName);
             }
 
-            if (variableSave != null)
+            if (variableSave?.Type != null)
             {
                 return TypeManager.Self.GetTypeFromString(variableSave.Type);
             }
