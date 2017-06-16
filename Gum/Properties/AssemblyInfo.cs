@@ -65,5 +65,7 @@ using System.Runtime.InteropServices;
 // 0.8.5
 //  - Setting a variable in a state in a category sets the same variable on other states in the same category,
 //    making animations much easier to create.
-[assembly: AssemblyVersion("0.8.5.0")]
-[assembly: AssemblyFileVersion("0.8.5.0")]
+// 0.8.5.1
+//  - Fixed possible crash when creating Text objects.
+[assembly: AssemblyVersion("0.8.5.1")]
+[assembly: AssemblyFileVersion("0.8.5.1")]

@@ -101,6 +101,10 @@ namespace Gum.PropertyGridHelpers
 
             var defaultState = SelectedState.Self.SelectedElement.DefaultState;
             var defaultVariable = defaultState.GetVariableSave(changedMember);
+            if(defaultVariable == null)
+            {
+                defaultVariable = defaultState.GetVariableRecursive(changedMember);
+            }
             var defaultValue = defaultVariable.Value;
 
             foreach(var state in currentCategory.States)

@@ -71,6 +71,11 @@ namespace Gum.Managers
         {
             StateSave stateSave = SelectedState.Self.SelectedStateSave;
 
+            if(stateSave == null)
+            {
+                throw new InvalidOperationException($"{nameof(stateSave)} is null");
+            }
+
             string prefix = "";
             if (instance != null)
             {
@@ -79,10 +84,24 @@ namespace Gum.Managers
 
             object fontSizeAsObject = stateSave.GetValueRecursive(prefix + "FontSize");
 
-            BmfcSave.CreateBitmapFontFilesIfNecessary(
-                (int)fontSizeAsObject,
-                (string)stateSave.GetValueRecursive(prefix + "Font"),
-                (int)stateSave.GetValueRecursive(prefix + "OutlineThickness"));
+            var fontValue =
+                (string)stateSave.GetValueRecursive(prefix + "Font");
+
+            var outlineValueAsObject = stateSave.GetValueRecursive(prefix + "OutlineThickness");
+
+            int outlineValue = 0;
+            if (outlineValueAsObject != null)
+            {
+                outlineValueAsObject = (int)outlineValueAsObject;
+            }
+            
+            if(fontValue != null)
+            {
+                BmfcSave.CreateBitmapFontFilesIfNecessary(
+                    (int)fontSizeAsObject,
+                    fontValue,
+                    outlineValue);
+            }
         }
     }
 }
