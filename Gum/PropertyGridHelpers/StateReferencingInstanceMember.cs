@@ -30,6 +30,8 @@ namespace Gum.PropertyGridHelpers
 
         #region Properties
 
+        public StateSaveCategory StateSaveCategory { get; set; }
+
         public override bool IsReadOnly
         {
             get
@@ -174,9 +176,11 @@ namespace Gum.PropertyGridHelpers
         #region Methods
 
         public StateReferencingInstanceMember(InstanceSavePropertyDescriptor ispd, StateSave stateSave, 
+            StateSaveCategory stateSaveCategory,
             string variableName, InstanceSave instanceSave, ElementSave elementSave) :
             base(variableName, stateSave)
         {
+            StateSaveCategory = stateSaveCategory;
             mInstanceSave = instanceSave;
             mStateSave = stateSave;
             mVariableName = variableName;
@@ -185,6 +189,7 @@ namespace Gum.PropertyGridHelpers
             this.CustomGetEvent += GetEvent;
             this.CustomSetEvent += SetEvent;
             this.CustomGetTypeEvent += GetTypeEvent;
+
 
             this.SortValue = int.MaxValue;
 

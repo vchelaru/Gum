@@ -37,13 +37,14 @@ namespace Gum.Managers
 
         ElementSaveDisplayer mPropertyGridDisplayer = new ElementSaveDisplayer();
 
-        ToolStripMenuItem mExposeVariable;
-        ToolStripMenuItem mResetToDefault;
-        ToolStripMenuItem mUnExposeVariable;
+        //ToolStripMenuItem mExposeVariable;
+        //ToolStripMenuItem mResetToDefault;
+        //ToolStripMenuItem mUnExposeVariable;
 
         ElementSave mLastElement;
         InstanceSave mLastInstance;
         StateSave mLastState;
+        StateSaveCategory mLastCategory;
 
         MainControlViewModel variableViewModel;
 
@@ -168,6 +169,7 @@ namespace Gum.Managers
                 var state = SelectedState.Self.SelectedStateSave;
                 var instance = SelectedState.Self.SelectedInstance;
                 var behaviorSave = SelectedState.Self.SelectedBehavior;
+                var category = SelectedState.Self.SelectedStateCategorySave;
 
                 bool shouldMakeYellow = element != null && state != element.DefaultState;
 
@@ -176,7 +178,7 @@ namespace Gum.Managers
 
 
                 //Task task = new Task(() => RefreshDataGrid(element, state, instance));
-                RefreshDataGrid(element, state, instance, behaviorSave, force);
+                RefreshDataGrid(element, state, category, instance, behaviorSave, force);
             }
 
             RefreshEventsUi();
@@ -199,16 +201,20 @@ namespace Gum.Managers
         /// <param name="state">The state to display.</param>
         /// <param name="instance">The instance to display. May be null.</param>
         /// <param name="force">Whether to refresh even if the element, state, and instance have not changed.</param>
-        private void RefreshDataGrid(ElementSave element, StateSave state, InstanceSave instance, BehaviorSave behaviorSave, bool force = false)
+        private void RefreshDataGrid(ElementSave element, StateSave state, StateSaveCategory category, InstanceSave instance, 
+            BehaviorSave behaviorSave, bool force = false)
         {
 
-            bool hasChangedObjectShowing = element != mLastElement || instance != mLastInstance || state != mLastState ||
+            bool hasChangedObjectShowing = element != mLastElement || 
+                instance != mLastInstance || 
+                state != mLastState ||
+                category != mLastCategory ||
                 force;
 
 
             if (hasChangedObjectShowing)
             {
-                List<MemberCategory> categories = GetCategories(element, state, instance);
+                List<MemberCategory> categories = GetMemberCategories(element, state, category, instance);
                 Application.DoEvents();
                 SimultaneousCalls ++;
                 lock (lockObject)
@@ -230,14 +236,14 @@ namespace Gum.Managers
                     // duplicate UI members.  I am going to deal with it now because it is
 
 
-                    foreach (var category in categories)
+                    foreach (var memberCategory in categories)
                     {
 
                         // We used to do this:
                         // Application.DoEvents();
                         // That made things go faster,
                         // but it made the "lock" not work, which could make duplicate UI show up.
-                        mVariablesDataGrid.Categories.Add(category);
+                        mVariablesDataGrid.Categories.Add(memberCategory);
                         if(SimultaneousCalls > 1)
                         {
                             SimultaneousCalls--;
@@ -257,7 +263,7 @@ namespace Gum.Managers
             else
             {
                 // let's see if any variables have been added/removed
-                var categories = GetCategories(element, state, instance);
+                var categories = GetMemberCategories(element, state, category, instance);
 
                 foreach (var newCategory in categories)
                 {
@@ -362,65 +368,139 @@ namespace Gum.Managers
         }
 
 
-        private List<MemberCategory> GetCategories(ElementSave element, StateSave state, InstanceSave instance)
+        private List<MemberCategory> GetMemberCategories(ElementSave element, StateSave state, StateSaveCategory stateCategory, InstanceSave instance)
         {
             List<MemberCategory> categories = new List<MemberCategory>();
 
             mLastElement = element;
             mLastState = state;
             mLastInstance = instance;
+            mLastCategory = stateCategory;
 
             var stateSave = SelectedState.Self.SelectedStateSave;
             if (stateSave != null)
             {
-                categories.Clear();
-                var properties = mPropertyGridDisplayer.GetProperties(null);
-                foreach (InstanceSavePropertyDescriptor propertyDescriptor in properties)
-                {
-                    StateReferencingInstanceMember srim;
-                    if (instance != null)
-                    {
-                        srim =
-                            new StateReferencingInstanceMember(propertyDescriptor, stateSave, instance.Name + "." + propertyDescriptor.Name, instance, element);
-                    }
-                    else
-                    {
-                        srim =
-                            new StateReferencingInstanceMember(propertyDescriptor, stateSave, propertyDescriptor.Name, instance, element);
-                    }
-
-                    srim.SetToDefault += ResetVariableToDefault;
-
-                    string category = propertyDescriptor.Category.Trim();
-
-                    var categoryToAddTo = categories.FirstOrDefault(item => item.Name == category);
-
-                    if (categoryToAddTo == null)
-                    {
-                        categoryToAddTo = new MemberCategory(category);
-                        categories.Add(categoryToAddTo);
-                    }
-
-                    categoryToAddTo.Members.Add(srim);
-
-                }
-
-                foreach (var category in categories)
-                {
-                    var enumerable = category.Members.OrderBy(item => ((StateReferencingInstanceMember)item).SortValue).ToList();
-                    category.Members.Clear();
-
-                    foreach (var value in enumerable)
-                    {
-                        category.Members.Add(value);
-                    }
-                }
-
-                ReorganizeCategories(categories);
-                CustomizeVariables(categories);
+                GetMemberCategoriesForState(element, instance, categories, stateSave, stateCategory);
+            }
+            else if(stateCategory != null)
+            {
+                GetMemberCategoriesForStateCategory(element, instance, categories, stateCategory);
             }
             return categories;
 
+        }
+
+        private void GetMemberCategoriesForStateCategory(ElementSave element, InstanceSave instance, List<MemberCategory> categories, StateSaveCategory stateCategory)
+        {
+            categories.Clear();
+
+            List<string> commonMembers = new List<string>();
+
+            var firstState = stateCategory.States.FirstOrDefault();
+
+            if(firstState != null)
+            {
+                foreach(var variable in firstState.Variables)
+                {
+                    commonMembers.Add(variable.Name);
+                }
+            }
+
+            if(commonMembers.Any())
+            {
+                var memberCategory = new MemberCategory();
+                memberCategory.Name = $"{stateCategory.Name} Variables";
+                categories.Add(memberCategory);
+
+                foreach(var commonMember in commonMembers)
+                {
+                    var instanceMember = new InstanceMember();
+
+                    instanceMember.Name = commonMember;
+                    instanceMember.CustomGetTypeEvent += (member) => typeof(string);
+                    instanceMember.CustomGetEvent += (member) => commonMember;
+                    instanceMember.CustomSetEvent += (not, used) =>
+                    {
+                        AskRemoveFromAll(commonMember, stateCategory);
+                    };
+
+                    instanceMember.PreferredDisplayer = typeof(VariableRemoveButton);
+
+                    memberCategory.Members.Add(instanceMember);
+                }
+            }
+        }
+
+        private void AskRemoveFromAll(string variableName, StateSaveCategory stateCategory)
+        {
+            var result = MessageBox.Show($"Are you sure you want to remove {variableName} from all states in {stateCategory.Name}?", "Remove Variables?", MessageBoxButtons.YesNo);
+
+            if(result == DialogResult.Yes)
+            {
+                foreach(var state in stateCategory.States)
+                {
+                    var foundVariable = state.Variables.FirstOrDefault(item => item.Name == variableName);
+
+                    if(foundVariable != null)
+                    {
+                        state.Variables.Remove(foundVariable);
+                    }
+                }
+
+                // save everything
+                GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+                GumCommands.Self.GuiCommands.RefreshStateTreeView();
+                GumCommands.Self.GuiCommands.RefreshPropertyGrid();
+            }
+        }
+
+        private void GetMemberCategoriesForState(ElementSave element, InstanceSave instance, List<MemberCategory> categories, StateSave stateSave, StateSaveCategory stateSaveCategory)
+        {
+            categories.Clear();
+            var properties = mPropertyGridDisplayer.GetProperties(null);
+            foreach (InstanceSavePropertyDescriptor propertyDescriptor in properties)
+            {
+                StateReferencingInstanceMember srim;
+                if (instance != null)
+                {
+                    srim =
+                        new StateReferencingInstanceMember(propertyDescriptor, stateSave, stateSaveCategory, instance.Name + "." + propertyDescriptor.Name, instance, element);
+                }
+                else
+                {
+                    srim =
+                        new StateReferencingInstanceMember(propertyDescriptor, stateSave, stateSaveCategory, propertyDescriptor.Name, instance, element);
+                }
+
+                srim.SetToDefault += (memberName) => ResetVariableToDefault(srim);
+
+                string category = propertyDescriptor.Category.Trim();
+
+                var categoryToAddTo = categories.FirstOrDefault(item => item.Name == category);
+
+                if (categoryToAddTo == null)
+                {
+                    categoryToAddTo = new MemberCategory(category);
+                    categories.Add(categoryToAddTo);
+                }
+
+                categoryToAddTo.Members.Add(srim);
+
+            }
+
+            foreach (var category in categories)
+            {
+                var enumerable = category.Members.OrderBy(item => ((StateReferencingInstanceMember)item).SortValue).ToList();
+                category.Members.Clear();
+
+                foreach (var value in enumerable)
+                {
+                    category.Members.Add(value);
+                }
+            }
+
+            ReorganizeCategories(categories);
+            CustomizeVariables(categories);
         }
 
         private void CustomizeVariables(List<MemberCategory> categories)
@@ -609,8 +689,10 @@ namespace Gum.Managers
         /// Called when the user clicks the "Make Default" menu item
         /// </summary>
         /// <param name="variableName">The variable to make default.</param>
-        private void ResetVariableToDefault(string variableName)
+        private void ResetVariableToDefault(StateReferencingInstanceMember srim)
         {
+            string variableName = srim.Name;
+
             bool shouldReset = false;
             bool affectsTreeView = false;
 
@@ -629,7 +711,20 @@ namespace Gum.Managers
                     // ... unless it's not the default
                     SelectedState.Self.SelectedStateSave != SelectedState.Self.SelectedElement.DefaultState;
             }
-            
+
+            if(shouldReset)
+            {
+                // If the variable is part of a category, then we don't allow setting the variable to default - they gotta do it through the cateory itself
+                bool isPartOfCategory = srim.StateSaveCategory != null;
+
+                if (isPartOfCategory)
+                {
+                    string message = "This variable is part of a category so it cannot be made default unless it is removed from all states in the category.\n\n" +
+                    "To remove the variable, select the category and click the X button";
+                    MessageBox.Show(message);
+                    shouldReset = false;
+                }
+            };
 
             if (shouldReset)
             {
@@ -694,6 +789,10 @@ namespace Gum.Managers
                         ProjectManager.Self.SaveElement(SelectedState.Self.SelectedElement);
                     }
                 }
+            }
+            else
+            {
+                srim.IsDefault = false;
             }
         }
     }

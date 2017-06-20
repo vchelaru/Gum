@@ -187,7 +187,7 @@
     <Compile Include="Managers\NameVerifier.cs" />
     <Compile Include="Managers\ObjectRemover.cs" />
     <Compile Include="Managers\OutputManager.cs" />
-    <Compile Include="Managers\PropertyGridManager.Events.cs" />
+    <Compile Include="Plugins\VariableGrid\PropertyGridManager.Events.cs" />
     <Compile Include="Managers\RenameManager.cs" />
     <Compile Include="Managers\Singleton.cs" />
     <Compile Include="Mvvm\ObservableCollectionExtensions.cs" />
@@ -219,6 +219,9 @@
       <DependentUpon>AddVariableWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Plugins\VariableGrid\MainControlViewModel.cs" />
+    <Compile Include="Plugins\VariableGrid\VariableRemoveButton.xaml.cs">
+      <DependentUpon>VariableRemoveButton.xaml</DependentUpon>
+    </Compile>
     <Compile Include="PropertyGridHelpers\Converters\AvailableGuidesTypeConverter.cs" />
     <Compile Include="Input\CursorExtensionMethods.cs" />
     <Compile Include="Managers\DragDropManager.cs" />
@@ -226,7 +229,7 @@
     <Compile Include="Managers\ElementTreeViewManager.RightClick.cs" />
     <Compile Include="Managers\MenuStripManager.cs" />
     <Compile Include="Managers\ObjectFinder.cs" />
-    <Compile Include="Managers\PropertyGridManager.cs" />
+    <Compile Include="Plugins\VariableGrid\PropertyGridManager.cs" />
     <Compile Include="Managers\StandardElementsManager.cs" />
     <Compile Include="Managers\StateTreeViewManager.cs" />
     <Compile Include="MainWindow.cs">
@@ -345,7 +348,7 @@
     <None Include="Content\TestFont.fnt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <Compile Include="Managers\PropertyGridManager.RightClick.cs" />
+    <Compile Include="Plugins\VariableGrid\PropertyGridManager.RightClick.cs" />
     <None Include="Launcher.au3" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -464,6 +467,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Plugins\VariableGrid\AddVariableWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Plugins\VariableGrid\VariableRemoveButton.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

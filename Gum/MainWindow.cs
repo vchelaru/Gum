@@ -159,7 +159,6 @@ namespace Gum
 
         private void PropertyGridMenuStrip_Opening(object sender, CancelEventArgs e)
         {
-            PropertyGridManager.Self.OnPropertyGridRightClick(sender as ContextMenuStrip);
         }
 
         private void MainWindow_Load(object sender, EventArgs e)

@@ -93,27 +93,18 @@ namespace WpfDataUi
                 throw new NullReferenceException(nameof(InstanceMember));
             }
 
-            Type type = InstanceMember.PropertyType;
-
-
-
-            UserControl controlToAdd = CreateControlByType(InstanceMember, type);
-
-            return controlToAdd;
-        }
-
-        private UserControl CreateControlByType(InstanceMember instanceMember, Type type)
-        {
 
             UserControl controlToAdd = null;
 
-            if (instanceMember.PreferredDisplayer != null)
+            if (InstanceMember.PreferredDisplayer != null)
             {
-                controlToAdd = (UserControl)Activator.CreateInstance(instanceMember.PreferredDisplayer);
+                controlToAdd = (UserControl)Activator.CreateInstance(InstanceMember.PreferredDisplayer);
             }
 
             if (controlToAdd == null)
             {
+                var type = InstanceMember.PropertyType;
+
                 foreach (var kvp in mTypeDisplayerAssociation)
                 {
                     if (kvp.Key(type))
@@ -123,7 +114,7 @@ namespace WpfDataUi
                 }
             }
 
-            if(controlToAdd == null && instanceMember.CustomOptions != null && instanceMember.CustomOptions.Count != 0)
+            if(controlToAdd == null && InstanceMember.CustomOptions != null && InstanceMember.CustomOptions.Count != 0)
             {
                 controlToAdd = new ComboBoxDisplay();
             }
@@ -135,9 +126,9 @@ namespace WpfDataUi
 
 
             IDataUi display = (IDataUi)controlToAdd;
-            display.InstanceMember = instanceMember;
+            display.InstanceMember = InstanceMember;
 
-            instanceMember.CallUiCreated(controlToAdd);
+            InstanceMember.CallUiCreated(controlToAdd);
 
             return controlToAdd;
         }
