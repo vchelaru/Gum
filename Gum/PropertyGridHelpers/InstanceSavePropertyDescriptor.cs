@@ -124,7 +124,7 @@ namespace Gum.DataTypes.ComponentModel
             InstanceSave instanceSave = SelectedState.Self.SelectedInstance;
 
             //////////////// Early Out/////////////
-            if(stateSave == null)
+            if(stateSave == null || elementSave == null)
             {
                 return;
             }

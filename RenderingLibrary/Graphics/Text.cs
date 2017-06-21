@@ -708,7 +708,7 @@ namespace RenderingLibrary.Graphics
 
             if (this.VerticalAlignment == Graphics.VerticalAlignment.Center)
             {
-                mTempForRendering.Y += (this.EffectiveHeight - mTextureToRender.Height) / 2.0f;
+                mTempForRendering.Y += (this.EffectiveHeight - mTempForRendering.Height) / 2.0f;
             }
             else if (this.VerticalAlignment == Graphics.VerticalAlignment.Bottom)
             {

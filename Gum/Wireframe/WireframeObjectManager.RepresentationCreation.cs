@@ -196,7 +196,10 @@ namespace Gum.Wireframe
                 if (type == "Text")
                 {
                     (graphicalElement.RenderableComponent as Text).RenderBoundary = ProjectManager.Self.GeneralSettingsFile.ShowTextOutlines;
-                    FontManager.Self.ReactToFontValueSet(instance);
+                    if(SelectedState.Self.SelectedStateSave != null)
+                    {
+                        FontManager.Self.ReactToFontValueSet(instance);
+                    }
                 }
 
             }

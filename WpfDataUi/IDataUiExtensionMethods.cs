@@ -139,7 +139,9 @@ namespace WpfDataUi
                 {
                     dataUi.InstanceMember.IsDefault = true;
                     dataUi.Refresh();
-                    if(dataUi is ISetDefaultable)
+
+                    // the instance member may have undone the IsDefault, so let's only do this if it's still set to default:
+                    if(dataUi is ISetDefaultable && dataUi.InstanceMember.IsDefault)
                     {
                         ((ISetDefaultable)dataUi).SetToDefault();
                     }

@@ -67,5 +67,11 @@ using System.Runtime.InteropServices;
 //    making animations much easier to create.
 // 0.8.5.1
 //  - Fixed possible crash when creating Text objects.
-[assembly: AssemblyVersion("0.8.5.1")]
-[assembly: AssemblyFileVersion("0.8.5.1")]
+// 0.8.6.0
+//  - Reorganized code for property grid (not functional, just moved files to be under the plugin folder)
+//  - Variables on states inside of categories cannot be made default anymore
+//  - Variables in states inidde of categories must be made default with an X button shown when selecting the category.
+//  - Added support for instance members to undo their Make Default command.
+//  - 
+[assembly: AssemblyVersion("0.8.6.0")]
+[assembly: AssemblyFileVersion("0.8.6.0")]

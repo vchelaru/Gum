@@ -31,21 +31,27 @@ namespace Gum.Managers
 
             if (SelectedState.Self.SelectedStateSave != null)
             {
+                bool isDefault = SelectedState.Self.SelectedStateSave == SelectedState.Self.SelectedElement.DefaultState; 
+
                 mMenuStrip.Items.Add("-");
 
-                AddMenuItem("Rename State", RenameStateClick);
+                if(!isDefault)
+                {
+                    AddMenuItem("Rename State", RenameStateClick);
+                }
 
                 AddMenuItem("Duplicate State", DuplicateStateClick);
 
-                AddMenuItem("Delete " + SelectedState.Self.SelectedStateSave.Name, DeleteStateClick);
+                if(!isDefault)
+                {
+                    AddMenuItem("Delete " + SelectedState.Self.SelectedStateSave.Name, DeleteStateClick);
+                }
 
 
 
                 if (SelectedState.Self.SelectedElement != null && SelectedState.Self.SelectedStateSave != SelectedState.Self.SelectedElement.DefaultState)
                 {
                     mMenuStrip.Items.Add("-");
-
-                    AddMenuItem("Make Default", MakeDefaultClick);
 
                     AddMoveToCategoryItems();
 
@@ -213,31 +219,7 @@ namespace Gum.Managers
         {
             GumCommands.Self.Edit.AddState();
         }
-
-        private static void MakeDefaultClick()
-        {
-            StateSave state = SelectedState.Self.SelectedStateSave;
-
-            var element = SelectedState.Self.SelectedElement;
-
-            if (!element.States.Contains(state))
-            {
-                // It's categorized
-                MessageBox.Show("Categorized states cannot be made default");
-            }
-            else
-            {
-                element.States.Remove(state);
-                element.States.Insert(0, state);
-
-                StateTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedElement);
-
-                SelectedState.Self.SelectedStateSave = state;
-
-                GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
-            }
-        }
-
+        
         private static void DuplicateStateClick()
         {
             StateSave newState = SelectedState.Self.SelectedStateSave.Clone();
