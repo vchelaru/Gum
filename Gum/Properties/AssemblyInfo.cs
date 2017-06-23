@@ -72,6 +72,10 @@ using System.Runtime.InteropServices;
 //  - Variables on states inside of categories cannot be made default anymore
 //  - Variables in states inidde of categories must be made default with an X button shown when selecting the category.
 //  - Added support for instance members to undo their Make Default command.
-//  - 
-[assembly: AssemblyVersion("0.8.6.0")]
-[assembly: AssemblyFileVersion("0.8.6.0")]
+// 0.8.6.1
+//  - Removed ability to rename/remove default state.
+//  - Fixed font rendering bug which would offset centered fonts on the Y axis.
+// 0.8.6.2
+//  - Fixed variables not propagating to sibling states in a category when editing in the wireframe window.
+[assembly: AssemblyVersion("0.8.6.2")]
+[assembly: AssemblyFileVersion("0.8.6.2")]

@@ -16,6 +16,7 @@ using Gum.Input;
 using Gum.RenderingLibrary;
 using RenderingLibrary.Math;
 using Microsoft.Xna.Framework;
+using Gum.PropertyGridHelpers;
 
 namespace Gum.Wireframe
 {
@@ -1016,6 +1017,9 @@ namespace Gum.Wireframe
 
                 ipso.SetProperty(baseVariableName, newValue);
 
+                SetVariableLogic.Self.PropagateVariablesInCategory(nameWithInstance);
+
+
                 return newValue;
             }
             else
@@ -1044,6 +1048,7 @@ namespace Gum.Wireframe
             var ipso = WireframeObjectManager.Self.GetRepresentation(elementSave);
             ipso.SetProperty(baseVariableName, newValue);
 
+            SetVariableLogic.Self.PropagateVariablesInCategory(baseVariableName);
 
             return newValue;
         }

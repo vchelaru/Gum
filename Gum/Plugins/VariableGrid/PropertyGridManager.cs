@@ -699,7 +699,7 @@ namespace Gum.Managers
             if (SelectedState.Self.SelectedInstance != null)
             {
                 affectsTreeView = variableName == "Parent";
-                variableName = SelectedState.Self.SelectedInstance.Name + "." + variableName;
+                //variableName = SelectedState.Self.SelectedInstance.Name + "." + variableName;
 
                 shouldReset = true;
             }
@@ -724,7 +724,7 @@ namespace Gum.Managers
                     MessageBox.Show(message);
                     shouldReset = false;
                 }
-            };
+            }
 
             if (shouldReset)
             {
