@@ -203,7 +203,7 @@ namespace Gum.Managers
                 return container;
             }
 
-            int indexOfSlash = relativeDirectory.IndexOf('\\');
+            int indexOfSlash = relativeDirectory.IndexOf('/');
             string whatToLookFor = relativeDirectory;
             string sub = "";
 
