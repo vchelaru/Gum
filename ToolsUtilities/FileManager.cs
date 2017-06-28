@@ -419,8 +419,8 @@ namespace ToolsUtilities
                     // Otherwise, we have to use the new method to identify the common root
 
                     // Split the path strings
-                    string[] path = pathToMakeRelative.Split('\\');
-                    string[] relpath = pathToMakeRelativeTo.Split('\\');
+                    string[] path = pathToMakeRelative.Split('/');
+                    string[] relpath = pathToMakeRelativeTo.Split('/');
 
                     string relativepath = string.Empty;
 
@@ -438,7 +438,7 @@ namespace ToolsUtilities
                         for (int i = start; i < relpath.Length; i++)
                         {
                             if (relpath[i] != string.Empty)
-                                relativepath += @"..\";
+                                relativepath += @"../";
                         }
 
                         // if the current relative path is still empty, and there are more than one entries left in the path,
@@ -452,13 +452,13 @@ namespace ToolsUtilities
                         for (int i = start; i < path.Length; i++)
                         {
                             relativepath += path[i];
-                            if (i < path.Length - 1) relativepath += "\\";
+                            if (i < path.Length - 1) relativepath += "/";
                         }
 
                         pathToMakeRelative = relativepath;
                     }
                 }
-                if (pathToMakeRelative.StartsWith("\\"))
+                if (pathToMakeRelative.StartsWith("\\") || pathToMakeRelative.StartsWith("/"))
                 {
                     pathToMakeRelative = pathToMakeRelative.Substring(1);
                 }
