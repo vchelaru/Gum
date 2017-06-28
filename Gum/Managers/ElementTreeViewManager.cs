@@ -446,6 +446,11 @@ namespace Gum.Managers
                     string fullPath = FileLocations.Self.ComponentsFolder + FileManager.GetDirectory(componentSave.Name);
                     TreeNode parentNode = GetTreeNodeFor(fullPath);
 
+                    if(parentNode == null)
+                    {
+                        throw new Exception($"Error trying to get parent node for component {fullPath}");
+                    }
+
                     AddTreeNodeForElement(componentSave, parentNode, ComponentImageIndex);
                 }
             }
