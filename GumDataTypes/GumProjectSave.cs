@@ -212,7 +212,7 @@ namespace Gum.DataTypes
             string projectRootDirectory = FileManager.GetDirectory(fileName);
 
             gps.PopulateElementSavesFromReferences(projectRootDirectory, result);
-            gps.FullFileName = fileName;
+            gps.FullFileName = fileName.Replace('\\', '/');
 
             return gps;
         }

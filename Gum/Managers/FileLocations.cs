@@ -26,7 +26,7 @@ namespace Gum.Managers
         {
             get
             {
-                return ProjectFolder + "Screens\\";
+                return ProjectFolder + "Screens/";
 
             }
         }
@@ -35,7 +35,7 @@ namespace Gum.Managers
         {
             get
             {
-                return ProjectFolder + "Components\\";
+                return ProjectFolder + "Components/";
             }
         }
 
@@ -43,7 +43,7 @@ namespace Gum.Managers
         {
             get
             {
-                return ProjectFolder + "Behaviors\\";
+                return ProjectFolder + "Behaviors/";
             }
         }
 
