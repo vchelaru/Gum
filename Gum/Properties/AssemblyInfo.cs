@@ -77,5 +77,7 @@ using System.Runtime.InteropServices;
 //  - Fixed font rendering bug which would offset centered fonts on the Y axis.
 // 0.8.6.2
 //  - Fixed variables not propagating to sibling states in a category when editing in the wireframe window.
-[assembly: AssemblyVersion("0.8.6.2")]
-[assembly: AssemblyFileVersion("0.8.6.2")]
+// 0.8.6.3
+//  - Fixed crash when setting text color in a categorized state.
+[assembly: AssemblyVersion("0.8.6.3")]
+[assembly: AssemblyFileVersion("0.8.6.3")]

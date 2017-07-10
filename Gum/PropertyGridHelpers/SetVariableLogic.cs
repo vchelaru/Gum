@@ -31,7 +31,8 @@ namespace Gum.PropertyGridHelpers
             PropertyValueChanged(changedMember, oldValue);
         }
 
-        public void PropertyValueChanged(string changedMember, object oldValue, bool refresh = true)
+
+        public void PropertyValueChanged(string unqualifiedMemberName, object oldValue, bool refresh = true)
         {
             var selectedStateSave = SelectedState.Self.SelectedStateSave;
 
@@ -45,27 +46,35 @@ namespace Gum.PropertyGridHelpers
 
                 if (instance != null)
                 {
-                    SelectedState.Self.SelectedVariableSave = SelectedState.Self.SelectedStateSave.GetVariableSave(instance.Name + "." + changedMember);
+                    SelectedState.Self.SelectedVariableSave = SelectedState.Self.SelectedStateSave.GetVariableSave(instance.Name + "." + unqualifiedMemberName);
                 }
                 else
                 {
-                    SelectedState.Self.SelectedVariableSave = SelectedState.Self.SelectedStateSave.GetVariableSave(changedMember);
+                    SelectedState.Self.SelectedVariableSave = SelectedState.Self.SelectedStateSave.GetVariableSave(unqualifiedMemberName);
                 }
             }
-            PropertyValueChanged(changedMember, oldValue, parentElement, instance, refresh);
+            PropertyValueChanged(unqualifiedMemberName, oldValue, parentElement, instance, refresh);
         }
 
-        public void PropertyValueChanged(string changedMember, object oldValue, ElementSave parentElement, InstanceSave instance, bool refresh)
+        /// <summary>
+        /// Reacts to a variable having been set.
+        /// </summary>
+        /// <param name="unqualifiedMember">The variable name without the prefix instance name.</param>
+        /// <param name="oldValue"></param>
+        /// <param name="parentElement"></param>
+        /// <param name="instance"></param>
+        /// <param name="refresh"></param>
+        public void PropertyValueChanged(string unqualifiedMember, object oldValue, ElementSave parentElement, InstanceSave instance, bool refresh)
         {
             if (parentElement != null)
             {
 
-                ReactToChangedMember(changedMember, oldValue, parentElement, instance);
+                ReactToChangedMember(unqualifiedMember, oldValue, parentElement, instance);
 
-                string qualifiedName = changedMember;
+                string qualifiedName = unqualifiedMember;
                 if(instance != null)
                 {
-                    qualifiedName = $"{instance.Name}.{changedMember}";
+                    qualifiedName = $"{instance.Name}.{unqualifiedMember}";
                 }
                 PropagateVariablesInCategory(qualifiedName);
 

@@ -301,24 +301,30 @@ namespace RenderingLibrary.Graphics
             spriteRenderer.EndSpriteBatch();
         }
 
-        private void PreRender(IEnumerable<IRenderableIpso> renderables)
+        private void PreRender(IList<IRenderableIpso> renderables)
         {
+#if DEBUG
             if(renderables == null)
             {
                 throw new ArgumentNullException("renderables");
             }
+#endif
 
-            foreach(var renderable in renderables)
+            var count = renderables.Count;
+            for(int i = 0; i < count; i++)
             {
+                var renderable = renderables[i];
                 renderable.PreRender();
                 PreRender(renderable.Children);
             }
         }
 
-        private void Render(IEnumerable<IRenderableIpso> whatToRender, SystemManagers managers, Layer layer)
+        private void Render(IList<IRenderableIpso> whatToRender, SystemManagers managers, Layer layer)
         {
-            foreach(var renderable in whatToRender)
+            var count = whatToRender.Count;
+            for (int i = 0; i < count; i++)
             {
+                var renderable = whatToRender[i];
                 var oldClip = mRenderStateVariables.ClipRectangle;
                 AdjustRenderStates(mRenderStateVariables, layer, renderable);
                 bool didClipChange = oldClip != mRenderStateVariables.ClipRectangle;
@@ -331,7 +337,7 @@ namespace RenderingLibrary.Graphics
                     Render(renderable.Children, managers, layer);
                 }
 
-                if(didClipChange)
+                if (didClipChange)
                 {
                     mRenderStateVariables.ClipRectangle = oldClip;
                     spriteRenderer.BeginSpriteBatch(mRenderStateVariables, layer, BeginType.Begin, mCamera);

@@ -658,9 +658,10 @@ namespace Gum.Managers
             state.SetValue(greenVariableName, (int)color.G, "int");
             state.SetValue(blueVariableName, (int)color.B, "int");
 
-            SetVariableLogic.Self.PropertyValueChanged(redVariableName, (int)oldColor.R, false );
-            SetVariableLogic.Self.PropertyValueChanged(greenVariableName, (int)oldColor.G, false );
-            SetVariableLogic.Self.PropertyValueChanged(blueVariableName, (int)oldColor.B, true);
+            // These functions take unqualified:
+            SetVariableLogic.Self.PropertyValueChanged("Red", (int)oldColor.R, false );
+            SetVariableLogic.Self.PropertyValueChanged("Green", (int)oldColor.G, false );
+            SetVariableLogic.Self.PropertyValueChanged("Blue", (int)oldColor.B, true);
 
             RefreshUI();
         }
