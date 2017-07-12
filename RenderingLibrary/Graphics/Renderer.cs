@@ -414,7 +414,7 @@ namespace RenderingLibrary.Graphics
 
             if (renderBlendState == null)
             {
-                renderBlendState = BlendState.NonPremultiplied;
+                renderBlendState = Renderer.NormalBlendState;
             }
             if (renderState.BlendState != renderBlendState)
             {

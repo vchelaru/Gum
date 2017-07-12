@@ -79,5 +79,7 @@ using System.Runtime.InteropServices;
 //  - Fixed variables not propagating to sibling states in a category when editing in the wireframe window.
 // 0.8.6.3
 //  - Fixed crash when setting text color in a categorized state.
-[assembly: AssemblyVersion("0.8.6.3")]
-[assembly: AssemblyFileVersion("0.8.6.3")]
+// 0.8.6.4
+//  - Fixed rendering issue where text objects sometimes render using the wrong render states
+[assembly: AssemblyVersion("0.8.6.4")]
+[assembly: AssemblyFileVersion("0.8.6.4")]

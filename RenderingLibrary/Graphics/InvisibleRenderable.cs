@@ -23,7 +23,7 @@ namespace RenderingLibrary.Graphics
             }
         }
 
-        public BlendState BlendState => BlendState.AlphaBlend;
+        public BlendState BlendState => Renderer.NormalBlendState;
 
         List<IRenderableIpso> children = new List<IRenderableIpso>();
         public List<IRenderableIpso> Children => children;
