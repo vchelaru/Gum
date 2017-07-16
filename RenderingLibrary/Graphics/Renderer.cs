@@ -418,7 +418,10 @@ namespace RenderingLibrary.Graphics
             }
             if (renderState.BlendState != renderBlendState)
             {
-                renderState.BlendState = renderable.BlendState;
+                // This used to set this, but not sure why...I think it should set the renderBlendState:
+                //renderState.BlendState = renderable.BlendState;
+                renderState.BlendState = renderBlendState;
+
                 shouldResetStates = true;
 
             }
