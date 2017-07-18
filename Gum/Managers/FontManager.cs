@@ -92,7 +92,7 @@ namespace Gum.Managers
             int outlineValue = 0;
             if (outlineValueAsObject != null)
             {
-                outlineValueAsObject = (int)outlineValueAsObject;
+                outlineValue = (int)outlineValueAsObject;
             }
             
             if(fontValue != null)

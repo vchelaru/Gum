@@ -452,21 +452,6 @@ namespace RenderingLibrary.Graphics
         /// <returns></returns>
         public Texture2D RenderToTexture2D(IEnumerable<string> lines, HorizontalAlignment horizontalAlignment, SystemManagers managers, Texture2D toReplace, object objectRequestingRender)
         {
-            bool useImageData = false;
-            if (useImageData)
-            {
-                return RenderToTexture2DUsingImageData(lines, horizontalAlignment, managers);
-            }
-            else
-            {
-                return RenderToTexture2DUsingRenderStates(lines, horizontalAlignment, managers, toReplace, objectRequestingRender);
-
-            }
-        }
-
-        private Texture2D RenderToTexture2DUsingRenderStates(IEnumerable<string> lines, HorizontalAlignment horizontalAlignment, 
-            SystemManagers managers, Texture2D toReplace, object objectRequestingChange)
-        {
             if (managers == null)
             {
                 managers = SystemManagers.Default;
@@ -483,8 +468,8 @@ namespace RenderingLibrary.Graphics
 
             int requiredWidth;
             int requiredHeight;
-            List<int> widths;
-            GetRequiredWithAndHeight(lines, out requiredWidth, out requiredHeight, out widths);
+            List<int> widths = new List<int>();
+            GetRequiredWidthAndHeight(lines, out requiredWidth, out requiredHeight, widths);
 
             if (requiredWidth != 0)
             {
@@ -527,7 +512,7 @@ namespace RenderingLibrary.Graphics
                 managers.Renderer.GraphicsDevice.Clear(Color.Transparent);
                 spriteRenderer.Begin();
 
-                DrawLines(lines, horizontalAlignment, objectRequestingChange, requiredWidth, widths, spriteRenderer);
+                DrawTextLines(lines, horizontalAlignment, objectRequestingRender, requiredWidth, widths, spriteRenderer);
                 
                 spriteRenderer.End();
 
@@ -539,11 +524,20 @@ namespace RenderingLibrary.Graphics
             return renderTarget;
         }
 
-        private Point DrawLines(IEnumerable<string> lines, HorizontalAlignment horizontalAlignment, object objectRequestingChange, int requiredWidth, List<int> widths, SpriteRenderer spriteRenderer)
+        public void DrawTextLines(IEnumerable<string> lines, HorizontalAlignment horizontalAlignment, object objectRequestingChange, int requiredWidth, List<int> widths, SpriteRenderer spriteRenderer, 
+            float xOffset = 0, float yOffset = 0, float rotation = 0, float scaleX = 1, float scaleY = 1)
         {
             Point point = new Point();
 
             int lineNumber = 0;
+
+            int xOffsetAsInt = MathFunctions.RoundToInt(xOffset);
+            int yOffsetAsInt = MathFunctions.RoundToInt(yOffset);
+
+            //int xOffsetAsInt = (int)xOffset;
+            //int yOffsetAsInt = (int)yOffset;
+
+
 
             foreach (string line in lines)
             {
@@ -563,15 +557,19 @@ namespace RenderingLibrary.Graphics
                 {
                     Rectangle destRect;
                     int pageIndex;
-                    var sourceRect = GetCharacterRect(c, lineNumber, ref point, out destRect, out pageIndex);
+                    var sourceRect = GetCharacterRect(c, lineNumber, ref point, out destRect, out pageIndex, scaleX);
+
+                    // position:
+                    destRect.X += xOffsetAsInt;
+                    destRect.Y += yOffsetAsInt;
+
+                    // todo: rotation, because that will impact destination rectangle too
 
                     spriteRenderer.Draw(mTextures[pageIndex], destRect, sourceRect, Color.White, objectRequestingChange);
                 }
                 point.X = 0;
                 lineNumber++;
             }
-
-            return point;
         }
 
         /// <summary>
@@ -585,8 +583,8 @@ namespace RenderingLibrary.Graphics
             var point = new Point();
             int requiredWidth;
             int requiredHeight;
-            List<int> widths;
-            GetRequiredWithAndHeight(lines, out requiredWidth, out requiredHeight, out widths);
+            List<int> widths = new List<int>();
+            GetRequiredWidthAndHeight(lines, out requiredWidth, out requiredHeight, widths);
 
             int lineNumber = 0;
 
@@ -678,19 +676,16 @@ namespace RenderingLibrary.Graphics
             return sourceRectangle;
         }
 
-        public void GetRequiredWithAndHeight(IEnumerable lines, out int requiredWidth, out int requiredHeight)
+        public void GetRequiredWidthAndHeight(IEnumerable lines, out int requiredWidth, out int requiredHeight)
         {
-            List<int> throwaway;
-            GetRequiredWithAndHeight(lines, out requiredWidth, out requiredHeight, out throwaway);
+            GetRequiredWidthAndHeight(lines, out requiredWidth, out requiredHeight, null);
         }
 
-        private void GetRequiredWithAndHeight(IEnumerable lines, out int requiredWidth, out int requiredHeight, out List<int> widths)
+        public void GetRequiredWidthAndHeight(IEnumerable lines, out int requiredWidth, out int requiredHeight, List<int> widths)
         {
 
             requiredWidth = 0;
             requiredHeight = 0;
-
-            widths = new List<int>();
 
             foreach (string line in lines)
             {
@@ -698,7 +693,10 @@ namespace RenderingLibrary.Graphics
                 int lineWidth = 0;
 
                 lineWidth = MeasureString(line);
-                widths.Add(lineWidth);
+                if(widths != null)
+                {
+                    widths.Add(lineWidth);
+                }
                 requiredWidth = System.Math.Max(lineWidth, requiredWidth);
             }
 

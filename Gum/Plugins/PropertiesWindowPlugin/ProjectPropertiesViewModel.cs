@@ -57,6 +57,19 @@ namespace Gum.Plugins.PropertiesWindowPlugin
             set { base.SetProperty(ref restrictFileNamesToAndroidAssets, value); }
         }
 
+        bool renderTextCharacterByCharacter;
+        public bool RenderTextCharacterByCharacter
+        {
+            get
+            {
+                return renderTextCharacterByCharacter;
+            }
+            set
+            {
+                base.SetProperty(ref renderTextCharacterByCharacter, value);
+            }
+        }
+
         public void BindTo(GeneralSettingsFile generalSettings, GumProjectSave gumProject)
         {
             this.generalSettings = generalSettings;
@@ -68,6 +81,8 @@ namespace Gum.Plugins.PropertiesWindowPlugin
             CanvasHeight = this.gumProject.DefaultCanvasHeight;
             CanvasWidth = this.gumProject.DefaultCanvasWidth;
             RestrictFileNamesForAndroid = this.gumProject.RestrictFileNamesForAndroid;
+            RenderTextCharacterByCharacter = global::RenderingLibrary.Graphics.Text.TextRenderingMode ==
+                global::RenderingLibrary.Graphics.TextRenderingMode.CharacterByCharacter;
 
         }
 
@@ -79,6 +94,16 @@ namespace Gum.Plugins.PropertiesWindowPlugin
             this.gumProject.DefaultCanvasHeight = CanvasHeight;
             this.gumProject.DefaultCanvasWidth = CanvasWidth;
             this.gumProject.RestrictFileNamesForAndroid = RestrictFileNamesForAndroid;
+            if(RenderTextCharacterByCharacter)
+            {
+                global::RenderingLibrary.Graphics.Text.TextRenderingMode =
+                    global::RenderingLibrary.Graphics.TextRenderingMode.CharacterByCharacter;
+            }
+            else
+            {
+                global::RenderingLibrary.Graphics.Text.TextRenderingMode =
+                    global::RenderingLibrary.Graphics.TextRenderingMode.RenderTarget;
+            }
         }
 
 
