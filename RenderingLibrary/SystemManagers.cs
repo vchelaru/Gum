@@ -112,28 +112,6 @@ namespace RenderingLibrary
             TextManager.Managers = this;
         }
 
-        public static SystemManagers CreateFromSingletons()
-        {
-            SystemManagers systemManagers = new SystemManagers();
-
-#if WINDOWS_8 || UWP
-            systemManagers.mPrimaryThreadId = Environment.CurrentManagedThreadId;
-#else
-            systemManagers.mPrimaryThreadId = System.Threading.Thread.CurrentThread.ManagedThreadId;
-#endif
-
-
-            systemManagers.Renderer = Renderer.Self;
-            systemManagers.SpriteManager = SpriteManager.Self;
-            systemManagers.ShapeManager = ShapeManager.Self;
-            systemManagers.TextManager = TextManager.Self;
-
-            systemManagers.SpriteManager.Managers = systemManagers;
-            systemManagers.ShapeManager.Managers = systemManagers;
-            systemManagers.TextManager.Managers = systemManagers;
-
-            return systemManagers;
-        }
 
         public override string ToString()
         {

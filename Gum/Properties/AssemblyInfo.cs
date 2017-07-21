@@ -81,5 +81,9 @@ using System.Runtime.InteropServices;
 //  - Fixed crash when setting text color in a categorized state.
 // 0.8.6.4
 //  - Fixed rendering issue where text objects sometimes render using the wrong render states
-[assembly: AssemblyVersion("0.8.6.4")]
-[assembly: AssemblyFileVersion("0.8.6.4")]
+// 0.8.6.5
+//  - Added support for setting the single pixel texture and source rectangle on renderer, to be used with spritesheets at runtime for rendering speed.
+// 0.8.7
+//  - Fixed more bugs on text rendering when doing character-by-character, may be ready for prime time
+[assembly: AssemblyVersion("0.8.7.0")]
+[assembly: AssemblyFileVersion("0.8.7.0")]

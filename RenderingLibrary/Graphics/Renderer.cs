@@ -94,7 +94,18 @@ namespace RenderingLibrary.Graphics
 #endif
                 return mSinglePixelTexture;
             }
+            set
+            {
+                // Setter added to support rendering from sprite sheet.
+                mSinglePixelTexture = value;
+            }
         }
+
+        /// <summary>
+        /// The rectangle to use when rendering single-pixel texture objects, such as ColoredRectangles.
+        /// By default this is null, indicating the entire texture is used.
+        /// </summary>
+        public Rectangle? SinglePixelSourceRectangle = null;
 
         public Texture2D DottedLineTexture
         {
@@ -124,11 +135,14 @@ namespace RenderingLibrary.Graphics
         {
             get
             {
-                if (mSelf == null)
-                {
-                    mSelf = new Renderer();
-                }
-                return mSelf;
+                // Why is this using a singleton instead of system managers default? This seems bad...
+
+                //if (mSelf == null)
+                //{
+                //    mSelf = new Renderer();
+                //}
+                //return mSelf;
+                return SystemManagers.Default.Renderer;
 
             }
         }

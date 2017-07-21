@@ -16,7 +16,7 @@ namespace RenderingLibrary.Graphics
 
         List<IRenderableIpso> mChildren;
         private static Texture2D mTexture;
-        private static Rectangle mSourceRect;
+        public static Rectangle SinglePixelTextureSourceRectangle;
 
         public Color Color;
 
@@ -191,7 +191,7 @@ namespace RenderingLibrary.Graphics
 
             if (atlasedTexture != null)
             {
-                mSourceRect = new Rectangle(atlasedTexture.SourceRectangle.Left + 1,
+                SinglePixelTextureSourceRectangle = new Rectangle(atlasedTexture.SourceRectangle.Left + 1,
                     atlasedTexture.SourceRectangle.Top + 1, 1, 1);
 
                 texture = atlasedTexture.Texture;
@@ -215,11 +215,11 @@ namespace RenderingLibrary.Graphics
                 }
 
                 var texture = renderer.SinglePixelTexture;
-                Rectangle? sourceRect = null;
+                Rectangle? sourceRect = renderer.SinglePixelSourceRectangle;
                 if (mTexture != null)
                 {
                     texture = mTexture;
-                    sourceRect = mSourceRect;
+                    sourceRect = SinglePixelTextureSourceRectangle;
                 }
 
                 Sprite.Render(managers, spriteRenderer, this, texture, Color, sourceRect, false, false, Rotation);

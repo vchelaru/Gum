@@ -174,6 +174,8 @@ namespace RenderingLibrary.Graphics
                 mWidth = value;
                 UpdateWrappedText();
                 UpdateLinePrimitive();
+                UpdatePreRenderDimensions();
+
             }
         }
 
@@ -362,6 +364,8 @@ namespace RenderingLibrary.Graphics
                 mFontScale = System.Math.Max(0, value);
                 UpdateWrappedText();
                 mNeedsBitmapFontRefresh = true;
+                UpdatePreRenderDimensions();
+
             }
         }
 
@@ -890,9 +894,8 @@ namespace RenderingLibrary.Graphics
 
                 if (this.mRawText != null)
                 {
-                    string[] lines = this.mRawText.Replace("\r", "").Split('\n');
-
-                    mBitmapFont.GetRequiredWidthAndHeight(lines, out requiredWidth, out requiredHeight);
+                    
+                    mBitmapFont.GetRequiredWidthAndHeight(this.WrappedText, out requiredWidth, out requiredHeight);
                 }
 
                 mPreRenderWidth = (int)(requiredWidth * FontScale + .5f);

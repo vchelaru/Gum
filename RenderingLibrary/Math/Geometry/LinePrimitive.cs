@@ -57,7 +57,7 @@ namespace RenderingLibrary.Math.Geometry
         /// <summary>
         /// Creates a new primitive line object.
         /// </summary>
-        /// <param name="graphicsDevice">The Graphics Device object to use.</param>
+        /// <param name="singlePixelTexture">The texture to use when rendering the line.</param>
         public LinePrimitive(Texture2D singlePixelTexture)
         {
             // create pixels

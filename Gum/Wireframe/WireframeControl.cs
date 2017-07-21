@@ -189,7 +189,8 @@ namespace Gum.Wireframe
 
                 mWireframeEditControl.ZoomChanged += HandleZoomChanged;
 
-                Renderer.Self.Initialize(GraphicsDevice, null);
+                SystemManagers.Default = new SystemManagers();
+                SystemManagers.Default.Initialize(GraphicsDevice);
 
                 Renderer.Self.SamplerState = SamplerState.PointWrap;
 
@@ -226,7 +227,6 @@ namespace Gum.Wireframe
 
                 mHasInitialized = true;
 
-                SystemManagers.Default = SystemManagers.CreateFromSingletons();
             }
             catch(Exception exception)
             {
