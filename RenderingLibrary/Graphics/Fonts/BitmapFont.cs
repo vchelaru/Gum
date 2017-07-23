@@ -126,10 +126,9 @@ namespace RenderingLibrary.Graphics
                         //mTextures[i] = LoaderManager.Self.Load(texturesToLoad[i], managers);
                         fileName = texturesToLoad[i];
                     }
-                    if (ToolsUtilities.FileManager.FileExists(fileName))
-                    {
-                        mTextures[i] = LoaderManager.Self.LoadContent<Texture2D>(fileName);
-                    }
+                    // Don't rely on this - it may be aliased, the internal loader may redirect. Let it do its job:
+                    //if (ToolsUtilities.FileManager.FileExists(fileName))
+                    mTextures[i] = LoaderManager.Self.LoadContent<Texture2D>(fileName);
                 }
             } 
             

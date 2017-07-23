@@ -85,5 +85,7 @@ using System.Runtime.InteropServices;
 //  - Added support for setting the single pixel texture and source rectangle on renderer, to be used with spritesheets at runtime for rendering speed.
 // 0.8.7
 //  - Fixed more bugs on text rendering when doing character-by-character, may be ready for prime time
-[assembly: AssemblyVersion("0.8.7.0")]
-[assembly: AssemblyFileVersion("0.8.7.0")]
+// 0.8.7.1
+//  - Fixed vertical alignment issues found in Brake Neck 
+[assembly: AssemblyVersion("0.8.7.1")]
+[assembly: AssemblyFileVersion("0.8.7.1")]

@@ -2734,7 +2734,7 @@ namespace Gum.Wireframe
                     {
                         nineSlice.LoadAtlasedTexture(valueAsString, atlasedTexture);
                     }
-                    else if (ToolsUtilities.FileManager.FileExists(valueAsString))
+                    else
                     {
                         if (NineSlice.GetIfShouldUsePattern(valueAsString))
                         {
@@ -2939,11 +2939,11 @@ namespace Gum.Wireframe
                 }
                 else
                 {
-                    if (ToolsUtilities.FileManager.FileExists(valueAsString))
-                    {
-                        sprite.Texture = global::RenderingLibrary.Content.LoaderManager.Self.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(valueAsString);
-                        UpdateLayout();
-                    }
+                    // We used to check if the file exists. But internally something may
+                    // alias a file. Ultimately the content loader should make that decision,
+                    // not the GUE
+                    sprite.Texture = global::RenderingLibrary.Content.LoaderManager.Self.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(valueAsString);
+                    UpdateLayout();
                 }
             }
             handled = true;

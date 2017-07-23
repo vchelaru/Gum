@@ -44,16 +44,19 @@ namespace RenderingLibrary.Graphics
         #region Fields
 
         /// <summary>
-        /// Stores the width of the text object's texture before it has had a chance to render.
+        /// Stores the width of the text object's texture before it has had a chance to render, not including
+        /// the FontScale.
         /// </summary>
         /// <remarks>
-        /// A Texture can have a width that depends on its texture.  However, its texture will not 
-        /// be rendered created until the entire engine is rendered.  This will be used until that render
-        /// occurs if not null.
+        /// A text object may need to be positioned according to its dimensions. Normally this would
+        /// use a text's render target texture. In some situations (before the render pass has occurred,
+        /// or when using character-by-character rendering), the text may not have a render target texture.
+        /// Therefore, the pre-rendered values provide size information.
         /// </remarks>
         int? mPreRenderWidth;
         /// <summary>
-        /// Stores the height of the text object's texture before it has had a chance to render.
+        /// Stores the height of the text object's texture before it has had a chance to render, not including
+        /// the FontScale.
         /// </summary>
         /// <remarks>
         /// See mPreRenderWidth for more information about this member.
@@ -92,8 +95,9 @@ namespace RenderingLibrary.Graphics
 
         // For now this is going to be app-wide, but...maybe we want to make this instance-based?  I'm not sure, but
         // I don't want to inflate each text object to support something that may not be used, so we'll start with a static.
-        // It'll break code but it won't be hard to respond to
-        public static TextRenderingMode TextRenderingMode = TextRenderingMode.RenderTarget;
+        // It'll break code but it won't be hard to respond to.
+        // As of 0.8.7, CharacterByCharacter is the standard in Gum tool
+        public static TextRenderingMode TextRenderingMode = TextRenderingMode.CharacterByCharacter;
 
         #endregion
 
@@ -752,7 +756,8 @@ namespace RenderingLibrary.Graphics
             {
                 // Why do we need managers?
                 //mTempForRendering = new LineRectangle(managers);
-                mTempForRendering = new LineRectangle();
+                // And why do we even need a line rectangle?
+                mTempForRendering = new InvisibleRenderable();
             }
 
             mTempForRendering.X = this.X;
@@ -898,8 +903,8 @@ namespace RenderingLibrary.Graphics
                     mBitmapFont.GetRequiredWidthAndHeight(this.WrappedText, out requiredWidth, out requiredHeight);
                 }
 
-                mPreRenderWidth = (int)(requiredWidth * FontScale + .5f);
-                mPreRenderHeight = (int)(requiredHeight * FontScale + .5f);
+                mPreRenderWidth = (int)(requiredWidth + .5f);
+                mPreRenderHeight = (int)(requiredHeight + .5f);
             }
         }
         #endregion
