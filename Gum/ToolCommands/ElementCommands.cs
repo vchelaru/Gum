@@ -64,7 +64,7 @@ namespace Gum.ToolCommands
             stateSave.Name = name;
             AddState(elementToAddTo, category, stateSave);
 
-            var otherState = category.States.FirstOrDefault(item => item != stateSave);
+            var otherState = category?.States.FirstOrDefault(item => item != stateSave);
             if(otherState != null)
             {
                 foreach(var variable in otherState.Variables)

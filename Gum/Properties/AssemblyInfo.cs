@@ -87,5 +87,7 @@ using System.Runtime.InteropServices;
 //  - Fixed more bugs on text rendering when doing character-by-character, may be ready for prime time
 // 0.8.7.1
 //  - Fixed vertical alignment issues found in Brake Neck 
-[assembly: AssemblyVersion("0.8.7.1")]
-[assembly: AssemblyFileVersion("0.8.7.1")]
+// 0.8.7.2
+//  - Fixed crash in creating new state caused by variable propagation 
+[assembly: AssemblyVersion("0.8.7.2")]
+[assembly: AssemblyFileVersion("0.8.7.2")]
