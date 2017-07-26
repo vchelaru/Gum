@@ -511,7 +511,7 @@ namespace RenderingLibrary.Graphics
                 managers.Renderer.GraphicsDevice.Clear(Color.Transparent);
                 spriteRenderer.Begin();
 
-                DrawTextLines(lines, horizontalAlignment, objectRequestingRender, requiredWidth, widths, spriteRenderer);
+                DrawTextLines(lines, horizontalAlignment, objectRequestingRender, requiredWidth, widths, spriteRenderer, Color.White);
                 
                 spriteRenderer.End();
 
@@ -524,6 +524,7 @@ namespace RenderingLibrary.Graphics
         }
 
         public void DrawTextLines(IEnumerable<string> lines, HorizontalAlignment horizontalAlignment, object objectRequestingChange, int requiredWidth, List<int> widths, SpriteRenderer spriteRenderer, 
+            Color color,
             float xOffset = 0, float yOffset = 0, float rotation = 0, float scaleX = 1, float scaleY = 1)
         {
             Point point = new Point();
@@ -564,7 +565,7 @@ namespace RenderingLibrary.Graphics
 
                     // todo: rotation, because that will impact destination rectangle too
 
-                    spriteRenderer.Draw(mTextures[pageIndex], destRect, sourceRect, Color.White, objectRequestingChange);
+                    spriteRenderer.Draw(mTextures[pageIndex], destRect, sourceRect, color, objectRequestingChange);
                 }
                 point.X = 0;
                 lineNumber++;

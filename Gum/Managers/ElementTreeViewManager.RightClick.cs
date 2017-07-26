@@ -145,6 +145,7 @@ namespace Gum.Managers
             if (treeNode != null)
             {
                 string fullFile = treeNode.GetFullFilePath();
+                fullFile = fullFile.Replace("/", "\\");
 
                 if (fullFile.EndsWith("\\") || fullFile.EndsWith("/"))
                 {

@@ -65,7 +65,20 @@ namespace RenderingLibrary.Graphics
 
         public Vector2 Position;
 
-        public Color Color = Color.White;
+        public Color Color
+        {
+            get
+            {
+                return new Color(mRed, mGreen, mBlue, mAlpha);
+            }
+            set
+            {
+                mRed = value.R;
+                mGreen = value.G;
+                mBlue = value.B;
+                mAlpha = value.A;
+            }
+        }
 
         string mRawText;
         List<string> mWrappedText = new List<string>();
@@ -728,7 +741,7 @@ namespace RenderingLibrary.Graphics
                 UpdateIpsoForRendering();
 
                 fontToUse.DrawTextLines(WrappedText, HorizontalAlignment, this,
-                    requiredWidth, widths, spriteRenderer, mTempForRendering.GetAbsoluteLeft(), mTempForRendering.GetAbsoluteTop(), Rotation, FontScale, FontScale);
+                    requiredWidth, widths, spriteRenderer, Color, mTempForRendering.GetAbsoluteLeft(), mTempForRendering.GetAbsoluteTop(), Rotation, FontScale, FontScale);
             }
         }
 
