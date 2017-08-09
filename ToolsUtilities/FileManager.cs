@@ -1137,12 +1137,7 @@ namespace ToolsUtilities
         public static void XmlSerialize(Type type, object objectToSerialize, string fileName)
         {
             FileStream fs = null;
-
-#if SILVERLIGHT
-            IsolatedStorageFileStream isfs = null;
-            XmlWriter writer = null;
-
-#endif
+            
             try
             {
                 // Make sure that the directory for the file settings exist
