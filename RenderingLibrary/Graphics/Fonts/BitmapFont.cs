@@ -534,10 +534,15 @@ namespace RenderingLibrary.Graphics
             int xOffsetAsInt = MathFunctions.RoundToInt(xOffset);
             int yOffsetAsInt = MathFunctions.RoundToInt(yOffset);
 
-            //int xOffsetAsInt = (int)xOffset;
-            //int yOffsetAsInt = (int)yOffset;
+            if (Renderer.NormalBlendState == BlendState.AlphaBlend)
+            {
+                // this is premultiplied, so premulitply the color value
+                float multiple = color.A / 255.0f;
 
-
+                color.R = (byte)(color.R * multiple);
+                color.G = (byte)(color.G * multiple);
+                color.B = (byte)(color.B * multiple);
+            }
 
             foreach (string line in lines)
             {
