@@ -37,12 +37,25 @@ namespace Gum.Controls
 
         public InstanceMember InstanceMember
         {
-            get => internalDisplay.InstanceMember; set => internalDisplay.InstanceMember = value;
+            get
+            {
+                return internalDisplay.InstanceMember;
+            }
+            set
+            {
+                internalDisplay.InstanceMember = value;
+            }
         }
         public bool SuppressSettingProperty
         {
-            get => internalDisplay.SuppressSettingProperty;
-            set => internalDisplay.SuppressSettingProperty = value;
+            get
+            {
+                return internalDisplay.SuppressSettingProperty;
+            }
+            set
+            {
+                internalDisplay.SuppressSettingProperty = value;
+            }
         }
 
         #endregion
