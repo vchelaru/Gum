@@ -135,7 +135,10 @@ namespace Gum.PropertyGridHelpers
         {
             get
             {
-                if(CustomOptions != null && CustomOptions.Count != 0)
+                // we want to still give priority to the base displayer since
+                // we may want to replace combo boxes with something like toggles:
+                if(CustomOptions != null && CustomOptions.Count != 0 &&
+                    base.PreferredDisplayer == null)
                 {
                     return typeof(WpfDataUi.Controls.ComboBoxDisplay);
                 }

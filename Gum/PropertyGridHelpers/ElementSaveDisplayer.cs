@@ -66,7 +66,14 @@ namespace Gum.PropertyGridHelpers
 
             if (elementSave != null)
             {
-                stateToDisplay = elementSave.States[0];
+                if (elementSave is StandardElementSave)
+                {
+                    stateToDisplay = StandardElementsManager.Self.GetDefaultStateFor(elementSave.Name);
+                }
+                else
+                {
+                    stateToDisplay = elementSave.States[0];
+                }
             }
             else
             {
@@ -287,6 +294,14 @@ namespace Gum.PropertyGridHelpers
             if (shouldInclude)
             {
                 shouldInclude = GetShouldIncludeBasedOnBaseType(defaultVariable, container, currentInstance, rootElementSave);
+            }
+
+            if(shouldInclude)
+            {
+                if(currentInstance != null && defaultVariable.ExcludeFromInstances)
+                {
+                    shouldInclude = false;
+                }
             }
 
             if (shouldInclude)

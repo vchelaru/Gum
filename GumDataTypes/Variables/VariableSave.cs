@@ -138,6 +138,9 @@ namespace Gum.DataTypes.Variables
         public bool CanOnlyBeSetInDefaultState { get; set; }
 
         [XmlIgnore]
+        public bool ExcludeFromInstances { get; set; }
+
+        [XmlIgnore]
         public int DesiredOrder
         {
             get;

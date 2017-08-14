@@ -96,6 +96,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Controls\ToggleButtonOptionDisplay.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="DataUiGrid.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -120,6 +124,9 @@
       <DependentUpon>TextBoxDisplay.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\TextBoxDisplayLogic.cs" />
+    <Compile Include="Controls\ToggleButtonOptionDisplay.xaml.cs">
+      <DependentUpon>ToggleButtonOptionDisplay.xaml</DependentUpon>
+    </Compile>
     <Compile Include="DataGridAttachedProperties.cs" />
     <Compile Include="DataTypes\IMemberDefinition.cs" />
     <Compile Include="DataTypes\IMemberDefinitionContainer.cs" />

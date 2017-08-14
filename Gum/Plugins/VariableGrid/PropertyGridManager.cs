@@ -24,6 +24,8 @@ using System.Collections.ObjectModel;
 using WpfDataUi;
 using Gum.Plugins.VariableGrid;
 using Gum.DataTypes.Behaviors;
+using Gum.Controls;
+using WpfDataUi.Controls;
 
 namespace Gum.Managers
 {
@@ -402,7 +404,12 @@ namespace Gum.Managers
             {
                 foreach(var variable in firstState.Variables)
                 {
-                    commonMembers.Add(variable.Name);
+                    bool canAdd = variable.ExcludeFromInstances == false || instance == null;
+
+                    if(canAdd)
+                    {
+                        commonMembers.Add(variable.Name);
+                    }
                 }
             }
 
@@ -506,10 +513,29 @@ namespace Gum.Managers
         private void CustomizeVariables(List<MemberCategory> categories)
         {
             // Hack! I would like to have this set by variables, but that's going to require a ton
-            // of refatoring. We need to move off of the intermediate PropertyDescriptor class
+            // of refatoring. We need to move off of the intermediate PropertyDescriptor class.
             MakeTextMultiline(categories);
 
             UpdateColorCategory(categories);
+
+            SetDisplayerForAlignment(categories);
+
+        }
+
+        private void SetDisplayerForAlignment(List<MemberCategory> categories)
+        {
+            // This used to only make Text objects multiline, but...maybe we should make all string values multiline?
+            foreach (var category in categories)
+            {
+                foreach (var member in category.Members)
+                {
+                    if (member.PropertyType == typeof(global::RenderingLibrary.Graphics.HorizontalAlignment) &&
+                        member.Name == "HorizontalAlignment" || member.Name.EndsWith(".HorizontalAlignment"))
+                    {
+                        member.PreferredDisplayer = typeof(TextHorizontalAlignmentControl);
+                    }
+                }
+            }
         }
 
         private void MakeTextMultiline(List<MemberCategory> categories)
@@ -523,7 +549,9 @@ namespace Gum.Managers
                         member.PropertyType == typeof(string) &&
                         member.Name != "Name" && member.Name.EndsWith(".Name") == false)
                     {
+                        //member.PreferredDisplayer = typeof(ToggleButtonOptionDisplay);
                         member.PreferredDisplayer = typeof(WpfDataUi.Controls.MultiLineTextBoxDisplay);
+                        //ToggleButtonOptionDisplay
                     }
                 }
             }

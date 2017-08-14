@@ -131,6 +131,7 @@
     <Compile Include="Controls\StateView.Designer.cs">
       <DependentUpon>StateView.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\TextHorizontalAlignmentControl.cs" />
     <Compile Include="DataTypes\BehaviorSaveExtensionMethods.cs" />
     <Compile Include="DataTypes\ComponentSaveExtensionMethods.cs" />
     <Compile Include="DataTypes\ElementSaveExtensionMethods.cs" />
@@ -422,6 +423,15 @@
     <Resource Include="Content\Icons\AnchorPlugin\TopLeft.png" />
     <Resource Include="Content\Icons\AnchorPlugin\TopMiddle.png" />
     <Resource Include="Content\Icons\AnchorPlugin\TopRight.png" />
+    <None Include="Content\Icons\Alignment\CenterAlign.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Icons\Alignment\LeftAlign.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Icons\Alignment\RightAlign.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <Content Include="Libraries\TargaImage.dll" />
     <Content Include="Libraries\TargaImage.xml" />
     <None Include="Content\InvalidTexture.png">

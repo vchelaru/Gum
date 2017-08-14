@@ -17,6 +17,7 @@ using Gum.PropertyGridHelpers.Converters;
 
 namespace Gum.Managers
 {
+    #region Enums
 
     public enum TextureAddress
     {
@@ -33,6 +34,8 @@ namespace Gum.Managers
 
     }
 
+    #endregion
+
     public class StandardElementsManager
     {
         #region Enums
@@ -45,7 +48,6 @@ namespace Gum.Managers
         }
 
         #endregion
-
 
         #region Fields
 
@@ -108,8 +110,6 @@ namespace Gum.Managers
 
         #endregion
 
-
-
         public void Initialize()
         {
             mDefaults = new Dictionary<string, StateSave>();
@@ -117,310 +117,309 @@ namespace Gum.Managers
             // Eventually this would get read from somewhere like an XML file
             // or a CSV file, but for
             // now we'll just use hard values.
-            
 
 
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            //                                                     Text                                                           //
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            StateSave stateSave = new StateSave();
-            stateSave.Name = "Default";
-            AddPositioningVariables(stateSave);
-            AddDimensionsVariables(stateSave, 100, 50, DimensionVariableAction.ExcludeFileOptions);
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "Hello", Name = "Text", Category = "Text" });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "VerticalAlignment", Value = VerticalAlignment.Top, Name = "VerticalAlignment", Category = "Text" });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "HorizontalAlignment", Value = HorizontalAlignment.Left, Name = "HorizontalAlignment", Category = "Text" });
+            {
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                //                                                     Text                                                           //
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                var stateSave = new StateSave();
+                stateSave.Name = "Default";
+                AddPositioningVariables(stateSave);
+                AddDimensionsVariables(stateSave, 100, 50, DimensionVariableAction.ExcludeFileOptions);
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "Hello", Name = "Text", Category = "Text" });
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "VerticalAlignment", Value = VerticalAlignment.Top, Name = "VerticalAlignment", Category = "Text" });
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "HorizontalAlignment", Value = HorizontalAlignment.Left, Name = "HorizontalAlignment", Category = "Text" });
 
-            // font:
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "UseCustomFont", Category = "Font" });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "Arial", Name = "Font", IsFont = true, Category = "Font" });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 18, Name = "FontSize", Category = "Font" });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "OutlineThickness", Category = "Font" });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "CustomFontFile", Category = "Font", IsFile = true });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 1.0f, Name = "Font Scale", Category = "Font" });
+                // font:
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "UseCustomFont", Category = "Font" });
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "Arial", Name = "Font", IsFont = true, Category = "Font" });
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 18, Name = "FontSize", Category = "Font" });
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "OutlineThickness", Category = "Font" });
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "CustomFontFile", Category = "Font", IsFile = true });
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 1.0f, Name = "Font Scale", Category = "Font" });
 
-            stateSave.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation" });
-            AddEventVariables(stateSave);
+                stateSave.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation" });
+                AddEventVariables(stateSave);
 
-            AddStateVariable(stateSave);
+                AddStateVariable(stateSave);
 
-            AddColorVariables(stateSave, includeAlpha:true);
-
-#if GUM
-            PluginManager.Self.ModifyDefaultStandardState("Text", stateSave);
-#endif
-
-            ApplySortValuesFromOrderInState(stateSave);
-
-            mDefaults.Add("Text", stateSave);
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-
-
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            //                                                     Sprite                                                         //
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            stateSave = new StateSave();
-            stateSave.Name = "Default";
-            AddPositioningVariables(stateSave);
-            AddDimensionsVariables(stateSave, 100, 100, DimensionVariableAction.DefaultToPercentageOfFile);
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "SourceFile", IsFile = true });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Category = "Animation", Name = "Animate" });
-
-            stateSave.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation" });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Category = "Flip", Name = "FlipHorizontal" });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Category = "Flip", Name = "FlipVertical" });
-
-
-            //stateSave.Variables.Add(new VariableSave { Type = "bool", Value = false, Name = "Custom Texture Coordinates", Category="Source" });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "TextureAddress", Value = Gum.Managers.TextureAddress.EntireTexture, Name = "Texture Address", Category = "Source" });
-
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "Texture Top", Category = "Source" });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "Texture Left", Category = "Source" });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "Texture Width", Category = "Source" });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "Texture Height", Category = "Source" });
-
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0.0f, Name = "Texture Width Scale", Category = "Source" });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0.0f, Name = "Texture Height Scale", Category = "Source" });
-
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "Wrap", Category = "Source" });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "HasEvents", Category = "Behavior", CanOnlyBeSetInDefaultState = true });
-
-            AddColorVariables(stateSave);
-
-            AddEventVariables(stateSave);
-
-            AddStateVariable(stateSave);
-
-
-            List<string> list = new List<string>();
-            stateSave.VariableLists.Add(new VariableListSave<string> { Type = "string", Value = list, Category = "Animation", Name = "AnimationFrames"});
-#if GUM
-            PluginManager.Self.ModifyDefaultStandardState("Sprite", stateSave);
-#endif
-            ApplySortValuesFromOrderInState(stateSave);
-
-
-            mDefaults.Add("Sprite", stateSave);
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-
-
-
-
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            //                                                   Container                                                        //
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            stateSave = new StateSave();
-            stateSave.Name = "Default";
-
-            AddPositioningVariables(stateSave);
-
-            AddDimensionsVariables(stateSave, 150, 150, DimensionVariableAction.ExcludeFileOptions);
-
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "ChildrenLayout", Value = ChildrenLayout.Regular, Name = "Children Layout" });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "Wraps Children" });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "Clips Children" });
-
-            AddEventVariables(stateSave, defaultHasEvents:true);
+                AddColorVariables(stateSave, includeAlpha: true);
 
 #if GUM
-            PluginManager.Self.ModifyDefaultStandardState("Container", stateSave);
+                PluginManager.Self.ModifyDefaultStandardState("Text", stateSave);
 #endif
-            ApplySortValuesFromOrderInState(stateSave);
 
-            mDefaults.Add("Container", stateSave);
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                ApplySortValuesFromOrderInState(stateSave);
 
-
-
-
+                mDefaults.Add("Text", stateSave);
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            }
 
 
 
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            //                                               ColoredRectangle                                                     //
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            stateSave = new StateSave();
-            stateSave.Name = "Default";
 
-            AddPositioningVariables(stateSave);
+            {
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                //                                                     Sprite                                                         //
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                var stateSave = new StateSave();
+                stateSave.Name = "Default";
+                AddPositioningVariables(stateSave);
+                AddDimensionsVariables(stateSave, 100, 100, DimensionVariableAction.DefaultToPercentageOfFile);
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "SourceFile", IsFile = true });
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Category = "Animation", Name = "Animate" });
 
-            AddDimensionsVariables(stateSave, 50, 50, DimensionVariableAction.ExcludeFileOptions);
+                stateSave.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation" });
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Category = "Flip", Name = "FlipHorizontal" });
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Category = "Flip", Name = "FlipVertical" });
 
-            stateSave.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation" });
+
+                //stateSave.Variables.Add(new VariableSave { Type = "bool", Value = false, Name = "Custom Texture Coordinates", Category="Source" });
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "TextureAddress", Value = Gum.Managers.TextureAddress.EntireTexture, Name = "Texture Address", Category = "Source" });
+
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "Texture Top", Category = "Source" });
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "Texture Left", Category = "Source" });
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "Texture Width", Category = "Source" });
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "Texture Height", Category = "Source" });
+
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0.0f, Name = "Texture Width Scale", Category = "Source" });
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0.0f, Name = "Texture Height Scale", Category = "Source" });
+
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "Wrap", Category = "Source" });
+                
+                AddColorVariables(stateSave);
+
+                AddEventVariables(stateSave);
+
+                AddStateVariable(stateSave);
 
 
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
-            AddColorVariables(stateSave, true);
+                List<string> list = new List<string>();
+                stateSave.VariableLists.Add(new VariableListSave<string> { Type = "string", Value = list, Category = "Animation", Name = "AnimationFrames" });
+#if GUM
+                PluginManager.Self.ModifyDefaultStandardState("Sprite", stateSave);
+#endif
+                ApplySortValuesFromOrderInState(stateSave);
 
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "Blend", Value = Blend.Normal, Name = "Blend", Category = "Rendering" });
 
-            AddEventVariables(stateSave);
+                mDefaults.Add("Sprite", stateSave);
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            }
 
-            AddStateVariable(stateSave);
+
+
+
+
+
+            {
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                //                                                   Container                                                        //
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                var stateSave = new StateSave();
+                stateSave.Name = "Default";
+
+                AddPositioningVariables(stateSave);
+
+                AddDimensionsVariables(stateSave, 150, 150, DimensionVariableAction.ExcludeFileOptions);
+
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "ChildrenLayout", Value = ChildrenLayout.Regular, Name = "Children Layout" });
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "Wraps Children" });
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "Clips Children" });
+
+                AddEventVariables(stateSave, defaultHasEvents: true);
 
 #if GUM
-            PluginManager.Self.ModifyDefaultStandardState("ColoredRectangle", stateSave);
+                PluginManager.Self.ModifyDefaultStandardState("Container", stateSave);
 #endif
-            ApplySortValuesFromOrderInState(stateSave);
+                ApplySortValuesFromOrderInState(stateSave);
 
-            mDefaults.Add("ColoredRectangle", stateSave);
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
+                mDefaults.Add("Container", stateSave);
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            }
 
 
 
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            //                                               Circle                                                               //
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            stateSave = new StateSave();
-            stateSave.Name = "Default";
 
-            AddPositioningVariables(stateSave);
 
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 16.0f, Name = "Radius" });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 16.0f, Name = "Width", IsHiddenInPropertyGrid = true });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 16.0f, Name = "Height", IsHiddenInPropertyGrid = true });
+            {
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                //                                               ColoredRectangle                                                     //
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                var stateSave = new StateSave();
+                stateSave.Name = "Default";
 
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
-            AddColorVariables(stateSave, true);
+                AddPositioningVariables(stateSave);
 
-            AddEventVariables(stateSave);
+                AddDimensionsVariables(stateSave, 50, 50, DimensionVariableAction.ExcludeFileOptions);
 
-            AddStateVariable(stateSave);
+                stateSave.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation" });
+
+
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
+                AddColorVariables(stateSave, true);
+
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "Blend", Value = Blend.Normal, Name = "Blend", Category = "Rendering" });
+
+                AddEventVariables(stateSave);
+
+                AddStateVariable(stateSave);
 
 #if GUM
-            PluginManager.Self.ModifyDefaultStandardState("Circle", stateSave);
+                PluginManager.Self.ModifyDefaultStandardState("ColoredRectangle", stateSave);
 #endif
-            ApplySortValuesFromOrderInState(stateSave);
+                ApplySortValuesFromOrderInState(stateSave);
 
-            mDefaults.Add("Circle", stateSave);
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                mDefaults.Add("ColoredRectangle", stateSave);
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            }
 
 
 
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            //                                               Rectangle                                                            //
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            stateSave = new StateSave();
-            stateSave.Name = "Default";
 
-            AddPositioningVariables(stateSave);
+            {
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                //                                               Circle                                                               //
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                var stateSave = new StateSave();
+                stateSave.Name = "Default";
 
-            AddDimensionsVariables(stateSave, 16, 16, DimensionVariableAction.ExcludeFileOptions);
+                AddPositioningVariables(stateSave);
 
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
-            AddColorVariables(stateSave, true);
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 16.0f, Name = "Radius" });
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 16.0f, Name = "Width", IsHiddenInPropertyGrid = true });
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 16.0f, Name = "Height", IsHiddenInPropertyGrid = true });
 
-            AddEventVariables(stateSave);
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
+                AddColorVariables(stateSave, true);
 
-            AddStateVariable(stateSave);
+                AddEventVariables(stateSave);
+
+                AddStateVariable(stateSave);
 
 #if GUM
-            PluginManager.Self.ModifyDefaultStandardState("Rectangle", stateSave);
+                PluginManager.Self.ModifyDefaultStandardState("Circle", stateSave);
 #endif
-            ApplySortValuesFromOrderInState(stateSave);
+                ApplySortValuesFromOrderInState(stateSave);
 
-            mDefaults.Add("Rectangle", stateSave);
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                mDefaults.Add("Circle", stateSave);
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            }
+
+            {
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                //                                               Rectangle                                                            //
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                var stateSave = new StateSave();
+                stateSave.Name = "Default";
+
+                AddPositioningVariables(stateSave);
+
+                AddDimensionsVariables(stateSave, 16, 16, DimensionVariableAction.ExcludeFileOptions);
+
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
+                AddColorVariables(stateSave, true);
+
+                AddEventVariables(stateSave);
+
+                AddStateVariable(stateSave);
+
+#if GUM
+                PluginManager.Self.ModifyDefaultStandardState("Rectangle", stateSave);
+#endif
+                ApplySortValuesFromOrderInState(stateSave);
+
+                mDefaults.Add("Rectangle", stateSave);
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            }
 
 
 
 
+            {
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                //                                                    NineSlice                                                         //
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                var stateSave = new StateSave();
+                stateSave.Name = "Default";
+                AddPositioningVariables(stateSave);
+                AddDimensionsVariables(stateSave, 64, 64, DimensionVariableAction.ExcludeFileOptions);
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "SourceFile", IsFile = true });
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
 
+                AddColorVariables(stateSave);
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "Blend", Value = Blend.Normal, Name = "Blend", Category = "Rendering" });
 
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            //                                                    NineSlice                                                         //
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            stateSave = new StateSave();
-            stateSave.Name = "Default";
-            AddPositioningVariables(stateSave);
-            AddDimensionsVariables(stateSave, 64, 64, DimensionVariableAction.ExcludeFileOptions);
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "SourceFile", IsFile = true });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "TextureAddress", Value = Gum.Managers.TextureAddress.EntireTexture, Name = "Texture Address", Category = "Source" });
 
-            AddColorVariables(stateSave);
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "Blend", Value = Blend.Normal, Name = "Blend", Category = "Rendering" });
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "Texture Top", Category = "Source" });
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "Texture Left", Category = "Source" });
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "Texture Width", Category = "Source" });
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "Texture Height", Category = "Source" });
 
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "TextureAddress", Value = Gum.Managers.TextureAddress.EntireTexture, Name = "Texture Address", Category = "Source" });
+                AddEventVariables(stateSave);
 
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "Texture Top", Category = "Source" });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "Texture Left", Category = "Source" });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "Texture Width", Category = "Source" });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "Texture Height", Category = "Source" });
-
-            AddEventVariables(stateSave);
-
-            AddStateVariable(stateSave);
+                AddStateVariable(stateSave);
 
 #if GUM
 
-            PluginManager.Self.ModifyDefaultStandardState("NineSlice", stateSave);
+                PluginManager.Self.ModifyDefaultStandardState("NineSlice", stateSave);
 #endif
-            ApplySortValuesFromOrderInState(stateSave);
+                ApplySortValuesFromOrderInState(stateSave);
 
-            mDefaults.Add("NineSlice", stateSave);
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                mDefaults.Add("NineSlice", stateSave);
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            }
 
-
-
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            //                                                     Component                                                      //
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            stateSave = new StateSave();
-            stateSave.Name = "Default";
+            {
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                //                                                     Component                                                      //
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                var stateSave = new StateSave();
+                stateSave.Name = "Default";
 #if GUM
-            PluginManager.Self.ModifyDefaultStandardState("Component", stateSave);
+                PluginManager.Self.ModifyDefaultStandardState("Component", stateSave);
 #endif
 
 #if GUM
-            // Victor Chelaru
-            // August 21, 2014
-            // Not sure why we have
-            // this here.  Doing so would
-            // create an endless loop...
-            //stateSave.Variables.Add(new VariableSave { Type = "string", Value = "Default", Name = "State", CustomTypeConverter = new AvailableStatesConverter(null)});
-            // The type used to be "string" but we want to differentiate it from actual strings so we use "State"
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "State", Value = null, Name = "State", CustomTypeConverter = new AvailableStatesConverter(null) });
+                // Victor Chelaru
+                // August 21, 2014
+                // Not sure why we have
+                // this here.  Doing so would
+                // create an endless loop...
+                //stateSave.Variables.Add(new VariableSave { Type = "string", Value = "Default", Name = "State", CustomTypeConverter = new AvailableStatesConverter(null)});
+                // The type used to be "string" but we want to differentiate it from actual strings so we use "State"
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "State", Value = null, Name = "State", CustomTypeConverter = new AvailableStatesConverter(null) });
 #endif
 
-            ApplySortValuesFromOrderInState(stateSave);
+                ApplySortValuesFromOrderInState(stateSave);
 
-            // Not sure if component needs this - does it get values from container?
-            //AddEventVariables(stateSave);
+                // Not sure if component needs this - does it get values from container?
+                //AddEventVariables(stateSave);
 
-            mDefaults.Add("Component", stateSave);
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                mDefaults.Add("Component", stateSave);
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            }
 
 
-
-
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            //                                                    Screen                                                          //
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            stateSave = new StateSave();
-            stateSave.Name = "Default";
+            {
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                //                                                    Screen                                                          //
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                var stateSave = new StateSave();
+                stateSave.Name = "Default";
 #if GUM
-            PluginManager.Self.ModifyDefaultStandardState("Screen", stateSave);
+                PluginManager.Self.ModifyDefaultStandardState("Screen", stateSave);
 #endif
 
-            ApplySortValuesFromOrderInState(stateSave);
+                ApplySortValuesFromOrderInState(stateSave);
 
-            mDefaults.Add("Screen", stateSave);
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+                mDefaults.Add("Screen", stateSave);
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            }
 
             // We shouldn't do this because states above may explicitly not want to set values - like the variable for state
             //foreach (var defaultState in mDefaults.Values)
@@ -451,8 +450,12 @@ namespace Gum.Managers
 
         private void AddEventVariables(StateSave stateSave, bool defaultHasEvents = false)
         {
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = defaultHasEvents, Name = "HasEvents", Category = "Behavior", CanOnlyBeSetInDefaultState = true });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = defaultHasEvents, Name = "ExposeChildrenEvents", Category = "Behavior", CanOnlyBeSetInDefaultState = true });
+            stateSave.Variables.Add(
+                new VariableSave
+                { SetsValue = true, Type = "bool", Value = defaultHasEvents, Name = "HasEvents", Category = "Behavior", CanOnlyBeSetInDefaultState = true , ExcludeFromInstances = true});
+            stateSave.Variables.Add(
+                new VariableSave
+                { SetsValue = true, Type = "bool", Value = defaultHasEvents, Name = "ExposeChildrenEvents", Category = "Behavior", CanOnlyBeSetInDefaultState = true, ExcludeFromInstances = true });
         }
 
         private static void AddStateVariable(StateSave stateSave)
