@@ -132,6 +132,8 @@
       <DependentUpon>StateView.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\TextHorizontalAlignmentControl.cs" />
+    <Compile Include="Controls\TextVerticalAlignmentControl.cs" />
+    <Compile Include="Controls\ToggleButtonOptionContainer.cs" />
     <Compile Include="DataTypes\BehaviorSaveExtensionMethods.cs" />
     <Compile Include="DataTypes\ComponentSaveExtensionMethods.cs" />
     <Compile Include="DataTypes\ElementSaveExtensionMethods.cs" />
@@ -430,6 +432,15 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Content\Icons\Alignment\RightAlign.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Icons\Alignment\BottomAlign.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Icons\Alignment\TopAlign.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Icons\Alignment\VerticalCenterAlign.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <Content Include="Libraries\TargaImage.dll" />

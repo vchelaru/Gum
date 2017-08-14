@@ -534,6 +534,11 @@ namespace Gum.Managers
                     {
                         member.PreferredDisplayer = typeof(TextHorizontalAlignmentControl);
                     }
+                    else if (member.PropertyType == typeof(global::RenderingLibrary.Graphics.VerticalAlignment) &&
+                        member.Name == "VerticalAlignment" || member.Name.EndsWith(".VerticalAlignment"))
+                    {
+                        member.PreferredDisplayer = typeof(TextVerticalAlignmentControl);
+                    }
                 }
             }
         }

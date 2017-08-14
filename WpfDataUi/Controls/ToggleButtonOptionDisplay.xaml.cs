@@ -37,6 +37,9 @@ namespace WpfDataUi.Controls
 
         #region Fields/Properties
 
+        static Brush mUnmodifiedBrush = null;
+
+
         List<ToggleButton> toggleButtons = new List<ToggleButton>();
 
         InstanceMember mInstanceMember;
@@ -56,15 +59,35 @@ namespace WpfDataUi.Controls
 
         public bool SuppressSettingProperty { get; set; }
 
+        public Brush DesiredBackgroundBrush
+        {
+            get
+            {
+                if (InstanceMember.IsDefault)
+                {
+                    return Brushes.LightGreen;
+                }
+                else
+                {
+                    return mUnmodifiedBrush;
+                }
+            }
+        }
+
         #endregion
 
         public ToggleButtonOptionDisplay(Option[] options)
         {
             InitializeComponent();
-            this.Height = 60;
+            this.Height = 40;
             foreach(var option in options)
             {
                 var toggleButton = new ToggleButton();
+
+                if(mUnmodifiedBrush == null)
+                {
+                    mUnmodifiedBrush = toggleButton.Background;
+                }
 
                 if(option.Image != null)
                 {
@@ -96,17 +119,30 @@ namespace WpfDataUi.Controls
                 ButtonStackPanel.Children.Add(toggleButton);
 
             }
+
+            ButtonStackPanel.ContextMenu = new ContextMenu();
+            this.RefreshContextMenu(ButtonStackPanel.ContextMenu);
+
         }
 
         public void Refresh(bool forceRefreshEvenIfFocused = false)
         {
             SuppressSettingProperty = true;
 
-            string propertyName = InstanceMember?.DisplayName;
-
-            // todo: camel case it
-            Label.Text =  propertyName;
+            string propertyName =  InstanceMember?.DisplayName;
+            
+            if(propertyName != null)
+            {
+                propertyName = InsertSpacesInCamelCaseString(propertyName);
+            }
+            Label.Text = propertyName;
             TrySetValueOnUi(InstanceMember.Value);
+
+            this.RefreshContextMenu(ButtonStackPanel.ContextMenu);
+            RefreshButtonAppearance();
+
+            // todo: adjust the background to be either green or gray depending on defaults
+
             //if (this.HasEnoughInformationToWork())
             //{
             //    Type type = this.GetPropertyType();
@@ -135,6 +171,27 @@ namespace WpfDataUi.Controls
             //CheckBox.Foreground = DesiredForegroundBrush;
 
             SuppressSettingProperty = false;
+        }
+
+        private void RefreshButtonAppearance()
+        {
+            foreach (var button in toggleButtons)
+            {
+                button.Background = DesiredBackgroundBrush;
+                const double smallSize = 30;
+                const double largeSize = 35;
+
+                if(button.IsChecked == true)
+                {
+                    button.Width = largeSize;
+                    button.Height = largeSize;
+                }
+                else
+                {
+                    button.Width = smallSize;
+                    button.Height = smallSize;
+                }
+            }
         }
 
         public ApplyValueResult TryGetValueOnUi(out object result)
@@ -183,7 +240,23 @@ namespace WpfDataUi.Controls
                 toggleButtonClicked.IsChecked = true;
             }
             this.TrySetValueOnInstance();
+            RefreshButtonAppearance();
 
+        }
+
+        static string InsertSpacesInCamelCaseString(string originalString)
+        {
+            // Normally in reverse loops you go til i > -1, but 
+            // we don't want the character at index 0 to be tested.
+            for (int i = originalString.Length - 1; i > 0; i--)
+            {
+                if (char.IsUpper(originalString[i]) && i != 0)
+                {
+                    originalString = originalString.Insert(i, " ");
+                }
+            }
+
+            return originalString;
         }
     }
 }
