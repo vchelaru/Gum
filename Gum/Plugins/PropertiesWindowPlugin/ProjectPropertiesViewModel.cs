@@ -1,6 +1,7 @@
 ﻿using Gum.DataTypes;
 using Gum.Mvvm;
 using Gum.Settings;
+using Gum.Wireframe;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -90,6 +91,11 @@ namespace Gum.Plugins.PropertiesWindowPlugin
         {
             this.generalSettings.AutoSave = AutoSave;
             this.gumProject.ShowOutlines = ShowOutlines;
+            GraphicalUiElement.ShowLineRectangles = ShowOutlines;
+            GraphicalUiElement.CanvasWidth = CanvasWidth;
+            GraphicalUiElement.CanvasHeight = CanvasHeight;
+
+
             this.gumProject.RestrictToUnitValues = RestrictToUnitValues;
             this.gumProject.DefaultCanvasHeight = CanvasHeight;
             this.gumProject.DefaultCanvasWidth = CanvasWidth;

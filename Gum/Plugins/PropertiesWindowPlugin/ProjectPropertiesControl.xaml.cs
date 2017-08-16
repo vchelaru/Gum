@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -21,7 +22,7 @@ namespace Gum.Gui.Controls
     /// </summary>
     public partial class ProjectPropertiesControl : UserControl
     {
-        public event EventHandler ApplyClicked;
+        public event EventHandler PropertyChanged;
         public event EventHandler CloseClicked;
 
         public ProjectPropertiesViewModel ViewModel
@@ -34,11 +35,26 @@ namespace Gum.Gui.Controls
             {
                 if(value != DataGrid.Instance)
                 {
+                    if (DataGrid.Instance != null)
+                    {
+                        ((ProjectPropertiesViewModel)DataGrid.Instance).PropertyChanged -= HandleViewModelPropertyChanged;
+                    }
+
                     DataGrid.Instance = value;
+
+                    if(value != null)
+                    {
+                        value.PropertyChanged += HandleViewModelPropertyChanged;
+                    }
 
                     UpdateToInstance();
                 }
             }
+        }
+
+        private void HandleViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            PropertyChanged?.Invoke(this, null);
         }
 
         private void UpdateToInstance()
@@ -57,11 +73,6 @@ namespace Gum.Gui.Controls
         public ProjectPropertiesControl()
         {
             InitializeComponent();
-        }
-
-        private void ApplyButtonClicked(object sender, RoutedEventArgs e)
-        {
-            ApplyClicked?.Invoke(this, null);
         }
 
         private void CancelButtonClicked(object sender, RoutedEventArgs e)

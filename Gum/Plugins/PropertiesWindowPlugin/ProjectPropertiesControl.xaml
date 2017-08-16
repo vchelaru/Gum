@@ -15,9 +15,7 @@
         <WpfDataUi:DataUiGrid Name="DataGrid"></WpfDataUi:DataUiGrid>
 
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button Click="ApplyButtonClicked">Apply</Button>
             <Button Margin="10,0,0,0" Click="CancelButtonClicked" >Close</Button>
-            
         </StackPanel>
         
     </Grid>

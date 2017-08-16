@@ -34,7 +34,7 @@ namespace Gum.Plugins.PropertiesWindowPlugin
             if(control == null)
             {
                 control = new ProjectPropertiesControl();
-                control.ApplyClicked += HandleApplyClicked;
+                control.PropertyChanged += HandlePropertyChanged;
 
                 control.CloseClicked += HandleCloseClicked;
             }
@@ -45,7 +45,7 @@ namespace Gum.Plugins.PropertiesWindowPlugin
             control.ViewModel = viewModel;
         }
 
-        private void HandleApplyClicked(object sender, EventArgs e)
+        private void HandlePropertyChanged(object sender, EventArgs e)
         {
             viewModel.ApplyToBoundObjects();
 
