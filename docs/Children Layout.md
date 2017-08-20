@@ -10,9 +10,9 @@ The value **LeftToWriteStack** results in the children stacking one beside anoth
 
 The following shows how to use the ChildrenLayout property to stack objects. It begins with a single NineSlice inside of a container called ContainerInstance. The following actions are performed:
 
-# The NineSliceInstance is copied and pasted 3 times. At this point all NineSliceInstance's are overlapping each other
-# The Children Layout is changed from Regular to TopToBottomStack. The NineSliceInstance's are automatically stacked top-to-bottom.
-# The Children Layout is changed to LeftToRightStack. The NineSliceInstance's are automatically stacked left-to-right.
+1. The NineSliceInstance is copied and pasted 3 times. At this point all NineSliceInstance's are overlapping each other
+1. The Children Layout is changed from Regular to TopToBottomStack. The NineSliceInstance's are automatically stacked top-to-bottom.
+1. The Children Layout is changed to LeftToRightStack. The NineSliceInstance's are automatically stacked left-to-right.
 
 ![](Children Layout_ChildrenLayoutGum.gif)
 

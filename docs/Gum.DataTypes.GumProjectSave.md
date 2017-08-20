@@ -6,7 +6,7 @@ The GumProjectSave object is a serializable object representing a Gum project.  
 
 The following code loops through all screens, components, and standard elements in the current project and adds their names to a list of strings:
 
-{{
+```
 List<string> allObjectsInGumProject = new List<string>();
 
 foreach (var screen in Gum.ToolStates.ProjectState.Self.GumProjectSave.Screens)
@@ -23,4 +23,4 @@ foreach (var standardElement in Gum.ToolStates.ProjectState.Self.GumProjectSave.
 {
     allObjectsInGumProject.Add(standardElement.Name);
 }
-}}
+```
