@@ -6,9 +6,9 @@ This page discusses how to write plugins for Gum.  Plugins are a useful way to m
 
 To begin writing a plugin:
 
-# Obtain the Gum source code.  You can download the .zip or get the source through a version control client
-# Create a copy of Gum.sln.  You will want to work with your own .sln file so that the project containing your plugin can be debugged easily.  For example, you might want to call your solution GumWithPlugins.sln
-# Open your new .sln file in Visual Studio
+1. Obtain the Gum source code.  You can download the .zip or get the source through a version control client
+1. Create a copy of Gum.sln.  You will want to work with your own .sln file so that the project containing your plugin can be debugged easily.  For example, you might want to call your solution GumWithPlugins.sln
+1. Open your new .sln file in Visual Studio
 
 Now that you have created a .sln which will contain your plugin project, you can add this project:
 
@@ -51,7 +51,7 @@ Next you'll want to add a Plugin class.  This is a class that inherits from Plug
 # Add the following using:  {{ using Gum.Plugins.BaseClasses; }}
 # Modify your plugin so it's public and inherits from PluginBase: {{ public class MyPlugin : PluginBase }}
 # Add the following implementation into your plugin class:
-{{
+```
         public override string FriendlyName
         {
             get { return "My Plugin Name"; }
@@ -72,7 +72,7 @@ Next you'll want to add a Plugin class.  This is a class that inherits from Plug
             return true;
         }
 
-}}
+```
 
 # Getting your plugin into Gum
 
