@@ -32,13 +32,13 @@ Add the following inside a layout container (like a Grid):
 
 To use the grid in code you simply need to set its Instance member to an instance object you want to view.  For example:
 
-{{
+```
 // We'll use a MemoryStream to show that it works,
 // but we could really use anything.
 MemoryStream memoryStream = new MemoryStream();
 
 this.DataGrid.Instance = memoryStream;
-}}
+```
 
 This will produce a grid which looks like this:
 

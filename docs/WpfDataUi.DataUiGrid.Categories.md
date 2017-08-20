@@ -6,7 +6,7 @@ The Categories member provides more detailed control over a DataUiGrid. The easi
 
 The following makes the grid only show a single value called "Some Value" which always has a value of 10. An actual implementation may modify some backing variable.
 
-{{
+```
             var category = new MemberCategory("Test Category");
 
             var instanceMember = new InstanceMember("Some value", this);
@@ -31,4 +31,4 @@ The following makes the grid only show a single value called "Some Value" which 
             category.Members.Add(instanceMember);
 
             Grid.Categories.Add(category);
-}}
+```
