@@ -12,25 +12,25 @@ To begin writing a plugin:
 
 Now that you have created a .sln which will contain your plugin project, you can add this project:
 
-# Right-click on your solution
-# Select "Add ->New Project..."
-# Select "Class Library" as the type
-# Verify that you are targeting .NET 4.5
-# Enter the name of your project, such as MyPluginProject
-# Click OK
+1. Right-click on your solution
+1. Select "Add ->New Project..."
+1. Select "Class Library" as the type
+1. Verify that you are targeting .NET 4.5
+1. Enter the name of your project, such as MyPluginProject
+1. Click OK
 
 Next you'll need to reference the Gum libraries.  To do this:
 
-# Right-click on your project's References
-# Select "Add Reference"
-# Verify that "Solution" is selected (Assuming Visual Studio 2012)
-# Check the following projects:
-## Gum
-## GumDataTypes
-## InputLibrary
-## RenderingLibrary
-## ToolsUtilities
-# Click OK
+1. Right-click on your project's References
+1. Select "Add Reference"
+1. Verify that "Solution" is selected (Assuming Visual Studio 2012)
+1. Check the following projects:
+	1. Gum
+	1. GumDataTypes
+	1. InputLibrary
+	1. RenderingLibrary
+	1. ToolsUtilities
+1. Click OK
 
 Since Gum references XNA, and XNA doesn't have 64 bit libraries, you will need to modify your project's build configuration.  To do this:
 

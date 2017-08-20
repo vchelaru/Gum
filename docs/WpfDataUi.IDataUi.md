@@ -6,6 +6,6 @@ The IDataUi is an interface that is used by the [WpfDataUi.DataUiGrid](WpfDataUi
 
 To create a custom display:
 
-# Add a new User Control (WPF)
-# In the codebehind file, implement the IDataUi interface
-# This newly-created control can be used in a WpfDataUi grid by assigning the [WpfDataUi.DataTypes.InstanceMember.PreferredDisplayer](WpfDataUi.DataTypes.InstanceMember.PreferredDisplayer) property.
+1. Add a new User Control (WPF)
+1. In the codebehind file, implement the IDataUi interface
+1. This newly-created control can be used in a WpfDataUi grid by assigning the [WpfDataUi.DataTypes.InstanceMember.PreferredDisplayer](WpfDataUi.DataTypes.InstanceMember.PreferredDisplayer) property.
