@@ -246,6 +246,9 @@ namespace Gum.Wireframe
             }
         }
 
+        public float GetAbsoluteWidth() => ((IPositionedSizedObject)this).Width;
+        public float GetAbsoluteHeight() => ((IPositionedSizedObject)this).Height;
+
         void IRenderableIpso.SetParentDirect(IRenderableIpso parent)
         {
             mContainedObjectAsIpso.SetParentDirect(parent);
