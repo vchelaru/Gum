@@ -5,11 +5,15 @@ The SelectedState class gives you information about what the user has selected i
 
 To get the current ScreenSave:
 
-{{var currentScreen = Gum.ToolStates.SelectedState.Self.SelectedScreen;}}
+```
+var currentScreen = Gum.ToolStates.SelectedState.Self.SelectedScreen;
+```
 
 To get the current InstanceSave:
 
-{{var currentInstance = Gum.ToolStates.SelectedState.Self.SelectedInstance;}}
+```
+var currentInstance = Gum.ToolStates.SelectedState.Self.SelectedInstance;
+```
 
 
 

@@ -7,15 +7,15 @@ The AddAndRemoveVariablesForType event allows plugins to add and remove variable
 The following code can be used to add a variable to the Sprite standard element. This variable will be a float variable with the name "MyCustomVariable":
 
 First the event must be added in the StartUp method:
-{{
+```
   public override void StartUp()
   {
       this.AddAndRemoveVariablesForType += HandleAddAndRemoveVariablesForType;
   }
-}}
+```
 
 The HandleAddAndRemoveVariablesForType method handles the event being raised and adds the necessary variables. Note that in this case we are only handling variables for the Sprite type, but the same method could be used for all types:
-{{
+```
 private void HandleAddAndRemoveVariablesForType(string type, Gum.DataTypes.Variables.StateSave stateSave)
 {
     if (type == "Sprite")
@@ -33,7 +33,7 @@ private void HandleAddAndRemoveVariablesForType(string type, Gum.DataTypes.Varia
         stateSave.Variables.Add(variableToAdd);
     }
 }
-}}
+```
 
 The end result would be that the Sprite object displays the variable when selected:
 
@@ -43,7 +43,7 @@ The end result would be that the Sprite object displays the variable when select
 
 The example above shows how to add variables, but you can also remove variables from standard types. For example if your engine does not support texture wrapping on Sprites, you may do the following:
 
-{{
+```
 private void HandleAddAndRemoveVariablesForType(string type, Gum.DataTypes.Variables.StateSave stateSave)
 {
     if (type == "Sprite")
@@ -53,7 +53,7 @@ private void HandleAddAndRemoveVariablesForType(string type, Gum.DataTypes.Varia
         stateSave.Variables.Remove(variableToRemove);
     }
 }
-}}
+```
 
 To prevent accidental deletion of data, Gum will still present variables which are defined in the XML files for standard elements even if the variable is removed through a plugin. Therefore, to fully remove a variable (like Wrap), it must be removed from the underlying XML file as well. This can be done by removing the individual file from the XML file, or deleting the entire XML file (which will cause Glue to regenerate it). Keep in mind that deleting and regenerating the entire XML file will result in all other changes being lost.
 

@@ -6,7 +6,7 @@ The Export delegate allows you to create a custom export for Gum elements.  This
 
 The following code will show a message box whenever an element is exported.  Keep in mind this is only for demonstration purposes.  By default Gum auto-saves every change made by the user, and showing a message box after every save can be very annoying for users of your plugin.
 
-{{
+```
         public override void StartUp()
         {
             this.Export += HandleElementExport;
@@ -17,7 +17,7 @@ The following code will show a message box whenever an element is exported.  Kee
             System.Windows.Forms.MessageBox.Show("Handling export of " + element);
         }
 
-}}
+```
 
 # Accessing properties
 
@@ -31,7 +31,7 @@ For more information on how to access properties and instances from the ElementS
 
 The following shows what a very simple exporter might look like:
 
-{{
+```
         void HandleElementExport(Gum.DataTypes.ElementSave element)
         {
 
@@ -69,11 +69,11 @@ The following shows what a very simple exporter might look like:
             // Now the textToSave would get saved to disk wherever you want it exported
         }
 
-}}
+```
 
 This may produce output that looks like this:
 
-{{
+```
 Sprite SpriteInstance1 = new Sprite();
 Sprite SpriteInstance2 = new Sprite();
 Text TextInstance1 = new Text();
@@ -82,4 +82,4 @@ SpriteInstance1.X = 3;
 SpriteInstance1.Y = 4;
 SpriteInstance2.Width = 10;
 Text.X = 3;
-}}
+```
