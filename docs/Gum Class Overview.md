@@ -31,11 +31,12 @@ Notice that GumProjects contain ScreenSaves, ComponentSaves, and StandardElement
 
 ElementSaves can contain instances, and each instance is of type InstanceSave.  Therefore, if you wanted to print out information about all of the instances in a given screen you might do something like this:
 
-{{
+```
 var screen = SelectedState.Self.CurrentScreen;
 foreach(var instance in screen.Instances)
 {
     System.Console.WriteLine("The instance is named " + instance.Name + 
            "and its base type is " + instance.BaseType);
 }
-}}
+
+```
