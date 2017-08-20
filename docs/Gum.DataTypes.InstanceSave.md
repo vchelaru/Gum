@@ -22,7 +22,7 @@ In this pic the Screen1 ScreenSave has 3 InstanceSaves:
 
 The following code shows how to access the X value of an ElementSave as defined in the default state of its container.
 
-{{
+```
 var container = SelectedState.Self.SelectedScreen;
 // This code gets an instance by the name "Title"
 var instance = container.Instances.FirstOrDefault(item=>item.Name == "Title");
@@ -36,4 +36,4 @@ if(xVariable != null)
 {
    xValue = (float)xVariable.Value;
 }
-}}
+```
