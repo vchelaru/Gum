@@ -1,3 +1,12 @@
+---
+layout: docs
+title: Welcome to Gum
+description: Gum is a platform-agnostic, object oriented, XML-based UI creation tool
+group: Test
+toc: true
+---
+
+
 # Important: Binaries have moved
 
 **Binaries can now be downloaded from FlatRedBall here:**
