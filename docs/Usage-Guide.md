@@ -4,14 +4,14 @@ This is the root page for the usage guide.  The usage guide will present how to 
 
 # Tutorials
 ## Getting Started
-# [The Basics](Usage-Guide-_-The-Basics)
-# [Properties Window](Usage-Guide-_-Properties-Window)
-# [Files](Usage-Guide-_-Files)
-# [Components](Usage-Guide-_-Components)
-# [Exposing Variables](Usage-Guide-_-Exposing-Variables)
-# [Parent](Usage-Guide-_-Parent)
-# [States](Usage-Guide-_-States)
-# [Categories](Usage-Guide-_-State-Categories)
+1. [The Basics](Usage-Guide-_-The-Basics)
+1. [Properties Window](Usage-Guide-_-Properties-Window)
+1. [Files](Usage-Guide-_-Files)
+1. [Components](Usage-Guide-_-Components)
+1. [Exposing Variables](Usage-Guide-_-Exposing-Variables)
+1. [Parent](Usage-Guide-_-Parent)
+1. [States](Usage-Guide-_-States)
+1. [Categories](Usage-Guide-_-State-Categories)
 
 ## Animation
 * [Introduction to Animation ](-Usage-Guide-_-Introduction-to-Animation)
