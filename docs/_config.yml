@@ -1,6 +1,1 @@
 theme: jekyll-theme-leap-day
-
-plugins:
-  - jekyll-redirect-from
-  - jekyll-sitemap
-  - jekyll-toc
