@@ -40,16 +40,13 @@
 
     <div class="wrapper">
       <nav>
-        {% assign mydocs = site | group_by: 'Category' %}
-        {% for cat in mydocs %}
-        <h2>{{ cat.name | capitalize }}</h2>
-            <ul>
-            {% assign items = cat.items | sort: 'order' %}
-            {% for item in items %}
-                <li><a href="{{ item.url }}">{{ item.title }}</a></li>
-            {% endfor %}
-            </ul>
+        <ul>
+        {% for item in site.docs %}
+            <li><a href="{{ item.url }}">{{ item.url }}</a></li>
         {% endfor %}
+        </ul>
+
+
       </nav>
       <section>
         {{ content }}
