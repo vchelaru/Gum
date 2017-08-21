@@ -40,7 +40,7 @@
 
     <div class="wrapper">
       <nav>
-        {% assign mydocs = site | group_by: 'category' %}
+        {% assign mydocs = site | group_by: 'Category' %}
         {% for cat in mydocs %}
         <h2>{{ cat.name | capitalize }}</h2>
             <ul>
