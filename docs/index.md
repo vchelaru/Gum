@@ -1,3 +1,9 @@
+---
+Title: About Gum
+category: Home
+order: 1
+---
+
 
 # Important: Binaries have moved
 

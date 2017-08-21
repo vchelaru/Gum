@@ -40,18 +40,16 @@
 
     <div class="wrapper">
       <nav>
-        <div>
-            This is some stuff on the nav bar....does it work...
-
-        </div>
-        <ul>
-        </ul>
-        <ul>
-            {% for item in site.data.samplelist.docs %}
-                <li><a href="{{ item.url }}" alt="{{ item.title }}">{{ item.title }}</a></li>
+        {% assign mydocs = site.docs | group_by: 'category' %}
+        {% for cat in mydocs %}
+        <h2>{{ cat.name | capitalize }}</h2>
+            <ul>
+            {% assign items = cat.items | sort: 'order' %}
+            {% for item in items %}
+                <li><a href="{{ item.url }}">{{ item.title }}</a></li>
             {% endfor %}
-
-        </ul>
+            </ul>
+        {% endfor %}
       </nav>
       <section>
         {{ content }}
