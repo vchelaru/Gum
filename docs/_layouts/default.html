@@ -42,7 +42,12 @@
             This is some stuff on the nav bar....does it work...
 
         </div>
-        <ul></ul>
+        <ul>
+            {% for item in site.data.samplelist.docs %}
+                <li><a href="{{ item.url }}" alt="{{ item.title }}">{{ item.title }}</a></li>
+            {% endfor %}
+
+        </ul>
       </nav>
       <section>
         {{ content }}
