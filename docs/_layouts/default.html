@@ -42,7 +42,7 @@
       <nav>
         <ul>
         {% for item in site.pages %}
-            <li><a href="{{ item.url }}">{{ item.url }}</a></li>
+            <li><a href="{{ item.title }}">{{ item.url }}</a></li>
         {% endfor %}
         </ul>
 
@@ -54,7 +54,7 @@
       </section>
       <footer>
         {% if site.github.is_project_page %}
-          <p>Project maintained by jomama <a href="{{ site.github.owner_url }}">{{ site.github.owner_name }}</a></p>
+          <p>Project maintained by jomam<a href="{{ site.github.owner_url }}">{{ site.github.owner_name }}</a></p>
         {% endif %}
         <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://twitter.com/michigangraham">mattgraham</a></small></p>
       </footer>

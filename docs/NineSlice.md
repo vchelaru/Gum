@@ -1,5 +1,5 @@
 ---
-type: pages
+title: NineSlice
 layout: page
 ---
 
