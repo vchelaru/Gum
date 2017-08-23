@@ -1,3 +1,8 @@
+---
+type: pages
+layout: page
+---
+
 # Introduction
 
 NineSlice is a standard component which can be used to create visual objects which can stretch to any size without creating distortion on the source image. For example, consider the following image:
