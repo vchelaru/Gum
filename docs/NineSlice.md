@@ -1,6 +1,5 @@
 ---
 title: NineSlice
-layout: page
 ---
 
 # Introduction

@@ -1,3 +1,7 @@
+---
+title: Children Layout
+---
+
 # Introduction 
 
 The **Children Layout** property determines how a container positions its children. The default value is "Regular" which means that children are positioned according to their [X Units](X-Units) and [Y Units](Y-Units).

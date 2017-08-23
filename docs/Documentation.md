@@ -1,3 +1,7 @@
+---
+title: Documentation
+---
+
 # Introduction
 
 Gum is an open-source, general purpose UI tool.  While it has been developed primarily for creating video game UI, it can be used in any context given its open XML file format and plugin system.

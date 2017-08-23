@@ -1,3 +1,7 @@
+---
+title: Class Overview
+---
+
 # Introduction
 
 This page discusses all of the classes in Gum at a high level to give you an understanding of how they relate to each other.
