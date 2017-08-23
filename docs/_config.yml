@@ -1,9 +1,2 @@
 theme: jekyll-theme-leap-day
 
-defaults:
-  -
-    scope:
-      path: "pages"
-      type: "pages"
-    values:
-      layout: "page"
