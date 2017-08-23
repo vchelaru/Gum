@@ -1,3 +1,7 @@
+---
+title: Texture Address
+---
+
 ## Introduction
 
 The **Texture Address** variable can be used to define the area that the NineSlice displays. By default the **Texture Address** is set to **Entire Texture** which means the NineSlice will display the entire source file (split up among the nine pieces.

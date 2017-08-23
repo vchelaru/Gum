@@ -1,3 +1,7 @@
+---
+title: Parent
+---
+
 # Introduction
 
 Parenting allows UI elements to be positioned and sized according to other UI elements. Parenting hierarchies can go many levels deep and the parent/child relationship can be visualized by the white line connecting the parent to the child when the child is selected.

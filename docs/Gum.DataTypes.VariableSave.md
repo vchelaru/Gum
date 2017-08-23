@@ -1,3 +1,6 @@
+---
+title: VariableSave
+---
 # Introduction
 
 A VariableSave represents a single variable on an object, such as its X or Y value.

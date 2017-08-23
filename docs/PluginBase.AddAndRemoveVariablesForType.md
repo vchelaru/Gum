@@ -1,3 +1,7 @@
+---
+title: AddAndRemoveVariablesForType
+---
+
 # Introduction
 
 The AddAndRemoveVariablesForType event allows plugins to add and remove variables from standard elements. Since Gum is designed to work with external engines the properties presented by standard types (such as Sprite) may not align with the feature set of the external engine. Variables can be added and removed to create a more natural development experience for users of Gum.
