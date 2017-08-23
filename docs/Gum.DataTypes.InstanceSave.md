@@ -1,3 +1,7 @@
+---
+title: InstanceSave
+---
+
 # Introduction
 
 An InstanceSave represents an instance in Gum.  InstanceSave only stores two pieces of information:
