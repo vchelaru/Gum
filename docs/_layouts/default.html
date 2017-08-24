@@ -21,7 +21,7 @@
       <header>
         <h1>{{ site.title | default: site.github.repository_name }}</h1>
         <p>{{ site.description | default: site.github.project_tagline }}</p>
-        <h3>Test 2</h3>
+        <h3>Test 3</h3>
         
       </header>
 
@@ -44,15 +44,11 @@
       <nav>
         <ul>
         {% assign pages = site.pages | sort:"order" %}
-        {% assign categories = site.categories %}
+        {% assign tutorials = site.tutorials %}
 
-        {% for category in categories %}
-          <h3>Some CAtegory</h3>
-          {% for page in pages %}
-            {% if page.category == category %}
-              <li><a href="/Gum">{{ category }}</a></li>
-            {% endif %}}
-          {% endfor %}          
+        {% for tutorial in tutorials %}
+          <h3>Tutorial!</h3>
+          <li><a href="/Gum">{{ tutorial.title }}</a></li>
         {% endfor %}
         </ul>
       </nav>
