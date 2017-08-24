@@ -41,8 +41,12 @@
     <div class="wrapper">
       <nav>
         <ul>
-        {% for item in site.pages %}
-            <li><a href="/Gum{{ item.url }}">{{ item.title }}</a></li>
+
+        {% assign pages = site.pages | sort:"order"}
+        {% assign categories = site.pages.category }
+
+        {% for category in categories %}
+            <li><a href="/Gum">{{ category }}</a></li>
         {% endfor %}
         </ul>
       </nav>
@@ -52,7 +56,7 @@
       </section>
       <footer>
         {% if site.github.is_project_page %}
-          <p>Project maintained by jo<a href="{{ site.github.owner_url }}">{{ site.github.owner_name }}</a></p>
+          <p>Project maintained by j<a href="{{ site.github.owner_url }}">{{ site.github.owner_name }}</a></p>
         {% endif %}
         <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://twitter.com/michigangraham">mattgraham</a></small></p>
       </footer>
