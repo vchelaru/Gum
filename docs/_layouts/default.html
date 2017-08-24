@@ -21,6 +21,8 @@
       <header>
         <h1>{{ site.title | default: site.github.repository_name }}</h1>
         <p>{{ site.description | default: site.github.project_tagline }}</p>
+          <h3>Test 1</h3>
+        
       </header>
 
       <div id="banner">
@@ -41,12 +43,11 @@
     <div class="wrapper">
       <nav>
         <ul>
-
         {% assign pages = site.pages | sort:"order" %}
         {% assign categories = site.pages.category %}
 
         {% for category in categories %}
-        
+          <h3>Some CAtegory</h3>
           {% for page in pages %}
             {% if page.category == category %}
               <li><a href="/Gum">{{ category }}</a></li>
