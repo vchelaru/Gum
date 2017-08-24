@@ -20,10 +20,10 @@ By default each instance of our Button cannot access values that are contained i
 
 To do this:
 
-# Select TextInstance under Button
-# Find the "Text" variable in the Variables tab (Second column, under the "States" panel)
-# Right-click on the text box and select "Expose Variable"
-# Enter the name "Text" for the variable name
+1. Select TextInstance under Button
+1. Find the "Text" variable in the Variables tab (Second column, under the "States" panel)
+1. Right-click on the text box and select "Expose Variable"
+1. Enter the name "Text" for the variable name
 
 You can verify that the Text value is exposed by clicking the "Button" component and seeing the "Text" variable under the "Exposed" category:
 
@@ -33,8 +33,8 @@ You can verify that the Text value is exposed by clicking the "Button" component
 
 Now that the Text variable is an exposed variable, it can be set per-instance.  To do this:
 
-# Select one of the Buttons in MainMenu
-# Change its Text to "Button 1"
+1. Select one of the Buttons in MainMenu
+1. Change its Text to "Button 1"
 
 Feel free to set different Text values on all of the buttons.  Notice that the Text may word-wrap.
 
