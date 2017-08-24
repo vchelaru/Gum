@@ -21,7 +21,7 @@
       <header>
         <h1>{{ site.title | default: site.github.repository_name }}</h1>
         <p>{{ site.description | default: site.github.project_tagline }}</p>
-        <h3>Test 5</h3>
+        <h3>Test 6</h3>
         
       </header>
 
@@ -44,7 +44,7 @@
       <nav>
         <ul>
         {% assign pages = site.pages | sort:"order" %}
-        {% assign tutorials = site.tutorials % | sort:"order"}
+        {% assign tutorials = site.tutorials % | sort:"order" %}
 
         <h3>Tutorials</h3>
         {% for tutorial in tutorials %}
