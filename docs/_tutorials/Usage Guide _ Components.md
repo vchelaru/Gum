@@ -1,3 +1,8 @@
+---
+title: Components
+order: 2
+---
+
 # Introduction 
 Components are objects which are created in Gum which can contain instances of other components and of standard objects.  Examples of components include:
 

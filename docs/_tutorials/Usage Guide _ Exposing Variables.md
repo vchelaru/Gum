@@ -1,3 +1,7 @@
+---
+title: Exposing Variables
+---
+
 # Introduction
 
 The ability to expose variables in Gum makes components very powerful and flexible.  For this example we will continue the Button example from the last tutorial.  
