@@ -1,3 +1,10 @@
+---
+title: Usage Guide
+category: Tutorials
+order: 1
+---
+
+
 # Introduction
 
 This page walks you through the basics of using the Gum UI tool (which we'll refer to simply as Gum for this and all other documentation).  
