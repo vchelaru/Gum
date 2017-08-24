@@ -1,3 +1,7 @@
+---
+title: X Origin
+---
+
 # Introduction
 
 The **X Origin** variable controls the point which an object is positioned by. By default the **X Origin** is **Left**. The **X Origin** is shown visually as a white "X" in the editor.

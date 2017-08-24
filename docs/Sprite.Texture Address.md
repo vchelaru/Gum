@@ -1,3 +1,7 @@
+---
+title: Texture Address
+---
+
 # Introduction
 
 The texture address property controls how sprites are drawn when their texture coordinates extend beyond the size of the image.  The setting on texture address impacts which other properties are available.  

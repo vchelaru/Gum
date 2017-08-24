@@ -1,3 +1,7 @@
+---
+title: Custom NineSlice
+---
+
 # Introduction
 
 Although Gum naturally provides a NineSlice object, the Gum layout system can be used to create a custom NineSlice component. Such a component could be used if additional flexibility beyond what is provided by the standard NineSlice is needed.
@@ -6,11 +10,11 @@ Although Gum naturally provides a NineSlice object, the Gum layout system can be
 
 As implied by the name, the NineSlice object is composed of nine Sprites. First we'll create the component:
 
-# Open Gum
-# Open or create a new Gum project
-# Right-click on the **Components** folder
-# Select **Add Component**
-# Name the Component **CustomNineSlice**
+1. Open Gum
+1. Open or create a new Gum project
+1. Right-click on the **Components** folder
+1. Select **Add Component**
+1. Name the Component **CustomNineSlice**
 
 ![](Usage Guide : Custom NineSlice_CustomNineSlice1.png)
 
@@ -25,10 +29,10 @@ Next, we'll add corner Sprite instances to our CustomNineSlice. We'll be using t
 * [Y Origin](Y-Origin)
 * [Y Units](Y-Units)
 
-# Drag+drop a Sprite element onto the CustomNineSlice component ![](Usage Guide : Custom NineSlice_DragDropSprite.png)
-# Click the Alignment tab
-# Anchor the newly-created Sprite to the top-left of its container ![](Usage Guide : Custom NineSlice_AnchorTopLeft.png)
-# Repeat the steps above three more times, creating one Sprite for each of the four corners ![](Usage Guide : Custom NineSlice_FourCornerSprites.png)
+1. Drag+drop a Sprite element onto the CustomNineSlice component ![](Usage Guide : Custom NineSlice_DragDropSprite.png)
+1. Click the Alignment tab
+1. Anchor the newly-created Sprite to the top-left of its container ![](Usage Guide : Custom NineSlice_AnchorTopLeft.png)
+1. Repeat the steps above three more times, creating one Sprite for each of the four corners ![](Usage Guide : Custom NineSlice_FourCornerSprites.png)
 
 Notice that if we resize our CustomNineSlice component, each of the four sprites remains in the corner.
 
@@ -38,20 +42,20 @@ Notice that if we resize our CustomNineSlice component, each of the four sprites
 
 Next we'll add the four sprites which will sit on the edge of our component:
 
-# Drag+drop a Sprite element onto the CustomNineSlice component
-# Click on the alignment tab
-# Dock the newly-created Sprite to the top of its container. Docking sets the width of the sprite to match the width of the component. We'll address this in the next step. ![](Usage Guide : Custom NineSlice_DockTop.png)
-# To accommodate for the corner Sprites, we need to adjust the width of the top Sprite. Set the newly-created Sprite's Width to -128. Since the Sprite uses a **Width Units** of **RelativeToContainer**, Setting the value to -128 will make the sprite be 128 units smaller than the container. We picked 128 because each of the corner sprites is 64. ![](Usage Guide : Custom NineSlice_TopStretched.PNG)
-# Repeat the above steps, but instead setting the dock to create sprites on the left, right, and bottom. adjust width and height values as necessary.
+1. Drag+drop a Sprite element onto the CustomNineSlice component
+1. Click on the alignment tab
+1. Dock the newly-created Sprite to the top of its container. Docking sets the width of the sprite to match the width of the component. We'll address this in the next step. ![](Usage Guide : Custom NineSlice_DockTop.png)
+1. To accommodate for the corner Sprites, we need to adjust the width of the top Sprite. Set the newly-created Sprite's Width to -128. Since the Sprite uses a **Width Units** of **RelativeToContainer**, Setting the value to -128 will make the sprite be 128 units smaller than the container. We picked 128 because each of the corner sprites is 64. ![](Usage Guide : Custom NineSlice_TopStretched.PNG)
+1. Repeat the above steps, but instead setting the dock to create sprites on the left, right, and bottom. adjust width and height values as necessary.
 
 # Adding the Center Sprite
 
 The last Sprite we'll add is the center Sprite:
 
-# Drag+drop a Sprite element onto the CustomNineSlice component
-# Click on the alignment tab
-# Dock the newly-created Sprite to the center of its container. 
-# Set both the newly created Sprite's Width and Height to -128
+1. Drag+drop a Sprite element onto the CustomNineSlice component
+1. Click on the alignment tab
+1. Dock the newly-created Sprite to the center of its container. 
+1. Set both the newly created Sprite's Width and Height to -128
 
 Now the Sprites will stretch and adjust whenever the CustomNineSlice is resized.
 ![](Usage Guide : Custom NineSlice_CustomNineSliceResize.gif)

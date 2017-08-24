@@ -1,3 +1,8 @@
+---
+title: Rotation
+---
+
+
 # Introduction
 
 The Rotation property can be used to rotate Gum components. It is measured in degrees, where positive values rotate an object counterclockwise about its origin ([X Origin](X-Origin) and [Y Origin](Y-Origin)).

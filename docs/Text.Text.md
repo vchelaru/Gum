@@ -1,3 +1,8 @@
+---
+title: Text
+---
+
+
 # Introduction
 Text objects have a Text property which controls the displayed text. By default this value is set to "Hello".
 

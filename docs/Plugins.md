@@ -1,3 +1,7 @@
+---
+title: AddMenuItem
+---
+
 # Introduction
 
 This page discusses how to write plugins for Gum.  Plugins are a useful way to modify Gum because they allow you to customize Gum without making project-specific, technology-specific, or organization-specific modifications to the core source code.  This means that you can customize the Gum experience while still maintaining ties to the core source code.  
@@ -34,23 +38,23 @@ Next you'll need to reference the Gum libraries.  To do this:
 
 Since Gum references XNA, and XNA doesn't have 64 bit libraries, you will need to modify your project's build configuration.  To do this:
 
-# Select the "Build"->"Configuration Manager" menu item
-# Change the Active solution platform" from "Mixed Platforms" to "x86" if it isn't already set to x86.  If your Active solution is set to "Any CPU", change that to "x86"
-# If your plugin project's Platform is set to "Any CPU", use the drop down to pick "x86" if it exists.  If not, select "<New...>"
-## Change the New platform to "x86"
-## Click "OK"
-# Make sure your plugin project is set to build
-# Click Close to close the Configuration Manager
-# Adding a Plugin class
+1. Select the "Build"->"Configuration Manager" menu item
+1. Change the Active solution platform" from "Mixed Platforms" to "x86" if it isn't already set to x86.  If your Active solution is set to "Any CPU", change that to "x86"
+1. If your plugin project's Platform is set to "Any CPU", use the drop down to pick "x86" if it exists.  If not, select "<New...>"
+	1. Change the New platform to "x86"
+	1. Click "OK"
+1. Make sure your plugin project is set to build
+1. Click Close to close the Configuration Manager
+1. Adding a Plugin class
 
 Next you'll want to add a Plugin class.  This is a class that inherits from PluginBase.  To do this:
 
-# Right-click on your project
-# Select "Add->Class..."
-# Name your class "MyPlugin" or whatever you want your plugin to be called
-# Add the following using:  {{ using Gum.Plugins.BaseClasses; }}
-# Modify your plugin so it's public and inherits from PluginBase: {{ public class MyPlugin : PluginBase }}
-# Add the following implementation into your plugin class:
+1. Right-click on your project
+1. Select "Add->Class..."
+1. Name your class "MyPlugin" or whatever you want your plugin to be called
+1. Add the following using:  {{ using Gum.Plugins.BaseClasses; }}
+1. Modify your plugin so it's public and inherits from PluginBase: {{ public class MyPlugin : PluginBase }}
+1. Add the following implementation into your plugin class:
 ```
         public override string FriendlyName
         {
@@ -78,24 +82,24 @@ Next you'll want to add a Plugin class.  This is a class that inherits from Plug
 
 Now that you have a simple plugin, you need to do two things to test this plugin out.  The first is to mark the plugin as a class that is exported using Microsoft Extension Framework.  To do this:
 
-# Right-click on your project's References item in the Solution Explorer
-# Select "Add Reference..."
-# Click the "Assemblies->Framework" tab
-# Check "System.ComponentModel.Composition"
-# Click OK
-# Add the following using statement to your plugin class:  {{ using System.ComponentModel.Composition; }}
-# Modify your class definition so it looks like this (we're making it public and also adding the Export attribute:
-{{
+1. Right-click on your project's References item in the Solution Explorer
+1. Select "Add Reference..."
+1. Click the "Assemblies->Framework" tab
+1. Check "System.ComponentModel.Composition"
+1. Click OK
+1. Add the following using statement to your plugin class:  ` using System.ComponentModel.Composition; `
+1. Modify your class definition so it looks like this (we're making it public and also adding the Export attribute:
+```
   [Export(typeof(PluginBase))](Export(typeof(PluginBase)))
   public class MyPlugin : PluginBase
-}}
+```
 
 Now you can right-click on your project and select Build and it will generate a .dll for your project.  This .dll file needs to be in the Plugins folder under the Gum binary.  That is, from the location of your .sln file, you can go to {{\Gum\bin\Debug\Plugins}}.  Once there, you will need to create a folder for your plugin (like MyPlugin) and place your .dll there.
 
 To verify that your plugin is working correctly:
 
-# Run Gum
-# Click Plugins->"Manage Plugins"
+1. Run Gum
+1. Click Plugins->"Manage Plugins"
 
 ![](Plugins_MyPluginName.png)
 
@@ -105,10 +109,10 @@ To verify that your plugin is working correctly:
 
 This may happen if you are targeting different versions of the .NET framework.  At the time of this writing Gum targets .NET 4.5.  Therefore, you'll want to make sure that your Plugin project also targets .NET 4.5.  To do this:
 
-# Right-click on your project
-# Select "Properties"
-# Select the "Application" tab
-# Verify that the "Target Framework:" is set to .NET Framework 4.5 (or whatever version Gum is currently on)
+1. Right-click on your project
+1. Select "Properties"
+1. Select the "Application" tab
+1. Verify that the "Target Framework:" is set to .NET Framework 4.5 (or whatever version Gum is currently on)
 
 # Subsections
 

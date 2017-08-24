@@ -1,3 +1,7 @@
+---
+title: Setting Up Post Build Events
+---
+
 # Introduction
 
 dll files created for plugins are files which are not required for Gum to function.  In other words, if the file is there Gum will use it.  If not, Gum can operate normally.  This means that in your Visual Studio solution the project that you have created to hold your plugin will not automatically be copied to the build output folder.  Fortunately Visual Studio supports post-build events which allow you to copy the built .dll to the plugins folder.  

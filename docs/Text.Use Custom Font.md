@@ -1,3 +1,7 @@
+---
+title: Use Custom Font
+---
+
 ## Introduction
 The **Use Custom Font** variable controls whether a Text object uses a premade .fnt file (if true) or if it Gum automatically creates font files according to the Text's **Font**, **Font Size**, and **Outline Thickness** variables.
 

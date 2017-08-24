@@ -1,3 +1,7 @@
+---
+title: Introduction to Animation
+---
+
 # Introduction 
 
 Gum supports creating and previewing animations in the editor through the use of states.  The general workflow for creating an animation is as follows:

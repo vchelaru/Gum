@@ -1,3 +1,8 @@
+---
+title: Font Size
+---
+
+
 # Introduction
 
 Font Size controls how large a font appears on screen. Each font size and Font combination creates its own rasterized font, so using a lot of different font sizes will increase the amount of texture memory your game needs.

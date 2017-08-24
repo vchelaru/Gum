@@ -1,3 +1,8 @@
+---
+title: Outline Thickness
+---
+
+
 ## Introduction
 OutlineThickness can be used to create an outline around a font. The outline is saved in the .png of the font itself, so each value for OutlineThickness results in a new .fnt file and associated .png files created in the FontCache folder.
 

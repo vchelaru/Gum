@@ -1,3 +1,7 @@
+---
+title: Visible
+---
+
 # Introduction
 
 The Visible property controls whether an object and its children appear. 

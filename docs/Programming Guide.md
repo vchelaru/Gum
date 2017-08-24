@@ -1,3 +1,7 @@
+---
+title: Programming Guide
+---
+
 ## Introduction 
 
 Gum is an open-source tool which enables you to pull code for any other project, or to make modifications so that the tool fits your needs.

@@ -1,3 +1,8 @@
+---
+title: Font Scale
+---
+
+
 # Introduction
 
 The font scale property allows you to zoom a font in or out, effectively making the text larger or smaller.  Unlike using the font size property, font scale will not re-create the font (when using standard fonts).  Font scale is also necessary for resizing custom fonts.

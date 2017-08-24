@@ -1,3 +1,7 @@
+---
+title: Categories
+---
+
 # Introduction
 
 The Categories member provides more detailed control over a DataUiGrid. The easiest way to work with a DataUiGrid is to assign its Instance and let it automatically create UI for all public members. Working with Categories requires more code but gives the most flexibility in setting up a grid.

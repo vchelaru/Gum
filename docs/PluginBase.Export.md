@@ -1,3 +1,7 @@
+---
+title: Export
+---
+
 # Introduction
 
 The Export delegate allows you to create a custom export for Gum elements.  This delegate will automatically be called by Gum whenever an element is saved.  By default this occurs whenever the user makes any modification to the element.  If your export is especially processor intensive you may consider not adding your export logic here and rather requiring an explicit export by the user.

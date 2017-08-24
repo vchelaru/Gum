@@ -1,3 +1,7 @@
+---
+title: Width Units
+---
+
 # Introduction
 
 The **Width Units** variable controls how a unit is horizontally sized, which may be relative to its parent. By default an object uses **Absolute** width, where each unit represents 1 pixel of width in absolute terms. When using **Absolute**, an object ignores its parents' With.

@@ -1,3 +1,7 @@
+---
+title: AddMenuItem
+---
+
 # Introduction 
 The AddMenuItem function allows adding menu items to Gum.  The AddMenuItem accepts an enumerable of strings which allow you to embed menu items under a root menu item. 
 
