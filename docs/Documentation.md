@@ -14,5 +14,5 @@ Gum is written using C#, Windows Forms (aka winforms), and XNA.  It uses Managed
 
 # Subsections
 
-* [Usage Guide](Usage-Guide)
-* [Programming Guide](Programming-Guide)
+* [Usage Guide](Usage Guide)
+* [Programming Guide](Programming Guide)
