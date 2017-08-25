@@ -3,4 +3,4 @@ theme: jekyll-theme-leap-day
 collections:
   tutorials:
     output: true
-    theme: jekyll-theme-leap-day
+    order: 10000
