@@ -1,4 +1,5 @@
 theme: jekyll-theme-leap-day
+layout: default
 
 collections:
   tutorials:
