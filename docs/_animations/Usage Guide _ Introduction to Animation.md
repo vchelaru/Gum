@@ -1,15 +1,16 @@
 ---
-title: Introduction to Animation
+title: 1 - Introduction to Animation
+order: 1
 ---
 
 # Introduction 
 
 Gum supports creating and previewing animations in the editor through the use of states.  The general workflow for creating an animation is as follows:
 
-# Create states representing the keyframes in the animation (usually one category per animation)
-# Add an animation to the component or screen
-# Add states to the animation and adjust their time
-# Set interpolation values for each keyframe to control "easing"
+1. Create states representing the keyframes in the animation (usually one category per animation)
+2. Add an animation to the component or screen
+3. Add states to the animation and adjust their time
+4. Set interpolation values for each keyframe to control "easing"
 
 # Examples of animations
 

@@ -1,5 +1,6 @@
 ---
-title: Creating an Animation
+title: 2 - Creating an Animation
+order: 2
 ---
 
 # Introduction

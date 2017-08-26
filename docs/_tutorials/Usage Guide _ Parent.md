@@ -1,6 +1,5 @@
 ---
 title: 6 - Parent
-category: Tutorials
 order: 6
 ---
 

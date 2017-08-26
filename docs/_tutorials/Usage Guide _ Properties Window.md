@@ -1,6 +1,5 @@
 ---
 title: 2 - Properties Window
-category: Tutorials
 order: 2
 ---
 

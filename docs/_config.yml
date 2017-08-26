@@ -12,3 +12,8 @@ collections:
   tutorials:
     output: true
     order: 10000
+
+collections:
+  animations:
+    output: true
+    order: 10000
