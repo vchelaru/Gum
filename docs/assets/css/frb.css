@@ -34,6 +34,10 @@ li.top_nav ul {
             inset 0 0 5px 5px rgba(255,255,255,0.4);
     }
 
+    nav ul {
+        padding: 0px;
+    }
+
     li.top_nav p.list_title {
         background: #DDD;
     }
