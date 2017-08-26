@@ -1,3 +1,16 @@
+li.top_nav {
+    cursor: pointer;
+}
+
+li.top_nav span.list_title {
+    font-weight:bold;
+    font-size: 16px;
+}
+
+li.top_nav ul {
+    padding-left: 0;
+}
+
 @media print, screen and (max-width: 1060px) {
     nav {
         display: block;
