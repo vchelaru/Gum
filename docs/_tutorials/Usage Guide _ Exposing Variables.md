@@ -1,6 +1,5 @@
 ---
 title: 5 - Exposing Variables
-category: Tutorials
 order: 5
 ---
 

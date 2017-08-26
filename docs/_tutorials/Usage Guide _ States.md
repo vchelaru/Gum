@@ -1,6 +1,5 @@
 ---
 title: 7 - States
-category: Tutorials
 order: 7
 ---
 

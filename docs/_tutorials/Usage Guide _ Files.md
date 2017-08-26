@@ -1,6 +1,5 @@
 ---
 title: 3 - Files
-category: Tutorials
 order: 3
 ---
 

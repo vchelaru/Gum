@@ -1,5 +1,6 @@
 ---
-title: Playing Animations Inside Other Animations
+title: 3 - Playing Animations Inside Other Animations
+order: 3
 ---
 
 

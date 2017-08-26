@@ -43,13 +43,21 @@
     <div class="wrapper">
       <nav>
         <ul>
-        {% assign pages = site.pages | sort:"order" %}
-        {% assign tutorials = site.tutorials % | sort:"order" %}
 
-        <h3>Tutorials</h3>
+        {% assign tutorials = site.tutorials % | sort: "order" %}
+        <h3>Intro Tutorials</h3>
         {% for tutorial in tutorials %}
           <li><a href="/Gum{{ tutorial.url }}">{{ tutorial.title }}</a></li>
         {% endfor %}
+
+        {% assign animations = site.animations % | sort: "order" %}
+        <h3>Animation Tutorials</h3>
+        {% for animation in animations %}
+          <li><a href="/Gum{{ animation.url }}">{{ animation.title }}</a></li>
+        {% endfor %}
+
+
+
         </ul>
       </nav>
       <section>
