@@ -3,6 +3,9 @@
         display: block;
         float: none;
         position: relative;
+        top: inherit;
+        left: inherit;
+        text-align: left;
         margin:200px 0 0 0;
         width: 590px;
         max-width: 600px;
