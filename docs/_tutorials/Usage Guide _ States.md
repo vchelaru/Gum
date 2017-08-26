@@ -17,9 +17,9 @@ This tutorial builds upon the previous tutorial where a Button component was cre
 # Defining states
 First we'll define two new states.  All components and screens have a "Default" state automatically.  To add a new state:
 
-# Select Edit->Add State ![](Usage Guide : States_GumEditAddState.png)
-# Enter the name "Highlighted"
-# Click OK ![](Usage Guide : States_GumEnterStateName.PNG)
+1. Select Edit->Add State ![](Usage Guide : States_GumEditAddState.png)
+1. Enter the name "Highlighted"
+1. Click OK ![](Usage Guide : States_GumEnterStateName.PNG)
 
 The Button component will now have a new state called Highlighted:
 ![](Usage Guide : States_GumState.png)
@@ -29,9 +29,9 @@ Once a state is defined and selected, setting a variable will associate that var
 
 For this example, we will make the button become a lighter blue when highlighted.  To do this:
 
-# Verify the Highlighted state is selected
-# Select the ColoredRectangleInstance
-# Set the Green and Red values to 100
+1. Verify the Highlighted state is selected
+1. Select the ColoredRectangleInstance
+1. Set the Green and Red values to 100
 
 Notice that the Green and Red values are rendered in black rather than green - indicating that they are values that are explicitly set in the Highlight state.  
 
