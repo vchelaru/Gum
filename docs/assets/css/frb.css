@@ -2,9 +2,10 @@ li.top_nav {
     cursor: pointer;
 }
 
-li.top_nav span.list_title {
+li.top_nav p.list_title {
     font-weight:bold;
     font-size: 16px;
+    background: #DDD;
 }
 
 li.top_nav ul {
