@@ -18,3 +18,6 @@ collections:
   examples:
     output: true
     order: 10000
+  generalproperties:
+    output: true
+    order: 10000
