@@ -3,7 +3,9 @@ var frb = (function(jQuery) {
     var a = {};
 
     a.init = function () {
-        console.log("Loading frb js app...");
+        $("li.top_nav").click(function () {
+            $(this).children("ul").toggle("slow");
+        });
     }
 
     return a;
