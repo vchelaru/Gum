@@ -7,7 +7,9 @@
 {% seo %}
     <link rel="stylesheet" href="{{ '/assets/css/style.css?v=' | append: site.github.build_revision | relative_url }}">
     <link rel="stylesheet" href="{{ '/assets/css/frb.css?v=' | append: site.github.build_revision | relative_url }}">
+    
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="{{ '/assets/js/frb.js?v=' | append: site.github.build_revision | relative_url }}"></script>
     
     <!-- This adds the sidebar local navigation which I don't want, because I want site-wide navigation intead -->
     <!--<script src="{{ '/assets/js/main.js' | relative_url }}"></script> -->
@@ -41,34 +43,48 @@
       </div><!-- end banner -->
 
     <div class="wrapper">
+
+        <!-- declare all loop vars here -->
+        {% assign tutorials = site.tutorials % | sort: "order" %}
+        {% assign animations = site.animations % | sort: "order" %}
+        {% assign examples = site.examples % | sort: "order" %}
+        {% assign generalproperties = site.generalproperties % | sort: "order" %}
+
       <nav>
         <ul>
+          
+          <!-- Intro tutorial collapsable list -->
+          <li class="top_nav">Intro Tutorials</li>
+            <ul>
+                {% for tutorial in tutorials %}
+                  <li><a href="/Gum{{ tutorial.url }}">{{ tutorial.title }}</a></li>
+                {% endfor %}
+            </ul>
+          </li>
 
-        {% assign tutorials = site.tutorials % | sort: "order" %}
-        <h3>Intro Tutorials</h3>
-        {% for tutorial in tutorials %}
-          <li><a href="/Gum{{ tutorial.url }}">{{ tutorial.title }}</a></li>
-        {% endfor %}
+          <li class="top_nav">Animation Tutorials</li>
+            <ul>
+                {% for animation in animations %}
+                  <li><a href="/Gum{{ animation.url }}">{{ animation.title }}</a></li>
+                {% endfor %}
+            </ul>
+          </li>
 
-        {% assign animations = site.animations % | sort: "order" %}
-        <h3>Animation Tutorials</h3>
-        {% for animation in animations %}
-          <li><a href="/Gum{{ animation.url }}">{{ animation.title }}</a></li>
-        {% endfor %}
+          <li class="top_nav">Examples</li>
+            <ul>
+                {% for example in examples %}
+                  <li><a href="/Gum{{ example.url }}">{{ example.title }}</a></li>
+                {% endfor %}
+            </ul>
+          </li>
 
-        {% assign examples = site.examples % | sort: "order" %}
-        <h3>Examples</h3>
-        {% for example in examples %}
-          <li><a href="/Gum{{ example.url }}">{{ example.title }}</a></li>
-        {% endfor %}
-
-        {% assign generalproperties = site.generalproperties % | sort: "order" %}
-        <h3>Examples</h3>
-        {% for generalproperty in generalproperties %}
-          <li><a href="/Gum{{ generalproperty.url }}">{{ generalproperty.title }}</a></li>
-        {% endfor %}
-
-
+          <li class="top_nav">General Properties</li>
+            <ul>
+                {% for generalproperty in generalproperties %}
+                  <li><a href="/Gum{{ generalproperty.url }}">{{ generalproperty.title }}</a></li>
+                {% endfor %}
+            </ul>
+          </li>
         </ul>
       </nav>
       <section>
