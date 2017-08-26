@@ -2,9 +2,11 @@ li.top_nav {
     cursor: pointer;
 }
 
-li.top_nav span.list_title {
+li.top_nav p.list_title {
     font-weight:bold;
     font-size: 16px;
+    margin:0;
+    padding: 3px;
 }
 
 li.top_nav ul {
@@ -30,6 +32,10 @@ li.top_nav ul {
             0px 1px 2px rgba(0,0,0,0.09), 
             inset 0px 0px 2px 2px rgba(255,255,255,0.5), 
             inset 0 0 5px 5px rgba(255,255,255,0.4);
+    }
+
+    li.top_nav p.list_title {
+        background: #DDD;
     }
 
     section {
