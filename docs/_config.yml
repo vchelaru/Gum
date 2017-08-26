@@ -15,3 +15,6 @@ collections:
   animations:
     output: true
     order: 10000
+  examples:
+    output: true
+    order: 10000
