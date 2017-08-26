@@ -17,7 +17,7 @@ First we'll create a Screen called AnimatedScreen.  To do this:
 1. Enter the name "AnimatedScreen" and click the OK button
 1. Drag+drop a few TextComponents into the Screen and spread them out visually
 
-![](Usage Guide: Playing Animations inside other Animations_AddScreenAndText.gif)
+![](AddScreenAndText.gif)
 
 # Defining the initial state
 
@@ -30,7 +30,7 @@ The animation we will be creating in our Screen will start with all TextComponen
 1. Set its State to Hidden
 1. Repeat setting the State to Hidden for the other TextComponents
 
-![](Usage Guide: Playing Animations inside other Animations_MakeAllInvisibleState.gif)
+![](MakeAllInvisibleState.gif)
 
 # Creating the Animation
 

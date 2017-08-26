@@ -18,7 +18,7 @@ First we'll create a component which will be animated.  To do this:
 1. Select the "Alignment" tab and click the middle button to have the TextInstance fill the TextComponent
 1. Select the Variables tab and change the VerticalAlignment and HorizontalAlignment to Center
 
-![](Usage Guide: Creating an Animation_CreatingAnimationCreateComponent.gif)
+![](CreatingAnimationCreateComponent.gif)
 
 # Creating the States
 
@@ -34,7 +34,7 @@ Now that we have a component we'll add the states needed for animation.  We'll a
 1. Select "Add State"
 1. Select "Shown"
 
-![](Usage Guide: Creating an Animation_AddHideShowStates.gif)
+![](AddHideShowStates.gif)
 
 # Setting values in the states
 
@@ -46,7 +46,7 @@ Now that we have the states defined we can set values for the states.  In this c
 1. Select the "Shown" state
 1. Set the Font Scale to 1.  This effectively makes the Text regular size
 
-![](Usage Guide: Creating an Animation_SetFontScale.gif)
+![](SetFontScale.gif)
 
 # Creating the Show animation
 
@@ -61,11 +61,11 @@ The two states we created above will be used as the keyframes for our animation.
 1. Click "Add State" again
 1. Select "Shown" and click OK
 
-![](Usage Guide: Creating an Animation_AddShowAnimation.gif)
+![](AddShowAnimation.gif)
 
 The animation can now be played or previewed:
 
-![](Usage Guide: Creating an Animation_PreviewAnimation1.gif)
+![](PreviewAnimation1.gif)
 
 # Adjusting Interpolation Type
 
@@ -76,4 +76,4 @@ The "Interpolation Type" value sets how one keyframe blends to another. By defau
 
 Playing the animation will reflect these changes.
 
-![](Usage Guide: Creating an Animation_ElasticAnimation.gif)
+![](ElasticAnimation.gif)
