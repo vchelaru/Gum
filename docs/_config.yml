@@ -1,6 +1,13 @@
 theme: jekyll-theme-leap-day
 layout: default
 
+
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: default
+
 collections:
   tutorials:
     output: true
