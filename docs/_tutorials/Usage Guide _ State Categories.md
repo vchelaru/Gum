@@ -24,8 +24,8 @@ For this tutorial we'll create a new component.  This component will have state 
 
 1. Open Gum
 1. Create a new Component called "CategoryDemo"
-1. Right-click anywhere in the State box and select "Add Category" ![](Usage Guide : State Categories_GumAddCategory.png)
-1. Enter the name "Size" for the new category and click OK ![](Usage Guide : State Categories_GumAddCategoryCalledSize.PNG)
+1. Right-click anywhere in the State box and select "Add Category" ![](GumAddCategory.png)
+1. Enter the name "Size" for the new category and click OK ![](GumAddCategoryCalledSize.PNG)
 1. Repeat the above steps to create a "Color" category
 
 Now we can add states to the categories.  To do this:
@@ -39,7 +39,7 @@ Now we can add states to the categories.  To do this:
 1. Right-click on the "Color" category again and select "Add State
 1. Add a state called "Blue"
 
-![](Usage Guide : State Categories_GumStatesInCategories.PNG)
+![](GumStatesInCategories.PNG)
 
 # Adding visuals
 
@@ -47,7 +47,7 @@ Now that we have states set up we need to add a visual element to the component 
 
 To do this, drag+drop a ColoredRectangle into your component 
 
-![](Usage Guide : State Categories_GumColoredRectangleInComponent.PNG)
+![](GumColoredRectangleInComponent.PNG)
 
 # Setting variables in states
 
@@ -56,16 +56,16 @@ Just like with states which do not belong to categories, you can simply select a
 First we'll set the Size states.  To do this:
 
 1. Select the "Big" state
-1. Resize the colored rectangle so it is larger than the default ![](Usage Guide : State Categories_GumBigState.PNG)
+1. Resize the colored rectangle so it is larger than the default ![](GumBigState.PNG)
 1. Select the "Small" state
-1. Resize the colored rectangle so it is smaller than the default ![](Usage Guide : State Categories_GumSmallState.PNG)
+1. Resize the colored rectangle so it is smaller than the default ![](GumSmallState.PNG)
 
 Next we'll set the Color states.  To do this:
 
 1. Select the "Red" state
-1. Set the Red, Green, Blue values to:  255, 0, 0 ![](Usage Guide : State Categories_GumRedState.PNG)
+1. Set the Red, Green, Blue values to:  255, 0, 0 ![](GumRedState.PNG)
 1. Select the "Blue" state
-1. Set the Red, Green, Blue values to:  0, 0, 255 ![](Usage Guide : State Categories_GumBlueState.PNG)
+1. Set the Red, Green, Blue values to:  0, 0, 255 ![](GumBlueState.PNG)
 
 # Viewing multiple states on an instance
 
@@ -74,5 +74,5 @@ Now that we have our CategoryDemo component set up with multiple categories, we 
 1. Create a Screen called CategoryDemoScreen
 1. Drop an instance of the CategoryDemo component into the CategoryDemoScreen
 1. Select the newly-created CategoryDemoInstance
-1. Scroll down in the Variables list and notice that the instance has drop-downs for each category.  ![](Usage Guide : State Categories_GumLookCategoriesOnInstance.PNG)
-1. You can set each state independently and the states will combine ![](Usage Guide : State Categories_GumCombinedStates.PNG)
+1. Scroll down in the Variables list and notice that the instance has drop-downs for each category.  ![](GumLookCategoriesOnInstance.PNG)
+1. You can set each state independently and the states will combine ![](GumCombinedStates.PNG)

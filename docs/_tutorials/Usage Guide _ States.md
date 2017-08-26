@@ -17,12 +17,12 @@ This tutorial builds upon the previous tutorial where a Button component was cre
 # Defining states
 First we'll define two new states.  All components and screens have a "Default" state automatically.  To add a new state:
 
-1. Select Edit->Add State ![](Usage Guide : States_GumEditAddState.png)
+1. Select Edit->Add State ![](GumEditAddState.png)
 1. Enter the name "Highlighted"
-1. Click OK ![](Usage Guide : States_GumEnterStateName.PNG)
+1. Click OK ![](GumEnterStateName.PNG)
 
 The Button component will now have a new state called Highlighted:
-![](Usage Guide : States_GumState.png)
+![](GumState.png)
 
 # Setting variables in states
 Once a state is defined and selected, setting a variable will associate that variable with a given state.  In other words, any variable that is set when the "Highlighted" state is selected will associate the variable with the Highlighted state.
@@ -35,7 +35,7 @@ For this example, we will make the button become a lighter blue when highlighted
 
 Notice that the Green and Red values are rendered in black rather than green - indicating that they are values that are explicitly set in the Highlight state.  
 
-![](Usage Guide : States_GumStateValuesSet.png)
+![](GumStateValuesSet.png)
 
 # Switching between states
 The values that have just been set apply **only** to the state that was selected - the Highlight state.  This means that clicking on the Default state will switch the button back to the default colors.  By clicking on the states in Gum you can preview and edit states easily.
