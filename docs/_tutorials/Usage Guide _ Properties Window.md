@@ -1,3 +1,9 @@
+---
+title: 2 - Properties Window
+category: Tutorials
+order: 2
+---
+
 # Introduction 
 
 The properties window in Gum is used to provide extensive control over instances.  While the visual editor is very handy for quick edits such as positioning and resizing instances, the properties window exposes all properties.  It is also useful for making fine changes to instances, such as by moving an instance by a single pixel.

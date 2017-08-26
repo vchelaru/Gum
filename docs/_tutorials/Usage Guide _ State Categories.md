@@ -1,3 +1,8 @@
+---
+title: 8 - Categories
+order: 8
+---
+
 # Introduction
 States are a powerful way to create expressive groups of variables.  However, some UI elements may require a combination of states to be applied simultaneously.  
 

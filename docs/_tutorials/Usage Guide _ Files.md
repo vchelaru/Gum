@@ -1,5 +1,7 @@
 ---
-title: Files
+title: 3 - Files
+category: Tutorials
+order: 3
 ---
 
 # Introduction

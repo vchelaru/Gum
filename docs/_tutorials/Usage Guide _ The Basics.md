@@ -1,9 +1,8 @@
 ---
-title: Usage Guide
+title: 1 - The Basics
 category: Tutorials
 order: 1
 ---
-
 
 # Introduction
 

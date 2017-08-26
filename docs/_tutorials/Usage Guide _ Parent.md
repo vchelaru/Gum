@@ -1,3 +1,10 @@
+---
+title: 6 - Parent
+category: Tutorials
+order: 6
+---
+
+
 # Introduction
 
 The component tutorial shows how objects can be sized and positioned according to the container that they are a part of.  Although this is the default behavior, the parent of an instance can be explicitly set to another instance.

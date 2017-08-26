@@ -1,6 +1,7 @@
 ---
-title: Components
-order: 2
+title: 4 - Components
+category: Tutorials
+order: 4
 ---
 
 # Introduction 

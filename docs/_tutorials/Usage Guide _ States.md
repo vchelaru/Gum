@@ -1,3 +1,10 @@
+---
+title: 7 - States
+category: Tutorials
+order: 7
+---
+
+
 # Introduction
 States allow you to set multiple variables at one time.  Examples of states might include:
 
