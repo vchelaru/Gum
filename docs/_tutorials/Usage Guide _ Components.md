@@ -19,7 +19,7 @@ To understand how components work, we'll create a simple Button component.  To d
 1. Drag+drop a "ColoredRectangle" standard element into the Button component
 1. Drag+drop a "Text" standard element into the Button component
 
-![](Usage Guide : Components_GumButton1.PNG)
+![](GumButton1.PNG)
 
 Since both the ColoredRectangleInstance and TextInstance are using white text you may not be able to see the Text.  Let's change the ColoredRectangleInstance's color:
 
@@ -30,7 +30,7 @@ Since both the ColoredRectangleInstance and TextInstance are using white text yo
 
 Now you should be able to see the Text on top of the rectangle:
 
-![](Usage Guide : Components_GumWhiteTextBlueRect.PNG)
+![](GumWhiteTextBlueRect.PNG)
 
 # Sizing the colored rectangle
 
@@ -46,7 +46,7 @@ To do this:
 
 Now the ColoredRectangleInstance will automatically match the Button's Width and Height:
 
-![](Usage Guide : Components_GumRelativeToContainerWidthHeight.PNG)
+![](GumRelativeToContainerWidthHeight.PNG)
 
 # Positioning the Text
 
@@ -70,7 +70,7 @@ Now let's make it centered on the Y as well:
 1. Change the Y Origin to "Center"
 1. Change Y to 0
 
-![](Usage Guide : Components_GumCenteredTextInButton.PNG)
+![](GumCenteredTextInButton.PNG)
 
 Finally, let's make the width of the text match the width of the button.  For the Text we'll actually leave a border around the edge so the Text doesn't line wrap right against the edge of the button.  To do this:
 
@@ -78,7 +78,7 @@ Finally, let's make the width of the text match the width of the button.  For th
 1. Change the Width Units to "RelativeToContainer"
 1. Change Width to -40.  This means that the width of the Text will be 40 pixels less than the width of its container.  Since the button is centered this means a 20 pixel border on the left and 20 on the right (20+20=40).
 
-![](Usage Guide : Components_GumBorderedText.PNG)
+![](GumBorderedText.PNG)
 
 # Setting the Button default values
 
@@ -90,7 +90,7 @@ Buttons are typically wider than they are tall.  To match this common layout, le
 
 Notice that whenever you change these values, the contained objects (text and colored rectangle) adjust automatically.
 
-![](Usage Guide : Components_GumButtonResized.PNG)
+![](GumButtonResized.PNG)
 
 # Using components as instances
 
@@ -101,4 +101,4 @@ Now that we have a component created, we can add instances of this component the
 
 You can now resize and position the Button instance.  You can also add multiple buttons and adjust the individually.
 
-![](Usage Guide : Components_GumMultipleButtonInstances.PNG)
+![](GumMultipleButtonInstances.PNG)
