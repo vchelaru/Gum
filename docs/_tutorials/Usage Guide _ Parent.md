@@ -20,20 +20,20 @@ For this example we'll create a Text object which includes a value and a unit of
 
 To do this:
 
-# Create a new component called MeasurementDisplay
-# Drop two Text objects in the newly-created component
-# Name the first "ValueText" 
-# Name the second "UnitsDisplay"
+1. Create a new component called MeasurementDisplay
+1. Drop two Text objects in the newly-created component
+1. Name the first "ValueText" 
+1. Name the second "UnitsDisplay"
 
 # Positioning according to a parent
 
 Next we'll make the UnitsDisplay use the ValueText as its parent:
 
-# Select the UnitsDisplay Text object
-# Change its Parent to ValueText
-# Change its X Units to "PixelsFromRight".  This will make the text object be positioned according to its parent's right edge
-# Change its X to 10 - this means the UnitsDisplay text will be 10 units offset from the right edge of its parent ValueText
-# Change its Y to 0
+1. Select the UnitsDisplay Text object
+1. Change its Parent to ValueText
+1. Change its X Units to "PixelsFromRight".  This will make the text object be positioned according to its parent's right edge
+1. Change its X to 10 - this means the UnitsDisplay text will be 10 units offset from the right edge of its parent ValueText
+1. Change its Y to 0
 
 ![](Usage Guide : Parent_GumParentingToRightSide2.PNG)
 
@@ -45,10 +45,10 @@ Next we'll want the parent text (ValueText) to automatically size according to i
 
 Now that we have the texts set up, let's modify the color of the UnitsDisplay:
 
-# Select the UnitsDisplay
-# Change Red to 200
-# Change Green to 150
-# Change Blue to 0
+1. Select the UnitsDisplay
+1. Change Red to 200
+1. Change Green to 150
+1. Change Blue to 0
 
 # Changing ValueText
 

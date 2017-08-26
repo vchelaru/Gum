@@ -25,17 +25,18 @@ You can think of screens like a screen in a video game.  Examples include a main
 # Creating a Screen
 
 To create a screen:
-# Right-click on the Screens tree item and select "Add Screen" ![](Usage Guide : The Basics_GumAddScreen.png)
-# Enter the name of the new screen - such as "MainMenu"
-# The newly-created screen will be created and selected for you automatically ![](Usage Guide : The Basics_GumNewMainMenu.PNG)
+
+1. Right-click on the Screens tree item and select "Add Screen" ![](Usage Guide : The Basics_GumAddScreen.png)
+1. Enter the name of the new screen - such as "MainMenu"
+1. The newly-created screen will be created and selected for you automatically ![](Usage Guide : The Basics_GumNewMainMenu.PNG)
 
 # Adding instances
 
 Instances of standard and component elements can be added to screens and components.  To add an instance:
-# Select the destination screen or component.  In this case I'll use the MainMenu screen.
-# Push the left mouse button (but don't release it) on the Text item.  If you happen to release the mouse button, this will select the Text item.
-# Drag the Text item onto the preview window
-# Release the mouse button.  A new text instance will appear in your screen ![](Usage Guide : The Basics_GumTextInstance.PNG)
+1. Select the destination screen or component.  In this case I'll use the MainMenu screen.
+1. Push the left mouse button (but don't release it) on the Text item.  If you happen to release the mouse button, this will select the Text item.
+1. Drag the Text item onto the preview window
+1. Release the mouse button.  A new text instance will appear in your screen ![](Usage Guide : The Basics_GumTextInstance.PNG)
 
 # Editing in the preview window
 
