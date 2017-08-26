@@ -35,11 +35,11 @@ Next we'll make the UnitsDisplay use the ValueText as its parent:
 1. Change its X to 10 - this means the UnitsDisplay text will be 10 units offset from the right edge of its parent ValueText
 1. Change its Y to 0
 
-![](Usage Guide : Parent_GumParentingToRightSide2.PNG)
+![](GumParentingToRightSide2.PNG)
 
 Next we'll want the parent text (ValueText) to automatically size according to its contents. To do this, set its Width to 0.  Setting Width to 0 on a text instance means that the text's width will be equal to the size needed to display the text.
 
-![](Usage Guide : Parent_GumZeroWidthText.PNG)
+![](GumZeroWidthText.PNG)
 
 # Adjusting Colors
 
@@ -54,4 +54,4 @@ Now that we have the texts set up, let's modify the color of the UnitsDisplay:
 
 Now the Text variable in ValueText can be changed, and when doing so the UnitsDisplay will automatically change positions:
 
-![](Usage Guide : Parent_GumTextValuesChanged.png)
+![](GumTextValuesChanged.png)
