@@ -21,7 +21,8 @@
 
       <header>
         <h1>{{ site.title | default: site.github.repository_name }}</h1>
-        <p>{{ site.description | default: site.github.project_tagline }}</p>        
+        <p>{{ site.description | default: site.github.project_tagline }}</p>       
+        <h2>Bubble Neck: A</h2> 
       </header>
 
       <div id="banner">
@@ -55,6 +56,17 @@
           <li><a href="/Gum{{ animation.url }}">{{ animation.title }}</a></li>
         {% endfor %}
 
+        {% assign examples = site.examples % | sort: "order" %}
+        <h3>Examples</h3>
+        {% for example in examples %}
+          <li><a href="/Gum{{ example.url }}">{{ example.title }}</a></li>
+        {% endfor %}
+
+        {% assign generalproperties = site.generalproperties % | sort: "order" %}
+        <h3>Examples</h3>
+        {% for generalproperty in generalproperties %}
+          <li><a href="/Gum{{ generalproperty.url }}">{{ generalproperty.title }}</a></li>
+        {% endfor %}
 
 
         </ul>
