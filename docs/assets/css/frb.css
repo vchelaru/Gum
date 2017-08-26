@@ -1,6 +1,10 @@
 li.top_nav {
     cursor: pointer;
-    font-weight: bold;
+}
+
+li.top_nav span.list_title {
+    font-weight:bold;
+    font-size: 16px;
 }
 
 li.top_nav ul {

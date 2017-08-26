@@ -54,7 +54,7 @@
         <ul>
           
           <!-- Intro tutorial collapsable list -->
-          <li class="top_nav">Intro Tutorials</li>
+          <li class="top_nav"><span class="list_title">Intro Tutorials</span>
             <ul>
                 {% for tutorial in tutorials %}
                   <li><a href="/Gum{{ tutorial.url }}">{{ tutorial.title }}</a></li>
@@ -62,7 +62,7 @@
             </ul>
           </li>
 
-          <li class="top_nav">Animation Tutorials</li>
+          <li class="top_nav"><span class="list_title">Animation Tutorials</span>
             <ul>
                 {% for animation in animations %}
                   <li><a href="/Gum{{ animation.url }}">{{ animation.title }}</a></li>
@@ -70,7 +70,7 @@
             </ul>
           </li>
 
-          <li class="top_nav">Examples</li>
+          <li class="top_nav"><span class="list_title">Examples</span>
             <ul>
                 {% for example in examples %}
                   <li><a href="/Gum{{ example.url }}">{{ example.title }}</a></li>
@@ -78,7 +78,7 @@
             </ul>
           </li>
 
-          <li class="top_nav">General Properties</li>
+          <li class="top_nav"><span class="list_title">General Properties</span>
             <ul>
                 {% for generalproperty in generalproperties %}
                   <li><a href="/Gum{{ generalproperty.url }}">{{ generalproperty.title }}</a></li>
