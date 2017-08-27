@@ -13,7 +13,7 @@ To set a parent/child relationship:
 # Select the child
 # Change the Parent property to the desired parent:
 
-![](Parent_GumParentChild.gif)
+![](GumParentChild.gif)
 
 The Parent can also be changed through a dropdown:
 
