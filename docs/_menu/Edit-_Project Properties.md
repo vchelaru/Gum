@@ -12,4 +12,4 @@ Gum allows you to change the canvas width and height of a project. This canvas w
 
 The canvas width and height can be changed through the project properties page:
 
-![](Edit->Project Properties_GumCanvasWidthHeight.gif)
+![](GumCanvasWidthHeight.gif)

@@ -24,7 +24,7 @@
       <header>
         <h1>{{ site.title | default: site.github.repository_name }}</h1>
         <p>{{ site.description | default: site.github.project_tagline }}</p>       
-        <h2>Bubble Nec: B</h2> 
+        <h2>Bubble Ne: C</h2> 
       </header>
 
       <div id="banner">
@@ -49,6 +49,7 @@
         {% assign animations = site.animations % | sort: "order" %}
         {% assign examples = site.examples % | sort: "order" %}
         {% assign generalproperties = site.generalproperties % | sort: "order" %}
+        {% assign menu = site.menu % | sort: "order" %}
 
       <nav>
         <ul>
@@ -85,6 +86,16 @@
                 {% endfor %}
             </ul>
           </li>
+
+          <li class="top_nav"><p class="list_title">Menu</p>
+            <ul>
+                {% for menuitem in menu %}
+                  <li><a href="/Gum{{ menuitem.url }}">{{ menuitem.title }}</a></li>
+                {% endfor %}
+            </ul>
+          </li>
+
+
         </ul>
       </nav>
       <section>

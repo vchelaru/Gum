@@ -21,3 +21,6 @@ collections:
   generalproperties:
     output: true
     order: 10000
+  menu:
+    output: true
+    order: 10000
