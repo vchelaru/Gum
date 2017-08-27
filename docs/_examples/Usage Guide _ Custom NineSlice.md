@@ -17,7 +17,7 @@ As implied by the name, the NineSlice object is composed of nine Sprites. First 
 1. Select **Add Component**
 1. Name the Component **CustomNineSlice**
 
-![](Usage Guide : Custom NineSlice_CustomNineSlice1.png)
+![](CustomNineSlice1.png)
 
 # Adding Corner Sprites
 
@@ -30,14 +30,14 @@ Next, we'll add corner Sprite instances to our CustomNineSlice. We'll be using t
 * [Y Origin](Y-Origin)
 * [Y Units](Y-Units)
 
-1. Drag+drop a Sprite element onto the CustomNineSlice component ![](Usage Guide : Custom NineSlice_DragDropSprite.png)
+1. Drag+drop a Sprite element onto the CustomNineSlice component ![](DragDropSprite.png)
 1. Click the Alignment tab
-1. Anchor the newly-created Sprite to the top-left of its container ![](Usage Guide : Custom NineSlice_AnchorTopLeft.png)
-1. Repeat the steps above three more times, creating one Sprite for each of the four corners ![](Usage Guide : Custom NineSlice_FourCornerSprites.png)
+1. Anchor the newly-created Sprite to the top-left of its container ![](AnchorTopLeft.png)
+1. Repeat the steps above three more times, creating one Sprite for each of the four corners ![](FourCornerSprites.png)
 
 Notice that if we resize our CustomNineSlice component, each of the four sprites remains in the corner.
 
-![](Usage Guide : Custom NineSlice_CustomNineSliceResized.PNG)
+![](CustomNineSliceResized.PNG)
 
 # Adding Edge Sprites
 
@@ -45,8 +45,8 @@ Next we'll add the four sprites which will sit on the edge of our component:
 
 1. Drag+drop a Sprite element onto the CustomNineSlice component
 1. Click on the alignment tab
-1. Dock the newly-created Sprite to the top of its container. Docking sets the width of the sprite to match the width of the component. We'll address this in the next step. ![](Usage Guide : Custom NineSlice_DockTop.png)
-1. To accommodate for the corner Sprites, we need to adjust the width of the top Sprite. Set the newly-created Sprite's Width to -128. Since the Sprite uses a **Width Units** of **RelativeToContainer**, Setting the value to -128 will make the sprite be 128 units smaller than the container. We picked 128 because each of the corner sprites is 64. ![](Usage Guide : Custom NineSlice_TopStretched.PNG)
+1. Dock the newly-created Sprite to the top of its container. Docking sets the width of the sprite to match the width of the component. We'll address this in the next step. ![](DockTop.png)
+1. To accommodate for the corner Sprites, we need to adjust the width of the top Sprite. Set the newly-created Sprite's Width to -128. Since the Sprite uses a **Width Units** of **RelativeToContainer**, Setting the value to -128 will make the sprite be 128 units smaller than the container. We picked 128 because each of the corner sprites is 64. ![](TopStretched.PNG)
 1. Repeat the above steps, but instead setting the dock to create sprites on the left, right, and bottom. adjust width and height values as necessary.
 
 # Adding the Center Sprite
@@ -59,7 +59,7 @@ The last Sprite we'll add is the center Sprite:
 1. Set both the newly created Sprite's Width and Height to -128
 
 Now the Sprites will stretch and adjust whenever the CustomNineSlice is resized.
-![](Usage Guide : Custom NineSlice_CustomNineSliceResize.gif)
+![](CustomNineSliceResize.gif)
 
 # Assigning values on CustomNineSlice
 

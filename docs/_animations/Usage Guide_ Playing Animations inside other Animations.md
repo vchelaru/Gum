@@ -46,7 +46,7 @@ Now we have all of the states and animations that we'll use as keyframes in our 
 
 The animation now sets all TextComponents to their Hidden state initially.
 
-![](Usage Guide: Playing Animations inside other Animations_CreateScreenAnimation1.gif)
+![](CreateScreenAnimation1.gif)
 
 # Adding Sub-Animations
 
@@ -60,8 +60,8 @@ Next we'll be adding animations to animate the TextComponent instances to visibl
 1. Select the newly-created animation and set its Time to 0.5
 1. Repeat the above steps to add animations for the other two TextComponents, but set their times to 1.0 and 1.5
 
-![](Usage Guide: Playing Animations inside other Animations_AddingSubAnimations.gif)
+![](AddingSubAnimations.gif)
 
 Now the animation can be played or previewed with the slider bar:
 
-![](Usage Guide: Playing Animations inside other Animations_PreviewAndPlayingSubAnimations.gif)
+![](PreviewAndPlayingSubAnimations.gif)
