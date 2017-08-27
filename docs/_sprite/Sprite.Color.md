@@ -14,34 +14,34 @@ The following images show the color values as applied to a multi-color sprite.
 Red: 255
 Green: 255
 Blue: 255
-![](Sprite.Color_WhiteColorGum.png)
+![](WhiteColorGum.png)
 
 
 Red: 255
 Green: 0
 Blue: 0
-![](Sprite.Color_RedColorGum.png)
+![](RedColorGum.png)
 
 
 Red: 0
 Green: 255
 Blue: 0
-![](Sprite.Color_GreenColorGum.png)
+![](GreenColorGum.png)
 
 
 Red: 0
 Green: 0
 Blue: 255
-![](Sprite.Color_BlueColorGum.png)
+![](BlueColorGum.png)
 
 
 Red: 128
 Green: 128
 Blue: 128
-![](Sprite.Color_DarkColorGum.png)
+![](DarkColorGum.png)
 
 
 Red: 0
 Green: 0
 Blue: 0
-![](Sprite.Color_BlackColorGum.png)
+![](BlackColorGum.png)

@@ -1,5 +1,6 @@
 ---
 title: NineSlice Introduction
+order: 1
 ---
 
 # Introduction
@@ -10,7 +11,7 @@ NineSlice is a standard component which can be used to create visual objects whi
 
 This image could be used to create nine slices of various sizes without any distortion:
 
-![](NineSliceScreenShot.PNG)
+![](NineSliceScreenShot.png)
 
 The NineSlice achieves this effect by splitting the texture into nine pieces, and scales each one differently to prevent distortion. Highlighting a nine slice shows how it is split:
 

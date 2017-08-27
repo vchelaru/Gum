@@ -27,3 +27,6 @@ collections:
   nineslice:
     output: true
     order: 10000
+  sprite:
+    output: true
+    order: 10000

@@ -51,6 +51,7 @@
         {% assign generalproperties = site.generalproperties % | sort: "order" %}
         {% assign menu = site.menu % | sort: "order" %}
         {% assign nineslice = site.nineslice % | sort: "order" %}
+        {% assign sprite = site.sprite % | sort: "order" %}
         
 
       <nav>
@@ -97,10 +98,18 @@
             </ul>
           </li>
 
-          <li class="top_nav"><p class="list_title">Menu</p>
+          <li class="top_nav"><p class="list_title">NineSlice</p>
             <ul>
                 {% for ninesliceitem in nineslice %}
                   <li><a href="/Gum{{ ninesliceitem.url }}">{{ ninesliceitem.title }}</a></li>
+                {% endfor %}
+            </ul>
+          </li>
+
+          <li class="top_nav"><p class="list_title">Sprite</p>
+            <ul>
+                {% for spriteitem in sprite %}
+                  <li><a href="/Gum{{ spriteitem.url }}">{{ spriteitem.title }}</a></li>
                 {% endfor %}
             </ul>
           </li>
