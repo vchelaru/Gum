@@ -17,4 +17,4 @@ To set a parent/child relationship:
 
 The Parent can also be changed through a dropdown:
 
-![](Parent_ParentDropdownGum.png)
+![](ParentDropdownGum.png)
