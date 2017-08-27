@@ -1,5 +1,6 @@
 ---
-title: Text
+title: Text Introduction
+order: 1
 ---
 
 
@@ -15,10 +16,10 @@ The text object can be used to display written information.  The text object sup
 # Text Properties
 
 * [Text.Blue](Text.Blue)
-* [Text.Font Size](Text.Font-Size)
-* [Text.Font Scale](Text.Font-Scale)
+* [Text.Font Size](Text.Font Size)
+* [Text.Font Scale](Text.Font Scale)
 * [Text.Green](Text.Green)
 * [Text.OutlineThickness](Text.OutlineThickness)
 * [Text.Red](Text.Red)
 * [Text.Text](Text.Text)
-* [Text.Use Custom Font](Text.Use-Custom-Font)
+* [Text.Use Custom Font](Text.Use Custom Font)

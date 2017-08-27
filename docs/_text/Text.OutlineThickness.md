@@ -9,8 +9,8 @@ OutlineThickness can be used to create an outline around a font. The outline is 
 ## Setting OutlineThickness
 The OutlineThickness can be set on a Text object like any other variable.
 
-![](Text.OutlineThickness_OutlineThicknessGum.png)
+![](OutlineThicknessGum.png)
 
 OutlineThickness changes appear in the Gum window.
 
-![](Text.OutlineThickness_OutlineThicknessGumExample.png)
+![](OutlineThicknessGumExample.png)

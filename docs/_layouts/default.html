@@ -52,6 +52,7 @@
         {% assign menu = site.menu % | sort: "order" %}
         {% assign nineslice = site.nineslice % | sort: "order" %}
         {% assign sprite = site.sprite % | sort: "order" %}
+        {% assign text = site.text % | sort: "order" %}
         
 
       <nav>
@@ -113,6 +114,15 @@
                 {% endfor %}
             </ul>
           </li>
+
+          <li class="top_nav"><p class="list_title">Text</p>
+            <ul>
+                {% for textitem in text %}
+                  <li><a href="/Gum{{ textitem.url }}">{{ textitem.title }}</a></li>
+                {% endfor %}
+            </ul>
+          </li>
+
 
         </ul>
       </nav>

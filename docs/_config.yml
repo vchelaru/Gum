@@ -30,3 +30,6 @@ collections:
   sprite:
     output: true
     order: 10000
+  text:
+    output: true
+    order: 10000

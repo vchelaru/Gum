@@ -14,34 +14,45 @@ The following images show the color values as applied to a multi-color sprite.
 Red: 255
 Green: 255
 Blue: 255
+
 ![](WhiteColorGum.png)
+
 
 
 Red: 255
 Green: 0
 Blue: 0
+
 ![](RedColorGum.png)
+
 
 
 Red: 0
 Green: 255
 Blue: 0
+
 ![](GreenColorGum.png)
+
 
 
 Red: 0
 Green: 0
 Blue: 255
+
 ![](BlueColorGum.png)
+
 
 
 Red: 128
 Green: 128
 Blue: 128
+
 ![](DarkColorGum.png)
 
 
 Red: 0
 Green: 0
 Blue: 0
+
+
 ![](BlackColorGum.png)

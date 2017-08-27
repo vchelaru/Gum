@@ -10,7 +10,7 @@ The **Use Custom Font** variable controls whether a Text object uses a premade .
 ## Example
 If **Use Custom Font** is set to true, then Gum displays the **Custom Font File** variable, which can point to a .fnt file created by Bitmap Font Generator.
 
-![](Text.Use Custom Font_UseCustomFontGum.png)
+![](UseCustomFontGum.png)
 
 If **Use Custom Font** is set to true, then the **Font**, **Font Size**, and **Outline Thickness** variables can no longer be set - as they are part of the font file itself.
 
@@ -18,8 +18,8 @@ The **Font Scale** variable is still available when using custom fonts.
 
 To set a custom font
 
-# Click the **...** button
-# Navigate to the location of the desired .fnt file
-# Select the file and click **Open**
+1. Click the **...** button
+1. Navigate to the location of the desired .fnt file
+1. Select the file and click **Open**
 
-![](Text.Use Custom Font_CustomFontInGum.PNG)
+![](CustomFontInGum.PNG)
