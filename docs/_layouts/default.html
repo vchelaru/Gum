@@ -24,7 +24,7 @@
       <header>
         <h1>{{ site.title | default: site.github.repository_name }}</h1>
         <p>{{ site.description | default: site.github.project_tagline }}</p>       
-        <h2>Bubble Ne: C</h2> 
+        <h2>Bubble N: D</h2> 
       </header>
 
       <div id="banner">
@@ -83,46 +83,49 @@
             </ul>
           </li>
 
-          <li class="top_nav"><p class="list_title">General Properties</p>
-            <ul>
-                {% for generalproperty in generalproperties %}
-                  <li><a href="/Gum{{ generalproperty.url }}">{{ generalproperty.title }}</a></li>
-                {% endfor %}
-            </ul>
-          </li>
-
+          
           <li class="top_nav"><p class="list_title">Menu</p>
             <ul>
-                {% for menuitem in menu %}
-                  <li><a href="/Gum{{ menuitem.url }}">{{ menuitem.title }}</a></li>
-                {% endfor %}
+              {% for menuitem in menu %}
+              <li><a href="/Gum{{ menuitem.url }}">{{ menuitem.title }}</a></li>
+              {% endfor %}
             </ul>
           </li>
 
-          <li class="top_nav"><p class="list_title">NineSlice</p>
-            <ul>
-                {% for ninesliceitem in nineslice %}
-                  <li><a href="/Gum{{ ninesliceitem.url }}">{{ ninesliceitem.title }}</a></li>
-                {% endfor %}
-            </ul>
-          </li>
+          <li class="top_nav"><p class="list_title">Gum Elements</p>
+            <li class="top_nav"><p class="list_title">General Properties</p>
+              <ul>
+                  {% for generalproperty in generalproperties %}
+                    <li><a href="/Gum{{ generalproperty.url }}">{{ generalproperty.title }}</a></li>
+                  {% endfor %}
+              </ul>
+            </li>
 
-          <li class="top_nav"><p class="list_title">Sprite</p>
-            <ul>
-                {% for spriteitem in sprite %}
-                  <li><a href="/Gum{{ spriteitem.url }}">{{ spriteitem.title }}</a></li>
-                {% endfor %}
-            </ul>
-          </li>
+            <li class="top_nav"><p class="list_title">NineSlice</p>
+              <ul>
+                  {% for ninesliceitem in nineslice %}
+                    <li><a href="/Gum{{ ninesliceitem.url }}">{{ ninesliceitem.title }}</a></li>
+                  {% endfor %}
+              </ul>
+            </li>
 
-          <li class="top_nav"><p class="list_title">Text</p>
-            <ul>
-                {% for textitem in text %}
-                  <li><a href="/Gum{{ textitem.url }}">{{ textitem.title }}</a></li>
-                {% endfor %}
-            </ul>
-          </li>
+            <li class="top_nav"><p class="list_title">Sprite</p>
+              <ul>
+                  {% for spriteitem in sprite %}
+                    <li><a href="/Gum{{ spriteitem.url }}">{{ spriteitem.title }}</a></li>
+                  {% endfor %}
+              </ul>
+            </li>
 
+            <li class="top_nav"><p class="list_title">Text</p>
+              <ul>
+                  {% for textitem in text %}
+                    <li><a href="/Gum{{ textitem.url }}">{{ textitem.title }}</a></li>
+                  {% endfor %}
+              </ul>
+            </li>
+          </li>
+        
 
         </ul>
       </nav>
