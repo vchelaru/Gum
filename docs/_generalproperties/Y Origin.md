@@ -10,16 +10,16 @@ The **Y Origin** variable controls the point which an object is positioned by. B
 
 The following image shows a [ColoredRectangle](ColoredRectangle) with its **Y Origin** set to **Top**:
 
-![](TopYOrigin.PNG)
+![](TopYOrigin.png)
 
 # Center
 
 The following image shows a [ColoredRectangle](ColoredRectangle) with its **Y Origin** set to **Center**:
 
-![](CenterYOrigin.PNG)
+![](CenterYOrigin.png)
 
 # Bottom
 
 The following image shows a [ColoredRectangle](ColoredRectangle) with its **Y Origin** set to **Bottom**:
 
-![](BottomYOrigin.PNG)
+![](BottomYOrigin.png)

@@ -10,16 +10,16 @@ The **X Origin** variable controls the point which an object is positioned by. B
 
 The following image shows a [ColoredRectangle](ColoredRectangle) with its **X Origin** set to **Left**:
 
-![](X LeftXOrigin.PNG)
+![](X LeftXOrigin.png)
 
 # Center
 
 The following image shows a [ColoredRectangle](ColoredRectangle) with its **X Origin** set to **Center**:
 
-![](X CenterXOrigin.PNG)
+![](X CenterXOrigin.png)
 
 # Right
 
 The following image shows a [ColoredRectangle](ColoredRectangle) with its **X Origin** set to **Right**:
 
-![](RightXOrigin.PNG)
+![](RightXOrigin.png)

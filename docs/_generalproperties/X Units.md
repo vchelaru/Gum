@@ -10,22 +10,22 @@ The **X Units** variable controls how a unit is horizontally positioned relative
 
 The following shows a child [ColoredRectangle](ColoredRectangle) positioned 50 **PixelsFromLeft** relative to its parent:
 
-![](PixelsFromLeftGum.PNG)
+![](PixelsFromLeftGum.png)
 
 ## PixelsFromCenterX
 
 The following shows a child [ColoredRectangle](ColoredRectangle) positioned 50 **PixelsFromCenterX** relative to its parent:
 
-![](PixelsFromCenterXGum.PNG)
+![](PixelsFromCenterXGum.png)
 
 ## PixelsFromRight
 
 The following shows a child [ColoredRectangle](ColoredRectangle) positioned 50 **PixelsFromRight** relative to its Parent:
 
-![](PixelsFromRightGum.PNG)
+![](PixelsFromRightGum.png)
 
 ## PercentageWidth
 
 The following shows a child [ColoredRectangle](ColoredRectangle) positioned 50 **PercentageWidth** relative to its Parent. In other words, it will be positioned halfway between the left and right edges of the Parent:
 
-![](PercentageWidthGum.PNG)
+![](PercentageWidthGum.png)
