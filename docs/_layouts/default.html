@@ -93,37 +93,39 @@
           </li>
 
           <li class="top_nav"><p class="list_title">Gum Elements</p>
-            <li class="top_nav"><p class="list_title">General Properties</p>
-              <ul>
-                  {% for generalproperty in generalproperties %}
-                    <li><a href="/Gum{{ generalproperty.url }}">{{ generalproperty.title }}</a></li>
-                  {% endfor %}
-              </ul>
-            </li>
+            <ul>
+              <li class="top_nav"><p class="list_title">General Properties</p>
+                <ul>
+                    {% for generalproperty in generalproperties %}
+                      <li><a href="/Gum{{ generalproperty.url }}">{{ generalproperty.title }}</a></li>
+                    {% endfor %}
+                </ul>
+              </li>
 
-            <li class="top_nav"><p class="list_title">NineSlice</p>
-              <ul>
-                  {% for ninesliceitem in nineslice %}
-                    <li><a href="/Gum{{ ninesliceitem.url }}">{{ ninesliceitem.title }}</a></li>
-                  {% endfor %}
-              </ul>
-            </li>
+              <li class="top_nav"><p class="list_title">NineSlice</p>
+                <ul>
+                    {% for ninesliceitem in nineslice %}
+                      <li><a href="/Gum{{ ninesliceitem.url }}">{{ ninesliceitem.title }}</a></li>
+                    {% endfor %}
+                </ul>
+              </li>
 
-            <li class="top_nav"><p class="list_title">Sprite</p>
-              <ul>
-                  {% for spriteitem in sprite %}
-                    <li><a href="/Gum{{ spriteitem.url }}">{{ spriteitem.title }}</a></li>
-                  {% endfor %}
-              </ul>
-            </li>
+              <li class="top_nav"><p class="list_title">Sprite</p>
+                <ul>
+                    {% for spriteitem in sprite %}
+                      <li><a href="/Gum{{ spriteitem.url }}">{{ spriteitem.title }}</a></li>
+                    {% endfor %}
+                </ul>
+              </li>
 
-            <li class="top_nav"><p class="list_title">Text</p>
-              <ul>
-                  {% for textitem in text %}
-                    <li><a href="/Gum{{ textitem.url }}">{{ textitem.title }}</a></li>
-                  {% endfor %}
-              </ul>
-            </li>
+              <li class="top_nav"><p class="list_title">Text</p>
+                <ul>
+                    {% for textitem in text %}
+                      <li><a href="/Gum{{ textitem.url }}">{{ textitem.title }}</a></li>
+                    {% endfor %}
+                </ul>
+              </li>
+            </ul>
           </li>
         
 
