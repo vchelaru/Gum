@@ -10,8 +10,8 @@ Parenting allows UI elements to be positioned and sized according to other UI el
 
 To set a parent/child relationship:
 
-# Select the child
-# Change the Parent property to the desired parent:
+1. Select the child
+1. Change the Parent property to the desired parent:
 
 ![](GumParentChild.gif)
 
