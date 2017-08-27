@@ -1,24 +1,24 @@
 ---
-title: NineSlice
+title: NineSlice Introduction
 ---
 
 # Introduction
 
 NineSlice is a standard component which can be used to create visual objects which can stretch to any size without creating distortion on the source image. For example, consider the following image:
 
-![](NineSlice_metalPanel_blue.png)
+![](metalPanel_blue.png)
 
 This image could be used to create nine slices of various sizes without any distortion:
 
-![](NineSlice_NineSliceScreenShot.PNG)
+![](NineSliceScreenShot.PNG)
 
 The NineSlice achieves this effect by splitting the texture into nine pieces, and scales each one differently to prevent distortion. Highlighting a nine slice shows how it is split:
 
-![](NineSlice_NineSliceSplit.png)
+![](NineSliceSplit.png)
 
 This is achieved by splitting the texture into 1/3 sections wide and tall. The following image shows how the original image will be split:
 
-![](NineSlice_NineSliceImageSplit.png)
+![](NineSliceImageSplit.png)
 
 # NineSlice Texture
 
@@ -40,4 +40,4 @@ The following suffixes can be added to create nine slice graphics.  For example,
 
 NineSlice Properties
 
-* [NineSlice.Texture Address](NineSlice.Texture-Address)
+* [NineSlice.Texture Address](NineSlice.Texture Address)

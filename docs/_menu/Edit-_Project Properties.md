@@ -2,7 +2,7 @@
 title: Project Properties
 ---
 
-# Introduciton
+# Introduction
 
 The project properties window allows you to modify properties that apply across the entire project (as opposed to a single screen or component).
 

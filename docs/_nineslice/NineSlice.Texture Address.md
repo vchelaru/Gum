@@ -18,7 +18,7 @@ The **Custom** value allows specifying a custom set of coordinates for the Nine 
 
 The Sprite next to the NineSlice displays the entire texture.
 
-![](NineSlice.Texture Address_NineSliceCustomCoordinates.png)
+![](NineSliceCustomCoordinates.png)
 
 
 

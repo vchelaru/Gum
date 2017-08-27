@@ -24,3 +24,6 @@ collections:
   menu:
     output: true
     order: 10000
+  nineslice:
+    output: true
+    order: 10000

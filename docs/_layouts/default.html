@@ -50,6 +50,8 @@
         {% assign examples = site.examples % | sort: "order" %}
         {% assign generalproperties = site.generalproperties % | sort: "order" %}
         {% assign menu = site.menu % | sort: "order" %}
+        {% assign nineslice = site.nineslice % | sort: "order" %}
+        
 
       <nav>
         <ul>
@@ -95,6 +97,13 @@
             </ul>
           </li>
 
+          <li class="top_nav"><p class="list_title">Menu</p>
+            <ul>
+                {% for ninesliceitem in nineslice %}
+                  <li><a href="/Gum{{ ninesliceitem.url }}">{{ ninesliceitem.title }}</a></li>
+                {% endfor %}
+            </ul>
+          </li>
 
         </ul>
       </nav>
