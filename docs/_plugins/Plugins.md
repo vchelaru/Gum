@@ -101,7 +101,7 @@ To verify that your plugin is working correctly:
 1. Run Gum
 1. Click Plugins->"Manage Plugins"
 
-![](Plugins_MyPluginName.png)
+![](MyPluginName.png)
 
 # Troubleshooting
 
@@ -116,7 +116,7 @@ This may happen if you are targeting different versions of the .NET framework.  
 
 # Subsections
 
-* [Setting Up Post Build Events](Setting-Up-Post-Build-Events)
+* [Setting Up Post Build Events](Setting Up Post Build Events)
 * [PluginBase.AddAndRemoveVariablesForType](PluginBase.AddAndRemoveVariablesForType)
 * [PluginBase.AddMenuItem](PluginBase.AddMenuItem)
 * [PluginBase.Export](PluginBase.Export)

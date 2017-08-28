@@ -41,7 +41,7 @@ private void HandleAddAndRemoveVariablesForType(string type, Gum.DataTypes.Varia
 
 The end result would be that the Sprite object displays the variable when selected:
 
-![](PluginBase.AddAndRemoveVariablesForType_GumCustomPropertyInPropertyGrid.png)
+![](GumCustomPropertyInPropertyGrid.png)
 
 # Variable removal
 
