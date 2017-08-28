@@ -11,6 +11,7 @@ li.top_nav p.list_title {
 
 li.top_nav ul {
     padding-left: 0;
+    display:none;
 }
 
 @media print, screen and (max-width: 1060px) {
@@ -40,6 +41,8 @@ li.top_nav ul {
 
     li.top_nav p.list_title {
         background: #DDD;
+        padding:3px;
+        border-radius:3px;
     }
 
     section {
