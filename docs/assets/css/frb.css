@@ -1,4 +1,4 @@
-li.top_nav {
+li.top_nav p.list_title {
     cursor: pointer;
 }
 
@@ -41,7 +41,7 @@ li.top_nav ul {
 
     li.top_nav p.list_title {
         background: #DDD;
-        padding:3px;
+        padding:10px;
         border-radius:3px;
     }
 
