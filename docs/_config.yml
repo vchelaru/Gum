@@ -33,3 +33,6 @@ collections:
   text:
     output: true
     order: 10000
+  plugins:
+    output: true
+    order: 10000

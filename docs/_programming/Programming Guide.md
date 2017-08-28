@@ -16,7 +16,7 @@ Gum uses the following technologies:
 
 ## Running from source
 
-For information on running from source, see [Running from Source](Running-from-Source).
+For information on running from source, see [Running from Source](Running from Source).
 
 ## Writing Plugins
 
@@ -26,6 +26,7 @@ For information on how to write Gum plugins, visit this page:  [Plugins](Plugins
 
 * [Gum Class Overview](Gum-Class-Overview)
 
+
 * [Gum.DataTypes.ComponentSave](Gum.DataTypes.ComponentSave)
 * [Gum.DataTypes.GumProjectSave](Gum.DataTypes.GumProjectSave)
 * [Gum.DataTypes.InstanceSave](Gum.DataTypes.InstanceSave)
@@ -33,6 +34,7 @@ For information on how to write Gum plugins, visit this page:  [Plugins](Plugins
 * [Gum.DataTypes.VariableSave](Gum.DataTypes.VariableSave)
 * [Gum.ToolStates.SelectedState](Gum.ToolStates.SelectedState)
 * [Gum.Wireframe.GraphicalUiElement](Gum.Wireframe.GraphicalUiElement)
+
 
 * [RenderingLibrary.IPositionedSizedObject](RenderingLibrary.IPositionedSizedObject)
 

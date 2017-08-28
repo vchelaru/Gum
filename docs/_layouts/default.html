@@ -53,6 +53,7 @@
         {% assign nineslice = site.nineslice % | sort: "order" %}
         {% assign sprite = site.sprite % | sort: "order" %}
         {% assign text = site.text % | sort: "order" %}
+        {% assign plugins = site.plugins % | sort: "order" %}
         
 
       <nav>
@@ -92,6 +93,7 @@
             </ul>
           </li>
 
+          <!-- Top level gum elements node-->
           <li class="top_nav"><p class="list_title">Gum Elements</p>
             <ul>
               <li class="top_nav"><p class="list_title">General Properties</p>
@@ -126,6 +128,19 @@
                 </ul>
               </li>
             </ul>
+          </li>
+
+          <!-- Top level code reference node-->
+          <li class="top_nav"><p class="list_title">Code Reference</p>
+            <ul>
+              <li class="top_nav"><p class="list_title">Plugins</p>
+                <ul>
+                    {% for plugin in plugins %}
+                      <li><a href="/Gum{{ plugin.url }}">{{ plugin.title }}</a></li>
+                    {% endfor %}
+                </ul>
+              </li>
+            </ul>                
           </li>
         
 
