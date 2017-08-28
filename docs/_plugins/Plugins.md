@@ -55,6 +55,7 @@ Next you'll want to add a Plugin class.  This is a class that inherits from Plug
 1. Add the following using:  {{ using Gum.Plugins.BaseClasses; }}
 1. Modify your plugin so it's public and inherits from PluginBase: {{ public class MyPlugin : PluginBase }}
 1. Add the following implementation into your plugin class:
+
 ```
         public override string FriendlyName
         {
@@ -89,6 +90,7 @@ Now that you have a simple plugin, you need to do two things to test this plugin
 1. Click OK
 1. Add the following using statement to your plugin class:  ` using System.ComponentModel.Composition; `
 1. Modify your class definition so it looks like this (we're making it public and also adding the Export attribute:
+
 ```
   [Export(typeof(PluginBase))](Export(typeof(PluginBase)))
   public class MyPlugin : PluginBase

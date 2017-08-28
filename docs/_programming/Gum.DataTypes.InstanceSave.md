@@ -20,7 +20,7 @@ In this pic the Screen1 ScreenSave has 3 InstanceSaves:
 1. ColoredRectangleInstance
 1. ColoredRectangleInstance1
 
-![](Gum.DataTypes.InstanceSave_GumSamplePic1.png)
+![](GumSamplePic1.png)
 
 # Simple variable access
 

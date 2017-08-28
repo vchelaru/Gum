@@ -55,6 +55,8 @@
         {% assign text = site.text % | sort: "order" %}
         {% assign plugins = site.plugins % | sort: "order" %}
         
+        {% assign programming = site.programming % | sort: "order" %}
+        
 
       <nav>
         <ul>
@@ -140,6 +142,15 @@
                     {% endfor %}
                 </ul>
               </li>
+
+              <li class="top_nav"><p class="list_title">Gum Code</p>
+                <ul>
+                    {% for programmingitem in programming %}
+                      <li><a href="/Gum{{ programmingitem.url }}">{{ programmingitem.title }}</a></li>
+                    {% endfor %}
+                </ul>
+              </li>
+
             </ul>                
           </li>
         

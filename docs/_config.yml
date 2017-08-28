@@ -36,3 +36,6 @@ collections:
   plugins:
     output: true
     order: 10000
+  programming:
+    output: true
+    order: 10000

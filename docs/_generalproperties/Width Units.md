@@ -43,7 +43,7 @@ A non-zero **Width** when using **RelativeToChildren** can be used to add additi
 
 ![](LeftToRightStackSizeChildren.gif)
 
-For more information on relative layout in regards to absolute vs. relative unit types, see the [Relative Layout Unit Type](Relative-Layout-Unit-Type) page.
+For more information on relative layout in regards to absolute vs. relative unit types, see the [Relative Layout Unit Type](Relative Layout Unit Type) page.
 
 # PercentageOfSourceFile
 

@@ -23,11 +23,13 @@ The following references are needed for displaying the DataUiGrid:
 To add a grid to your XAML you'll need to:
 
 Add the following using:   
+
 ``` 
 xmlns:WpfDataUi="clr-namespace:WpfDataUi;assembly=WpfDataUi" 
 ```
 
 Add the following inside a layout container (like a Grid):    
+
 ```
 <WpfDataUi:DataUiGrid Name="DataGrid"></WpfDataUi:DataUiGrid>
 ```
@@ -46,7 +48,7 @@ this.DataGrid.Instance = memoryStream;
 
 This will produce a grid which looks like this:
 
-![](WpfDataUi.DataUiGrid_WpfDataUiGrid.PNG)
+![](WpfDataUiGrid.png)
 
 # DataUiGrid Members
 

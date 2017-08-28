@@ -8,7 +8,7 @@ The AddAndRemoveVariablesForType event allows plugins to add and remove variable
 
 # Code Example
 
-The following code can be used to add a variable to the Sprite standard element. This variable will be a float variable with the name "MyCustomVariable":
+The following code can be used to add a variable to the Sprite standard element. This variable will be a float variable with the name "MyCustomVariable".
 
 First the event must be added in the StartUp method:
 ```
