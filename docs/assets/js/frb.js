@@ -17,6 +17,21 @@ var frb = (function(jQuery) {
             // toggle uls to the opposite state
             .slideToggle("slow");
         });
+
+        $("p.secondary_list_title").click(function () {
+            // get the parent "li" object
+            $(this).parent()
+
+            // get all ULs belonging to parent li
+            .children("ul")
+            
+            // toggle uls to the opposite state
+            .slideToggle("slow");
+        });
+
+
+
+
     }
 
     // return the container
