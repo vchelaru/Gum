@@ -10,9 +10,11 @@ defaults:
 
 collections:
   tutorials:
+    category: tutorials
     output: true
     order: 10000
   animations:
+    category: animations
     output: true
     order: 10000
   examples:
