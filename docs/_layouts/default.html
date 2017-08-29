@@ -24,7 +24,7 @@
       <header>
         <h1>{{ site.title | default: site.github.repository_name }}</h1>
         <p>{{ site.description | default: site.github.project_tagline }}</p>       
-        <h2>B:L</h2> 
+        <h2>:M</h2> 
       </header>
 
       <div id="banner">
@@ -64,11 +64,12 @@
           <li class="top_nav"><p class="list_title">Intro Tutorials</p>
             <ul>
               {% for tutorial in tutorials %}
-                {% if page.title == tutorial.title %}
-                  <p>This is {{page.title}}</p>
+                {% if page.url == tutorial.url %}
+                  <li><a href="/Gum{{ tutorial.url }}"> &gt;{{ tutorial.title }}</a></li>              
+                {% else %}
+                  <li><a href="/Gum{{ tutorial.url }}">{{ tutorial.title }}</a></li>              
                 {% endif %}
-                  <li><a href="/Gum{{ tutorial.url }}">{{ tutorial.title }}</a></li>
-                {% endfor %}
+              {% endfor %}
             </ul>
           </li>
 
