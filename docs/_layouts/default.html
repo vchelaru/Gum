@@ -24,7 +24,7 @@
       <header>
         <h1>{{ site.title | default: site.github.repository_name }}</h1>
         <p>{{ site.description | default: site.github.project_tagline }}</p>       
-        <h2>B: K</h2> 
+        <h2>B:L</h2> 
       </header>
 
       <div id="banner">
@@ -60,11 +60,13 @@
 
       <nav>
         <ul>
-          <p>page.title</p>
           <!-- Intro tutorial collapsable list -->
           <li class="top_nav"><p class="list_title">Intro Tutorials</p>
             <ul>
-                {% for tutorial in tutorials %}
+              {% for tutorial in tutorials %}
+                {% if page.title == tutorial.title %}
+                  <p>This is {{page.title}}</p>
+                {% endif %}
                   <li><a href="/Gum{{ tutorial.url }}">{{ tutorial.title }}</a></li>
                 {% endfor %}
             </ul>
