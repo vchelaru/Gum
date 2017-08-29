@@ -10,9 +10,10 @@ defaults:
 
 collections:
   tutorials:
-    category: tutorials
     output: true
     order: 10000
+    values:
+      category: tutorials
   animations:
     category: animations
     output: true
