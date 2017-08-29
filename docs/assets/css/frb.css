@@ -4,13 +4,13 @@ li.top_nav p.list_title p.secondary_list_title{
 
 li.top_nav p.list_title {
     font-weight:bold;
-    font-size: 16px;
+    font-size: 18px;
     margin:0;
     padding: 3px;
 }
 
 p.secondary_list_title{
-    font-size: 16px;
+    font-size: 17px;
     margin:0;
     padding: 3px;
 }
