@@ -9,6 +9,12 @@ li.top_nav p.list_title {
     padding: 3px;
 }
 
+li.secondary_nav{
+    font-size: 14px;
+    margin:0;
+    padding: 3px;
+}
+
 li.top_nav ul {
     padding-left: 0;
     display:none;
