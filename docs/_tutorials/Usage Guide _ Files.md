@@ -11,7 +11,7 @@ Gum supports loading image files for Sprites and NineSlices.  We'll discuss how 
 First we'll set up a workspace. To do this
 1. Create a Screen.  I'll call my Screen "SpriteScreen"
 1. Drag+drop a Sprite into the newly-created Screen
-![](GumSpriteInstance.png)
+![](GumSpriteInstance.PNG)
 
 1. Setting the Sprite SourceFile
 The "SourceFile" property controls the image that the Sprite displays.  Common examples of source file types are .png and .tga.  To add a source file

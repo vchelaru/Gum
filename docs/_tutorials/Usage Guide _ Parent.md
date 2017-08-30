@@ -54,4 +54,4 @@ Now that we have the texts set up, let's modify the color of the UnitsDisplay:
 
 Now the Text variable in ValueText can be changed, and when doing so the UnitsDisplay will automatically change positions:
 
-![](GumTextValuesChanged.png)
+![](GumTextValuesChanged.PNG)

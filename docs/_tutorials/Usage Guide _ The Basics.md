@@ -6,7 +6,7 @@ order: 1
 # Introduction
 
 This page walks you through the basics of using the Gum UI tool (which we'll refer to simply as Gum for this and all other documentation).  
-![](gumEmpty.PNG)
+![](GumEmpty.PNG)
 
 # Gum Elements
 
@@ -39,7 +39,7 @@ Instances of standard and component elements can be added to screens and compone
 1. Select the destination screen or component.  In this case I'll use the MainMenu screen.
 1. Push the left mouse button (but don't release it) on the Text item.  If you happen to release the mouse button, this will select the Text item.
 1. Drag the Text item onto the preview window
-1. Release the mouse button.  A new text instance will appear in your screen ![](GumTextInstance.PNG)
+1. Release the mouse button.  A new text instance will appear in your screen ![](GumTextInstance.png)
 
 # Editing in the preview window
 

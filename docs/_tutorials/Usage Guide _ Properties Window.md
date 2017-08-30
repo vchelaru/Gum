@@ -13,7 +13,7 @@ The properties window will show properties for the selected instance or element.
 # Editing Properties
 
 Properties can be edited simply by changing values on the selected property.  For example, to change the text so that it is positioned against the top-left of the screen, change its X and Y properties to 0:
-![](GumTextTopLeft.png)
+![](GumTextTopLeft.PNG)
 
 # Positioning Instances
 
@@ -29,11 +29,11 @@ Notice that I had to pan the view to be able to see the Text object.  To pan the
 Changing the X Origin value changes the origin of the selected instance; however, it is still positioned relative to the top-left corner of the Text instance's container - which in this case is the entire screen designated by the dotted white outline rectangle.
 
 We can change the origin that the Text is relative to by changing the X Units.  By default the X Units property is set to "PixelsFromLeft" for X and "PixelsFromTop" for Y.  Changing the X Units to "PixelsFromRight" will cause the Text to be positioned on the right-side of the screen.  Notice that changing the units value will automatically update the X or Y values as appropriate.  This is why my X value is now showing a value of -800:
-![](GumPixelsFromRight.png)
+![](GumPixelsFromRight.PNG)
 
 # Text Alignment
 The X,Y values, Origin values, and Units values are all available for every type of element in Gum; however, these values only change the bounds.  In the case of a Text object we may be interested in how the text is aligned within the bounds.  The Text object offers two properties for aligning its text:  VerticalAlignment and HorizontalAlignment.  Changing the HorizontalAlignment to Center will center the Text within its bounds:
-![](GumTextCenterAlignment.png)
+![](GumTextCenterAlignment.PNG)
 
 # Default and overriding values
 You may have noticed that some properties in the property grid are green while others are black.  For example, in the image above the TextInstance's VerticalAlignment is "Top", but it is green.  The reason for this is because instances are not required to define values for every property.  Whenever an instance does not define a property, it uses the property that is defined in the Standard Element definition.
@@ -49,4 +49,4 @@ Now if we select the TextIntance we will see that the VerticalAlignment is visib
 
 Values can be reverted back to their default simply by right-clicking on the variable name in the properties window and selecting "Reset to default"
 ![](GumMakeDefaultRightClick.png)
-![](GumAllDefaults.png)
+![](GumAllDefaults.PNG)
