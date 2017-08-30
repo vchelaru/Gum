@@ -4,9 +4,9 @@ li.top_nav p.list_title, li.top_nav p.secondary_list_title{
 
 li.top_nav p.list_title {
     font-weight:bold;
-    font-size: 18px;
+    font-size: 20px;
     margin:0;
-    padding: 3px;
+    padding: 0px;
 }
 
 p.secondary_list_title{
