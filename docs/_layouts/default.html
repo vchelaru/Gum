@@ -24,7 +24,7 @@
       <header>
         <h1>{{ site.title | default: site.github.repository_name }}</h1>
         <p>{{ site.description | default: site.github.project_tagline }}</p>       
-        <h2>U</h2> 
+        <h2>V</h2> 
       </header>
 
       <div id="banner">
@@ -103,9 +103,9 @@
             <ul>
               {% for menuitem in menu %}
                 {% if page.url == menuitem.url %}
-                  <li><a href="/Gum{{ menuitem.url }}">{{ menuitem.title }}</a></li>
-                {% else %}
                   <li class="active"><a href="/Gum{{ menuitem.url }}">{{ menuitem.title }}</a></li>
+                {% else %}
+                  <li><a href="/Gum{{ menuitem.url }}">{{ menuitem.title }}</a></li>
                 {% endif %}
               {% endfor %}
             </ul>
