@@ -11,11 +11,11 @@ Font Size controls how large a font appears on screen. Each font size and Font c
 
 The Font Size property can be set in Gum to make a text object's font larger or smaller. For example, the following shows a Text object with a font size of 18:
 
-![](FontSize18.PNG)
+![](FontSize18.png)
 
 Changing the font size will increase the size of the Text object. For example, here is the same Text object with a Font Size of 36:
 
-![](FontSize36.PNG)
+![](FontSize36.png)
 
 # Font Cache
 
@@ -25,4 +25,5 @@ The FontCache folder is located in the following location:
 
 <Gum Project>/FontCache/
 
-![](FontCacheFolder.PNG)
+
+![](FontCacheFolder.png)

@@ -9,12 +9,12 @@ Text objects have a Text property which controls the displayed text. By default 
 # Changing Text
 The Text property can be changed in the multi-line edit window.
 
-![](GumIsAwesome.PNG)
+![](GumIsAwesome.png)
 
 Text will wrap according to the Text object's Width.
 
-![](LineWrappingTextGum.PNG)
+![](LineWrappingTextGum.png)
 
 The enter key can be used to add new lines to text.
 
-![](NewlinesGum.PNG)
+![](NewlinesGum.png)

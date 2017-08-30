@@ -22,4 +22,4 @@ To set a custom font
 1. Navigate to the location of the desired .fnt file
 1. Select the file and click **Open**
 
-![](CustomFontInGum.PNG)
+![](CustomFontInGum.png)
