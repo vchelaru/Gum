@@ -34,7 +34,7 @@ nav.sideNav ul li ul li {
     line-height: 10x;
 }
 
-li.active {
+li.active a {
     font-weight: bold;
 }
 

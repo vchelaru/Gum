@@ -9,7 +9,7 @@ order: 1
 
 **Binaries can now be downloaded from FlatRedBall here:**
 
-[http://files.flatredball.com/content/Tools/Gum/Gum.zip](files.flatredball.com/content/Tools/Gum/Gum.zip)
+[files.flatredball.com/content/Tools/Gum/Gum.zip](http://files.flatredball.com/content/Tools/Gum/Gum.zip)
 
 # Source code has moved
 

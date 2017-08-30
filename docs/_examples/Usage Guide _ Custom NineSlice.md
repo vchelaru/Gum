@@ -17,7 +17,7 @@ As implied by the name, the NineSlice object is composed of nine Sprites. First 
 1. Select **Add Component**
 1. Name the Component **CustomNineSlice**
 
-![](CustomNineSlice1.png)
+![](CustomNineSlice1.PNG)
 
 # Adding Corner Sprites
 
@@ -33,7 +33,7 @@ Next, we'll add corner Sprite instances to our CustomNineSlice. We'll be using t
 1. Drag+drop a Sprite element onto the CustomNineSlice component ![](DragDropSprite.png)
 1. Click the Alignment tab
 1. Anchor the newly-created Sprite to the top-left of its container ![](AnchorTopLeft.png)
-1. Repeat the steps above three more times, creating one Sprite for each of the four corners ![](FourCornerSprites.png)
+1. Repeat the steps above three more times, creating one Sprite for each of the four corners ![](FourCornerSprites.PNG)
 
 Notice that if we resize our CustomNineSlice component, each of the four sprites remains in the corner.
 
