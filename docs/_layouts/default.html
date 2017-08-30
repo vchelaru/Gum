@@ -24,7 +24,7 @@
       <header>
         <h1>{{ site.title | default: site.github.repository_name }}</h1>
         <p>{{ site.description | default: site.github.project_tagline }}</p>       
-        <h2>T</h2> 
+        <h2>U</h2> 
       </header>
 
       <div id="banner">
@@ -77,7 +77,11 @@
           <li class="top_nav"><p class="list_title">Animation Tutorials</p>
             <ul>
                 {% for animation in animations %}
-                  <li><a href="/Gum{{ animation.url }}">{{ animation.title }}</a></li>
+                  {% if page.url == animation.url %}
+                    <li class="active"><a href="/Gum{{ animation.url }}">{{ animation.title }}</a></li>
+                  {% else %}
+                    <li><a href="/Gum{{ animation.url }}">{{ animation.title }}</a></li>
+                  {% endif %}
                 {% endfor %}
             </ul>
           </li>
@@ -85,7 +89,11 @@
           <li class="top_nav"><p class="list_title">Examples</p>
             <ul>
                 {% for example in examples %}
-                  <li><a href="/Gum{{ example.url }}">{{ example.title }}</a></li>
+                  {% if page.url == example.url %}
+                    <li class="active"><a href="/Gum{{ example.url }}">{{ example.title }}</a></li>
+                  {% else %}
+                    <li><a href="/Gum{{ example.url }}">{{ example.title }}</a></li>
+                  {% endif %}
                 {% endfor %}
             </ul>
           </li>
@@ -94,7 +102,11 @@
           <li class="top_nav"><p class="list_title">Menu</p>
             <ul>
               {% for menuitem in menu %}
-              <li><a href="/Gum{{ menuitem.url }}">{{ menuitem.title }}</a></li>
+                {% if page.url == menuitem.url %}
+                  <li><a href="/Gum{{ menuitem.url }}">{{ menuitem.title }}</a></li>
+                {% else %}
+                  <li class="active"><a href="/Gum{{ menuitem.url }}">{{ menuitem.title }}</a></li>
+                {% endif %}
               {% endfor %}
             </ul>
           </li>
@@ -105,32 +117,48 @@
               <li class="top_nav"><p class="secondary_list_title">General Properties</p>
                 <ul>
                     {% for generalproperty in generalproperties %}
-                      <li><a href="/Gum{{ generalproperty.url }}">{{ generalproperty.title }}</a></li>
+                      {% if page.url == generalproperty.url %}
+                        <li class="active"><a href="/Gum{{ generalproperty.url }}">{{ generalproperty.title }}</a></li>
+                      {% else %}
+                        <li><a href="/Gum{{ generalproperty.url }}">{{ generalproperty.title }}</a></li>
+                      {% endif %}
                     {% endfor %}
                 </ul>
               </li>
 
               <li class="top_nav"><p class="secondary_list_title">NineSlice</p>
                 <ul>
-                    {% for ninesliceitem in nineslice %}
-                      <li><a href="/Gum{{ ninesliceitem.url }}">{{ ninesliceitem.title }}</a></li>
+                    {% for item in nineslice %}
+                      {% if page.url == item.url %}
+                        <li class="active"><a href="/Gum{{ item.url }}">{{ item.title }}</a></li>
+                      {% else %}  
+                        <li><a href="/Gum{{ item.url }}">{{ item.title }}</a></li>
+                      {% endif %}
                     {% endfor %}
                 </ul>
               </li>
 
               <li class="top_nav"><p class="secondary_list_title">Sprite</p>
                 <ul>
-                    {% for spriteitem in sprite %}
-                      <li><a href="/Gum{{ spriteitem.url }}">{{ spriteitem.title }}</a></li>
-                    {% endfor %}
+                  {% for item in sprite %}
+                    {% if page.url == item.url %}
+                      <li class="active"><a href="/Gum{{ item.url }}">{{ item.title }}</a></li>
+                    {% else %}  
+                      <li><a href="/Gum{{ item.url }}">{{ item.title }}</a></li>
+                    {% endif %}
+                  {% endfor %}
                 </ul>
               </li>
 
               <li class="top_nav"><p class="secondary_list_title">Text</p>
                 <ul>
-                    {% for textitem in text %}
-                      <li><a href="/Gum{{ textitem.url }}">{{ textitem.title }}</a></li>
-                    {% endfor %}
+                  {% for item in text %}
+                    {% if page.url == item.url %}
+                      <li class="active"><a href="/Gum{{ item.url }}">{{ item.title }}</a></li>
+                    {% else %}  
+                      <li><a href="/Gum{{ item.url }}">{{ item.title }}</a></li>
+                    {% endif %}
+                  {% endfor %}
                 </ul>
               </li>
             </ul>
@@ -140,16 +168,24 @@
 
           <li class="top_nav"><p class="list_title">Plugins Reference</p>
             <ul>
-                {% for plugin in plugins %}
-                  <li><a href="/Gum{{ plugin.url }}">{{ plugin.title }}</a></li>
+                {% for item in plugins %}
+                  {% if page.url == item.url %}
+                    <li class="active"><a href="/Gum{{ item.url }}">{{ item.title }}</a></li>
+                  {% else %}  
+                    <li><a href="/Gum{{ item.url }}">{{ item.title }}</a></li>
+                  {% endif %}
                 {% endfor %}
             </ul>
           </li>
 
           <li class="top_nav"><p class="list_title">Gum Code Reference</p>
             <ul>
-                {% for programmingitem in programming %}
-                  <li><a href="/Gum{{ programmingitem.url }}">{{ programmingitem.title }}</a></li>
+                {% for item in programming %}
+                  {% if page.url == item.url %}
+                    <li class="active"><a href="/Gum{{ item.url }}">{{ item.title }}</a></li>
+                  {% else %}  
+                    <li><a href="/Gum{{ item.url }}">{{ item.title }}</a></li>
+                  {% endif %}
                 {% endfor %}
             </ul>
           </li>

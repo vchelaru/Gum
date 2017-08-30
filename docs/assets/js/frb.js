@@ -8,7 +8,9 @@ var frb = (function(jQuery) {
     a.init = function () {
 
         // show parent category
-        $("li.active").parent().show();
+        var $liParent = $("li.active").parent();
+        //$liParent.show();
+        $liParent.addClass("active_branch");
 
 
         $("p.list_title").click(function () {
