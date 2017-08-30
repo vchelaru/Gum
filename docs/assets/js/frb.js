@@ -11,7 +11,7 @@ var frb = (function(jQuery) {
         var $liParent = $("li.active").parent();
         $liParent.addClass("active_branch");
 
-        $liparent.parent().addClass("active_branch");
+        $liParent.parent().addClass("active_branch");
 
 
         $("p.list_title").click(function () {

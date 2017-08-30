@@ -1,4 +1,4 @@
-li.top_nav p.list_title p.secondary_list_title{
+li.top_nav p.list_title, li.top_nav p.secondary_list_title{
     cursor: pointer;
 }
 
