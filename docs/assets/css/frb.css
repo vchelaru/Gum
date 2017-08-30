@@ -34,6 +34,10 @@ nav.sideNav ul li ul li {
     line-height: 10x;
 }
 
+h1 a{
+    color: #fbfbfb;
+}
+
 @media print, screen and (max-width: 1060px) {
     nav {
         display: block;
