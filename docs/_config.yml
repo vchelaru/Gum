@@ -12,10 +12,8 @@ collections:
   tutorials:
     output: true
     order: 10000
-    values:
-      category: tutorials
+    category: tutorials
   animations:
-    category: animations
     output: true
     order: 10000
   examples:

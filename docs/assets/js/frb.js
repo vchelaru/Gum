@@ -7,6 +7,10 @@ var frb = (function(jQuery) {
     // init function binds events to the DOM
     a.init = function () {
 
+        // show parent category
+        $("li.active").parent().show();
+
+
         $("p.list_title").click(function () {
             // get the parent "li" object
             $(this).parent()
