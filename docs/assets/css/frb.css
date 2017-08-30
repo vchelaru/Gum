@@ -25,7 +25,14 @@ li.top_nav ul.active_branch {
     display:block;
 }
 
+nav.sideNav {
+    top:190px;
+}
 
+nav.sideNav ul li ul li {
+    margin-right: 20px;
+    line-height: 10x;
+}
 
 @media print, screen and (max-width: 1060px) {
     nav {
