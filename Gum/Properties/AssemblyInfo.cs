@@ -89,5 +89,7 @@ using System.Runtime.InteropServices;
 //  - Fixed vertical alignment issues found in Brake Neck 
 // 0.8.7.2
 //  - Fixed crash in creating new state caused by variable propagation 
-[assembly: AssemblyVersion("0.8.7.2")]
-[assembly: AssemblyFileVersion("0.8.7.2")]
+// 0.8.7.3
+//  - Fixed crash when running Gum from an outside directory
+[assembly: AssemblyVersion("0.8.7.3")]
+[assembly: AssemblyFileVersion("0.8.7.3")]

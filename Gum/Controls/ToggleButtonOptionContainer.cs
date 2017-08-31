@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Controls;
@@ -79,6 +81,12 @@ namespace Gum.Controls
 
         protected static BitmapImage CreateBitmapFromFile(string resourceName)
         {
+            // make it absolute so the app doesn't look for the files in the current directory, 
+            // which could be outside the Gum.exe location
+            var relativeDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location).ToLower() + "/";
+
+            resourceName = relativeDirectory + resourceName;
+
             BitmapImage centerAlignBitmap = new BitmapImage();
             centerAlignBitmap.BeginInit();
             centerAlignBitmap.UriSource = new Uri(resourceName, UriKind.Relative);
