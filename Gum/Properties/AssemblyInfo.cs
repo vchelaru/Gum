@@ -91,5 +91,7 @@ using System.Runtime.InteropServices;
 //  - Fixed crash in creating new state caused by variable propagation 
 // 0.8.7.3
 //  - Fixed crash when running Gum from an outside directory
-[assembly: AssemblyVersion("0.8.7.3")]
-[assembly: AssemblyFileVersion("0.8.7.3")]
+// 0.8.7.4
+//  - Fixed rendering of dimension based wrapping when not using power of 2 sprites
+[assembly: AssemblyVersion("0.8.7.4")]
+[assembly: AssemblyFileVersion("0.8.7.4")]

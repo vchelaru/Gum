@@ -428,7 +428,7 @@ namespace RenderingLibrary.Graphics
                     float extraY = yRepetitions - y;
                     if (extraY < 1)
                     {
-                        worldUnitsChoppedOffBottom = System.Math.Max(0, (1 - extraY) * eachWidth);
+                        worldUnitsChoppedOffBottom = System.Math.Max(0, (1 - extraY) * eachHeight);
                     }
 
 
