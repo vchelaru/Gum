@@ -2299,31 +2299,28 @@ namespace Gum.Wireframe
                 layerToAddTo = mManagers.Renderer.Layers[0];
             }
 
-            //if (mSortableLayer != null)
-            //{
-            //    // all renderables are part of the mSortableLayer, so we
-            //    // just move the mSortableLayer and everything comes along with it:
-            //    mManagers.Renderer.RemoveLayer(mSortableLayer);
-            //    mManagers.Renderer.AddLayer(mSortableLayer, layer);
-            //}
-            //else
+            bool isScreen = mContainedObjectAsIpso == null;
+            if (!isScreen)
             {
-                // This may be a Screen
-                if (mContainedObjectAsIpso != null)
+                if (layerToRemoveFrom != null)
                 {
-                    if(layerToRemoveFrom != null)
+                    layerToRemoveFrom.Remove(mContainedObjectAsIpso);
+                }
+                layerToAddTo.Add(mContainedObjectAsIpso);
+            }
+            else
+            {
+                // move all contained objects:
+                foreach (var containedInstance in this.ContainedElements)
+                {
+                    var containedAsGue = containedInstance as GraphicalUiElement;
+                    // If it's got a parent, the parent will handle it
+                    if (containedAsGue.Parent == null)
                     {
-                        layerToRemoveFrom.Remove(mContainedObjectAsIpso);
+                        containedAsGue.MoveToLayer(layer);
                     }
-                    layerToAddTo.Add(mContainedObjectAsIpso);
                 }
 
-                // We don't want to move the children to a layer, because the children
-                // are drawn hierarchically
-                //foreach (var contained in this.mWhatThisContains)
-                //{
-                //    contained.MoveToLayer(layer);
-                //}
             }
         }
 
