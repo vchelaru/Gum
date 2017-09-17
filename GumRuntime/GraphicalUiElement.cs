@@ -151,12 +151,20 @@ namespace Gum.Wireframe
             }
         }
 
+        /// <summary>
+        /// The X "world units" that the entire gum rendering system uses. This is essentially the "top level" container's width.
+        /// For a game which renders at 1:1, this will match the game's resolution. 
+        /// </summary>
         public static float CanvasWidth
         {
             get { return mCanvasWidth; }
             set { mCanvasWidth = value; }
         }
 
+        /// <summary>
+        /// The Y "world units" that the entire gum rendering system uses. This is essentially the "top level" container's height.
+        /// For a game which renders at 1:1, this will match the game's resolution. 
+        /// </summary>
         public static float CanvasHeight
         {
             get { return mCanvasHeight; }

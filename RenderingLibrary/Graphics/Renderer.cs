@@ -46,6 +46,12 @@ namespace RenderingLibrary.Graphics
 
         public static object LockObject = new object();
 
+        /// <summary>
+        /// This adjusts for this bug:
+        /// https://github.com/MonoGame/MonoGame/issues/5947
+        /// </summary>
+        public static bool SubtractViewportYForMonoGameGlBug { get; set; } = false;
+
         #endregion
 
         #region Properties
@@ -407,6 +413,20 @@ namespace RenderingLibrary.Graphics
                 int width = System.Math.Max(0, right - left);
                 int height = System.Math.Max(0, bottom - top);
 
+                // ScissorRectangles are relative to the viewport in Gum, so we need to adjust for that:
+                left += this.GraphicsDevice.Viewport.X;
+                right += this.GraphicsDevice.Viewport.X;
+
+                if (SubtractViewportYForMonoGameGlBug)
+                {
+                    top -= this.GraphicsDevice.Viewport.Y;
+                    bottom -= this.GraphicsDevice.Viewport.Y;
+                }
+                else
+                {
+                    top += this.GraphicsDevice.Viewport.Y;
+                    bottom += this.GraphicsDevice.Viewport.Y;
+                }
 
                 Microsoft.Xna.Framework.Rectangle thisRectangle = new Microsoft.Xna.Framework.Rectangle(
                     left,

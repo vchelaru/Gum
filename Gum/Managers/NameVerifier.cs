@@ -234,6 +234,7 @@ namespace Gum.Managers
                 if(!IsValidAndroidFileCharacter(name[i]))
                 {
                     whyNotValid = $"The character {name[i]} is not supported on Android.";
+                    break;
                 }
             }
 

@@ -74,7 +74,7 @@ using System.Runtime.InteropServices;
 //  - Added support for instance members to undo their Make Default command.
 // 0.8.6.1
 //  - Removed ability to rename/remove default state.
-//  - Fixed font rendering bug which would offset centered fonts on the Y axis.
+//  - Fixed font rendering bug which would offset centered fonts on the Y axis.hat bo
 // 0.8.6.2
 //  - Fixed variables not propagating to sibling states in a category when editing in the wireframe window.
 // 0.8.6.3
