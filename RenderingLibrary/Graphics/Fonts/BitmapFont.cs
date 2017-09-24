@@ -564,13 +564,20 @@ namespace RenderingLibrary.Graphics
                     int pageIndex;
                     var sourceRect = GetCharacterRect(c, lineNumber, ref point, out destRect, out pageIndex, scaleX);
 
-                    // position:
-                    destRect.X += xOffsetAsInt;
-                    destRect.Y += yOffsetAsInt;
+
 
                     // todo: rotation, because that will impact destination rectangle too
-
-                    spriteRenderer.Draw(mTextures[pageIndex], destRect, sourceRect, color, objectRequestingChange);
+                    if(Text.TextRenderingPositionMode == TextRenderingPositionMode.FreeFloating)
+                    {
+                        spriteRenderer.Draw(mTextures[pageIndex], new Vector2(destRect.X + xOffset, destRect.Y + yOffset),  sourceRect, color, 0, Vector2.Zero, Vector2.One, SpriteEffects.None, 0, this);
+                    }
+                    else
+                    {
+                        // position:
+                        destRect.X += xOffsetAsInt;
+                        destRect.Y += yOffsetAsInt;
+                        spriteRenderer.Draw(mTextures[pageIndex], destRect, sourceRect, color, this);
+                    }
                 }
                 point.X = 0;
                 lineNumber++;

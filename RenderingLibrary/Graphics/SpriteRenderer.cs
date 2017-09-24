@@ -207,14 +207,14 @@ namespace RenderingLibrary.Graphics
             mSpriteBatch.DrawString(font, line, offset, color, objectRequestingChange);
         }
 
-        internal void Draw(Texture2D textureToUse, Rectangle destinationRectangle, Rectangle? sourceRectangle, Color color, float rotation, Vector2 vector2, SpriteEffects effects, int layerDepth, object objectRequestingChange)
+        internal void Draw(Texture2D textureToUse, Rectangle destinationRectangle, Rectangle? sourceRectangle, Color color, float rotation, Vector2 origin, SpriteEffects effects, int layerDepth, object objectRequestingChange)
         {
-            mSpriteBatch.Draw(textureToUse, destinationRectangle, sourceRectangle, color, rotation, vector2, effects, layerDepth, objectRequestingChange);
+            mSpriteBatch.Draw(textureToUse, destinationRectangle, sourceRectangle, color, rotation, origin, effects, layerDepth, objectRequestingChange);
         }
 
-        internal void Draw(Texture2D textureToUse, Vector2 position, Rectangle? sourceRectangle, Color color, float rotation, Vector2 vector22, Vector2 scale, SpriteEffects effects, float depth, object objectRequestingChange)
+        internal void Draw(Texture2D textureToUse, Vector2 position, Rectangle? sourceRectangle, Color color, float rotation, Vector2 origin, Vector2 scale, SpriteEffects effects, float depth, object objectRequestingChange)
         {
-            mSpriteBatch.Draw(textureToUse, position, sourceRectangle, color, rotation, vector22, scale, effects, depth, objectRequestingChange);
+            mSpriteBatch.Draw(textureToUse, position, sourceRectangle, color, rotation, origin, scale, effects, depth, objectRequestingChange);
         }
 
         internal void ClearPerformanceRecordingVariables()

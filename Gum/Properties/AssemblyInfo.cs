@@ -93,5 +93,7 @@ using System.Runtime.InteropServices;
 //  - Fixed crash when running Gum from an outside directory
 // 0.8.7.4
 //  - Fixed rendering of dimension based wrapping when not using power of 2 sprites
-[assembly: AssemblyVersion("0.8.7.4")]
-[assembly: AssemblyFileVersion("0.8.7.4")]
+// 0.8.7.5
+//  - Added Text.TextRenderingPositionMode so that games can turn off snap to pixel if they want - use at your own risk!
+[assembly: AssemblyVersion("0.8.7.5")]
+[assembly: AssemblyFileVersion("0.8.7.5")]
