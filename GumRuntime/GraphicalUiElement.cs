@@ -192,7 +192,7 @@ namespace Gum.Wireframe
             }
             set
             {
-                mContainedObjectAsIpso.X = value;
+                throw new InvalidOperationException("This is a GraphicalUiElement. You must cast the instance to GraphicalUiElement to set its X so that its XUnits apply.");
             }
         }
 
@@ -211,7 +211,7 @@ namespace Gum.Wireframe
             }
             set
             {
-                mContainedObjectAsIpso.Y = value;
+                throw new InvalidOperationException("This is a GraphicalUiElement. You must cast the instance to GraphicalUiElement to set its Y so that its YUnits apply.");
             }
         }
 
