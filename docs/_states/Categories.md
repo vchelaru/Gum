@@ -32,13 +32,13 @@ For example, if we set the **X** variable in the **LeftSide** state, the **X** v
 
 ![](sharedexplicitset.gif)
 
-Once the **X** variable is set on one state in a category, all other states in the same category will automatically have this value set - even new categories:
+Once the **X** variable is set on one state in a category, all other states in the same category will automatically have this value set - even new states:
 
 ![](newcategorizedstate.gif)
 
 # Removing Variables from Categories
 
-Variables can be removed from categories, but this removal must be done at the category level rather than at the individual state. To remove a category:
+Variables can be removed from states, but this removal must be done at the category level rather than at the individual state. Doing so will remove all variables from all states within a category. To remove a variable in all states in a category:
 
 1. Select the category itself (not the state)
 1. Click the "X" button next to the variable
