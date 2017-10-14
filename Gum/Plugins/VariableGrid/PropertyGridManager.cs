@@ -440,7 +440,15 @@ namespace Gum.Managers
 
         private void AskRemoveFromAll(string variableName, StateSaveCategory stateCategory)
         {
-            var result = MessageBox.Show($"Are you sure you want to remove {variableName} from all states in {stateCategory.Name}?", "Remove Variables?", MessageBoxButtons.YesNo);
+            string message =
+                $"Are you sure you want to remove {variableName} from all states in {stateCategory.Name}? The following categories will be impacted:\n";
+
+            foreach(var state in stateCategory.States)
+            {
+                message += $"\n{state.Name}";
+            }
+
+            var result = MessageBox.Show(message, "Remove Variables?", MessageBoxButtons.YesNo);
 
             if(result == DialogResult.Yes)
             {
