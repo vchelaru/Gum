@@ -1106,7 +1106,7 @@ namespace Gum.Wireframe
 
                 var unitsVariable = UnitConverter.ConvertToGeneralUnit(unitsVariableAsObject);
 
-                UnitConverter.Self.ConvertToUnitTypeCoordinates(xAmount, yAmount, unitsVariable, unitsVariable, ipso.GetAbsoluteX(), ipso.GetAbsoluteY(), parentWidth, parentHeight, fileWidth, fileHeight,
+                UnitConverter.Self.ConvertToUnitTypeCoordinates(xAmount, yAmount, unitsVariable, unitsVariable, ipso.Width, ipso.Height, parentWidth, parentHeight, fileWidth, fileHeight,
                     out outX, out outY);
 
                 if (baseVariableName == "X" || baseVariableName == "Width")
