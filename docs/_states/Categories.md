@@ -7,7 +7,9 @@ order: 1
 
 Categories can be used to organize similar states into one group (such as a button's Pressed and Unpressed states). 
 
-For a tutorial on working with categories, see the [State Categories Tutorial](tutorials/Usage Guide _ State Categories.html)
+Link test 1:
+
+For a tutorial on working with categories, see the [State Categories Tutorial](/Gum/tutorials/Usage Guide _ State Categories.html)
 
 A category can contain one or more states. States within a category have special behavior:
 
