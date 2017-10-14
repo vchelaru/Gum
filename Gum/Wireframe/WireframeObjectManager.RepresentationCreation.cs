@@ -397,16 +397,7 @@ namespace Gum.Wireframe
             {
                 ipso.Parent = parentIpso;
             }
-
-            if (!string.IsNullOrEmpty(guideName))
-            {
-                IRenderableIpso guideIpso = GetGuide(guideName);
-
-                if (guideIpso != null)
-                {
-                    ipso.Parent = guideIpso;
-                }
-            }
+            
             // don't do this because it causes double render.
             //else if (setParentToBoundsIfNoGuide) 
             //{

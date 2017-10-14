@@ -260,6 +260,20 @@ namespace Gum.Wireframe
             }
         }
 
+        /// <summary>
+        /// Returns the difference between the current X, Y, Width, and Height values and the nearest to-the-pixel value.
+        /// </summary>
+        /// <param name="gue">The GraphicalUiElement to use for current values.</param>
+        /// <param name="differenceToUnitPositionX">The amount to add to the X value to snap it to-the-pixel.</param>
+        /// <param name="differenceToUnitPositionY">The amount to add to the Y value to snap it to-the-pixel.</param>
+        /// <param name="differenceToUnitWidth">The amount to add to the Width value to snap it to-the-pixel.</param>
+        /// <param name="differenceToUnitHeight">The amount to add to the Height value to snap it to-the-pixel.</param>
+        /// <remarks>
+        /// The values returned here depend on the GraphicalUiElement's values for X,Y,Width, and Height. They also depend on the
+        /// units for the corresponding values. 
+        /// As an example, if the GraphicalUiElement is using an XUnits of PixelsFromLeft and has an X value of 4.9, then the 
+        /// differenceToUnitPisitionX would be .1.
+        /// </remarks>
         private static void GetDifferenceToUnit(GraphicalUiElement gue, 
             out float differenceToUnitPositionX, out float differenceToUnitPositionY,
             out float differenceToUnitWidth, out float differenceToUnitHeight
@@ -1006,8 +1020,6 @@ namespace Gum.Wireframe
                 object unitsVariableAsObject;
                 GetCurrentValueForVariable(unitsVariableName, instanceSave, out unitsNameWithInstance, out unitsVariableAsObject);
 
-                currentValue = AdjustCurrentValueIfScale(currentValue, baseVariableName, unitsVariableAsObject);
-
                 modificationAmount = AdjustAmountAccordingToUnitType(baseVariableName, modificationAmount, unitsVariableAsObject);
 
                 float newValue = currentValue + modificationAmount;
@@ -1053,96 +1065,6 @@ namespace Gum.Wireframe
             return newValue;
         }
 
-        /// <summary>
-        /// This method gets the actual width/height value of an object if the stored value is 0.  This is used for Sprites
-        /// which have width/height of 0 if they let the Texture determine their size.
-        /// </summary>
-        /// <param name="currentValue">The value as stored in the StateSave - may be 0</param>
-        /// <param name="baseVariableName">The base name - like Height</param>
-        /// <param name="unitsValue">The units value - </param>
-        /// <returns></returns>
-        private float AdjustCurrentValueIfScale(float currentValue, string baseVariableName, object unitsValue)
-        {
-            if (currentValue == 0 && (baseVariableName == "Width" || baseVariableName == "Height"))
-            {
-                IRenderableIpso selectedIpso = SelectionManager.Self.SelectedIpso;
-
-                // absolute 0 used to mean using the parent's width/height, but not anymore, since we have a stanard size
-                if ((DimensionUnitType)unitsValue == DimensionUnitType.Absolute)
-                {
-                    // don't do anything anymore
-                }
-                if((DimensionUnitType)unitsValue == DimensionUnitType.RelativeToChildren)
-                {
-                    if (baseVariableName == "Width")
-                    {
-                        currentValue = selectedIpso.Width;
-                    }
-                    else
-                    {
-                        currentValue = selectedIpso.Height;
-                    }
-                }
-                else if ((DimensionUnitType)unitsValue == DimensionUnitType.RelativeToContainer)
-                {
-                    // We don't do anything special with "0" when RelativeToContainer, so don't modify the currentValue
-                }
-                else if ((DimensionUnitType)unitsValue == DimensionUnitType.PercentageOfSourceFile)
-                {
-                    if (selectedIpso is Sprite)
-                    {
-                        Microsoft.Xna.Framework.Graphics.Texture2D texture = (selectedIpso as Sprite).Texture;
-
-                        if(texture != null)
-                        {
-                            if (baseVariableName == "Width")
-                            {
-                                currentValue = 100 * selectedIpso.Width / texture.Width;
-                            }
-                            else
-                            {
-                                currentValue = 100 * selectedIpso.Height / texture.Height;
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    float parentValue;
-
-                    // need to support percentage based width
-                    if (baseVariableName == "Width")
-                    {
-                        if (selectedIpso.Parent == null)
-                        {
-                            parentValue = ObjectFinder.Self.GumProjectSave.DefaultCanvasWidth;
-                        }
-                        else
-                        {
-                            parentValue = selectedIpso.Parent.Width;
-                        }
-                        currentValue = 100 * selectedIpso.Width / parentValue;
-                    }
-                    else
-                    {
-                        if (selectedIpso.Parent == null)
-                        {
-                            parentValue = ObjectFinder.Self.GumProjectSave.DefaultCanvasHeight;
-                        }
-                        else
-                        {
-                            parentValue = selectedIpso.Parent.Height;
-                        }
-
-                        currentValue = 100 * selectedIpso.Height / parentValue;
-                    }
-
-                }
-            }
-
-            return currentValue;
-        }
-
         private static float AdjustAmountAccordingToUnitType(string baseVariableName, float amount, object unitsVariableAsObject)
         {
             GeneralUnitType generalUnitType = UnitConverter.ConvertToGeneralUnit(unitsVariableAsObject);
@@ -1184,7 +1106,7 @@ namespace Gum.Wireframe
 
                 var unitsVariable = UnitConverter.ConvertToGeneralUnit(unitsVariableAsObject);
 
-                UnitConverter.Self.ConvertToUnitTypeCoordinates(xAmount, yAmount, unitsVariable, unitsVariable, parentWidth, parentHeight, fileWidth, fileHeight,
+                UnitConverter.Self.ConvertToUnitTypeCoordinates(xAmount, yAmount, unitsVariable, unitsVariable, ipso.GetAbsoluteX(), ipso.GetAbsoluteY(), parentWidth, parentHeight, fileWidth, fileHeight,
                     out outX, out outY);
 
                 if (baseVariableName == "X" || baseVariableName == "Width")
@@ -1210,6 +1132,15 @@ namespace Gum.Wireframe
             return currentValueAsObject;
         }
 
+        /// <summary>
+        /// Returns the current value for a variable, considering inheritance and states. It returns the "effective" value of the variable.
+        /// This value is in the current object's units.
+        /// </summary>
+        /// <param name="baseVariableName"></param>
+        /// <param name="instanceSave"></param>
+        /// <param name="nameWithInstance"></param>
+        /// <param name="currentValue"></param>
+        /// <returns></returns>
         private static object GetCurrentValueForVariable(string baseVariableName, InstanceSave instanceSave, out string nameWithInstance, out object currentValue)
         {
             nameWithInstance = baseVariableName;

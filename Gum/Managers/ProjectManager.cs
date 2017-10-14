@@ -207,8 +207,7 @@ namespace Gum
 
             // Now that a new project is loaded, refresh the UI!
             GumCommands.Self.GuiCommands.RefreshElementTreeView();
-            // And the guides
-            WireframeObjectManager.Self.UpdateGuides();
+
 
             GeneralSettingsFile.AddToRecentFilesIfNew(fileName);
 

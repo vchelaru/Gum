@@ -217,6 +217,9 @@ namespace Gum.PropertyGridHelpers
                     float fileWidth = 0;
                     float fileHeight = 0;
 
+                    float thisWidth = 0;
+                    float thisHeight = 0;
+
                     if (currentIpso != null)
                     {
                         currentIpso.GetFileWidthAndHeight(out fileWidth, out fileHeight);
@@ -225,6 +228,8 @@ namespace Gum.PropertyGridHelpers
                             parentWidth = currentIpso.Parent.Width;
                             parentHeight = currentIpso.Parent.Height;
                         }
+                        thisWidth = currentIpso.Width;
+                        thisHeight = currentIpso.Height;
                     }
 
 
@@ -277,7 +282,7 @@ namespace Gum.PropertyGridHelpers
                                 valueOnObject, 0, oldValue, defaultUnitType, parentWidth, parentHeight, fileWidth, fileHeight, out outX, out outY);
 
                             UnitConverter.Self.ConvertToUnitTypeCoordinates(
-                                outX, outY, unitType, defaultUnitType, parentWidth, parentHeight, fileWidth, fileHeight, out valueToSet, out outY);
+                                outX, outY, unitType, defaultUnitType, thisWidth, thisHeight, parentWidth, parentHeight, fileWidth, fileHeight, out valueToSet, out outY);
                         }
                         else
                         {
@@ -285,7 +290,7 @@ namespace Gum.PropertyGridHelpers
                                 0, valueOnObject, defaultUnitType, oldValue, parentWidth, parentHeight, fileWidth, fileHeight, out outX, out outY);
 
                             UnitConverter.Self.ConvertToUnitTypeCoordinates(
-                                outX, outY, defaultUnitType, unitType, parentWidth, parentHeight, fileWidth, fileHeight, out outX, out valueToSet);
+                                outX, outY, defaultUnitType, unitType, thisWidth, thisHeight, parentWidth, parentHeight, fileWidth, fileHeight, out outX, out valueToSet);
                         }
                         wasAnythingSet = true;
                     }

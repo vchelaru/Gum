@@ -36,7 +36,8 @@ namespace Gum.Converters
         PixelsFromMiddle,
         Percentage,
         PercentageOfFile,
-        PixelsFromMiddleInverted
+        PixelsFromMiddleInverted,
+        PercentageOfOtherDimension
     }
 
     public static class GeneralUnitTypeExtensions
@@ -78,7 +79,8 @@ namespace Gum.Converters
 
             float convertedX;
             // now from pixel back to whatever unit type:
-            ConvertToUnitTypeCoordinates(pixelX, 0, toUnit, GeneralUnitType.PixelsFromLarge, parentWidth, 0, 0, 0, out convertedX, out throwaway);
+            // owner x and owner wy don't matter here
+            ConvertToUnitTypeCoordinates(pixelX, 0, toUnit, GeneralUnitType.PixelsFromLarge, 0,0, parentWidth, 0, 0, 0, out convertedX, out throwaway);
 
             return convertedX;
         }
@@ -93,7 +95,8 @@ namespace Gum.Converters
 
             float convertedY;
             // now from pixel back to whatever unit type:
-            ConvertToUnitTypeCoordinates(0, pixelY, GeneralUnitType.PixelsFromLarge, toUnit, 0, parentHeight, 0, 0, out throwaway, out convertedY);
+            // owner x and owner wy don't matter here
+            ConvertToUnitTypeCoordinates(0, pixelY, GeneralUnitType.PixelsFromLarge, toUnit, 0,0, 0, parentHeight, 0, 0, out throwaway, out convertedY);
 
             return convertedY;
         }
@@ -120,6 +123,10 @@ namespace Gum.Converters
             {
                 absoluteX = fileWidth * relativeX / 100.0f;
             }
+            else
+            {
+                throw new NotImplementedException();
+            }
 
 
             if (generalY == GeneralUnitType.Percentage)
@@ -142,52 +149,75 @@ namespace Gum.Converters
             {
                 absoluteY = fileHeight * relativeY / 100.0f;
             }
+            else
+            {
+                throw new NotImplementedException();
+            }
         }
 
 
-        public void ConvertToUnitTypeCoordinates(float absoluteX, float absoluteY, GeneralUnitType generalX, GeneralUnitType generalY, float parentWidth, float parentHeight, float fileWidth, float fileHeight, out float relativeX, out float relativeY)
+        public void ConvertToUnitTypeCoordinates(float pixelXToConvert, float pixelYToConvert, GeneralUnitType generalX, GeneralUnitType generalY,
+            // owner X and Y values are needed if the object is using percentage of other unit value
+            float ownerX, float ownerY,
+            float parentWidth, float parentHeight, float fileWidth, float fileHeight, out float relativeX, out float relativeY)
         {
-            relativeX = absoluteX;
-            relativeY = absoluteY;
+            relativeX = pixelXToConvert;
+            relativeY = pixelYToConvert;
 
             if (generalX == GeneralUnitType.Percentage)
             {
-                relativeX = 100 * absoluteX / parentWidth;
+                relativeX = 100 * pixelXToConvert / parentWidth;
             }
             else if (generalX == GeneralUnitType.PixelsFromMiddle)
             {
-                relativeX = absoluteX - parentWidth / 2.0f;
+                relativeX = pixelXToConvert - parentWidth / 2.0f;
             }
             else if (generalX == GeneralUnitType.PixelsFromLarge)
             {
-                relativeX = absoluteX - parentWidth;
+                relativeX = pixelXToConvert - parentWidth;
             }
             else if (generalX == GeneralUnitType.PercentageOfFile)
             {
-                relativeX = 100 * absoluteX / fileWidth;
+                relativeX = 100 * pixelXToConvert / fileWidth;
+            }
+            else if(generalX == GeneralUnitType.PercentageOfOtherDimension)
+            {
+                relativeX = pixelXToConvert / ( ownerY / 100f);
+            }
+            else
+            {
+                throw new NotImplementedException();
             }
 
             if (generalY == GeneralUnitType.Percentage)
             {
-                relativeY = 100 * absoluteY / parentHeight;
+                relativeY = 100 * pixelYToConvert / parentHeight;
             }
             else if (generalY == GeneralUnitType.PixelsFromMiddle)
             {
-                relativeY = absoluteY - parentHeight / 2.0f;
+                relativeY = pixelYToConvert - parentHeight / 2.0f;
             }
             else if(generalY == GeneralUnitType.PixelsFromMiddleInverted)
             {
-                relativeY = -absoluteY - parentHeight / 2.0f;
+                relativeY = -pixelYToConvert - parentHeight / 2.0f;
             }
             else if (generalY == GeneralUnitType.PixelsFromLarge)
             {
-                relativeY = absoluteY - parentHeight;
+                relativeY = pixelYToConvert - parentHeight;
             }
             else if (generalY == GeneralUnitType.PercentageOfFile)
             {
-                relativeY = 100 * absoluteY / fileHeight;
+                relativeY = 100 * pixelYToConvert / fileHeight;
             }
 
+            else if (generalY == GeneralUnitType.PercentageOfOtherDimension)
+            {
+                relativeY = pixelYToConvert / (ownerX/100f);
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
         }
 
         public static bool TryConvertToGeneralUnit(object unitType, out GeneralUnitType result)
@@ -261,6 +291,8 @@ namespace Gum.Converters
                     return GeneralUnitType.PixelsFromLarge;
                 case DimensionUnitType.PercentageOfSourceFile:
                     return GeneralUnitType.PercentageOfFile;
+                case DimensionUnitType.PercentageOfOtherDimension:
+                    return GeneralUnitType.PercentageOfOtherDimension;
                 default:
                     throw new NotImplementedException();
             }

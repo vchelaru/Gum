@@ -26,6 +26,11 @@ namespace RenderingLibrary
             return Matrix.CreateRotationZ(-MathHelper.ToRadians(ipso.Rotation));
         }
         
+        /// <summary>
+        /// Returns the world X coordinate of the argument RenderableIpso.
+        /// </summary>
+        /// <param name="ipso">The RenderableIpso to return the value for.</param>
+        /// <returns>The world X coordinate.</returns>
         public static float GetAbsoluteX(this IRenderableIpso ipso)
         {
             if (ipso.Parent == null)
@@ -39,6 +44,11 @@ namespace RenderingLibrary
             }
         }
 
+        /// <summary>
+        /// Returns the world Y coordinate of the argument RenderableIpso.
+        /// </summary>
+        /// <param name="ipso">The RenderableIpso to return the value for.</param>
+        /// <returns>The world Y coordinate.</returns>
         public static float GetAbsoluteY(this IRenderableIpso ipso)
         {
             if (ipso.Parent == null)
