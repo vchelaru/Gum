@@ -48,6 +48,7 @@
         {% assign animations = site.animations % | sort: "order" %}
         {% assign examples = site.examples % | sort: "order" %}
         {% assign generalproperties = site.generalproperties % | sort: "order" %}
+        {% assign states = site.states % | sort: "order" %}
         {% assign menu = site.menu % | sort: "order" %}
         {% assign nineslice = site.nineslice % | sort: "order" %}
         {% assign sprite = site.sprite % | sort: "order" %}
@@ -118,6 +119,18 @@
                         <li class="active"><a href="/Gum{{ generalproperty.url }}">{{ generalproperty.title }}</a></li>
                       {% else %}
                         <li><a href="/Gum{{ generalproperty.url }}">{{ generalproperty.title }}</a></li>
+                      {% endif %}
+                    {% endfor %}
+                </ul>
+              </li>
+
+              <li class="top_nav"><p class="secondary_list_title">States</p>
+                <ul>
+                    {% for item in states %}
+                      {% if page.url == item.url %}
+                        <li class="active"><a href="/Gum{{ item.url }}">{{ item.title }}</a></li>
+                      {% else %}  
+                        <li><a href="/Gum{{ item.url }}">{{ item.title }}</a></li>
                       {% endif %}
                     {% endfor %}
                 </ul>
