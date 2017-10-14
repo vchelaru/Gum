@@ -753,9 +753,9 @@ namespace Gum.Managers
 
                 if (isPartOfCategory)
                 {
-                    string message = "This variable is part of a category so it cannot be made default unless it is removed from all states in the category.\n\n" +
-                    "To remove the variable, select the category and click the X button";
-                    MessageBox.Show(message);
+                    var window = new DeletingVariablesInCategoriesMessageBox();
+                    window.ShowDialog();
+                    
                     shouldReset = false;
                 }
             }

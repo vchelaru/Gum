@@ -95,5 +95,7 @@ using System.Runtime.InteropServices;
 //  - Fixed rendering of dimension based wrapping when not using power of 2 sprites
 // 0.8.7.5
 //  - Added Text.TextRenderingPositionMode so that games can turn off snap to pixel if they want - use at your own risk!
-[assembly: AssemblyVersion("0.8.7.5")]
-[assembly: AssemblyFileVersion("0.8.7.5")]
+// 0.8.7.6
+//  - Added new popup when trying to remove variables from a categorized state, linking to the docs
+[assembly: AssemblyVersion("0.8.7.6")]
+[assembly: AssemblyFileVersion("0.8.7.6")]
