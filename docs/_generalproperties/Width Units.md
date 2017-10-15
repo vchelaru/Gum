@@ -46,7 +46,7 @@ For more information on relative layout in regards to absolute vs. relative unit
 
 # PercentageOfOtherDimension
 
-**PercentageOfOtherDimension** will adjust the object's effective width so it remains proportional to the Height value multiplied by the Width value. For example, if a Width value of 200 is entered, then the effective width will be 200% (2x) of the height.
+**PercentageOfOtherDimension** will adjust the object's effective width so it remains proportional to the Height value multiplied by the Width value (as a percentage). For example, if a Width value of 200 is entered, then the effective width will be 200% (2x) of the height.
 
 The following image shows a child [ColoredRectangle](/Gum/coloredrectangle/ColoredRectangle.html) with a Width of 200 **PercentageOfOtherDimension**. In this image, the **Height** value is 50 units, so the effective width is 100 units:
 
