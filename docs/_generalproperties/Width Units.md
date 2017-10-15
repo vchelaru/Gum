@@ -8,26 +8,25 @@ The **Width Units** variable controls how a unit is horizontally sized, which ma
 
 # Absolute
 
-The following shows a child [ColoredRectangle](ColoredRectangle) with 50 **Absolute** Width:
+The following shows a child [ColoredRectangle](/Gum/coloredrectangle/ColoredRectangle.html) with 50 **Absolute** Width:
 
 ![](50AbsoluteWidth.png)
 
 # Percentage
 
-The following shows a child [ColoredRectangle](ColoredRectangle) with 100 **Percentage** Width, which means it will have 100% of the width of its parent. Note that 100 **Percentage** is the same as 0 **RelativeToContainer**:
+The following shows a child [ColoredRectangle](/Gum/coloredrectangle/ColoredRectangle.html) with 100 **Percentage** Width, which means it will have 100% of the width of its parent. Note that 100 **Percentage** is the same as 0 **RelativeToContainer**:
 
 ![](100PercentageWidth.png)
 
 # RelativeToContainer
 
-The following image shows a child [ColoredRectangle](ColoredRectangle) with -10 **RelativeToContainer** Width, which means it will always be 10 pixels less wide than its parent.
+The following image shows a child [ColoredRectangle](/Gum/coloredrectangle/ColoredRectangle.html) with -10 **RelativeToContainer** Width, which means it will always be 10 pixels less wide than its parent.
 
 ![](Negative10RelativeToContainer.png)
 
-
 # RelativeToChildren
 
-The following image shows a child [ColoredRectangle](ColoredRectangle) with 50 **RelativeToChildren** Width, which means that it will always be 50 pixels wider than is necessary to contain its children. Since the rectangle has no children, this is the same as having 50 **Absolute** Width:
+The following image shows a child [ColoredRectangle](/Gum/coloredrectangle/ColoredRectangle.html) with 50 **RelativeToChildren** Width, which means that it will always be 50 pixels wider than is necessary to contain its children. Since the rectangle has no children, this is the same as having 50 **Absolute** Width:
 
 ![](RelativeToChildren1.png)
 
@@ -44,6 +43,14 @@ A non-zero **Width** when using **RelativeToChildren** can be used to add additi
 ![](LeftToRightStackSizeChildren.gif)
 
 For more information on relative layout in regards to absolute vs. relative unit types, see the [Relative Layout Unit Type](Relative Layout Unit Type) page.
+
+# PercentageOfOtherDimension
+
+**PercentageOfOtherDimension** will adjust the object's effective width so it remains proportional to the Height value multiplied by the Width value. For example, if a Width value of 200 is entered, then the effective width will be 200% (2x) of the height.
+
+The following image shows a child [ColoredRectangle](/Gum/coloredrectangle/ColoredRectangle.html) with a Width of 200 **PercentageOfOtherDimension**. In this image, the **Height** value is 50 units, so the effective width is 100 units:
+
+![](PercentageOfOtherDimensionWidth.png)
 
 # PercentageOfSourceFile
 
