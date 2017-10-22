@@ -66,14 +66,22 @@ namespace Gum.DataTypes
                 // type doesn't wipe out old values.
                 //componentSave.Initialize(null);
                 
-                StateSave defaultStateSave = null;
-                StandardElementSave ses = ObjectFinder.Self.GetRootStandardElementSave(componentSave);
-                if (ses != null)
-                {
-                    defaultStateSave = ses.DefaultState;
-                }
+                // October 17, 2017
+                // We used to pass in
+                // the base StandardElementSave
+                // to copy the variables to the Component.
+                // This is redundant. It adds data, makes things
+                // slower...I just don't think we need it. It's especially
+                // bad at runtime in games that are redundantly setting variables
+                // which may result in reflection.
+                //StateSave defaultStateSave = null;
+                //StandardElementSave ses = ObjectFinder.Self.GetRootStandardElementSave(componentSave);
+                //if (ses != null)
+                //{
+                //    defaultStateSave = ses.DefaultState;
+                //}
 
-                if(componentSave.Initialize(defaultStateSave))
+                if(componentSave.Initialize(new StateSave { Name = "Default" }))
                 {
                     wasModified = true;
                 }

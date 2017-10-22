@@ -101,13 +101,15 @@ namespace Gum.Converters
             return convertedY;
         }
 
-        public void ConvertToPixelCoordinates(float relativeX, float relativeY, GeneralUnitType generalX, GeneralUnitType generalY, float parentWidth, float parentHeight, 
+        public void ConvertToPixelCoordinates(float relativeX, float relativeY, GeneralUnitType generalX, GeneralUnitType generalY, 
+            float parentWidth, float parentHeight, 
             float fileWidth, float fileHeight, out float absoluteX, out float absoluteY)
         {
-            absoluteX = relativeX;
-            absoluteY = relativeY;
-
-            if (generalX == GeneralUnitType.Percentage)
+            if(generalX == GeneralUnitType.PixelsFromSmall)
+            {
+                absoluteX = relativeX;
+            }
+            else if (generalX == GeneralUnitType.Percentage)
             {
                 absoluteX = parentWidth * relativeX / 100.0f;
             }
@@ -128,8 +130,11 @@ namespace Gum.Converters
                 throw new NotImplementedException();
             }
 
-
-            if (generalY == GeneralUnitType.Percentage)
+            if(generalY == GeneralUnitType.PixelsFromSmall)
+            {
+                absoluteY = relativeY;
+            }
+            else if (generalY == GeneralUnitType.Percentage)
             {
                 absoluteY = parentHeight * relativeY / 100.0f;
             }
@@ -158,13 +163,17 @@ namespace Gum.Converters
 
         public void ConvertToUnitTypeCoordinates(float pixelXToConvert, float pixelYToConvert, GeneralUnitType generalX, GeneralUnitType generalY,
             // owner X and Y values are needed if the object is using percentage of other unit value
-            float ownerX, float ownerY,
+            float ownerWidthInPixels, float ownerHeightInPixels,
             float parentWidth, float parentHeight, float fileWidth, float fileHeight, out float relativeX, out float relativeY)
         {
-            relativeX = pixelXToConvert;
             relativeY = pixelYToConvert;
 
-            if (generalX == GeneralUnitType.Percentage)
+            if(generalX == GeneralUnitType.PixelsFromSmall)
+            {
+                relativeX = pixelXToConvert;
+
+            }
+            else if (generalX == GeneralUnitType.Percentage)
             {
                 relativeX = 100 * pixelXToConvert / parentWidth;
             }
@@ -182,14 +191,18 @@ namespace Gum.Converters
             }
             else if(generalX == GeneralUnitType.PercentageOfOtherDimension)
             {
-                relativeX = pixelXToConvert / ( ownerY / 100f);
+                relativeX = pixelXToConvert / ( ownerHeightInPixels / 100f);
             }
             else
             {
                 throw new NotImplementedException();
             }
 
-            if (generalY == GeneralUnitType.Percentage)
+            if(generalY == GeneralUnitType.PixelsFromSmall)
+            {
+                relativeY = pixelYToConvert;
+            }
+            else if (generalY == GeneralUnitType.Percentage)
             {
                 relativeY = 100 * pixelYToConvert / parentHeight;
             }
@@ -212,7 +225,7 @@ namespace Gum.Converters
 
             else if (generalY == GeneralUnitType.PercentageOfOtherDimension)
             {
-                relativeY = pixelYToConvert / (ownerX/100f);
+                relativeY = pixelYToConvert / (ownerWidthInPixels/100f);
             }
             else
             {

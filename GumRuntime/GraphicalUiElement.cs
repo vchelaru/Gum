@@ -12,6 +12,7 @@ using Microsoft.Xna.Framework;
 using RenderingLibrary.Math.Geometry;
 using Gum.RenderingLibrary;
 using System.Reflection;
+using GumRuntime;
 
 namespace Gum.Wireframe
 {
@@ -422,7 +423,15 @@ namespace Gum.Wireframe
                 {
                     mX = value;
 
-                    UpdateLayout(true, 0);
+                    // special case:
+                    if (ParentGue == null && XUnits == GeneralUnitType.PixelsFromSmall)
+                    {
+                        this.mContainedObjectAsIpso.X = mX;
+                    }
+                    else
+                    {
+                        UpdateLayout(true, 0);
+                    }
                 }
             }
         }
@@ -439,7 +448,15 @@ namespace Gum.Wireframe
                 {
                     mY = value;
 
-                    UpdateLayout(true, 0);
+
+                    if (ParentGue == null && YUnits == GeneralUnitType.PixelsFromSmall)
+                    {
+                        this.mContainedObjectAsIpso.Y = mY;
+                    }
+                    else
+                    {
+                        UpdateLayout(true, 0);
+                    }
                 }
             }
         }
@@ -1020,6 +1037,19 @@ namespace Gum.Wireframe
 
         }
 
+        /// <summary>
+        /// Sets the default state.
+        /// </summary>
+        /// <remarks>
+        /// This function is virtual so that derived classes can override it
+        /// and provide a quicker method for setting default states
+        /// </remarks>
+        public virtual void SetDefaultState()
+        {
+            var elementSave = this.Tag as ElementSave;
+            this.SetVariablesRecursively(elementSave, elementSave.DefaultState);
+        }
+
         private static float GetDimensionFromEdges(float smallEdge, float bigEdge, GeneralUnitType units)
         {
             float dimensionToReturn = 0;
@@ -1080,6 +1110,24 @@ namespace Gum.Wireframe
             }
         }
 
+        public virtual void CreateChildrenRecursively(ElementSave elementSave, SystemManagers systemManagers)
+        {
+            bool isScreen = elementSave is ScreenSave;
+
+            foreach (var instance in elementSave.Instances)
+            {
+                var childGue = instance.ToGraphicalUiElement(systemManagers);
+
+                if (childGue != null)
+                {
+                    if (!isScreen)
+                    {
+                        childGue.Parent = this;
+                    }
+                    childGue.ParentGue = this;
+                }
+            }
+        }
 
         bool GetIfShouldCallUpdateOnParent()
         {
@@ -2566,6 +2614,7 @@ namespace Gum.Wireframe
                     break;
                 case "Rotation":
                     this.Rotation = (float)value;
+                    toReturn = true;
                     break;
                 case "Width":
                     this.Width = (float)value;
@@ -2603,6 +2652,10 @@ namespace Gum.Wireframe
                 case "Texture Address":
 
                     this.TextureAddress = (Gum.Managers.TextureAddress)value;
+                    toReturn = true;
+                    break;
+                case "Visible":
+                    this.Visible = (bool)value;
                     toReturn = true;
                     break;
                 case "X":
@@ -2705,6 +2758,30 @@ namespace Gum.Wireframe
 
                     solidRect.BlendState = valueAsXnaBlend;
 
+                    handled = true;
+                }
+                else if (propertyName == "Alpha")
+                {
+                    int valueAsInt = (int)value;
+                    solidRect.Alpha = valueAsInt;
+                    handled = true;
+                }
+                else if (propertyName == "Red")
+                {
+                    int valueAsInt = (int)value;
+                    solidRect.Red = valueAsInt;
+                    handled = true;
+                }
+                else if (propertyName == "Green")
+                {
+                    int valueAsInt = (int)value;
+                    solidRect.Green = valueAsInt;
+                    handled = true;
+                }
+                else if (propertyName == "Blue")
+                {
+                    int valueAsInt = (int)value;
+                    solidRect.Blue = valueAsInt;
                     handled = true;
                 }
             }
@@ -3049,14 +3126,81 @@ namespace Gum.Wireframe
                 text.BlendState = valueAsXnaBlend;
                 handled = true;
             }
+            else if (propertyName == "Alpha")
+            {
+                int valueAsInt = (int)value;
+                ((Text)mContainedObjectAsIpso).Alpha = valueAsInt;
+                handled = true;
+            }
+            else if (propertyName == "Red")
+            {
+                int valueAsInt = (int)value;
+                ((Text)mContainedObjectAsIpso).Red = valueAsInt;
+                handled = true;
+            }
+            else if (propertyName == "Green")
+            {
+                int valueAsInt = (int)value;
+                ((Text)mContainedObjectAsIpso).Green = valueAsInt;
+                handled = true;
+            }
+            else if (propertyName == "Blue")
+            {
+                int valueAsInt = (int)value;
+                ((Text)mContainedObjectAsIpso).Blue = valueAsInt;
+                handled = true;
+            }
+            else if(propertyName == "HorizontalAlignment")
+            {
+                ((Text)mContainedObjectAsIpso).HorizontalAlignment = (HorizontalAlignment)value;
+                handled = true;
+            }
+            else if (propertyName == "VerticalAlignment")
+            {
+                ((Text)mContainedObjectAsIpso).VerticalAlignment = (VerticalAlignment)value;
+                handled = true;
+            }
+
+
             return handled;
         }
 
-        public bool UseCustomFont { get; set; }
-        public string CustomFontFile { get; set; }
-        public string Font { get; set; }
-        public int FontSize { get; set; }
-        public int OutlineThickness { get; set; }
+        bool useCustomFont;
+        public bool UseCustomFont
+        {
+            get { return useCustomFont; }
+            set { useCustomFont = value; UpdateToFontValues(); }
+        }
+
+
+        string customFontFile;
+        public string CustomFontFile
+        {
+            get { return customFontFile; }
+            set { customFontFile = value; UpdateToFontValues(); }
+        }
+
+        string font;
+        public string Font
+        {
+            get { return font; }
+            set { font = value; UpdateToFontValues(); }
+        }
+
+        int fontSize;
+        public int FontSize
+        {
+            get { return fontSize; }
+            set { fontSize = value; UpdateToFontValues(); }
+        }
+
+
+        int outlineThickness;
+        public int OutlineThickness
+        {
+            get { return outlineThickness; }
+            set { outlineThickness = value; UpdateToFontValues(); }
+        }
 
         void UpdateToFontValues()
         {
@@ -3094,20 +3238,17 @@ namespace Gum.Wireframe
                     fullFileName = fullFileName.ToLowerInvariant();
 #endif
 
-                    if (ToolsUtilities.FileManager.FileExists(fullFileName))
+
+                    font = contentLoader.TryGetCachedDisposable<BitmapFont>(fullFileName);
+                    if (font == null)
                     {
+                        font = new BitmapFont(fullFileName, SystemManagers.Default);
 
-                        font = contentLoader.TryGetCachedDisposable<BitmapFont>(fullFileName);
-                        if (font == null)
-                        {
-                            font = new BitmapFont(fullFileName, SystemManagers.Default);
-
-                            contentLoader.AddDisposable(fullFileName, font);
-                        }
-                        if (font.Textures.Any(item => item?.IsDisposed == true))
-                        {
-                            throw new InvalidOperationException("The returned font has a disposed texture");
-                        }
+                        contentLoader.AddDisposable(fullFileName, font);
+                    }
+                    if (font.Textures.Any(item => item?.IsDisposed == true))
+                    {
+                        throw new InvalidOperationException("The returned font has a disposed texture");
                     }
                 }
             }

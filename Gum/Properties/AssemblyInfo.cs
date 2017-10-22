@@ -97,5 +97,9 @@ using System.Runtime.InteropServices;
 //  - Added Text.TextRenderingPositionMode so that games can turn off snap to pixel if they want - use at your own risk!
 // 0.8.7.6
 //  - Added new popup when trying to remove variables from a categorized state, linking to the docs
-[assembly: AssemblyVersion("0.8.7.6")]
-[assembly: AssemblyFileVersion("0.8.7.6")]
+// 0.9
+//  - Added new Width Unit and Height Unit value - dependent on other dimension so that objects can stay a certain aspect ratio when one dimension changes
+//  - Fonts with spaces now generate with an underscore in their name instead of space. This makes it easier to work with in engines like FlatRedBall.
+
+[assembly: AssemblyVersion("0.9.0.0")]
+[assembly: AssemblyFileVersion("0.9.0.0")]

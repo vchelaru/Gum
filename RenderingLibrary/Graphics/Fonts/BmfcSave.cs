@@ -64,6 +64,11 @@ namespace RenderingLibrary.Graphics.Fonts
         public static string GetFontCacheFileNameFor(int fontSize, string fontName, int outline)
         {
             string fileName = null;
+
+
+            // don't allow some charactersin the file name:
+            fontName = fontName.Replace(' ', '_');
+
             if (outline == 0)
             {
                 fileName = "Font" + fontSize + fontName + ".fnt";

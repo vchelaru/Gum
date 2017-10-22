@@ -183,10 +183,18 @@ namespace Gum.DataTypes
 
             var variableName = variableSave.GetRootName();
 
+            // This is called a lot so let's try to make it faster:
+            bool endsWithState = variableName.Length >= 5 &&
+                variableName[variableName.Length - 1] == 'e' &&
+                variableName[variableName.Length - 2] == 't' &&
+                variableName[variableName.Length - 3] == 'a' &&
+                variableName[variableName.Length - 4] == 't' &&
+                variableName[variableName.Length - 5] == 'S';
+
             ///////////////Early Out
-            if(variableName.EndsWith("State") == false && string.IsNullOrEmpty(variableSave.SourceObject ))
+            if (endsWithState == false && string.IsNullOrEmpty(variableSave.SourceObject))
             {
-                return false;                
+                return false;
             }
             /////////////End early out
 
@@ -194,27 +202,27 @@ namespace Gum.DataTypes
 
             string categoryName = null;
 
-            if (variableName.EndsWith("State"))
+            if (endsWithState)
             {
                 categoryName = variableName.Substring(0, variableName.Length - "State".Length);
             }
 
-            if(string.IsNullOrEmpty( variableSave.SourceObject) == false)
+            if (string.IsNullOrEmpty(variableSave.SourceObject) == false)
             {
                 var instanceSave = container.GetInstance(variableSave.SourceObject);
 
-                if(instanceSave != null)
+                if (instanceSave != null)
                 {
                     var element = ObjectFinder.Self.GetElementSave(instanceSave.BaseType);
 
-                    if(element != null)
+                    if (element != null)
                     {
                         // let's try going recursively:
                         var subVariable = element.DefaultState.Variables.FirstOrDefault(item => item.ExposedAsName == variableSave.GetRootName());
 
                         if (subVariable != null && recursive)
                         {
-                            return subVariable.IsState(element, out categoryContainer, out category);   
+                            return subVariable.IsState(element, out categoryContainer, out category);
                         }
                         else
                         {

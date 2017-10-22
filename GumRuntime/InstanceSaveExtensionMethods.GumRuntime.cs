@@ -23,9 +23,7 @@ namespace GumRuntime
             GraphicalUiElement toReturn = null;
             if (instanceElement != null)
             {
-                toReturn = ElementSaveExtensions.CreateGueForElement(instanceElement);
-
-                GumRuntime.ElementSaveExtensions.SetGraphicalUiElement(instanceElement, toReturn, systemManagers);
+                toReturn = ElementSaveExtensions.CreateGueForElement(instanceElement, true);
 
                 toReturn.Name = instanceSave.Name;
                 toReturn.Tag = instanceSave;
