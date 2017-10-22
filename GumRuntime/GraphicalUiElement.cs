@@ -1044,7 +1044,7 @@ namespace Gum.Wireframe
         /// This function is virtual so that derived classes can override it
         /// and provide a quicker method for setting default states
         /// </remarks>
-        public virtual void SetDefaultState()
+        public virtual void SetInitialState()
         {
             var elementSave = this.Tag as ElementSave;
             this.SetVariablesRecursively(elementSave, elementSave.DefaultState);

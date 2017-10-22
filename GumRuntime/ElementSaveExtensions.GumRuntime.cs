@@ -195,7 +195,7 @@ namespace GumRuntime
 
             toReturn.Tag = elementSave;
 
-            toReturn.SetDefaultState();
+            toReturn.SetInitialState();
         }
 
 
