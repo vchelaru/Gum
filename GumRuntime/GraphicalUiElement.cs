@@ -3219,8 +3219,13 @@ namespace Gum.Wireframe
                     font = contentLoader.TryGetCachedDisposable<BitmapFont>(CustomFontFile);
                     if (font == null)
                     {
-                        font = new BitmapFont(CustomFontFile, SystemManagers.Default);
-                        contentLoader.AddDisposable(CustomFontFile, font);
+                        // so normally we would just let the content loader check if the file exists but since we're not going to
+                        // use the content loader for BitmapFont, we're going to protect this with a file.exists.
+                        if (ToolsUtilities.FileManager.FileExists(CustomFontFile))
+                        {
+                            font = new BitmapFont(CustomFontFile, SystemManagers.Default);
+                            contentLoader.AddDisposable(CustomFontFile, font);
+                        }
                     }
                 }
 
@@ -3242,14 +3247,22 @@ namespace Gum.Wireframe
                     font = contentLoader.TryGetCachedDisposable<BitmapFont>(fullFileName);
                     if (font == null)
                     {
-                        font = new BitmapFont(fullFileName, SystemManagers.Default);
+                        // so normally we would just let the content loader check if the file exists but since we're not going to
+                        // use the content loader for BitmapFont, we're going to protect this with a file.exists.
+                        if(ToolsUtilities.FileManager.FileExists(fullFileName))
+                        {
+                            font = new BitmapFont(fullFileName, SystemManagers.Default);
 
-                        contentLoader.AddDisposable(fullFileName, font);
+                            contentLoader.AddDisposable(fullFileName, font);
+                        }
                     }
-                    if (font.Textures.Any(item => item?.IsDisposed == true))
+
+#if DEBUG
+                    if (font?.Textures.Any(item => item?.IsDisposed == true) == true)
                     {
                         throw new InvalidOperationException("The returned font has a disposed texture");
                     }
+#endif
                 }
             }
 

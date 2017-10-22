@@ -91,12 +91,12 @@ namespace ToolsUtilities
 
         public static bool FileExists(string fileName, bool ignoreExtensions)
         {
+            fileName = Standardize(fileName, makeAbsolute: true);
             if (!ignoreExtensions)
             {
 #if ANDROID || IOS || WINDOWS_8 
 				try
                 {
-					fileName = Standardize(fileName);
 					if(fileName.StartsWith(".\\"))
 					{
 						fileName = fileName.Substring(2);
@@ -119,7 +119,6 @@ namespace ToolsUtilities
 #if WINDOWS_8 || UWP
                 throw new NotImplementedException();
 #else
-                fileName = Standardize(fileName);
                 // This takes a little bit of work
                 string fileWithoutExtension = FileManager.RemoveExtension(fileName);
 
