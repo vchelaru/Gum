@@ -60,31 +60,27 @@ namespace Gum.PropertyGridHelpers
             return pdc;
         }
 
-        private static StateSave GetRecursiveStateFor(ElementSave elementSave)
+        private static StateSave GetRecursiveStateFor(ElementSave elementSave, StateSave stateToAddTo = null)
         {
-            var defaultState = elementSave.DefaultState;
-
-            if (elementSave is ComponentSave)
+            if(stateToAddTo == null)
             {
-                var ses = ObjectFinder.Self.GetRootStandardElementSave(elementSave);
+                stateToAddTo = new StateSave();
+            }
+            var existingVariableNames = stateToAddTo.Variables.Select(item => item.Name);
+            var variablesToAdd = elementSave.DefaultState.Variables
+                .Select(item => item.Clone())
+                .Where(item => existingVariableNames.Contains(item.Name) == false);
 
-                // we want to look at the base type so all variables show up even if the user 
-                // deleted them from the component, or if Glue doesn't assign values to all of the variables:
+            stateToAddTo.Variables.AddRange(variablesToAdd);
 
-                // start with the default state, because that will have the categories.
-                var clonedState = ses.DefaultState.Clone();
-                var existingVariableNames = clonedState.Variables.Select(item => item.Name);
+            var baseElement = ObjectFinder.Self.GetElementSave(elementSave.BaseType);
 
-                var variablesToAdd = elementSave.DefaultState.Variables
-                    .Select(item => item.Clone())
-                    .Where(item => existingVariableNames.Contains(item.Name) == false);
-
-                clonedState.Variables.AddRange(variablesToAdd);
-
-                defaultState = clonedState;
+            if(baseElement != null)
+            {
+                GetRecursiveStateFor(baseElement, stateToAddTo);
             }
 
-            return defaultState;
+            return stateToAddTo;
         }
 
         private void DisplayCurrentInstance(List<PropertyDescriptor> pdc, InstanceSave instanceSave)
