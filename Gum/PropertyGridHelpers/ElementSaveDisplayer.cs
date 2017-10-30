@@ -62,10 +62,18 @@ namespace Gum.PropertyGridHelpers
 
         private static StateSave GetRecursiveStateFor(ElementSave elementSave, StateSave stateToAddTo = null)
         {
+            // go bottom up
+            var baseElement = ObjectFinder.Self.GetElementSave(elementSave.BaseType);
+            if (baseElement != null)
+            {
+                stateToAddTo = GetRecursiveStateFor(baseElement, stateToAddTo);
+            }
             if(stateToAddTo == null)
             {
                 stateToAddTo = new StateSave();
             }
+
+
             var existingVariableNames = stateToAddTo.Variables.Select(item => item.Name);
             var variablesToAdd = elementSave.DefaultState.Variables
                 .Select(item => item.Clone())
@@ -73,12 +81,7 @@ namespace Gum.PropertyGridHelpers
 
             stateToAddTo.Variables.AddRange(variablesToAdd);
 
-            var baseElement = ObjectFinder.Self.GetElementSave(elementSave.BaseType);
 
-            if(baseElement != null)
-            {
-                GetRecursiveStateFor(baseElement, stateToAddTo);
-            }
 
             return stateToAddTo;
         }

@@ -1,0 +1,88 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>f919c045-eac7-4806-9a1f-ce421f923e97</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>GumCoreShared</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\Behaviors\BehaviorReference.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\Behaviors\BehaviorSave.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\Behaviors\ElementBehaviorReference.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\ComponentSave.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\CustomPropertySave.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\DimensionUnitType.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\ElementReference.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\ElementSave.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\EventSave.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\GuideRectangle.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\GumProjectSave.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\InstanceSave.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\IStateContainer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\NamedRectangle.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\ScreenSave.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\StandardElementSave.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\UnitConverter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\Variables\IVariableFinder.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\Variables\StateSave.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\Variables\StateSaveCategory.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\Variables\VariableListSave.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\Variables\VariableSave.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GumRuntime\ElementSaveExtensions.GumRuntime.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GumRuntime\GraphicalUiElement.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GumRuntime\InstanceSaveExtensionMethods.GumRuntime.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Gum\DataTypes\ElementSaveExtensionMethods.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Gum\DataTypes\InstanceSaveExtensionMethods.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Gum\DataTypes\RecursiveVariableFinder.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Gum\DataTypes\StateSaveExtensionMethods.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Gum\DataTypes\VariableSaveExtensionMethods.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Gum\Managers\ObjectFinder.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Gum\Managers\StandardElementsManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Gum\RenderingLibrary\Blend.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Gum\Wireframe\ElementWithState.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Camera.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Content\IContentLoader.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Content\LoaderManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\AnimationFrame.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\Atlas.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\AtlasedTexture.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\BitmapCharacterInfo.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\Fonts\BitmapFont.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\Fonts\BmfcSave.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\IAnimation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\ImageData.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\InvisibleRenderable.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\IRenderable.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\IRenderableIpso.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\IVisible.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\Layer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\LayerCameraSettings.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\NineSlice.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\Renderer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\SortableLayer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\Sprite.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\SpriteBatchStack.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\SpriteManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\SpriteRenderer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\Text.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\TextManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\TextureFlipAnimation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\TimedSpriteSheetAnimation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\IPositionedSizedObject.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Math\Geometry\Line.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Math\Geometry\LineCircle.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Math\Geometry\LineGrid.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Math\Geometry\LinePrimitive.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Math\Geometry\LineRectangle.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Math\Geometry\ShapeManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Math\Geometry\SolidRectangle.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Math\MathFunctions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\SystemManagers.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ToolsUtilities\FileManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ToolsUtilities\ReflectionManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ToolsUtilities\StringFunctions.cs" />
+  </ItemGroup>
+</Project>

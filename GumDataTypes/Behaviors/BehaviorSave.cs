@@ -36,6 +36,8 @@ namespace Gum.DataTypes.Behaviors
             }
         }
 
+        public List<InstanceSave> RequiredInstances { get; set; } = new List<InstanceSave>();
+
         public override string ToString()
         {
             return Name;
