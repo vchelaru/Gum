@@ -94,7 +94,11 @@ namespace StateAnimationPlugin
             {
                 CreateViewModel();
             }
-            RenameManager.Self.HandleRename(instanceSave, oldName, mCurrentViewModel);
+
+            if (SelectedState.Self.SelectedElement != null)
+            {
+                RenameManager.Self.HandleRename(instanceSave, oldName, mCurrentViewModel);
+            }
         }
 
         private void HandleStateRename(StateSave stateSave, string oldName)
@@ -103,7 +107,11 @@ namespace StateAnimationPlugin
             {
                 CreateViewModel();
             }
-            RenameManager.Self.HandleRename(stateSave, oldName, mCurrentViewModel);
+
+            if (SelectedState.Self.SelectedElement != null)
+            {
+                RenameManager.Self.HandleRename(stateSave, oldName, mCurrentViewModel);
+            }
         }
 
         private void HandleCategoryRename(StateSaveCategory category, string oldName)
@@ -113,7 +121,11 @@ namespace StateAnimationPlugin
                 CreateViewModel();
             }
 
-            RenameManager.Self.HandleRename(category, oldName, mCurrentViewModel);
+            // We only care about this if we have an element. Otherwise, it could be a behavior:
+            if(SelectedState.Self.SelectedElement != null)
+            {
+                RenameManager.Self.HandleRename(category, oldName, mCurrentViewModel);
+            }
 
         }
         private void CreateMenuItems()

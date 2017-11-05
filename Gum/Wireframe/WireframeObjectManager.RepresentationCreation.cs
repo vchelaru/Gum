@@ -334,12 +334,20 @@ namespace Gum.Wireframe
                 }
 
                 elementWithState.InstanceName = instance.Name;
-                elementStack.Add(elementWithState);
 
-                foreach (InstanceSave internalInstance in baseComponentSave.Instances)
+                // Does this element already exist?
+                bool alreadyExists = elementStack.Any(item => item.Element == elementWithState.Element);
+                if(!alreadyExists)
                 {
-                    GraphicalUiElement createdIpso = CreateRepresentationForInstance(internalInstance, instance, elementStack, rootIpso);
+                    elementStack.Add(elementWithState);
 
+                    foreach (InstanceSave internalInstance in baseComponentSave.Instances)
+                    {
+                        // let's make sure we don't recursively create the same instance causing a stack overflow:
+
+                        GraphicalUiElement createdIpso = CreateRepresentationForInstance(internalInstance, instance, elementStack, rootIpso);
+
+                    }
                 }
 
                 SetUpParentRelationship(rootIpso.ContainedElements, elementStack, baseComponentSave.Instances);

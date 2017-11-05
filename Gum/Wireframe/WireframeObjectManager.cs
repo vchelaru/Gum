@@ -337,19 +337,30 @@ namespace Gum.Wireframe
                 {
                     ElementSave instanceElement = instanceSave.GetBaseElementSave();
 
-                    toReturn = GetInstance(representation, instanceElement, prefix + instanceSave.Name + ".", fetchType, elementStack);
+                    bool alreadyInStack = elementStack.Any(item => item.Element == instanceElement);
 
-                    if (toReturn != null)
+                    if (!alreadyInStack)
                     {
-                        if (fetchType == InstanceFetchType.DeepInstance)
+                        var elementWithState = new ElementWithState(instanceElement);
+
+                        elementStack.Add(elementWithState);
+
+                        toReturn = GetInstance(representation, instanceElement, prefix + instanceSave.Name + ".", fetchType, elementStack);
+
+                        if (toReturn != null)
                         {
-                            // toReturn will be toReturn, no need to do anything
+                            if (fetchType == InstanceFetchType.DeepInstance)
+                            {
+                                // toReturn will be toReturn, no need to do anything
+                            }
+                            else // fetchType == InstanceInCurrentElement
+                            {
+                                toReturn = instanceSave;
+                            }
+                            break;
                         }
-                        else // fetchType == InstanceInCurrentElement
-                        {
-                            toReturn = instanceSave;
-                        }
-                        break;
+
+                        elementStack.Remove(elementWithState);
                     }
                 }
             }
