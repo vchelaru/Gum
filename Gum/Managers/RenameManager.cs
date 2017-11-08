@@ -125,42 +125,45 @@ namespace Gum.Managers
             // This changes the names of the ElementSave references.
             ProjectManager.Self.GumProjectSave.ReactToRenamed(elementSave, instance, oldName);
 
-            foreach (var screen in ProjectState.Self.GumProjectSave.Screens)
+            if(instance == null)
             {
-                bool shouldSave = false;
-                foreach (var instanceInScreen in screen.Instances)
+                foreach (var screen in ProjectState.Self.GumProjectSave.Screens)
                 {
-                    if (instanceInScreen.BaseType == oldName)
+                    bool shouldSave = false;
+                    foreach (var instanceInScreen in screen.Instances)
                     {
-                        instanceInScreen.BaseType = elementSave.Name;
-                        shouldSave = true;
+                        if (instanceInScreen.BaseType == oldName)
+                        {
+                            instanceInScreen.BaseType = elementSave.Name;
+                            shouldSave = true;
+                        }
+                    }
+
+                    if (shouldSave)
+                    {
+                        GumCommands.Self.FileCommands.TryAutoSaveElement(screen);
                     }
                 }
 
-                if (shouldSave)
+                foreach (var component in ProjectState.Self.GumProjectSave.Components)
                 {
-                    GumCommands.Self.FileCommands.TryAutoSaveElement(screen);
-                }
-            }
-
-            foreach (var component in ProjectState.Self.GumProjectSave.Components)
-            {
-                bool shouldSave = false;
-                foreach (var instanceInScreen in component.Instances)
-                {
-                    if (instanceInScreen.BaseType == oldName)
+                    bool shouldSave = false;
+                    foreach (var instanceInScreen in component.Instances)
                     {
-                        instanceInScreen.BaseType = elementSave.Name;
-                        shouldSave = true;
+                        if (instanceInScreen.BaseType == oldName)
+                        {
+                            instanceInScreen.BaseType = elementSave.Name;
+                            shouldSave = true;
+                        }
+                    }
+
+                    if (shouldSave)
+                    {
+                        GumCommands.Self.FileCommands.TryAutoSaveElement(component);
                     }
                 }
 
-                if (shouldSave)
-                {
-                    GumCommands.Self.FileCommands.TryAutoSaveElement(component);
-                }
             }
-
             if (instance != null)
             {
                 string newName = SelectedState.Self.SelectedInstance.Name;

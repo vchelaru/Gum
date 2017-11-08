@@ -20,8 +20,6 @@ namespace Gum.Wireframe
 
     public partial class GraphicalUiElement : IRenderableIpso, IVisible
     {
-
-
         #region Fields
 
 
@@ -89,8 +87,6 @@ namespace Gum.Wireframe
 
         Dictionary<string, Gum.DataTypes.Variables.StateSaveCategory> mCategories =
             new Dictionary<string, Gum.DataTypes.Variables.StateSaveCategory>();
-
-
 
         #endregion
 
@@ -492,6 +488,12 @@ namespace Gum.Wireframe
             {
                 if (mHeight != value)
                 {
+#if DEBUG
+                    if(float.IsNaN(value))
+                    {
+                        throw new Exception("Height of NaN is not supported");
+                    }
+#endif
                     mHeight = value; UpdateLayout();
                 }
             }
@@ -913,6 +915,13 @@ namespace Gum.Wireframe
         }
         #endregion
 
+        #region Events
+
+        public event EventHandler SizeChanged;
+        public event EventHandler PositionChanged;
+
+        #endregion
+
         #region Constructor
 
         public GraphicalUiElement()
@@ -1258,10 +1267,15 @@ namespace Gum.Wireframe
 
                         float widthBefore = 0;
                         float heightBefore = 0;
+                        float xBefore = 0;
+                        float yBefore = 0;
                         if (this.mContainedObjectAsIpso != null)
                         {
                             widthBefore = mContainedObjectAsIpso.Width;
                             heightBefore = mContainedObjectAsIpso.Height;
+
+                            xBefore = mContainedObjectAsIpso.X;
+                            yBefore = mContainedObjectAsIpso.Y;
                         }
 
                         // The texture dimensions may need to be set before
@@ -1313,6 +1327,21 @@ namespace Gum.Wireframe
                         UpdatePosition(parentWidth, parentHeight, xOrY);
 
                         mContainedObjectAsIpso.Rotation = this.GetAbsoluteRotation();
+
+                        if (this.mContainedObjectAsIpso != null)
+                        {
+                            if(widthBefore != mContainedObjectAsIpso.Width ||
+                                heightBefore != mContainedObjectAsIpso.Height)
+                            {
+                                SizeChanged?.Invoke(this, null);
+                            }
+
+                            if(xBefore != mContainedObjectAsIpso.X || 
+                                    yBefore != mContainedObjectAsIpso.Y)
+                            {
+                                PositionChanged?.Invoke(this, null);
+                            }
+                        }
                     }
 
 
