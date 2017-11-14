@@ -184,6 +184,8 @@ namespace ToolsUtilities
 
         public static string GetDirectory(string fileName)
         {
+            string directoryToReturn = "";
+
             if (fileName == null)
             {
                 throw new Exception("The fileName passed to GetDirectory is null.  Non-null is required");
@@ -215,12 +217,15 @@ namespace ToolsUtilities
                 //{
                 //    return FileManager.Standardize(fileName.Substring(0, lastIndex + 1));
                 //}
-                return fileName.Substring(0, lastIndex + 1);
+                directoryToReturn = fileName.Substring(0, lastIndex + 1);
 
             }
             else
-                return ""; // there was no directory found.
+            {
+                directoryToReturn = ""; // there was no directory found.
+            }
 
+            return directoryToReturn;
         }
 
         #region XML Docs
@@ -345,7 +350,7 @@ namespace ToolsUtilities
                 return true;
 
 #else
-            if(fileName.Length < 1 || !Path.IsPathRooted(fileName))
+            if (fileName.Length < 1 || !Path.IsPathRooted(fileName))
             {
                 relative = true;
             }
@@ -764,7 +769,7 @@ namespace ToolsUtilities
                 Directory.CreateDirectory(directory);
             }
         }
-        
+
         public static void DeleteDirectory(string dir)
         {
             System.IO.DirectoryInfo info = new System.IO.DirectoryInfo(dir);
@@ -884,7 +889,9 @@ namespace ToolsUtilities
             //    directory = mRelativeDirectory;
 
             if (directory.EndsWith(@"\") == false && directory.EndsWith("/") == false)
-                directory += @"\";
+            {
+                directory += @"/";
+            }
 
             // if they passed in a fileType which begins with a period (like ".jpg"), then
             // remove the period so only the extension remains.  That is, convert
@@ -1136,7 +1143,7 @@ namespace ToolsUtilities
         public static void XmlSerialize(Type type, object objectToSerialize, string fileName)
         {
             FileStream fs = null;
-            
+
             try
             {
                 // Make sure that the directory for the file settings exist
