@@ -44,6 +44,12 @@ A non-zero **Width** when using **RelativeToChildren** can be used to add additi
 
 For more information on relative layout in regards to absolute vs. relative unit types, see the [Relative Layout Unit Type](Relative Layout Unit Type) page.
 
+## RelativeToChildren and Text
+
+Setting a Text instance's **Width Units** to **RelativeToChildren** results in the Text object adjusting according to its text contents. For example, setting the **Width Units** to **RelativeToChildren** and setting the **Width** to 0 results in the Text object automatically adjusting its actual width according to the text it contains.
+
+![](TextRelativeToChildrenWidth.png)
+
 # PercentageOfOtherDimension
 
 **PercentageOfOtherDimension** will adjust the object's effective width so it remains proportional to the Height value multiplied by the Width value (as a percentage). For example, if a Width value of 200 is entered, then the effective width will be 200% (2x) of the height.
