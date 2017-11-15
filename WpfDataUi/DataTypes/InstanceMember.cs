@@ -42,6 +42,7 @@ namespace WpfDataUi.DataTypes
             private set;
         }
 
+        public Dictionary<string, object> PropertiesToSetOnDisplayer { get; private set; } = new Dictionary<string, object>();
 
         public GridLength FirstGridLength
         {

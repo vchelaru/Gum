@@ -528,6 +528,22 @@ namespace Gum.Managers
 
             SetDisplayerForAlignment(categories);
 
+            UpdateFileFilters(categories);
+
+        }
+
+        private void UpdateFileFilters(List<MemberCategory> categories)
+        {
+            foreach (var category in categories)
+            {
+                foreach (var member in category.Members)
+                {
+                    if((member as StateReferencingInstanceMember)?.RootVariableName == "CustomFontFile")
+                    {
+                        member.PropertiesToSetOnDisplayer.Add("Filter", "Bitmap Font Generator Font|*.fnt");
+                    }
+                }
+            }
         }
 
         private void SetDisplayerForAlignment(List<MemberCategory> categories)

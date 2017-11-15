@@ -20,7 +20,7 @@
                               
                               local:DataGridAttachedProperties.HideExpanderArrow="{Binding HideHeader}"
                               >
-                        <ItemsControl ItemsSource="{Binding Members}" Focusable="False">
+                        <ItemsControl x:Name="ItemsControlInstance" ItemsSource="{Binding Members}" Focusable="False">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <DataUi:SingleDataUiContainer FontSize="12" Margin="3,0,3,0" Background="{Binding BackgroundColor}"/>

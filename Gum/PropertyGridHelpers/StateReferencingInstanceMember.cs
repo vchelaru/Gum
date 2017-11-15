@@ -47,7 +47,7 @@ namespace Gum.PropertyGridHelpers
             }
         }
 
-        string RootVariableName
+        public string RootVariableName
         {
             get
             {
@@ -142,7 +142,7 @@ namespace Gum.PropertyGridHelpers
                 {
                     return typeof(WpfDataUi.Controls.ComboBoxDisplay);
                 }
-                else if (IsFile)
+                else if (IsFile && base.PreferredDisplayer == null)
                 {
                     return typeof(WpfDataUi.Controls.FileSelectionDisplay);
                 }

@@ -65,11 +65,19 @@ namespace WpfDataUi.Controls
             }
         }
 
-
         public bool SuppressSettingProperty { get; set; }
+
+        /// <summary>
+        /// Sets the filter used by the OpenFileDialog. Example: "Bitmap Font Generator Font|*.fnt"
+        /// </summary>
+        public string Filter
+        {
+            get; set;
+        }
 
         #endregion
 
+        #region Methods
 
         public FileSelectionDisplay()
         {
@@ -95,6 +103,7 @@ namespace WpfDataUi.Controls
 
             SuppressSettingProperty = false;
         }
+
         public ApplyValueResult TrySetValueOnUi(object valueOnInstance)
         {
             this.TextBox.Text = valueOnInstance.ToString();
@@ -131,6 +140,9 @@ namespace WpfDataUi.Controls
         private void Button_Click_1(object sender, RoutedEventArgs e)
         {
             OpenFileDialog fileDialog = new OpenFileDialog();
+
+            fileDialog.Filter = Filter;
+
             var shouldOpen = fileDialog.ShowDialog();
 
             if (shouldOpen.HasValue && shouldOpen.Value)
@@ -140,6 +152,8 @@ namespace WpfDataUi.Controls
                 mTextBoxLogic.TryApplyToInstance();
             }
         }
+
+        #endregion
 
     }
 }

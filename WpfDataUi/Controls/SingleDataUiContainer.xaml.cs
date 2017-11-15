@@ -124,6 +124,14 @@ namespace WpfDataUi
                 controlToAdd = new TextBoxDisplay();
             }
 
+            var displayerType = controlToAdd.GetType();
+
+            foreach (var kvp in InstanceMember.PropertiesToSetOnDisplayer)
+            {
+                var propertyInfo = displayerType.GetProperty(kvp.Key);
+
+                propertyInfo?.SetValue(controlToAdd, kvp.Value, null);
+            }
 
             IDataUi display = (IDataUi)controlToAdd;
             display.InstanceMember = InstanceMember;
