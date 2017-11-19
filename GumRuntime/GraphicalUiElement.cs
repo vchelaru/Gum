@@ -518,7 +518,9 @@ namespace Gum.Wireframe
                         (mParent as GraphicalUiElement)?.UpdateLayout();
                     }
                     mParent = value;
-                    if (mParent != null && mParent.Children != null)
+
+                    // In case the object was added explicitly 
+                    if (mParent?.Children != null && mParent.Children.Contains(this) == false)
                     {
                         mParent.Children.Add(this);
                     }
