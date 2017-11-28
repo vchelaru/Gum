@@ -146,6 +146,17 @@
     <Compile Include="DataTypes\VariableSaveExtensionMethods.cs" />
     <Compile Include="Debug\ProjectVerifier.cs" />
     <Compile Include="Events\GumEvents.cs" />
+    <Compile Include="Plugins\Errors\AllErrorsViewModel.cs" />
+    <Compile Include="Plugins\Errors\ErrorChecker.cs" />
+    <Compile Include="Plugins\Errors\ErrorDisplay.xaml.cs">
+      <DependentUpon>ErrorDisplay.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Plugins\Errors\ErrorListEntry.xaml.cs">
+      <DependentUpon>ErrorListEntry.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Plugins\Errors\ErrorViewModel.cs" />
+    <Compile Include="Plugins\Errors\MainErrorsPlugin.cs" />
+    <Compile Include="Plugins\Fonts\MainFontPlugin.cs" />
     <Compile Include="Plugins\PropertiesWindowPlugin\MainPlugin.cs" />
     <Compile Include="Plugins\PropertiesWindowPlugin\ProjectPropertiesControl.xaml.cs">
       <DependentUpon>ProjectPropertiesControl.xaml</DependentUpon>
@@ -455,6 +466,14 @@
     <Page Include="Controls\ColorDisplay.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Plugins\Errors\ErrorDisplay.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Plugins\Errors\ErrorListEntry.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Plugins\PropertiesWindowPlugin\ProjectPropertiesControl.xaml">
       <SubType>Designer</SubType>

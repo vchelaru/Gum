@@ -37,9 +37,10 @@ namespace Gum.Plugins.BaseClasses
 
         /// <summary>
         /// Event which is raised when an ElementSave's variable is set.
-        /// ElementSave is the current ElementSave (like the Screen)
-        /// string is the name of the variable set
-        /// object is the OLD value of the variable.  New value must be obtained through the InstanceSave
+        /// ElementSave - current ElementSave (like the Screen)
+        /// InstanceSave - current InstanceSave (like a sprite in a Screen). This may be null
+        /// string - name of the variable set
+        /// object - OLD value of the variable.  New value must be obtained through the InstanceSave
         /// </summary>
         public event Action<ElementSave, InstanceSave, string, object> VariableSet;
         public event Action<ElementSave> ElementSelected;
@@ -47,6 +48,8 @@ namespace Gum.Plugins.BaseClasses
         public event Action<ElementSave, InstanceSave> InstanceSelected;
         public event Action<ElementSave, InstanceSave> InstanceAdd;
         public event Action<ElementSave, InstanceSave> InstanceDelete;
+
+        public event Action<ElementSave> BehaviorReferencesChanged;
 
         #endregion
 
@@ -64,6 +67,15 @@ namespace Gum.Plugins.BaseClasses
         public abstract void StartUp();
         public abstract bool ShutDown(PluginShutDownReason shutDownReason);
 
+        /// <summary>
+        /// Adds a menu item using the path specified by the menuAndSubmenus. 
+        /// </summary>
+        /// <param name="menuAndSubmenus">The menu path. The first item may specify an existing menu to add to.
+        /// For example, to add a Properties item to the existing Edit item, the following
+        /// parameter could be used:
+        /// new List<string> { "Edit", "Properties" }
+        /// </param>
+        /// <returns>The newly-created menu item.</returns>
         public ToolStripMenuItem AddMenuItem(IEnumerable<string> menuAndSubmenus)
         {
             string menuName = menuAndSubmenus.Last();
@@ -227,6 +239,11 @@ namespace Gum.Plugins.BaseClasses
             {
                 InstanceAdd(elementSave, instance);
             }
+        }
+
+        public void CallBehaviorReferencesChanged(ElementSave element)
+        {
+            BehaviorReferencesChanged?.Invoke(element);
         }
 
         public void CallInstanceDelete(ElementSave elementSave, InstanceSave instance)

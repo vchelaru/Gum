@@ -956,10 +956,7 @@ namespace Gum.Plugins
         {
 
             CallMethodOnPlugin(
-                delegate(PluginBase plugin)
-                {
-                    plugin.CallInstanceAdd(elementSave, instance);
-                },
+                (plugin) => plugin.CallInstanceAdd(elementSave, instance),
                 "InstanceAdd"
             );
         }
@@ -967,14 +964,17 @@ namespace Gum.Plugins
         internal void InstanceDelete(ElementSave elementSave, InstanceSave instance)
         {
             CallMethodOnPlugin(
-                delegate(PluginBase plugin)
-                {
-                    plugin.CallInstanceDelete(elementSave, instance);
-                },
-                "InstanceDelete"
+                (plugin) => plugin.CallInstanceDelete(elementSave, instance),
+                nameof(InstanceDelete)
             );
+        }
 
-
+        internal void BehaviorReferencesChanged(ElementSave elementSave)
+        {
+            CallMethodOnPlugin(
+                (plugin) => plugin.CallBehaviorReferencesChanged(elementSave),
+                nameof(BehaviorReferencesChanged)
+            );
         }
 
         #endregion

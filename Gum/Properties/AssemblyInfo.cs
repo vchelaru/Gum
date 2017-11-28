@@ -103,6 +103,7 @@ using System.Runtime.InteropServices;
 // 0.9.0.1
 //  - Added NaN check on Height - will throw an exception. This is mainly for games using Gum runtime.
 //  - Added GraphicalUiElement.PositionChanged and SizeChanged which is raised in the UpdateLayout
-//  - 
-[assembly: AssemblyVersion("0.9.0.1")]
-[assembly: AssemblyFileVersion("0.9.0.1")]
+// 0.9.1.0
+//  - Added new Error window for behaviors
+[assembly: AssemblyVersion("0.9.1.0")]
+[assembly: AssemblyFileVersion("0.9.1.0")]

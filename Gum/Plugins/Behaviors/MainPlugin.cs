@@ -38,13 +38,16 @@ namespace Gum.Plugins.Behaviors
             {
                 var selectedBehaviorNames = viewModel.AllBehaviors
                     .Where(item => item.IsChecked)
-                    .Select(item => item.Name);
+                    .Select(item => item.Name)
+                    .ToList();
 
                 var addedBehaviors = selectedBehaviorNames
-                    .Except(component.Behaviors.Select(item => item.BehaviorName));
+                    .Except(component.Behaviors.Select(item => item.BehaviorName))
+                    .ToList();
 
                 var removedBehaviors = component.Behaviors.Select(item => item.BehaviorName)
-                    .Except(selectedBehaviorNames);
+                    .Except(selectedBehaviorNames)
+                    .ToList();
 
                 if(removedBehaviors.Any())
                 {
@@ -71,8 +74,12 @@ namespace Gum.Plugins.Behaviors
                 GumCommands.Self.GuiCommands.RefreshStateTreeView();
                 GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
 
-
                 UpdateViewModelTo(component);
+
+                if(removedBehaviors.Any() || addedBehaviors.Any())
+                {
+                    PluginManager.Self.BehaviorReferencesChanged(component);
+                }
             }
         }
 

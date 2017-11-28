@@ -310,13 +310,15 @@ namespace Gum
             tabPage.Controls.Add(control);
         }
 
-        public void AddWpfControl(System.Windows.Controls.UserControl control, string tabTitle, TabLocation tabLocation = TabLocation.Center)
+        public TabPage AddWpfControl(System.Windows.Controls.UserControl control, string tabTitle, TabLocation tabLocation = TabLocation.Center)
         {
             TabPage existingTabPage;
             TabControl existingTabControl;
             GetContainers(control, out existingTabPage, out existingTabControl);
 
             bool alreadyExists = existingTabControl != null;
+
+            TabPage tabPage = existingTabPage;
 
             if (!alreadyExists)
             {
@@ -326,7 +328,7 @@ namespace Gum
                 wpfHost.Dock = DockStyle.Fill;
                 wpfHost.Child = control;
 
-                TabPage tabPage = CreateTabPage(tabTitle);
+                tabPage = CreateTabPage(tabTitle);
 
                 TabControl tabControl = GetTabFromLocation(tabLocation);
                 tabControl.Controls.Add(tabPage);
@@ -334,6 +336,8 @@ namespace Gum
                 tabPage.Controls.Add(wpfHost);
 
             }
+
+            return tabPage;
         }
 
         private static TabPage CreateTabPage(string tabTitle)

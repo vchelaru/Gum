@@ -113,39 +113,6 @@ namespace Gum.Mvvm
             return true;
         }
 
-        /// <summary>
-        /// Gets property name from expression.
-        /// </summary>
-        /// <param name="propertyExpression">
-        /// The property expression.
-        /// </param>
-        /// <typeparam name="T">
-        /// </typeparam>
-        /// <returns>
-        /// The <see cref="string"/>.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// Throws an exception if expression is null.
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        /// Expression should be a member access lambda expression
-        /// </exception>
-        private string GetPropertyName<T>(Expression<Func<T>> propertyExpression)
-        {
-            if (propertyExpression == null)
-            {
-                throw new ArgumentNullException("propertyExpression");
-            }
-
-            if (propertyExpression.Body.NodeType != ExpressionType.MemberAccess)
-            {
-                throw new ArgumentException("Should be a member access lambda expression", "propertyExpression");
-            }
-
-            var memberExpression = (MemberExpression)propertyExpression.Body;
-            return memberExpression.Member.Name;
-        }
-        
     }
 
 }
