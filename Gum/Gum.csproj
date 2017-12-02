@@ -146,6 +146,8 @@
     <Compile Include="DataTypes\VariableSaveExtensionMethods.cs" />
     <Compile Include="Debug\ProjectVerifier.cs" />
     <Compile Include="Events\GumEvents.cs" />
+    <Compile Include="Managers\FileChangeReactionLogic.cs" />
+    <Compile Include="Managers\FileWatchManager.cs" />
     <Compile Include="Plugins\Errors\AllErrorsViewModel.cs" />
     <Compile Include="Plugins\Errors\ErrorChecker.cs" />
     <Compile Include="Plugins\Errors\ErrorDisplay.xaml.cs">

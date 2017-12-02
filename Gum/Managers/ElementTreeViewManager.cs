@@ -318,20 +318,6 @@ namespace Gum.Managers
         }
         
 
-        public void RefreshUI()
-        {
-            RecordSelection();
-            // brackets are used simply to indicate the recording and selection should
-            // go around the rest of the function:
-            {
-                CreateRootTreeNodesIfNecessary();
-
-                AddAndRemoveFolderNodes();
-
-                AddAndRemoveScreensComponentsAndStandards(null);
-            }
-            SelectRecordedSelection();
-        }
 
         private void AddAndRemoveFolderNodes()
         {
@@ -780,6 +766,21 @@ namespace Gum.Managers
                 treeNodes[0].EnsureVisible();
                 mTreeView.CallAfterClickSelect(null, new TreeViewEventArgs(treeNodes[0]));
             }
+        }
+
+        public void RefreshUi()
+        {
+            RecordSelection();
+            // brackets are used simply to indicate the recording and selection should
+            // go around the rest of the function:
+            {
+                CreateRootTreeNodesIfNecessary();
+
+                AddAndRemoveFolderNodes();
+
+                AddAndRemoveScreensComponentsAndStandards(null);
+            }
+            SelectRecordedSelection();
         }
 
         public void RefreshUi(ElementSave elementSave)

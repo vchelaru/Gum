@@ -73,6 +73,7 @@ namespace StateAnimationPlugin.Managers
 
             var save = viewModel.ToSave();
 
+            FileWatchManager.Self.IgnoreNextChangeOn(fileName);
             FileManager.XmlSerialize(save, fileName);
         }
 

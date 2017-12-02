@@ -33,6 +33,8 @@ namespace Gum
 
     public partial class MainWindow : Form
     {
+        private System.Windows.Forms.Timer FileWatchTimer;
+
         StateView stateView;
 
         public MainWindow()
@@ -54,13 +56,13 @@ namespace Gum
 
             TypeManager.Self.Initialize();
             PluginManager.Self.Initialize(this);
-            
+
             ElementTreeViewManager.Self.Initialize(this.ObjectTreeView);
             StateTreeViewManager.Self.Initialize(this.stateView.TreeView, this.stateView.StateContextMenuStrip);
-            PropertyGridManager.Self.Initialize( 
+            PropertyGridManager.Self.Initialize(
                 ((TestWpfControl)this.VariableHost.Child),
                 ((TestWpfControl)this.EventsHost.Child).DataGrid
-                
+
                 );
             StandardElementsManager.Self.Initialize();
             MenuStripManager.Self.Initialize(
@@ -76,6 +78,27 @@ namespace Gum
             // does, then we need to make sure that the wireframe controls
             // are set up properly before that happens.
             HandleXnaInitialize();
+
+            InitializeFileWatchTimer();
+
+        }
+
+        private void InitializeFileWatchTimer()
+        {
+            this.FileWatchTimer = new Timer(this.components);
+            this.FileWatchTimer.Enabled = true;
+            this.FileWatchTimer.Interval = 1000;
+            this.FileWatchTimer.Tick += new System.EventHandler(HandleFileWatchTimer);
+        }
+
+        private void HandleFileWatchTimer(object sender, EventArgs e)
+        {
+            var gumProject = ProjectState.Self.GumProjectSave;
+            if (gumProject != null && !string.IsNullOrEmpty(gumProject.FullFileName))
+            {
+
+                FileWatchManager.Self.Flush();
+            }
         }
 
         //void HandleXnaInitialize(object sender, EventArgs e)

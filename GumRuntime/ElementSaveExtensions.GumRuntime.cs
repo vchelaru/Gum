@@ -155,7 +155,8 @@ namespace GumRuntime
             var variablesToSet = stateSave.Variables
                 .Where(item => item.SetsValue && item.Value != null)
                 // States should be applied first, then values may override states (order by sorts false first):
-                .OrderBy(item=>!item.IsState(elementSave));
+                .OrderBy(item=>!item.IsState(elementSave))
+                .ToList();
 
             foreach (var variable in variablesToSet)
             {
@@ -174,7 +175,8 @@ namespace GumRuntime
             // That way they are drawn in the same
             // order as they are defined.
             variablesToSet = variablesToSet.Where(item => item.GetRootName() == "Parent")
-                .OrderBy(item => elementSave.Instances.FindIndex(instance => instance.Name == item.SourceObject));
+                .OrderBy(item => elementSave.Instances.FindIndex(instance => instance.Name == item.SourceObject))
+                .ToList();
 
             foreach (var variable in variablesToSet)
             {

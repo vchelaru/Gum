@@ -105,6 +105,8 @@ namespace Gum
 
         public void CreateNewProject()
         {
+            FileWatchManager.Self.HandleProjectUnloaded();
+
             mGumProjectSave = new GumProjectSave();
             ObjectFinder.Self.GumProjectSave = mGumProjectSave;
 
@@ -199,6 +201,8 @@ namespace Gum
 
                 GraphicalUiElement.CanvasWidth = mGumProjectSave.DefaultCanvasWidth;
                 GraphicalUiElement.CanvasHeight = mGumProjectSave.DefaultCanvasHeight;
+
+                FileWatchManager.Self.HandleProjectLoaded();
             }
             else
             {
@@ -293,6 +297,7 @@ namespace Gum
                                 PluginManager.Self.BeforeElementSave(standardElementSave);
                             }
                         }
+                        FileWatchManager.Self.IgnoreNextChangeOn(GumProjectSave.FullFileName);
 
                         GumProjectSave.Save(GumProjectSave.FullFileName, saveContainedElements);
                         succeeded = true;
@@ -412,6 +417,7 @@ namespace Gum
 
                     string fileName = elementSave.GetFullPathXmlFile();
 
+
                     // if it's readonly, let's warn the user
                     bool isReadOnly = IsFileReadOnly(fileName);
 
@@ -421,6 +427,8 @@ namespace Gum
                     }
                     else
                     {
+                        FileWatchManager.Self.IgnoreNextChangeOn(fileName);
+
                         const int maxNumberOfTries = 5;
                         const int msBetweenSaves = 100;
                         int numberOfTimesTried = 0;

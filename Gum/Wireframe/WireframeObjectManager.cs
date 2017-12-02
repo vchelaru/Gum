@@ -211,13 +211,9 @@ namespace Gum.Wireframe
                 ClearAll();
 
                 // If it's the same element, let's not refresh the textures
-                bool didElementChange = elementSave != ElementShowing;
+                ((ContentLoader)LoaderManager.Self.ContentLoader).DisposeAndClear();
+                LoaderManager.Self.CacheTextures = false;
 
-                if (didElementChange)
-                {
-                    ((ContentLoader)LoaderManager.Self.ContentLoader).DisposeAndClear();
-                    LoaderManager.Self.CacheTextures = false;
-                }
                 LoaderManager.Self.CacheTextures = true;
 
                 RootGue = CreateIpsoForElement(elementSave);

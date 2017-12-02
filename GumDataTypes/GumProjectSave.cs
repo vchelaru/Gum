@@ -217,7 +217,7 @@ namespace Gum.DataTypes
             return gps;
         }
 
-#if ANDROID || IOS || WINDOWS_8
+#if ANDROID || IOS
         static GumProjectSave LoadFromTitleStorage(string fileName, GumLoadResult result)
 		{
 			using (System.IO.Stream stream = Microsoft.Xna.Framework.TitleContainer.OpenStream(fileName))
@@ -316,6 +316,68 @@ namespace Gum.DataTypes
 
             result.ErrorMessage += errors;
 
+        }
+
+        public void ReloadBehavior(BehaviorSave behavior)
+        {
+            string projectRootDirectory = FileManager.GetDirectory(this.FullFileName);
+            
+            var matchingReference = BehaviorReferences.FirstOrDefault(item => item.Name == behavior.Name);
+
+            var newBehaviorSave = matchingReference?.ToBehaviorSave(projectRootDirectory);
+
+            if(newBehaviorSave != null)
+            {
+                Behaviors.Remove(behavior);
+                Behaviors.Add(newBehaviorSave);
+            }
+        }
+
+        public void ReloadElement(ElementSave element)
+        {
+            string projectRootDirectory = FileManager.GetDirectory(this.FullFileName);
+
+            var gumLoadResult = new GumLoadResult();
+
+            if (element is ScreenSave)
+            {
+                var matchingReference = ScreenReferences.FirstOrDefault(item => item.Name == element.Name);
+
+                ScreenSave newScreen = matchingReference?.ToElementSave<ScreenSave>(
+                    projectRootDirectory, GumProjectSave.ScreenExtension, gumLoadResult);
+
+                if(newScreen != null)
+                {
+                    Screens.Remove(element as ScreenSave);
+                    Screens.Add(newScreen);
+                }
+            }
+            else if(element is ComponentSave)
+            {
+                var matchingReference = ComponentReferences.FirstOrDefault(item => item.Name == element.Name);
+
+                ComponentSave newComonent = matchingReference?.ToElementSave<ComponentSave>(
+                    projectRootDirectory, GumProjectSave.ComponentExtension, gumLoadResult);
+
+                if (newComonent != null)
+                {
+                    Components.Remove(element as ComponentSave);
+                    Components.Add(newComonent);
+                }
+            }
+            else if(element is StandardElementSave)
+            {
+                var matchingReference = StandardElementReferences.FirstOrDefault(item => item.Name == element.Name);
+
+                StandardElementSave newStandardElement = matchingReference?.ToElementSave<StandardElementSave>(
+                    projectRootDirectory, GumProjectSave.ComponentExtension, gumLoadResult);
+
+                if (newStandardElement != null)
+                {
+                    StandardElements.Remove(element as StandardElementSave);
+                    StandardElements.Add(newStandardElement);
+                }
+            }
         }
 
 #if !WINDOWS_8 && !UWP

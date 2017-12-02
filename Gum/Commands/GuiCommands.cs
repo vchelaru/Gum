@@ -58,7 +58,7 @@ namespace Gum.Commands
 
         public void RefreshElementTreeView()
         {
-            ElementTreeViewManager.Self.RefreshUI();
+            ElementTreeViewManager.Self.RefreshUi();
         }
 
         public void RefreshElementTreeView(ElementSave element)

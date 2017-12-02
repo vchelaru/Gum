@@ -312,6 +312,14 @@ namespace Gum.Managers
             return toReturn.Distinct();
         }
 
+        public List<string> GetFilesReferencedBy(ElementSave element)
+        {
+            List<string> toReturn = new List<string>();
+
+            FillListWithReferencedFiles(toReturn, element);
+
+            return toReturn;
+        }
 
         private void FillListWithReferencedFiles<T>(List<string> files, IList<T> elements) where T : ElementSave
         {

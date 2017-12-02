@@ -116,7 +116,7 @@ namespace Gum.Commands
                     //PluginManager.Self.BeforeBehaviorSave(behavior);
 
                     string fileName = behavior.GetFullPathXmlFile();
-
+                    FileWatchManager.Self.IgnoreNextChangeOn(fileName);
                     // if it's readonly, let's warn the user
                     bool isReadOnly = ProjectManager.IsFileReadOnly(fileName);
 
