@@ -10,8 +10,14 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
+using System.Windows;
+using CommonFormsAndControls;
+using StateAnimationPlugin.Validation;
+using Gum.Managers;
+using ToolsUtilities;
 
 namespace StateAnimationPlugin.ViewModels
 {
@@ -57,7 +63,13 @@ namespace StateAnimationPlugin.ViewModels
                 }
             }
         }
-                
+
+        public ObservableCollection<MenuItem> AnimationRightClickItems
+        {
+            get;
+            private set;
+        } = new ObservableCollection<MenuItem>();
+
         public AnimationViewModel SelectedAnimation
         {
             get { return mSelectedAnimation; }
@@ -160,12 +172,14 @@ namespace StateAnimationPlugin.ViewModels
         private void OnPropertyChanged(string propertyName)
         {
             
-            if (propertyName == "SelectedAnimation")
+            if (propertyName == nameof(SelectedAnimation))
             {
                 if(SelectedAnimation != null)
                 {
                     SelectedAnimation.RefreshCombinedStates( SelectedState.Self.SelectedElement );
                 }
+
+                RefreshRightClickMenuItems();
             }
 
             if(PropertyChanged != null)
@@ -176,12 +190,52 @@ namespace StateAnimationPlugin.ViewModels
             OnAnyChange(this, propertyName);
         }
 
+        private void RefreshRightClickMenuItems()
+        {
+            AnimationRightClickItems.Clear();
+
+            if(SelectedAnimation != null)
+            {
+                var menuItem = new MenuItem();
+                menuItem.Header = "Rename Animation";
+                menuItem.Click += HandleRenameAnimation;
+
+                AnimationRightClickItems.Add(menuItem);
+            }
+
+
+        }
+
+        private void HandleRenameAnimation(object sender, RoutedEventArgs e)
+        {
+            TextInputWindow tiw = new TextInputWindow();
+            tiw.Message = "Enter new animation name:";
+            tiw.Result = SelectedAnimation.Name;
+
+            var dialogResult = tiw.ShowDialog();
+
+            if (dialogResult == System.Windows.Forms.DialogResult.OK)
+            {
+                string whyInvalid;
+                if (!NameValidator.IsAnimationNameValid(tiw.Result, Animations, out whyInvalid))
+                {
+                    MessageBox.Show(whyInvalid);
+                }
+                else
+                {
+                    var oldAnimationName = SelectedAnimation.Name;
+                    SelectedAnimation.Name = tiw.Result;
+
+                    StateAnimationPlugin.Managers.RenameManager.Self.HandleRename(
+                        SelectedAnimation, 
+                        oldAnimationName, Animations, Element);   
+                }
+            }
+        }
+
         private void OnAnyChange(object sender, string propertyName)
         {
-            if(AnyChange != null)
-            {
-                AnyChange(sender, new PropertyChangedEventArgs(propertyName));
-            }
+            AnyChange?.Invoke(sender, new PropertyChangedEventArgs(propertyName));
         }
 
 

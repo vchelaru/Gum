@@ -66,8 +66,13 @@
                     <RowDefinition Height="Auto"></RowDefinition>
                 </Grid.RowDefinitions>
                 <ListBox ItemsSource="{Binding Animations}" 
-                         SelectedItem="{Binding SelectedAnimation}" 
-                         KeyDown="HandleDeleteAnimationPressed">
+                         KeyDown="HandleDeleteAnimationPressed"
+                         SelectedItem="{Binding SelectedAnimation}">
+                    <ListBox.ContextMenu>
+                        <ContextMenu 
+                            ItemsSource="{Binding AnimationRightClickItems}"
+                            x:Name="AnimationContextMenu"></ContextMenu>
+                    </ListBox.ContextMenu>
                   <ListBox.ItemTemplate>
                     <DataTemplate>
                       <StackPanel Orientation="Horizontal">
