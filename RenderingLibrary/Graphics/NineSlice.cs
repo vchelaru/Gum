@@ -473,7 +473,8 @@ namespace RenderingLibrary.Graphics
                 else
                 {
                     desiredMiddleWidth = 0;
-                    mSprites[(int)NineSliceSections.TopLeft].Width = mSprites[(int)NineSliceSections.TopRight].Width = mSprites[(int)NineSliceSections.Left].Width = mSprites[(int)NineSliceSections.Right].Width =
+                    mSprites[(int)NineSliceSections.TopLeft].Width = mSprites[(int)NineSliceSections.TopRight].Width = 
+                        mSprites[(int)NineSliceSections.Left].Width = mSprites[(int)NineSliceSections.Right].Width =
                         mSprites[(int)NineSliceSections.BottomLeft].Width = mSprites[(int)NineSliceSections.BottomRight].Width = Width / 2.0f;
                 }
 
@@ -615,7 +616,7 @@ namespace RenderingLibrary.Graphics
                     insideWidth,
                     outsideHeight);
                 mSprites[(int)NineSliceSections.TopRight].SourceRectangle = new Rectangle(
-                    leftCoordinate + insideWidth + outsideWidth,
+                    rightCoordinate - outsideWidth,
                     topCoordinate + 0,
                     outsideWidth,
                     outsideHeight);
@@ -631,24 +632,24 @@ namespace RenderingLibrary.Graphics
                     insideWidth,
                     insideHeight);
                 mSprites[(int)NineSliceSections.Right].SourceRectangle = new Rectangle(
-                    leftCoordinate + outsideWidth + insideWidth,
+                    rightCoordinate - outsideWidth,
                     topCoordinate + outsideHeight,
                     outsideWidth,
                     insideHeight);
 
                 mSprites[(int)NineSliceSections.BottomLeft].SourceRectangle = new Rectangle(
                     leftCoordinate + 0,
-                    topCoordinate + outsideHeight + insideHeight,
+                    bottomCoordinate - outsideHeight,
                     outsideWidth,
                     outsideHeight);
                 mSprites[(int)NineSliceSections.Bottom].SourceRectangle = new Rectangle(
                     leftCoordinate + outsideWidth,
-                    topCoordinate + outsideHeight + insideHeight,
+                    bottomCoordinate - outsideHeight,
                     insideWidth,
                     outsideHeight);
                 mSprites[(int)NineSliceSections.BottomRight].SourceRectangle = new Rectangle(
-                    leftCoordinate + outsideWidth + insideWidth,
-                    topCoordinate + outsideHeight + insideHeight,
+                    rightCoordinate - outsideWidth,
+                    bottomCoordinate - outsideHeight,
                     outsideWidth,
                     outsideHeight);
             }
