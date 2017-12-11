@@ -71,6 +71,12 @@ namespace Gum.Managers
         {
             StateSave stateSave = SelectedState.Self.SelectedStateSave;
 
+            // If the user has a category selected but no state in the category, then use the default:
+            if(stateSave == null && SelectedState.Self.SelectedStateCategorySave != null)
+            {
+                stateSave = SelectedState.Self.SelectedElement.DefaultState;
+            }
+
             if(stateSave == null)
             {
                 throw new InvalidOperationException($"{nameof(stateSave)} is null");

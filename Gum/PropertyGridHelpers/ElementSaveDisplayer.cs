@@ -96,7 +96,18 @@ namespace Gum.PropertyGridHelpers
             {
                 if (elementSave is StandardElementSave)
                 {
-                    stateToDisplay = StandardElementsManager.Self.GetDefaultStateFor(elementSave.Name);
+                    // if we use the standard elements manager, we don't get any custom categories, so we need to add those:
+                    stateToDisplay = StandardElementsManager.Self.GetDefaultStateFor(elementSave.Name).Clone();
+                    foreach(var category in elementSave.Categories)
+                    {
+                        var expectedName = category.Name + "State";
+
+                        var variable = elementSave.GetVariableFromThisOrBase(expectedName);
+                        if(variable != null)
+                        {
+                            stateToDisplay.Variables.Add(variable);
+                        }
+                    }
                 }
                 else
                 {
