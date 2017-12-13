@@ -105,5 +105,8 @@ using System.Runtime.InteropServices;
 //  - Added GraphicalUiElement.PositionChanged and SizeChanged which is raised in the UpdateLayout
 // 0.9.1.0
 //  - Added new Error window for behaviors
+// 0.9.1.1
+//  - Lots of fixes related to categorized states on standard elements
+//  - Fixed a crash when setting alignment with category selected.
 [assembly: AssemblyVersion("0.9.1.0")]
 [assembly: AssemblyFileVersion("0.9.1.0")]

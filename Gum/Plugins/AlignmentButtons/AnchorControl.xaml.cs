@@ -1,4 +1,5 @@
 ﻿using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.ToolStates;
 using System;
@@ -23,6 +24,21 @@ namespace Gum.Plugins.AlignmentButtons
     /// </summary>
     public partial class AnchorControl : UserControl
     {
+        StateSave CurrentState
+        {
+            get
+            {
+                if(SelectedState.Self.SelectedStateSave != null)
+                {
+                    return SelectedState.Self.SelectedStateSave;
+                }
+                else
+                {
+                    return SelectedState.Self.SelectedElement?.DefaultState;
+                }
+            }
+        }
+
         public AnchorControl()
         {
             InitializeComponent();
@@ -147,7 +163,7 @@ namespace Gum.Plugins.AlignmentButtons
 
         private void SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment alignment, PositionUnitType xUnits)
         {
-            var state = SelectedState.Self.SelectedStateSave;
+            var state = CurrentState;
             string prefix = GetVariablePrefix();
 
             state.SetValue(prefix + "X", 0.0f, "float");
@@ -176,7 +192,7 @@ namespace Gum.Plugins.AlignmentButtons
 
         private void SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment alignment, PositionUnitType yUnits)
         {
-            var state = SelectedState.Self.SelectedStateSave;
+            var state = CurrentState;
             string prefix = GetVariablePrefix();
 
             state.SetValue(prefix + "Y", 0.0f, "float");
