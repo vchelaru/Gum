@@ -975,7 +975,7 @@ namespace Gum.Managers
         {
             if (e.KeyCode == Keys.Delete)
             {
-                EditingManager.Self.HandleDelete();
+                DeleteLogic.Self.HandleDelete();
 
                 e.Handled = true;
                 e.SuppressKeyPress = true;

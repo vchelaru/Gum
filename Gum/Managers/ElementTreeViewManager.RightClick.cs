@@ -84,7 +84,7 @@ namespace Gum.Managers
 
         void HandleDeleteObjectClick(object sender, EventArgs e)
         {
-            EditingManager.Self.HandleDelete();
+            DeleteLogic.Self.HandleDelete();
         }
 
         void OnGoToDefinitionClick(object sender, EventArgs e)

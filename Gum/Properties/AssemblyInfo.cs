@@ -108,5 +108,5 @@ using System.Runtime.InteropServices;
 // 0.9.1.1
 //  - Lots of fixes related to categorized states on standard elements
 //  - Fixed a crash when setting alignment with category selected.
-[assembly: AssemblyVersion("0.9.1.0")]
-[assembly: AssemblyFileVersion("0.9.1.0")]
+[assembly: AssemblyVersion("0.9.1.1")]
+[assembly: AssemblyFileVersion("0.9.1.1")]

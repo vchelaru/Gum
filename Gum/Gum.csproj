@@ -146,6 +146,7 @@
     <Compile Include="DataTypes\VariableSaveExtensionMethods.cs" />
     <Compile Include="Debug\ProjectVerifier.cs" />
     <Compile Include="Events\GumEvents.cs" />
+    <Compile Include="Managers\DeleteLogic.cs" />
     <Compile Include="Managers\FileChangeReactionLogic.cs" />
     <Compile Include="Managers\FileWatchManager.cs" />
     <Compile Include="Plugins\Errors\AllErrorsViewModel.cs" />
@@ -286,6 +287,7 @@
     <Compile Include="PropertyGridHelpers\SetVariableLogic.cs" />
     <Compile Include="PropertyGridHelpers\StateReferencingInstanceMember.cs" />
     <Compile Include="PropertyGridHelpers\UiTypeConverters\ModalTypeConverter.cs" />
+    <Compile Include="PropertyGridHelpers\VariableInCategoryPropagationLogic.cs" />
     <Compile Include="Reflection\LateBinder.cs" />
     <Compile Include="Reflection\TypeManager.cs" />
     <Compile Include="RenderingLibrary\Blend.cs" />

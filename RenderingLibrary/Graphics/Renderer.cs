@@ -46,12 +46,6 @@ namespace RenderingLibrary.Graphics
 
         public static object LockObject = new object();
 
-        /// <summary>
-        /// This adjusts for this bug:
-        /// https://github.com/MonoGame/MonoGame/issues/5947
-        /// </summary>
-        public static bool SubtractViewportYForMonoGameGlBug { get; set; } = false;
-
         #endregion
 
         #region Properties
@@ -417,16 +411,8 @@ namespace RenderingLibrary.Graphics
                 left += this.GraphicsDevice.Viewport.X;
                 right += this.GraphicsDevice.Viewport.X;
 
-                if (SubtractViewportYForMonoGameGlBug)
-                {
-                    top -= this.GraphicsDevice.Viewport.Y;
-                    bottom -= this.GraphicsDevice.Viewport.Y;
-                }
-                else
-                {
-                    top += this.GraphicsDevice.Viewport.Y;
-                    bottom += this.GraphicsDevice.Viewport.Y;
-                }
+                top += this.GraphicsDevice.Viewport.Y;
+                bottom += this.GraphicsDevice.Viewport.Y;
 
                 Microsoft.Xna.Framework.Rectangle thisRectangle = new Microsoft.Xna.Framework.Rectangle(
                     left,

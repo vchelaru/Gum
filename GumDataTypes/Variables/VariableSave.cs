@@ -67,15 +67,20 @@ namespace Gum.DataTypes.Variables
         {
             get
             {
-                int dotIndex = Name.IndexOf('.');
-                if (dotIndex != -1)
-                {
-                    return Name.Substring(0, dotIndex);
-                }
-                else
-                {
-                    return null;
-                }
+                return GetSourceObject(Name);
+            }
+        }
+
+        public static string GetSourceObject(string variableName)
+        {
+            int dotIndex = variableName.IndexOf('.');
+            if (dotIndex != -1)
+            {
+                return variableName.Substring(0, dotIndex);
+            }
+            else
+            {
+                return null;
             }
         }
 

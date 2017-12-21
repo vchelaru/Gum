@@ -428,44 +428,14 @@ namespace Gum.Managers
                     instanceMember.CustomGetEvent += (member) => commonMember;
                     instanceMember.CustomSetEvent += (not, used) =>
                     {
-                        AskRemoveFromAll(commonMember, stateCategory);
+                        VariableInCategoryPropagationLogic.Self
+                            .AskRemoveVariableFromAllStatesInCategory(commonMember, stateCategory);
                     };
 
                     instanceMember.PreferredDisplayer = typeof(VariableRemoveButton);
 
                     memberCategory.Members.Add(instanceMember);
                 }
-            }
-        }
-
-        private void AskRemoveFromAll(string variableName, StateSaveCategory stateCategory)
-        {
-            string message =
-                $"Are you sure you want to remove {variableName} from all states in {stateCategory.Name}? The following categories will be impacted:\n";
-
-            foreach(var state in stateCategory.States)
-            {
-                message += $"\n{state.Name}";
-            }
-
-            var result = MessageBox.Show(message, "Remove Variables?", MessageBoxButtons.YesNo);
-
-            if(result == DialogResult.Yes)
-            {
-                foreach(var state in stateCategory.States)
-                {
-                    var foundVariable = state.Variables.FirstOrDefault(item => item.Name == variableName);
-
-                    if(foundVariable != null)
-                    {
-                        state.Variables.Remove(foundVariable);
-                    }
-                }
-
-                // save everything
-                GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
-                GumCommands.Self.GuiCommands.RefreshStateTreeView();
-                GumCommands.Self.GuiCommands.RefreshPropertyGrid();
             }
         }
 

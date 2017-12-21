@@ -1029,7 +1029,7 @@ namespace Gum.Wireframe
 
                 ipso.SetProperty(baseVariableName, newValue);
 
-                SetVariableLogic.Self.PropagateVariablesInCategory(nameWithInstance);
+                VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(nameWithInstance);
 
 
                 return newValue;
@@ -1060,7 +1060,7 @@ namespace Gum.Wireframe
             var ipso = WireframeObjectManager.Self.GetRepresentation(elementSave);
             ipso.SetProperty(baseVariableName, newValue);
 
-            SetVariableLogic.Self.PropagateVariablesInCategory(baseVariableName);
+            VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(baseVariableName);
 
             return newValue;
         }

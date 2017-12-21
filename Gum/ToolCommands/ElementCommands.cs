@@ -7,6 +7,7 @@ using Gum.Managers;
 using Gum.DataTypes.Variables;
 using Gum.Plugins;
 using Gum.ToolStates;
+using Gum.PropertyGridHelpers;
 
 namespace Gum.ToolCommands
 {
@@ -69,7 +70,8 @@ namespace Gum.ToolCommands
             {
                 foreach(var variable in otherState.Variables)
                 {
-                    PropertyGridHelpers.SetVariableLogic.Self.PropagateVariablesInCategory(variable.Name);
+                    VariableInCategoryPropagationLogic.Self
+                        .PropagateVariablesInCategory(variable.Name);
                 }
             }
 
@@ -136,14 +138,6 @@ namespace Gum.ToolCommands
             GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
         }
 
-        public void RemoveStateCategory(StateSaveCategory category, IStateCategoryListContainer elementToRemoveFrom)
-        {
-            elementToRemoveFrom.Categories.Remove(category);
-
-            GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
-
-        }
-
         public void RemoveInstance(InstanceSave instanceToRemove, ElementSave elementToRemoveFrom)
         {
             if (!elementToRemoveFrom.Instances.Contains(instanceToRemove))
@@ -157,8 +151,18 @@ namespace Gum.ToolCommands
             {
                 for (int i = stateSave.Variables.Count - 1; i > -1; i--)
                 {
-                    if (stateSave.Variables[i].SourceObject == instanceToRemove.Name)
+                    var variable = stateSave.Variables[i];
+
+                    if (variable.SourceObject == instanceToRemove.Name)
                     {
+                        // this is a variable that assigns a value on the removed object. The object
+                        // is gone, so the variable should be removed too.
+                        stateSave.Variables.RemoveAt(i);
+                    }
+                    else if(variable.GetRootName() == "Parent" && variable.Value as string == instanceToRemove.Name)
+                    {
+                        // This is a variable that assigns the Parent to the removed object. Since the object is
+                        // gone, the parent value shouldn't be assigned anymore.
                         stateSave.Variables.RemoveAt(i);
                     }
                 }

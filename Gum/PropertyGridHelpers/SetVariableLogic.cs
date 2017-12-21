@@ -76,7 +76,7 @@ namespace Gum.PropertyGridHelpers
                 {
                     qualifiedName = $"{instance.Name}.{unqualifiedMember}";
                 }
-                PropagateVariablesInCategory(qualifiedName);
+                VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(qualifiedName);
 
                 // Need to record undo before refreshing and reselecting the UI
                 Undo.UndoManager.Self.RecordUndo();
@@ -98,46 +98,7 @@ namespace Gum.PropertyGridHelpers
             }
         }
 
-        public void PropagateVariablesInCategory( string changedMember)
-        {
-            var currentCategory = SelectedState.Self.SelectedStateCategorySave;
-            /////////////////////Early Out//////////////////////////
-            if(currentCategory == null)
-            {
-                return;
-            }
-            ///////////////////End Early Out////////////////////////
 
-            var defaultState = SelectedState.Self.SelectedElement.DefaultState;
-            var defaultVariable = defaultState.GetVariableSave(changedMember);
-            if(defaultVariable == null)
-            {
-                defaultVariable = defaultState.GetVariableRecursive(changedMember);
-            }
-            var defaultValue = defaultVariable.Value;
-
-            foreach(var state in currentCategory.States)
-            {
-                var existingVariable = state.GetVariableSave(changedMember);
-
-                if(existingVariable == null)
-                {
-                    VariableSave newVariable = defaultVariable.Clone();
-                    newVariable.Value = defaultValue;
-                    newVariable.SetsValue = true;
-                    newVariable.Name = changedMember;
-
-                    state.Variables.Add(newVariable);
-
-                    GumCommands.Self.GuiCommands.PrintOutput(
-                        $"Adding {changedMember} to {currentCategory.Name}/{state.Name}");
-                }
-                else if(existingVariable.SetsValue == false)
-                {
-                    existingVariable.SetsValue = true;
-                }
-            }
-        }
 
         private void ReactToChangedMember(string changedMember, object oldValue, ElementSave parentElement, InstanceSave instance)
         {

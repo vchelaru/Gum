@@ -76,33 +76,10 @@ namespace Gum.Commands
                 }
             }
         }
+
         public void RemoveStateCategory( StateSaveCategory category, IStateCategoryListContainer stateCategoryListContainer)
         {
-            // This category can only be removed if no behaviors require it
-            var behaviorsNeedingCategory = GetBehaviorsNeedingCategory(category, stateCategoryListContainer as ComponentSave);
-
-            if(behaviorsNeedingCategory.Any())
-            {
-                string message =
-                    "This category cannot be removed because it is needed by the following behavior(s):";
-
-                foreach(var behavior in behaviorsNeedingCategory)
-                {
-                    message += "\n" + behavior.Name; 
-                }
-
-                MessageBox.Show(message);
-            }
-            else
-            {
-                var response = MessageBox.Show($"Are you sure you want to delete the category {category.Name}?", "Delete category?", MessageBoxButtons.YesNo);
-
-                if (response == DialogResult.Yes)
-                {
-                    ObjectRemover.Self.Remove(category);
-                }
-
-            }
+            DeleteLogic.Self.RemoveStateCategory(category, stateCategoryListContainer);
         }
 
         private List<BehaviorSave> GetBehaviorsNeedingState(StateSave stateSave)
@@ -131,7 +108,7 @@ namespace Gum.Commands
 
                 if (elementCategory != null)
                 {
-                    var allBehaviorsNeedingCategory = GetBehaviorsNeedingCategory(elementCategory, componentSave);
+                    var allBehaviorsNeedingCategory = DeleteLogic.Self.GetBehaviorsNeedingCategory(elementCategory, componentSave);
 
                     foreach(var behavior in allBehaviorsNeedingCategory)
                     {
@@ -151,27 +128,7 @@ namespace Gum.Commands
         }
 
 
-        private List<BehaviorSave> GetBehaviorsNeedingCategory(StateSaveCategory category, ComponentSave componentSave)
-        {
-            List<BehaviorSave> behaviors = new List<BehaviorSave>();
 
-            if(componentSave != null)
-            {
-                var behaviorNames = componentSave.Behaviors.Select(item => item.BehaviorName);
-
-                foreach (var behavior in ProjectManager.Self.GumProjectSave.Behaviors.Where(item => behaviorNames.Contains(item.Name)))
-                {
-                    bool needsCategory = behavior.Categories.Any(item => item.Name == category.Name);
-
-                    if(needsCategory)
-                    {
-                        behaviors.Add(behavior);
-                    }
-                }
-            }
-
-            return behaviors;
-        }
 
         public void AddCategory()
         {
@@ -358,7 +315,7 @@ namespace Gum.Commands
         internal void RenameStateCategory(StateSaveCategory category, ElementSave elementSave)
         {
             // This category can only be renamed if no behaviors require it
-            var behaviorsNeedingCategory = GetBehaviorsNeedingCategory(category, elementSave as ComponentSave);
+            var behaviorsNeedingCategory = DeleteLogic.Self.GetBehaviorsNeedingCategory(category, elementSave as ComponentSave);
 
             if (behaviorsNeedingCategory.Any())
             {
