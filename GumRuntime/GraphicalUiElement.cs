@@ -526,6 +526,7 @@ namespace Gum.Wireframe
                     }
                     UpdateLayout();
 
+                    ParentChanged?.Invoke(this, null);
                 }
             }
         }
@@ -921,6 +922,7 @@ namespace Gum.Wireframe
 
         public event EventHandler SizeChanged;
         public event EventHandler PositionChanged;
+        public event EventHandler ParentChanged;
 
         #endregion
 
