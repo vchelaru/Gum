@@ -314,10 +314,34 @@ namespace Gum.Managers
             mMenuStrip = mTreeView.ContextMenuStrip;
             GumCommands.Self.GuiCommands.RefreshElementTreeView();
 
+            mTreeView.DragDrop += HandleDragDropEvent;
+
+            mTreeView.ItemDrag += (sender, e) =>
+            {
+                TreeNode node = e.Item as TreeNode;
+
+                mTreeView.DoDragDrop(node, DragDropEffects.Move | DragDropEffects.Copy);
+
+            };
+
+            mTreeView.DragEnter += (sender, e) =>
+            {
+                e.Effect = DragDropEffects.All;
+
+            };
+
+            mTreeView.DragOver += (sender, e) =>
+            {
+                e.Effect = DragDropEffects.Move;
+            };
+
             InitializeMenuItems();
         }
-        
 
+        private void HandleDragDropEvent(object sender, DragEventArgs e)
+        {
+            DragDropManager.Self.HandleDragDropEvent(sender, e);
+        }
 
         private void AddAndRemoveFolderNodes()
         {

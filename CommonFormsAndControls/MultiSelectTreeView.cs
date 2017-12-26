@@ -21,6 +21,8 @@ namespace CommonFormsAndControls
         private bool mSelectedNodeChanged = false;
         private List<TreeNode> mSelectedNodes = null;
 
+        private TreeNode nodeOnDragStart;
+
 
         #endregion
 
@@ -245,6 +247,17 @@ namespace CommonFormsAndControls
                     }
                 }
 
+                // Not sure why the drag drop events are not raised automatically, trying to do so manually...
+                if(nodeOnDragStart != null)
+                {
+                    DragEventArgs dragEventArgs = new DragEventArgs(null, 0, Cursor.Position.X, Cursor.Position.Y, DragDropEffects.All, DragDropEffects.All);
+
+                    this.OnDragDrop(dragEventArgs);
+                }
+
+                nodeOnDragStart = null;
+
+
                 base.OnMouseUp(e);
             }
 #if !DEBUG
@@ -276,6 +289,8 @@ namespace CommonFormsAndControls
                     }
                 }
 
+                nodeOnDragStart = e.Item as TreeNode;
+
                 base.OnItemDrag(e);
             }
 #if !DEBUG
@@ -285,6 +300,8 @@ namespace CommonFormsAndControls
             }
 #endif
         }
+
+
 
         protected override void OnBeforeSelect(TreeViewCancelEventArgs e)
         {

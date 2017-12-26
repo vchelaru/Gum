@@ -65,22 +65,11 @@ namespace Gum.Managers
             {
                 if (mDraggedItem != null)
                 {
-                    List<TreeNode> treeNodesToDrop = new List<TreeNode>
-                    {
-                        (TreeNode)mDraggedItem
-                    };
+                    List<TreeNode> treeNodesToDrop = GetTreeNodesToDrop();
 
-                    // The selected nodes should contain the dragged item, but I don't know for 100% certain.
-                    // If not, then we'll just use the dragged item. If it does, then we'll also add all other
-                    // selected items:
-                    if(SelectedState.Self.SelectedTreeNodes.Contains(mDraggedItem))
-                    {
-                        var whatToAdd = SelectedState.Self.SelectedTreeNodes.Where(item => item != mDraggedItem);
-                        treeNodesToDrop.AddRange(whatToAdd);
-                    }
-
-                    mDraggedItem = null; // to prevent this from getting hit again if a message box is up
-                    foreach(var draggedTreeNode in treeNodesToDrop)
+                    // I don't know if we need this now that we're moving to things being event based:
+                    //mDraggedItem = null; // to prevent this from getting hit again if a message box is up
+                    foreach (var draggedTreeNode in treeNodesToDrop)
                     {
                         object draggedObject = draggedTreeNode.Tag;
 
@@ -88,19 +77,42 @@ namespace Gum.Managers
 
                         HandleDroppedItemInWireframe(draggedObject, out handled);
 
-                        if (!handled)
+                        if(handled)
                         {
-                            TreeNode targetTreeNode = ElementTreeViewManager.Self.GetTreeNodeOver();
-                            if (targetTreeNode != draggedTreeNode)
-                            {
-                                HandleDroppedItemOnTreeView(draggedObject, targetTreeNode);
-                            }
+                            mDraggedItem = null;
                         }
+                        // This used to be handled here, but now we handle it with events so it's not tied to fps
+                        //if (!handled)
+                        //{
+                        //    TreeNode targetTreeNode = ElementTreeViewManager.Self.GetTreeNodeOver();
+                        //    if (targetTreeNode != draggedTreeNode)
+                        //    {
+                        //        HandleDroppedItemOnTreeView(draggedObject, targetTreeNode);
+                        //    }
+                        //}
                     }
                 }
             }
         }
-        
+
+        private List<TreeNode> GetTreeNodesToDrop()
+        {
+            List<TreeNode> treeNodesToDrop = new List<TreeNode>
+                    {
+                        (TreeNode)mDraggedItem
+                    };
+
+            // The selected nodes should contain the dragged item, but I don't know for 100% certain.
+            // If not, then we'll just use the dragged item. If it does, then we'll also add all other
+            // selected items:
+            if (SelectedState.Self.SelectedTreeNodes.Contains(mDraggedItem))
+            {
+                var whatToAdd = SelectedState.Self.SelectedTreeNodes.Where(item => item != mDraggedItem);
+                treeNodesToDrop.AddRange(whatToAdd);
+            }
+
+            return treeNodesToDrop;
+        }
 
         private void HandleDroppedItemOnTreeView(object draggedComponentOrElement, TreeNode treeNodeDroppedOn)
         {
@@ -247,6 +259,22 @@ namespace Gum.Managers
             }
         }
 
+        internal void HandleDragDropEvent(object sender, DragEventArgs e)
+        {
+            List<TreeNode> treeNodesToDrop = GetTreeNodesToDrop();
+            foreach(var draggedTreeNode in treeNodesToDrop)
+            {
+                object draggedObject = draggedTreeNode.Tag;
+
+                TreeNode targetTreeNode = ElementTreeViewManager.Self.GetTreeNodeOver();
+                if (targetTreeNode != draggedTreeNode)
+                {
+                    HandleDroppedItemOnTreeView(draggedObject, targetTreeNode);
+                }
+            }
+            mDraggedItem = null;
+        }
+
         private static void HandleDroppingInstanceOnTarget(object targetObject, InstanceSave dragDroppedInstance, ElementSave targetElementSave)
         {
             if (targetObject != dragDroppedInstance)
@@ -294,10 +322,14 @@ namespace Gum.Managers
                     float worldX, worldY;
                     Renderer.Self.Camera.ScreenToWorld(Cursor.X, Cursor.Y,
                                                        out worldX, out worldY);
+                    if(newInstance != null)
+                    {
 
-                    SetInstanceToPosition(worldX, worldY, newInstance);
+                        SetInstanceToPosition(worldX, worldY, newInstance);
 
-                    SaveAndRefresh();
+                        SaveAndRefresh();
+                    }
+                    mDraggedItem = null;
                 }
             }
         }

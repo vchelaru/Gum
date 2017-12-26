@@ -474,7 +474,15 @@ namespace Gum.Wireframe
             get { return mWidth; }
             set
             {
-                if (mWidth != value)
+#if DEBUG
+                if (float.IsPositiveInfinity(value) || 
+                    float.IsNegativeInfinity(value) ||
+                    float.IsNaN(value))
+                {
+                    throw new ArgumentException();
+                }
+#endif
+                    if (mWidth != value)
                 {
                     mWidth = value; UpdateLayout();
                 }
@@ -489,9 +497,11 @@ namespace Gum.Wireframe
                 if (mHeight != value)
                 {
 #if DEBUG
-                    if(float.IsNaN(value))
+                    if (float.IsPositiveInfinity(value) ||
+                        float.IsNegativeInfinity(value) ||
+                        float.IsNaN(value))
                     {
-                        throw new Exception("Height of NaN is not supported");
+                        throw new ArgumentException();
                     }
 #endif
                     mHeight = value; UpdateLayout();
@@ -1218,6 +1228,10 @@ namespace Gum.Wireframe
                     //mContainedObjectAsIpso.Parent = mParent;
                     mContainedObjectAsIpso.SetParentDirect(mParent);
                 }
+                float widthBefore = 0;
+                float heightBefore = 0;
+                float xBefore = 0;
+                float yBefore = 0;
 
                 // Not sure why we use the ParentGue and not the Parent itself...
                 // We want to do it on the actual Parent so that objects attached to components
@@ -1269,10 +1283,6 @@ namespace Gum.Wireframe
                             (mContainedObjectAsIpso as InvisibleRenderable).ClipsChildren = ClipsChildren;
                         }
 
-                        float widthBefore = 0;
-                        float heightBefore = 0;
-                        float xBefore = 0;
-                        float yBefore = 0;
                         if (this.mContainedObjectAsIpso != null)
                         {
                             widthBefore = mContainedObjectAsIpso.Width;
@@ -1332,20 +1342,6 @@ namespace Gum.Wireframe
 
                         mContainedObjectAsIpso.Rotation = this.GetAbsoluteRotation();
 
-                        if (this.mContainedObjectAsIpso != null)
-                        {
-                            if(widthBefore != mContainedObjectAsIpso.Width ||
-                                heightBefore != mContainedObjectAsIpso.Height)
-                            {
-                                SizeChanged?.Invoke(this, null);
-                            }
-
-                            if(xBefore != mContainedObjectAsIpso.X || 
-                                    yBefore != mContainedObjectAsIpso.Y)
-                            {
-                                PositionChanged?.Invoke(this, null);
-                            }
-                        }
                     }
 
 
@@ -1360,6 +1356,20 @@ namespace Gum.Wireframe
                     {
                         (this.Parent as GraphicalUiElement).UpdateLayout(false, false);
                         ChildrenUpdatingParentLayoutCalls++;
+                    }
+                    if (this.mContainedObjectAsIpso != null)
+                    {
+                        if(widthBefore != mContainedObjectAsIpso.Width ||
+                            heightBefore != mContainedObjectAsIpso.Height)
+                        {
+                            SizeChanged?.Invoke(this, null);
+                        }
+
+                        if(xBefore != mContainedObjectAsIpso.X || 
+                                yBefore != mContainedObjectAsIpso.Y)
+                        {
+                            PositionChanged?.Invoke(this, null);
+                        }
                     }
 
                     UpdateLayerScissor();
@@ -1470,6 +1480,13 @@ namespace Gum.Wireframe
                 parentWidth = this.ElementGueContainingThis.mContainedObjectAsIpso.Width;
                 parentHeight = this.ElementGueContainingThis.mContainedObjectAsIpso.Height;
             }
+
+#if DEBUG
+            if ( float.IsPositiveInfinity(parentHeight ))
+            {
+                throw new Exception();
+            }
+#endif
         }
 
         private void UpdateTextureCoordinatesDimensionBased()
@@ -1601,6 +1618,18 @@ namespace Gum.Wireframe
 
         private void UpdatePosition(float parentWidth, float parentHeight, bool wrap, XOrY? xOrY)
         {
+#if DEBUG
+            if(float.IsPositiveInfinity( parentHeight ) || float.IsNegativeInfinity(parentHeight))
+            {
+                throw new ArgumentException(nameof(parentHeight));
+            }
+            if (float.IsPositiveInfinity(parentHeight) || float.IsNegativeInfinity(parentHeight))
+            {
+                throw new ArgumentException(nameof(parentHeight));
+            }
+
+#endif
+
             float parentOriginOffsetX;
             float parentOriginOffsetY;
             bool wasHandledX;
