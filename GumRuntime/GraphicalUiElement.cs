@@ -1668,13 +1668,20 @@ namespace Gum.Wireframe
             }
 #endif
 
-            unitOffsetX += parentOriginOffsetX;
             unitOffsetY += parentOriginOffsetY;
 
+            // See if we're explicitly updating only Y. If so, skip setting X.
+            if(xOrY != XOrY.Y)
+            {
+                unitOffsetX += parentOriginOffsetX;
+                this.mContainedObjectAsIpso.X = unitOffsetX;
+            }
 
-
-            this.mContainedObjectAsIpso.X = unitOffsetX;
-            this.mContainedObjectAsIpso.Y = unitOffsetY;
+            // See if we're explicitly updating only X. If so, skip setting Y.
+            if(xOrY != XOrY.X)
+            {
+                this.mContainedObjectAsIpso.Y = unitOffsetY;
+            }
         }
 
         public void GetParentOffsets(out float parentOriginOffsetX, out float parentOriginOffsetY)
