@@ -59,7 +59,16 @@ namespace Gum.PropertyGridHelpers
                     // we're going to assign a value on the variable, but we don't want to modify the original one so, 
                     // let's clone it:
                     defaultVariable = defaultVariable.Clone();
-                    defaultVariable.Value = category.States.FirstOrDefault()?.Name;
+                    if(category != null)
+                    {
+                        defaultVariable.Value = category.States.FirstOrDefault()?.Name;
+                    }
+                    else
+                    {
+                        defaultVariable.Value = variableContainer.DefaultState?.Name;
+
+                    }
+
                 }
             }
 
