@@ -264,6 +264,7 @@ namespace Gum.Managers
         internal void HandleDragDropEvent(object sender, DragEventArgs e)
         {
             List<TreeNode> treeNodesToDrop = GetTreeNodesToDrop();
+            mDraggedItem = null;
             foreach(var draggedTreeNode in treeNodesToDrop )
             {
 
@@ -275,7 +276,6 @@ namespace Gum.Managers
                     HandleDroppedItemOnTreeView(draggedObject, targetTreeNode);
                 }
             }
-            mDraggedItem = null;
         }
 
         private static void HandleDroppingInstanceOnTarget(object targetObject, InstanceSave dragDroppedInstance, ElementSave targetElementSave)
