@@ -542,7 +542,8 @@ namespace Gum.Wireframe
         }
 
         // Made obsolete November 4, 2017
-        [Obsolete("Use ElementGueContainingThis instead - it more clearly indicates the relationship, as the ParentGue may not actually be the parent")]
+        [Obsolete("Use ElementGueContainingThis instead - it more clearly indicates the relationship, " +
+            "as the ParentGue may not actually be the parent. If the effective parent is desired, use EffectiveParentGue")]
         public GraphicalUiElement ParentGue
         {
             get { return ElementGueContainingThis; }
