@@ -201,7 +201,6 @@
     <Compile Include="Plugins\VariableGrid\DeletingVariablesInCategoriesMessageBox.xaml.cs">
       <DependentUpon>DeletingVariablesInCategoriesMessageBox.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Plugins\VariableGrid\PropertyGridManager.Events.cs" />
     <Compile Include="Managers\RenameManager.cs" />
     <Compile Include="Managers\Singleton.cs" />
     <Compile Include="Mvvm\ObservableCollectionExtensions.cs" />

@@ -63,13 +63,6 @@
             this.VariablesAndEverythingElse = new System.Windows.Forms.SplitContainer();
             this.StatesAndVariablesContainer = new System.Windows.Forms.SplitContainer();
             this.tabControl1 = new System.Windows.Forms.TabControl();
-            this.MiddleTabControl = new System.Windows.Forms.TabControl();
-            this.tabPage2 = new System.Windows.Forms.TabPage();
-            this.VariableHost = new System.Windows.Forms.Integration.ElementHost();
-            this.testWpfControl1 = new Gum.TestWpfControl();
-            this.tabPage1 = new System.Windows.Forms.TabPage();
-            this.EventsHost = new System.Windows.Forms.Integration.ElementHost();
-            this.testWpfControl2 = new Gum.TestWpfControl();
             this.PreviewSplitContainer = new System.Windows.Forms.SplitContainer();
             this.panel1 = new System.Windows.Forms.Panel();
             this.ToolbarPanel = new System.Windows.Forms.FlowLayoutPanel();
@@ -81,6 +74,10 @@
             this.tabPage3 = new System.Windows.Forms.TabPage();
             this.OutputTextBox = new System.Windows.Forms.RichTextBox();
             this.PropertyGridMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.VariableHost = new System.Windows.Forms.Integration.ElementHost();
+            this.testWpfControl2 = new Gum.TestWpfControl();
+            this.MiddleTabControl = new System.Windows.Forms.TabControl();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.LeftAndEverythingContainer)).BeginInit();
             this.LeftAndEverythingContainer.Panel1.SuspendLayout();
@@ -94,9 +91,6 @@
             this.StatesAndVariablesContainer.Panel1.SuspendLayout();
             this.StatesAndVariablesContainer.Panel2.SuspendLayout();
             this.StatesAndVariablesContainer.SuspendLayout();
-            this.MiddleTabControl.SuspendLayout();
-            this.tabPage2.SuspendLayout();
-            this.tabPage1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.PreviewSplitContainer)).BeginInit();
             this.PreviewSplitContainer.Panel1.SuspendLayout();
             this.PreviewSplitContainer.Panel2.SuspendLayout();
@@ -105,6 +99,8 @@
             this.panel2.SuspendLayout();
             this.RightTabControl.SuspendLayout();
             this.tabPage3.SuspendLayout();
+            this.tabPage2.SuspendLayout();
+            this.MiddleTabControl.SuspendLayout();
             this.SuspendLayout();
             // 
             // menuStrip1
@@ -182,14 +178,14 @@
             // 
             this.undoToolStripMenuItem.Name = "undoToolStripMenuItem";
             this.undoToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Z)));
-            this.undoToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.undoToolStripMenuItem.Size = new System.Drawing.Size(144, 22);
             this.undoToolStripMenuItem.Text = "Undo";
             this.undoToolStripMenuItem.Click += new System.EventHandler(this.undoToolStripMenuItem_Click);
             // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(149, 6);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(141, 6);
             // 
             // addToolStripMenuItem
             // 
@@ -198,7 +194,7 @@
             this.componentToolStripMenuItem,
             this.instanceToolStripMenuItem});
             this.addToolStripMenuItem.Name = "addToolStripMenuItem";
-            this.addToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.addToolStripMenuItem.Size = new System.Drawing.Size(144, 22);
             this.addToolStripMenuItem.Text = "Add";
             // 
             // screenToolStripMenuItem
@@ -229,7 +225,7 @@
             this.RemoveStateMenuItem,
             this.RemoveVariableMenuItem});
             this.removeToolStripMenuItem.Name = "removeToolStripMenuItem";
-            this.removeToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.removeToolStripMenuItem.Size = new System.Drawing.Size(144, 22);
             this.removeToolStripMenuItem.Text = "Remove";
             // 
             // RemoveElementMenuItem
@@ -416,59 +412,6 @@
             this.tabControl1.Size = new System.Drawing.Size(242, 119);
             this.tabControl1.TabIndex = 1;
             // 
-            // MiddleTabControl
-            // 
-            this.MiddleTabControl.Controls.Add(this.tabPage2);
-            this.MiddleTabControl.Controls.Add(this.tabPage1);
-            this.MiddleTabControl.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.MiddleTabControl.Location = new System.Drawing.Point(0, 0);
-            this.MiddleTabControl.Name = "MiddleTabControl";
-            this.MiddleTabControl.SelectedIndex = 0;
-            this.MiddleTabControl.Size = new System.Drawing.Size(242, 498);
-            this.MiddleTabControl.TabIndex = 3;
-            // 
-            // tabPage2
-            // 
-            this.tabPage2.Controls.Add(this.VariableHost);
-            this.tabPage2.Location = new System.Drawing.Point(4, 22);
-            this.tabPage2.Name = "tabPage2";
-            this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(234, 472);
-            this.tabPage2.TabIndex = 1;
-            this.tabPage2.Text = "Variables";
-            this.tabPage2.UseVisualStyleBackColor = true;
-            // 
-            // VariableHost
-            // 
-            this.VariableHost.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.VariableHost.Location = new System.Drawing.Point(3, 3);
-            this.VariableHost.Name = "VariableHost";
-            this.VariableHost.Size = new System.Drawing.Size(228, 466);
-            this.VariableHost.TabIndex = 0;
-            this.VariableHost.Text = "elementHost1";
-            this.VariableHost.Child = this.testWpfControl1;
-            // 
-            // tabPage1
-            // 
-            this.tabPage1.Controls.Add(this.EventsHost);
-            this.tabPage1.Location = new System.Drawing.Point(4, 22);
-            this.tabPage1.Name = "tabPage1";
-            this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(234, 472);
-            this.tabPage1.TabIndex = 0;
-            this.tabPage1.Text = "Events";
-            this.tabPage1.UseVisualStyleBackColor = true;
-            // 
-            // EventsHost
-            // 
-            this.EventsHost.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.EventsHost.Location = new System.Drawing.Point(3, 3);
-            this.EventsHost.Name = "EventsHost";
-            this.EventsHost.Size = new System.Drawing.Size(228, 466);
-            this.EventsHost.TabIndex = 3;
-            this.EventsHost.Text = "elementHost1";
-            this.EventsHost.Child = this.testWpfControl2;
-            // 
             // PreviewSplitContainer
             // 
             this.PreviewSplitContainer.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -588,6 +531,37 @@
             this.PropertyGridMenuStrip.Size = new System.Drawing.Size(61, 4);
             this.PropertyGridMenuStrip.Opening += new System.ComponentModel.CancelEventHandler(this.PropertyGridMenuStrip_Opening);
             // 
+            // tabPage2
+            // 
+            this.tabPage2.Controls.Add(this.VariableHost);
+            this.tabPage2.Location = new System.Drawing.Point(4, 22);
+            this.tabPage2.Name = "tabPage2";
+            this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPage2.Size = new System.Drawing.Size(234, 472);
+            this.tabPage2.TabIndex = 1;
+            this.tabPage2.Text = "Variables";
+            this.tabPage2.UseVisualStyleBackColor = true;
+            // 
+            // VariableHost
+            // 
+            this.VariableHost.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.VariableHost.Location = new System.Drawing.Point(3, 3);
+            this.VariableHost.Name = "VariableHost";
+            this.VariableHost.Size = new System.Drawing.Size(228, 466);
+            this.VariableHost.TabIndex = 0;
+            this.VariableHost.Text = "elementHost1";
+            this.VariableHost.Child = this.testWpfControl2;
+            // 
+            // MiddleTabControl
+            // 
+            this.MiddleTabControl.Controls.Add(this.tabPage2);
+            this.MiddleTabControl.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.MiddleTabControl.Location = new System.Drawing.Point(0, 0);
+            this.MiddleTabControl.Name = "MiddleTabControl";
+            this.MiddleTabControl.SelectedIndex = 0;
+            this.MiddleTabControl.Size = new System.Drawing.Size(242, 498);
+            this.MiddleTabControl.TabIndex = 3;
+            // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -615,9 +589,6 @@
             this.StatesAndVariablesContainer.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.StatesAndVariablesContainer)).EndInit();
             this.StatesAndVariablesContainer.ResumeLayout(false);
-            this.MiddleTabControl.ResumeLayout(false);
-            this.tabPage2.ResumeLayout(false);
-            this.tabPage1.ResumeLayout(false);
             this.PreviewSplitContainer.Panel1.ResumeLayout(false);
             this.PreviewSplitContainer.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.PreviewSplitContainer)).EndInit();
@@ -626,6 +597,8 @@
             this.panel2.ResumeLayout(false);
             this.RightTabControl.ResumeLayout(false);
             this.tabPage3.ResumeLayout(false);
+            this.tabPage2.ResumeLayout(false);
+            this.MiddleTabControl.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -666,16 +639,9 @@
         private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem newProjectToolStripMenuItem;
         private System.Windows.Forms.RichTextBox OutputTextBox;
-        private System.Windows.Forms.TabControl MiddleTabControl;
-        private System.Windows.Forms.TabPage tabPage1;
-        private System.Windows.Forms.TabPage tabPage2;
-        private System.Windows.Forms.Integration.ElementHost VariableHost;
-        private TestWpfControl testWpfControl1;
         private System.Windows.Forms.ToolStripMenuItem contentToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem clearFontCacheToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem saveAllToolStripMenuItem;
-        private System.Windows.Forms.Integration.ElementHost EventsHost;
-        private TestWpfControl testWpfControl2;
         private System.Windows.Forms.ToolStripMenuItem loadRecentToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem findFileReferencesToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem undoToolStripMenuItem;
@@ -684,6 +650,10 @@
         private System.Windows.Forms.TabPage tabPage3;
         private System.Windows.Forms.TabControl tabControl1;
         private System.Windows.Forms.ToolStripMenuItem RemoveVariableMenuItem;
+        private System.Windows.Forms.TabControl MiddleTabControl;
+        private System.Windows.Forms.TabPage tabPage2;
+        private System.Windows.Forms.Integration.ElementHost VariableHost;
+        private TestWpfControl testWpfControl2;
     }
 }
 

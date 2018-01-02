@@ -129,8 +129,8 @@ namespace Gum.Managers
                 AddDimensionsVariables(stateSave, 100, 50, DimensionVariableAction.ExcludeFileOptions);
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "Hello", Name = "Text", Category = "Text" });
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "VerticalAlignment", Value = VerticalAlignment.Top, Name = "VerticalAlignment", Category = "Text" });
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "HorizontalAlignment", Value = HorizontalAlignment.Left, Name = "HorizontalAlignment", Category = "Text" });
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "VerticalAlignment", Value = VerticalAlignment.Top, Name = "VerticalAlignment", Category = "Text" });
 
                 // font:
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "UseCustomFont", Category = "Font" });
@@ -180,8 +180,8 @@ namespace Gum.Managers
                 //stateSave.Variables.Add(new VariableSave { Type = "bool", Value = false, Name = "Custom Texture Coordinates", Category="Source" });
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "TextureAddress", Value = Gum.Managers.TextureAddress.EntireTexture, Name = "Texture Address", Category = "Source" });
 
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "Texture Top", Category = "Source" });
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "Texture Left", Category = "Source" });
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "Texture Top", Category = "Source" });
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "Texture Width", Category = "Source" });
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "Texture Height", Category = "Source" });
 
@@ -355,8 +355,8 @@ namespace Gum.Managers
 
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "TextureAddress", Value = Gum.Managers.TextureAddress.EntireTexture, Name = "Texture Address", Category = "Source" });
 
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "Texture Top", Category = "Source" });
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "Texture Left", Category = "Source" });
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "Texture Top", Category = "Source" });
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "Texture Width", Category = "Source" });
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "Texture Height", Category = "Source" });
 

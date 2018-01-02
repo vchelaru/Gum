@@ -37,18 +37,19 @@ namespace Gum.Plugins.PropertiesWindowPlugin
             set { base.SetProperty(ref restrictToUnitValues, value); }
         }
 
-        int canvasHeight;
-        public int CanvasHeight
-        {
-            get { return canvasHeight; }
-            set { base.SetProperty(ref canvasHeight, value); }
-        }
 
         int canvasWidth;
         public int CanvasWidth
         {
             get { return canvasWidth; }
             set { base.SetProperty(ref canvasWidth, value); }
+        }
+
+        int canvasHeight;
+        public int CanvasHeight
+        {
+            get { return canvasHeight; }
+            set { base.SetProperty(ref canvasHeight, value); }
         }
 
         bool restrictFileNamesToAndroidAssets;

@@ -82,15 +82,13 @@ namespace Gum.Managers
         #endregion
 
 
-        public void Initialize(TestWpfControl variablesDataUiGrid, DataUiGrid eventsDataUiGrid)
+        public void Initialize(TestWpfControl variablesDataUiGrid)
         {
             mVariablesDataGrid = variablesDataUiGrid.DataGrid;
             variableViewModel = new Plugins.VariableGrid.MainControlViewModel();
             variablesDataUiGrid.DataContext = variableViewModel;
             variablesDataUiGrid.SelectedBehaviorVariableChanged += HandleBehaviorVariableSelected;
             variablesDataUiGrid.AddVariableClicked += HandleAddVariable;
-
-            InitializeEvents(eventsDataUiGrid);
 
             InitializeRightClickMenu();
         }
@@ -182,8 +180,6 @@ namespace Gum.Managers
                 //Task task = new Task(() => RefreshDataGrid(element, state, instance));
                 RefreshDataGrid(element, state, category, instance, behaviorSave, force);
             }
-
-            RefreshEventsUi();
 
             isInRefresh = false;
         }
