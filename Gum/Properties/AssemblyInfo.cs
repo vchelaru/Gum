@@ -108,5 +108,8 @@ using System.Runtime.InteropServices;
 // 0.9.1.1
 //  - Lots of fixes related to categorized states on standard elements
 //  - Fixed a crash when setting alignment with category selected.
+// 0.9.2
+//  - Behaviors now can reference instances which themselves require behaviors
+//  - Error window now reports if there are no instances with the required behaviors.
 [assembly: AssemblyVersion("0.9.1.1")]
 [assembly: AssemblyFileVersion("0.9.1.1")]

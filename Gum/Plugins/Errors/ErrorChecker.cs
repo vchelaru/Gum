@@ -55,10 +55,10 @@ namespace Gum.Plugins.Errors
         {
             foreach (var behaviorInstance in behavior.RequiredInstances)
             {
-                var candidateInstances = component.Instances.Where(item => item.Name == behaviorInstance.Name);
+                var candidateInstances = component.Instances.Where(item => item.Name == behaviorInstance.Name).ToList();
                 if (!string.IsNullOrEmpty(behaviorInstance.BaseType))
                 {
-                    candidateInstances = candidateInstances.Where(item => item.IsOfType(behaviorInstance.BaseType));
+                    candidateInstances = candidateInstances.Where(item => item.IsOfType(behaviorInstance.BaseType)).ToList();
                 }
 
                 if (behaviorInstance.Behaviors.Any())
@@ -76,7 +76,7 @@ namespace Gum.Plugins.Errors
 
                         }
                         return fulfillsRequirements;
-                    });
+                    }).ToList();
 
                 }
 
