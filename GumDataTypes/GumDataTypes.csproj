@@ -55,6 +55,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Behaviors\BehaviorInstanceSave.cs" />
     <Compile Include="Behaviors\BehaviorReference.cs" />
     <Compile Include="Behaviors\BehaviorSave.cs" />
     <Compile Include="Behaviors\ElementBehaviorReference.cs" />
