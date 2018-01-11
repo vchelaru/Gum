@@ -251,7 +251,16 @@ namespace Gum.Wireframe
             }
         }
 
+        /// <summary>
+        /// Returns the absolute width of the GraphicalUiElement in pixels (as opposed to using its WidthUnits)
+        /// </summary>
+        /// <returns>The absolute width in pixels.</returns>
         public float GetAbsoluteWidth() => ((IPositionedSizedObject)this).Width;
+
+        /// <summary>
+        /// Returns the absolute height of the GraphicalUiElement in pixels (as opposed to using its HeightUnits)
+        /// </summary>
+        /// <returns>The absolute height in pixels.</returns>
         public float GetAbsoluteHeight() => ((IPositionedSizedObject)this).Height;
 
         void IRenderableIpso.SetParentDirect(IRenderableIpso parent)

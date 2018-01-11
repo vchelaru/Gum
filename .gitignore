@@ -33,3 +33,4 @@ WpfDataUi/SampleProject/SampleProject/obj/
 .vs/
 GumCore/GumCoreXnaPc/bin/
 GumCore/GumCoreXnaPc/obj/
+*.bak
