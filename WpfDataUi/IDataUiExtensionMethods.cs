@@ -62,7 +62,7 @@ namespace WpfDataUi
 
             if (!hasErrorOccurred)
             {
-                if (dataUi.InstanceMember.Value != valueToSet)
+                if (AreEqual(dataUi.InstanceMember.Value, valueToSet) == false)
                 {
                     dataUi.InstanceMember.Value = valueToSet;
                     result = ApplyValueResult.Success;
@@ -77,6 +77,54 @@ namespace WpfDataUi
 
             return result;
         }
+
+        static bool AreEqual(object object1, object object2)
+        {
+            if(object1 is float && object2 is float)
+            {
+                return (float)object1 == (float)object2;
+            }
+            else if (object1 is double && object2 is double)
+            {
+                return (double)object1 == (double)object2;
+            }
+            else if (object1 is decimal && object2 is decimal)
+            {
+                return (decimal)object1 == (decimal)object2;
+            }
+
+            else if (object1 is int && object2 is int)
+            {
+                return (int)object1 == (int)object2;
+            }
+            else if (object1 is long && object2 is long)
+            {
+                return (long)object1 == (long)object2;
+            }
+            else if (object1 is short && object2 is short)
+            {
+                return (short)object1 == (short)object2;
+            }
+
+            else if (object1 is bool && object2 is bool)
+            {
+                return (bool)object1 == (bool)object2;
+            }
+            else if (object1 is char && object2 is char)
+            {
+                return (char)object1 == (char)object2;
+            }
+            else if (object1 is string && object2 is string)
+            {
+                return (string)object1 == (string)object2;
+            }
+            else
+            {
+                return object1 == object2;
+            }
+
+        }
+
 
 
 
