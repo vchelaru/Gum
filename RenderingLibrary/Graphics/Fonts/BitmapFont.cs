@@ -688,12 +688,12 @@ namespace RenderingLibrary.Graphics
             return sourceRectangle;
         }
 
-        public void GetRequiredWidthAndHeight(IEnumerable lines, out int requiredWidth, out int requiredHeight)
+        public void GetRequiredWidthAndHeight(IEnumerable<string> lines, out int requiredWidth, out int requiredHeight)
         {
             GetRequiredWidthAndHeight(lines, out requiredWidth, out requiredHeight, null);
         }
 
-        public void GetRequiredWidthAndHeight(IEnumerable lines, out int requiredWidth, out int requiredHeight, List<int> widths)
+        public void GetRequiredWidthAndHeight(IEnumerable<string> lines, out int requiredWidth, out int requiredHeight, List<int> widths)
         {
 
             requiredWidth = 0;

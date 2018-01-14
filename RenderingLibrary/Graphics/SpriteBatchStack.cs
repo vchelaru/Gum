@@ -40,7 +40,7 @@ namespace RenderingLibrary.Graphics
         public Rectangle ScissorRectangle { get; set; }
 
 
-        public List<StateChangeInfo> ChangeRecord
+        public StateChangeInfoList ChangeRecord
         {
             get; set;
         }
@@ -62,6 +62,8 @@ namespace RenderingLibrary.Graphics
 
     public class SpriteBatchStack
     {
+        static StateChangeInfoListPool StateChangeInfoListPool = new StateChangeInfoListPool();
+
         enum SpriteBatchBeginEndState
         {
             Ended,
@@ -121,12 +123,18 @@ namespace RenderingLibrary.Graphics
             SpriteBatch = new SpriteBatch(graphicsDevice);
         }
 
-
+        public static void PerformStartOfLayerRenderingLogic()
+        {
+            // Resets the pool so that the rendering can use lists without having to instantiate or expand the internal array.
+            // This means that the internal StateChange info is only valid for that particular frame of rendering
+            StateChangeInfoListPool.MakeAllUnused();
+        }
 
         public void Begin()
         {
             var beginParams = new BeginParameters();
-            beginParams.ChangeRecord = new List<StateChangeInfo>();
+            beginParams.ChangeRecord = StateChangeInfoListPool.GetNextAvailable();
+            beginParams.ChangeRecord.Clear();
 
             beginParams.IsDefault = true;
             currentParameters = beginParams;
@@ -159,7 +167,8 @@ namespace RenderingLibrary.Graphics
             bool isNewRender = currentParameters.HasValue == false;
 
             var newParameters = new BeginParameters();
-            newParameters.ChangeRecord = new List<StateChangeInfo>();
+            newParameters.ChangeRecord = StateChangeInfoListPool.GetNextAvailable();
+            newParameters.ChangeRecord.Clear();
 
             newParameters.SortMode = sortMode;
             newParameters.BlendState = blendState;
@@ -173,7 +182,7 @@ namespace RenderingLibrary.Graphics
             {
                 newParameters.ScissorRectangle = scissorRectangle;
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 throw new Exception("Could not set scissor rectangle to:" + scissorRectangle.ToString(), e);
             }
@@ -193,7 +202,7 @@ namespace RenderingLibrary.Graphics
             {
                 SpriteBatch.GraphicsDevice.ScissorRectangle = scissorRectangle;
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 throw new Exception("Error trying to set scissor rectangle:" + scissorRectangle.ToString());
             }
@@ -237,7 +246,7 @@ namespace RenderingLibrary.Graphics
 
             bool shouldRecordChange = paramsValue.ChangeRecord.Count == 0;
 
-            if(!shouldRecordChange)
+            if (!shouldRecordChange)
             {
                 var last = paramsValue.ChangeRecord.Last();
 
@@ -329,4 +338,119 @@ namespace RenderingLibrary.Graphics
             beginParametersUsedThisFrame.Clear();
         }
     }
+
+
+
+    public class StateChangeInfoList : List<StateChangeInfo>
+    {
+        public int Index { get; set; }
+        public bool Used { get; set; }
+    }
+
+    public class StateChangeInfoListPool : IEnumerable<StateChangeInfoList>
+    {
+        #region Fields
+        List<StateChangeInfoList> mPoolables = new List<StateChangeInfoList>();
+        int mNextAvailable = -1;
+        #endregion
+
+        public bool HasAnyUnusedItems
+        {
+            get { return mNextAvailable != -1; }
+        }
+
+        #region Methods
+
+        public void AddToPool(StateChangeInfoList poolableToAdd)
+        {
+
+            int index = mPoolables.Count;
+
+            if (mNextAvailable == -1)
+            {
+                mNextAvailable = index;
+            }
+
+            mPoolables.Add(poolableToAdd);
+            poolableToAdd.Index = index;
+            poolableToAdd.Used = false;
+        }
+        
+        public StateChangeInfoList GetNextAvailable()
+        {
+            StateChangeInfoList returnReference;
+
+            bool createdNewInstance = false;
+            if (mNextAvailable == -1)
+            {
+                returnReference = new StateChangeInfoList();
+                mPoolables.Add(returnReference);
+                returnReference.Index = mPoolables.Count - 1;
+
+                createdNewInstance = true;
+            }
+            else
+            {
+                returnReference = mPoolables[mNextAvailable];
+
+            }
+            returnReference.Used = true;
+
+            // find next available
+            int count = mPoolables.Count;
+
+            if(!createdNewInstance)
+            {
+                mNextAvailable = -1;
+
+                for (int i = returnReference.Index + 1; i < count; i++)
+                {
+                    var poolable = mPoolables[i];
+
+                    if (poolable.Used == false)
+                    {
+                        mNextAvailable = i;
+                        break;
+                    }
+                }
+            }
+
+            return returnReference;
+        }
+
+        public void MakeAllUnused()
+        {
+            int count = mPoolables.Count;
+
+            for (int i = 0; i < count; i++)
+            {
+                MakeUnused(mPoolables[i]);
+            }
+        }
+
+        public void MakeUnused(StateChangeInfoList poolableToMakeUnused)
+        {
+            if (mNextAvailable == -1 || poolableToMakeUnused.Index < mNextAvailable)
+            {
+                mNextAvailable = poolableToMakeUnused.Index;
+            }
+
+            poolableToMakeUnused.Used = false;
+        }
+
+        #endregion
+
+
+        public IEnumerator<StateChangeInfoList> GetEnumerator()
+        {
+            return mPoolables.GetEnumerator();
+        }
+
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        {
+            return mPoolables.GetEnumerator();
+        }
+    }
+
+
 }

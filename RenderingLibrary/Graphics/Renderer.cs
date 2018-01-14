@@ -306,6 +306,8 @@ namespace RenderingLibrary.Graphics
                 PreRender(layer.Renderables);
             }
 
+            SpriteBatchStack.PerformStartOfLayerRenderingLogic();
+
             spriteRenderer.BeginSpriteBatch(mRenderStateVariables, layer, BeginType.Push, mCamera);
 
             layer.SortRenderables();
