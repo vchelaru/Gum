@@ -92,7 +92,7 @@ namespace Gum.PropertyGridHelpers
                     GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
 
                     // Inefficient but let's do this for now - we can make it more efficient later
-                    WireframeObjectManager.Self.RefreshAll(true);
+                    WireframeObjectManager.Self.RefreshAll(true, forceReloadTextures:false);
                     SelectionManager.Self.Refresh();
                 }
             }

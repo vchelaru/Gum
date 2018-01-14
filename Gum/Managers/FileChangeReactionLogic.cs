@@ -60,7 +60,7 @@ namespace Gum.Managers
 
                 if(referencedFiles.Contains(file))
                 {
-                    Wireframe.WireframeObjectManager.Self.RefreshAll(force: true);
+                    Wireframe.WireframeObjectManager.Self.RefreshAll(true, true);
                 }
             }
 
@@ -104,7 +104,7 @@ namespace Gum.Managers
             if(shouldReloadWireframe)
             {
                 // reload wireframe
-                Wireframe.WireframeObjectManager.Self.RefreshAll(force: true);
+                Wireframe.WireframeObjectManager.Self.RefreshAll(true, true);
 
                 // todo - this isn't working if I rename a variable...
                 PropertyGridManager.Self.RefreshUI(force: true);

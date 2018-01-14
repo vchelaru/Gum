@@ -188,31 +188,36 @@ namespace Gum.Wireframe
             mGraphicalElements.Clear();
         }
 
-        public void RefreshAll(bool force)
+        public void RefreshAll(bool forceLayout, bool forceReloadTextures = true)
         {
             ElementSave elementSave = SelectedState.Self.SelectedElement;
 
-            RefreshAll(force, elementSave);
+            RefreshAll(forceLayout, forceReloadTextures, elementSave);
 
             SelectionManager.Self.Refresh();
 
             mWireframeControl.UpdateToProject();
         }
 
-        public void RefreshAll(bool force, ElementSave elementSave)
+        public void RefreshAll(bool forceLayout, bool forceReloadTextures, ElementSave elementSave)
         {
+            bool shouldRecreateIpso = forceLayout || elementSave != ElementShowing;
+            bool shouldReloadTextures = forceReloadTextures || elementSave != ElementShowing;
+
             if (elementSave == null || elementSave.IsSourceFileMissing)
             {
                 ClearAll();
                 RootGue = null;
             }
-            else if (elementSave != null && (force || elementSave != ElementShowing))
+            else if (forceLayout || forceReloadTextures)
             {
                 ClearAll();
 
-                // If it's the same element, let's not refresh the textures
-                ((ContentLoader)LoaderManager.Self.ContentLoader).DisposeAndClear();
-                LoaderManager.Self.CacheTextures = false;
+                if(forceReloadTextures)
+                {
+                    ((ContentLoader)LoaderManager.Self.ContentLoader).DisposeAndClear();
+                    LoaderManager.Self.CacheTextures = false;
+                }
 
                 LoaderManager.Self.CacheTextures = true;
 
