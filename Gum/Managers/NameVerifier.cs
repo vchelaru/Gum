@@ -59,14 +59,14 @@ namespace Gum.Managers
 
             if (string.IsNullOrEmpty(whyNotValid))
             {
-                IsNameAnExistingElement(screenName, screen, out whyNotValid);
+                IsNameAnExistingElement(screenName, null, screen, out whyNotValid);
             }
 
             return string.IsNullOrEmpty(whyNotValid);
 
         }
 
-        public bool IsComponentNameValid(string componentName, ComponentSave component, out string whyNotValid)
+        public bool IsComponentNameValid(string componentName, string folderName, ComponentSave component, out string whyNotValid)
         {
             IsNameValidCommon(componentName, out whyNotValid);
 
@@ -77,7 +77,7 @@ namespace Gum.Managers
 
             if (string.IsNullOrEmpty(whyNotValid))
             {
-                IsNameAnExistingElement(componentName, component, out whyNotValid);
+                IsNameAnExistingElement(componentName, folderName, component, out whyNotValid);
             }
 
             return string.IsNullOrEmpty(whyNotValid);
@@ -200,26 +200,28 @@ namespace Gum.Managers
 
         }
 
-        private void IsNameAnExistingElement(string name, object objectToIgnore, out string whyNotValid)
+        private void IsNameAnExistingElement(string name, string folderName, object objectToIgnore, out string whyNotValid)
         {
             whyNotValid = null;
 
+            var newStandardizedNameWithFolder = (folderName + name).ToLowerInvariant();
+
             var standardElement = ObjectFinder.Self.GumProjectSave.StandardElements.FirstOrDefault(item =>
-                item != objectToIgnore && item.Name == name);
+                item != objectToIgnore && item.Name.ToLowerInvariant() == newStandardizedNameWithFolder);
             if (standardElement != null)
             {
                 whyNotValid = "There is a standard element named " + standardElement.Name + " so this name can't be used.";
             }
 
             var component = ObjectFinder.Self.GumProjectSave.Components.FirstOrDefault(item =>
-                item != objectToIgnore && item.Name == name);
+                item != objectToIgnore && item.Name.ToLowerInvariant() == newStandardizedNameWithFolder);
             if (component != null)
             {
                 whyNotValid = "There is a component named " + component.Name + " so this name can't be used.";
             }
 
             var screen = ObjectFinder.Self.GumProjectSave.Screens.FirstOrDefault(item =>
-                item != objectToIgnore && item.Name == name);
+                item != objectToIgnore && item.Name.ToLowerInvariant() == newStandardizedNameWithFolder);
             if (screen != null)
             {
                 whyNotValid = "There is a screen named " + screen.Name + " so this name can't be used.";

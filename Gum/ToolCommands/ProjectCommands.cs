@@ -5,6 +5,10 @@ using System.Text;
 using Gum.DataTypes;
 using Gum.Managers;
 using Gum.DataTypes.Behaviors;
+using Gum.ToolStates;
+using ToolsUtilities;
+using CommonFormsAndControls;
+using System.Windows.Forms;
 
 namespace Gum.ToolCommands
 {
@@ -54,56 +58,6 @@ namespace Gum.ToolCommands
             ProjectManager.Self.GumProjectSave.Screens.Add(screenSave);
 
         }
-
-        public ComponentSave AddComponent(string componentName)
-        {
-            ComponentSave componentSave = new ComponentSave();
-            componentSave.Name = componentName;
-
-
-
-            AddComponent(componentSave);
-
-
-
-
-            // components shouldn't set their positions to 0 by default, so if the
-            // default state sets those values, we should null them out:
-            var xVariable = componentSave.DefaultState.GetVariableSave("X");
-            var yVariable = componentSave.DefaultState.GetVariableSave("Y");
-
-            if (xVariable != null)
-            {
-                xVariable.Value = null;
-                xVariable.SetsValue = false;
-            }
-            if (yVariable != null)
-            {
-                yVariable.Value = null;
-                yVariable.SetsValue = false;
-            }
-
-            var hasEventsVariable = componentSave.DefaultState.GetVariableSave("HasEvents");
-            if (hasEventsVariable != null)
-            {
-                hasEventsVariable.Value = true;
-            }
-
-            return componentSave;
-        }
-
-        public void AddComponent(ComponentSave componentSave)
-        {
-            componentSave.BaseType = "Container";
-
-            ProjectManager.Self.GumProjectSave.ComponentReferences.Add(new ElementReference { Name = componentSave.Name, ElementType = ElementType.Component });
-            ProjectManager.Self.GumProjectSave.ComponentReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
-            ProjectManager.Self.GumProjectSave.Components.Add(componentSave);
-
-            componentSave.InitializeDefaultAndComponentVariables();
-
-        }
-
 
         #endregion
 
@@ -169,5 +123,109 @@ namespace Gum.ToolCommands
                 }
             }
         }
+
+        #region Component
+
+        public void AskToAddComponent()
+        {
+            if (ObjectFinder.Self.GumProjectSave == null || string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave.FullFileName))
+            {
+                MessageBox.Show("You must first save the project before adding a new component");
+            }
+            else
+            {
+                TextInputWindow tiw = new TextInputWindow();
+                tiw.Message = "Enter new Component name:";
+
+                if (tiw.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    string name = tiw.Result;
+                    TreeNode nodeToAddTo = ElementTreeViewManager.Self.SelectedNode;
+
+                    while (nodeToAddTo != null && nodeToAddTo.Tag is ComponentSave && nodeToAddTo.Parent != null)
+                    {
+                        nodeToAddTo = nodeToAddTo.Parent;
+                    }
+
+                    if (nodeToAddTo == null || !nodeToAddTo.IsPartOfComponentsFolderStructure())
+                    {
+                        nodeToAddTo = ElementTreeViewManager.Self.RootComponentsTreeNode;
+                    }
+
+                    string path = nodeToAddTo.GetFullFilePath();
+
+                    string relativeToComponents = FileManager.MakeRelative(path,
+                        FileLocations.Self.ComponentsFolder);
+
+                    AddComponent(name, relativeToComponents);
+                }
+            }
+        }
+
+        public void AddComponent(string componentName, string folder)
+        {
+            string whyNotValid;
+
+            if (!NameVerifier.Self.IsComponentNameValid(componentName, folder, null, out whyNotValid))
+            {
+                MessageBox.Show(whyNotValid);
+            }
+            else
+            {
+                ComponentSave componentSave = new ComponentSave();
+                PrepareNewComponentSave(componentSave, folder + componentName);
+
+                AddComponent(componentSave);
+            }
+        }
+
+        public void AddComponent(ComponentSave componentSave)
+        {
+            var gumProject = ProjectState.Self.GumProjectSave;
+            gumProject.ComponentReferences.Add(new ElementReference { Name = componentSave.Name, ElementType = ElementType.Component });
+            gumProject.ComponentReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
+            gumProject.Components.Add(componentSave);
+
+            GumCommands.Self.GuiCommands.RefreshElementTreeView();
+
+            SelectedState.Self.SelectedComponent = componentSave;
+
+            GumCommands.Self.FileCommands.TryAutoSaveProject();
+            GumCommands.Self.FileCommands.TryAutoSaveElement(componentSave);
+        }
+
+        private void PrepareNewComponentSave(ComponentSave componentSave, string componentName)
+        {
+            componentSave.Name = componentName;
+
+            componentSave.BaseType = "Container";
+
+            componentSave.InitializeDefaultAndComponentVariables();
+
+
+            // components shouldn't set their positions to 0 by default, so if the
+            // default state sets those values, we should null them out:
+            var xVariable = componentSave.DefaultState.GetVariableSave("X");
+            var yVariable = componentSave.DefaultState.GetVariableSave("Y");
+
+            if (xVariable != null)
+            {
+                xVariable.Value = null;
+                xVariable.SetsValue = false;
+            }
+            if (yVariable != null)
+            {
+                yVariable.Value = null;
+                yVariable.SetsValue = false;
+            }
+
+            var hasEventsVariable = componentSave.DefaultState.GetVariableSave("HasEvents");
+            if (hasEventsVariable != null)
+            {
+                hasEventsVariable.Value = true;
+            }
+        }
+
+        #endregion
     }
 }

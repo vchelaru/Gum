@@ -442,7 +442,7 @@ namespace Gum.Managers
 
         public void AddComponentClick(object sender, EventArgs e)
         {
-            GumCommands.Self.Edit.AddComponent();
+            ProjectCommands.Self.AskToAddComponent();
         }
 
         public void ImportScreenClick(object sender, EventArgs e)

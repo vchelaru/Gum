@@ -17,6 +17,8 @@ namespace Gum.Commands
 {
     public class EditCommands
     {
+        #region State
+
         public void AddState()
         {
             if(SelectedState.Self.SelectedStateCategorySave == null && SelectedState.Self.SelectedElement == null )
@@ -77,10 +79,128 @@ namespace Gum.Commands
             }
         }
 
+        internal void RenameState(StateSave stateSave, IStateContainer stateContainer)
+        {
+            var behaviorNeedingState = GetBehaviorsNeedingState(stateSave);
+
+            if (behaviorNeedingState.Any())
+            {
+                string message =
+                    "This state cannot be removed because it is needed by the following behavior(s):";
+
+                foreach (var behavior in behaviorNeedingState)
+                {
+                    message += "\n" + behavior.Name;
+                }
+
+                MessageBox.Show(message);
+            }
+            else
+            {
+                TextInputWindow tiw = new TextInputWindow();
+                tiw.Message = "Enter new state name";
+                tiw.Result = SelectedState.Self.SelectedStateSave.Name;
+                var result = tiw.ShowDialog();
+
+                if (result == DialogResult.OK)
+                {
+                    string oldName = stateSave.Name;
+
+                    stateSave.Name = tiw.Result;
+                    GumCommands.Self.GuiCommands.RefreshStateTreeView();
+                    // I don't think we need to save the project when renaming a state:
+                    //GumCommands.Self.FileCommands.TryAutoSaveProject();
+
+                    PluginManager.Self.StateRename(stateSave, oldName);
+
+                    GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+                }
+            }
+        }
+        #endregion
+
+        #region Category
+
         public void RemoveStateCategory( StateSaveCategory category, IStateCategoryListContainer stateCategoryListContainer)
         {
             DeleteLogic.Self.RemoveStateCategory(category, stateCategoryListContainer);
         }
+
+        public void AddCategory()
+        {
+
+            var target = SelectedState.Self.SelectedStateContainer as IStateCategoryListContainer;
+            if (target == null)
+            {
+                MessageBox.Show("You must first select an element or behavior to add a state category");
+            }
+            else
+            {
+                TextInputWindow tiw = new TextInputWindow();
+                tiw.Message = "Enter new category name:";
+
+                if (tiw.ShowDialog() == DialogResult.OK)
+                {
+                    string name = tiw.Result;
+
+                    StateSaveCategory category = ElementCommands.Self.AddCategory(
+                        target, name);
+
+                    ElementTreeViewManager.Self.RefreshUi(SelectedState.Self.SelectedStateContainer);
+
+                    StateTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedStateContainer);
+
+                    SelectedState.Self.SelectedStateCategorySave = category;
+
+                    GumCommands.Self.FileCommands.TryAutoSaveCurrentObject();
+                }
+            }
+
+        }
+
+        internal void RenameStateCategory(StateSaveCategory category, ElementSave elementSave)
+        {
+            // This category can only be renamed if no behaviors require it
+            var behaviorsNeedingCategory = DeleteLogic.Self.GetBehaviorsNeedingCategory(category, elementSave as ComponentSave);
+
+            if (behaviorsNeedingCategory.Any())
+            {
+                string message =
+                    "This category cannot be renamed because it is needed by the following behavior(s):";
+
+                foreach (var behavior in behaviorsNeedingCategory)
+                {
+                    message += "\n" + behavior.Name;
+                }
+
+                MessageBox.Show(message);
+            }
+            else
+            {
+                TextInputWindow tiw = new TextInputWindow();
+                tiw.Message = "Enter new category name";
+                tiw.Result = category.Name;
+                var result = tiw.ShowDialog();
+
+                if (result == DialogResult.OK)
+                {
+                    string oldName = category.Name;
+
+                    category.Name = tiw.Result;
+                    GumCommands.Self.GuiCommands.RefreshStateTreeView();
+                    // I don't think we need to save the project when renaming a state:
+                    //GumCommands.Self.FileCommands.TryAutoSaveProject();
+
+                    PluginManager.Self.CategoryRename(category, oldName);
+
+                    GumCommands.Self.FileCommands.TryAutoSaveCurrentObject();
+                }
+            }
+        }
+
+        #endregion
+
+        #region Behavior
 
         private List<BehaviorSave> GetBehaviorsNeedingState(StateSave stateSave)
         {
@@ -127,39 +247,11 @@ namespace Gum.Commands
             return toReturn;
         }
 
-
-
-
-        public void AddCategory()
+        public void RemoveBehaviorVariable(BehaviorSave container, VariableSave variable)
         {
-
-            var target = SelectedState.Self.SelectedStateContainer as IStateCategoryListContainer;
-            if (target == null)
-            {
-                MessageBox.Show("You must first select an element or behavior to add a state category");
-            }
-            else
-            {
-                TextInputWindow tiw = new TextInputWindow();
-                tiw.Message = "Enter new category name:";
-
-                if (tiw.ShowDialog() == DialogResult.OK)
-                {
-                    string name = tiw.Result;
-
-                    StateSaveCategory category = ElementCommands.Self.AddCategory(
-                        target, name);
-
-                    ElementTreeViewManager.Self.RefreshUi(SelectedState.Self.SelectedStateContainer);
-
-                    StateTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedStateContainer);
-
-                    SelectedState.Self.SelectedStateCategorySave = category;
-
-                    GumCommands.Self.FileCommands.TryAutoSaveCurrentObject();
-                }
-            }
-
+            container.RequiredVariables.Variables.Remove(variable);
+            GumCommands.Self.FileCommands.TryAutoSaveBehavior(container);
+            PropertyGridManager.Self.RefreshUI();
         }
 
         public void AddBehavior()
@@ -204,159 +296,7 @@ namespace Gum.Commands
                 }
             }
 
-        internal void RenameState(StateSave stateSave, IStateContainer stateContainer)
-        {
-            var behaviorNeedingState = GetBehaviorsNeedingState(stateSave);
+        #endregion
 
-            if (behaviorNeedingState.Any())
-            {
-                string message =
-                    "This state cannot be removed because it is needed by the following behavior(s):";
-
-                foreach (var behavior in behaviorNeedingState)
-                {
-                    message += "\n" + behavior.Name;
-                }
-
-                MessageBox.Show(message);
-            }
-            else
-            {
-                TextInputWindow tiw = new TextInputWindow();
-                tiw.Message = "Enter new state name";
-                tiw.Result = SelectedState.Self.SelectedStateSave.Name;
-                var result = tiw.ShowDialog();
-
-                if (result == DialogResult.OK)
-                {
-                    string oldName = stateSave.Name;
-
-                    stateSave.Name = tiw.Result;
-                    GumCommands.Self.GuiCommands.RefreshStateTreeView();
-                    // I don't think we need to save the project when renaming a state:
-                    //GumCommands.Self.FileCommands.TryAutoSaveProject();
-
-                    PluginManager.Self.StateRename(stateSave, oldName);
-
-                    GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
-                }
-            }
-        }
-
-        internal void AddComponent()
-        {
-            if (ObjectFinder.Self.GumProjectSave == null || string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave.FullFileName))
-            {
-                MessageBox.Show("You must first save the project before adding a new component");
-            }
-            else
-            {
-                TextInputWindow tiw = new TextInputWindow();
-                tiw.Message = "Enter new Component name:";
-
-                if (tiw.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-                {
-                    string name = tiw.Result;
-
-                    string whyNotValid;
-
-                    if (!NameVerifier.Self.IsComponentNameValid(name, null, out whyNotValid))
-                    {
-                        MessageBox.Show(whyNotValid);
-                    }
-                    else
-                    {
-                        TreeNode nodeToAddTo = ElementTreeViewManager.Self.SelectedNode;
-
-                        while (nodeToAddTo != null && nodeToAddTo.Tag is ComponentSave && nodeToAddTo.Parent != null)
-                        {
-                            nodeToAddTo = nodeToAddTo.Parent;
-                        }
-
-                        if (nodeToAddTo == null || !nodeToAddTo.IsPartOfComponentsFolderStructure())
-                        {
-                            nodeToAddTo = ElementTreeViewManager.Self.RootComponentsTreeNode;
-                        }
-
-                        string path = nodeToAddTo.GetFullFilePath();
-
-                        string relativeToComponents = FileManager.MakeRelative(path,
-                            FileLocations.Self.ComponentsFolder);
-
-
-
-                        ComponentSave componentSave = ProjectCommands.Self.AddComponent(relativeToComponents + name);
-
-
-                        GumCommands.Self.GuiCommands.RefreshElementTreeView();
-
-                        SelectedState.Self.SelectedComponent = componentSave;
-
-                        GumCommands.Self.FileCommands.TryAutoSaveProject();
-                        GumCommands.Self.FileCommands.TryAutoSaveElement(componentSave);
-                    }
-                }
-            }
-        }
-
-        internal void AddComponent(ComponentSave componentSave)
-        {
-
-            GumCommands.Self.Edit.AddComponent(componentSave);
-
-            GumCommands.Self.GuiCommands.RefreshElementTreeView();
-
-            SelectedState.Self.SelectedComponent = componentSave;
-
-            GumCommands.Self.FileCommands.TryAutoSaveProject();
-            GumCommands.Self.FileCommands.TryAutoSaveElement(componentSave);
-        }
-
-        internal void RenameStateCategory(StateSaveCategory category, ElementSave elementSave)
-        {
-            // This category can only be renamed if no behaviors require it
-            var behaviorsNeedingCategory = DeleteLogic.Self.GetBehaviorsNeedingCategory(category, elementSave as ComponentSave);
-
-            if (behaviorsNeedingCategory.Any())
-            {
-                string message =
-                    "This category cannot be renamed because it is needed by the following behavior(s):";
-
-                foreach (var behavior in behaviorsNeedingCategory)
-                {
-                    message += "\n" + behavior.Name;
-                }
-
-                MessageBox.Show(message);
-            }
-            else
-            {
-                TextInputWindow tiw = new TextInputWindow();
-                tiw.Message = "Enter new category name";
-                tiw.Result = category.Name;
-                var result = tiw.ShowDialog();
-
-                if (result == DialogResult.OK)
-                {
-                    string oldName = category.Name;
-
-                    category.Name = tiw.Result;
-                    GumCommands.Self.GuiCommands.RefreshStateTreeView();
-                    // I don't think we need to save the project when renaming a state:
-                    //GumCommands.Self.FileCommands.TryAutoSaveProject();
-
-                    PluginManager.Self.CategoryRename(category, oldName);
-
-                    GumCommands.Self.FileCommands.TryAutoSaveCurrentObject();
-                }
-            }
-        }
-
-        public void RemoveBehaviorVariable(BehaviorSave container, VariableSave variable)
-        {
-            container.RequiredVariables.Variables.Remove(variable);
-            GumCommands.Self.FileCommands.TryAutoSaveBehavior(container);
-            PropertyGridManager.Self.RefreshUI();
-        }
     }
 }

@@ -111,5 +111,7 @@ using System.Runtime.InteropServices;
 // 0.9.2
 //  - Behaviors now can reference instances which themselves require behaviors
 //  - Error window now reports if there are no instances with the required behaviors.
-[assembly: AssemblyVersion("0.9.1.1")]
-[assembly: AssemblyFileVersion("0.9.1.1")]
+// 0.9.2.1
+//  - Fixed bug where components could be named the same as other components if placed in a subfolder.
+[assembly: AssemblyVersion("0.9.2.1")]
+[assembly: AssemblyFileVersion("0.9.2.1")]
