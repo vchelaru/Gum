@@ -1612,11 +1612,20 @@ namespace Gum.Wireframe
 
         private void UpdatePosition(float parentWidth, float parentHeight, XOrY? xOrY)
         {
+            // First get the position of the object ignoring wrapping...
             UpdatePosition(parentWidth, parentHeight, wrap: false, xOrY: xOrY);
 
             var effectiveParent = EffectiveParentGue;
 
-            bool shouldWrap = GetIfParentStacks() && this.EffectiveParentGue.WrapsChildren &&
+            // Wrap the object if:
+            bool shouldWrap = 
+            // * The parent stacks
+                GetIfParentStacks() && 
+                
+            // * The parent wraps
+                this.EffectiveParentGue.WrapsChildren &&
+                
+            // * The object is outside of parent's bounds
                 ((effectiveParent.ChildrenLayout == Gum.Managers.ChildrenLayout.LeftToRightStack && this.GetAbsoluteRight() > effectiveParent.GetAbsoluteRight()) ||
                 (effectiveParent.ChildrenLayout == Gum.Managers.ChildrenLayout.TopToBottomStack && this.GetAbsoluteBottom() > effectiveParent.GetAbsoluteBottom()));
 
@@ -1817,6 +1826,12 @@ namespace Gum.Wireframe
             {
                 if (shouldWrap)
                 {
+                    // If we should wrap, then "this" is going to either be on a new row or column (depending on the stack type)
+                    // For this explanation let's consider a left-to-right stack (rows)
+                    // If the object is to wrap, that means it's too far to the right, so it needs to wrap on a new row.
+                    // To do this, we take the previous sibling and check its X value. If the X value is smaller than the "this", then
+                    // that means it is on the same row, but further to the left. Therefore, we keep going left until we come across a sibling
+                    // that no longer has a smaller X. Once we've done that, we hit the beginnign of the row, and that's the sibling we position off of.
                     int currentIndex = thisIndex - 1;
                     IRenderableIpso minimumItem = siblings[currentIndex] as IRenderableIpso;
 
@@ -1842,6 +1857,7 @@ namespace Gum.Wireframe
                         {
                             minValue = getAbsoluteValueFunc(candidate);
                             minimumItem = candidate;
+                            currentIndex--;
                         }
                         else
                         {
@@ -1865,6 +1881,7 @@ namespace Gum.Wireframe
                 }
                 else
                 {
+                    // This doesn't wrap so we always stack after the previous sibling.
                     whatToStackAfter = siblings[thisIndex - 1] as IPositionedSizedObject;
                     if (whatToStackAfter != null)
                     {
