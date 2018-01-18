@@ -837,12 +837,28 @@ namespace Gum.Managers
             {
                 ElementSave elementSave = node.Tag as ElementSave;
 
+                List<InstanceSave> expandedInstances = new List<InstanceSave>();
+                foreach (InstanceSave instance in elementSave.Instances)
+                {
+                    var treeNode = GetTreeNodeFor(instance, node);
+
+                    if(treeNode?.Nodes.Count > 0 && treeNode?.IsExpanded == true)
+                    {
+                        expandedInstances.Add(instance);
+                    }
+                }
+
                 node.Text = FileManager.RemovePath(elementSave.Name);
                 node.Nodes.Clear();
 
                 foreach (InstanceSave instance in elementSave.Instances)
                 {
                     TreeNode nodeForInstance = GetTreeNodeFor(instance, node);
+
+                    if(expandedInstances.Contains(instance))
+                    {
+                        nodeForInstance.Expand();
+                    }
 
                     if (nodeForInstance == null)
                     {
