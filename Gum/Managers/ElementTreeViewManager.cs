@@ -855,14 +855,14 @@ namespace Gum.Managers
                 {
                     TreeNode nodeForInstance = GetTreeNodeFor(instance, node);
 
-                    if(expandedInstances.Contains(instance))
-                    {
-                        nodeForInstance.Expand();
-                    }
-
                     if (nodeForInstance == null)
                     {
                         nodeForInstance = AddTreeNodeForInstance(instance, node);
+                    }
+
+                    if(expandedInstances.Contains(instance))
+                    {
+                        nodeForInstance.Expand();
                     }
 
                     var siblingInstances = instance.GetSiblingsIncludingThis();
