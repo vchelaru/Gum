@@ -499,11 +499,14 @@ namespace Gum.Wireframe
             if(mCopiedElement is ScreenSave)
             {
                 toAdd = ((ScreenSave)mCopiedElement).Clone();
+                toAdd.Initialize(null);
             }
             else
             {
                 toAdd = ((ComponentSave)mCopiedElement).Clone();
+                ((ComponentSave)toAdd).InitializeDefaultAndComponentVariables();
             }
+
 
             List<string> allElementNames = new List<string>();
             allElementNames.AddRange(ProjectState.Self.GumProjectSave.Screens.Select(item=>item.Name.ToLowerInvariant()));
