@@ -3031,43 +3031,50 @@ namespace Gum.Wireframe
                 {
                     string valueAsString = value as string;
 
-                    if (ToolsUtilities.FileManager.IsRelative(valueAsString))
+                    if(string.IsNullOrEmpty(valueAsString))
                     {
-                        valueAsString = ToolsUtilities.FileManager.RelativeDirectory + valueAsString;
-                        valueAsString = ToolsUtilities.FileManager.RemoveDotDotSlash(valueAsString);
-                    }
-
-                    //check if part of atlas
-                    //Note: assumes that if this filename is in an atlas that all 9 are in an atlas
-                    var atlasedTexture = global::RenderingLibrary.Content.LoaderManager.Self.TryLoadContent<AtlasedTexture>(valueAsString);
-                    if (atlasedTexture != null)
-                    {
-                        nineSlice.LoadAtlasedTexture(valueAsString, atlasedTexture);
+                        nineSlice.SetSingleTexture(null);
                     }
                     else
                     {
-                        if (NineSlice.GetIfShouldUsePattern(valueAsString))
+                        if (ToolsUtilities.FileManager.IsRelative(valueAsString))
                         {
-                            nineSlice.SetTexturesUsingPattern(valueAsString, SystemManagers.Default, false);
+                            valueAsString = ToolsUtilities.FileManager.RelativeDirectory + valueAsString;
+                            valueAsString = ToolsUtilities.FileManager.RemoveDotDotSlash(valueAsString);
+                        }
+
+                        //check if part of atlas
+                        //Note: assumes that if this filename is in an atlas that all 9 are in an atlas
+                        var atlasedTexture = global::RenderingLibrary.Content.LoaderManager.Self.TryLoadContent<AtlasedTexture>(valueAsString);
+                        if (atlasedTexture != null)
+                        {
+                            nineSlice.LoadAtlasedTexture(valueAsString, atlasedTexture);
                         }
                         else
                         {
-                            var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
-
-                            Microsoft.Xna.Framework.Graphics.Texture2D texture =
-                                global::RenderingLibrary.Content.LoaderManager.Self.InvalidTexture;
-
-                            try
+                            if (NineSlice.GetIfShouldUsePattern(valueAsString))
                             {
-                                texture =
-                                    loaderManager.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(valueAsString);
+                                nineSlice.SetTexturesUsingPattern(valueAsString, SystemManagers.Default, false);
                             }
-                            catch (Exception e)
+                            else
                             {
-                                // do nothing?
-                            }
-                            nineSlice.SetSingleTexture(texture);
+                                var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
 
+                                Microsoft.Xna.Framework.Graphics.Texture2D texture =
+                                    global::RenderingLibrary.Content.LoaderManager.Self.InvalidTexture;
+
+                                try
+                                {
+                                    texture =
+                                        loaderManager.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(valueAsString);
+                                }
+                                catch (Exception e)
+                                {
+                                    // do nothing?
+                                }
+                                nineSlice.SetSingleTexture(texture);
+
+                            }
                         }
                     }
                     handled = true;
