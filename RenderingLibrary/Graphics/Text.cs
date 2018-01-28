@@ -195,10 +195,13 @@ namespace RenderingLibrary.Graphics
             }
             set
             {
-                mWidth = value;
-                UpdateWrappedText();
-                UpdateLinePrimitive();
-                UpdatePreRenderDimensions();
+                if(mWidth != value)
+                {
+                    mWidth = value;
+                    UpdateWrappedText();
+                    UpdateLinePrimitive();
+                    UpdatePreRenderDimensions();
+                }
 
             }
         }
@@ -211,8 +214,11 @@ namespace RenderingLibrary.Graphics
             }
             set
             {
-                mHeight = value;
-                UpdateLinePrimitive();
+                if(mHeight != value)
+                {
+                    mHeight = value;
+                    UpdateLinePrimitive();
+                }
             }
         }
 
@@ -728,6 +734,8 @@ namespace RenderingLibrary.Graphics
             }
         }
 
+        // todo: reduce allocs by using a static here (static is prob okay since it can't be multithreaded)
+        static List<int> widths = new List<int>();
         private void RenderCharacterByCharacter(SpriteRenderer spriteRenderer)
         {
             BitmapFont fontToUse = mBitmapFont;
@@ -739,8 +747,7 @@ namespace RenderingLibrary.Graphics
 
             if (fontToUse != null)
             {
-                // todo: reduce allocs by using a static here (static is prob okay since it can't be multithreaded)
-                List<int> widths = new List<int>();
+                widths.Clear();
                 int requiredWidth;
                 int requiredHeight;
                 fontToUse.GetRequiredWidthAndHeight(WrappedText, out requiredWidth, out requiredHeight, widths);

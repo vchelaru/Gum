@@ -424,7 +424,7 @@ namespace Gum.Wireframe
             }
             set
             {
-                if (mX != value)
+                if (mX != value && mContainedObjectAsIpso != null)
                 {
 #if DEBUG
                     if (float.IsNaN(value))
@@ -455,7 +455,7 @@ namespace Gum.Wireframe
             }
             set
             {
-                if (mY != value)
+                if (mY != value && mContainedObjectAsIpso != null)
                 {
 #if DEBUG
                     if (float.IsNaN(value))

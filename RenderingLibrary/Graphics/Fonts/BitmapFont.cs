@@ -424,14 +424,14 @@ namespace RenderingLibrary.Graphics
 
         public Texture2D RenderToTexture2D(string whatToRender, SystemManagers managers, object objectRequestingRender)
         {
-            string[] lines = whatToRender.Split('\n');
+            var lines = whatToRender.Split('\n').ToList();
 
             return RenderToTexture2D(lines, HorizontalAlignment.Left, managers, null, objectRequestingRender);
         }
 
         public Texture2D RenderToTexture2D(string whatToRender, HorizontalAlignment horizontalAlignment, SystemManagers managers, object objectRequestingRender)
         {
-            string[] lines = whatToRender.Split('\n');
+            var lines = whatToRender.Split('\n').ToList();
 
             return RenderToTexture2D(lines, horizontalAlignment, managers, null, objectRequestingRender);
         }
@@ -449,7 +449,7 @@ namespace RenderingLibrary.Graphics
         /// <param name="objectRequestingRender"></param>
         /// <param name="charLocations">Used to store char locations for drawing directly to screen.</param>
         /// <returns></returns>
-        public Texture2D RenderToTexture2D(IEnumerable<string> lines, HorizontalAlignment horizontalAlignment, SystemManagers managers, Texture2D toReplace, object objectRequestingRender)
+        public Texture2D RenderToTexture2D(List<string> lines, HorizontalAlignment horizontalAlignment, SystemManagers managers, Texture2D toReplace, object objectRequestingRender)
         {
             if (managers == null)
             {
@@ -523,7 +523,7 @@ namespace RenderingLibrary.Graphics
             return renderTarget;
         }
 
-        public void DrawTextLines(IEnumerable<string> lines, HorizontalAlignment horizontalAlignment, object objectRequestingChange, int requiredWidth, List<int> widths, SpriteRenderer spriteRenderer, 
+        public void DrawTextLines(List<string> lines, HorizontalAlignment horizontalAlignment, object objectRequestingChange, int requiredWidth, List<int> widths, SpriteRenderer spriteRenderer, 
             Color color,
             float xOffset = 0, float yOffset = 0, float rotation = 0, float scaleX = 1, float scaleY = 1)
         {
@@ -693,7 +693,9 @@ namespace RenderingLibrary.Graphics
             GetRequiredWidthAndHeight(lines, out requiredWidth, out requiredHeight, null);
         }
 
-        public void GetRequiredWidthAndHeight(IEnumerable<string> lines, out int requiredWidth, out int requiredHeight, List<int> widths)
+        // This sucks, but if we pass an IEnumerable, it allocates memory like crazy. Duplicate code to handle List to reduce alloc
+        //public void GetRequiredWidthAndHeight(IEnumerable<string> lines, out int requiredWidth, out int requiredHeight, List<int> widths)
+        public void GetRequiredWidthAndHeight(List<string> lines, out int requiredWidth, out int requiredHeight, List<int> widths)
         {
 
             requiredWidth = 0;
@@ -716,6 +718,34 @@ namespace RenderingLibrary.Graphics
             requiredWidth = System.Math.Min(requiredWidth, MaxWidthAndHeight);
             requiredHeight = System.Math.Min(requiredHeight, MaxWidthAndHeight);
             if(requiredWidth != 0 && mOutlineThickness != 0)
+            {
+                requiredWidth += mOutlineThickness * 2;
+            }
+        }
+
+        public void GetRequiredWidthAndHeight(IEnumerable<string> lines, out int requiredWidth, out int requiredHeight, List<int> widths)
+        {
+
+            requiredWidth = 0;
+            requiredHeight = 0;
+
+            foreach (string line in lines)
+            {
+                requiredHeight += LineHeightInPixels;
+                int lineWidth = 0;
+
+                lineWidth = MeasureString(line);
+                if (widths != null)
+                {
+                    widths.Add(lineWidth);
+                }
+                requiredWidth = System.Math.Max(lineWidth, requiredWidth);
+            }
+
+            const int MaxWidthAndHeight = 4096; // change this later?
+            requiredWidth = System.Math.Min(requiredWidth, MaxWidthAndHeight);
+            requiredHeight = System.Math.Min(requiredHeight, MaxWidthAndHeight);
+            if (requiredWidth != 0 && mOutlineThickness != 0)
             {
                 requiredWidth += mOutlineThickness * 2;
             }
