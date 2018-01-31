@@ -55,7 +55,7 @@ namespace ToolsUtilities
         {
             get
             {
-                return FileManager.Standardize(original, preserveCase: false, makeAbsolute: true);
+                return FileManager.RemoveDotDotSlash( FileManager.Standardize(original, preserveCase: false, makeAbsolute: true));
             }
         }
 
@@ -73,11 +73,21 @@ namespace ToolsUtilities
                    Standardized == path.Standardized;
         }
 
+        public FilePath GetDirectoryContainingThis()
+        {
+            return FileManager.GetDirectory(this.Standardized);
+        }
+
         public override int GetHashCode()
         {
             var hashCode = 354063820;
             hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Standardized);
             return hashCode;
+        }
+
+        public bool IsRootOf(FilePath otherFilePath)
+        {
+            return otherFilePath.Standardized.StartsWith(this.Standardized);
         }
 
         public override string ToString()

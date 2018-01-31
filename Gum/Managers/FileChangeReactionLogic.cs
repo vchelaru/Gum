@@ -20,6 +20,10 @@ namespace Gum.Managers
             {
                 ReactToImageFileChanged(file);
             }
+            else if(extension == "fnt")
+            {
+                ReactToFontFileChanged(file);
+            }
             else if(extension == GumProjectSave.ScreenExtension || extension == GumProjectSave.ComponentExtension || 
                 extension == GumProjectSave.StandardExtension)
             {
@@ -65,6 +69,27 @@ namespace Gum.Managers
             }
 
         }
+
+        private void ReactToFontFileChanged(FilePath file)
+        {
+            var currentElement = SelectedState.Self.SelectedElement;
+            string relativeDirectory = ProjectState.Self.ProjectDirectory;
+
+            if (currentElement != null)
+            {
+                var referencedFiles = ObjectFinder.Self
+                    .GetFilesReferencedBy(currentElement)
+                    .Select(item => new FilePath(item))
+                    .ToList()
+                    ;
+
+                if (referencedFiles.Contains(file))
+                {
+                    Wireframe.WireframeObjectManager.Self.RefreshAll(true, true);
+                }
+            }
+        }
+
 
         private void ReactToElementSaveChanged(FilePath file)
         {

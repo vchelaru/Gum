@@ -45,12 +45,57 @@ namespace Gum.Managers
 
         public void HandleProjectLoaded()
         {
-            string directory = ProjectState.Self.ProjectDirectory;
+            string directory = GetFileWatchRootDirectory().Standardized;
 
             // Gum standard is to have a trailing slash, 
             // but FileSystemWatcher expects no trailing slash:
-            fileSystemWatcher.Path = directory.Substring(0, directory.Length-1);
+            fileSystemWatcher.Path = directory.Substring(0, directory.Length - 1);
             fileSystemWatcher.EnableRaisingEvents = true;
+        }
+
+        private static FilePath GetFileWatchRootDirectory()
+        {
+            var allReferencedFiles = new List<FilePath>();
+
+            foreach(var screen in ProjectState.Self.GumProjectSave.Screens)
+            {
+                var screenPaths = ObjectFinder.Self.GetFilesReferencedBy(screen)
+                    .Select(item => (FilePath)item);
+
+                allReferencedFiles.AddRange(screenPaths);
+
+            }
+            foreach (var component in ProjectState.Self.GumProjectSave.Components)
+            {
+                var componentPaths = ObjectFinder.Self.GetFilesReferencedBy(component)
+                    .Select(item => (FilePath)item);
+
+                allReferencedFiles.AddRange(componentPaths);
+            }
+            foreach (var standardElement in ProjectState.Self.GumProjectSave.StandardElements)
+            {
+                var standardElementPaths = ObjectFinder.Self.GetFilesReferencedBy(standardElement)
+                    .Select(item => (FilePath)item);
+
+                allReferencedFiles.AddRange(standardElementPaths);
+            }
+
+            allReferencedFiles.Add(ProjectManager.Self.GumProjectSave.FullFileName);
+
+            allReferencedFiles = allReferencedFiles.Distinct().ToList();
+
+            var rootmostFile = allReferencedFiles.OrderBy(item => item.Standardized.Split('/').Length).FirstOrDefault();
+            var rootmostDirectory = rootmostFile.GetDirectoryContainingThis();
+
+            foreach(var path in allReferencedFiles)
+            {
+                while(rootmostDirectory.IsRootOf(path) == false)
+                {
+                    rootmostDirectory = rootmostDirectory.GetDirectoryContainingThis();
+                }
+            }
+
+            return rootmostDirectory;
         }
 
         public void HandleProjectUnloaded()
