@@ -80,7 +80,12 @@ namespace Gum.Managers
                 allReferencedFiles.AddRange(standardElementPaths);
             }
 
-            allReferencedFiles.Add(ProjectManager.Self.GumProjectSave.FullFileName);
+            FilePath gumProjectFilePath = ProjectManager.Self.GumProjectSave.FullFileName;
+
+            char gumProjectDrive = gumProjectFilePath.Standardized[0];
+
+            allReferencedFiles.Add(gumProjectFilePath);
+
 
             allReferencedFiles = allReferencedFiles.Distinct().ToList();
 
@@ -89,9 +94,13 @@ namespace Gum.Managers
 
             foreach(var path in allReferencedFiles)
             {
-                while(rootmostDirectory.IsRootOf(path) == false)
+                // make sure this is on the same drive as the gum project. If not, don't include it:
+                if(path.Standardized.StartsWith(gumProjectDrive.ToString()))
                 {
-                    rootmostDirectory = rootmostDirectory.GetDirectoryContainingThis();
+                    while(rootmostDirectory.IsRootOf(path) == false)
+                    {
+                        rootmostDirectory = rootmostDirectory.GetDirectoryContainingThis();
+                    }
                 }
             }
 
