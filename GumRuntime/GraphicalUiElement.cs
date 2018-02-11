@@ -2142,7 +2142,7 @@ namespace Gum.Wireframe
 
                     foreach (var element in this.mWhatThisContains)
                     {
-                        if (element.IsAllLayoutAbsolute(XOrY.X))
+                        if (element.IsAllLayoutAbsolute(XOrY.Y))
                         {
                             var elementHeight = element.GetRequiredParentHeight();
                             if(this.ChildrenLayout == ChildrenLayout.TopToBottomStack)
@@ -2225,7 +2225,7 @@ namespace Gum.Wireframe
                 {
                     foreach (GraphicalUiElement element in this.Children)
                     {
-                        if (element.IsAllLayoutAbsolute())
+                        if (element.IsAllLayoutAbsolute(XOrY.X))
                         {
                             var elementWidth = element.GetRequiredParentWidth();
 
@@ -2244,7 +2244,7 @@ namespace Gum.Wireframe
                 {
                     foreach (var element in this.mWhatThisContains)
                     {
-                        if (element.IsAllLayoutAbsolute())
+                        if (element.IsAllLayoutAbsolute(XOrY.X))
                         {
                             var elementWidth = element.GetRequiredParentWidth();
 

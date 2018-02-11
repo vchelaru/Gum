@@ -238,7 +238,7 @@ namespace RenderingLibrary.Graphics
                 // priority to the prerendered values as they may be more up-to-date.
                 else if (mPreRenderWidth.HasValue)
                 {
-                    return mPreRenderWidth.Value;
+                    return mPreRenderWidth.Value * mFontScale;
                 }
                 else if (mTextureToRender != null)
                 {
@@ -272,7 +272,7 @@ namespace RenderingLibrary.Graphics
                 // See EffectiveWidth for an explanation of why the prerendered values need to come first
                 else if (mPreRenderHeight.HasValue)
                 {
-                    return mPreRenderHeight.Value;
+                    return mPreRenderHeight.Value * mFontScale;
                 }
                 else if (mTextureToRender != null)
                 {
