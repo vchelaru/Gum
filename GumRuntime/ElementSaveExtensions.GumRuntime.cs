@@ -28,10 +28,10 @@ namespace GumRuntime
             if (mElementToGueTypes.ContainsKey(elementSave.Name))
             {
                 var type = mElementToGueTypes[elementSave.Name];
-                var constructor = type.GetConstructor(new Type[] { typeof(bool)});
+                var constructor = type.GetConstructor(new Type[] { typeof(bool), typeof(bool)});
 
 
-                toReturn = constructor.Invoke(new object[] { fullInstantiation}) as GraphicalUiElement;
+                toReturn = constructor.Invoke(new object[] { fullInstantiation, true}) as GraphicalUiElement;
             }
             else
             {
