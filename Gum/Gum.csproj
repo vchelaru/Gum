@@ -313,6 +313,7 @@
     <Compile Include="Wireframe\GrabbedInitialState.cs" />
     <Compile Include="Wireframe\GraphicalOutline.cs" />
     <Compile Include="Wireframe\InterpolatingColor.cs" />
+    <Compile Include="Wireframe\OriginDisplay.cs" />
     <Compile Include="Wireframe\PlatformDetails.cs" />
     <Compile Include="Wireframe\ResizeHandles.cs" />
     <Compile Include="Wireframe\Ruler.cs" />

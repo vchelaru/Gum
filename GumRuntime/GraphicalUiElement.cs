@@ -88,6 +88,14 @@ namespace Gum.Wireframe
         Dictionary<string, Gum.DataTypes.Variables.StateSaveCategory> mCategories =
             new Dictionary<string, Gum.DataTypes.Variables.StateSaveCategory>();
 
+        // the row or column index when anobject is sorted.
+        // This is used by the stacking logic to properly sort objects
+        public int StackedRowOrColumnIndex { get; set; } = -1;
+
+        // null by default, non-null if an object uses
+        // stacked layout for its children.
+        public List<float> StackedRowOrColumnDimensions { get; private set; }
+
         #endregion
 
         #region Properties
@@ -699,6 +707,10 @@ namespace Gum.Wireframe
 
         public IPositionedSizedObject Component { get { return mContainedObjectAsIpso; } }
 
+        /// <summary>
+        /// Returns the absolute X of the origin of the GraphicalUiElement. Note that
+        /// this considers the XOrigin, and will apply rotation
+        /// </summary>
         public float AbsoluteX
         {
             get
@@ -1238,10 +1250,10 @@ namespace Gum.Wireframe
                     //mContainedObjectAsIpso.Parent = mParent;
                     mContainedObjectAsIpso.SetParentDirect(mParent);
                 }
-                float widthBefore = 0;
-                float heightBefore = 0;
-                float xBefore = 0;
-                float yBefore = 0;
+                float widthBeforeLayout = 0;
+                float heightBeforeLayout = 0;
+                float xBeforeLayout = 0;
+                float yBeforeLayout = 0;
 
                 // Not sure why we use the ParentGue and not the Parent itself...
                 // We want to do it on the actual Parent so that objects attached to components
@@ -1295,11 +1307,11 @@ namespace Gum.Wireframe
 
                         if (this.mContainedObjectAsIpso != null)
                         {
-                            widthBefore = mContainedObjectAsIpso.Width;
-                            heightBefore = mContainedObjectAsIpso.Height;
+                            widthBeforeLayout = mContainedObjectAsIpso.Width;
+                            heightBeforeLayout = mContainedObjectAsIpso.Height;
 
-                            xBefore = mContainedObjectAsIpso.X;
-                            yBefore = mContainedObjectAsIpso.Y;
+                            xBeforeLayout = mContainedObjectAsIpso.X;
+                            yBeforeLayout = mContainedObjectAsIpso.Y;
                         }
 
                         // The texture dimensions may need to be set before
@@ -1329,7 +1341,7 @@ namespace Gum.Wireframe
                         if (mContainedObjectAsIpso is Text && childrenUpdateDepth > 0)
                         {
                             // Only if the width or height have changed:
-                            if (mContainedObjectAsIpso.Width != widthBefore || mContainedObjectAsIpso.Height != heightBefore)
+                            if (mContainedObjectAsIpso.Width != widthBeforeLayout || mContainedObjectAsIpso.Height != heightBeforeLayout)
                             {
                                 // I think this should only happen when actually rendering:
                                 //((Text)mContainedObjectAsIpso).UpdateTextureToRender();
@@ -1350,6 +1362,11 @@ namespace Gum.Wireframe
 
                         UpdatePosition(parentWidth, parentHeight, xOrY);
 
+                        if(GetIfParentStacks() )
+                        {
+                            RefreshParentRowColumnDimensionForThis();
+                        }
+
                         mContainedObjectAsIpso.Rotation = this.GetAbsoluteRotation();
 
                     }
@@ -1369,14 +1386,14 @@ namespace Gum.Wireframe
                     }
                     if (this.mContainedObjectAsIpso != null)
                     {
-                        if(widthBefore != mContainedObjectAsIpso.Width ||
-                            heightBefore != mContainedObjectAsIpso.Height)
+                        if(widthBeforeLayout != mContainedObjectAsIpso.Width ||
+                            heightBeforeLayout != mContainedObjectAsIpso.Height)
                         {
                             SizeChanged?.Invoke(this, null);
                         }
 
-                        if(xBefore != mContainedObjectAsIpso.X || 
-                                yBefore != mContainedObjectAsIpso.Y)
+                        if(xBeforeLayout != mContainedObjectAsIpso.X || 
+                                yBeforeLayout != mContainedObjectAsIpso.Y)
                         {
                             PositionChanged?.Invoke(this, null);
                         }
@@ -1386,6 +1403,51 @@ namespace Gum.Wireframe
                 }
             }
 
+        }
+
+        private void RefreshParentRowColumnDimensionForThis()
+        {
+            // If it stacks, then update this row/column's dimensions given the index of this
+            var indexToUpdate = this.StackedRowOrColumnIndex;
+            var parentGue = ParentGue;
+
+            if (parentGue.StackedRowOrColumnDimensions.Count <= indexToUpdate)
+            {
+                parentGue.StackedRowOrColumnDimensions.Add(0);
+            }
+            else
+            {
+                parentGue.StackedRowOrColumnDimensions[indexToUpdate] = 0;
+            }
+
+            foreach (GraphicalUiElement child in parentGue.Children)
+            {
+                var asIpso = child as IPositionedSizedObject;
+
+                if (child.StackedRowOrColumnIndex == indexToUpdate)
+                {
+                    if (parentGue.ChildrenLayout == ChildrenLayout.LeftToRightStack)
+                    {
+                        parentGue.StackedRowOrColumnDimensions[indexToUpdate] =
+                            System.Math.Max(parentGue.StackedRowOrColumnDimensions[indexToUpdate],
+                            child.Y + child.Height);
+                    }
+                    else
+                    {
+                        parentGue.StackedRowOrColumnDimensions[indexToUpdate] =
+                            System.Math.Max(parentGue.StackedRowOrColumnDimensions[indexToUpdate],
+                            child.X + child.Width);
+                    }
+
+                    // We don't need to worry about the children after this, because the siblings will get updated in order:
+                    // This can (on average) make this run 2x as fast
+                    if(this == child)
+                    {
+                        break;
+                    }
+                }
+
+            }
         }
 
         private void UpdateChildren(int childrenUpdateDepth, bool onlyAbsoluteLayoutChildren = false)
@@ -1612,20 +1674,23 @@ namespace Gum.Wireframe
 
         private void UpdatePosition(float parentWidth, float parentHeight, XOrY? xOrY)
         {
-            // First get the position of the object ignoring wrapping...
+            // First get the position of the object without considering if this object should be wrapped.
+            // This call may result in the object being placed outside of its parent's bounds. In which case
+            // it will be wrapped....later
             UpdatePosition(parentWidth, parentHeight, wrap: false, xOrY: xOrY);
 
             var effectiveParent = EffectiveParentGue;
 
             // Wrap the object if:
-            bool shouldWrap = 
+            bool shouldWrap =
+                effectiveParent != null &&
             // * The parent stacks
-                GetIfParentStacks() && 
+                effectiveParent.ChildrenLayout != Gum.Managers.ChildrenLayout.Regular &&
+
+                // * And the parent wraps
+                effectiveParent.WrapsChildren &&
                 
-            // * The parent wraps
-                this.EffectiveParentGue.WrapsChildren &&
-                
-            // * The object is outside of parent's bounds
+            // * And the object is outside of parent's bounds
                 ((effectiveParent.ChildrenLayout == Gum.Managers.ChildrenLayout.LeftToRightStack && this.GetAbsoluteRight() > effectiveParent.GetAbsoluteRight()) ||
                 (effectiveParent.ChildrenLayout == Gum.Managers.ChildrenLayout.TopToBottomStack && this.GetAbsoluteBottom() > effectiveParent.GetAbsoluteBottom()));
 
@@ -1713,13 +1778,25 @@ namespace Gum.Wireframe
             bool throwaway2;
 
             bool wrap = false;
-            if (EffectiveParentGue != null)
+            bool shouldWrap = false;
+            var effectiveParent = EffectiveParentGue;
+            if (effectiveParent != null)
             {
-                wrap = (EffectiveParentGue as GraphicalUiElement).Wrap;
+                wrap = (effectiveParent as GraphicalUiElement).Wrap;
+
             }
+
+
+            // indicating false to wrap will reset the index on this. We don't want this method
+            // to modify anything so store it off and resume:
+            var oldIndex = StackedRowOrColumnIndex;
+
 
             GetParentOffsets(wrap, false, parentWidth, parentHeight, out parentOriginOffsetX, out parentOriginOffsetY,
                 out throwaway1, out throwaway2);
+
+            StackedRowOrColumnIndex = oldIndex;
+
         }
 
         private void GetParentOffsets(bool canWrap, bool shouldWrap, float parentWidth, float parentHeight, out float parentOriginOffsetX, out float parentOriginOffsetY,
@@ -1822,88 +1899,83 @@ namespace Gum.Wireframe
             IPositionedSizedObject whatToStackAfter = null;
             whatToStackAfterX = 0;
             whatToStackAfterY = 0;
+
+            if(parentGue.StackedRowOrColumnDimensions == null)
+            {
+                parentGue.StackedRowOrColumnDimensions = new List<float>();
+            }
+
+            int thisRowOrColumnIndex = 0;
+
             if (thisIndex > 0)
             {
+                whatToStackAfter = siblings[thisIndex - 1] as IPositionedSizedObject;
+
                 if (shouldWrap)
                 {
-                    // If we should wrap, then "this" is going to either be on a new row or column (depending on the stack type)
-                    // For this explanation let's consider a left-to-right stack (rows)
-                    // If the object is to wrap, that means it's too far to the right, so it needs to wrap on a new row.
-                    // To do this, we take the previous sibling and check its X value. If the X value is smaller than the "this", then
-                    // that means it is on the same row, but further to the left. Therefore, we keep going left until we come across a sibling
-                    // that no longer has a smaller X. Once we've done that, we hit the beginnign of the row, and that's the sibling we position off of.
-                    int currentIndex = thisIndex - 1;
-                    IRenderableIpso minimumItem = siblings[currentIndex] as IRenderableIpso;
+                    // This is going to be on a new row/column. That means the following are true:
+                    // * It will have a previous sibling.
+                    // * It will be positioned at the start/end of its row/column
+                    this.StackedRowOrColumnIndex = (whatToStackAfter as GraphicalUiElement).StackedRowOrColumnIndex + 1;
 
-                    Func<IRenderableIpso, float> getAbsoluteValueFunc = null;
 
-                    if (parentGue.ChildrenLayout == Gum.Managers.ChildrenLayout.LeftToRightStack)
-                    {
-                        getAbsoluteValueFunc = item => item.GetAbsoluteX();
-                    }
-                    else if (parentGue.ChildrenLayout == Gum.Managers.ChildrenLayout.TopToBottomStack)
-                    {
-                        getAbsoluteValueFunc = item => item.GetAbsoluteY();
-                    }
-
-                    float minValue = getAbsoluteValueFunc(minimumItem);
-                    currentIndex--;
-
-                    while (currentIndex > -1)
-                    {
-                        var candidate = siblings[currentIndex] as IRenderableIpso;
-
-                        if (getAbsoluteValueFunc(candidate) < minValue)
-                        {
-                            minValue = getAbsoluteValueFunc(candidate);
-                            minimumItem = candidate;
-                            currentIndex--;
-                        }
-                        else
-                        {
-                            break;
-                        }
-
-                    }
-                    whatToStackAfter = minimumItem;
-
+                    thisRowOrColumnIndex = (whatToStackAfter as GraphicalUiElement).StackedRowOrColumnIndex + 1;
+                    var previousRowOrColumnIndex = thisRowOrColumnIndex - 1;
                     if (parentGue.ChildrenLayout == Gum.Managers.ChildrenLayout.LeftToRightStack)
                     {
                         whatToStackAfterX = 0;
-                        whatToStackAfterY = whatToStackAfter.Y + whatToStackAfter.Height;
 
+                        whatToStackAfterY = 0;
+                        for(int i = 0; i < thisRowOrColumnIndex; i++)
+                        {
+                            whatToStackAfterY += parentGue.StackedRowOrColumnDimensions[i];
+                        }
                     }
-                    else if (parentGue.ChildrenLayout == Gum.Managers.ChildrenLayout.TopToBottomStack)
+                    else // top to bottom stack
                     {
                         whatToStackAfterY = 0;
-                        whatToStackAfterX = whatToStackAfter.X + whatToStackAfter.Width;
+                        whatToStackAfterX = 0;
+                        for (int i = 0; i < thisRowOrColumnIndex; i++)
+                        {
+                            whatToStackAfterX += parentGue.StackedRowOrColumnDimensions[i];
+                        }
                     }
+                    
                 }
                 else
                 {
-                    // This doesn't wrap so we always stack after the previous sibling.
-                    whatToStackAfter = siblings[thisIndex - 1] as IPositionedSizedObject;
+
                     if (whatToStackAfter != null)
                     {
-                        if (parentGue.ChildrenLayout == Gum.Managers.ChildrenLayout.LeftToRightStack || shouldWrap)
+                        thisRowOrColumnIndex = (whatToStackAfter as GraphicalUiElement).StackedRowOrColumnIndex;
+                        this.StackedRowOrColumnIndex = (whatToStackAfter as GraphicalUiElement).StackedRowOrColumnIndex;
+                        if (parentGue.ChildrenLayout == Gum.Managers.ChildrenLayout.LeftToRightStack)
                         {
                             whatToStackAfterX = whatToStackAfter.X + whatToStackAfter.Width;
+
+                            whatToStackAfterY = 0;
+                            for (int i = 0; i < thisRowOrColumnIndex; i++)
+                            {
+                                whatToStackAfterY += parentGue.StackedRowOrColumnDimensions[i];
+                            }
                         }
                         else
-                        {
-                            whatToStackAfterX = whatToStackAfter.X;
-                        }
-
-                        if (parentGue.ChildrenLayout == Gum.Managers.ChildrenLayout.TopToBottomStack || shouldWrap)
                         {
                             whatToStackAfterY = whatToStackAfter.Y + whatToStackAfter.Height;
+                            whatToStackAfterX = 0;
+                            for (int i = 0; i < thisRowOrColumnIndex; i++)
+                            {
+                                whatToStackAfterX += parentGue.StackedRowOrColumnDimensions[i];
+                            }
                         }
-                        else
-                        {
-                            whatToStackAfterY = whatToStackAfter.Y;
-                        }
+
+                        // This is on the same row/column as its previous sibling
                     }
                 }
+            }
+            else if(canWrap)
+            {
+                StackedRowOrColumnIndex = 0;
             }
 
             return whatToStackAfter;
@@ -3624,26 +3696,36 @@ namespace Gum.Wireframe
             }
         }
 
-        static List<List<Gum.DataTypes.Variables.VariableSaveValues>> listOfLists = new List<List<Gum.DataTypes.Variables.VariableSaveValues>>();
-        int index = 0;
+        // When interpolating between two states,
+        // the code is goign to merge the values from
+        // the two states to create a 3rd set of (merged)
+        // values. Interpolation can happen in complex animations
+        // resulting in lots of merged lists being created. This allocates
+        // tons of memory. Therefore we create a static set of variable lists
+        // to store the merged values. We don't know how deep the stack will go
+        // (animations within animations) so we need to support a dynamically growing
+        // list. The numberOfUsedInterpolationLists stores how many times this is being
+        // called so it knows if it needs to add more lists.
+        static List<List<Gum.DataTypes.Variables.VariableSaveValues>> listOfListsForReducingAllocInInterpolation = new List<List<Gum.DataTypes.Variables.VariableSaveValues>>();
+        int numberOfUsedInterpolationLists = 0;
 
         public void InterpolateBetween(Gum.DataTypes.Variables.StateSave first, Gum.DataTypes.Variables.StateSave second, float interpolationValue)
         {
-            if (index >= listOfLists.Count)
+            if (numberOfUsedInterpolationLists >= listOfListsForReducingAllocInInterpolation.Count)
             {
                 const int capacity = 20;
                 var newList = new List<DataTypes.Variables.VariableSaveValues>(capacity);
-                listOfLists.Add(newList);
+                listOfListsForReducingAllocInInterpolation.Add(newList);
             }
 
-            List<Gum.DataTypes.Variables.VariableSaveValues> values = listOfLists[index];
+            List<Gum.DataTypes.Variables.VariableSaveValues> values = listOfListsForReducingAllocInInterpolation[numberOfUsedInterpolationLists];
             values.Clear();
-            index++;
+            numberOfUsedInterpolationLists++;
 
             Gum.DataTypes.Variables.StateSaveExtensionMethods.Merge(first, second, interpolationValue, values);
 
             this.ApplyState(values);
-            index--;
+            numberOfUsedInterpolationLists--;
         }
         #endregion
     }

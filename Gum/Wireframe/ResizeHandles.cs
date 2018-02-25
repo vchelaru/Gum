@@ -41,11 +41,8 @@ namespace Gum.Wireframe
 
         LineCircle[] mHandles = new LineCircle[8];
 
-        Line mXLine1;
-        Line mXLine2;
 
-        Line mOriginLine;
-
+        OriginDisplay originDisplay;
 
 
         const float RadiusAtNoZoom = 5;
@@ -107,10 +104,8 @@ namespace Gum.Wireframe
                     mHandles[i].Visible = value;
                 }
 
-                mXLine1.Visible = value && ShowOrigin;
-                mXLine2.Visible = value && ShowOrigin;
+                originDisplay.Visible = value && ShowOrigin;
 
-                mOriginLine.Visible = value && ShowOrigin;
             }
         }
 
@@ -134,19 +129,8 @@ namespace Gum.Wireframe
 
             }
 
-            mXLine1 = new Line(null);
-            mXLine2 = new Line(null);
-            mXLine1.Name = "Resize Handle X Line 1";
-            mXLine2.Name = "Resize Handle X Line 2";
-
-            ShapeManager.Self.Add(mXLine1, layer);
-            ShapeManager.Self.Add(mXLine2, layer);
-
-            mOriginLine = new Line(null);
-            mOriginLine.Name = "Resize Handle Offset Line";
-            ShapeManager.Self.Add(mOriginLine, layer);
-
-
+            originDisplay = new OriginDisplay(layer);
+            
             Visible = true;
             UpdateToProperties();
         }
@@ -178,77 +162,15 @@ namespace Gum.Wireframe
             {
                 var asGue = ipso as GraphicalUiElement;
 
-                SetOriginXPosition(asGue);
+                originDisplay.SetOriginXPosition(asGue);
 
-                UpdateOriginLine(asGue);
+                originDisplay.UpdateTo(asGue);
             }
 
 
             UpdateToProperties();
         }
 
-        private void SetOriginXPosition(GraphicalUiElement asGue)
-        {
-            float absoluteX = asGue.AbsoluteX;
-            float absoluteY = asGue.AbsoluteY;
-
-            IPositionedSizedObject asIpso = asGue;
-            float zoom = Renderer.Self.Camera.Zoom;
-
-            float offset = RadiusAtNoZoom * 1.5f / zoom;
-
-
-
-            mXLine1.X = absoluteX - offset;
-            mXLine1.Y = absoluteY - offset;
-
-            mXLine2.X = absoluteX - offset;
-            mXLine2.Y = absoluteY + offset;
-
-            mXLine1.RelativePoint = new Microsoft.Xna.Framework.Vector2(offset * 2, offset * 2);
-            mXLine2.RelativePoint = new Microsoft.Xna.Framework.Vector2(offset * 2, -offset * 2);
-
-
-
-
-        }
-
-        private void UpdateOriginLine(GraphicalUiElement asGue)
-        {
-            var parent = asGue.EffectiveParentGue;
-
-
-            mOriginLine.Visible = true;
-
-            // The child's position is relative
-            // to the parent, but not always the
-            // top left - depending on the XUnits
-            // and YUnits. ParentOriginOffset contains
-            // the point that the child is relative to, 
-            // relative to the top-left of the parent.
-            // In other words, if the child's XUnits is
-            // PixelsFromRight, then the parentOriginOffsetX
-            // will be the width of the parent.
-            float parentOriginOffsetX;
-            float parentOriginOffsetY;
-            asGue.GetParentOffsets(out parentOriginOffsetX, out parentOriginOffsetY);
-
-            float parentAbsoluteX = 0;
-            float parentAbsoluteY = 0;
-
-            if (parent != null)
-            {
-                parentAbsoluteX = parent.GetAbsoluteX();
-                parentAbsoluteY = parent.GetAbsoluteY();
-
-            }
-
-            mOriginLine.X = parentOriginOffsetX + parentAbsoluteX;
-            mOriginLine.Y = parentOriginOffsetY + parentAbsoluteY;
-
-            mOriginLine.RelativePoint.X = asGue.AbsoluteX - mOriginLine.X;
-            mOriginLine.RelativePoint.Y = asGue.AbsoluteY - mOriginLine.Y;
-        }
 
         public void SetValuesFrom(IEnumerable<IRenderableIpso> ipsoList)
         {
@@ -284,7 +206,7 @@ namespace Gum.Wireframe
                 {
                     var asGue = first as GraphicalUiElement;
 
-                    SetOriginXPosition(asGue);
+                    originDisplay.SetOriginXPosition(asGue);
 
                 }
 

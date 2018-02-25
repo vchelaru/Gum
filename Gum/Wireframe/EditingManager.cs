@@ -439,6 +439,7 @@ namespace Gum.Wireframe
 
                         if (!shouldSkip)
                         {
+                            // This could prevent a double-layout by locking layout until all values have been set
                             if (xToMoveBy != 0)
                             {
                                 hasChangeOccurred = true;
