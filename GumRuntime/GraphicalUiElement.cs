@@ -1430,13 +1430,13 @@ namespace Gum.Wireframe
                     {
                         parentGue.StackedRowOrColumnDimensions[indexToUpdate] =
                             System.Math.Max(parentGue.StackedRowOrColumnDimensions[indexToUpdate],
-                            child.Y + child.Height);
+                            child.Y + child.GetAbsoluteHeight());
                     }
                     else
                     {
                         parentGue.StackedRowOrColumnDimensions[indexToUpdate] =
                             System.Math.Max(parentGue.StackedRowOrColumnDimensions[indexToUpdate],
-                            child.X + child.Width);
+                            child.X + child.GetAbsoluteWidth());
                     }
 
                     // We don't need to worry about the children after this, because the siblings will get updated in order:

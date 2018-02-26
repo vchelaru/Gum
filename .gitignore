@@ -34,3 +34,5 @@ WpfDataUi/SampleProject/SampleProject/obj/
 GumCore/GumCoreXnaPc/bin/
 GumCore/GumCoreXnaPc/obj/
 *.bak
+GumCore/GumCoreXnaPc/GumCoreUwp/obj/
+GumCore/GumCoreXnaPc/GumCoreUwp/bin/Debug/
