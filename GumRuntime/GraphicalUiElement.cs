@@ -1409,7 +1409,12 @@ namespace Gum.Wireframe
         {
             // If it stacks, then update this row/column's dimensions given the index of this
             var indexToUpdate = this.StackedRowOrColumnIndex;
-            var parentGue = ParentGue;
+            var parentGue = EffectiveParentGue;
+
+            if (parentGue.StackedRowOrColumnDimensions == null)
+            {
+                parentGue.StackedRowOrColumnDimensions = new List<float>();
+            }
 
             if (parentGue.StackedRowOrColumnDimensions.Count <= indexToUpdate)
             {
@@ -1973,7 +1978,7 @@ namespace Gum.Wireframe
                     }
                 }
             }
-            else if(canWrap)
+            else
             {
                 StackedRowOrColumnIndex = 0;
             }
