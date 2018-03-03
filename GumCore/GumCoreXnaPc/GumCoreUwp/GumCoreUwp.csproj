@@ -106,7 +106,6 @@
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Class1.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Properties\GumCoreUwp.rd.xml" />
   </ItemGroup>
@@ -120,7 +119,18 @@
       <HintPath>..\..\..\..\FlatRedBall\Engines\FlatRedBallXNA\FlatRedBall\FlatRedBallUwp\Libraries\UWP\Debug\MonoGame.Framework.dll</HintPath>
     </Reference>
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\FlatRedBall\Engines\FlatRedBallXNA\FlatRedBall\FlatRedBallUwp\FlatRedBallUwp.csproj">
+      <Project>{d874a841-1f53-4bde-a271-b9197b2cbdd5}</Project>
+      <Name>FlatRedBallUwp</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\FlatRedBall\Engines\Forms\FlatRedBall.Forms\StateInterpolation\StateInterpolation.Uwp.csproj">
+      <Project>{bb7d8c65-2d7d-442f-a2c9-9b5774a462b9}</Project>
+      <Name>StateInterpolation.Uwp</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="..\..\..\GumCoreShared.projitems" Label="Shared" />
+  <Import Project="..\..\..\..\FlatRedBall\FRBDK\Glue\GumPlugin\GumPlugin\GumCoreShared.FlatRedBall.projitems" Label="Shared" />
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
   </PropertyGroup>

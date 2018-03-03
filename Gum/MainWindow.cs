@@ -103,6 +103,25 @@ namespace Gum
         void HandleXnaInitialize()
         {
             this.wireframeControl1.Initialize(WireframeEditControl);
+
+            this.wireframeControl1.Parent.Resize += (not, used) => UpdateWireframeControlSizes();
+
+            UpdateWireframeControlSizes();
+        }
+
+        /// <summary>
+        /// Refreshes the wifreframe control size - for some reason this is necessary if windows has a non-100% scale (for higher resolution displays)
+        /// </summary>
+        private void UpdateWireframeControlSizes()
+        {
+            WireframeEditControl.Width = WireframeEditControl.Parent.Width;
+
+            ToolbarPanel.Width = ToolbarPanel.Parent.Width;
+
+            wireframeControl1.Width = wireframeControl1.Parent.Width;
+
+            // Add location.Y to account for the shortcut bar at the top.
+            wireframeControl1.Height = wireframeControl1.Parent.Height - wireframeControl1.Location.Y;
         }
 
         private void VariableCenterAndEverythingRight_SplitterMoved(object sender, SplitterEventArgs e)
