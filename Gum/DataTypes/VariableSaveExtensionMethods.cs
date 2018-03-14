@@ -217,6 +217,12 @@ namespace Gum.DataTypes
 
                     if (element != null)
                     {
+                        var defaultState = element.DefaultState;
+                        if(defaultState == null)
+                        {
+                            throw new NullReferenceException(
+                                $"Could not find a default state for {element} - this happens if the element wasn't initialized, or if its file was not loaded properly.");
+                        }
                         // let's try going recursively:
                         var subVariable = element.DefaultState.Variables.FirstOrDefault(item => item.ExposedAsName == variableSave.GetRootName());
 
