@@ -85,8 +85,14 @@ namespace Gum.Wireframe
                     mGraphicalElements.Add(rootIpso);
 
                     rootIpso.CreateGraphicalComponent(elementSave, null);
-                    rootIpso.Component.Name = elementSave.Name;
-                    rootIpso.Component.Tag = elementSave;
+
+                    // can be null if the element save references a bad file
+                    if(rootIpso.Component != null)
+                    {
+                        rootIpso.Component.Name = elementSave.Name;
+                        rootIpso.Component.Tag = elementSave;
+
+                    }
 
                     RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(SelectedState.Self.SelectedStateSaveOrDefault);
 
