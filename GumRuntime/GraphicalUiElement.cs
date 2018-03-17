@@ -3351,11 +3351,21 @@ namespace Gum.Wireframe
             if (propertyName == "Text")
             {
                 ((Text)mContainedObjectAsIpso).RawText = value as string;
+                // we want to update if the text's size is based on its "children" (the letters it contains)
+                if(this.WidthUnits == DimensionUnitType.RelativeToChildren)
+                {
+                    UpdateLayout();
+                }
                 handled = true;
             }
             else if (propertyName == "Font Scale")
             {
                 ((Text)mContainedObjectAsIpso).FontScale = (float)value;
+                // we want to update if the text's size is based on its "children" (the letters it contains)
+                if (this.WidthUnits == DimensionUnitType.RelativeToChildren)
+                {
+                    UpdateLayout();
+                }
                 handled = true;
 
             }
@@ -3364,12 +3374,22 @@ namespace Gum.Wireframe
                 this.Font = value as string;
 
                 UpdateToFontValues();
+                // we want to update if the text's size is based on its "children" (the letters it contains)
+                if (this.WidthUnits == DimensionUnitType.RelativeToChildren)
+                {
+                    UpdateLayout();
+                }
                 handled = true;
             }
             else if (propertyName == "UseCustomFont")
             {
                 this.UseCustomFont = (bool)value;
                 UpdateToFontValues();
+                // we want to update if the text's size is based on its "children" (the letters it contains)
+                if (this.WidthUnits == DimensionUnitType.RelativeToChildren)
+                {
+                    UpdateLayout();
+                }
                 handled = true;
             }
 
@@ -3377,18 +3397,33 @@ namespace Gum.Wireframe
             {
                 CustomFontFile = (string)value;
                 UpdateToFontValues();
+                // we want to update if the text's size is based on its "children" (the letters it contains)
+                if (this.WidthUnits == DimensionUnitType.RelativeToChildren)
+                {
+                    UpdateLayout();
+                }
                 handled = true;
             }
             else if (propertyName == "FontSize")
             {
                 FontSize = (int)value;
                 UpdateToFontValues();
+                // we want to update if the text's size is based on its "children" (the letters it contains)
+                if (this.WidthUnits == DimensionUnitType.RelativeToChildren)
+                {
+                    UpdateLayout();
+                }
                 handled = true;
             }
             else if (propertyName == "OutlineThickness")
             {
                 OutlineThickness = (int)value;
                 UpdateToFontValues();
+                // we want to update if the text's size is based on its "children" (the letters it contains)
+                if (this.WidthUnits == DimensionUnitType.RelativeToChildren)
+                {
+                    UpdateLayout();
+                }
                 handled = true;
             }
             else if (propertyName == "Blend")
