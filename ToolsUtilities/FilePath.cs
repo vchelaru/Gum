@@ -51,7 +51,24 @@ namespace ToolsUtilities
             }
         }
 
-        public string Standardized
+        public string FileNameNoPath
+        {
+            get
+            {
+                return FileManager.RemovePath(original);
+            }
+        }
+
+        public string FullPath
+        {
+            get
+            {
+                return FileManager.RemoveDotDotSlash(FileManager.Standardize(original, preserveCase: true, makeAbsolute: true));
+            }
+
+        }
+
+    public string Standardized
         {
             get
             {

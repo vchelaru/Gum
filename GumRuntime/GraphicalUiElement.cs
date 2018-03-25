@@ -443,7 +443,7 @@ namespace Gum.Wireframe
                     mX = value;
 
                     // special case:
-                    if (Parent as GraphicalUiElement == null && XUnits == GeneralUnitType.PixelsFromSmall)
+                    if (Parent as GraphicalUiElement == null && XUnits == GeneralUnitType.PixelsFromSmall && XOrigin == HorizontalAlignment.Left)
                     {
                         this.mContainedObjectAsIpso.X = mX;
                     }
@@ -474,7 +474,7 @@ namespace Gum.Wireframe
                     mY = value;
 
 
-                    if (Parent as GraphicalUiElement == null && YUnits == GeneralUnitType.PixelsFromSmall)
+                    if (Parent as GraphicalUiElement == null && YUnits == GeneralUnitType.PixelsFromSmall && YOrigin == VerticalAlignment.Top)
                     {
                         this.mContainedObjectAsIpso.Y = mY;
                     }

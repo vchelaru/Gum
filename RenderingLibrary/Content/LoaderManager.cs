@@ -274,6 +274,7 @@ namespace RenderingLibrary.Content
                         tgaImage.Image.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
                         stream.Seek(0, SeekOrigin.Begin); //must do this, or error is thrown in next line
                         toReturn = Texture2D.FromStream(renderer.GraphicsDevice, stream);
+                        toReturn.Name = fileName;
                     }
 #else
                     throw new NotImplementedException();

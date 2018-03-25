@@ -1026,9 +1026,9 @@ namespace Gum.Wireframe
                 float newValue = currentValue + modificationAmount;
                 SelectedState.Self.SelectedStateSave.SetValue(nameWithInstance, newValue, instanceSave, "float");
 
-                var ipso = WireframeObjectManager.Self.GetRepresentation(instanceSave, null);
+                var graphicalUiElement = WireframeObjectManager.Self.GetRepresentation(instanceSave, null);
 
-                ipso.SetProperty(baseVariableName, newValue);
+                graphicalUiElement.SetProperty(baseVariableName, newValue);
 
                 VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(nameWithInstance);
 

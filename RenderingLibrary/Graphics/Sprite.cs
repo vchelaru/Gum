@@ -637,7 +637,7 @@ namespace RenderingLibrary.Graphics
 
                 if (textureToUse != null && textureToUse.IsDisposed)
                 {
-                    throw new ObjectDisposedException("Texture is disposed.  Texture name: " + textureToUse.Name + ", sprite scale: " + scale);
+                    throw new ObjectDisposedException($"Texture is disposed.  Texture name: {textureToUse.Name}, sprite scale: {scale}, Sprite name: {ipso.Name}");
                 }
 
                 spriteRenderer.Draw(textureToUse,
