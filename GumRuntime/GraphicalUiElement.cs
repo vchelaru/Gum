@@ -64,8 +64,8 @@ namespace Gum.Wireframe
 
         float mX;
         float mY;
-        float mWidth;
-        float mHeight;
+        protected float mWidth;
+        protected float mHeight;
         float mRotation;
 
         static float mCanvasWidth = 800;
