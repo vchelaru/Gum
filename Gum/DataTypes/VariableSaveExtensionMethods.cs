@@ -309,9 +309,12 @@ namespace Gum.DataTypes
                 {
                     if((int)array.GetValue(i) == (int)variableSave.Value)
                     {
+                        variableSave.Value = array.GetValue(i);
                         return true;
                     }
                 }
+
+                return false;
             }
             return false;
 #else
