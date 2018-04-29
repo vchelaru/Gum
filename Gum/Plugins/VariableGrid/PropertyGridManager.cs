@@ -529,6 +529,35 @@ namespace Gum.Managers
                     {
                         member.PreferredDisplayer = typeof(TextVerticalAlignmentControl);
                     }
+                    else if (member.PropertyType == typeof(PositionUnitType) &&
+                        member.Name == "X Units" || member.Name.EndsWith(".X Units"))
+                    {
+                        member.PreferredDisplayer = typeof(XUnitsControl);
+                    }
+                    else if (member.PropertyType == typeof(PositionUnitType) &&
+                        member.Name == "Y Units" || member.Name.EndsWith(".Y Units"))
+                    {
+                        member.PreferredDisplayer = typeof(YUnitsControl);
+                    }
+                    else if (member.PropertyType == typeof(HorizontalAlignment) &&
+                        member.Name == "X Origin" || member.Name.EndsWith(".X Origin"))
+                    {
+                        member.PreferredDisplayer = typeof(XOriginControl);
+                    }
+                    else if (member.PropertyType == typeof(global::RenderingLibrary.Graphics.VerticalAlignment) &&
+                        member.Name == "Y Origin" || member.Name.EndsWith(".Y Origin"))
+                    {
+                        member.PreferredDisplayer = typeof(YOriginControl);
+                    }
+                    else if (member.PropertyType == typeof(DimensionUnitType) &&
+                        member.Name == "Width Units" || member.Name.EndsWith(".Width Units"))
+                    {
+                        member.PreferredDisplayer = typeof(WidthUnitsControl);
+                    }
+
+
+
+
                 }
             }
         }

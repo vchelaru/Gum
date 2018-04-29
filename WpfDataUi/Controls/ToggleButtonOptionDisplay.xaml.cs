@@ -113,6 +113,12 @@ namespace WpfDataUi.Controls
                 {
                     toggleButton.Content = option.Name;
                 }
+
+
+                var tooltip = new ToolTip();
+                tooltip.Content = option.Name;
+                toggleButton.ToolTip = tooltip;
+
                 toggleButton.Click += HandleToggleClick;
                 toggleButton.Tag = option;
                 toggleButtons.Add(toggleButton);

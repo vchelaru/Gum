@@ -28,7 +28,9 @@ namespace WpfDataUi
 
         // Using a DependencyProperty as the backing store for HideExpanderArrow.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty HideExpanderArrowProperty =
-            DependencyProperty.RegisterAttached("HideExpanderArrow", typeof(bool), typeof(DataGridAttachedProperties), new UIPropertyMetadata(false, OnHideExpanderArrowChanged));
+            DependencyProperty.RegisterAttached("HideExpanderArrow", typeof(bool), 
+                    typeof(DataGridAttachedProperties), 
+                    new UIPropertyMetadata(false, OnHideExpanderArrowChanged));
 
         private static void OnHideExpanderArrowChanged(DependencyObject o, DependencyPropertyChangedEventArgs e)
         {
