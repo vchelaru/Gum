@@ -8,8 +8,8 @@ This is the root page for the usage guide.  The usage guide will present how to 
 
 # Tutorials
 ## Getting Started
-1. [The Basics](Usage Guide _ The Basics)
-1. [Properties Window](Usage Guide _ Properties Window)
+1. [The Basics](tutorials/Usage Guide _ The Basics)
+1. [Properties Window](_tutorials/Usage Guide _ Properties Window)
 1. [Files](Usage Guide _ Files)
 1. [Components](Usage Guide _ Components)
 1. [Exposing Variables](Usage Guide _ Exposing Variables)
