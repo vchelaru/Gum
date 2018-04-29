@@ -9,46 +9,46 @@ This is the root page for the usage guide.  The usage guide will present how to 
 # Tutorials
 ## Getting Started
 1. [The Basics](tutorials/Usage Guide _ The Basics)
-1. [Properties Window](_tutorials/Usage Guide _ Properties Window)
-1. [Files](Usage Guide _ Files)
-1. [Components](Usage Guide _ Components)
-1. [Exposing Variables](Usage Guide _ Exposing Variables)
-1. [Parent](Usage Guide _ Parent)
-1. [States](Usage Guide _ States)
-1. [Categories](Usage Guide _ State Categories)
+1. [Properties Window](tutorials/Usage Guide _ Properties Window)
+1. [Files](tutorials/Usage Guide _ Files)
+1. [Components](tutorials/Usage Guide _ Components)
+1. [Exposing Variables](tutorials/Usage Guide _ Exposing Variables)
+1. [Parent](tutorials/Usage Guide _ Parent)
+1. [States](tutorials/Usage Guide _ States)
+1. [Categories](tutorials/Usage Guide _ State Categories)
 
 ## Animation
-* [Introduction to Animation ](Usage Guide _ Introduction to Animation)
-* [Creating an Animation](Usage Guide_ Creating an Animation)
-* [Playing Animations inside other Animations ](Usage Guide_ Playing Animations inside other Animations)
+* [Introduction to Animation ](animations/Usage Guide _ Introduction to Animation)
+* [Creating an Animation](animations/Usage Guide_ Creating an Animation)
+* [Playing Animations inside other Animations ](animations/Usage Guide_ Playing Animations inside other Animations)
 
 ## Examples
-* [Custom NineSlice](Usage Guide _ Custom NineSlice)
+* [Custom NineSlice](examples/Usage Guide _ Custom NineSlice)
 
 # Reference
 
 * General Properties
-	* [Children Layout](Children Layout)
-	* [Clips Children](Clips Children)
-	* [Height Units](Height Units)
-	* [Parent](Parent)
-	* [Rotation](Rotation)
-	* [Visible](Visible)
-	* [Width Units](Width Units)
-	* [Wraps Children](Wraps Children)
-	* [X](X)
-	* [X Origin](X Origin)
-	* [X Units](X Units)
-	* [Y](Y)
-	* [Y Origin](Y Origin)
-	* [Y Units](Y Units)
+	* [Children Layout](generalproperties/Children Layout)
+	* [Clips Children](generalproperties/Clips Children)
+	* [Height Units](generalproperties/Height Units)
+	* [Parent](generalproperties/Parent)
+	* [Rotation](generalproperties/Rotation)
+	* [Visible](generalproperties/Visible)
+	* [Width Units](generalproperties/Width Units)
+	* [Wraps Children](generalproperties/Wraps Children)
+	* [X](generalproperties/X)
+	* [X Origin](generalproperties/X Origin)
+	* [X Units](generalproperties/X Units)
+	* [Y](generalproperties/Y)
+	* [Y Origin](generalproperties/Y Origin)
+	* [Y Units](generalproperties/Y Units)
 
 * Menu
 	* Edit
-		* [Edit->Project Properties](Edit-_Project-Properties)
+		* [Edit->Project Properties](menu/Edit-_Project-Properties)
 
 
 * Standard Elements
-	* [NineSlice](NineSlice)
-	* [Sprite](Sprite)
-	* [Text](Text)
+	* [NineSlice](nineslice/NineSlice)
+	* [Sprite](sprite/Sprite)
+	* [Text](text/Text)
