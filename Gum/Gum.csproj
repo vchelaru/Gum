@@ -122,9 +122,11 @@
     <Compile Include="Commands\FileCommands.cs" />
     <Compile Include="Commands\GuiCommands.cs" />
     <Compile Include="Commands\WireframeCommands.cs" />
+    <Compile Include="Controls\ChildrenLayoutControl.cs" />
     <Compile Include="Controls\ColorDisplay.xaml.cs">
       <DependentUpon>ColorDisplay.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\HeightUnitsControl.cs" />
     <Compile Include="Controls\StateView.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -508,6 +510,30 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Content\Icons\WidthUnits\RelativeToParent.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Icons\HeightUnits\AbsoluteHeight.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Icons\HeightUnits\PercentageOfOtherWidth.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Icons\HeightUnits\PercentOfParent.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Icons\HeightUnits\RelativeToChildren.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Icons\HeightUnits\RelativeToParent.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Icons\ChildrenLayout\LeftToRight.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Icons\ChildrenLayout\Regular.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Icons\ChildrenLayout\TopToBottom.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <Content Include="Libraries\TargaImage.dll" />

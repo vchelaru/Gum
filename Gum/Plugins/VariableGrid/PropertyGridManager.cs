@@ -554,9 +554,11 @@ namespace Gum.Managers
                     {
                         member.PreferredDisplayer = typeof(WidthUnitsControl);
                     }
-
-
-
+                    else if(member.PropertyType == typeof(DimensionUnitType) &&
+                        member.Name == "Height Units" || member.Name.EndsWith(".Height Units"))
+                    {
+                        member.PreferredDisplayer = typeof(HeightUnitsControl);
+                    }
 
                 }
             }
