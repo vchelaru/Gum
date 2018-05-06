@@ -16,9 +16,9 @@ namespace Gum.Controls
         {
             if (cachedOptions == null)
             {
-                BitmapImage regularBitmap = CreateBitmapFromFile("Content/Icons/Alignment/CenterAlign.png");
-                BitmapImage topToBottomBitmap = CreateBitmapFromFile("Content/Icons/Alignment/LeftAlign.png");
-                BitmapImage leftToRightBitmap = CreateBitmapFromFile("Content/Icons/Alignment/RightAlign.png");
+                BitmapImage regularBitmap = CreateBitmapFromFile("Content/Icons/ChildrenLayout/Regular.png");
+                BitmapImage topToBottomBitmap = CreateBitmapFromFile("Content/Icons/ChildrenLayout/TopToBottom.png");
+                BitmapImage leftToRightBitmap = CreateBitmapFromFile("Content/Icons/ChildrenLayout/LeftToRight.png");
 
                 cachedOptions = new Option[]
                 {

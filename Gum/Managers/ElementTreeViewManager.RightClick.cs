@@ -151,6 +151,17 @@ namespace Gum.Managers
                 {
                     try
                     {
+                        var doesExist = System.IO.File.Exists(fullFile);
+
+                        if(!doesExist)
+                        {
+                            // file doesn't exist, but if it's a standard folder we can make one:
+                            if(treeNode.IsTopComponentContainerTreeNode() ||
+                                treeNode.IsTopScreenContainerTreeNode())
+                            {
+                                System.IO.Directory.CreateDirectory(fullFile);
+                            }
+                        }
                         Process.Start(fullFile);
                     }
                     catch(Exception exc)

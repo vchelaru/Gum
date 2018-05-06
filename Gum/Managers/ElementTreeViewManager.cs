@@ -1199,7 +1199,8 @@ namespace Gum.Managers
             }
             else
             {
-                return treeNode.Parent.GetFullFilePath() + treeNode.Text + "\\";
+                var toReturn = treeNode.Parent.GetFullFilePath() + treeNode.Text + "\\";
+                return toReturn;
             }
         }
 

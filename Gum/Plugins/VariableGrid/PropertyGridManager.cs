@@ -539,7 +539,7 @@ namespace Gum.Managers
                     {
                         member.PreferredDisplayer = typeof(YUnitsControl);
                     }
-                    else if (member.PropertyType == typeof(HorizontalAlignment) &&
+                    else if (member.PropertyType == typeof(global::RenderingLibrary.Graphics.HorizontalAlignment) &&
                         member.Name == "X Origin" || member.Name.EndsWith(".X Origin"))
                     {
                         member.PreferredDisplayer = typeof(XOriginControl);
@@ -554,10 +554,15 @@ namespace Gum.Managers
                     {
                         member.PreferredDisplayer = typeof(WidthUnitsControl);
                     }
-                    else if(member.PropertyType == typeof(DimensionUnitType) &&
+                    else if (member.PropertyType == typeof(DimensionUnitType) &&
                         member.Name == "Height Units" || member.Name.EndsWith(".Height Units"))
                     {
                         member.PreferredDisplayer = typeof(HeightUnitsControl);
+                    }
+                    else if (member.PropertyType == typeof(ChildrenLayout) &&
+                        member.Name == "Children Layout" || member.Name.EndsWith(".Children Layout"))
+                    {
+                        member.PreferredDisplayer = typeof(ChildrenLayoutControl);
                     }
 
                 }

@@ -152,10 +152,10 @@ namespace Gum.ToolCommands
                         nodeToAddTo = ElementTreeViewManager.Self.RootComponentsTreeNode;
                     }
 
-                    string path = nodeToAddTo.GetFullFilePath();
+                    FilePath path = nodeToAddTo.GetFullFilePath();
 
-                    string relativeToComponents = FileManager.MakeRelative(path,
-                        FileLocations.Self.ComponentsFolder);
+                    string relativeToComponents = FileManager.MakeRelative(path.StandardizedCaseSensitive,
+                        FileLocations.Self.ComponentsFolder, preserveCase:true);
 
                     AddComponent(name, relativeToComponents);
                 }

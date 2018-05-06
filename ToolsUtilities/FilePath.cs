@@ -68,11 +68,19 @@ namespace ToolsUtilities
 
         }
 
-    public string Standardized
+        public string Standardized
         {
             get
             {
                 return FileManager.RemoveDotDotSlash( FileManager.Standardize(original, preserveCase: false, makeAbsolute: true));
+            }
+        }
+
+        public string StandardizedCaseSensitive
+        {
+            get
+            {
+                return FileManager.RemoveDotDotSlash(FileManager.Standardize(original, preserveCase: true, makeAbsolute: true));
             }
         }
 
