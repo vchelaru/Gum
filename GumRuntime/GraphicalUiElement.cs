@@ -304,7 +304,16 @@ namespace Gum.Wireframe
 
         Microsoft.Xna.Framework.Graphics.BlendState IRenderable.BlendState
         {
-            get { return mContainedObjectAsIpso.BlendState; }
+            get
+            {
+#if DEBUG
+                if(mContainedObjectAsIpso == null)
+                {
+                    throw new NullReferenceException("This GraphicalUiElemente has not had its visual set, so it does not have a blend operation. This can happen if a GraphicalUiElement was added as a child without its contained renderable having been set.");
+                }
+#endif
+                return mContainedObjectAsIpso.BlendState;
+            }
         }
 
         bool IRenderable.Wrap

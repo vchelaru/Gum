@@ -72,7 +72,14 @@ namespace ToolsUtilities
         {
             get
             {
-                return FileManager.RemoveDotDotSlash( FileManager.Standardize(original, preserveCase: false, makeAbsolute: true));
+                if(string.IsNullOrEmpty(original))
+                {
+                    return FileManager.RemoveDotDotSlash(FileManager.Standardize("", preserveCase: false, makeAbsolute: true));
+                }
+                else
+                {
+                    return FileManager.RemoveDotDotSlash( FileManager.Standardize(original, preserveCase: false, makeAbsolute: true));
+                }
             }
         }
 
@@ -113,6 +120,13 @@ namespace ToolsUtilities
         public bool IsRootOf(FilePath otherFilePath)
         {
             return otherFilePath.Standardized.StartsWith(this.Standardized);
+        }
+
+        public FilePath RemoveExtension()
+        {
+            var fileString = FileManager.RemoveExtension(original);
+
+            return fileString;
         }
 
         public override string ToString()

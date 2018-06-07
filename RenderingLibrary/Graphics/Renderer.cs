@@ -331,7 +331,13 @@ namespace RenderingLibrary.Graphics
             {
                 var renderable = renderables[i];
                 renderable.PreRender();
-                PreRender(renderable.Children);
+
+                // Some Gum objects, like GraphicalUiElements, may not have children if the object hasn't
+                // yet been assigned a visual. Just skip over it...
+                if(renderable.Children != null)
+                {
+                    PreRender(renderable.Children);
+                }
             }
         }
 
