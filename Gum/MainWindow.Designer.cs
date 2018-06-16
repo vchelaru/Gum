@@ -381,7 +381,7 @@
             // 
             this.VariablesAndEverythingElse.Panel2.Controls.Add(this.PreviewSplitContainer);
             this.VariablesAndEverythingElse.Size = new System.Drawing.Size(876, 621);
-            this.VariablesAndEverythingElse.SplitterDistance = 295;
+            this.VariablesAndEverythingElse.SplitterDistance = 332;
             this.VariablesAndEverythingElse.TabIndex = 0;
             this.VariablesAndEverythingElse.SplitterMoved += new System.Windows.Forms.SplitterEventHandler(this.VariablesAndEverythingElse_SplitterMoved);
             // 
@@ -399,7 +399,7 @@
             // StatesAndVariablesContainer.Panel2
             // 
             this.StatesAndVariablesContainer.Panel2.Controls.Add(this.MiddleTabControl);
-            this.StatesAndVariablesContainer.Size = new System.Drawing.Size(295, 621);
+            this.StatesAndVariablesContainer.Size = new System.Drawing.Size(332, 621);
             this.StatesAndVariablesContainer.SplitterDistance = 119;
             this.StatesAndVariablesContainer.TabIndex = 0;
             // 
@@ -409,7 +409,7 @@
             this.tabControl1.Location = new System.Drawing.Point(0, 0);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(295, 119);
+            this.tabControl1.Size = new System.Drawing.Size(332, 119);
             this.tabControl1.TabIndex = 1;
             // 
             // MiddleTabControl
@@ -419,7 +419,7 @@
             this.MiddleTabControl.Location = new System.Drawing.Point(0, 0);
             this.MiddleTabControl.Name = "MiddleTabControl";
             this.MiddleTabControl.SelectedIndex = 0;
-            this.MiddleTabControl.Size = new System.Drawing.Size(295, 498);
+            this.MiddleTabControl.Size = new System.Drawing.Size(332, 498);
             this.MiddleTabControl.TabIndex = 3;
             // 
             // tabPage2
@@ -428,7 +428,7 @@
             this.tabPage2.Location = new System.Drawing.Point(4, 22);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(287, 472);
+            this.tabPage2.Size = new System.Drawing.Size(324, 472);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "Variables";
             this.tabPage2.UseVisualStyleBackColor = true;
@@ -438,7 +438,7 @@
             this.VariableHost.Dock = System.Windows.Forms.DockStyle.Fill;
             this.VariableHost.Location = new System.Drawing.Point(3, 3);
             this.VariableHost.Name = "VariableHost";
-            this.VariableHost.Size = new System.Drawing.Size(281, 466);
+            this.VariableHost.Size = new System.Drawing.Size(318, 466);
             this.VariableHost.TabIndex = 0;
             this.VariableHost.Text = "elementHost1";
             this.VariableHost.Child = this.testWpfControl2;
@@ -457,7 +457,7 @@
             // PreviewSplitContainer.Panel2
             // 
             this.PreviewSplitContainer.Panel2.Controls.Add(this.panel2);
-            this.PreviewSplitContainer.Size = new System.Drawing.Size(577, 621);
+            this.PreviewSplitContainer.Size = new System.Drawing.Size(540, 621);
             this.PreviewSplitContainer.SplitterDistance = 512;
             this.PreviewSplitContainer.TabIndex = 0;
             // 
@@ -471,7 +471,7 @@
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(577, 512);
+            this.panel1.Size = new System.Drawing.Size(540, 512);
             this.panel1.TabIndex = 0;
             // 
             // ToolbarPanel
@@ -480,7 +480,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.ToolbarPanel.Location = new System.Drawing.Point(0, 22);
             this.ToolbarPanel.Name = "ToolbarPanel";
-            this.ToolbarPanel.Size = new System.Drawing.Size(569, 31);
+            this.ToolbarPanel.Size = new System.Drawing.Size(532, 31);
             this.ToolbarPanel.TabIndex = 2;
             // 
             // wireframeControl1
@@ -494,7 +494,7 @@
             this.wireframeControl1.DesiredFramesPerSecond = 30F;
             this.wireframeControl1.Location = new System.Drawing.Point(0, 52);
             this.wireframeControl1.Name = "wireframeControl1";
-            this.wireframeControl1.Size = new System.Drawing.Size(569, 452);
+            this.wireframeControl1.Size = new System.Drawing.Size(532, 452);
             this.wireframeControl1.TabIndex = 0;
             this.wireframeControl1.Text = "wireframeControl1";
             this.wireframeControl1.DragDrop += new System.Windows.Forms.DragEventHandler(this.wireframeControl1_DragDrop);
@@ -514,7 +514,7 @@
             this.WireframeEditControl.Margin = new System.Windows.Forms.Padding(4);
             this.WireframeEditControl.Name = "WireframeEditControl";
             this.WireframeEditControl.PercentageValue = 100;
-            this.WireframeEditControl.Size = new System.Drawing.Size(569, 22);
+            this.WireframeEditControl.Size = new System.Drawing.Size(532, 22);
             this.WireframeEditControl.TabIndex = 1;
             // 
             // panel2
@@ -523,7 +523,7 @@
             this.panel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel2.Location = new System.Drawing.Point(0, 0);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(577, 105);
+            this.panel2.Size = new System.Drawing.Size(540, 105);
             this.panel2.TabIndex = 0;
             // 
             // RightTabControl
@@ -533,7 +533,7 @@
             this.RightTabControl.Location = new System.Drawing.Point(0, 0);
             this.RightTabControl.Name = "RightTabControl";
             this.RightTabControl.SelectedIndex = 0;
-            this.RightTabControl.Size = new System.Drawing.Size(577, 105);
+            this.RightTabControl.Size = new System.Drawing.Size(540, 105);
             this.RightTabControl.TabIndex = 1;
             // 
             // tabPage3
@@ -542,7 +542,7 @@
             this.tabPage3.Location = new System.Drawing.Point(4, 22);
             this.tabPage3.Name = "tabPage3";
             this.tabPage3.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage3.Size = new System.Drawing.Size(569, 79);
+            this.tabPage3.Size = new System.Drawing.Size(532, 79);
             this.tabPage3.TabIndex = 0;
             this.tabPage3.Text = "Output";
             this.tabPage3.UseVisualStyleBackColor = true;
@@ -552,7 +552,7 @@
             this.OutputTextBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.OutputTextBox.Location = new System.Drawing.Point(3, 3);
             this.OutputTextBox.Name = "OutputTextBox";
-            this.OutputTextBox.Size = new System.Drawing.Size(563, 73);
+            this.OutputTextBox.Size = new System.Drawing.Size(526, 73);
             this.OutputTextBox.TabIndex = 0;
             this.OutputTextBox.Text = "";
             // 

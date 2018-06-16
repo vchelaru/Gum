@@ -113,5 +113,7 @@ using System.Runtime.InteropServices;
 //  - Error window now reports if there are no instances with the required behaviors.
 // 0.9.2.1
 //  - Fixed bug where components could be named the same as other components if placed in a subfolder.
-[assembly: AssemblyVersion("0.9.2.1")]
-[assembly: AssemblyFileVersion("0.9.2.1")]
+// 0.9.3
+//  - Added icons for % of file for width and height units.
+[assembly: AssemblyVersion("0.9.3.0")]
+[assembly: AssemblyFileVersion("0.9.3.0")]

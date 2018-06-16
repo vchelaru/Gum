@@ -80,16 +80,27 @@ namespace WpfDataUi.Controls
         {
             InitializeComponent();
             this.Height = 40;
-            foreach(var option in options)
+            RefreshButtonFromOptions(options);
+
+            ButtonStackPanel.ContextMenu = new ContextMenu();
+            this.RefreshContextMenu(ButtonStackPanel.ContextMenu);
+
+        }
+
+        public void RefreshButtonFromOptions(Option[] options)
+        {
+            ButtonStackPanel.Children.Clear();
+
+            foreach (var option in options)
             {
                 var toggleButton = new ToggleButton();
 
-                if(mUnmodifiedBrush == null)
+                if (mUnmodifiedBrush == null)
                 {
                     mUnmodifiedBrush = toggleButton.Background;
                 }
 
-                if(option.Image != null)
+                if (option.Image != null)
                 {
                     //var stackPanel = new StackPanel();
 
@@ -99,7 +110,7 @@ namespace WpfDataUi.Controls
                     //var label = new TextBlock();
                     //label.Text = "hi";
                     //stackPanel.Children.Add(label);
-                    
+
                     //toggleButton.Content = image;
                     var image = new Image();
 
@@ -125,10 +136,6 @@ namespace WpfDataUi.Controls
                 ButtonStackPanel.Children.Add(toggleButton);
 
             }
-
-            ButtonStackPanel.ContextMenu = new ContextMenu();
-            this.RefreshContextMenu(ButtonStackPanel.ContextMenu);
-
         }
 
         public void Refresh(bool forceRefreshEvenIfFocused = false)

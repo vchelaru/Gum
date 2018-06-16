@@ -1,4 +1,6 @@
 ﻿using Gum.DataTypes;
+using Gum.Managers;
+using Gum.ToolStates;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,28 +15,86 @@ namespace Gum.Controls
     {
         static Option[] cachedOptions;
 
+        public WidthUnitsControl()
+        {
+            this.RefreshButtonsOnSelection = true;
+        }
+
         protected override Option[] GetOptions()
         {
             if (cachedOptions == null)
             {
-                BitmapImage absoluteBitmap =
-                    CreateBitmapFromFile("Content/Icons/WidthUnits/AbsoluteWidth.png");
+                CreateCachedOptions();
+            }
 
-                BitmapImage percentageOfHeightBitmap =
-                    CreateBitmapFromFile("Content/Icons/WidthUnits/PercentageOfOtherHeight.png");
+            List<Option> toReturn = cachedOptions.ToList();
 
-                BitmapImage percentOfParentBitmap =
-                    CreateBitmapFromFile("Content/Icons/WidthUnits/PercentOfParent.png");
+            StandardElementSave rootElement = GetRootElement();
 
-                BitmapImage relativeToChildrenBitmap =
-                    CreateBitmapFromFile("Content/Icons/WidthUnits/RelativeToChildren.png");
+            if (rootElement != null && StandardElementsManager.Self.DefaultStates.ContainsKey(rootElement.Name))
+            {
+                var state = StandardElementsManager.Self.DefaultStates[rootElement.Name];
 
-                BitmapImage relativeToParentBitmap =
-                    CreateBitmapFromFile("Content/Icons/WidthUnits/RelativeToParent.png");
+                var variable = state.Variables.FirstOrDefault(item => item.Name == "Width Units");
 
-
-                cachedOptions = new Option[]
+                if (variable?.ExcludedValuesForEnum?.Any() == true)
                 {
+                    foreach (var toExclude in variable.ExcludedValuesForEnum)
+                    {
+                        var matchingOption = toReturn.FirstOrDefault(item => (DimensionUnitType)item.Value == (DimensionUnitType)toExclude);
+
+                        if (matchingOption != null)
+                        {
+                            toReturn.Remove(matchingOption);
+                        }
+                    }
+                }
+            }
+
+            return toReturn.ToArray();
+        }
+
+        private static StandardElementSave GetRootElement()
+        {
+            StandardElementSave rootElement = null;
+
+            if (SelectedState.Self.SelectedInstance != null)
+            {
+                rootElement =
+                    ObjectFinder.Self.GetRootStandardElementSave(SelectedState.Self.SelectedInstance);
+            }
+            else if (SelectedState.Self.SelectedElement != null)
+            {
+                rootElement =
+                    ObjectFinder.Self.GetRootStandardElementSave(SelectedState.Self.SelectedElement);
+            }
+
+            return rootElement;
+        }
+
+        private static void CreateCachedOptions()
+        {
+            BitmapImage absoluteBitmap =
+                                CreateBitmapFromFile("Content/Icons/WidthUnits/AbsoluteWidth.png");
+
+            BitmapImage percentageOfHeightBitmap =
+                CreateBitmapFromFile("Content/Icons/WidthUnits/PercentageOfOtherHeight.png");
+
+            BitmapImage percentOfParentBitmap =
+                CreateBitmapFromFile("Content/Icons/WidthUnits/PercentOfParent.png");
+
+            BitmapImage relativeToChildrenBitmap =
+                CreateBitmapFromFile("Content/Icons/WidthUnits/RelativeToChildren.png");
+
+            BitmapImage relativeToParentBitmap =
+                CreateBitmapFromFile("Content/Icons/WidthUnits/RelativeToParent.png");
+
+            BitmapImage percentageOfFileWidth =
+                CreateBitmapFromFile("Content/Icons/WidthUnits/PercentageOfFileWidth.png");
+
+
+            cachedOptions = new Option[]
+            {
                     new Option
                     {
                         Name = "Absolute",
@@ -65,12 +125,15 @@ namespace Gum.Controls
                         Name = "Percentage of Height",
                         Value = DimensionUnitType.PercentageOfOtherDimension,
                         Image = percentageOfHeightBitmap
+                    },
+                    new Option
+                    {
+                        Name = "Percentage of File Width",
+                        Value = DimensionUnitType.PercentageOfSourceFile,
+                        Image = percentageOfFileWidth
                     }
-                };
-            }
 
-            return cachedOptions;
+            };
         }
-
     }
 }

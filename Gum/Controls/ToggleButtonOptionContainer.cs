@@ -37,6 +37,11 @@ namespace Gum.Controls
 
         protected abstract Option[] GetOptions();
 
+        public bool RefreshButtonsOnSelection
+        {
+            get; set;
+        } = false;
+
         public InstanceMember InstanceMember
         {
             get
@@ -45,9 +50,23 @@ namespace Gum.Controls
             }
             set
             {
-                internalDisplay.InstanceMember = value;
+                if(internalDisplay.InstanceMember != value)
+                {
+                    internalDisplay.InstanceMember = value;
+
+                    if(RefreshButtonsOnSelection)
+                    {
+                        Refresh();
+                    }
+                }
             }
         }
+
+        private void RefreshButtons()
+        {
+            internalDisplay.RefreshButtonFromOptions(GetOptions());
+        }
+
         public bool SuppressSettingProperty
         {
             get
@@ -68,7 +87,15 @@ namespace Gum.Controls
             this.AddChild(internalDisplay);
         }
 
-        public void Refresh(bool forceRefreshEvenIfFocused = false) => internalDisplay.Refresh(forceRefreshEvenIfFocused);
+        public void Refresh(bool forceRefreshEvenIfFocused = false)
+        {
+            if(RefreshButtonsOnSelection)
+            {
+                RefreshButtons();
+            }
+            internalDisplay.Refresh(forceRefreshEvenIfFocused);
+
+        }
 
         public ApplyValueResult TryGetValueOnUi(out object result)
         {
