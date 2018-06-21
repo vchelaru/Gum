@@ -218,19 +218,19 @@ namespace RenderingLibrary.Graphics
             SpriteBatch.Draw(texture2D, destinationRectangle, sourceRectangle, color);
         }
 
-        internal void Draw(Texture2D texture2D, Rectangle destinationRectangle, Rectangle? sourceRectangle, Color color, float rotation, Vector2 origin, SpriteEffects effects, int layerDepth, object objectRequestingChange)
+        internal void Draw(Texture2D texture2D, Rectangle destinationRectangle, Rectangle? sourceRectangle, Color color, float rotationInRadians, Vector2 origin, SpriteEffects effects, int layerDepth, object objectRequestingChange)
         {
             AdjustCurrentParametersDrawCall(texture2D, null, objectRequestingChange);
 
 
-            SpriteBatch.Draw(texture2D, destinationRectangle, sourceRectangle, color, rotation, origin, effects, layerDepth);
+            SpriteBatch.Draw(texture2D, destinationRectangle, sourceRectangle, color, rotationInRadians, origin, effects, layerDepth);
         }
 
-        internal void Draw(Texture2D texture2D, Vector2 position, Rectangle? sourceRectangle, Color color, float rotation, Vector2 origin, Vector2 scale, SpriteEffects effects, float depth, object objectRequestingChange)
+        internal void Draw(Texture2D texture2D, Vector2 position, Rectangle? sourceRectangle, Color color, float rotationInRadians, Vector2 origin, Vector2 scale, SpriteEffects effects, float depth, object objectRequestingChange)
         {
             AdjustCurrentParametersDrawCall(texture2D, null, objectRequestingChange);
 
-            SpriteBatch.Draw(texture2D, position, sourceRectangle, color, rotation, origin, scale, effects, depth);
+            SpriteBatch.Draw(texture2D, position, sourceRectangle, color, rotationInRadians, origin, scale, effects, depth);
         }
 
         internal void DrawString(SpriteFont font, string line, Vector2 offset, Color color, object objectRequestingChange)

@@ -544,6 +544,20 @@ namespace RenderingLibrary.Graphics
                 color.B = (byte)(color.B * multiple);
             }
 
+            var rotationRadians = MathHelper.ToRadians(rotation);
+
+            Vector2 xAxis = Vector2.UnitX;
+            Vector2 yAxis = Vector2.UnitY;
+
+            if(rotation != 0)
+            {
+                xAxis.X = (float)System.Math.Cos(-rotationRadians);
+                xAxis.Y = (float)System.Math.Sin(-rotationRadians);
+
+                yAxis.X = (float)System.Math.Cos(-rotationRadians + MathHelper.PiOver2);
+                yAxis.Y = (float)System.Math.Sin(-rotationRadians + MathHelper.PiOver2);
+            }
+
             foreach (string line in lines)
             {
                 // scoot over to leave room for the outline
@@ -558,18 +572,23 @@ namespace RenderingLibrary.Graphics
                     point.X = (requiredWidth - widths[lineNumber]) / 2;
                 }
 
+
                 foreach (char c in line)
                 {
                     Rectangle destRect;
                     int pageIndex;
                     var sourceRect = GetCharacterRect(c, lineNumber, ref point, out destRect, out pageIndex, scaleX);
 
+                    var finalPosition = destRect.X * xAxis + destRect.Y * yAxis;
+
+                    finalPosition.X += xOffset;
+                    finalPosition.Y += yOffset;
 
 
                     // todo: rotation, because that will impact destination rectangle too
-                    if(Text.TextRenderingPositionMode == TextRenderingPositionMode.FreeFloating)
+                    if(Text.TextRenderingPositionMode == TextRenderingPositionMode.FreeFloating || rotation != 0)
                     {
-                        spriteRenderer.Draw(mTextures[pageIndex], new Vector2(destRect.X + xOffset, destRect.Y + yOffset),  sourceRect, color, 0, Vector2.Zero, Vector2.One, SpriteEffects.None, 0, this);
+                        spriteRenderer.Draw(mTextures[pageIndex], finalPosition,  sourceRect, color, -rotationRadians, Vector2.Zero, Vector2.One, SpriteEffects.None, 0, this);
                     }
                     else
                     {
