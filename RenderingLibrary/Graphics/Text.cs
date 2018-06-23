@@ -755,7 +755,10 @@ namespace RenderingLibrary.Graphics
                 UpdateIpsoForRendering();
 
                 fontToUse.DrawTextLines(WrappedText, HorizontalAlignment, this,
-                    requiredWidth, widths, spriteRenderer, Color, mTempForRendering.GetAbsoluteLeft(), mTempForRendering.GetAbsoluteTop(), Rotation, FontScale, FontScale);
+                    requiredWidth, widths, spriteRenderer, Color, 
+                    mTempForRendering.GetAbsoluteLeft(), 
+                    mTempForRendering.GetAbsoluteTop(), 
+                    this.GetAbsoluteRotation(), FontScale, FontScale);
             }
         }
 
