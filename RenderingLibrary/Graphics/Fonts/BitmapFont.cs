@@ -588,7 +588,8 @@ namespace RenderingLibrary.Graphics
                     // todo: rotation, because that will impact destination rectangle too
                     if(Text.TextRenderingPositionMode == TextRenderingPositionMode.FreeFloating || rotation != 0)
                     {
-                        spriteRenderer.Draw(mTextures[pageIndex], finalPosition,  sourceRect, color, -rotationRadians, Vector2.Zero, Vector2.One, SpriteEffects.None, 0, this);
+                        var scale = new Vector2(scaleX, scaleY);
+                        spriteRenderer.Draw(mTextures[pageIndex], finalPosition,  sourceRect, color, -rotationRadians, Vector2.Zero, scale, SpriteEffects.None, 0, this);
                     }
                     else
                     {
