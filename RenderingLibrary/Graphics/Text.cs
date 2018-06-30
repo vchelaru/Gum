@@ -578,10 +578,16 @@ namespace RenderingLibrary.Graphics
                     wordArray.Insert(0, wordUnmodified.Substring(indexOfNewline + 1, wordUnmodified.Length - (indexOfNewline + 1)));
                 }
             }
-            while (line.EndsWith(" "))
-            {
-                line = line.Substring(0, line.Length - 1);
-            }
+            // June 30, 2018
+            // We no longer want
+            // to trim the end of the
+            // lines, because those can
+            // be used to make an auto-sized
+            // font larger.
+            //while (line.EndsWith(" "))
+            //{
+            //    line = line.Substring(0, line.Length - 1);
+            //}
             mWrappedText.Add(line);
 
 
