@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -38,7 +39,16 @@ namespace WpfDataUi.Controls
             }
             set
             {
+                bool instanceMemberChanged = mInstanceMember != value;
+                if (mInstanceMember != null && instanceMemberChanged)
+                {
+                    mInstanceMember.PropertyChanged -= HandlePropertyChange;
+                }
                 mInstanceMember = value;
+                if (mInstanceMember != null && instanceMemberChanged)
+                {
+                    mInstanceMember.PropertyChanged += HandlePropertyChange;
+                }
                 Refresh();
             }
         }
@@ -122,6 +132,15 @@ namespace WpfDataUi.Controls
             value = CheckBox.IsChecked;
 
             return ApplyValueResult.Success;
+        }
+
+        private void HandlePropertyChange(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(InstanceMember.Value))
+            {
+                this.Refresh();
+
+            }
         }
 
         private void CheckBoxChanged(object sender, RoutedEventArgs e)

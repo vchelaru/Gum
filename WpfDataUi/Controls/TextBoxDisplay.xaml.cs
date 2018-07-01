@@ -43,14 +43,14 @@ namespace WpfDataUi.Controls
             {
                 mTextBoxLogic.InstanceMember = value;
 
-                bool valueChanged = mInstanceMember != value;
-                if (mInstanceMember != null && valueChanged)
+                bool instanceMemberChanged = mInstanceMember != value;
+                if (mInstanceMember != null && instanceMemberChanged)
                 {
                     mInstanceMember.PropertyChanged -= HandlePropertyChange;
                 }
                 mInstanceMember = value;
 
-                if (mInstanceMember != null && valueChanged)
+                if (mInstanceMember != null && instanceMemberChanged)
                 {
                     mInstanceMember.PropertyChanged += HandlePropertyChange;
                 }
