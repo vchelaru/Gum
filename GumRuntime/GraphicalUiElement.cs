@@ -3524,7 +3524,13 @@ namespace Gum.Wireframe
         }
 
         // Not sure if we need to make this a public value, but we do need to store it
+        // Update - yes we do need this to be public so it can be assigned in codegen:
         bool useFontSmoothing = true;
+        public bool UseFontSmoothing
+        {
+            get { return useFontSmoothing; }
+            set { useFontSmoothing = value; UpdateToFontValues(); }
+        }
 
         int outlineThickness;
         public int OutlineThickness
