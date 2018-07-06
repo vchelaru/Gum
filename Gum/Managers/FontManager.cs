@@ -25,10 +25,10 @@ namespace Gum.Managers
         }
 
 
-        public BitmapFont GetBitmapFontFor(string fontName, int fontSize, int outlineThickness)
+        public BitmapFont GetBitmapFontFor(string fontName, int fontSize, int outlineThickness, bool useFontSmoothing)
         {
             string fileName = AbsoluteFontCacheFolder + 
-                FileManager.RemovePath(BmfcSave.GetFontCacheFileNameFor(fontSize, fontName, outlineThickness));
+                FileManager.RemovePath(BmfcSave.GetFontCacheFileNameFor(fontSize, fontName, outlineThickness, useFontSmoothing));
 
             if (FileManager.FileExists(fileName))
             {
@@ -100,13 +100,21 @@ namespace Gum.Managers
             {
                 outlineValue = (int)outlineValueAsObject;
             }
-            
-            if(fontValue != null)
+
+            bool fontSmoothing = true;
+            var fontSmoothingAsObject = stateSave.GetValueRecursive(prefix + "UseFontSmoothing");
+            if(fontSmoothingAsObject != null)
+            {
+                fontSmoothing = (bool)fontSmoothingAsObject;
+            }
+
+            if (fontValue != null)
             {
                 BmfcSave.CreateBitmapFontFilesIfNecessary(
                     (int)fontSizeAsObject,
                     fontValue,
-                    outlineValue);
+                    outlineValue, 
+                    fontSmoothing);
             }
         }
     }

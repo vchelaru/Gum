@@ -22,7 +22,7 @@ namespace Gum.PropertyGridHelpers.Excluders
 
             bool shouldExclude = false;
 
-            if(rootName == "Font" || rootName == "FontSize" || rootName == "OutlineThickness")
+            if(rootName == "Font" || rootName == "FontSize" || rootName == "OutlineThickness" || rootName == "UseFontSmoothing")
             {
                 bool useCustomFont = rvf.GetValue<bool>("UseCustomFont");
 

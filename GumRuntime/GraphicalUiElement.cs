@@ -3435,6 +3435,16 @@ namespace Gum.Wireframe
                 }
                 handled = true;
             }
+            else if(propertyName == "UseFontSmoothing")
+            {
+                useFontSmoothing = (bool)value;
+                UpdateToFontValues();
+                if (this.WidthUnits == DimensionUnitType.RelativeToChildren)
+                {
+                    UpdateLayout();
+                }
+                handled = true;
+            }
             else if (propertyName == "Blend")
             {
                 var valueAsGumBlend = (RenderingLibrary.Blend)value;
@@ -3513,6 +3523,8 @@ namespace Gum.Wireframe
             set { fontSize = value; UpdateToFontValues(); }
         }
 
+        // Not sure if we need to make this a public value, but we do need to store it
+        bool useFontSmoothing = true;
 
         int outlineThickness;
         public int OutlineThickness
@@ -3556,7 +3568,8 @@ namespace Gum.Wireframe
                 {
                     if (FontSize > 0 && !string.IsNullOrEmpty(Font))
                     {
-                        string fontName = global::RenderingLibrary.Graphics.Fonts.BmfcSave.GetFontCacheFileNameFor(FontSize, Font, OutlineThickness);
+
+                        string fontName = global::RenderingLibrary.Graphics.Fonts.BmfcSave.GetFontCacheFileNameFor(FontSize, Font, OutlineThickness, useFontSmoothing);
 
                         string fullFileName = ToolsUtilities.FileManager.Standardize(fontName, false, true);
 

@@ -13,6 +13,7 @@ namespace RenderingLibrary.Graphics.Fonts
         public string FontName = "Arial";
         public int FontSize = 20;
         public int OutlineThickness = 0;
+        public bool UseSmoothing = true;
 
         public void Save(string fileName)
         {
@@ -28,6 +29,7 @@ namespace RenderingLibrary.Graphics.Fonts
             template = template.Replace("FontNameVariable", FontName);
             template = template.Replace("FontSizeVariable", FontSize.ToString());
             template = template.Replace("OutlineThicknessVariable", OutlineThickness.ToString());
+            template = template.Replace("{UseSmoothing}", UseSmoothing ? "1" : "0");
 
             //alphaChnl=alphaChnlValue
             //redChnl=redChnlValue
@@ -56,12 +58,12 @@ namespace RenderingLibrary.Graphics.Fonts
         {
             get
             {
-                return GetFontCacheFileNameFor(FontSize, FontName, OutlineThickness);
+                return GetFontCacheFileNameFor(FontSize, FontName, OutlineThickness, UseSmoothing);
             }
 
         }
 
-        public static string GetFontCacheFileNameFor(int fontSize, string fontName, int outline)
+        public static string GetFontCacheFileNameFor(int fontSize, string fontName, int outline, bool useFontSmoothing)
         {
             string fileName = null;
 
@@ -69,14 +71,18 @@ namespace RenderingLibrary.Graphics.Fonts
             // don't allow some charactersin the file name:
             fontName = fontName.Replace(' ', '_');
 
-            if (outline == 0)
+            fileName = "Font" + fontSize + fontName;
+            if (outline != 0)
             {
-                fileName = "Font" + fontSize + fontName + ".fnt";
+                fileName = "Font" + fontSize + fontName + "_o" + outline;
             }
-            else
+
+            if(useFontSmoothing == false)
             {
-                fileName = "Font" + fontSize + fontName + "_o" + outline + ".fnt";
+                fileName += "_noSmooth";
             }
+
+            fileName += ".fnt";
 
             fileName = System.IO.Path.Combine("FontCache", fileName);
 
@@ -88,13 +94,13 @@ namespace RenderingLibrary.Graphics.Fonts
 
         // tool-necessary implementations
 #if !WINDOWS_8 && !UWP
-        public static void CreateBitmapFontFilesIfNecessary(int fontSize, string fontName, int outline)
+        public static void CreateBitmapFontFilesIfNecessary(int fontSize, string fontName, int outline, bool fontSmoothing)
         {
             BmfcSave bmfcSave = new BmfcSave();
             bmfcSave.FontSize = fontSize;
             bmfcSave.FontName = fontName;
             bmfcSave.OutlineThickness = outline;
-
+            bmfcSave.UseSmoothing = fontSmoothing;
 
             bmfcSave.CreateBitmapFontFilesIfNecessary(bmfcSave.FontCacheFileName);
         }
