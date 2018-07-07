@@ -115,5 +115,7 @@ using System.Runtime.InteropServices;
 //  - Fixed bug where components could be named the same as other components if placed in a subfolder.
 // 0.9.3
 //  - Added icons for % of file for width and height units.
-[assembly: AssemblyVersion("0.9.3.0")]
-[assembly: AssemblyFileVersion("0.9.3.0")]
+// 0.9.4
+//  - Added support for font smoothing to be turned on/off on automatically generated fonts.
+[assembly: AssemblyVersion("0.9.4.0")]
+[assembly: AssemblyFileVersion("0.9.4.0")]
