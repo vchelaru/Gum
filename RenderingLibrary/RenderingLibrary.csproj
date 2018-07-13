@@ -101,6 +101,7 @@
     <Compile Include="Graphics\SpriteBatchStack.cs" />
     <Compile Include="Graphics\SpriteRenderer.cs" />
     <Compile Include="Graphics\TimedSpriteSheetAnimation.cs" />
+    <Compile Include="Math\FloatRectangle.cs" />
     <Compile Include="Math\Geometry\Line.cs" />
     <Compile Include="Math\Geometry\LineGrid.cs" />
     <Compile Include="Math\Geometry\SolidRectangle.cs" />

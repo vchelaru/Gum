@@ -527,7 +527,7 @@ namespace RenderingLibrary.Graphics
             Color color,
             float xOffset = 0, float yOffset = 0, float rotation = 0, float scaleX = 1, float scaleY = 1)
         {
-            Point point = new Point();
+            var point = new Vector2();
 
             int lineNumber = 0;
 
@@ -575,7 +575,7 @@ namespace RenderingLibrary.Graphics
 
                 foreach (char c in line)
                 {
-                    Rectangle destRect;
+                    FloatRectangle destRect;
                     int pageIndex;
                     var sourceRect = GetCharacterRect(c, lineNumber, ref point, out destRect, out pageIndex, scaleX);
 
@@ -584,9 +584,11 @@ namespace RenderingLibrary.Graphics
                     finalPosition.X += xOffset;
                     finalPosition.Y += yOffset;
 
-
-                    // todo: rotation, because that will impact destination rectangle too
-                    if(Text.TextRenderingPositionMode == TextRenderingPositionMode.FreeFloating || rotation != 0)
+                    if(Text.TextRenderingPositionMode == TextRenderingPositionMode.FreeFloating ||
+                        // If rotated, need free floating positions since sprite positions will likely not line up with pixels
+                        rotation != 0 || 
+                        // If scaled up/down, don't use free floating
+                        scaleX != 1)
                     {
                         var scale = new Vector2(scaleX, scaleY);
                         spriteRenderer.Draw(mTextures[pageIndex], finalPosition,  sourceRect, color, -rotationRadians, Vector2.Zero, scale, SpriteEffects.None, 0, this);
@@ -596,7 +598,10 @@ namespace RenderingLibrary.Graphics
                         // position:
                         destRect.X += xOffsetAsInt;
                         destRect.Y += yOffsetAsInt;
-                        spriteRenderer.Draw(mTextures[pageIndex], destRect, sourceRect, color, this);
+
+                        var position = new Vector2(destRect.X, destRect.Y);
+
+                        spriteRenderer.Draw(mTextures[pageIndex], position, sourceRect, color, 0, Vector2.Zero, new Vector2(scaleX, scaleY), SpriteEffects.None, 0, this);
                     }
                 }
                 point.X = 0;
@@ -612,7 +617,7 @@ namespace RenderingLibrary.Graphics
             object objectRequestingChange)
         {
             var textObject = (Text)objectRequestingChange;
-            var point = new Point();
+            var point = new Vector2();
             int requiredWidth;
             int requiredHeight;
             List<int> widths = new List<int>();
@@ -648,14 +653,14 @@ namespace RenderingLibrary.Graphics
 
                 foreach (char c in line)
                 {
-                    Rectangle destRect;
+                    FloatRectangle destRect;
                     int pageIndex;
                     var sourceRect = GetCharacterRect(c, lineNumber, ref point, out destRect, out pageIndex, textObject.FontScale);
 
                     var origin = new Point((int)textObject.X, (int)(textObject.Y + yoffset));
                     var rotate = (float)-(textObject.Rotation * System.Math.PI / 180f);
 
-                    var rotatingPoint = new Point(origin.X + destRect.X, origin.Y + destRect.Y);
+                    var rotatingPoint = new Point(origin.X + (int)destRect.X, origin.Y + (int)destRect.Y);
                     MathFunctions.RotatePointAroundPoint(new Point(origin.X, origin.Y), ref rotatingPoint, rotate);
 
                     mCharRect.X = rotatingPoint.X;
@@ -677,7 +682,7 @@ namespace RenderingLibrary.Graphics
             }
         }
 
-        public Rectangle GetCharacterRect(char c, int lineNumber, ref Point point, out Rectangle destinationRectangle,
+        public Rectangle GetCharacterRect(char c, int lineNumber, ref Vector2 point, out FloatRectangle destinationRectangle,
             out int pageIndex, float fontScale = 1)
         {
             BitmapCharacterInfo characterInfo = GetCharacterInfo(c);
@@ -691,19 +696,19 @@ namespace RenderingLibrary.Graphics
 
             // There could be some offset for this character
             int xOffset = characterInfo.GetPixelXOffset(LineHeightInPixels);
-            point.X += (int)(xOffset * fontScale);
+            point.X += xOffset * fontScale;
 
-            point.Y = (int)((lineNumber * LineHeightInPixels + distanceFromTop) * fontScale);
+            point.Y = (lineNumber * LineHeightInPixels + distanceFromTop) * fontScale;
 
             var sourceRectangle = new Microsoft.Xna.Framework.Rectangle(
                 sourceLeft, sourceTop, sourceWidth, sourceHeight);
 
             pageIndex = characterInfo.PageNumber;
 
-            destinationRectangle = new Rectangle(point.X, point.Y, (int)(sourceWidth * fontScale), (int)(sourceHeight * fontScale));
+            destinationRectangle = new FloatRectangle(point.X, point.Y, sourceWidth * fontScale, sourceHeight * fontScale);
 
-            point.X -= (int)(xOffset * fontScale);
-            point.X += (int)(characterInfo.GetXAdvanceInPixels(LineHeightInPixels) * fontScale);
+            point.X -= xOffset * fontScale;
+            point.X += characterInfo.GetXAdvanceInPixels(LineHeightInPixels) * fontScale;
 
             return sourceRectangle;
         }

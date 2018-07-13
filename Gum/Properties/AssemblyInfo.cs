@@ -117,5 +117,7 @@ using System.Runtime.InteropServices;
 //  - Added icons for % of file for width and height units.
 // 0.9.4
 //  - Added support for font smoothing to be turned on/off on automatically generated fonts.
-[assembly: AssemblyVersion("0.9.4.0")]
-[assembly: AssemblyFileVersion("0.9.4.0")]
+// 0.9.4.2
+//  - Fixed a bug with letter positioning in Text objects when using scale < 1.
+[assembly: AssemblyVersion("0.9.4.2")]
+[assembly: AssemblyFileVersion("0.9.4.2")]
