@@ -73,6 +73,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\TextureFlipAnimation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\TimedSpriteSheetAnimation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\IPositionedSizedObject.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Math\FloatRectangle.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Math\Geometry\Line.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Math\Geometry\LineCircle.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Math\Geometry\LineGrid.cs" />
