@@ -17,11 +17,25 @@ using GumRuntime;
 namespace Gum.Wireframe
 {
 
-
     public partial class GraphicalUiElement : IRenderableIpso, IVisible
     {
+        enum ChildrenUpdateType
+        {
+            AbsoluteOnly,
+            RelativeOnly,
+            Both
+        }
+
+        class DirtyState
+        {
+            public bool UpdateParent;
+            public int ChildrenUpdateDepth;
+            public XOrY? XOrY;
+        }
+
         #region Fields
 
+        private DirtyState currentDirtyState;
 
         public static int UpdateLayoutCallCount;
         public static int ChildrenUpdatingParentLayoutCalls;
@@ -756,6 +770,10 @@ namespace Gum.Wireframe
         }
 
 
+        /// <summary>
+        /// Returns the absolute Y of the origin of the GraphicalUiElement. Note that
+        /// this considers the YOrigin, and will apply rotation
+        /// </summary>
         public float AbsoluteY
         {
             get
@@ -812,7 +830,10 @@ namespace Gum.Wireframe
                 if (mTextureTop != value)
                 {
                     mTextureTop = value;
-                    UpdateLayout();
+                    // changing the texture top won't update the dimensions, just
+                    // the contained graphical object. 
+                    UpdateLayout(updateParent: false, updateChildren: false);
+
                 }
             }
         }
@@ -832,7 +853,7 @@ namespace Gum.Wireframe
                 if (mTextureLeft != value)
                 {
                     mTextureLeft = value;
-                    UpdateLayout();
+                    UpdateLayout(updateParent:false, updateChildren:false);
                 }
             }
         }
@@ -1238,8 +1259,16 @@ namespace Gum.Wireframe
 
         public void UpdateLayout(bool updateParent, int childrenUpdateDepth, XOrY? xOrY = null)
         {
-            if (!mIsLayoutSuspended && !IsAllLayoutSuspended)
+            var isSuspended = mIsLayoutSuspended || IsAllLayoutSuspended;
+
+            if(isSuspended)
             {
+                MakeDirty(updateParent, childrenUpdateDepth, xOrY);
+            }
+            else
+            {
+                currentDirtyState = null;
+
                 UpdateLayoutCallCount++;
 
                 // May 15, 2014
@@ -1333,7 +1362,8 @@ namespace Gum.Wireframe
                             UpdateTextureCoordinatesNotDimensionBased();
                         }
 
-                        if (this.WidthUnits.GetDependencyType() == HierarchyDependencyType.DependsOnChildren || this.HeightUnits.GetDependencyType() == HierarchyDependencyType.DependsOnChildren)
+                        if (this.WidthUnits.GetDependencyType() == HierarchyDependencyType.DependsOnChildren || 
+                            this.HeightUnits.GetDependencyType() == HierarchyDependencyType.DependsOnChildren)
                         {
                             UpdateChildren(childrenUpdateDepth, onlyAbsoluteLayoutChildren: true);
                         }
@@ -1350,7 +1380,8 @@ namespace Gum.Wireframe
                         if (mContainedObjectAsIpso is Text && childrenUpdateDepth > 0)
                         {
                             // Only if the width or height have changed:
-                            if (mContainedObjectAsIpso.Width != widthBeforeLayout || mContainedObjectAsIpso.Height != heightBeforeLayout)
+                            if (mContainedObjectAsIpso.Width != widthBeforeLayout || 
+                                mContainedObjectAsIpso.Height != heightBeforeLayout)
                             {
                                 // I think this should only happen when actually rendering:
                                 //((Text)mContainedObjectAsIpso).UpdateTextureToRender();
@@ -1412,6 +1443,34 @@ namespace Gum.Wireframe
                 }
             }
 
+        }
+
+        // Records the type of update needed when layout resumes
+        private void MakeDirty(bool updateParent, int childrenUpdateDepth, XOrY? xOrY)
+        {
+            if(currentDirtyState == null)
+            {
+                currentDirtyState = new DirtyState();
+
+                currentDirtyState.XOrY = xOrY;
+            }
+
+            currentDirtyState.UpdateParent = currentDirtyState.UpdateParent || updateParent;
+            currentDirtyState.ChildrenUpdateDepth = Math.Max(
+                currentDirtyState.ChildrenUpdateDepth, childrenUpdateDepth);
+
+            // If the update is supposed to update all associations, make it null...
+            if(xOrY == null)
+            {
+                currentDirtyState.XOrY = null;
+            }
+            // If neither are null and they differ, then that means update both, so set it to null
+            else if(currentDirtyState.XOrY != null && currentDirtyState.XOrY != xOrY)
+            {
+                currentDirtyState.XOrY = null;
+            }
+            // It's not possible to set either X or Y here. That can only happen on initialization
+            // of the currentDirtyState
         }
 
         private void RefreshParentRowColumnDimensionForThis()
@@ -1479,24 +1538,24 @@ namespace Gum.Wireframe
                     {
                         if (child.IsAllLayoutAbsolute() || onlyAbsoluteLayoutChildren == false)
                         {
-                            child.UpdateLayout(false, childrenUpdateDepth - 1);
-                        }
-                        else
-                        { 
-                            // only update absolute layout, and the child has some relative values, but let's see if 
-                            // we can do only one axis:
-                            if (child.IsAllLayoutAbsolute(XOrY.X))
-                            {
-                                child.UpdateLayout(false, childrenUpdateDepth - 1, XOrY.X);
+                                child.UpdateLayout(false, childrenUpdateDepth - 1);
                             }
-                            else if (child.IsAllLayoutAbsolute(XOrY.Y))
-                            {
-                                child.UpdateLayout(false, childrenUpdateDepth - 1, XOrY.Y);
+                            else
+                            { 
+                                // only update absolute layout, and the child has some relative values, but let's see if 
+                                // we can do only one axis:
+                                if (child.IsAllLayoutAbsolute(XOrY.X))
+                                {
+                                    child.UpdateLayout(false, childrenUpdateDepth - 1, XOrY.X);
+                                }
+                                else if (child.IsAllLayoutAbsolute(XOrY.Y))
+                                {
+                                    child.UpdateLayout(false, childrenUpdateDepth - 1, XOrY.Y);
+                                }
                             }
                         }
                     }
                 }
-            }
             else
             {
                 for (int i = 0; i < this.Children.Count; i++)
@@ -1509,25 +1568,25 @@ namespace Gum.Wireframe
                         var child = ipsoChild as GraphicalUiElement;
                         if (child.IsAllLayoutAbsolute() || onlyAbsoluteLayoutChildren == false)
                         {
-                            child.UpdateLayout(false, childrenUpdateDepth - 1);
-                        }
-                        else
-                        {
-                            // only update absolute layout, and the child has some relative values, but let's see if 
-                            // we can do only one axis:
-                            if (child.IsAllLayoutAbsolute(XOrY.X))
-                            {
-                                child.UpdateLayout(false, childrenUpdateDepth - 1, XOrY.X);
+                                child.UpdateLayout(false, childrenUpdateDepth - 1);
                             }
-                            else if (child.IsAllLayoutAbsolute(XOrY.Y))
+                            else
                             {
-                                child.UpdateLayout(false, childrenUpdateDepth - 1, XOrY.Y);
+                                // only update absolute layout, and the child has some relative values, but let's see if 
+                                // we can do only one axis:
+                                if (child.IsAllLayoutAbsolute(XOrY.X))
+                                {
+                                    child.UpdateLayout(false, childrenUpdateDepth - 1, XOrY.X);
+                                }
+                                else if (child.IsAllLayoutAbsolute(XOrY.Y))
+                                {
+                                    child.UpdateLayout(false, childrenUpdateDepth - 1, XOrY.Y);
+                                }
                             }
                         }
                     }
                 }
             }
-        }
 
         private void UpdateLayerScissor()
         {
@@ -2769,7 +2828,12 @@ namespace Gum.Wireframe
                 ResumeLayoutNoUpdateRecursive();
             }
 
-            UpdateLayout();
+            if(currentDirtyState != null)
+            {
+                UpdateLayout(currentDirtyState.UpdateParent, 
+                    currentDirtyState.ChildrenUpdateDepth, 
+                    currentDirtyState.XOrY);
+            }
         }
 
         private void ResumeLayoutNoUpdateRecursive()
