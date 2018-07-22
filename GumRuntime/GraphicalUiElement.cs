@@ -2825,25 +2825,34 @@ namespace Gum.Wireframe
 
             if (recursive)
             {
-                ResumeLayoutNoUpdateRecursive();
+                ResumeLayoutUpdateIfDirtyRecursive();
             }
-
-            if(currentDirtyState != null)
+            else
             {
-                UpdateLayout(currentDirtyState.UpdateParent, 
-                    currentDirtyState.ChildrenUpdateDepth, 
-                    currentDirtyState.XOrY);
+                if(currentDirtyState != null)
+                {
+                    UpdateLayout(currentDirtyState.UpdateParent, 
+                        currentDirtyState.ChildrenUpdateDepth, 
+                        currentDirtyState.XOrY);
+                }
             }
         }
 
-        private void ResumeLayoutNoUpdateRecursive()
+        private void ResumeLayoutUpdateIfDirtyRecursive()
         {
 
             mIsLayoutSuspended = false;
 
+            if (currentDirtyState != null)
+            {
+                UpdateLayout(currentDirtyState.UpdateParent,
+                currentDirtyState.ChildrenUpdateDepth,
+                currentDirtyState.XOrY);
+            }
+
             foreach (var item in this.mWhatThisContains)
             {
-                item.ResumeLayoutNoUpdateRecursive();
+                item.ResumeLayoutUpdateIfDirtyRecursive();
             }
         }
 
@@ -3750,7 +3759,8 @@ namespace Gum.Wireframe
                     // We can set the variable if it's not setting a state (to prevent recursive setting).                   
                     item.IsState(state.ParentContainer) == false ||
                         // If it is setting a state we'll allow it if it's on a child.
-                    !string.IsNullOrEmpty(item.SourceObject));
+                    !string.IsNullOrEmpty(item.SourceObject))
+                .ToArray();
 
             foreach (var variable in variablesToConsider)
             {
