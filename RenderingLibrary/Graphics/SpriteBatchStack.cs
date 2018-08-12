@@ -157,7 +157,8 @@ namespace RenderingLibrary.Graphics
             mStateStack.Add(currentParameters);
 
             // begin will end 
-            ReplaceRenderStates(sortMode, blendState, samplerState, depthStencilState, rasterizerState, effect, transformMatrix, scissorRectangle);
+            ReplaceRenderStates(
+                sortMode, blendState, samplerState, depthStencilState, rasterizerState, effect, transformMatrix, scissorRectangle);
         }
 
         public void ReplaceRenderStates(SpriteSortMode sortMode, BlendState blendState, SamplerState samplerState,

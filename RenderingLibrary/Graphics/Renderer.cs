@@ -257,7 +257,7 @@ namespace RenderingLibrary.Graphics
 
                 var oldSampler = GraphicsDevice.SamplerStates[0];
 
-                mRenderStateVariables.BlendState = BlendState.NonPremultiplied;
+                mRenderStateVariables.BlendState = Renderer.NormalBlendState;
                 mRenderStateVariables.Wrap = false;
 
                 RenderLayer(managers, layer);
@@ -277,7 +277,7 @@ namespace RenderingLibrary.Graphics
                 mCamera.UpdateClient();
 
 
-                mRenderStateVariables.BlendState = BlendState.NonPremultiplied;
+                mRenderStateVariables.BlendState = Renderer.NormalBlendState;
                 mRenderStateVariables.Wrap = false;
 
                 foreach (Layer layer in layers)

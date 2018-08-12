@@ -318,7 +318,7 @@ namespace Gum.Managers
 
             FillListWithReferencedFiles(toReturn, element);
 
-            return toReturn;
+            return toReturn.Distinct().ToList();
         }
 
         private void FillListWithReferencedFiles<T>(List<string> files, IList<T> elements) where T : ElementSave
@@ -359,6 +359,25 @@ namespace Gum.Managers
 
                 foreach (InstanceSave instance in element.Instances)
                 {
+                    // August 5, 2018 - why are we not considering
+                    // the file name of the element? Isn't that a referenced
+                    // file?
+                    var instanceElement = GetElementSave(instance);
+                    if(instanceElement != null)
+                    {
+                        string prefix = FileManager.GetDirectory(GumProjectSave.FullFileName);
+                        if(instanceElement is ComponentSave)
+                        {
+                            prefix += "Components/";
+                        }
+                        else // standard element
+                        {
+                            prefix += "Standards/";
+                        }
+                        files.Add(prefix + instanceElement.Name + "." + instanceElement.FileExtension);
+                    }
+
+
                     rvf = new RecursiveVariableFinder(instance, elementStack);
 
                     value = rvf.GetValue<string>("SourceFile");

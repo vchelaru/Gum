@@ -25,6 +25,15 @@ namespace GumRuntime
             {
                 toReturn = ElementSaveExtensions.CreateGueForElement(instanceElement, true);
 
+                // If we get here but there's no contained graphical object then that means we don't
+                // have a strongly-typed system (like when a game is running in FRB). Therefore, we'll
+                // just fall back to the regular creation of graphical objects, like is done in the Gum tool:
+                if(toReturn.RenderableComponent == null)
+                {
+                    instanceElement.SetGraphicalUiElement(toReturn, systemManagers);
+                }
+
+
                 toReturn.Name = instanceSave.Name;
                 toReturn.Tag = instanceSave;
 

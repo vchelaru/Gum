@@ -27,6 +27,9 @@ namespace GumRuntime
 
             if (mElementToGueTypes.ContainsKey(elementSave.Name))
             {
+                // This code allows sytems (like games that use Gum) to assign types
+                // to their GraphicalUiElements so that users of the code can work with
+                // strongly-typed Gum objects.
                 var type = mElementToGueTypes[elementSave.Name];
                 var constructor = type.GetConstructor(new Type[] { typeof(bool), typeof(bool)});
 
