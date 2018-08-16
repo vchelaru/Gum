@@ -124,10 +124,13 @@
       <Project>{d874a841-1f53-4bde-a271-b9197b2cbdd5}</Project>
       <Name>FlatRedBallUwp</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\..\..\FlatRedBall\Engines\Forms\FlatRedBall.Forms\StateInterpolation\StateInterpolation.Uwp\StateInterpolation.Uwp.csproj">
+      <Project>{f3984de4-8f1e-42a9-bde4-a4fc52100f14}</Project>
+      <Name>StateInterpolation.Uwp</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="..\..\..\GumCoreShared.projitems" Label="Shared" />
   <Import Project="..\..\..\..\FlatRedBall\FRBDK\Glue\GumPlugin\GumPlugin\GumCoreShared.FlatRedBall.projitems" Label="Shared" />
-  <Import Project="..\..\..\..\FlatRedBall\FRBDK\Glue\StateInterpolationPlugin\StateInterpolationPlugin\StateInterpolationShared.projitems" Label="Shared" />
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
   </PropertyGroup>
