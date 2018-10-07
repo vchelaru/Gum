@@ -205,6 +205,7 @@
     <Compile Include="Managers\NameVerifier.cs" />
     <Compile Include="Managers\ObjectRemover.cs" />
     <Compile Include="Managers\OutputManager.cs" />
+    <Compile Include="Plugins\RenameLogicPlugin\MainRenameLogic.cs" />
     <Compile Include="Plugins\VariableGrid\DeletingVariablesInCategoriesMessageBox.xaml.cs">
       <DependentUpon>DeletingVariablesInCategoriesMessageBox.xaml</DependentUpon>
     </Compile>

@@ -156,7 +156,7 @@ namespace Gum.Wireframe
             this.mWidth = ipso.Width;
             this.mHeight = ipso.Height;
 
-            this.mRotation = ipso.Rotation;
+            this.mRotation = ipso.GetAbsoluteRotation();
 
             if (ipso is GraphicalUiElement)
             {

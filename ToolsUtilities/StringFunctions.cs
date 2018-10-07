@@ -289,7 +289,10 @@ namespace ToolsUtilities
             // we don't want the character at index 0 to be tested.
             for (int i = originalString.Length - 1; i > 0; i--)
             {
-                if (char.IsUpper(originalString[i]) && i != 0)
+                if (char.IsUpper(originalString[i]) && i != 0
+                    // make sure there's not already a space there
+                    && originalString[i-1] != ' '
+                    )
                 {
                     originalString = originalString.Insert(i, " ");
                 }

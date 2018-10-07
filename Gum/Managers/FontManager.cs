@@ -24,7 +24,6 @@ namespace Gum.Managers
             }
         }
 
-
         public BitmapFont GetBitmapFontFor(string fontName, int fontSize, int outlineThickness, bool useFontSmoothing)
         {
             string fileName = AbsoluteFontCacheFolder + 
@@ -67,53 +66,100 @@ namespace Gum.Managers
             }
         }
 
+        public void CreateAllMissingFontFiles(GumProjectSave project)
+        {
+            foreach(var element in project.StandardElements)
+            {
+                foreach(var state in element.AllStates)
+                {
+                    TryCreateFontFileFor(null, state);
+
+                    // standard elements don't have instances
+                }
+            }
+            foreach (var component in project.Components)
+            {
+                foreach (var state in component.AllStates)
+                {
+                    TryCreateFontFileFor(null, state);
+
+                    foreach(var instance in component.Instances)
+                    {
+                        TryCreateFontFileFor(instance, state);
+                    }
+                }
+            }
+            foreach(var screen in project.Screens)
+            {
+                foreach (var state in screen.AllStates)
+                {
+                    TryCreateFontFileFor(null, state);
+
+                    foreach (var instance in screen.Instances)
+                    {
+                        TryCreateFontFileFor(instance, state);
+                    }
+                }
+            }
+        }
+
         internal void ReactToFontValueSet(InstanceSave instance)
         {
             StateSave stateSave = SelectedState.Self.SelectedStateSave;
 
             // If the user has a category selected but no state in the category, then use the default:
-            if(stateSave == null && SelectedState.Self.SelectedStateCategorySave != null)
+            if (stateSave == null && SelectedState.Self.SelectedStateCategorySave != null)
             {
                 stateSave = SelectedState.Self.SelectedElement.DefaultState;
             }
 
-            if(stateSave == null)
+            if (stateSave == null)
             {
                 throw new InvalidOperationException($"{nameof(stateSave)} is null");
             }
 
+            TryCreateFontFileFor(instance, stateSave);
+        }
+
+        public void TryCreateFontFileFor(InstanceSave instance, StateSave stateSave)
+        {
             string prefix = "";
             if (instance != null)
             {
                 prefix = instance.Name + ".";
             }
 
+            int? fontSize = null;
             object fontSizeAsObject = stateSave.GetValueRecursive(prefix + "FontSize");
+            if(fontSizeAsObject != null)
+            {
+                fontSize = (int)fontSizeAsObject;
+            }
 
             var fontValue =
                 (string)stateSave.GetValueRecursive(prefix + "Font");
 
+            int? outlineValue = 0;
             var outlineValueAsObject = stateSave.GetValueRecursive(prefix + "OutlineThickness");
-
-            int outlineValue = 0;
             if (outlineValueAsObject != null)
             {
                 outlineValue = (int)outlineValueAsObject;
             }
 
+            // default to true to match how old behavior worked
             bool fontSmoothing = true;
             var fontSmoothingAsObject = stateSave.GetValueRecursive(prefix + "UseFontSmoothing");
-            if(fontSmoothingAsObject != null)
+            if (fontSmoothingAsObject != null)
             {
                 fontSmoothing = (bool)fontSmoothingAsObject;
             }
 
-            if (fontValue != null)
+            if (fontValue != null && fontSize != null && outlineValue != null)
             {
                 BmfcSave.CreateBitmapFontFilesIfNecessary(
-                    (int)fontSizeAsObject,
+                    fontSize.Value,
                     fontValue,
-                    outlineValue, 
+                    outlineValue.Value,
                     fontSmoothing);
             }
         }

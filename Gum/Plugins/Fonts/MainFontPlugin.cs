@@ -1,4 +1,6 @@
-﻿using Gum.Plugins.BaseClasses;
+﻿using Gum.Managers;
+using Gum.Plugins.BaseClasses;
+using Gum.ToolStates;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
@@ -13,16 +15,36 @@ namespace Gum.Plugins.Fonts
     {
         public override void StartUp()
         {
-            // todo - I'd like to move the 
-            // Clear Fonts command from the
-            // main window to be part of the
-            // plugin. I'd also like to have it
-            // handle opening the font cache folder
-            // (since people don't know where it is)
-            // and a command which will go through the
-            // entire proejct and re-create all fonts which
-            // are needed, so users don't have to go through
-            // it themselves if the font cache is deleted.
+            var clearFontCacheMenuItem = this.AddMenuItem(new[] {
+                "Content", "Clear Font Cache" });
+            clearFontCacheMenuItem.Click += HandleClearFontCache;
+
+            var refreshFontCacheMenuItem = this.AddMenuItem(new[]
+            {
+                "Content", "Refresh Font Cache"
+            });
+            refreshFontCacheMenuItem.Click += HandleRefreshFontCache;
+
+        }
+
+        private void HandleClearFontCache(object sender, EventArgs e)
+        {
+            FontManager.Self.DeleteFontCacheFolder();
+        }
+
+        private void HandleRefreshFontCache(object sender, EventArgs e)
+        {
+            var gumProjectSave = ProjectState.Self.GumProjectSave;
+            if(gumProjectSave == null)
+            {
+                GumCommands.Self.GuiCommands.ShowMessage(
+                    "A Gum project must first be loaded before recreating font files");
+            }
+            else
+            {
+                FontManager.Self.CreateAllMissingFontFiles(
+                    ProjectState.Self.GumProjectSave);
+            }
         }
     }
 }

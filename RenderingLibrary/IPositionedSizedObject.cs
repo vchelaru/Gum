@@ -25,7 +25,12 @@ namespace RenderingLibrary
         {
             return Matrix.CreateRotationZ(-MathHelper.ToRadians(ipso.Rotation));
         }
-        
+
+        public static Matrix GetAbsoluteRotationMatrix(this IRenderableIpso ipso)
+        {
+            return Matrix.CreateRotationZ(-MathHelper.ToRadians(ipso.GetAbsoluteRotation()));
+        }
+
         /// <summary>
         /// Returns the world X coordinate of the argument RenderableIpso.
         /// </summary>
@@ -91,7 +96,7 @@ namespace RenderingLibrary
             y -= absoluteY;
 
             // normally it's negative, but we are going to * -1 to rotate the other way
-            var matrix = Matrix.CreateRotationZ(-MathHelper.ToRadians(ipso.Rotation) * -1);
+            var matrix = Matrix.CreateRotationZ(-MathHelper.ToRadians(ipso.GetAbsoluteRotation()) * -1);
 
             var relativePosition = new Vector2(x, y);
             relativePosition = Vector2.Transform(relativePosition, matrix);

@@ -106,15 +106,32 @@ namespace Gum.ToolCommands
 
             objectToAddTo.Categories.Add(category);
 
-            string categoryName = category.Name + "State";
 
-            if(objectToAddTo is ElementSave)
+            // September 20, 2018
+            // Not sure why we have
+            // this category add itself
+            // as a variable to the default
+            // state. States can't set other
+            // states, and I don't think the rest
+            // of Gum depends on this. Commenting it
+            // out to see.
+            // Update - even though the element can't set
+            // it's own categorized state in the default state,
+            // instances use this variable to determine if a variable
+            // should be shown.
+            if (objectToAddTo is ElementSave)
             {
+                string categoryName = category.Name + "State";
                 var elementToAddTo = objectToAddTo as ElementSave;
-                elementToAddTo.DefaultState.Variables.Add(new VariableSave() { Name = categoryName, Type = categoryName, Value = null
-    #if GUM
-    ,             CustomTypeConverter = new Gum.PropertyGridHelpers.Converters.AvailableStatesConverter(category.Name)
-    #endif    
+                elementToAddTo.DefaultState.Variables.Add(new VariableSave()
+                {
+                    Name = categoryName,
+                    Type = categoryName,
+                    Value = null
+#if GUM
+    ,
+                    CustomTypeConverter = new Gum.PropertyGridHelpers.Converters.AvailableStatesConverter(category.Name)
+#endif
                 });
 
                 elementToAddTo.DefaultState.Variables.Sort((first, second) => first.Name.CompareTo(second.Name));

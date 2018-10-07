@@ -135,10 +135,18 @@ namespace Gum.PropertyGridHelpers
         {
             get
             {
+                bool shouldBeComboBox = false;
                 // we want to still give priority to the base displayer since
                 // we may want to replace combo boxes with something like toggles:
-                if(CustomOptions != null && CustomOptions.Count != 0 &&
-                    base.PreferredDisplayer == null)
+                if(CustomOptions != null && base.PreferredDisplayer == null)
+                {
+                    shouldBeComboBox =
+                       CustomOptions.Count != 0 || 
+                    // If this is a state, still show the combo box even if there are no
+                    // available states to select from. Otherwise it's a confusing text box
+                       mPropertyDescriptor.Converter is Converters.AvailableStatesConverter;
+                }
+                if(shouldBeComboBox)
                 {
                     return typeof(WpfDataUi.Controls.ComboBoxDisplay);
                 }
@@ -205,7 +213,15 @@ namespace Gum.PropertyGridHelpers
                 this.Instance = elementSave;
             }
 
-            DisplayName = RootVariableName;
+            var alreadyHasSpaces = RootVariableName?.Contains(" ");
+            if(alreadyHasSpaces == false)
+            {
+                DisplayName =  ToolsUtilities.StringFunctions.InsertSpacesInCamelCaseString(RootVariableName);
+            }
+            else
+            {
+                DisplayName = RootVariableName;
+            }
 
             TryAddExposeVariableMenuOptions(instanceSave);
 
@@ -307,8 +323,16 @@ namespace Gum.PropertyGridHelpers
                 string rawVariableName = this.RootVariableName;
 
                 ElementSave elementForInstance = ObjectFinder.Self.GetElementSave(instanceSave.BaseType);
-
                 var variableInDefault = elementForInstance.DefaultState.GetVariableSave(rawVariableName);
+                while(variableInDefault == null && !string.IsNullOrEmpty(elementForInstance.BaseType))
+                {
+                    elementForInstance = ObjectFinder.Self.GetElementSave(elementForInstance.BaseType);
+                    if(elementForInstance?.DefaultState == null)
+                    {
+                        break;
+                    }
+                    variableInDefault = elementForInstance.DefaultState.GetVariableSave(rawVariableName);
+                }
 
                 if (variableInDefault != null)
                 {

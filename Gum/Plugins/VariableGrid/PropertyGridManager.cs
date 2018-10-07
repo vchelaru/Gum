@@ -442,6 +442,7 @@ namespace Gum.Managers
             foreach (InstanceSavePropertyDescriptor propertyDescriptor in properties)
             {
                 StateReferencingInstanceMember srim;
+
                 if (instance != null)
                 {
                     srim =

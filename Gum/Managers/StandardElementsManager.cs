@@ -231,6 +231,8 @@ namespace Gum.Managers
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "Wraps Children" });
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "Clips Children" });
 
+                stateSave.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation" });
+
                 AddEventVariables(stateSave, defaultHasEvents: true);
 
 #if GUM
@@ -297,6 +299,10 @@ namespace Gum.Managers
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
                 AddColorVariables(stateSave, true);
 
+                // Although rotating a circle about its center does nothing we add rotation because you can rotate it about a different origin
+                stateSave.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation" });
+
+
                 AddEventVariables(stateSave);
 
                 AddStateVariable(stateSave);
@@ -323,6 +329,9 @@ namespace Gum.Managers
 
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
                 AddColorVariables(stateSave, true);
+
+                stateSave.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation" });
+
 
                 AddEventVariables(stateSave);
 
@@ -364,6 +373,9 @@ namespace Gum.Managers
                 AddEventVariables(stateSave);
 
                 AddStateVariable(stateSave);
+
+                stateSave.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation" });
+
 
 #if GUM
 

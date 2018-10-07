@@ -1,4 +1,5 @@
-﻿using RenderingLibrary;
+﻿using Microsoft.Xna.Framework;
+using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Math.Geometry;
 using System;
@@ -13,11 +14,8 @@ namespace Gum.Wireframe
     {
         const float RadiusAtNoZoom = 5;
 
-
         Line mXLine1;
         Line mXLine2;
-
-        Line dottedRowOrColumnLine;
 
         Line mOriginLine;
 
@@ -72,10 +70,8 @@ namespace Gum.Wireframe
             float parentOriginOffsetX;
             float parentOriginOffsetY;
 
-
-
             asGue.GetParentOffsets(out parentOriginOffsetX, out parentOriginOffsetY);
-            
+
             // This currently has some confusing behavior:
             // If an object is part of a stacked parent, then
             // the offset line is correct if the parent is either
@@ -114,9 +110,30 @@ namespace Gum.Wireframe
                 }
             }
 
-            mOriginLine.X = parentOriginOffsetX + parentAbsoluteX;
-            mOriginLine.Y = parentOriginOffsetY + parentAbsoluteY;
+            var parentAbsoluteRotation = 0.0f;
 
+            if (parent != null)
+            {
+                parentAbsoluteRotation = parent.GetAbsoluteRotation();
+            }
+
+            if(parentAbsoluteRotation == 0)
+            {
+                mOriginLine.X = parentOriginOffsetX + parentAbsoluteX;
+                mOriginLine.Y = parentOriginOffsetY + parentAbsoluteY;
+
+            }
+            else
+            {
+                var matrix = Matrix.CreateRotationZ(-MathHelper.ToRadians(parentAbsoluteRotation));
+
+                var rotatedVector = parentOriginOffsetX * matrix.Right + parentOriginOffsetY * matrix.Up;
+
+
+                mOriginLine.X = rotatedVector.X + parentAbsoluteX;
+                mOriginLine.Y = rotatedVector.Y + parentAbsoluteY;
+
+            }
             mOriginLine.RelativePoint.X = asGue.AbsoluteX - mOriginLine.X;
             mOriginLine.RelativePoint.Y = asGue.AbsoluteY - mOriginLine.Y;
         }

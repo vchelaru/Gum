@@ -65,5 +65,10 @@ namespace Gum.Commands
         {
             ElementTreeViewManager.Self.RefreshUi(element);
         }
+
+        public void ShowMessage(string message)
+        {
+            MessageBox.Show(message);
+        }
     }
 }

@@ -407,25 +407,7 @@ namespace Gum.Plugins
 
             var pluginDirectories = new List<string>();
 
-            // For now we have just a global plugin manager
-            //if (mGlobal)
-            {
-                pluginDirectories.Add(PluginFolder);
-                //var paths = new List<string>
-                //                         {
-                //                             FileManager.GetDirectory(Application.ExecutablePath) + "Plugins"
-                //                             //,FileManager.UserApplicationData + @"FRBDK\Plugins"
-                //                         };
-
-                //pluginDirectories.AddRange(paths.Where(Directory.Exists).SelectMany(Directory.GetDirectories));
-            }
-            //else
-            //{
-            //    //if (ProjectManager.GlueProjectFileName != null && Directory.Exists(FileManager.GetDirectory(ProjectManager.GlueProjectFileName) + "Plugins"))
-            //    //{
-            //    //    pluginDirectories.AddRange(Directory.GetDirectories(FileManager.GetDirectory(ProjectManager.GlueProjectFileName) + "Plugins"));
-            //    //}
-            //}
+            pluginDirectories.Add(PluginFolder);
 
             foreach (var directory in pluginDirectories)
             {
@@ -439,47 +421,6 @@ namespace Gum.Plugins
 
                     returnValue.Catalogs.Add(new AssemblyCatalog(loadedAssembly));
                 }
-
-                //try
-                //{
-                //    var result = CompilePlugin(plugin);
-
-                //    if (result != null)
-                //    {
-                //        if (result.Errors.HasErrors)
-                //        {
-                //            var errors = new StringBuilder();
-                //            var filename = Path.GetFileName(plugin);
-                //            foreach (CompilerError err in result.Errors)
-                //            {
-                //                errors.Append(string.Format("\r\n{0}({1},{2}): {3}: {4}",
-                //                            filename, err.Line, err.Column,
-                //                            err.ErrorNumber, err.ErrorText));
-                //            }
-                //            var str = "Error loading script " + plugin + "\r\n" + errors.ToString();
-                //            MessageBox.Show(str, @"Error compiling plugin");
-                //        }
-                //        else
-                //        {
-                //            var newCatalog = new AssemblyCatalog(result.CompiledAssembly);
-
-                //            returnValue.Catalogs.Add(newCatalog);
-
-                //            //foreach (string assm in mReferenceListExternal)
-                //            //{
-                //            //    Assembly ass = Assembly.LoadFrom(assm);
-                //            //    var assemblies = AppDomain.CurrentDomain.GetAssemblies().Where(a => !a.IsDynamic).Select(a => a.Location);
-
-                //            //    returnValue.Catalogs.Add(newCatalog);
-                //            //}
-                //        }
-                //    }
-                //}
-                //catch (Exception ex)
-                //{
-                //    var str = "Error loading plugin at " + plugin + "\r\n\r\n" + ex;
-                //    MessageBox.Show(str, @"Error loading plugin");
-                //}
             }
 
             if (mGlobal)

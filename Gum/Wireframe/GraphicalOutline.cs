@@ -83,19 +83,44 @@ namespace Gum.Wireframe
                 centerHeight = nineSlice.Height - (topHeight + bottomHeight);
                 centerWidth = nineSlice.Width - (leftWidth + rightWidth);
 
+                float offsetX = leftWidth;
+                float offsetY = 0;
+
+                //Vector3 right;
+                //Vector3 up;
+
+                //if (nineSlice.Rotation == 0)
+                //{
+                //    right = Vector3.Right;
+                //    up = Vector3.Up;
+                //}
+                //else
+                //{
+                //    var matrix = Matrix.CreateRotationZ(-MathHelper.ToRadians(nineSlice.Rotation));
+
+                //    right = matrix.Right;
+                //    up = matrix.Up;
+                //}
+
                 LineRectangle tallRectangle = GetOrMakeRectangleAtIndex(1);
                 tallRectangle.Color = Color.Red;
-                tallRectangle.X = nineSlice.GetAbsoluteX() + leftWidth;
-                tallRectangle.Y = nineSlice.GetAbsoluteY();
+                tallRectangle.X = nineSlice.GetAbsoluteX() + offsetX ;
+                tallRectangle.Y = nineSlice.GetAbsoluteY() ;
                 tallRectangle.Width = centerWidth;
                 tallRectangle.Height = nineSlice.Height;
+                tallRectangle.Rotation = nineSlice.GetAbsoluteRotation();
+
+
+                offsetX = 0;
+                offsetY = topHeight;
 
                 LineRectangle wideRectangle = GetOrMakeRectangleAtIndex(2);
                 wideRectangle.Color = Color.Red;
-                wideRectangle.X = nineSlice.GetAbsoluteX();
-                wideRectangle.Y = nineSlice.GetAbsoluteY() + topHeight;
+                wideRectangle.X = nineSlice.GetAbsoluteX() ;
+                wideRectangle.Y = nineSlice.GetAbsoluteY() + offsetY ;
                 wideRectangle.Width = nineSlice.Width;
                 wideRectangle.Height = centerHeight;
+                wideRectangle.Rotation = nineSlice.GetAbsoluteRotation();
             }
         }
 
@@ -121,7 +146,7 @@ namespace Gum.Wireframe
             rectangle.Width = pso.Width + adjustedSelectionBorder * 2;
             rectangle.Height = pso.Height + adjustedSelectionBorder * 2;
 
-            rectangle.Rotation = pso.Rotation;
+            rectangle.Rotation = pso.GetAbsoluteRotation();
         }
 
         LineRectangle GetOrMakeRectangleAtIndex(int i)

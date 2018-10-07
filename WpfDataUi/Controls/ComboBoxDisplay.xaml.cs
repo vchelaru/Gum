@@ -79,7 +79,7 @@ namespace WpfDataUi.Controls
             set;
         }
 
-        private Label Label
+        private TextBlock TextBlock
         {
             get;
             set;
@@ -119,13 +119,14 @@ namespace WpfDataUi.Controls
             Grid.ColumnDefinitions.Add(firstColumnDefinition);
             Grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
 
-            Label = new Label
+            TextBlock = new TextBlock
             {
                 Name="Label",
                 VerticalAlignment = VerticalAlignment.Center,
-                Content = "Property Label:"
+                Text = "Property Label:"
             };
-            Grid.Children.Add(Label);
+            TextBlock.TextWrapping = TextWrapping.Wrap;
+            Grid.Children.Add(TextBlock);
 
             ComboBox = new ComboBox
             {
@@ -185,7 +186,7 @@ namespace WpfDataUi.Controls
 
             this.RefreshContextMenu(ComboBox.ContextMenu);
 
-            this.Label.Content = InstanceMember.DisplayName;
+            this.TextBlock.Text = InstanceMember.DisplayName;
         }
 
         public ApplyValueResult TrySetValueOnUi(object valueOnInstance)

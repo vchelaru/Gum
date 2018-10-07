@@ -186,7 +186,19 @@ namespace RenderingLibrary.Math.Geometry
 
             if(mCircleOrigin == Geometry.CircleOrigin.TopLeft)
             {
-                mLinePrimitive.Shift(Radius, Radius);
+                if(Rotation != 0)
+                {
+                    Matrix matrix = Matrix.CreateRotationZ(-MathHelper.ToRadians(Rotation));
+
+                    var vector = Radius * matrix.Right + Radius * matrix.Up;
+
+                    mLinePrimitive.Shift(vector.X, vector.Y);
+
+                }
+                else
+                {
+                    mLinePrimitive.Shift(Radius, Radius);
+                }
             }
         }
 

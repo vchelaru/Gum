@@ -49,7 +49,6 @@
             this.RemoveStateMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.RemoveVariableMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.contentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.clearFontCacheToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.findFileReferencesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.pluginsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.managePluginsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -249,18 +248,10 @@
             // contentToolStripMenuItem
             // 
             this.contentToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.clearFontCacheToolStripMenuItem,
             this.findFileReferencesToolStripMenuItem});
             this.contentToolStripMenuItem.Name = "contentToolStripMenuItem";
             this.contentToolStripMenuItem.Size = new System.Drawing.Size(62, 20);
             this.contentToolStripMenuItem.Text = "Content";
-            // 
-            // clearFontCacheToolStripMenuItem
-            // 
-            this.clearFontCacheToolStripMenuItem.Name = "clearFontCacheToolStripMenuItem";
-            this.clearFontCacheToolStripMenuItem.Size = new System.Drawing.Size(182, 22);
-            this.clearFontCacheToolStripMenuItem.Text = "Clear Font Cache";
-            this.clearFontCacheToolStripMenuItem.Click += new System.EventHandler(this.clearFontCacheToolStripMenuItem_Click);
             // 
             // findFileReferencesToolStripMenuItem
             // 
@@ -640,7 +631,6 @@
         private System.Windows.Forms.ToolStripMenuItem newProjectToolStripMenuItem;
         private System.Windows.Forms.RichTextBox OutputTextBox;
         private System.Windows.Forms.ToolStripMenuItem contentToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem clearFontCacheToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem saveAllToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem loadRecentToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem findFileReferencesToolStripMenuItem;

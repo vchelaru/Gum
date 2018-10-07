@@ -187,6 +187,7 @@ namespace Gum.Commands
                     string oldName = category.Name;
 
                     category.Name = tiw.Result;
+                    
                     GumCommands.Self.GuiCommands.RefreshStateTreeView();
                     // I don't think we need to save the project when renaming a state:
                     //GumCommands.Self.FileCommands.TryAutoSaveProject();

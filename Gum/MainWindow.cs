@@ -285,11 +285,6 @@ namespace Gum
             GumCommands.Self.FileCommands.NewProject();
         }
 
-        private void clearFontCacheToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            FontManager.Self.DeleteFontCacheFolder();
-        }
-
         private void saveAllToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (ObjectFinder.Self.GumProjectSave == null)

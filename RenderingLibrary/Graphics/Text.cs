@@ -760,11 +760,14 @@ namespace RenderingLibrary.Graphics
 
                 UpdateIpsoForRendering();
 
+                var absoluteLeft = mTempForRendering.GetAbsoluteLeft();
+                var absoluteTop = mTempForRendering.GetAbsoluteTop();
+
                 fontToUse.DrawTextLines(WrappedText, HorizontalAlignment, this,
-                    requiredWidth, widths, spriteRenderer, Color, 
-                    mTempForRendering.GetAbsoluteLeft(), 
-                    mTempForRendering.GetAbsoluteTop(), 
-                    this.GetAbsoluteRotation(), FontScale, FontScale);
+                    requiredWidth, widths, spriteRenderer, Color,
+                    absoluteLeft,
+                    absoluteTop, 
+                    this.Rotation, FontScale, FontScale);
             }
         }
 
@@ -813,23 +816,36 @@ namespace RenderingLibrary.Graphics
 
             float widthDifference = this.EffectiveWidth - mTempForRendering.Width;
 
+            Vector3 alignmentOffset = Vector3.Zero;
+
             if (this.HorizontalAlignment == Graphics.HorizontalAlignment.Center)
             {
-                mTempForRendering.X += widthDifference / 2.0f;
+                alignmentOffset.X = widthDifference / 2.0f;
             }
             else if (this.HorizontalAlignment == Graphics.HorizontalAlignment.Right)
             {
-                mTempForRendering.X += widthDifference;
+                alignmentOffset.X = widthDifference;
             }
 
             if (this.VerticalAlignment == Graphics.VerticalAlignment.Center)
             {
-                mTempForRendering.Y += (this.EffectiveHeight - mTempForRendering.Height) / 2.0f;
+                alignmentOffset.Y = (this.EffectiveHeight - mTempForRendering.Height) / 2.0f;
             }
             else if (this.VerticalAlignment == Graphics.VerticalAlignment.Bottom)
             {
-                mTempForRendering.Y += this.EffectiveHeight - mTempForRendering.Height;
+                alignmentOffset.Y = this.EffectiveHeight - mTempForRendering.Height;
             }
+
+            var absoluteRotation = this.Rotation;
+            if(absoluteRotation != 0)
+            {
+                var matrix = Matrix.CreateRotationZ(-MathHelper.ToRadians(absoluteRotation));
+
+                alignmentOffset = Vector3.Transform(alignmentOffset, matrix);
+            }
+
+            mTempForRendering.X += alignmentOffset.X;
+            mTempForRendering.Y += alignmentOffset.Y;
 
             if (this.Parent != null)
             {

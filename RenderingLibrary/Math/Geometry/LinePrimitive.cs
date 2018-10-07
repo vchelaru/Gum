@@ -172,6 +172,22 @@ namespace RenderingLibrary.Math.Geometry
                 Vector2 vector1 = mVectors[i - 1];
                 Vector2 vector2 = mVectors[i];
 
+
+                // rotation should be handled in the object creating "this"
+                //if(rotation != 0)
+                //{
+                //    var matrix = Matrix.CreateRotationZ(-MathHelper.ToRadians(rotation));
+
+                //    var new1 = vector1.X * matrix.Right + vector1.Y * matrix.Up;
+                //    var new2 = vector2.X * matrix.Right + vector2.Y * matrix.Up;
+
+                //    vector1.X = new1.X;
+                //    vector1.Y = new1.Y;
+
+                //    vector2.X = new2.X;
+                //    vector2.Y = new2.Y;
+                //}
+
                 // calculate the distance between the two vectors
                 float distance = Vector2.Distance(vector1, vector2);
 

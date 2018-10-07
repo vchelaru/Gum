@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using ToolsUtilities;
 
 namespace Gum.Managers
@@ -394,6 +395,69 @@ namespace Gum.Managers
                 }
             }
         }
+
+        public ElementSave GetContainerOf(StateSaveCategory category)
+        {
+            if(GumProjectSave != null)
+            {
+                foreach(var screen in GumProjectSave.Screens)
+                {
+                    if(screen.Categories.Contains(category))
+                    {
+                        return screen;
+                    }
+                }
+                foreach (var component in GumProjectSave.Components)
+                {
+                    if (component.Categories.Contains(category))
+                    {
+                        return component;
+                    }
+                }
+                foreach (var standardElement in GumProjectSave.StandardElements)
+                {
+                    if (standardElement.Categories.Contains(category))
+                    {
+                        return standardElement;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+
+        public ElementSave GetContainerOf(StateSave stateSave)
+        {
+            if (GumProjectSave != null)
+            {
+                foreach (var screen in GumProjectSave.Screens)
+                {
+                    if (screen.AllStates.Contains(stateSave))
+                    {
+                        return screen;
+                    }
+                }
+                foreach (var component in GumProjectSave.Components)
+                {
+                    if (component.AllStates.Contains(stateSave))
+                    {
+                        return component;
+                    }
+                }
+                foreach (var standardElement in GumProjectSave.StandardElements)
+                {
+                    if (standardElement.AllStates.Contains(stateSave))
+                    {
+                        return standardElement;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+
     }
 
 

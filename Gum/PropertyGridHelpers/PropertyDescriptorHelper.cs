@@ -70,7 +70,7 @@ namespace Gum.DataTypes.ComponentModel
         {
             InstanceSavePropertyDescriptor ppd = new InstanceSavePropertyDescriptor(
                 propertyName, propertyType, attributes);
-
+            
             ppd.TypeConverter = converter;
 
             pdc.Add(ppd);

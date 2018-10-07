@@ -119,5 +119,8 @@ using System.Runtime.InteropServices;
 //  - Added support for font smoothing to be turned on/off on automatically generated fonts.
 // 0.9.4.2
 //  - Fixed a bug with letter positioning in Text objects when using scale < 1.
-[assembly: AssemblyVersion("0.9.4.2")]
-[assembly: AssemblyFileVersion("0.9.4.2")]
+// 0.9.4.3
+//  - Renaming a category now adjusts variable names and types, eliminating possible orphan variables
+//    which will show up in the property grid with no dropdown.
+[assembly: AssemblyVersion("0.9.4.3")]
+[assembly: AssemblyFileVersion("0.9.4.3")]

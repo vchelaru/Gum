@@ -763,7 +763,7 @@ namespace Gum.Wireframe
                         break;
                 }
 
-                var matrix = this.GetRotationMatrix();
+                var matrix = this.GetAbsoluteRotationMatrix();
                 originOffset = Vector2.Transform(originOffset, matrix);
                 return toReturn + originOffset.X;
             }
@@ -802,7 +802,7 @@ namespace Gum.Wireframe
                         originOffset.Y = ((IPositionedSizedObject)this).Height;
                         break;
                 }
-                var matrix = this.GetRotationMatrix();
+                var matrix = this.GetAbsoluteRotationMatrix();
                 originOffset = Vector2.Transform(originOffset, matrix);
 
                 return toReturn + originOffset.Y;
@@ -1330,7 +1330,22 @@ namespace Gum.Wireframe
 
                     float parentWidth;
                     float parentHeight;
+
                     GetParentDimensions(out parentWidth, out parentHeight);
+
+                    float absoluteParentRotation = 0;
+
+                    if (this.Parent != null)
+                    {
+                        absoluteParentRotation = this.Parent.GetAbsoluteRotation();
+                    }
+                    else if (this.ElementGueContainingThis != null && this.ElementGueContainingThis.mContainedObjectAsIpso != null)
+                    {
+                        parentWidth = this.ElementGueContainingThis.mContainedObjectAsIpso.Width;
+                        parentHeight = this.ElementGueContainingThis.mContainedObjectAsIpso.Height;
+
+                        absoluteParentRotation = this.ElementGueContainingThis.GetAbsoluteRotation();
+                    }
 
                     if (mContainedObjectAsIpso != null)
                     {
@@ -1400,7 +1415,7 @@ namespace Gum.Wireframe
                         }
 
 
-                        UpdatePosition(parentWidth, parentHeight, xOrY);
+                        UpdatePosition(parentWidth, parentHeight, xOrY, absoluteParentRotation);
 
                         if(GetIfParentStacks() )
                         {
@@ -1415,6 +1430,67 @@ namespace Gum.Wireframe
                     if (childrenUpdateDepth > 0)
                     {
                         UpdateChildren(childrenUpdateDepth);
+
+                        var sizeDependsOnChildren = this.WidthUnits == DimensionUnitType.RelativeToChildren ||
+                            this.HeightUnits == DimensionUnitType.RelativeToChildren;
+
+                        var canOneDimensionChangeOtherDimension = false;
+
+                        if (this.mContainedObjectAsIpso == null)
+                        {
+                            foreach (var child in this.mWhatThisContains)
+                            {
+                                canOneDimensionChangeOtherDimension = child.RenderableComponent is Text ||
+                                    child.WidthUnits == DimensionUnitType.PercentageOfOtherDimension ||
+                                    child.HeightUnits == DimensionUnitType.PercentageOfOtherDimension ||
+                                    ((child.ChildrenLayout == ChildrenLayout.LeftToRightStack || 
+                                     child.ChildrenLayout == ChildrenLayout.TopToBottomStack) && child.WrapsChildren);
+
+                                if (canOneDimensionChangeOtherDimension)
+                                {
+                                    break;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            for (int i = 0; i < this.Children.Count; i++)
+                            {
+                                var uncastedChild = Children[i];
+
+                                if(uncastedChild is GraphicalUiElement)
+                                {
+                                    var child = uncastedChild as GraphicalUiElement;
+
+                                    canOneDimensionChangeOtherDimension = child.RenderableComponent is Text ||
+                                        child.WidthUnits == DimensionUnitType.PercentageOfOtherDimension ||
+                                        child.HeightUnits == DimensionUnitType.PercentageOfOtherDimension ||
+                                        ((child.ChildrenLayout == ChildrenLayout.LeftToRightStack ||
+                                         child.ChildrenLayout == ChildrenLayout.TopToBottomStack) && child.WrapsChildren);
+
+                                    if(canOneDimensionChangeOtherDimension)
+                                    {
+                                        break;
+                                    }
+
+                                }
+                            }
+                        }
+
+                        if(sizeDependsOnChildren && canOneDimensionChangeOtherDimension)
+                        {
+                            float widthBeforeSecondLayout = mContainedObjectAsIpso.Width;
+                            float heightBeforeSecondLayout = mContainedObjectAsIpso.Height;
+
+                            UpdateDimensions(parentWidth, parentHeight, xOrY);
+
+                            if ( widthBeforeSecondLayout != mContainedObjectAsIpso.Width || 
+                                heightBeforeSecondLayout != mContainedObjectAsIpso.Height)
+                            {
+                                UpdateChildren(childrenUpdateDepth);
+                            }
+
+                        }
                     }
 
                     // Eventually add more conditions here to make it fire less often
@@ -1568,25 +1644,25 @@ namespace Gum.Wireframe
                         var child = ipsoChild as GraphicalUiElement;
                         if (child.IsAllLayoutAbsolute() || onlyAbsoluteLayoutChildren == false)
                         {
-                                child.UpdateLayout(false, childrenUpdateDepth - 1);
-                            }
-                            else
+                            child.UpdateLayout(false, childrenUpdateDepth - 1);
+                        }
+                        else
+                        {
+                            // only update absolute layout, and the child has some relative values, but let's see if 
+                            // we can do only one axis:
+                            if (child.IsAllLayoutAbsolute(XOrY.X))
                             {
-                                // only update absolute layout, and the child has some relative values, but let's see if 
-                                // we can do only one axis:
-                                if (child.IsAllLayoutAbsolute(XOrY.X))
-                                {
-                                    child.UpdateLayout(false, childrenUpdateDepth - 1, XOrY.X);
-                                }
-                                else if (child.IsAllLayoutAbsolute(XOrY.Y))
-                                {
-                                    child.UpdateLayout(false, childrenUpdateDepth - 1, XOrY.Y);
-                                }
+                                child.UpdateLayout(false, childrenUpdateDepth - 1, XOrY.X);
+                            }
+                            else if (child.IsAllLayoutAbsolute(XOrY.Y))
+                            {
+                                child.UpdateLayout(false, childrenUpdateDepth - 1, XOrY.Y);
                             }
                         }
                     }
                 }
             }
+        }
 
         private void UpdateLayerScissor()
         {
@@ -1745,12 +1821,12 @@ namespace Gum.Wireframe
             }
         }
 
-        private void UpdatePosition(float parentWidth, float parentHeight, XOrY? xOrY)
+        private void UpdatePosition(float parentWidth, float parentHeight, XOrY? xOrY, float parentAbsoluteRotation)
         {
             // First get the position of the object without considering if this object should be wrapped.
             // This call may result in the object being placed outside of its parent's bounds. In which case
             // it will be wrapped....later
-            UpdatePosition(parentWidth, parentHeight, wrap: false, xOrY: xOrY);
+            UpdatePosition(parentWidth, parentHeight, wrap: false, xOrY: xOrY, parentRotation: parentAbsoluteRotation);
 
             var effectiveParent = EffectiveParentGue;
 
@@ -1769,11 +1845,11 @@ namespace Gum.Wireframe
 
             if (shouldWrap)
             {
-                UpdatePosition(parentWidth, parentHeight, wrap: true, xOrY: xOrY);
+                UpdatePosition(parentWidth, parentHeight, wrap: true, xOrY: xOrY, parentRotation: parentAbsoluteRotation);
             }
         }
 
-        private void UpdatePosition(float parentWidth, float parentHeight, bool wrap, XOrY? xOrY)
+        private void UpdatePosition(float parentWidth, float parentHeight, bool wrap, XOrY? xOrY, float parentRotation)
         {
 #if DEBUG
             if(float.IsPositiveInfinity( parentHeight ) || float.IsNegativeInfinity(parentHeight))
@@ -1825,12 +1901,29 @@ namespace Gum.Wireframe
             }
 #endif
 
+
+            Matrix matrix = Matrix.Identity;
+
+
+            unitOffsetX += parentOriginOffsetX;
             unitOffsetY += parentOriginOffsetY;
 
-            // See if we're explicitly updating only Y. If so, skip setting X.
-            if(xOrY != XOrY.Y)
+            if (parentRotation != 0)
             {
-                unitOffsetX += parentOriginOffsetX;
+                matrix = Matrix.CreateRotationZ(-MathHelper.ToRadians(parentRotation));
+
+                var rotatedOffset = unitOffsetX * matrix.Right + unitOffsetY * matrix.Up;
+
+
+                unitOffsetX = rotatedOffset.X;
+                unitOffsetY = rotatedOffset.Y;
+
+            }
+            
+
+            // See if we're explicitly updating only Y. If so, skip setting X.
+            if (xOrY != XOrY.Y)
+            {
                 this.mContainedObjectAsIpso.X = unitOffsetX;
             }
 
