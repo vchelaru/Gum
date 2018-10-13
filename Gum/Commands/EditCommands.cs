@@ -299,5 +299,97 @@ namespace Gum.Commands
 
         #endregion
 
+        #region Component
+
+
+        public void DuplicateSelectedElement()
+        {
+            var element = SelectedState.Self.SelectedElement;
+
+            if (element == null)
+            {
+                MessageBox.Show("You must first save the project before adding a new component");
+            }
+            else if (element is StandardElementSave)
+            {
+                MessageBox.Show("Standard Elements cannot be duplicated");
+            }
+            else if (element is ScreenSave)
+            {
+                TextInputWindow tiw = new TextInputWindow();
+                tiw.Message = "Enter new Component name:";
+
+                // todo - handle folders... do we support folders?
+
+                tiw.Result = element.Name + "Copy";
+
+                if (tiw.ShowDialog() == DialogResult.OK)
+                {
+                    string name = tiw.Result;
+
+                    string whyNotValid;
+
+                    NameVerifier.Self.IsScreenNameValid(tiw.Result, null, out whyNotValid);
+
+                    if (string.IsNullOrEmpty(whyNotValid))
+                    {
+                        var newScreen = (element as ScreenSave).Clone();
+                        newScreen.Name = name;
+                        newScreen.Initialize(null);
+
+                        ProjectCommands.Self.AddScreen(newScreen);
+                    }
+                    else
+                    {
+                        MessageBox.Show($"Invalid name for new screen: {whyNotValid}");
+                    }
+                }
+            }
+            else if (element is ComponentSave)
+            {
+                TextInputWindow tiw = new TextInputWindow();
+                tiw.Message = "Enter new Component name:";
+
+                FilePath filePath = element.Name;
+                var nameWithoutPath = filePath.FileNameNoPath;
+
+                string folder = null;
+                if(element.Name.Contains("/"))
+                {
+                    folder = element.Name.Substring(0, element.Name.LastIndexOf('/'));
+                }
+
+                tiw.Result = nameWithoutPath + "Copy";
+
+                if (tiw.ShowDialog() == DialogResult.OK)
+                {
+                    string name = tiw.Result;
+
+                    string whyNotValid;
+                    NameVerifier.Self.IsComponentNameValid(tiw.Result, folder, null, out whyNotValid);
+
+                    if (string.IsNullOrEmpty(whyNotValid))
+                    {
+                        var newComponent = (element as ComponentSave).Clone();
+                        if(!string.IsNullOrEmpty(folder))
+                        {
+                            folder += "/";
+                        }
+                        newComponent.Name = folder + name;
+                        newComponent.Initialize(null);
+
+                        ProjectCommands.Self.AddComponent(newComponent);
+                    }
+                    else
+                    {
+                        MessageBox.Show($"Invalid name for new component: {whyNotValid}");
+                    }
+                }
+            }
+
+        }
+
+        #endregion
+
     }
 }

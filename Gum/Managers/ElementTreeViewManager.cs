@@ -569,13 +569,17 @@ namespace Gum.Managers
 
             #endregion
 
-            mScreensTreeNode.Nodes.SortByName();
+            #region Sort everything
 
-            mComponentsTreeNode.Nodes.SortByName();
+            mScreensTreeNode.Nodes.SortByName(recursive:true);
 
-            mStandardElementsTreeNode.Nodes.SortByName();
+            mComponentsTreeNode.Nodes.SortByName(recursive: true);
 
-            mBehaviorsTreeNode.Nodes.SortByName();
+            mStandardElementsTreeNode.Nodes.SortByName(recursive: true);
+
+            mBehaviorsTreeNode.Nodes.SortByName(recursive: true);
+
+            #endregion
 
             #region Re-select whatever was selected before
 
@@ -604,7 +608,7 @@ namespace Gum.Managers
                 treeNode.ImageIndex = defaultImageIndex;
 
             treeNode.Tag = element;
-
+            
             parentNode.Nodes.Add(treeNode);
         }
 
@@ -1254,7 +1258,7 @@ namespace Gum.Managers
                 (treeNode.Parent.IsComponentsFolderTreeNode() || treeNode.Parent.IsTopComponentContainerTreeNode());
         }
 
-        public static void SortByName(this TreeNodeCollection treeNodeCollection)
+        public static void SortByName(this TreeNodeCollection treeNodeCollection, bool recursive = false)
         {
             int lastObjectExclusive = treeNodeCollection.Count;
             int whereObjectBelongs;
@@ -1291,6 +1295,18 @@ namespace Gum.Managers
                             treeNodeCollection.Insert(0, treeNode);
                             break;
                         }
+                    }
+                }
+            }
+
+            if(recursive)
+            {
+                foreach(var node in treeNodeCollection)
+                {
+                    var asTreeNode = node as TreeNode;
+                    if(asTreeNode != null)
+                    {
+                        asTreeNode.Nodes.SortByName(recursive);
                     }
                 }
             }

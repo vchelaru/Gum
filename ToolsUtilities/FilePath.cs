@@ -9,7 +9,11 @@ namespace ToolsUtilities
     {
         #region Fields
 
-        string original;
+        public string Original
+        {
+            get;
+            private set;
+        }
 
         #endregion
 
@@ -39,7 +43,7 @@ namespace ToolsUtilities
         {
             get
             {
-                return FileManager.GetExtension(original);
+                return FileManager.GetExtension(Original);
             }
         }
 
@@ -55,7 +59,7 @@ namespace ToolsUtilities
         {
             get
             {
-                return FileManager.RemovePath(original);
+                return FileManager.RemovePath(Original);
             }
         }
 
@@ -63,7 +67,7 @@ namespace ToolsUtilities
         {
             get
             {
-                return FileManager.RemoveDotDotSlash(FileManager.Standardize(original, preserveCase: true, makeAbsolute: true));
+                return FileManager.RemoveDotDotSlash(FileManager.Standardize(Original, preserveCase: true, makeAbsolute: true));
             }
 
         }
@@ -72,13 +76,13 @@ namespace ToolsUtilities
         {
             get
             {
-                if(string.IsNullOrEmpty(original))
+                if(string.IsNullOrEmpty(Original))
                 {
                     return FileManager.RemoveDotDotSlash(FileManager.Standardize("", preserveCase: false, makeAbsolute: true));
                 }
                 else
                 {
-                    return FileManager.RemoveDotDotSlash( FileManager.Standardize(original, preserveCase: false, makeAbsolute: true));
+                    return FileManager.RemoveDotDotSlash( FileManager.Standardize(Original, preserveCase: false, makeAbsolute: true));
                 }
             }
         }
@@ -87,7 +91,7 @@ namespace ToolsUtilities
         {
             get
             {
-                return FileManager.RemoveDotDotSlash(FileManager.Standardize(original, preserveCase: true, makeAbsolute: true));
+                return FileManager.RemoveDotDotSlash(FileManager.Standardize(Original, preserveCase: true, makeAbsolute: true));
             }
         }
 
@@ -95,7 +99,7 @@ namespace ToolsUtilities
 
         public FilePath(string path)
         {
-            original = path;
+            Original = path;
         }
 
         public override bool Equals(object obj)
@@ -107,7 +111,7 @@ namespace ToolsUtilities
 
         public FilePath GetDirectoryContainingThis()
         {
-            return FileManager.GetDirectory(this.Standardized);
+            return FileManager.GetDirectory(this.StandardizedCaseSensitive);
         }
 
         public override int GetHashCode()
@@ -124,7 +128,7 @@ namespace ToolsUtilities
 
         public FilePath RemoveExtension()
         {
-            var fileString = FileManager.RemoveExtension(original);
+            var fileString = FileManager.RemoveExtension(Original);
 
             return fileString;
         }

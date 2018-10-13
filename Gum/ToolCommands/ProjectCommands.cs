@@ -162,13 +162,14 @@ namespace Gum.ToolCommands
             }
         }
 
-        public void AddComponent(string componentName, string folder)
+        public ComponentSave AddComponent(string componentName, string folder)
         {
             string whyNotValid;
 
             if (!NameVerifier.Self.IsComponentNameValid(componentName, folder, null, out whyNotValid))
             {
                 MessageBox.Show(whyNotValid);
+                return null;
             }
             else
             {
@@ -176,6 +177,7 @@ namespace Gum.ToolCommands
                 PrepareNewComponentSave(componentSave, folder + componentName);
 
                 AddComponent(componentSave);
+                return componentSave;
             }
         }
 

@@ -18,9 +18,9 @@ namespace Gum.DataTypes
             get { return ElementReference.ScreenSubfolder; }
         }
 
-        public ElementSave Clone()
+        public ScreenSave Clone()
         {
-            ElementSave cloned = FileManager.CloneSaveObject(this);
+            var cloned = FileManager.CloneSaveObject(this);
             return cloned;
 
         }

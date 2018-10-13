@@ -37,6 +37,8 @@ namespace Gum.Managers
 
         ToolStripMenuItem mAddFolder;
 
+        ToolStripMenuItem duplicateElement;
+
         #endregion
 
         #region Initialize and event handlers
@@ -78,6 +80,10 @@ namespace Gum.Managers
             mDeleteObject = new ToolStripMenuItem();
             mDeleteObject.Text = "Delete";
             mDeleteObject.Click += HandleDeleteObjectClick;
+
+            duplicateElement = new ToolStripMenuItem();
+            duplicateElement.Text = "To Be Replaced...";
+            duplicateElement.Click += HandleDuplicateElementClick;
         }
 
 
@@ -85,6 +91,15 @@ namespace Gum.Managers
         void HandleDeleteObjectClick(object sender, EventArgs e)
         {
             DeleteLogic.Self.HandleDelete();
+        }
+
+        void HandleDuplicateElementClick(object sender, EventArgs e)
+        {
+            if(SelectedState.Self.SelectedScreen != null ||
+                SelectedState.Self.SelectedComponent != null)
+            {
+                GumCommands.Self.Edit.DuplicateSelectedElement();
+            }
         }
 
         void OnGoToDefinitionClick(object sender, EventArgs e)
@@ -254,6 +269,16 @@ namespace Gum.Managers
 
                     mDeleteObject.Text = "Delete " + SelectedState.Self.SelectedElement.ToString();
                     mMenuStrip.Items.Add(mDeleteObject);
+
+                    if(SelectedState.Self.SelectedScreen != null)
+                    {
+                        duplicateElement.Text = $"Duplicate {SelectedState.Self.SelectedScreen.Name}";
+                    }
+                    else
+                    {
+                        duplicateElement.Text = $"Duplicate {SelectedState.Self.SelectedComponent.Name}";
+                    }
+                    mMenuStrip.Items.Add(duplicateElement);
                 }
                 else if(SelectedState.Self.SelectedBehavior != null)
                 {

@@ -31,5 +31,20 @@ namespace Gum.DataTypes.Variables
         {
             return Name;
         }
+
+        public StateSaveCategory Clone()
+        {
+            var toReturn = new StateSaveCategory();
+
+            toReturn.Name = this.Name;
+
+            foreach(var state in this.States)
+            {
+                var clone = state.Clone();
+                toReturn.States.Add(clone);
+            }
+
+            return toReturn;
+        }
     }
 }
