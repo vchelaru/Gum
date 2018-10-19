@@ -123,7 +123,7 @@ namespace Gum.Managers
                             return itemAsNode.Tag is StateSave && (itemAsNode.Tag as StateSave).Name == "Default";
                         }) as TreeNode;
 
-                    selectedObject = newlySelectedNode.Tag;
+                    selectedObject = newlySelectedNode?.Tag;
                     mTreeView.SelectedNode = newlySelectedNode;
                 }
             }

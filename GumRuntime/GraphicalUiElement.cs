@@ -3511,7 +3511,14 @@ namespace Gum.Wireframe
                     // We used to check if the file exists. But internally something may
                     // alias a file. Ultimately the content loader should make that decision,
                     // not the GUE
-                    sprite.Texture = global::RenderingLibrary.Content.LoaderManager.Self.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(valueAsString);
+                    try
+                    {
+                        sprite.Texture = global::RenderingLibrary.Content.LoaderManager.Self.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(valueAsString);
+                    }
+                    catch(System.IO.FileNotFoundException)
+                    {
+                        sprite.Texture = null;
+                    }
                     UpdateLayout();
                 }
             }

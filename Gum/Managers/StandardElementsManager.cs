@@ -112,6 +112,22 @@ namespace Gum.Managers
 
         public void Initialize()
         {
+            RefreshDefaults();
+
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            //                                                    Events                                                          //
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+            mStandardEvents.Add("Click");
+            mStandardEvents.Add("RollOn");
+            mStandardEvents.Add("RollOver");
+            mStandardEvents.Add("RollOff");
+
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        }
+
+        public void RefreshDefaults()
+        {
             mDefaults = new Dictionary<string, StateSave>();
 
             // Eventually this would get read from somewhere like an XML file
@@ -190,7 +206,7 @@ namespace Gum.Managers
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0.0f, Name = "Texture Height Scale", Category = "Source" });
 
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "Wrap", Category = "Source" });
-                
+
                 AddColorVariables(stateSave);
 
                 AddEventVariables(stateSave);
@@ -442,23 +458,6 @@ namespace Gum.Managers
             //        variable.SetsValue = true;
             //    }
             //}
-
-
-
-
-
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            //                                                    Events                                                          //
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-            mStandardEvents.Add("Click");
-            mStandardEvents.Add("RollOn");
-            mStandardEvents.Add("RollOver");
-            mStandardEvents.Add("RollOff");
-
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
         }
 
         private void AddEventVariables(StateSave stateSave, bool defaultHasEvents = false)

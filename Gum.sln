@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.23107.0
+# Visual Studio 15
+VisualStudioVersion = 15.0.27703.2047
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gum", "Gum\Gum.csproj", "{121AC5A5-8F6A-42B2-8863-DEBC45B052BC}"
 EndProject
@@ -150,5 +150,8 @@ Global
 		{991D5E91-45C6-44DE-AA07-9A3FF695AB9E} = {28BBCA70-AFC9-4C9B-9114-E0E23FA01C3F}
 		{8D388562-F5F6-4000-9489-33761112B974} = {28BBCA70-AFC9-4C9B-9114-E0E23FA01C3F}
 		{47241002-7EB5-433B-B931-A530BB6B84EE} = {20FE6025-9144-4FFB-9F0E-97947EF3F7F0}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {691B2E2F-58CB-4FD2-8480-695E8DE0CCE2}
 	EndGlobalSection
 EndGlobal

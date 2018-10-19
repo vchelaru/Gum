@@ -1,5 +1,6 @@
 ﻿using Gum.Converters;
 using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using Gum.ToolStates;
 using InputLibrary;
 using Microsoft.Xna.Framework;
@@ -13,6 +14,9 @@ namespace Gum.Wireframe
 {
     public class GrabbedInitialState
     {
+
+        public StateSave StateSave { get; private set; }
+
         public XOrY AxisMovedFurthestAlong
         {
             get
@@ -43,13 +47,27 @@ namespace Gum.Wireframe
             set;
         }
 
+        /// <summary>
+        /// The X and Y of the selected component when grabbed. This is the effective position as opposed to the value stored in the selected state
+        /// </summary>
         public Vector2 ComponentPosition
         {
             get;
             private set;
-
         }
+        public Vector2 ComponentSize
+        {
+            get;
+            private set;
+        }
+
         public Dictionary<InstanceSave, Vector2> InstancePositions
+        {
+            get;
+            private set;
+        } = new Dictionary<InstanceSave, Vector2>();
+
+        public Dictionary<InstanceSave, Vector2> InstanceSizes
         {
             get;
             private set;
@@ -90,22 +108,29 @@ namespace Gum.Wireframe
         private void RecordInitialPositions()
         {
             InstancePositions.Clear();
-            if(SelectedState.Self.SelectedInstances.Count() == 0 && SelectedState.Self.SelectedElement != null)
-            {
-                var ipso = WireframeObjectManager.Self.GetRepresentation(SelectedState.Self.SelectedElement);
+            InstanceSizes.Clear();
 
-                ComponentPosition = new Vector2(ipso.X, ipso.Y);
+            StateSave = SelectedState.Self.SelectedStateSave.Clone();
+
+            if (SelectedState.Self.SelectedInstances.Count() == 0 && SelectedState.Self.SelectedElement != null)
+            {
+                var graphicalUiElement = WireframeObjectManager.Self.GetRepresentation(SelectedState.Self.SelectedElement);
+
+                ComponentPosition = new Vector2(graphicalUiElement.X, graphicalUiElement.Y);
+                ComponentSize = new Vector2(graphicalUiElement.Width, graphicalUiElement.Height);
             }
             else if(SelectedState.Self.SelectedInstances.Count() != 0)
             {
                 foreach(var instance in SelectedState.Self.SelectedInstances)
                 {
-                    var ipso = WireframeObjectManager.Self.GetRepresentation(instance);
+                    var instanceGue = WireframeObjectManager.Self.GetRepresentation(instance);
 
-                    if(ipso != null)
+                    if(instanceGue != null)
                     {
                         InstancePositions.Add(instance,
-                            new Vector2(ipso.X, ipso.Y));
+                            new Vector2(instanceGue.X, instanceGue.Y));
+                        InstanceSizes.Add(instance,
+                            new Vector2(instanceGue.Width, instanceGue.Height));
                     }
 
                 }

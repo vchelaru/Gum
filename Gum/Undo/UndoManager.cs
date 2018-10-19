@@ -96,7 +96,8 @@ namespace Gum.Undo
                 bool doTypesDiffer = mRecordedElementSave.BaseType != selectedElement.BaseType;
                 bool doNamesDiffer = mRecordedElementSave.Name != selectedElement.Name;
 
-                if (doStatesDiffer || doInstanceListsDiffer || doTypesDiffer || doNamesDiffer)
+                bool didAnythingChange = doStatesDiffer || doStateCategoriesDiffer || doInstanceListsDiffer || doTypesDiffer || doNamesDiffer;
+                if (didAnythingChange)
                 {
                     if (mUndos.ContainsKey(SelectedState.Self.SelectedElement) == false)
                     {

@@ -38,3 +38,6 @@ GumCore/GumCoreXnaPc/GumCoreUwp/obj/
 GumCore/GumCoreXnaPc/GumCoreUwp/bin/Debug/
 GumCore/GumCoreXnaPc/GumCoreUwp/bin/
 *.user
+GluePlugin/obj/
+GluePlugin/bin/Debug/Plugins/readme.txt
+GluePlugin/bin/

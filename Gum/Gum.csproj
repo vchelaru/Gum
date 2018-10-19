@@ -543,6 +543,9 @@
     <None Include="Content\Icons\WidthUnits\PercentageOfFileWidth.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="Content\Icons\Units\PixelsFromCenterYInverted.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <Content Include="Libraries\TargaImage.dll" />
     <Content Include="Libraries\TargaImage.xml" />
     <None Include="Content\InvalidTexture.png">

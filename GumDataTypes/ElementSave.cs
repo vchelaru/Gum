@@ -97,6 +97,10 @@ namespace Gum.DataTypes
             set;
         }
 
+        /// <summary>
+        /// Returns all states in the element including categorized states. For uncategorized states, see
+        /// the States property.
+        /// </summary>
         [XmlIgnore]
         public IEnumerable<StateSave> AllStates
         {

@@ -28,6 +28,10 @@ namespace Gum.Controls
                 BitmapImage pixelsFromCenterBitmap =
                     CreateBitmapFromFile("Content/Icons/Units/PixelsFromCenterY.png");
 
+                BitmapImage pixelsFromCenterYInvertedBitmap =
+                    CreateBitmapFromFile("Content/Icons/Units/PixelsFromCenterYInverted.png");
+
+
                 BitmapImage pixelsFromBottomBitmap =
                     CreateBitmapFromFile("Content/Icons/Units/PixelsFromBottom.png");
 
@@ -45,6 +49,12 @@ namespace Gum.Controls
                         Name = "Pixels From Center",
                         Value = PositionUnitType.PixelsFromCenterY,
                         Image = pixelsFromCenterBitmap
+                    },
+                    new Option
+                    {
+                        Name = "Pixels From Center Y Inverted",
+                        Value = PositionUnitType.PixelsFromCenterYInverted,
+                        Image = pixelsFromCenterYInvertedBitmap
                     },
                     new Option
                     {

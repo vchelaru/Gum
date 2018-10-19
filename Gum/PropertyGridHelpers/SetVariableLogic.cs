@@ -135,7 +135,7 @@ namespace Gum.PropertyGridHelpers
             {
                 ElementSave asElementSave = s as ElementSave;
 
-                asElementSave.ReactToChangedBaseType(SelectedState.Self.SelectedInstance, oldValue.ToString());
+                asElementSave.ReactToChangedBaseType(SelectedState.Self.SelectedInstance, oldValue?.ToString());
             }
         }
 

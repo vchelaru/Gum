@@ -26,6 +26,7 @@ using Gum.Plugins.VariableGrid;
 using Gum.DataTypes.Behaviors;
 using Gum.Controls;
 using WpfDataUi.Controls;
+using System.ComponentModel;
 
 namespace Gum.Managers
 {
@@ -441,6 +442,13 @@ namespace Gum.Managers
             var properties = mPropertyGridDisplayer.GetProperties(null);
             foreach (InstanceSavePropertyDescriptor propertyDescriptor in properties)
             {
+                // early continue
+                var isMarkedAsNotBrowsable = (propertyDescriptor.Attributes[typeof(BrowsableAttribute)] as BrowsableAttribute).Browsable == false;
+                if(isMarkedAsNotBrowsable)
+                {
+                    continue;
+                }
+                    
                 StateReferencingInstanceMember srim;
 
                 if (instance != null)

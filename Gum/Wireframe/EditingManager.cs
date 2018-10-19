@@ -17,6 +17,7 @@ using Gum.RenderingLibrary;
 using RenderingLibrary.Math;
 using Microsoft.Xna.Framework;
 using Gum.PropertyGridHelpers;
+using Gum.Plugins;
 
 namespace Gum.Wireframe
 {
@@ -119,7 +120,6 @@ namespace Gum.Wireframe
 
             if (cursor.PrimaryClick && mHasChangedAnythingSinceLastPush)
             {
-
                 bool isShiftDown = GetIsShiftDown();
 
                 // If the user resized with a shift, then released, we don't want to apply this, because they are not doing axis constrained movement
@@ -128,10 +128,13 @@ namespace Gum.Wireframe
                     var axis = grabbedInitialState.AxisMovedFurthestAlong;
 
                     bool isElementSelected = SelectedState.Self.SelectedInstances.Count() == 0 &&
-                            (SelectedState.Self.SelectedComponent != null || SelectedState.Self.SelectedStandardElement != null);
+                        // check specifically for components or standard elements, since Screens can't be moved
+                             (SelectedState.Self.SelectedComponent != null || SelectedState.Self.SelectedStandardElement != null);
+
 
                     if (axis == XOrY.X)
                     {
+                        // If the X axis is the furthest-moved, set the Y values back to what they were.
                         if (isElementSelected)
                         {
                             SelectedState.Self.SelectedStateSave.SetValue("Y", grabbedInitialState.ComponentPosition.Y, null, "float");
@@ -146,9 +149,10 @@ namespace Gum.Wireframe
                     }
                     else
                     {
+                        // If the Y axis is the furthest-moved, set the X values back to what they were.
                         if (isElementSelected)
                         {
-                            SelectedState.Self.SelectedStateSave.SetValue("X", grabbedInitialState.ComponentPosition.Y, null, "float");
+                            SelectedState.Self.SelectedStateSave.SetValue("X", grabbedInitialState.ComponentPosition.X, null, "float");
                         }
                         else
                         {
@@ -169,10 +173,81 @@ namespace Gum.Wireframe
                 }
             }
 
-            if (cursor.PrimaryClick && mHasChangedAnythingSinceLastPush && ProjectManager.Self.GeneralSettingsFile.AutoSave)
+            if (cursor.PrimaryClick && mHasChangedAnythingSinceLastPush )
             {
-                ProjectManager.Self.SaveElement(SelectedState.Self.SelectedElement);
+                var selectedElement = SelectedState.Self.SelectedElement;
+
+                if(ProjectManager.Self.GeneralSettingsFile.AutoSave)
+                {
+                    ProjectManager.Self.SaveElement(selectedElement);
+                }
+
+
+                var stateSave = SelectedState.Self.SelectedStateSave;
+
+                var element = SelectedState.Self.SelectedElement;
+
+                foreach(var newVariable in stateSave.Variables)
+                {
+                    var oldValue = grabbedInitialState.StateSave.GetValue(newVariable.Name);
+
+                    if(DoValuesDiffer(stateSave, newVariable.Name, oldValue))
+                    {
+                        // report this:
+                        if(!string.IsNullOrEmpty(newVariable.SourceObject ))
+                        {
+                            var instance = element.GetInstance(newVariable.SourceObject);
+                            PluginManager.Self.VariableSet(element, instance, newVariable.GetRootName(), oldValue);
+                        }
+                        else
+                        {
+                            PluginManager.Self.VariableSet(element, null, newVariable.GetRootName(), oldValue);
+                        }
+                    }
+                }
+
                 mHasChangedAnythingSinceLastPush = false;
+            }
+        }
+
+        bool DoValuesDiffer(StateSave newStateSave, string variableName, object oldValue)
+        {
+            var newValue = newStateSave.GetValue(variableName);
+            if(newValue == null && oldValue != null)
+            {
+                return true;
+            }
+            if(newValue != null && oldValue == null)
+            {
+                return true;
+            }
+            if(newValue == null && oldValue == null)
+            {
+                return false;
+            }
+            // neither are null
+            else
+            {
+                if(oldValue is float)
+                {
+                    var oldFloat = (float)oldValue;
+                    var newFloat = (float)newValue;
+
+                    return oldFloat != newFloat;
+                }
+                else if(oldValue is string)
+                {
+                    return (string)oldValue != (string)newValue;
+                }
+                else if(oldValue is bool)
+                {
+                    return (bool)oldValue != (bool)newValue;
+                }
+                else
+                {
+                    int m = 3;
+                    return false;
+                }
             }
         }
 

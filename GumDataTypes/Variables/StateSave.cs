@@ -217,20 +217,22 @@ namespace Gum.DataTypes.Variables
             }
         }
 
-        public void SetValue(string variableName, object valueToSet, string variableType)
+        public VariableSave SetValue(string variableName, object valueToSet, string variableType)
         {
-            VariableSave variableState = GetVariableSave(variableName);
+            VariableSave variableSave = GetVariableSave(variableName);
 
-            if(variableState == null)
+            if(variableSave == null)
             {
-                variableState = new VariableSave();
-                variableState.Name = variableName;
-                variableState.Type = variableType;
-                this.Variables.Add(variableState);
+                variableSave = new VariableSave();
+                variableSave.Name = variableName;
+                variableSave.Type = variableType;
+                this.Variables.Add(variableSave);
             }
 
-            variableState.Value = valueToSet;
-            variableState.SetsValue = true;
+            variableSave.Value = valueToSet;
+            variableSave.SetsValue = true;
+
+            return variableSave;
         }
 
         public override string ToString()
