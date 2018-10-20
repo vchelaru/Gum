@@ -17,6 +17,7 @@ namespace GluePlugin.Logic
 
             CustomizeSprite();
 
+            CustomizeContainer();
         }
 
         private void CustomizeRectangle()
@@ -65,8 +66,21 @@ namespace GluePlugin.Logic
             circleDefaultValues.GetVariableSave("Y").IsHiddenInPropertyGrid = false;
             circleDefaultValues.GetVariableSave("Radius").IsHiddenInPropertyGrid = false;
             circleDefaultValues.GetVariableSave("Visible").IsHiddenInPropertyGrid = false;
+        }
 
+        private void CustomizeContainer()
+        {
+            var containerDefaultValues = StandardElementsManager.Self.DefaultStates["Container"];
 
+            foreach (var variable in containerDefaultValues.Variables)
+            {
+                variable.IsHiddenInPropertyGrid = true;
+            }
+
+            containerDefaultValues.GetVariableSave("X").IsHiddenInPropertyGrid = false;
+            containerDefaultValues.GetVariableSave("Y").IsHiddenInPropertyGrid = false;
+            containerDefaultValues.GetVariableSave("Visible").IsHiddenInPropertyGrid = false;
+            // entities don't have width/height so don't let them edit it...
         }
 
     }

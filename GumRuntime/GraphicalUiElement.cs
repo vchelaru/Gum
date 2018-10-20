@@ -1124,6 +1124,13 @@ namespace Gum.Wireframe
                     return 0;
                 }
                 float smallEdge = positionValue;
+
+                var units = mYUnits;
+                if(units == GeneralUnitType.PixelsFromMiddleInverted)
+                {
+                    smallEdge *= -1;
+                }
+
                 if (mYOrigin == VerticalAlignment.Center)
                 {
                     smallEdge = positionValue - ((IPositionedSizedObject)this).Height / 2.0f;
@@ -1143,7 +1150,6 @@ namespace Gum.Wireframe
                     bigEdge = positionValue + ((IPositionedSizedObject)this).Height;
                 }
 
-                var units = mYUnits;
                 float dimensionToReturn = GetDimensionFromEdges(smallEdge, bigEdge, units);
 
                 return dimensionToReturn;
@@ -1168,13 +1174,15 @@ namespace Gum.Wireframe
         {
             float dimensionToReturn = 0;
             if (units == GeneralUnitType.PixelsFromSmall)
+                // The value already comes in properly inverted
             {
                 smallEdge = 0;
 
                 bigEdge = System.Math.Max(0, bigEdge);
                 dimensionToReturn = bigEdge - smallEdge;
             }
-            else if (units == GeneralUnitType.PixelsFromMiddle)
+            else if (units == GeneralUnitType.PixelsFromMiddle ||
+                units == GeneralUnitType.PixelsFromMiddleInverted)
             {
                 // use the full width
                 float abs1 = System.Math.Abs(smallEdge);

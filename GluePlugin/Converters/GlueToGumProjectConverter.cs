@@ -106,6 +106,16 @@ namespace GluePlugin.Converters
             component.Name = entitySave.Name.Substring(
                 "Entities\\".Length);
 
+            component.DefaultState.SetValue("Width", 
+                0.0f, "float");
+            component.DefaultState.SetValue("Height", 
+                0.0f, "float");
+
+            component.DefaultState.SetValue("Width Units", 
+                DimensionUnitType.RelativeToChildren, nameof(DimensionUnitType));
+            component.DefaultState.SetValue("Height Units", 
+                DimensionUnitType.RelativeToChildren, nameof(DimensionUnitType));
+
             AddInstances(entitySave, component);
 
             return component;
@@ -309,6 +319,12 @@ namespace GluePlugin.Converters
                         case "Sprite":
                             gumType = "Sprite";
                             break;
+                    }
+                    break;
+                case SourceType.Entity:
+                    if(namedObject.SourceClassType?.StartsWith("Entities\\") == true)
+                    {
+                        gumType = namedObject.SourceClassType.Substring("Entities\\".Length);
                     }
                     break;
             }
