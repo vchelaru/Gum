@@ -75,18 +75,13 @@ namespace TextureCoordinateSelectionPlugin
 
         private void RefreshControl()
         {
-            var treeNode = SelectedState.Self.SelectedTreeNode;
+            Texture2D textureToAssign = GetTextureToAssign();
 
-            if (treeNode?.IsInstanceTreeNode() == true)
-            {
-                HandleInstanceSelected(SelectedState.Self.SelectedInstance);
-            }
-            else
-            {
-                control.CurrentTexture = null;
-                Logic.ControlLogic.Self.RefreshSelector(control);
-                Logic.ControlLogic.Self.RefreshOutline(control, ref textureOutlineRectangle);
-            }
+            control.CurrentTexture = textureToAssign;
+
+            Logic.ControlLogic.Self.RefreshSelector(control);
+
+            Logic.ControlLogic.Self.RefreshOutline(control, ref textureOutlineRectangle);
         }
 
         private void HandleVariableSet(ElementSave element, InstanceSave instance, string variableName, object oldValue)
@@ -99,7 +94,9 @@ namespace TextureCoordinateSelectionPlugin
             }
         }
 
-        private void HandleInstanceSelected(Gum.DataTypes.InstanceSave instance)
+
+
+        private static Texture2D GetTextureToAssign()
         {
             var graphicalUiElement = SelectedState.Self.SelectedIpso as GraphicalUiElement;
 
@@ -132,23 +129,19 @@ namespace TextureCoordinateSelectionPlugin
                         nineSlice.BottomTexture == nineSlice.CenterTexture &&
                         nineSlice.BottomRightTexture == nineSlice.CenterTexture;
 
-                    if(isUsingSameTextures)
+                    if (isUsingSameTextures)
                     {
                         textureToAssign = nineSlice.CenterTexture;
                     }
                 }
             }
 
-            if(textureToAssign?.IsDisposed == true)
+            if (textureToAssign?.IsDisposed == true)
             {
                 textureToAssign = null;
             }
 
-            control.CurrentTexture = textureToAssign;
-
-            Logic.ControlLogic.Self.RefreshSelector(control);
-
-            Logic.ControlLogic.Self.RefreshOutline(control, ref textureOutlineRectangle);
+            return textureToAssign;
         }
     }
 }

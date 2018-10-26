@@ -67,12 +67,17 @@ namespace TextureCoordinateSelectionPlugin.Logic
                 graphicalUiElement.TextureHeight = MathFunctions.RoundToInt(selector.Height);
 
                 var state = SelectedState.Self.SelectedStateSave;
-                var instance = SelectedState.Self.SelectedInstance;
+                var instancePrefix = SelectedState.Self.SelectedInstance?.Name;
 
-                state.SetValue($"{instance.Name}.Texture Left", graphicalUiElement.TextureLeft, "int");
-                state.SetValue($"{instance.Name}.Texture Top", graphicalUiElement.TextureTop, "int");
-                state.SetValue($"{instance.Name}.Texture Width", graphicalUiElement.TextureWidth, "int");
-                state.SetValue($"{instance.Name}.Texture Height", graphicalUiElement.TextureHeight, "int");
+                if (!string.IsNullOrEmpty(instancePrefix))
+                {
+                    instancePrefix += ".";
+                }
+
+                state.SetValue($"{instancePrefix}Texture Left", graphicalUiElement.TextureLeft, "int");
+                state.SetValue($"{instancePrefix}Texture Top", graphicalUiElement.TextureTop, "int");
+                state.SetValue($"{instancePrefix}Texture Width", graphicalUiElement.TextureWidth, "int");
+                state.SetValue($"{instancePrefix}Texture Height", graphicalUiElement.TextureHeight, "int");
 
                 GumCommands.Self.GuiCommands.RefreshPropertyGridValues();
             }
