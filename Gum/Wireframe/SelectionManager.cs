@@ -306,17 +306,21 @@ namespace Gum.Wireframe
         {
             try
             {
-                if (Cursor.IsInWindow && SelectedState.Self.SelectedElement != null)
+                // Always check this even if the cursor isn't over the window because other windows (like
+                // the texture coordinate seleciton plugin window) can change the texture coordinates and we
+                // want the highlight to update:
+                //if (Cursor.IsInWindow && SelectedState.Self.SelectedElement != null)
+                if (SelectedState.Self.SelectedElement != null)
                 {
                     HighlightActivity(container);
 
                     SelectionActivity();
                 }
-                else if (!Cursor.IsInWindow)
-                {
+                //else if (!Cursor.IsInWindow)
+                //{
                     // the element view window can also highlight, so we don't want to do this:
                     //HighlightedIpso = null;
-                }
+                //}
             }
             catch (Exception e)
             {
@@ -408,20 +412,25 @@ namespace Gum.Wireframe
                 }
 
 
-                // We don't want to show the highlight when the user is performing some kind of editing.
-                // Therefore make sure the cursor isn't down.
-                if (representationOver != null && Cursor.PrimaryDown == false)
-                {
-                    HighlightedIpso = representationOver;
-                }
-                else
-                {
-                    HighlightedIpso = null;
-                }
 
-                Cursor.SetWinformsCursor(cursorToSet);
+                // We used to not check this, but we have to now because the cursor might be 
+                if(Cursor.IsInWindow)
+                {
+                    Cursor.SetWinformsCursor(cursorToSet);
+
+                    // We don't want to show the highlight when the user is performing some kind of editing.
+                    // Therefore make sure the cursor isn't down.
+                    if (representationOver != null && Cursor.PrimaryDown == false)
+                    {
+                        HighlightedIpso = representationOver;
+                    }
+                    else
+                    {
+                        HighlightedIpso = null;
+                    }
+                }
             }
-            else if(InputLibrary.Cursor.Self.PrimaryDown)
+            else if(InputLibrary.Cursor.Self.PrimaryDown && Cursor.IsInWindow)
             {
                 // We only want to hide it if the user is holding the cursor down over the wireframe window.
                 HighlightedIpso = null;

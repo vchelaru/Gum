@@ -13,6 +13,7 @@ using ToolsUtilities;
 using Gum.Events;
 using Gum.Wireframe;
 using Gum.DataTypes.Behaviors;
+using Gum.Plugins;
 
 namespace Gum.Managers
 {
@@ -987,6 +988,8 @@ namespace Gum.Managers
             {
                 SelectedState.Self.UpdateToSelectedBehavior();
             }
+
+            PluginManager.Self.TreeNodeSelected(selectedTreeNode);
         }
 
 

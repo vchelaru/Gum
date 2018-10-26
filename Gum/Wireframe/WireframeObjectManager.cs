@@ -17,6 +17,7 @@ using Microsoft.Xna.Framework;
 using FlatRedBall.AnimationEditorForms.Controls;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Gum.Plugins;
 
 namespace Gum.Wireframe
 {
@@ -197,9 +198,11 @@ namespace Gum.Wireframe
             SelectionManager.Self.Refresh();
 
             mWireframeControl.UpdateToProject();
+
+            PluginManager.Self.WireframeRefreshed();
         }
 
-        public void RefreshAll(bool forceLayout, bool forceReloadTextures, ElementSave elementSave)
+        private void RefreshAll(bool forceLayout, bool forceReloadTextures, ElementSave elementSave)
         {
             bool shouldRecreateIpso = forceLayout || elementSave != ElementShowing;
             bool shouldReloadTextures = forceReloadTextures || elementSave != ElementShowing;
@@ -225,6 +228,7 @@ namespace Gum.Wireframe
 
             }
             ElementShowing = elementSave;
+
         }
 
 

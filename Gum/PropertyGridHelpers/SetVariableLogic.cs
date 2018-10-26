@@ -83,7 +83,11 @@ namespace Gum.PropertyGridHelpers
 
                 if (refresh)
                 {
-                    GumCommands.Self.GuiCommands.RefreshElementTreeView(parentElement);
+                    var needsToRefreshEntireElement = unqualifiedMember == "Parent" || unqualifiedMember == "Name";
+                    if(needsToRefreshEntireElement)
+                    {
+                        GumCommands.Self.GuiCommands.RefreshElementTreeView(parentElement);
+                    }
                 }
 
 

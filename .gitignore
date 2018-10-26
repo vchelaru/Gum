@@ -41,3 +41,7 @@ GumCore/GumCoreXnaPc/GumCoreUwp/bin/
 GluePlugin/obj/
 GluePlugin/bin/Debug/Plugins/readme.txt
 GluePlugin/bin/
+TextureCoordinateSelectionPlugin/obj/
+TextureCoordinateSelectionPlugin/bin/
+FlatRedBall.SpecializedXnaControls/obj/
+FlatRedBall.SpecializedXnaControls/bin/

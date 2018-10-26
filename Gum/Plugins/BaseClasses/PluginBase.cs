@@ -33,7 +33,7 @@ namespace Gum.Plugins.BaseClasses
         public event Action<VariableSave, List<Attribute>> FillVariableAttributes;
         public event Action<string, StateSave> AddAndRemoveVariablesForType;
         public event Func<VariableSave, RecursiveVariableFinder, bool> VariableExcluded;
-
+        public event Action WireframeRefreshed;
 
         /// <summary>
         /// Event which is raised when an ElementSave's variable is set.
@@ -44,6 +44,7 @@ namespace Gum.Plugins.BaseClasses
         /// </summary>
         public event Action<ElementSave, InstanceSave, string, object> VariableSet;
         public event Action<ElementSave> ElementSelected;
+        public event Action<TreeNode> TreeNodeSelected;
         public event Action<BehaviorSave> BehaviorSelected;
         public event Action<ElementSave, InstanceSave> InstanceSelected;
         public event Action<ElementSave, InstanceSave> InstanceAdd;
@@ -220,6 +221,11 @@ namespace Gum.Plugins.BaseClasses
             }
         }
 
+        public void CallTreeNodeSelected(TreeNode treeNode)
+        {
+            TreeNodeSelected?.Invoke(treeNode);
+        }
+
         public void CallBehaviorSelected(BehaviorSave behavior)
         {
             BehaviorSelected?.Invoke(behavior);
@@ -272,11 +278,15 @@ namespace Gum.Plugins.BaseClasses
 
         public void CallBeforeProjectSave(GumProjectSave savedProject)
         {
-            if (BeforeProjectSave != null)
-            {
-                BeforeProjectSave(savedProject);
-            }
+            BeforeProjectSave?.Invoke(savedProject);
         }
+
+        public void CallWireframeRefreshed()
+        {
+            WireframeRefreshed?.Invoke();
+        }
+
+
 
         internal bool GetIfVariableIsExcluded(VariableSave defaultVariable, RecursiveVariableFinder rvf)
         {

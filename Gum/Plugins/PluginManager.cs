@@ -246,27 +246,6 @@ namespace Gum.Plugins
             }
             catch (Exception e)
             {
-                //MessageBox.Show("Error trying to load plugins: \r\n\r\n" + e.ToString(), "Error trying to load plugins");
-                //instance.TreeViewPlugins = new List<ITreeViewRightClick>();
-                //instance.PropertyGridRightClickPlugins = new List<IPropertyGridRightClick>();
-                //instance.NewObjectPlugins = new List<INewObject>();
-                //instance.OpenVisualStudioPlugins = new List<IOpenVisualStudio>();
-                //instance.TreeItemSelectPlugins = new List<ITreeItemSelect>();
-                //instance.NewFilePlugins = new List<INewFile>();
-                //instance.MenuStripPlugins = new List<IMenuStripPlugin>();
-                //instance.TopTabPlugins = new List<ITopTab>();
-                //instance.LeftTabPlugins = new List<ILeftTab>();
-                //instance.BottomTabPlugins = new List<IBottomTab>();
-                //instance.RightTabPlugins = new List<IRightTab>();
-                //instance.CenterTabPlugins = new List<ICenterTab>();
-                //instance.GluxLoadPlugins = new List<IGluxLoad>();
-                //instance.NamedObjectsPlugins = new List<INamedObject>();
-                //instance.CurrentElementPlugins = new List<ICurrentElement>();
-                //instance.PropertyChangePlugins = new List<IPropertyChange>();
-                //instance.CodeGeneratorPlugins = new List<ICodeGeneratorPlugin>();
-                //instance.ContentFileChangePlugins = new List<IContentFileChange>();
-                //instance.OutputReceiverPlugins = new List<IOutputReceiver>();
-
                 string error = "Error loading plugins";
                 if (e is ReflectionTypeLoadException)
                 {
@@ -860,13 +839,18 @@ namespace Gum.Plugins
         internal void ElementSelected(ElementSave elementSave)
         {
             CallMethodOnPlugin(
-                delegate(PluginBase plugin)
-                {
-                    plugin.CallElementSelected(elementSave);
-                },
+                (plugin) => plugin.CallElementSelected(elementSave),
                 nameof(ElementSelected)
             );
 
+        }
+
+        internal void TreeNodeSelected(TreeNode treeNode)
+        {
+            CallMethodOnPlugin(
+                (plugin) => plugin.CallTreeNodeSelected(treeNode),
+                nameof(TreeNodeSelected)
+                );
         }
 
         internal void BehaviorSelected(BehaviorSave behaviorSave)
@@ -918,12 +902,15 @@ namespace Gum.Plugins
             );
         }
 
+        internal void WireframeRefreshed()
+        {
+            CallMethodOnPlugin(
+                (plugin) => plugin.CallWireframeRefreshed(),
+                nameof(WireframeRefreshed)
+                );
+        }
+
         #endregion
-
-
-
-
-
 
         internal bool ShouldExclude(VariableSave defaultVariable, RecursiveVariableFinder rvf)
         {

@@ -31,14 +31,27 @@ namespace Gum.Commands
             StateTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedElement);
         }
 
-        internal void RefreshPropertyGrid(bool force = false)
+        public void RefreshPropertyGrid(bool force = false)
         {
             PropertyGridManager.Self.RefreshUI(force:force);
+        }
+
+        /// <summary>
+        /// Refreshes the displayed values without clearing and recreating the grid
+        /// </summary>
+        public void RefreshPropertyGridValues()
+        {
+            PropertyGridManager.Self.RefreshVariablesDataGridValues();
         }
 
         public TabPage AddControl(System.Windows.Controls.UserControl control, string tabTitle, TabLocation tabLocation = TabLocation.Center)
         {
             return mMainWindow.AddWpfControl(control, tabTitle, tabLocation);
+        }
+
+        public TabPage AddWinformsControl(Control control, string tabTitle, TabLocation tabLocation)
+        {
+            return mMainWindow.AddWinformsControl(control, tabTitle, tabLocation);
         }
         
         public void RemoveControl(System.Windows.Controls.UserControl control)

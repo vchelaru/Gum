@@ -142,7 +142,7 @@ namespace Gum.Managers
         /// </summary>
         /// <param name="force">Whether to force the refresh. If this is true, the grid will refresh. If this
         /// is false, the refresh will only happen if a new element, state, or instance has been selected.</param>
-        public async void RefreshUI(bool force = false)
+        public void RefreshUI(bool force = false)
         {
             if (isInRefresh)
                 return;
@@ -285,6 +285,11 @@ namespace Gum.Managers
 
             mVariablesDataGrid.Refresh();
             
+        }
+
+        public void RefreshVariablesDataGridValues()
+        {
+            mVariablesDataGrid.Refresh();
         }
 
         private void RefreshBehaviorUi(BehaviorSave behaviorSave)

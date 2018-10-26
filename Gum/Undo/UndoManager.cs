@@ -56,6 +56,10 @@ namespace Gum.Undo
             }
         }
 
+        /// <summary>
+        /// Records the current state, which serves as the "restore point" when an undo occurs. This state will be compared
+        /// with the RecordUndo call to see if any changes should be made.
+        /// </summary>
         public void RecordState()
         {
 
@@ -81,6 +85,10 @@ namespace Gum.Undo
             //PrintStatus("RecordState");
         }
 
+        /// <summary>
+        /// Records an undo if any values have changed. This should be called whenever some editing activity has finished.
+        /// For example, whenever a value changes in a text box or whenever a drag has finished.
+        /// </summary>
         public void RecordUndo()
         {
             if (mRecordedElementSave != null && SelectedState.Self.SelectedElement != null)

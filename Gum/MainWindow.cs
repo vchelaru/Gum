@@ -333,7 +333,7 @@ namespace Gum
             ElementTreeViewManager.Self.OnSelect(ObjectTreeView.SelectedNode);
         }
 
-        public void AddWinformsControl(Control control, string tabTitle, TabLocation tabLocation)
+        public TabPage AddWinformsControl(Control control, string tabTitle, TabLocation tabLocation)
         {
             // todo: check if control has already been added. Right now this can't be done trough the Gum commands
             // so it's only used "internally", so no checking is being done.
@@ -343,6 +343,8 @@ namespace Gum
             tabControl.Controls.Add(tabPage);
 
             tabPage.Controls.Add(control);
+
+            return tabPage;
         }
 
         public TabPage AddWpfControl(System.Windows.Controls.UserControl control, string tabTitle, TabLocation tabLocation = TabLocation.Center)

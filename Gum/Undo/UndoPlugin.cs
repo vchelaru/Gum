@@ -13,11 +13,11 @@ namespace Gum.Undo
     {
         public override void StartUp()
         {
-            this.ElementSelected += new Action<DataTypes.ElementSave>(HandleElementSelected);
-            this.InstanceSelected += new Action<DataTypes.ElementSave,DataTypes.InstanceSave>(HandleInstanceSelected);
-            this.ProjectLoad += new Action<DataTypes.GumProjectSave>(HandleProjectLoad);
-            this.InstanceAdd += new Action<ElementSave, InstanceSave>(HandleInstanceAdd);
-            this.InstanceDelete += new Action<ElementSave, InstanceSave>(HandleInstanceDelete);
+            this.ElementSelected += HandleElementSelected;
+            this.InstanceSelected += HandleInstanceSelected;
+            this.ProjectLoad += HandleProjectLoad;
+            this.InstanceAdd += HandleInstanceAdd;
+            this.InstanceDelete += HandleInstanceDelete;
 
             this.BehaviorReferencesChanged += HandleBehaviorReferencesChanged;
         }
