@@ -215,7 +215,7 @@ namespace Gum.DataTypes
             else
             {
                 // Let's give it an empty state so that it doesn't cause runtime problems
-                // Nevermind, this causes problelms in Gum
+                // Nevermind, this causes problelms in Gum, and it should be okay to pass a null state here
                 //elementSave.States.Add(new StateSave());
             }
 

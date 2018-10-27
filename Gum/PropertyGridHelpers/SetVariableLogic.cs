@@ -83,7 +83,20 @@ namespace Gum.PropertyGridHelpers
 
                 if (refresh)
                 {
-                    var needsToRefreshEntireElement = unqualifiedMember == "Parent" || unqualifiedMember == "Name";
+                    // These properties may require some changes to the grid, so we refresh the tree view
+                    // and entire grid.
+                    // There's lots of work that can/should be done here:
+                    // 1. We should have the plugins that handle excluding variables also
+                    //    report whether a variable requires refreshing
+                    // 2. We could only refresh the grid for some variables like UseCustomFont
+                    // 3. We could have only certain variable refresh themselves instead of the entire 
+                    //    grid.
+                    var needsToRefreshEntireElement = 
+                        unqualifiedMember == "Parent" || 
+                        unqualifiedMember == "Name" ||
+                        unqualifiedMember == "UseCustomFont" ||
+                        unqualifiedMember == "Texture Address"
+                        ;
                     if(needsToRefreshEntireElement)
                     {
                         GumCommands.Self.GuiCommands.RefreshElementTreeView(parentElement);

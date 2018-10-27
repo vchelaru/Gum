@@ -77,17 +77,22 @@ namespace Gum.DataTypes
 
         public RecursiveVariableFinder(StateSave stateSave)
         {
-            ContainerType = VariableContainerType.StateSave;
-            mStateSave = stateSave;
-
-            ElementStack = new List<ElementWithState>();
-
 #if DEBUG
+            if (stateSave == null)
+            {
+                throw new ArgumentNullException(nameof(stateSave));
+            }
+
             if (stateSave.ParentContainer == null)
             {
                 throw new NullReferenceException("The state passed in to the RecursiveVariableFinder has a null ParentContainer and it shouldn't");
             }
 #endif
+            ContainerType = VariableContainerType.StateSave;
+            mStateSave = stateSave;
+
+            ElementStack = new List<ElementWithState>();
+
 
             ElementStack.Add(new ElementWithState(stateSave.ParentContainer) { StateName = stateSave.Name });
         }
