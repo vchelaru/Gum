@@ -175,6 +175,8 @@ namespace Gum
 
             ObjectFinder.Self.GumProjectSave = mGumProjectSave;
 
+            WpfDataUi.Controls.FileSelectionDisplay.FolderRelativeTo = FileManager.GetDirectory(fileName);
+
             if (mGumProjectSave != null)
             {
                 bool wasModified = mGumProjectSave.Initialize();

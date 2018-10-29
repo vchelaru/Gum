@@ -557,16 +557,25 @@ namespace Gum.Managers
         {
             string nameToAdd = FileManager.RemovePath(FileManager.RemoveExtension(fileName));
 
-            IEnumerable<string> existingNames = SelectedState.Self.SelectedElement.Instances.Select(i => i.Name);
+            var element = SelectedState.Self.SelectedElement;
+
+            IEnumerable<string> existingNames = element.Instances.Select(i => i.Name);
             nameToAdd = StringFunctions.MakeStringUnique(nameToAdd, existingNames);
 
             InstanceSave instance =
-                ElementCommands.Self.AddInstance(SelectedState.Self.SelectedElement, nameToAdd);
+                ElementCommands.Self.AddInstance(element, nameToAdd);
             instance.BaseType = "Sprite";
 
             SetInstanceToPosition(worldX, worldY, instance);
 
-            SelectedState.Self.SelectedStateSave.SetValue(instance.Name + ".SourceFile", fileName, instance);
+            var variableName = instance.Name + ".SourceFile";
+
+            var oldValue = SelectedState.Self.SelectedStateSave.GetValueOrDefault<string>(variableName);
+
+            SelectedState.Self.SelectedStateSave.SetValue(variableName, fileName, instance);
+
+            SetVariableLogic.Self.ReactToPropertyValueChanged("SourceFile", oldValue, element, instance, refresh:false);
+
         }
 
         private static void SetInstanceToPosition(float worldX, float worldY, InstanceSave instance)

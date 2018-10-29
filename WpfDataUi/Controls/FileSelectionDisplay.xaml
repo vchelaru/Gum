@@ -18,17 +18,25 @@
         <Label x:Name="Label" MinWidth="100">Property Label:</Label>        
         
         <TextBox Grid.Column="1" x:Name="TextBox" 
-                 Margin="0,0,24,0" LostFocus="TextBox_LostFocus_1" 
+                 Margin="0,0,51,0" LostFocus="TextBox_LostFocus_1" 
                  MinWidth="60" VerticalAlignment="Center">
             <TextBox.ContextMenu>
                 <ContextMenu>
                 </ContextMenu>
             </TextBox.ContextMenu>
         </TextBox>
-        <Button Grid.Column="1"
-                Width="24"
-                HorizontalAlignment="Right" Click="Button_Click_1" VerticalAlignment="Center"
-                >...</Button>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Column="1">
+            <Button Width="24"
+                    Click="Button_Click_1" VerticalAlignment="Center"
+                    >...</Button>
+            <Button Grid.Column="2"
+                    Width="24"
+                    Height="20"
+                    Margin="1,0,0,0" Click="ViewInExplorerClicked">
+                <Image Source="/WpfDataUi;component/Content/Icons/OpenFolder.png"></Image>
+            </Button>
+            
+        </StackPanel>
 
     </Grid>
 </UserControl>

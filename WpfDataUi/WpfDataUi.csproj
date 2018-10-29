@@ -181,8 +181,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Content\Icons\" />
     <Folder Include="Libraries\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Content\Icons\OpenFolder.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

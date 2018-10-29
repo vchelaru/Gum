@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Windows;
@@ -74,6 +75,8 @@ namespace WpfDataUi.Controls
         {
             get; set;
         }
+
+        public static string FolderRelativeTo { get; set; }
 
         #endregion
 
@@ -151,6 +154,71 @@ namespace WpfDataUi.Controls
                 this.TextBox.Text = file;
                 mTextBoxLogic.TryApplyToInstance();
             }
+        }
+
+        private void ViewInExplorerClicked(object sender, RoutedEventArgs e)
+        {
+            var fileToOpen = this.TextBox.Text;
+
+            if(!string.IsNullOrEmpty(fileToOpen))
+            {
+                if(!string.IsNullOrEmpty(FolderRelativeTo ))
+                {
+                    fileToOpen = RemoveDotDotSlash(
+                        FolderRelativeTo + fileToOpen)
+                        .Replace("/", "\\");
+
+
+                }
+
+                if(System.IO.File.Exists(fileToOpen))
+                {
+                    Process.Start("explorer.exe", "/select," + fileToOpen);
+                }
+
+                //if (isFile)
+                {
+                }
+                //else
+                //{
+                //    Process.Start("explorer.exe", "/root," + locationToShow);
+                //}
+
+            }
+        }
+
+        private string RemoveDotDotSlash(string fileNameToFix)
+        {
+            if (fileNameToFix.Contains(".."))
+            {
+                fileNameToFix = fileNameToFix.Replace("\\", "/");
+
+                // First let's get rid of any ..'s that are in the middle
+                // for example:
+                //
+                // "content/zones/area1/../../background/outdoorsanim/outdoorsanim.achx"
+                //
+                // would become
+                // 
+                // "content/background/outdoorsanim/outdoorsanim.achx"
+
+                int indexOfNextDotDotSlash = fileNameToFix.IndexOf("../");
+
+                bool shouldLoop = indexOfNextDotDotSlash > 0;
+
+                while (shouldLoop)
+                {
+                    int indexOfPreviousDirectory = fileNameToFix.LastIndexOf('/', indexOfNextDotDotSlash - 2, indexOfNextDotDotSlash - 2);
+
+                    fileNameToFix = fileNameToFix.Remove(indexOfPreviousDirectory + 1, indexOfNextDotDotSlash - indexOfPreviousDirectory + 2);
+
+                    indexOfNextDotDotSlash = fileNameToFix.IndexOf("../");
+
+                    shouldLoop = indexOfNextDotDotSlash > 0;
+                }
+            }
+
+            return fileNameToFix.Replace("\\", "/");
         }
 
         #endregion

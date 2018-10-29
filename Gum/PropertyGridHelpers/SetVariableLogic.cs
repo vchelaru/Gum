@@ -53,7 +53,7 @@ namespace Gum.PropertyGridHelpers
                     SelectedState.Self.SelectedVariableSave = SelectedState.Self.SelectedStateSave.GetVariableSave(unqualifiedMemberName);
                 }
             }
-            PropertyValueChanged(unqualifiedMemberName, oldValue, parentElement, instance, refresh);
+            ReactToPropertyValueChanged(unqualifiedMemberName, oldValue, parentElement, instance, refresh);
         }
 
         /// <summary>
@@ -64,7 +64,7 @@ namespace Gum.PropertyGridHelpers
         /// <param name="parentElement"></param>
         /// <param name="instance"></param>
         /// <param name="refresh"></param>
-        public void PropertyValueChanged(string unqualifiedMember, object oldValue, ElementSave parentElement, InstanceSave instance, bool refresh)
+        public void ReactToPropertyValueChanged(string unqualifiedMember, object oldValue, ElementSave parentElement, InstanceSave instance, bool refresh)
         {
             if (parentElement != null)
             {
@@ -129,7 +129,7 @@ namespace Gum.PropertyGridHelpers
 
             ReactIfChangedMemberIsUnitType(parentElement, changedMember, oldValue);
 
-            ReactIfChangedMemberIsSourceFile(parentElement, changedMember, oldValue);
+            ReactIfChangedMemberIsSourceFile(parentElement, instance, changedMember, oldValue);
 
             ReactIfChangedMemberIsTextureAddress(parentElement, changedMember, oldValue);
 
@@ -287,12 +287,21 @@ namespace Gum.PropertyGridHelpers
             }
         }
 
-        private void ReactIfChangedMemberIsSourceFile(ElementSave parentElement, string changedMember, object oldValue)
+        private void ReactIfChangedMemberIsSourceFile(ElementSave parentElement, InstanceSave instance, string changedMember, object oldValue)
         {
-            VariableSave variable = SelectedState.Self.SelectedVariableSave;
-            // Eventually need to handle tunneled variables
+            string variableFullName;
+            if(instance != null)
+            {
+                variableFullName = $"{instance.Name}.{changedMember}";
+            }
+            else
+            {
+                variableFullName = changedMember;
+            }
 
-            bool isSourcefile = variable != null && variable.GetRootName() == "SourceFile";
+            VariableSave variable = SelectedState.Self.SelectedStateSave?.GetVariableSave(variableFullName);
+
+            bool isSourcefile = variable?.GetRootName() == "SourceFile";
             
             string errorMessage = null;
 
@@ -315,7 +324,9 @@ namespace Gum.PropertyGridHelpers
                     if (!string.IsNullOrEmpty(value))
                     {
                         // See if this is relative to the project
-                        bool isRelativeToProject = !value.StartsWith("../") && !value.StartsWith("..\\");
+                        var isRelativeToProject = FileManager.IsRelativeTo(
+                            value,
+                            ProjectState.Self.ProjectDirectory);
 
                         if (!isRelativeToProject)
                         {

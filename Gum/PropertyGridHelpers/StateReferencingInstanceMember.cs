@@ -442,7 +442,7 @@ namespace Gum.PropertyGridHelpers
                         if(instanceInElement != null)
                         {
                             handledByExposedVariable = true;
-                            SetVariableLogic.Self.PropertyValueChanged(variable.GetRootName(), oldValue, elementSave, instanceInElement, true);
+                            SetVariableLogic.Self.ReactToPropertyValueChanged(variable.GetRootName(), oldValue, elementSave, instanceInElement, true);
                         }
                         
                     }
