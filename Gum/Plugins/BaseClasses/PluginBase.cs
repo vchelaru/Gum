@@ -29,6 +29,10 @@ namespace Gum.Plugins.BaseClasses
         /// </summary>
         public event Action<StateSave, string> StateRename;
         public event Action<StateSaveCategory, string> CategoryRename;
+
+        /// <summary>
+        /// Event raised whenever an instance is renamed. Second parameter is the old name.
+        /// </summary>
         public event Action<InstanceSave, string> InstanceRename;
         public event Action<VariableSave, List<Attribute>> FillVariableAttributes;
         public event Action<string, StateSave> AddAndRemoveVariablesForType;
@@ -49,6 +53,7 @@ namespace Gum.Plugins.BaseClasses
         public event Action<ElementSave, InstanceSave> InstanceSelected;
         public event Action<ElementSave, InstanceSave> InstanceAdd;
         public event Action<ElementSave, InstanceSave> InstanceDelete;
+        public event Action<InstanceSave> InstanceReordered;
 
         public event Action<ElementSave> BehaviorReferencesChanged;
 
@@ -258,6 +263,11 @@ namespace Gum.Plugins.BaseClasses
             {
                 InstanceDelete(elementSave, instance);
             }
+        }
+
+        public void CallInstanceReordered(InstanceSave instance)
+        {
+            InstanceReordered?.Invoke(instance);
         }
 
         public void CallBeforeElementSave(ElementSave elementSave)

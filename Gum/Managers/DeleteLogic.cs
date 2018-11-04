@@ -110,44 +110,96 @@ namespace Gum.Managers
 
         private static void AskToDeleteInstances(IEnumerable<InstanceSave> instances)
         {
-            string message = "Are you sure you'd like to delete the following:";
 
-            foreach (var instance in instances)
+            var deletableInstances = instances.Where(item => item.DefinedByBase == false).ToArray();
+            var instancesFromBase = instances.Except(deletableInstances).ToArray();
+
+            if(deletableInstances.Any() && instancesFromBase.Any())
             {
-                message += "\n" + instance.Name;
-            }
-            DialogResult result =
-                MessageBox.Show(message, "Delete instances?", MessageBoxButtons.YesNo);
-
-            if (result == DialogResult.Yes)
-            {
-                ElementSave selectedElement = SelectedState.Self.SelectedElement;
-
-                // Just in case the argument is a reference to the selected instances:
-                var instancesToRemove = instances.ToList();
-
-                foreach (var instance in instancesToRemove)
+                // has both
+                string message = "Are you sure you'd like to delete the following:";
+                foreach (var instance in deletableInstances)
                 {
-                    Gum.ToolCommands.ElementCommands.Self.RemoveInstance(instance,
-                        selectedElement);
+                    message += "\n" + instance.Name;
                 }
 
-                RefreshAndSaveAfterInstanceRemoval(selectedElement);
+                message += "\n\nThe following instances will not be deleted because they are defined in a base object:";
+                foreach (var instance in instancesFromBase)
+                {
+                    message += "\n" + instance.Name;
+                }
+
+                DialogResult result =
+                    MessageBox.Show(message, "Delete instances?", MessageBoxButtons.YesNo);
+
+                if (result == DialogResult.Yes)
+                {
+                    ElementSave selectedElement = SelectedState.Self.SelectedElement;
+
+                    foreach (var instance in deletableInstances)
+                    {
+                        Gum.ToolCommands.ElementCommands.Self.RemoveInstance(instance,
+                            selectedElement);
+                    }
+
+                    RefreshAndSaveAfterInstanceRemoval(selectedElement);
+                }
+            }
+            else if(instancesFromBase.Any())
+            {
+                // only from base
+                var message = "All selected instances are defined in a base object, so cannot be deleted";
+
+                MessageBox.Show(message);
+            }
+            else
+            {
+                // all can be deleted
+                string message = "Are you sure you'd like to delete the following:";
+                foreach (var instance in instances)
+                {
+                    message += "\n" + instance.Name;
+                }
+                DialogResult result =
+                    MessageBox.Show(message, "Delete instances?", MessageBoxButtons.YesNo);
+
+                if (result == DialogResult.Yes)
+                {
+                    ElementSave selectedElement = SelectedState.Self.SelectedElement;
+
+                    // Just in case the argument is a reference to the selected instances:
+                    var instancesToRemove = instances.ToList();
+
+                    foreach (var instance in instancesToRemove)
+                    {
+                        Gum.ToolCommands.ElementCommands.Self.RemoveInstance(instance,
+                            selectedElement);
+                    }
+
+                    RefreshAndSaveAfterInstanceRemoval(selectedElement);
+                }
             }
         }
 
         private static void AskToDeleteInstance(InstanceSave instance)
         {
-            DialogResult result =
-                MessageBox.Show("Are you sure you'd like to delete " + instance.Name + "?", "Delete instance?", MessageBoxButtons.YesNo);
-
-            if (result == DialogResult.Yes)
+            if(instance.DefinedByBase)
             {
-                ElementSave selectedElement = SelectedState.Self.SelectedElement;
+                MessageBox.Show($"The instance {instance.Name} cannot be deleted becuase it is defined in a base object.");
+            }
+            else
+            {
+                DialogResult result =
+                    MessageBox.Show("Are you sure you'd like to delete " + instance.Name + "?", "Delete instance?", MessageBoxButtons.YesNo);
 
-                Gum.ToolCommands.ElementCommands.Self.RemoveInstance(instance, selectedElement);
+                if (result == DialogResult.Yes)
+                {
+                    ElementSave selectedElement = SelectedState.Self.SelectedElement;
 
-                RefreshAndSaveAfterInstanceRemoval(selectedElement);
+                    Gum.ToolCommands.ElementCommands.Self.RemoveInstance(instance, selectedElement);
+
+                    RefreshAndSaveAfterInstanceRemoval(selectedElement);
+                }
             }
         }
 

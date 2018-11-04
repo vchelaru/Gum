@@ -11,6 +11,7 @@ namespace Gum.DataTypes
     {
         public string Name;
         public string BaseType;
+        public bool DefinedByBase;
 
         public bool Locked
         {

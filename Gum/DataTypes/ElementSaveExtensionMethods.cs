@@ -277,6 +277,9 @@ namespace Gum.DataTypes
             {
                 string newValue = asElementSave.BaseType;
 
+                // kill the old instances:
+                asElementSave.Instances.RemoveAll(item => item.DefinedByBase);
+
                 if (StandardElementsManager.Self.IsDefaultType(newValue))
                 {
 
@@ -286,13 +289,53 @@ namespace Gum.DataTypes
                 }
                 else
                 {
-                    MessageBox.Show("Currently we don't support components inheriting from other components.  But I'm sure this will be added");
-                    asElementSave.BaseType = oldValue.ToString();
+                    var baseElement = ObjectFinder.Self.GetElementSave(asElementSave.BaseType);
+
+                    StateSave stateSave = new StateSave();
+                    if(baseElement != null)
+                    {
+                        // This copies the values to this explicitly, which we don't want
+                        //FillWithDefaultRecursively(baseElement, stateSave);
+
+
+                        foreach(var instance in baseElement.Instances)
+                        {
+                            var derivedInstance = instance.Clone();
+                            derivedInstance.DefinedByBase = true;
+                            asElementSave.Instances.Add(derivedInstance);
+                        }
+                        asElementSave.Initialize(stateSave);
+                    }
+
                 }
             }
             const bool fullRefresh = true;
+            // since the type might change:
+            GumCommands.Self.GuiCommands.RefreshElementTreeView(asElementSave);
             PropertyGridManager.Self.RefreshUI(fullRefresh);
             StateTreeViewManager.Self.RefreshUI(asElementSave);
+        }
+
+        private static void FillWithDefaultRecursively(ElementSave element, StateSave stateSave)
+        {
+            foreach(var variable in element.DefaultState.Variables)
+            {
+                var alreadyExists = stateSave.Variables.Any(item => item.Name == variable.Name);
+
+                if(!alreadyExists)
+                {
+                    stateSave.Variables.Add(variable);
+                }
+            }
+
+            if(!string.IsNullOrEmpty(element.BaseType))
+            {
+                var baseElement = ObjectFinder.Self.GetElementSave(element.BaseType);
+                if (baseElement != null)
+                {
+                    FillWithDefaultRecursively(baseElement, stateSave);
+                }
+            }
         }
 #endif
 

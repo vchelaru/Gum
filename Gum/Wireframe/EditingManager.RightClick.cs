@@ -105,7 +105,7 @@ namespace Gum.Wireframe
                     var nextSiblingIndexInContainer = element.Instances.IndexOf(nextSibling);
 
                     element.Instances.Insert(nextSiblingIndexInContainer + 1, instance);
-                    RefreshInResponseToReorder();
+                    RefreshInResponseToReorder(instance);
                 }
             }
         }
@@ -133,7 +133,7 @@ namespace Gum.Wireframe
                     var previousSiblingIndexInContainer = element.Instances.IndexOf(previousSibling);
 
                     element.Instances.Insert(previousSiblingIndexInContainer, instance);
-                    RefreshInResponseToReorder();
+                    RefreshInResponseToReorder(instance);
                 }
             }
         }
@@ -149,7 +149,7 @@ namespace Gum.Wireframe
                 element.Instances.Remove(instance);
                 element.Instances.Insert(0, instance);
 
-                RefreshInResponseToReorder();
+                RefreshInResponseToReorder(instance);
             }
         }
 
@@ -543,19 +543,18 @@ namespace Gum.Wireframe
             InstanceSave instance = SelectedState.Self.SelectedInstance;
             ElementSave element = SelectedState.Self.SelectedElement;
 
-            if (SelectedState.Self.SelectedInstance != null)
+            if (instance != null)
             {
                 // to bring to back, we're going to remove, then add (at the end)
                 element.Instances.Remove(instance);
                 element.Instances.Add(instance);
 
-                RefreshInResponseToReorder();
+                RefreshInResponseToReorder(instance);
             }
         }
 
-        private void RefreshInResponseToReorder()
+        private void RefreshInResponseToReorder(InstanceSave instance)
         {
-            InstanceSave instance = SelectedState.Self.SelectedInstance;
             ElementSave element = SelectedState.Self.SelectedElement;
 
             GumCommands.Self.GuiCommands.RefreshElementTreeView(element);
@@ -565,6 +564,8 @@ namespace Gum.Wireframe
 
             SelectionManager.Self.Refresh();
             GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+
+            PluginManager.Self.InstanceReordered(instance);
         }
 
 
@@ -618,12 +619,12 @@ namespace Gum.Wireframe
 
             var element = SelectedState.Self.SelectedElement;
             var whatToInsert = SelectedState.Self.SelectedInstance;
-            element.Instances.Remove(SelectedState.Self.SelectedInstance);
+            element.Instances.Remove(whatToInsert);
             int whereToInsert = element.Instances.IndexOf(instance) + 1;
 
             element.Instances.Insert(whereToInsert, whatToInsert);
 
-            RefreshInResponseToReorder();
+            RefreshInResponseToReorder(instance);
 
             if (ProjectManager.Self.GeneralSettingsFile.AutoSave)
             {

@@ -140,7 +140,10 @@ namespace Gum.PropertyGridHelpers
             InstanceSave instanceSave, StateSave defaultState, string prependedVariable, AmountToDisplay amountToDisplay = AmountToDisplay.AllVariables)
         {
             bool isDefault = SelectedState.Self.SelectedStateSave == SelectedState.Self.SelectedElement.DefaultState;
-
+            if(instanceSave?.DefinedByBase == true)
+            {
+                isDefault = false;
+            }
             if (!string.IsNullOrEmpty(prependedVariable))
             {
                 prependedVariable += ".";
@@ -149,7 +152,7 @@ namespace Gum.PropertyGridHelpers
             bool isCustomType = (elementSave is StandardElementSave) == false;
             if (isDefault && ( isCustomType || instanceSave != null))
             {
-                AddNameAndBaseTypeProperties(pdc);
+                AddNameAndBaseTypeProperties(pdc, elementSave, instanceSave);
             }
 
             if (instanceSave != null)
@@ -299,7 +302,7 @@ namespace Gum.PropertyGridHelpers
             }
         }
 
-        private static void AddNameAndBaseTypeProperties(List<PropertyDescriptor> pdc)
+        private static void AddNameAndBaseTypeProperties(List<PropertyDescriptor> pdc, ElementSave elementSave, InstanceSave instance)
         {
             mHelper.AddProperty(pdc,
                 "Name", typeof(string), TypeDescriptor.GetConverter(typeof(string)), new Attribute[]
@@ -307,19 +310,15 @@ namespace Gum.PropertyGridHelpers
                             new CategoryAttribute("\tObject") // \t isn't rendered, but it is sorted on.  Hack to get this property to appear first
                         });
 
-            bool isDisplayingScreen =
-                SelectedState.Self.SelectedInstance == null &&
-                SelectedState.Self.SelectedScreen != null;
 
-            if (!isDisplayingScreen)
-            {
+            var baseTypeConverter = new AvailableBaseTypeConverter(elementSave, instance);
+
                 // We may want to support Screens inheriting from other Screens in the future, but for now we won't allow it
-                mHelper.AddProperty(pdc,
-                    "Base Type", typeof(string), new AvailableBaseTypeConverter(), new Attribute[]
-                        { 
-                            new CategoryAttribute("\tObject") // \t isn't rendered, but it is sorted on.  Hack to get this property to appear first
-                        });
-            }
+            mHelper.AddProperty(pdc,
+                "Base Type", typeof(string), baseTypeConverter, new Attribute[]
+                    { 
+                        new CategoryAttribute("\tObject") // \t isn't rendered, but it is sorted on.  Hack to get this property to appear first
+                    });
         }
 
         private static bool GetIfShouldInclude(VariableListSave variableList, ElementSave container, InstanceSave currentInstance, StandardElementSave rootElementSave)
@@ -397,6 +396,11 @@ namespace Gum.PropertyGridHelpers
             bool shouldInclude = true;
 
             bool isDefault = SelectedState.Self.SelectedStateSave == SelectedState.Self.SelectedElement.DefaultState;
+
+            if(currentInstance != null)
+            {
+                isDefault = currentInstance.DefinedByBase == false;
+            }
 
             if (!isDefault && canOnlyBeSetInDefaultState)
             {

@@ -843,11 +843,13 @@ namespace Gum.Managers
                 ElementSave elementSave = node.Tag as ElementSave;
 
                 List<InstanceSave> expandedInstances = new List<InstanceSave>();
-                foreach (InstanceSave instance in elementSave.Instances)
+                List<InstanceSave> allInstances = elementSave.Instances;
+
+                foreach (InstanceSave instance in allInstances)
                 {
                     var treeNode = GetTreeNodeFor(instance, node);
 
-                    if(treeNode?.Nodes.Count > 0 && treeNode?.IsExpanded == true)
+                    if (treeNode?.Nodes.Count > 0 && treeNode?.IsExpanded == true)
                     {
                         expandedInstances.Add(instance);
                     }
@@ -856,7 +858,7 @@ namespace Gum.Managers
                 node.Text = FileManager.RemovePath(elementSave.Name);
                 node.Nodes.Clear();
 
-                foreach (InstanceSave instance in elementSave.Instances)
+                foreach (InstanceSave instance in allInstances)
                 {
                     TreeNode nodeForInstance = GetTreeNodeFor(instance, node);
 
@@ -865,7 +867,7 @@ namespace Gum.Managers
                         nodeForInstance = AddTreeNodeForInstance(instance, node);
                     }
 
-                    if(expandedInstances.Contains(instance))
+                    if (expandedInstances.Contains(instance))
                     {
                         nodeForInstance.Expand();
                     }
@@ -1309,7 +1311,15 @@ namespace Gum.Managers
                     var asTreeNode = node as TreeNode;
                     if(asTreeNode != null)
                     {
-                        asTreeNode.Nodes.SortByName(recursive);
+                        var sortInner = asTreeNode.IsScreenTreeNode() == false &&
+                            asTreeNode.IsComponentTreeNode() == false &&
+                            asTreeNode.IsStandardElementTreeNode() == false &&
+                            asTreeNode.IsBehaviorTreeNode() == false;
+
+                        if(sortInner)
+                        {
+                            asTreeNode.Nodes.SortByName(recursive);
+                        }
                     }
                 }
             }

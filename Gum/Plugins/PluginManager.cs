@@ -894,6 +894,14 @@ namespace Gum.Plugins
             );
         }
 
+        internal void InstanceReordered(InstanceSave instance)
+        {
+            CallMethodOnPlugin(
+                (plugin) => plugin.CallInstanceReordered(instance),
+                nameof(InstanceDelete)
+            );
+        }
+
         internal void BehaviorReferencesChanged(ElementSave elementSave)
         {
             CallMethodOnPlugin(

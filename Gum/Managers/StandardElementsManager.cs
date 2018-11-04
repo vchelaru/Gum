@@ -440,6 +440,8 @@ namespace Gum.Managers
                 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                 var stateSave = new StateSave();
                 stateSave.Name = "Default";
+
+
 #if GUM
                 PluginManager.Self.ModifyDefaultStandardState("Screen", stateSave);
 #endif

@@ -167,6 +167,7 @@
     <Compile Include="Plugins\Errors\ErrorViewModel.cs" />
     <Compile Include="Plugins\Errors\MainErrorsPlugin.cs" />
     <Compile Include="Plugins\Fonts\MainFontPlugin.cs" />
+    <Compile Include="Plugins\Inheritance\MainInheritancePlugin.cs" />
     <Compile Include="Plugins\PropertiesWindowPlugin\MainPlugin.cs" />
     <Compile Include="Plugins\PropertiesWindowPlugin\ProjectPropertiesControl.xaml.cs">
       <DependentUpon>ProjectPropertiesControl.xaml</DependentUpon>

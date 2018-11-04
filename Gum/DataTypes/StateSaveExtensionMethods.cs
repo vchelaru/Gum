@@ -65,21 +65,30 @@ namespace Gum.DataTypes.Variables
                 
                 if (!wasFound && parent != null)
                 {
-                    ElementSave baseElement = GetBaseElementFromVariable(variableName, parent);
-                    
-                    if (baseElement != null)
+                    if(!string.IsNullOrEmpty(parent.BaseType))
                     {
-                        string nameInBase = variableName;
+                        // eventually pass the state, but for now use default
+                        value = TryToGetValueFromInheritance(variableName, parent.BaseType);
+                    }
 
-                        if ( StringFunctions.ContainsNoAlloc( variableName, '.'))
+                    if(value == null)
+                    {
+                        ElementSave baseElement = GetBaseElementFromVariable(variableName, parent);
+                    
+                        if (baseElement != null)
                         {
-                            // this variable is set on an instance, but we're going into the
-                            // base type, so we want to get the raw variable and not the variable
-                            // as tied to an instance.
-                            nameInBase = variableName.Substring(nameInBase.IndexOf('.') + 1);
-                        }
+                            string nameInBase = variableName;
 
-                        value = baseElement.DefaultState.GetValueRecursive(nameInBase);
+                            if ( StringFunctions.ContainsNoAlloc( variableName, '.'))
+                            {
+                                // this variable is set on an instance, but we're going into the
+                                // base type, so we want to get the raw variable and not the variable
+                                // as tied to an instance.
+                                nameInBase = variableName.Substring(nameInBase.IndexOf('.') + 1);
+                            }
+
+                            value = baseElement.DefaultState.GetValueRecursive(nameInBase);
+                        }
                     }
 
 
@@ -96,6 +105,30 @@ namespace Gum.DataTypes.Variables
 
 
             return value;
+        }
+
+        private static object TryToGetValueFromInheritance(string variableName, string baseType)
+        {
+            object foundValue = null;
+
+            var baseElement = ObjectFinder.Self.GetElementSave(baseType);
+
+            if(baseElement?.DefaultState != null)
+            {
+                var variable = baseElement.DefaultState.GetVariableSave(variableName);
+
+                if (variable?.SetsValue == true)
+                {
+                    foundValue = variable.Value;
+                }
+            }
+
+            if(foundValue == null && !string.IsNullOrEmpty(baseElement.BaseType))
+            {
+                foundValue = TryToGetValueFromInheritance(variableName, baseElement.BaseType);
+            }
+
+            return foundValue;
         }
 
         private static ElementSave GetBaseElementFromVariable(string variableName, ElementSave parent)

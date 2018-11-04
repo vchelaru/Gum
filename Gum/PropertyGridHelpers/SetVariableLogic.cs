@@ -419,8 +419,11 @@ namespace Gum.PropertyGridHelpers
             try
             {
 
-                string sourceAbsoluteFile =
-                    directory + value;
+                string sourceAbsoluteFile = value;
+                if(FileManager.IsRelative(sourceAbsoluteFile))
+                {
+                    sourceAbsoluteFile = directory + value;
+                }
                 sourceAbsoluteFile = FileManager.RemoveDotDotSlash(sourceAbsoluteFile);
 
                 System.IO.File.Copy(sourceAbsoluteFile, targetAbsoluteFile, overwrite: true);

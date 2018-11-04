@@ -322,6 +322,46 @@ namespace Gum.Managers
             return toReturn.Distinct().ToList();
         }
 
+        public ICollection<ElementSave> GetElementsInheritingFrom(ElementSave element)
+        {
+            List<ElementSave> toReturn = new List<ElementSave>();
+
+            FillListWithElementsInheriting(element, toReturn);
+
+            return toReturn;
+        }
+
+        private void FillListWithElementsInheriting(ElementSave element, List<ElementSave> listToAddTo)
+        {
+            if(element is ScreenSave)
+            {
+                var screensInheriting = GumProjectSave.Screens
+                    .Where(item => item.BaseType == element.Name)
+                    .ToArray();
+
+                listToAddTo.AddRange(screensInheriting);
+
+                foreach(var screen in screensInheriting)
+                {
+                    FillListWithElementsInheriting(screen, listToAddTo);
+                }
+            }
+            else
+            {
+                var componentsInheriting = GumProjectSave.Components
+                    .Where(item => item.BaseType == element.Name)
+                    .ToArray();
+
+                listToAddTo.AddRange(componentsInheriting);
+
+                foreach(var component in componentsInheriting)
+                {
+                    FillListWithElementsInheriting(component, listToAddTo);
+                }
+            }
+
+        }
+
         private void FillListWithReferencedFiles<T>(List<string> files, IList<T> elements) where T : ElementSave
         {
             // These files are all relative to the project, so we don't have to worry
