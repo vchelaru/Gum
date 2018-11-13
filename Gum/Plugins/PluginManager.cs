@@ -555,8 +555,9 @@ namespace Gum.Plugins
         {
 
 #if !TEST
-
-            foreach (var plugin in this.Plugins)
+            // let internal plugins handle changes first before external plugins.
+            var sortedPlugins = this.Plugins.OrderBy(item => !(item is InternalPlugin)).ToArray();
+            foreach (var plugin in sortedPlugins)
             {
                 PluginContainer container = this.PluginContainers[plugin];
 
@@ -714,6 +715,28 @@ namespace Gum.Plugins
                     plugin.CallElementRename(elementSave, oldName);
                 },
                 "ElementRename"
+                );
+        }
+
+        internal void ElementAdd(ElementSave element)
+        {
+            CallMethodOnPlugin(
+                delegate (PluginBase plugin)
+                {
+                    plugin.CallElementAdd(element);
+                },
+                nameof(ElementAdd)
+                );
+        }
+
+        internal void ElementDelete(ElementSave element)
+        {
+            CallMethodOnPlugin(
+                delegate (PluginBase plugin)
+                {
+                    plugin.CallElementDelete(element);
+                },
+                nameof(ElementDelete)
                 );
         }
 

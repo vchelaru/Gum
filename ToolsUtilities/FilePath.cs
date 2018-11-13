@@ -55,6 +55,14 @@ namespace ToolsUtilities
             }
         }
 
+        public string CaseSensitiveNoPathNoExtension
+        {
+            get
+            {
+                return FileManager.RemovePath(FileManager.RemoveExtension(Original));
+            }
+        }
+
         public string FileNameNoPath
         {
             get
@@ -109,6 +117,11 @@ namespace ToolsUtilities
                    Standardized == path.Standardized;
         }
 
+        public bool Exists()
+        {
+            return System.IO.File.Exists(this.StandardizedCaseSensitive);
+        }
+
         public FilePath GetDirectoryContainingThis()
         {
             return FileManager.GetDirectory(this.StandardizedCaseSensitive);
@@ -135,7 +148,7 @@ namespace ToolsUtilities
 
         public override string ToString()
         {
-            return Standardized;
+            return StandardizedCaseSensitive;
         }
     }
 }

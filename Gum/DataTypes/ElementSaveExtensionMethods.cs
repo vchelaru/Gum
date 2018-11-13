@@ -267,55 +267,6 @@ namespace Gum.DataTypes
         }
 
 
-        public static void ReactToChangedBaseType(this ElementSave asElementSave, InstanceSave instanceSave, string oldValue)
-        {
-            if (instanceSave != null)
-            {
-                // nothing to do here because the new type only impacts which variables are visible, and the refresh of the PropertyGrid will handle that.
-            }
-            else
-            {
-                string newValue = asElementSave.BaseType;
-
-                // kill the old instances:
-                asElementSave.Instances.RemoveAll(item => item.DefinedByBase);
-
-                if (StandardElementsManager.Self.IsDefaultType(newValue))
-                {
-
-                    StateSave defaultStateSave = StandardElementsManager.Self.GetDefaultStateFor(newValue);
-
-                    asElementSave.Initialize(defaultStateSave);
-                }
-                else
-                {
-                    var baseElement = ObjectFinder.Self.GetElementSave(asElementSave.BaseType);
-
-                    StateSave stateSave = new StateSave();
-                    if(baseElement != null)
-                    {
-                        // This copies the values to this explicitly, which we don't want
-                        //FillWithDefaultRecursively(baseElement, stateSave);
-
-
-                        foreach(var instance in baseElement.Instances)
-                        {
-                            var derivedInstance = instance.Clone();
-                            derivedInstance.DefinedByBase = true;
-                            asElementSave.Instances.Add(derivedInstance);
-                        }
-                        asElementSave.Initialize(stateSave);
-                    }
-
-                }
-            }
-            const bool fullRefresh = true;
-            // since the type might change:
-            GumCommands.Self.GuiCommands.RefreshElementTreeView(asElementSave);
-            PropertyGridManager.Self.RefreshUI(fullRefresh);
-            StateTreeViewManager.Self.RefreshUI(asElementSave);
-        }
-
         private static void FillWithDefaultRecursively(ElementSave element, StateSave stateSave)
         {
             foreach(var variable in element.DefaultState.Variables)

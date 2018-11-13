@@ -95,7 +95,8 @@ namespace Gum.PropertyGridHelpers
                         unqualifiedMember == "Parent" || 
                         unqualifiedMember == "Name" ||
                         unqualifiedMember == "UseCustomFont" ||
-                        unqualifiedMember == "Texture Address"
+                        unqualifiedMember == "Texture Address" ||
+                        unqualifiedMember == "Base Type"
                         ;
                     if(needsToRefreshEntireElement)
                     {
@@ -106,11 +107,24 @@ namespace Gum.PropertyGridHelpers
 
                 if (refresh)
                 {
-                    GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+                    var value = SelectedState.Self.SelectedStateSave.GetValue(qualifiedName);
 
-                    // Inefficient but let's do this for now - we can make it more efficient later
-                    WireframeObjectManager.Self.RefreshAll(true, forceReloadTextures:false);
-                    SelectionManager.Self.Refresh();
+                    var areSame = value == null && oldValue == null;
+                    if(!areSame && value != null)
+                    {
+                        areSame = value.Equals(oldValue);
+                    }
+
+                    // If the values are the same they may have been set to be the same by a plugin that
+                    // didn't allow the assignment, so don't go through the work of saving and refreshing
+                    if(!areSame)
+                    {
+                        GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+
+                        // Inefficient but let's do this for now - we can make it more efficient later
+                        WireframeObjectManager.Self.RefreshAll(true, forceReloadTextures:false);
+                        SelectionManager.Self.Refresh();
+                    }
                 }
             }
         }
@@ -121,7 +135,8 @@ namespace Gum.PropertyGridHelpers
         {
             ReactIfChangedMemberIsName(parentElement, instance, changedMember, oldValue);
 
-            ReactIfChangedMemberIsBaseType(parentElement, changedMember, oldValue);
+            // Handled in a plugin
+            //ReactIfChangedMemberIsBaseType(parentElement, changedMember, oldValue);
 
             ReactIfChangedMemberIsFont(parentElement, instance, changedMember, oldValue);
 
@@ -143,16 +158,6 @@ namespace Gum.PropertyGridHelpers
             if (changedMember == "Name")
             {
                 RenameManager.Self.HandleRename(container, instance, (string)oldValue, NameChangeAction.Rename);
-            }
-        }
-
-        private static void ReactIfChangedMemberIsBaseType(object s, string changedMember, object oldValue)
-        {
-            if (changedMember == "Base Type")
-            {
-                ElementSave asElementSave = s as ElementSave;
-
-                asElementSave.ReactToChangedBaseType(SelectedState.Self.SelectedInstance, oldValue?.ToString());
             }
         }
 

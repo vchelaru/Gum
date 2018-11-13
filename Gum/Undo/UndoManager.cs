@@ -181,13 +181,13 @@ namespace Gum.Undo
                     toApplyTo.Name = undoObject.Name;
                     RenameManager.Self.HandleRename(toApplyTo, (InstanceSave)null, oldName, NameChangeAction.Rename, askAboutRename:false);
                 }
-                if (undoObject.BaseType != null)
-                {
-                    string oldBaseType = toApplyTo.BaseType;
-                    toApplyTo.BaseType = undoObject.BaseType;
+                //if (undoObject.BaseType != null)
+                //{
+                //    string oldBaseType = toApplyTo.BaseType;
+                //    toApplyTo.BaseType = undoObject.BaseType;
                     
-                    toApplyTo.ReactToChangedBaseType(null, oldBaseType);
-                }
+                //    toApplyTo.ReactToChangedBaseType(null, oldBaseType);
+                //}
 
                 RecordState();
 

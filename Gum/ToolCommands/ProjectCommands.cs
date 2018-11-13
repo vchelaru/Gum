@@ -57,6 +57,10 @@ namespace Gum.ToolCommands
             ProjectManager.Self.GumProjectSave.ScreenReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
             ProjectManager.Self.GumProjectSave.Screens.Add(screenSave);
 
+            GumCommands.Self.FileCommands.TryAutoSaveProject();
+            GumCommands.Self.FileCommands.TryAutoSaveElement(screenSave);
+
+            Plugins.PluginManager.Self.ElementAdd(screenSave);
         }
 
         #endregion
@@ -83,6 +87,8 @@ namespace Gum.ToolCommands
             RemoveElementReferencesFromList(name, references);
 
             gps.Screens.Remove(asScreenSave);
+
+            Plugins.PluginManager.Self.ElementDelete(asScreenSave);
         }
 
         internal void RemoveBehavior(BehaviorSave behavior)
@@ -107,6 +113,8 @@ namespace Gum.ToolCommands
             RemoveElementReferencesFromList(name, references);
 
             gps.Components.Remove(asComponentSave);
+
+            Plugins.PluginManager.Self.ElementDelete(asComponentSave);
         }
 
 
@@ -194,6 +202,8 @@ namespace Gum.ToolCommands
 
             GumCommands.Self.FileCommands.TryAutoSaveProject();
             GumCommands.Self.FileCommands.TryAutoSaveElement(componentSave);
+
+            Plugins.PluginManager.Self.ElementAdd(componentSave);
         }
 
         private void PrepareNewComponentSave(ComponentSave componentSave, string componentName)

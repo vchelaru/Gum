@@ -23,6 +23,9 @@ namespace Gum.Plugins.BaseClasses
         public event Action<ElementSave> Export;
         public event Action<DeleteOptionsWindow, object> DeleteOptionsWindowShow;
         public event Action<DeleteOptionsWindow, object> DeleteConfirm;
+
+        public event Action<ElementSave> ElementAdd;
+        public event Action<ElementSave> ElementDelete;
         public event Action<ElementSave, string> ElementRename;
         /// <summary>
         /// Action raised when an event is renamed. String parameter is the State's old name.
@@ -160,6 +163,16 @@ namespace Gum.Plugins.BaseClasses
             {
                 DeleteConfirm(optionsWindow, deletedObject);
             }
+        }
+
+        public void CallElementAdd(ElementSave element)
+        {
+            ElementAdd?.Invoke(element);
+        }
+
+        public void CallElementDelete(ElementSave element)
+        {
+            ElementDelete?.Invoke(element);
         }
 
         public void CallElementRename(ElementSave elementSave, string oldName)

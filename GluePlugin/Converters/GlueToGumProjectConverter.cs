@@ -11,7 +11,15 @@ using System.Text;
 using System.Threading.Tasks;
 
 using GlueScreen = FlatRedBall.Glue.SaveClasses.ScreenSave;
+using GlueElement = FlatRedBall.Glue.SaveClasses.IElement;
+using GlueState = FlatRedBall.Glue.SaveClasses.StateSave;
+using GlueStateCategory = FlatRedBall.Glue.SaveClasses.StateSaveCategory;
+
 using GumScreen = Gum.DataTypes.ScreenSave;
+using GumElement = Gum.DataTypes.ElementSave;
+using GumState = Gum.DataTypes.Variables.StateSave;
+using GumStateCategory = Gum.DataTypes.Variables.StateSaveCategory;
+using FlatRedBall.Content.Instructions;
 
 namespace GluePlugin.Converters
 {
@@ -43,6 +51,8 @@ namespace GluePlugin.Converters
             gumProject.AddNewStandardElementTypes();
             gumProject.FixStandardVariables();
 
+            // set the finder before we do this because we'll need it to get objects:
+            ObjectFinder.Self.GumProjectSave = gumProject;
 
             AdjustStandardsToMatchFrb(gumProject);
 
@@ -50,6 +60,40 @@ namespace GluePlugin.Converters
 
             return gumProject;
         }
+
+        // This auto-adds all inherited objects, but we don't want to do that because
+        // Glue has its own inheritance rules:
+        //private void AddInheritedInstances(GumProjectSave gumProject)
+        //{
+        //    var sortedScreens = gumProject.Screens
+        //        .OrderBy(item => GetInheritanceDepth(item))
+        //        .ToArray();
+
+        //    foreach(var screen in sortedScreens)
+        //    {
+        //        if(!string.IsNullOrEmpty(screen.BaseType ))
+        //        {
+        //            Gum.PropertyGridHelpers.SetVariableLogic.Self.ReactToPropertyValueChanged(
+        //                "Base Type", null, screen, null, false);
+
+        //        }
+        //    }
+        //}
+
+
+        //private int GetInheritanceDepth(ElementSave gumElement, int depth = 0)
+        //{
+        //    if(string.IsNullOrEmpty(gumElement.BaseType))
+        //    {
+        //        return depth;
+        //    }
+        //    else
+        //    {
+        //        var baseElement = ObjectFinder.Self.GetElementSave(gumElement.BaseType);
+
+        //        return GetInheritanceDepth(baseElement, depth + 1);
+        //    }
+        //}
 
         private void AdjustStandardsToMatchFrb(GumProjectSave gumProject)
         {
@@ -83,7 +127,21 @@ namespace GluePlugin.Converters
             gumScreen.Name = glueScreen.Name.Substring(
                 "Screens\\".Length);
 
+            if(!string.IsNullOrEmpty(glueScreen.BaseScreen))
+            {
+                // This sets the base type, but doesn't populate the instances.
+                // Once the entire project is converted over, we'll loop through all 
+                // screens that have base types and have them act as if the value was 
+                // just set, causing the inheritance plugin to handle it.
+                var baseScreen = glueScreen.BaseScreen.Substring(
+                    "Screens\\".Length);
+
+                gumScreen.BaseType = baseScreen;
+            }
+
             AddInstances(glueScreen, gumScreen);
+
+            AddStates(glueScreen, gumScreen);
 
             return gumScreen;
         }
@@ -118,7 +176,61 @@ namespace GluePlugin.Converters
 
             AddInstances(entitySave, component);
 
+            AddStates(entitySave, component);
+
             return component;
+        }
+
+        private void AddStates(GlueElement glueElement, GumElement gumElement)
+        {
+            foreach(var glueState in glueElement.States)
+            {
+                var gumState = ToGumState(glueState, glueElement);
+
+                gumElement.States.Add(gumState);
+            }
+
+            foreach(var glueStateCategory in glueElement.StateCategoryList)
+            {
+                var gumStateCategory = ToGumStateCategory(glueStateCategory, glueElement);
+
+                gumElement.Categories.Add(gumStateCategory);
+            }
+        }
+
+        private GumState ToGumState(FlatRedBall.Glue.SaveClasses.StateSave glueState, GlueElement glueElement)
+        {
+            var gumState = new GumState();
+            gumState.Name = glueState.Name;
+
+            foreach (var glueVariable in glueState.InstructionSaves)
+            {
+                AddGumVariables(glueVariable, null, glueElement, gumState.Variables, isInState:true);
+            }
+
+
+            // everything should set value
+            foreach (var gumVariable in gumState.Variables)
+            {
+                gumVariable.SetsValue = true;
+            }
+
+
+            return gumState;
+        }
+
+        private GumStateCategory ToGumStateCategory(GlueStateCategory glueStateCategory, GlueElement glueElement)
+        {
+            var gumStateCategory = new GumStateCategory();
+            gumStateCategory.Name = glueStateCategory.Name;
+
+            foreach(var glueState in glueStateCategory.States)
+            {
+                var gumState = ToGumState(glueState, glueElement);
+                gumStateCategory.States.Add(gumState);
+            }
+
+            return gumStateCategory;
         }
 
         private ElementReference ToComponentReference(EntitySave entitySave)
@@ -131,13 +243,13 @@ namespace GluePlugin.Converters
             return elementReference;
         }
 
-        private void AddInstances(IElement glueElement, ElementSave gumElement)
+        private void AddInstances(GlueElement glueElement, ElementSave gumElement)
         {
             foreach (var namedObject in glueElement.NamedObjects)
             {
                 var instance = ToInstanceSave(namedObject);
 
-                var variableList = GetVariableSaves(namedObject, glueElement);
+                var variableList = GetVariableSaves(namedObject, null, glueElement);
                 gumElement.DefaultState.Variables.AddRange(variableList);
 
                 gumElement.Instances.Add(instance);
@@ -147,14 +259,15 @@ namespace GluePlugin.Converters
                     foreach (var containedObject in namedObject.ContainedObjects)
                     {
                         var containedInstance = ToInstanceSave(containedObject);
-
-                        // todo - add it and make it a child
+                        gumElement.Instances.Add(containedInstance);
+                        var containedVariableList = GetVariableSaves(containedObject, namedObject, glueElement);
+                        gumElement.DefaultState.Variables.AddRange(containedVariableList);
                     }
                 }
             }
         }
 
-        private List<VariableSave> GetVariableSaves(NamedObjectSave namedObject, IElement glueElement)
+        private List<VariableSave> GetVariableSaves(NamedObjectSave namedObject, NamedObjectSave parentNamedObject, GlueElement glueElement)
         {
             List<VariableSave> gumVariables = new List<VariableSave>();
             foreach(var glueVariable in namedObject.InstructionSaves)
@@ -162,8 +275,27 @@ namespace GluePlugin.Converters
                 AddGumVariables(glueVariable, namedObject, glueElement, gumVariables);
             }
 
+            if(namedObject.SourceType == SourceType.FlatRedBallType && 
+                namedObject.SourceClassType == "PositionedObjectList<T>" &&
+                namedObject.SourceClassGenericType != null)
+            {
+                AddVariablesForPositionedObjectList(namedObject, gumVariables);
+            }
+
+            if(parentNamedObject != null)
+            {
+                var parentVariable = new VariableSave();
+                parentVariable.Value = parentNamedObject.InstanceName;
+                parentVariable.SetsValue = true;
+                parentVariable.Type = "string";
+                parentVariable.Name = $"{namedObject.InstanceName}.Parent";
+                gumVariables.Add(parentVariable);
+
+            }
+
+
             // everything should set value
-            foreach(var gumVariable in gumVariables)
+            foreach (var gumVariable in gumVariables)
             {
                 gumVariable.SetsValue = true;
             }
@@ -171,11 +303,95 @@ namespace GluePlugin.Converters
             return gumVariables;
         }
 
-        private void AddGumVariables(CustomVariableInNamedObject glueVariable, NamedObjectSave namedObject, IElement glueElement, List<VariableSave> gumVariables)
+        private static void AddVariablesForPositionedObjectList(NamedObjectSave namedObject, List<VariableSave> gumVariables)
         {
+            var type = ConvertEntityToGumComponent(namedObject.SourceClassGenericType);
+
+            if (string.IsNullOrEmpty(type))
+            {
+                type = ConvertFlatRedBallPrimitiveTypeToGumPrimitive(namedObject.SourceClassGenericType);
+            }
+
+            var widthUnits = new VariableSave();
+            widthUnits.Value = DimensionUnitType.RelativeToContainer;
+            widthUnits.SetsValue = true;
+            widthUnits.Type = nameof(DimensionUnitType);
+            widthUnits.Name = $"{namedObject.InstanceName}.Width Units";
+            gumVariables.Add(widthUnits);
+
+            var width = new VariableSave();
+            width.Value = 0.0f;
+            width.SetsValue = true;
+            width.Type = "float";
+            width.Name = $"{namedObject.InstanceName}.Width";
+            gumVariables.Add(width);
+
+            var heightUnits = new VariableSave();
+            heightUnits.Value = DimensionUnitType.RelativeToContainer;
+            heightUnits.SetsValue = true;
+            heightUnits.Type = nameof(DimensionUnitType);
+            heightUnits.Name = $"{namedObject.InstanceName}.Height Units";
+            gumVariables.Add(heightUnits);
+
+            var height = new VariableSave();
+            height.Value = 0.0f;
+            height.SetsValue = true;
+            height.Type = "float";
+            height.Name = $"{namedObject.InstanceName}.Height";
+            gumVariables.Add(height);
+
+            var x = new VariableSave();
+            x.Value = 0.0f;
+            x.SetsValue = true;
+            x.Type = "float";
+            x.Name = $"{namedObject.InstanceName}.X";
+            gumVariables.Add(x);
+
+            var y = new VariableSave();
+            y.Value = 0.0f;
+            y.SetsValue = true;
+            y.Type = "float";
+            y.Name = $"{namedObject.InstanceName}.Y";
+            gumVariables.Add(y);
+
+
+
+            if (!string.IsNullOrEmpty(type))
+            {
+                var variableSave = new VariableSave();
+                variableSave.Value = type;
+                variableSave.SetsValue = true;
+                variableSave.Type = "string";
+                variableSave.Name = $"{namedObject.InstanceName}.Contained Type";
+                gumVariables.Add(variableSave);
+            }
+        }
+
+        private void AddGumVariables(InstructionSave glueVariable, NamedObjectSave namedObject,
+            GlueElement glueElement, List<VariableSave> gumVariables, bool isInState = false)
+        {
+            string glueVariableName = glueVariable.Member;
+
+            if(isInState)
+            {
+                // It's a state variable so it references a different variable that we have to find:
+                var variableOnElement = glueElement.GetCustomVariable(glueVariable.Member);
+
+                if(variableOnElement != null)
+                {
+                    glueVariableName = variableOnElement.SourceObjectProperty;
+                }
+
+
+                if(!string.IsNullOrEmpty( variableOnElement.SourceObject ))
+                {
+                    namedObject = glueElement.AllNamedObjects
+                        .FirstOrDefault(item => item.InstanceName == variableOnElement.SourceObject);
+                }
+            }
 
             // Let's be explicit instead of expecting the names to match up:
-            switch(glueVariable.Member)
+            switch(glueVariableName)
             {
                 case "Height":
                     {
@@ -298,6 +514,16 @@ namespace GluePlugin.Converters
             InstanceSave instanceSave = new InstanceSave();
             instanceSave.Name = namedObject.InstanceName;
             instanceSave.BaseType = GetGumBaseType(namedObject);
+            instanceSave.DefinedByBase = namedObject.DefinedByBase;
+
+            if(namedObject.SourceType == SourceType.FlatRedBallType && 
+                namedObject.SourceClassType == "PositionedObjectList<T>")
+            {
+                // so user can't select and move it around accidentally
+                instanceSave.Locked = true;
+            }
+
+
             return instanceSave;
         }
 
@@ -308,24 +534,10 @@ namespace GluePlugin.Converters
             switch(namedObject.SourceType)
             {
                 case SourceType.FlatRedBallType:
-                    switch(namedObject.SourceClassType)
-                    {
-                        case "Circle":
-                            gumType = "Circle";
-                            break;
-                        case "AxisAlignedRectangle":
-                            gumType = "Rectangle";
-                            break;
-                        case "Sprite":
-                            gumType = "Sprite";
-                            break;
-                    }
+                    gumType = ConvertFlatRedBallPrimitiveTypeToGumPrimitive(namedObject.SourceClassType);
                     break;
                 case SourceType.Entity:
-                    if(namedObject.SourceClassType?.StartsWith("Entities\\") == true)
-                    {
-                        gumType = namedObject.SourceClassType.Substring("Entities\\".Length);
-                    }
+                    gumType = ConvertEntityToGumComponent(namedObject.SourceClassType);
                     break;
             }
 
@@ -337,5 +549,38 @@ namespace GluePlugin.Converters
             return gumType;
         }
 
+        private static string ConvertEntityToGumComponent(string glueType)
+        {
+            string gumType = null;
+            if (glueType?.StartsWith("Entities\\") == true)
+            {
+                gumType = glueType.Substring("Entities\\".Length);
+            }
+
+            return gumType;
+        }
+
+        private static string ConvertFlatRedBallPrimitiveTypeToGumPrimitive(string glueType)
+        {
+            string gumType = null;
+            switch (glueType)
+            {
+                case "Circle":
+                    gumType = "Circle";
+                    break;
+                case "AxisAlignedRectangle":
+                    gumType = "Rectangle";
+                    break;
+                case "Sprite":
+                case "FlatRedBall.Sprite":
+                    gumType = "Sprite";
+                    break;
+                case "PositionedObjectList":
+                    gumType = "Container";
+                    break;
+            }
+
+            return gumType;
+        }
     }
 }

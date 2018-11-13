@@ -1,4 +1,5 @@
 ﻿using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Plugins.BaseClasses;
 using Gum.ToolCommands;
@@ -85,22 +86,77 @@ namespace Gum.Plugins.Inheritance
 
             if (variableName == "Base Type")
             {
-                var elementsInheritingFromContainer =
-                    ObjectFinder.Self.GetElementsInheritingFrom(container);
-
-                foreach (var inheritingElement in elementsInheritingFromContainer)
+                if(instance != null)
                 {
-                    var toChange = inheritingElement.GetInstance(instance.Name);
-
-                    if(toChange != null)
-                    {
-                        toChange.BaseType = instance.BaseType;
-
-                        GumCommands.Self.FileCommands.TryAutoSaveElement(inheritingElement);
-                    }
-
+                    HandleInstanceVariableBaseTypeSet(container, instance);
+                }
+                else
+                {
+                    HandleElementBaseType(container);
                 }
             }
+        }
+
+
+        private static void HandleInstanceVariableBaseTypeSet(ElementSave container, InstanceSave instance)
+        {
+            var elementsInheritingFromContainer =
+                                    ObjectFinder.Self.GetElementsInheritingFrom(container);
+
+            foreach (var inheritingElement in elementsInheritingFromContainer)
+            {
+                var toChange = inheritingElement.GetInstance(instance.Name);
+
+                if (toChange != null)
+                {
+                    toChange.BaseType = instance.BaseType;
+
+                    GumCommands.Self.FileCommands.TryAutoSaveElement(inheritingElement);
+                }
+
+            }
+        }
+
+        private void HandleElementBaseType(ElementSave asElementSave)
+        {
+            string newValue = asElementSave.BaseType;
+
+            // kill the old instances:
+            asElementSave.Instances.RemoveAll(item => item.DefinedByBase);
+
+            if (StandardElementsManager.Self.IsDefaultType(newValue))
+            {
+
+                StateSave defaultStateSave = StandardElementsManager.Self.GetDefaultStateFor(newValue);
+
+                asElementSave.Initialize(defaultStateSave);
+            }
+            else
+            {
+                var baseElement = ObjectFinder.Self.GetElementSave(asElementSave.BaseType);
+
+                StateSave stateSave = new StateSave();
+                if (baseElement != null)
+                {
+                    // This copies the values to this explicitly, which we don't want
+                    //FillWithDefaultRecursively(baseElement, stateSave);
+
+
+                    foreach (var instance in baseElement.Instances)
+                    {
+                        var derivedInstance = instance.Clone();
+                        derivedInstance.DefinedByBase = true;
+                        asElementSave.Instances.Add(derivedInstance);
+                    }
+                    asElementSave.Initialize(stateSave);
+                }
+
+            }
+            const bool fullRefresh = true;
+            // since the type might change:
+            GumCommands.Self.GuiCommands.RefreshElementTreeView(asElementSave);
+            PropertyGridManager.Self.RefreshUI(fullRefresh);
+            StateTreeViewManager.Self.RefreshUI(asElementSave);
         }
 
         private void HandleInstanceReordered(InstanceSave instance)

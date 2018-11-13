@@ -156,6 +156,7 @@
     <Compile Include="Managers\DeleteLogic.cs" />
     <Compile Include="Managers\FileChangeReactionLogic.cs" />
     <Compile Include="Managers\FileWatchManager.cs" />
+    <Compile Include="Plugins\CirclePlugin\MainCirclePlugin.cs" />
     <Compile Include="Plugins\Errors\AllErrorsViewModel.cs" />
     <Compile Include="Plugins\Errors\ErrorChecker.cs" />
     <Compile Include="Plugins\Errors\ErrorDisplay.xaml.cs">
@@ -168,6 +169,7 @@
     <Compile Include="Plugins\Errors\MainErrorsPlugin.cs" />
     <Compile Include="Plugins\Fonts\MainFontPlugin.cs" />
     <Compile Include="Plugins\Inheritance\MainInheritancePlugin.cs" />
+    <Compile Include="Plugins\ParentPlugin\MainParentPlugin.cs" />
     <Compile Include="Plugins\PropertiesWindowPlugin\MainPlugin.cs" />
     <Compile Include="Plugins\PropertiesWindowPlugin\ProjectPropertiesControl.xaml.cs">
       <DependentUpon>ProjectPropertiesControl.xaml</DependentUpon>
@@ -244,6 +246,7 @@
     <Compile Include="Plugins\VariableGrid\VariableRemoveButton.xaml.cs">
       <DependentUpon>VariableRemoveButton.xaml</DependentUpon>
     </Compile>
+    <Compile Include="PropertyGridHelpers\Converters\AvailableContainedTypeConverter.cs" />
     <Compile Include="PropertyGridHelpers\Converters\AvailableGuidesTypeConverter.cs" />
     <Compile Include="Input\CursorExtensionMethods.cs" />
     <Compile Include="Managers\DragDropManager.cs" />

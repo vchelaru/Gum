@@ -226,11 +226,6 @@ namespace Gum.Managers
                 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             }
 
-
-
-
-
-
             {
                 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                 //                                                   Container                                                        //
@@ -238,14 +233,21 @@ namespace Gum.Managers
                 var stateSave = new StateSave();
                 stateSave.Name = "Default";
 
+
                 AddPositioningVariables(stateSave);
 
                 AddDimensionsVariables(stateSave, 150, 150, DimensionVariableAction.ExcludeFileOptions);
 
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Category = "Children", Type = "string", Value = null, Name = "Contained Type"
+#if GUM
+                    , CustomTypeConverter = new AvailableContainedTypeConverter()
+#endif
+                });
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Category = "Children", Type = "ChildrenLayout", Value = ChildrenLayout.Regular, Name = "Children Layout" });
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Category = "Children", Type = "bool", Value = false, Name = "Wraps Children" });
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Category = "Children", Type = "bool", Value = false, Name = "Clips Children" });
+
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "ChildrenLayout", Value = ChildrenLayout.Regular, Name = "Children Layout" });
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "Wraps Children" });
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "Clips Children" });
 
                 stateSave.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation" });
 
@@ -259,10 +261,6 @@ namespace Gum.Managers
                 mDefaults.Add("Container", stateSave);
                 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             }
-
-
-
-
 
             {
                 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -579,7 +577,7 @@ namespace Gum.Managers
             variableSave.CustomTypeConverter = new AvailableInstancesConverter() { IncludeScreenBounds = true };
             variables.Variables.Add(variableSave);
         }
-#endif 
+#endif
 
         public StateSave GetDefaultStateFor(string type)
         {

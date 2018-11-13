@@ -1,6 +1,7 @@
 ﻿using FlatRedBall.Glue.SaveClasses;
 using FlatRedBall.IO;
 using GluePlugin.Converters;
+using GluePlugin.SaveObjects;
 using Gum;
 using Gum.Managers;
 using System;
@@ -30,9 +31,17 @@ namespace GluePlugin.Logic
 
         private void LoadGlueProject(string fileName)
         {
+            GluePluginState.Self.InitializationState = InitializationState.Initializing;
+
             var glueProjectSave = ToolsUtilities.FileManager.XmlDeserialize<GlueProjectSave>(fileName);
             GluePluginState.Self.GlueProject = glueProjectSave;
             GluePluginState.Self.GlueProjectFilePath = fileName;
+
+            GluePluginState.Self.CsprojFilePath = GluePluginState.Self.GlueProjectFilePath.RemoveExtension() + ".csproj";
+
+            var vsProject = VisualStudioProjectSave.Load(GluePluginState.Self.CsprojFilePath);
+            GluePluginState.Self.ProjectRootNamespace = vsProject.GetRootNamespace();
+
 
             var gumProject = GlueToGumProjectConverter.Self.ToGumProjectSave(glueProjectSave);
 
@@ -40,11 +49,17 @@ namespace GluePlugin.Logic
             var directory = glueFilePath.GetDirectoryContainingThis();
             var saveLocation = directory + "GumGluePlugin/testGum.gumx";
 
+            // to prevent a reload:
+            FileWatchManager.Self.IgnoreNextChangeOn(saveLocation);
             gumProject.Save(saveLocation, saveElements:true);
 
             GumCommands.Self.FileCommands.LoadProject(saveLocation);
 
+
             StandardElementsCustomizationLogic.Self.CustomizeStandardElements();
+
+            GluePluginState.Self.InitializationState = InitializationState.Initialized;
+
         }
     }
 }

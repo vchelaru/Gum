@@ -187,7 +187,7 @@ namespace Gum.Wireframe
 
                 var element = SelectedState.Self.SelectedElement;
 
-                foreach(var newVariable in stateSave.Variables)
+                foreach(var newVariable in stateSave.Variables.ToList())
                 {
                     var oldValue = grabbedInitialState.StateSave.GetValue(newVariable.Name);
 
@@ -245,8 +245,7 @@ namespace Gum.Wireframe
                 }
                 else
                 {
-                    int m = 3;
-                    return false;
+                    return oldValue.Equals(newValue);
                 }
             }
         }

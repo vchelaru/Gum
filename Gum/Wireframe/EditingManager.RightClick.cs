@@ -374,6 +374,8 @@ namespace Gum.Wireframe
 
             targetElement.Instances.Add(targetInstance);
 
+            StateSave stateSave = copiedState;
+            StateSave targetState;
             // We now have to copy over the states
             if (targetElement != sourceElement)
             {
@@ -382,78 +384,47 @@ namespace Gum.Wireframe
                     MessageBox.Show("Only the default state variables will be copied since the source and target elements differ.");
                 }
 
-                StateSave stateSave = copiedState;
+                targetState = targetElement.DefaultState;
 
-                // Why do we reverse loop here?
-                for (int i = stateSave.Variables.Count - 1; i > -1; i--)
-                {
-                    VariableSave sourceVariable = stateSave.Variables[i];
-
-                    VariableSave copiedVariable = sourceVariable.Clone();
-                    // Only copy over the variables that apply to the object that was dropped
-                    if (sourceVariable.SourceObject == sourceInstance.Name)
-                    {
-                        copiedVariable.Name = targetInstance.Name + "." + copiedVariable.GetRootName();
-
-                        // We don't want to copy exposed variables.
-                        // If we did, the user would have 2 variables exposed with the same.
-                        copiedVariable.ExposedAsName = null;
-
-                        targetElement.DefaultState.Variables.Add(copiedVariable);
-                    }
-                }
-
-                for(int i = 0; i < stateSave.VariableLists.Count; i++)
-                {
-                    var sourceVariableList = stateSave.VariableLists[i];
-
-                    var copiedVariableList = sourceVariableList.Clone();
-                    // Only copy over the variables that apply to the object that was dropped
-                    if (sourceVariableList.SourceObject == sourceInstance.Name)
-                    {
-                        copiedVariableList.Name = targetInstance.Name + "." + copiedVariableList.GetRootName();
-                        copiedVariableList.SourceObject = targetInstance.Name;
-                        targetElement.DefaultState.VariableLists.Add(copiedVariableList);
-                    }
-                }
             }
             else
             {
-                StateSave stateSave = copiedState;
+                targetState = SelectedState.Self.SelectedStateSave;
+            }
 
-                for (int i = stateSave.Variables.Count - 1; i > -1; i--)
+            // why reverse loop?
+            for (int i = stateSave.Variables.Count - 1; i > -1; i--)
+            {
+                // We may have copied over a group of instances.  If so
+                // the copied state may have variables for multiple instances.
+                // We only want to apply the variables that work for the selected
+                // object.
+                VariableSave sourceVariable = stateSave.Variables[i];
+                if (sourceVariable.SourceObject == sourceInstance.Name)
                 {
-                    // We may have copied over a group of instances.  If so
-                    // the copied state may have variables for multiple instances.
-                    // We only want to apply the variables that work for the selected
-                    // object.
-                    VariableSave sourceVariable = stateSave.Variables[i];
-                    if (sourceVariable.SourceObject == sourceInstance.Name)
-                    {
 
-                        VariableSave copiedVariable = sourceVariable.Clone();
-                        copiedVariable.Name = targetInstance.Name + "." + copiedVariable.GetRootName();
+                    VariableSave copiedVariable = sourceVariable.Clone();
+                    copiedVariable.Name = targetInstance.Name + "." + copiedVariable.GetRootName();
 
-                        // We don't want to copy exposed variables.
-                        // If we did, the user would have 2 variables exposed with the same.
-                        copiedVariable.ExposedAsName = null;
+                    // We don't want to copy exposed variables.
+                    // If we did, the user would have 2 variables exposed with the same.
+                    copiedVariable.ExposedAsName = null;
 
-                        SelectedState.Self.SelectedStateSave.Variables.Add(copiedVariable);
-                    }
+                    targetState.Variables.Add(copiedVariable);
                 }
-                // Copy over the VariableLists too
-                for (int i = stateSave.VariableLists.Count - 1; i > -1; i--)
-                {
+            }
+            // Copy over the VariableLists too
+            for (int i = stateSave.VariableLists.Count - 1; i > -1; i--)
+            {
 
-                    VariableListSave sourceList = stateSave.VariableLists[i];
-                    if (sourceList.SourceObject == sourceInstance.Name)
-                    {
-                        VariableListSave copiedList = sourceList.Clone();
-                        copiedList.Name = targetInstance.Name + "." + copiedList.GetRootName();
-                        copiedList.SourceObject = targetInstance.Name;
-                        
-                        SelectedState.Self.SelectedStateSave.VariableLists.Add(copiedList);
-                    }
+                VariableListSave sourceVariableList = stateSave.VariableLists[i];
+                if (sourceVariableList.SourceObject == sourceInstance.Name)
+                {
+                    VariableListSave copiedList = sourceVariableList.Clone();
+                    copiedList.Name = targetInstance.Name + "." + copiedList.GetRootName();
+                    copiedList.SourceObject = targetInstance.Name;
+
+                    targetState.VariableLists.Add(copiedList);
                 }
             }
 

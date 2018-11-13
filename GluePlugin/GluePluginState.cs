@@ -9,9 +9,20 @@ using ToolsUtilities;
 
 namespace GluePlugin
 {
+    public enum InitializationState
+    {
+        NotStarted,
+        Initializing,
+        Initialized
+    }
+
     public class GluePluginState : Singleton<GluePluginState>
     {
         public FilePath GlueProjectFilePath { get; set; }
         public GlueProjectSave GlueProject { get; set;}
+        public FilePath CsprojFilePath { get; set; }
+        public string ProjectRootNamespace { get; set; }
+
+        public InitializationState InitializationState { get; set; }
     }
 }
