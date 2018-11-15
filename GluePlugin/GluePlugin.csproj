@@ -34,6 +34,7 @@
       <HintPath>..\packages\Microsoft.VisualStudio.Setup.Configuration.Interop.1.16.30\lib\net35\Microsoft.VisualStudio.Setup.Configuration.Interop.dll</HintPath>
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
+    <Reference Include="PresentationCore" />
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Configuration" />
@@ -55,10 +56,13 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
+    <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Converters\GlueToGumProjectConverter.cs" />
+    <Compile Include="Converters\GlueToGumTextureCoordinateConversionLogic.cs" />
     <Compile Include="Converters\GumToGlueConverter.cs" />
+    <Compile Include="Converters\VariableGroupDictionary.cs" />
     <Compile Include="GluePluginState.cs" />
     <Compile Include="Logic\CodeCreationLogic.cs" />
     <Compile Include="Logic\ElementAddLogic.cs" />

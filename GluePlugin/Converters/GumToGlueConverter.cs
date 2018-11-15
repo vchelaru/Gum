@@ -20,19 +20,25 @@ namespace GluePlugin.Converters
         {
             var convertedName = variableName;
 
-            if(instance.BaseType == "Sprite")
+            // values for any type:
+            switch(variableName)
             {
-                if(variableName == "Height")
+                case "Rotation": convertedName = "RotationZ"; break;
+            }
+
+            if (instance.BaseType == "Sprite")
+            {
+                switch (variableName)
                 {
-                    convertedName = "TextureScale";
-                }
-                else if (variableName == "Width")
-                {
-                    convertedName = "TextureScale";
-                }
-                else if(variableName == "SourceFile")
-                {
-                    convertedName = "Texture"; // eventually this might be .achx or something else, but for now always texture
+                    case "Height": convertedName = "TextureScale"; break;
+                    case "Width": convertedName = "TextureScale"; break;
+
+                    // eventually this might be .achx or something else, but for now always texture
+                    case "SourceFile": convertedName = "Texture"; break;
+                    case "Texture Left": convertedName = "LeftTexturePixel"; break;
+                    case "Texture Right": convertedName = "RightTexturePixel"; break;
+                    case "Texture Top": convertedName = "TopTexturePixel"; break;
+                    case "Texture Bottom": convertedName = "BottomTexturePixel"; break;
                 }
 
             }
@@ -43,14 +49,14 @@ namespace GluePlugin.Converters
 
         internal IElement ConvertElement(ElementSave element)
         {
-            if(element is GumScreen)
+            if (element is GumScreen)
             {
                 var glueScreen = new FlatRedBall.Glue.SaveClasses.ScreenSave();
                 glueScreen.Name = $"Screens\\{element.Name}";
 
                 return glueScreen;
             }
-            else if(element is ComponentSave)
+            else if (element is ComponentSave)
             {
                 var glueEntity = new FlatRedBall.Glue.SaveClasses.EntitySave();
                 glueEntity.Name = $"Entities\\{element.Name}";
@@ -67,11 +73,20 @@ namespace GluePlugin.Converters
         {
             var convertedValue = variableValue;
 
-            if(instance.BaseType == "Sprite")
+            // conversions regardless of type:
+            if(gumVariableName == "Rotation")
+            {
+                if(variableValue is float)
+                {
+                    convertedValue = (float)(2 * Math.PI * ((float)variableValue) / 360);
+                }
+            }
+
+            if (instance.BaseType == "Sprite")
             {
                 if (gumVariableName == "Height")
                 {
-                    if(variableValue is float)
+                    if (variableValue is float)
                     {
                         convertedValue = ((float)variableValue) / 100.0f;
                     }
@@ -84,9 +99,9 @@ namespace GluePlugin.Converters
                         convertedValue = ((float)variableValue) / 100.0f;
                     }
                 }
-                else if(gumVariableName == "SourceFile")
+                else if (gumVariableName == "SourceFile")
                 {
-                    if(variableValue is string)
+                    if (variableValue is string)
                     {
                         var filePath = new FilePath(variableValue as string);
 
@@ -107,13 +122,20 @@ namespace GluePlugin.Converters
 
             if (instance.BaseType == "Sprite")
             {
-                if (gumVariableName == "SourceFile")
+                if (gumVariableName == "SourceFile" && variableValue is string)
                 {
-                    if (variableValue is string)
-                    {
-                        typeToReturn = "Microsoft.Xna.Framework.Graphics.Texture2D";
-                    }
+                    typeToReturn = "Microsoft.Xna.Framework.Graphics.Texture2D";
                 }
+
+                else if (gumVariableName == "Texture Left" ||
+                    gumVariableName == "Texture Right" ||
+                    gumVariableName == "Texture Top" ||
+                    gumVariableName == "Texture Bottom")
+                {
+                    typeToReturn = "float";
+                }
+
+
             }
 
             return typeToReturn;
@@ -124,13 +146,13 @@ namespace GluePlugin.Converters
             var newNamedObjectSave = new NamedObjectSave();
             newNamedObjectSave.InstanceName = instance.Name;
 
-            if(!string.IsNullOrEmpty(instance.BaseType ))
+            if (!string.IsNullOrEmpty(instance.BaseType))
             {
                 var baseElement = ObjectFinder.Self.GetElementSave(instance.BaseType);
 
-                if(baseElement is StandardElementSave)
+                if (baseElement is StandardElementSave)
                 {
-                    switch(instance.BaseType)
+                    switch (instance.BaseType)
                     {
                         case "Sprite":
                             newNamedObjectSave.SourceType = SourceType.FlatRedBallType;
@@ -146,7 +168,7 @@ namespace GluePlugin.Converters
                             break;
                     }
                 }
-                else if(baseElement is ComponentSave)
+                else if (baseElement is ComponentSave)
                 {
                     newNamedObjectSave.SourceType = SourceType.Entity;
                     newNamedObjectSave.SourceClassType = $"Entities\\{baseElement.Name}";
@@ -159,7 +181,7 @@ namespace GluePlugin.Converters
         internal bool ApplyGumVariableCustom(InstanceSave gumInstance, ElementSave gumElement, string glueVariableName, object glueValue)
         {
             var handled = false;
-            if(glueVariableName == "Parent")
+            if (glueVariableName == "Parent")
             {
                 var parentValue = (string)glueValue;
 
@@ -172,11 +194,11 @@ namespace GluePlugin.Converters
                 {
                     var isInList = glueElement.NamedObjects.Contains(namedObject) == false;
 
-                    if(isInList)
+                    if (isInList)
                     {
                         var list = glueElement.NamedObjects.FirstOrDefault(item => item.ContainedObjects.Contains(namedObject));
 
-                        if(list != null)
+                        if (list != null)
                         {
                             list.ContainedObjects.Remove(namedObject);
                         }
@@ -190,7 +212,7 @@ namespace GluePlugin.Converters
 
                     var isInList = glueElement.NamedObjects.Contains(namedObject) == false;
 
-                    if(!isInList)
+                    if (!isInList)
                     {
                         glueElement.NamedObjects.Remove(namedObject);
                         wasRemoved = true;
@@ -206,11 +228,11 @@ namespace GluePlugin.Converters
                         }
                     }
 
-                    if(wasRemoved)
+                    if (wasRemoved)
                     {
                         var newList = glueElement.NamedObjects.FirstOrDefault(item => item.InstanceName == parentValue);
 
-                        if(newList != null)
+                        if (newList != null)
                         {
                             newList.ContainedObjects.Add(namedObject);
                         }

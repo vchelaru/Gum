@@ -203,10 +203,14 @@ namespace GluePlugin.Converters
             var gumState = new GumState();
             gumState.Name = glueState.Name;
 
+            VariableGroupDictionary variableGroups = new VariableGroupDictionary();
+
             foreach (var glueVariable in glueState.InstructionSaves)
             {
-                AddGumVariables(glueVariable, null, glueElement, gumState.Variables, isInState:true);
+                AddGumVariables(glueVariable, null, glueElement, gumState.Variables, variableGroups, isInState:true);
             }
+
+            ApplyVariableGroups(variableGroups, glueElement, gumState.Variables);
 
 
             // everything should set value
@@ -217,6 +221,15 @@ namespace GluePlugin.Converters
 
 
             return gumState;
+        }
+
+        private void ApplyVariableGroups(VariableGroupDictionary variableGroups, GlueElement glueElement, 
+            List<VariableSave> gumVariables)
+        {
+            if(variableGroups.HasCategory(GlueToGumTextureCoordinateConversionLogic.TextureCoordinatesCategory))
+            {
+                GlueToGumTextureCoordinateConversionLogic.Self.ApplyTextureCoordinatesVariables(variableGroups, gumVariables, glueElement);
+            }
         }
 
         private GumStateCategory ToGumStateCategory(GlueStateCategory glueStateCategory, GlueElement glueElement)
@@ -269,13 +282,17 @@ namespace GluePlugin.Converters
 
         private List<VariableSave> GetVariableSaves(NamedObjectSave namedObject, NamedObjectSave parentNamedObject, GlueElement glueElement)
         {
+            VariableGroupDictionary variableGroups = new VariableGroupDictionary();
+
             List<VariableSave> gumVariables = new List<VariableSave>();
             foreach(var glueVariable in namedObject.InstructionSaves)
             {
-                AddGumVariables(glueVariable, namedObject, glueElement, gumVariables);
+                AddGumVariables(glueVariable, namedObject, glueElement, gumVariables, variableGroups);
             }
 
-            if(namedObject.SourceType == SourceType.FlatRedBallType && 
+            ApplyVariableGroups(variableGroups, glueElement, gumVariables);
+
+            if (namedObject.SourceType == SourceType.FlatRedBallType && 
                 namedObject.SourceClassType == "PositionedObjectList<T>" &&
                 namedObject.SourceClassGenericType != null)
             {
@@ -368,7 +385,7 @@ namespace GluePlugin.Converters
         }
 
         private void AddGumVariables(InstructionSave glueVariable, NamedObjectSave namedObject,
-            GlueElement glueElement, List<VariableSave> gumVariables, bool isInState = false)
+            GlueElement glueElement, List<VariableSave> gumVariables, VariableGroupDictionary variableGroups, bool isInState = false)
         {
             string glueVariableName = glueVariable.Member;
 
@@ -402,49 +419,6 @@ namespace GluePlugin.Converters
                         gumVariables.Add(variableSave);
                     }
                     break;
-                case "Texture":
-                    {
-                        var variableSave = new VariableSave();
-                        variableSave.Name = $"{namedObject.InstanceName}.SourceFile";
-                        variableSave.Type = "string";
-
-                        //var referencedFileName = (string)glueVariable.Value;
-                        //var nos = glueElement.GetReferencedFileSave(referencedFileName);
-
-                        //if(nos == null)
-                        //{
-                        //    // todo - need to look in global content;
-                        //}
-
-                        // assume the content location is in a monogame DGL location, and the
-                        // file is a PNG. Eventually we can make this more intelligent
-                        var fileName = $"../Content/{glueElement.Name}/{(string)glueVariable.Value}.png";
-
-                        variableSave.Value = fileName;
-                        variableSave.IsFile = true;
-                        gumVariables.Add(variableSave);
-                    }
-                    break;
-                case "TextureScale":
-                    {
-                        var variableSave = new VariableSave();
-
-                        variableSave = new VariableSave();
-                        variableSave.Name = $"{namedObject.InstanceName}.Width";
-                        variableSave.Type = "float";
-                        variableSave.Value = (float)glueVariable.Value * 100;
-                        gumVariables.Add(variableSave);
-
-
-                        variableSave = new VariableSave();
-                        variableSave.Name = $"{namedObject.InstanceName}.Height";
-                        variableSave.Type = "float";
-                        variableSave.Value = (float)glueVariable.Value * 100;
-                        gumVariables.Add(variableSave);
-
-                        // todo width units?
-                    }
-                    break;
                 case "Radius":
                     {
                         if(namedObject.SourceType == SourceType.FlatRedBallType && namedObject.SourceClassType == "Circle")
@@ -471,6 +445,73 @@ namespace GluePlugin.Converters
                             gumVariables.Add(variableSave);
 
                         }
+                    }
+                    break;
+
+                case "RotationZ":
+                    {
+                        var variableSave = new VariableSave();
+                        variableSave.Name = $"{namedObject.InstanceName}.Rotation";
+                        variableSave.Type = "float";
+                        var valueRadians = (float)glueVariable.Value;
+                        var degrees = 360 * (valueRadians / (2 * Math.PI));
+                        variableSave.Value = (float)degrees;
+                        gumVariables.Add(variableSave);
+                    }
+
+                    break;
+
+                case "RightTexturePixel":
+                case "LeftTexturePixel":
+                case "BottomTexturePixel":
+                case "TopTexturePixel":
+                    variableGroups.AddVariable(glueVariable, namedObject, 
+                        glueVariableName, GlueToGumTextureCoordinateConversionLogic.TextureCoordinatesCategory);
+                    break;
+                case "Texture":
+                    {
+                        var variableSave = new VariableSave();
+                        variableSave.Name = $"{namedObject.InstanceName}.SourceFile";
+                        variableSave.Type = "string";
+
+                        //var referencedFileName = (string)glueVariable.Value;
+                        //var nos = glueElement.GetReferencedFileSave(referencedFileName);
+
+                        //if(nos == null)
+                        //{
+                        //    // todo - need to look in global content;
+                        //}
+
+                        // assume the content location is in a monogame DGL location, and the
+                        // file is a PNG. Eventually we can make this more intelligent
+                        var fileName = $"../Content/{glueElement.Name}/{(string)glueVariable.Value}.png";
+
+                        variableSave.Value = fileName;
+                        variableSave.IsFile = true;
+                        gumVariables.Add(variableSave);
+
+                        variableGroups.AddVariable(glueVariable, namedObject, glueVariableName,
+                            GlueToGumTextureCoordinateConversionLogic.TextureCoordinatesCategory);
+                    }
+                    break;
+                case "TextureScale":
+                    {
+                        var variableSave = new VariableSave();
+
+                        variableSave = new VariableSave();
+                        variableSave.Name = $"{namedObject.InstanceName}.Width";
+                        variableSave.Type = "float";
+                        variableSave.Value = (float)glueVariable.Value * 100;
+                        gumVariables.Add(variableSave);
+
+
+                        variableSave = new VariableSave();
+                        variableSave.Name = $"{namedObject.InstanceName}.Height";
+                        variableSave.Type = "float";
+                        variableSave.Value = (float)glueVariable.Value * 100;
+                        gumVariables.Add(variableSave);
+
+                        // todo width units?
                     }
                     break;
                 case "X":

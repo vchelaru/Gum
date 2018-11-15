@@ -2,6 +2,7 @@
 using Gum;
 using Gum.DataTypes;
 using Gum.Managers;
+using Gum.PropertyGridHelpers;
 using Gum.ToolStates;
 using Gum.Undo;
 using Gum.Wireframe;
@@ -17,6 +18,19 @@ namespace TextureCoordinateSelectionPlugin.Logic
 {
     public class ControlLogic : Singleton<ControlLogic>
     {
+
+        object oldTextureLeftValue;
+        object oldTextureTopValue;
+        object oldTextureWidthValue;
+        object oldTextureHeightValue;
+
+        /// <summary>
+        /// This can be set to false to prevent the
+        /// view from refreshing, which we want to do when
+        /// the view itself is what set the values
+        /// </summary>
+        bool shouldRefreshAccordingToVariableSets = true;
+
         public ImageRegionSelectionControl CreateControl()
         {
             var control = new ImageRegionSelectionControl();
@@ -48,6 +62,20 @@ namespace TextureCoordinateSelectionPlugin.Logic
         private void HandleStartRegionChanged(object sender, EventArgs e)
         {
             UndoManager.Self.RecordUndo();
+
+            var state = SelectedState.Self.SelectedStateSave;
+
+            var instancePrefix = SelectedState.Self.SelectedInstance?.Name;
+
+            if (!string.IsNullOrEmpty(instancePrefix))
+            {
+                instancePrefix += ".";
+            }
+
+            oldTextureLeftValue = state.GetValue($"{instancePrefix}Texture Left");
+            oldTextureTopValue = state.GetValue($"{instancePrefix}Texture Top");
+            oldTextureWidthValue = state.GetValue($"{instancePrefix}Texture Width");
+            oldTextureHeightValue = state.GetValue($"{instancePrefix}Texture Height");
         }
 
         private void HandleRegionChanged(object sender, EventArgs e)
@@ -74,17 +102,37 @@ namespace TextureCoordinateSelectionPlugin.Logic
                     instancePrefix += ".";
                 }
 
+
+
                 state.SetValue($"{instancePrefix}Texture Left", graphicalUiElement.TextureLeft, "int");
                 state.SetValue($"{instancePrefix}Texture Top", graphicalUiElement.TextureTop, "int");
                 state.SetValue($"{instancePrefix}Texture Width", graphicalUiElement.TextureWidth, "int");
                 state.SetValue($"{instancePrefix}Texture Height", graphicalUiElement.TextureHeight, "int");
 
+                
                 GumCommands.Self.GuiCommands.RefreshPropertyGridValues();
             }
         }
 
         private void HandleEndRegionChanged(object sender, EventArgs e)
         {
+            var element = SelectedState.Self.SelectedElement;
+            var instance = SelectedState.Self.SelectedInstance;
+
+            shouldRefreshAccordingToVariableSets = false;
+            {
+                // This could be really heavy if we notify everyone of the changes. We should only do it when the editing stops...
+                SetVariableLogic.Self.ReactToPropertyValueChanged("Texture Left", oldTextureLeftValue,
+                    element, instance, refresh: false);
+                SetVariableLogic.Self.ReactToPropertyValueChanged("Texture Top", oldTextureTopValue,
+                    element, instance, refresh: false);
+                SetVariableLogic.Self.ReactToPropertyValueChanged("Texture Width", oldTextureWidthValue,
+                    element, instance, refresh: false);
+                SetVariableLogic.Self.ReactToPropertyValueChanged("Texture Height", oldTextureHeightValue,
+                    element, instance, refresh: false);
+            }
+            shouldRefreshAccordingToVariableSets = true;
+
             UndoManager.Self.RecordUndo();
 
             GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
@@ -123,6 +171,13 @@ namespace TextureCoordinateSelectionPlugin.Logic
             {
                 return;
             }
+
+            if(shouldRefreshAccordingToVariableSets == false)
+            {
+                return;
+            }
+
+            //////////////end early out///////////////////////////////
 
             var shouldClearOut = true;
             if (SelectedState.Self.SelectedStateSave != null)

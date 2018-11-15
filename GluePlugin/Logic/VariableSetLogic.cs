@@ -11,6 +11,10 @@ using ToolsUtilities;
 using GlueScreen = FlatRedBall.Glue.SaveClasses.ScreenSave;
 using GumScreen = Gum.DataTypes.ScreenSave;
 
+using GumElement = Gum.DataTypes.ElementSave;
+using GlueElement = FlatRedBall.Glue.SaveClasses.IElement;
+
+
 using GlueState = FlatRedBall.Glue.SaveClasses.StateSave;
 using GlueStateCategory = FlatRedBall.Glue.SaveClasses.StateSaveCategory;
 
@@ -70,81 +74,193 @@ namespace GluePlugin.Logic
 
             if (foundNos != null)
             {
-                var gumToGlueConverter = GumToGlueConverter.Self;
-                var glueVariableName = gumToGlueConverter.ConvertVariableName(variableName, gumInstance);
-                var glueValue = gumToGlueConverter
-                    .ConvertVariableValue(variableName, gumValue, gumInstance);
-                var type = gumToGlueConverter.ConvertType(variableName, gumValue, gumInstance);
+                var handled = TryHandleAssigningMultipleVariables(gumElement, gumInstance, variableName, glueElement, foundNos, gumValue);
 
-                var handled = gumToGlueConverter.ApplyGumVariableCustom(gumInstance, gumElement, glueVariableName, glueValue);
-
-                if (!handled)
+                if(!handled)
                 {
-                    var selectedGumState = SelectedState.Self.SelectedStateSave;
-                    if (selectedGumState == SelectedState.Self.SelectedElement?.DefaultState)
+                    HandleIndividualVariableAssignment(gumElement, gumInstance, variableName, glueElement, foundNos, gumValue);
+                }
+            }
+
+            if (save)
+            {
+                FileManager.XmlSerialize(glueProject, GluePluginState.Self.GlueProjectFilePath.StandardizedCaseSensitive);
+            }
+        }
+
+        private static bool TryHandleAssigningMultipleVariables(ElementSave gumElement, InstanceSave gumInstance, string variableName, GlueElement glueElement, FlatRedBall.Glue.SaveClasses.NamedObjectSave foundNos, object gumValue)
+        {
+            var isTextureValue = variableName == "Texture Address" ||
+                variableName == "Texture Left" ||
+                variableName == "Texture Top" ||
+                variableName == "Texture Width" ||
+                variableName == "Texture Height";
+
+            var handled = false;
+
+            if(isTextureValue)
+            {
+                string variablePrefix = null;
+                if(gumInstance != null)
+                {
+                    variablePrefix = $"{gumInstance.Name}.";
+                }
+                var state = SelectedState.Self.SelectedStateSave;
+                var addressValueGumCurrent = state.GetValue($"{variablePrefix}Texture Address");
+                var textureLeftValueGumCurrent = state.GetValue($"{variablePrefix}Texture Left");
+                var textureWidthValueGumCurrent = state.GetValue($"{variablePrefix}Texture Width");
+                var textureTopValueGumCurrent = state.GetValue($"{variablePrefix}Texture Top");
+                var textureHeightValueGumCurrent = state.GetValue($"{variablePrefix}Texture Height");
+
+                var setsAny = addressValueGumCurrent != null ||
+                    textureLeftValueGumCurrent != null ||
+                    textureWidthValueGumCurrent != null ||
+                    textureTopValueGumCurrent != null ||
+                    textureHeightValueGumCurrent != null;
+
+                if(setsAny)
+                {
+                    var rvf = new RecursiveVariableFinder(state);
+                    var addressValueGumRecursive = rvf.GetValue<TextureAddress>($"{variablePrefix}Texture Address");
+                    
+                    // set them all
+
+                    if (addressValueGumRecursive == TextureAddress.EntireTexture)
                     {
-
-                        var glueVariable = foundNos.SetVariableValue(glueVariableName, glueValue);
-
-                        glueVariable.Type = type;
+                        // null them out:
+                        HandleIndividualVariableAssignment(gumElement, gumInstance, "Texture Left", glueElement, foundNos, null);
+                        HandleIndividualVariableAssignment(gumElement, gumInstance, "Texture Right", glueElement, foundNos, null);
+                        HandleIndividualVariableAssignment(gumElement, gumInstance, "Texture Top", glueElement, foundNos, null);
+                        HandleIndividualVariableAssignment(gumElement, gumInstance, "Texture Bottom", glueElement, foundNos, null);
                     }
                     else
                     {
-                        GlueState glueState;
+                        // set the values:
+                        HandleIndividualVariableAssignment(gumElement, gumInstance, "Texture Left", glueElement, foundNos, IntToNullOrFloat(textureLeftValueGumCurrent));
+                        HandleIndividualVariableAssignment(gumElement, gumInstance, "Texture Top", glueElement, foundNos, IntToNullOrFloat(textureTopValueGumCurrent));
 
-                        glueState = GetOrCreateGlueState(glueElement, selectedGumState);
-
-                        if(gumInstance != null)
+                        // right and bottom depend on left/top plus width/height
+                        if(textureLeftValueGumCurrent != null && textureWidthValueGumCurrent != null)
                         {
-                            // The only way Glue states can set this value is to have a tunneled variable, so we gotta look for that
-                            var tunneledVariable = glueElement.CustomVariables
-                                .FirstOrDefault(item => item.SourceObject == gumInstance.Name && item.SourceObjectProperty == glueVariableName);
-
-                            if(tunneledVariable == null)
-                            {
-                                tunneledVariable = new FlatRedBall.Glue.SaveClasses.CustomVariable();
-                                tunneledVariable.Name = gumInstance.Name + glueVariableName;
-                                tunneledVariable.DefaultValue = null;
-                                tunneledVariable.SourceObject = gumInstance.Name;
-                                tunneledVariable.SourceObjectProperty = glueVariableName;
-                                tunneledVariable.Type = type;
-
-                                glueElement.CustomVariables.Add(tunneledVariable);
-                            }
-
-                            var stateVariable = glueState.InstructionSaves.FirstOrDefault(item => item.Member == tunneledVariable.Name);
-
-                            if(stateVariable == null)
-                            {
-                                stateVariable = new FlatRedBall.Content.Instructions.InstructionSave();
-                                stateVariable.Member = tunneledVariable.Name;
-                                glueState.InstructionSaves.Add(stateVariable);
-                            }
-
-                            stateVariable.Value = glueValue;
+                            var combined = (int)textureLeftValueGumCurrent + (int)textureWidthValueGumCurrent;
+                            HandleIndividualVariableAssignment(gumElement, gumInstance, "Texture Right", glueElement, foundNos, (float)combined);
                         }
                         else
                         {
-                            var stateVariable = glueState.InstructionSaves.FirstOrDefault(item => item.Member == glueVariableName);
-
-                            if (stateVariable == null)
-                            {
-                                stateVariable = new FlatRedBall.Content.Instructions.InstructionSave();
-                                stateVariable.Member = glueVariableName;
-                                glueState.InstructionSaves.Add(stateVariable);
-                            }
-
-                            stateVariable.Value = glueValue;
+                            HandleIndividualVariableAssignment(gumElement, gumInstance, "Texture Right", glueElement, foundNos, IntToNullOrFloat(null));
                         }
 
+                        if(textureTopValueGumCurrent != null && textureHeightValueGumCurrent != null)
+                        {
+                            var combined = (int)textureTopValueGumCurrent + (int)textureHeightValueGumCurrent;
+                            HandleIndividualVariableAssignment(gumElement, gumInstance, "Texture Bottom", glueElement, foundNos, (float) combined);
+                        }
+                        else
+                        {
+                            HandleIndividualVariableAssignment(gumElement, gumInstance, "Texture Bottom", glueElement, foundNos, null);
+                        }
                     }
+
+                }
+                else
+                {
+                    // null them all
+                    HandleIndividualVariableAssignment(gumElement, gumInstance, "Texture Left", glueElement, foundNos, null);
+                    HandleIndividualVariableAssignment(gumElement, gumInstance, "Texture Right", glueElement, foundNos, null);
+                    HandleIndividualVariableAssignment(gumElement, gumInstance, "Texture Top", glueElement, foundNos, null);
+                    HandleIndividualVariableAssignment(gumElement, gumInstance, "Texture Bottom", glueElement, foundNos, null);
                 }
 
+
+
+                handled = true;
             }
 
-            if(save)
+            return handled;
+        }
+
+        private static object IntToNullOrFloat(object value)
+        {
+            if(value == null)
             {
-                FileManager.XmlSerialize(glueProject, GluePluginState.Self.GlueProjectFilePath.StandardizedCaseSensitive);
+                return null;
+            }
+            else
+            {
+                return (float)((int)value);
+            }
+        }
+
+        private static void HandleIndividualVariableAssignment(ElementSave gumElement, InstanceSave gumInstance, string variableName, GlueElement glueElement, FlatRedBall.Glue.SaveClasses.NamedObjectSave foundNos, object gumValue)
+        {
+            var gumToGlueConverter = GumToGlueConverter.Self;
+            var glueVariableName = gumToGlueConverter.ConvertVariableName(variableName, gumInstance);
+            var glueValue = gumToGlueConverter
+                .ConvertVariableValue(variableName, gumValue, gumInstance);
+            var type = gumToGlueConverter.ConvertType(variableName, gumValue, gumInstance);
+
+            var handled = gumToGlueConverter.ApplyGumVariableCustom(gumInstance, gumElement, glueVariableName, glueValue);
+
+            if (!handled)
+            {
+                var selectedGumState = SelectedState.Self.SelectedStateSave;
+                if (selectedGumState == SelectedState.Self.SelectedElement?.DefaultState)
+                {
+
+                    var glueVariable = foundNos.SetVariableValue(glueVariableName, glueValue);
+
+                    glueVariable.Type = type;
+                }
+                else
+                {
+                    GlueState glueState;
+
+                    glueState = GetOrCreateGlueState(glueElement, selectedGumState);
+
+                    if (gumInstance != null)
+                    {
+                        // The only way Glue states can set this value is to have a tunneled variable, so we gotta look for that
+                        var tunneledVariable = glueElement.CustomVariables
+                            .FirstOrDefault(item => item.SourceObject == gumInstance.Name && item.SourceObjectProperty == glueVariableName);
+
+                        if (tunneledVariable == null)
+                        {
+                            tunneledVariable = new FlatRedBall.Glue.SaveClasses.CustomVariable();
+                            tunneledVariable.Name = gumInstance.Name + glueVariableName;
+                            tunneledVariable.DefaultValue = null;
+                            tunneledVariable.SourceObject = gumInstance.Name;
+                            tunneledVariable.SourceObjectProperty = glueVariableName;
+                            tunneledVariable.Type = type;
+
+                            glueElement.CustomVariables.Add(tunneledVariable);
+                        }
+
+                        var stateVariable = glueState.InstructionSaves.FirstOrDefault(item => item.Member == tunneledVariable.Name);
+
+                        if (stateVariable == null)
+                        {
+                            stateVariable = new FlatRedBall.Content.Instructions.InstructionSave();
+                            stateVariable.Member = tunneledVariable.Name;
+                            glueState.InstructionSaves.Add(stateVariable);
+                        }
+
+                        stateVariable.Value = glueValue;
+                    }
+                    else
+                    {
+                        var stateVariable = glueState.InstructionSaves.FirstOrDefault(item => item.Member == glueVariableName);
+
+                        if (stateVariable == null)
+                        {
+                            stateVariable = new FlatRedBall.Content.Instructions.InstructionSave();
+                            stateVariable.Member = glueVariableName;
+                            glueState.InstructionSaves.Add(stateVariable);
+                        }
+
+                        stateVariable.Value = glueValue;
+                    }
+
+                }
             }
         }
 

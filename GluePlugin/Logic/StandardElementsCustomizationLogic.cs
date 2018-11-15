@@ -38,19 +38,29 @@ namespace GluePlugin.Logic
 
         private void CustomizeSprite()
         {
-            var circleDefaultValues = StandardElementsManager.Self.DefaultStates["Sprite"];
+            var spriteDefaultValues = StandardElementsManager.Self.DefaultStates["Sprite"];
 
-            foreach (var variable in circleDefaultValues.Variables)
+            foreach (var variable in spriteDefaultValues.Variables)
             {
                 variable.IsHiddenInPropertyGrid = true;
             }
 
-            circleDefaultValues.GetVariableSave("X").IsHiddenInPropertyGrid = false;
-            circleDefaultValues.GetVariableSave("Y").IsHiddenInPropertyGrid = false;
-            circleDefaultValues.GetVariableSave("Width").IsHiddenInPropertyGrid = false;
-            circleDefaultValues.GetVariableSave("Height").IsHiddenInPropertyGrid = false;
-            circleDefaultValues.GetVariableSave("Visible").IsHiddenInPropertyGrid = false;
-            circleDefaultValues.GetVariableSave("SourceFile").IsHiddenInPropertyGrid = false;
+            spriteDefaultValues.GetVariableSave("X").IsHiddenInPropertyGrid = false;
+            spriteDefaultValues.GetVariableSave("Y").IsHiddenInPropertyGrid = false;
+            spriteDefaultValues.GetVariableSave("Width").IsHiddenInPropertyGrid = false;
+            spriteDefaultValues.GetVariableSave("Height").IsHiddenInPropertyGrid = false;
+            spriteDefaultValues.GetVariableSave("Visible").IsHiddenInPropertyGrid = false;
+            spriteDefaultValues.GetVariableSave("SourceFile").IsHiddenInPropertyGrid = false;
+
+            spriteDefaultValues.GetVariableSave("Rotation").IsHiddenInPropertyGrid = false;
+
+
+            spriteDefaultValues.GetVariableSave("Texture Address").IsHiddenInPropertyGrid = false;
+            spriteDefaultValues.GetVariableSave("Texture Left").IsHiddenInPropertyGrid = false;
+            spriteDefaultValues.GetVariableSave("Texture Top").IsHiddenInPropertyGrid = false;
+            spriteDefaultValues.GetVariableSave("Texture Width").IsHiddenInPropertyGrid = false;
+            spriteDefaultValues.GetVariableSave("Texture Height").IsHiddenInPropertyGrid = false;
+
         }
 
         private static void CustomizeCircle()
@@ -80,6 +90,9 @@ namespace GluePlugin.Logic
             containerDefaultValues.GetVariableSave("X").IsHiddenInPropertyGrid = false;
             containerDefaultValues.GetVariableSave("Y").IsHiddenInPropertyGrid = false;
             containerDefaultValues.GetVariableSave("Visible").IsHiddenInPropertyGrid = false;
+
+            containerDefaultValues.GetVariableSave("Rotation").IsHiddenInPropertyGrid = false;
+
             // entities don't have width/height so don't let them edit it...
         }
 
