@@ -5,6 +5,7 @@ using System.Text;
 using System.Xml.Serialization;
 using System.Collections;
 using ToolsUtilities;
+using Microsoft.Xna.Framework;
 
 namespace Gum.DataTypes.Variables
 {
@@ -14,6 +15,7 @@ namespace Gum.DataTypes.Variables
     [XmlInclude(typeof(VariableListSave<long>))]
     [XmlInclude(typeof(VariableListSave<double>))]
     [XmlInclude(typeof(VariableListSave<bool>))]
+    [XmlInclude(typeof(VariableListSave<Vector2>))]
     public abstract class VariableListSave
     {
         public string Type

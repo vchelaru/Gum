@@ -18,22 +18,24 @@ namespace GluePlugin.Logic
             CustomizeSprite();
 
             CustomizeContainer();
+
+            CustomizePolygon();
         }
 
         private void CustomizeRectangle()
         {
-            var circleDefaultValues = StandardElementsManager.Self.DefaultStates["Rectangle"];
+            var rectangleDefaultValues = StandardElementsManager.Self.DefaultStates["Rectangle"];
 
-            foreach (var variable in circleDefaultValues.Variables)
+            foreach (var variable in rectangleDefaultValues.Variables)
             {
                 variable.IsHiddenInPropertyGrid = true;
             }
 
-            circleDefaultValues.GetVariableSave("X").IsHiddenInPropertyGrid = false;
-            circleDefaultValues.GetVariableSave("Y").IsHiddenInPropertyGrid = false;
-            circleDefaultValues.GetVariableSave("Width").IsHiddenInPropertyGrid = false;
-            circleDefaultValues.GetVariableSave("Height").IsHiddenInPropertyGrid = false;
-            circleDefaultValues.GetVariableSave("Visible").IsHiddenInPropertyGrid = false;
+            rectangleDefaultValues.GetVariableSave("X").IsHiddenInPropertyGrid = false;
+            rectangleDefaultValues.GetVariableSave("Y").IsHiddenInPropertyGrid = false;
+            rectangleDefaultValues.GetVariableSave("Width").IsHiddenInPropertyGrid = false;
+            rectangleDefaultValues.GetVariableSave("Height").IsHiddenInPropertyGrid = false;
+            rectangleDefaultValues.GetVariableSave("Visible").IsHiddenInPropertyGrid = false;
         }
 
         private void CustomizeSprite()
@@ -94,6 +96,24 @@ namespace GluePlugin.Logic
             containerDefaultValues.GetVariableSave("Rotation").IsHiddenInPropertyGrid = false;
 
             // entities don't have width/height so don't let them edit it...
+        }
+
+
+        private void CustomizePolygon()
+        {
+            var polygonDefaultValues = StandardElementsManager.Self.DefaultStates["Polygon"];
+
+            foreach (var variable in polygonDefaultValues.Variables)
+            {
+                variable.IsHiddenInPropertyGrid = true;
+            }
+
+
+            polygonDefaultValues.GetVariableSave("X").IsHiddenInPropertyGrid = false;
+            polygonDefaultValues.GetVariableSave("Y").IsHiddenInPropertyGrid = false;
+
+            polygonDefaultValues.GetVariableSave("Visible").IsHiddenInPropertyGrid = false;
+
         }
 
     }

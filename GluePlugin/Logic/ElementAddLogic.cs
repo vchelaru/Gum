@@ -8,11 +8,17 @@ using System.Text;
 using System.Threading.Tasks;
 using ToolsUtilities;
 
+using GlueElement = FlatRedBall.Glue.SaveClasses.IElement;
+using GumElement = Gum.DataTypes.ElementSave;
+using GlueScreen = FlatRedBall.Glue.SaveClasses.ScreenSave;
+using GlueEntity = FlatRedBall.Glue.SaveClasses.EntitySave;
+
+
 namespace GluePlugin.Logic
 {
     public class ElementAddLogic : Singleton<ElementAddLogic>
     {
-        internal void HandleElementAdd(ElementSave gumElement)
+        internal void HandleElementAdd(GumElement gumElement)
         {
             var glueProject = GluePluginState.Self.GlueProject;
 
@@ -25,14 +31,15 @@ namespace GluePlugin.Logic
 
             var glueElement = GumToGlueConverter.Self.ConvertElement(gumElement);
 
-            if(glueElement is FlatRedBall.Glue.SaveClasses.ScreenSave)
+            if(glueElement is GlueScreen)
             {
-                glueProject.Screens.Add(glueElement as FlatRedBall.Glue.SaveClasses.ScreenSave);
+                glueProject.Screens.Add(glueElement as GlueScreen);
             }
-            else if(glueElement is FlatRedBall.Glue.SaveClasses.EntitySave)
+            else if(glueElement is GlueEntity)
             {
-                glueProject.Entities.Add(glueElement as FlatRedBall.Glue.SaveClasses.EntitySave);
+                glueProject.Entities.Add(glueElement as GlueEntity);
             }
+
 
             // Create the code file before saving the glue project so that it's already there and Glue
             // doesn't complain about a missing file:

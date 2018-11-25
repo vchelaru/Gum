@@ -135,14 +135,6 @@ namespace GumRuntime
         //    graphicalElement.SetVariablesRecursively(elementSave, elementSave.DefaultState);
         //}
         
-        public static void SetVariablesTopLevel(this GraphicalUiElement graphicalElement, ElementSave elementSave, Gum.DataTypes.Variables.StateSave stateSave)
-        {
-            foreach (var variable in stateSave.Variables.Where(item => item.SetsValue && item.Value != null))
-            {
-                graphicalElement.SetProperty(variable.Name, variable.Value);
-            }
-        }
-
         public static void SetVariablesRecursively(this GraphicalUiElement graphicalElement, ElementSave elementSave, Gum.DataTypes.Variables.StateSave stateSave)
         {
             if (!string.IsNullOrEmpty(elementSave.BaseType))
@@ -155,36 +147,7 @@ namespace GumRuntime
                 }
             }
 
-            var variablesToSet = stateSave.Variables
-                .Where(item => item.SetsValue && item.Value != null)
-                // States should be applied first, then values may override states (order by sorts false first):
-                .OrderBy(item=>!item.IsState(elementSave))
-                .ToList();
-
-            foreach (var variable in variablesToSet)
-            {
-                // See below for explanation on why we don't set Parent here
-                if (variable.GetRootName() != "Parent")
-                {
-                    graphicalElement.SetProperty(variable.Name, variable.Value);
-                }
-            }
-
-            // Now set all parents
-            // The reason for this is
-            // because parents need to
-            // be assigned in the order
-            // of the instances in the .glux.
-            // That way they are drawn in the same
-            // order as they are defined.
-            variablesToSet = variablesToSet.Where(item => item.GetRootName() == "Parent")
-                .OrderBy(item => elementSave.Instances.FindIndex(instance => instance.Name == item.SourceObject))
-                .ToList();
-
-            foreach (var variable in variablesToSet)
-            {
-                graphicalElement.SetProperty(variable.Name, variable.Value);
-            }
+            graphicalElement.ApplyState(stateSave);
         }
 
         public static void SetGraphicalUiElement(this ElementSave elementSave, GraphicalUiElement toReturn, SystemManagers systemManagers)

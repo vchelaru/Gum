@@ -11,6 +11,7 @@ using Gum.DataTypes.Behaviors;
 using Gum.Undo;
 using Gum.Plugins;
 using ToolsUtilities;
+using Gum.Logic.FileWatch;
 
 namespace Gum.Commands
 {
@@ -116,7 +117,7 @@ namespace Gum.Commands
                     //PluginManager.Self.BeforeBehaviorSave(behavior);
 
                     string fileName = behavior.GetFullPathXmlFile();
-                    FileWatchManager.Self.IgnoreNextChangeOn(fileName);
+                    FileWatchLogic.Self.IgnoreNextChangeOn(fileName);
                     // if it's readonly, let's warn the user
                     bool isReadOnly = ProjectManager.IsFileReadOnly(fileName);
 

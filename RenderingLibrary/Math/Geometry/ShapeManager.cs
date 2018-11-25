@@ -17,6 +17,7 @@ namespace RenderingLibrary.Math.Geometry
         List<SolidRectangle> mSolidRectangles = new List<SolidRectangle>();
         List<LineCircle> mCircles = new List<LineCircle>();
         List<LineGrid> mGrids = new List<LineGrid>();
+        List<LinePolygon> mLinePolygons = new List<LinePolygon>();
         List<Line> mLines = new List<Line>();
 
         #endregion
@@ -58,6 +59,7 @@ namespace RenderingLibrary.Math.Geometry
         public IEnumerable<LineRectangle> Rectangles { get { return mRectangles; } }
         public IEnumerable<SolidRectangle> SolidRectangles { get { return mSolidRectangles; } }
         public IEnumerable<LineCircle> Circles { get { return mCircles; } }
+        public IEnumerable<LinePolygon> Polygons {  get { return mLinePolygons; } }
         public IEnumerable<LineGrid> Grids { get { return mGrids; } }
         public IEnumerable<Line> Lines { get { return mLines; } }
         #endregion
@@ -130,12 +132,21 @@ namespace RenderingLibrary.Math.Geometry
             layer.Add(lineCircle);
         }
 
+        public void Add(LinePolygon linePolygon, Layer layer)
+        {
+            mLinePolygons.Add(linePolygon);
 
+            if (layer == null)
+            {
+                layer = Renderer.LayersWritable[0];
+            }
+
+            layer.Add(linePolygon);
+        }
 
 
         public void Remove(LineRectangle linePrimitive)
         {
-            // todo:  Need to make this remove from whatever Layer the line rectangle is on
             mRectangles.Remove(linePrimitive);
             Renderer.RemoveRenderable(linePrimitive);
         }
@@ -157,6 +168,12 @@ namespace RenderingLibrary.Math.Geometry
         {
             mCircles.Remove(lineCircle);
             Renderer.RemoveRenderable(lineCircle);
+        }
+
+        public void Remove(LinePolygon linePolygon)
+        {
+            mLinePolygons.Remove(linePolygon);
+            Renderer.RemoveRenderable(linePolygon);
         }
 
         public void Remove(Line line)

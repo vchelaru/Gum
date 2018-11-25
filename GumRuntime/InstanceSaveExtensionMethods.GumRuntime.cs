@@ -89,7 +89,10 @@ namespace GumRuntime
                     circle.CircleOrigin = CircleOrigin.TopLeft;
                     containedObject = circle;
                     break;
-
+                case "Polygon":
+                    LinePolygon polygon = new LinePolygon(systemManagers);
+                    containedObject = polygon;
+                    break;
                 case "ColoredRectangle":
                     SolidRectangle solidRectangle = new SolidRectangle();
                     containedObject = solidRectangle;

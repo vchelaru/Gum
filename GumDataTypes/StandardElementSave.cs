@@ -15,6 +15,7 @@ namespace Gum.DataTypes
         Container,
         NineSlice,
         ColoredRectangle,
+        Polygon,
         Circle,
         Rectangle
     }

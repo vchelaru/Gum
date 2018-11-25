@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using GlueScreen = FlatRedBall.Glue.SaveClasses.ScreenSave;
+using GlueEntity = FlatRedBall.Glue.SaveClasses.EntitySave;
 using GlueElement = FlatRedBall.Glue.SaveClasses.IElement;
 using GlueState = FlatRedBall.Glue.SaveClasses.StateSave;
 using GlueStateCategory = FlatRedBall.Glue.SaveClasses.StateSaveCategory;
@@ -20,6 +21,7 @@ using GumElement = Gum.DataTypes.ElementSave;
 using GumState = Gum.DataTypes.Variables.StateSave;
 using GumStateCategory = Gum.DataTypes.Variables.StateSaveCategory;
 using FlatRedBall.Content.Instructions;
+using Microsoft.Xna.Framework;
 
 namespace GluePlugin.Converters
 {
@@ -101,18 +103,26 @@ namespace GluePlugin.Converters
             {
                 if(standardElement.Name == "Circle")
                 {
-                    standardElement.DefaultState.SetValue("Width", 32.0f, "float");
-                    standardElement.DefaultState.SetValue("Height", 32.0f, "float");
-                    standardElement.DefaultState.SetValue("Radius", 32.0f, "float");
+                    standardElement.DefaultState.SetValue("Width", 2.0f, "float");
+                    standardElement.DefaultState.SetValue("Height", 2.0f, "float");
+                    standardElement.DefaultState.SetValue("Radius", 1.0f, "float");
                 }
-
-
-
 
                 foreach(var state in standardElement.AllStates)
                 {
-                    state.SetValue("X Origin", HorizontalAlignment.Center, nameof(HorizontalAlignment));
-                    state.SetValue("Y Origin", VerticalAlignment.Center, nameof(VerticalAlignment));
+                    if(standardElement.Name == "Polygon")
+                    {
+                        // Polygons don't really have a width/height
+                        state.SetValue("X Origin", HorizontalAlignment.Left, nameof(HorizontalAlignment));
+                        state.SetValue("Y Origin", VerticalAlignment.Top, nameof(VerticalAlignment));
+                    }
+                    else
+                    {
+                        state.SetValue("X Origin", HorizontalAlignment.Center, nameof(HorizontalAlignment));
+                        state.SetValue("Y Origin", VerticalAlignment.Center, nameof(VerticalAlignment));
+                    }
+
+
 
                     state.SetValue("X Units", PositionUnitType.PixelsFromCenterX, nameof(PositionUnitType));
                     state.SetValue("Y Units", PositionUnitType.PixelsFromCenterYInverted, nameof(PositionUnitType));
@@ -207,7 +217,7 @@ namespace GluePlugin.Converters
 
             foreach (var glueVariable in glueState.InstructionSaves)
             {
-                AddGumVariables(glueVariable, null, glueElement, gumState.Variables, variableGroups, isInState:true);
+                AddGumVariables(glueVariable, null, glueElement, gumState.Variables, gumState.VariableLists, variableGroups, isInState:true);
             }
 
             ApplyVariableGroups(variableGroups, glueElement, gumState.Variables);
@@ -262,8 +272,11 @@ namespace GluePlugin.Converters
             {
                 var instance = ToInstanceSave(namedObject);
 
-                var variableList = GetVariableSaves(namedObject, null, glueElement);
+                List<VariableSave> variableList = null;
+                List<VariableListSave> variableListList = null;
+                GetVariableSaves(namedObject, null, glueElement, out variableList, out variableListList);
                 gumElement.DefaultState.Variables.AddRange(variableList);
+                gumElement.DefaultState.VariableLists.AddRange(variableListList);
 
                 gumElement.Instances.Add(instance);
 
@@ -273,21 +286,25 @@ namespace GluePlugin.Converters
                     {
                         var containedInstance = ToInstanceSave(containedObject);
                         gumElement.Instances.Add(containedInstance);
-                        var containedVariableList = GetVariableSaves(containedObject, namedObject, glueElement);
+                        List<VariableSave> containedVariableList;
+                        List<VariableListSave> containedVariableListList;
+                        GetVariableSaves(containedObject, namedObject, glueElement, out containedVariableList, out containedVariableListList);
                         gumElement.DefaultState.Variables.AddRange(containedVariableList);
                     }
                 }
             }
         }
 
-        private List<VariableSave> GetVariableSaves(NamedObjectSave namedObject, NamedObjectSave parentNamedObject, GlueElement glueElement)
+        private void GetVariableSaves(NamedObjectSave namedObject, NamedObjectSave parentNamedObject, GlueElement glueElement,
+            out List<VariableSave> gumVariables, out List<VariableListSave> gumVariableLists)
         {
             VariableGroupDictionary variableGroups = new VariableGroupDictionary();
 
-            List<VariableSave> gumVariables = new List<VariableSave>();
+            gumVariables = new List<VariableSave>();
+            gumVariableLists = new List<VariableListSave>();
             foreach(var glueVariable in namedObject.InstructionSaves)
             {
-                AddGumVariables(glueVariable, namedObject, glueElement, gumVariables, variableGroups);
+                AddGumVariables(glueVariable, namedObject, glueElement, gumVariables, gumVariableLists, variableGroups);
             }
 
             ApplyVariableGroups(variableGroups, glueElement, gumVariables);
@@ -317,7 +334,6 @@ namespace GluePlugin.Converters
                 gumVariable.SetsValue = true;
             }
 
-            return gumVariables;
         }
 
         private static void AddVariablesForPositionedObjectList(NamedObjectSave namedObject, List<VariableSave> gumVariables)
@@ -385,7 +401,10 @@ namespace GluePlugin.Converters
         }
 
         private void AddGumVariables(InstructionSave glueVariable, NamedObjectSave namedObject,
-            GlueElement glueElement, List<VariableSave> gumVariables, VariableGroupDictionary variableGroups, bool isInState = false)
+            GlueElement glueElement, 
+            List<VariableSave> gumVariables, 
+            List<VariableListSave> gumVariableLists,
+            VariableGroupDictionary variableGroups, bool isInState = false)
         {
             string glueVariableName = glueVariable.Member;
 
@@ -417,6 +436,28 @@ namespace GluePlugin.Converters
                         variableSave.Type = "float";
                         variableSave.Value = (float)glueVariable.Value;
                         gumVariables.Add(variableSave);
+                    }
+                    break;
+                case "Points":
+                    {
+                        var variableListSave = new VariableListSave<Vector2>();
+                        variableListSave.Name = $"{namedObject.InstanceName}.Points";
+
+                        var pointsPositiveYUp = glueVariable.Value as List<Vector2>;
+
+
+
+                        if(pointsPositiveYUp != null)
+                        {
+                            foreach(var frbPoint in pointsPositiveYUp)
+                            {
+                                var newPoint = frbPoint;
+                                newPoint.Y *= -1;
+
+                                variableListSave.ValueAsIList.Add(newPoint);
+                            }
+                        }
+                        gumVariableLists.Add(variableListSave);
                     }
                     break;
                 case "Radius":
@@ -618,6 +659,10 @@ namespace GluePlugin.Converters
                     break;
                 case "PositionedObjectList":
                     gumType = "Container";
+                    break;
+                case "Polygon":
+                case "FlatRedBall.Math.Geometry.Polygon":
+                    gumType = "Polygon";
                     break;
             }
 

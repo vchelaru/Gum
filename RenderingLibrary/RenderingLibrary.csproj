@@ -104,6 +104,7 @@
     <Compile Include="Math\FloatRectangle.cs" />
     <Compile Include="Math\Geometry\Line.cs" />
     <Compile Include="Math\Geometry\LineGrid.cs" />
+    <Compile Include="Math\Geometry\LinePolygon.cs" />
     <Compile Include="Math\Geometry\SolidRectangle.cs" />
     <Compile Include="Graphics\Sprite.cs" />
     <Compile Include="Graphics\SpriteManager.cs" />

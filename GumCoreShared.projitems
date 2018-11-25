@@ -77,6 +77,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Math\Geometry\Line.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Math\Geometry\LineCircle.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Math\Geometry\LineGrid.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Math\Geometry\LinePolygon.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Math\Geometry\LinePrimitive.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Math\Geometry\LineRectangle.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Math\Geometry\ShapeManager.cs" />

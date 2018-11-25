@@ -61,6 +61,25 @@ namespace GluePlugin.Converters
                 var glueEntity = new FlatRedBall.Glue.SaveClasses.EntitySave();
                 glueEntity.Name = $"Entities\\{element.Name}";
 
+                // components should have some variables by default:
+                glueEntity.CustomVariables.Add(new CustomVariable()
+                {
+                    Name = "X",
+                    Type = "float",
+                });
+
+                glueEntity.CustomVariables.Add(new CustomVariable()
+                {
+                    Name = "Y",
+                    Type = "float",
+                });
+
+                glueEntity.CustomVariables.Add(new CustomVariable()
+                {
+                    Name = "RotationZ",
+                    Type = "float",
+                });
+
                 return glueEntity;
             }
             else
@@ -119,6 +138,20 @@ namespace GluePlugin.Converters
         public string ConvertType(string gumVariableName, object variableValue, InstanceSave instance)
         {
             string typeToReturn = null;
+
+            /// any type
+            if(gumVariableName == "X")
+            {
+                typeToReturn = "float";
+            }
+            else if(gumVariableName == "Y")
+            {
+                typeToReturn = "float";
+            }
+            else if(gumVariableName == "Rotation")
+            {
+                typeToReturn = "float";
+            }
 
             if (instance.BaseType == "Sprite")
             {

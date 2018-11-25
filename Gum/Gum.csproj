@@ -153,9 +153,10 @@
     <Compile Include="DataTypes\VariableSaveExtensionMethods.cs" />
     <Compile Include="Debug\ProjectVerifier.cs" />
     <Compile Include="Events\GumEvents.cs" />
+    <Compile Include="Logic\FileWatch\FileWatchLogic.cs" />
     <Compile Include="Managers\DeleteLogic.cs" />
     <Compile Include="Managers\FileChangeReactionLogic.cs" />
-    <Compile Include="Managers\FileWatchManager.cs" />
+    <Compile Include="Logic\FileWatch\FileWatchManager.cs" />
     <Compile Include="Plugins\CirclePlugin\MainCirclePlugin.cs" />
     <Compile Include="Plugins\Errors\AllErrorsViewModel.cs" />
     <Compile Include="Plugins\Errors\ErrorChecker.cs" />

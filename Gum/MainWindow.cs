@@ -19,6 +19,7 @@ using Gum.PropertyGridHelpers;
 using System.Windows.Forms.Integration;
 using Gum.DataTypes;
 using Gum.Controls;
+using Gum.Logic.FileWatch;
 
 namespace Gum
 {

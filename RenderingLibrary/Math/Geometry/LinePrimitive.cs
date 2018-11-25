@@ -71,7 +71,7 @@ namespace RenderingLibrary.Math.Geometry
         }
         
         /// <summary>
-        /// Adds a vector to the primive live object.
+        /// Adds a vector to the LinePrimitive object.
         /// </summary>
         /// <param name="vector">The vector to add.</param>
         public void Add(Vector2 vector)
@@ -80,7 +80,7 @@ namespace RenderingLibrary.Math.Geometry
         }
 
         /// <summary>
-        /// Adds a vector to the primive live object.
+        /// Adds a vector to the LinePrimitive object.
         /// </summary>
         /// <param name="x">The X position of the new point.</param>
         /// <param name="y">The Y position of the new point.</param>
@@ -97,6 +97,11 @@ namespace RenderingLibrary.Math.Geometry
         public void Insert(int index, Vector2 vector)
         {
             mVectors.Insert(index, vector);
+        }
+
+        public Vector2 PointAt(int index)
+        {
+            return mVectors[index];
         }
 
         /// <summary>

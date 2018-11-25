@@ -157,7 +157,7 @@ namespace Gum.Wireframe
                 if (SelectedState.Self.SelectedStateSave != elementSave.DefaultState && SelectedState.Self.SelectedStateSave != null)
                 {
                     var state = SelectedState.Self.SelectedStateSave;
-                    rootIpso.SetVariablesTopLevel(elementSave, state);
+                    rootIpso.ApplyState(state);
                 }
 
                 if(elementSave is StandardElementSave && elementSave.Name == "Text")

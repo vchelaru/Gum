@@ -12,6 +12,7 @@ using System.IO;
 using CommonFormsAndControls.Forms;
 using System.Diagnostics;
 using Gum.ToolStates;
+using Gum.Logic.FileWatch;
 
 namespace Gum
 {
@@ -105,7 +106,7 @@ namespace Gum
 
         public void CreateNewProject()
         {
-            FileWatchManager.Self.HandleProjectUnloaded();
+            FileWatchLogic.Self.HandleProjectUnloaded();
 
             mGumProjectSave = new GumProjectSave();
             ObjectFinder.Self.GumProjectSave = mGumProjectSave;
@@ -204,7 +205,7 @@ namespace Gum
                 GraphicalUiElement.CanvasWidth = mGumProjectSave.DefaultCanvasWidth;
                 GraphicalUiElement.CanvasHeight = mGumProjectSave.DefaultCanvasHeight;
 
-                FileWatchManager.Self.HandleProjectLoaded();
+                FileWatchLogic.Self.HandleProjectLoaded();
             }
             else
             {
@@ -299,7 +300,7 @@ namespace Gum
                                 PluginManager.Self.BeforeElementSave(standardElementSave);
                             }
                         }
-                        FileWatchManager.Self.IgnoreNextChangeOn(GumProjectSave.FullFileName);
+                        FileWatchLogic.Self.IgnoreNextChangeOn(GumProjectSave.FullFileName);
 
                         GumProjectSave.Save(GumProjectSave.FullFileName, saveContainedElements);
                         succeeded = true;
@@ -429,7 +430,7 @@ namespace Gum
                     }
                     else
                     {
-                        FileWatchManager.Self.IgnoreNextChangeOn(fileName);
+                        FileWatchLogic.Self.IgnoreNextChangeOn(fileName);
 
                         const int maxNumberOfTries = 5;
                         const int msBetweenSaves = 100;

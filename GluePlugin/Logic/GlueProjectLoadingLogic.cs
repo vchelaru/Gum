@@ -3,6 +3,7 @@ using FlatRedBall.IO;
 using GluePlugin.Converters;
 using GluePlugin.SaveObjects;
 using Gum;
+using Gum.Logic.FileWatch;
 using Gum.Managers;
 using System;
 using System.Collections.Generic;
@@ -50,7 +51,7 @@ namespace GluePlugin.Logic
             var saveLocation = directory + "GumGluePlugin/testGum.gumx";
 
             // to prevent a reload:
-            FileWatchManager.Self.IgnoreNextChangeOn(saveLocation);
+            FileWatchLogic.Self.IgnoreNextChangeOn(saveLocation);
             gumProject.Save(saveLocation, saveElements:true);
 
             GumCommands.Self.FileCommands.LoadProject(saveLocation);

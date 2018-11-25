@@ -1,4 +1,5 @@
 ﻿using Gum.DataTypes;
+using Gum.Logic.FileWatch;
 using Gum.Managers;
 using Gum.ToolStates;
 using StateAnimationPlugin.SaveClasses;
@@ -73,7 +74,7 @@ namespace StateAnimationPlugin.Managers
 
             var save = viewModel.ToSave();
 
-            FileWatchManager.Self.IgnoreNextChangeOn(fileName);
+            FileWatchLogic.Self.IgnoreNextChangeOn(fileName);
             FileManager.XmlSerialize(save, fileName);
         }
 

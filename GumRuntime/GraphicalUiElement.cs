@@ -16,9 +16,10 @@ using GumRuntime;
 
 namespace Gum.Wireframe
 {
-
     public partial class GraphicalUiElement : IRenderableIpso, IVisible
     {
+        #region Enums
+
         enum ChildrenUpdateType
         {
             AbsoluteOnly,
@@ -32,6 +33,8 @@ namespace Gum.Wireframe
             public int ChildrenUpdateDepth;
             public XOrY? XOrY;
         }
+
+        #endregion
 
         #region Fields
 
@@ -193,6 +196,10 @@ namespace Gum.Wireframe
 
         #region IPSO properties
 
+        /// <summary>
+        /// The X position of this object as an IPositionedSizedObject. This does not consider origins
+        /// so it will use the default origin, which is top-left for most types.
+        /// </summary>
         float IPositionedSizedObject.X
         {
             get
@@ -215,6 +222,11 @@ namespace Gum.Wireframe
             }
         }
 
+
+        /// <summary>
+        /// The Y position of this object as an IPositionedSizedObject. This does not consider origins
+        /// so it will use the default origin, which is top-left for most types.
+        /// </summary>
         float IPositionedSizedObject.Y
         {
             get
@@ -2791,6 +2803,10 @@ namespace Gum.Wireframe
                 {
                     managers.ShapeManager.Add(mContainedObjectAsIpso as LineCircle, layer);
                 }
+                else if(mContainedObjectAsIpso is LinePolygon)
+                {
+                    managers.ShapeManager.Add(mContainedObjectAsIpso as LinePolygon, layer);
+                }
                 else if(mContainedObjectAsIpso is InvisibleRenderable)
                 {
                     managers.SpriteManager.Add(mContainedObjectAsIpso as InvisibleRenderable, layer);
@@ -2883,6 +2899,10 @@ namespace Gum.Wireframe
                 else if (mContainedObjectAsIpso is global::RenderingLibrary.Math.Geometry.LineRectangle)
                 {
                     mManagers.ShapeManager.Remove(mContainedObjectAsIpso as global::RenderingLibrary.Math.Geometry.LineRectangle);
+                }
+                else if(mContainedObjectAsIpso is global::RenderingLibrary.Math.Geometry.LinePolygon)
+                {
+                    mManagers.ShapeManager.Remove(mContainedObjectAsIpso as global::RenderingLibrary.Math.Geometry.LinePolygon);
                 }
                 else if (mContainedObjectAsIpso is global::RenderingLibrary.Graphics.SolidRectangle)
                 {
@@ -3182,6 +3202,7 @@ namespace Gum.Wireframe
 
             return toReturn;
         }
+
         private void SetPropertyOnRenderable(string propertyName, object value)
         {
             bool handled = false;
@@ -3199,6 +3220,10 @@ namespace Gum.Wireframe
             else if(mContainedObjectAsIpso is LineRectangle)
             {
                 handled = TrySetPropertyOnLineRectangle(propertyName, value);
+            }
+            else if(mContainedObjectAsIpso is LinePolygon)
+            {
+                handled = TrySetPropertyOnLinePolygon(propertyName, value);
             }
             else if (mContainedObjectAsIpso is SolidRectangle)
             {
@@ -3376,6 +3401,70 @@ namespace Gum.Wireframe
                     }
                 }
             }
+        }
+
+        private bool TrySetPropertyOnLinePolygon(string propertyName, object value)
+        {
+            bool handled = false;
+
+
+            if (propertyName == "Alpha")
+            {
+                int valueAsInt = (int)value;
+
+                var color =
+                    ((LinePolygon)mContainedObjectAsIpso).Color;
+                color.A = (byte)valueAsInt;
+
+                ((LinePolygon)mContainedObjectAsIpso).Color = color;
+                handled = true;
+            }
+
+            else if (propertyName == "Red")
+            {
+                int valueAsInt = (int)value;
+
+                var color =
+                    ((LinePolygon)mContainedObjectAsIpso).Color;
+                color.R = (byte)valueAsInt;
+
+                ((LinePolygon)mContainedObjectAsIpso).Color = color;
+                handled = true;
+            }
+
+            else if (propertyName == "Green")
+            {
+                int valueAsInt = (int)value;
+
+                var color =
+                    ((LinePolygon)mContainedObjectAsIpso).Color;
+                color.G = (byte)valueAsInt;
+
+                ((LinePolygon)mContainedObjectAsIpso).Color = color;
+                handled = true;
+            }
+
+            else if (propertyName == "Blue")
+            {
+                int valueAsInt = (int)value;
+
+                var color =
+                    ((LinePolygon)mContainedObjectAsIpso).Color;
+                color.B = (byte)valueAsInt;
+
+                ((LinePolygon)mContainedObjectAsIpso).Color = color;
+                handled = true;
+            }
+
+            else if(propertyName == "Points")
+            {
+                var points = (List<Vector2>)value;
+
+                ((LinePolygon)mContainedObjectAsIpso).SetPoints(points);
+                handled = true;
+            }
+
+            return handled;
         }
 
         private bool TrySetPropertyOnLineRectangle(string propertyName, object value)
@@ -3868,9 +3957,14 @@ namespace Gum.Wireframe
             var variablesToConsider =
                 state.Variables.Where(item =>
                     // We can set the variable if it's not setting a state (to prevent recursive setting).                   
-                    item.IsState(state.ParentContainer) == false ||
+                    (item.IsState(state.ParentContainer) == false ||
                         // If it is setting a state we'll allow it if it's on a child.
-                    !string.IsNullOrEmpty(item.SourceObject))
+                    !string.IsNullOrEmpty(item.SourceObject)) &&
+                    item.SetsValue
+                    
+                    )
+                    .OrderBy(item => item.GetRootName() == "Parent")
+                    .ThenBy(item => !item.IsState(state.ParentContainer))
                 .ToArray();
 
             foreach (var variable in variablesToConsider)
@@ -3879,6 +3973,11 @@ namespace Gum.Wireframe
                 {
                     this.SetProperty(variable.Name, variable.Value);
                 }
+            }
+
+            foreach(var variableList in state.VariableLists)
+            {
+                this.SetProperty(variableList.Name, variableList.ValueAsIList);
             }
             this.ResumeLayout(true);
         }

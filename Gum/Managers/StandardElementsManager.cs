@@ -55,8 +55,6 @@ namespace Gum.Managers
 
         static StandardElementsManager mSelf;
 
-        List<string> mStandardEvents = new List<string>();
-
         #endregion
 
         #region Properties
@@ -100,30 +98,12 @@ namespace Gum.Managers
             }
         }
 
-        public List<string> StandardEvents
-        {
-            get
-            {
-                return mStandardEvents;
-            }
-        }
-
         #endregion
 
         public void Initialize()
         {
             RefreshDefaults();
 
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            //                                                    Events                                                          //
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-            mStandardEvents.Add("Click");
-            mStandardEvents.Add("RollOn");
-            mStandardEvents.Add("RollOver");
-            mStandardEvents.Add("RollOff");
-
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         }
 
         public void RefreshDefaults()
@@ -360,12 +340,48 @@ namespace Gum.Managers
                 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             }
 
+            {
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                //                                                     Polygon                                                        //
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+                var stateSave = new StateSave();
+                stateSave.Name = "Default";
+
+                AddPositioningVariables(stateSave);
+
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
+                AddColorVariables(stateSave, true);
+
+                stateSave.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation" });
+
+                var pointsVariable = new VariableListSave<Vector2>()
+                { Name = "Points", Category = "Points" };
+
+                pointsVariable.Value.Add(new Vector2(-32, -32));
+                pointsVariable.Value.Add(new Vector2(32, -32));
+                pointsVariable.Value.Add(new Vector2(32, 32));
+                pointsVariable.Value.Add(new Vector2(-32, 32));
+                // close it:
+                pointsVariable.Value.Add(new Vector2(-32, -32));
+
+                stateSave.VariableLists.Add(pointsVariable);
+
+                AddStateVariable(stateSave);
+
+#if GUM
+                PluginManager.Self.ModifyDefaultStandardState("Polygon", stateSave);
+#endif
+
+                ApplySortValuesFromOrderInState(stateSave);
+
+                mDefaults.Add("Polygon", stateSave);
+            }
 
 
             {
                 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                //                                                    NineSlice                                                         //
+                //                                                    NineSlice                                                       //
                 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                 var stateSave = new StateSave();
                 stateSave.Name = "Default";
@@ -383,6 +399,9 @@ namespace Gum.Managers
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "Texture Top", Category = "Source" });
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "Texture Width", Category = "Source" });
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "Texture Height", Category = "Source" });
+
+
+
 
                 AddEventVariables(stateSave);
 
