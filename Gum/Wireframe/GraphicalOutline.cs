@@ -39,12 +39,25 @@ namespace Gum.Wireframe
                         mHighlightRectangles[i].Visible = false;
                     }
 
-                    if (mHighlightedIpso != null && mHighlightedIpso.Component != null)
+                    if (mHighlightedIpso != null && mHighlightedIpso.Component != null && 
+                        // We don't want to show the rectangle around line polygons, they don't fit inside a rectangle
+                        (mHighlightedIpso.RenderableComponent) is LinePolygon == false)
                     {
                         UpdateHighlightElements();
                     }
                 }
             }
+        }
+
+
+        #endregion
+
+        #region Methods
+
+        public GraphicalOutline(Layer uiLayer)
+        {
+            SelectionBorder = 0;
+            mUiLayer = uiLayer;
         }
 
         private void UpdateHighlightElements()
@@ -122,17 +135,6 @@ namespace Gum.Wireframe
                 wideRectangle.Height = centerHeight;
                 wideRectangle.Rotation = nineSlice.GetAbsoluteRotation();
             }
-        }
-
-
-        #endregion
-
-        #region Methods
-
-        public GraphicalOutline(Layer uiLayer)
-        {
-            SelectionBorder = 0;
-            mUiLayer = uiLayer;
         }
 
         private void SetLineRectangleAroundIpso(LineRectangle rectangle, IRenderableIpso pso)

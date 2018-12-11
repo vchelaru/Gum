@@ -150,17 +150,19 @@ namespace Gum.DataTypes
         /// when the project is first loaded.
         /// </summary>
         /// <param name="gumProjectSave">The gum project to add to</param>
-        public static void AddNewStandardElementTypes(this GumProjectSave gumProjectSave)
+        public static bool AddNewStandardElementTypes(this GumProjectSave gumProjectSave)
         {
+            bool modified = false;
             foreach(string typeName in StandardElementsManager.Self.DefaultTypes)
             {
                 if (typeName != "Screen" && !gumProjectSave.StandardElements.ContainsName(typeName))
                 {
                     StandardElementsManager.Self.AddStandardElementSaveInstance(
                         gumProjectSave, typeName);
+                    modified = true;
                 }
             }
-
+            return modified;
         }
 
         public static void RemoveDuplicateVariables(this GumProjectSave gumProjectSave)

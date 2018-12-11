@@ -96,7 +96,7 @@ namespace Gum
             }
             else if (!string.IsNullOrEmpty(GeneralSettingsFile.LastProject))
             {
-                LoadProject(GeneralSettingsFile.LastProject);
+                GumCommands.Self.FileCommands.LoadProject(GeneralSettingsFile.LastProject);
             }
             else
             {
@@ -136,7 +136,7 @@ namespace Gum
                 SelectedState.Self.SelectedInstance = null;
                 SelectedState.Self.SelectedElement = null;
 
-                LoadProject(fileName);
+                GumCommands.Self.FileCommands.LoadProject(fileName);
 
                 return true;
             }
@@ -185,7 +185,10 @@ namespace Gum
 
                 RecreateMissingStandardElements();
 
-                mGumProjectSave.AddNewStandardElementTypes();
+                if(mGumProjectSave.AddNewStandardElementTypes())
+                {
+                    wasModified = true;
+                }
                 mGumProjectSave.FixStandardVariables();
 
                 FileManager.RelativeDirectory = FileManager.GetDirectory(fileName);

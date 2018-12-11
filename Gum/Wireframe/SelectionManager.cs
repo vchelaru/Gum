@@ -15,6 +15,7 @@ using System.Runtime.InteropServices;
 using Microsoft.Xna.Framework.Graphics;
 using Gum.Undo;
 using Gum.Debug;
+using Gum.Wireframe.Editors;
 
 namespace Gum.Wireframe
 {
@@ -42,18 +43,17 @@ namespace Gum.Wireframe
         
         static SelectionManager mSelf;
 
-        SolidRectangle mOverlaySolidRectangle;
-        Sprite mOverlaySprite;
-        NineSlice mOverlayNineSlice;
 
 
-        ResizeHandles mResizeHandles;
+        public WireframeEditor WireframeEditor;
 
         List<GraphicalUiElement> mSelectedIpsos = new List<GraphicalUiElement>();
         IPositionedSizedObject mHighlightedIpso;
 
         GraphicalOutline mGraphicalOutline;
         Layer mUiLayer;
+
+        HighlightManager highlightManager;
 
         #endregion
 
@@ -87,19 +87,13 @@ namespace Gum.Wireframe
             }
         }
 
-        public ResizeSide SideOver
-        {
-            get;
-            private set;
-        }
-
         public bool IsOverBody
         {
             get;
             set;
         }
 
-        public GraphicalUiElement SelectedIpso
+        public GraphicalUiElement SelectedGue
         {
             get
             {
@@ -114,26 +108,18 @@ namespace Gum.Wireframe
             }
             set
             {
-                if (value != null && (value.Tag == null || (value.Tag is ScreenSave == false)))
-                {
-                    mResizeHandles.Visible = true;
-                    mResizeHandles.SetValuesFrom(value);
-                }
-                else
-                {
-                    mResizeHandles.Visible = false;
-                }
-
                 mSelectedIpsos.Clear();
 
                 if (value != null)
                 {
                     mSelectedIpsos.Add(value);
                 }
+                UpdateEditorsToSelection();
             }
         }
 
-        public List<GraphicalUiElement> SelectedIpsos
+
+        public List<GraphicalUiElement> SelectedGues
         {
             get
             {
@@ -141,21 +127,9 @@ namespace Gum.Wireframe
             }
             private set
             {
-                if (value.Count == 1)
-                {
-                    SelectedIpso = value[0] as GraphicalUiElement;
-                }
-                else if (value.Count > 1)
-                {
-                    mSelectedIpsos.Clear();
-                    mSelectedIpsos.AddRange(value);
-                    mResizeHandles.Visible = true;
-                    mResizeHandles.SetValuesFrom(mSelectedIpsos);
-                }
-                else
-                {
-                    mSelectedIpsos.Clear();
-                }
+                mSelectedIpsos.Clear();
+                mSelectedIpsos.AddRange(value);
+                UpdateEditorsToSelection();
             }
         }
 
@@ -167,11 +141,12 @@ namespace Gum.Wireframe
             }
             set
             {
+                highlightManager.HighlightedIpso = value;
                 if (mHighlightedIpso != value)
                 {
                     if (mHighlightedIpso != null)
                     {
-                        UnhighlightIpso(mHighlightedIpso as GraphicalUiElement);
+                        highlightManager.UnhighlightIpso(mHighlightedIpso as GraphicalUiElement);
                     }
 
                     mHighlightedIpso = value;
@@ -181,80 +156,11 @@ namespace Gum.Wireframe
             }
         }
 
-        private void UnhighlightIpso(GraphicalUiElement highlightedIpso)
-        {
-            if (highlightedIpso.Component is Sprite)
-            {
-                mOverlaySprite.Visible = false;
-            }
-            else if (highlightedIpso.Component is NineSlice)
-            {
-                mOverlayNineSlice.Visible = false;
-            }
-            else if (highlightedIpso.Component is LineRectangle)
-            {
-                mOverlaySolidRectangle.Visible = false;
-            }
-        }
-
-        public Sprite HighlightedSprite
-        {
-            get
-            {
-                if (HighlightedIpso == null)
-                {
-                    return null;
-                }
-                else
-                {
-                    return (HighlightedIpso as GraphicalUiElement).Component as Sprite;
-                }
-            }
-        }
-
-        public NineSlice HighlightedNineSlice
-        {
-            get
-            {
-                if (HighlightedIpso == null)
-                {
-                    return null;
-                }
-                else
-                {
-                    return (HighlightedIpso as GraphicalUiElement).Component as NineSlice;
-                }
-            }
-        }
-
-        public LineRectangle HighlightedLineRectangle
-        {
-            get
-            {
-                if (HighlightedIpso == null)
-                {
-                    return null;
-                }
-                else
-                {
-                    return (HighlightedIpso as GraphicalUiElement).Component as LineRectangle;
-                }
-            }
-        }
-
-        public ResizeHandles ResizeHandles
-        {
-            get
-            {
-                return mResizeHandles;
-            }
-        }
-
         public bool HasSelection
         {
             get
             {
-                return mResizeHandles.Visible;
+                return  mSelectedIpsos.Any();
             }
         }
 
@@ -263,6 +169,20 @@ namespace Gum.Wireframe
             get
             {
                 return ((Control.ModifierKeys & Keys.Shift) != 0);
+            }
+        }
+
+        bool restrictToUnitValues;
+        public bool RestrictToUnitValues
+        {
+            get { return restrictToUnitValues; }
+            set
+            {
+                restrictToUnitValues = value;
+                if(WireframeEditor != null)
+                {
+                    WireframeEditor.RestrictToUnitValues = value;
+                }
             }
         }
         #endregion
@@ -278,28 +198,17 @@ namespace Gum.Wireframe
 
             mGraphicalOutline = new GraphicalOutline(mUiLayer);
 
-            mOverlaySolidRectangle = new SolidRectangle();
-            mOverlaySolidRectangle.Name = "Overlay SolidRectangle";
-            mOverlaySolidRectangle.Color = Color.LightGreen;
-            mOverlaySolidRectangle.Color.A = 100;
-            mOverlaySolidRectangle.Visible = false;
-            ShapeManager.Self.Add(mOverlaySolidRectangle, mUiLayer);
+            highlightManager = new HighlightManager(mUiLayer);
+        }
 
-            mOverlaySprite = new Sprite(null);
-            mOverlaySprite.Name = "Overlay Sprite";
-            mOverlaySprite.BlendState = BlendState.Additive;
-            mOverlaySprite.Visible = false;
-            SpriteManager.Self.Add(mOverlaySprite, mUiLayer);
-
-            mOverlayNineSlice = new NineSlice();
-            mOverlayNineSlice.Name = "Overlay NineSlice";
-            mOverlayNineSlice.BlendState = BlendState.Additive;
-            mOverlayNineSlice.Visible = false;
-            SpriteManager.Self.Add(mOverlayNineSlice, mUiLayer);
-
-            mResizeHandles = new ResizeHandles(mUiLayer);
-            mResizeHandles.ShowOrigin = true;
-            mResizeHandles.Visible = false;
+        public bool TryHandleDelete()
+        {
+            var toReturn = false;
+            if (WireframeEditor != null)
+            {
+                toReturn = WireframeEditor.TryHandleDelete();
+            }
+            return toReturn;
         }
 
         public void Activity(System.Windows.Forms.Control container)
@@ -330,12 +239,12 @@ namespace Gum.Wireframe
 
         public void LateActivity()
         {
-            UpdateResizeHandles();
+            WireframeEditor?.Activity(SelectedGues);
         }
 
         public void Deselect()
         {
-            mResizeHandles.Visible = false;
+            SelectedGue = null;
         }
 
         void HighlightActivity(System.Windows.Forms.Control container)
@@ -362,12 +271,16 @@ namespace Gum.Wireframe
                 }
                 else
                 {
-                    cursorToSet = CursorOverHandlesHighlightActivity(cursorToSet, worldXAt, worldYAt);
+                    if(WireframeEditor != null)
+                    {
+                        cursorToSet = WireframeEditor.GetWindowsCursorToShow(cursorToSet, worldXAt, worldYAt);
+
+                    }
 
                     #region Selecting element activity
 
 
-                    if (SideOver != ResizeSide.None)
+                    if (WireframeEditor?.HasCursorOver == true)
                     {
                         representationOver = WireframeObjectManager.Self.GetSelectedRepresentation();
                         IsOverBody = false;
@@ -436,84 +349,7 @@ namespace Gum.Wireframe
                 HighlightedIpso = null;
             }
             
-            UpdateHighlightObjects();
-        }
-
-        /// <summary>
-        /// Updates additional UI used to highlight objects, such
-        /// as a solid rectangle for highlighted containers or overlaying
-        /// an additive Sprite over the highlighted Sprite
-        /// </summary>
-        private void UpdateHighlightObjects()
-        {
-            if (HighlightedSprite != null)
-            {
-                mOverlaySprite.Visible = true;
-                mOverlaySprite.X = HighlightedSprite.GetAbsoluteX();
-                mOverlaySprite.Y = HighlightedSprite.GetAbsoluteY();
-
-                mOverlaySprite.Width = HighlightedSprite.Width;
-                mOverlaySprite.Height = HighlightedSprite.Height;
-                mOverlaySprite.Texture = HighlightedSprite.Texture;
-
-
-                mOverlaySprite.Wrap = HighlightedSprite.Wrap;
-
-                mOverlaySprite.SourceRectangle = HighlightedSprite.SourceRectangle;
-
-                mOverlaySprite.FlipHorizontal = HighlightedSprite.FlipHorizontal;
-                mOverlaySprite.FlipVertical = HighlightedSprite.FlipVertical;
-
-                mOverlaySprite.Rotation = HighlightedSprite.Rotation;
-            }
-            else if (HighlightedNineSlice != null)
-            {
-                SetNineSliceOverlay();
-            }
-            else if (HighlightedLineRectangle != null)
-            {
-                SolidRectangle overlay = mOverlaySolidRectangle;
-
-                overlay.Visible = true;
-                overlay.X = HighlightedLineRectangle.GetAbsoluteX();
-                overlay.Y = HighlightedLineRectangle.GetAbsoluteY();
-
-                overlay.Width = HighlightedLineRectangle.Width;
-                overlay.Height = HighlightedLineRectangle.Height;
-
-                overlay.Rotation = HighlightedLineRectangle.Rotation;
-            }
-        }
-
-        private void SetNineSliceOverlay()
-        {
-
-            mOverlayNineSlice.Visible = true;
-            mOverlayNineSlice.X = HighlightedNineSlice.GetAbsoluteX();
-            mOverlayNineSlice.Y = HighlightedNineSlice.GetAbsoluteY();
-
-            mOverlayNineSlice.Width = HighlightedNineSlice.Width;
-            mOverlayNineSlice.Height = HighlightedNineSlice.Height;
-            mOverlayNineSlice.TopLeftTexture = HighlightedNineSlice.TopLeftTexture;
-            mOverlayNineSlice.TopTexture = HighlightedNineSlice.TopTexture;
-            mOverlayNineSlice.TopRightTexture = HighlightedNineSlice.TopRightTexture;
-
-            mOverlayNineSlice.LeftTexture = HighlightedNineSlice.LeftTexture;
-            mOverlayNineSlice.CenterTexture = HighlightedNineSlice.CenterTexture;
-            mOverlayNineSlice.RightTexture = HighlightedNineSlice.RightTexture;
-
-            mOverlayNineSlice.BottomLeftTexture = HighlightedNineSlice.BottomLeftTexture;
-            mOverlayNineSlice.BottomTexture = HighlightedNineSlice.BottomTexture;
-            mOverlayNineSlice.BottomRightTexture = HighlightedNineSlice.BottomRightTexture;
-
-            mOverlayNineSlice.Red = HighlightedNineSlice.Red;
-            mOverlayNineSlice.Green = HighlightedNineSlice.Green;
-            mOverlayNineSlice.Blue = HighlightedNineSlice.Blue;
-
-            mOverlayNineSlice.SourceRectangle = HighlightedNineSlice.SourceRectangle;
-
-            mOverlayNineSlice.Rotation = HighlightedNineSlice.Rotation;
-
+            highlightManager.UpdateHighlightObjects();
         }
 
         public GraphicalUiElement GetRepresentationAt(float x, float y, bool skipSelected, List<ElementWithState> elementStack)
@@ -536,7 +372,18 @@ namespace Gum.Wireframe
             {
                 if (selectedRepresentation != null && selectedRepresentation.Tag is ScreenSave == false)
                 {
-                    if (selectedRepresentation.HasCursorOver(x, y))
+                    var hasCursorOver = false;
+
+                    if (selectedRepresentation.RenderableComponent is LinePolygon)
+                    {
+                        hasCursorOver = (selectedRepresentation.RenderableComponent as LinePolygon).IsPointInside(x, y);
+                    }
+                    else
+                    {
+                        hasCursorOver = selectedRepresentation.HasCursorOver(x, y);
+                    }
+
+                    if (hasCursorOver)
                     {
                         ipsoOver = selectedRepresentation;
                     }
@@ -632,23 +479,37 @@ namespace Gum.Wireframe
             for (int i = indexToStartAt; i > indexToEndAt; i--)
             {
                 
-                GraphicalUiElement ipso = WireframeObjectManager.Self.AllIpsos[i];
-                bool skip = ipso.Tag is ScreenSave;
+                GraphicalUiElement graphicalUiElement = WireframeObjectManager.Self.AllIpsos[i];
+                bool skip = graphicalUiElement.Tag is ScreenSave;
                 if (!skip)
                 {
-                    bool visible = IsIpsoVisible(ipso);
+                    bool visible = IsIpsoVisible(graphicalUiElement);
 
 
-                    if (visible == visibleToCheck && ipso.HasCursorOver(x, y) && (WireframeObjectManager.Self.IsRepresentation(ipso)))
+                    if (visible == visibleToCheck)
                     {
+                        var hasCursorOver = false;
 
-                        // hold on, even though this is a valid IPSO and the cursor is over it, we gotta see if
-                        // it's an instance that is locked.  If so, we shouldn't select it!
-                        InstanceSave instanceSave = ipso.Tag as InstanceSave;
-                        if (instanceSave == null || instanceSave.Locked == false)
+                        if(graphicalUiElement.RenderableComponent is LinePolygon)
                         {
-                            ipsoOver = ipso;
-                            break;
+                            hasCursorOver = (graphicalUiElement.RenderableComponent as LinePolygon).IsPointInside(x, y);
+                        }
+                        else
+                        {
+                            hasCursorOver = graphicalUiElement.HasCursorOver(x, y);
+                        }
+
+                        if (hasCursorOver && (WireframeObjectManager.Self.IsRepresentation(graphicalUiElement)))
+                        {
+
+                            // hold on, even though this is a valid IPSO and the cursor is over it, we gotta see if
+                            // it's an instance that is locked.  If so, we shouldn't select it!
+                            InstanceSave instanceSave = graphicalUiElement.Tag as InstanceSave;
+                            if (instanceSave == null || instanceSave.Locked == false)
+                            {
+                                ipsoOver = graphicalUiElement;
+                                break;
+                            }
                         }
                     }
                 }
@@ -695,65 +556,47 @@ namespace Gum.Wireframe
             return isVisible;
         }
 
-
-        private Cursor CursorOverHandlesHighlightActivity(Cursor cursorToSet, float worldXAt, float worldYAt)
+        private void UpdateEditorsToSelection()
         {
-            if (mResizeHandles.Visible == false)
+            if(SelectedGues.Count == 1 &&
+                SelectedGue?.Tag is InstanceSave && 
+                ((InstanceSave)SelectedGue.Tag).BaseType == "Polygon")
             {
-                SideOver = ResizeSide.None;
-            }
-            else
-            {
-                // If the user is already dragging then there's
-                // no need to re-check which side the user is over
-                if (!Cursor.PrimaryDown && !Cursor.PrimaryClick)
+                // use the Polygon wireframe editor
+                if(WireframeEditor is PolygonWireframeEditor == false)
                 {
-                    SideOver = mResizeHandles.GetSideOver(worldXAt, worldYAt);
+                    if (WireframeEditor != null)
+                    {
+                        WireframeEditor.Destroy();
+                    }
+                    WireframeEditor = new PolygonWireframeEditor(UiLayer);
                 }
+                WireframeEditor.UpdateToSelection(mSelectedIpsos);
             }
-
-            switch (SideOver)
+            else if(SelectedGues.Count > 0 && SelectedGue?.Tag is ScreenSave == false)
             {
-                case ResizeSide.TopLeft:
-                case ResizeSide.BottomRight:
-                    cursorToSet = Cursors.SizeNWSE;
-                    break;
-                case ResizeSide.TopRight:
-                case ResizeSide.BottomLeft:
-                    cursorToSet = Cursors.SizeNESW;
-                    break;
-                case ResizeSide.Top:
-                case ResizeSide.Bottom:
-                    cursorToSet = Cursors.SizeNS;
-                    break;
-                case ResizeSide.Left:
-                case ResizeSide.Right:
-                    cursorToSet = Cursors.SizeWE;
-                    break;
-                case ResizeSide.None:
-
-                    break;
-            }
-            return cursorToSet;
-        }
-
-
-        /// <summary>
-        /// Updates the resize handles according to the current object.  We need to do this every
-        /// frame because the selected IPSO may be a Sprite that is continually updating itself.
-        /// </summary>
-        private void UpdateResizeHandles()
-        {
-            if (SelectedIpsos.Count != 0)
-            {
-                bool shouldSkip = SelectedIpso.Tag is ScreenSave;
-
-                if (!shouldSkip)
+                if(WireframeEditor is StandardWireframeEditor == false)
                 {
-                    mResizeHandles.SetValuesFrom(SelectedIpsos);
-
-                    mResizeHandles.UpdateHandleRadius();
+                    if(WireframeEditor != null)
+                    {
+                        WireframeEditor.Destroy();
+                    }
+                    WireframeEditor = new StandardWireframeEditor(UiLayer);
                 }
+                WireframeEditor.UpdateToSelection(mSelectedIpsos);
+            }
+            else if(WireframeEditor != null)
+            {
+                if (WireframeEditor != null)
+                {
+                    WireframeEditor.Destroy();
+                }
+                WireframeEditor = null;
+            }
+
+            if(WireframeEditor != null)
+            {
+                WireframeEditor.RestrictToUnitValues = RestrictToUnitValues;
             }
         }
 
@@ -767,10 +610,10 @@ namespace Gum.Wireframe
                     PushAndDoubleClickSelectionActivity();
                 }
 
-                if (Cursor.PrimaryClick)
-                {
-                    SideOver = ResizeSide.None;
-                }
+                //if (Cursor.PrimaryClick)
+                //{
+                //    SideOver = ResizeSide.None;
+                //}
             }
         }
 
@@ -781,7 +624,7 @@ namespace Gum.Wireframe
                 // If the SideOver is a non-None
                 // value, that means that the object
                 // is already selected
-                if (SideOver == ResizeSide.None)
+                if (WireframeEditor?.HasCursorOver != true)
                 {
                     float x = Cursor.GetWorldX();
                     float y = Cursor.GetWorldY();
@@ -852,13 +695,7 @@ namespace Gum.Wireframe
                     {
                         SelectedState.Self.SelectedInstance = null;
                     }
-
-
-
-
-
-
-
+                    
                     if (hasChanged)
                     {
                         if (SelectedState.Self.SelectedInstances.GetCount() > 1)
@@ -868,11 +705,11 @@ namespace Gum.Wireframe
                             {
                                 selectedIpsos.Add(WireframeObjectManager.Self.GetRepresentation(instance, elementStack));
                             }
-                            SelectedIpsos = selectedIpsos;
+                            SelectedGues = selectedIpsos;
                         }
                         else
                         {
-                            SelectedIpso = representation as GraphicalUiElement;
+                            SelectedGue = representation as GraphicalUiElement;
                         }
                     }
                 }
@@ -920,12 +757,6 @@ namespace Gum.Wireframe
             }
         }
 
-        public void ShowSizeHandlesFor(IRenderableIpso representation)
-        {
-            mResizeHandles.Visible = true;
-            mResizeHandles.SetValuesFrom(representation);
-        }
-
         public void Refresh()
         {
             Clear();
@@ -957,13 +788,12 @@ namespace Gum.Wireframe
                 }
             }
 
-            SelectedIpsos = representations;
+            SelectedGues = representations;
         }
 
         private void Clear()
         {
             HighlightedIpso = null;
-            mResizeHandles.Visible = false;
         }
 
         #endregion

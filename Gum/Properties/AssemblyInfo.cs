@@ -122,5 +122,7 @@ using System.Runtime.InteropServices;
 // 0.9.4.3
 //  - Renaming a category now adjusts variable names and types, eliminating possible orphan variables
 //    which will show up in the property grid with no dropdown.
-[assembly: AssemblyVersion("0.9.4.3")]
-[assembly: AssemblyFileVersion("0.9.4.3")]
+// 0.9.4.4 
+//  - Fixed project ignoring the next file change on a new Gum project that has missing files.
+[assembly: AssemblyVersion("0.9.4.4")]
+[assembly: AssemblyFileVersion("0.9.4.4")]

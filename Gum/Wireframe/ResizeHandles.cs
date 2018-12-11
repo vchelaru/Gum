@@ -135,7 +135,16 @@ namespace Gum.Wireframe
             UpdateToProperties();
         }
 
-        
+        public void Destroy()
+        {
+            for (int i = 0; i < mHandles.Length; i++)
+            {
+                ShapeManager.Self.Remove(mHandles[i]);
+            }
+
+            originDisplay.Destroy();
+        }
+
         public ResizeSide GetSideOver(float x, float y)
         {
             for (int i = 0; i < this.mHandles.Length; i++)
@@ -170,7 +179,6 @@ namespace Gum.Wireframe
 
             UpdateToProperties();
         }
-
 
         public void SetValuesFrom(IEnumerable<IRenderableIpso> ipsoList)
         {

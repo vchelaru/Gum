@@ -150,7 +150,7 @@ namespace RenderingLibrary.Content
                 FileManager.FileExists(invalidTextureLocation))
             {
 
-                mInvalidTexture = Load(invalidTextureLocation, managers);
+                mInvalidTexture = LoadContent<Texture2D>(invalidTextureLocation);
             }
             else
             {

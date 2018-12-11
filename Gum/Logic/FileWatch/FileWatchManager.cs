@@ -42,7 +42,10 @@ namespace Gum.Logic.FileWatch
 
             fileSystemWatcher.Deleted += new FileSystemEventHandler(HandleFileSystemDelete);
             fileSystemWatcher.Changed += new FileSystemEventHandler(HandleFileSystemChange);
+            // Gum files get deleted and then created, rather than changed
+            fileSystemWatcher.Created += new FileSystemEventHandler(HandleFileSystemChange);
         }
+
 
         public void EnableWithDirectory(FilePath directoryFilePath)
         {
@@ -111,6 +114,11 @@ namespace Gum.Logic.FileWatch
                     changesToIgnore[standardized] = 1;
                 }
             }
+        }
+
+        public void ClearIgnoredFiles()
+        {
+            changesToIgnore.Clear();
         }
 
         public void Flush()

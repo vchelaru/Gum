@@ -51,6 +51,13 @@ namespace Gum.Wireframe
 
         }
 
+        public void Destroy()
+        {
+            ShapeManager.Self.Remove(mXLine1);
+            ShapeManager.Self.Remove(mXLine2);
+            ShapeManager.Self.Remove(mOriginLine);
+        }
+
         public void UpdateTo(GraphicalUiElement asGue)
         {
             var parent = asGue.EffectiveParentGue;

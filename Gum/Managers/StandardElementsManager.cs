@@ -348,7 +348,7 @@ namespace Gum.Managers
                 var stateSave = new StateSave();
                 stateSave.Name = "Default";
 
-                AddPositioningVariables(stateSave);
+                AddPositioningVariables(stateSave, addOriginVariables:false);
 
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
                 AddColorVariables(stateSave, true);
@@ -554,7 +554,7 @@ namespace Gum.Managers
             stateSave.Variables.Add(variableSave);
         }
 
-        private static void AddPositioningVariables(StateSave stateSave)
+        private static void AddPositioningVariables(StateSave stateSave, bool addOriginVariables = true)
         {
             List<object> xUnitsExclusions = new List<object>();
             xUnitsExclusions.Add(PositionUnitType.PixelsFromTop);
@@ -576,8 +576,11 @@ namespace Gum.Managers
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0.0f, Name = "Y", Category = "Position" });
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = typeof(PositionUnitType).Name, Value = PositionUnitType.PixelsFromTop, Name = "Y Units", Category = "Position", ExcludedValuesForEnum = yUnitsExclusions });
 
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "HorizontalAlignment", Value = HorizontalAlignment.Left, Name = "X Origin", Category = "Position" });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "VerticalAlignment", Value = VerticalAlignment.Top, Name = "Y Origin", Category = "Position" });
+            if(addOriginVariables)
+            {
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "HorizontalAlignment", Value = HorizontalAlignment.Left, Name = "X Origin", Category = "Position" });
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "VerticalAlignment", Value = VerticalAlignment.Top, Name = "Y Origin", Category = "Position" });
+            }
 
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = null, Name = "Guide", Category = "Position" });
 #if GUM

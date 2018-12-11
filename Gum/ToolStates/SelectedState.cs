@@ -461,11 +461,11 @@ namespace Gum.ToolStates
         {
             get
             {
-                return SelectionManager.Self.SelectedIpso;
+                return SelectionManager.Self.SelectedGue;
             }
             set
             {
-                SelectionManager.Self.SelectedIpso = value as GraphicalUiElement;
+                SelectionManager.Self.SelectedGue = value as GraphicalUiElement;
             }
         }
 
@@ -473,7 +473,7 @@ namespace Gum.ToolStates
         {
             get
             {
-                return SelectionManager.Self.SelectedIpsos;
+                return SelectionManager.Self.SelectedGues;
             }
 
         }

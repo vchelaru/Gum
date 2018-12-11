@@ -132,6 +132,11 @@ namespace RenderingLibrary.Math.Geometry
             layer.Add(lineCircle);
         }
 
+        public void Add(LinePolygon linePolygon)
+        {
+            Add(linePolygon, Renderer.LayersWritable[0]);
+        }
+
         public void Add(LinePolygon linePolygon, Layer layer)
         {
             mLinePolygons.Add(linePolygon);

@@ -265,7 +265,6 @@ namespace Gum.DataTypes.Variables
                     if (variableList.SourceObject == oldName)
                     {
                         variableList.Name = newName + "." + variableList.Name.Substring((oldName + ".").Length);
-                        variableList.SourceObject = newName;
                     }
                 }
             }
@@ -456,7 +455,7 @@ namespace Gum.DataTypes.Variables
                     VariableListSave baseVariableListSave = ObjectFinder.Self.GetRootStandardElementSave(instanceSave).DefaultState.GetVariableListSave(rootName);
                     variableListSave.IsFile = baseVariableListSave.IsFile;
                 }
-                variableListSave.SourceObject = sourceObjectName;
+                variableListSave.Name = variableName;
             }
 
             variableListSave.ValueAsIList = value as IList;

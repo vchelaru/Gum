@@ -74,7 +74,7 @@ namespace RenderingLibrary.Math.Geometry
                 // do nothing
             }
         }
-        bool IRenderable.Wrap { get { return false; } }
+        bool IRenderable.Wrap { get { return true; } }
 
         public float X { get; set; }
 
@@ -114,6 +114,7 @@ namespace RenderingLibrary.Math.Geometry
             get { return BlendState.NonPremultiplied; }
         }
 
+        public int PointCount => mLinePrimitive.VectorCount;
 
         bool IRenderableIpso.ClipsChildren
         {
@@ -131,8 +132,11 @@ namespace RenderingLibrary.Math.Geometry
             set;
         }
 
+        public bool IsDotted { get; set; }
 
         #endregion
+
+        #region Constructor
 
         public LinePolygon() : this(null)
         {
@@ -158,6 +162,8 @@ namespace RenderingLibrary.Math.Geometry
             // todo - make it default to something - a rectangle?
         }
 
+        #endregion
+
         public void SetPoints(ICollection<Vector2> points)
         {
             mLinePrimitive.ClearVectors();
@@ -171,10 +177,44 @@ namespace RenderingLibrary.Math.Geometry
             }
         }
 
-        public bool HasCursorOver(float x, float y)
+        /// <summary>
+        /// Returns whether the world X, Y values are inside of the polygon.
+        /// </summary>
+        /// <param name="worldX">The coordinate in world coordinates.</param>
+        /// <param name="worldY"></param>
+        /// <returns>Whether the argument x,y values are inside of the polygon.</returns>
+        public bool IsPointInside(float worldX, float worldY)
         {
-            throw new NotImplementedException("// todo");
+            // position has to be updated:
+            mLinePrimitive.Position.X = this.GetAbsoluteLeft();
+            mLinePrimitive.Position.Y = this.GetAbsoluteTop();
+            return mLinePrimitive.IsPointInside(worldX, worldY);
             // see if point is inside
+        }
+
+        /// <summary>
+        /// Returns the X,Y of the point at the argument index in object space (relative to the object's position)
+        /// </summary>
+        /// <param name="index">The 0-based index.</param>
+        /// <returns>The position of the point at the argument index in object space.</returns>
+        public Vector2 PointAt(int index)
+        {
+            return mLinePrimitive.PointAt(index);
+        }
+
+        public void InsertPointAt(Vector2 point, int index)
+        {
+            mLinePrimitive.Insert(index, point);
+        }
+
+        public void RemovePointAtIndex(int index)
+        {
+            mLinePrimitive.RemoveAt(index);
+        }
+
+        public void SetPointAt(Vector2 point, int index)
+        {
+            mLinePrimitive.SetPointAt(point, index);
         }
 
         void IRenderable.Render(SpriteRenderer spriteRenderer, SystemManagers managers)
@@ -183,7 +223,26 @@ namespace RenderingLibrary.Math.Geometry
             {
                 mLinePrimitive.Position.X = this.GetAbsoluteLeft();
                 mLinePrimitive.Position.Y = this.GetAbsoluteTop();
-                mLinePrimitive.Render(spriteRenderer, managers);
+
+                Renderer renderer;
+                if (managers != null)
+                {
+                    renderer = managers.Renderer;
+                }
+                else
+                {
+                    renderer = Renderer.Self;
+                }
+
+                Texture2D textureToUse = renderer.SinglePixelTexture;
+
+                if (IsDotted)
+                {
+                    textureToUse = renderer.DottedLineTexture;
+                }
+
+                //mLinePrimitive.Render(spriteRenderer, managers, textureToUse, .2f * renderer.Camera.Zoom);
+                mLinePrimitive.Render(spriteRenderer, managers, textureToUse, .1f * renderer.Camera.Zoom);
             }
         }
 

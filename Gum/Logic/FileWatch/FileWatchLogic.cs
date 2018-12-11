@@ -20,6 +20,9 @@ namespace Gum.Logic.FileWatch
 
         public void HandleProjectLoaded()
         {
+            // When we do this, we're going to clear out the ignored files
+            fileWatchManager.ClearIgnoredFiles();
+
             var directory = GetFileWatchRootDirectory();
 
             fileWatchManager.EnableWithDirectory(directory);

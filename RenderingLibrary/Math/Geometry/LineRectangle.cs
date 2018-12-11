@@ -201,6 +201,12 @@ namespace RenderingLibrary.Math.Geometry
             get { return true; }
         }
 
+        public float LinePixelWidth
+        {
+            get { return mLinePrimitive.LinePixelWidth; }
+            set { mLinePrimitive.LinePixelWidth = value; }
+        }
+
         #endregion
 
         #region Methods
@@ -273,7 +279,8 @@ namespace RenderingLibrary.Math.Geometry
         }
 
 
-        public static void RenderLinePrimitive(LinePrimitive linePrimitive, SpriteRenderer spriteRenderer, IRenderableIpso ipso, SystemManagers managers, bool isDotted)
+        public static void RenderLinePrimitive(LinePrimitive linePrimitive, SpriteRenderer spriteRenderer, 
+            IRenderableIpso ipso, SystemManagers managers, bool isDotted)
         {
             linePrimitive.Position.X = ipso.GetAbsoluteX();
             linePrimitive.Position.Y = ipso.GetAbsoluteY();

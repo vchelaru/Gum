@@ -422,7 +422,6 @@ namespace Gum.Wireframe
                 {
                     VariableListSave copiedList = sourceVariableList.Clone();
                     copiedList.Name = targetInstance.Name + "." + copiedList.GetRootName();
-                    copiedList.SourceObject = targetInstance.Name;
 
                     targetState.VariableLists.Add(copiedList);
                 }

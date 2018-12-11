@@ -280,7 +280,13 @@ namespace GluePlugin.Converters
 
                 gumElement.Instances.Add(instance);
 
-                if (namedObject.IsList)
+                // Do we want to "trust" the .glux? 
+                // ShapeCollection instances can now
+                // contain shapes, so this if-check is
+                // wrong. I could add an explicit check
+                // for list or ShapeCollection, but maybe
+                // I'll just comment out the if-check for now.
+                //if (namedObject.IsList)
                 {
                     foreach (var containedObject in namedObject.ContainedObjects)
                     {
@@ -316,7 +322,13 @@ namespace GluePlugin.Converters
                 AddVariablesForPositionedObjectList(namedObject, gumVariables);
             }
 
-            if(parentNamedObject != null)
+            if (namedObject.SourceType == SourceType.FlatRedBallType &&
+                namedObject.SourceClassType == "ShapeCollection")
+            {
+                AddVariablesForShapeCollection(namedObject, gumVariables);
+            }
+
+            if (parentNamedObject != null)
             {
                 var parentVariable = new VariableSave();
                 parentVariable.Value = parentNamedObject.InstanceName;
@@ -336,6 +348,11 @@ namespace GluePlugin.Converters
 
         }
 
+        private static void AddVariablesForShapeCollection(NamedObjectSave namedObject, List<VariableSave> gumVariables)
+        {
+            AddVariablesForContainer(namedObject, gumVariables);
+        }
+
         private static void AddVariablesForPositionedObjectList(NamedObjectSave namedObject, List<VariableSave> gumVariables)
         {
             var type = ConvertEntityToGumComponent(namedObject.SourceClassGenericType);
@@ -345,6 +362,21 @@ namespace GluePlugin.Converters
                 type = ConvertFlatRedBallPrimitiveTypeToGumPrimitive(namedObject.SourceClassGenericType);
             }
 
+            AddVariablesForContainer(namedObject, gumVariables);
+
+            if (!string.IsNullOrEmpty(type))
+            {
+                var variableSave = new VariableSave();
+                variableSave.Value = type;
+                variableSave.SetsValue = true;
+                variableSave.Type = "string";
+                variableSave.Name = $"{namedObject.InstanceName}.Contained Type";
+                gumVariables.Add(variableSave);
+            }
+        }
+
+        private static void AddVariablesForContainer(NamedObjectSave namedObject, List<VariableSave> gumVariables)
+        {
             var widthUnits = new VariableSave();
             widthUnits.Value = DimensionUnitType.RelativeToContainer;
             widthUnits.SetsValue = true;
@@ -386,18 +418,6 @@ namespace GluePlugin.Converters
             y.Type = "float";
             y.Name = $"{namedObject.InstanceName}.Y";
             gumVariables.Add(y);
-
-
-
-            if (!string.IsNullOrEmpty(type))
-            {
-                var variableSave = new VariableSave();
-                variableSave.Value = type;
-                variableSave.SetsValue = true;
-                variableSave.Type = "string";
-                variableSave.Name = $"{namedObject.InstanceName}.Contained Type";
-                gumVariables.Add(variableSave);
-            }
         }
 
         private void AddGumVariables(InstructionSave glueVariable, NamedObjectSave namedObject,
@@ -599,7 +619,10 @@ namespace GluePlugin.Converters
             instanceSave.DefinedByBase = namedObject.DefinedByBase;
 
             if(namedObject.SourceType == SourceType.FlatRedBallType && 
-                namedObject.SourceClassType == "PositionedObjectList<T>")
+
+                (namedObject.SourceClassType == "PositionedObjectList<T>" ||
+                 namedObject.SourceClassType == "ShapeCollection"
+                ))
             {
                 // so user can't select and move it around accidentally
                 instanceSave.Locked = true;
@@ -658,6 +681,7 @@ namespace GluePlugin.Converters
                     gumType = "Sprite";
                     break;
                 case "PositionedObjectList":
+                case "ShapeCollection":
                     gumType = "Container";
                     break;
                 case "Polygon":

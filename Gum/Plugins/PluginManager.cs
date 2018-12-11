@@ -246,7 +246,7 @@ namespace Gum.Plugins
             }
             catch (Exception e)
             {
-                string error = "Error loading plugins";
+                string error = "Error loading plugins\n";
                 if (e is ReflectionTypeLoadException)
                 {
                     error += "Error is a reflection type load exception\n";

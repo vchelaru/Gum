@@ -14,6 +14,8 @@ using GumScreen = Gum.DataTypes.ScreenSave;
 using GumElement = Gum.DataTypes.ElementSave;
 using GlueElement = FlatRedBall.Glue.SaveClasses.IElement;
 
+using GumInstance = Gum.DataTypes.InstanceSave;
+
 
 using GlueState = FlatRedBall.Glue.SaveClasses.StateSave;
 using GlueStateCategory = FlatRedBall.Glue.SaveClasses.StateSaveCategory;
@@ -22,7 +24,7 @@ namespace GluePlugin.Logic
 {
     public class VariableSetLogic : Singleton<VariableSetLogic>
     {
-        internal void SetVariable(ElementSave gumElement, InstanceSave gumInstance, string variableName, object oldValue, bool save = true)
+        internal void SetVariable(ElementSave gumElement, GumInstance gumInstance, string variableName, object oldValue, bool save = true)
         {
             var glueProject = GluePluginState.Self.GlueProject;
 
@@ -48,7 +50,7 @@ namespace GluePlugin.Logic
             }
         }
 
-        private static void ApplyChangedVariable(ElementSave gumElement, InstanceSave gumInstance, string variableName, FlatRedBall.Glue.SaveClasses.GlueProjectSave glueProject, bool save)
+        private static void ApplyChangedVariable(ElementSave gumElement, GumInstance gumInstance, string variableName, FlatRedBall.Glue.SaveClasses.GlueProjectSave glueProject, bool save)
         {
             var glueElement = GluePluginObjectFinder.Self.GetGlueElementFrom(gumElement);
             
@@ -88,7 +90,7 @@ namespace GluePlugin.Logic
             }
         }
 
-        private static bool TryHandleAssigningMultipleVariables(ElementSave gumElement, InstanceSave gumInstance, string variableName, GlueElement glueElement, FlatRedBall.Glue.SaveClasses.NamedObjectSave foundNos, object gumValue)
+        private static bool TryHandleAssigningMultipleVariables(ElementSave gumElement, GumInstance gumInstance, string variableName, GlueElement glueElement, FlatRedBall.Glue.SaveClasses.NamedObjectSave foundNos, object gumValue)
         {
             var isTextureValue = variableName == "Texture Address" ||
                 variableName == "Texture Left" ||
@@ -191,7 +193,7 @@ namespace GluePlugin.Logic
             }
         }
 
-        private static void HandleIndividualVariableAssignment(ElementSave gumElement, InstanceSave gumInstance, string variableName, GlueElement glueElement, FlatRedBall.Glue.SaveClasses.NamedObjectSave foundNos, object gumValue)
+        private static void HandleIndividualVariableAssignment(ElementSave gumElement, GumInstance gumInstance, string variableName, GlueElement glueElement, FlatRedBall.Glue.SaveClasses.NamedObjectSave foundNos, object gumValue)
         {
             var gumToGlueConverter = GumToGlueConverter.Self;
             var glueVariableName = gumToGlueConverter.ConvertVariableName(variableName, gumInstance);
@@ -311,7 +313,7 @@ namespace GluePlugin.Logic
             return glueState;
         }
 
-        private bool GetIfShouldApplyValue(ElementSave gumElement, InstanceSave gumInstance, string variableName)
+        private bool GetIfShouldApplyValue(ElementSave gumElement, GumInstance gumInstance, string variableName)
         {
             var shouldApply = true;
 
@@ -321,17 +323,43 @@ namespace GluePlugin.Logic
 
                 var newParentName = currentState.GetValueOrDefault<string>($"{gumInstance.Name}.Parent");
 
-                InstanceSave newParent = null;
+                GumInstance newGumParent = null;
+                var glueElement = GluePluginObjectFinder.Self.GetGlueElementFrom(gumElement);
+
+                var glueInstance = glueElement?.AllNamedObjects.FirstOrDefault(item => item.InstanceName == gumInstance.Name);
+                FlatRedBall.Glue.SaveClasses.NamedObjectSave newGlueInstanceParent = null;
+
                 if(!string.IsNullOrEmpty(newParentName))
                 {
-                    newParent = gumElement.GetInstance(newParentName);
+                    newGumParent = gumElement.GetInstance(newParentName);
+
+                    newGlueInstanceParent = 
+                        glueElement?.AllNamedObjects.FirstOrDefault(item => item.FieldName == newParentName);
                 }
 
-                if(newParent != null)
+                if(newGumParent != null)
                 {
-                    var canNewParentBeParent = newParent.BaseType == "Container";
+                    if(newGlueInstanceParent?.SourceType == FlatRedBall.Glue.SaveClasses.SourceType.FlatRedBallType &&
+                        newGlueInstanceParent.SourceClassType == "ShapeCollection")
+                    {
+                        var canBeParent = glueInstance?.SourceType == FlatRedBall.Glue.SaveClasses.SourceType.FlatRedBallType &&
+                            (
+                                glueInstance.SourceClassType == "Circle" ||
+                                glueInstance.SourceClassType == "FlatRedBall.Math.Geometry.Circle" ||
+                                glueInstance.SourceClassType == "AxisAlignedRectangle" ||
+                                glueInstance.SourceClassType == "FlatRedBall.Math.Geometry.AxisAlignedRectangle" ||
+                                glueInstance.SourceClassType == "Polygon" ||
+                                glueInstance.SourceClassType == "FlatRedBall.Math.Geometry.Polygon" 
+                            );
 
-                    shouldApply = canNewParentBeParent;
+                        shouldApply = canBeParent;
+                    }
+                    else
+                    {
+                        var canNewParentBeParent = newGumParent.BaseType == "Container";
+
+                        shouldApply = canNewParentBeParent;
+                    }
                 }
             }
 

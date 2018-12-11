@@ -453,7 +453,7 @@ namespace Gum.Wireframe
                 {
                     mRotation = value;
 
-                    UpdateLayout(true, 0);
+                    UpdateLayout();
                 }
             }
         }

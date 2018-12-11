@@ -19,6 +19,16 @@ namespace Gum.Managers
     {
         public void HandleDelete()
         {
+            var handled = SelectionManager.Self.TryHandleDelete();
+            if(!handled)
+            {
+                DoDeletingLogic();
+            }
+
+        }
+
+        private void DoDeletingLogic()
+        {
             object objectDeleted = null;
             DeleteOptionsWindow optionsWindow = null;
 

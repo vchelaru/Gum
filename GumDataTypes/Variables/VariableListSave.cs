@@ -29,11 +29,14 @@ namespace Gum.DataTypes.Variables
             get;
             set;
         }
-        
+
+        [XmlIgnore]
         public string SourceObject
         {
-            get;
-            set;
+            get
+            {
+                return VariableSave.GetSourceObject(Name);
+            }
         }
 
         public string Category

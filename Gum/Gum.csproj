@@ -322,17 +322,21 @@
     <Compile Include="Wireframe\CameraController.cs" />
     <Compile Include="Wireframe\EditingManager.cs" />
     <Compile Include="Wireframe\EditingManager.RightClick.cs" />
+    <Compile Include="Wireframe\Editors\PolygonWireframeEditor.cs" />
     <Compile Include="Wireframe\ElementWithState.cs" />
     <Compile Include="Wireframe\GrabbedInitialState.cs" />
     <Compile Include="Wireframe\GraphicalOutline.cs" />
+    <Compile Include="Wireframe\HighlightManager.cs" />
     <Compile Include="Wireframe\InterpolatingColor.cs" />
     <Compile Include="Wireframe\OriginDisplay.cs" />
     <Compile Include="Wireframe\PlatformDetails.cs" />
     <Compile Include="Wireframe\ResizeHandles.cs" />
     <Compile Include="Wireframe\Ruler.cs" />
     <Compile Include="Wireframe\SelectionManager.cs" />
+    <Compile Include="Wireframe\Editors\StandardWireframeEditor.cs" />
     <Compile Include="Wireframe\TimeManager.cs" />
     <Compile Include="Wireframe\WireframeControl.cs" />
+    <Compile Include="Wireframe\Editors\WireframeEditor.cs" />
     <Compile Include="Wireframe\WireframeObjectManager.cs" />
     <Compile Include="Wireframe\WireframeObjectManager.Guide.cs" />
     <Compile Include="Wireframe\WireframeObjectManager.RepresentationCreation.cs" />
@@ -549,6 +553,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Content\Icons\Units\PixelsFromCenterYInverted.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\AddPoint.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <Content Include="Libraries\TargaImage.dll" />

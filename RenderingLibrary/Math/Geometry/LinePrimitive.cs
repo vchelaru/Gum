@@ -24,6 +24,10 @@ namespace RenderingLibrary.Math.Geometry
         }
 
         Texture2D mTexture;
+
+        /// <summary>
+        /// The list of points relative to the LinePrimitive (in object space)
+        /// </summary>
         List<Vector2> mVectors;
 
         /// <summary>
@@ -40,6 +44,8 @@ namespace RenderingLibrary.Math.Geometry
         /// Gets/sets the render depth of the primitive line object (0 = front, 1 = back)
         /// </summary>
         public float Depth;
+
+        public float LinePixelWidth = 1;
 
         #endregion
 
@@ -71,7 +77,7 @@ namespace RenderingLibrary.Math.Geometry
         }
         
         /// <summary>
-        /// Adds a vector to the LinePrimitive object.
+        /// Adds a vector to the LinePrimitive object. The position is relative to the position of the LinePrimitive (object space)
         /// </summary>
         /// <param name="vector">The vector to add.</param>
         public void Add(Vector2 vector)
@@ -101,6 +107,10 @@ namespace RenderingLibrary.Math.Geometry
 
         public Vector2 PointAt(int index)
         {
+            if (index >= mVectors.Count)
+            {
+                throw new IndexOutOfRangeException($"index:{index}, count{mVectors.Count}");
+            }
             return mVectors[index];
         }
 
@@ -149,6 +159,26 @@ namespace RenderingLibrary.Math.Geometry
             Render(spriteRenderer, managers, mTexture, .2f);
         }
 
+        internal bool IsPointInside(float worldX, float worldY)
+        {
+            bool b = false;
+
+            for (int i = 0, j = mVectors.Count - 1; i < mVectors.Count; j = i++)
+            {
+                var atI = mVectors[i] + Position;
+                var atJ = mVectors[j] + Position;
+
+                if ((((atI.Y <= worldY) && (worldY < atJ.Y)) || ((atJ.Y <= worldY) && (worldY < atI.Y))) &&
+                    (worldX < (atJ.X - atI.X) * (worldY - atI.Y) / (atJ.Y - atI.Y) + atI.X)) b = !b;
+            }
+
+            return b;
+        }
+
+        internal void SetPointAt(Vector2 point, int index)
+        {
+            mVectors[index] = point;
+        }
 
         public void Render(SpriteRenderer spriteRenderer, SystemManagers managers, Texture2D textureToUse, float repetitionsPerLength)
         {
@@ -222,7 +252,7 @@ namespace RenderingLibrary.Math.Geometry
                     Color,
                     angle,
                     Vector2.Zero,
-                    new Vector2(distance / ((float)repetitions * textureToUse.Width), 1/renderer.CurrentZoom),
+                    new Vector2(distance / ((float)repetitions * textureToUse.Width), LinePixelWidth / renderer.CurrentZoom),
                     SpriteEffects.None,
                     Depth,
                     this);

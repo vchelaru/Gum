@@ -20,6 +20,7 @@ using System.Windows.Forms.Integration;
 using Gum.DataTypes;
 using Gum.Controls;
 using Gum.Logic.FileWatch;
+using Gum.Commands;
 
 namespace Gum
 {
@@ -66,7 +67,7 @@ namespace Gum
             StandardElementsManager.Self.Initialize();
             MenuStripManager.Self.Initialize(
                 RemoveElementMenuItem, RemoveStateMenuItem, RemoveVariableMenuItem);
-            GuiCommands.Self.Initialize(wireframeControl1);
+            ToolCommands.GuiCommands.Self.Initialize(wireframeControl1);
             Wireframe.WireframeObjectManager.Self.Initialize(WireframeEditControl, wireframeControl1);
 
             EditingManager.Self.Initialize(this.WireframeContextMenuStrip);
@@ -324,7 +325,7 @@ namespace Gum
 
                 menuItem.Click += delegate
                 {
-                    ProjectManager.Self.LoadProject(menuItem.Text);
+                    GumCommands.Self.FileCommands.LoadProject(menuItem.Text);
                 };
             }
         }

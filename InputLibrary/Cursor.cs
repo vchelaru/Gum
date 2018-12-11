@@ -54,6 +54,9 @@ namespace InputLibrary
             }
         }
 
+        /// <summary>
+        /// Returns the pixel X on the window - this is in window space, not world space.
+        /// </summary>
         public float X
         {
             get
@@ -64,6 +67,9 @@ namespace InputLibrary
             }
         }
 
+        /// <summary>
+        /// Returns the pixel Y on the window - this is in window space, not world space.
+        /// </summary>
         public float Y
         {
             get
