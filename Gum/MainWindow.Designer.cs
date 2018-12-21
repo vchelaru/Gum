@@ -68,10 +68,7 @@
             this.testWpfControl2 = new Gum.TestWpfControl();
             this.PreviewSplitContainer = new System.Windows.Forms.SplitContainer();
             this.panel1 = new System.Windows.Forms.Panel();
-            this.ToolbarPanel = new System.Windows.Forms.FlowLayoutPanel();
-            this.wireframeControl1 = new Gum.Wireframe.WireframeControl();
             this.WireframeContextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.WireframeEditControl = new FlatRedBall.AnimationEditorForms.Controls.WireframeEditControl();
             this.panel2 = new System.Windows.Forms.Panel();
             this.RightTabControl = new System.Windows.Forms.TabControl();
             this.tabPage3 = new System.Windows.Forms.TabPage();
@@ -456,57 +453,17 @@
             // 
             this.panel1.BackColor = System.Drawing.SystemColors.Control;
             this.panel1.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            this.panel1.Controls.Add(this.ToolbarPanel);
-            this.panel1.Controls.Add(this.wireframeControl1);
-            this.panel1.Controls.Add(this.WireframeEditControl);
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(540, 512);
             this.panel1.TabIndex = 0;
             // 
-            // ToolbarPanel
-            // 
-            this.ToolbarPanel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.ToolbarPanel.Location = new System.Drawing.Point(0, 22);
-            this.ToolbarPanel.Name = "ToolbarPanel";
-            this.ToolbarPanel.Size = new System.Drawing.Size(532, 31);
-            this.ToolbarPanel.TabIndex = 2;
-            // 
-            // wireframeControl1
-            // 
-            this.wireframeControl1.AllowDrop = true;
-            this.wireframeControl1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.wireframeControl1.ContextMenuStrip = this.WireframeContextMenuStrip;
-            this.wireframeControl1.Cursor = System.Windows.Forms.Cursors.Default;
-            this.wireframeControl1.DesiredFramesPerSecond = 30F;
-            this.wireframeControl1.Location = new System.Drawing.Point(0, 52);
-            this.wireframeControl1.Name = "wireframeControl1";
-            this.wireframeControl1.Size = new System.Drawing.Size(532, 452);
-            this.wireframeControl1.TabIndex = 0;
-            this.wireframeControl1.Text = "wireframeControl1";
-            this.wireframeControl1.DragDrop += new System.Windows.Forms.DragEventHandler(this.wireframeControl1_DragDrop);
-            this.wireframeControl1.DragEnter += new System.Windows.Forms.DragEventHandler(this.wireframeControl1_DragEnter);
-            this.wireframeControl1.MouseClick += new System.Windows.Forms.MouseEventHandler(this.wireframeControl1_MouseClick);
-            // 
             // WireframeContextMenuStrip
             // 
             this.WireframeContextMenuStrip.Name = "WireframeContextMenuStrip";
             this.WireframeContextMenuStrip.Size = new System.Drawing.Size(61, 4);
-            // 
-            // WireframeEditControl
-            // 
-            this.WireframeEditControl.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.WireframeEditControl.Location = new System.Drawing.Point(0, 0);
-            this.WireframeEditControl.Margin = new System.Windows.Forms.Padding(4);
-            this.WireframeEditControl.Name = "WireframeEditControl";
-            this.WireframeEditControl.PercentageValue = 100;
-            this.WireframeEditControl.Size = new System.Drawing.Size(532, 22);
-            this.WireframeEditControl.TabIndex = 1;
+
             // 
             // panel2
             // 
@@ -618,15 +575,12 @@
         private System.Windows.Forms.ToolStripMenuItem RemoveStateMenuItem;
         private System.Windows.Forms.ToolStripMenuItem RemoveElementMenuItem;
         private System.Windows.Forms.ContextMenuStrip ElementMenuStrip;
-        private Wireframe.WireframeControl wireframeControl1;
         private System.Windows.Forms.ContextMenuStrip WireframeContextMenuStrip;
         private System.Windows.Forms.ContextMenuStrip PropertyGridMenuStrip;
         private System.Windows.Forms.ToolStripMenuItem pluginsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem managePluginsToolStripMenuItem;
         private System.Windows.Forms.ImageList ElementTreeImages;
-        private FlatRedBall.AnimationEditorForms.Controls.WireframeEditControl WireframeEditControl;
         private System.Windows.Forms.ToolStripMenuItem saveProjectToolStripMenuItem;
-        public System.Windows.Forms.FlowLayoutPanel ToolbarPanel;
         private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem newProjectToolStripMenuItem;
         private System.Windows.Forms.RichTextBox OutputTextBox;

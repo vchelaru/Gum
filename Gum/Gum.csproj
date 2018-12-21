@@ -332,6 +332,7 @@
     <Compile Include="Wireframe\PlatformDetails.cs" />
     <Compile Include="Wireframe\ResizeHandles.cs" />
     <Compile Include="Wireframe\Ruler.cs" />
+    <Compile Include="Wireframe\ScrollBarControlLogic.cs" />
     <Compile Include="Wireframe\SelectionManager.cs" />
     <Compile Include="Wireframe\Editors\StandardWireframeEditor.cs" />
     <Compile Include="Wireframe\TimeManager.cs" />

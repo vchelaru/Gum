@@ -22,6 +22,8 @@ namespace Gum.Wireframe
         WireframeEditControl mWireframeEditControl;
         System.Drawing.Point mLastMouseLocation;
 
+        public event Action CameraChanged;
+
         public void Initialize(Camera camera, WireframeEditControl wireframeEditControl, int defaultWidth, int defaultHeight)
         {
             Camera = camera;
@@ -55,6 +57,8 @@ namespace Gum.Wireframe
 
             Camera.X = worldX + newDifferenceX;
             Camera.Y = worldY + newDifferenceY;
+
+            CameraChanged?.Invoke();
         }
 
         internal void HandleMouseDown(object sender, MouseEventArgs e)
@@ -77,6 +81,11 @@ namespace Gum.Wireframe
 
                 Gum.ToolCommands.GuiCommands.Self.RefreshWireframe();
 
+                if(xChange != 0 || yChange != 0)
+                {
+                    CameraChanged?.Invoke();
+                }
+
                 mLastMouseLocation = e.Location;
             }
         }
@@ -88,26 +97,33 @@ namespace Gum.Wireframe
                 if (e.KeyCode == System.Windows.Forms.Keys.Up)
                 {
                     SystemManagers.Default.Renderer.Camera.Y -= 10 / SystemManagers.Default.Renderer.Camera.Zoom;
+                    CameraChanged?.Invoke();
+
                 }
                 else if (e.KeyCode == System.Windows.Forms.Keys.Down)
                 {
                     SystemManagers.Default.Renderer.Camera.Y += 10 / SystemManagers.Default.Renderer.Camera.Zoom;
+                    CameraChanged?.Invoke();
                 }
                 else if (e.KeyCode == System.Windows.Forms.Keys.Left)
                 {
                     SystemManagers.Default.Renderer.Camera.X -= 10 / SystemManagers.Default.Renderer.Camera.Zoom;
+                    CameraChanged?.Invoke();
                 }
                 else if (e.KeyCode == System.Windows.Forms.Keys.Right)
                 {
                     SystemManagers.Default.Renderer.Camera.X += 10 / SystemManagers.Default.Renderer.Camera.Zoom;
+                    CameraChanged?.Invoke();
                 }
                 else if (e.KeyCode == Keys.Oemplus || e.KeyCode == Keys.Add)
                 {
                     mWireframeEditControl.ZoomIn();
+                    CameraChanged?.Invoke();
                 }
                 else if (e.KeyCode == Keys.OemMinus || e.KeyCode == Keys.Subtract)
                 {
                     mWireframeEditControl.ZoomOut();
+                    CameraChanged?.Invoke();
                 }
             }
         }

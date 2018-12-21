@@ -30,7 +30,10 @@ namespace PerformanceMeasurementPlugin
         {
             view = new PerformanceView();
             view.DataContext = new PerformanceViewModel();
-            GumCommands.Self.GuiCommands.AddControl(view, "Performance");
+
+            // This doesn't work currently so we're not going to show it, it just gets in the way.
+            //GumCommands.Self.GuiCommands.AddControl(view, "Performance");
+
         }
 
         public override bool ShutDown(Gum.Plugins.PluginShutDownReason shutDownReason)

@@ -31,18 +31,25 @@ namespace Gum.Plugins.PropertiesWindowPlugin
 
         private void HandlePropertiesClicked(object sender, EventArgs e)
         {
-            if(control == null)
+            try
             {
-                control = new ProjectPropertiesControl();
-                control.PropertyChanged += HandlePropertyChanged;
+                if(control == null)
+                {
+                    control = new ProjectPropertiesControl();
+                    control.PropertyChanged += HandlePropertyChanged;
 
-                control.CloseClicked += HandleCloseClicked;
+                    control.CloseClicked += HandleCloseClicked;
+                }
+                viewModel.BindTo(ProjectManager.Self.GeneralSettingsFile, ProjectState.Self.GumProjectSave);
+
+                GumCommands.Self.GuiCommands.AddControl(control, "Project Properties");
+                GumCommands.Self.GuiCommands.ShowControl(control);
+                control.ViewModel = viewModel;
             }
-            viewModel.BindTo(ProjectManager.Self.GeneralSettingsFile, ProjectState.Self.GumProjectSave);
-
-            GumCommands.Self.GuiCommands.AddControl(control, "Project Properties");
-            GumCommands.Self.GuiCommands.ShowControl(control);
-            control.ViewModel = viewModel;
+            catch(Exception ex)
+            {
+                GumCommands.Self.GuiCommands.PrintOutput($"Error showing project properties:\n{ex.ToString()}");
+            }
         }
 
         private void HandlePropertyChanged(object sender, EventArgs e)
@@ -50,8 +57,6 @@ namespace Gum.Plugins.PropertiesWindowPlugin
             viewModel.ApplyToBoundObjects();
 
             GumCommands.Self.WireframeCommands.Refresh();
-            GumCommands.Self.FileCommands.TryAutoSaveProject();
-
 
             GumCommands.Self.FileCommands.TryAutoSaveProject();
         }

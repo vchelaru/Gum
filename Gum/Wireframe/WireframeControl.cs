@@ -59,6 +59,9 @@ namespace Gum.Wireframe
         Ruler mTopRuler;
         Ruler mLeftRuler;
 
+        public event Action CameraChanged;
+
+
         #endregion
 
         #region Properties
@@ -181,11 +184,14 @@ namespace Gum.Wireframe
 
         #region Initialize Methods
 
-        public void Initialize(WireframeEditControl wireframeEditControl)
+        public void Initialize(WireframeEditControl wireframeEditControl, Panel wireframeParentPanel)
         {
             try
             {
                 mWireframeEditControl = wireframeEditControl;
+
+
+
 
                 mWireframeEditControl.ZoomChanged += HandleZoomChanged;
 
@@ -198,6 +204,7 @@ namespace Gum.Wireframe
 
                 LoaderManager.Self.Initialize(null, "content/TestFont.fnt", Services, null);
                 CameraController.Self.Initialize(Camera, mWireframeEditControl, Width, Height);
+                CameraController.Self.CameraChanged += () => CameraChanged?.Invoke();
 
                 InputLibrary.Cursor.Self.Initialize(this);
                 InputLibrary.Keyboard.Self.Initialize(this);

@@ -36,19 +36,45 @@ namespace Gum
     public partial class MainWindow : Form
     {
         private System.Windows.Forms.Timer FileWatchTimer;
+        private FlatRedBall.AnimationEditorForms.Controls.WireframeEditControl WireframeEditControl;
+        private Wireframe.WireframeControl wireframeControl1;
+        ScrollBarControlLogic scrollBarControlLogic;
+        public System.Windows.Forms.FlowLayoutPanel ToolbarPanel;
+
 
         StateView stateView;
 
         public MainWindow()
         {
 #if DEBUG
-            // This suppresses annoying, useless output from WPF, as explained here:
-            http://weblogs.asp.net/akjoshi/resolving-un-harmful-binding-errors-in-wpf
+        // This suppresses annoying, useless output from WPF, as explained here:
+        http://weblogs.asp.net/akjoshi/resolving-un-harmful-binding-errors-in-wpf
             System.Diagnostics.PresentationTraceSources.DataBindingSource.Switch.Level = System.Diagnostics.SourceLevels.Critical;
 #endif
 
 
             InitializeComponent();
+
+            // Create the wireframe control, but don't add it...
+            CreateWireframeControl();
+
+            // place the scrollbars first so they are in front of everything
+            scrollBarControlLogic = new ScrollBarControlLogic(this.panel1, wireframeControl1);
+            scrollBarControlLogic.SetDisplayedArea(800, 600);
+            wireframeControl1.CameraChanged += () =>
+            {
+                scrollBarControlLogic.UpdateScrollBars();
+                scrollBarControlLogic.UpdateScrollBarsToCameraPosition();
+
+            };
+
+            CreateWireframeEditControl();
+
+            CreateToolbarPanel();
+
+            //... add it here, so it can be done after scroll bars and other controls
+            this.panel1.Controls.Add(this.wireframeControl1);
+
 
             stateView = new StateView();
             this.AddWinformsControl(stateView, "States", TabLocation.CenterTop);
@@ -83,6 +109,65 @@ namespace Gum
 
         }
 
+        private void CreateToolbarPanel()
+        {
+            this.ToolbarPanel = new System.Windows.Forms.FlowLayoutPanel();
+            this.panel1.Controls.Add(this.ToolbarPanel);
+            // 
+            // ToolbarPanel
+            // 
+            //this.ToolbarPanel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            //| System.Windows.Forms.AnchorStyles.Right)));
+            this.ToolbarPanel.Dock = DockStyle.Top;
+            this.ToolbarPanel.Location = new System.Drawing.Point(0, 22);
+            this.ToolbarPanel.Name = "ToolbarPanel";
+            this.ToolbarPanel.Size = new System.Drawing.Size(532, 31);
+            this.ToolbarPanel.TabIndex = 2;
+        }
+
+        private void CreateWireframeControl()
+        {
+            this.wireframeControl1 = new Gum.Wireframe.WireframeControl();
+            // 
+            // wireframeControl1
+            // 
+            this.wireframeControl1.AllowDrop = true;
+            //this.wireframeControl1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            //| System.Windows.Forms.AnchorStyles.Left)
+            //| System.Windows.Forms.AnchorStyles.Right)));
+            this.wireframeControl1.Dock = DockStyle.Fill;
+            this.wireframeControl1.ContextMenuStrip = this.WireframeContextMenuStrip;
+            this.wireframeControl1.Cursor = System.Windows.Forms.Cursors.Default;
+            this.wireframeControl1.DesiredFramesPerSecond = 30F;
+            this.wireframeControl1.Location = new System.Drawing.Point(0, 52);
+            this.wireframeControl1.Name = "wireframeControl1";
+            this.wireframeControl1.Size = new System.Drawing.Size(532, 452);
+            this.wireframeControl1.TabIndex = 0;
+            this.wireframeControl1.Text = "wireframeControl1";
+            this.wireframeControl1.DragDrop += new System.Windows.Forms.DragEventHandler(this.wireframeControl1_DragDrop);
+            this.wireframeControl1.DragEnter += new System.Windows.Forms.DragEventHandler(this.wireframeControl1_DragEnter);
+            this.wireframeControl1.MouseClick += new System.Windows.Forms.MouseEventHandler(this.wireframeControl1_MouseClick);
+
+
+        }
+
+        private void CreateWireframeEditControl()
+        {
+            this.WireframeEditControl = new FlatRedBall.AnimationEditorForms.Controls.WireframeEditControl();
+            this.panel1.Controls.Add(this.WireframeEditControl);
+            // 
+            // WireframeEditControl
+            // 
+            //this.WireframeEditControl.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            //| System.Windows.Forms.AnchorStyles.Right)));
+            this.WireframeEditControl.Dock = DockStyle.Top;
+            this.WireframeEditControl.Location = new System.Drawing.Point(0, 0);
+            this.WireframeEditControl.Margin = new System.Windows.Forms.Padding(4);
+            this.WireframeEditControl.Name = "WireframeEditControl";
+            this.WireframeEditControl.PercentageValue = 100;
+            this.WireframeEditControl.TabIndex = 1;
+        }
+
         private void InitializeFileWatchTimer()
         {
             this.FileWatchTimer = new Timer(this.components);
@@ -104,9 +189,15 @@ namespace Gum
         //void HandleXnaInitialize(object sender, EventArgs e)
         void HandleXnaInitialize()
         {
-            this.wireframeControl1.Initialize(WireframeEditControl);
+            this.wireframeControl1.Initialize(WireframeEditControl, panel1);
+            scrollBarControlLogic.Managers = global::RenderingLibrary.SystemManagers.Default;
+            scrollBarControlLogic.UpdateScrollBars();
 
-            this.wireframeControl1.Parent.Resize += (not, used) => UpdateWireframeControlSizes();
+            this.wireframeControl1.Parent.Resize += (not, used) =>
+            {
+                UpdateWireframeControlSizes();
+                scrollBarControlLogic.UpdateScrollBars();
+            };
 
             UpdateWireframeControlSizes();
         }

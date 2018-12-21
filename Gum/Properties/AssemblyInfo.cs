@@ -124,5 +124,10 @@ using System.Runtime.InteropServices;
 //    which will show up in the property grid with no dropdown.
 // 0.9.4.4 
 //  - Fixed project ignoring the next file change on a new Gum project that has missing files.
-[assembly: AssemblyVersion("0.9.4.4")]
-[assembly: AssemblyFileVersion("0.9.4.4")]
+// 0.9.4.5
+//  - Removed the performance tab, it doesn't do anything yet
+//  - Added try/catch around showing project properties
+// 0.9.5
+//  - Added vertical/horizontal scroll bars to the wireframe area
+[assembly: AssemblyVersion("0.9.5.0")]
+[assembly: AssemblyFileVersion("0.9.5.0")]
