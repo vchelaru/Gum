@@ -25,20 +25,20 @@ namespace Gum.Controls
                     new Option
                     {
                         Name = "Regular",
-                        Value = global::RenderingLibrary.Graphics.HorizontalAlignment.Left,
+                        Value = Gum.Managers.ChildrenLayout.Regular,
                         Image = regularBitmap
 
                     },
                     new Option
                     {
                         Name = "Top to Bottom Stack",
-                        Value = global::RenderingLibrary.Graphics.HorizontalAlignment.Center,
+                        Value = Gum.Managers.ChildrenLayout.TopToBottomStack,
                         Image = topToBottomBitmap
                     },
                     new Option
                     {
                         Name = "Left to Right Stack",
-                        Value = global::RenderingLibrary.Graphics.HorizontalAlignment.Right,
+                        Value = Gum.Managers.ChildrenLayout.LeftToRightStack,
                         Image = leftToRightBitmap
                     },
                 };

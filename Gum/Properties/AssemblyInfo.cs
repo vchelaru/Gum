@@ -129,5 +129,8 @@ using System.Runtime.InteropServices;
 //  - Added try/catch around showing project properties
 // 0.9.5
 //  - Added vertical/horizontal scroll bars to the wireframe area
-[assembly: AssemblyVersion("0.9.5.0")]
-[assembly: AssemblyFileVersion("0.9.5.0")]
+// 0.9.6
+//  - Fixed possible stacking bug with children that do not have alphabetical names
+//  - Fixed children layout buttons not showing selected value.
+[assembly: AssemblyVersion("0.9.6.0")]
+[assembly: AssemblyFileVersion("0.9.6.0")]
