@@ -13,6 +13,9 @@ using System.Threading.Tasks;
 
 namespace Gum.Plugins.PropertiesWindowPlugin
 {
+    /// <summary>
+    /// Plugin for displaying project properties
+    /// </summary>
     [Export(typeof(PluginBase))]
     class MainPlugin : InternalPlugin
     {

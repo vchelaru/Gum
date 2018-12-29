@@ -13,6 +13,7 @@ using RenderingLibrary.Math.Geometry;
 using Gum.RenderingLibrary;
 using System.Reflection;
 using GumRuntime;
+using Gum.DataTypes.Variables;
 
 namespace Gum.Wireframe
 {
@@ -2927,6 +2928,8 @@ namespace Gum.Wireframe
 
 
                 CustomRemoveFromManagers();
+
+                mManagers = null;
             }
         }
 
@@ -3954,18 +3957,33 @@ namespace Gum.Wireframe
         {
             this.SuspendLayout(true);
 
-            var variablesToConsider =
+            var variablesWithoutStatesOnParent =
                 state.Variables.Where(item =>
                     // We can set the variable if it's not setting a state (to prevent recursive setting).                   
                     (item.IsState(state.ParentContainer) == false ||
-                        // If it is setting a state we'll allow it if it's on a child.
+                    // If it is setting a state we'll allow it if it's on a child.
                     !string.IsNullOrEmpty(item.SourceObject)) &&
                     item.SetsValue
-                    
-                    )
-                    .OrderBy(item => item.GetRootName() == "Parent")
-                    .ThenBy(item => !item.IsState(state.ParentContainer))
-                .ToArray();
+
+                    ).ToArray();
+
+
+            var parentSettingVariables =
+                variablesWithoutStatesOnParent
+                    .Where(item => item.GetRootName() == "Parent")
+                    .OrderBy(item => GetOrderedIndexForParentVariable(item))
+                    .ToArray();
+
+            var nonParentSettingVariables =
+                variablesWithoutStatesOnParent
+                    .Except(parentSettingVariables)
+                    // Even though we removed state-setting variables on the parent, we still allow setting
+                    // states on the contained objects
+                    .OrderBy(item => !item.IsState(state.ParentContainer))
+                    .ToArray();
+
+            var variablesToConsider =
+                parentSettingVariables.Concat(nonParentSettingVariables);
 
             foreach (var variable in variablesToConsider)
             {
@@ -3980,6 +3998,19 @@ namespace Gum.Wireframe
                 this.SetProperty(variableList.Name, variableList.ValueAsIList);
             }
             this.ResumeLayout(true);
+        }
+
+        private int GetOrderedIndexForParentVariable(VariableSave item)
+        {
+            var objectName = item.SourceObject;
+            for (int i = 0; i < ElementSave.Instances.Count; i++)
+            {
+                if (objectName == ElementSave.Instances[i].Name)
+                {
+                    return i;
+                }
+            }
+            return -1;
         }
 
         public void ApplyState(List<DataTypes.Variables.VariableSaveValues> variableSaveValues)

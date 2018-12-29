@@ -6,6 +6,9 @@ using System.ComponentModel;
 
 namespace Gum.PropertyGridHelpers.Converters
 {
+    /// <summary>
+    /// A type converter for enums which can restrict certain values from appearing. 
+    /// </summary>
     public class RestrictiveEnumConverter : EnumConverter
     {
         public List<object> ValuesToExclude = new List<object>();
