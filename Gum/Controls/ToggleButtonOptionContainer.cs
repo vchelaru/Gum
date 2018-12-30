@@ -16,7 +16,7 @@ namespace Gum.Controls
 {
     /// <summary>
     /// A container for ToggleButtonOptionDisplay, which can be extended
-    /// to create custom toggle button option views. See remakrs for details on why
+    /// to create custom toggle button option views. See remarks for details on why
     /// this exists.
     /// </summary>
     /// <remarks>
@@ -102,7 +102,10 @@ namespace Gum.Controls
             return internalDisplay.TryGetValueOnUi(out result);
         }
 
-        public ApplyValueResult TrySetValueOnUi(object value) => internalDisplay.TrySetValueOnUi(value);
+        public ApplyValueResult TrySetValueOnUi(object value)
+        {
+            return internalDisplay.TrySetValueOnUi(value);
+        }
 
 
 

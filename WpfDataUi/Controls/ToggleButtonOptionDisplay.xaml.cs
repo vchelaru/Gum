@@ -79,17 +79,18 @@ namespace WpfDataUi.Controls
         public ToggleButtonOptionDisplay(Option[] options)
         {
             InitializeComponent();
-            this.Height = 40;
+            // We prob want this auto-height
+            //this.Height = 40;
             RefreshButtonFromOptions(options);
 
-            ButtonStackPanel.ContextMenu = new ContextMenu();
-            this.RefreshContextMenu(ButtonStackPanel.ContextMenu);
+            ButtonWrapPanel.ContextMenu = new ContextMenu();
+            this.RefreshContextMenu(ButtonWrapPanel.ContextMenu);
 
         }
 
         public void RefreshButtonFromOptions(Option[] options)
         {
-            ButtonStackPanel.Children.Clear();
+            ButtonWrapPanel.Children.Clear();
 
             foreach (var option in options)
             {
@@ -133,7 +134,7 @@ namespace WpfDataUi.Controls
                 toggleButton.Click += HandleToggleClick;
                 toggleButton.Tag = option;
                 toggleButtons.Add(toggleButton);
-                ButtonStackPanel.Children.Add(toggleButton);
+                ButtonWrapPanel.Children.Add(toggleButton);
 
             }
         }
@@ -151,7 +152,7 @@ namespace WpfDataUi.Controls
             Label.Text = propertyName;
             TrySetValueOnUi(InstanceMember.Value);
 
-            this.RefreshContextMenu(ButtonStackPanel.ContextMenu);
+            this.RefreshContextMenu(ButtonWrapPanel.ContextMenu);
             RefreshButtonAppearance();
 
             // todo: adjust the background to be either green or gray depending on defaults

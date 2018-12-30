@@ -5,7 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:WpfDataUi.Controls"
              mc:Ignorable="d" 
-             Height="24" d:DesignWidth="300">
+             Height="Auto" d:DesignWidth="300" Margin="0,4,0,4">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Name="FirstColumn" Width="{Binding FirstGridLength}"></ColumnDefinition>
@@ -14,9 +14,9 @@
         <TextBlock x:Name="Label" MinWidth="100" TextWrapping="Wrap"  VerticalAlignment="Center"
                    Padding="4"
                    >Property Label:</TextBlock>
-        <StackPanel Grid.Column="1" Orientation="Horizontal" x:Name="ButtonStackPanel">
+        <WrapPanel Grid.Column="1" Orientation="Horizontal" x:Name="ButtonWrapPanel">
             
-        </StackPanel>
+        </WrapPanel>
         
     </Grid>
 </UserControl>
