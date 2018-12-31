@@ -205,7 +205,7 @@ namespace Gum.PropertyGridHelpers
 
                     if (currentIpso != null)
                     {
-                        currentIpso.GetFileWidthAndHeight(out fileWidth, out fileHeight);
+                        currentIpso.GetFileWidthAndHeightOrDefault(out fileWidth, out fileHeight);
                         if (currentIpso.Parent != null)
                         {
                             parentWidth = currentIpso.Parent.Width;

@@ -263,7 +263,17 @@ namespace Gum.Wireframe
                 object unitsVariableAsObject;
                 GetCurrentValueForVariable(unitsVariableName, instanceSave, out unitsNameWithInstance, out unitsVariableAsObject);
 
+                if (float.IsPositiveInfinity(modificationAmount))
+                {
+                    throw new InvalidOperationException("Cannot be infinite");
+                }
+
                 modificationAmount = AdjustAmountAccordingToUnitType(baseVariableName, modificationAmount, unitsVariableAsObject);
+
+                if(float.IsPositiveInfinity(modificationAmount))
+                {
+                    throw new InvalidOperationException("Cannot be infinite");
+                }
 
                 float newValue = currentValue + modificationAmount;
                 SelectedState.Self.SelectedStateSave.SetValue(nameWithInstance, newValue, instanceSave, "float");
@@ -342,7 +352,7 @@ namespace Gum.Wireframe
 
 
                 IRenderableIpso ipso = WireframeObjectManager.Self.GetSelectedRepresentation();
-                ipso.GetFileWidthAndHeight(out fileWidth, out fileHeight);
+                ipso.GetFileWidthAndHeightOrDefault(out fileWidth, out fileHeight);
                 ipso.GetParentWidthAndHeight(
                     ProjectManager.Self.GumProjectSave.DefaultCanvasWidth, ProjectManager.Self.GumProjectSave.DefaultCanvasHeight,
                     out parentWidth, out parentHeight);

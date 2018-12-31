@@ -132,5 +132,7 @@ using System.Runtime.InteropServices;
 // 0.9.6
 //  - Fixed possible stacking bug with children that do not have alphabetical names
 //  - Fixed children layout buttons not showing selected value.
-[assembly: AssemblyVersion("0.9.6.0")]
-[assembly: AssemblyFileVersion("0.9.6.0")]
+// 0.9.6.1
+//  - Fixed crash and corruption when resizing a Sprite that has a null texture, but uses % file width or height
+[assembly: AssemblyVersion("0.9.6.1")]
+[assembly: AssemblyFileVersion("0.9.6.1")]

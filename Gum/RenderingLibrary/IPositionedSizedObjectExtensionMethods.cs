@@ -29,10 +29,11 @@ namespace Gum.RenderingLibrary
             }
         }
 
-        public static void GetFileWidthAndHeight(this IRenderableIpso ipso, out float fileWidth, out float fileHeight)
+        public static void GetFileWidthAndHeightOrDefault(this IRenderableIpso ipso, out float fileWidth, out float fileHeight)
         {
-            fileWidth = 0;
-            fileHeight = 0;
+            // to prevent divide-by-zero issues
+            fileWidth = 32;
+            fileHeight = 32;
 
             Microsoft.Xna.Framework.Graphics.Texture2D texture = null;
 
