@@ -24,7 +24,7 @@ namespace RenderingLibrary.Math.Geometry
 
         LinePrimitive mLinePrimitive;
 
-        List<IRenderableIpso> mChildren;
+        ObservableCollection<IRenderableIpso> mChildren;
 
 
         IRenderableIpso mParent;
@@ -163,7 +163,7 @@ namespace RenderingLibrary.Math.Geometry
             }
         }
 
-        public List<IRenderableIpso> Children
+        public ObservableCollection<IRenderableIpso> Children
         {
             get { return mChildren; }
         }
@@ -223,7 +223,7 @@ namespace RenderingLibrary.Math.Geometry
 
             mManagers = managers;
 
-            mChildren = new List<IRenderableIpso>();
+            mChildren = new ObservableCollection<IRenderableIpso>();
 
             Visible = true;
             Renderer renderer = null;

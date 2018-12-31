@@ -14,6 +14,7 @@ using Gum.RenderingLibrary;
 using System.Reflection;
 using GumRuntime;
 using Gum.DataTypes.Variables;
+using System.Collections.ObjectModel;
 
 namespace Gum.Wireframe
 {
@@ -702,7 +703,7 @@ namespace Gum.Wireframe
         /// <summary>
         /// Returns the direct hierarchical children of this. Note that this does not return all objects contained in the element. 
         /// </summary>
-        public List<IRenderableIpso> Children
+        public ObservableCollection<IRenderableIpso> Children
         {
             get
             {
@@ -3068,7 +3069,7 @@ namespace Gum.Wireframe
 
                 case "Height":
                     this.Height = (float)value;
-                    toReturn = true;
+                        toReturn = true;
                     break;
                 case "Height Units":
                     this.HeightUnits = (DimensionUnitType)value;

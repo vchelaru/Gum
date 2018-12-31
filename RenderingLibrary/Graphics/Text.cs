@@ -96,7 +96,7 @@ namespace RenderingLibrary.Graphics
 
         IRenderableIpso mParent;
 
-        List<IRenderableIpso> mChildren;
+        ObservableCollection<IRenderableIpso> mChildren;
 
         int mAlpha = 255;
         int mRed = 255;
@@ -357,7 +357,7 @@ namespace RenderingLibrary.Graphics
             }
         }
 
-        public List<IRenderableIpso> Children
+        public ObservableCollection<IRenderableIpso> Children
         {
             get { return mChildren; }
         }
@@ -468,7 +468,7 @@ namespace RenderingLibrary.Graphics
             RenderBoundary = RenderBoundaryDefault;
 
             mManagers = managers;
-            mChildren = new List<IRenderableIpso>();
+            mChildren = new ObservableCollection<IRenderableIpso>();
 
             mRawText = text;
             mNeedsBitmapFontRefresh = true;

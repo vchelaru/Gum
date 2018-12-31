@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework.Graphics;
@@ -25,8 +26,8 @@ namespace RenderingLibrary.Graphics
 
         public BlendState BlendState => Renderer.NormalBlendState;
 
-        List<IRenderableIpso> children = new List<IRenderableIpso>();
-        public List<IRenderableIpso> Children => children;
+        ObservableCollection<IRenderableIpso> children = new ObservableCollection<IRenderableIpso>();
+        public ObservableCollection<IRenderableIpso> Children => children;
 
         // If a GUE uses this, it needs to support storing the values.
         public bool ClipsChildren { get; set; }

@@ -5,6 +5,7 @@ using System.Text;
 using RenderingLibrary.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System.Collections.ObjectModel;
 
 namespace RenderingLibrary.Math.Geometry
 {
@@ -118,11 +119,11 @@ namespace RenderingLibrary.Math.Geometry
             }
         }
 
-        public List<IRenderableIpso> Children
+        public ObservableCollection<IRenderableIpso> Children
         {
             get;
             private set;
-        } = new List<IRenderableIpso>();
+        } = new ObservableCollection<IRenderableIpso>();
 
         BlendState IRenderable.BlendState
         {

@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ToolsUtilities;
 using RenderingLibrary.Content;
+using System.Collections.ObjectModel;
 
 namespace RenderingLibrary.Graphics
 {
@@ -31,7 +32,7 @@ namespace RenderingLibrary.Graphics
         #region Fields
 
 
-        List<IRenderableIpso> mChildren = new List<IRenderableIpso>();
+        ObservableCollection<IRenderableIpso> mChildren = new ObservableCollection<IRenderableIpso>();
 
         //Sprites which make up NineSlice indexed by NineSliceSections enum
         private Sprite[] mSprites;
@@ -348,7 +349,7 @@ namespace RenderingLibrary.Graphics
 
 
 
-        public List<IRenderableIpso> Children
+        public ObservableCollection<IRenderableIpso> Children
         {
             get { return mChildren; }
         }

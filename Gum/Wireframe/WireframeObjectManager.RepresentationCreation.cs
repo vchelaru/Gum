@@ -152,7 +152,15 @@ namespace Gum.Wireframe
                 rootIpso.SetStatesAndCategoriesRecursively(elementSave);
 
                 // First we need to the default state (and do so recursively)
-                rootIpso.SetVariablesRecursively(elementSave, elementSave.DefaultState);
+                try
+                {
+                    rootIpso.SetVariablesRecursively(elementSave, elementSave.DefaultState);
+                }
+                catch(Exception e)
+                {
+                    // this barfed, but we don't want to crash the tool
+                    GumCommands.Self.GuiCommands.PrintOutput($"Error loading {elementSave}:\n{e.ToString()}");
+                }
                 // then we override it with the current state if one is set:
                 if (SelectedState.Self.SelectedStateSave != elementSave.DefaultState && SelectedState.Self.SelectedStateSave != null)
                 {

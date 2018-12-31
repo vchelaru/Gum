@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework;
@@ -14,7 +15,7 @@ namespace RenderingLibrary.Graphics
         Vector2 Position;
         IRenderableIpso mParent;
 
-        List<IRenderableIpso> mChildren;
+        ObservableCollection<IRenderableIpso> mChildren;
         private static Texture2D mTexture;
         public static Rectangle SinglePixelTextureSourceRectangle;
 
@@ -100,7 +101,7 @@ namespace RenderingLibrary.Graphics
 
         public float Rotation { get; set; }
 
-        public List<IRenderableIpso> Children
+        public ObservableCollection<IRenderableIpso> Children
         {
             get { return mChildren; }
         }
@@ -163,7 +164,7 @@ namespace RenderingLibrary.Graphics
 
         public SolidRectangle()
         {
-            mChildren = new List<IRenderableIpso>();
+            mChildren = new ObservableCollection<IRenderableIpso>();
             Color = Color.White;
             Visible = true;
 

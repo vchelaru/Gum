@@ -5,6 +5,7 @@ using System.Text;
 using RenderingLibrary.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System.Collections.ObjectModel;
 
 namespace RenderingLibrary.Math.Geometry
 {
@@ -19,7 +20,7 @@ namespace RenderingLibrary.Math.Geometry
 
         IRenderableIpso mParent;
 
-        List<IRenderableIpso> mChildren;
+        ObservableCollection<IRenderableIpso> mChildren;
         SystemManagers mManagers;
 
         #endregion
@@ -116,7 +117,7 @@ namespace RenderingLibrary.Math.Geometry
             }
         }
 
-        public List<IRenderableIpso> Children
+        public ObservableCollection<IRenderableIpso> Children
         {
             get { return mChildren; }
         }
@@ -170,7 +171,7 @@ namespace RenderingLibrary.Math.Geometry
                 mLinePrimitive = new LinePrimitive(Renderer.Self.SinglePixelTexture);
             }
 
-            mChildren = new List<IRenderableIpso>();
+            mChildren = new ObservableCollection<IRenderableIpso>();
             UpdatePoints();
         }
 

@@ -17,7 +17,7 @@ namespace RenderingLibrary.Graphics
         Vector2 Position;
         IRenderableIpso mParent;
 
-        List<IRenderableIpso> mChildren;
+        ObservableCollection<IRenderableIpso> mChildren;
 
         public Color Color = Color.White;
 
@@ -165,7 +165,7 @@ namespace RenderingLibrary.Graphics
             set;
         }
 
-        public List<IRenderableIpso> Children
+        public ObservableCollection<IRenderableIpso> Children
         {
             get { return mChildren; }
         }
@@ -294,7 +294,7 @@ namespace RenderingLibrary.Graphics
         {
             this.Visible = true;
             BlendState = BlendState.NonPremultiplied;
-            mChildren = new List<IRenderableIpso>();
+            mChildren = new ObservableCollection<IRenderableIpso>();
 
             Texture = texture;
         }

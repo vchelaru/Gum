@@ -6,6 +6,7 @@ using RenderingLibrary.Math.Geometry;
 using Microsoft.Xna.Framework;
 using RenderingLibrary.Graphics;
 using Microsoft.Xna.Framework.Graphics;
+using System.Collections.ObjectModel;
 
 namespace RenderingLibrary.Math.Geometry
 {
@@ -25,7 +26,7 @@ namespace RenderingLibrary.Math.Geometry
 
         bool mVisible;
 
-        List<IRenderableIpso> mChildren;
+        ObservableCollection<IRenderableIpso> mChildren;
 
         CircleOrigin mCircleOrigin;
 
@@ -160,7 +161,7 @@ namespace RenderingLibrary.Math.Geometry
         public LineCircle(SystemManagers managers)
         {
 
-            mChildren = new List<IRenderableIpso>();
+            mChildren = new ObservableCollection<IRenderableIpso>();
 
             mRadius = 32;
             Visible = true;
@@ -243,7 +244,7 @@ namespace RenderingLibrary.Math.Geometry
             }
         }
 
-        public List<IRenderableIpso> Children
+        public ObservableCollection<IRenderableIpso> Children
         {
             get { return mChildren; }
         }

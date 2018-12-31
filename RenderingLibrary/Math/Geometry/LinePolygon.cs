@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 
@@ -15,7 +16,7 @@ namespace RenderingLibrary.Math.Geometry
         LinePrimitive mLinePrimitive;
         IRenderableIpso mParent;
         bool mVisible;
-        List<IRenderableIpso> mChildren;
+        ObservableCollection<IRenderableIpso> mChildren;
 
         #endregion
 
@@ -146,7 +147,7 @@ namespace RenderingLibrary.Math.Geometry
         public LinePolygon(SystemManagers managers)
         {
 
-            mChildren = new List<IRenderableIpso>();
+            mChildren = new ObservableCollection<IRenderableIpso>();
 
             Visible = true;
 
@@ -266,7 +267,7 @@ namespace RenderingLibrary.Math.Geometry
             }
         }
 
-        public List<IRenderableIpso> Children
+        public ObservableCollection<IRenderableIpso> Children
         {
             get { return mChildren; }
         }
