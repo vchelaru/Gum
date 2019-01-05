@@ -15,6 +15,7 @@ using System.Reflection;
 using GumRuntime;
 using Gum.DataTypes.Variables;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 
 namespace Gum.Wireframe
 {
@@ -1037,8 +1038,19 @@ namespace Gum.Wireframe
                 throw new ArgumentException("The argument containedObject cannot be 'this'");
             }
 
+
+            if (mContainedObjectAsIpso != null)
+            {
+                mContainedObjectAsIpso.Children.CollectionChanged -= HandleCollectionChanged;
+            }
+
             mContainedObjectAsIpso = containedObject as IRenderableIpso;
             mContainedObjectAsIVisible = containedObject as IVisible;
+
+            if(mContainedObjectAsIpso != null)
+            {
+                mContainedObjectAsIpso.Children.CollectionChanged += HandleCollectionChanged;
+            }
 
             if (containedObject != null)
             {
@@ -1046,9 +1058,35 @@ namespace Gum.Wireframe
             }
         }
 
+
         #endregion
 
         #region Methods
+
+        private void HandleCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if(e.Action == NotifyCollectionChangedAction.Add)
+            {
+                foreach(IRenderableIpso ipso in e.NewItems)
+                {
+                    if(ipso.Parent != this)
+                    {
+                        ipso.Parent = this;
+
+                    }
+                }
+            }
+            else if(e.Action == NotifyCollectionChangedAction.Remove)
+            {
+                foreach(IRenderableIpso ipso in e.OldItems)
+                {
+                    if(ipso.Parent == this)
+                    {
+                        ipso.Parent = null;
+                    }
+                }
+            }
+        }
 
         bool IsAllLayoutAbsolute()
         {
