@@ -189,6 +189,11 @@ namespace Gum
                 {
                     wasModified = true;
                 }
+                if(FixSlashesInNames(mGumProjectSave))
+                {
+                    wasModified = true;
+                }
+
                 mGumProjectSave.FixStandardVariables();
 
                 FileManager.RelativeDirectory = FileManager.GetDirectory(fileName);
@@ -232,6 +237,30 @@ namespace Gum
                 RecentFilesUpdated();
             }
 
+        }
+
+        private bool FixSlashesInNames(GumProjectSave mGumProjectSave)
+        {
+            var toReturn = false;
+            foreach(var reference in mGumProjectSave.ComponentReferences)
+            {
+                if(reference.Name.Contains("\\"))
+                {
+                    reference.Name = reference.Name.Replace("\\", "/");
+                    toReturn = true;
+                }
+            }
+
+            foreach(var component in mGumProjectSave.Components)
+            {
+                if(component.Name.Contains("\\"))
+                {
+                    component.Name = component.Name.Replace("\\", "/");
+                    toReturn = true;
+                }
+            }
+
+            return toReturn;
         }
 
         private void RecreateMissingStandardElements()

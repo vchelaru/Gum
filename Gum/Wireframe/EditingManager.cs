@@ -61,8 +61,11 @@ namespace Gum.Wireframe
         {
             RightClickInitialize(contextMenuStrip);
 
-            GumEvents.Self.InstanceSelected += 
-                () => SelectionManager.Self.WireframeEditor.UpdateAspectRatioForGrabbedIpso();
+            GumEvents.Self.InstanceSelected +=
+                () =>
+                {
+                    SelectionManager.Self.WireframeEditor?.UpdateAspectRatioForGrabbedIpso();
+                };
         }
 
 
