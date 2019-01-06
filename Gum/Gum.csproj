@@ -171,8 +171,8 @@
     <Compile Include="Plugins\Fonts\MainFontPlugin.cs" />
     <Compile Include="Plugins\Inheritance\MainInheritancePlugin.cs" />
     <Compile Include="Plugins\ParentPlugin\MainParentPlugin.cs" />
-    <Compile Include="Plugins\PropertiesWindowPlugin\MainPlugin.cs" />
-    <Compile Include="Plugins\PropertiesWindowPlugin\ProjectPropertiesControl.xaml.cs">
+    <Compile Include="Plugins\ProjectPropertiesWindowPlugin\MainPlugin.cs" />
+    <Compile Include="Plugins\ProjectPropertiesWindowPlugin\ProjectPropertiesControl.xaml.cs">
       <DependentUpon>ProjectPropertiesControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Gui\Forms\UndoList.cs">
@@ -234,7 +234,7 @@
     <Compile Include="Plugins\Behaviors\BehaviorsViewModel.cs" />
     <Compile Include="Plugins\Behaviors\CheckListBehaviorItem.cs" />
     <Compile Include="Plugins\Behaviors\MainPlugin.cs" />
-    <Compile Include="Plugins\PropertiesWindowPlugin\ProjectPropertiesViewModel.cs" />
+    <Compile Include="Plugins\ProjectPropertiesWindowPlugin\ProjectPropertiesViewModel.cs" />
     <Compile Include="Plugins\Undos\MainPlugin.cs" />
     <Compile Include="Plugins\Undos\UndoDisplay.xaml.cs">
       <DependentUpon>UndoDisplay.xaml</DependentUpon>
@@ -297,7 +297,7 @@
     <Compile Include="PropertyGridHelpers\ReflectingParameterDescriptor.cs" />
     <Compile Include="PropertyGridHelpers\ReflectingPropertyDescriptorHelper.cs" />
     <Compile Include="PropertyGridHelpers\SetVariableLogic.cs" />
-    <Compile Include="PropertyGridHelpers\StateReferencingInstanceMember.cs" />
+    <Compile Include="Plugins\VariableGrid\StateReferencingInstanceMember.cs" />
     <Compile Include="PropertyGridHelpers\UiTypeConverters\ModalTypeConverter.cs" />
     <Compile Include="PropertyGridHelpers\VariableInCategoryPropagationLogic.cs" />
     <Compile Include="Reflection\LateBinder.cs" />
@@ -587,7 +587,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Plugins\PropertiesWindowPlugin\ProjectPropertiesControl.xaml">
+    <Page Include="Plugins\ProjectPropertiesWindowPlugin\ProjectPropertiesControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

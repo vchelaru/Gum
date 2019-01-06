@@ -101,6 +101,7 @@ namespace Gum.PropertyGridHelpers
                     if(needsToRefreshEntireElement)
                     {
                         GumCommands.Self.GuiCommands.RefreshElementTreeView(parentElement);
+                        GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);
                     }
                 }
 

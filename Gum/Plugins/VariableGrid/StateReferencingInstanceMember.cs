@@ -197,9 +197,9 @@ namespace Gum.PropertyGridHelpers
             mVariableName = variableName;
             mPropertyDescriptor = ispd;
             mElementSave = elementSave;
-            this.CustomGetEvent += GetEvent;
-            this.CustomSetEvent += SetEvent;
-            this.CustomGetTypeEvent += GetTypeEvent;
+            this.CustomGetEvent += HandleCustomGet;
+            this.CustomSetEvent += HandleCustomSet;
+            this.CustomGetTypeEvent += HandleCustomGetType;
 
 
             this.SortValue = int.MaxValue;
@@ -393,7 +393,7 @@ namespace Gum.PropertyGridHelpers
             }
         }
 
-        private object GetEvent(object instance)
+        private object HandleCustomGet(object instance)
         {
             if (mPropertyDescriptor != null)
             {
@@ -412,7 +412,7 @@ namespace Gum.PropertyGridHelpers
             }
         }
 
-        private void SetEvent(object instance, object value)
+        private void HandleCustomSet(object instance, object value)
         {
             if (mPropertyDescriptor != null)
             {
@@ -460,7 +460,7 @@ namespace Gum.PropertyGridHelpers
             // set the value
         }
 
-        private Type GetTypeEvent(object instance)
+        private Type HandleCustomGetType(object instance)
         {
             if (mPropertyDescriptor != null)
             {
