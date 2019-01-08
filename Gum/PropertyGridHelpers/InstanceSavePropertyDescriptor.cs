@@ -12,8 +12,10 @@ namespace Gum.DataTypes.ComponentModel
     public delegate object GetValueDelegate(object component);
     public delegate void SetValueDelegate(object component, object value);
 
-    public class InstanceSavePropertyDescriptor : PropertyDescriptor
+    public class InstanceSavePropertyDescriptor
+        //: PropertyDescriptor
     {
+        public Attribute[] Attributes { get; }
         #region Fields
 
         Type mParameterType;
@@ -25,7 +27,7 @@ namespace Gum.DataTypes.ComponentModel
 
         #region Properties
 
-        public string Name { get; private set; }
+        public string Name { get; set; }
 
         public TypeConverter TypeConverter
         {
@@ -33,7 +35,7 @@ namespace Gum.DataTypes.ComponentModel
             set { mTypeConverter = value; }
         }
 
-        public override TypeConverter Converter
+        public TypeConverter Converter
         {
             get
             {
@@ -65,19 +67,19 @@ namespace Gum.DataTypes.ComponentModel
         #endregion
 
         public InstanceSavePropertyDescriptor(string name, Type type, Attribute[] attrs)
-            : base(name, attrs)
         {
+            this.Attributes = attrs;
 			mParameterType = type;
             Name = name;
         }
 
 
-        public override bool CanResetValue(object component)
+        public bool CanResetValue(object component)
         {
             return false;
         }
 
-        public override Type ComponentType
+        public Type ComponentType
         {
             get 
             {
@@ -89,7 +91,7 @@ namespace Gum.DataTypes.ComponentModel
             }
         }
 
-        public override object GetValue(object component)
+        public object GetValue(object component)
         {
             StateSave stateSave = SelectedState.Self.SelectedStateSave;
             if (stateSave != null)
@@ -115,7 +117,7 @@ namespace Gum.DataTypes.ComponentModel
 
 
 
-        public override void SetValue(object component, object value)
+        public void SetValue(object component, object value)
         {
 
 
@@ -160,13 +162,17 @@ namespace Gum.DataTypes.ComponentModel
 
 
 
-
-        public override bool IsReadOnly
+        // Eventually we're going to move off of using the base 
+        // PropertyDescriptor
+        public bool IsReadOnly
         {
-            get { return false; }
+            get;
+            set;
         }
 
-        public override Type PropertyType
+        public string Category { get; set; } = "";
+
+        public Type PropertyType
         {
             get 
 			{
@@ -181,7 +187,7 @@ namespace Gum.DataTypes.ComponentModel
 			}
         }
 
-        public override void ResetValue(object component)
+        public void ResetValue(object component)
         {
             
             // do nothing here
@@ -235,7 +241,7 @@ namespace Gum.DataTypes.ComponentModel
         //    }
         //}
 
-        public override bool ShouldSerializeValue(object component)
+        public bool ShouldSerializeValue(object component)
         {
             return false;
         }

@@ -448,7 +448,9 @@ namespace Gum.Managers
             foreach (InstanceSavePropertyDescriptor propertyDescriptor in properties)
             {
                 // early continue
-                var isMarkedAsNotBrowsable = (propertyDescriptor.Attributes[typeof(BrowsableAttribute)] as BrowsableAttribute).Browsable == false;
+                var browsableAttribute = propertyDescriptor.Attributes.FirstOrDefault(item => item is BrowsableAttribute);
+                
+                var isMarkedAsNotBrowsable = browsableAttribute != null && (browsableAttribute as BrowsableAttribute).Browsable == false;
                 if(isMarkedAsNotBrowsable)
                 {
                     continue;
@@ -469,7 +471,7 @@ namespace Gum.Managers
 
                 srim.SetToDefault += (memberName) => ResetVariableToDefault(srim);
 
-                string category = propertyDescriptor.Category.Trim();
+                string category = propertyDescriptor.Category?.Trim();
 
                 var categoryToAddTo = categories.FirstOrDefault(item => item.Name == category);
 

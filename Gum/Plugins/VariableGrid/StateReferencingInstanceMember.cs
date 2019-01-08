@@ -197,9 +197,19 @@ namespace Gum.PropertyGridHelpers
             mVariableName = variableName;
             mPropertyDescriptor = ispd;
             mElementSave = elementSave;
+
+            if(ispd.IsReadOnly)
+            {
+                // don't assign it (can't null it)
+                //this.CustomSetEvent = null;
+            }
+            else
+            {
+                this.CustomSetEvent += HandleCustomSet;
+            }
             this.CustomGetEvent += HandleCustomGet;
-            this.CustomSetEvent += HandleCustomSet;
             this.CustomGetTypeEvent += HandleCustomGetType;
+
 
 
             this.SortValue = int.MaxValue;

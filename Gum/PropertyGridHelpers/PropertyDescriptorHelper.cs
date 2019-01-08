@@ -55,73 +55,32 @@ namespace Gum.DataTypes.ComponentModel
             return new PropertyDescriptorCollection(properties.ToArray());
         }
 
-        public void AddProperty(List<PropertyDescriptor> pdc, string propertyName, Type propertyType)
-        {
-            AddProperty(pdc, propertyName, propertyType, null, new Attribute[0]);
-        }
-
-        public PropertyDescriptorCollection AddProperty(PropertyDescriptorCollection pdc, string propertyName, Type propertyType)
+        public InstanceSavePropertyDescriptor AddProperty(List<InstanceSavePropertyDescriptor> pdc, string propertyName, Type propertyType)
         {
             return AddProperty(pdc, propertyName, propertyType, null, new Attribute[0]);
         }
 
-        public void AddProperty(List<PropertyDescriptor> pdc, string propertyName, Type propertyType, TypeConverter converter,
+        public InstanceSavePropertyDescriptor AddProperty(List<InstanceSavePropertyDescriptor> pdc, string propertyName, Type propertyType, TypeConverter converter,
             Attribute[] attributes)
         {
-            InstanceSavePropertyDescriptor ppd = new InstanceSavePropertyDescriptor(
-                propertyName, propertyType, attributes);
-            
-            ppd.TypeConverter = converter;
-
-            pdc.Add(ppd);
-        }
-
-        public PropertyDescriptorCollection AddProperty(PropertyDescriptorCollection pdc, string propertyName, Type propertyType, TypeConverter converter,
-            Attribute[] attributes)
-        {
-            List<PropertyDescriptor> properties = new List<PropertyDescriptor>(pdc.Count);
-
-            for (int i = 0; i < pdc.Count; i++)
-            {
-                PropertyDescriptor pd = pdc[i];
-
-                if (pd.Name != propertyName)
-                {
-                    properties.Add(pd);
-                }
-            }
-
-            InstanceSavePropertyDescriptor ppd = new InstanceSavePropertyDescriptor(
+            InstanceSavePropertyDescriptor newProperty = new InstanceSavePropertyDescriptor(
                 propertyName, propertyType, attributes);
 
-            ppd.TypeConverter = converter;
+            newProperty.TypeConverter = converter;
 
-            properties.Add(ppd);
+            pdc.Add(newProperty);
 
-            //PropertyDescriptor propertyDescriptor;
-
-            return new PropertyDescriptorCollection(properties.ToArray());
+            return newProperty;
 
         }
 
-        public PropertyDescriptorCollection SetPropertyDisplay(PropertyDescriptorCollection pdc, string oldName, string newName)
+        public void SetPropertyDisplay(List<InstanceSavePropertyDescriptor> pdc, string oldName, string newName)
         {
-            PropertyDescriptor pd = GetPropertyDescriptor(pdc, oldName);
-
-            pdc = RemoveProperty(pdc, oldName);
-
-
-            Attribute[] attributeArray = new Attribute[pd.Attributes.Count];
-
-            for (int i = 0; i < attributeArray.Length; i++)
+            var property = pdc.FirstOrDefault(item => item.Name == oldName);
+            if(property != null)
             {
-                attributeArray[i] = pd.Attributes[i];
-
+                property.Name = newName;
             }
-
-            pdc = AddProperty(pdc, newName, pd.PropertyType, null, attributeArray);
-
-            return pdc;
         }
     }
 }

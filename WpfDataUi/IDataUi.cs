@@ -24,6 +24,8 @@ namespace WpfDataUi
         bool SuppressSettingProperty { get; set; }
         void Refresh(bool forceRefreshEvenIfFocused = false);
 
+        bool IsEnabled { get; set; }
+
         ApplyValueResult TryGetValueOnUi(out object result);
         ApplyValueResult TrySetValueOnUi(object value);
 

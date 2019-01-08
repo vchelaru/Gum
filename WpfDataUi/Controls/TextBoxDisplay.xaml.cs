@@ -28,6 +28,8 @@ namespace WpfDataUi.Controls
 
         InstanceMember mInstanceMember;
 
+        ApplyValueResult? lastApplyValueResult = null;
+
         #endregion
 
         #region Properties
@@ -96,6 +98,8 @@ namespace WpfDataUi.Controls
                 this.Label.Text = InstanceMember.DisplayName;
                 this.RefreshContextMenu(TextBox.ContextMenu);
 
+                RefreshIsEnabled();
+
                 SuppressSettingProperty = false;
             }
         }
@@ -136,11 +140,24 @@ namespace WpfDataUi.Controls
         private void TextBox_LostFocus_1(object sender, RoutedEventArgs e)
         {
 
-            var result = mTextBoxLogic.TryApplyToInstance();
+            lastApplyValueResult = mTextBoxLogic.TryApplyToInstance();
 
-            if (result == ApplyValueResult.NotSupported)
+            RefreshIsEnabled();
+        }
+
+        private void RefreshIsEnabled()
+        {
+            if (lastApplyValueResult == ApplyValueResult.NotSupported)
             {
                 this.IsEnabled = false;
+            }
+            else if(mTextBoxLogic.InstanceMember?.IsReadOnly == true)
+            {
+                this.IsEnabled = false;
+            }
+            else
+            {
+                this.IsEnabled = true;
             }
         }
 

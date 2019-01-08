@@ -33,10 +33,10 @@ namespace Gum.PropertyGridHelpers
 
         #endregion
 
-        public List<PropertyDescriptor> GetProperties(Attribute[] attributes)
+        public List<InstanceSavePropertyDescriptor> GetProperties(Attribute[] attributes)
         {
             // search terms: display properties, display variables, show variables, variable display, variable displayer
-            List<PropertyDescriptor> pdc = new List<PropertyDescriptor>();
+            List<InstanceSavePropertyDescriptor> pdc = new List<InstanceSavePropertyDescriptor>();
 
 
             StateSave stateSave = SelectedState.Self.SelectedStateSave;
@@ -99,7 +99,7 @@ namespace Gum.PropertyGridHelpers
             return stateToAddTo;
         }
 
-        private void DisplayCurrentInstance(List<PropertyDescriptor> pdc, InstanceSave instanceSave)
+        private void DisplayCurrentInstance(List<InstanceSavePropertyDescriptor> pdc, InstanceSave instanceSave)
         {
             ElementSave elementSave = instanceSave.GetBaseElementSave();
 
@@ -136,7 +136,7 @@ namespace Gum.PropertyGridHelpers
             
         }
 
-        private static void DisplayCurrentElement(List<PropertyDescriptor> pdc, ElementSave elementSave, 
+        private static void DisplayCurrentElement(List<InstanceSavePropertyDescriptor> pdc, ElementSave elementSave, 
             InstanceSave instanceSave, StateSave defaultState, string prependedVariable, AmountToDisplay amountToDisplay = AmountToDisplay.AllVariables)
         {
             bool isDefault = SelectedState.Self.SelectedStateSave == SelectedState.Self.SelectedElement.DefaultState;
@@ -150,17 +150,14 @@ namespace Gum.PropertyGridHelpers
             }
 
             bool isCustomType = (elementSave is StandardElementSave) == false;
-            if (isDefault && ( isCustomType || instanceSave != null))
+            if ( isCustomType || instanceSave != null)
             {
-                AddNameAndBaseTypeProperties(pdc, elementSave, instanceSave);
+                AddNameAndBaseTypeProperties(pdc, elementSave, instanceSave, isReadOnly:isDefault==false);
             }
 
             if (instanceSave != null)
             {
-                if (isDefault)
-                {
-                    mHelper.AddProperty(pdc, "Locked", typeof(bool));
-                }
+                mHelper.AddProperty(pdc, "Locked", typeof(bool)).IsReadOnly = !isDefault;
             }
 
             // if component
@@ -256,7 +253,7 @@ namespace Gum.PropertyGridHelpers
             
         }
 
-        private static void TryDisplayVariableSave(List<PropertyDescriptor> pdc, ElementSave elementSave, InstanceSave instanceSave, 
+        private static void TryDisplayVariableSave(List<InstanceSavePropertyDescriptor> pdc, ElementSave elementSave, InstanceSave instanceSave, 
             AmountToDisplay amountToDisplay, StandardElementSave ses, VariableSave defaultVariable)
         {
             ElementSave container = elementSave;
@@ -281,6 +278,15 @@ namespace Gum.PropertyGridHelpers
 
                 Attribute[] customAttributes = GetAttributesForVariable(defaultVariable);
 
+                string category = null;
+                if (!string.IsNullOrEmpty(defaultVariable.Category))
+                {
+                    category = defaultVariable.Category;
+                }
+                else if (!string.IsNullOrEmpty(defaultVariable.ExposedAsName))
+                {
+                    category = "Exposed";
+                }
 
                 //Type type = typeof(string);
                 Type type = Gum.Reflection.TypeManager.Self.GetTypeFromString(defaultVariable.Type);
@@ -292,33 +298,42 @@ namespace Gum.PropertyGridHelpers
                     name = defaultVariable.ExposedAsName;
                 }
 
-                mHelper.AddProperty(pdc,
+                var property = mHelper.AddProperty(pdc,
                     name,
                     type,
                     typeConverter,
                     //,
                     customAttributes
                     );
+                property.Category = category;
             }
         }
 
-        private static void AddNameAndBaseTypeProperties(List<PropertyDescriptor> pdc, ElementSave elementSave, InstanceSave instance)
+        private static void AddNameAndBaseTypeProperties(List<InstanceSavePropertyDescriptor> pdc, ElementSave elementSave, InstanceSave instance, bool isReadOnly)
         {
-            mHelper.AddProperty(pdc,
-                "Name", typeof(string), TypeDescriptor.GetConverter(typeof(string)), new Attribute[]
+            var nameProperty = mHelper.AddProperty(
+                pdc,
+                "Name", 
+                typeof(string), 
+                TypeDescriptor.GetConverter(typeof(string)), 
+                new Attribute[]
                         { 
                             new CategoryAttribute("\tObject") // \t isn't rendered, but it is sorted on.  Hack to get this property to appear first
                         });
+
+            nameProperty.IsReadOnly = isReadOnly;
 
 
             var baseTypeConverter = new AvailableBaseTypeConverter(elementSave, instance);
 
                 // We may want to support Screens inheriting from other Screens in the future, but for now we won't allow it
-            mHelper.AddProperty(pdc,
+            var baseTypeProperty = mHelper.AddProperty(pdc,
                 "Base Type", typeof(string), baseTypeConverter, new Attribute[]
                     { 
                         new CategoryAttribute("\tObject") // \t isn't rendered, but it is sorted on.  Hack to get this property to appear first
                     });
+
+            baseTypeProperty.IsReadOnly = isReadOnly;
         }
 
         private static bool GetIfShouldInclude(VariableListSave variableList, ElementSave container, InstanceSave currentInstance, StandardElementSave rootElementSave)
@@ -553,15 +568,6 @@ namespace Gum.PropertyGridHelpers
         {
             List<Attribute> attributes = new List<Attribute>();
 
-            
-            if (!string.IsNullOrEmpty(defaultVariable.Category))
-            {
-                attributes.Add(new CategoryAttribute(defaultVariable.Category));
-            }
-            else if (!string.IsNullOrEmpty(defaultVariable.ExposedAsName))
-            {
-                attributes.Add(new CategoryAttribute("Exposed"));
-            }
             if (defaultVariable.IsFile)
             {
                 attributes.Add(mFileWindowAttribute);

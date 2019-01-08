@@ -12,6 +12,8 @@ namespace WpfDataUi.Controls
 {
     public class TextBoxDisplayLogic
     {
+        #region Properties
+
         TextBox mAssociatedTextBox;
         IDataUi mContainer;
 
@@ -24,6 +26,8 @@ namespace WpfDataUi.Controls
         public decimal? MaxValue { get; set; }
 
         public bool HandlesEnter { get; set; } = true;
+
+        #endregion
 
         public TextBoxDisplayLogic(IDataUi container, TextBox textBox)
         {

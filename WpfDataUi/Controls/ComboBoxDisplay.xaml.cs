@@ -87,6 +87,8 @@ namespace WpfDataUi.Controls
 
         #endregion
 
+        public event PropertyChangedEventHandler PropertyChanged;
+
         public ComboBoxDisplay()
         {
 
@@ -150,7 +152,6 @@ namespace WpfDataUi.Controls
 
             this.Content = Grid;
         }
-        
 
         public void Refresh(bool forceRefreshEvenIfFocused = false)
         {
@@ -187,6 +188,21 @@ namespace WpfDataUi.Controls
             this.RefreshContextMenu(ComboBox.ContextMenu);
 
             this.TextBlock.Text = InstanceMember.DisplayName;
+
+            RefreshIsEnabled();
+
+        }
+
+        private void RefreshIsEnabled()
+        {
+            if (InstanceMember?.IsReadOnly == true)
+            {
+                this.IsEnabled = false;
+            }
+            else
+            {
+                this.IsEnabled = true;
+            }
         }
 
         public ApplyValueResult TrySetValueOnUi(object valueOnInstance)
@@ -261,6 +277,5 @@ namespace WpfDataUi.Controls
         }
 
 
-        public event PropertyChangedEventHandler PropertyChanged;
     }
 }
