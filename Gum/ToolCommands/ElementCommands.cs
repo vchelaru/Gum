@@ -155,6 +155,12 @@ namespace Gum.ToolCommands
             GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
         }
 
+        /// <summary>
+        /// Removes the argument instance from the argument elementToRemoveFrom, and detaches any
+        /// object that was attached to this parent.
+        /// </summary>
+        /// <param name="instanceToRemove">The instance to remove.</param>
+        /// <param name="elementToRemoveFrom">The element to remove from.</param>
         public void RemoveInstance(InstanceSave instanceToRemove, ElementSave elementToRemoveFrom)
         {
             if (!elementToRemoveFrom.Instances.Contains(instanceToRemove))
@@ -164,6 +170,21 @@ namespace Gum.ToolCommands
 
             elementToRemoveFrom.Instances.Remove(instanceToRemove);
 
+            RemoveParentReferencesToInstance(instanceToRemove, elementToRemoveFrom);
+
+            elementToRemoveFrom.Events.RemoveAll(item => item.GetSourceObject() == instanceToRemove.Name);
+
+
+            PluginManager.Self.InstanceDelete(elementToRemoveFrom, instanceToRemove);
+
+            if (SelectedState.Self.SelectedInstance == instanceToRemove)
+            {
+                SelectedState.Self.SelectedInstance = null;
+            }
+        }
+
+        public void RemoveParentReferencesToInstance(InstanceSave instanceToRemove, ElementSave elementToRemoveFrom)
+        {
             foreach (StateSave stateSave in elementToRemoveFrom.AllStates)
             {
                 for (int i = stateSave.Variables.Count - 1; i > -1; i--)
@@ -176,7 +197,7 @@ namespace Gum.ToolCommands
                         // is gone, so the variable should be removed too.
                         stateSave.Variables.RemoveAt(i);
                     }
-                    else if(variable.GetRootName() == "Parent" && variable.Value as string == instanceToRemove.Name)
+                    else if (variable.GetRootName() == "Parent" && variable.Value as string == instanceToRemove.Name)
                     {
                         // This is a variable that assigns the Parent to the removed object. Since the object is
                         // gone, the parent value shouldn't be assigned anymore.
@@ -190,16 +211,6 @@ namespace Gum.ToolCommands
                         stateSave.VariableLists.RemoveAt(i);
                     }
                 }
-            }
-
-            elementToRemoveFrom.Events.RemoveAll(item => item.GetSourceObject() == instanceToRemove.Name);
-
-
-            PluginManager.Self.InstanceDelete(elementToRemoveFrom, instanceToRemove);
-
-            if (SelectedState.Self.SelectedInstance == instanceToRemove)
-            {
-                SelectedState.Self.SelectedInstance = null;
             }
         }
 

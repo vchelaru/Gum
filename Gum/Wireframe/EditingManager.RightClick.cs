@@ -167,12 +167,8 @@ namespace Gum.Wireframe
 
             if (sourceElement.Instances.Contains(sourceInstance))
             {
-                // Not sure why we weren't just using
-                // ElementCommands here - maybe an oversight?
-                // This should improve things like 
-                //sourceElement.Instances.Remove(sourceInstance);
-
                 ElementCommands.Self.RemoveInstance(sourceInstance, sourceElement);
+
                 if( ProjectManager.Self.GeneralSettingsFile.AutoSave)
                 {
                     ProjectManager.Self.SaveElement(sourceElement);

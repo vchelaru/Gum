@@ -153,6 +153,9 @@
     <Compile Include="DataTypes\VariableSaveExtensionMethods.cs" />
     <Compile Include="Debug\ProjectVerifier.cs" />
     <Compile Include="Events\GumEvents.cs" />
+    <Compile Include="Gui\Window\DeleteOptionsWindow.xaml.cs">
+      <DependentUpon>DeleteOptionsWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Logic\FileWatch\FileWatchLogic.cs" />
     <Compile Include="Managers\DeleteLogic.cs" />
     <Compile Include="Managers\FileChangeReactionLogic.cs" />
@@ -199,7 +202,7 @@
     <Compile Include="Gui\Forms\PluginsWindow.designer.cs">
       <DependentUpon>PluginsWindow.cs</DependentUpon>
     </Compile>
-    <Compile Include="Gui\Plugins\DeleteObjectPlugin.cs" />
+    <Compile Include="Plugins\Delete\DeleteObjectPlugin.cs" />
     <Compile Include="Gui\Plugins\MainWindowPlugin.cs" />
     <Compile Include="Commands\GumCommands.cs" />
     <Compile Include="Managers\CommandLineManager.cs" />
@@ -578,6 +581,10 @@
     <Page Include="Controls\ColorDisplay.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Gui\Window\DeleteOptionsWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Plugins\Errors\ErrorDisplay.xaml">
       <SubType>Designer</SubType>

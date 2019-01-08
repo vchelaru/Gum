@@ -1,7 +1,7 @@
 ﻿using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
-using Gum.Gui.Forms;
+using Gum.Gui.Windows;
 using Gum.Plugins;
 using Gum.ToolCommands;
 using Gum.ToolStates;
@@ -32,20 +32,53 @@ namespace Gum.Managers
             object objectDeleted = null;
             DeleteOptionsWindow optionsWindow = null;
 
+            var selectedElement = SelectedState.Self.SelectedElement;
+            var selectedInstance = SelectedState.Self.SelectedInstance;
+
             if (SelectedState.Self.SelectedInstances.Count() > 1)
             {
                 AskToDeleteInstances(SelectedState.Self.SelectedInstances);
             }
-            else if (SelectedState.Self.SelectedInstance != null)
+            else if (selectedInstance != null)
             {
-                objectDeleted = SelectedState.Self.SelectedInstance;
-                AskToDeleteInstance(SelectedState.Self.SelectedInstance);
+                objectDeleted = selectedInstance;
+                //AskToDeleteInstance(SelectedState.Self.SelectedInstance);
+
+                if (selectedInstance.DefinedByBase)
+                {
+                    MessageBox.Show($"The instance {selectedInstance.Name} cannot be deleted becuase it is defined in a base object.");
+                }
+                else
+                {
+                    //DialogResult result =
+                    //    MessageBox.Show("Are you sure you'd like to delete " + instance.Name + "?", "Delete instance?", MessageBoxButtons.YesNo);
+                    var result = ShowDeleteDialog(selectedInstance, out optionsWindow);
+
+
+                    if (result == true)
+                    {
+                        // This will delete all references to this, meaning, all 
+                        // instances attached to the deleted object will be detached, 
+                        // but we don't want that, we want to only do that if the user wants to do it, which 
+                        // will be handled in a plugin
+                        //Gum.ToolCommands.ElementCommands.Self.RemoveInstance(instance, selectedElement);
+                        selectedElement.Instances.Remove(selectedInstance);
+                        selectedElement.Events.RemoveAll(item => item.GetSourceObject() == selectedInstance.Name);
+                        PluginManager.Self.InstanceDelete(selectedElement, selectedInstance);
+                        if (SelectedState.Self.SelectedInstance == selectedInstance)
+                        {
+                            SelectedState.Self.SelectedInstance = null;
+                        }
+
+                        RefreshAndSaveAfterInstanceRemoval(selectedElement);
+                    }
+                }
             }
             else if (SelectedState.Self.SelectedComponent != null)
             {
-                DialogResult result = ShowDeleteDialog(SelectedState.Self.SelectedComponent, out optionsWindow);
+                var result = ShowDeleteDialog(SelectedState.Self.SelectedComponent, out optionsWindow);
 
-                if (result == DialogResult.Yes || result == DialogResult.OK)
+                if (result == true)
                 {
                     objectDeleted = SelectedState.Self.SelectedComponent;
                     // We need to remove the reference
@@ -54,9 +87,9 @@ namespace Gum.Managers
             }
             else if (SelectedState.Self.SelectedScreen != null)
             {
-                DialogResult result = ShowDeleteDialog(SelectedState.Self.SelectedScreen, out optionsWindow);
+                var result = ShowDeleteDialog(SelectedState.Self.SelectedScreen, out optionsWindow);
 
-                if (result == DialogResult.Yes || result == DialogResult.OK)
+                if (result == true)
                 {
                     objectDeleted = SelectedState.Self.SelectedScreen;
                     // We need to remove the reference
@@ -65,9 +98,9 @@ namespace Gum.Managers
             }
             else if (SelectedState.Self.SelectedBehavior != null)
             {
-                DialogResult result = ShowDeleteDialog(SelectedState.Self.SelectedBehavior, out optionsWindow);
+                var result = ShowDeleteDialog(SelectedState.Self.SelectedBehavior, out optionsWindow);
 
-                if (result == DialogResult.Yes || result == DialogResult.OK)
+                if (result == true)
                 {
                     objectDeleted = SelectedState.Self.SelectedBehavior;
                     // We need to remove the reference
@@ -80,7 +113,7 @@ namespace Gum.Managers
             }
         }
 
-        DialogResult ShowDeleteDialog(object objectToDelete, out DeleteOptionsWindow optionsWindow)
+        bool? ShowDeleteDialog(object objectToDelete, out DeleteOptionsWindow optionsWindow)
         {
             string titleText;
             if (objectToDelete is ComponentSave)
@@ -105,13 +138,13 @@ namespace Gum.Managers
             }
 
             optionsWindow = new DeleteOptionsWindow();
-            optionsWindow.Text = titleText;
+            optionsWindow.Title = titleText;
             optionsWindow.Message = "Are you sure you want to delete:\n" + objectToDelete.ToString();
             optionsWindow.ObjectToDelete = objectToDelete;
 
             PluginManager.Self.ShowDeleteDialog(optionsWindow, objectToDelete);
 
-            DialogResult result = optionsWindow.ShowDialog();
+            var result = optionsWindow.ShowDialog();
 
 
             return result;
@@ -191,27 +224,6 @@ namespace Gum.Managers
             }
         }
 
-        private static void AskToDeleteInstance(InstanceSave instance)
-        {
-            if(instance.DefinedByBase)
-            {
-                MessageBox.Show($"The instance {instance.Name} cannot be deleted becuase it is defined in a base object.");
-            }
-            else
-            {
-                DialogResult result =
-                    MessageBox.Show("Are you sure you'd like to delete " + instance.Name + "?", "Delete instance?", MessageBoxButtons.YesNo);
-
-                if (result == DialogResult.Yes)
-                {
-                    ElementSave selectedElement = SelectedState.Self.SelectedElement;
-
-                    Gum.ToolCommands.ElementCommands.Self.RemoveInstance(instance, selectedElement);
-
-                    RefreshAndSaveAfterInstanceRemoval(selectedElement);
-                }
-            }
-        }
 
         private static void RefreshAndSaveAfterInstanceRemoval(ElementSave selectedElement)
         {

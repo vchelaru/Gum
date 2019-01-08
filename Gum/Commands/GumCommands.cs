@@ -35,7 +35,6 @@ namespace Gum
             private set;
         }
 
-
         public GumCommands()
         {
             GuiCommands = new GuiCommands();

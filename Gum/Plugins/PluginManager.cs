@@ -12,7 +12,7 @@ using Gum.Plugins.BaseClasses;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Gui.Plugins;
-using Gum.Gui.Forms;
+using Gum.Gui.Windows;
 using ToolsUtilities;
 using Gum.DataTypes.Behaviors;
 
@@ -684,6 +684,12 @@ namespace Gum.Plugins
                 );
         }
 
+        /// <summary>
+        /// Allows all plugins to adjust the DeleteOptionsWindow whenever any object is deleted, including
+        /// elements, instances, and behaviors.
+        /// </summary>
+        /// <param name="window">The window to modify.</param>
+        /// <param name="objectToDelete">The object that may be deleted, which could be any Gum type.</param>
         internal void ShowDeleteDialog(DeleteOptionsWindow window, object objectToDelete)
         {
             CallMethodOnPlugin(
@@ -692,7 +698,7 @@ namespace Gum.Plugins
                     plugin.CallDeleteOptionsWindowShow(window, objectToDelete);
                     
                 },
-                "ShowDeleteDialog"
+                nameof(ShowDeleteDialog)
                 );
         }
 
