@@ -2421,6 +2421,11 @@ namespace Gum.Wireframe
 
                 if (this.mContainedObjectAsIpso != null)
                 {
+                    if (mContainedObjectAsIpso is Text)
+                    {
+                        maxHeight = ((Text)mContainedObjectAsIpso).WrappedTextHeight;
+                    }
+
                     foreach (GraphicalUiElement element in this.Children)
                     {
                         if (element.IsAllLayoutAbsolute(XOrY.Y))
@@ -2524,6 +2529,11 @@ namespace Gum.Wireframe
 
                 if (this.mContainedObjectAsIpso != null)
                 {
+                    if(mContainedObjectAsIpso is Text)
+                    {
+                        maxWidth = ((Text)mContainedObjectAsIpso).WrappedTextWidth;
+                    }
+
                     foreach (GraphicalUiElement element in this.Children)
                     {
                         if (element.IsAllLayoutAbsolute(XOrY.X))
@@ -2612,6 +2622,7 @@ namespace Gum.Wireframe
             {
                 widthToSet = mContainedObjectAsIpso.Height * mWidth / 100.0f;
             }
+
             mContainedObjectAsIpso.Width = widthToSet;
         }
 
@@ -3674,7 +3685,14 @@ namespace Gum.Wireframe
 
             if (propertyName == "Text")
             {
-                ((Text)mContainedObjectAsIpso).RawText = value as string;
+                var asText = ((Text)mContainedObjectAsIpso);
+                if (this.WidthUnits == DimensionUnitType.RelativeToChildren)
+                {
+                    // make it have no line wrap width before assignign the text:
+                    asText.Width = 0;
+                }
+                
+                asText.RawText = value as string;
                 // we want to update if the text's size is based on its "children" (the letters it contains)
                 if(this.WidthUnits == DimensionUnitType.RelativeToChildren)
                 {

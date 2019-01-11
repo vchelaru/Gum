@@ -123,6 +123,47 @@ namespace RenderingLibrary.Graphics
 
         #region Properties
 
+        /// <summary>
+        /// The width needed to display the wrapped text. 
+        /// </summary>
+        public float WrappedTextWidth
+        {
+            get
+            {
+                if(mPreRenderWidth != null)
+                {
+                    return mPreRenderWidth.Value * mFontScale;
+                }
+                else if(mTextureToRender?.Width > 0)
+                {
+                    return mTextureToRender.Width * mFontScale;
+                }
+                else
+                {
+                    return 0;
+                }
+            }
+        }
+
+        public float WrappedTextHeight
+        {
+            get
+            {
+                if(mPreRenderHeight != null)
+                {
+                    return mPreRenderHeight.Value * mFontScale;
+                }
+                else if(mTextureToRender?.Height > 0)
+                {
+                    return mTextureToRender.Height * mFontScale;
+                }
+                else
+                {
+                    return 0;
+                }
+            }
+        }
+
         public static bool RenderBoundaryDefault
         {
             get;
@@ -549,10 +590,6 @@ namespace RenderingLibrary.Graphics
 
                 if (lineWidth > wrappingWidth)
                 {
-                    while (line.EndsWith(" "))
-                    {
-                        line = line.Substring(0, line.Length - 1);
-                    }
                     if (!string.IsNullOrEmpty(line))
                     {
                         mWrappedText.Add(line);
@@ -578,6 +615,26 @@ namespace RenderingLibrary.Graphics
                     wordArray.Insert(0, wordUnmodified.Substring(indexOfNewline + 1, wordUnmodified.Length - (indexOfNewline + 1)));
                 }
             }
+
+            // We want to remove any trailing spaces on any lines except the last. On the last we allow
+            // the user to have as many spaces as they want
+            // count-1 to exclude the last line
+            for(int i = 0; i < mWrappedText.Count - 1; i++)
+            {
+                var lineToTrim = mWrappedText[i];
+                var reAssign = false;
+                while (lineToTrim.EndsWith(" "))
+                {
+                    lineToTrim = line.Substring(0, line.Length - 1);
+                    reAssign = true;
+                }
+
+                if(reAssign)
+                {
+                    mWrappedText[i] = lineToTrim;
+                }
+            }
+
             // June 30, 2018
             // We no longer want
             // to trim the end of the
