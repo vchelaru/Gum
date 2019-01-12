@@ -1,5 +1,7 @@
 # Introduction 
 
+[![Join the chat at https://gitter.im/vchelaru/Gum](https://badges.gitter.im/vchelaru/Gum.svg)](https://gitter.im/vchelaru/Gum?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Gum is a general purpose UI layout tool built on object-oriented principles. Specifically it supports:
 
 * Inheritance
