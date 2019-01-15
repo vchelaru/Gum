@@ -20,7 +20,9 @@ namespace Gum.MonoGameIntegration
             hasInitializeBeenCalled = true;
 
             var graphicsDeviceManager =
-                Game.Services.GetService<IGraphicsDeviceManager>() as GraphicsDeviceManager;
+                // This seems to only be supported on MonoGame, not XNA
+                //Game.Services.GetService<IGraphicsDeviceManager>() as GraphicsDeviceManager;
+                Game.Services.GetService(typeof(IGraphicsDeviceManager)) as GraphicsDeviceManager; 
 
             FlatRedBallServices.InitializeFlatRedBall(Game, graphicsDeviceManager);
 
