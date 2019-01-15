@@ -134,7 +134,7 @@ namespace Gum.DataTypes
 
                             if (rootVariableSave != null)
                             {
-                                return rootVariableSave.GetTypeConverter((ElementSave)null);
+                                return rootVariableSave.GetTypeConverter((ElementSave)foundElementSave);
                             }
                         }
                     }
@@ -178,6 +178,10 @@ namespace Gum.DataTypes
 
         public static bool IsState(this VariableSave variableSave, ElementSave container, out ElementSave categoryContainer, out StateSaveCategory category, bool recursive = true)
         {
+            if(container == null)
+            {
+                throw new ArgumentNullException(nameof(container));
+            }
             category = null;
             categoryContainer = null;
 

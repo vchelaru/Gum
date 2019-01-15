@@ -17,7 +17,12 @@ namespace GumRuntime
     {
         public static GraphicalUiElement ToGraphicalUiElement(this InstanceSave instanceSave, SystemManagers systemManagers)
         {
-
+#if DEBUG
+            if(ObjectFinder.Self.GumProjectSave == null)
+            {
+                throw new InvalidOperationException("You need to set the ObjectFinder's GumProjectSave first so it can track references");
+            }
+#endif
             ElementSave instanceElement = ObjectFinder.Self.GetElementSave(instanceSave.BaseType);
 
             GraphicalUiElement toReturn = null;

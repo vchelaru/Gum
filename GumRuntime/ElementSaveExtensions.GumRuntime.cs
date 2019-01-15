@@ -45,6 +45,11 @@ namespace GumRuntime
         }
 
 
+        public static GraphicalUiElement ToGraphicalUiElement(this ElementSave elementSave)
+        {
+            return ToGraphicalUiElement(elementSave, SystemManagers.Default, addToManagers: true);
+        }
+
         public static GraphicalUiElement ToGraphicalUiElement(this ElementSave elementSave, SystemManagers systemManagers, 
             bool addToManagers)
         {

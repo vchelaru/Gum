@@ -4012,6 +4012,13 @@ namespace Gum.Wireframe
 
         public virtual void ApplyState(DataTypes.Variables.StateSave state)
         {
+#if DEBUG
+            if(state.ParentContainer == null)
+            {
+                throw new InvalidOperationException("State.ParentContainer is null - did you remember to initialize the state?");
+            }
+
+#endif
             this.SuspendLayout(true);
 
             var variablesWithoutStatesOnParent =

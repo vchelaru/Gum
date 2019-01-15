@@ -188,6 +188,11 @@ namespace Gum.DataTypes
                 return null;
             }
 
+            if(FileManager.IsRelative(fileName))
+            {
+                fileName = FileManager.MakeAbsolute(fileName);
+            }
+
             GumProjectSave gps = null;
 
 #if ANDROID || IOS || WINDOWS_8

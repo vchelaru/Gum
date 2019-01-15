@@ -71,6 +71,13 @@ namespace RenderingLibrary
 
         public void Activity(double currentTime)
         {
+#if DEBUG
+            if(SpriteManager == null)
+            {
+                throw new InvalidOperationException("The SpriteManager is null - did you remember to initialize the SystemManagers?");
+            }
+#endif
+
             SpriteManager.Activity(currentTime);
         }
 
