@@ -31,7 +31,11 @@ namespace Gum.Managers
             }
             else if(extension == GumProjectSave.ProjectExtension)
             {
-                ReactToProjectChanged(file);
+                var isCurrentProject = file == ProjectState.Self.GumProjectSave.FullFileName;
+                if(isCurrentProject)
+                {
+                    ReactToProjectChanged(file);
+                }
             }
             else if(extension == "ganx")
             {
@@ -44,6 +48,7 @@ namespace Gum.Managers
             }
 
         }
+
         private void ReactToProjectChanged(FilePath file)
         {
             GumCommands.Self.FileCommands.LoadProject(file.Standardized);
