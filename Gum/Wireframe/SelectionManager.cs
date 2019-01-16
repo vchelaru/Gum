@@ -211,7 +211,7 @@ namespace Gum.Wireframe
             return toReturn;
         }
 
-        public void Activity(System.Windows.Forms.Control container)
+        public void Activity(bool forceNoHighlight)
         {
             try
             {
@@ -221,7 +221,7 @@ namespace Gum.Wireframe
                 //if (Cursor.IsInWindow && SelectedState.Self.SelectedElement != null)
                 if (SelectedState.Self.SelectedElement != null)
                 {
-                    HighlightActivity(container);
+                    HighlightActivity(forceNoHighlight);
 
                     SelectionActivity();
                 }
@@ -233,7 +233,7 @@ namespace Gum.Wireframe
             }
             catch (Exception e)
             {
-                MessageBox.Show("Error in SelectionManager.Activity:\n\n" + e.ToString());
+                GumCommands.Self.GuiCommands.ShowMessage("Error in SelectionManager.Activity:\n\n" + e.ToString());
             }
         }
 
@@ -247,8 +247,17 @@ namespace Gum.Wireframe
             SelectedGue = null;
         }
 
-        void HighlightActivity(System.Windows.Forms.Control container)
+        /// <summary>
+        /// Performs every-frame highlight activity.
+        /// </summary>
+        /// <param name="forceNoHighlight">If force no highlight, the highlight will not act as if it's over anything. This is used
+        /// to un-highlight anything if the cursor is outside of the window</param>
+        void HighlightActivity(bool forceNoHighlight)
         {
+            if(forceNoHighlight && HighlightedIpso != null)
+            {
+                int m = 3;
+            }
             if (!InputLibrary.Cursor.Self.PrimaryDownIgnoringIsInWindow)
             {
                 // There is currently a known
@@ -279,36 +288,44 @@ namespace Gum.Wireframe
 
                     #region Selecting element activity
 
-
-                    if (WireframeEditor?.HasCursorOver == true)
+                    if(forceNoHighlight)
                     {
-                        representationOver = WireframeObjectManager.Self.GetSelectedRepresentation();
                         IsOverBody = false;
                     }
-                    else
+
+                    if(forceNoHighlight == false)
                     {
-                        if (IsOverBody && Cursor.PrimaryDown)
+
+                        if (WireframeEditor?.HasCursorOver == true)
                         {
-                            cursorToSet = Cursors.SizeAll;
                             representationOver = WireframeObjectManager.Self.GetSelectedRepresentation();
+                            IsOverBody = false;
                         }
                         else
                         {
-                            List<ElementWithState> elementStack = new List<ElementWithState>();
-                            elementStack.Add(new ElementWithState(SelectedState.Self.SelectedElement));
-
-
-                            representationOver =
-                                GetRepresentationAt(worldXAt, worldYAt, false, elementStack);
-
-                            if (representationOver != null)
+                            if (IsOverBody && Cursor.PrimaryDown)
                             {
                                 cursorToSet = Cursors.SizeAll;
-                                IsOverBody = true;
+                                representationOver = WireframeObjectManager.Self.GetSelectedRepresentation();
                             }
                             else
                             {
-                                IsOverBody = false;
+                                List<ElementWithState> elementStack = new List<ElementWithState>();
+                                elementStack.Add(new ElementWithState(SelectedState.Self.SelectedElement));
+
+
+                                representationOver =
+                                    GetRepresentationAt(worldXAt, worldYAt, false, elementStack);
+
+                                if (representationOver != null)
+                                {
+                                    cursorToSet = Cursors.SizeAll;
+                                    IsOverBody = true;
+                                }
+                                else
+                                {
+                                    IsOverBody = false;
+                                }
                             }
                         }
                     }
@@ -346,6 +363,10 @@ namespace Gum.Wireframe
             else if(InputLibrary.Cursor.Self.PrimaryDown && Cursor.IsInWindow)
             {
                 // We only want to hide it if the user is holding the cursor down over the wireframe window.
+                HighlightedIpso = null;
+            }
+            else if(forceNoHighlight)
+            {
                 HighlightedIpso = null;
             }
             

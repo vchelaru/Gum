@@ -61,6 +61,8 @@ namespace Gum.Wireframe
 
         public event Action CameraChanged;
 
+        bool mouseHasEntered = false;
+
 
         #endregion
 
@@ -222,6 +224,19 @@ namespace Gum.Wireframe
                 this.MouseMove += CameraController.Self.HandleMouseMove;
                 this.MouseWheel += CameraController.Self.HandleMouseWheel;
                 this.mTopRuler = new Ruler(this, null, InputLibrary.Cursor.Self);
+
+                this.MouseEnter += (not, used) =>
+                {
+                    System.Diagnostics.Debug.WriteLine("Entered");
+                    mouseHasEntered = true;
+                };
+                this.MouseLeave += (not, used) =>
+                {
+                    System.Diagnostics.Debug.WriteLine("Left");
+
+                    mouseHasEntered = false;
+                };
+
                 mLeftRuler = new Ruler(this, null, InputLibrary.Cursor.Self);
                 mLeftRuler.RulerSide = RulerSide.Left;
 
@@ -284,10 +299,19 @@ namespace Gum.Wireframe
 
                     // But we want the selection to update the handles to the selected object
                     // after editing is done.  SelectionManager.LateActivity lets us do that.  LateActivity must
-                    // come after EidtingManager.Activity.
+                    // come after EditingManager.Activity.
+
+                    // Update 1/15/2019
+                    // When the user uses scroll bars we get selection to underlying objects.
+                    // We want to not have that happen, so we'll check if the mouse has entered
+                    // the control. I may have to update this at some point to force deselection
+                    // if the mouse has not entered so things don't stay highlighted when exiting
+                    // the control
+                    // Update 2 - yea, we def need to pass in mouseHasEntered == false to force no highlight
+                    
                     if (mTopRuler.IsCursorOver == false && mLeftRuler.IsCursorOver == false)
                     {
-                        SelectionManager.Self.Activity(this);
+                        SelectionManager.Self.Activity(mouseHasEntered == false);
                         // EditingManager activity must happen after SelectionManager activity
                         EditingManager.Self.Activity();
 

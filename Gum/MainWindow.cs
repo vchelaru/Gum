@@ -68,12 +68,12 @@ namespace Gum
 
             };
 
-            CreateWireframeEditControl();
-
-            CreateToolbarPanel();
 
             //... add it here, so it can be done after scroll bars and other controls
             this.panel1.Controls.Add(this.wireframeControl1);
+
+            CreateWireframeEditControl();
+            CreateToolbarPanel();
 
 
             stateView = new StateView();
@@ -144,6 +144,7 @@ namespace Gum
             this.wireframeControl1.Size = new System.Drawing.Size(532, 452);
             this.wireframeControl1.TabIndex = 0;
             this.wireframeControl1.Text = "wireframeControl1";
+
             this.wireframeControl1.DragDrop += new System.Windows.Forms.DragEventHandler(this.wireframeControl1_DragDrop);
             this.wireframeControl1.DragEnter += new System.Windows.Forms.DragEventHandler(this.wireframeControl1_DragEnter);
             this.wireframeControl1.MouseClick += new System.Windows.Forms.MouseEventHandler(this.wireframeControl1_MouseClick);
@@ -207,7 +208,8 @@ namespace Gum
         /// </summary>
         private void UpdateWireframeControlSizes()
         {
-            WireframeEditControl.Width = WireframeEditControl.Parent.Width;
+            // I don't think we need this for docking:
+            //WireframeEditControl.Width = WireframeEditControl.Parent.Width / 2;
 
             ToolbarPanel.Width = ToolbarPanel.Parent.Width;
 
