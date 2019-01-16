@@ -18,11 +18,15 @@ The following shows a child [ColoredRectangle](/Gum/coloredrectangle/ColoredRect
 
 ![](100PercentageWidth.png)
 
+If an object uses **Percentage** Width, but has no parent, it will size itself as a percentage of the entire screen's width.
+
 # RelativeToContainer
 
 The following image shows a child [ColoredRectangle](/Gum/coloredrectangle/ColoredRectangle.html) with -10 **RelativeToContainer** Width, which means it will always be 10 pixels less wide than its parent.
 
 ![](Negative10RelativeToContainer.png)
+
+If an object uses **RelativeToContainer** Width, but has no parent, it will size itself relative to the entire screen's width.
 
 # RelativeToChildren
 

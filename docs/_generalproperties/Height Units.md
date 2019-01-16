@@ -18,11 +18,15 @@ The following shows a child [ColoredRectangle](/Gum/coloredrectangle/ColoredRect
 
 ![](100PercentageHeight.png)
 
+If an object uses **Percentage** Height, but has no parent, it will size itself as a percentage of the entire screen's height.
+
 # RelativeToContainer
 
 The following shows a child [ColoredRectangle](/Gum/coloredrectangle/ColoredRectangle.html) with -10 **RelativeToContainer** Height, which means it will always be 10 pixels less tall than its parent.
 
 ![](Negative10HeightRelativeToContainer.png)
+
+If an object uses **RelativeToContainer** Height, but has no parent, it will size itself relative to the entire screen's height.
 
 # RelativeToChildren
 

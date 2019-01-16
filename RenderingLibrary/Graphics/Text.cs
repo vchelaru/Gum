@@ -625,7 +625,7 @@ namespace RenderingLibrary.Graphics
                 var reAssign = false;
                 while (lineToTrim.EndsWith(" "))
                 {
-                    lineToTrim = line.Substring(0, line.Length - 1);
+                    lineToTrim = lineToTrim.Substring(0, line.Length - 1);
                     reAssign = true;
                 }
 
