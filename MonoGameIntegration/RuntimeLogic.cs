@@ -42,8 +42,9 @@ namespace Gum.MonoGameIntegration
             {
                 throw new InvalidOperationException("Need to call Initialize first. If this has been added as a game component, make this call after your game's base.Initialize() call.");
             }
+            GumLoadResult loadResult;
             var gumProject = GumProjectSave.Load(
-                fileName, out GumLoadResult loadResult);
+                fileName, out loadResult);
             Gum.Managers.ObjectFinder.Self.GumProjectSave = gumProject;
             foreach (var item in gumProject.Screens)
             {
