@@ -19,6 +19,11 @@ using System.Collections.Specialized;
 
 namespace Gum.Wireframe
 {
+    /// <summary>
+    /// The base object for all Gum runtime objects. It contains functionality for
+    /// setting variables, states, and perofrming layout. The GraphicalUiElement can
+    /// wrap an underlying rendering object.
+    /// </summary>
     public partial class GraphicalUiElement : IRenderableIpso, IVisible
     {
         #region Enums
