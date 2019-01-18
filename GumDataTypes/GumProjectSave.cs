@@ -12,6 +12,13 @@ namespace Gum.DataTypes
 
     public class GumLoadResult
     {
+        /// <summary>
+        /// Error message about why the load may have failed. This does not include errors about missing files - for missing files see the MissingFiles list.
+        /// </summary>
+        /// <remarks>
+        /// Errors include situations like a malformed XML file - errors which tools like Gum cannot recover from. Missing files, while resulting
+        /// in an incomplete load, do not put the project in an unusable state, so we do not consider them errors.
+        /// </remarks>
         public string ErrorMessage
         {
             get;
@@ -204,7 +211,7 @@ namespace Gum.DataTypes
             }
             catch (FileNotFoundException)
             {
-                result.ErrorMessage = "The Gum project file does not exist";
+                result.MissingFiles.Add(fileName);
                 return null;
             }
             catch (IOException ex)

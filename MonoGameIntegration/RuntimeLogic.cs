@@ -3,6 +3,8 @@ using Gum.DataTypes;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace Gum.MonoGameIntegration
@@ -35,7 +37,11 @@ namespace Gum.MonoGameIntegration
 
         }
 
-
+        /// <summary>
+        /// Loads a Gum project and fully initializes it for runtime use.
+        /// </summary>
+        /// <param name="fileName">The .gumx file name (typically relative to the executable) to load.</param>
+        /// <returns>The fully-initialized GumProjectSave</returns>
         public static GumProjectSave LoadGumProject(string fileName)
         {
             if(!hasInitializeBeenCalled)
@@ -45,6 +51,24 @@ namespace Gum.MonoGameIntegration
             GumLoadResult loadResult;
             var gumProject = GumProjectSave.Load(
                 fileName, out loadResult);
+
+
+
+            if(loadResult.MissingFiles.Count > 0)
+            {
+                string message = null;
+                if(!string.IsNullOrEmpty(loadResult.ErrorMessage))
+                {
+                    message = loadResult.ErrorMessage + "\n\n";
+                }
+                foreach(var missingFile in loadResult.MissingFiles)
+                {
+                    message += $"Missing:{missingFile}";
+                }
+                throw new FileNotFoundException(message);
+            }
+
+
             Gum.Managers.ObjectFinder.Self.GumProjectSave = gumProject;
             foreach (var item in gumProject.Screens)
             {
