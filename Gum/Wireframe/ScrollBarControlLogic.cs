@@ -91,10 +91,10 @@ namespace Gum.Wireframe
         public void UpdateScrollBarsToCameraPosition()
         {
             mVerticalScrollBar.Value = 
-                Math.Max(mVerticalScrollBar.Minimum, (int)Managers.Renderer.Camera.Y);
+                Math.Min(Math.Max(mVerticalScrollBar.Minimum, (int)Managers.Renderer.Camera.Y), mVerticalScrollBar.Maximum);
 
             mHorizontalScrollBar.Value = 
-                Math.Max(mHorizontalScrollBar.Minimum, (int)Managers.Renderer.Camera.X);
+                Math.Min(Math.Max(mHorizontalScrollBar.Minimum, (int)Managers.Renderer.Camera.X), mHorizontalScrollBar.Maximum);
         }
 
         public void SetDisplayedArea(int width, int height)
