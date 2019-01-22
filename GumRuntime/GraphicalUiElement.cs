@@ -3362,6 +3362,13 @@ namespace Gum.Wireframe
                     solidRect.Blue = valueAsInt;
                     handled = true;
                 }
+                else if (propertyName == "Color")
+                {
+                    var valueAsColor = (Color)value;
+                    solidRect.Color = valueAsColor;
+                    handled = true;
+                }
+
             }
             else if (mContainedObjectAsIpso is Sprite)
             {
@@ -3395,6 +3402,13 @@ namespace Gum.Wireframe
                     sprite.Blue = valueAsInt;
                     handled = true;
                 }
+                else if (propertyName == "Color")
+                {
+                    var valueAsColor = (Color)value;
+                    sprite.Color = valueAsColor;
+                    handled = true;
+                }
+
                 else if (propertyName == "Blend")
                 {
                     var valueAsGumBlend = (RenderingLibrary.Blend)value;
@@ -3560,7 +3574,15 @@ namespace Gum.Wireframe
                 handled = true;
             }
 
-            else if(propertyName == "Points")
+            else if (propertyName == "Color")
+            {
+                var valueAsColor = (Color)value;
+                ((LinePolygon)mContainedObjectAsIpso).Color = valueAsColor;
+                handled = true;
+            }
+
+
+            else if (propertyName == "Points")
             {
                 var points = (List<Vector2>)value;
 
@@ -3622,6 +3644,12 @@ namespace Gum.Wireframe
                 ((LineRectangle)mContainedObjectAsIpso).Color = color;
                 handled = true;
             }
+            else if (propertyName == "Color")
+            {
+                var valueAsColor = (Color)value;
+                ((LineRectangle)mContainedObjectAsIpso).Color = valueAsColor;
+                handled = true;
+            }
 
             return handled;
         }
@@ -3675,6 +3703,13 @@ namespace Gum.Wireframe
                 color.B = (byte)valueAsInt;
 
                 ((LineCircle)mContainedObjectAsIpso).Color = color;
+                handled = true;
+            }
+
+            else if(propertyName == "Color")
+            {
+                var valueAsColor = (Color)value;
+                ((LineCircle)mContainedObjectAsIpso).Color = valueAsColor;
                 handled = true;
             }
 
@@ -3868,7 +3903,14 @@ namespace Gum.Wireframe
                 ((Text)mContainedObjectAsIpso).Blue = valueAsInt;
                 handled = true;
             }
-            else if(propertyName == "HorizontalAlignment")
+            else if (propertyName == "Color")
+            {
+                var valueAsColor = (Color)value;
+                ((Text)mContainedObjectAsIpso).Color = valueAsColor;
+                handled = true;
+            }
+
+            else if (propertyName == "HorizontalAlignment")
             {
                 ((Text)mContainedObjectAsIpso).HorizontalAlignment = (HorizontalAlignment)value;
                 handled = true;
