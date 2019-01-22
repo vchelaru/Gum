@@ -47,7 +47,70 @@ namespace GumRuntime
 
         public static GraphicalUiElement ToGraphicalUiElement(this ElementSave elementSave)
         {
-            return ToGraphicalUiElement(elementSave, SystemManagers.Default, addToManagers: true);
+            var toReturn = ToGraphicalUiElement(elementSave, SystemManagers.Default, addToManagers: true);
+
+#if DEBUG
+            if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
+            {
+                ThrowMissingFileExceptionsRecursively(toReturn);
+            }
+#endif
+
+            return toReturn;
+        }
+
+        private static void ThrowMissingFileExceptionsRecursively(GraphicalUiElement toReturn)
+        {
+
+            // We can't throw exceptions when assigning values on fonts because the font values get set one-by-one
+            // and the end result of all values determines which file to load. For example, an object may set the following
+            // variables one-by-one:
+            // * FontSize
+            // * Font
+            // * OutlineThickness
+            // Let's say the Font gets set to Arial. The FontSize may not have been set yet, so whatever value happens
+            // to be there will be used to load the font (like 12). But the user may not have Arial12 in their project,
+            // and if we threw an exception on-the-spot, the user would see a message about missing Arial12, even though
+            // the project doesn't actually use Arial12.
+            // We need to wait until the graphical UI element is fully created before we try to throw an exception, so
+            // that's what we're going to do here:
+            if (toReturn != null && toReturn.RenderableComponent is Text)
+            {
+                // check it
+                var asText = toReturn.RenderableComponent as Text;
+                if (asText.BitmapFont == null)
+                {
+                    if (toReturn.UseCustomFont)
+                    {
+                        var fontName = ToolsUtilities.FileManager.Standardize(toReturn.CustomFontFile, preserveCase:true, makeAbsolute:true);
+
+                        throw new System.IO.FileNotFoundException($"Missing:{fontName}");
+                    }
+                    else
+                    {
+                        if (toReturn.FontSize > 0 && !string.IsNullOrEmpty(toReturn.Font))
+                        {
+                            string fontName = global::RenderingLibrary.Graphics.Fonts.BmfcSave.GetFontCacheFileNameFor(
+                                toReturn.FontSize,
+                                toReturn.Font,
+                                toReturn.OutlineThickness,
+                                toReturn.UseFontSmoothing);
+
+                            var standardized = ToolsUtilities.FileManager.Standardize(fontName, preserveCase:true, makeAbsolute:true);
+
+                            throw new System.IO.FileNotFoundException($"Missing:{standardized}");
+                        }
+
+                    }
+
+                }
+            }
+
+            
+            foreach (var element in toReturn.ContainedElements)
+            {
+                ThrowMissingFileExceptionsRecursively(element);
+            }
         }
 
         public static GraphicalUiElement ToGraphicalUiElement(this ElementSave elementSave, SystemManagers systemManagers, 

@@ -365,7 +365,8 @@ namespace Gum.Wireframe
                 // We only want to hide it if the user is holding the cursor down over the wireframe window.
                 HighlightedIpso = null;
             }
-            else if(forceNoHighlight)
+
+            if (forceNoHighlight)
             {
                 HighlightedIpso = null;
             }

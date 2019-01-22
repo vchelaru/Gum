@@ -140,13 +140,6 @@ namespace Gum.Wireframe
                 mHorizontalScrollBar.Maximum = (int)(displayedAreaWidth + visibleAreaWidth);
                 mHorizontalScrollBar.LargeChange = (int)visibleAreaWidth;
             }
-
-
-
-
-            float multiplier = 100 / zoomPercentage;
-
-            mHorizontalScrollBar.LargeChange = (int)(mPanel.Width * multiplier);
         }
 
         

@@ -19,6 +19,12 @@ using System.Collections.Specialized;
 
 namespace Gum.Wireframe
 {
+    public enum MissingFileBehavior
+    {
+        ConsumeSilently,
+        ThrowException
+    }
+
     /// <summary>
     /// The base object for all Gum runtime objects. It contains functionality for
     /// setting variables, states, and perofrming layout. The GraphicalUiElement can
@@ -26,7 +32,7 @@ namespace Gum.Wireframe
     /// </summary>
     public partial class GraphicalUiElement : IRenderableIpso, IVisible
     {
-        #region Enums
+        #region Enums/Internal Classes
 
         enum ChildrenUpdateType
         {
@@ -41,6 +47,7 @@ namespace Gum.Wireframe
             public int ChildrenUpdateDepth;
             public XOrY? XOrY;
         }
+
 
         #endregion
 
@@ -124,6 +131,8 @@ namespace Gum.Wireframe
         #endregion
 
         #region Properties
+
+        public static MissingFileBehavior MissingFileBehavior { get; set; } = MissingFileBehavior.ConsumeSilently;
 
         public ElementSave ElementSave
         {
@@ -3038,6 +3047,12 @@ namespace Gum.Wireframe
             }
         }
 
+        /// <summary>
+        /// Searches for and returns a GraphicalUiElement in this instance by name. Returns null
+        /// if not found.
+        /// </summary>
+        /// <param name="name">The case-sensitive name to search for.</param>
+        /// <returns>The found GraphicalUiElement, or null if no match is found.</returns>
         public GraphicalUiElement GetGraphicalUiElementByName(string name)
         {
             foreach (var item in mWhatThisContains)
@@ -3048,6 +3063,32 @@ namespace Gum.Wireframe
                 }
             }
 
+            return null;
+        }
+
+        /// <summary>
+        /// Performs a recursive search for graphical UI elements, where eacn name in the parameters
+        /// is the name of a GraphicalUiElement one level deeper than the last.
+        /// </summary>
+        /// <param name="names">The names to search for, allowing retrieval multiple levels deep.</param>
+        /// <returns>The found element, or null if no match is found.</returns>
+        public GraphicalUiElement GetGraphicalUiElementByName(params string[] names)
+        {
+            if(names.Length > 0)
+            {
+                var directChild = GetGraphicalUiElementByName(names[0]);
+
+                if(names.Length == 1)
+                {
+                    return directChild;
+                }
+                else
+                {
+                    var subArray = names.Skip(1).ToArray();
+
+                    return directChild?.GetGraphicalUiElementByName(subArray);
+                }
+            }
             return null;
         }
 
@@ -3416,6 +3457,11 @@ namespace Gum.Wireframe
                                 }
                                 catch (Exception e)
                                 {
+                                    if (MissingFileBehavior == MissingFileBehavior.ThrowException)
+                                    {
+                                        string message = $"Error setting SourceFile on NineSlice in {this.Tag}:\n{valueAsString}";
+                                        throw new System.IO.FileNotFoundException(message);
+                                    }
                                     // do nothing?
                                 }
                                 nineSlice.SetSingleTexture(texture);
@@ -3675,6 +3721,11 @@ namespace Gum.Wireframe
                     }
                     catch(System.IO.FileNotFoundException)
                     {
+                        if(MissingFileBehavior == MissingFileBehavior.ThrowException)
+                        {
+                            string message = $"Error setting SourceFile on Sprite in {this.Tag}:\n{valueAsString}";
+                            throw new System.IO.FileNotFoundException(message);
+                        }
                         sprite.Texture = null;
                     }
                     UpdateLayout();

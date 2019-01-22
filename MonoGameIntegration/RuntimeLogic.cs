@@ -35,6 +35,16 @@ namespace Gum.MonoGameIntegration
             global::RenderingLibrary.SystemManagers.Default.Renderer.Camera.CameraCenterOnScreen =
                 global::RenderingLibrary.CameraCenterOnScreen.TopLeft;
 
+            global::RenderingLibrary.Content.LoaderManager.Self.ContentLoader = new global::RenderingLibrary.Content.ContentLoader();
+
+            // We do this to help the programmer find missing files
+            Wireframe.GraphicalUiElement.MissingFileBehavior = Wireframe.MissingFileBehavior.ThrowException;
+
+            // Hide component outlines:
+            Wireframe.GraphicalUiElement.ShowLineRectangles = false;
+
+            // Hide the render boundary bool which controls whether we draw a green outline around text objects
+            global::RenderingLibrary.Graphics.Text.RenderBoundaryDefault = false;
         }
 
         /// <summary>
@@ -63,7 +73,7 @@ namespace Gum.MonoGameIntegration
                 }
                 foreach(var missingFile in loadResult.MissingFiles)
                 {
-                    message += $"Missing:{missingFile}";
+                    message += $"Missing:{missingFile}\n\n";
                 }
                 throw new FileNotFoundException(message);
             }
@@ -96,6 +106,9 @@ namespace Gum.MonoGameIntegration
             }
 
             Gum.Managers.StandardElementsManager.Self.Initialize();
+
+            // Now all files are going to be loaded relative to the gum project
+            ToolsUtilities.FileManager.RelativeDirectory = ToolsUtilities.FileManager.GetDirectory( gumProject.FullFileName);
 
             return gumProject;
         }

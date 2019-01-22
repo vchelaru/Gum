@@ -288,7 +288,7 @@ namespace Gum.Wireframe
 
                     InputLibrary.Cursor.Self.Activity(TimeManager.Self.CurrentTime);
                     InputLibrary.Keyboard.Self.Activity();
-                    if (Cursor.PrimaryPush)
+                    if (InputLibrary.Keyboard.Self.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Space))
                     {
                         int m = 3;
                     }
