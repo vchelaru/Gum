@@ -8,7 +8,7 @@ The **Children Layout** property determines how a container positions its childr
 
 The value **TopToBottomStack** results in the children stacking one on top of another, from top to bottom.
 
-The value **LeftToWriteStack** results in the children stacking one beside another, from left to right.
+The value **LeftToRightStack** results in the children stacking one beside another, from left to right.
 
 # Example
 
@@ -38,3 +38,21 @@ Children can be reordered using the right-click menu on an instance.
 # Wraps Children
 
 The [Wraps Children](Wraps Children) property controls how stacking behaves beyond boundaries. For more information, see the [Wraps Children](Wraps Children) page.
+
+# Stacking and Children Origin
+
+In most cases children which are stacked should use a Left [X Origin](X Origin) if the parent uses a **LeftToRightStack** and should use a Top [Y Origin](Y Origin) if the parent uses a **Top To Bottom Stack**.
+
+For example, consider a parent which contains two children - a blue and a red rectangle.
+
+![](LeftToRightStackLeftOrigin.png)
+
+In the image shown above, the red rectangle is positioned directly to the right of the blue rectangle. Notice that if the red rectangle's [X Origin](X Origin) is changed to **Center**, the red rectangle overlaps the blue rectangle.
+
+![](LeftToRightOverlapping.png)
+
+If the red rectangle's [X Origin](X Origin) is changed to **Right**, then its right side will align with the right side of the blue rectangle, resulting in the red overlapping the blue completely. In this case the stacking is essentially cancelled out by the [X Origin](X Origin).
+
+![](LeftToRightCompleteOverlap.png)
+
+This overlapping may not be desirable, so keep this in mind when changing a stacked child's origin.
