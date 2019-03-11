@@ -134,5 +134,7 @@ using System.Runtime.InteropServices;
 //  - Fixed children layout buttons not showing selected value.
 // 0.9.6.1
 //  - Fixed crash and corruption when resizing a Sprite that has a null texture, but uses % file width or height
-[assembly: AssemblyVersion("0.9.6.1")]
-[assembly: AssemblyFileVersion("0.9.6.1")]
+// 0.9.7
+//  - Added command line params for rebuilding font cache
+[assembly: AssemblyVersion("0.9.7.0")]
+[assembly: AssemblyFileVersion("0.9.7.0")]

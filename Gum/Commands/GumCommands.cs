@@ -46,6 +46,7 @@ namespace Gum
         public void Initialize(MainWindow mainWindow)
         {
             GuiCommands.Initialize(mainWindow);
+            FileCommands.Initialize(mainWindow);
         }
         
     }

@@ -26,7 +26,7 @@ namespace ToolsUtilities
         #region Fields
 
         static string mRelativeDirectory =
-#if WINDOWS_8 || UWP
+#if UWP
             "./";
 #else
             Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location).ToLower().Replace("/", "\\") + "\\";
@@ -736,7 +736,7 @@ namespace ToolsUtilities
     // Stuff that only works on desktop (and not Windows RT)
     public static partial class FileManager
     {
-#if !WINDOWS_8  && !UWP
+#if !UWP
         public static void CopyFilesRecursively(string source, string target)
         {
             DirectoryInfo sourceDirectory = new DirectoryInfo(source);
@@ -1127,7 +1127,12 @@ namespace ToolsUtilities
         }
 
 
-
+        /// <summary>
+        /// Returns a full path for a folder which can be used to save user data. 
+        /// </summary>
+        /// <example>
+        /// System.IO.File.SaveText("File Contents", FlatRedBall.UserApplicationDataForThisApplication + "File.txt");
+        /// </example>
         public static string UserApplicationDataForThisApplication
         {
             get

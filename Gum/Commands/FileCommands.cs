@@ -17,6 +17,12 @@ namespace Gum.Commands
 {
     public class FileCommands
     {
+        MainWindow mainWindow;
+        public void Initialize(MainWindow mainWindow)
+        {
+            this.mainWindow = mainWindow;
+        }
+
         public void TryAutoSaveCurrentObject()
         {
             if(SelectedState.Self.SelectedBehavior != null)
@@ -168,6 +174,11 @@ namespace Gum.Commands
                 //PluginManager.Self.Export(elementSave);
             }
 
+        }
+
+        public void Exit()
+        {
+            mainWindow.Close();
         }
     }
 }

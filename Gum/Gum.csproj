@@ -205,7 +205,7 @@
     <Compile Include="Plugins\Delete\DeleteObjectPlugin.cs" />
     <Compile Include="Gui\Plugins\MainWindowPlugin.cs" />
     <Compile Include="Commands\GumCommands.cs" />
-    <Compile Include="Managers\CommandLineManager.cs" />
+    <Compile Include="CommandLine\CommandLineManager.cs" />
     <Compile Include="Managers\EventsViewModel.cs" />
     <Compile Include="Managers\FileLocations.cs" />
     <Compile Include="Managers\FontManager.cs" />

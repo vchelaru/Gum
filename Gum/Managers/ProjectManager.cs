@@ -13,6 +13,7 @@ using CommonFormsAndControls.Forms;
 using System.Diagnostics;
 using Gum.ToolStates;
 using Gum.Logic.FileWatch;
+using Gum.CommandLine;
 
 namespace Gum
 {
@@ -85,22 +86,25 @@ namespace Gum
 
             CommandLineManager.Self.ReadCommandLine();
 
-            if (!string.IsNullOrEmpty(CommandLineManager.Self.Glux))
+            if(!CommandLineManager.Self.ShouldExitImmediately)
             {
-                GumCommands.Self.FileCommands.LoadProject(CommandLineManager.Self.Glux);
-
-                if (!string.IsNullOrEmpty(CommandLineManager.Self.ElementName))
+                if (!string.IsNullOrEmpty(CommandLineManager.Self.GlueProjectToLoad))
                 {
-                    SelectedState.Self.SelectedElement = ObjectFinder.Self.GetElementSave(CommandLineManager.Self.ElementName);
+                    GumCommands.Self.FileCommands.LoadProject(CommandLineManager.Self.GlueProjectToLoad);
+
+                    if (!string.IsNullOrEmpty(CommandLineManager.Self.ElementName))
+                    {
+                        SelectedState.Self.SelectedElement = ObjectFinder.Self.GetElementSave(CommandLineManager.Self.ElementName);
+                    }
                 }
-            }
-            else if (!string.IsNullOrEmpty(GeneralSettingsFile.LastProject))
-            {
-                GumCommands.Self.FileCommands.LoadProject(GeneralSettingsFile.LastProject);
-            }
-            else
-            {
-                CreateNewProject();
+                else if (!string.IsNullOrEmpty(GeneralSettingsFile.LastProject))
+                {
+                    GumCommands.Self.FileCommands.LoadProject(GeneralSettingsFile.LastProject);
+                }
+                else
+                {
+                    CreateNewProject();
+                }
             }
         }
 
