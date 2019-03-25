@@ -138,6 +138,9 @@ namespace WpfDataUi
 
             InstanceMember.CallUiCreated(controlToAdd);
 
+            // can we share them like this? Is it safe? OK?
+            this.ContextMenu = controlToAdd.ContextMenu;
+
             return controlToAdd;
         }
 

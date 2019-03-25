@@ -9,8 +9,6 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using WpfDataUi.EventArguments;
 
-
-
 namespace WpfDataUi.DataTypes
 {
     public class InstanceMember : DependencyObject

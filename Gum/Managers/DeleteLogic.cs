@@ -63,7 +63,22 @@ namespace Gum.Managers
                         // will be handled in a plugin
                         //Gum.ToolCommands.ElementCommands.Self.RemoveInstance(instance, selectedElement);
                         selectedElement.Instances.Remove(selectedInstance);
-                        selectedElement.Events.RemoveAll(item => item.GetSourceObject() == selectedInstance.Name);
+                        var instanceName = selectedInstance.Name;
+
+                        selectedElement.Events.RemoveAll(item => item.GetSourceObject() == instanceName);
+
+                        foreach(var state in selectedElement.AllStates)
+                        {
+                            state.Variables.RemoveAll(item => item.SourceObject == instanceName);
+                        }
+
+                        // March 17, 2019
+                        // Let's also delete
+                        // any variables referencing
+                        // this object
+                        var objectName = selectedInstance.Name;
+                        
+
                         PluginManager.Self.InstanceDelete(selectedElement, selectedInstance);
                         if (SelectedState.Self.SelectedInstance == selectedInstance)
                         {

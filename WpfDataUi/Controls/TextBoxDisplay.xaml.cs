@@ -79,6 +79,7 @@ namespace WpfDataUi.Controls
             mTextBoxLogic = new TextBoxDisplayLogic(this, TextBox);
 
             this.RefreshContextMenu(TextBox.ContextMenu);
+            this.ContextMenu = TextBox.ContextMenu;
         }
 
         public void Refresh(bool forceRefreshEvenIfFocused = false)
