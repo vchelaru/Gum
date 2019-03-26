@@ -1632,48 +1632,55 @@ namespace Gum.Wireframe
             var indexToUpdate = this.StackedRowOrColumnIndex;
             var parentGue = EffectiveParentGue;
 
-            if (parentGue.StackedRowOrColumnDimensions == null)
+            if(this.Visible)
             {
-                parentGue.StackedRowOrColumnDimensions = new List<float>();
-            }
 
-            if (parentGue.StackedRowOrColumnDimensions.Count <= indexToUpdate)
-            {
-                parentGue.StackedRowOrColumnDimensions.Add(0);
-            }
-            else
-            {
-                parentGue.StackedRowOrColumnDimensions[indexToUpdate] = 0;
-            }
-
-            foreach (GraphicalUiElement child in parentGue.Children)
-            {
-                var asIpso = child as IPositionedSizedObject;
-
-                if (child.StackedRowOrColumnIndex == indexToUpdate)
+                if (parentGue.StackedRowOrColumnDimensions == null)
                 {
-                    if (parentGue.ChildrenLayout == ChildrenLayout.LeftToRightStack)
-                    {
-                        parentGue.StackedRowOrColumnDimensions[indexToUpdate] =
-                            System.Math.Max(parentGue.StackedRowOrColumnDimensions[indexToUpdate],
-                            child.Y + child.GetAbsoluteHeight());
-                    }
-                    else
-                    {
-                        parentGue.StackedRowOrColumnDimensions[indexToUpdate] =
-                            System.Math.Max(parentGue.StackedRowOrColumnDimensions[indexToUpdate],
-                            child.X + child.GetAbsoluteWidth());
-                    }
-
-                    // We don't need to worry about the children after this, because the siblings will get updated in order:
-                    // This can (on average) make this run 2x as fast
-                    if(this == child)
-                    {
-                        break;
-                    }
+                    parentGue.StackedRowOrColumnDimensions = new List<float>();
                 }
 
+                if (parentGue.StackedRowOrColumnDimensions.Count <= indexToUpdate)
+                {
+                    parentGue.StackedRowOrColumnDimensions.Add(0);
+                }
+                else
+                {
+                    parentGue.StackedRowOrColumnDimensions[indexToUpdate] = 0;
+                }
+                foreach (GraphicalUiElement child in parentGue.Children)
+                {
+                    if(child.Visible)
+                    {
+                        var asIpso = child as IPositionedSizedObject;
+
+
+                        if (child.StackedRowOrColumnIndex == indexToUpdate)
+                        {
+                            if (parentGue.ChildrenLayout == ChildrenLayout.LeftToRightStack)
+                            {
+                                parentGue.StackedRowOrColumnDimensions[indexToUpdate] =
+                                    System.Math.Max(parentGue.StackedRowOrColumnDimensions[indexToUpdate],
+                                    child.Y + child.GetAbsoluteHeight());
+                            }
+                            else
+                            {
+                                parentGue.StackedRowOrColumnDimensions[indexToUpdate] =
+                                    System.Math.Max(parentGue.StackedRowOrColumnDimensions[indexToUpdate],
+                                    child.X + child.GetAbsoluteWidth());
+                            }
+
+                            // We don't need to worry about the children after this, because the siblings will get updated in order:
+                            // This can (on average) make this run 2x as fast
+                            if(this == child)
+                            {
+                                break;
+                            }
+                        }
+                    }
+                }
             }
+
         }
 
         private void UpdateChildren(int childrenUpdateDepth, bool onlyAbsoluteLayoutChildren = false)
@@ -2150,10 +2157,24 @@ namespace Gum.Wireframe
 
             int thisRowOrColumnIndex = 0;
 
+
+
             if (thisIndex > 0)
             {
-                whatToStackAfter = siblings[thisIndex - 1] as IPositionedSizedObject;
+                var index = thisIndex - 1;
+                while(index > -1)
+                {
+                    if((siblings[index] as IVisible).Visible)
+                    {
+                        whatToStackAfter = siblings[index] as IPositionedSizedObject;
+                        break;
+                    }
+                    index--;
+                }
+            }
 
+            if(whatToStackAfter != null)
+            { 
                 if (shouldWrap)
                 {
                     // This is going to be on a new row/column. That means the following are true:
