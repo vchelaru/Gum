@@ -183,9 +183,15 @@ namespace Gum.Wireframe
             set
             {
                 // If this is a Screen, then it doesn't have a contained IVisible:
-                if (mContainedObjectAsIVisible != null)
+                if (mContainedObjectAsIVisible != null && value != mContainedObjectAsIVisible.Visible)
                 {
                     mContainedObjectAsIVisible.Visible = value;
+
+                    // See if this has a parent that stacks children. If so, update its layout:
+                    if(GetIfParentStacks())
+                    {
+                        this.UpdateLayout();
+                    }
                 }
             }
         }
