@@ -136,5 +136,8 @@ using System.Runtime.InteropServices;
 //  - Fixed crash and corruption when resizing a Sprite that has a null texture, but uses % file width or height
 // 0.9.7
 //  - Added command line params for rebuilding font cache
-[assembly: AssemblyVersion("0.9.7.0")]
-[assembly: AssemblyFileVersion("0.9.7.0")]
+// 0.9.8
+//  - Added ALT + reorder
+//  - Fixed bug with changing color not updating the visual window if the Blue value was the same
+[assembly: AssemblyVersion("0.9.8.0")]
+[assembly: AssemblyFileVersion("0.9.8.0")]

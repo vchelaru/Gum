@@ -91,7 +91,7 @@ namespace Gum.Managers
             MoveStateInDirection(1);
         }
 
-        private void MoveStateInDirection(int direction)
+        public void MoveStateInDirection(int direction)
         {
             var state = SelectedState.Self.SelectedStateSave;
             var list = SelectedState.Self.SelectedElement.States;

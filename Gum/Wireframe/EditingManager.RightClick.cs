@@ -13,6 +13,7 @@ using ToolsUtilities;
 using Gum.Debug;
 using Gum.Gui.Forms;
 using Gum.DataTypes.Behaviors;
+using Gum.Logic;
 
 namespace Gum.Wireframe
 {
@@ -85,72 +86,19 @@ namespace Gum.Wireframe
 
         void OnMoveForward(object sender, EventArgs e)
         {
-                        
-            InstanceSave instance = SelectedState.Self.SelectedInstance;
-            ElementSave element = SelectedState.Self.SelectedElement;
-
-            if (instance != null)
-            {
-                var siblingInstances = instance.GetSiblingsIncludingThis();
-                var thisIndex = siblingInstances.IndexOf(instance);
-                bool isLast = thisIndex == siblingInstances.Count - 1;
-
-                if(!isLast)
-                {
-                    // remove it before getting the new index, or else the removal could impact the
-                    // index.
-                    element.Instances.Remove(instance);
-                    var nextSibling = siblingInstances[thisIndex + 1];
-
-                    var nextSiblingIndexInContainer = element.Instances.IndexOf(nextSibling);
-
-                    element.Instances.Insert(nextSiblingIndexInContainer + 1, instance);
-                    RefreshInResponseToReorder(instance);
-                }
-            }
+            ReorderLogic.Self.MoveSelectedInstanceForward();
         }
 
 
 
         void OnMoveBackward(object sender, EventArgs e)
         {
-            InstanceSave instance = SelectedState.Self.SelectedInstance;
-            ElementSave element = SelectedState.Self.SelectedElement;
-
-            if (instance != null)
-            {
-                // remove it before getting the new index, or else the removal could impact the
-                // index.
-                var siblingInstances = instance.GetSiblingsIncludingThis();
-                var thisIndex = siblingInstances.IndexOf(instance);
-                bool isFirst = thisIndex == 0;
-
-                if (!isFirst)
-                {
-                    element.Instances.Remove(instance);
-                    var previousSibling = siblingInstances[thisIndex - 1];
-
-                    var previousSiblingIndexInContainer = element.Instances.IndexOf(previousSibling);
-
-                    element.Instances.Insert(previousSiblingIndexInContainer, instance);
-                    RefreshInResponseToReorder(instance);
-                }
-            }
+            ReorderLogic.Self.MoveSelectedInstanceBackward();
         }
 
         void OnSendToBack(object sender, EventArgs e)
         {
-            InstanceSave instance = SelectedState.Self.SelectedInstance;
-            ElementSave element = SelectedState.Self.SelectedElement;
-
-            if (instance != null)
-            {
-                // to bring to back, we're going to remove, then insert at index 0
-                element.Instances.Remove(instance);
-                element.Instances.Insert(0, instance);
-
-                RefreshInResponseToReorder(instance);
-            }
+            ReorderLogic.Self.MoveSelectedInstanceToBack();
         }
 
         public void OnCopy(CopyType copyType)
@@ -506,34 +454,8 @@ namespace Gum.Wireframe
 
         void OnBringToFrontClick(object sender, EventArgs e)
         {
-            InstanceSave instance = SelectedState.Self.SelectedInstance;
-            ElementSave element = SelectedState.Self.SelectedElement;
-
-            if (instance != null)
-            {
-                // to bring to back, we're going to remove, then add (at the end)
-                element.Instances.Remove(instance);
-                element.Instances.Add(instance);
-
-                RefreshInResponseToReorder(instance);
-            }
+            ReorderLogic.Self.MoveSelectedInstanceToFront();
         }
-
-        private void RefreshInResponseToReorder(InstanceSave instance)
-        {
-            ElementSave element = SelectedState.Self.SelectedElement;
-
-            GumCommands.Self.GuiCommands.RefreshElementTreeView(element);
-
-
-            WireframeObjectManager.Self.RefreshAll(true);
-
-            SelectionManager.Self.Refresh();
-            GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
-
-            PluginManager.Self.InstanceReordered(instance);
-        }
-
 
         public void OnRightClick()
         {
@@ -581,21 +503,9 @@ namespace Gum.Wireframe
 
         private void HandleMoveInFrontOfClick(object sender, EventArgs e)
         {
-            InstanceSave instance = ((ToolStripMenuItem)sender).Tag as InstanceSave;
+            InstanceSave whatToMoveInFrontOf = ((ToolStripMenuItem)sender).Tag as InstanceSave;
 
-            var element = SelectedState.Self.SelectedElement;
-            var whatToInsert = SelectedState.Self.SelectedInstance;
-            element.Instances.Remove(whatToInsert);
-            int whereToInsert = element.Instances.IndexOf(instance) + 1;
-
-            element.Instances.Insert(whereToInsert, whatToInsert);
-
-            RefreshInResponseToReorder(instance);
-
-            if (ProjectManager.Self.GeneralSettingsFile.AutoSave)
-            {
-                ProjectManager.Self.SaveElement(element);
-            }
+            ReorderLogic.Self.MoveSelectedInstanceInFrontOf(whatToMoveInFrontOf);
         }
 
 

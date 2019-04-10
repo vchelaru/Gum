@@ -165,7 +165,6 @@ namespace Gum.Managers
             return result;
         }
 
-
         private static void AskToDeleteInstances(IEnumerable<InstanceSave> instances)
         {
 
@@ -239,7 +238,6 @@ namespace Gum.Managers
             }
         }
 
-
         private static void RefreshAndSaveAfterInstanceRemoval(ElementSave selectedElement)
         {
             if (ProjectManager.Self.GeneralSettingsFile.AutoSave)
@@ -290,7 +288,6 @@ namespace Gum.Managers
             }
         }
 
-
         private void Remove(StateSaveCategory category)
         {
             var stateCategoryListContainer = 
@@ -323,7 +320,6 @@ namespace Gum.Managers
             WireframeObjectManager.Self.RefreshAll(true);
             SelectionManager.Self.Refresh();
         }
-
 
         public List<BehaviorSave> GetBehaviorsNeedingCategory(StateSaveCategory category, ComponentSave componentSave)
         {

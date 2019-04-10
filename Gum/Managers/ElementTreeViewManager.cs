@@ -1007,56 +1007,9 @@ namespace Gum.Managers
             }
         }
 
-
-
         internal void HandleKeyDown(KeyEventArgs e)
         {
-            HandleCopyCutPaste(e);
-            HandleDelete(e);
-
-            if (e.KeyCode == Keys.Up || e.KeyCode == Keys.Down)
-            {
-                ElementTreeViewManager.Self.OnSelect(ElementTreeViewManager.Self.SelectedNode);
-            }
-        }
-
-        public void HandleDelete(KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.Delete)
-            {
-                DeleteLogic.Self.HandleDelete();
-
-                e.Handled = true;
-                e.SuppressKeyPress = true;
-            }
-        }
-
-        public void HandleCopyCutPaste(KeyEventArgs e)
-        {
-            if ((e.Modifiers & Keys.Control) == Keys.Control)
-            {
-                // copy, ctrl c, ctrl + c
-                if (e.KeyCode == Keys.C)
-                {
-                    EditingManager.Self.OnCopy(CopyType.InstanceOrElement);
-                    e.Handled = true;
-                    e.SuppressKeyPress = true;
-                }
-                // paste, ctrl v, ctrl + v
-                else if (e.KeyCode == Keys.V)
-                {
-                    EditingManager.Self.OnPaste(CopyType.InstanceOrElement);
-                    e.Handled = true;
-                    e.SuppressKeyPress = true;
-                }
-                // cut, ctrl x, ctrl + x
-                else if (e.KeyCode == Keys.X)
-                {
-                    EditingManager.Self.OnCut(CopyType.InstanceOrElement);
-                    e.Handled = true;
-                    e.SuppressKeyPress = true;
-                }
-            }
+            HotkeyManager.Self.HandleKeyDownElementTreeView(e);
         }
 
         #endregion

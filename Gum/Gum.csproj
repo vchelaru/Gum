@@ -157,9 +157,11 @@
       <DependentUpon>DeleteOptionsWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Logic\FileWatch\FileWatchLogic.cs" />
+    <Compile Include="Logic\ReorderLogic.cs" />
     <Compile Include="Managers\DeleteLogic.cs" />
     <Compile Include="Managers\FileChangeReactionLogic.cs" />
     <Compile Include="Logic\FileWatch\FileWatchManager.cs" />
+    <Compile Include="Managers\HotkeyManager.cs" />
     <Compile Include="Plugins\CirclePlugin\MainCirclePlugin.cs" />
     <Compile Include="Plugins\Errors\AllErrorsViewModel.cs" />
     <Compile Include="Plugins\Errors\ErrorChecker.cs" />

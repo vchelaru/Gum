@@ -72,7 +72,7 @@ namespace Gum.Controls
         // in and selects the node above/below the selected node
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
-            bool isHandled = StateTreeViewManager.Self.TryHandleCmdKey(keyData);
+            bool isHandled = HotkeyManager.Self.TryHandleCmdKeyStateView(keyData);
 
 
             if (isHandled)
@@ -97,7 +97,7 @@ namespace Gum.Controls
 
         private void StateTreeView_KeyDown(object sender, KeyEventArgs e)
         {
-            StateTreeViewManager.Self.HandleKeyDown(e);
+            HotkeyManager.Self.HandleKeyDownStateView(e);
         }
 
     }

@@ -95,22 +95,12 @@ namespace Gum.Wireframe
 
         void OnKeyDown(object sender, KeyEventArgs e)
         {
-            ElementTreeViewManager.Self.HandleCopyCutPaste(e);
-            ElementTreeViewManager.Self.HandleDelete(e);
-
-            // I think this is handled in ProcessCmdKey
-            //HandleNudge(e);
-        }
-
-        void OnKeyPress(object sender, KeyPressEventArgs e)
-        {
+            HotkeyManager.Self.HandleKeyDownWireframe(e);
         }
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
-            bool handled = false;
-
-            handled = HandleNudge(keyData);
+            bool handled = HotkeyManager.Self.ProcessCmdKeyWireframe(ref msg, keyData);
 
             if (handled)
             {
@@ -121,66 +111,7 @@ namespace Gum.Wireframe
                 return base.ProcessCmdKey(ref msg, keyData);
             }
         }
-        //protected override bool ProcessKeyEventArgs(ref Message m, Keys keyData)
-        //{
-        //    if (keyData == Keys.Left)
-        //    {
-        //        Console.WriteLine("left");
-        //        return true;
-        //    }
-        //    // etc..
-        //    return base.ProcessCmdKey(ref msg, keyData);
-        //}
 
-        private bool HandleNudge(Keys keyData)
-        {
-            bool handled = false;
-
-            int nudgeX = 0;
-            int nudgeY = 0;
-
-            Keys extracted = keyData;
-            if (keyData >= Keys.KeyCode)
-            {
-                int value = (int)(keyData) + (int)Keys.Modifiers;
-
-                extracted = (Keys)value;
-            }
-
-
-            if (extracted == Keys.Up)
-            {
-                nudgeY = -1;
-            }
-            if (extracted == Keys.Down)
-            {
-                nudgeY = 1;
-            }
-            if (extracted == Keys.Right)
-            {
-                nudgeX = 1;
-            }
-            if (extracted == Keys.Left)
-            {
-                nudgeX = -1;
-            }
-
-            bool shiftDown = (keyData & Keys.Shift) == Keys.Shift;
-            if (shiftDown)
-            {
-                nudgeX *= 5;
-                nudgeY *= 5;
-            }
-
-            if (nudgeX != 0 || nudgeY != 0)
-            {
-                EditingManager.Self.MoveSelectedObjectsBy(nudgeX, nudgeY);
-                handled = true;
-
-                GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
-            }
-            return handled;
-        }     
 
         #endregion
 
@@ -219,7 +150,6 @@ namespace Gum.Wireframe
                 ShapeManager.Self.Add(mScreenBounds, SelectionManager.Self.UiLayer);              
 
                 this.KeyDown += OnKeyDown;
-                this.KeyPress += OnKeyPress;
                 this.MouseDown += CameraController.Self.HandleMouseDown;
                 this.MouseMove += CameraController.Self.HandleMouseMove;
                 this.MouseWheel += CameraController.Self.HandleMouseWheel;

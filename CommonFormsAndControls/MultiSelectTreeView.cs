@@ -430,6 +430,9 @@ namespace CommonFormsAndControls
                 // Nothing is still selected in the tree, this isn't a good state, leave.
                 if (mSelectedNode == null) return;
 
+                var isAltDown = (e.Modifiers & Keys.Alt) == Keys.Alt;
+                var isControlDown = (e.Modifiers & Keys.Control) == Keys.Control;
+
                 if (e.KeyCode == Keys.Left)
                 {
                     if (mSelectedNode.IsExpanded && mSelectedNode.Nodes.Count > 0)
@@ -456,26 +459,20 @@ namespace CommonFormsAndControls
                         SelectSingleNode(mSelectedNode.FirstNode);
                     }
                 }
-                else if (e.KeyCode == Keys.Up)
+                else if (e.KeyCode == Keys.Up && !isAltDown && !isControlDown)
                 {
-                    if (ModifierKeys != Keys.Control)
+                    // Select the previous node
+                    if (mSelectedNode.PrevVisibleNode != null)
                     {
-                        // Select the previous node
-                        if (mSelectedNode.PrevVisibleNode != null)
-                        {
-                            ReactToClickedNode(mSelectedNode.PrevVisibleNode);
-                        }
+                        ReactToClickedNode(mSelectedNode.PrevVisibleNode);
                     }
                 }
-                else if (e.KeyCode == Keys.Down)
+                else if (e.KeyCode == Keys.Down && !isAltDown && !isControlDown)
                 {
-                    if (ModifierKeys != Keys.Control)
+                    // Select the next node
+                    if (mSelectedNode.NextVisibleNode != null)
                     {
-                        // Select the next node
-                        if (mSelectedNode.NextVisibleNode != null)
-                        {
-                            ReactToClickedNode(mSelectedNode.NextVisibleNode);
-                        }
+                        ReactToClickedNode(mSelectedNode.NextVisibleNode);
                     }
                 }
                 else if (e.KeyCode == Keys.Home)

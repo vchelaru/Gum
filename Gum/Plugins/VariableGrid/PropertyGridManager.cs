@@ -733,10 +733,15 @@ namespace Gum.Managers
             state.SetValue(greenVariableName, (int)color.G, "int");
             state.SetValue(blueVariableName, (int)color.B, "int");
 
+            // Only need to refresh on one of the colors, so do it on any that have changed:
+            var refreshRed = oldColor.R != color.R;
+            var refreshGreen = !refreshRed && oldColor.G != color.G;
+            var refreshBlue = !refreshRed && !refreshGreen && oldColor.B != color.B;
+
             // These functions take unqualified:
-            SetVariableLogic.Self.PropertyValueChanged("Red", (int)oldColor.R, false );
-            SetVariableLogic.Self.PropertyValueChanged("Green", (int)oldColor.G, false );
-            SetVariableLogic.Self.PropertyValueChanged("Blue", (int)oldColor.B, true);
+            SetVariableLogic.Self.PropertyValueChanged("Red", (int)oldColor.R, refreshRed);
+            SetVariableLogic.Self.PropertyValueChanged("Green", (int)oldColor.G, refreshGreen );
+            SetVariableLogic.Self.PropertyValueChanged("Blue", (int)oldColor.B, refreshBlue);
 
             RefreshUI();
         }

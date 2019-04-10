@@ -429,69 +429,6 @@ namespace Gum.Managers
             }
         }
 
-        internal bool TryHandleCmdKey(Keys keyData)
-        {
-
-            switch (keyData)
-            {
-                // CTRL+F, control f, search focus, ctrl f, ctrl + f
-                case Keys.Alt | Keys.Up:
-
-                    MoveStateInDirection(-1);
-                    return true;
-
-                case Keys.Alt | Keys.Down:
-                    var stateSave = ProjectState.Self.Selected.SelectedStateSave;
-                    bool isDefault = stateSave != null &&
-                        stateSave == ProjectState.Self.Selected.SelectedElement.DefaultState;
-
-                    if(!isDefault)
-                    {
-                        MoveStateInDirection(1);
-                    }
-                    return true;
-                //case Keys.Alt | Keys.Shift | Keys.Down:
-                //    return RightClickHelper.MoveToBottom();
-                //case Keys.Alt | Keys.Shift | Keys.Up:
-                //    return RightClickHelper.MoveToTop();
-                default:
-                    return false;
-            }
-
-        }
-
-        internal void HandleKeyDown(KeyEventArgs e)
-        {
-            HandleCopyCutPaste(e);
-        }
-
-        private void HandleCopyCutPaste(KeyEventArgs e)
-        {
-            if ((e.Modifiers & Keys.Control) == Keys.Control)
-            {
-                // copy, ctrl c, ctrl + c
-                if (e.KeyCode == Keys.C)
-                {
-                    EditingManager.Self.OnCopy(CopyType.State);
-                    e.Handled = true;
-                    e.SuppressKeyPress = true;
-                }
-                // paste, ctrl v, ctrl + v
-                else if (e.KeyCode == Keys.V)
-                {
-                    EditingManager.Self.OnPaste(CopyType.State);
-                    e.Handled = true;
-                    e.SuppressKeyPress = true;
-                }
-                //// cut, ctrl x, ctrl + x
-                //else if (e.KeyCode == Keys.X)
-                //{
-                //    EditingManager.Self.OnCut(CopyType.Instance);
-                //    e.Handled = true;
-                //    e.SuppressKeyPress = true;
-                //}
-            }
-        }
     }
 
 
