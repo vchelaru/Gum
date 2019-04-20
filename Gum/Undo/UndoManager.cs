@@ -16,24 +16,18 @@ namespace Gum.Undo
     {
         #region Fields
 
-        Dictionary<ElementSave, Stack<ElementSave>> mUndos = new Dictionary<ElementSave, Stack<ElementSave>>();
+        bool isRecordingUndos = true;
+
+        Dictionary<ElementSave, Stack<UndoSnapshot>> mUndos = new Dictionary<ElementSave, Stack<UndoSnapshot>>();
 
         static UndoManager mSelf;
 
-        ElementSave mRecordedElementSave;
-
-        public event EventHandler UndosChanged;
-
-        //StateSave mRecordedStateSave;
-        //List<InstanceSave> mRecordedInstanceList;
-
-        #endregion
-
-        public IEnumerable<ElementSave> CurrentUndoStack
+        UndoSnapshot recordedSnapshot;
+        public IEnumerable<UndoSnapshot> CurrentUndoStack
         {
             get
             {
-                Stack<ElementSave> stack = null;
+                Stack<UndoSnapshot> stack = null;
 
                 if (SelectedState.Self.SelectedElement != null && mUndos.ContainsKey(SelectedState.Self.SelectedElement))
                 {
@@ -43,6 +37,14 @@ namespace Gum.Undo
                 return stack;
             }
         }
+
+        public event EventHandler UndosChanged;
+
+        //StateSave mRecordedStateSave;
+        //List<InstanceSave> mRecordedInstanceList;
+
+        #endregion
+
 
         public static UndoManager Self
         {
@@ -58,28 +60,37 @@ namespace Gum.Undo
 
         /// <summary>
         /// Records the current state, which serves as the "restore point" when an undo occurs. This state will be compared
-        /// with the RecordUndo call to see if any changes should be made.
+        /// with the current state in the RecordUndo call to see if any changes should be made.
         /// </summary>
         public void RecordState()
         {
 
-            mRecordedElementSave = null;
+            recordedSnapshot = null;
             
 
             if (SelectedState.Self.SelectedElement != null)
             {
                 if (SelectedState.Self.SelectedComponent != null)
                 {
-                    mRecordedElementSave = FileManager.CloneSaveObject(SelectedState.Self.SelectedComponent);
+                    recordedSnapshot = new UndoSnapshot();
+                    recordedSnapshot.Element = FileManager.CloneSaveObject(SelectedState.Self.SelectedComponent);
                 }
                 else if (SelectedState.Self.SelectedScreen != null)
                 {
-                    mRecordedElementSave = FileManager.CloneSaveObject(SelectedState.Self.SelectedScreen);
+                    recordedSnapshot = new UndoSnapshot();
+                    recordedSnapshot.Element = FileManager.CloneSaveObject(SelectedState.Self.SelectedScreen);
                 }
                 else if (SelectedState.Self.SelectedStandardElement != null)
                 {
-                    mRecordedElementSave = FileManager.CloneSaveObject(SelectedState.Self.SelectedStandardElement);
+                    recordedSnapshot = new UndoSnapshot();
+                    recordedSnapshot.Element = FileManager.CloneSaveObject(SelectedState.Self.SelectedStandardElement);
                 }
+            }
+
+            if(recordedSnapshot != null)
+            {
+                recordedSnapshot.StateName = SelectedState.Self.SelectedStateSave?.Name;
+                recordedSnapshot.CategoryName = SelectedState.Self.SelectedStateCategorySave?.Name;
             }
 
             //PrintStatus("RecordState");
@@ -91,51 +102,72 @@ namespace Gum.Undo
         /// </summary>
         public void RecordUndo()
         {
-            if (mRecordedElementSave != null && SelectedState.Self.SelectedElement != null)
+            if (recordedSnapshot != null && SelectedState.Self.SelectedElement != null && isRecordingUndos)
             {
                 StateSave currentStateSave = SelectedState.Self.SelectedStateSave;
+                var currentCategory = SelectedState.Self.SelectedStateCategorySave;
                 ElementSave selectedElement = SelectedState.Self.SelectedElement;
 
+                StateSave stateToCompareAgainst = null;
 
-                bool doStatesDiffer = FileManager.AreSaveObjectsEqual(mRecordedElementSave.DefaultState, currentStateSave) == false;
+                if(currentCategory != null)
+                {
+                    var category = recordedSnapshot.Element.Categories.Find(item => item.Name == currentCategory.Name);
+                    stateToCompareAgainst = category?.States.Find(item => item.Name == currentStateSave.Name);
+                }
+                else
+                {
+                    var stateName = currentStateSave.Name;
+                    stateToCompareAgainst = recordedSnapshot.Element.States.Find(item => item.Name == stateName);
+                }
+
+
+
+                bool doStatesDiffer = FileManager.AreSaveObjectsEqual(stateToCompareAgainst, currentStateSave) == false;
                 bool doStateCategoriesDiffer =
-                    FileManager.AreSaveObjectsEqual(mRecordedElementSave.Categories, selectedElement.Categories) == false;
-                bool doInstanceListsDiffer = FileManager.AreSaveObjectsEqual(mRecordedElementSave.Instances, selectedElement.Instances) == false;
-                bool doTypesDiffer = mRecordedElementSave.BaseType != selectedElement.BaseType;
-                bool doNamesDiffer = mRecordedElementSave.Name != selectedElement.Name;
+                    FileManager.AreSaveObjectsEqual(recordedSnapshot.Element.Categories, selectedElement.Categories) == false;
+                bool doInstanceListsDiffer = FileManager.AreSaveObjectsEqual(recordedSnapshot.Element.Instances, selectedElement.Instances) == false;
+                bool doTypesDiffer = recordedSnapshot.Element.BaseType != selectedElement.BaseType;
+                bool doNamesDiffer = recordedSnapshot.Element.Name != selectedElement.Name;
 
-                bool didAnythingChange = doStatesDiffer || doStateCategoriesDiffer || doInstanceListsDiffer || doTypesDiffer || doNamesDiffer;
+                bool doesSelectedStateDiffer = recordedSnapshot.CategoryName != currentCategory?.Name ||
+                    recordedSnapshot.StateName != currentStateSave?.Name;
+
+                // todo : need to add behavior differences
+
+
+                bool didAnythingChange = doStatesDiffer || doStateCategoriesDiffer || doInstanceListsDiffer || doTypesDiffer || doNamesDiffer || doesSelectedStateDiffer;
                 if (didAnythingChange)
                 {
                     if (mUndos.ContainsKey(SelectedState.Self.SelectedElement) == false)
                     {
-                        mUndos.Add(SelectedState.Self.SelectedElement, new Stack<ElementSave>());
+                        mUndos.Add(SelectedState.Self.SelectedElement, new Stack<UndoSnapshot>());
                     }
 
                     if (!doInstanceListsDiffer)
                     {
-                        mRecordedElementSave.Instances = null;
+                        recordedSnapshot.Element.Instances = null;
                     }
                     if (!doStatesDiffer)
                     {
-                        mRecordedElementSave.States = null;
+                        recordedSnapshot.Element.States = null;
                     }
                     if (!doStateCategoriesDiffer)
                     {
-                        mRecordedElementSave.Categories = null;
+                        recordedSnapshot.Element.Categories = null;
                     }
                     if (!doNamesDiffer)
                     {
-                        mRecordedElementSave.Name = null;
+                        recordedSnapshot.Element.Name = null;
                     }
                     if (!doTypesDiffer)
                     {
-                        mRecordedElementSave.BaseType = null;
+                        recordedSnapshot.Element.BaseType = null;
                     }
 
-                    Stack<ElementSave> stack = mUndos[SelectedState.Self.SelectedElement] ;
+                    Stack<UndoSnapshot> stack = mUndos[SelectedState.Self.SelectedElement] ;
 
-                    stack.Push(mRecordedElementSave);
+                    stack.Push(recordedSnapshot);
                     RecordState();
 
                     UndosChanged?.Invoke(this, null);
@@ -149,7 +181,7 @@ namespace Gum.Undo
 
         public void PerformUndo()
         {
-            Stack<ElementSave> stack = null;
+            Stack<UndoSnapshot> stack = null;
 
             if (SelectedState.Self.SelectedElement != null && mUndos.ContainsKey(SelectedState.Self.SelectedElement))
             {
@@ -160,32 +192,77 @@ namespace Gum.Undo
             {
                 ElementSave lastSelectedElementSave = SelectedState.Self.SelectedElement;
 
-                ElementSave undoObject = stack.Pop();
+                var undoSnapshot = stack.Pop();
+                var elementToUndo = undoSnapshot.Element;
 
                 ElementSave toApplyTo = SelectedState.Self.SelectedElement;
 
                 bool shouldRefreshWireframe = false;
 
-                if (undoObject.DefaultState != null)
+                if (elementToUndo.States != null)
                 {
-                    Apply(undoObject.DefaultState, toApplyTo.DefaultState, toApplyTo);
+                    foreach(var state in elementToUndo.States)
+                    {
+                        var matchingState = toApplyTo.States.Find(item => item.Name == state.Name);
+                        if(matchingState != null)
+                        {
+                            Apply(state, matchingState, toApplyTo);
+                        }
+                    }
+
                 }
-                if (undoObject.Instances != null)
+
+                if(elementToUndo.Categories != null)
                 {
-                    Apply(undoObject.Instances, toApplyTo.Instances, toApplyTo);
+                    foreach(var category in elementToUndo.Categories)
+                    {
+                        foreach(var state in category.States)
+                        {
+                            var matchingCategory = toApplyTo.Categories.Find(item => item.Name == category.Name);
+                            var matchingState = matchingCategory?.States.Find(item => item.Name == state.Name);
+                            if(matchingState != null)
+                            {
+                                Apply(state, matchingState, toApplyTo);
+                            }
+                        }
+                    }
+                }
+                if (elementToUndo.Instances != null)
+                {
+                    Apply(elementToUndo.Instances, toApplyTo.Instances, toApplyTo);
                     shouldRefreshWireframe = true;
                 }
-                if (undoObject.Name != null)
+                if (elementToUndo.Name != null)
                 {
                     string oldName = toApplyTo.Name;
-                    toApplyTo.Name = undoObject.Name;
+                    toApplyTo.Name = elementToUndo.Name;
                     RenameManager.Self.HandleRename(toApplyTo, (InstanceSave)null, oldName, NameChangeAction.Rename, askAboutRename:false);
                 }
+
+                if(undoSnapshot.CategoryName != SelectedState.Self.SelectedStateCategorySave?.Name ||
+                    undoSnapshot.StateName != SelectedState.Self.SelectedStateSave?.Name)
+                {
+                    var listOfStates = lastSelectedElementSave.States;
+                    if(!string.IsNullOrEmpty( undoSnapshot.CategoryName ))
+                    {
+                        listOfStates = lastSelectedElementSave.Categories
+                            .FirstOrDefault(item => item.Name == undoSnapshot.CategoryName)?.States;
+                    }
+
+                    var state = listOfStates?.FirstOrDefault(item => item.Name == undoSnapshot.StateName);
+
+                    isRecordingUndos = false;
+                    SelectedState.Self.SelectedStateSave = state;
+
+                    isRecordingUndos = true;
+
+                }
+
                 //if (undoObject.BaseType != null)
                 //{
                 //    string oldBaseType = toApplyTo.BaseType;
                 //    toApplyTo.BaseType = undoObject.BaseType;
-                    
+
                 //    toApplyTo.ReactToChangedBaseType(null, oldBaseType);
                 //}
 
@@ -279,7 +356,7 @@ namespace Gum.Undo
 
         void PrintStatus(string reason)
         {
-            Stack<ElementSave> stack = null;
+            Stack<UndoSnapshot> stack = null;
 
             if (SelectedState.Self.SelectedElement != null)
             {

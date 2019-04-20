@@ -321,9 +321,9 @@
     <Compile Include="ToolStates\SelectedState.cs" />
     <Compile Include="ToolStates\StateStackingMode.cs" />
     <Compile Include="Undo\UndoManager.cs" />
-    <Compile Include="Undo\StateSaveMemento.cs" />
     <Compile Include="Undo\UndoObject.cs" />
     <Compile Include="Undo\UndoPlugin.cs" />
+    <Compile Include="Undo\UndoSnapshot.cs" />
     <Compile Include="Wireframe\CameraController.cs" />
     <Compile Include="Wireframe\EditingManager.cs" />
     <Compile Include="Wireframe\EditingManager.RightClick.cs" />

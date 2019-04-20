@@ -8,6 +8,7 @@ using Gum.DataTypes.Variables;
 using System.Windows.Forms;
 using Gum.ToolStates;
 using Gum.Wireframe;
+using Gum.Undo;
 
 namespace Gum.Managers
 {
@@ -139,6 +140,7 @@ namespace Gum.Managers
 
             Select(treeNode);
 
+            UndoManager.Self.RecordUndo();
         }
 
         public void Select(StateSaveCategory stateSaveCategory)
@@ -158,6 +160,7 @@ namespace Gum.Managers
                 {
                     treeNode.EnsureVisible();
                 }
+
             }
         }
 
