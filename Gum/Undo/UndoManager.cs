@@ -102,7 +102,8 @@ namespace Gum.Undo
         /// </summary>
         public void RecordUndo()
         {
-            if (recordedSnapshot != null && SelectedState.Self.SelectedElement != null && isRecordingUndos)
+            if (recordedSnapshot != null && SelectedState.Self.SelectedElement != null && isRecordingUndos &&
+                SelectedState.Self.SelectedStateSave != null)
             {
                 StateSave currentStateSave = SelectedState.Self.SelectedStateSave;
                 var currentCategory = SelectedState.Self.SelectedStateCategorySave;

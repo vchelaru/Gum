@@ -485,20 +485,42 @@ namespace Gum.Wireframe
         {
             mMoveInFrontOf.DropDownItems.Clear();
 
+            var selectedInstance = SelectedState.Self.SelectedInstance;
+            var selectedElement = SelectedState.Self.SelectedElement;
+
+            var selectedParent = GetParentNameFor(selectedInstance, selectedElement);
+
+
             foreach (var instance in SelectedState.Self.SelectedElement.Instances)
             {
-                var selectedInstance = SelectedState.Self.SelectedInstance;
                 // Ignore the current instance
                 if (instance != selectedInstance)
                 {
                     ToolStripMenuItem item = new ToolStripMenuItem(instance.Name);
+                    var hasSameParent = GetParentNameFor(instance, selectedElement) == selectedParent;
 
-                    item.Tag = instance;
-                    mMoveInFrontOf.DropDownItems.Add(item);
+                    // for move in front of, we only want to allow the selected instance to be moved in front of its siblings.
+                    // This menu item cannot be used to move to a different parent.
+                    if(hasSameParent)
+                    {
+                        item.Tag = instance;
+                        mMoveInFrontOf.DropDownItems.Add(item);
 
-                    item.Click += HandleMoveInFrontOfClick;
+                        item.Click += HandleMoveInFrontOfClick;
+                    }
                 }
             }
+        }
+
+        private string GetParentNameFor(InstanceSave instance, ElementSave owner)
+        {
+            var variableName = instance.Name + ".Parent";
+
+            var state = owner.DefaultState;
+
+            var parentVariable = state.Variables.Find(item => item.Name == variableName);
+
+            return (string)parentVariable?.Value;
         }
 
         private void HandleMoveInFrontOfClick(object sender, EventArgs e)

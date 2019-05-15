@@ -329,9 +329,11 @@ namespace Gum.PropertyGridHelpers
 
                     if (!string.IsNullOrEmpty(value))
                     {
+                        var fullValue = new FilePath(ProjectState.Self.ProjectDirectory + value);
+
                         // See if this is relative to the project
                         var isRelativeToProject = FileManager.IsRelativeTo(
-                            value,
+                            fullValue.FullPath,
                             ProjectState.Self.ProjectDirectory);
 
                         if (!isRelativeToProject)

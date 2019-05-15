@@ -114,7 +114,27 @@ namespace WpfDataUi.Controls
 
             CheckBox.Foreground = DesiredForegroundBrush;
 
+            RefreshIsEnabled();
+
+
             SuppressSettingProperty = false;
+        }
+
+        private void RefreshIsEnabled()
+        {
+            //if (lastApplyValueResult == ApplyValueResult.NotSupported)
+            //{
+            //    this.IsEnabled = false;
+            //}
+            //else 
+            if (InstanceMember?.IsReadOnly == true)
+            {
+                this.IsEnabled = false;
+            }
+            else
+            {
+                this.IsEnabled = true;
+            }
         }
 
         public ApplyValueResult TrySetValueOnUi(object valueOnInstance)
