@@ -139,5 +139,7 @@ using System.Runtime.InteropServices;
 // 0.9.8
 //  - Added ALT + reorder
 //  - Fixed bug with changing color not updating the visual window if the Blue value was the same
-[assembly: AssemblyVersion("0.9.8.0")]
-[assembly: AssemblyFileVersion("0.9.8.0")]
+// 0.9.9
+//  - Fixed bug where variables changed through anchor and dock not propagating.
+[assembly: AssemblyVersion("0.9.9.0")]
+[assembly: AssemblyFileVersion("0.9.9.0")]
