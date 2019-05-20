@@ -1,6 +1,7 @@
 ﻿using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
+using Gum.PropertyGridHelpers;
 using Gum.ToolStates;
 using System;
 using System.Collections.Generic;
@@ -163,49 +164,55 @@ namespace Gum.Plugins.AlignmentButtons
 
         private void SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment alignment, PositionUnitType xUnits)
         {
-            var state = CurrentState;
-            string prefix = GetVariablePrefix();
-
-            state.SetValue(prefix + "X", 0.0f, "float");
-            state.SetValue(prefix + "X Origin",
+            SetAndCallReact("X", 0.0f, "float");
+            SetAndCallReact("X Origin",
                 alignment, "HorizontalAlignment");
-            state.SetValue(prefix + "X Units",
+            SetAndCallReact("X Units",
                xUnits, typeof(Gum.Managers.PositionUnitType).Name);
 
             if (SelectedState.Self.SelectedInstance?.BaseType == "Text")
             {
-                state.SetValue(prefix + "HorizontalAlignment", alignment, "HorizontalAlignment");
+                SetAndCallReact("HorizontalAlignment", alignment, "HorizontalAlignment");
             }
-
         }
 
-        private static string GetVariablePrefix()
-        {
-            string prefix = "";
-            var instance = SelectedState.Self.SelectedInstance;
-            if (instance != null)
-            {
-                prefix = instance.Name + ".";
-            }
-            return prefix;
-        }
 
         private void SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment alignment, PositionUnitType yUnits)
         {
             var state = CurrentState;
-            string prefix = GetVariablePrefix();
 
-            state.SetValue(prefix + "Y", 0.0f, "float");
-            state.SetValue(prefix + "Y Origin",
+            SetAndCallReact("Y", 0.0f, "float");
+            SetAndCallReact("Y Origin",
                 alignment, typeof(global::RenderingLibrary.Graphics.VerticalAlignment).Name);
-            state.SetValue(prefix + "Y Units",
+            SetAndCallReact("Y Units",
                 yUnits, typeof(PositionUnitType).Name);
 
             if (SelectedState.Self.SelectedInstance?.BaseType == "Text")
             {
-                state.SetValue(prefix + "VerticalAlignment", alignment, "VerticalAlignment");
+                SetAndCallReact("VerticalAlignment", alignment, "VerticalAlignment");
             }
 
+        }
+
+        private void SetAndCallReact(string unqualified, object value, string typeName)
+        {
+            var instance = SelectedState.Self.SelectedInstance;
+            string GetVariablePrefix()
+            {
+                string prefixInternal = "";
+                if (instance != null)
+                {
+                    prefixInternal = instance.Name + ".";
+                }
+                return prefixInternal;
+            }
+            var state = SelectedState.Self.SelectedStateSave;
+            string prefix = GetVariablePrefix();
+
+
+            var oldValue = state.GetValue(prefix + unqualified);
+            state.SetValue(prefix + unqualified, value, typeName);
+            SetVariableLogic.Self.ReactToPropertyValueChanged(unqualified, oldValue, SelectedState.Self.SelectedElement, instance, refresh: false);
         }
 
         private static void RefreshAndSave()

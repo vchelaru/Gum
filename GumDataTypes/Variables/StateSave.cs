@@ -128,6 +128,11 @@ namespace Gum.DataTypes.Variables
             }
         }
 
+        /// <summary>
+        /// Attempts to get the value for the argument variableName, or null if not found.
+        /// </summary>
+        /// <param name="variableName">The qualified variable name</param>
+        /// <returns>The value found, or null</returns>
         public object GetValue(string variableName)
         {
             ////////////////////Early Out////////////////

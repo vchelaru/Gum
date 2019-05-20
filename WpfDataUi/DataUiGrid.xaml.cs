@@ -65,8 +65,10 @@ namespace WpfDataUi
         // This is currently a DP, but it doesn't function because the DataContext for this is not the Instance
         // I should consider changing this at some point...
         public static readonly DependencyProperty InstanceProperty =
-            DependencyProperty.Register("Instance", typeof(object), typeof(DataUiGrid), 
-            new PropertyMetadata(null, HandlePropertyChanged));
+            DependencyProperty.Register("Instance", 
+                typeof(object), 
+                typeof(DataUiGrid), 
+                new PropertyMetadata(null, HandlePropertyChanged));
 
         private static void HandlePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
