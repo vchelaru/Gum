@@ -387,7 +387,8 @@ namespace StateAnimationPlugin.ViewModels
                 }
                 if (instance == null)
                 {
-                    subAnimation.SubAnimationViewModel.RefreshCombinedStates(element, false);
+                    // Null check in case the referenced instance was removed
+                    subAnimation.SubAnimationViewModel?.RefreshCombinedStates(element, false);
                 }
                 else
                 {

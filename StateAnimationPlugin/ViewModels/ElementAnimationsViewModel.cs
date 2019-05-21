@@ -176,7 +176,8 @@ namespace StateAnimationPlugin.ViewModels
             {
                 if(SelectedAnimation != null)
                 {
-                    SelectedAnimation.RefreshCombinedStates( SelectedState.Self.SelectedElement );
+                    var selectedElement = SelectedState.Self.SelectedElement;
+                    SelectedAnimation.RefreshCombinedStates(selectedElement);
                 }
 
                 RefreshRightClickMenuItems();
