@@ -1,6 +1,7 @@
 ﻿using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
+using Gum.Logic;
 using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
@@ -108,6 +109,26 @@ namespace Gum.Managers
             if (string.IsNullOrEmpty(whyNotValid))
             {
                 IsNameAlreadyUsed(variableName, null, elementSave, out whyNotValid);
+            }
+
+            if (string.IsNullOrEmpty(whyNotValid))
+            {
+                var existingVariable = elementSave.GetVariableFromThisOrBase(variableName);
+
+                // there's a variable but we shouldn't consider it
+                // unless it's "Active" - inactive variables may be
+                // leftovers from a type change
+
+
+                if(existingVariable != null)
+                {
+                    var isActive = VariableSaveLogic.GetIfVariableIsActive(existingVariable,
+                        elementSave, null);
+                    if(isActive)
+                    {
+                        whyNotValid = $"The variable name {variableName} is already used";
+                    }
+                }
             }
 
             return string.IsNullOrEmpty(whyNotValid);

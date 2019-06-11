@@ -158,6 +158,7 @@
     </Compile>
     <Compile Include="Logic\FileWatch\FileWatchLogic.cs" />
     <Compile Include="Logic\ReorderLogic.cs" />
+    <Compile Include="Logic\VariableSaveLogic.cs" />
     <Compile Include="Managers\DeleteLogic.cs" />
     <Compile Include="Managers\FileChangeReactionLogic.cs" />
     <Compile Include="Logic\FileWatch\FileWatchManager.cs" />

@@ -162,6 +162,14 @@ namespace StateAnimationPlugin.Views
 
         private void AddSubAnimationButton_Click(object sender, RoutedEventArgs e)
         {
+            ////////////// Early Out//////////
+            if(ViewModel.SelectedAnimation == null)
+            {
+                MessageBox.Show("You must first select an animation");
+                return;
+            }
+            /////////// End Early Out/////////
+
             SubAnimationSelectionWindow window = new SubAnimationSelectionWindow();
 
             window.AnimationToExclude = this.ViewModel.SelectedAnimation;
@@ -207,6 +215,14 @@ namespace StateAnimationPlugin.Views
 
         private void AddNamedEventButton_Click(object sender, RoutedEventArgs e)
         {
+            ////////////// Early Out//////////
+            if (ViewModel.SelectedAnimation == null)
+            {
+                MessageBox.Show("You must first select an animation");
+                return;
+            }
+            /////////// End Early Out/////////
+            
             var textInputWindow = new TextInputWindow();
             textInputWindow.Message = "Enter new event name";
             var result = textInputWindow.ShowDialog();

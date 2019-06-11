@@ -125,7 +125,9 @@ namespace Gum.PropertyGridHelpers
                 // save everything
                 GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
                 GumCommands.Self.GuiCommands.RefreshStateTreeView();
-                GumCommands.Self.GuiCommands.RefreshPropertyGrid();
+                // no selection has changed, but we want to force refresh here because we know
+                // we really need a refresh - something was removed.
+                GumCommands.Self.GuiCommands.RefreshPropertyGrid(force:true);
             }
         }
 

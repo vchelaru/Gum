@@ -2,6 +2,7 @@
 using Gum.DataTypes;
 using Gum.DataTypes.ComponentModel;
 using Gum.DataTypes.Variables;
+using Gum.Logic;
 using Gum.Managers;
 using Gum.Reflection;
 using Gum.ToolStates;
@@ -381,6 +382,31 @@ namespace Gum.PropertyGridHelpers
                     }
                     else
                     {
+                        var elementSave = SelectedState.Self.SelectedElement;
+                        // if there is an inactive variable,
+                        // we should get rid of it:
+                        var existingVariable = SelectedState.Self.SelectedElement.GetVariableFromThisOrBase(tiw.Result);
+
+                        // there's a variable but we shouldn't consider it
+                        // unless it's "Active" - inactive variables may be
+                        // leftovers from a type change
+
+
+                        if (existingVariable != null)
+                        {
+                            var isActive = VariableSaveLogic.GetIfVariableIsActive(existingVariable, elementSave, null);
+                            if (isActive == false)
+                            {
+                                // gotta remove the variable:
+                                if(elementSave.DefaultState.Variables.Contains(existingVariable))
+                                {
+                                    // We may need to worry about inheritance...eventually
+                                    elementSave.DefaultState.Variables.Remove(existingVariable);
+                                }
+                            }
+
+                        }
+
                         variableSave.ExposedAsName = tiw.Result;
 
                         GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
