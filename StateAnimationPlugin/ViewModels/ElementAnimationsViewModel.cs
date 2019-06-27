@@ -18,6 +18,7 @@ using CommonFormsAndControls;
 using StateAnimationPlugin.Validation;
 using Gum.Managers;
 using ToolsUtilities;
+using System.Globalization;
 
 namespace StateAnimationPlugin.ViewModels
 {
@@ -202,8 +203,12 @@ namespace StateAnimationPlugin.ViewModels
                 var menuItem = new MenuItem();
                 menuItem.Header = "Rename Animation";
                 menuItem.Click += HandleRenameAnimation;
-
                 AnimationRightClickItems.Add(menuItem);
+
+                var squashStretch = new MenuItem();
+                squashStretch.Header = "Squash/Stretch Frame Times";
+                squashStretch.Click += HandleSquashStretchTimes;
+                AnimationRightClickItems.Add(squashStretch);
             }
 
 
@@ -233,6 +238,48 @@ namespace StateAnimationPlugin.ViewModels
                         SelectedAnimation, 
                         oldAnimationName, Animations, Element);   
                 }
+            }
+        }
+
+        private void HandleSquashStretchTimes(object sender, RoutedEventArgs e)
+        {
+            TextInputWindow tiw = new TextInputWindow();
+            tiw.Message = "Set desired animation length (in seconds):";
+            tiw.Result = SelectedAnimation.Length.ToString(CultureInfo.InvariantCulture);
+
+            var dialogResult = tiw.ShowDialog();
+
+            if (dialogResult == System.Windows.Forms.DialogResult.OK)
+            {
+                float value = 0;
+
+                var didParse = float.TryParse(tiw.Result, out value);
+
+                string errorMessage = null;
+
+                if(!didParse)
+                {
+                    errorMessage = "Please enter a valid number";
+                }
+                if(errorMessage == null && value < 0)
+                {
+                    errorMessage = "Value must be greater than 0";
+                }
+
+                if(errorMessage != null)
+                {
+                    MessageBox.Show(errorMessage);
+                }
+                else if(SelectedAnimation.Length != 0)
+                {
+                    var multiplier = value / SelectedAnimation.Length;
+
+                    foreach(var frame in this.SelectedAnimation.Keyframes.ToArray())
+                    {
+                        frame.Time *= multiplier;
+                    }
+                }
+
             }
         }
 
