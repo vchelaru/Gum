@@ -293,7 +293,10 @@ namespace RenderingLibrary.Graphics
         public Sprite(Texture2D texture)
         {
             this.Visible = true;
-            BlendState = BlendState.NonPremultiplied;
+            // why do we set this? It should be null so that 
+            // the sprite will render using the default blendop, which may differ
+            // depending on whether the game uses premult or standard
+            //BlendState = BlendState.NonPremultiplied;
             mChildren = new ObservableCollection<IRenderableIpso>();
 
             Texture = texture;

@@ -208,7 +208,9 @@ namespace RenderingLibrary.Graphics
                 throw new Exception("Error trying to set scissor rectangle:" + scissorRectangle.ToString());
             }
             beginEndState = SpriteBatchBeginEndState.Began;
-            SpriteBatch.Begin(sortMode, blendState, samplerState, depthStencilState, rasterizerState, effect, transformMatrix);
+            SpriteBatch.Begin(sortMode,
+                blendState,
+                samplerState, depthStencilState, rasterizerState, effect, transformMatrix);
 
         }
 
