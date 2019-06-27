@@ -125,6 +125,8 @@ namespace StateAnimationPlugin.ViewModels
 
         public event PropertyChangedEventHandler AnyChange;
 
+        public event EventHandler SelectedItemPropertyChanged;
+
         #endregion
 
         #region Methods
@@ -247,7 +249,6 @@ namespace StateAnimationPlugin.ViewModels
                 foreach(AnimationViewModel item in eventArgs.NewItems)
                 {
                     item.PropertyChanged += HandleAnimationItemChange;
-                    item.AnyChange += HandleAnimationItemChange;
                 }
             }
 
@@ -257,6 +258,7 @@ namespace StateAnimationPlugin.ViewModels
         private void HandleAnimationItemChange(object sender, PropertyChangedEventArgs e)
         {
             OnAnyChange(sender, e.PropertyName);
+
         }
 
 

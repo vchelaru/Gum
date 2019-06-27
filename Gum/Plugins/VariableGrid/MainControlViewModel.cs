@@ -12,31 +12,22 @@ namespace Gum.Plugins.VariableGrid
 {
     public class MainControlViewModel : ViewModel
     {
-        Visibility hasErrors;
         public Visibility HasErrors
         {
-            get { return hasErrors; }
-            set
-            {
-                base.SetProperty(ref hasErrors, value);
-            }
+            get { return Get<Visibility>(); }
+            set { Set(value); }
         }
 
-        string errorInformation;
         public string ErrorInformation
         {
-            get { return errorInformation; }
-            set
-            {
-                base.SetProperty(ref errorInformation, value);
-            }
+            get { return Get<string>(); }
+            set { Set(value); }
         }
 
-        Visibility showBehaviorUi = Visibility.Collapsed;
         public Visibility ShowBehaviorUi
         {
-            get { return showBehaviorUi; }
-            set { base.SetProperty(ref showBehaviorUi, value); }
+            get { return Get<Visibility>(); }
+            set { Set(value); }
         }
 
         public ObservableCollection<VariableSave> BehaviorVariables
@@ -45,18 +36,16 @@ namespace Gum.Plugins.VariableGrid
             private set;
         } = new ObservableCollection<VariableSave>();
 
-        Visibility showVariableGrid = Visibility.Collapsed;
         public Visibility ShowVariableGrid
         {
-            get { return showVariableGrid; }
-            set { base.SetProperty(ref showVariableGrid, value); }
+            get { return Get<Visibility>(); }
+            set { Set(value); }
         }
 
-        VariableSave selectedBehaviorVariable;
         public VariableSave SelectedBehaviorVariable
         {
-            get { return selectedBehaviorVariable; }
-            set { base.SetProperty(ref selectedBehaviorVariable, value); }
+            get { return Get<VariableSave>(); }
+            set { Set(value); }
         }
 
         public VariableSave EffectiveSelectedBehaviorVariable

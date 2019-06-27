@@ -9,6 +9,7 @@ using System.Windows.Forms;
 using Gum.ToolStates;
 using Gum.Wireframe;
 using Gum.Undo;
+using Gum.Plugins;
 
 namespace Gum.Managers
 {
@@ -132,6 +133,8 @@ namespace Gum.Managers
             SelectedState.Self.UpdateToSelectedStateSave();
             // refreshes the yellow highlights
             StateTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedStateContainer);
+
+            PluginManager.Self.StateWindowTreeNodeSelected(treeNode);
         }
 
         public void Select(StateSave stateSave)

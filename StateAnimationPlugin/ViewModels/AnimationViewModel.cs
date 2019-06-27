@@ -1,6 +1,7 @@
 ﻿using FlatRedBall.Glue.StateInterpolation;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
+using Gum.Mvvm;
 using Gum.Wireframe;
 using StateAnimationPlugin.Managers;
 using StateAnimationPlugin.SaveClasses;
@@ -16,11 +17,9 @@ using System.Windows.Media.Imaging;
 
 namespace StateAnimationPlugin.ViewModels
 {
-    public class AnimationViewModel : INotifyPropertyChanged
+    public class AnimationViewModel : ViewModel, INotifyPropertyChanged
     {
         #region Fields
-
-        string mName;
 
         AnimatedKeyframeViewModel mSelectedState;
 
@@ -37,12 +36,8 @@ namespace StateAnimationPlugin.ViewModels
 
         public string Name 
         { 
-            get { return mName; }
-            set 
-            { 
-                mName = value;
-                OnPropertyChanged("Name");
-            }
+            get { return Get<string>(); }
+            set { Set(value); }
         }
 
         public float Length 
@@ -98,8 +93,8 @@ namespace StateAnimationPlugin.ViewModels
             {
                 mSelectedState = value;
 
-                OnPropertyChanged("SelectedKeyframe");
-                OnPropertyChanged("HasSelectedKeyframeVisibility");
+                NotifyPropertyChanged("SelectedKeyframe");
+                NotifyPropertyChanged("HasSelectedKeyframeVisibility");
             }
         }
 
@@ -108,14 +103,6 @@ namespace StateAnimationPlugin.ViewModels
             get;
             set;
         }
-
-        #endregion
-
-        #region Events
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        public event PropertyChangedEventHandler AnyChange;
 
         #endregion
 
@@ -247,20 +234,11 @@ namespace StateAnimationPlugin.ViewModels
                 }
             }
 
-            OnPropertyChanged("Length");
-            OnPropertyChanged("MarkerTimes");
+            NotifyPropertyChanged("Length");
+            NotifyPropertyChanged("MarkerTimes");
 
-            OnAnyChange(this, "States");
+            NotifyPropertyChanged("States");
             
-        }
-
-        private void OnAnyChange(object sender, string property)
-        {
-            if (AnyChange != null)
-            {
-                AnyChange(sender, new PropertyChangedEventArgs(property));
-            }
-
         }
 
         private void HandleAnimatedStatePropertyChange(object sender, PropertyChangedEventArgs e)
@@ -270,32 +248,17 @@ namespace StateAnimationPlugin.ViewModels
             {
                 SortList();
 
-                OnPropertyChanged("Length");
-                OnPropertyChanged("MarkerTimes");
+                NotifyPropertyChanged("Length");
+                NotifyPropertyChanged("MarkerTimes");
 
             }
 
-            OnAnyChange(sender, e.PropertyName);
+            NotifyPropertyChanged(e.PropertyName);
         }
 
         public override string ToString()
         {
             return Name + " (" + Length.ToString("0.00") + ")";
-        }
-
-        private void OnPropertyChanged(string propertyName)
-        {
-
-
-            if(PropertyChanged != null)
-            {
-                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-            }
-
-
-
-            OnAnyChange(this, propertyName);
-
         }
 
         void SortList()
@@ -405,12 +368,9 @@ namespace StateAnimationPlugin.ViewModels
         {
             mLoops = !mLoops;
 
-            OnPropertyChanged("ButtonBitmapFrame");
+            NotifyPropertyChanged("ButtonBitmapFrame");
 
-            if(AnyChange != null)
-            {
-                AnyChange(this, new PropertyChangedEventArgs("Loops"));
-            }
+            NotifyPropertyChanged("Loops");
         }
 
         public void SetStateAtTime(double animationTime, ElementSave element, bool defaultIfNull)

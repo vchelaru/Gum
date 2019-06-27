@@ -18,11 +18,10 @@ namespace Gum.Plugins.Behaviors
         public ObservableCollection<CheckListBehaviorItem> AllBehaviors { get; set; } = new ObservableCollection<CheckListBehaviorItem>();
         //public ObservableCollection<string> AllBehaviors { get; set; } = new ObservableCollection<string>();
 
-        bool isEditing;
         public bool IsEditing
         {
-            get { return isEditing; }
-            set { base.SetProperty(ref isEditing, value); }
+            get { return Get<bool>(); }
+            set { Set(value); }
         }
 
         [DependsOn(nameof(IsEditing))]

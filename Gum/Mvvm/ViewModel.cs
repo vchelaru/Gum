@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -23,23 +24,45 @@ namespace Gum.Mvvm
 
     public class ViewModel : INotifyPropertyChanged
     {
-        /// <summary>
-        /// The action to execute if the Validate() response returns true.
-        /// </summary>
-        public Action AfterSuccessfulValidation;
-
         Dictionary<string, List<string>> notifyRelationships = new Dictionary<string, List<string>>();
+        private Dictionary<string, object> propertyDictionary = new Dictionary<string, object>();
 
-        /// <summary>
-        /// Occurs when property is changed.
-        /// </summary>
-        public event PropertyChangedEventHandler PropertyChanged;
+        protected T Get<T>([CallerMemberName]string propertyName = null)
+        {
+            T toReturn = default(T);
+
+            if (propertyName != null && propertyDictionary.ContainsKey(propertyName))
+            {
+                toReturn = (T)propertyDictionary[propertyName];
+            }
+
+            return toReturn;
+        }
+
+        protected void Set<T>(T propertyValue, [CallerMemberName]string propertyName = null)
+        {
+            if (propertyDictionary.ContainsKey(propertyName))
+            {
+                var storage = (T)propertyDictionary[propertyName];
+                if (EqualityComparer<T>.Default.Equals(storage, propertyValue) == false)
+                {
+                    propertyDictionary[propertyName] = propertyValue;
+                    NotifyPropertyChanged(propertyName);
+                }
+            }
+            else
+            {
+                propertyDictionary.Add(propertyName, propertyValue);
+                NotifyPropertyChanged(propertyName);
+            }
+        }
+
 
         public ViewModel()
         {
             var derivedType = this.GetType();
 
-            var properties = derivedType.GetProperties(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic);
+            var properties = derivedType.GetRuntimeProperties();
 
             foreach (var property in properties)
             {
@@ -69,15 +92,23 @@ namespace Gum.Mvvm
                     }
                 }
             }
+
+        }
+        protected void ChangeAndNotify<T>(ref T property, T value, [CallerMemberName] string propertyName = null)
+        {
+            if (EqualityComparer<T>.Default.Equals(property, value) == false)
+            {
+                property = value;
+                NotifyPropertyChanged(propertyName);
+            }
         }
 
-        /// <summary>
-        /// Raises the PropertyChanged event.
-        /// </summary>
-        /// <param name="propertyName">The name of the property to raise the PropertyChanged event for.</param>
-        protected virtual void NotifyPropertyChanged([CallerMemberName]string propertyName = null)
+        protected virtual void NotifyPropertyChanged([CallerMemberName] string propertyName = null)
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            if (PropertyChanged != null)
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            }
 
             if (notifyRelationships.ContainsKey(propertyName))
             {
@@ -93,25 +124,7 @@ namespace Gum.Mvvm
 
 
 
-        /// <summary>
-        /// Changes the property if the value is different and raises the PropertyChanged event.
-        /// </summary>
-        /// <typeparam name="T">The 1st type parameter.</typeparam>
-        /// <param name="storage">Reference to current value.</param>
-        /// <param name="value">New value to be set.</param>
-        /// <param name="propertyName">The name of the property to raise the PropertyChanged event for.</param>
-        /// <returns><c>true</c> if new value, <c>false</c> otherwise.</returns>
-        protected bool SetProperty<T>(ref T storage, T value, [CallerMemberName] string propertyName = null)
-        {
-            if (EqualityComparer<T>.Default.Equals(storage, value))
-            {
-                return false;
-            }
-
-            storage = value;
-            this.NotifyPropertyChanged(propertyName);
-            return true;
-        }
+        public event PropertyChangedEventHandler PropertyChanged;
 
     }
 

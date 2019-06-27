@@ -22,9 +22,12 @@
 
         <Label Grid.Row="0" x:Name="NameLabel" Grid.ColumnSpan="2" Content="{Binding DisplayName, FallbackValue=StateName}"></Label>
         <Label Grid.Row="1">Time:</Label>
-        <Label Grid.Row="2" Visibility="{Binding InterpolationElementVisibility}">Interpolation Type:</Label>
-        <Label Grid.Row="3" Visibility="{Binding InterpolationElementVisibility}">In/Out:</Label>
-        <Label Grid.Row="4" Visibility="{Binding HasInvalidStateVisibility, TargetNullValue=Collapsed, FallbackValue=Collapsed}" 
+        <Label Grid.Row="2" 
+               Visibility="{Binding InterpolationElementVisibility}">Interpolation Type:</Label>
+        <Label Grid.Row="3" 
+               Visibility="{Binding InterpolationElementVisibility}">In/Out:</Label>
+        <Label Grid.Row="4" 
+               Visibility="{Binding HasInvalidStateVisibility, TargetNullValue=Collapsed, FallbackValue=Collapsed}" 
                Grid.ColumnSpan="2" Background="Red" x:Name="NotFoundLabel">Could not find state or animation</Label>
 
         <TextBox Grid.Row="1" Grid.Column="1" x:Name="TimeTextBox"

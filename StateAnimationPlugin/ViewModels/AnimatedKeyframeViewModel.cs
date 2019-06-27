@@ -1,5 +1,6 @@
 ﻿using FlatRedBall.Glue.StateInterpolation;
 using Gum.DataTypes.Variables;
+using Gum.Mvvm;
 using StateAnimationPlugin.Managers;
 using StateAnimationPlugin.SaveClasses;
 using System;
@@ -13,20 +14,11 @@ using System.Windows.Media.Imaging;
 
 namespace StateAnimationPlugin.ViewModels
 {
-    public class AnimatedKeyframeViewModel : INotifyPropertyChanged, IComparable
+    public class AnimatedKeyframeViewModel : ViewModel, INotifyPropertyChanged, IComparable
     {
         #region Fields
 
-        string mStateName;
-        string mAnimationName;
-        string mEventName;
         AnimationViewModel mSubAnimationViewModel;
-
-        float mTime;
-
-        InterpolationType mInterpolationType;
-        Easing mEasing;
-
 
         static BitmapFrame mStateBitmap;
         static BitmapFrame mAnimationBitmap;
@@ -37,35 +29,20 @@ namespace StateAnimationPlugin.ViewModels
 
         public string StateName 
         {
-            get { return mStateName; } 
-            set
-            {
-                mStateName = value;
-                OnPropertyChanged("StateName");
-            }
+            get { return Get<string>(); } 
+            set { Set(value); }
         }
 
         public string AnimationName
         {
-            get { return mAnimationName; }
-            set
-            {
-                mAnimationName = value;
-                OnPropertyChanged("AnimationName");
-            }
+            get { return Get<string>(); }
+            set { Set(value); }
         }
 
         public string EventName
         {
-            get
-            {
-                return mEventName;
-            }
-            set
-            {
-                mEventName = value;
-                OnPropertyChanged("mEventName");
-            }
+            get { return Get<string>(); }
+            set { Set(value); }
         }
 
         public AnimationViewModel SubAnimationViewModel
@@ -93,17 +70,11 @@ namespace StateAnimationPlugin.ViewModels
             }
         }
 
+
         public float Time 
         {
-            get { return mTime; }
-            set 
-            { 
-                mTime = value;
-
-                OnPropertyChanged("Time");
-                OnPropertyChanged("DisplayString");
-                
-            }
+            get { return Get<float>(); }
+            set { Set(value); }
         }
 
         public float Length
@@ -123,24 +94,17 @@ namespace StateAnimationPlugin.ViewModels
 
         public InterpolationType InterpolationType 
         {
-            get { return mInterpolationType; }
-            set
-            {
-                mInterpolationType = value;
-                OnPropertyChanged("InterpolationType");
-            }
+            get { return Get<InterpolationType>(); }
+            set { Set(value); }
         }
         
         public Easing Easing 
         {
-            get { return mEasing; }
-            set 
-            {
-                mEasing = value;
-                OnPropertyChanged("Easing");
-            }
+            get { return Get<Easing>(); }
+            set { Set(value); }
         }
 
+        [DependsOn("Time")]
         public string DisplayString 
         {
             get
@@ -247,12 +211,6 @@ namespace StateAnimationPlugin.ViewModels
 
         #endregion
 
-        #region Events
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        #endregion
-
         #region Methods
 
         static AnimatedKeyframeViewModel()
@@ -341,15 +299,6 @@ namespace StateAnimationPlugin.ViewModels
             toReturn.Time = this.Time;
 
             return toReturn;
-        }
-
-
-        private void OnPropertyChanged(string property)
-        {
-            if(PropertyChanged != null)
-            {
-                PropertyChanged(this, new PropertyChangedEventArgs(property));
-            }
         }
 
 

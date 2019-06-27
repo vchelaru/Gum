@@ -1,6 +1,7 @@
 ﻿using StateAnimationPlugin.ViewModels;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -67,7 +68,11 @@ namespace StateAnimationPlugin.Views
 
         // Using a DependencyProperty as the backing store for SelectedKeyframe.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty SelectedKeyframeProperty =
-            DependencyProperty.Register("SelectedKeyframe", typeof(AnimatedKeyframeViewModel), typeof(TimedStateMarkerDisplay), new PropertyMetadata(null, SelectedKeyframeChangedCallback));
+            DependencyProperty.Register(
+                "SelectedKeyframe", 
+                typeof(AnimatedKeyframeViewModel), 
+                typeof(TimedStateMarkerDisplay), 
+                new PropertyMetadata(null, SelectedKeyframeChangedCallback));
 
 
 
@@ -95,9 +100,21 @@ namespace StateAnimationPlugin.Views
         private static void SelectedKeyframeChangedCallback(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var instance = d as TimedStateMarkerDisplay;
+
+            //var oldKeyframeViewModel = e.OldValue as AnimatedKeyframeViewModel;
+
+            //if(oldKeyframeViewModel != null)
+            //{
+            //    oldKeyframeViewModel.PropertyChanged -= instance.SelectedKeyframeValueChanged;
+            //}
+
+            //if(instance.SelectedKeyframe != null)
+            //{
+            //    instance.SelectedKeyframe.PropertyChanged += instance.SelectedKeyframeValueChanged;
+            //}
+
             instance.UpdateRectangleProperties();
         }
-
 
         private static void RangePropertyChangeCallback(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
@@ -105,13 +122,45 @@ namespace StateAnimationPlugin.Views
             display.RefreshRectangles();
         }
 
+        private void SelectedKeyframeValueChanged(object sender, PropertyChangedEventArgs e)
+        {
+            switch(e.PropertyName)
+            {
+                case nameof(AnimatedKeyframeViewModel.Time):
+                    UpdateRectangleProperties();
+                    break;
+            }
+        }
+
 
         private static void MarkerItemSourceChangeCallback(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            TimedStateMarkerDisplay display = d as TimedStateMarkerDisplay;
-            display.RefreshRectangles();
+            TimedStateMarkerDisplay instance = d as TimedStateMarkerDisplay;
+            var oldValues = e.OldValue as IEnumerable<AnimatedKeyframeViewModel>;
+
+            if(oldValues != null)
+            {
+                foreach(var item in oldValues)
+                {
+                    item.PropertyChanged -= instance.HandleItemPropertyChanged;
+                }
+            }
+
+            var newValues = e.NewValue as IEnumerable<AnimatedKeyframeViewModel>;
+            if(newValues != null)
+            {
+                foreach(var item in newValues)
+                {
+                    item.PropertyChanged += instance.HandleItemPropertyChanged;
+                }
+            }
+            instance.RefreshRectangles();
         }
 
+        private void HandleItemPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            RefreshRectangles();
+        }
 
         private void RefreshRectangles()
         {
@@ -120,7 +169,7 @@ namespace StateAnimationPlugin.Views
             UpdateRectangleProperties();
         }
 
-        private void UpdateRectangleProperties()
+        public void UpdateRectangleProperties()
         {
             int subAnimationIndex = 0;
             int index = 0;

@@ -16,60 +16,46 @@ namespace Gum.Plugins.PropertiesWindowPlugin
         GeneralSettingsFile generalSettings;
         GumProjectSave gumProject;
 
-        bool autoSave;
         public bool AutoSave
         {
-            get { return autoSave; }
-            set { base.SetProperty(ref autoSave, value); }
+            get { return Get<bool>(); }
+            set { Set(value); }
         }
 
-        bool showOutlines;
         public bool ShowOutlines
         {
-            get { return showOutlines; }
-            set { base.SetProperty(ref showOutlines, value); }
+            get { return Get<bool>(); }
+            set { Set(value); }
         }
 
-        bool restrictToUnitValues;
         public bool RestrictToUnitValues
         {
-            get { return restrictToUnitValues; }
-            set { base.SetProperty(ref restrictToUnitValues, value); }
+            get { return Get<bool>(); }
+            set { Set(value); }
         }
 
-
-        int canvasWidth;
         public int CanvasWidth
         {
-            get { return canvasWidth; }
-            set { base.SetProperty(ref canvasWidth, value); }
+            get { return Get<int>(); }
+            set { Set(value); }
         }
 
-        int canvasHeight;
         public int CanvasHeight
         {
-            get { return canvasHeight; }
-            set { base.SetProperty(ref canvasHeight, value); }
+            get { return Get<int>(); }
+            set { Set(value); }
         }
 
-        bool restrictFileNamesToAndroidAssets;
         public bool RestrictFileNamesForAndroid
         {
-            get { return restrictFileNamesToAndroidAssets; }
-            set { base.SetProperty(ref restrictFileNamesToAndroidAssets, value); }
+            get { return Get<bool>(); }
+            set { Set(value); }
         }
 
-        bool renderTextCharacterByCharacter;
         public bool RenderTextCharacterByCharacter
         {
-            get
-            {
-                return renderTextCharacterByCharacter;
-            }
-            set
-            {
-                base.SetProperty(ref renderTextCharacterByCharacter, value);
-            }
+            get { return Get<bool>(); }
+            set { Set(value); }
         }
 
         public void BindTo(GeneralSettingsFile generalSettings, GumProjectSave gumProject)
