@@ -265,12 +265,11 @@ namespace Gum.Managers
         {
             List<TreeNode> treeNodesToDrop = GetTreeNodesToDrop();
             mDraggedItem = null;
+            TreeNode targetTreeNode = ElementTreeViewManager.Self.GetTreeNodeOver();
             foreach(var draggedTreeNode in treeNodesToDrop )
             {
-
                 object draggedObject = draggedTreeNode.Tag;
 
-                TreeNode targetTreeNode = ElementTreeViewManager.Self.GetTreeNodeOver();
                 if (targetTreeNode != draggedTreeNode)
                 {
                     HandleDroppedItemOnTreeView(draggedObject, targetTreeNode);
