@@ -842,46 +842,7 @@ namespace Gum.Managers
             {
                 ElementSave elementSave = node.Tag as ElementSave;
 
-                List<InstanceSave> expandedInstances = new List<InstanceSave>();
-                List<InstanceSave> allInstances = elementSave.Instances;
-
-                foreach (InstanceSave instance in allInstances)
-                {
-                    var treeNode = GetTreeNodeFor(instance, node);
-
-                    if (treeNode?.Nodes.Count > 0 && treeNode?.IsExpanded == true)
-                    {
-                        expandedInstances.Add(instance);
-                    }
-                }
-
-                node.Text = FileManager.RemovePath(elementSave.Name);
-                node.Nodes.Clear();
-
-                foreach (InstanceSave instance in allInstances)
-                {
-                    TreeNode nodeForInstance = GetTreeNodeFor(instance, node);
-
-                    if (nodeForInstance == null)
-                    {
-                        nodeForInstance = AddTreeNodeForInstance(instance, node);
-                    }
-
-                    if (expandedInstances.Contains(instance))
-                    {
-                        nodeForInstance.Expand();
-                    }
-
-                    var siblingInstances = instance.GetSiblingsIncludingThis();
-                    var desiredIndex = siblingInstances.IndexOf(instance);
-
-                    var nodeParent = nodeForInstance.Parent;
-                    if (desiredIndex != nodeParent.Nodes.IndexOf(nodeForInstance))
-                    {
-                        nodeParent.Nodes.Remove(nodeForInstance);
-                        nodeParent.Nodes.Insert(desiredIndex, nodeForInstance);
-                    }
-                }
+                RefreshElementTreeNode(node, elementSave);
             }
             else if (node.Tag is InstanceSave)
             {
@@ -897,6 +858,50 @@ namespace Gum.Managers
             foreach (TreeNode treeNode in node.Nodes)
             {
                 RefreshUi(treeNode);
+            }
+        }
+
+        private void RefreshElementTreeNode(TreeNode node, ElementSave elementSave)
+        {
+            List<InstanceSave> expandedInstances = new List<InstanceSave>();
+            List<InstanceSave> allInstances = elementSave.Instances;
+
+            foreach (InstanceSave instance in allInstances)
+            {
+                var treeNode = GetTreeNodeFor(instance, node);
+
+                if (treeNode?.Nodes.Count > 0 && treeNode?.IsExpanded == true)
+                {
+                    expandedInstances.Add(instance);
+                }
+            }
+
+            node.Text = FileManager.RemovePath(elementSave.Name);
+            node.Nodes.Clear();
+
+            foreach (InstanceSave instance in allInstances)
+            {
+                TreeNode nodeForInstance = GetTreeNodeFor(instance, node);
+
+                if (nodeForInstance == null)
+                {
+                    nodeForInstance = AddTreeNodeForInstance(instance, node);
+                }
+
+                if (expandedInstances.Contains(instance))
+                {
+                    nodeForInstance.Expand();
+                }
+
+                var siblingInstances = instance.GetSiblingsIncludingThis();
+                var desiredIndex = siblingInstances.IndexOf(instance);
+
+                var nodeParent = nodeForInstance.Parent;
+                if (desiredIndex != nodeParent.Nodes.IndexOf(nodeForInstance))
+                {
+                    nodeParent.Nodes.Remove(nodeForInstance);
+                    nodeParent.Nodes.Insert(desiredIndex, nodeForInstance);
+                }
             }
         }
 

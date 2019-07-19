@@ -488,7 +488,7 @@ namespace Gum.Wireframe
             var selectedInstance = SelectedState.Self.SelectedInstance;
             var selectedElement = SelectedState.Self.SelectedElement;
 
-            var selectedParent = GetParentNameFor(selectedInstance, selectedElement);
+            var selectedParent = GetEffectiveParentNameFor(selectedInstance, selectedElement);
 
 
             foreach (var instance in SelectedState.Self.SelectedElement.Instances)
@@ -496,13 +496,14 @@ namespace Gum.Wireframe
                 // Ignore the current instance
                 if (instance != selectedInstance)
                 {
-                    ToolStripMenuItem item = new ToolStripMenuItem(instance.Name);
-                    var hasSameParent = GetParentNameFor(instance, selectedElement) == selectedParent;
+                    var instanceParent = GetEffectiveParentNameFor(instance, selectedElement);
+                    var hasSameParent = instanceParent == selectedParent;
 
                     // for move in front of, we only want to allow the selected instance to be moved in front of its siblings.
                     // This menu item cannot be used to move to a different parent.
                     if(hasSameParent)
                     {
+                        ToolStripMenuItem item = new ToolStripMenuItem(instance.Name);
                         item.Tag = instance;
                         mMoveInFrontOf.DropDownItems.Add(item);
 
@@ -512,15 +513,30 @@ namespace Gum.Wireframe
             }
         }
 
-        private string GetParentNameFor(InstanceSave instance, ElementSave owner)
+        private string GetEffectiveParentNameFor(InstanceSave instance, ElementSave owner)
         {
             var variableName = instance.Name + ".Parent";
 
             var state = owner.DefaultState;
 
-            var parentVariable = state.Variables.Find(item => item.Name == variableName);
+            var parentVariableValue = state.Variables.Find(item => item.Name == variableName)?.Value;
 
-            return (string)parentVariable?.Value;
+            var parentName = (string)parentVariableValue;
+
+            // even though an instance may have a parent variable, we don't consider
+            // it an actual parent if there is no instance with that name (it could be 
+            // a left-over variable).
+            if(!string.IsNullOrEmpty(parentName))
+            {
+                var matchingInstance = owner.GetInstance(parentName);
+                if(matchingInstance == null)
+                {
+                    parentName = null;
+                }
+            }
+
+
+            return parentName;
         }
 
         private void HandleMoveInFrontOfClick(object sender, EventArgs e)

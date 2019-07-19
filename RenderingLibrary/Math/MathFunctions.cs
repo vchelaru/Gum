@@ -84,6 +84,11 @@ namespace RenderingLibrary.Math
             return ((int)(System.Math.Sign(valueToRound) * .5f + valueToRound / multipleOf)) * multipleOf;
         }
 
+        /// <summary>
+        /// Rotates (and modifies) the argument vector2 by the argument radians, where a positive value is clockwise.
+        /// </summary>
+        /// <param name="vector2">The vector to rotate.</param>
+        /// <param name="radians">The radians to rotate counterclockwise.</param>
         public static void RotateVector(ref Vector2 vector2, float radians)
         {
             if(vector2.X == 0 && vector2.Y == 0)

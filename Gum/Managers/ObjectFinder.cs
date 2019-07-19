@@ -526,12 +526,23 @@ namespace Gum.Managers
             var defaultState = container.DefaultState;
             var thisParentValue = defaultState.GetValueOrDefault<string>($"{thisInstance.Name}.Parent");
 
+            // Need to only consider the parent if it actually exists (also done below)
+            if(container.GetInstance(thisParentValue) == null)
+            {
+                thisParentValue = null;
+            }
+
             foreach (var instance in container.Instances)
             {
                 var parentVariableName = $"{instance.Name}.Parent";
-                var parentVariableValue = defaultState.GetValueOrDefault<string>(parentVariableName);
+                var instanceParentVariable = defaultState.GetValueOrDefault<string>(parentVariableName);
 
-                if (thisParentValue == parentVariableValue)
+                if(container.GetInstance(instanceParentVariable) == null)
+                {
+                    instanceParentVariable = null;
+                }
+
+                if (thisParentValue == instanceParentVariable)
                 {
                     toReturn.Add(instance);
                 }
