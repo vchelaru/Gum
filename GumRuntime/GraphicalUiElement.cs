@@ -3740,6 +3740,16 @@ namespace Gum.Wireframe
                 handled = true;
             }
 
+            else if(propertyName == "Radius")
+            {
+                var valueAsFloat = (float)value;
+                ((LineCircle)mContainedObjectAsIpso).Width = 2*valueAsFloat;
+                ((LineCircle)mContainedObjectAsIpso).Height = 2*valueAsFloat;
+                ((LineCircle)mContainedObjectAsIpso).Radius = valueAsFloat;
+                this.Width = 2 * valueAsFloat;
+                this.Height = 2 * valueAsFloat;
+            }
+
             return handled;
         }
 

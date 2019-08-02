@@ -67,8 +67,12 @@ namespace RenderingLibrary.Math.Geometry
             }
             set
             {
-                mRadius = value;
-                UpdatePoints();
+                // Save a call to UpdatePoints
+                if(value != mRadius)
+                {
+                    mRadius = value;
+                    UpdatePoints();
+                }
             }
         }
 
