@@ -298,6 +298,11 @@ namespace Gum.Wireframe
                 ElementSave sourceElement = sourceInstance.ParentContainer;
 
                 InstanceSave targetInstance = sourceInstance.Clone();
+
+                // the original may have been defined in a base component. The new instance will not be
+                // derived in the base, so let's get rid of that:
+                targetInstance.DefinedByBase = false;
+
                 newInstances.Add(targetInstance);
 
                 if (targetElement != null)
@@ -488,7 +493,12 @@ namespace Gum.Wireframe
             var selectedInstance = SelectedState.Self.SelectedInstance;
             var selectedElement = SelectedState.Self.SelectedElement;
 
-            var selectedParent = GetEffectiveParentNameFor(selectedInstance, selectedElement);
+            string selectedParent = null;
+
+            if (selectedInstance != null)
+            {
+                selectedParent = GetEffectiveParentNameFor(selectedInstance, selectedElement);
+            }
 
 
             foreach (var instance in SelectedState.Self.SelectedElement.Instances)
