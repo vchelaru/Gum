@@ -143,5 +143,9 @@ using System.Runtime.InteropServices;
 //  - Fixed bug where variables changed through anchor and dock not propagating.
 // 0.9.9.0
 // - Fixed bug with reordering and displaying instances in the wrong order if they had left-over parent variables.
+// 0.9.9.1
+// - Fixed a bug where sometimes exposed variables would not display the right default value. 
+// - Fixed a bug where changing an exposed variable that was defined in a base component would not change the derived 
+//   object display in the preview window.
 [assembly: AssemblyVersion("0.9.9.1")]
 [assembly: AssemblyFileVersion("0.9.9.1")]

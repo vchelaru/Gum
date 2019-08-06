@@ -157,43 +157,85 @@ namespace Gum.DataTypes.Variables
         }
 
 
+        /// <summary>
+        /// Returns the first instance of an existing VariableSave recursively. 
+        /// </summary>
+        /// <param name="stateSave">The possible state that contains the variable. If it doesn't, then the code will recursively go to base types.</param>
+        /// <param name="variableName"></param>
+        /// <returns></returns>
         public static VariableSave GetVariableRecursive(this StateSave stateSave, string variableName)
         {
             VariableSave variableSave = stateSave.GetVariableSave(variableName);
 
             if (variableSave == null)
             {
+                // 1. Go to the default state if it's not a default
+                bool shouldGoToDefaultState = false;
+                // 2. Go to the base type if the variable is on the container itself, or if the instance is DefinedByBase
+                bool shouldGoToBaseType = false;
+                // 3. Go to the instance if it's on an instance and we're not going to the default state or base type
+                bool shouldGoToInstanceComponent = false;
+
                 // Is this thing the default?
-                ElementSave parent = stateSave.ParentContainer;
+                ElementSave elementContainingState = stateSave.ParentContainer;
 
-                if (parent != null && stateSave != parent.DefaultState)
+                if(elementContainingState != null)
                 {
-                    variableSave = stateSave.GetVariableSave(variableName);
-
-                    if (variableSave == null)
+                    if (elementContainingState != null && stateSave != elementContainingState.DefaultState)
                     {
-                        variableSave = parent.DefaultState.GetVariableSave(variableName);
+                        shouldGoToDefaultState = true;
                     }
-                }
-                
-                if (variableSave == null && parent != null)
-                {
-                    ElementSave baseElement = GetBaseElementFromVariable(variableName, parent);
 
-                    if (baseElement != null)
+                    var isVariableOnInstance = variableName.Contains('.');
+                    InstanceSave instance = null;
+                    if (!shouldGoToDefaultState)
                     {
-                        string nameInBase = variableName;
+                        var hasBaseType = !string.IsNullOrEmpty(elementContainingState.BaseType);
+                        var isVariableDefinedOnThisInheritanceLevel = false;
 
-                        if ( StringFunctions.ContainsNoAlloc( variableName, '.'))
+                        var instanceName = VariableSave.GetSourceObject(variableName);
+                        instance = elementContainingState.Instances.FirstOrDefault(item => item.Name == instanceName);
+
+                        if (isVariableOnInstance && hasBaseType)
                         {
-                            // this variable is set on an instance, but we're going into the
-                            // base type, so we want to get the raw variable and not the variable
-                            // as tied to an instance.
-                            nameInBase = variableName.Substring(nameInBase.IndexOf('.') + 1);
+                            if (instance != null && instance.DefinedByBase == false)
+                            {
+                                isVariableDefinedOnThisInheritanceLevel = true;
+                            }
                         }
 
-                        return baseElement.DefaultState.GetVariableRecursive(nameInBase);
+                        shouldGoToBaseType = isVariableOnInstance == false ||
+                            isVariableDefinedOnThisInheritanceLevel == false;
                     }
+
+                    if(!shouldGoToDefaultState && !shouldGoToBaseType)
+                    {
+                        shouldGoToInstanceComponent = isVariableOnInstance;
+                    }
+
+
+                    if(shouldGoToDefaultState)
+                    {
+                        variableSave = elementContainingState.DefaultState.GetVariableSave(variableName);
+                    }
+                    else if(shouldGoToBaseType)
+                    {
+                        var baseElement = ObjectFinder.Self.GetElementSave(elementContainingState.BaseType);
+
+                        if (baseElement != null)
+                        {
+                            variableSave = baseElement.DefaultState.GetVariableRecursive(variableName);
+                        }
+                    }
+                    else if(shouldGoToInstanceComponent)
+                    {
+                        var instanceElement = ObjectFinder.Self.GetElementSave(instance);
+                        if(instanceElement != null)
+                        {
+                            variableSave = instanceElement.DefaultState.GetVariableRecursive(VariableSave.GetRootName(variableName));
+                        }
+                    }
+
                 }
             }
 
@@ -282,25 +324,20 @@ namespace Gum.DataTypes.Variables
             bool isReservedName = TrySetReservedValues(stateSave, variableName, value, instanceSave);
 
             VariableSave variableSave = stateSave.GetVariableSave(variableName);
+            var coreVariableDefinition = stateSave.GetVariableRecursive(variableName);
 
             string exposedVariableSourceName = null;
-
+            if(!string.IsNullOrEmpty(coreVariableDefinition?.ExposedAsName))
+            {
+                exposedVariableSourceName = coreVariableDefinition.Name;
+            }
             string rootName = variableName;
             if (StringFunctions.ContainsNoAlloc(variableName, '.'))
             {
                 rootName = variableName.Substring(variableName.IndexOf('.') + 1);
             }
-            else if(stateSave.ParentContainer != null && stateSave.ParentContainer.DefaultState != stateSave)
-            {
-                // This isn't the default state, so let's ask the default state if this is an exposed variable...
-                var defaultState = stateSave.ParentContainer.DefaultState;
 
-                var found = defaultState.Variables.FirstOrDefault(item=>item.ExposedAsName == variableName);
-                if(found != null)
-                {
-                    exposedVariableSourceName = found.Name;
-                }
-            }
+
 
             if (!isReservedName)
             {
