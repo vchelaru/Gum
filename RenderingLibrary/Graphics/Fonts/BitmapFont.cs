@@ -565,11 +565,11 @@ namespace RenderingLibrary.Graphics
 
                 if (horizontalAlignment == HorizontalAlignment.Right)
                 {
-                    point.X = requiredWidth - widths[lineNumber];
+                    point.X = scaleX *( requiredWidth - widths[lineNumber]);
                 }
                 else if (horizontalAlignment == HorizontalAlignment.Center)
                 {
-                    point.X = (requiredWidth - widths[lineNumber]) / 2;
+                    point.X = scaleX * (requiredWidth - widths[lineNumber]) / 2;
                 }
 
 
