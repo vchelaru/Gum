@@ -28,7 +28,16 @@ namespace GumRuntime
             GraphicalUiElement toReturn = null;
             if (instanceElement != null)
             {
-                toReturn = ElementSaveExtensions.CreateGueForElement(instanceElement, true);
+                string genericType = null;
+
+                var instanceContainerDefaultState = instanceSave.ParentContainer.DefaultState;
+
+                if(instanceElement.Name == "Container" && instanceElement is StandardElementSave)
+                {
+                    genericType = instanceSave.ParentContainer.DefaultState.GetValueOrDefault<string>(instanceSave.Name + "." + "Contained Type");
+                }
+
+                toReturn = ElementSaveExtensions.CreateGueForElement(instanceElement, true, genericType);
 
                 // If we get here but there's no contained graphical object then that means we don't
                 // have a strongly-typed system (like when a game is running in FRB). Therefore, we'll
@@ -42,11 +51,10 @@ namespace GumRuntime
                 toReturn.Name = instanceSave.Name;
                 toReturn.Tag = instanceSave;
 
-                var state = instanceSave.ParentContainer.DefaultState;
 
 
 
-                foreach (var variable in state.Variables.Where(item => item.SetsValue && item.SourceObject == instanceSave.Name))
+                foreach (var variable in instanceContainerDefaultState.Variables.Where(item => item.SetsValue && item.SourceObject == instanceSave.Name))
                 {
                     string propertyOnInstance = variable.Name.Substring(variable.Name.LastIndexOf('.') + 1);
 
