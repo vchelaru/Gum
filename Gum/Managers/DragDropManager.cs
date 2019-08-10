@@ -54,6 +54,168 @@ namespace Gum.Managers
         #endregion
 
 
+        #region Drag+drop File (like form windows explorer)
+
+        internal void HandleFileDragDrop(object sender, DragEventArgs e)
+        {
+            if (!CanDrop())
+                return;
+
+            float worldX, worldY;
+            Renderer.Self.Camera.ScreenToWorld(Cursor.X, Cursor.Y, out worldX, out worldY);
+            string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+
+
+            var handled = false;
+            bool shouldUpdate = false;
+
+            // If only one file was dropped, see if we're over an instance that can take a file
+            if (files.Length == 1)
+            {
+                if (!ValidExtension(files[0]))
+                {
+                    handled = true;
+                }
+            }
+
+            if(!handled)
+            {
+                TryHandleFileDropOnInstance(worldX, worldY, files, ref handled, ref shouldUpdate);
+            }
+
+
+            if (!handled)
+            {
+                foreach (string file in files)
+                {
+                    if (!ValidExtension(file))
+                        continue;
+
+                    string fileName = FileManager.MakeRelative(file, FileLocations.Self.ProjectFolder);
+                    AddNewInstanceForDrop(fileName, worldX, worldY);
+                    shouldUpdate = true;
+                }
+
+            }
+            if (shouldUpdate)
+                SaveAndRefresh();
+        }
+
+        private void TryHandleFileDropOnInstance(float worldX, float worldY, string[] files, ref bool handled, ref bool shouldUpdate)
+        {
+            // This only supports drag+drop on an instance, but what if dropping on a component
+            // which inherits from Sprite, or perhaps an instance that has an exposed file variable?
+            // Not super high priority, but it's worth noting that this currently doesn't work...
+            InstanceSave instance = FindInstanceWithSourceFile(worldX, worldY);
+            if (instance != null)
+            {
+                string fileName = FileManager.MakeRelative(files[0], FileLocations.Self.ProjectFolder);
+
+                MultiButtonMessageBox mbmb = new MultiButtonMessageBox();
+                mbmb.StartPosition = FormStartPosition.Manual;
+
+                mbmb.Location = new Point(MainWindow.MousePosition.X - mbmb.Width / 2,
+                     MainWindow.MousePosition.Y - mbmb.Height / 2);
+
+                mbmb.MessageText = "What do you want to do with the file " + fileName;
+
+                mbmb.AddButton("Set source file on " + instance.Name, DialogResult.OK);
+                mbmb.AddButton("Add new Sprite", DialogResult.Yes);
+                mbmb.AddButton("Nothing", DialogResult.Cancel);
+
+                var result = mbmb.ShowDialog();
+
+                if (result == DialogResult.OK)
+                {
+                    var oldValue = SelectedState.Self.SelectedStateSave
+                        .GetValueOrDefault<string>(instance.Name + ".SourceFile");
+
+                    SelectedState.Self.SelectedStateSave.SetValue(instance.Name + ".SourceFile", fileName, instance);
+                    ProjectState.Self.Selected.SelectedInstance = instance;
+                    SetVariableLogic.Self.PropertyValueChanged("SourceFile", oldValue);
+
+                    shouldUpdate = true;
+                    handled = true;
+                }
+                else if (result == DialogResult.Cancel)
+                {
+                    handled = true;
+
+                }
+                // continue for DialogResult.Yes
+            }
+        }
+
+        private void TryHandleFileDropOnComponent(float worldX, float worldY, string[] files, ref bool handled, ref bool shouldUpdate)
+        {
+            List<ElementWithState> elementStack = new List<ElementWithState>();
+            elementStack.Add(new ElementWithState(SelectedState.Self.SelectedElement) { StateName = SelectedState.Self.SelectedStateSave.Name });
+
+            // see if it's over the component:
+            IPositionedSizedObject ipsoOver = SelectionManager.Self.GetRepresentationAt(worldX, worldY, false, elementStack);
+            if(ipsoOver?.Tag is ComponentSave component && (component.BaseType == "Sprite" || component.BaseType == "NineSlice"))
+            {
+                string fileName = FileManager.MakeRelative(files[0], FileLocations.Self.ProjectFolder);
+
+                MultiButtonMessageBox mbmb = new MultiButtonMessageBox();
+                mbmb.StartPosition = FormStartPosition.Manual;
+
+                mbmb.Location = new Point(MainWindow.MousePosition.X - mbmb.Width / 2,
+                     MainWindow.MousePosition.Y - mbmb.Height / 2);
+
+                mbmb.MessageText = "What do you want to do with the file " + fileName;
+
+                mbmb.AddButton("Set source file on " + component.Name, DialogResult.OK);
+                mbmb.AddButton("Add new Sprite", DialogResult.Yes);
+                mbmb.AddButton("Nothing", DialogResult.Cancel);
+
+
+                var result = mbmb.ShowDialog();
+
+                if (result == DialogResult.OK)
+                {
+                    var oldValue = SelectedState.Self.SelectedStateSave
+                        .GetValueOrDefault<string>("SourceFile");
+
+                    SelectedState.Self.SelectedStateSave.SetValue("SourceFile", fileName);
+                    ProjectState.Self.Selected.SelectedInstance = null;
+                    SetVariableLogic.Self.PropertyValueChanged("SourceFile", oldValue);
+
+                    shouldUpdate = true;
+                    handled = true;
+                }
+                else if (result == DialogResult.Cancel)
+                {
+                    handled = true;
+
+                }
+
+            }
+        }
+
+        private InstanceSave FindInstanceWithSourceFile(float worldX, float worldY)
+        {
+            List<ElementWithState> elementStack = new List<ElementWithState>();
+            elementStack.Add(new ElementWithState(SelectedState.Self.SelectedElement) { StateName = SelectedState.Self.SelectedStateSave.Name });
+
+            IPositionedSizedObject ipsoOver = SelectionManager.Self.GetRepresentationAt(worldX, worldY, false, elementStack);
+
+            if (ipsoOver != null && ipsoOver.Tag is InstanceSave)
+            {
+                var baseStandardElement = ObjectFinder.Self.GetRootStandardElementSave(ipsoOver.Tag as InstanceSave);
+
+                if (baseStandardElement.DefaultState.Variables.Any(v => v.Name == "SourceFile"))
+                {
+                    return ipsoOver.Tag as InstanceSave;
+                }
+            }
+
+            return null;
+        }
+
+
+        #endregion
+
         public void OnItemDrag(object item)
         {
             mDraggedItem = item;
@@ -443,79 +605,6 @@ namespace Gum.Managers
             }
         }
 
-        internal void HandleFileDragDrop(object sender, DragEventArgs e)
-        {
-            if (!CanDrop())
-                return;
-
-            float worldX, worldY;
-            Renderer.Self.Camera.ScreenToWorld(Cursor.X, Cursor.Y, out worldX, out worldY);
-
-            string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
-
-            // If only one file was dropped, see if we're over an instance that can take a file
-            if (files.Length == 1)
-            {
-                if (!ValidExtension(files[0]))
-                    return;
-
-                // This only supports drag+drop on an instance, but what if dropping on a component
-                // which inherits from Sprite, or perhaps an instance that has an exposed file variable?
-                // Not super high priority, but it's worth noting that this currently doesn't work...
-                InstanceSave instance = FindInstanceWithSourceFile(worldX, worldY);
-                if (instance != null)
-                {
-                    string fileName = FileManager.MakeRelative(files[0], FileLocations.Self.ProjectFolder);
-
-                    MultiButtonMessageBox mbmb = new MultiButtonMessageBox();
-                    mbmb.StartPosition = FormStartPosition.Manual;
-                    
-                    mbmb.Location = new Point(MainWindow.MousePosition.X - mbmb.Width / 2,
-                         MainWindow.MousePosition.Y - mbmb.Height / 2);
-
-                    mbmb.MessageText = "What do you want to do with the file " + fileName;
-
-                    mbmb.AddButton("Set source file on " + instance.Name, DialogResult.OK);
-                    mbmb.AddButton("Add new Sprite", DialogResult.Yes);
-                    mbmb.AddButton("Nothing", DialogResult.Cancel);
-
-                    var result = mbmb.ShowDialog();
-
-                    if (result == DialogResult.OK)
-                    {
-                        var oldValue = SelectedState.Self.SelectedStateSave
-                            .GetValueOrDefault<string>(instance.Name + ".SourceFile");
-
-                        SelectedState.Self.SelectedStateSave.SetValue(instance.Name + ".SourceFile", fileName, instance);
-                        ProjectState.Self.Selected.SelectedInstance = instance;
-                        SetVariableLogic.Self.PropertyValueChanged("SourceFile", oldValue);
-
-                        SaveAndRefresh();
-                        return;
-                    }
-                    else if (result == DialogResult.Cancel)
-                    {
-                        return;
-                    }
-                    // continue for DialogResult.Yes
-                }
-            }
-
-            bool shouldUpdate = false;
-
-            foreach (string file in files)
-            {
-                if (!ValidExtension(file))
-                    continue;
-
-                string fileName = FileManager.MakeRelative(file, FileLocations.Self.ProjectFolder);
-                AddNewInstanceForDrop(fileName, worldX, worldY);
-                shouldUpdate = true;
-            }
-
-            if (shouldUpdate)
-                SaveAndRefresh();
-        }
 
         private bool ValidExtension(string file)
         {
@@ -523,25 +612,6 @@ namespace Gum.Managers
             return LoaderManager.Self.ValidTextureExtensions.Contains(extension);
         }
 
-        private InstanceSave FindInstanceWithSourceFile(float worldX, float worldY)
-        {
-            List<ElementWithState> elementStack = new List<ElementWithState>();
-            elementStack.Add(new ElementWithState(SelectedState.Self.SelectedElement) { StateName = SelectedState.Self.SelectedStateSave.Name });
-
-            IPositionedSizedObject ipsoOver = SelectionManager.Self.GetRepresentationAt(worldX, worldY, false, elementStack);
-
-            if (ipsoOver != null && ipsoOver.Tag is InstanceSave)
-            {
-                var baseStandardElement = ObjectFinder.Self.GetRootStandardElementSave(ipsoOver.Tag as InstanceSave);
-
-                if (baseStandardElement.DefaultState.Variables.Any(v => v.Name == "SourceFile"))
-                {
-                    return ipsoOver.Tag as InstanceSave;
-                }
-            }
-
-            return null;
-        }
 
         private static void SaveAndRefresh()
         {
