@@ -83,6 +83,11 @@ namespace Gum.Managers
                 TryHandleFileDropOnInstance(worldX, worldY, files, ref handled, ref shouldUpdate);
             }
 
+            if(!handled)
+            {
+                TryHandleFileDropOnComponent(worldX, worldY, files, ref handled, ref shouldUpdate);
+            }
+
 
             if (!handled)
             {
