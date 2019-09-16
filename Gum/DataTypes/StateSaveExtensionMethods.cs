@@ -203,6 +203,10 @@ namespace Gum.DataTypes.Variables
                                 isVariableDefinedOnThisInheritanceLevel = true;
                             }
                         }
+                        else if(!hasBaseType)
+                        {
+                            isVariableDefinedOnThisInheritanceLevel = true;
+                        }
 
                         shouldGoToBaseType = isVariableOnInstance == false ||
                             isVariableDefinedOnThisInheritanceLevel == false;

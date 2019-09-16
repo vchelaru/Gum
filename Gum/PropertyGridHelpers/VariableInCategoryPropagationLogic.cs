@@ -72,7 +72,7 @@ namespace Gum.PropertyGridHelpers
                 }
             }
 
-            var defaultValue = defaultVariable.Value;
+            var defaultValue = defaultVariable?.Value;
 
             foreach (var state in currentCategory.States)
             {

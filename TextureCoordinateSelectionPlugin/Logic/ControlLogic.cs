@@ -6,6 +6,7 @@ using Gum.PropertyGridHelpers;
 using Gum.ToolStates;
 using Gum.Undo;
 using Gum.Wireframe;
+using InputLibrary;
 using RenderingLibrary.Math;
 using RenderingLibrary.Math.Geometry;
 using System;
@@ -54,9 +55,58 @@ namespace TextureCoordinateSelectionPlugin.Logic
             control.StartRegionChanged += HandleStartRegionChanged;
             control.RegionChanged += HandleRegionChanged;
             control.EndRegionChanged += HandleEndRegionChanged;
+
             GumCommands.Self.GuiCommands.AddWinformsControl(control, "Texture Coordinates", TabLocation.Right);
 
             return control;
+        }
+
+        public void HandleRegionDoubleClicked(ImageRegionSelectionControl control, ref LineRectangle textureOutlineRectangle)
+        {
+            var state = SelectedState.Self.SelectedStateSave;
+            var instancePrefix = SelectedState.Self.SelectedInstance?.Name;
+            var graphicalUiElement = SelectedState.Self.SelectedIpso as GraphicalUiElement;
+
+            if (!string.IsNullOrEmpty(instancePrefix))
+            {
+                instancePrefix += ".";
+            }
+
+            if (state != null && graphicalUiElement != null)
+            {
+                graphicalUiElement.TextureAddress = TextureAddress.Custom;
+
+                var cursorX = (int)control.XnaCursor.GetWorldX(control.SystemManagers);
+                var cursorY = (int)control.XnaCursor.GetWorldY(control.SystemManagers);
+
+
+                int left = Math.Max(0, cursorX - 32);
+                int top = Math.Max(0, cursorY - 32);
+                int right = left + 64;
+                int bottom = top + 64;
+
+                int width = right - left;
+                int height = bottom - top;
+
+                graphicalUiElement.TextureLeft = MathFunctions.RoundToInt(left);
+                graphicalUiElement.TextureTop = MathFunctions.RoundToInt(top);
+
+                graphicalUiElement.TextureWidth = MathFunctions.RoundToInt(width);
+                graphicalUiElement.TextureHeight = MathFunctions.RoundToInt(height);
+
+                state.SetValue($"{instancePrefix}Texture Left", left, "int");
+                state.SetValue($"{instancePrefix}Texture Top", top, "int");
+                state.SetValue($"{instancePrefix}Texture Width", width, "int");
+                state.SetValue($"{instancePrefix}Texture Height", height, "int");
+                state.SetValue($"{instancePrefix}Texture Address",
+                    Gum.Managers.TextureAddress.Custom, nameof(TextureAddress));
+
+                RefreshOutline(control, ref textureOutlineRectangle);
+
+                RefreshSelector(control);
+            }
+
+
         }
 
         private void HandleStartRegionChanged(object sender, EventArgs e)

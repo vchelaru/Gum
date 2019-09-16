@@ -56,6 +56,8 @@ namespace TextureCoordinateSelectionPlugin
         public override void StartUp()
         {
             control = Logic.ControlLogic.Self.CreateControl();
+            control.DoubleClick += (not, used) =>
+                Logic.ControlLogic.Self.HandleRegionDoubleClicked(control, ref textureOutlineRectangle);
 
             this.TreeNodeSelected += HandleTreeNodeSelected;
             this.VariableSet += HandleVariableSet;

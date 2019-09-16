@@ -62,6 +62,10 @@
       <Project>{121AC5A5-8F6A-42B2-8863-DEBC45B052BC}</Project>
       <Name>Gum</Name>
     </ProjectReference>
+    <ProjectReference Include="..\InputLibrary\InputLibrary.csproj">
+      <Project>{938d9a00-8529-4ce8-9077-e0a3994a73ea}</Project>
+      <Name>InputLibrary</Name>
+    </ProjectReference>
     <ProjectReference Include="..\RenderingLibrary\RenderingLibrary.csproj">
       <Project>{A86EE399-7C93-42E1-80ED-CA4CBF4CA573}</Project>
       <Name>RenderingLibrary</Name>
