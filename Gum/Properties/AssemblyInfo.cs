@@ -147,5 +147,7 @@ using System.Runtime.InteropServices;
 // - Fixed a bug where sometimes exposed variables would not display the right default value. 
 // - Fixed a bug where changing an exposed variable that was defined in a base component would not change the derived 
 //   object display in the preview window.
-[assembly: AssemblyVersion("0.9.9.1")]
-[assembly: AssemblyFileVersion("0.9.9.1")]
+// 0.9.9.2
+// - Fixed possible crash when clicking on a component with an exposed variable
+[assembly: AssemblyVersion("0.9.9.2")]
+[assembly: AssemblyFileVersion("0.9.9.2")]

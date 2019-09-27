@@ -233,7 +233,12 @@ namespace Gum.DataTypes.Variables
                     }
                     else if(shouldGoToInstanceComponent)
                     {
-                        var instanceElement = ObjectFinder.Self.GetElementSave(instance);
+                        ElementSave instanceElement = null;
+                        if (instance != null)
+                        {
+                            instanceElement = ObjectFinder.Self.GetElementSave(instance);
+                        }
+
                         if(instanceElement != null)
                         {
                             variableSave = instanceElement.DefaultState.GetVariableRecursive(VariableSave.GetRootName(variableName));
