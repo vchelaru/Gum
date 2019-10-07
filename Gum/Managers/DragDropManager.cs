@@ -19,6 +19,7 @@ using RenderingLibrary.Graphics;
 using Gum.PropertyGridHelpers;
 using System.Drawing;
 using Gum.Converters;
+using Gum.Logic;
 
 namespace Gum.Managers
 {
@@ -421,7 +422,7 @@ namespace Gum.Managers
                 else
                 {
                     List<InstanceSave> instances = new List<InstanceSave>() { draggedAsInstanceSave };
-                    EditingManager.Self.PasteInstanceSaves(instances,
+                    CopyPasteLogic.PasteInstanceSaves(instances,
                         draggedAsInstanceSave.ParentContainer.DefaultState.Clone(),
                         targetElementSave);
                 }

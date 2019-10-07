@@ -792,7 +792,7 @@ namespace Gum.Managers
 
             if (treeNodes.Count != 0)
             {
-                treeNodes[0].EnsureVisible();
+                treeNodes[0]?.EnsureVisible();
                 mTreeView.CallAfterClickSelect(null, new TreeViewEventArgs(treeNodes[0]));
             }
         }

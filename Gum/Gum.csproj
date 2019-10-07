@@ -156,6 +156,7 @@
     <Compile Include="Gui\Window\DeleteOptionsWindow.xaml.cs">
       <DependentUpon>DeleteOptionsWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Logic\CopyPasteLogic.cs" />
     <Compile Include="Logic\FileWatch\FileWatchLogic.cs" />
     <Compile Include="Logic\ReorderLogic.cs" />
     <Compile Include="Logic\VariableSaveLogic.cs" />
