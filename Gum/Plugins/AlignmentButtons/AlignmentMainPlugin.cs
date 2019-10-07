@@ -1,4 +1,5 @@
-﻿using Gum.Plugins.BaseClasses;
+﻿using Gum.Managers;
+using Gum.Plugins.BaseClasses;
 using Gum.ToolStates;
 using System;
 using System.Collections.Generic;
@@ -40,18 +41,7 @@ namespace Gum.Plugins.AlignmentButtons
 
         private void RefreshTabVisibility()
         {
-            var shouldAdd = SelectedState.Self.SelectedElement != null &&
-                SelectedState.Self.SelectedStateSave != null;
-
-            if(shouldAdd)
-            {
-                if(SelectedState.Self.SelectedScreen != null &&
-                    SelectedState.Self.SelectedInstance == null)
-                {
-                    // screens as a whole can't be aligned
-                    shouldAdd = false;
-                }
-            }
+            bool shouldAdd = DetermineIfShouldShowTab();
 
             if (shouldAdd)
             {
@@ -74,6 +64,36 @@ namespace Gum.Plugins.AlignmentButtons
                     isAdded = false;
                 }
             }
+        }
+
+        private static bool DetermineIfShouldShowTab()
+        {
+            var shouldAdd = SelectedState.Self.SelectedElement != null &&
+                SelectedState.Self.SelectedStateSave != null;
+
+            if (shouldAdd)
+            {
+                if (SelectedState.Self.SelectedScreen != null &&
+                    SelectedState.Self.SelectedInstance == null)
+                {
+                    // screens as a whole can't be aligned
+                    shouldAdd = false;
+                }
+
+            }
+
+            if(shouldAdd && SelectedState.Self.SelectedInstance != null)
+            {
+                var elementSave = ObjectFinder.Self.GetRootStandardElementSave(SelectedState.Self.SelectedInstance);
+
+                if(elementSave?.Name == "Circle")
+                {
+                    // circles currently can't anchor...
+                    shouldAdd = false;
+                }
+            }
+
+            return shouldAdd;
         }
     }
 }

@@ -97,11 +97,21 @@ namespace Gum.Managers
             return null;
         }
 
+        /// <summary>
+        /// Returns the ElementSave (Screen, Component, or Standard Element) for the argument instance
+        /// </summary>
+        /// <param name="instance">The instance to find the matching element for</param>
+        /// <returns>The matching ElementSave, or null if none is found</returns>
         public ElementSave GetElementSave(InstanceSave instance)
         {
             return GetElementSave(instance.BaseType);
         }
 
+        /// <summary>
+        /// Returns the ElementSave (Screen, Component, or Standard Element) for the argument elementName
+        /// </summary>
+        /// <param name="elementName">The name of the ElementSave to search for</param>
+        /// <returns>The matching ElementSave, or null if none is found</returns>
         public ElementSave GetElementSave(string elementName)
         {
             ScreenSave screenSave = GetScreen(elementName);

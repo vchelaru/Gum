@@ -47,11 +47,18 @@ namespace Gum.Logic
             StoreCopiedObject(copyType);
 
             ElementSave sourceElement = SelectedState.Self.SelectedElement;
-            InstanceSave sourceInstance = SelectedState.Self.SelectedInstance;
 
-            if (sourceElement.Instances.Contains(sourceInstance))
+            if(mCopiedInstances.Any())
             {
-                ElementCommands.Self.RemoveInstance(sourceInstance, sourceElement);
+                foreach(var clone in mCopiedInstances)
+                {
+                    // copied instances is a clone, so need to find by name:
+                    var originalForCopy = sourceElement.Instances.FirstOrDefault(item => item.Name == clone.Name);
+                    if (sourceElement.Instances.Contains(originalForCopy))
+                    {
+                        ElementCommands.Self.RemoveInstance(originalForCopy, sourceElement);
+                    }
+                }
 
                 if (ProjectManager.Self.GeneralSettingsFile.AutoSave)
                 {
@@ -133,12 +140,18 @@ namespace Gum.Logic
             {
                 var element = SelectedState.Self.SelectedElement;
 
+                List<InstanceSave> selected = new List<InstanceSave>();
                 // When copying we want to grab all instances in the order that they are in their container.
                 // That way when they're pasted they are pasted in the right order
                 foreach (var instance in SelectedState.Self.SelectedInstances.OrderBy(item => element.Instances.IndexOf(item)))
                 {
-                    mCopiedInstances.Add(instance.Clone());
+                    
+                    selected.Add(instance.Clone());
                 }
+
+                mCopiedInstances =
+                        GetAllInstancesAndChildrenOf(selected, selected.FirstOrDefault()?.ParentContainer);
+
                 mCopiedState = SelectedState.Self.SelectedStateSave.Clone();
 
                 // Clear out any variables that don't pertain to the selected instance:
@@ -225,12 +238,14 @@ namespace Gum.Logic
         }
 
 
-        public static void PasteInstanceSaves(List<InstanceSave> copiedInstances, StateSave copiedState, ElementSave targetElement)
+        public static void PasteInstanceSaves(List<InstanceSave> instancesToCopy, StateSave copiedState, ElementSave targetElement)
         {
             Dictionary<string, string> oldNewNameDictionary = new Dictionary<string, string>();
 
+
+
             List<InstanceSave> newInstances = new List<InstanceSave>();
-            foreach (var sourceInstance in copiedInstances)
+            foreach (var sourceInstance in instancesToCopy)
             {
                 ElementSave sourceElement = sourceInstance.ParentContainer;
 
@@ -256,11 +271,11 @@ namespace Gum.Logic
                 }
             }
 
-            foreach (var sourceInstance in copiedInstances)
+            foreach (var sourceInstance in instancesToCopy)
             {
                 ElementSave sourceElement = sourceInstance.ParentContainer;
                 var newInstance = newInstances.First(item => item.Name == oldNewNameDictionary[sourceInstance.Name]);
-B
+
                 if (targetElement != null)
                 { 
                     StateSave stateSave = copiedState;
@@ -293,6 +308,17 @@ B
 
                             VariableSave copiedVariable = sourceVariable.Clone();
                             copiedVariable.Name = newInstance.Name + "." + copiedVariable.GetRootName();
+
+                            var valueAsString = copiedVariable.Value as string;
+
+                            if (copiedVariable.GetRootName() == "Parent" && 
+                                string.IsNullOrWhiteSpace(valueAsString) == false &&
+                                oldNewNameDictionary.ContainsKey(valueAsString))
+                            {
+                                // this is a parent and it may be attached to a copy, so update the value
+                                var newValue = oldNewNameDictionary[valueAsString];
+                                copiedVariable.Value = newValue;
+                            }
 
                             // We don't want to copy exposed variables.
                             // If we did, the user would have 2 variables exposed with the same.
@@ -354,8 +380,46 @@ B
 
         }
 
+        private static List<InstanceSave> GetAllInstancesAndChildrenOf(List<InstanceSave> explicitlySelectedInstances, ElementSave container)
+        {
+            List<InstanceSave> listToFill = new List<InstanceSave>();
 
+            foreach(var instance in explicitlySelectedInstances)
+            {
+                if(listToFill.Any(item => item.Name == instance.Name) == false)
+                {
+                    listToFill.Add(instance.Clone());
 
+                    FillWithChildrenOf(instance, listToFill, container);
+                }
+            }
+
+            return listToFill;
+        }
+
+        private static void FillWithChildrenOf(InstanceSave instance, List<InstanceSave> listToFill, ElementSave container)
+        {
+            var defaultState = container.DefaultState;
+
+            foreach(var variable in defaultState.Variables)
+            {
+                if(variable.GetRootName() == "Parent")
+                {
+                    var value = variable.Value as string;
+
+                    if(!string.IsNullOrEmpty(value) && value == instance.Name)
+                    {
+                        var foundObject = container.GetInstance(variable.SourceObject);
+
+                        if(foundObject != null && listToFill.Any(item => item.Name == foundObject.Name) == false)
+                        {
+                            listToFill.Add(foundObject.Clone());
+                            FillWithChildrenOf(foundObject, listToFill, container);
+                        }
+                    }
+                }
+            }
+        }
 
         private static void PasteCopiedElement()
         {

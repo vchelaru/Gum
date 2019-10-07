@@ -23,6 +23,8 @@ namespace Gum.Managers
 
     public class RenameManager
     {
+        #region Fields/Properties
+
         static RenameManager mRenameManager;
 
         public static RenameManager Self
@@ -38,6 +40,8 @@ namespace Gum.Managers
         }
 
         public bool IsRenamingXmlFile { get; private set; }
+
+        #endregion
 
         public void HandleRename(ElementSave elementSave, InstanceSave instance, string oldName, NameChangeAction action, bool askAboutRename = true)
         {
@@ -137,6 +141,15 @@ namespace Gum.Managers
                             instanceInScreen.BaseType = elementSave.Name;
                             shouldSave = true;
                         }
+
+                    }
+
+                    foreach(var variable in screen.DefaultState.Variables.Where(item => item.GetRootName() == "Contained Type"))
+                    {
+                        if(variable.Value as string == oldName)
+                        {
+                            variable.Value = elementSave.Name;
+                        }
                     }
 
                     if (shouldSave)
@@ -154,6 +167,14 @@ namespace Gum.Managers
                         {
                             instanceInScreen.BaseType = elementSave.Name;
                             shouldSave = true;
+                        }
+                    }
+
+                    foreach (var variable in component.DefaultState.Variables.Where(item => item.GetRootName() == "Contained Type"))
+                    {
+                        if (variable.Value as string == oldName)
+                        {
+                            variable.Value = elementSave.Name;
                         }
                     }
 
