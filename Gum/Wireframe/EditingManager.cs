@@ -354,7 +354,7 @@ namespace Gum.Wireframe
                 float outY;
 
 
-                IRenderableIpso ipso = WireframeObjectManager.Self.GetSelectedRepresentation();
+                var ipso = WireframeObjectManager.Self.GetSelectedRepresentation();
                 ipso.GetFileWidthAndHeightOrDefault(out fileWidth, out fileHeight);
                 ipso.GetParentWidthAndHeight(
                     ProjectManager.Self.GumProjectSave.DefaultCanvasWidth, ProjectManager.Self.GumProjectSave.DefaultCanvasHeight,
@@ -362,8 +362,33 @@ namespace Gum.Wireframe
 
                 var unitsVariable = UnitConverter.ConvertToGeneralUnit(unitsVariableAsObject);
 
-                UnitConverter.Self.ConvertToUnitTypeCoordinates(xAmount, yAmount, unitsVariable, unitsVariable, ipso.Width, ipso.Height, parentWidth, parentHeight, fileWidth, fileHeight,
+                UnitConverter.Self.ConvertToUnitTypeCoordinates(xAmount, yAmount, unitsVariable, unitsVariable, 
+                    ipso.Width, ipso.Height, 
+                    parentWidth, parentHeight, 
+                    fileWidth, fileHeight,
                     out outX, out outY);
+
+                if(generalUnitType == GeneralUnitType.PercentageOfFile)
+                {
+                    // need to amplify the value based on the ratio of what is displayed to the file size
+                    if(baseVariableName == "Width")
+                    {
+                        var ratio = ipso.TextureWidth / fileWidth;
+
+                        if(float.IsPositiveInfinity(ratio) == false && ratio != 0)
+                        {
+                            outX /= ratio;
+                        }
+                    }
+                    if(baseVariableName == "Height")
+                    {
+                        var ratio = ipso.TextureHeight / fileHeight;
+                        if (float.IsPositiveInfinity(ratio) == false && ratio != 0)
+                        {
+                            outY /= ratio;
+                        }
+                    }
+                }
 
                 if (baseVariableName == "X" || baseVariableName == "Width")
                 {
