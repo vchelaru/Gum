@@ -188,28 +188,32 @@ namespace Gum.DataTypes.Variables
 
                     var isVariableOnInstance = variableName.Contains('.');
                     InstanceSave instance = null;
-                    if (!shouldGoToDefaultState)
+                    bool canGoToBase = false;
+
+                    var hasBaseType = !string.IsNullOrEmpty(elementContainingState.BaseType);
+                    var isVariableDefinedOnThisInheritanceLevel = false;
+
+                    var instanceName = VariableSave.GetSourceObject(variableName);
+                    instance = elementContainingState.Instances.FirstOrDefault(item => item.Name == instanceName);
+
+                    if (isVariableOnInstance && hasBaseType)
                     {
-                        var hasBaseType = !string.IsNullOrEmpty(elementContainingState.BaseType);
-                        var isVariableDefinedOnThisInheritanceLevel = false;
-
-                        var instanceName = VariableSave.GetSourceObject(variableName);
-                        instance = elementContainingState.Instances.FirstOrDefault(item => item.Name == instanceName);
-
-                        if (isVariableOnInstance && hasBaseType)
-                        {
-                            if (instance != null && instance.DefinedByBase == false)
-                            {
-                                isVariableDefinedOnThisInheritanceLevel = true;
-                            }
-                        }
-                        else if(!hasBaseType)
+                        if (instance != null && instance.DefinedByBase == false)
                         {
                             isVariableDefinedOnThisInheritanceLevel = true;
                         }
+                    }
+                    else if(!hasBaseType)
+                    {
+                        isVariableDefinedOnThisInheritanceLevel = true;
+                    }
 
-                        shouldGoToBaseType = isVariableOnInstance == false ||
-                            isVariableDefinedOnThisInheritanceLevel == false;
+                    canGoToBase = isVariableOnInstance == false ||
+                        isVariableDefinedOnThisInheritanceLevel == false;
+
+                    if (!shouldGoToDefaultState)
+                    {
+                        shouldGoToBaseType = canGoToBase;
                     }
 
                     if(!shouldGoToDefaultState && !shouldGoToBaseType)
@@ -221,8 +225,13 @@ namespace Gum.DataTypes.Variables
                     if(shouldGoToDefaultState)
                     {
                         variableSave = elementContainingState.DefaultState.GetVariableSave(variableName);
+                        if(variableSave == null)
+                        {
+                            shouldGoToBaseType = canGoToBase;
+                        }
                     }
-                    else if(shouldGoToBaseType)
+
+                    if (shouldGoToBaseType)
                     {
                         var baseElement = ObjectFinder.Self.GetElementSave(elementContainingState.BaseType);
 

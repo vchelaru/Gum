@@ -535,47 +535,48 @@ namespace Gum.Managers
             {
                 foreach (var member in category.Members)
                 {
-                    if (member.PropertyType == typeof(global::RenderingLibrary.Graphics.HorizontalAlignment) &&
+                    var propertyType = member.PropertyType;
+                    if (propertyType == typeof(global::RenderingLibrary.Graphics.HorizontalAlignment) &&
                         member.Name == "HorizontalAlignment" || member.Name.EndsWith(".HorizontalAlignment"))
                     {
                         member.PreferredDisplayer = typeof(TextHorizontalAlignmentControl);
                     }
-                    else if (member.PropertyType == typeof(global::RenderingLibrary.Graphics.VerticalAlignment) &&
+                    else if (propertyType == typeof(global::RenderingLibrary.Graphics.VerticalAlignment) &&
                         member.Name == "VerticalAlignment" || member.Name.EndsWith(".VerticalAlignment"))
                     {
                         member.PreferredDisplayer = typeof(TextVerticalAlignmentControl);
                     }
-                    else if (member.PropertyType == typeof(PositionUnitType) &&
+                    else if (propertyType == typeof(PositionUnitType) &&
                         member.Name == "X Units" || member.Name.EndsWith(".X Units"))
                     {
                         member.PreferredDisplayer = typeof(XUnitsControl);
                     }
-                    else if (member.PropertyType == typeof(PositionUnitType) &&
+                    else if (propertyType == typeof(PositionUnitType) &&
                         member.Name == "Y Units" || member.Name.EndsWith(".Y Units"))
                     {
                         member.PreferredDisplayer = typeof(YUnitsControl);
                     }
-                    else if (member.PropertyType == typeof(global::RenderingLibrary.Graphics.HorizontalAlignment) &&
+                    else if (propertyType == typeof(global::RenderingLibrary.Graphics.HorizontalAlignment) &&
                         member.Name == "X Origin" || member.Name.EndsWith(".X Origin"))
                     {
                         member.PreferredDisplayer = typeof(XOriginControl);
                     }
-                    else if (member.PropertyType == typeof(global::RenderingLibrary.Graphics.VerticalAlignment) &&
+                    else if (propertyType == typeof(global::RenderingLibrary.Graphics.VerticalAlignment) &&
                         member.Name == "Y Origin" || member.Name.EndsWith(".Y Origin"))
                     {
                         member.PreferredDisplayer = typeof(YOriginControl);
                     }
-                    else if (member.PropertyType == typeof(DimensionUnitType) &&
+                    else if (propertyType == typeof(DimensionUnitType) &&
                         member.Name == "Width Units" || member.Name.EndsWith(".Width Units"))
                     {
                         member.PreferredDisplayer = typeof(WidthUnitsControl);
                     }
-                    else if (member.PropertyType == typeof(DimensionUnitType) &&
+                    else if (propertyType == typeof(DimensionUnitType) &&
                         member.Name == "Height Units" || member.Name.EndsWith(".Height Units"))
                     {
                         member.PreferredDisplayer = typeof(HeightUnitsControl);
                     }
-                    else if (member.PropertyType == typeof(ChildrenLayout) &&
+                    else if (propertyType == typeof(ChildrenLayout) &&
                         member.Name == "Children Layout" || member.Name.EndsWith(".Children Layout"))
                     {
                         member.PreferredDisplayer = typeof(ChildrenLayoutControl);
@@ -777,6 +778,8 @@ namespace Gum.Managers
             bool shouldReset = false;
             bool affectsTreeView = false;
 
+            var selectedElement = SelectedState.Self.SelectedElement;
+
             if (SelectedState.Self.SelectedInstance != null)
             {
                 affectsTreeView = variableName == "Parent";
@@ -784,11 +787,11 @@ namespace Gum.Managers
 
                 shouldReset = true;
             }
-            else if (SelectedState.Self.SelectedElement != null)
+            else if (selectedElement != null)
             {
                 shouldReset =
                     // Don't let the user reset standard element variables, they have to have some actual value
-                    (SelectedState.Self.SelectedElement is StandardElementSave) == false ||
+                    (selectedElement is StandardElementSave) == false ||
                     // ... unless it's not the default
                     SelectedState.Self.SelectedStateSave != SelectedState.Self.SelectedElement.DefaultState;
             }
@@ -826,9 +829,25 @@ namespace Gum.Managers
                     // the variable now. In fact, we should
                     //bool shouldRemove = SelectedState.Self.SelectedInstance != null ||
                     //    SelectedState.Self.SelectedStateSave != SelectedState.Self.SelectedElement.DefaultState;
-
                     // Also, don't remove it if it's an exposed variable, this un-exposes things
                     bool shouldRemove = string.IsNullOrEmpty(variable.ExposedAsName);
+
+                    // Update October 7, 2019
+                    // Actually, we can remove any variable so long as the current state isn't the "base definition" for it
+                    // For elements - no variables are the base variable definitions except for variables that are categorized
+                    // state variables for categories defined in this element
+                    if(shouldRemove)
+                    {
+                        var isState = variable.IsState(selectedElement, out ElementSave categoryContainer, out StateSaveCategory categoryForVariable);
+
+                        if(isState)
+                        {
+                            var isDefinedHere = categoryForVariable != null && categoryContainer == selectedElement;
+
+                            shouldRemove = !isDefinedHere;
+                        }
+                    }
+
 
                     if (shouldRemove)
                     {
