@@ -8,8 +8,9 @@ using Gum.DataTypes.Variables;
 using System.Windows.Forms;
 using Gum.Plugins;
 using ToolsUtilities;
+using Gum.Managers;
 
-namespace Gum.Managers
+namespace Gum.Logic
 {
     #region Enums
 
@@ -21,33 +22,15 @@ namespace Gum.Managers
 
     #endregion
 
-    public class RenameManager
+    public class RenameLogic
     {
-        #region Fields/Properties
+        static bool isRenamingXmlFile;
 
-        static RenameManager mRenameManager;
-
-        public static RenameManager Self
-        {
-            get
-            {
-                if (mRenameManager == null)
-                {
-                    mRenameManager = new RenameManager();
-                }
-                return mRenameManager;
-            }
-        }
-
-        public bool IsRenamingXmlFile { get; private set; }
-
-        #endregion
-
-        public void HandleRename(ElementSave elementSave, InstanceSave instance, string oldName, NameChangeAction action, bool askAboutRename = true)
+        public static void HandleRename(ElementSave elementSave, InstanceSave instance, string oldName, NameChangeAction action, bool askAboutRename = true)
         {
             try
             {
-                IsRenamingXmlFile = instance == null;
+                isRenamingXmlFile = instance == null;
 
                 bool shouldContinue = true;
 
@@ -67,44 +50,13 @@ namespace Gum.Managers
                         ProjectManager.Self.SaveElement(elementSave);
                     }
 
-                    if (IsRenamingXmlFile)
+                    if (isRenamingXmlFile)
                     {
-                        // If we got here that means all went okay, so we should delete the old files
-                        string oldXml = elementSave.GetFullPathXmlFile(oldName);
-                        string newXml = elementSave.GetFullPathXmlFile();
-
-                        // Delete the XML.
-                        // If the file doesn't
-                        // exist, no biggie - we
-                        // were going to delete it
-                        // anyway.
-                        if (System.IO.File.Exists(oldXml))
-                        {
-                            System.IO.File.Delete(oldXml);
-                        }
-
-                        PluginManager.Self.ElementRename(elementSave, oldName);
-
-                        GumCommands.Self.FileCommands.TryAutoSaveProject();
-
-                        var oldDirectory = FileManager.GetDirectory(oldXml);
-                        var newDirectory = FileManager.GetDirectory(newXml);
-
-                        bool didMoveToNewDirectory = oldDirectory != newDirectory;
-
-                        if (didMoveToNewDirectory)
-                        {
-                            // refresh the entire tree view because the node is moving:
-                            GumCommands.Self.GuiCommands.RefreshElementTreeView();
-                        }
-                        else
-                        {
-                            GumCommands.Self.GuiCommands.RefreshElementTreeView(elementSave);
-                        }
+                        RenameXml(elementSave, oldName);
                     }
                 }
 
-                if (!shouldContinue && IsRenamingXmlFile)
+                if (!shouldContinue && isRenamingXmlFile)
                 {
                     elementSave.Name = oldName;
                 }
@@ -119,7 +71,43 @@ namespace Gum.Managers
             }
             finally
             {
-                IsRenamingXmlFile = false;
+                isRenamingXmlFile = false;
+            }
+        }
+
+        private static void RenameXml(ElementSave elementSave, string oldName)
+        {
+            // If we got here that means all went okay, so we should delete the old files
+            string oldXml = elementSave.GetFullPathXmlFile(oldName);
+            string newXml = elementSave.GetFullPathXmlFile();
+
+            // Delete the XML.
+            // If the file doesn't
+            // exist, no biggie - we
+            // were going to delete it
+            // anyway.
+            if (System.IO.File.Exists(oldXml))
+            {
+                System.IO.File.Delete(oldXml);
+            }
+
+            PluginManager.Self.ElementRename(elementSave, oldName);
+
+            GumCommands.Self.FileCommands.TryAutoSaveProject();
+
+            var oldDirectory = FileManager.GetDirectory(oldXml);
+            var newDirectory = FileManager.GetDirectory(newXml);
+
+            bool didMoveToNewDirectory = oldDirectory != newDirectory;
+
+            if (didMoveToNewDirectory)
+            {
+                // refresh the entire tree view because the node is moving:
+                GumCommands.Self.GuiCommands.RefreshElementTreeView();
+            }
+            else
+            {
+                GumCommands.Self.GuiCommands.RefreshElementTreeView(elementSave);
             }
         }
 
@@ -161,6 +149,12 @@ namespace Gum.Managers
                 foreach (var component in ProjectState.Self.GumProjectSave.Components)
                 {
                     bool shouldSave = false;
+                    if(component.BaseType == oldName)
+                    {
+                        component.BaseType = elementSave.Name;
+                        shouldSave = true;
+                    }
+
                     foreach (var instanceInScreen in component.Instances)
                     {
                         if (instanceInScreen.BaseType == oldName)
@@ -204,9 +198,9 @@ namespace Gum.Managers
             }
         }
 
-        private bool AskIfToRename(string oldName, bool askAboutRename, NameChangeAction action, bool shouldContinue)
+        private static bool AskIfToRename(string oldName, bool askAboutRename, NameChangeAction action, bool shouldContinue)
         {
-            if (shouldContinue && IsRenamingXmlFile && askAboutRename)
+            if (shouldContinue && isRenamingXmlFile && askAboutRename)
             {
                 string moveOrRename;
                 if(action == NameChangeAction.Move)
@@ -244,16 +238,14 @@ namespace Gum.Managers
             return shouldContinue;
         }
 
-        public void HandleRename(ElementSave containerElement, EventSave eventSave, string oldName)
+        public static void HandleRename(ElementSave containerElement, EventSave eventSave, string oldName)
         {
-
             List<ElementSave> elements = new List<ElementSave>();
             elements.AddRange(ProjectManager.Self.GumProjectSave.Screens);
             elements.AddRange(ProjectManager.Self.GumProjectSave.Components);
 
             foreach (var possibleElement in elements)
             {
-
                 foreach (var instance in possibleElement.Instances.Where(item=>item.IsOfType(containerElement.Name)))
                 {
                     foreach (var eventToRename in possibleElement.Events.Where(item => item.GetSourceObject() == instance.Name))

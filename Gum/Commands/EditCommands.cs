@@ -6,6 +6,7 @@ using Gum.Managers;
 using Gum.Plugins;
 using Gum.ToolCommands;
 using Gum.ToolStates;
+using StateAnimationPlugin.Views;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -299,8 +300,7 @@ namespace Gum.Commands
 
         #endregion
 
-        #region Component
-
+        #region Element
 
         public void DuplicateSelectedElement()
         {
@@ -387,6 +387,114 @@ namespace Gum.Commands
                 }
             }
 
+        }
+
+        public void DisplayReferencesTo(ElementSave element)
+        {
+            var elementName = element.Name;
+            List<object> references = new List<object>();
+            foreach (var screen in ProjectState.Self.GumProjectSave.Screens)
+            {
+                foreach (var instanceInScreen in screen.Instances)
+                {
+                    if (instanceInScreen.BaseType == elementName)
+                    {
+                        references.Add(instanceInScreen);
+                    }
+                }
+
+                foreach (var variable in screen.DefaultState.Variables.Where(item => item.GetRootName() == "Contained Type"))
+                {
+                    if (variable.Value as string == elementName)
+                    {
+                        references.Add(variable);
+                    }
+                }
+            }
+
+            foreach (var component in ProjectState.Self.GumProjectSave.Components)
+            {
+                if (component.BaseType == elementName)
+                {
+                    references.Add(component);
+                }
+
+                foreach (var instanceInScreen in component.Instances)
+                {
+                    if (instanceInScreen.BaseType == elementName)
+                    {
+                        references.Add(instanceInScreen);
+                    }
+                }
+
+                foreach (var variable in component.DefaultState.Variables.Where(item => item.GetRootName() == "Contained Type"))
+                {
+                    if (variable.Value as string == elementName)
+                    {
+                        references.Add(variable);
+                    }
+                }
+            }
+
+            if(references.Count > 0)
+            {
+                //var stringBuilder = new StringBuilder();
+                //stringBuilder.AppendLine($"The following objects reference {element}");
+                //foreach(var reference in references)
+                //{
+                //    stringBuilder.AppendLine(reference.ToString());
+                //}
+
+                //GumCommands.Self.GuiCommands.ShowMessage(stringBuilder.ToString());
+
+                ListBoxMessageBox lbmb = new ListBoxMessageBox();
+                lbmb.RequiresSelection = true;
+                lbmb.Message = $"The following objects reference {element}";
+                lbmb.ItemSelected += (not, used) =>
+                {
+                    var selectedItem = lbmb.SelectedItem;
+
+                    if(selectedItem is InstanceSave instance)
+                    {
+                        SelectedState.Self.SelectedInstance = instance;
+                    }
+                    else if(selectedItem is ElementSave selectedElement)
+                    {
+                        SelectedState.Self.SelectedElement = selectedElement;
+                    }
+                    else if(selectedItem is VariableSave variable)
+                    {
+                        ElementSave foundElement = ObjectFinder.Self.GumProjectSave.Screens
+                            .FirstOrDefault(item => item.DefaultState.Variables.Contains(variable));
+                        if(foundElement == null)
+                        {
+                            foundElement = ObjectFinder.Self.GumProjectSave.Components
+                                .FirstOrDefault(item => item.DefaultState.Variables.Contains(variable));
+                        }
+                        if(foundElement != null)
+                        {
+                            // what's the instance?
+                            var instanceWithVariable = foundElement.GetInstance(variable.SourceObject);
+
+                            if(instanceWithVariable != null)
+                            {
+                                SelectedState.Self.SelectedInstance = instanceWithVariable;
+                            }
+                        }
+                    }
+                };
+                foreach (var reference in references)
+                {
+                    lbmb.Items.Add(reference);
+                }
+                lbmb.HideCancelNoDialog();
+                lbmb.Show();
+
+            }
+            else
+            {
+                GumCommands.Self.GuiCommands.ShowMessage($"{element} is not referenced by any other Screen/Component");
+            }
         }
 
         #endregion

@@ -77,9 +77,6 @@
     <Compile Include="ViewModels\AnimationContainerViewModel.cs" />
     <Compile Include="ViewModels\ElementAnimationsViewModel.cs" />
     <Compile Include="ViewModels\AnimationViewModel.cs" />
-    <Compile Include="Views\ListBoxMessageBox.xaml.cs">
-      <DependentUpon>ListBoxMessageBox.xaml</DependentUpon>
-    </Compile>
     <Compile Include="Views\MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </Compile>
@@ -126,10 +123,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Page Include="Views\ListBoxMessageBox.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="Views\MainWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

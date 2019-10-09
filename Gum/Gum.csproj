@@ -127,6 +127,9 @@
       <DependentUpon>ColorDisplay.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\HeightUnitsControl.cs" />
+    <Compile Include="Controls\ListBoxMessageBox.xaml.cs">
+      <DependentUpon>ListBoxMessageBox.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\StateView.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -220,7 +223,7 @@
     <Compile Include="Plugins\VariableGrid\DeletingVariablesInCategoriesMessageBox.xaml.cs">
       <DependentUpon>DeletingVariablesInCategoriesMessageBox.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Managers\RenameManager.cs" />
+    <Compile Include="Logic\RenameLogic.cs" />
     <Compile Include="Managers\Singleton.cs" />
     <Compile Include="Mvvm\ObservableCollectionExtensions.cs" />
     <Compile Include="Mvvm\ViewModel.cs" />
@@ -583,6 +586,10 @@
   </ItemGroup>
   <ItemGroup>
     <Page Include="Controls\ColorDisplay.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Controls\ListBoxMessageBox.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

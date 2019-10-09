@@ -18,6 +18,7 @@ using CommonFormsAndControls.Forms;
 using ToolsUtilities;
 using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary.Graphics;
+using Gum.Logic;
 
 namespace Gum.PropertyGridHelpers
 {
@@ -158,7 +159,7 @@ namespace Gum.PropertyGridHelpers
         {
             if (changedMember == "Name")
             {
-                RenameManager.Self.HandleRename(container, instance, (string)oldValue, NameChangeAction.Rename);
+                RenameLogic.HandleRename(container, instance, (string)oldValue, NameChangeAction.Rename);
             }
         }
 

@@ -370,7 +370,7 @@ namespace Gum.Managers
 
                     string oldName = draggedAsElementSave.Name;
                     draggedAsElementSave.Name = nodeRelativeToProject + FileManager.RemovePath(draggedAsElementSave.Name);
-                    RenameManager.Self.HandleRename(draggedAsElementSave, (InstanceSave)null,  oldName, NameChangeAction.Move);
+                    RenameLogic.HandleRename(draggedAsElementSave, (InstanceSave)null,  oldName, NameChangeAction.Move);
 
                     handled = true;
                 }
@@ -390,7 +390,7 @@ namespace Gum.Managers
             {
                 // It's in a directory, we're going to move it out
                 draggedAsElementSave.Name = FileManager.RemovePath(name);
-                RenameManager.Self.HandleRename(draggedAsElementSave, (InstanceSave)null, name, NameChangeAction.Move);
+                RenameLogic.HandleRename(draggedAsElementSave, (InstanceSave)null, name, NameChangeAction.Move);
 
                 handled = true;
             }

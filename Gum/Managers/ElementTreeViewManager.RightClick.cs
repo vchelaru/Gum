@@ -13,6 +13,7 @@ using System.Diagnostics;
 using System.IO;
 using ToolsUtilities;
 using Gum.Wireframe;
+using Gum.Logic;
 
 namespace Gum.Managers
 {
@@ -263,13 +264,13 @@ namespace Gum.Managers
                 {
                     mMenuStrip.Items.Add("View in explorer", null, HandleViewInExplorer);
 
+                    mMenuStrip.Items.Add("View References", null, HandleViewReferences);
+
+                    mMenuStrip.Items.Add("-");
+
                     mAddInstance.Text = "Add object to " + SelectedState.Self.SelectedElement.Name;
                     mMenuStrip.Items.Add(mAddInstance);
                     mMenuStrip.Items.Add(mSaveObject);
-
-                    mDeleteObject.Text = "Delete " + SelectedState.Self.SelectedElement.ToString();
-                    mMenuStrip.Items.Add(mDeleteObject);
-
                     if(SelectedState.Self.SelectedScreen != null)
                     {
                         duplicateElement.Text = $"Duplicate {SelectedState.Self.SelectedScreen.Name}";
@@ -279,6 +280,13 @@ namespace Gum.Managers
                         duplicateElement.Text = $"Duplicate {SelectedState.Self.SelectedComponent.Name}";
                     }
                     mMenuStrip.Items.Add(duplicateElement);
+
+                    mMenuStrip.Items.Add("-");
+
+
+                    mDeleteObject.Text = "Delete " + SelectedState.Self.SelectedElement.ToString();
+                    mMenuStrip.Items.Add(mDeleteObject);
+
                 }
                 else if(SelectedState.Self.SelectedBehavior != null)
                 {
@@ -321,6 +329,11 @@ namespace Gum.Managers
                     mMenuStrip.Items.Add("Add Behavior", null, HandleAddBehavior);
                 }
             }
+        }
+
+        private void HandleViewReferences(object sender, EventArgs e)
+        {
+            GumCommands.Self.Edit.DisplayReferencesTo(SelectedState.Self.SelectedElement);
         }
 
         private void HandleRenameFolder(object sender, EventArgs e)
@@ -385,7 +398,7 @@ namespace Gum.Managers
                                 string newName = newPathRelativeToElementsRoot + screen.Name.Substring(oldPathRelativeToElementsRoot.Length);
 
                                 screen.Name = newName;
-                                RenameManager.Self.HandleRename(screen, (InstanceSave)null, oldVaue, NameChangeAction.Move, askAboutRename: false);
+                                RenameLogic.HandleRename(screen, (InstanceSave)null, oldVaue, NameChangeAction.Move, askAboutRename: false);
                             }
                         }
                     }
@@ -399,7 +412,7 @@ namespace Gum.Managers
                                 string newName = newPathRelativeToElementsRoot + component.Name.Substring(oldPathRelativeToElementsRoot.Length);
                                 component.Name = newName;
 
-                                RenameManager.Self.HandleRename(component, (InstanceSave)null, oldVaue, NameChangeAction.Move, askAboutRename:false);
+                                RenameLogic.HandleRename(component, (InstanceSave)null, oldVaue, NameChangeAction.Move, askAboutRename:false);
                             }
                         }
                     }
