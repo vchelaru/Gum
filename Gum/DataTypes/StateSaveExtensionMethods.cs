@@ -345,7 +345,7 @@ namespace Gum.DataTypes.Variables
             var coreVariableDefinition = stateSave.GetVariableRecursive(variableName);
 
             string exposedVariableSourceName = null;
-            if(!string.IsNullOrEmpty(coreVariableDefinition?.ExposedAsName))
+            if(!string.IsNullOrEmpty(coreVariableDefinition?.ExposedAsName) && instanceSave == null)
             {
                 exposedVariableSourceName = coreVariableDefinition.Name;
             }

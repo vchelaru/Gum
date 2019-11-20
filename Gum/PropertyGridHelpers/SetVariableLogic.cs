@@ -124,7 +124,34 @@ namespace Gum.PropertyGridHelpers
                         GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
 
                         // Inefficient but let's do this for now - we can make it more efficient later
-                        WireframeObjectManager.Self.RefreshAll(true, forceReloadTextures:false);
+                        // November 19, 2019
+                        // While this is inefficient
+                        // at runtime, it is *really*
+                        // inefficient for debugging. If
+                        // a set value fails, we have to trace
+                        // the entire variable assignment and that
+                        // can take forever. Therefore, we're going to
+                        // migrate towards setting the individual values
+                        // here. This can expand over time to just exclude
+                        // the RefreshAll call completely....but I don't know
+                        // if that will cause problems now, so instead I'm going
+                        // to do it one by one:
+                        var handledByDirectSet = false;
+                        if(unqualifiedMember == "Text" && instance != null)
+                        {
+                            var gue = WireframeObjectManager.Self.GetRepresentation(instance);
+
+                            if(gue != null)
+                            {
+                                gue.SetProperty(unqualifiedMember, value);
+                                handledByDirectSet = true;
+                            }
+                        }
+                        
+                        if(!handledByDirectSet)
+                        {
+                            WireframeObjectManager.Self.RefreshAll(true, forceReloadTextures:false);
+                        }
                         SelectionManager.Self.Refresh();
                     }
                 }

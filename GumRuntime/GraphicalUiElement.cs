@@ -1705,23 +1705,23 @@ namespace Gum.Wireframe
                         if (child.IsAllLayoutAbsolute() || onlyAbsoluteLayoutChildren == false)
                         {
                                 child.UpdateLayout(false, childrenUpdateDepth - 1);
+                        }
+                        else
+                        { 
+                            // only update absolute layout, and the child has some relative values, but let's see if 
+                            // we can do only one axis:
+                            if (child.IsAllLayoutAbsolute(XOrY.X))
+                            {
+                                child.UpdateLayout(false, childrenUpdateDepth - 1, XOrY.X);
                             }
-                            else
-                            { 
-                                // only update absolute layout, and the child has some relative values, but let's see if 
-                                // we can do only one axis:
-                                if (child.IsAllLayoutAbsolute(XOrY.X))
-                                {
-                                    child.UpdateLayout(false, childrenUpdateDepth - 1, XOrY.X);
-                                }
-                                else if (child.IsAllLayoutAbsolute(XOrY.Y))
-                                {
-                                    child.UpdateLayout(false, childrenUpdateDepth - 1, XOrY.Y);
-                                }
+                            else if (child.IsAllLayoutAbsolute(XOrY.Y))
+                            {
+                                child.UpdateLayout(false, childrenUpdateDepth - 1, XOrY.Y);
                             }
                         }
                     }
                 }
+            }
             else
             {
                 for (int i = 0; i < this.Children.Count; i++)
@@ -2570,9 +2570,20 @@ namespace Gum.Wireframe
 
                 if (this.mContainedObjectAsIpso != null)
                 {
-                    if(mContainedObjectAsIpso is Text)
+                    if(mContainedObjectAsIpso is Text asText)
                     {
-                        maxWidth = ((Text)mContainedObjectAsIpso).WrappedTextWidth;
+                        // It's possible that the text has itself wrapped, but the dimensions changed.
+                        if(asText.WrappedText.Count > 0 && 
+                            (asText.Width != 0 && float.IsPositiveInfinity(asText.Width) == false))
+                        {
+                            // this could be either because it wrapped, or because the raw text
+                            // actually has newlines. Vic says - this difference could maybe be tested
+                            // but I'm not sure it's worth the extra code for the minor savings here, so just
+                            // set the wrap width to positive infinity and refresh the text
+                            asText.Width = float.PositiveInfinity;
+                        }
+
+                        maxWidth = asText.WrappedTextWidth;
                     }
 
                     foreach (GraphicalUiElement element in this.Children)
@@ -4182,7 +4193,8 @@ namespace Gum.Wireframe
                     .ToArray();
 
             var variablesToConsider =
-                parentSettingVariables.Concat(nonParentSettingVariables);
+                parentSettingVariables.Concat(nonParentSettingVariables)
+                .ToArray() ;
 
             foreach (var variable in variablesToConsider)
             {

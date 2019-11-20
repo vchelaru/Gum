@@ -281,6 +281,11 @@ namespace WpfDataUi.DataTypes
 
         public event PropertyChangedEventHandler PropertyChanged;
 
+        /// <summary>
+        /// Provides a custom set event. This is required if the instance member is not part of the
+        /// Instance class as a field or property. The parameters are (owner, value)
+        /// </summary>
+        /// 
         public event Action<object, object> CustomSetEvent;
         /// <summary>
         /// Allows the InstanceMenber to define its own custom logic for getting a value.

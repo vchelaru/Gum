@@ -679,24 +679,27 @@ namespace Gum.Managers
             var selectedState = SelectedState.Self.SelectedStateSave;
 
             int red = 0;
-            object redAsObject = selectedState.GetValueRecursive(redVariableName);
-            if(redAsObject != null)
-            {
-                red = (int)redAsObject;
-            }
-
             int green = 0;
-            object greenAsObject = selectedState.GetValueRecursive(greenVariableName);
-            if (greenAsObject != null)
-            {
-                green = (int)greenAsObject;
-            }
-
             int blue = 0;
-            object blueAsObject = selectedState.GetValueRecursive(blueVariableName);
-            if (blueAsObject != null)
+            if(selectedState != null)
             {
-                blue = (int)blueAsObject;
+                object redAsObject = selectedState.GetValueRecursive(redVariableName);
+                if(redAsObject != null)
+                {
+                    red = (int)redAsObject;
+                }
+
+                object greenAsObject = selectedState.GetValueRecursive(greenVariableName);
+                if (greenAsObject != null)
+                {
+                    green = (int)greenAsObject;
+                }
+
+                object blueAsObject = selectedState.GetValueRecursive(blueVariableName);
+                if (blueAsObject != null)
+                {
+                    blue = (int)blueAsObject;
+                }
             }
 
             return new Microsoft.Xna.Framework.Color(red, green, blue);
