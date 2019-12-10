@@ -24,6 +24,14 @@ namespace Gum.PropertyGridHelpers
 {
     public class SetVariableLogic : Singleton<SetVariableLogic>
     {
+        static List<string> PropertiesSupportingIncrementalChange = new List<string>
+        {
+            "MaxLettersToShow",
+            "Text",
+            "X",
+            "Y",
+        };
+
         internal void PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
         {
             string changedMember = e.ChangedItem.PropertyDescriptor.Name;
@@ -137,7 +145,7 @@ namespace Gum.PropertyGridHelpers
                         // if that will cause problems now, so instead I'm going
                         // to do it one by one:
                         var handledByDirectSet = false;
-                        if(unqualifiedMember == "Text" && instance != null)
+                        if(PropertiesSupportingIncrementalChange.Contains(unqualifiedMember) && instance != null)
                         {
                             var gue = WireframeObjectManager.Self.GetRepresentation(instance);
 

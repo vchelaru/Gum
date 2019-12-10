@@ -32,17 +32,25 @@ namespace RenderingLibrary.Graphics
 
     #endregion
 
+    #region TextRenderingMode Enum
+
     public enum TextRenderingMode
     {
         RenderTarget,
         CharacterByCharacter
     }
 
+    #endregion
+
+    #region TextRenderingPositionMode
+
     public enum TextRenderingPositionMode
     {
         SnapToPixel,
         FreeFloating
     }
+
+    #endregion
 
     public class Text : IRenderableIpso, IVisible
     {
@@ -90,6 +98,8 @@ namespace RenderingLibrary.Graphics
         float mWidth = 200;
         float mHeight = 200;
         LinePrimitive mBounds;
+
+        
 
         BitmapFont mBitmapFont;
         Texture2D mTextureToRender;
@@ -174,6 +184,25 @@ namespace RenderingLibrary.Graphics
         {
             get;
             set;
+        }
+
+        int? maxLettersToShow;
+        /// <summary>
+        /// The maximum letters to display. This can be used to 
+        /// create an effect where the text prints out letter-by-letter.
+        /// </summary>
+        public int? MaxLettersToShow 
+        {
+            get => maxLettersToShow;
+            set
+            {
+                if(maxLettersToShow != value)
+                {
+                    maxLettersToShow = value;
+
+                    mNeedsBitmapFontRefresh = true;
+                }
+            }
         }
 
         public string RawText
@@ -713,7 +742,7 @@ namespace RenderingLibrary.Graphics
                     //}
 
                     var returnedRenderTarget = fontToUse.RenderToTexture2D(WrappedText, this.HorizontalAlignment,
-                        mManagers, mTextureToRender, this);
+                        mManagers, mTextureToRender, this, MaxLettersToShow);
                     bool isNewInstance = returnedRenderTarget != mTextureToRender;
 
                     if (isNewInstance && mTextureToRender != null)
@@ -820,11 +849,12 @@ namespace RenderingLibrary.Graphics
                 var absoluteLeft = mTempForRendering.GetAbsoluteLeft();
                 var absoluteTop = mTempForRendering.GetAbsoluteTop();
 
-                fontToUse.DrawTextLines(WrappedText, HorizontalAlignment, this,
+                fontToUse.DrawTextLines(WrappedText, HorizontalAlignment, 
+                    this,
                     requiredWidth, widths, spriteRenderer, Color,
                     absoluteLeft,
                     absoluteTop, 
-                    this.Rotation, FontScale, FontScale);
+                    this.Rotation, FontScale, FontScale, MaxLettersToShow);
             }
         }
 
@@ -840,7 +870,8 @@ namespace RenderingLibrary.Graphics
             else
             {
                 Sprite.Render(managers, spriteRenderer, mTempForRendering, mTextureToRender,
-                    new Color(mRed, mGreen, mBlue, mAlpha), null, false, false, Rotation, treat0AsFullDimensions: false,
+                    new Color(mRed, mGreen, mBlue, mAlpha), null, false, false, Rotation, 
+                    treat0AsFullDimensions: false,
                     objectCausingRenering: this);
 
             }

@@ -426,7 +426,7 @@ namespace RenderingLibrary.Graphics
         {
             var lines = whatToRender.Split('\n').ToList();
 
-            return RenderToTexture2D(lines, HorizontalAlignment.Left, managers, null, objectRequestingRender);
+            return RenderToTexture2D(lines, HorizontalAlignment.Left, managers, null, objectRequestingRender, null);
         }
 
         public Texture2D RenderToTexture2D(string whatToRender, HorizontalAlignment horizontalAlignment, SystemManagers managers, object objectRequestingRender)
@@ -447,9 +447,11 @@ namespace RenderingLibrary.Graphics
         /// <param name="managers"></param>
         /// <param name="toReplace"></param>
         /// <param name="objectRequestingRender"></param>
-        /// <param name="charLocations">Used to store char locations for drawing directly to screen.</param>
+        /// <param name="numberOfLettersToRender">The maximum number of characters to render.</param>
         /// <returns></returns>
-        public Texture2D RenderToTexture2D(List<string> lines, HorizontalAlignment horizontalAlignment, SystemManagers managers, Texture2D toReplace, object objectRequestingRender)
+        public Texture2D RenderToTexture2D(List<string> lines, HorizontalAlignment horizontalAlignment, 
+            SystemManagers managers, Texture2D toReplace, object objectRequestingRender, 
+            int? numberOfLettersToRender = null)
         {
             if (managers == null)
             {
@@ -511,7 +513,8 @@ namespace RenderingLibrary.Graphics
                 managers.Renderer.GraphicsDevice.Clear(Color.Transparent);
                 spriteRenderer.Begin();
 
-                DrawTextLines(lines, horizontalAlignment, objectRequestingRender, requiredWidth, widths, spriteRenderer, Color.White);
+                DrawTextLines(lines, horizontalAlignment, objectRequestingRender, requiredWidth, widths, 
+                    spriteRenderer, Color.White, numberOfLettersToRender: numberOfLettersToRender);
                 
                 spriteRenderer.End();
 
@@ -523,9 +526,12 @@ namespace RenderingLibrary.Graphics
             return renderTarget;
         }
 
-        public void DrawTextLines(List<string> lines, HorizontalAlignment horizontalAlignment, object objectRequestingChange, int requiredWidth, List<int> widths, SpriteRenderer spriteRenderer, 
+        public void DrawTextLines(List<string> lines, HorizontalAlignment horizontalAlignment, 
+            object objectRequestingChange, int requiredWidth, List<int> widths, 
+            SpriteRenderer spriteRenderer, 
             Color color,
-            float xOffset = 0, float yOffset = 0, float rotation = 0, float scaleX = 1, float scaleY = 1)
+            float xOffset = 0, float yOffset = 0, float rotation = 0, float scaleX = 1, float scaleY = 1,
+            int? numberOfLettersToRender = null)
         {
             var point = new Vector2();
 
@@ -557,6 +563,8 @@ namespace RenderingLibrary.Graphics
                 yAxis.X = (float)System.Math.Cos(-rotationRadians + MathHelper.PiOver2);
                 yAxis.Y = (float)System.Math.Sin(-rotationRadians + MathHelper.PiOver2);
             }
+
+            int numberOfLettersRendered = 0;
 
             foreach (string line in lines)
             {
@@ -603,9 +611,22 @@ namespace RenderingLibrary.Graphics
 
                         spriteRenderer.Draw(mTextures[pageIndex], position, sourceRect, color, 0, Vector2.Zero, new Vector2(scaleX, scaleY), SpriteEffects.None, 0, this);
                     }
+
+                    numberOfLettersRendered++;
+
+                    if(numberOfLettersToRender <= numberOfLettersRendered)
+                    {
+                        break;
+                    }
+
                 }
                 point.X = 0;
                 lineNumber++;
+
+                if (numberOfLettersToRender <= numberOfLettersRendered)
+                {
+                    break;
+                }
             }
         }
 

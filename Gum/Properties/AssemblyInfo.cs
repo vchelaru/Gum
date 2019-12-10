@@ -149,5 +149,8 @@ using System.Runtime.InteropServices;
 //   object display in the preview window.
 // 0.9.9.2
 // - Fixed possible crash when clicking on a component with an exposed variable
-[assembly: AssemblyVersion("0.9.9.2")]
-[assembly: AssemblyFileVersion("0.9.9.2")]
+// 1.0
+// - Line wrapped text now properly scales when the width units are dependent on children
+// - Added new event export system allowing tools to respond to actions performed in Gum
+[assembly: AssemblyVersion("1.0.0")]
+[assembly: AssemblyFileVersion("1.0.0")]

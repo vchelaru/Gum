@@ -3968,7 +3968,11 @@ namespace Gum.Wireframe
                 ((Text)mContainedObjectAsIpso).VerticalAlignment = (VerticalAlignment)value;
                 handled = true;
             }
-
+            else if(propertyName == "MaxLettersToShow")
+            {
+                ((Text)mContainedObjectAsIpso).MaxLettersToShow = (int)value;
+                handled = true;
+            }
 
             return handled;
         }

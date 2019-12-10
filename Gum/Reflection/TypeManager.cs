@@ -74,6 +74,7 @@ namespace Gum.Reflection
                 if (typeAsString == "bool") return typeof(bool);
                 if (typeAsString == "float") return typeof(float);
                 if (typeAsString == "int") return typeof(int);
+                if (typeAsString == "int?") return typeof(int?);
                 if (typeAsString == "double") return typeof(double);
                 if (typeAsString == "string") return typeof(string);
                 if (typeAsString == "long") return typeof(long);

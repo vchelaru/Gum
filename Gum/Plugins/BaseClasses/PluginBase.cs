@@ -26,6 +26,14 @@ namespace Gum.Plugins.BaseClasses
 
         public event Action<ElementSave> ElementAdd;
         public event Action<ElementSave> ElementDelete;
+
+        /// <summary>
+        /// Event raised when the element is renamed.
+        /// </summary>
+        /// <remarks>
+        /// ElementSave is the element that was renamed
+        /// string is the old name
+        /// </remarks>
         public event Action<ElementSave, string> ElementRename;
         /// <summary>
         /// Action raised when an event is renamed. String parameter is the State's old name.
@@ -33,10 +41,6 @@ namespace Gum.Plugins.BaseClasses
         public event Action<StateSave, string> StateRename;
         public event Action<StateSaveCategory, string> CategoryRename;
 
-        /// <summary>
-        /// Event raised whenever an instance is renamed. Second parameter is the old name.
-        /// </summary>
-        public event Action<InstanceSave, string> InstanceRename;
         public event Action<VariableSave, List<Attribute>> FillVariableAttributes;
         public event Action<string, StateSave> AddAndRemoveVariablesForType;
         public event Func<VariableSave, RecursiveVariableFinder, bool> VariableExcluded;
@@ -57,6 +61,10 @@ namespace Gum.Plugins.BaseClasses
         public event Action<ElementSave, InstanceSave> InstanceSelected;
         public event Action<ElementSave, InstanceSave> InstanceAdd;
         public event Action<ElementSave, InstanceSave> InstanceDelete;
+        /// <summary>
+        /// Event raised whenever an instance is renamed. Third parameter is the old name.
+        /// </summary>
+        public event Action<ElementSave, InstanceSave, string> InstanceRename;
         public event Action<InstanceSave> InstanceReordered;
 
         public event Action<ElementSave> BehaviorReferencesChanged;
@@ -201,9 +209,9 @@ namespace Gum.Plugins.BaseClasses
             }
         }
 
-        public void CallInstanceRename(InstanceSave instanceSave, string oldName)
+        public void CallInstanceRename(ElementSave parentElement, InstanceSave instanceSave, string oldName)
         {
-            InstanceRename?.Invoke(instanceSave, oldName);
+            InstanceRename?.Invoke(parentElement, instanceSave, oldName);
         }
 
         public void CallFillVariableAttributes(VariableSave variableSave, List<Attribute> listToFill)

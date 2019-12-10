@@ -61,10 +61,8 @@ namespace Gum.Plugins.Inheritance
             }
         }
 
-        private void HandleInstanceRenamed(InstanceSave instance, string oldName)
+        private void HandleInstanceRenamed(ElementSave container, InstanceSave instance, string oldName)
         {
-            var container = instance.ParentContainer;
-
             var elementsInheritingFromContainer =
                 ObjectFinder.Self.GetElementsInheritingFrom(container);
             foreach (var inheritingElement in elementsInheritingFromContainer)

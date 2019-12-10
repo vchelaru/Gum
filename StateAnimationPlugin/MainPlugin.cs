@@ -88,7 +88,7 @@ namespace StateAnimationPlugin
             RenameManager.Self.HandleRename(element, oldName, mCurrentViewModel);
         }
 
-        private void HandleInstanceRename(InstanceSave instanceSave, string oldName)
+        private void HandleInstanceRename(ElementSave element, InstanceSave instanceSave, string oldName)
         {
             if (mCurrentViewModel == null)
             {

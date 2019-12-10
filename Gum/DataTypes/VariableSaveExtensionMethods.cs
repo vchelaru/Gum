@@ -71,6 +71,9 @@ namespace Gum.DataTypes
                 case "int":
                     foundType = typeof(int);
                     break;
+                case "int?":
+                    foundType = typeof(int?);
+                    break;
                 case "float":
                     foundType = typeof(float);
                     break;
@@ -280,6 +283,7 @@ namespace Gum.DataTypes
             {
                 case "string":
                 case "int":
+                case "int?":
                 case "float":
                 case "bool":
                 case "decimal":

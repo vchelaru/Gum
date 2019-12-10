@@ -8,12 +8,15 @@ using RenderingLibrary.Graphics;
 
 namespace RenderingLibrary
 {
+    #region Enums
+
     public enum CameraCenterOnScreen
     {
         Center,
         TopLeft
     }
 
+    #endregion
 
     public class Camera
     {
@@ -169,7 +172,10 @@ namespace RenderingLibrary
             private set;
         }
 
-
+        /// <summary>
+        /// The zoom value for everything on this camera. Default value of 1.
+        /// A value of 2 will make everything appear twice as large.
+        /// </summary>
         public float Zoom
         {
             get;

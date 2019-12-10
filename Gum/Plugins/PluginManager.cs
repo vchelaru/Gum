@@ -753,7 +753,7 @@ namespace Gum.Plugins
                 {
                     plugin.CallStateRename(stateSave, oldName);
                 },
-                "StateRename"
+                nameof(StateRename)
                 );
         }
 
@@ -764,18 +764,18 @@ namespace Gum.Plugins
                 {
                     plugin.CallStateCategoryRename(category, oldName);
                 },
-                "CategoryRename"
+                nameof(CategoryRename)
                 );
         }
 
-        internal void InstanceRename(InstanceSave instanceSave, string oldName)
+        internal void InstanceRename(ElementSave element, InstanceSave instanceSave, string oldName)
         {
             CallMethodOnPlugin(
                 delegate (PluginBase plugin)
                 {
-                    plugin.CallInstanceRename(instanceSave, oldName);
+                    plugin.CallInstanceRename(element, instanceSave, oldName);
                 },
-                "InstanceRename"
+                nameof(InstanceRename)
                 );
 
         }
@@ -787,7 +787,7 @@ namespace Gum.Plugins
                 {
                     plugin.CallGuidesChanged();
                 },
-                "GuidesChanged"
+                nameof(GuidesChanged)
             );
         }
 

@@ -43,6 +43,32 @@ namespace Gum
             WireframeCommands = new WireframeCommands();
         }
 
+        public void TryMultipleTimes(Action action, int numberOfTimesToTry = 5)
+        {
+            const int msSleep = 200;
+            int failureCount = 0;
+
+            while (failureCount < numberOfTimesToTry)
+            {
+                try
+                {
+                    action();
+                    break;
+                }
+
+
+                catch (Exception e)
+                {
+                    failureCount++;
+                    System.Threading.Thread.Sleep(msSleep);
+                    if (failureCount >= numberOfTimesToTry)
+                    {
+                        throw e;
+                    }
+                }
+            }
+        }
+
         public void Initialize(MainWindow mainWindow)
         {
             GuiCommands.Initialize(mainWindow);

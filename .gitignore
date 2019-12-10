@@ -15,6 +15,7 @@ GumRuntime/bin/
 WpfDataUi/bin/
 InputLibrary/bin/
 ToolsUtilities/bin/
+EventOutputPlugin/bin/
 GumUnitTests/obj/
 WpfDataUi/obj/
 Gum/obj/

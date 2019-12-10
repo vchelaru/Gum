@@ -330,7 +330,7 @@ namespace Gum.DataTypes.Variables
             }
 
 #if GUM
-            PluginManager.Self.InstanceRename(instanceSave, oldName);
+            PluginManager.Self.InstanceRename(instanceSave.ParentContainer, instanceSave, oldName);
 #endif
 
         }
@@ -551,6 +551,10 @@ namespace Gum.DataTypes.Variables
                 else if (value is int)
                 {
                     variableSave.Type = "int";
+                }
+                else if (value is int?)
+                {
+                    variableSave.Type = "int?";
                 }
                 // account for enums
                 else if (value is string)

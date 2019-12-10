@@ -95,10 +95,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ContentLibrary\ContentLibrary.csproj">
-      <Project>{6e3deca0-b292-4fba-b585-7460a329de2e}</Project>
-      <Name>ContentLibrary</Name>
-    </ProjectReference>
     <ProjectReference Include="..\GumDataTypes\GumDataTypes.csproj">
       <Project>{5971a187-f6b2-4d65-a277-5613ded1f50f}</Project>
       <Name>GumDataTypes</Name>
