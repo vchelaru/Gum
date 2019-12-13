@@ -227,6 +227,12 @@ namespace TextureCoordinateSelectionPlugin.Logic
                 return;
             }
 
+            if(SelectedState.Self.SelectedElement == null)
+            {
+                // in case a behavior is selected:
+                return;
+            }
+
             //////////////end early out///////////////////////////////
 
             var shouldClearOut = true;

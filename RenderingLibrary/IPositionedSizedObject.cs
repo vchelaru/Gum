@@ -86,6 +86,16 @@ namespace RenderingLibrary
             return ipso.GetAbsoluteY() + ipso.Height;
         }
 
+        public static float GetAbsoluteCenterX(this IRenderableIpso ipso)
+        {
+            return ipso.GetAbsoluteX() + ipso.Width/2.0f;
+        }
+
+        public static float GetAbsoluteCenterY(this IRenderableIpso ipso)
+        {
+            return ipso.GetAbsoluteTop() + ipso.Height / 2.0f;
+        }
+
         public static bool HasCursorOver(this IRenderableIpso ipso, float x, float y)
         {
             float absoluteX = ipso.GetAbsoluteX();

@@ -629,9 +629,16 @@ namespace RenderingLibrary.Graphics
                 }
 
                 // If it's the first word and it's empty, don't add anything
-                if (!string.IsNullOrEmpty(word) || !string.IsNullOrEmpty(line))
+                if ((!string.IsNullOrEmpty(word) || !string.IsNullOrEmpty(line)))
                 {
-                    line = line + word + ' ';
+                    if(wordArray.Count > 1)
+                    {
+                        line = line + word + ' ';
+                    }
+                    else
+                    {
+                        line = line + word;
+                    }
                 }
 
                 wordArray.RemoveAt(0);
@@ -648,21 +655,27 @@ namespace RenderingLibrary.Graphics
             // We want to remove any trailing spaces on any lines except the last. On the last we allow
             // the user to have as many spaces as they want
             // count-1 to exclude the last line
-            for(int i = 0; i < mWrappedText.Count - 1; i++)
-            {
-                var lineToTrim = mWrappedText[i];
-                var reAssign = false;
-                while (lineToTrim.EndsWith(" "))
-                {
-                    lineToTrim = lineToTrim.Substring(0, lineToTrim.Length - 1);
-                    reAssign = true;
-                }
+            // Update Dec 10 2019
+            // Why do we trim the ending
+            // spaces? This means lines won't
+            // have spaces at the end, but they 
+            // should for FRB.Forms to properly show
+            // ending spaces for character count.
+            //for(int i = 0; i < mWrappedText.Count - 1; i++)
+            //{
+            //    var lineToTrim = mWrappedText[i];
+            //    var reAssign = false;
+            //    while (lineToTrim.EndsWith(" "))
+            //    {
+            //        lineToTrim = lineToTrim.Substring(0, lineToTrim.Length - 1);
+            //        reAssign = true;
+            //    }
 
-                if(reAssign)
-                {
-                    mWrappedText[i] = lineToTrim;
-                }
-            }
+            //    if(reAssign)
+            //    {
+            //        mWrappedText[i] = lineToTrim;
+            //    }
+            //}
 
             // June 30, 2018
             // We no longer want

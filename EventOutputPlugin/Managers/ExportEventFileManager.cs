@@ -45,25 +45,28 @@ namespace EventOutputPlugin.Managers
         {
             const int daysToKeep = 14;
 
-            var filesInDirectory = System.IO.Directory.GetFiles(EventExportDirector);
-
-            var cutoff = DateTime.UtcNow.AddDays(-daysToKeep);
-
-            foreach(var file in filesInDirectory)
+            if(System.IO.Directory.Exists(EventExportDirector))
             {
-                var fileDate = GetFileDateTimeUtc(file);
+                var filesInDirectory = System.IO.Directory.GetFiles(EventExportDirector);
 
-                if(fileDate < cutoff)
+                var cutoff = DateTime.UtcNow.AddDays(-daysToKeep);
+
+                foreach(var file in filesInDirectory)
                 {
-                    try
+                    var fileDate = GetFileDateTimeUtc(file);
+
+                    if(fileDate < cutoff)
                     {
-                        System.IO.File.Delete(file);
-                    }
-                    catch(Exception e)
-                    {
-                        // if we can't, oh well
-                        GumCommands.Self.GuiCommands.PrintOutput(
-                            $"Error attempting to delete event file:\n{e}");
+                        try
+                        {
+                            System.IO.File.Delete(file);
+                        }
+                        catch(Exception e)
+                        {
+                            // if we can't, oh well
+                            GumCommands.Self.GuiCommands.PrintOutput(
+                                $"Error attempting to delete event file:\n{e}");
+                        }
                     }
                 }
             }

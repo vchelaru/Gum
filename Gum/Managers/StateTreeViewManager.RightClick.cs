@@ -31,7 +31,7 @@ namespace Gum.Managers
 
             if (SelectedState.Self.SelectedStateSave != null)
             {
-                bool isDefault = SelectedState.Self.SelectedStateSave == SelectedState.Self.SelectedElement.DefaultState; 
+                bool isDefault = SelectedState.Self.SelectedStateSave == SelectedState.Self.SelectedElement?.DefaultState; 
 
                 mMenuStrip.Items.Add("-");
 
