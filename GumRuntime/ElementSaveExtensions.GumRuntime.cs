@@ -140,7 +140,10 @@ namespace GumRuntime
 
         public static void SetStatesAndCategoriesRecursively(this GraphicalUiElement graphicalElement, ElementSave elementSave)
         {
-
+            if(graphicalElement == null)
+            {
+                throw new ArgumentNullException(nameof(graphicalElement));
+            }
             if(!string.IsNullOrEmpty(elementSave.BaseType))
             {
                 var baseElementSave = Gum.Managers.ObjectFinder.Self.GetElementSave(elementSave.BaseType);

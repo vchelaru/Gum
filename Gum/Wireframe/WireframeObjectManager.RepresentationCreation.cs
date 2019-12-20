@@ -289,18 +289,18 @@ namespace Gum.Wireframe
                 string parent = rvf.GetValue<string>(instance.Name + ".Parent");
 
                 SetGuideParent(container, graphicalElement, guide);
-            }
 
-            if (baseElement != null)
-            {
-                graphicalElement.SetStatesAndCategoriesRecursively(baseElement);
-
-                // for performance reasons, we'll suspend the layout here:
-                graphicalElement.SuspendLayout();
+                if (baseElement != null)
                 {
-                    graphicalElement.SetVariablesRecursively(baseElement, baseElement.DefaultState);
+                    graphicalElement.SetStatesAndCategoriesRecursively(baseElement);
+
+                    // for performance reasons, we'll suspend the layout here:
+                    graphicalElement.SuspendLayout();
+                    {
+                        graphicalElement.SetVariablesRecursively(baseElement, baseElement.DefaultState);
+                    }
+                    graphicalElement.ResumeLayout();
                 }
-                graphicalElement.ResumeLayout();
             }
 
             return graphicalElement;
