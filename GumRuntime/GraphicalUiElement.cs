@@ -1523,11 +1523,7 @@ namespace Gum.Wireframe
                         {
                             foreach (var child in this.mWhatThisContains)
                             {
-                                canOneDimensionChangeOtherDimension = child.RenderableComponent is Text ||
-                                    child.WidthUnits == DimensionUnitType.PercentageOfOtherDimension ||
-                                    child.HeightUnits == DimensionUnitType.PercentageOfOtherDimension ||
-                                    ((child.ChildrenLayout == ChildrenLayout.LeftToRightStack || 
-                                     child.ChildrenLayout == ChildrenLayout.TopToBottomStack) && child.WrapsChildren);
+                                canOneDimensionChangeOtherDimension = GetIfOneDimensionCanChangeOtherDimension(child);
 
                                 if (canOneDimensionChangeOtherDimension)
                                 {
@@ -1541,17 +1537,11 @@ namespace Gum.Wireframe
                             {
                                 var uncastedChild = Children[i];
 
-                                if(uncastedChild is GraphicalUiElement)
+                                if(uncastedChild is GraphicalUiElement child)
                                 {
-                                    var child = uncastedChild as GraphicalUiElement;
+                                    canOneDimensionChangeOtherDimension = GetIfOneDimensionCanChangeOtherDimension(child);
 
-                                    canOneDimensionChangeOtherDimension = child.RenderableComponent is Text ||
-                                        child.WidthUnits == DimensionUnitType.PercentageOfOtherDimension ||
-                                        child.HeightUnits == DimensionUnitType.PercentageOfOtherDimension ||
-                                        ((child.ChildrenLayout == ChildrenLayout.LeftToRightStack ||
-                                         child.ChildrenLayout == ChildrenLayout.TopToBottomStack) && child.WrapsChildren);
-
-                                    if(canOneDimensionChangeOtherDimension)
+                                    if (canOneDimensionChangeOtherDimension)
                                     {
                                         break;
                                     }
@@ -1601,6 +1591,38 @@ namespace Gum.Wireframe
                     UpdateLayerScissor();
                 }
             }
+
+        }
+
+        private static bool GetIfOneDimensionCanChangeOtherDimension(GraphicalUiElement gue)
+        {
+            var canOneDimensionChangeTheOtherOnChild = gue.RenderableComponent is Text ||
+                    gue.WidthUnits == DimensionUnitType.PercentageOfOtherDimension ||
+                    gue.HeightUnits == DimensionUnitType.PercentageOfOtherDimension ||
+                    ((gue.ChildrenLayout == ChildrenLayout.LeftToRightStack || gue.ChildrenLayout == ChildrenLayout.TopToBottomStack) && gue.WrapsChildren);
+
+            // If the child cannot be directly changed by a dimension, it may be indirectly changed by a dimension recursively. This can happen
+            // if the child either depends on its own children's widths and heights, and one of its children can have its dimension changed.
+
+            if(!canOneDimensionChangeTheOtherOnChild && gue.GetIfDimensionsDependOnChildren())
+            {
+                for (int i = 0; i < gue.Children.Count; i++)
+                {
+                    var uncastedChild = gue.Children[i];
+
+                    if (uncastedChild is GraphicalUiElement child)
+                    {
+
+                        if(GetIfOneDimensionCanChangeOtherDimension(child))
+                        {
+                            canOneDimensionChangeTheOtherOnChild = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            return canOneDimensionChangeTheOtherOnChild;
 
         }
 

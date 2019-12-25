@@ -20,6 +20,10 @@ namespace RenderingLibrary.Graphics
 
         public IRenderableIpso ScissorIpso { get; set; }
 
+        /// <summary>
+        /// Contains values which the Layer can use to override the camera settings.
+        /// By default this is null, which means the Layer uses the camera settings. 
+        /// </summary>
         public LayerCameraSettings LayerCameraSettings
         {
             get;

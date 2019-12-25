@@ -30,6 +30,8 @@ namespace Gum.PropertyGridHelpers
             "Text",
             "X",
             "Y",
+            "Width",
+            "Height",
         };
 
         internal void PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
