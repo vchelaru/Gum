@@ -76,23 +76,26 @@ namespace Gum.Controls
 
         private static void CreateCachedOptions()
         {
-            BitmapImage absoluteBitmap =
-                                CreateBitmapFromFile("Content/Icons/HeightUnits/AbsoluteHeight.png");
+            var absoluteBitmap =
+               CreateBitmapFromFile("Content/Icons/HeightUnits/AbsoluteHeight.png");
 
-            BitmapImage percentageOfHeightBitmap =
+            var percentageOfHeightBitmap =
                 CreateBitmapFromFile("Content/Icons/HeightUnits/PercentageOfOtherWidth.png");
 
-            BitmapImage percentOfParentBitmap =
+            var percentOfParentBitmap =
                 CreateBitmapFromFile("Content/Icons/HeightUnits/PercentOfParent.png");
 
-            BitmapImage relativeToChildrenBitmap =
+            var relativeToChildrenBitmap =
                 CreateBitmapFromFile("Content/Icons/HeightUnits/RelativeToChildren.png");
 
-            BitmapImage relativeToParentBitmap =
+            var relativeToParentBitmap =
                 CreateBitmapFromFile("Content/Icons/HeightUnits/RelativeToParent.png");
 
-            BitmapImage percentageOfFileHeightBitmap =
+            var percentageOfFileHeightBitmap =
                 CreateBitmapFromFile("Content/Icons/HeightUnits/PercentageOfFileHeight.png");
+
+            var maintainFileAspectRatio =
+                CreateBitmapFromFile("Content/Icons/HeightUnits/MaintainFileAspectRatioHeight.png");
 
             cachedOptions = new Option[]
             {
@@ -132,6 +135,12 @@ namespace Gum.Controls
                         Name = "Percentage of File Height",
                         Value = DimensionUnitType.PercentageOfSourceFile,
                         Image = percentageOfFileHeightBitmap
+                    },
+                    new Option
+                    {
+                        Name = "Maintain File Aspect Ratio Height",
+                        Value = DimensionUnitType.MaintainFileAspectRatio,
+                        Image = maintainFileAspectRatio
                     }
             };
         }

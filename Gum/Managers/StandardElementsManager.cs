@@ -541,6 +541,7 @@ namespace Gum.Managers
             if (dimensionVariableAction == DimensionVariableAction.ExcludeFileOptions)
             {
                 variableSave.ExcludedValuesForEnum.Add(DimensionUnitType.PercentageOfSourceFile);
+                variableSave.ExcludedValuesForEnum.Add(DimensionUnitType.MaintainFileAspectRatio);
             }
             stateSave.Variables.Add(variableSave);
 
@@ -552,6 +553,7 @@ namespace Gum.Managers
             if (dimensionVariableAction == DimensionVariableAction.ExcludeFileOptions)
             {
                 variableSave.ExcludedValuesForEnum.Add(DimensionUnitType.PercentageOfSourceFile);
+                variableSave.ExcludedValuesForEnum.Add(DimensionUnitType.MaintainFileAspectRatio);
             }
             stateSave.Variables.Add(variableSave);
         }

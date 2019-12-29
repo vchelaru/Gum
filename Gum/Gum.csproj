@@ -573,6 +573,12 @@
     <None Include="Content\AddPoint.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="Content\Icons\HeightUnits\MaintainFileAspectRatioHeight.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Icons\WidthUnits\MaintainFileAspectRatioWidth.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <Content Include="Libraries\TargaImage.dll" />
     <Content Include="Libraries\TargaImage.xml" />
     <None Include="Content\InvalidTexture.png">

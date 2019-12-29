@@ -1599,6 +1599,10 @@ namespace Gum.Wireframe
             var canOneDimensionChangeTheOtherOnChild = gue.RenderableComponent is Text ||
                     gue.WidthUnits == DimensionUnitType.PercentageOfOtherDimension ||
                     gue.HeightUnits == DimensionUnitType.PercentageOfOtherDimension ||
+                    gue.WidthUnits == DimensionUnitType.MaintainFileAspectRatio ||
+                    gue.HeightUnits == DimensionUnitType.MaintainFileAspectRatio ||
+
+
                     ((gue.ChildrenLayout == ChildrenLayout.LeftToRightStack || gue.ChildrenLayout == ChildrenLayout.TopToBottomStack) && gue.WrapsChildren);
 
             // If the child cannot be directly changed by a dimension, it may be indirectly changed by a dimension recursively. This can happen
@@ -2435,7 +2439,14 @@ namespace Gum.Wireframe
                 mContainedObjectAsIpso.Width = mWidth;
                 mContainedObjectAsIpso.Height = mHeight;
             }
-            else if (mWidthUnit == DimensionUnitType.PercentageOfOtherDimension)
+            // see above
+            if (mWidthUnit == DimensionUnitType.MaintainFileAspectRatio && mHeightUnit == DimensionUnitType.MaintainFileAspectRatio)
+            {
+                mContainedObjectAsIpso.Width = mWidth;
+                mContainedObjectAsIpso.Height = mHeight;
+            }
+            else if (mWidthUnit == DimensionUnitType.PercentageOfOtherDimension ||
+                mWidthUnit == DimensionUnitType.MaintainFileAspectRatio)
             {
                 // if width depends on height, do height first:
                 if (xOrY == null || xOrY == XOrY.Y)
@@ -2447,7 +2458,8 @@ namespace Gum.Wireframe
                     UpdateWidth(parentWidth);
                 }
             }
-            else if (mHeightUnit == DimensionUnitType.PercentageOfOtherDimension)
+            else if (mHeightUnit == DimensionUnitType.PercentageOfOtherDimension ||
+                mHeightUnit == DimensionUnitType.MaintainFileAspectRatio)
             {
                 // If height depends on width, do width first
                 if (xOrY == null || xOrY == XOrY.X)
@@ -2568,6 +2580,38 @@ namespace Gum.Wireframe
                     heightToSet = 64 * mHeight / 100.0f;
                 }
             }
+            else if(mHeightUnit == DimensionUnitType.MaintainFileAspectRatio)
+            {
+                bool wasSet = false;
+                if(mContainedObjectAsIpso is Sprite sprite)
+                {
+                    if(sprite.AtlasedTexture != null)
+                    {
+                        throw new NotImplementedException();
+                    }
+                    else if(sprite.Texture != null)
+                    {
+                        var scale = GetAbsoluteWidth() / sprite.Texture.Width;
+                        heightToSet = sprite.Texture.Height * scale * mHeight/100.0f;
+                        wasSet = true;
+                    }
+
+                    if(wasSet)
+                    {
+                        // If the address is dimension based, then that means texture coords depend on dimension...but we
+                        // can't make dimension based on texture coords as that would cause a circular reference
+                        if (sprite.EffectiveRectangle.HasValue && mTextureAddress != TextureAddress.DimensionsBased)
+                        {
+                            var scale = GetAbsoluteWidth() / sprite.EffectiveRectangle.Value.Width;
+                            heightToSet = sprite.EffectiveRectangle.Value.Height * scale * mHeight / 100.0f;
+                        }
+                    }
+                }
+                if (!wasSet)
+                {
+                    heightToSet = 64 * mHeight / 100.0f;
+                }
+            }
             else if (mHeightUnit == DimensionUnitType.RelativeToContainer)
             {
                 heightToSet = parentHeight + mHeight;
@@ -2683,6 +2727,36 @@ namespace Gum.Wireframe
                     }
                 }
 
+                if (!wasSet)
+                {
+                    widthToSet = 64 * mWidth / 100.0f;
+                }
+            }
+            else if(mWidthUnit == DimensionUnitType.MaintainFileAspectRatio)
+            {
+                bool wasSet = false;
+                if(mContainedObjectAsIpso is Sprite sprite)
+                {
+                    if(sprite.AtlasedTexture != null)
+                    {
+                        throw new NotImplementedException();
+                    }
+                    else if(sprite.Texture != null)
+                    {
+                        var scale = GetAbsoluteHeight() / sprite.Texture.Height;
+                        widthToSet = sprite.Texture.Width * scale * mWidth / 100.0f;
+                        wasSet = true;
+                    }
+
+                    if(wasSet)
+                    {
+                        if(sprite.EffectiveRectangle.HasValue && mTextureAddress != TextureAddress.DimensionsBased)
+                        {
+                            var scale = GetAbsoluteHeight() / sprite.EffectiveRectangle.Value.Height;
+                            widthToSet = sprite.EffectiveRectangle.Value.Width * scale * mWidth / 100.0f;
+                        }
+                    }
+                }
                 if (!wasSet)
                 {
                     widthToSet = 64 * mWidth / 100.0f;

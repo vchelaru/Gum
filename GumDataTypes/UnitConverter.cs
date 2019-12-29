@@ -37,7 +37,8 @@ namespace Gum.Converters
         Percentage,
         PercentageOfFile,
         PixelsFromMiddleInverted,
-        PercentageOfOtherDimension
+        PercentageOfOtherDimension,
+        MaintainFileAspectRatio
     }
 
     public static class GeneralUnitTypeExtensions
@@ -189,6 +190,11 @@ namespace Gum.Converters
             {
                 relativeX = 100 * pixelXToConvert / fileWidth;
             }
+            else if(generalX == GeneralUnitType.MaintainFileAspectRatio)
+            {
+                throw new NotImplementedException();
+                //relativeX = pixelYToConvert / fileWidth;
+            }
             else if(generalX == GeneralUnitType.PercentageOfOtherDimension)
             {
                 relativeX = pixelXToConvert / ( ownerHeightInPixels / 100f);
@@ -217,6 +223,10 @@ namespace Gum.Converters
             else if (generalY == GeneralUnitType.PixelsFromLarge)
             {
                 relativeY = pixelYToConvert - parentHeight;
+            }
+            else if(generalY == GeneralUnitType.MaintainFileAspectRatio)
+            {
+                throw new NotImplementedException();
             }
             else if (generalY == GeneralUnitType.PercentageOfFile)
             {
@@ -306,6 +316,8 @@ namespace Gum.Converters
                     return GeneralUnitType.PercentageOfFile;
                 case DimensionUnitType.PercentageOfOtherDimension:
                     return GeneralUnitType.PercentageOfOtherDimension;
+                case DimensionUnitType.MaintainFileAspectRatio:
+                    return GeneralUnitType.MaintainFileAspectRatio;
                 default:
                     throw new NotImplementedException();
             }

@@ -74,25 +74,26 @@ namespace Gum.Controls
 
         private static void CreateCachedOptions()
         {
-            BitmapImage absoluteBitmap =
+            var absoluteBitmap =
                                 CreateBitmapFromFile("Content/Icons/WidthUnits/AbsoluteWidth.png");
 
-            BitmapImage percentageOfHeightBitmap =
+            var percentageOfHeightBitmap =
                 CreateBitmapFromFile("Content/Icons/WidthUnits/PercentageOfOtherHeight.png");
 
-            BitmapImage percentOfParentBitmap =
+            var percentOfParentBitmap =
                 CreateBitmapFromFile("Content/Icons/WidthUnits/PercentOfParent.png");
 
-            BitmapImage relativeToChildrenBitmap =
+            var relativeToChildrenBitmap =
                 CreateBitmapFromFile("Content/Icons/WidthUnits/RelativeToChildren.png");
 
-            BitmapImage relativeToParentBitmap =
+            var relativeToParentBitmap =
                 CreateBitmapFromFile("Content/Icons/WidthUnits/RelativeToParent.png");
 
-            BitmapImage percentageOfFileWidth =
+            var percentageOfFileWidth =
                 CreateBitmapFromFile("Content/Icons/WidthUnits/PercentageOfFileWidth.png");
 
-
+            var maintainFileAspectRatio =
+                CreateBitmapFromFile("Content/Icons/WidthUnits/MaintainFileAspectRatioWidth.png");
             cachedOptions = new Option[]
             {
                     new Option
@@ -131,6 +132,12 @@ namespace Gum.Controls
                         Name = "Percentage of File Width",
                         Value = DimensionUnitType.PercentageOfSourceFile,
                         Image = percentageOfFileWidth
+                    },
+                    new Option
+                    {
+                        Name = "Maintain File Aspect Ratio Width",
+                        Value = DimensionUnitType.MaintainFileAspectRatio,
+                        Image = maintainFileAspectRatio
                     }
 
             };
