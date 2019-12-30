@@ -700,7 +700,14 @@ namespace Gum.DataTypes.Variables
 #endif
         }
 
-#if GUM
+        public static void ConvertEnumerationValuesToInts(this StateSave stateSave)
+        {
+            foreach (VariableSave variable in stateSave.Variables)
+            {
+                variable.ConvertEnumerationValuesToInts();
+            }
+        }
+
         public static void FixEnumerations(this StateSave stateSave)
         {
             foreach (VariableSave variable in stateSave.Variables)
@@ -716,7 +723,6 @@ namespace Gum.DataTypes.Variables
 
 
         }
-#endif
         // I wrote this for animation but it turns out it isn't going to work how I expected
         //public static StateSave CombineBaseValuesAndClone(this StateSave stateSave)
         //{

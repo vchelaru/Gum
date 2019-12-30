@@ -70,3 +70,5 @@ C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\obj\Debug\EventOutputPlugi
 C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\obj\Debug\EventOutputPlugin.pdb
 C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\bin\Debug\Newtonsoft.Json.dll
 C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\bin\Debug\Newtonsoft.Json.xml
+C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\bin\Debug\Content\Icons\HeightUnits\MaintainFileAspectRatioHeight.png
+C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\bin\Debug\Content\Icons\WidthUnits\MaintainFileAspectRatioWidth.png

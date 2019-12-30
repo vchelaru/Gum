@@ -296,6 +296,34 @@ namespace Gum.DataTypes
             return true;
         }
 
+        public static void ConvertEnumerationValuesToInts(this VariableSave variableSave)
+        {
+            if(variableSave.Value != null)
+            {
+                switch (variableSave.Type)
+                {
+                    case "DimensionUnitType":
+                    case "Gum.DataTypes.DimensionUnitType":
+                    case "VerticalAlignment":
+                    case "RenderingLibrary.Graphics.VerticalAlignment":
+                    case "HorizontalAlignment":
+                    case "RenderingLibrary.Graphics.HorizontalAlignment":
+                    case "PositionUnitType":
+                    case "Gum.Managers.PositionUnitType":
+                    case "GeneralUnitType":
+                    case "Gum.Converters.GeneralUnitType":
+                    case "Gum.RenderingLibrary.Blend":
+                    case "Blend":
+                    case "Gum.Managers.TextureAddress":
+                    case "TextureAddress":
+                    case "Gum.Managers.ChildrenLayout":
+                    case "ChildrenLayout":
+                        variableSave.Value = (int)variableSave.Value;
+                        break;
+                }
+            }
+        }
+
         /// <summary>
         /// Converts integer values to their corresponding enumeration values. This should be called
         /// after variable saves are loaded from XML.
