@@ -409,7 +409,7 @@
       <Name>CommonFormsAndControls</Name>
     </ProjectReference>
     <ProjectReference Include="..\GumDataTypes\GumDataTypes.csproj">
-      <Project>{5971A187-F6B2-4D65-A277-5613DED1F50F}</Project>
+      <Project>{5971a187-f6b2-4d65-a277-5613ded1f50f}</Project>
       <Name>GumDataTypes</Name>
     </ProjectReference>
     <ProjectReference Include="..\InputLibrary\InputLibrary.csproj">

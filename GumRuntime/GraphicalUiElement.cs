@@ -3587,7 +3587,7 @@ namespace Gum.Wireframe
                         }
                         else
                         {
-                            if (NineSlice.GetIfShouldUsePattern(valueAsString))
+                            if (NineSliceExtensions.GetIfShouldUsePattern(valueAsString))
                             {
                                 nineSlice.SetTexturesUsingPattern(valueAsString, SystemManagers.Default, false);
                             }

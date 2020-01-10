@@ -75,10 +75,6 @@
     <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\GumDataTypes\GumDataTypes.csproj">
-      <Project>{5971A187-F6B2-4D65-A277-5613DED1F50F}</Project>
-      <Name>GumDataTypes</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Gum\Gum.csproj">
       <Project>{121AC5A5-8F6A-42B2-8863-DEBC45B052BC}</Project>
       <Name>Gum</Name>

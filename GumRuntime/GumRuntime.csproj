@@ -111,9 +111,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\GumDataTypes\GumDataTypes.csproj">
-      <Project>{5971a187-f6b2-4d65-a277-5613ded1f50f}</Project>
-      <Name>GumDataTypes</Name>
+    <ProjectReference Include="..\GumDataTypes\GumDataTypesStandard.csproj">
+      <Project>{049d8e60-b8fd-4b57-909c-ef83124e242f}</Project>
+      <Name>GumDataTypesStandard</Name>
     </ProjectReference>
     <ProjectReference Include="..\InputLibrary\InputLibrary.csproj">
       <Project>{938d9a00-8529-4ce8-9077-e0a3994a73ea}</Project>

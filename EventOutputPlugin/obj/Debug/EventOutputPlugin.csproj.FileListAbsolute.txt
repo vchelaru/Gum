@@ -42,7 +42,6 @@ C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\bin\Debug\Content\TestFont
 C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\bin\Debug\Plugins\readme.txt
 C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\bin\Debug\EventOutputPlugin.dll
 C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\bin\Debug\EventOutputPlugin.pdb
-C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\bin\Debug\Gum.DataTypes.dll
 C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\bin\Debug\Gum.exe
 C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\bin\Debug\Microsoft.Xna.Framework.dll
 C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\bin\Debug\ToolsUtilities.dll
@@ -53,7 +52,6 @@ C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\bin\Debug\Microsoft.Xna.Fr
 C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\bin\Debug\InputLibrary.dll
 C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\bin\Debug\Xceed.Wpf.Toolkit.dll
 C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\bin\Debug\XnaAndWinforms.dll
-C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\bin\Debug\Gum.DataTypes.pdb
 C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\bin\Debug\Gum.pdb
 C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\bin\Debug\Gum.exe.config
 C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\bin\Debug\Microsoft.Xna.Framework.xml
@@ -72,3 +70,5 @@ C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\bin\Debug\Newtonsoft.Json.
 C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\bin\Debug\Newtonsoft.Json.xml
 C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\bin\Debug\Content\Icons\HeightUnits\MaintainFileAspectRatioHeight.png
 C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\bin\Debug\Content\Icons\WidthUnits\MaintainFileAspectRatioWidth.png
+C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\bin\Debug\Gum.DataTypes.dll
+C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\bin\Debug\Gum.DataTypes.pdb
