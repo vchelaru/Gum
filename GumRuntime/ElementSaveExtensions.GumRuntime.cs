@@ -1,8 +1,10 @@
 ﻿using Gum.DataTypes;
 using Gum.Wireframe;
+#if !NO_XNA
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Math.Geometry;
+#endif
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,6 +22,7 @@ namespace GumRuntime
             mElementToGueTypes[elementName] = gueInheritingType;
         }
 
+#if !NO_XNA
         public static GraphicalUiElement CreateGueForElement(ElementSave elementSave, bool fullInstantiation = false, string genericType = null)
         {
             GraphicalUiElement toReturn = null;
@@ -52,7 +55,6 @@ namespace GumRuntime
             toReturn.ElementSave = elementSave;
             return toReturn;
         }
-
 
         public static GraphicalUiElement ToGraphicalUiElement(this ElementSave elementSave)
         {
@@ -185,7 +187,6 @@ namespace GumRuntime
                 }
             }
         }
-
         static void AddExposedVariablesRecursively(this GraphicalUiElement graphicalElement, ElementSave elementSave)
         {
             if (!string.IsNullOrEmpty(elementSave.BaseType))
@@ -230,6 +231,7 @@ namespace GumRuntime
             graphicalElement.ApplyState(stateSave);
         }
 
+
         public static void SetGraphicalUiElement(this ElementSave elementSave, GraphicalUiElement toReturn, SystemManagers systemManagers)
         {
             // We need to set categories and states first since those are used below;
@@ -245,7 +247,7 @@ namespace GumRuntime
 
             toReturn.SetInitialState();
         }
-
+#endif
 
 
     }

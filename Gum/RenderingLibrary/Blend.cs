@@ -17,7 +17,7 @@ namespace Gum.RenderingLibrary
 
     public static class BlendExtensions
     {
-
+#if !NO_XNA
         public static Microsoft.Xna.Framework.Graphics.BlendState ToBlendState(this Blend blend)
         {
             switch (blend)
@@ -31,6 +31,7 @@ namespace Gum.RenderingLibrary
             }
             return BlendState.NonPremultiplied;
         }
+#endif
 
         public static Blend ToBlend(this BlendState blendState)
         {

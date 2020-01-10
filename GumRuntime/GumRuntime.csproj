@@ -12,6 +12,8 @@
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -35,7 +37,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\x86\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;NO_XNA</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>x86</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
@@ -53,8 +55,9 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.Xna.Framework, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86" />
-    <Reference Include="Microsoft.Xna.Framework.Graphics, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86" />
+    <Reference Include="MonoGame.Framework, Version=3.7.0.7, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\FlatRedBall\FRBDK\Glue\packages\MonoGame.Framework.DesktopGL.Core.3.7.0.7\lib\netstandard2.0\MonoGame.Framework.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -94,8 +97,16 @@
     <Compile Include="..\Gum\Wireframe\ElementWithState.cs">
       <Link>ElementWithState.cs</Link>
     </Compile>
+    <Compile Include="..\RenderingLibrary\Graphics\HorizontalAlignment.cs">
+      <Link>HorizontalAlignment.cs</Link>
+    </Compile>
+    <Compile Include="..\RenderingLibrary\Graphics\NineSliceExtensions.cs">
+      <Link>NineSliceExtensions.cs</Link>
+    </Compile>
+    <Compile Include="..\RenderingLibrary\Graphics\VerticalAlignment.cs">
+      <Link>VerticalAlignment.cs</Link>
+    </Compile>
     <Compile Include="ElementSaveExtensions.GumRuntime.cs" />
-    <Compile Include="GraphicalUiElement.cs" />
     <Compile Include="InstanceSaveExtensionMethods.GumRuntime.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -108,16 +119,22 @@
       <Project>{938d9a00-8529-4ce8-9077-e0a3994a73ea}</Project>
       <Name>InputLibrary</Name>
     </ProjectReference>
-    <ProjectReference Include="..\RenderingLibrary\RenderingLibrary.csproj">
-      <Project>{a86ee399-7c93-42e1-80ed-ca4cbf4ca573}</Project>
-      <Name>RenderingLibrary</Name>
-    </ProjectReference>
     <ProjectReference Include="..\ToolsUtilities\ToolsUtilities.csproj">
       <Project>{b941a93f-6093-4dc6-ad11-91a058b6c2cc}</Project>
       <Name>ToolsUtilities</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="..\..\FlatRedBall\FRBDK\Glue\packages\MonoGame.Framework.DesktopGL.Core.3.7.0.7\build\MonoGame.Framework.DesktopGL.Core.targets" Condition="Exists('..\..\FlatRedBall\FRBDK\Glue\packages\MonoGame.Framework.DesktopGL.Core.3.7.0.7\build\MonoGame.Framework.DesktopGL.Core.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\..\FlatRedBall\FRBDK\Glue\packages\MonoGame.Framework.DesktopGL.Core.3.7.0.7\build\MonoGame.Framework.DesktopGL.Core.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\FlatRedBall\FRBDK\Glue\packages\MonoGame.Framework.DesktopGL.Core.3.7.0.7\build\MonoGame.Framework.DesktopGL.Core.targets'))" />
+  </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

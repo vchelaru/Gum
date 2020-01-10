@@ -10,28 +10,6 @@ using System.Collections.ObjectModel;
 
 namespace RenderingLibrary.Graphics
 {
-    #region HorizontalAlignment Enum
-
-    public enum HorizontalAlignment
-    {
-        Left,
-        Center,
-        Right
-    }
-
-    #endregion
-
-    #region VerticalAlignment Enum
-
-    public enum VerticalAlignment
-    {
-        Top,
-        Center,
-        Bottom
-    }
-
-    #endregion
-
     #region TextRenderingMode Enum
 
     public enum TextRenderingMode

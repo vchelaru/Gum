@@ -10,22 +10,7 @@ using System.Collections.ObjectModel;
 
 namespace RenderingLibrary.Graphics
 {
-    #region Enums
 
-    public enum NineSliceSections
-    {
-        TopLeft,
-        Top,
-        TopRight,
-        Left,
-        Center,
-        Right,
-        BottomLeft,
-        Bottom,
-        BottomRight
-    }
-
-    #endregion
 
     public class NineSlice : IRenderableIpso, IVisible
     {
@@ -354,11 +339,7 @@ namespace RenderingLibrary.Graphics
             get { return mChildren; }
         }
 
-        public static string[] PossibleNineSliceEndings
-        {
-            get;
-            private set;
-        }
+
 
         public float OutsideSpriteWidth
         {
@@ -945,16 +926,7 @@ namespace RenderingLibrary.Graphics
 
         static NineSlice()
         {
-            PossibleNineSliceEndings = new string[9];
-            PossibleNineSliceEndings[(int) NineSliceSections.Center] = "_center";
-            PossibleNineSliceEndings[(int) NineSliceSections.Left] = "_left";
-            PossibleNineSliceEndings[(int) NineSliceSections.Right] = "_right";
-            PossibleNineSliceEndings[(int) NineSliceSections.TopLeft] = "_topLeft";
-            PossibleNineSliceEndings[(int) NineSliceSections.Top] = "_topCenter";
-            PossibleNineSliceEndings[(int) NineSliceSections.TopRight] = "_topRight";
-            PossibleNineSliceEndings[(int) NineSliceSections.BottomLeft] = "_bottomLeft";
-            PossibleNineSliceEndings[(int) NineSliceSections.Bottom] = "_bottomCenter";
-            PossibleNineSliceEndings[(int) NineSliceSections.BottomRight] = "_bottomRight";
+
 
         }
 
@@ -978,7 +950,7 @@ namespace RenderingLibrary.Graphics
         public void LoadAtlasedTexture(string valueAsString, AtlasedTexture atlasedTexture)
         {
             //if made up of seperate textures
-            if (GetIfShouldUsePattern(valueAsString))
+            if (NineSliceExtensions.GetIfShouldUsePattern(valueAsString))
             {
                 SetTexturesUsingPattern(valueAsString, SystemManagers.Default, true);
             }
@@ -1018,72 +990,33 @@ namespace RenderingLibrary.Graphics
 
             string extension = FileManager.GetExtension(absoluteTexture);
 
-            string bareTexture = GetBareTextureForNineSliceTexture(absoluteTexture);
+            string bareTexture = NineSliceExtensions.GetBareTextureForNineSliceTexture(absoluteTexture);
             string error;
             if (!string.IsNullOrEmpty(bareTexture))
             {
                 if (inAtlas)
                 {
                     //loop through all nine sprite names
-                    for (var sprite = 0; sprite < PossibleNineSliceEndings.Count(); sprite++)
+                    for (var sprite = 0; sprite < NineSliceExtensions.PossibleNineSliceEndings.Count(); sprite++)
                     {
                         var atlasedTexture = LoaderManager.Self.TryLoadContent<AtlasedTexture>
-                            (bareTexture + PossibleNineSliceEndings[sprite] + "." + extension);
+                            (bareTexture + NineSliceExtensions.PossibleNineSliceEndings[sprite] + "." + extension);
 
                         if (atlasedTexture != null) mSprites[sprite].AtlasedTexture = atlasedTexture;
                     }
                 }
                 else
                 {
-                    for (var sprite = 0; sprite < PossibleNineSliceEndings.Count(); sprite++)
+                    for (var sprite = 0; sprite < NineSliceExtensions.PossibleNineSliceEndings.Count(); sprite++)
                     {
                         mSprites[sprite].Texture = LoaderManager.Self.LoadOrInvalid(
-                            bareTexture + PossibleNineSliceEndings[sprite] + "." + extension, managers, out error);
+                            bareTexture + NineSliceExtensions.PossibleNineSliceEndings[sprite] + "." + extension, managers, out error);
                     }
                 }
             }
         }
 
 
-        public static bool GetIfShouldUsePattern(string absoluteTexture)
-        {
-            bool usePattern = false;
-
-            string withoutExtension = FileManager.RemoveExtension(absoluteTexture);
-            foreach (var kvp in PossibleNineSliceEndings)
-            {
-                if (withoutExtension.EndsWith(kvp, StringComparison.OrdinalIgnoreCase))
-                {
-                    usePattern = true;
-                    break;
-                }
-            }
-            return usePattern;
-        }
-
-        
-        public static string GetBareTextureForNineSliceTexture(string absoluteTexture)
-        {
-            string extension = FileManager.GetExtension(absoluteTexture);
-
-            string withoutExtension = FileManager.RemoveExtension(absoluteTexture);
-
-            string toReturn = withoutExtension;
-
-            foreach (var kvp in PossibleNineSliceEndings)
-            {
-                if (withoutExtension.EndsWith(kvp, StringComparison.OrdinalIgnoreCase))
-                {
-                    toReturn = withoutExtension.Substring(0, withoutExtension.Length - kvp.Length);
-                    break;
-                }
-            }
-
-            // No extensions, because we'll need to append that
-            //toReturn += "." + extension;
-
-            return toReturn;
-        }
 
         void IRenderable.PreRender() { }
         #endregion

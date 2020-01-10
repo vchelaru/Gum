@@ -2,11 +2,15 @@
 using Gum.Managers;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework.Graphics;
+#if !NO_XNA
+
 using RenderingLibrary;
 using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Math.Geometry;
+#endif
 using System;
+
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,6 +19,8 @@ namespace GumRuntime
 {
     public static class InstanceSaveExtensionMethods
     {
+
+#if !NO_XNA
         public static GraphicalUiElement ToGraphicalUiElement(this InstanceSave instanceSave, SystemManagers systemManagers)
         {
 #if DEBUG
@@ -68,7 +74,6 @@ namespace GumRuntime
             return toReturn;
 
         }
-
 
 
         internal static bool TryHandleAsBaseType(string baseType, SystemManagers systemManagers, out IRenderable containedObject)
@@ -137,7 +142,6 @@ namespace GumRuntime
             return handledAsBaseType;
         }
 
-
         private static void SetAlphaAndColorValues(SolidRectangle solidRectangle, RecursiveVariableFinder rvf)
         {
             solidRectangle.Color = ColorFromRvf(rvf);
@@ -179,5 +183,6 @@ namespace GumRuntime
             text.HorizontalAlignment = rvf.GetValue<HorizontalAlignment>("HorizontalAlignment");
             text.VerticalAlignment = rvf.GetValue<VerticalAlignment>("VerticalAlignment");
         }
+#endif
     }
 }
