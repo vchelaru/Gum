@@ -47,3 +47,5 @@ TextureCoordinateSelectionPlugin/bin/
 FlatRedBall.SpecializedXnaControls/obj/
 FlatRedBall.SpecializedXnaControls/bin/
 packages/
+Gum/objNetFramework/
+GumDataTypes/objNetFramework/
