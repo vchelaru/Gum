@@ -115,10 +115,6 @@
       <Project>{049d8e60-b8fd-4b57-909c-ef83124e242f}</Project>
       <Name>GumDataTypesStandard</Name>
     </ProjectReference>
-    <ProjectReference Include="..\InputLibrary\InputLibrary.csproj">
-      <Project>{938d9a00-8529-4ce8-9077-e0a3994a73ea}</Project>
-      <Name>InputLibrary</Name>
-    </ProjectReference>
     <ProjectReference Include="..\ToolsUtilities\ToolsUtilities.csproj">
       <Project>{b941a93f-6093-4dc6-ad11-91a058b6c2cc}</Project>
       <Name>ToolsUtilities</Name>

@@ -100,9 +100,6 @@ namespace Gum.Wireframe
         protected float mHeight;
         float mRotation;
 
-        static float mCanvasWidth = 800;
-        static float mCanvasHeight = 600;
-
         IRenderableIpso mParent;
 
 
@@ -202,8 +199,8 @@ namespace Gum.Wireframe
         /// </summary>
         public static float CanvasWidth
         {
-            get { return mCanvasWidth; }
-            set { mCanvasWidth = value; }
+            get;
+            set;
         }
 
         /// <summary>
@@ -212,8 +209,8 @@ namespace Gum.Wireframe
         /// </summary>
         public static float CanvasHeight
         {
-            get { return mCanvasHeight; }
-            set { mCanvasHeight = value; }
+            get;
+            set;
         }
 
 

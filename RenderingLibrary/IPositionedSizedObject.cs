@@ -143,7 +143,7 @@ namespace RenderingLibrary
             }
             else
             {
-                return ipso.Parent;
+                return ipso.Parent.GetTopParent();
             }
 
         }
