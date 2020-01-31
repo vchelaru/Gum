@@ -1080,155 +1080,6 @@ namespace Gum.Wireframe
 
         #region Methods
 
-        private void HandleCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            if(e.Action == NotifyCollectionChangedAction.Add)
-            {
-                foreach(IRenderableIpso ipso in e.NewItems)
-                {
-                    if(ipso.Parent != this)
-                    {
-                        ipso.Parent = this;
-
-                    }
-                }
-            }
-            else if(e.Action == NotifyCollectionChangedAction.Remove)
-            {
-                foreach(IRenderableIpso ipso in e.OldItems)
-                {
-                    if(ipso.Parent == this)
-                    {
-                        ipso.Parent = null;
-                    }
-                }
-            }
-        }
-
-        bool IsAllLayoutAbsolute()
-        {
-            return mWidthUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent &&
-                mHeightUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent &&
-                (mXUnits == GeneralUnitType.PixelsFromLarge || mXUnits == GeneralUnitType.PixelsFromMiddle ||
-                    mXUnits == GeneralUnitType.PixelsFromSmall || mXUnits == GeneralUnitType.PixelsFromMiddleInverted) &&
-                (mYUnits == GeneralUnitType.PixelsFromLarge || mYUnits == GeneralUnitType.PixelsFromMiddle ||
-                    mYUnits == GeneralUnitType.PixelsFromSmall || mYUnits == GeneralUnitType.PixelsFromMiddleInverted);
-        }
-
-        bool IsAllLayoutAbsolute(XOrY xOrY)
-        {
-            if (xOrY == XOrY.X)
-            {
-                return mWidthUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent &&
-                    (mXUnits == GeneralUnitType.PixelsFromLarge || mXUnits == GeneralUnitType.PixelsFromMiddle ||
-                        mXUnits == GeneralUnitType.PixelsFromSmall || mXUnits == GeneralUnitType.PixelsFromMiddleInverted);
-            }
-            else // Y
-            {
-                return mHeightUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent &&
-                    (mYUnits == GeneralUnitType.PixelsFromLarge || mYUnits == GeneralUnitType.PixelsFromMiddle ||
-                        mYUnits == GeneralUnitType.PixelsFromSmall || mYUnits == GeneralUnitType.PixelsFromMiddleInverted);
-            }
-        }
-
-        float GetRequiredParentWidth()
-        {
-            var effectiveParent = this.EffectiveParentGue;
-            if (effectiveParent != null && effectiveParent.ChildrenLayout == ChildrenLayout.TopToBottomStack && effectiveParent.WrapsChildren)
-            {
-                var asIpso = this as IPositionedSizedObject;
-                return asIpso.X + asIpso.Width;
-            }
-            else
-            {
-                float positionValue = mX;
-
-                // This GUE hasn't been set yet so it can't give
-                // valid widths/heights
-                if (this.mContainedObjectAsIpso == null)
-                {
-                    return 0;
-                }
-                float smallEdge = positionValue;
-                if (mXOrigin == HorizontalAlignment.Center)
-                {
-                    smallEdge = positionValue - ((IPositionedSizedObject)this).Width / 2.0f;
-                }
-                else if (mXOrigin == HorizontalAlignment.Right)
-                {
-                    smallEdge = positionValue - ((IPositionedSizedObject)this).Width;
-                }
-
-                float bigEdge = positionValue;
-                if (mXOrigin == HorizontalAlignment.Center)
-                {
-                    bigEdge = positionValue + ((IPositionedSizedObject)this).Width / 2.0f;
-                }
-                if (mXOrigin == HorizontalAlignment.Left)
-                {
-                    bigEdge = positionValue + ((IPositionedSizedObject)this).Width;
-                }
-
-                var units = mXUnits;
-
-                float dimensionToReturn = GetDimensionFromEdges(smallEdge, bigEdge, units);
-
-                return dimensionToReturn;
-            }
-        }
-
-        float GetRequiredParentHeight()
-        {
-            var effectiveParent = this.EffectiveParentGue;
-            if (effectiveParent != null && effectiveParent.ChildrenLayout == ChildrenLayout.LeftToRightStack && effectiveParent.WrapsChildren)
-            {
-                var asIpso = this as IPositionedSizedObject;
-                return asIpso.Y + asIpso.Height;
-            }
-            else
-            {
-                float positionValue = mY;
-
-                // This GUE hasn't been set yet so it can't give
-                // valid widths/heights
-                if (this.mContainedObjectAsIpso == null)
-                {
-                    return 0;
-                }
-                float smallEdge = positionValue;
-
-                var units = mYUnits;
-                if(units == GeneralUnitType.PixelsFromMiddleInverted)
-                {
-                    smallEdge *= -1;
-                }
-
-                if (mYOrigin == VerticalAlignment.Center)
-                {
-                    smallEdge = positionValue - ((IPositionedSizedObject)this).Height / 2.0f;
-                }
-                else if (mYOrigin == VerticalAlignment.Bottom)
-                {
-                    smallEdge = positionValue - ((IPositionedSizedObject)this).Height;
-                }
-
-                float bigEdge = positionValue;
-                if (mYOrigin == VerticalAlignment.Center)
-                {
-                    bigEdge = positionValue + ((IPositionedSizedObject)this).Height / 2.0f;
-                }
-                if (mYOrigin == VerticalAlignment.Top)
-                {
-                    bigEdge = positionValue + ((IPositionedSizedObject)this).Height;
-                }
-
-                float dimensionToReturn = GetDimensionFromEdges(smallEdge, bigEdge, units);
-
-                return dimensionToReturn;
-            }
-
-        }
-
         /// <summary>
         /// Sets the default state.
         /// </summary>
@@ -1242,48 +1093,9 @@ namespace Gum.Wireframe
             this.SetVariablesRecursively(elementSave, elementSave.DefaultState);
         }
 
-        private static float GetDimensionFromEdges(float smallEdge, float bigEdge, GeneralUnitType units)
-        {
-            float dimensionToReturn = 0;
-            if (units == GeneralUnitType.PixelsFromSmall)
-                // The value already comes in properly inverted
-            {
-                smallEdge = 0;
-
-                bigEdge = System.Math.Max(0, bigEdge);
-                dimensionToReturn = bigEdge - smallEdge;
-            }
-            else if (units == GeneralUnitType.PixelsFromMiddle ||
-                units == GeneralUnitType.PixelsFromMiddleInverted)
-            {
-                // use the full width
-                float abs1 = System.Math.Abs(smallEdge);
-                float abs2 = System.Math.Abs(bigEdge);
-
-                dimensionToReturn = 2 * System.Math.Max(abs1, abs2);
-            }
-            else if (units == GeneralUnitType.PixelsFromLarge)
-            {
-                smallEdge = System.Math.Min(0, smallEdge);
-                bigEdge = 0;
-                dimensionToReturn = bigEdge - smallEdge;
-
-            }
-            return dimensionToReturn;
-        }
-
         public void UpdateLayout()
         {
             UpdateLayout(true, true);
-        }
-
-        public bool GetIfDimensionsDependOnChildren()
-        {
-            // If this is a Screen, then it doesn't have a size. Screens cannot depend on children:
-            bool isScreen = ElementSave != null && ElementSave is ScreenSave;
-            return !isScreen &&
-                (this.WidthUnits.GetDependencyType() == HierarchyDependencyType.DependsOnChildren ||
-                this.HeightUnits.GetDependencyType() == HierarchyDependencyType.DependsOnChildren);
         }
 
         public void UpdateLayout(bool updateParent, bool updateChildren)
@@ -1294,47 +1106,6 @@ namespace Gum.Wireframe
                 value = 0;
             }
             UpdateLayout(updateParent, value);
-        }
-
-        void IRenderable.PreRender()
-        {
-            if (mContainedObjectAsIpso != null)
-            {
-                mContainedObjectAsIpso.PreRender();
-            }
-        }
-
-        public virtual void CreateChildrenRecursively(ElementSave elementSave, SystemManagers systemManagers)
-        {
-            bool isScreen = elementSave is ScreenSave;
-
-            foreach (var instance in elementSave.Instances)
-            {
-                var childGue = instance.ToGraphicalUiElement(systemManagers);
-
-                if (childGue != null)
-                {
-                    if (!isScreen)
-                    {
-                        childGue.Parent = this;
-                    }
-                    childGue.ElementGueContainingThis = this;
-                }
-            }
-        }
-
-        bool GetIfShouldCallUpdateOnParent()
-        {
-            var asGue = this.Parent as GraphicalUiElement;
-
-            if (asGue != null)
-            {
-                return asGue.GetIfDimensionsDependOnChildren() || asGue.ChildrenLayout != Gum.Managers.ChildrenLayout.Regular;
-            }
-            else
-            {
-                return false;
-            }
         }
 
         public void UpdateLayout(bool updateParent, int childrenUpdateDepth, XOrY? xOrY = null)
@@ -1591,6 +1362,210 @@ namespace Gum.Wireframe
 
         }
 
+        bool IsAllLayoutAbsolute()
+        {
+            return mWidthUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent &&
+                mHeightUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent &&
+                (mXUnits == GeneralUnitType.PixelsFromLarge || mXUnits == GeneralUnitType.PixelsFromMiddle ||
+                    mXUnits == GeneralUnitType.PixelsFromSmall || mXUnits == GeneralUnitType.PixelsFromMiddleInverted) &&
+                (mYUnits == GeneralUnitType.PixelsFromLarge || mYUnits == GeneralUnitType.PixelsFromMiddle ||
+                    mYUnits == GeneralUnitType.PixelsFromSmall || mYUnits == GeneralUnitType.PixelsFromMiddleInverted);
+        }
+
+        bool IsAllLayoutAbsolute(XOrY xOrY)
+        {
+            if (xOrY == XOrY.X)
+            {
+                return mWidthUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent &&
+                    (mXUnits == GeneralUnitType.PixelsFromLarge || mXUnits == GeneralUnitType.PixelsFromMiddle ||
+                        mXUnits == GeneralUnitType.PixelsFromSmall || mXUnits == GeneralUnitType.PixelsFromMiddleInverted);
+            }
+            else // Y
+            {
+                return mHeightUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent &&
+                    (mYUnits == GeneralUnitType.PixelsFromLarge || mYUnits == GeneralUnitType.PixelsFromMiddle ||
+                        mYUnits == GeneralUnitType.PixelsFromSmall || mYUnits == GeneralUnitType.PixelsFromMiddleInverted);
+            }
+        }
+
+        float GetRequiredParentWidth()
+        {
+            var effectiveParent = this.EffectiveParentGue;
+            if (effectiveParent != null && effectiveParent.ChildrenLayout == ChildrenLayout.TopToBottomStack && effectiveParent.WrapsChildren)
+            {
+                var asIpso = this as IPositionedSizedObject;
+                return asIpso.X + asIpso.Width;
+            }
+            else
+            {
+                float positionValue = mX;
+
+                // This GUE hasn't been set yet so it can't give
+                // valid widths/heights
+                if (this.mContainedObjectAsIpso == null)
+                {
+                    return 0;
+                }
+                float smallEdge = positionValue;
+                if (mXOrigin == HorizontalAlignment.Center)
+                {
+                    smallEdge = positionValue - ((IPositionedSizedObject)this).Width / 2.0f;
+                }
+                else if (mXOrigin == HorizontalAlignment.Right)
+                {
+                    smallEdge = positionValue - ((IPositionedSizedObject)this).Width;
+                }
+
+                float bigEdge = positionValue;
+                if (mXOrigin == HorizontalAlignment.Center)
+                {
+                    bigEdge = positionValue + ((IPositionedSizedObject)this).Width / 2.0f;
+                }
+                if (mXOrigin == HorizontalAlignment.Left)
+                {
+                    bigEdge = positionValue + ((IPositionedSizedObject)this).Width;
+                }
+
+                var units = mXUnits;
+
+                float dimensionToReturn = GetDimensionFromEdges(smallEdge, bigEdge, units);
+
+                return dimensionToReturn;
+            }
+        }
+
+        float GetRequiredParentHeight()
+        {
+            var effectiveParent = this.EffectiveParentGue;
+            if (effectiveParent != null && effectiveParent.ChildrenLayout == ChildrenLayout.LeftToRightStack && effectiveParent.WrapsChildren)
+            {
+                var asIpso = this as IPositionedSizedObject;
+                return asIpso.Y + asIpso.Height;
+            }
+            else
+            {
+                float positionValue = mY;
+
+                // This GUE hasn't been set yet so it can't give
+                // valid widths/heights
+                if (this.mContainedObjectAsIpso == null)
+                {
+                    return 0;
+                }
+                float smallEdge = positionValue;
+
+                var units = mYUnits;
+                if(units == GeneralUnitType.PixelsFromMiddleInverted)
+                {
+                    smallEdge *= -1;
+                }
+
+                if (mYOrigin == VerticalAlignment.Center)
+                {
+                    smallEdge = positionValue - ((IPositionedSizedObject)this).Height / 2.0f;
+                }
+                else if (mYOrigin == VerticalAlignment.Bottom)
+                {
+                    smallEdge = positionValue - ((IPositionedSizedObject)this).Height;
+                }
+
+                float bigEdge = positionValue;
+                if (mYOrigin == VerticalAlignment.Center)
+                {
+                    bigEdge = positionValue + ((IPositionedSizedObject)this).Height / 2.0f;
+                }
+                if (mYOrigin == VerticalAlignment.Top)
+                {
+                    bigEdge = positionValue + ((IPositionedSizedObject)this).Height;
+                }
+
+                float dimensionToReturn = GetDimensionFromEdges(smallEdge, bigEdge, units);
+
+                return dimensionToReturn;
+            }
+
+        }
+
+        private static float GetDimensionFromEdges(float smallEdge, float bigEdge, GeneralUnitType units)
+        {
+            float dimensionToReturn = 0;
+            if (units == GeneralUnitType.PixelsFromSmall)
+                // The value already comes in properly inverted
+            {
+                smallEdge = 0;
+
+                bigEdge = System.Math.Max(0, bigEdge);
+                dimensionToReturn = bigEdge - smallEdge;
+            }
+            else if (units == GeneralUnitType.PixelsFromMiddle ||
+                units == GeneralUnitType.PixelsFromMiddleInverted)
+            {
+                // use the full width
+                float abs1 = System.Math.Abs(smallEdge);
+                float abs2 = System.Math.Abs(bigEdge);
+
+                dimensionToReturn = 2 * System.Math.Max(abs1, abs2);
+            }
+            else if (units == GeneralUnitType.PixelsFromLarge)
+            {
+                smallEdge = System.Math.Min(0, smallEdge);
+                bigEdge = 0;
+                dimensionToReturn = bigEdge - smallEdge;
+
+            }
+            return dimensionToReturn;
+        }
+
+        public bool GetIfDimensionsDependOnChildren()
+        {
+            // If this is a Screen, then it doesn't have a size. Screens cannot depend on children:
+            bool isScreen = ElementSave != null && ElementSave is ScreenSave;
+            return !isScreen &&
+                (this.WidthUnits.GetDependencyType() == HierarchyDependencyType.DependsOnChildren ||
+                this.HeightUnits.GetDependencyType() == HierarchyDependencyType.DependsOnChildren);
+        }
+
+        void IRenderable.PreRender()
+        {
+            if (mContainedObjectAsIpso != null)
+            {
+                mContainedObjectAsIpso.PreRender();
+            }
+        }
+
+        public virtual void CreateChildrenRecursively(ElementSave elementSave, SystemManagers systemManagers)
+        {
+            bool isScreen = elementSave is ScreenSave;
+
+            foreach (var instance in elementSave.Instances)
+            {
+                var childGue = instance.ToGraphicalUiElement(systemManagers);
+
+                if (childGue != null)
+                {
+                    if (!isScreen)
+                    {
+                        childGue.Parent = this;
+                    }
+                    childGue.ElementGueContainingThis = this;
+                }
+            }
+        }
+
+        bool GetIfShouldCallUpdateOnParent()
+        {
+            var asGue = this.Parent as GraphicalUiElement;
+
+            if (asGue != null)
+            {
+                return asGue.GetIfDimensionsDependOnChildren() || asGue.ChildrenLayout != Gum.Managers.ChildrenLayout.Regular;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
         private static bool GetIfOneDimensionCanChangeOtherDimension(GraphicalUiElement gue)
         {
             var canOneDimensionChangeTheOtherOnChild = gue.RenderableComponent is Text ||
@@ -1784,8 +1759,6 @@ namespace Gum.Wireframe
                 mSortableLayer.ScissorIpso = this;
             }
         }
-
-
 
         private void GetParentDimensions(out float parentWidth, out float parentHeight)
         {
@@ -2879,6 +2852,31 @@ namespace Gum.Wireframe
                 child.CustomAddToManagers();
 
                 child.CustomAddChildren();
+            }
+        }
+
+        private void HandleCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if(e.Action == NotifyCollectionChangedAction.Add)
+            {
+                foreach(IRenderableIpso ipso in e.NewItems)
+                {
+                    if(ipso.Parent != this)
+                    {
+                        ipso.Parent = this;
+
+                    }
+                }
+            }
+            else if(e.Action == NotifyCollectionChangedAction.Remove)
+            {
+                foreach(IRenderableIpso ipso in e.OldItems)
+                {
+                    if(ipso.Parent == this)
+                    {
+                        ipso.Parent = null;
+                    }
+                }
             }
         }
 
