@@ -10,7 +10,7 @@ using System.Collections.ObjectModel;
 
 namespace RenderingLibrary.Graphics
 {
-    public class Sprite : IRenderableIpso, IVisible
+    public class Sprite : IRenderableIpso, IVisible, IAspectRatio
     {
         #region Fields
 
@@ -285,6 +285,8 @@ namespace RenderingLibrary.Graphics
                 return sourceRectangle;
             }
         }
+
+        float IAspectRatio.AspectRatio => Texture != null ? (Texture.Width / (float)Texture.Height) : 1.0f;
 
         #endregion
 

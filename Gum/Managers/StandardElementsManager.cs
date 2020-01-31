@@ -40,7 +40,7 @@ namespace Gum.Managers
     {
         #region Enums
 
-        enum DimensionVariableAction
+        public enum DimensionVariableAction
         {
             ExcludeFileOptions,
             AllowFileOptions,
@@ -526,7 +526,7 @@ namespace Gum.Managers
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "Blue", Category = "Rendering" });
         }
 
-        private static void AddDimensionsVariables(StateSave stateSave, float defaultWidth, float defaultHeight, DimensionVariableAction dimensionVariableAction)
+        public static void AddDimensionsVariables(StateSave stateSave, float defaultWidth, float defaultHeight, DimensionVariableAction dimensionVariableAction)
         {
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = defaultWidth, Name = "Width", Category = "Dimensions" });
 
@@ -558,7 +558,7 @@ namespace Gum.Managers
             stateSave.Variables.Add(variableSave);
         }
 
-        private static void AddPositioningVariables(StateSave stateSave, bool addOriginVariables = true)
+        public static void AddPositioningVariables(StateSave stateSave, bool addOriginVariables = true)
         {
             List<object> xUnitsExclusions = new List<object>();
             xUnitsExclusions.Add(PositionUnitType.PixelsFromTop);
@@ -605,18 +605,35 @@ namespace Gum.Managers
         }
 #endif
 
-        public StateSave GetDefaultStateFor(string type)
+        public StateSave GetDefaultStateFor(string type, bool throwExceptionOnMissing = true)
         {
             if (mDefaults == null)
             {
                 throw new Exception("You must first call Initialize on StandardElementsManager before calling this function");
             }
-            if(!mDefaults.ContainsKey(type))
+            if(mDefaults.ContainsKey(type))
             {
-                throw new InvalidOperationException($"Could not get the default state for type {type}");
-            }
-            return mDefaults[type];
+                return mDefaults[type];
 
+            }
+            else
+            {
+
+                StateSave customState = null;
+#if GUM
+                
+                customState = PluginManager.Self.GetDefaultStateFor(type);
+#endif
+                if(customState == null && throwExceptionOnMissing)
+                {
+                    throw new InvalidOperationException(
+                        $"Could not get the default state for type {type} in either the default or through plugins");
+                }
+                else
+                {
+                    return customState;
+                }
+            }
         }
 
         public bool IsDefaultType(string type)

@@ -86,7 +86,7 @@ namespace Gum.DataTypes
                     wasModified = true;
                 }
 
-                if(componentSave.Initialize(StandardElementsManager.Self.DefaultStates["Component"]))
+                if(componentSave.Initialize(StandardElementsManager.Self.GetDefaultStateFor("Component")))
                 {
                     wasModified = true;
                 }

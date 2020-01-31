@@ -2415,42 +2415,34 @@ namespace Gum.Wireframe
                 mContainedObjectAsIpso.Width = mWidth;
                 mContainedObjectAsIpso.Height = mHeight;
             }
-            else if (mWidthUnit == DimensionUnitType.PercentageOfOtherDimension ||
-                mWidthUnit == DimensionUnitType.MaintainFileAspectRatio)
-            {
-                // if width depends on height, do height first:
-                if (xOrY == null || xOrY == XOrY.Y)
-                {
-                    UpdateHeight(parentHeight);
-                }
-                if (xOrY == null || xOrY == XOrY.X)
-                {
-                    UpdateWidth(parentWidth);
-                }
-            }
-            else if (mHeightUnit == DimensionUnitType.PercentageOfOtherDimension ||
-                mHeightUnit == DimensionUnitType.MaintainFileAspectRatio)
-            {
-                // If height depends on width, do width first
-                if (xOrY == null || xOrY == XOrY.X)
-                {
-                    UpdateWidth(parentWidth);
-                }
-                if (xOrY == null || xOrY == XOrY.Y)
-                {
-                    UpdateHeight(parentHeight);
-                }
-            }
             else
             {
-                // order doesn't matter, arbitrarily do width first
-                if (xOrY == null || xOrY == XOrY.X)
+                var doHeightFirst = mWidthUnit == DimensionUnitType.PercentageOfOtherDimension ||
+                    mWidthUnit == DimensionUnitType.MaintainFileAspectRatio;
+
+                if(doHeightFirst)
                 {
-                    UpdateWidth(parentWidth);
+                    // if width depends on height, do height first:
+                    if (xOrY == null || xOrY == XOrY.Y)
+                    {
+                        UpdateHeight(parentHeight);
+                    }
+                    if (xOrY == null || xOrY == XOrY.X)
+                    {
+                        UpdateWidth(parentWidth);
+                    }
                 }
-                if (xOrY == null|| xOrY == XOrY.Y)
+                else // either width needs to be first, or it doesn't matter so we just do width first arbitrarily
                 {
-                    UpdateHeight(parentHeight);
+                    // If height depends on width, do width first
+                    if (xOrY == null || xOrY == XOrY.X)
+                    {
+                        UpdateWidth(parentWidth);
+                    }
+                    if (xOrY == null || xOrY == XOrY.Y)
+                    {
+                        UpdateHeight(parentHeight);
+                    }
                 }
             }
         }
@@ -2458,6 +2450,8 @@ namespace Gum.Wireframe
         private void UpdateHeight(float parentHeight)
         {
             float heightToSet = mHeight;
+
+            #region RelativeToChildren
 
             if (mHeightUnit == DimensionUnitType.RelativeToChildren)
             {
@@ -2510,10 +2504,20 @@ namespace Gum.Wireframe
 
                 heightToSet = maxHeight + mHeight;
             }
+
+            #endregion
+
+            #region Percentage
+
             else if (mHeightUnit == DimensionUnitType.Percentage)
             {
                 heightToSet = parentHeight * mHeight / 100.0f;
             }
+
+            #endregion
+
+            #region PercentageOfSourceFile
+
             else if (mHeightUnit == DimensionUnitType.PercentageOfSourceFile)
             {
                 bool wasSet = false;
@@ -2550,23 +2554,25 @@ namespace Gum.Wireframe
                     heightToSet = 64 * mHeight / 100.0f;
                 }
             }
-            else if(mHeightUnit == DimensionUnitType.MaintainFileAspectRatio)
+
+            #endregion
+
+            #region MaintainFileAspectRatio
+
+            else if (mHeightUnit == DimensionUnitType.MaintainFileAspectRatio)
             {
                 bool wasSet = false;
-                if(mContainedObjectAsIpso is Sprite sprite)
+                if(mContainedObjectAsIpso is IAspectRatio aspectRatioObject)
                 {
-                    if(sprite.AtlasedTexture != null)
-                    {
-                        throw new NotImplementedException();
-                    }
-                    else if(sprite.Texture != null)
-                    {
-                        var scale = GetAbsoluteWidth() / sprite.Texture.Width;
-                        heightToSet = sprite.Texture.Height * scale * mHeight/100.0f;
-                        wasSet = true;
-                    }
+                    //if(sprite.AtlasedTexture != null)
+                    //{
+                    //    throw new NotImplementedException();
+                    //}
+                    //else 
+                    heightToSet = GetAbsoluteWidth() * (mHeight/100.0f) / aspectRatioObject.AspectRatio;
+                    wasSet = true;
 
-                    if(wasSet)
+                    if(wasSet && mContainedObjectAsIpso is Sprite sprite)
                     {
                         // If the address is dimension based, then that means texture coords depend on dimension...but we
                         // can't make dimension based on texture coords as that would cause a circular reference
@@ -2582,14 +2588,26 @@ namespace Gum.Wireframe
                     heightToSet = 64 * mHeight / 100.0f;
                 }
             }
+
+            #endregion
+
+            #region RelativeToContainer (in pixels)
+
             else if (mHeightUnit == DimensionUnitType.RelativeToContainer)
             {
                 heightToSet = parentHeight + mHeight;
             }
-            else if(mHeightUnit == DimensionUnitType.PercentageOfOtherDimension)
+
+            #endregion
+
+            #region PercentageOfOtherDimension
+
+            else if (mHeightUnit == DimensionUnitType.PercentageOfOtherDimension)
             {
                 heightToSet = mContainedObjectAsIpso.Width * mHeight / 100.0f;
             }
+
+            #endregion
 
             mContainedObjectAsIpso.Height = heightToSet;
         }
@@ -2597,6 +2615,8 @@ namespace Gum.Wireframe
         private void UpdateWidth(float parentWidth)
         {
             float widthToSet = mWidth;
+
+            #region RelativeToChildren
 
             if (mWidthUnit == DimensionUnitType.RelativeToChildren)
             {
@@ -2661,10 +2681,19 @@ namespace Gum.Wireframe
 
                 widthToSet = maxWidth + mWidth;
             }
+            #endregion
+
+            #region Percentage (of parent)
+
             else if (mWidthUnit == DimensionUnitType.Percentage)
             {
                 widthToSet = parentWidth * mWidth / 100.0f;
             }
+
+            #endregion
+
+            #region PercentageOfSourceFile
+
             else if (mWidthUnit == DimensionUnitType.PercentageOfSourceFile)
             {
                 bool wasSet = false;
@@ -2702,23 +2731,21 @@ namespace Gum.Wireframe
                     widthToSet = 64 * mWidth / 100.0f;
                 }
             }
-            else if(mWidthUnit == DimensionUnitType.MaintainFileAspectRatio)
+
+            #endregion
+
+            #region MaintainFileAspectRatio
+
+            else if (mWidthUnit == DimensionUnitType.MaintainFileAspectRatio)
             {
                 bool wasSet = false;
-                if(mContainedObjectAsIpso is Sprite sprite)
+                if(mContainedObjectAsIpso is IAspectRatio aspectRatioObject)
                 {
-                    if(sprite.AtlasedTexture != null)
-                    {
-                        throw new NotImplementedException();
-                    }
-                    else if(sprite.Texture != null)
-                    {
-                        var scale = GetAbsoluteHeight() / sprite.Texture.Height;
-                        widthToSet = sprite.Texture.Width * scale * mWidth / 100.0f;
-                        wasSet = true;
-                    }
+                    // mWidth is a percent where 100 means maintain aspect ratio
+                    widthToSet = GetAbsoluteHeight() * aspectRatioObject.AspectRatio * (mWidth / 100.0f);
+                    wasSet = true;
 
-                    if(wasSet)
+                    if(wasSet && mContainedObjectAsIpso is Sprite sprite)
                     {
                         if(sprite.EffectiveRectangle.HasValue && mTextureAddress != TextureAddress.DimensionsBased)
                         {
@@ -2732,14 +2759,26 @@ namespace Gum.Wireframe
                     widthToSet = 64 * mWidth / 100.0f;
                 }
             }
+
+            #endregion
+
+            #region RelativeToContainer (in pixels)
+
             else if (mWidthUnit == DimensionUnitType.RelativeToContainer)
             {
                 widthToSet = parentWidth + mWidth;
             }
+
+            #endregion
+
+            #region PercentageOfOtherDimension
+
             else if (mWidthUnit == DimensionUnitType.PercentageOfOtherDimension)
             {
                 widthToSet = mContainedObjectAsIpso.Height * mWidth / 100.0f;
             }
+
+            #endregion
 
             mContainedObjectAsIpso.Width = widthToSet;
         }
@@ -3005,9 +3044,17 @@ namespace Gum.Wireframe
                 {
                     managers.SpriteManager.Add(mContainedObjectAsIpso as InvisibleRenderable, layer);
                 }
+
                 else
                 {
-                    throw new NotImplementedException();
+                    if(layer == null)
+                    {
+                        managers.Renderer.Layers[0].Add(mContainedObjectAsIpso);
+                    }
+                    else
+                    {
+                        layer.Add(mContainedObjectAsIpso);
+                    }
                 }
             }
         }
@@ -3116,7 +3163,9 @@ namespace Gum.Wireframe
                 }
                 else if (mContainedObjectAsIpso != null)
                 {
-                    throw new NotImplementedException();
+                    // This could be a custom visual object, so don't do anything:
+                    //throw new NotImplementedException();
+                    mManagers.Renderer.RemoveRenderable(mContainedObjectAsIpso);
                 }
 
 

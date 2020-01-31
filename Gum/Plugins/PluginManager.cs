@@ -15,6 +15,7 @@ using Gum.Gui.Plugins;
 using Gum.Gui.Windows;
 using ToolsUtilities;
 using Gum.DataTypes.Behaviors;
+using RenderingLibrary.Graphics;
 
 namespace Gum.Plugins
 {
@@ -310,7 +311,8 @@ namespace Gum.Plugins
                 }
             }
 
-            MessageBox.Show("Couldn't find assembly: " + args.Name + " for " + args.RequestingAssembly);
+            //MessageBox.Show("Couldn't find assembly: " + args.Name + " for " + args.RequestingAssembly);
+            GumCommands.Self.GuiCommands.PrintOutput("Couldn't find assembly: " + args.Name + " for " + args.RequestingAssembly);
 
             return null;
         }
@@ -396,9 +398,17 @@ namespace Gum.Plugins
                 dllFiles.Add(executablePath + "Gum.exe");
                 foreach (string dll in dllFiles)
                 {
-                    Assembly loadedAssembly = Assembly.LoadFrom(dll);
+                    try
+                    {
+                        Assembly loadedAssembly = Assembly.LoadFrom(dll);
 
-                    returnValue.Catalogs.Add(new AssemblyCatalog(loadedAssembly));
+                        returnValue.Catalogs.Add(new AssemblyCatalog(loadedAssembly));
+
+                    }
+                    catch
+                    {
+                        // todo - report the error
+                    }
                 }
             }
 
@@ -930,6 +940,26 @@ namespace Gum.Plugins
             );
         }
 
+        internal StateSave GetDefaultStateFor(string type)
+        {
+            StateSave toReturn = null;
+
+            CallMethodOnPlugin(
+                (plugin) =>
+                {
+                    var innerToReturn = plugin.CallGetDefaultStateFor(type);
+
+                    if (innerToReturn != null)
+                    {
+                        toReturn = innerToReturn;
+                    }
+
+                },
+                nameof(GetDefaultStateFor));
+
+            return toReturn;
+        }
+
         internal void InstanceReordered(InstanceSave instance)
         {
             CallMethodOnPlugin(
@@ -952,6 +982,27 @@ namespace Gum.Plugins
                 (plugin) => plugin.CallWireframeRefreshed(),
                 nameof(WireframeRefreshed)
                 );
+        }
+
+        internal IRenderableIpso CreateRenderableForType(string type)
+        {
+            IRenderableIpso toReturn = null;
+
+
+            CallMethodOnPlugin(
+                (plugin) =>
+                {
+                    var innerToReturn = plugin.CallCreateRenderableForType(type);
+
+                    if (innerToReturn != null)
+                    {
+                        toReturn = innerToReturn;
+                    }
+
+                },
+                nameof(CreateRenderableForType));
+
+            return toReturn;
         }
 
         #endregion

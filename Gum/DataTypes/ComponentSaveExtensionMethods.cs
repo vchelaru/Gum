@@ -70,7 +70,7 @@ namespace Gum.DataTypes
 
             componentSave.Initialize(new StateSave { Name = "Default" });
 
-            componentSave.Initialize(StandardElementsManager.Self.DefaultStates["Component"]);
+            componentSave.Initialize(StandardElementsManager.Self.GetDefaultStateFor("Component"));
         }
 
     }

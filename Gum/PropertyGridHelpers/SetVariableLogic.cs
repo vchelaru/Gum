@@ -401,7 +401,8 @@ namespace Gum.PropertyGridHelpers
 
             bool isValidExtension = extension == "gif" ||
                 extension == "jpg" ||
-                extension == "png";
+                extension == "png" ||
+                extension == "svg"; // todo - this should be plugin controlled
             if(!isValidExtension)
             {
                 whyInvalid = "The extension " + extension + " is not supported for textures";

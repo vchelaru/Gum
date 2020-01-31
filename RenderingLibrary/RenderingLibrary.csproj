@@ -94,6 +94,7 @@
     <Compile Include="Graphics\Fonts\BmfcSave.cs" />
     <Compile Include="Graphics\HorizontalAlignment.cs" />
     <Compile Include="Graphics\IAnimation.cs" />
+    <Compile Include="Graphics\IAspectRatio.cs" />
     <Compile Include="Graphics\ImageData.cs" />
     <Compile Include="Graphics\InvisibleRenderable.cs" />
     <Compile Include="Graphics\IRenderable.cs" />

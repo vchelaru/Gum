@@ -32,10 +32,10 @@ namespace Gum.Controls
 
             StandardElementSave rootElement = GetRootElement();
 
-            if (rootElement != null && StandardElementsManager.Self.DefaultStates.ContainsKey(rootElement.Name))
-            {
-                var state = StandardElementsManager.Self.DefaultStates[rootElement.Name];
+            var state = StandardElementsManager.Self.GetDefaultStateFor(rootElement?.Name);
 
+            if (state != null)
+            {
                 var variable = state.Variables.FirstOrDefault(item => item.Name == "Height Units");
 
                 if (variable?.ExcludedValuesForEnum?.Any() == true)

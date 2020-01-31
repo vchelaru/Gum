@@ -78,7 +78,8 @@ namespace Gum.PropertyGridHelpers
 
             if(elementSave is StandardElementSave)
             {
-                var variablesToAdd = StandardElementsManager.Self.DefaultStates[elementSave.Name].Variables
+                var defaultStates = StandardElementsManager.Self.GetDefaultStateFor(elementSave.Name);
+                var variablesToAdd = defaultStates.Variables
                     .Select(item => item.Clone())
                     .Where(item => existingVariableNames.Contains(item.Name) == false);
 

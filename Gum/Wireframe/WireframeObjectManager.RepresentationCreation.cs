@@ -20,6 +20,7 @@ using Gum.Converters;
 using Gum.PropertyGridHelpers.Converters;
 using GumRuntime;
 using Microsoft.Xna.Framework.Graphics;
+using Gum.Plugins;
 
 namespace Gum.Wireframe
 {
@@ -211,10 +212,23 @@ namespace Gum.Wireframe
 
             string type = instance.BaseType;
 
-            if (type == "Sprite" || type == "ColoredRectangle" || type == "NineSlice" || type == "Text" || type == "Circle" || type == "Rectangle")
+            var renderable = PluginManager.Self.CreateRenderableForType(type);
+
+            if(renderable != null)
             {
                 graphicalElement = new GraphicalUiElement(null, container);
                 ElementSave instanceBase = ObjectFinder.Self.GetElementSave(instance.BaseType);
+                graphicalElement.SetContainedObject(renderable);
+                graphicalElement.Tag = instance;
+                graphicalElement.Component.Name = instance.Name;
+                graphicalElement.Component.Tag = instance;
+            }
+
+
+            else if (type == "Sprite" || type == "ColoredRectangle" || type == "NineSlice" || type == "Text" || type == "Circle" || type == "Rectangle")
+            {
+                graphicalElement = new GraphicalUiElement(null, container);
+                ElementSave instanceBase = ObjectFinder.Self.GetElementSave(type);
                 graphicalElement.CreateGraphicalComponent(instanceBase, null);
                 graphicalElement.Tag = instance;
                 graphicalElement.Component.Name = instance.Name;

@@ -7,6 +7,7 @@ using Gum.Gui.Windows;
 using Gum.DataTypes.Variables;
 using System.Windows.Forms;
 using Gum.DataTypes.Behaviors;
+using RenderingLibrary.Graphics;
 
 namespace Gum.Plugins.BaseClasses
 {
@@ -68,6 +69,16 @@ namespace Gum.Plugins.BaseClasses
         public event Action<InstanceSave> InstanceReordered;
 
         public event Action<ElementSave> BehaviorReferencesChanged;
+
+        /// <summary>
+        /// Method which allows a plugin to provide a default StateSave for a given type. This can be used
+        /// to return a set of variables and their defaults for a completely custom StandardElementSave instead
+        /// of relying on StandardElementsManager
+        /// </summary>
+        public event Func<string, StateSave> GetDefaultStateForType;
+
+
+        public event Func<string, IRenderableIpso> CreateRenderableForType;
 
         #endregion
 
@@ -323,7 +334,15 @@ namespace Gum.Plugins.BaseClasses
             WireframeRefreshed?.Invoke();
         }
 
+        public StateSave CallGetDefaultStateFor(string type)
+        {
+            return GetDefaultStateForType?.Invoke(type);
+        }
 
+        public IRenderableIpso CallCreateRenderableForType(string type)
+        {
+            return CreateRenderableForType?.Invoke(type);
+        }
 
         internal bool GetIfVariableIsExcluded(VariableSave defaultVariable, RecursiveVariableFinder rvf)
         {

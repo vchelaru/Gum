@@ -499,7 +499,8 @@ namespace RenderingLibrary.Graphics
             return new Rectangle(x, y, right - x, bottom - y);
         }
 
-        internal void RemoveRenderable(IRenderableIpso renderable)
+        // Made public to allow custom renderable objects to be removed:
+        public void RemoveRenderable(IRenderableIpso renderable)
         {
             foreach (Layer layer in this.Layers)
             {
