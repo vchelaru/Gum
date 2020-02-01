@@ -53,7 +53,7 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
 
         SystemManagers managers;
 
-        List<LineCircle> mHandles;
+        List<LineRectangle> mHandles;
 
         bool mShowHandles = true;
 
@@ -296,17 +296,19 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
         public RectangleSelector(SystemManagers managers)
         {
             this.managers = managers;
-            HandleSize = 4;
+            HandleSize = 10;
             ResetsCursorIfNotOver = true;
             mShowHandles = true;
-            mHandles = new List<LineCircle>();
+            mHandles = new List<LineRectangle>();
             mLineRectangle = new LineRectangle(managers);
 
             for (int i = 0; i < 8; i++)
             {
-                LineCircle lineCircle = new LineCircle(managers);
-                lineCircle.Radius = HandleSize;
-                mHandles.Add(lineCircle);
+                var lineRectangle = new LineRectangle(managers);
+                lineRectangle.IsDotted = false;
+                lineRectangle.Width = 10 ;
+                lineRectangle.Height = 10;
+                mHandles.Add(lineRectangle);
             }
 
             Width = 34;
@@ -324,9 +326,9 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
 
             if (mShowHandles)
             {
-                foreach (var circle in mHandles)
+                foreach (var rectangle in mHandles)
                 {
-                    if (circle.HasCursorOver(worldX, worldY))
+                    if (rectangle.HasCursorOver(worldX, worldY))
                     {
                         return true;
                     }
@@ -343,10 +345,10 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
             mLineRectangle.Z = 1;
             managers.ShapeManager.Add(mLineRectangle);
 
-            foreach (var circle in mHandles)
+            foreach (var handle in mHandles)
             {
-                circle.Z = 1;
-                managers.ShapeManager.Add(circle);
+                handle.Z = 1;
+                managers.ShapeManager.Add(handle);
             }
         }
 
@@ -355,37 +357,40 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
             mLineRectangle.Z = 1;
             managers.ShapeManager.Remove(mLineRectangle);
 
-            foreach (var circle in mHandles)
+            foreach (var handle in mHandles)
             {
-                managers.ShapeManager.Remove(circle);
+                managers.ShapeManager.Remove(handle);
             }
         }
 
         public void UpdateHandles()
         {
-            mHandles[0].X = Left;
-            mHandles[0].Y = Top;
+            var dim = HandleSize / managers.Renderer.Camera.Zoom;
+            var halfDim = dim / 2.0f;
 
-            mHandles[1].X = CenterX;
-            mHandles[1].Y = Top;
+            mHandles[0].X = Left - dim;
+            mHandles[0].Y = Top - dim;
+
+            mHandles[1].X = CenterX - halfDim;
+            mHandles[1].Y = Top - dim;
 
             mHandles[2].X = Right;
-            mHandles[2].Y = Top;
+            mHandles[2].Y = Top - dim;
 
             mHandles[3].X = Right;
-            mHandles[3].Y = CenterY;
+            mHandles[3].Y = CenterY - halfDim;
 
             mHandles[4].X = Right;
             mHandles[4].Y = Bottom;
 
-            mHandles[5].X = CenterX;
+            mHandles[5].X = CenterX - halfDim;
             mHandles[5].Y = Bottom;
 
-            mHandles[6].X = Left;
+            mHandles[6].X = Left - dim;
             mHandles[6].Y = Bottom;
 
-            mHandles[7].X = Left;
-            mHandles[7].Y = CenterY;
+            mHandles[7].X = Left - dim;
+            mHandles[7].Y = CenterY - halfDim;
         }
 
         public void Activity(Cursor cursor, Keyboard keyboard, System.Windows.Forms.Control container)
@@ -488,6 +493,9 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
 
             if (mVisible && cursor.IsInWindow)
             {
+                UpdateHandles();
+
+
                 PushActivity(cursor);
 
                 DragActivity(cursor);
@@ -503,7 +511,8 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
 
                 foreach (var handle in mHandles)
                 {
-                    handle.Radius = HandleSize / managers.Renderer.Camera.Zoom;
+                    handle.Width = HandleSize / managers.Renderer.Camera.Zoom;
+                    handle.Height = HandleSize / managers.Renderer.Camera.Zoom;
                 }
 
 
@@ -530,7 +539,6 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
 
 
         private void ClickActivity(Cursor cursor)
-
         {
             if (cursor.PrimaryClick)
             {

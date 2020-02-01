@@ -39,13 +39,13 @@ namespace Gum.Wireframe
 
         float mRotation;
 
-        LineCircle[] mHandles = new LineCircle[8];
+        LineRectangle[] mHandles = new LineRectangle[8];
 
 
         OriginDisplay originDisplay;
 
 
-        const float RadiusAtNoZoom = 5;
+        const float WidthAtNoZoom = 10;
 
         #endregion
 
@@ -123,8 +123,10 @@ namespace Gum.Wireframe
         {
             for (int i = 0; i < mHandles.Length; i++)
             {
-                mHandles[i] = new LineCircle();
-                mHandles[i].Radius = RadiusAtNoZoom;
+                mHandles[i] = new LineRectangle();
+                mHandles[i].IsDotted = false;
+                mHandles[i].Width = WidthAtNoZoom;
+                mHandles[i].Height = WidthAtNoZoom;
                 ShapeManager.Self.Add(mHandles[i], layer);
 
             }
@@ -229,40 +231,41 @@ namespace Gum.Wireframe
 
         public void UpdateHandleRadius()
         {
-            foreach (var circle in this.mHandles)
+            foreach (var handle in this.mHandles)
             {
-                circle.Radius = RadiusAtNoZoom / Renderer.Self.Camera.Zoom;
+                handle.Width = WidthAtNoZoom / Renderer.Self.Camera.Zoom;
+                handle.Height = WidthAtNoZoom / Renderer.Self.Camera.Zoom;
             }
         }
 
         private void UpdateToProperties()
         {
-            mHandles[0].X = 0;
-            mHandles[0].Y = 0;
+            var dim = WidthAtNoZoom / Renderer.Self.Camera.Zoom;
+            var halflDim = dim / 2.0f;
 
-            float sin = (float)System.Math.Sin(mRotation);
-            float cos = (float)System.Math.Cos(mRotation);
+            mHandles[0].X = 0 - dim;
+            mHandles[0].Y = 0 - dim;
 
-            mHandles[1].X = Width/2.0f;
-            mHandles[1].Y = 0;
+            mHandles[1].X = Width / 2.0f - halflDim;
+            mHandles[1].Y = 0 - dim;
 
             mHandles[2].X = Width;
-            mHandles[2].Y = 0;
+            mHandles[2].Y = 0 - dim;
 
             mHandles[3].X = Width;
-            mHandles[3].Y = Height / 2.0f;
+            mHandles[3].Y = Height / 2.0f - halflDim;
 
             mHandles[4].X = Width;
             mHandles[4].Y = Height;
 
-            mHandles[5].X = Width/2.0f;
+            mHandles[5].X = Width / 2.0f - halflDim;
             mHandles[5].Y = Height;
 
-            mHandles[6].X = 0;
+            mHandles[6].X = 0 - dim;
             mHandles[6].Y = Height;
 
-            mHandles[7].X = 0;
-            mHandles[7].Y = Height/2.0f;
+            mHandles[7].X = 0 - dim;
+            mHandles[7].Y = Height / 2.0f - halflDim;
 
             Matrix rotationMatrix = Matrix.CreateRotationZ(-MathHelper.ToRadians( mRotation ));
 
