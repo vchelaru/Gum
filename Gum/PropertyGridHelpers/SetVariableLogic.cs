@@ -29,9 +29,12 @@ namespace Gum.PropertyGridHelpers
             "MaxLettersToShow",
             "Text",
             "X",
+            "X Units",
             "Y",
+            "Y Units",
             "Width",
             "Height",
+            "Rotation"
         };
 
         internal void PropertyValueChanged(object s, PropertyValueChangedEventArgs e)

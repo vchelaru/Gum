@@ -296,7 +296,7 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
         public RectangleSelector(SystemManagers managers)
         {
             this.managers = managers;
-            HandleSize = 10;
+            HandleSize = 12;
             ResetsCursorIfNotOver = true;
             mShowHandles = true;
             mHandles = new List<LineRectangle>();
@@ -306,8 +306,8 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
             {
                 var lineRectangle = new LineRectangle(managers);
                 lineRectangle.IsDotted = false;
-                lineRectangle.Width = 10 ;
-                lineRectangle.Height = 10;
+                lineRectangle.Width = HandleSize;
+                lineRectangle.Height = HandleSize;
                 mHandles.Add(lineRectangle);
             }
 

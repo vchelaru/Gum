@@ -376,6 +376,11 @@ namespace Gum.Wireframe
             var cursor = InputLibrary.Cursor.Self;
             if (cursor.PrimaryPush)
             {
+                // do this first to get the rotation handles to update to the right size/position to prevent accidental clicks
+                UpdateRotationHandlePosition();
+
+                RefreshRotationGrabbed();
+
                 rotationGrabbed = rotationHighlighted;
 
                 mHasChangedAnythingSinceLastPush = false;

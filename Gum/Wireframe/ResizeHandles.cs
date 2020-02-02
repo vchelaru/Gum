@@ -45,7 +45,7 @@ namespace Gum.Wireframe
         OriginDisplay originDisplay;
 
 
-        const float WidthAtNoZoom = 10;
+        const float WidthAtNoZoom = 12;
 
         #endregion
 
