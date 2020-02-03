@@ -30,6 +30,8 @@ namespace RenderingLibrary.Math.Geometry
 
         public float Rotation { get; set; }
 
+        bool IPositionedSizedObject.FlipHorizontal { get; set; }
+
         public string Name
         {
             get;

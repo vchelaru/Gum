@@ -109,7 +109,6 @@ namespace Gum.RenderingLibrary
 
             return qualifiedVariablePrefixWithDot;
         }
-
                 
         public static string GetAttachmentQualifiedName(this IRenderableIpso ipso, List<ElementWithState> elementStack)
         {
@@ -160,6 +159,7 @@ namespace Gum.RenderingLibrary
             }
 
         }
+
 
 
     }

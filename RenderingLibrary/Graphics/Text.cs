@@ -77,7 +77,7 @@ namespace RenderingLibrary.Graphics
         float mHeight = 200;
         LinePrimitive mBounds;
 
-        
+
 
         BitmapFont mBitmapFont;
         Texture2D mTextureToRender;
@@ -118,11 +118,11 @@ namespace RenderingLibrary.Graphics
         {
             get
             {
-                if(mPreRenderWidth != null)
+                if (mPreRenderWidth != null)
                 {
                     return mPreRenderWidth.Value * mFontScale;
                 }
-                else if(mTextureToRender?.Width > 0)
+                else if (mTextureToRender?.Width > 0)
                 {
                     return mTextureToRender.Width * mFontScale;
                 }
@@ -137,11 +137,11 @@ namespace RenderingLibrary.Graphics
         {
             get
             {
-                if(mPreRenderHeight != null)
+                if (mPreRenderHeight != null)
                 {
                     return mPreRenderHeight.Value * mFontScale;
                 }
-                else if(mTextureToRender?.Height > 0)
+                else if (mTextureToRender?.Height > 0)
                 {
                     return mTextureToRender.Height * mFontScale;
                 }
@@ -169,12 +169,12 @@ namespace RenderingLibrary.Graphics
         /// The maximum letters to display. This can be used to 
         /// create an effect where the text prints out letter-by-letter.
         /// </summary>
-        public int? MaxLettersToShow 
+        public int? MaxLettersToShow
         {
             get => maxLettersToShow;
             set
             {
-                if(maxLettersToShow != value)
+                if (maxLettersToShow != value)
                 {
                     maxLettersToShow = value;
 
@@ -232,6 +232,8 @@ namespace RenderingLibrary.Graphics
                 Position.Y = value;
             }
         }
+
+        bool IPositionedSizedObject.FlipHorizontal { get; set;}
 
         public float Rotation { get; set; }
 

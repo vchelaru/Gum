@@ -44,7 +44,6 @@ namespace RenderingLibrary.Graphics
 
         public Rectangle? SourceRectangle;
 
-
         #endregion
 
         #region Properties
@@ -109,15 +108,16 @@ namespace RenderingLibrary.Graphics
             }
         }
 
-
         public float Rotation { get; set; }
 
+        bool IPositionedSizedObject.FlipHorizontal { get; set; }
 
         public string Name
         {
             get;
             set;
         }
+
         public object Tag { get; set; }
 
         public float Width

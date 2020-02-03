@@ -77,6 +77,8 @@ namespace SvgPlugin
 
         public float Rotation { get; set; }
 
+        bool IPositionedSizedObject.FlipHorizontal { get; set; }
+
         float width;
         public float Width
         {

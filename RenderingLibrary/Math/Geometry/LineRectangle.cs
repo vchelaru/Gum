@@ -104,6 +104,8 @@ namespace RenderingLibrary.Math.Geometry
             }
         }
 
+        bool IPositionedSizedObject.FlipHorizontal { get; set; }
+
         public float Width
         {
             get { return mWidth; }

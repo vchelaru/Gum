@@ -478,6 +478,13 @@ namespace Gum.Wireframe
             }
         }
 
+        public bool FlipHorizontal 
+        {
+            get => mContainedObjectAsIpso?.FlipHorizontal ?? false;
+            set => mContainedObjectAsIpso.FlipHorizontal = value;
+        }
+
+
 
         public float X
         {
@@ -3339,7 +3346,10 @@ namespace Gum.Wireframe
                     this.ClipsChildren = (bool)value;
                     toReturn = true;
                     break;
-
+                case "FlipHorizontal":
+                    this.FlipHorizontal = (bool)value;
+                    toReturn = true;
+                    break;
                 case "Height":
                     this.Height = (float)value;
                         toReturn = true;

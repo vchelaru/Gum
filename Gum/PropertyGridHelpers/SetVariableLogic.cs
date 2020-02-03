@@ -26,15 +26,16 @@ namespace Gum.PropertyGridHelpers
     {
         static List<string> PropertiesSupportingIncrementalChange = new List<string>
         {
+            "FlipHorizontal",
+            "Height",
             "MaxLettersToShow",
+            "Rotation",
             "Text",
+            "Width",
             "X",
             "X Units",
             "Y",
             "Y Units",
-            "Width",
-            "Height",
-            "Rotation"
         };
 
         internal void PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
@@ -150,9 +151,9 @@ namespace Gum.PropertyGridHelpers
                         // if that will cause problems now, so instead I'm going
                         // to do it one by one:
                         var handledByDirectSet = false;
-                        if(PropertiesSupportingIncrementalChange.Contains(unqualifiedMember) && instance != null)
+                        if(PropertiesSupportingIncrementalChange.Contains(unqualifiedMember) && (instance != null || SelectedState.Self.SelectedComponent != null))
                         {
-                            var gue = WireframeObjectManager.Self.GetRepresentation(instance);
+                            var gue = WireframeObjectManager.Self.GetSelectedRepresentation();
 
                             if(gue != null)
                             {

@@ -177,7 +177,7 @@ namespace RenderingLibrary.Graphics
             get;
             set;
         }
-
+        
         public bool FlipHorizontal
         {
             get;
@@ -597,6 +597,12 @@ namespace RenderingLibrary.Graphics
             }
 
             SpriteEffects effects = SpriteEffects.None;
+
+            if(ipso.GetAbsoluteFlipHorizontal())
+            {
+                flipHorizontal = !flipHorizontal;
+            }
+
             if (flipHorizontal)
             {
                 effects |= SpriteEffects.FlipHorizontally;

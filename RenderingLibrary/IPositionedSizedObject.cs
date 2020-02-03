@@ -13,6 +13,7 @@ namespace RenderingLibrary
         float Y { get; set; }
         float Z { get; set; }
         float Rotation { get; set; }
+        bool FlipHorizontal { get; set; }
         float Width { get; set; }
         float Height { get; set; }
         string Name { get; set; }
@@ -31,6 +32,13 @@ namespace RenderingLibrary
             return Matrix.CreateRotationZ(-MathHelper.ToRadians(ipso.GetAbsoluteRotation()));
         }
 
+        public static bool GetAbsoluteFlipHorizontal(this IRenderableIpso ipso)
+        {
+            var effectiveParentFlipHorizontal = ipso.Parent?.GetAbsoluteFlipHorizontal() ?? false;
+
+            return ipso.FlipHorizontal != effectiveParentFlipHorizontal;
+        }
+
         /// <summary>
         /// Returns the world X coordinate of the argument RenderableIpso.
         /// </summary>
@@ -45,7 +53,16 @@ namespace RenderingLibrary
             }
             else
             {
-                return ipso.X + ipso.Parent.GetAbsoluteX();
+                var parentFlip = ipso.Parent.GetAbsoluteFlipHorizontal();
+
+                if(parentFlip)
+                {
+                    return -ipso.X - ipso.Width + ipso.Parent.GetAbsoluteX();
+                }
+                else
+                {
+                    return ipso.X + ipso.Parent.GetAbsoluteX();
+                }
             }
         }
 

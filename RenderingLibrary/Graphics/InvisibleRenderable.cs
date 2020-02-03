@@ -87,6 +87,8 @@ namespace RenderingLibrary.Graphics
 
         public float Z { get; set; }
 
+        public bool FlipHorizontal { get; set; }
+
         IVisible IVisible.Parent { get { return Parent as IVisible; } }
 
         public void PreRender()

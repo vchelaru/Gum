@@ -128,6 +128,8 @@ namespace RenderingLibrary.Math.Geometry
             set;
         }
 
+        bool IPositionedSizedObject.FlipHorizontal { get; set; }
+
         public float Width
         {
             get
