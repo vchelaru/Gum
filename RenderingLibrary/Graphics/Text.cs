@@ -233,7 +233,7 @@ namespace RenderingLibrary.Graphics
             }
         }
 
-        bool IPositionedSizedObject.FlipHorizontal { get; set;}
+        public bool FlipHorizontal { get; set;}
 
         public float Rotation { get; set; }
 

@@ -101,7 +101,7 @@ namespace RenderingLibrary.Graphics
 
         public float Rotation { get; set; }
 
-        bool IPositionedSizedObject.FlipHorizontal { get; set; }
+        public bool FlipHorizontal { get; set; }
 
         public ObservableCollection<IRenderableIpso> Children
         {

@@ -189,7 +189,7 @@ namespace RenderingLibrary.Math.Geometry
             }
         }
 
-        bool IPositionedSizedObject.FlipHorizontal { get; set; }
+        public bool FlipHorizontal { get; set; }
 
 
         float IPositionedSizedObject.Width
