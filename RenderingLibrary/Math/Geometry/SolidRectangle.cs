@@ -225,7 +225,7 @@ namespace RenderingLibrary.Graphics
                     sourceRect = SinglePixelTextureSourceRectangle;
                 }
 
-                Sprite.Render(managers, spriteRenderer, this, texture, Color, sourceRect, false, false, Rotation);
+                Sprite.Render(managers, spriteRenderer, this, texture, Color, sourceRect, false, Rotation);
             }
         }
 

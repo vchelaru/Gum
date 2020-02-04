@@ -863,7 +863,7 @@ namespace RenderingLibrary.Graphics
             else
             {
                 Sprite.Render(managers, spriteRenderer, mTempForRendering, mTextureToRender,
-                    new Color(mRed, mGreen, mBlue, mAlpha), null, false, false, Rotation, 
+                    new Color(mRed, mGreen, mBlue, mAlpha), null, false, Rotation, 
                     treat0AsFullDimensions: false,
                     objectCausingRenering: this);
 

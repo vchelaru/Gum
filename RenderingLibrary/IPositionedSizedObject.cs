@@ -57,7 +57,9 @@ namespace RenderingLibrary
 
                 if(parentFlip)
                 {
-                    return -ipso.X - ipso.Width + ipso.Parent.GetAbsoluteX();
+                    return 
+                        //-ipso.X - ipso.Width + 
+                        ipso.Parent.GetAbsoluteX() + ipso.Parent.Width - ipso.X - ipso.Width;
                 }
                 else
                 {

@@ -882,7 +882,7 @@ namespace RenderingLibrary.Graphics
             if (sprite.AtlasedTexture != null) texture = sprite.AtlasedTexture.Texture;
 
             Sprite.Render(managers, spriteRenderer, sprite, texture, sprite.Color, 
-                sourceRectangle, sprite.FlipHorizontal, sprite.FlipVertical, sprite.Rotation, treat0AsFullDimensions:false);
+                sourceRectangle, sprite.FlipVertical, sprite.Rotation, treat0AsFullDimensions:false);
         }
 
         void IRenderableIpso.SetParentDirect(IRenderableIpso parent)

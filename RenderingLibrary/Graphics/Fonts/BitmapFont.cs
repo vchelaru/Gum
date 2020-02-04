@@ -695,7 +695,7 @@ namespace RenderingLibrary.Graphics
                         mCharRect.Y += textObject.Parent.GetAbsoluteY();
                     }
 
-                    Sprite.Render(managers, spriteRenderer, mCharRect, mTextures[0], color, sourceRect, false, false, rotation,
+                    Sprite.Render(managers, spriteRenderer, mCharRect, mTextures[0], color, sourceRect, false, rotation,
                         treat0AsFullDimensions: false, objectCausingRenering: objectRequestingChange);
                 }
                 point.X = 0;

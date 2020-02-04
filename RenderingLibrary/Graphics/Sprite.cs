@@ -342,7 +342,7 @@ namespace RenderingLibrary.Graphics
                         texture = AtlasedTexture.Texture;
                     }
 
-                    Render(managers, spriteRenderer, this, texture, Color, sourceRectangle, FlipHorizontal, FlipVertical, Rotation);
+                    Render(managers, spriteRenderer, this, texture, Color, sourceRectangle, FlipVertical, Rotation);
                 }
             }
         }
@@ -519,7 +519,7 @@ namespace RenderingLibrary.Graphics
                                 sourceWidth,
                                 sourceHeight);
 
-                            Render(managers, spriteRenderer, this, AtlasedTexture.Texture, Color, rectangle, FlipHorizontal, FlipVertical, rotationInDegrees: Rotation);
+                            Render(managers, spriteRenderer, this, AtlasedTexture.Texture, Color, rectangle, FlipVertical, rotationInDegrees: Rotation);
                         }
                         else
                         {
@@ -529,7 +529,7 @@ namespace RenderingLibrary.Graphics
                                 sourceWidth,
                                 sourceHeight);
 
-                            Render(managers, spriteRenderer, this, Texture, Color, SourceRectangle, FlipHorizontal, FlipVertical, rotationInDegrees: Rotation);
+                            Render(managers, spriteRenderer, this, Texture, Color, SourceRectangle, FlipVertical, rotationInDegrees: Rotation);
                         }
                         currentX = System.Math.Max(0, currentX);
                         currentX += this.Width * matrix.Right.X;
@@ -561,7 +561,6 @@ namespace RenderingLibrary.Graphics
         public static void Render(SystemManagers managers, SpriteRenderer spriteRenderer,
             IRenderableIpso ipso, Texture2D texture, Color color,
             Rectangle? sourceRectangle = null,
-            bool flipHorizontal = false,
             bool flipVertical = false,
             float rotationInDegrees = 0,
             bool treat0AsFullDimensions = false,
@@ -598,10 +597,7 @@ namespace RenderingLibrary.Graphics
 
             SpriteEffects effects = SpriteEffects.None;
 
-            if(ipso.GetAbsoluteFlipHorizontal())
-            {
-                flipHorizontal = !flipHorizontal;
-            }
+            var flipHorizontal = ipso.GetAbsoluteFlipHorizontal();
 
             if (flipHorizontal)
             {
