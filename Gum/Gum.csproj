@@ -160,6 +160,12 @@
     <Compile Include="DataTypes\VariableSaveExtensionMethods.cs" />
     <Compile Include="Debug\ProjectVerifier.cs" />
     <Compile Include="Events\GumEvents.cs" />
+    <Compile Include="Graphics\Animation\AnimationChain.cs" />
+    <Compile Include="Graphics\Animation\AnimationChainList.cs" />
+    <Compile Include="Graphics\Animation\AnimationFrame.cs" />
+    <Compile Include="Graphics\Animation\Content\AnimationChainListSave.cs" />
+    <Compile Include="Graphics\Animation\Content\AnimationChainSave.cs" />
+    <Compile Include="Graphics\Animation\Content\AnimationFrameSave.cs" />
     <Compile Include="Gui\Window\DeleteOptionsWindow.xaml.cs">
       <DependentUpon>DeleteOptionsWindow.xaml</DependentUpon>
     </Compile>
@@ -170,6 +176,7 @@
     <Compile Include="Managers\DeleteLogic.cs" />
     <Compile Include="Managers\FileChangeReactionLogic.cs" />
     <Compile Include="Logic\FileWatch\FileWatchManager.cs" />
+    <Compile Include="Managers\GraphicalUiElementManager.cs" />
     <Compile Include="Managers\HotkeyManager.cs" />
     <Compile Include="Plugins\CirclePlugin\MainCirclePlugin.cs" />
     <Compile Include="Plugins\Errors\AllErrorsViewModel.cs" />

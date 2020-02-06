@@ -105,5 +105,26 @@ namespace RenderingLibrary.Math
                 vector2.Y = length * (float)System.Math.Sin(angle);
             }
         }
+
+        public static double Loop(double value, double loopPeriod, out bool didLoop)
+        {
+            didLoop = false;
+            if (loopPeriod == 0)
+            {
+                return 0;
+            }
+
+            int numberOfTimesIn = (int)(value / loopPeriod);
+            if (value < 0)
+            {
+                didLoop = true;
+                return value + (1 + numberOfTimesIn) * loopPeriod;
+            }
+            else
+            {
+                didLoop = numberOfTimesIn > 0;
+                return value - numberOfTimesIn * loopPeriod;
+            }
+        }
     }
 }

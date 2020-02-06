@@ -24,13 +24,14 @@ namespace Gum.PropertyGridHelpers
 {
     public class SetVariableLogic : Singleton<SetVariableLogic>
     {
-        static List<string> PropertiesSupportingIncrementalChange = new List<string>
+        static HashSet<string> PropertiesSupportingIncrementalChange = new HashSet<string>
         {
             "FlipHorizontal",
             "Height",
             "MaxLettersToShow",
             "Rotation",
             "Text",
+            "Texture Address",
             "Width",
             "X",
             "X Units",
@@ -406,7 +407,8 @@ namespace Gum.PropertyGridHelpers
             bool isValidExtension = extension == "gif" ||
                 extension == "jpg" ||
                 extension == "png" ||
-                extension == "svg"; // todo - this should be plugin controlled
+                extension == "svg" || // todo - this should be plugin controlled
+                extension == "achx";
             if(!isValidExtension)
             {
                 whyInvalid = "The extension " + extension + " is not supported for textures";
@@ -590,14 +592,29 @@ namespace Gum.PropertyGridHelpers
 
                         if (System.IO.File.Exists(absolute))
                         {
-                            var texture = LoaderManager.Self.LoadContent<Texture2D>(absolute);
-
-                            if (texture != null && instance != null)
+                            if(absolute.ToLowerInvariant().EndsWith(".achx"))
                             {
-                                parentElement.DefaultState.SetValue(instance.Name + ".Texture Top", 0);
-                                parentElement.DefaultState.SetValue(instance.Name + ".Texture Left", 0);
-                                parentElement.DefaultState.SetValue(instance.Name + ".Texture Width", texture.Width);
-                                parentElement.DefaultState.SetValue(instance.Name + ".Texture Height", texture.Height);
+                                // I think this is already loaded here, because when the GUE has
+                                // its ACXH set, the texture and texture coordinate values are set
+                                // immediately...
+                                // But I'm not 100% certain.
+                                // update: okay, so it turns out what this does is it sets values on the Element itself
+                                // so those values get saved to disk and displayed in the property grid. I could update the
+                                // property grid here, but doing so would possibly immediately make the values be out-of-date
+                                // because the animation chain can change the coordinates constantly as it animates. I'm not sure
+                                // what to do here...
+                            }
+                            else
+                            {
+                                var texture = LoaderManager.Self.LoadContent<Texture2D>(absolute);
+
+                                if (texture != null && instance != null)
+                                {
+                                    parentElement.DefaultState.SetValue(instance.Name + ".Texture Top", 0);
+                                    parentElement.DefaultState.SetValue(instance.Name + ".Texture Left", 0);
+                                    parentElement.DefaultState.SetValue(instance.Name + ".Texture Width", texture.Width);
+                                    parentElement.DefaultState.SetValue(instance.Name + ".Texture Height", texture.Height);
+                                }
                             }
                         }
                     }

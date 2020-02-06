@@ -317,9 +317,10 @@ namespace Gum
                 {
                     PluginManager.Self.BeforeProjectSave(GumProjectSave);
 
+                    bool saveContainedElements = isNewProject || forceSaveContainedElements;
+                    
                     try
                     {
-                        bool saveContainedElements = isNewProject || forceSaveContainedElements;
 
                         if (saveContainedElements)
                         {
@@ -338,7 +339,8 @@ namespace Gum
                         }
                         FileWatchLogic.Self.IgnoreNextChangeOn(GumProjectSave.FullFileName);
 
-                        GumProjectSave.Save(GumProjectSave.FullFileName, saveContainedElements);
+                        GumCommands.Self.TryMultipleTimes(() => GumProjectSave.Save(GumProjectSave.FullFileName, saveContainedElements));
+
                         succeeded = true;
 
                         if (succeeded && saveContainedElements)
@@ -359,6 +361,9 @@ namespace Gum
                     }
                     catch(UnauthorizedAccessException exception)
                     {
+                        var tempFileName = FileManager.RemoveExtension(GumProjectSave.FullFileName) + DateTime.Now.ToString("s") + "gumx";
+                        GumCommands.Self.TryMultipleTimes(() => GumProjectSave.Save(tempFileName, saveContainedElements));
+
                         string fileName = TryGetFileNameFromException(exception);
                         if (fileName != null && IsFileReadOnly(fileName))
                         {
@@ -366,7 +371,7 @@ namespace Gum
                         }
                         else
                         {
-                            MessageBox.Show("Unknown error trying to save the project:\n\n" + exception.ToString());
+                            MessageBox.Show($"Error trying to save the project, but backup was saved at \n\n{tempFileName}\n\n Additional information:\n\n" + exception.ToString());
                         }
                     }
 

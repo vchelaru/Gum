@@ -16,9 +16,13 @@ namespace SvgPlugin
     [Export(typeof(PluginBase))]
     public class MainSvgPlugin : PluginBase
     {
+        #region Fields/Properties
+
         public override string FriendlyName => "SVG (Skia) Plugin";
 
         public override Version Version => new Version(1, 0);
+
+        #endregion
 
         public override bool ShutDown(PluginShutDownReason shutDownReason)
         {
@@ -28,6 +32,14 @@ namespace SvgPlugin
         public override void StartUp()
         {
             AssignEvents();
+
+            AddMenuItems();
+        }
+
+        private void AddMenuItems()
+        {
+            var item = this.AddMenuItem(new List<string>() { "Plugins", "Add SVG Standard" });
+            item.Click += (not, used) => SvgStandardAdder.AddSvgStandard();
         }
 
         private void AssignEvents()

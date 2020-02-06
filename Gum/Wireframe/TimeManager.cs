@@ -12,17 +12,19 @@ namespace Gum.Wireframe
     /// </summary>
     public class TimeManager
     {
+        #region Fields/Properties
 
         static TimeManager mSelf;
 
         System.Diagnostics.Stopwatch mStopWatch;
-
 
         public double CurrentTime
         {
             get;
             private set;
         }
+
+        public float SecondDifference { get; private set; }
 
         public static TimeManager Self
         {
@@ -36,6 +38,7 @@ namespace Gum.Wireframe
             }
         }
 
+        #endregion
 
         public TimeManager()
         {
@@ -45,7 +48,10 @@ namespace Gum.Wireframe
 
         public void Activity()
         {
+            var lastTime = CurrentTime; 
             CurrentTime = mStopWatch.Elapsed.TotalSeconds;
+
+            SecondDifference = (float)(CurrentTime - lastTime);
         }
 
 

@@ -16,14 +16,20 @@ using GumRuntime;
 using Gum.DataTypes.Variables;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using Gum.Graphics.Animation;
+using RenderingLibrary.Math;
 
 namespace Gum.Wireframe
 {
+    #region Enums
+
     public enum MissingFileBehavior
     {
         ConsumeSilently,
         ThrowException
     }
+
+    #endregion
 
     /// <summary>
     /// The base object for all Gum runtime objects. It contains functionality for
@@ -481,7 +487,13 @@ namespace Gum.Wireframe
         public bool FlipHorizontal 
         {
             get => mContainedObjectAsIpso?.FlipHorizontal ?? false;
-            set => mContainedObjectAsIpso.FlipHorizontal = value;
+            set
+            {
+                if (mContainedObjectAsIpso != null)
+                {
+                    mContainedObjectAsIpso.FlipHorizontal = value;
+                }
+            }
         }
 
 
@@ -3564,7 +3576,27 @@ namespace Gum.Wireframe
 
                 if (propertyName == "SourceFile")
                 {
-                    handled = AssignSourceFileOnSprite(value, sprite);
+                    var asString = value as String;
+                    if(asString?.EndsWith(".achx") == true)
+                    {
+                        if (ToolsUtilities.FileManager.IsRelative(asString))
+                        {
+                            asString = ToolsUtilities.FileManager.RelativeDirectory + asString;
+
+                            asString = ToolsUtilities.FileManager.RemoveDotDotSlash(asString);
+                        }
+
+                        var animationChainListSave = Content.AnimationChain.AnimationChainListSave.FromFile(asString);
+
+                        this.mAnimationChains = animationChainListSave.ToAnimationChainList(null);
+
+                        UpdateToCurrentAnimationFrame();
+                        handled = true;
+                    }
+                    else
+                    {
+                        handled = AssignSourceFileOnSprite(asString, sprite);
+                    }
                 }
                 else if (propertyName == "Alpha")
                 {
@@ -3914,12 +3946,11 @@ namespace Gum.Wireframe
             return handled;
         }
 
-        private bool AssignSourceFileOnSprite(object value, Sprite sprite)
+        private bool AssignSourceFileOnSprite(string value, Sprite sprite)
         {
             bool handled;
-            string valueAsString = value as string;
 
-            if (string.IsNullOrEmpty(valueAsString))
+            if (string.IsNullOrEmpty(value))
             {
                 sprite.Texture = null;
                 sprite.AtlasedTexture = null;
@@ -3928,15 +3959,15 @@ namespace Gum.Wireframe
             }
             else
             {
-                if (ToolsUtilities.FileManager.IsRelative(valueAsString))
+                if (ToolsUtilities.FileManager.IsRelative(value))
                 {
-                    valueAsString = ToolsUtilities.FileManager.RelativeDirectory + valueAsString;
+                    value = ToolsUtilities.FileManager.RelativeDirectory + value;
 
-                    valueAsString = ToolsUtilities.FileManager.RemoveDotDotSlash(valueAsString);
+                    value = ToolsUtilities.FileManager.RemoveDotDotSlash(value);
                 }
 
                 // see if an atlas exists:
-                var atlasedTexture = global::RenderingLibrary.Content.LoaderManager.Self.TryLoadContent<AtlasedTexture>(valueAsString);
+                var atlasedTexture = global::RenderingLibrary.Content.LoaderManager.Self.TryLoadContent<AtlasedTexture>(value);
 
                 if (atlasedTexture != null)
                 {
@@ -3950,13 +3981,13 @@ namespace Gum.Wireframe
                     // not the GUE
                     try
                     {
-                        sprite.Texture = global::RenderingLibrary.Content.LoaderManager.Self.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(valueAsString);
+                        sprite.Texture = global::RenderingLibrary.Content.LoaderManager.Self.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(value);
                     }
                     catch(System.IO.FileNotFoundException)
                     {
                         if(MissingFileBehavior == MissingFileBehavior.ThrowException)
                         {
-                            string message = $"Error setting SourceFile on Sprite in {this.Tag}:\n{valueAsString}";
+                            string message = $"Error setting SourceFile on Sprite in {this.Tag}:\n{value}";
                             throw new System.IO.FileNotFoundException(message);
                         }
                         sprite.Texture = null;
@@ -4478,6 +4509,142 @@ namespace Gum.Wireframe
             this.ApplyState(values);
             numberOfUsedInterpolationLists--;
         }
+
+
+        public bool Animate { get; set; }
+        int mCurrentChainIndex;
+        int mCurrentFrameIndex;
+        AnimationChainList mAnimationChains;
+        float mAnimationSpeed = 1;
+        double mTimeIntoAnimation;
+        public AnimationChain CurrentChain
+        {
+            get
+            {
+                if (mCurrentChainIndex != -1 && mAnimationChains.Count > 0 && mCurrentChainIndex < mAnimationChains.Count)
+                {
+                    return mAnimationChains[mCurrentChainIndex];
+                }
+                else
+                    return null;
+            }
+        }
+
+        bool mJustChangedFrame;
+        bool mJustCycled;
+
+        public void AnimateSelf()
+        {
+            //mJustChangedFrame = false;
+            //mJustCycled = false;
+            if (Animate == false || mCurrentChainIndex == -1 || mAnimationChains.Count == 0 || mAnimationChains[mCurrentChainIndex].Count == 0) return;
+
+            int frameBefore = mCurrentFrameIndex;
+
+            // June 10, 2011
+            // A negative animation speed should cause the animation to play in reverse
+            //Removed the System.Math.Abs on the mAnimationSpeed variable to restore the correct behaviour.
+            //double modifiedTimePassed = TimeManager.SecondDifference * System.Math.Abs(mAnimationSpeed);
+            double modifiedTimePassed = TimeManager.Self.SecondDifference * mAnimationSpeed;
+
+            mTimeIntoAnimation += modifiedTimePassed;
+
+            AnimationChain animationChain = mAnimationChains[mCurrentChainIndex];
+
+            mTimeIntoAnimation = MathFunctions.Loop(mTimeIntoAnimation, animationChain.TotalLength, out mJustCycled);
+
+            UpdateFrameBasedOffOfTimeIntoAnimation();
+
+            if (mCurrentFrameIndex != frameBefore)
+            {
+                UpdateToCurrentAnimationFrame();
+                mJustChangedFrame = true;
+            }
+        }
+
+        void UpdateFrameBasedOffOfTimeIntoAnimation()
+        {
+            double timeIntoAnimation = mTimeIntoAnimation;
+
+            if (timeIntoAnimation < 0)
+            {
+                throw new ArgumentException("The timeIntoAnimation argument must be 0 or positive");
+            }
+            else if (CurrentChain != null && CurrentChain.Count > 1)
+            {
+                int frameIndex = 0;
+                while (timeIntoAnimation >= 0)
+                {
+                    double frameTime = CurrentChain[frameIndex].FrameLength;
+
+                    if (timeIntoAnimation < frameTime)
+                    {
+                        mCurrentFrameIndex = frameIndex;
+
+                        break;
+                    }
+                    else
+                    {
+                        timeIntoAnimation -= frameTime;
+
+                        frameIndex = (frameIndex + 1) % CurrentChain.Count;
+                    }
+                }
+            }
+        }
+
+        public void UpdateToCurrentAnimationFrame()
+        {
+            if (mAnimationChains != null && mAnimationChains.Count > mCurrentChainIndex && mCurrentChainIndex != -1 &&
+                mCurrentFrameIndex > -1 &&
+                mCurrentFrameIndex < mAnimationChains[mCurrentChainIndex].Count)
+            {
+                var frame = mAnimationChains[mCurrentChainIndex][mCurrentFrameIndex];
+                // Set the property so that any necessary values change:
+                //				mTexture = mAnimationChains[mCurrentChainIndex][mCurrentFrameIndex].Texture;
+                //this.Vertices[0].TextureCoordinate.X = frame.LeftCoordinate;
+                //this.Vertices[1].TextureCoordinate.X = frame.RightCoordinate;
+                //this.Vertices[2].TextureCoordinate.X = frame.RightCoordinate;
+                //this.Vertices[3].TextureCoordinate.X = frame.LeftCoordinate;
+
+                //this.Vertices[0].TextureCoordinate.Y = frame.TopCoordinate;
+                //this.Vertices[1].TextureCoordinate.Y = frame.TopCoordinate;
+                //this.Vertices[2].TextureCoordinate.Y = frame.BottomCoordinate;
+                //this.Vertices[3].TextureCoordinate.Y = frame.BottomCoordinate;
+                if(mContainedObjectAsIpso is Sprite sprite)
+                {
+                    sprite.Texture = frame.Texture;
+                }
+                this.TextureLeft = (int)(frame.LeftCoordinate * frame.Texture.Width);
+                this.TextureWidth = (int)(frame.RightCoordinate * frame.Texture.Width) - this.TextureLeft;
+
+                this.TextureTop = (int)(frame.TopCoordinate * frame.Texture.Height);
+                this.TextureHeight = (int)(frame.BottomCoordinate * frame.Texture.Height) - this.TextureTop;
+
+                //if (mIgnoreAnimationChainTextureFlip == false)
+                //{
+                //    mFlipHorizontal = frame.FlipHorizontal;
+                //    mFlipVertical = frame.FlipVertical;
+                //}
+
+                //if (mUseAnimationRelativePosition)
+                //{
+
+                //    RelativePosition.X = frame.RelativeX;
+                //    RelativePosition.Y = frame.RelativeY;
+                //}
+
+                //foreach (var instruction in frame.Instructions)
+                //{
+                //    instruction.Execute();
+                //}
+
+                //UpdateScale();
+
+            }
+        }
+
+
         #endregion
     }
 }

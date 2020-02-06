@@ -44,14 +44,14 @@ namespace Gum.DataTypes
 
         public string Name;
 
-        public ElementSave ToElementSave(string projectroot, string extension)
-        {
-            string fullName = projectroot + Subfolder + "/" + Name + "." + extension;
+        //public ElementSave ToElementSave(string projectroot, string extension)
+        //{
+        //    string fullName = projectroot + Subfolder + "/" + Name + "." + extension;
 
-            ElementSave elementSave = FileManager.XmlDeserialize<ElementSave>(fullName);
+        //    ElementSave elementSave = FileManager.XmlDeserialize<ElementSave>(fullName);
 
-            return elementSave;
-        }
+        //    return elementSave;
+        //}
 
 
         public T ToElementSave<T>(string projectroot, string extension, GumLoadResult result) where T : ElementSave, new()
