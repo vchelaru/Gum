@@ -69,6 +69,13 @@ namespace RenderingLibrary.Graphics
             get { return mLineHeightInPixels; }
         }
 
+        public int BaselineY
+        {
+            get; set;
+        }
+
+        public int DescenderHeight => LineHeightInPixels - BaselineY;
+
         #endregion
 
         #region Methods
@@ -347,6 +354,9 @@ namespace RenderingLibrary.Graphics
             mLineHeightInPixels =
                 StringFunctions.GetIntAfter(
                 "lineHeight=", fontPattern);
+
+            BaselineY = StringFunctions.GetIntAfter(
+                "base=", fontPattern);
 
             if (mTextures.Length > 0 && mTextures[0] != null)
             {
@@ -1021,7 +1031,6 @@ namespace RenderingLibrary.Graphics
         #endregion
 
         #endregion
-
 
         public void Dispose()
         {

@@ -587,6 +587,9 @@
     <None Include="Content\Icons\WidthUnits\MaintainFileAspectRatioWidth.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Content Include="Content\Icons\Origins\Baseline.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Libraries\TargaImage.dll" />
     <Content Include="Libraries\TargaImage.xml" />
     <None Include="Content\InvalidTexture.png">

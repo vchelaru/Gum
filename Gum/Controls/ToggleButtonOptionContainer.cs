@@ -1,4 +1,7 @@
-﻿using System;
+﻿using Gum.DataTypes;
+using Gum.Managers;
+using Gum.ToolStates;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -107,7 +110,23 @@ namespace Gum.Controls
             return internalDisplay.TrySetValueOnUi(value);
         }
 
+        protected static StandardElementSave GetRootElement()
+        {
+            StandardElementSave rootElement = null;
 
+            if (SelectedState.Self.SelectedInstance != null)
+            {
+                rootElement =
+                    ObjectFinder.Self.GetRootStandardElementSave(SelectedState.Self.SelectedInstance);
+            }
+            else if (SelectedState.Self.SelectedElement != null)
+            {
+                rootElement =
+                    ObjectFinder.Self.GetRootStandardElementSave(SelectedState.Self.SelectedElement);
+            }
+
+            return rootElement;
+        }
 
         protected static BitmapImage CreateBitmapFromFile(string resourceName)
         {

@@ -72,3 +72,4 @@ C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\bin\Debug\Content\Icons\He
 C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\bin\Debug\Content\Icons\WidthUnits\MaintainFileAspectRatioWidth.png
 C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\bin\Debug\Gum.DataTypes.dll
 C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\bin\Debug\Gum.DataTypes.pdb
+C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\bin\Debug\Content\Icons\Origins\Baseline.png

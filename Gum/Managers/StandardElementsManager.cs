@@ -121,7 +121,7 @@ namespace Gum.Managers
                 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                 var stateSave = new StateSave();
                 stateSave.Name = "Default";
-                AddPositioningVariables(stateSave);
+                AddPositioningVariables(stateSave, includeBaseline:true);
                 AddDimensionsVariables(stateSave, 100, 50, DimensionVariableAction.ExcludeFileOptions);
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "Hello", Name = "Text", Category = "Text" });
@@ -560,7 +560,7 @@ namespace Gum.Managers
             stateSave.Variables.Add(variableSave);
         }
 
-        public static void AddPositioningVariables(StateSave stateSave, bool addOriginVariables = true)
+        public static void AddPositioningVariables(StateSave stateSave, bool addOriginVariables = true, bool includeBaseline = false)
         {
             List<object> xUnitsExclusions = new List<object>();
             xUnitsExclusions.Add(PositionUnitType.PixelsFromTop);
@@ -584,8 +584,15 @@ namespace Gum.Managers
 
             if(addOriginVariables)
             {
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "HorizontalAlignment", Value = HorizontalAlignment.Left, Name = "X Origin", Category = "Position" });
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "VerticalAlignment", Value = VerticalAlignment.Top, Name = "Y Origin", Category = "Position" });
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = nameof(HorizontalAlignment), Value = HorizontalAlignment.Left, Name = "X Origin", Category = "Position" });
+
+                var verticalAlignmentVariable =
+                    new VariableSave { SetsValue = true, Type = nameof(VerticalAlignment), Value = VerticalAlignment.Top, Name = "Y Origin", Category = "Position" };
+                if(includeBaseline == false)
+                {
+                    verticalAlignmentVariable.ExcludedValuesForEnum.Add(VerticalAlignment.TextBaseline);
+                }
+                stateSave.Variables.Add(verticalAlignmentVariable);
             }
 
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = null, Name = "Guide", Category = "Position" });

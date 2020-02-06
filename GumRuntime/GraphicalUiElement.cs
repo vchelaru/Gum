@@ -809,6 +809,13 @@ namespace Gum.Wireframe
 
                 switch (YOrigin)
                 {
+                    case VerticalAlignment.TextBaseline:
+                        originOffset.Y = ((IPositionedSizedObject)this).Height;
+                        if(mContainedObjectAsIpso is Text text && text.BitmapFont != null)
+                        {
+                            originOffset.Y -= text.BitmapFont.DescenderHeight * text.FontScale;
+                        }
+                        break;
                     case VerticalAlignment.Center:
                         originOffset.Y = ((IPositionedSizedObject)this).Height / 2;
                         break;
@@ -849,6 +856,13 @@ namespace Gum.Wireframe
 
                 switch (YOrigin)
                 {
+                    case VerticalAlignment.TextBaseline:
+                        originOffset.Y = ((IPositionedSizedObject)this).Height;
+                        if (mContainedObjectAsIpso is Text text && text.BitmapFont != null)
+                        {
+                            originOffset.Y -= text.BitmapFont.DescenderHeight * text.FontScale;
+                        }
+                        break;
                     case VerticalAlignment.Center:
                         originOffset.Y = ((IPositionedSizedObject)this).Height / 2;
                         break;
@@ -1482,6 +1496,17 @@ namespace Gum.Wireframe
                 if (mYOrigin == VerticalAlignment.Center)
                 {
                     smallEdge = positionValue - ((IPositionedSizedObject)this).Height / 2.0f;
+                }
+                else if (mYOrigin == VerticalAlignment.TextBaseline)
+                {
+                    if(mContainedObjectAsIpso is Text text && text.BitmapFont != null)
+                    {
+                        smallEdge = positionValue - ((IPositionedSizedObject)this).Height + text.BitmapFont.DescenderHeight * text.FontScale;
+                    }
+                    else
+                    {
+                        smallEdge = positionValue - ((IPositionedSizedObject)this).Height;
+                    }
                 }
                 else if (mYOrigin == VerticalAlignment.Bottom)
                 {
@@ -2285,6 +2310,17 @@ namespace Gum.Wireframe
             if (mYOrigin == VerticalAlignment.Center)
             {
                 offsetY -= mContainedObjectAsIpso.Height / 2.0f;
+            }
+            else if(mYOrigin == VerticalAlignment.TextBaseline)
+            {
+                if (mContainedObjectAsIpso is Text text && text.BitmapFont != null)
+                {
+                    offsetY += -mContainedObjectAsIpso.Height + text.BitmapFont.DescenderHeight * text.FontScale;
+                }
+                else
+                {
+                    offsetY -= mContainedObjectAsIpso.Height;
+                }
             }
             else if (mYOrigin == VerticalAlignment.Bottom)
             {

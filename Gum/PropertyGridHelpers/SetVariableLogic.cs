@@ -34,8 +34,10 @@ namespace Gum.PropertyGridHelpers
             "Texture Address",
             "Width",
             "X",
+            "X Origin",
             "X Units",
             "Y",
+            "Y Origin",
             "Y Units",
         };
 

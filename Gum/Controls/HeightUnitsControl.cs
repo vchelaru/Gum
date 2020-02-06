@@ -56,23 +56,7 @@ namespace Gum.Controls
             return toReturn.ToArray();
         }
 
-        private static StandardElementSave GetRootElement()
-        {
-            StandardElementSave rootElement = null;
 
-            if (SelectedState.Self.SelectedInstance != null)
-            {
-                rootElement =
-                    ObjectFinder.Self.GetRootStandardElementSave(SelectedState.Self.SelectedInstance);
-            }
-            else if (SelectedState.Self.SelectedElement != null)
-            {
-                rootElement =
-                    ObjectFinder.Self.GetRootStandardElementSave(SelectedState.Self.SelectedElement);
-            }
-
-            return rootElement;
-        }
 
         private static void CreateCachedOptions()
         {

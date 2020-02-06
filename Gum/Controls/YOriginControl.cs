@@ -1,4 +1,7 @@
-﻿using System;
+﻿using Gum.DataTypes;
+using Gum.Managers;
+using RenderingLibrary.Graphics;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -16,18 +19,49 @@ namespace Gum.Controls
         {
             if (cachedOptions == null)
             {
-                BitmapImage topBitmap =
-                    CreateBitmapFromFile("Content/Icons/Origins/TopOrigin.png");
+                CreateCachedOptions();
+            }
 
-                BitmapImage centerBitmap =
-                    CreateBitmapFromFile("Content/Icons/Origins/CenterOrigin.png");
+            List<Option> toReturn = cachedOptions.ToList();
 
-                BitmapImage bottomBitmap =
-                    CreateBitmapFromFile("Content/Icons/Origins/BottomOrigin.png");
+            StandardElementSave rootElement = GetRootElement();
 
+            var state = StandardElementsManager.Self.GetDefaultStateFor(rootElement?.Name);
 
-                cachedOptions = new Option[]
+            if (state != null)
+            {
+                var variable = state.Variables.FirstOrDefault(item => item.Name == "Y Origin");
+
+                foreach (var toExclude in variable.ExcludedValuesForEnum)
                 {
+                    var matchingOption = toReturn.FirstOrDefault(item => (VerticalAlignment)item.Value == (VerticalAlignment)toExclude);
+
+                    if (matchingOption != null)
+                    {
+                        toReturn.Remove(matchingOption);
+                    }
+                }
+            }
+
+            return toReturn.ToArray();
+        }
+
+        private static void CreateCachedOptions()
+        {
+            BitmapImage topBitmap =
+                CreateBitmapFromFile("Content/Icons/Origins/TopOrigin.png");
+
+            BitmapImage centerBitmap =
+                CreateBitmapFromFile("Content/Icons/Origins/CenterOrigin.png");
+
+            BitmapImage bottomBitmap =
+                CreateBitmapFromFile("Content/Icons/Origins/BottomOrigin.png");
+
+            BitmapImage baselineBitmap =
+                CreateBitmapFromFile("Content/Icons/Origins/Baseline.png");
+
+            cachedOptions = new Option[]
+            {
                     new Option
                     {
                         Name = "Top",
@@ -46,12 +80,15 @@ namespace Gum.Controls
                         Name = "Bottom",
                         Value = global::RenderingLibrary.Graphics.VerticalAlignment.Bottom,
                         Image = bottomBitmap
+                    },
+                    new Option
+                    {
+                        Name = "Baseline",
+                        Value = global::RenderingLibrary.Graphics.VerticalAlignment.TextBaseline,
+                        Image = baselineBitmap
                     }
-                };
-            }
 
-            return cachedOptions;
+            };
         }
-
     }
 }

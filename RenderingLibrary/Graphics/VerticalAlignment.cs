@@ -10,6 +10,7 @@ namespace RenderingLibrary.Graphics
     {
         Top,
         Center,
-        Bottom
+        Bottom,
+        TextBaseline
     }
 }
