@@ -19,7 +19,8 @@ namespace Gum.Managers
         PixelsFromBottom,
         PixelsFromCenterX,
         PixelsFromCenterY,
-        PixelsFromCenterYInverted
+        PixelsFromCenterYInverted,
+        PixelsFromBaseline
 
 
     }
@@ -38,7 +39,8 @@ namespace Gum.Converters
         PercentageOfFile,
         PixelsFromMiddleInverted,
         PercentageOfOtherDimension,
-        MaintainFileAspectRatio
+        MaintainFileAspectRatio,
+        PixelsFromBaseline
     }
 
     public static class GeneralUnitTypeExtensions
@@ -48,7 +50,8 @@ namespace Gum.Converters
             return unitType == GeneralUnitType.PixelsFromSmall ||
                 unitType == GeneralUnitType.PixelsFromMiddle ||
                 unitType == GeneralUnitType.PixelsFromMiddleInverted ||
-                unitType == GeneralUnitType.PixelsFromLarge;
+                unitType == GeneralUnitType.PixelsFromLarge ||
+                unitType == GeneralUnitType.PixelsFromBaseline;
         }
 
     }
@@ -296,6 +299,8 @@ namespace Gum.Converters
                     return GeneralUnitType.PixelsFromMiddle;
                 case PositionUnitType.PixelsFromCenterYInverted:
                     return GeneralUnitType.PixelsFromMiddleInverted;
+                case PositionUnitType.PixelsFromBaseline:
+                    return GeneralUnitType.PixelsFromBaseline;
                 default:
                     throw new NotImplementedException();
             }

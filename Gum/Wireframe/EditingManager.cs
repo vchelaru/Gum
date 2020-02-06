@@ -343,7 +343,10 @@ namespace Gum.Wireframe
             {
                 return amount * -1;
             }
-            else if (generalUnitType != GeneralUnitType.PixelsFromLarge && generalUnitType != GeneralUnitType.PixelsFromMiddle && generalUnitType != GeneralUnitType.PixelsFromSmall)
+            else if (generalUnitType != GeneralUnitType.PixelsFromLarge && 
+                generalUnitType != GeneralUnitType.PixelsFromMiddle && 
+                generalUnitType != GeneralUnitType.PixelsFromSmall && 
+                generalUnitType != GeneralUnitType.PixelsFromBaseline)
             {
 
                 float parentWidth;

@@ -568,6 +568,7 @@ namespace Gum.Managers
             xUnitsExclusions.Add(PositionUnitType.PixelsFromBottom);
             xUnitsExclusions.Add(PositionUnitType.PixelsFromCenterY);
             xUnitsExclusions.Add(PositionUnitType.PixelsFromCenterYInverted);
+            xUnitsExclusions.Add(PositionUnitType.PixelsFromBaseline);
 
             List<object> yUnitsExclusions = new List<object>();
             yUnitsExclusions.Add(PositionUnitType.PixelsFromLeft);

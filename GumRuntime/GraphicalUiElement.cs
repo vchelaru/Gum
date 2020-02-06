@@ -1402,7 +1402,8 @@ namespace Gum.Wireframe
                 (mXUnits == GeneralUnitType.PixelsFromLarge || mXUnits == GeneralUnitType.PixelsFromMiddle ||
                     mXUnits == GeneralUnitType.PixelsFromSmall || mXUnits == GeneralUnitType.PixelsFromMiddleInverted) &&
                 (mYUnits == GeneralUnitType.PixelsFromLarge || mYUnits == GeneralUnitType.PixelsFromMiddle ||
-                    mYUnits == GeneralUnitType.PixelsFromSmall || mYUnits == GeneralUnitType.PixelsFromMiddleInverted);
+                    mYUnits == GeneralUnitType.PixelsFromSmall || mYUnits == GeneralUnitType.PixelsFromMiddleInverted ||
+                    mYUnits == GeneralUnitType.PixelsFromBaseline);
         }
 
         bool IsAllLayoutAbsolute(XOrY xOrY)
@@ -1417,7 +1418,8 @@ namespace Gum.Wireframe
             {
                 return mHeightUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent &&
                     (mYUnits == GeneralUnitType.PixelsFromLarge || mYUnits == GeneralUnitType.PixelsFromMiddle ||
-                        mYUnits == GeneralUnitType.PixelsFromSmall || mYUnits == GeneralUnitType.PixelsFromMiddleInverted);
+                        mYUnits == GeneralUnitType.PixelsFromSmall || mYUnits == GeneralUnitType.PixelsFromMiddleInverted &&
+                        mYUnits == GeneralUnitType.PixelsFromBaseline);
             }
         }
 
@@ -2376,6 +2378,19 @@ namespace Gum.Wireframe
                 else if (mYUnits == GeneralUnitType.PixelsFromMiddle || mYUnits == GeneralUnitType.PixelsFromMiddleInverted)
                 {
                     unitOffsetY = parentHeight / 2.0f;
+                    wasHandledY = true;
+                }
+                else if(mYUnits == GeneralUnitType.PixelsFromBaseline)
+                {
+                    if(Parent is GraphicalUiElement gue && gue.RenderableComponent is Text text && text.BitmapFont != null)
+                    {
+                        unitOffsetY = parentHeight - text.BitmapFont.DescenderHeight;
+                    }
+                    else
+                    {
+                        // use the bottom as baseline:
+                        unitOffsetY = parentHeight;
+                    }
                     wasHandledY = true;
                 }
             }

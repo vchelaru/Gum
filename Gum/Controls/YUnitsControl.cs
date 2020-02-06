@@ -31,9 +31,12 @@ namespace Gum.Controls
                 BitmapImage pixelsFromCenterYInvertedBitmap =
                     CreateBitmapFromFile("Content/Icons/Units/PixelsFromCenterYInverted.png");
 
-
                 BitmapImage pixelsFromBottomBitmap =
                     CreateBitmapFromFile("Content/Icons/Units/PixelsFromBottom.png");
+
+                BitmapImage pixelsFromBaseline =
+                    CreateBitmapFromFile("Content/Icons/Units/PixelsFromBaseline.png");
+
 
                 cachedOptions = new Option[]
                 {
@@ -67,6 +70,12 @@ namespace Gum.Controls
                         Name = "Percentage Parent Height",
                         Value = PositionUnitType.PercentageHeight,
                         Image = percentageBitmap
+                    },
+                    new Option
+                    {
+                        Name = "Pixels From Baseline",
+                        Value = PositionUnitType.PixelsFromBaseline,
+                        Image = pixelsFromBaseline
                     }
                 };
             }

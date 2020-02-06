@@ -399,7 +399,9 @@ namespace Gum.Wireframe
 
         private void UpdateGrabbedGuideText(float guideSpaceY)
         {
-            const float distanceFromEdge = 10;
+            // need to make it bigger to support scrollbars
+            //const float distanceFromEdge = 10;
+            const float distanceFromEdge = 30;
             mGrabbedGuideText.Visible = false;
             if (mCursor.PrimaryDown && mGrabbedGuide != null)
             {
@@ -409,12 +411,12 @@ namespace Gum.Wireframe
                 {
                     mGrabbedGuideText.Y = mGrabbedGuide.Y - 21;
                     mGrabbedGuideText.X = Renderer.Camera.ClientWidth - distanceFromEdge - mGrabbedGuideText.Width;
-                    mGrabbedGuideText.RawText = (-mGrabbedGuide.Y / mZoomValue).ToString();
+                    mGrabbedGuideText.RawText = (mGrabbedGuide.Y / mZoomValue).ToString();
                     mGrabbedGuideText.HorizontalAlignment = HorizontalAlignment.Right;
                 }
                 else
                 {
-                    mGrabbedGuideText.Y = Renderer.Camera.ClientHeight - 22;
+                    mGrabbedGuideText.Y = Renderer.Camera.ClientHeight - distanceFromEdge - 22 ;
                     mGrabbedGuideText.X = mGrabbedGuide.X + 4;
                     mGrabbedGuideText.RawText = (mGrabbedGuide.X / mZoomValue).ToString();
                     mGrabbedGuideText.HorizontalAlignment = HorizontalAlignment.Left;
