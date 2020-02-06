@@ -32,6 +32,8 @@ namespace Gum.Wireframe
         SystemManagers mManagers;
         Layer mLayer;
         Cursor mCursor;
+        Keyboard mKeyboard;
+
         SolidRectangle mRectangle;
         List<Line> mRulerLines = new List<Line>();
         List<Line> mGuides = new List<Line>();
@@ -41,6 +43,9 @@ namespace Gum.Wireframe
         float mZoomValue = 1;
 
         Sprite mOffsetSprite;
+
+        int nudgeYOffset;
+        int nudgeXOffset;
 
         RulerSide mRulerSide;
 
@@ -167,11 +172,12 @@ namespace Gum.Wireframe
         #endregion
 
 
-        public Ruler(GraphicsDeviceControl control, SystemManagers managers, Cursor cursor )
+        public Ruler(GraphicsDeviceControl control, SystemManagers managers, Cursor cursor, InputLibrary.Keyboard keyboard )
         {
             try
             {
                 mControl = control;
+                mKeyboard = keyboard;
                 mManagers = managers;
                 mCursor = cursor;
 
@@ -195,7 +201,7 @@ namespace Gum.Wireframe
             IsCursorOver = false;
             UpdateOffsetSpritePosition();
 
-            bool isOver = HandleMovingGuides(isCursorInWindow);
+            bool isOver = PerformGuidesActivity(isCursorInWindow);
 
             if (isCursorInWindow)
             {
@@ -311,17 +317,17 @@ namespace Gum.Wireframe
             mLayer.Name = "Ruler Layer";
         }
 
-        private bool HandleMovingGuides(bool isCursorInWindow)
+        private bool PerformGuidesActivity(bool isCursorInWindow)
         {
 
             float guideSpacePosition;
             if (this.RulerSide == Wireframe.RulerSide.Left)
             {
-                guideSpacePosition = mCursor.Y - mOffsetSprite.Y;
+                guideSpacePosition = mCursor.Y - mOffsetSprite.Y + nudgeYOffset;
             }
             else
             {
-                guideSpacePosition = mCursor.X - mOffsetSprite.X;
+                guideSpacePosition = mCursor.X - mOffsetSprite.X + nudgeXOffset;
             }
 
 
@@ -360,16 +366,35 @@ namespace Gum.Wireframe
             if (mCursor.IsInWindow && mCursor.PrimaryPush)
             {
                 mGrabbedGuide = guideOver;
+                nudgeXOffset = 0;
+                nudgeYOffset = 0;
 
             }
             if (mCursor.PrimaryDown && mGrabbedGuide != null)
             {
+
                 if (this.RulerSide == Wireframe.RulerSide.Left)
                 {
+                    if(mKeyboard.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Up))
+                    {
+                        nudgeYOffset--;
+                    }
+                    else if (mKeyboard.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Down))
+                    {
+                        nudgeYOffset++;
+                    }
                     mGrabbedGuide.Y = guideSpacePosition;
                 }
                 else
                 {
+                    if (mKeyboard.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Left))
+                    {
+                        nudgeXOffset--;
+                    }
+                    else if (mKeyboard.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Right))
+                    {
+                        nudgeXOffset++;
+                    }
                     mGrabbedGuide.X = guideSpacePosition;
                 }
             }
@@ -383,6 +408,8 @@ namespace Gum.Wireframe
                     mGuides.Remove(mGrabbedGuide);
                     ShapeManager.Remove(mGrabbedGuide);
                 }
+                nudgeXOffset = 0;
+                nudgeYOffset = 0;
                 mGrabbedGuide = null;
             }
 
