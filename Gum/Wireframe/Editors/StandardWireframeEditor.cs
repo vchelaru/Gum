@@ -901,9 +901,9 @@ namespace Gum.Wireframe
             }
             else if(verticalAlignment == VerticalAlignment.TextBaseline)
             {
-                if(gue.RenderableComponent is Text text && text.BitmapFont != null && text.Height > 0)
+                if(gue.RenderableComponent is Text text && text.Height > 0)
                 {
-                    return 1 - (text.BitmapFont.DescenderHeight * text.FontScale / text.Height);
+                    return 1 - (text.DescenderHeight * text.FontScale / text.Height);
                 }
                 else
                 {

@@ -503,6 +503,8 @@ namespace RenderingLibrary.Graphics
             }
         }
 
+        public float DescenderHeight => BitmapFont?.DescenderHeight ?? 0;
+
         #endregion
 
         #region Methods

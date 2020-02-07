@@ -54,7 +54,6 @@ namespace Gum.Wireframe
             public XOrY? XOrY;
         }
 
-
         #endregion
 
         #region Fields
@@ -63,7 +62,6 @@ namespace Gum.Wireframe
 
         public static int UpdateLayoutCallCount;
         public static int ChildrenUpdatingParentLayoutCalls;
-
 
         public static bool ShowLineRectangles = true;
 
@@ -107,7 +105,6 @@ namespace Gum.Wireframe
         float mRotation;
 
         IRenderableIpso mParent;
-
 
         bool mIsLayoutSuspended = false;
 
@@ -811,9 +808,9 @@ namespace Gum.Wireframe
                 {
                     case VerticalAlignment.TextBaseline:
                         originOffset.Y = ((IPositionedSizedObject)this).Height;
-                        if(mContainedObjectAsIpso is Text text && text.BitmapFont != null)
+                        if(mContainedObjectAsIpso is Text text)
                         {
-                            originOffset.Y -= text.BitmapFont.DescenderHeight * text.FontScale;
+                            originOffset.Y -= text.DescenderHeight * text.FontScale;
                         }
                         break;
                     case VerticalAlignment.Center:
@@ -858,9 +855,9 @@ namespace Gum.Wireframe
                 {
                     case VerticalAlignment.TextBaseline:
                         originOffset.Y = ((IPositionedSizedObject)this).Height;
-                        if (mContainedObjectAsIpso is Text text && text.BitmapFont != null)
+                        if (mContainedObjectAsIpso is Text text)
                         {
-                            originOffset.Y -= text.BitmapFont.DescenderHeight * text.FontScale;
+                            originOffset.Y -= text.DescenderHeight * text.FontScale;
                         }
                         break;
                     case VerticalAlignment.Center:
@@ -1501,9 +1498,9 @@ namespace Gum.Wireframe
                 }
                 else if (mYOrigin == VerticalAlignment.TextBaseline)
                 {
-                    if(mContainedObjectAsIpso is Text text && text.BitmapFont != null)
+                    if(mContainedObjectAsIpso is Text text)
                     {
-                        smallEdge = positionValue - ((IPositionedSizedObject)this).Height + text.BitmapFont.DescenderHeight * text.FontScale;
+                        smallEdge = positionValue - ((IPositionedSizedObject)this).Height + text.DescenderHeight * text.FontScale;
                     }
                     else
                     {
@@ -2315,9 +2312,9 @@ namespace Gum.Wireframe
             }
             else if(mYOrigin == VerticalAlignment.TextBaseline)
             {
-                if (mContainedObjectAsIpso is Text text && text.BitmapFont != null)
+                if (mContainedObjectAsIpso is Text text )
                 {
-                    offsetY += -mContainedObjectAsIpso.Height + text.BitmapFont.DescenderHeight * text.FontScale;
+                    offsetY += -mContainedObjectAsIpso.Height + text.DescenderHeight * text.FontScale;
                 }
                 else
                 {
@@ -2382,9 +2379,9 @@ namespace Gum.Wireframe
                 }
                 else if(mYUnits == GeneralUnitType.PixelsFromBaseline)
                 {
-                    if(Parent is GraphicalUiElement gue && gue.RenderableComponent is Text text && text.BitmapFont != null)
+                    if(Parent is GraphicalUiElement gue && gue.RenderableComponent is Text text)
                     {
-                        unitOffsetY = parentHeight - text.BitmapFont.DescenderHeight;
+                        unitOffsetY = parentHeight - text.DescenderHeight;
                     }
                     else
                     {
