@@ -187,7 +187,10 @@ namespace Gum.Wireframe
                 // I think this has to be *after* we set varaibles because that's where clipping gets set
                 if (rootIpso != null)
                 {
+                    gueManager.Add(rootIpso);
+
                     rootIpso.AddToManagers();
+
                 }
             }
             GraphicalUiElement.IsAllLayoutSuspended = false;

@@ -23,7 +23,7 @@ namespace Gum.Managers
 
         public void Remove(GraphicalUiElement graphicalUiElement)
         {
-            GraphicalUiElements.Add(graphicalUiElement);
+            GraphicalUiElements.Remove(graphicalUiElement);
         }
 
         public void Activity()

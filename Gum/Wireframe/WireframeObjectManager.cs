@@ -49,7 +49,7 @@ namespace Gum.Wireframe
         const int left = -4096;
         const int width = 8192;
 
-
+        GraphicalUiElementManager gueManager;
 
 
         #endregion
@@ -112,7 +112,7 @@ namespace Gum.Wireframe
 
         #endregion
 
-        #region Methods
+        #region Initialize
 
         public void Initialize(WireframeEditControl editControl, WireframeControl wireframeControl)
         {
@@ -123,7 +123,20 @@ namespace Gum.Wireframe
 
             mEditControl = editControl;
             mEditControl.ZoomChanged += HandleControlZoomChange;
+
+            gueManager = new GraphicalUiElementManager();
         }
+
+        #endregion
+
+        #region Activity
+
+        public void Activity()
+        {
+            gueManager.Activity();
+        }
+
+        #endregion
 
         private void HandleKeyPress(object sender, System.Windows.Forms.KeyEventArgs e)
         {
@@ -183,6 +196,8 @@ namespace Gum.Wireframe
         {
             foreach (var element in mGraphicalElements)
             {
+                gueManager.Remove(element);
+
                 element.RemoveFromManagers();
             }
 
@@ -466,6 +481,5 @@ namespace Gum.Wireframe
             }
         }
 
-        #endregion
     }
 }

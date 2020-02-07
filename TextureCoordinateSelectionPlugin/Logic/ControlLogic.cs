@@ -17,6 +17,12 @@ using System.Threading.Tasks;
 
 namespace TextureCoordinateSelectionPlugin.Logic
 {
+    public enum RefreshType
+    {
+        Force,
+        OnlyIfGrabbed
+    }
+
     public class ControlLogic : Singleton<ControlLogic>
     {
 
@@ -103,7 +109,7 @@ namespace TextureCoordinateSelectionPlugin.Logic
 
                 RefreshOutline(control, ref textureOutlineRectangle);
 
-                RefreshSelector(control);
+                RefreshSelector(control, RefreshType.Force);
             }
 
 
@@ -213,10 +219,11 @@ namespace TextureCoordinateSelectionPlugin.Logic
             }
         }
 
-        public void RefreshSelector(ImageRegionSelectionControl control)
+        public void RefreshSelector(ImageRegionSelectionControl control, RefreshType refreshType)
         {
             // early out
-            if (control.RectangleSelector != null &&
+            if (refreshType == RefreshType.OnlyIfGrabbed &&
+                control.RectangleSelector != null &&
                 control.RectangleSelector.SideGrabbed != FlatRedBall.SpecializedXnaControls.RegionSelection.ResizeSide.None)
             {
                 return;

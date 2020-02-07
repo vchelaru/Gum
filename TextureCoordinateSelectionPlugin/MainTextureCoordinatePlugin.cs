@@ -81,7 +81,7 @@ namespace TextureCoordinateSelectionPlugin
 
             control.CurrentTexture = textureToAssign;
 
-            Logic.ControlLogic.Self.RefreshSelector(control);
+            Logic.ControlLogic.Self.RefreshSelector(control, Logic.RefreshType.OnlyIfGrabbed);
 
             Logic.ControlLogic.Self.RefreshOutline(control, ref textureOutlineRectangle);
         }
@@ -92,7 +92,7 @@ namespace TextureCoordinateSelectionPlugin
 
             if(shouldRefresh && control.CurrentTexture != null)
             {
-                Logic.ControlLogic.Self.RefreshSelector(control);
+                Logic.ControlLogic.Self.RefreshSelector(control, Logic.RefreshType.Force);
             }
         }
 

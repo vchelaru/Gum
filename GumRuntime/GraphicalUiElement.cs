@@ -4562,7 +4562,7 @@ namespace Gum.Wireframe
         }
 
 
-        public bool Animate { get; set; }
+        public bool Animate { get; set; } = true;
         int mCurrentChainIndex;
         int mCurrentFrameIndex;
         AnimationChainList mAnimationChains;
@@ -4586,30 +4586,44 @@ namespace Gum.Wireframe
 
         public void AnimateSelf()
         {
+            var shouldAnimateSelf = true;
             //mJustChangedFrame = false;
             //mJustCycled = false;
-            if (Animate == false || mCurrentChainIndex == -1 || mAnimationChains.Count == 0 || mAnimationChains[mCurrentChainIndex].Count == 0) return;
-
-            int frameBefore = mCurrentFrameIndex;
-
-            // June 10, 2011
-            // A negative animation speed should cause the animation to play in reverse
-            //Removed the System.Math.Abs on the mAnimationSpeed variable to restore the correct behaviour.
-            //double modifiedTimePassed = TimeManager.SecondDifference * System.Math.Abs(mAnimationSpeed);
-            double modifiedTimePassed = TimeManager.Self.SecondDifference * mAnimationSpeed;
-
-            mTimeIntoAnimation += modifiedTimePassed;
-
-            AnimationChain animationChain = mAnimationChains[mCurrentChainIndex];
-
-            mTimeIntoAnimation = MathFunctions.Loop(mTimeIntoAnimation, animationChain.TotalLength, out mJustCycled);
-
-            UpdateFrameBasedOffOfTimeIntoAnimation();
-
-            if (mCurrentFrameIndex != frameBefore)
+            if (Animate == false || mCurrentChainIndex == -1 || mAnimationChains == null || mAnimationChains.Count == 0 || mAnimationChains[mCurrentChainIndex].Count == 0)
             {
-                UpdateToCurrentAnimationFrame();
-                mJustChangedFrame = true;
+                shouldAnimateSelf = false;
+            }
+
+            if(shouldAnimateSelf)
+            {
+                int frameBefore = mCurrentFrameIndex;
+
+                // June 10, 2011
+                // A negative animation speed should cause the animation to play in reverse
+                //Removed the System.Math.Abs on the mAnimationSpeed variable to restore the correct behaviour.
+                //double modifiedTimePassed = TimeManager.SecondDifference * System.Math.Abs(mAnimationSpeed);
+                double modifiedTimePassed = TimeManager.Self.SecondDifference * mAnimationSpeed;
+
+                mTimeIntoAnimation += modifiedTimePassed;
+
+                AnimationChain animationChain = mAnimationChains[mCurrentChainIndex];
+
+                mTimeIntoAnimation = MathFunctions.Loop(mTimeIntoAnimation, animationChain.TotalLength, out mJustCycled);
+
+                UpdateFrameBasedOffOfTimeIntoAnimation();
+
+                if (mCurrentFrameIndex != frameBefore)
+                {
+                    UpdateToCurrentAnimationFrame();
+                    mJustChangedFrame = true;
+                }
+            }
+            foreach(var child in this.Children)
+            {
+                if(child is GraphicalUiElement childGue)
+                {
+                    childGue.AnimateSelf();
+                }
             }
         }
 

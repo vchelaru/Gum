@@ -96,6 +96,10 @@ namespace Gum
             ToolCommands.GuiCommands.Self.Initialize(wireframeControl1);
             Wireframe.WireframeObjectManager.Self.Initialize(WireframeEditControl, wireframeControl1);
 
+            wireframeControl1.XnaUpdate += () =>
+                Wireframe.WireframeObjectManager.Self.Activity();
+
+
             EditingManager.Self.Initialize(this.WireframeContextMenuStrip);
             OutputManager.Self.Initialize(this.OutputTextBox);
             // ProjectManager.Initialize used to happen here, but I 
