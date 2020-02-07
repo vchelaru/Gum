@@ -51,3 +51,5 @@ Gum/objNetFramework/
 GumDataTypes/objNetFramework/
 SvgPlugin/bin/
 SvgPlugin/obj/
+CodeOutputPlugin/bin/
+CodeOutputPlugin/obj/

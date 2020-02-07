@@ -135,6 +135,11 @@ namespace Gum.Plugins.BaseClasses
 
         }
 
+        public ToolStripMenuItem AddMenuItem(params string[] menuAndSubmenus)
+        {
+            return AddMenuItem((IEnumerable<string>)menuAndSubmenus);
+        }
+
         #region Event calling
 
         public void CallProjectLoad(GumProjectSave newlyLoadedProject)
