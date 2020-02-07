@@ -30,20 +30,26 @@ namespace Gum.Plugins.PropertiesWindowPlugin
 
         public bool RestrictToUnitValues
         {
-            get { return Get<bool>(); }
-            set { Set(value); }
+            get => Get<bool>();
+            set => Set(value); 
         }
 
         public int CanvasWidth
         {
-            get { return Get<int>(); }
-            set { Set(value); }
+            get => Get<int>();
+            set => Set(value); 
         }
 
         public int CanvasHeight
         {
-            get { return Get<int>(); }
-            set { Set(value); }
+            get => Get<int>();
+            set => Set(value);
+        }
+
+        public decimal DisplayDensity
+        {
+            get => Get<decimal>();
+            set => Set(value);
         }
 
         public bool RestrictFileNamesForAndroid
@@ -74,7 +80,7 @@ namespace Gum.Plugins.PropertiesWindowPlugin
 
         }
 
-        public void ApplyToBoundObjects()
+        public void ApplyToModelObjects()
         {
             this.generalSettings.AutoSave = AutoSave;
             this.gumProject.ShowOutlines = ShowOutlines;

@@ -115,16 +115,19 @@ namespace Gum.PropertyGridHelpers
                 {
                     var attributes = mPropertyDescriptor.Attributes;
 
-                    foreach(var attribute in attributes)
-                    {
-                        if(attribute is EditorAttribute)
+                    if (attributes != null)
+                    { 
+                        foreach(var attribute in attributes)
                         {
-                            EditorAttribute editorAttribute = attribute as EditorAttribute;
+                            if(attribute is EditorAttribute)
+                            {
+                                EditorAttribute editorAttribute = attribute as EditorAttribute;
 
-                            return editorAttribute.EditorTypeName.StartsWith("System.Windows.Forms.Design.FileNameEditor");
+                                return editorAttribute.EditorTypeName.StartsWith("System.Windows.Forms.Design.FileNameEditor");
+                            }
                         }
+                        //EditorAttribute(typeof(System.Windows.Forms.Design.FileNameEditor), typeof(System.Drawing.Design.UITypeEditor))
                     }
-                    //EditorAttribute(typeof(System.Windows.Forms.Design.FileNameEditor), typeof(System.Drawing.Design.UITypeEditor))
 
                 }
 

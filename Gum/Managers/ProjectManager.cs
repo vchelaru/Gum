@@ -517,6 +517,12 @@ namespace Gum
         public static void ShowReadOnlyDialog(string fileName)
         {
             MultiButtonMessageBox mbmb = new MultiButtonMessageBox();
+
+            mbmb.StartPosition = FormStartPosition.Manual;
+
+            mbmb.Location = new System.Drawing.Point(MainWindow.MousePosition.X - mbmb.Width / 2,
+                 MainWindow.MousePosition.Y - mbmb.Height / 2);
+
             mbmb.MessageText = "Could not save the file\n\n" + fileName + "\n\nbecause it is read-only." +
                 "What would you like to do?";
 

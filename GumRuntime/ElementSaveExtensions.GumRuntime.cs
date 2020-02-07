@@ -70,7 +70,7 @@ namespace GumRuntime
             return toReturn;
         }
 
-        private static void ThrowMissingFileExceptionsRecursively(GraphicalUiElement toReturn)
+        private static void ThrowMissingFileExceptionsRecursively(GraphicalUiElement graphicalUiElement)
         {
 
             // We can't throw exceptions when assigning values on fonts because the font values get set one-by-one
@@ -85,27 +85,28 @@ namespace GumRuntime
             // the project doesn't actually use Arial12.
             // We need to wait until the graphical UI element is fully created before we try to throw an exception, so
             // that's what we're going to do here:
-            if (toReturn != null && toReturn.RenderableComponent is Text)
+            if (graphicalUiElement != null && graphicalUiElement.RenderableComponent is Text)
             {
                 // check it
-                var asText = toReturn.RenderableComponent as Text;
+                var asText = graphicalUiElement.RenderableComponent as Text;
                 if (asText.BitmapFont == null)
                 {
-                    if (toReturn.UseCustomFont)
+                    if (graphicalUiElement.UseCustomFont)
                     {
-                        var fontName = ToolsUtilities.FileManager.Standardize(toReturn.CustomFontFile, preserveCase:true, makeAbsolute:true);
+                        var fontName = ToolsUtilities.FileManager.Standardize(graphicalUiElement.CustomFontFile, preserveCase:true, makeAbsolute:true);
 
                         throw new System.IO.FileNotFoundException($"Missing:{fontName}");
                     }
                     else
                     {
-                        if (toReturn.FontSize > 0 && !string.IsNullOrEmpty(toReturn.Font))
+                        if (graphicalUiElement.FontSize > 0 && !string.IsNullOrEmpty(graphicalUiElement.Font))
                         {
                             string fontName = global::RenderingLibrary.Graphics.Fonts.BmfcSave.GetFontCacheFileNameFor(
-                                toReturn.FontSize,
-                                toReturn.Font,
-                                toReturn.OutlineThickness,
-                                toReturn.UseFontSmoothing);
+                                graphicalUiElement.FontSize,
+                                graphicalUiElement.Font,
+                                graphicalUiElement.OutlineThickness,
+                                graphicalUiElement.UseFontSmoothing,
+                                graphicalUiElement.IsItalic);
 
                             var standardized = ToolsUtilities.FileManager.Standardize(fontName, preserveCase:true, makeAbsolute:true);
 
@@ -118,7 +119,7 @@ namespace GumRuntime
             }
 
             
-            foreach (var element in toReturn.ContainedElements)
+            foreach (var element in graphicalUiElement.ContainedElements)
             {
                 ThrowMissingFileExceptionsRecursively(element);
             }

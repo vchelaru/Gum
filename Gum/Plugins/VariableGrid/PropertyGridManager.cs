@@ -448,7 +448,7 @@ namespace Gum.Managers
             foreach (InstanceSavePropertyDescriptor propertyDescriptor in properties)
             {
                 // early continue
-                var browsableAttribute = propertyDescriptor.Attributes.FirstOrDefault(item => item is BrowsableAttribute);
+                var browsableAttribute = propertyDescriptor.Attributes?.FirstOrDefault(item => item is BrowsableAttribute);
                 
                 var isMarkedAsNotBrowsable = browsableAttribute != null && (browsableAttribute as BrowsableAttribute).Browsable == false;
                 if(isMarkedAsNotBrowsable)
@@ -799,22 +799,24 @@ namespace Gum.Managers
                     SelectedState.Self.SelectedStateSave != SelectedState.Self.SelectedElement.DefaultState;
             }
 
-            if(shouldReset)
-            {
-                // If the variable is part of a category, then we don't allow setting the variable to default - they gotta do it through the cateory itself
-                bool isPartOfCategory = srim.StateSaveCategory != null;
+            // now we reset, but we don't remove the variable:
+            //if(shouldReset)
+            //{
+            //    // If the variable is part of a category, then we don't allow setting the variable to default - they gotta do it through the cateory itself
 
-                if (isPartOfCategory)
-                {
-                    var window = new DeletingVariablesInCategoriesMessageBox();
-                    window.ShowDialog();
+            //    if (isPartOfCategory)
+            //    {
+            //        var window = new DeletingVariablesInCategoriesMessageBox();
+            //        window.ShowDialog();
                     
-                    shouldReset = false;
-                }
-            }
+            //        shouldReset = false;
+            //    }
+            //}
 
             if (shouldReset)
             {
+                bool isPartOfCategory = srim.StateSaveCategory != null;
+
                 StateSave state = SelectedState.Self.SelectedStateSave;
                 bool wasChangeMade = false;
                 VariableSave variable = state.GetVariableSave(variableName);
@@ -833,7 +835,7 @@ namespace Gum.Managers
                     //bool shouldRemove = SelectedState.Self.SelectedInstance != null ||
                     //    SelectedState.Self.SelectedStateSave != SelectedState.Self.SelectedElement.DefaultState;
                     // Also, don't remove it if it's an exposed variable, this un-exposes things
-                    bool shouldRemove = string.IsNullOrEmpty(variable.ExposedAsName);
+                    bool shouldRemove = string.IsNullOrEmpty(variable.ExposedAsName) && !isPartOfCategory;
 
                     // Update October 7, 2019
                     // Actually, we can remove any variable so long as the current state isn't the "base definition" for it
@@ -855,6 +857,23 @@ namespace Gum.Managers
                     if (shouldRemove)
                     {
                         state.Variables.Remove(variable);
+                    }
+                    else if(isPartOfCategory)
+                    {
+                        var variableInDefault = SelectedState.Self.SelectedElement.DefaultState.GetVariableSave(variable.Name);
+                        if(variableInDefault != null)
+                        {
+                            GumCommands.Self.GuiCommands.PrintOutput(
+                                $"The variable {variable.Name} is part of the category {srim.StateSaveCategory.Name} so it cannot be removed. Instead, the value has been set to the value in the default state");
+
+                            variable.Value = variableInDefault.Value;
+                        }
+                        else
+                        {
+                            GumCommands.Self.GuiCommands.PrintOutput("Could not set value to default because the default state doesn't set this value");
+
+                        }
+
                     }
                     else
                     {
@@ -882,7 +901,7 @@ namespace Gum.Managers
 
                 if (wasChangeMade)
                 {
-                    RefreshUI();
+                    RefreshUI(force:true);
                     WireframeObjectManager.Self.RefreshAll(true);
                     SelectionManager.Self.Refresh();
 

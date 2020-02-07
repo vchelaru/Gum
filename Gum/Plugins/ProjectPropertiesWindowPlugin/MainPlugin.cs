@@ -57,7 +57,7 @@ namespace Gum.Plugins.PropertiesWindowPlugin
 
         private void HandlePropertyChanged(object sender, EventArgs e)
         {
-            viewModel.ApplyToBoundObjects();
+            viewModel.ApplyToModelObjects();
 
             GumCommands.Self.WireframeCommands.Refresh();
 

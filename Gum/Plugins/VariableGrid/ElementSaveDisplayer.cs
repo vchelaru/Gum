@@ -301,11 +301,7 @@ namespace Gum.PropertyGridHelpers
                 pdc,
                 "Name", 
                 typeof(string), 
-                TypeDescriptor.GetConverter(typeof(string)), 
-                new Attribute[]
-                        { 
-                            new CategoryAttribute("\tObject") // \t isn't rendered, but it is sorted on.  Hack to get this property to appear first
-                        });
+                TypeDescriptor.GetConverter(typeof(string)));
 
             nameProperty.IsReadOnly = isReadOnly;
 
@@ -314,10 +310,7 @@ namespace Gum.PropertyGridHelpers
 
                 // We may want to support Screens inheriting from other Screens in the future, but for now we won't allow it
             var baseTypeProperty = mHelper.AddProperty(pdc,
-                "Base Type", typeof(string), baseTypeConverter, new Attribute[]
-                    { 
-                        new CategoryAttribute("\tObject") // \t isn't rendered, but it is sorted on.  Hack to get this property to appear first
-                    });
+                "Base Type", typeof(string), baseTypeConverter);
 
             baseTypeProperty.IsReadOnly = isReadOnly;
         }

@@ -157,6 +157,8 @@ namespace Gum.Managers
             optionsWindow.Message = "Are you sure you want to delete:\n" + objectToDelete.ToString();
             optionsWindow.ObjectToDelete = objectToDelete;
 
+            GumCommands.Self.GuiCommands.PositionWindowByCursor(optionsWindow);
+
             PluginManager.Self.ShowDeleteDialog(optionsWindow, objectToDelete);
 
             var result = optionsWindow.ShowDialog();

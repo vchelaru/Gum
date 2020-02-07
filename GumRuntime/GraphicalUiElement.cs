@@ -4094,7 +4094,7 @@ namespace Gum.Wireframe
                 }
                 handled = true;
             }
-            else if (propertyName == "UseCustomFont")
+            else if (propertyName == nameof (UseCustomFont))
             {
                 this.UseCustomFont = (bool)value;
                 UpdateToFontValues();
@@ -4106,7 +4106,7 @@ namespace Gum.Wireframe
                 handled = true;
             }
 
-            else if (propertyName == "CustomFontFile")
+            else if (propertyName == nameof(CustomFontFile))
             {
                 CustomFontFile = (string)value;
                 UpdateToFontValues();
@@ -4117,7 +4117,7 @@ namespace Gum.Wireframe
                 }
                 handled = true;
             }
-            else if (propertyName == "FontSize")
+            else if (propertyName == nameof(FontSize))
             {
                 FontSize = (int)value;
                 UpdateToFontValues();
@@ -4128,7 +4128,7 @@ namespace Gum.Wireframe
                 }
                 handled = true;
             }
-            else if (propertyName == "OutlineThickness")
+            else if (propertyName == nameof(OutlineThickness))
             {
                 OutlineThickness = (int)value;
                 UpdateToFontValues();
@@ -4139,7 +4139,18 @@ namespace Gum.Wireframe
                 }
                 handled = true;
             }
-            else if(propertyName == "UseFontSmoothing")
+            else if (propertyName == nameof(IsItalic))
+            {
+                IsItalic = (bool)value;
+                UpdateToFontValues();
+                // we want to update if the text's size is based on its "children" (the letters it contains)
+                if (this.WidthUnits == DimensionUnitType.RelativeToChildren)
+                {
+                    UpdateLayout();
+                }
+                handled = true;
+            }
+            else if(propertyName == nameof(UseFontSmoothing))
             {
                 useFontSmoothing = (bool)value;
                 UpdateToFontValues();
@@ -4149,7 +4160,7 @@ namespace Gum.Wireframe
                 }
                 handled = true;
             }
-            else if (propertyName == "Blend")
+            else if (propertyName == nameof(Blend))
             {
                 var valueAsGumBlend = (RenderingLibrary.Blend)value;
 
@@ -4238,6 +4249,13 @@ namespace Gum.Wireframe
             set { fontSize = value; UpdateToFontValues(); }
         }
 
+        bool isItalic;
+        public bool IsItalic
+        {
+            get { return isItalic; }
+            set { isItalic = value; UpdateToFontValues(); }
+        }
+
         // Not sure if we need to make this a public value, but we do need to store it
         // Update - yes we do need this to be public so it can be assigned in codegen:
         bool useFontSmoothing = true;
@@ -4290,7 +4308,12 @@ namespace Gum.Wireframe
                     if (FontSize > 0 && !string.IsNullOrEmpty(Font))
                     {
 
-                        string fontName = global::RenderingLibrary.Graphics.Fonts.BmfcSave.GetFontCacheFileNameFor(FontSize, Font, OutlineThickness, useFontSmoothing);
+                        string fontName = global::RenderingLibrary.Graphics.Fonts.BmfcSave.GetFontCacheFileNameFor(
+                            FontSize, 
+                            Font, 
+                            OutlineThickness, 
+                            useFontSmoothing,
+                            IsItalic);
 
                         string fullFileName = ToolsUtilities.FileManager.Standardize(fontName, false, true);
 
@@ -4618,11 +4641,14 @@ namespace Gum.Wireframe
                     mJustChangedFrame = true;
                 }
             }
-            foreach(var child in this.Children)
+            if(Children != null)
             {
-                if(child is GraphicalUiElement childGue)
+                foreach(var child in this.Children)
                 {
-                    childGue.AnimateSelf();
+                    if(child is GraphicalUiElement childGue)
+                    {
+                        childGue.AnimateSelf();
+                    }
                 }
             }
         }

@@ -10,7 +10,7 @@ namespace Gum.PropertyGridHelpers.Converters
 {
     public class AvailableBaseTypeConverter : TypeConverter
     {
-        ElementSave element;
+        ElementSave elementViewing;
         InstanceSave instance;
 
         public override bool GetStandardValuesSupported(ITypeDescriptorContext context)
@@ -25,7 +25,7 @@ namespace Gum.PropertyGridHelpers.Converters
 
         public AvailableBaseTypeConverter(ElementSave element, InstanceSave instance) : base()
         {
-            this.element = element;
+            this.elementViewing = element;
             this.instance = instance;
         }
 
@@ -33,12 +33,12 @@ namespace Gum.PropertyGridHelpers.Converters
         {
             List<string> values = new List<string>();
 
-            if(element is ScreenSave)
+            if(elementViewing is ScreenSave)
             {
                 values.Add("");
                 foreach(ScreenSave screenSave in ProjectManager.Self.GumProjectSave.Screens)
                 {
-                    if(element.IsOfType(screenSave.Name) == false)
+                    if(elementViewing.IsOfType(screenSave.Name) == false)
                     {
                         values.Add(screenSave.Name);
                     }
@@ -50,7 +50,10 @@ namespace Gum.PropertyGridHelpers.Converters
 
                 foreach (ComponentSave componentSave in ProjectManager.Self.GumProjectSave.Components)
                 {
-                    if (element == null || element.IsOfType(componentSave.Name) == false || element.Name == instance?.BaseType)
+                    //var shouldShow = element == null || element.IsOfType(componentSave.Name) == false || element.Name == instance?.BaseType;
+                    var shouldShow = elementViewing == null || elementViewing.Name != componentSave.Name || elementViewing.Name == instance?.BaseType;
+
+                    if(shouldShow)
                     {
                         values.Add(componentSave.Name);
                     }

@@ -40,6 +40,9 @@ namespace CommonFormsAndControls.Forms
         public MultiButtonMessageBox()
         {
             InitializeComponent();
+
+
+
         }
 
         public void AddButton(string text, DialogResult result)

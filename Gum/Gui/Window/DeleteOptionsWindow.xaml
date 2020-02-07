@@ -7,7 +7,7 @@
              mc:Ignorable="d" 
              Height="Auto"  MinHeight="60" Width="350" SizeToContent="Height"
         KeyDown="HandleKeyDown">
-    <Grid Height="Auto">
+    <Grid Height="Auto" Margin="3">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"></RowDefinition>
             <RowDefinition Height="Auto"></RowDefinition>

@@ -55,6 +55,12 @@ namespace Gum.Managers
                     if (foundVariable != null && foundVariable.Value == stateSave.Name)
                     {
                         MultiButtonMessageBox mbmb = new MultiButtonMessageBox();
+
+                        mbmb.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
+
+                        mbmb.Location = new System.Drawing.Point(MainWindow.MousePosition.X - mbmb.Width / 2,
+                             MainWindow.MousePosition.Y - mbmb.Height / 2);
+
                         mbmb.MessageText = "The state " + stateSave.Name + " is used in the element " + 
                             elementSave + " in its state " + stateInContainer + ".\n  What would you like to do?";
 

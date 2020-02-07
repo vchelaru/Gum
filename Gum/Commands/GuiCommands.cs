@@ -54,6 +54,34 @@ namespace Gum.Commands
             return mMainWindow.AddWinformsControl(control, tabTitle, tabLocation);
         }
         
+        public void PositionWindowByCursor(System.Windows.Window window)
+        {
+            window.WindowStartupLocation = System.Windows.WindowStartupLocation.Manual;
+
+            double width = window.Width;
+            if (double.IsNaN(width))
+            {
+                width = 0;
+            }
+            double height = window.Height;
+            if (double.IsNaN(height))
+            {
+                height = 0;
+            }
+
+            var mousePosition = GumCommands.Self.GuiCommands.GetMousePosition();
+            window.Left = mousePosition.X - width / 2;
+            window.Top = mousePosition.Y - height / 2;
+        }
+
+
+        public void PositionWindowByCursor(System.Windows.Forms.Form window)
+        {
+            var mousePosition = GumCommands.Self.GuiCommands.GetMousePosition();
+
+            window.Location = new System.Drawing.Point(mousePosition.X - window.Width / 2, mousePosition.Y - window.Height / 2);
+        }
+
         public void RemoveControl(System.Windows.Controls.UserControl control)
         {
             mMainWindow.RemoveWpfControl(control);
@@ -82,6 +110,11 @@ namespace Gum.Commands
         public void ShowMessage(string message)
         {
             MessageBox.Show(message);
+        }
+
+        public System.Drawing.Point GetMousePosition()
+        {
+            return MainWindow.MousePosition;
         }
     }
 }

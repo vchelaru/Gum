@@ -61,7 +61,7 @@ namespace Gum.DataTypes.ComponentModel
         }
 
         public InstanceSavePropertyDescriptor AddProperty(List<InstanceSavePropertyDescriptor> pdc, string propertyName, Type propertyType, TypeConverter converter,
-            Attribute[] attributes)
+            Attribute[] attributes = null)
         {
             InstanceSavePropertyDescriptor newProperty = new InstanceSavePropertyDescriptor(
                 propertyName, propertyType, attributes);
