@@ -204,7 +204,7 @@ namespace Gum.Wireframe
             mGraphicalElements.Clear();
         }
 
-        public void RefreshAll(bool forceLayout, bool forceReloadTextures = true)
+        public void RefreshAll(bool forceLayout, bool forceReloadTextures = false)
         {
             ElementSave elementSave = SelectedState.Self.SelectedElement;
 
@@ -220,7 +220,10 @@ namespace Gum.Wireframe
         private void RefreshAll(bool forceLayout, bool forceReloadTextures, ElementSave elementSave)
         {
             bool shouldRecreateIpso = forceLayout || elementSave != ElementShowing;
-            bool shouldReloadTextures = forceReloadTextures || elementSave != ElementShowing;
+            //bool shouldReloadTextures = forceReloadTextures || elementSave != ElementShowing;
+            bool shouldReloadTextures =
+                false;
+                //forceReloadTextures || elementSave != ElementShowing;
 
             if (elementSave == null || elementSave.IsSourceFileMissing)
             {

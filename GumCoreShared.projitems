@@ -40,10 +40,17 @@
     <Compile Include="$(MSBuildThisFileDirectory)Gum\DataTypes\RecursiveVariableFinder.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Gum\DataTypes\StateSaveExtensionMethods.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Gum\DataTypes\VariableSaveExtensionMethods.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Gum\Graphics\Animation\AnimationChain.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Gum\Graphics\Animation\AnimationChainList.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Gum\Graphics\Animation\AnimationFrame.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Gum\Graphics\Animation\Content\AnimationChainListSave.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Gum\Graphics\Animation\Content\AnimationChainSave.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Gum\Graphics\Animation\Content\AnimationFrameSave.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Gum\Managers\ObjectFinder.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Gum\Managers\StandardElementsManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Gum\RenderingLibrary\Blend.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Gum\Wireframe\ElementWithState.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Gum\Wireframe\TimeManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)MonoGameIntegration\RuntimeLogic.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Camera.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Content\ContentLoader.cs" />

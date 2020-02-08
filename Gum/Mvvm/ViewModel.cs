@@ -39,22 +39,45 @@ namespace Gum.Mvvm
             return toReturn;
         }
 
-        protected void Set<T>(T propertyValue, [CallerMemberName]string propertyName = null)
+        protected bool Set<T>(T propertyValue, [CallerMemberName]string propertyName = null)
         {
+            bool didSet = SetWithoutNotifying(propertyValue, propertyName);
+
+            if (didSet)
+            {
+                NotifyPropertyChanged(propertyName);
+            }
+
+            return didSet;
+        }
+
+        protected bool SetWithoutNotifying<T>(T propertyValue, [CallerMemberName]string propertyName = null)
+        {
+            var didSet = false;
+
             if (propertyDictionary.ContainsKey(propertyName))
             {
                 var storage = (T)propertyDictionary[propertyName];
                 if (EqualityComparer<T>.Default.Equals(storage, propertyValue) == false)
                 {
+                    didSet = true;
                     propertyDictionary[propertyName] = propertyValue;
-                    NotifyPropertyChanged(propertyName);
                 }
             }
             else
             {
                 propertyDictionary.Add(propertyName, propertyValue);
-                NotifyPropertyChanged(propertyName);
+
+                // Even though the user is setting a new value, we want to make sure it's
+                // not the same:
+                var defaultValue = default(T);
+                var isSettingDefault =
+                    EqualityComparer<T>.Default.Equals(defaultValue, propertyValue);
+
+                didSet = isSettingDefault == false;
             }
+
+            return didSet;
         }
 
 

@@ -4,8 +4,9 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" 
-             d:DesignHeight="130" d:DesignWidth="200" Focusable="true" Background="#FFFFFE">
+             d:DesignHeight="180" d:DesignWidth="200" Focusable="true" Background="#FFFFFE">
     <Grid>
+        
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"></ColumnDefinition>
             <ColumnDefinition></ColumnDefinition>
@@ -15,7 +16,8 @@
             <RowDefinition Height="26"></RowDefinition>
             <RowDefinition Height="26"></RowDefinition>
             <RowDefinition Height="26"></RowDefinition>
-            <RowDefinition Height="26"></RowDefinition>
+            <RowDefinition Height="Auto"></RowDefinition>
+            <RowDefinition Height="Auto"></RowDefinition>
         </Grid.RowDefinitions>
 
         <TextBox  x:Name="Focusable"  Width="0" Height="0" Margin="0" VerticalAlignment="Top" HorizontalAlignment="Left"/>
@@ -30,6 +32,8 @@
                Visibility="{Binding HasInvalidStateVisibility, TargetNullValue=Collapsed, FallbackValue=Collapsed}" 
                Grid.ColumnSpan="2" Background="Red" x:Name="NotFoundLabel">Could not find state or animation</Label>
 
+        <TextBlock Grid.Row="5" Grid.ColumnSpan="2" TextWrapping="Wrap" FontSize="10" Margin="5,0,5,0">
+            Interpolation values apply between this state and the next state.</TextBlock>
         <TextBox Grid.Row="1" Grid.Column="1" x:Name="TimeTextBox"
                 Text="{Binding Time}" KeyDown="TextBox_KeyDown"   
              />

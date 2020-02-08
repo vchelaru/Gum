@@ -24,6 +24,7 @@
                     <ColumnDefinition Width="40"></ColumnDefinition>
                     <ColumnDefinition></ColumnDefinition>
                     <ColumnDefinition Width="50"></ColumnDefinition>
+                    <ColumnDefinition MinWidth="40" Width="Auto"></ColumnDefinition>
                 </Grid.ColumnDefinitions>
                 <Button x:Name="PlayStopButton" Width="25" Height="25" Click="HandlePlayStopClicked">
                     <Image x:Name="ButtonImage" Source="{Binding ButtonBitmapFrame}"></Image>
@@ -40,6 +41,8 @@
                 </Slider>
 
                 <TextBox Grid.Column="2" Text="{Binding DisplayedAnimationTime}"></TextBox>
+
+                <TextBlock Grid.Column="3" Text="{Binding OverLengthTime}" VerticalAlignment="Bottom" Margin="0,0,5,0"></TextBlock>
 
                 <views:TimedStateMarkerDisplay Grid.Row="1" Grid.Column="1" Height="10" 
                                                RangeMaximum="{Binding SelectedAnimation.Length}"

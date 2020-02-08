@@ -17,6 +17,7 @@ using AnimationFrame = Gum.Graphics.Animation.AnimationFrame;
 using AnimationChainList = Gum.Graphics.Animation.AnimationChainList;
 using ToolsUtilities;
 using Gum.Graphics.Animation;
+using TimeMeasurementUnit = Gum.Graphics.Animation.TimeMeasurementUnit;
 
 namespace Gum.Content.AnimationChain
 {
