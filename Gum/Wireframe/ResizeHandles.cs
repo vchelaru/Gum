@@ -277,6 +277,8 @@ namespace Gum.Wireframe
 
                 handle.X = X + xComponent.X + yComponent.X;
                 handle.Y = Y + xComponent.Y + yComponent.Y;
+
+                handle.Rotation = mRotation;
             }
 
         }

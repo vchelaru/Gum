@@ -120,12 +120,20 @@ namespace RenderingLibrary.Math.Geometry
             }
         }
 
+        float mRotation;
         public float Rotation
         {
             // even though it doesn't rotate itself, its children
             // can rotate, so it should store rotation values:
-            get;
-            set;
+            get => mRotation;
+            set
+            {
+                if(mRotation != value)
+                {
+                    mRotation = value;
+                    UpdatePoints();
+                }
+            }
         }
 
         public bool FlipHorizontal { get; set; }
