@@ -306,12 +306,15 @@ namespace StateAnimationPlugin.ViewModels
                     item.PropertyChanged += HandleAnimationItemChange;
                 }
             }
+            NotifyPropertyChanged(nameof(OverLengthTime));
 
             OnAnyChange(this, "Animations");
         }
 
         private void HandleAnimationItemChange(object sender, PropertyChangedEventArgs e)
         {
+            NotifyPropertyChanged(nameof(OverLengthTime));
+
             OnAnyChange(sender, e.PropertyName);
 
         }
