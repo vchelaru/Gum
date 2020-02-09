@@ -602,7 +602,27 @@ namespace RenderingLibrary.Graphics
             if (flipHorizontal)
             {
                 effects |= SpriteEffects.FlipHorizontally;
+                //rotationInDegrees *= -1;
             }
+
+            var rotationInRadians = MathHelper.ToRadians(rotationInDegrees);
+
+
+            float leftAbsolute = ipso.GetAbsoluteX();
+            float topAbsolute = ipso.GetAbsoluteY();
+
+            Vector2 origin = Vector2.Zero;
+
+            //if(flipHorizontal)
+            //{
+            //    var offsetX = (float)System.Math.Cos(rotationInRadians);
+            //    var offsetY = (float)System.Math.Sin(rotationInRadians);
+            //    origin.X = 1;
+
+                
+
+            //}
+
             if (flipVertical)
             {
                 effects |= SpriteEffects.FlipVertically;
@@ -648,11 +668,11 @@ namespace RenderingLibrary.Graphics
                 }
 
                 spriteRenderer.Draw(textureToUse,
-                    new Vector2(ipso.GetAbsoluteX(), ipso.GetAbsoluteY()),
+                    new Vector2(leftAbsolute, topAbsolute),
                     sourceRectangle,
                     modifiedColor,
-                    Microsoft.Xna.Framework.MathHelper.TwoPi * -rotationInDegrees / 360.0f,
-                    Vector2.Zero,
+                    -rotationInRadians,
+                    origin,
                     scale,
                     effects,
                     0,
@@ -670,8 +690,8 @@ namespace RenderingLibrary.Graphics
                 }
 
                 Rectangle destinationRectangle = new Rectangle(
-                    (int)(ipso.GetAbsoluteX()),
-                    (int)(ipso.GetAbsoluteY()),
+                    (int)(leftAbsolute),
+                    (int)(topAbsolute),
                     width,
                     height);
 
@@ -680,8 +700,8 @@ namespace RenderingLibrary.Graphics
                     destinationRectangle,
                     sourceRectangle,
                     modifiedColor,
-                    rotationInDegrees / 360.0f,
-                    Vector2.Zero,
+                    rotationInRadians,
+                    origin,
                     effects,
                     0,
                     objectCausingRenering

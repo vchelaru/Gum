@@ -91,16 +91,29 @@ namespace Gum.Wireframe
             float parentAbsoluteX = 0;
             float parentAbsoluteY = 0;
 
+            var parentFlips = false;
+
             if (parent != null)
             {
                 parentAbsoluteX = parent.GetAbsoluteX();
                 parentAbsoluteY = parent.GetAbsoluteY();
 
-                if(parent.ChildrenLayout != Managers.ChildrenLayout.Regular &&
+                parentFlips = parent.GetAbsoluteFlipHorizontal();
+                if (parentFlips)
+                {
+                    var rotationMatrix = parent.GetAbsoluteRotationMatrix();
+                    Vector3 offset = new Vector3(parent.GetAbsoluteWidth(), 0, 0);
+                    offset = Vector3.Transform(offset, rotationMatrix);
+                    parentOriginOffsetX += offset.X;
+                    parentOriginOffsetY += offset.Y;
+                }
+
+
+                if (parent.ChildrenLayout != Managers.ChildrenLayout.Regular &&
                     parent.WrapsChildren)
                 {
                     // The origin may actually be a new row/column, so let's get that:
-                    if(parent.ChildrenLayout == Managers.ChildrenLayout.LeftToRightStack)
+                    if (parent.ChildrenLayout == Managers.ChildrenLayout.LeftToRightStack)
                     {
                         for (int i = 0; i < asGue.StackedRowOrColumnIndex; i++)
                         {
@@ -124,7 +137,7 @@ namespace Gum.Wireframe
                 parentAbsoluteRotation = parent.GetAbsoluteRotation();
             }
 
-            if(parentAbsoluteRotation == 0)
+            if (parentAbsoluteRotation == 0)
             {
                 mOriginLine.X = parentOriginOffsetX + parentAbsoluteX;
                 mOriginLine.Y = parentOriginOffsetY + parentAbsoluteY;
@@ -139,17 +152,42 @@ namespace Gum.Wireframe
 
                 mOriginLine.X = rotatedVector.X + parentAbsoluteX;
                 mOriginLine.Y = rotatedVector.Y + parentAbsoluteY;
-
             }
-            mOriginLine.RelativePoint.X = asGue.AbsoluteX - mOriginLine.X;
-            mOriginLine.RelativePoint.Y = asGue.AbsoluteY - mOriginLine.Y;
+
+            GetSelectedAbsoluteXAndY(asGue, parentFlips, out float selectedObjectX, out float selectedObjectY);
+
+            mOriginLine.RelativePoint.X = selectedObjectX - mOriginLine.X;
+            mOriginLine.RelativePoint.Y = selectedObjectY - mOriginLine.Y;
         }
 
+        private static void GetSelectedAbsoluteXAndY(GraphicalUiElement asGue, bool parentFlips, out float selectedObjectX, out float selectedObjectY)
+        {
+            selectedObjectX = asGue.AbsoluteX;
+            selectedObjectY = asGue.AbsoluteY;
+
+            if (parentFlips)
+            {
+                var rotationMatrix = asGue.GetAbsoluteRotationMatrix();
+                Vector3 offset = new Vector3(asGue.GetAbsoluteWidth(), 0, 0);
+                offset = Vector3.Transform(offset, rotationMatrix);
+                selectedObjectX += offset.X;
+                selectedObjectY += offset.Y;
+            }
+        }
 
         public void SetOriginXPosition(GraphicalUiElement asGue)
         {
-            float absoluteX = asGue.AbsoluteX;
-            float absoluteY = asGue.AbsoluteY;
+            var parent = asGue.EffectiveParentGue;
+
+            var parentFlips = false;
+
+            if (parent != null)
+            {
+                parentFlips = parent.GetAbsoluteFlipHorizontal();
+            }
+             
+            GetSelectedAbsoluteXAndY(asGue, parentFlips, out float selectedObjectX, out float selectedObjectY);
+
 
             IPositionedSizedObject asIpso = asGue;
             float zoom = Renderer.Self.Camera.Zoom;
@@ -158,11 +196,11 @@ namespace Gum.Wireframe
 
 
 
-            mXLine1.X = absoluteX - offset;
-            mXLine1.Y = absoluteY - offset;
+            mXLine1.X = selectedObjectX - offset;
+            mXLine1.Y = selectedObjectY - offset;
 
-            mXLine2.X = absoluteX - offset;
-            mXLine2.Y = absoluteY + offset;
+            mXLine2.X = selectedObjectX - offset;
+            mXLine2.Y = selectedObjectY + offset;
 
             mXLine1.RelativePoint = new Microsoft.Xna.Framework.Vector2(offset * 2, offset * 2);
             mXLine2.RelativePoint = new Microsoft.Xna.Framework.Vector2(offset * 2, -offset * 2);

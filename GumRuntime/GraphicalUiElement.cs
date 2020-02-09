@@ -488,7 +488,11 @@ namespace Gum.Wireframe
             {
                 if (mContainedObjectAsIpso != null)
                 {
-                    mContainedObjectAsIpso.FlipHorizontal = value;
+                    if(mContainedObjectAsIpso.FlipHorizontal != value)
+                    {
+                        mContainedObjectAsIpso.FlipHorizontal = value;
+                        UpdateLayout();
+                    }
                 }
             }
         }
@@ -1215,10 +1219,11 @@ namespace Gum.Wireframe
                     GetParentDimensions(out parentWidth, out parentHeight);
 
                     float absoluteParentRotation = 0;
-
+                    bool isParentFlippedHorizontally = false;
                     if (this.Parent != null)
                     {
                         absoluteParentRotation = this.Parent.GetAbsoluteRotation();
+                        isParentFlippedHorizontally = Parent.GetAbsoluteFlipHorizontal();
                     }
                     else if (this.ElementGueContainingThis != null && this.ElementGueContainingThis.mContainedObjectAsIpso != null)
                     {
@@ -1296,14 +1301,30 @@ namespace Gum.Wireframe
                         }
 
 
-                        UpdatePosition(parentWidth, parentHeight, xOrY, absoluteParentRotation);
+                        UpdatePosition(parentWidth, parentHeight, xOrY, absoluteParentRotation, isParentFlippedHorizontally);
 
                         if(GetIfParentStacks() )
                         {
                             RefreshParentRowColumnDimensionForThis();
                         }
 
-                        mContainedObjectAsIpso.Rotation = this.GetAbsoluteRotation();
+                        if (this.Parent == null)
+                        {
+                            mContainedObjectAsIpso.Rotation = mRotation;
+                        }
+                        else
+                        {
+                            if(isParentFlippedHorizontally)
+                            {
+                                mContainedObjectAsIpso.Rotation =
+                                    -mRotation + Parent.GetAbsoluteRotation();
+                            }
+                            else
+                            {
+                                mContainedObjectAsIpso.Rotation =
+                                    mRotation + Parent.GetAbsoluteRotation();
+                            }
+                        }
 
                     }
 
@@ -1950,12 +1971,12 @@ namespace Gum.Wireframe
             }
         }
 
-        private void UpdatePosition(float parentWidth, float parentHeight, XOrY? xOrY, float parentAbsoluteRotation)
+        private void UpdatePosition(float parentWidth, float parentHeight, XOrY? xOrY, float parentAbsoluteRotation, bool isParentFlippedHorizontally)
         {
             // First get the position of the object without considering if this object should be wrapped.
             // This call may result in the object being placed outside of its parent's bounds. In which case
             // it will be wrapped....later
-            UpdatePosition(parentWidth, parentHeight, wrap: false, xOrY: xOrY, parentRotation: parentAbsoluteRotation);
+            UpdatePosition(parentWidth, parentHeight, isParentFlippedHorizontally, wrap: false, xOrY: xOrY, parentRotation: parentAbsoluteRotation);
 
             var effectiveParent = EffectiveParentGue;
 
@@ -1974,11 +1995,11 @@ namespace Gum.Wireframe
 
             if (shouldWrap)
             {
-                UpdatePosition(parentWidth, parentHeight, wrap: true, xOrY: xOrY, parentRotation: parentAbsoluteRotation);
+                UpdatePosition(parentWidth, parentHeight, isParentFlippedHorizontally, wrap: true, xOrY: xOrY, parentRotation: parentAbsoluteRotation);
             }
         }
 
-        private void UpdatePosition(float parentWidth, float parentHeight, bool wrap, XOrY? xOrY, float parentRotation)
+        private void UpdatePosition(float parentWidth, float parentHeight, bool isParentFlippedHorizontally, bool wrap, XOrY? xOrY, float parentRotation)
         {
 #if DEBUG
             if(float.IsPositiveInfinity( parentHeight ) || float.IsNegativeInfinity(parentHeight))
@@ -1999,7 +2020,7 @@ namespace Gum.Wireframe
 
             bool canWrap = EffectiveParentGue != null && EffectiveParentGue.WrapsChildren;
 
-            GetParentOffsets(canWrap, wrap, parentWidth, parentHeight,
+            GetParentOffsets(canWrap, wrap, parentWidth, parentHeight, isParentFlippedHorizontally,
                 out parentOriginOffsetX, out parentOriginOffsetY,
                 out wasHandledX, out wasHandledY);
 
@@ -2007,7 +2028,7 @@ namespace Gum.Wireframe
             float unitOffsetX = 0;
             float unitOffsetY = 0;
 
-            AdjustOffsetsByUnits(parentWidth, parentHeight, xOrY, ref unitOffsetX, ref unitOffsetY);
+            AdjustOffsetsByUnits(parentWidth, parentHeight, isParentFlippedHorizontally, xOrY, ref unitOffsetX, ref unitOffsetY);
 #if DEBUG
             if (float.IsNaN(unitOffsetX))
             {
@@ -2022,7 +2043,7 @@ namespace Gum.Wireframe
 
 
 
-            AdjustOffsetsByOrigin(ref unitOffsetX, ref unitOffsetY);
+            AdjustOffsetsByOrigin(isParentFlippedHorizontally, ref unitOffsetX, ref unitOffsetY);
 #if DEBUG
             if (float.IsNaN(unitOffsetX) || float.IsNaN(unitOffsetY))
             {
@@ -2075,10 +2096,11 @@ namespace Gum.Wireframe
             bool wrap = false;
             bool shouldWrap = false;
             var effectiveParent = EffectiveParentGue;
+            bool isParentFlippedHorizontally = false;
             if (effectiveParent != null)
             {
-                wrap = (effectiveParent as GraphicalUiElement).Wrap;
-
+                wrap = effectiveParent.Wrap;
+                isParentFlippedHorizontally = effectiveParent.GetAbsoluteFlipHorizontal();
             }
 
 
@@ -2087,14 +2109,14 @@ namespace Gum.Wireframe
             var oldIndex = StackedRowOrColumnIndex;
 
 
-            GetParentOffsets(wrap, false, parentWidth, parentHeight, out parentOriginOffsetX, out parentOriginOffsetY,
+            GetParentOffsets(wrap, false, parentWidth, parentHeight, isParentFlippedHorizontally, out parentOriginOffsetX, out parentOriginOffsetY,
                 out throwaway1, out throwaway2);
 
             StackedRowOrColumnIndex = oldIndex;
 
         }
 
-        private void GetParentOffsets(bool canWrap, bool shouldWrap, float parentWidth, float parentHeight, out float parentOriginOffsetX, out float parentOriginOffsetY,
+        private void GetParentOffsets(bool canWrap, bool shouldWrap, float parentWidth, float parentHeight, bool isParentFlippedHorizontally, out float parentOriginOffsetX, out float parentOriginOffsetY,
             out bool wasHandledX, out bool wasHandledY)
         {
             parentOriginOffsetX = 0;
@@ -2105,7 +2127,7 @@ namespace Gum.Wireframe
             wasHandledX = false;
             wasHandledY = false;
 
-            AdjustParentOriginOffsetsByUnits(parentWidth, parentHeight, ref parentOriginOffsetX, ref parentOriginOffsetY,
+            AdjustParentOriginOffsetsByUnits(parentWidth, parentHeight, isParentFlippedHorizontally, ref parentOriginOffsetX, ref parentOriginOffsetY,
                 ref wasHandledX, ref wasHandledY);
 
         }
@@ -2290,16 +2312,18 @@ namespace Gum.Wireframe
             return whatToStackAfter;
         }
 
-        private void AdjustOffsetsByOrigin(ref float unitOffsetX, ref float unitOffsetY)
+        private void AdjustOffsetsByOrigin(bool isParentFlippedHorizontally, ref float unitOffsetX, ref float unitOffsetY)
         {
             float offsetX = 0;
             float offsetY = 0;
 
-            if (mXOrigin == HorizontalAlignment.Center)
+            HorizontalAlignment effectiveXorigin = isParentFlippedHorizontally ? mXOrigin.Flip() : mXOrigin;
+
+            if (effectiveXorigin == HorizontalAlignment.Center)
             {
                 offsetX -= mContainedObjectAsIpso.Width / 2.0f;
             }
-            else if (mXOrigin == HorizontalAlignment.Right)
+            else if (effectiveXorigin == HorizontalAlignment.Right)
             {
                 offsetX -= mContainedObjectAsIpso.Width;
             }
@@ -2330,7 +2354,9 @@ namespace Gum.Wireframe
             // Adjust offsets by rotation
             if (mRotation != 0)
             {
-                var matrix = Matrix.CreateRotationZ(-MathHelper.ToRadians(mRotation));
+                var rotation = isParentFlippedHorizontally ? -mRotation : mRotation;
+
+                var matrix = Matrix.CreateRotationZ(-MathHelper.ToRadians(rotation));
 
                 var unrotatedX = offsetX;
                 var unrotatedY = offsetY;
@@ -2343,26 +2369,27 @@ namespace Gum.Wireframe
             unitOffsetY += offsetY;
         }
 
-        private void AdjustParentOriginOffsetsByUnits(float parentWidth, float parentHeight,
+        private void AdjustParentOriginOffsetsByUnits(float parentWidth, float parentHeight, bool isParentFlippedHorizontally,
             ref float unitOffsetX, ref float unitOffsetY, ref bool wasHandledX, ref bool wasHandledY)
         {
             if (!wasHandledX)
             {
+                var units = isParentFlippedHorizontally ? mXUnits.Flip() : mXUnits;
 
-                if (mXUnits == GeneralUnitType.PixelsFromLarge)
+                if (units == GeneralUnitType.PixelsFromLarge)
                 {
                     unitOffsetX = parentWidth;
                     wasHandledX = true;
                 }
-                else if (mXUnits == GeneralUnitType.PixelsFromMiddle)
+                else if (units == GeneralUnitType.PixelsFromMiddle)
                 {
                     unitOffsetX = parentWidth / 2.0f;
                     wasHandledX = true;
                 }
-                //else if (mXUnits == GeneralUnitType.PixelsFromSmall)
-                //{
-                //    // no need to do anything
-                //}
+                else if (units == GeneralUnitType.PixelsFromSmall )
+                {
+                    // no need to do anything
+                }
             }
 
             if (!wasHandledY)
@@ -2393,7 +2420,7 @@ namespace Gum.Wireframe
             }
         }
 
-        private void AdjustOffsetsByUnits(float parentWidth, float parentHeight, XOrY? xOrY, ref float unitOffsetX, ref float unitOffsetY)
+        private void AdjustOffsetsByUnits(float parentWidth, float parentHeight, bool isParentFlippedHorizontally, XOrY? xOrY, ref float unitOffsetX, ref float unitOffsetY)
         {
             bool doX = xOrY == null || xOrY == XOrY.X;
             bool doY = xOrY == null || xOrY == XOrY.Y;
@@ -2425,7 +2452,14 @@ namespace Gum.Wireframe
                 }
                 else
                 {
-                    unitOffsetX += mX;
+                    if(isParentFlippedHorizontally)
+                    {
+                        unitOffsetX -= mX;
+                    }
+                    else
+                    {
+                        unitOffsetX += mX;
+                    }
                 }
             }
 

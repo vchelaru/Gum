@@ -54,6 +54,16 @@ namespace Gum.Converters
                 unitType == GeneralUnitType.PixelsFromBaseline;
         }
 
+        public static GeneralUnitType Flip(this GeneralUnitType unitType)
+        {
+            switch(unitType)
+            {
+                case GeneralUnitType.PixelsFromSmall: return GeneralUnitType.PixelsFromLarge;
+                case GeneralUnitType.PixelsFromLarge: return GeneralUnitType.PixelsFromSmall;
+            }
+            return unitType;
+        }
+
     }
 
 

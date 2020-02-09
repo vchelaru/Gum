@@ -40,7 +40,7 @@ namespace RenderingLibrary
         }
 
         /// <summary>
-        /// Returns the world X coordinate of the argument RenderableIpso.
+        /// Returns the top-left world X coordinate of the argument RenderableIpso.
         /// </summary>
         /// <param name="ipso">The RenderableIpso to return the value for.</param>
         /// <returns>The world X coordinate.</returns>
@@ -53,15 +53,15 @@ namespace RenderingLibrary
             }
             else
             {
-                var parentFlip = ipso.Parent.GetAbsoluteFlipHorizontal();
+                //var parentFlip = ipso.Parent.GetAbsoluteFlipHorizontal();
 
-                if(parentFlip)
-                {
-                    return 
-                        //-ipso.X - ipso.Width + 
-                        ipso.Parent.GetAbsoluteX() + ipso.Parent.Width - ipso.X - ipso.Width;
-                }
-                else
+                //if (parentFlip)
+                //{
+                //    return
+                //        -ipso.X - ipso.Width + 
+                //        ipso.Parent.GetAbsoluteX() + ipso.Parent.Width;
+                //}
+                //else
                 {
                     return ipso.X + ipso.Parent.GetAbsoluteX();
                 }
