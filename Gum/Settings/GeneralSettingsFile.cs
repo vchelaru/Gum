@@ -20,7 +20,7 @@ namespace Gum.Settings
     {
         #region Properties
 
-        public string LastProject 
+        public string LastProject
         {
             get;
             set;
@@ -88,6 +88,15 @@ namespace Gum.Settings
             set;
         }
 
+
+        public byte CheckerColor1R { get; set; } = 150;
+        public byte CheckerColor1G { get; set; } = 150;
+        public byte CheckerColor1B { get; set; } = 150;
+
+        public byte CheckerColor2R { get; set; } = 170;
+        public byte CheckerColor2G { get; set; } = 170;
+        public byte CheckerColor2B { get; set; } = 170;
+
         #endregion
 
         #region Methods
@@ -101,6 +110,8 @@ namespace Gum.Settings
             PreviewSplitterDistance = 558;
             StatesAndVariablesSplitterDistance = 119;
             RecentProjects = new List<RecentProjectReference>();
+
+
         }
 
         public static GeneralSettingsFile LoadOrCreateNew()

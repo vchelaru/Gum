@@ -66,6 +66,14 @@ namespace Gum.Gui.Controls
                 {
                     member.DisplayName =
                             ToolsUtilities.StringFunctions.InsertSpacesInCamelCaseString(member.DisplayName);
+
+                    switch(member.PropertyType.Name)
+                    {
+                        case "Microsoft.Xna.Framework.Color":
+                        case "Color":
+                            member.PreferredDisplayer = typeof(Gum.Controls.DataUi.ColorDisplay);
+                            break;
+                    }
                 }
             }
         }

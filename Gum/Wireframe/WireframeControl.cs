@@ -51,7 +51,6 @@ namespace Gum.Wireframe
 
         LineRectangle mScreenBounds;
 
-        public Color BackgroundColor = Color.DimGray;
         public Color ScreenBoundsColor = Color.LightBlue;
 
         bool mHasInitialized = false;
@@ -285,7 +284,20 @@ namespace Gum.Wireframe
         {
             if (mHasInitialized)
             {
-                GraphicsDevice.Clear(BackgroundColor);
+                Color backgroundColor = new Color();
+                if(ProjectManager.Self.GeneralSettingsFile != null)
+                {
+                    backgroundColor.R = ProjectManager.Self.GeneralSettingsFile.CheckerColor1R;
+                    backgroundColor.G = ProjectManager.Self.GeneralSettingsFile.CheckerColor1G;
+                    backgroundColor.B = ProjectManager.Self.GeneralSettingsFile.CheckerColor1B;
+                }
+                else
+                {
+                    backgroundColor.R = 150;
+                    backgroundColor.G = 150;
+                    backgroundColor.B = 150;
+                }
+                GraphicsDevice.Clear(backgroundColor);
 
                 Renderer.Self.Draw(null);
             }

@@ -134,6 +134,14 @@ namespace Gum.Wireframe
         public void Activity()
         {
             gueManager.Activity();
+
+            if(ProjectManager.Self.GeneralSettingsFile != null)
+            {
+                mBackgroundSprite.Color.R = ProjectManager.Self.GeneralSettingsFile.CheckerColor2R;
+                mBackgroundSprite.Color.G = ProjectManager.Self.GeneralSettingsFile.CheckerColor2G;
+                mBackgroundSprite.Color.B = ProjectManager.Self.GeneralSettingsFile.CheckerColor2B;
+
+            }
         }
 
         #endregion
@@ -148,10 +156,8 @@ namespace Gum.Wireframe
             // Create the Texture2D here
             ImageData imageData = new ImageData(2, 2, null);
 
-            int lightColor = 150;
-            int darkColor = 170;
-            Color darkGray = new Color(lightColor, lightColor, lightColor);
-            Color lightGray = new Color(darkColor, darkColor, darkColor);
+            Color opaqueColor = Microsoft.Xna.Framework.Color.White;
+            Color transparent = new Microsoft.Xna.Framework.Color(0,0,0,0);
 
             for (int y = 0; y < 2; y++)
             {
@@ -160,12 +166,12 @@ namespace Gum.Wireframe
                     bool isDark = ((x + y) % 2 == 0);
                     if (isDark)
                     {
-                        imageData.SetPixel(x, y, darkGray);
+                        imageData.SetPixel(x, y, transparent);
 
                     }
                     else
                     {
-                        imageData.SetPixel(x, y, lightGray);
+                        imageData.SetPixel(x, y, opaqueColor);
                     }
                 }
             }
@@ -178,6 +184,7 @@ namespace Gum.Wireframe
             mBackgroundSprite.Y = -4096;
             mBackgroundSprite.Width = 8192;
             mBackgroundSprite.Height = 8192;
+            mBackgroundSprite.Color = new Color(150, 150, 150);
 
             mBackgroundSprite.Wrap = true;
             int timesToRepeat = 256;

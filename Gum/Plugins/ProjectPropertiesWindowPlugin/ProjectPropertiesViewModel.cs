@@ -2,6 +2,7 @@
 using Gum.Mvvm;
 using Gum.Settings;
 using Gum.Wireframe;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -64,6 +65,18 @@ namespace Gum.Plugins.PropertiesWindowPlugin
             set { Set(value); }
         }
 
+        public Color CheckboardColor1
+        {
+            get => Get<Color>();
+            set => Set(value);
+        }
+
+        public Color CheckboardColor2
+        {
+            get => Get<Color>();
+            set => Set(value);
+        }
+
         public void BindTo(GeneralSettingsFile generalSettings, GumProjectSave gumProject)
         {
             this.generalSettings = generalSettings;
@@ -77,6 +90,11 @@ namespace Gum.Plugins.PropertiesWindowPlugin
             RestrictFileNamesForAndroid = this.gumProject.RestrictFileNamesForAndroid;
             RenderTextCharacterByCharacter = global::RenderingLibrary.Graphics.Text.TextRenderingMode ==
                 global::RenderingLibrary.Graphics.TextRenderingMode.CharacterByCharacter;
+
+            CheckboardColor1 = new Color(generalSettings.CheckerColor1R, generalSettings.CheckerColor1G, generalSettings.CheckerColor1B);
+            CheckboardColor2 = new Color(generalSettings.CheckerColor2R, generalSettings.CheckerColor2G, generalSettings.CheckerColor2B);
+
+
 
         }
 
@@ -103,6 +121,15 @@ namespace Gum.Plugins.PropertiesWindowPlugin
                 global::RenderingLibrary.Graphics.Text.TextRenderingMode =
                     global::RenderingLibrary.Graphics.TextRenderingMode.RenderTarget;
             }
+
+            generalSettings.CheckerColor1R = CheckboardColor1.R;
+            generalSettings.CheckerColor1G = CheckboardColor1.G;
+            generalSettings.CheckerColor1B = CheckboardColor1.B;
+
+            generalSettings.CheckerColor2R = CheckboardColor2.R;
+            generalSettings.CheckerColor2G = CheckboardColor2.G;
+            generalSettings.CheckerColor2B = CheckboardColor2.B;
+
         }
 
 
