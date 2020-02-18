@@ -3383,6 +3383,29 @@ namespace Gum.Wireframe
             return null;
         }
 
+        public IRenderableIpso GetChildByNameRecursively(string name)
+        {
+            return GetChildByName(Children, name);
+        }
+
+        private IRenderableIpso GetChildByName(ObservableCollection<IRenderableIpso> children, string name)
+        {
+            foreach (var child in children)
+            {
+                if (child.Name == name)
+                {
+                    return child;
+                }
+
+                var subChild = GetChildByName(child.Children, name);
+                if(subChild != null)
+                {
+                    return subChild;
+                }
+            }
+            return null;
+        }
+
         public void SetProperty(string propertyName, object value)
         {
 
