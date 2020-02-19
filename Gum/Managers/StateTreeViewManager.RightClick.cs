@@ -11,6 +11,7 @@ using Gum.Commands;
 using ToolsUtilities;
 using Gum.Plugins;
 using Gum.DataTypes;
+using Gum.PropertyGridHelpers;
 
 namespace Gum.Managers
 {
@@ -281,7 +282,9 @@ namespace Gum.Managers
             var categoryToMoveTo = SelectedState.Self.SelectedElement.Categories
                 .FirstOrDefault(item=>item.Name == categoryNameToMoveTo);
 
-            if(categoryNameToMoveTo == mNoCategory)
+            var isMovingToCategory = categoryNameToMoveTo != mNoCategory;
+
+            if (!isMovingToCategory)
             {
                 categoryToMoveFrom.States.Remove(stateToMove);
                 SelectedState.Self.SelectedElement.States.Add(stateToMove);
@@ -298,9 +301,31 @@ namespace Gum.Managers
                 }
 
                 categoryToMoveTo.States.Add(stateToMove);
+
             }
 
             GumCommands.Self.GuiCommands.RefreshStateTreeView();
+            SelectedState.Self.SelectedStateSave = stateToMove;
+
+            if(isMovingToCategory)
+            {
+                // make sure to propagate all variables in this new state and
+                // also move all existing variables to the new state (use the first)
+                foreach(var variable in stateToMove.Variables)
+                {
+                    VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(variable.Name);
+                }
+
+                var firstState = categoryToMoveTo.States.FirstOrDefault();
+                if (firstState != stateToMove)
+                {
+                    foreach (var variable in firstState.Variables)
+                    {
+                        VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(variable.Name);
+                    }
+                }
+            }
+
             GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
         }
     }

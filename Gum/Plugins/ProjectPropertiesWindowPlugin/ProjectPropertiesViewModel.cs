@@ -65,13 +65,13 @@ namespace Gum.Plugins.PropertiesWindowPlugin
             set { Set(value); }
         }
 
-        public Color CheckboardColor1
+        public Color CheckerboardColor1
         {
             get => Get<Color>();
             set => Set(value);
         }
 
-        public Color CheckboardColor2
+        public Color CheckerboardColor2
         {
             get => Get<Color>();
             set => Set(value);
@@ -91,8 +91,8 @@ namespace Gum.Plugins.PropertiesWindowPlugin
             RenderTextCharacterByCharacter = global::RenderingLibrary.Graphics.Text.TextRenderingMode ==
                 global::RenderingLibrary.Graphics.TextRenderingMode.CharacterByCharacter;
 
-            CheckboardColor1 = new Color(generalSettings.CheckerColor1R, generalSettings.CheckerColor1G, generalSettings.CheckerColor1B);
-            CheckboardColor2 = new Color(generalSettings.CheckerColor2R, generalSettings.CheckerColor2G, generalSettings.CheckerColor2B);
+            CheckerboardColor1 = new Color(generalSettings.CheckerColor1R, generalSettings.CheckerColor1G, generalSettings.CheckerColor1B);
+            CheckerboardColor2 = new Color(generalSettings.CheckerColor2R, generalSettings.CheckerColor2G, generalSettings.CheckerColor2B);
 
 
 
@@ -122,13 +122,13 @@ namespace Gum.Plugins.PropertiesWindowPlugin
                     global::RenderingLibrary.Graphics.TextRenderingMode.RenderTarget;
             }
 
-            generalSettings.CheckerColor1R = CheckboardColor1.R;
-            generalSettings.CheckerColor1G = CheckboardColor1.G;
-            generalSettings.CheckerColor1B = CheckboardColor1.B;
+            generalSettings.CheckerColor1R = CheckerboardColor1.R;
+            generalSettings.CheckerColor1G = CheckerboardColor1.G;
+            generalSettings.CheckerColor1B = CheckerboardColor1.B;
 
-            generalSettings.CheckerColor2R = CheckboardColor2.R;
-            generalSettings.CheckerColor2G = CheckboardColor2.G;
-            generalSettings.CheckerColor2B = CheckboardColor2.B;
+            generalSettings.CheckerColor2R = CheckerboardColor2.R;
+            generalSettings.CheckerColor2G = CheckerboardColor2.G;
+            generalSettings.CheckerColor2B = CheckerboardColor2.B;
 
         }
 

@@ -156,6 +156,9 @@ namespace StateAnimationPlugin
                     mMainWindow.Focus();
                 }
 
+                // forces a refresh:
+                mCurrentViewModel = new ElementAnimationsViewModel();
+
                 RefreshViewModel();
             }
         }
