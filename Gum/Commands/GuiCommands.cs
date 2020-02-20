@@ -87,6 +87,10 @@ namespace Gum.Commands
             mMainWindow.RemoveWpfControl(control);
         }
 
+        /// <summary>
+        /// Selects the tab which contains the argument control
+        /// </summary>
+        /// <param name="control"></param>
         public void ShowControl(System.Windows.Controls.UserControl control)
         {
             mMainWindow.ShowTabForControl(control);

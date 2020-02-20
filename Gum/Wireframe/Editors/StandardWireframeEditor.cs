@@ -713,12 +713,12 @@ namespace Gum.Wireframe
 
             if (mResizeHandles.Width != 0)
             {
-                widthMultiplier *= (ipso.Width / mResizeHandles.Width);
+                widthMultiplier *= (((IPositionedSizedObject)ipso).Width / mResizeHandles.Width);
             }
 
             if (mResizeHandles.Height != 0)
             {
-                heightMultiplier *= (ipso.Height / mResizeHandles.Height);
+                heightMultiplier *= (((IPositionedSizedObject)ipso).Height / mResizeHandles.Height);
             }
 
             if (GetIsAltDown())
