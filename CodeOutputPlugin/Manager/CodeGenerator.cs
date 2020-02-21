@@ -77,13 +77,33 @@ namespace CodeOutputPlugin.Manager
         {
             if (visualApi == VisualApi.Gum)
             {
-                return $"{instance.Name}.{GetGumVariableName(variable)} = {VariableValueToGumCodeValue(variable)};";
+                var fullLineReplacement = TryGetFullGumLineReplacement(instance, variable);
+
+                if(!string.IsNullOrEmpty(fullLineReplacement))
+                {
+                    return fullLineReplacement;
+                }
+                else
+                {
+                    return $"{instance.Name}.{GetGumVariableName(variable)} = {VariableValueToGumCodeValue(variable)};";
+                }
+
             }
             else // xamarin forms
             {
                 return $"{instance.Name}.{GetXamarinFormsVariableName(variable)} = {VariableValueToXamarinFormsCodeValue(variable)};";
 
             }
+        }
+
+        private static string TryGetFullGumLineReplacement(InstanceSave instance, VariableSave variable)
+        {
+            var rootName = variable.GetRootName();
+            if (rootName == "Parent")
+            {
+                return $"{variable.Value}.Children.Add({instance.Name});";
+            }
+            return null;
         }
 
         private static string VariableValueToGumCodeValue(VariableSave variable)
