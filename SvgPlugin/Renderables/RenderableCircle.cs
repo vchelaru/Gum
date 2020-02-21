@@ -12,13 +12,9 @@ namespace SkiaPlugin.Renderables
     {
         public Color Color = Color.White;
 
-
         public int Alpha
         {
-            get
-            {
-                return Color.A;
-            }
+            get => Color.A;
             set
             {
                 Color.A = (byte)value;
@@ -28,10 +24,7 @@ namespace SkiaPlugin.Renderables
 
         public int Red
         {
-            get
-            {
-                return Color.R;
-            }
+            get => Color.R;
             set
             {
                 Color.R = (byte)value;
@@ -41,10 +34,7 @@ namespace SkiaPlugin.Renderables
 
         public int Green
         {
-            get
-            {
-                return Color.G;
-            }
+            get => Color.G;
             set
             {
                 Color.G = (byte)value;
@@ -54,17 +44,13 @@ namespace SkiaPlugin.Renderables
 
         public int Blue
         {
-            get
-            {
-                return Color.B;
-            }
+            get => Color.B;
             set
             {
                 Color.B = (byte)value;
                 needsUpdate = true;
             }
         }
-
 
         internal override void DrawToSurface(SKSurface surface)
         {
