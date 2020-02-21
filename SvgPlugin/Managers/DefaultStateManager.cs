@@ -21,6 +21,7 @@ namespace SkiaPlugin.Managers
             {
                 svgState = new StateSave();
                 svgState.Name = "Default";
+                svgState.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
                 StandardElementsManager.AddPositioningVariables(svgState);
                 StandardElementsManager.AddDimensionsVariables(svgState, 100, 100, 
                     Gum.Managers.StandardElementsManager.DimensionVariableAction.AllowFileOptions);
@@ -46,6 +47,7 @@ namespace SkiaPlugin.Managers
             {
                 filledCircleState = new StateSave();
                 filledCircleState.Name = "Default";
+                filledCircleState.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
                 StandardElementsManager.AddPositioningVariables(filledCircleState);
                 StandardElementsManager.AddDimensionsVariables(filledCircleState, 64, 64, 
                     StandardElementsManager.DimensionVariableAction.ExcludeFileOptions);

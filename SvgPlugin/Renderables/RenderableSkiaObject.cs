@@ -153,7 +153,10 @@ namespace SkiaPlugin.Renderables
 
         public void Render(SpriteRenderer spriteRenderer, SystemManagers managers)
         {
-            Sprite.Render(managers, spriteRenderer, this, texture, Color.White, rotationInDegrees: Rotation);
+            if(AbsoluteVisible)
+            {
+                Sprite.Render(managers, spriteRenderer, this, texture, Color.White, rotationInDegrees: Rotation);
+            }
         }
 
         void IRenderableIpso.SetParentDirect(IRenderableIpso parent)
@@ -163,7 +166,7 @@ namespace SkiaPlugin.Renderables
 
         public void PreRender()
         {
-            if (needsUpdate && Width > 0 && Height > 0)
+            if (needsUpdate && Width > 0 && Height > 0 && AbsoluteVisible)
             {
                 if (texture != null)
                 {
@@ -173,8 +176,11 @@ namespace SkiaPlugin.Renderables
 
                 var colorType = SKImageInfo.PlatformColorType;
 
-                var imageInfo = new SKImageInfo((int)Width, (int)Height, colorType, SKAlphaType.Unpremul);
-                //var imageInfo = new SKImageInfo((int)Width, (int)Height, colorType, SKAlphaType.Premul);
+                var widthToUse = Math.Min(2048, Width);
+                var heightToUse = Math.Min(2048, Height);
+
+                //var imageInfo = new SKImageInfo((int)widthToUse, (int)heightToUse, colorType, SKAlphaType.Unpremul);
+                var imageInfo = new SKImageInfo((int)Width, (int)Height, colorType, SKAlphaType.Premul);
                 using (var surface = SKSurface.Create(imageInfo))
                 {
                     DrawToSurface(surface);

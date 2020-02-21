@@ -20,6 +20,51 @@ namespace CodeOutputPlugin.Manager
 
     public static class CodeGenerator
     {
+
+        public static string GetCodeForState(ElementSave container, StateSave stateSave, VisualApi visualApi)
+        {
+            VariableSave[] variablesToConsider = stateSave.Variables
+                // make "Parent" first
+                .Where(item => item.GetRootName() != "Parent")
+                .ToArray();
+
+            string last = null;
+
+            var stringBuilder = new StringBuilder();
+            foreach (var variable in variablesToConsider)
+            {
+                InstanceSave instance = null;
+
+                var instanceName = variable.SourceObject;
+
+                if (instanceName != null)
+                {
+                    instance = container.GetInstance(instanceName);
+                }
+
+                if(string.IsNullOrWhiteSpace(last) == false && last != instanceName)
+                {
+                    stringBuilder.AppendLine();
+                }
+
+                if(instance != null)
+                {
+                    var codeLine = GetCodeLine(instance, variable, visualApi);
+                    stringBuilder.AppendLine(codeLine);
+
+                    var suffixCodeLine = GetSuffixCodeLine(instance, variable, visualApi);
+                    if (!string.IsNullOrEmpty(suffixCodeLine))
+                    {
+                        stringBuilder.AppendLine(suffixCodeLine);
+                    }
+                }
+                last = instanceName;
+            }
+
+            var code = stringBuilder.ToString();
+            return code;
+        }
+
         public static string GetCodeForInstance(InstanceSave instance, VisualApi visualApi)
         {
             // use default state? Or current state? Let's start with default:
@@ -38,8 +83,10 @@ namespace CodeOutputPlugin.Manager
             }
 
             string suffix = visualApi == VisualApi.Gum ? "Runtime" : "";
+            var className = $"{strippedType}{suffix}";
 
-            stringBuilder.AppendLine($"var {instance.Name} = new {strippedType}{suffix}();");
+            stringBuilder.AppendLine($"{className} {instance.Name};");
+            stringBuilder.AppendLine($"{instance.Name} = new {className}();");
 
             foreach (var variable in variablesToConsider)
             {
@@ -122,6 +169,10 @@ namespace CodeOutputPlugin.Manager
                 {
                     return "\"" + variable.Value + "\"";
                 }
+            }
+            else if(variable.Value is bool)
+            {
+                return variable.Value.ToString().ToLowerInvariant();
             }
             else if(variable.Value.GetType().IsEnum)
             {

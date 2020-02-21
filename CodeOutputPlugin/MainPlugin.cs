@@ -10,6 +10,7 @@ using System.ComponentModel.Composition;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace CodeOutputPlugin
 {
@@ -46,11 +47,20 @@ namespace CodeOutputPlugin
         {
             this.InstanceSelected += HandleInstanceSelected;
             this.VariableSet += HandleVariableSet;
+            this.StateWindowTreeNodeSelected += HandleStateSelected;
+        }
+
+        private void HandleStateSelected(TreeNode obj)
+        {
+            if (control != null)
+            {
+                RefreshCodeDisplay();
+            }
         }
 
         private void HandleInstanceSelected(ElementSave arg1, InstanceSave instance)
         {
-            if(instance != null && control != null)
+            if(control != null)
             {
                 RefreshCodeDisplay();
             }
@@ -58,7 +68,7 @@ namespace CodeOutputPlugin
 
         private void HandleVariableSet(ElementSave arg1, InstanceSave instance, string arg3, object arg4)
         {
-            if (instance != null && control != null)
+            if (control != null)
             {
                 RefreshCodeDisplay();
             }
@@ -81,13 +91,23 @@ namespace CodeOutputPlugin
         {
             var instance = SelectedState.Self.SelectedInstance;
 
-            if (instance == null)
+            if (instance != null)
             {
-                return; // todo - spit out some output
+                string gumCode = CodeGenerator.GetCodeForInstance(instance, VisualApi.Gum);
+                string xamarinFormsCode = CodeGenerator.GetCodeForInstance(instance, VisualApi.XamarinForms);
+                viewModel.Code = $"//Gum Code:\n{gumCode}\n\n//Xamarin Forms Code:\n{xamarinFormsCode}";
             }
-            string gumCode = CodeGenerator.GetCodeForInstance(instance, VisualApi.Gum);
-            string xamarinFormsCode = CodeGenerator.GetCodeForInstance(instance, VisualApi.XamarinForms);
-            viewModel.Code = $"//Gum Code:\n{gumCode}\n\n//Xamarin Forms Code:\n{xamarinFormsCode}";
+            else
+            {
+                var state = SelectedState.Self.SelectedStateSave;
+                var selectedElement = SelectedState.Self.SelectedElement;
+
+                if(state != null && selectedElement != null)
+                {
+                    string gumCode = CodeGenerator.GetCodeForState(selectedElement, state, VisualApi.Gum);
+                    viewModel.Code = $"//State Code for {state.Name ?? "Default"}:\n{gumCode}";
+                }
+            }
         }
 
         private void CreateControl()

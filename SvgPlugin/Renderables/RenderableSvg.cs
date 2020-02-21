@@ -40,6 +40,8 @@ namespace SkiaPlugin.Renderables
         {
             if (skiaSvg != null)
             {
+                surface.Canvas.Clear(SKColors.Transparent);
+
                 var scaleX = this.Width / skiaSvg.ViewBox.Width;
                 var scaleY = this.Height / skiaSvg.ViewBox.Height;
 

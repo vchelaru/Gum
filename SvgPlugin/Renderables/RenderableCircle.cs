@@ -70,7 +70,7 @@ namespace SkiaPlugin.Renderables
         {
             surface.Canvas.Clear(SKColors.Transparent);
 
-            var skColor = new SKColor(Color.R, Color.G, Color.B);
+            var skColor = new SKColor(Color.R, Color.G, Color.B, Color.A);
 
             using (var whitePaint = new SKPaint { Color = skColor, Style = SKPaintStyle.Fill, IsAntialias = true })
             {
