@@ -26,9 +26,13 @@ namespace Gum.PropertyGridHelpers
     {
         static HashSet<string> PropertiesSupportingIncrementalChange = new HashSet<string>
         {
+            "Alpha",
+            "Blue",
             "FlipHorizontal",
+            "Green",
             "Height",
             "MaxLettersToShow",
+            "Red",
             "Rotation",
             "Text",
             "Texture Address",

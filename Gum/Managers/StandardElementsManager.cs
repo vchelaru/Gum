@@ -518,7 +518,7 @@ namespace Gum.Managers
             }
         }
 
-        private static void AddColorVariables(StateSave stateSave, bool includeAlpha = true)
+        public static void AddColorVariables(StateSave stateSave, bool includeAlpha = true)
         {
             if (includeAlpha)
             {

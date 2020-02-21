@@ -738,14 +738,16 @@ namespace Gum.Managers
             state.SetValue(blueVariableName, (int)color.B, "int");
 
             // Only need to refresh on one of the colors, so do it on any that have changed:
-            var refreshRed = oldColor.R != color.R;
-            var refreshGreen = !refreshRed && oldColor.G != color.G;
-            var refreshBlue = !refreshRed && !refreshGreen && oldColor.B != color.B;
+            // actually why not refresh all? It's fast now since it doesn't re-create the entire view, 
+            // and plugins may depend on it:
+            //var refreshRed = oldColor.R != color.R;
+            //var refreshGreen = !refreshRed && oldColor.G != color.G;
+            //var refreshBlue = !refreshRed && !refreshGreen && oldColor.B != color.B;
 
             // These functions take unqualified:
-            SetVariableLogic.Self.PropertyValueChanged("Red", (int)oldColor.R, refreshRed);
-            SetVariableLogic.Self.PropertyValueChanged("Green", (int)oldColor.G, refreshGreen );
-            SetVariableLogic.Self.PropertyValueChanged("Blue", (int)oldColor.B, refreshBlue);
+            SetVariableLogic.Self.PropertyValueChanged("Red", (int)oldColor.R, true);
+            SetVariableLogic.Self.PropertyValueChanged("Green", (int)oldColor.G, true);
+            SetVariableLogic.Self.PropertyValueChanged("Blue", (int)oldColor.B, true);
 
             RefreshUI();
         }

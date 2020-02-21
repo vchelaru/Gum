@@ -7,11 +7,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SvgPlugin.Managers
+namespace SkiaPlugin.Managers
 {
     public static class DefaultStateManager
     {
         static StateSave svgState;
+        static StateSave filledCircleState;
+
 
         public static StateSave GetSvgState()
         {
@@ -36,6 +38,21 @@ namespace SvgPlugin.Managers
 
             }
             return svgState;
+        }
+
+        public static StateSave GetColoredCircleState()
+        {
+            if(filledCircleState == null)
+            {
+                filledCircleState = new StateSave();
+                filledCircleState.Name = "Default";
+                StandardElementsManager.AddPositioningVariables(filledCircleState);
+                StandardElementsManager.AddDimensionsVariables(filledCircleState, 64, 64, 
+                    StandardElementsManager.DimensionVariableAction.ExcludeFileOptions);
+                StandardElementsManager.AddColorVariables(filledCircleState);
+            }
+
+            return filledCircleState;
         }
     }
 }

@@ -3,7 +3,8 @@ using Gum.Managers;
 using Gum.Plugins;
 using Gum.Plugins.BaseClasses;
 using RenderingLibrary.Graphics;
-using SvgPlugin.Managers;
+using SkiaPlugin.Managers;
+using SkiaPlugin.Renderables;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
@@ -11,7 +12,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SvgPlugin
+namespace SkiaPlugin
 {
     [Export(typeof(PluginBase))]
     public class MainSvgPlugin : PluginBase
@@ -38,8 +39,8 @@ namespace SvgPlugin
 
         private void AddMenuItems()
         {
-            var item = this.AddMenuItem(new List<string>() { "Plugins", "Add SVG Standard" });
-            item.Click += (not, used) => SvgStandardAdder.AddSvgStandard();
+            var item = this.AddMenuItem(new List<string>() { "Plugins", "Add Skia Standard Elements" });
+            item.Click += (not, used) => StandardAdder.AddAllStandards();
         }
 
         private void AssignEvents()
@@ -54,6 +55,10 @@ namespace SvgPlugin
             {
                 return new RenderableSvg();
             }
+            else if(type == "ColoredCircle")
+            {
+                return new RenderableCircle();
+            }
             else
             {
                 return null;
@@ -62,15 +67,12 @@ namespace SvgPlugin
 
         private StateSave HandleGetDefaultStateForType(string type)
         {
-            if(type == "Svg")
+            switch(type)
             {
-                return DefaultStateManager.GetSvgState();
-
+                case "Svg": return DefaultStateManager.GetSvgState();
+                case "ColoredCircle": return DefaultStateManager.GetColoredCircleState();
             }
-            else
-            {
-                return null;
-            }
+            return null;
         }
 
     }

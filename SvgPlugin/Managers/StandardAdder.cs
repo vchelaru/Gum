@@ -8,28 +8,34 @@ using System.Text;
 using System.Threading.Tasks;
 using ToolsUtilities;
 
-namespace SvgPlugin.Managers
+namespace SkiaPlugin.Managers
 {
-    static class SvgStandardAdder
+    static class StandardAdder
     {
-        internal static void AddSvgStandard()
+        public static void AddAllStandards()
         {
-            var targetFile = ProjectState.Self.ProjectDirectory + "Standards/Svg.gutx";
+            AddStandard("Svg");
+            AddStandard("ColoredCircle");
+        }
+
+        private static void AddStandard(string standardName)
+        {
+            var targetFile = ProjectState.Self.ProjectDirectory + $"Standards/{standardName}.gutx";
             FileManager.SaveEmbeddedResource(
-                typeof(SvgStandardAdder).Assembly, 
-                "SvgPlugin.Embedded.Svg.gutx", 
+                typeof(StandardAdder).Assembly,
+                $"SkiaPlugin.Embedded.{standardName}.gutx",
                 targetFile);
 
             var gumProject = ProjectState.Self.GumProjectSave;
-            var hasSvg = gumProject.StandardElementReferences.Any(item => item.Name == "Svg");
-            if(!hasSvg)
+            var hasStandard = gumProject.StandardElementReferences.Any(item => item.Name == standardName);
+            if (!hasStandard)
             {
                 var newReference = new ElementReference();
                 newReference.ElementType = ElementType.Standard;
-                newReference.Name = "Svg";
+                newReference.Name = standardName;
                 gumProject.StandardElementReferences.Add(newReference);
 
-                if(gumProject.StandardElements.Any(item => item.Name == "Svg") == false)
+                if (gumProject.StandardElements.Any(item => item.Name == standardName) == false)
                 {
                     GumLoadResult result = new GumLoadResult();
                     var loaded = newReference.ToElementSave<StandardElementSave>(
@@ -43,8 +49,6 @@ namespace SvgPlugin.Managers
                 }
                 GumCommands.Self.FileCommands.TryAutoSaveProject();
             }
-
         }
-
     }
 }

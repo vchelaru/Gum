@@ -39,7 +39,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlatRedBall.SpecializedXnaC
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventOutputPlugin", "EventOutputPlugin\EventOutputPlugin.csproj", "{645E1916-35B9-4BC8-8949-C88301838296}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SvgPlugin", "SvgPlugin\SvgPlugin.csproj", "{0FEE460B-616C-45AC-86D5-087B7E32546E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkiaPlugin", "SvgPlugin\SkiaPlugin.csproj", "{0FEE460B-616C-45AC-86D5-087B7E32546E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeOutputPlugin", "CodeOutputPlugin\CodeOutputPlugin.csproj", "{517D2748-414E-42F7-8523-516E59CE994C}"
 EndProject
