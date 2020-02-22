@@ -69,30 +69,98 @@ namespace CodeOutputPlugin.Manager
         {
             var stringBuilder = new StringBuilder();
 
-
-            foreach(var instance in element.Instances)
+            foreach (var instance in element.Instances)
             {
-                var instanceCode = GetCodeForInstance(instance, visualApi);
-                stringBuilder.AppendLine(instanceCode);
+                FillWithInstanceDeclaration(instance, stringBuilder, visualApi);
+            }
+            stringBuilder.AppendLine();
+
+
+            stringBuilder.AppendLine("{");
+
+
+            foreach (var instance in element.Instances)
+            {
+                FillWithInstanceInstantiation(instance, visualApi, stringBuilder, 1);
+            }
+            stringBuilder.AppendLine();
+
+            foreach (var instance in element.Instances)
+            {
+                FillWithVariableAssignments(instance, visualApi, stringBuilder, 1);
                 stringBuilder.AppendLine();
             }
+
+            stringBuilder.AppendLine("}");
+
 
             return stringBuilder.ToString();
         }
 
         public static string GetCodeForInstance(InstanceSave instance, VisualApi visualApi)
         {
-            // use default state? Or current state? Let's start with default:
+            var stringBuilder = new StringBuilder();
 
+            FillWithInstanceDeclaration(instance, stringBuilder, visualApi);
+
+            FillWithInstanceInstantiation(instance, visualApi, stringBuilder);
+
+            FillWithVariableAssignments(instance, visualApi, stringBuilder);
+
+            var code = stringBuilder.ToString();
+            return code;
+        }
+
+        private static void FillWithVariableAssignments(InstanceSave instance, VisualApi visualApi, StringBuilder stringBuilder, int tabCount = 0)
+        {
             VariableSave[] variablesToConsider = GetVariablesToConsider(instance)
                 // make "Parent" first
                 .OrderBy(item => item.GetRootName() != "Parent")
                 .ToArray();
 
-            var stringBuilder = new StringBuilder();
+            var hasParent = variablesToConsider.FirstOrDefault()?.GetRootName() == "Parent";
+
+            var tabs = new String(' ', 4 * tabCount);
+
+            if (!hasParent)
+            {
+                // add it to "this"
+                stringBuilder.AppendLine($"{tabs}this.Children.Add({instance.Name});");
+            }
+
+            foreach (var variable in variablesToConsider)
+            {
+                var codeLine = GetCodeLine(instance, variable, visualApi);
+                stringBuilder.AppendLine(tabs + codeLine);
+
+                var suffixCodeLine = GetSuffixCodeLine(instance, variable, visualApi);
+                if (!string.IsNullOrEmpty(suffixCodeLine))
+                {
+                    stringBuilder.AppendLine(tabs + suffixCodeLine);
+                }
+            }
+        }
+
+        private static void FillWithInstanceInstantiation(InstanceSave instance, VisualApi visualApi, StringBuilder stringBuilder, int tabCount = 0)
+        {
+            var strippedType = instance.BaseType;
+            if (strippedType.Contains("/"))
+            {
+                strippedType = strippedType.Substring(strippedType.LastIndexOf("/") + 1);
+            }
+            var tabs = new String(' ', 4 * tabCount);
+
+            string suffix = visualApi == VisualApi.Gum ? "Runtime" : "";
+            var className = $"{strippedType}{suffix}";
+            stringBuilder.AppendLine($"{tabs}{instance.Name} = new {className}();");
+        }
+
+        private static void FillWithInstanceDeclaration(InstanceSave instance, StringBuilder stringBuilder, VisualApi visualApi, int tabCount = 0)
+        {
+            var tabs = new String(' ', 4 * tabCount);
 
             var strippedType = instance.BaseType;
-            if(strippedType.Contains("/"))
+            if (strippedType.Contains("/"))
             {
                 strippedType = strippedType.Substring(strippedType.LastIndexOf("/") + 1);
             }
@@ -100,23 +168,7 @@ namespace CodeOutputPlugin.Manager
             string suffix = visualApi == VisualApi.Gum ? "Runtime" : "";
             var className = $"{strippedType}{suffix}";
 
-            stringBuilder.AppendLine($"{className} {instance.Name};");
-            stringBuilder.AppendLine($"{instance.Name} = new {className}();");
-
-            foreach (var variable in variablesToConsider)
-            {
-                var codeLine = GetCodeLine(instance, variable, visualApi);
-                stringBuilder.AppendLine(codeLine);
-
-                var suffixCodeLine = GetSuffixCodeLine(instance, variable, visualApi);
-                if(!string.IsNullOrEmpty(suffixCodeLine))
-                {
-                    stringBuilder.AppendLine(suffixCodeLine);
-                }
-            }
-
-            var code = stringBuilder.ToString();
-            return code;
+            stringBuilder.AppendLine($"{tabs}{className} {instance.Name};");
         }
 
         private static string GetSuffixCodeLine(InstanceSave instance, VariableSave variable, VisualApi visualApi)
