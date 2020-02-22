@@ -13,6 +13,7 @@ namespace SkiaPlugin.Managers
     {
         static StateSave svgState;
         static StateSave filledCircleState;
+        static StateSave roundedRectangleState;
 
 
         public static StateSave GetSvgState()
@@ -55,6 +56,24 @@ namespace SkiaPlugin.Managers
             }
 
             return filledCircleState;
+        }
+
+        public static StateSave GetRoundedRectangleState()
+        {
+            if (roundedRectangleState == null)
+            {
+                roundedRectangleState = new StateSave();
+                roundedRectangleState.Name = "Default";
+                roundedRectangleState.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
+                roundedRectangleState.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 5, Name = "CornerRadius", Category="Dimensions" });
+
+                StandardElementsManager.AddPositioningVariables(roundedRectangleState);
+                StandardElementsManager.AddDimensionsVariables(roundedRectangleState, 64, 64,
+                    StandardElementsManager.DimensionVariableAction.ExcludeFileOptions);
+                StandardElementsManager.AddColorVariables(roundedRectangleState);
+            }
+
+            return roundedRectangleState;
         }
     }
 }

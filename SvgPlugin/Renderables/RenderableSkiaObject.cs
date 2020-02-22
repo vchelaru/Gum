@@ -109,6 +109,48 @@ namespace SkiaPlugin.Renderables
 
         public object Tag { get; set; }
 
+        public Color Color = Color.White;
+
+        public int Alpha
+        {
+            get => Color.A;
+            set
+            {
+                Color.A = (byte)value;
+                needsUpdate = true;
+            }
+        }
+
+        public int Red
+        {
+            get => Color.R;
+            set
+            {
+                Color.R = (byte)value;
+                needsUpdate = true;
+            }
+        }
+
+        public int Green
+        {
+            get => Color.G;
+            set
+            {
+                Color.G = (byte)value;
+                needsUpdate = true;
+            }
+        }
+
+        public int Blue
+        {
+            get => Color.B;
+            set
+            {
+                Color.B = (byte)value;
+                needsUpdate = true;
+            }
+        }
+
         protected bool needsUpdate = true;
 
         #region IVisible Implementation

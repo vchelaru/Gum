@@ -51,18 +51,14 @@ namespace SkiaPlugin
 
         private IRenderableIpso HandleCreateRenderbleFor(string type)
         {
-            if (type == "Svg")
+            switch (type)
             {
-                return new RenderableSvg();
+                case "Svg": return new RenderableSvg();
+                case "ColoredCircle": return new RenderableCircle();
+                case "RoundedRectangle": return new RenderableRoundedRectangle();
             }
-            else if(type == "ColoredCircle")
-            {
-                return new RenderableCircle();
-            }
-            else
-            {
-                return null;
-            }
+
+            return null;
         }
 
         private StateSave HandleGetDefaultStateForType(string type)
@@ -71,6 +67,7 @@ namespace SkiaPlugin
             {
                 case "Svg": return DefaultStateManager.GetSvgState();
                 case "ColoredCircle": return DefaultStateManager.GetColoredCircleState();
+                case "RoundedRectangle": return DefaultStateManager.GetRoundedRectangleState();
             }
             return null;
         }

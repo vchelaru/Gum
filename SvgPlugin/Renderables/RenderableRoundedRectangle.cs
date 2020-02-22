@@ -1,5 +1,4 @@
-﻿using Microsoft.Xna.Framework;
-using SkiaSharp;
+﻿using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,8 +7,10 @@ using System.Threading.Tasks;
 
 namespace SkiaPlugin.Renderables
 {
-    class RenderableCircle : RenderableSkiaObject
+    class RenderableRoundedRectangle : RenderableSkiaObject
     {
+        public float CornerRadius { get; set; } = 5;
+
 
         internal override void DrawToSurface(SKSurface surface)
         {
@@ -20,7 +21,7 @@ namespace SkiaPlugin.Renderables
             using (var paint = new SKPaint { Color = skColor, Style = SKPaintStyle.Fill, IsAntialias = true })
             {
                 var radius = Width / 2;
-                surface.Canvas.DrawCircle(new SKPoint(radius, radius), radius, paint);
+                surface.Canvas.DrawRoundRect(0,0,Width, Height, CornerRadius, CornerRadius, paint);
             }
         }
     }

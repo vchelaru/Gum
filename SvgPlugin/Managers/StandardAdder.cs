@@ -16,6 +16,7 @@ namespace SkiaPlugin.Managers
         {
             AddStandard("Svg");
             AddStandard("ColoredCircle");
+            AddStandard("RoundedRectangle");
         }
 
         private static void AddStandard(string standardName)
