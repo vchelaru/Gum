@@ -7,6 +7,14 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid>
-        <TextBox Text="{Binding Code}"></TextBox>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"></RowDefinition>
+            <RowDefinition Height="*"></RowDefinition>
+        </Grid.RowDefinitions>
+        <StackPanel>
+            <RadioButton VerticalContentAlignment="Center" IsChecked="{Binding IsSelectedObjectSelected}">Selected Object</RadioButton>
+            <RadioButton VerticalContentAlignment="Center" IsChecked="{Binding IsSelectedStateSelected}">Selected State</RadioButton>
+        </StackPanel>
+        <TextBox ScrollViewer.VerticalScrollBarVisibility="Auto" Grid.Row="1" Text="{Binding Code}"></TextBox>
     </Grid>
 </UserControl>

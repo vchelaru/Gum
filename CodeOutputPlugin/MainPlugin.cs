@@ -90,31 +90,43 @@ namespace CodeOutputPlugin
         private void RefreshCodeDisplay()
         {
             var instance = SelectedState.Self.SelectedInstance;
+            var selectedElement = SelectedState.Self.SelectedElement;
 
-            if (instance != null)
+            switch(viewModel.WhatToView)
             {
-                string gumCode = CodeGenerator.GetCodeForInstance(instance, VisualApi.Gum);
-                string xamarinFormsCode = CodeGenerator.GetCodeForInstance(instance, VisualApi.XamarinForms);
-                viewModel.Code = $"//Gum Code:\n{gumCode}\n\n//Xamarin Forms Code:\n{xamarinFormsCode}";
-            }
-            else
-            {
-                var state = SelectedState.Self.SelectedStateSave;
-                var selectedElement = SelectedState.Self.SelectedElement;
+                case ViewModels.WhatToView.SelectedElement:
 
-                if(state != null && selectedElement != null)
-                {
-                    string gumCode = CodeGenerator.GetCodeForState(selectedElement, state, VisualApi.Gum);
-                    viewModel.Code = $"//State Code for {state.Name ?? "Default"}:\n{gumCode}";
-                }
+                    if (instance != null)
+                    {
+                        string gumCode = CodeGenerator.GetCodeForInstance(instance, VisualApi.Gum);
+                        string xamarinFormsCode = CodeGenerator.GetCodeForInstance(instance, VisualApi.XamarinForms);
+                        viewModel.Code = $"//Gum Code:\n{gumCode}\n\n//Xamarin Forms Code:\n{xamarinFormsCode}";
+                    }
+                    else if(selectedElement != null)
+                    {
+                        string gumCode = CodeGenerator.GetCodeForElement(selectedElement, VisualApi.Gum);
+                        viewModel.Code = $"//Code for {selectedElement.ToString()}\n{gumCode}";
+                    }
+                    break;
+                case ViewModels.WhatToView.SelectedState:
+                    var state = SelectedState.Self.SelectedStateSave;
+
+                    if (state != null && selectedElement != null)
+                    {
+                        string gumCode = CodeGenerator.GetCodeForState(selectedElement, state, VisualApi.Gum);
+                        viewModel.Code = $"//State Code for {state.Name ?? "Default"}:\n{gumCode}";
+                    }
+                    break;
             }
+
         }
 
         private void CreateControl()
         {
             control = new Views.CodeWindow();
-            viewModel = new ViewModels.CodeWindowViewModel();
 
+            viewModel = new ViewModels.CodeWindowViewModel();
+            viewModel.PropertyChanged += (not, used) => RefreshCodeDisplay();
             control.DataContext = viewModel;
 
             GumCommands.Self.GuiCommands.AddControl(control, "Code", TabLocation.Right);

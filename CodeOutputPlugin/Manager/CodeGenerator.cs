@@ -65,6 +65,21 @@ namespace CodeOutputPlugin.Manager
             return code;
         }
 
+        public static string GetCodeForElement(ElementSave element, VisualApi visualApi)
+        {
+            var stringBuilder = new StringBuilder();
+
+
+            foreach(var instance in element.Instances)
+            {
+                var instanceCode = GetCodeForInstance(instance, visualApi);
+                stringBuilder.AppendLine(instanceCode);
+                stringBuilder.AppendLine();
+            }
+
+            return stringBuilder.ToString();
+        }
+
         public static string GetCodeForInstance(InstanceSave instance, VisualApi visualApi)
         {
             // use default state? Or current state? Let's start with default:
