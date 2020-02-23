@@ -71,11 +71,15 @@ namespace CodeOutputPlugin.Manager
 
             var stringBuilder = new StringBuilder();
 
+
             foreach (var instance in element.Instances)
             {
                 FillWithInstanceDeclaration(instance, stringBuilder, visualApi, tabCount);
             }
             stringBuilder.AppendLine();
+
+            FillWithExposedVariables(element, stringBuilder, visualApi, tabCount);
+            // -- no need for AppendLine here since FillWithExposedVariables does it after every variable --
 
             var elementName = GetClassNameForType(element.Name, visualApi);
             stringBuilder.AppendLine(ToTabs(tabCount) + $"public {elementName}(bool fullInstantiation = true)");
@@ -89,6 +93,12 @@ namespace CodeOutputPlugin.Manager
             tabCount++;
 
             stringBuilder.AppendLine(ToTabs(tabCount) + "this.SetContainedObject(new InvisibleRenderable());");
+
+            stringBuilder.AppendLine();
+
+            FillWithVariableAssignments(element, visualApi, stringBuilder, tabCount);
+
+            stringBuilder.AppendLine();
 
             foreach (var instance in element.Instances)
             {
@@ -109,6 +119,32 @@ namespace CodeOutputPlugin.Manager
             return stringBuilder.ToString();
         }
 
+        private static void FillWithExposedVariables(ElementSave element, StringBuilder stringBuilder, VisualApi visualApi, int tabCount)
+        {
+            var exposedVariables = element.DefaultState.Variables
+                .Where(item => !string.IsNullOrEmpty(item.ExposedAsName))
+                .ToArray();
+
+            foreach(var exposedVariable in exposedVariables)
+            {
+                FillWithExposedVariable(exposedVariable, stringBuilder, tabCount);
+                stringBuilder.AppendLine();
+            }
+        }
+
+        private static void FillWithExposedVariable(VariableSave exposedVariable, StringBuilder stringBuilder, int tabCount)
+        {
+            stringBuilder.AppendLine(ToTabs(tabCount) + $"public {exposedVariable.Type} {exposedVariable.ExposedAsName}");
+            stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+            tabCount++;
+            stringBuilder.AppendLine(ToTabs(tabCount) + $"get => {exposedVariable.Name};");
+            stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {exposedVariable.Name} = value;");
+            tabCount--;
+
+            stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+
+        }
+
         public static string GetCodeForInstance(InstanceSave instance, VisualApi visualApi)
         {
             var stringBuilder = new StringBuilder();
@@ -123,6 +159,48 @@ namespace CodeOutputPlugin.Manager
             return code;
         }
 
+        private static void FillWithInstanceInstantiation(InstanceSave instance, VisualApi visualApi, StringBuilder stringBuilder, int tabCount = 0)
+        {
+            var strippedType = instance.BaseType;
+            if (strippedType.Contains("/"))
+            {
+                strippedType = strippedType.Substring(strippedType.LastIndexOf("/") + 1);
+            }
+            var tabs = new String(' ', 4 * tabCount);
+
+            string suffix = visualApi == VisualApi.Gum ? "Runtime" : "";
+            var className = $"{strippedType}{suffix}";
+            stringBuilder.AppendLine($"{tabs}{instance.Name} = new {className}();");
+        }
+
+        private static void FillWithVariableAssignments(ElementSave element, VisualApi visualApi, StringBuilder stringBuilder, int tabCount = 0)
+        {
+            var defaultState = SelectedState.Self.SelectedElement.DefaultState;
+            var variablesToConsider = defaultState.Variables
+                .Where(item =>
+                {
+                    return
+                        item.Value != null &&
+                        item.SetsValue &&
+                        string.IsNullOrEmpty(item.SourceObject);
+                })
+                .ToArray();
+
+            var tabs = new String(' ', 4 * tabCount);
+
+            foreach (var variable in variablesToConsider)
+            {
+                var codeLine = GetCodeLine(null, variable, visualApi);
+                stringBuilder.AppendLine(tabs + codeLine);
+
+                var suffixCodeLine = GetSuffixCodeLine(null, variable, visualApi);
+                if (!string.IsNullOrEmpty(suffixCodeLine))
+                {
+                    stringBuilder.AppendLine(tabs + suffixCodeLine);
+                }
+            }
+        }
+
         private static void FillWithVariableAssignments(InstanceSave instance, VisualApi visualApi, StringBuilder stringBuilder, int tabCount = 0)
         {
             VariableSave[] variablesToConsider = GetVariablesToConsider(instance)
@@ -133,6 +211,8 @@ namespace CodeOutputPlugin.Manager
             var hasParent = variablesToConsider.FirstOrDefault()?.GetRootName() == "Parent";
 
             var tabs = new String(' ', 4 * tabCount);
+
+            stringBuilder.AppendLine($"{tabs}{instance.Name}.Name = \"{instance.Name}\";");
 
             if (!hasParent)
             {
@@ -151,20 +231,6 @@ namespace CodeOutputPlugin.Manager
                     stringBuilder.AppendLine(tabs + suffixCodeLine);
                 }
             }
-        }
-
-        private static void FillWithInstanceInstantiation(InstanceSave instance, VisualApi visualApi, StringBuilder stringBuilder, int tabCount = 0)
-        {
-            var strippedType = instance.BaseType;
-            if (strippedType.Contains("/"))
-            {
-                strippedType = strippedType.Substring(strippedType.LastIndexOf("/") + 1);
-            }
-            var tabs = new String(' ', 4 * tabCount);
-
-            string suffix = visualApi == VisualApi.Gum ? "Runtime" : "";
-            var className = $"{strippedType}{suffix}";
-            stringBuilder.AppendLine($"{tabs}{instance.Name} = new {className}();");
         }
 
         private static void FillWithInstanceDeclaration(InstanceSave instance, StringBuilder stringBuilder, VisualApi visualApi, int tabCount = 0)
@@ -207,6 +273,8 @@ namespace CodeOutputPlugin.Manager
 
         private static string GetCodeLine(InstanceSave instance, VariableSave variable, VisualApi visualApi)
         {
+            string instancePrefix = instance != null ? $"{instance.Name}." : "this.";
+
             if (visualApi == VisualApi.Gum)
             {
                 var fullLineReplacement = TryGetFullGumLineReplacement(instance, variable);
@@ -217,13 +285,13 @@ namespace CodeOutputPlugin.Manager
                 }
                 else
                 {
-                    return $"{instance.Name}.{GetGumVariableName(variable)} = {VariableValueToGumCodeValue(variable)};";
+                    return $"{instancePrefix}{GetGumVariableName(variable)} = {VariableValueToGumCodeValue(variable)};";
                 }
 
             }
             else // xamarin forms
             {
-                return $"{instance.Name}.{GetXamarinFormsVariableName(variable)} = {VariableValueToXamarinFormsCodeValue(variable)};";
+                return $"{instancePrefix}{GetXamarinFormsVariableName(variable)} = {VariableValueToXamarinFormsCodeValue(variable)};";
 
             }
         }

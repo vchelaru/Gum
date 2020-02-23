@@ -278,7 +278,7 @@ namespace Gum.PropertyGridHelpers
                 }
                 else
                 {
-                    ContextMenuEvents.Add("Un-expose Variable", HandleUnExposeVariableClick);
+                    ContextMenuEvents.Add($"Un-expose Variable {VariableSave.ExposedAsName}", HandleUnExposeVariableClick);
                 }
             }
             else
