@@ -67,32 +67,44 @@ namespace CodeOutputPlugin.Manager
 
         public static string GetCodeForElement(ElementSave element, VisualApi visualApi)
         {
+            int tabCount = 0;
+
             var stringBuilder = new StringBuilder();
 
             foreach (var instance in element.Instances)
             {
-                FillWithInstanceDeclaration(instance, stringBuilder, visualApi);
+                FillWithInstanceDeclaration(instance, stringBuilder, visualApi, tabCount);
             }
             stringBuilder.AppendLine();
 
+            var elementName = GetClassNameForType(element.Name, visualApi);
+            stringBuilder.AppendLine(ToTabs(tabCount) + $"public {elementName}(bool fullInstantiation = true)");
+            stringBuilder.AppendLine(ToTabs(tabCount) + "{");
 
-            stringBuilder.AppendLine("{");
+            tabCount++;
 
+            stringBuilder.AppendLine(ToTabs(tabCount) + "if(fullInstantiation)");
+            stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+
+            tabCount++;
+
+            stringBuilder.AppendLine(ToTabs(tabCount) + "this.SetContainedObject(new InvisibleRenderable());");
 
             foreach (var instance in element.Instances)
             {
-                FillWithInstanceInstantiation(instance, visualApi, stringBuilder, 1);
+                FillWithInstanceInstantiation(instance, visualApi, stringBuilder, tabCount);
             }
             stringBuilder.AppendLine();
 
             foreach (var instance in element.Instances)
             {
-                FillWithVariableAssignments(instance, visualApi, stringBuilder, 1);
+                FillWithVariableAssignments(instance, visualApi, stringBuilder, tabCount);
                 stringBuilder.AppendLine();
             }
-
-            stringBuilder.AppendLine("}");
-
+            tabCount--;
+            stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+            tabCount--;
+            stringBuilder.AppendLine(ToTabs(tabCount) + "}");
 
             return stringBuilder.ToString();
         }
@@ -159,7 +171,14 @@ namespace CodeOutputPlugin.Manager
         {
             var tabs = new String(' ', 4 * tabCount);
 
-            var strippedType = instance.BaseType;
+            string className = GetClassNameForType(instance.BaseType, visualApi);
+
+            stringBuilder.AppendLine($"{tabs}{className} {instance.Name};");
+        }
+
+        private static string GetClassNameForType(string type, VisualApi visualApi)
+        {
+            var strippedType = type;
             if (strippedType.Contains("/"))
             {
                 strippedType = strippedType.Substring(strippedType.LastIndexOf("/") + 1);
@@ -167,8 +186,7 @@ namespace CodeOutputPlugin.Manager
 
             string suffix = visualApi == VisualApi.Gum ? "Runtime" : "";
             var className = $"{strippedType}{suffix}";
-
-            stringBuilder.AppendLine($"{tabs}{className} {instance.Name};");
+            return className;
         }
 
         private static string GetSuffixCodeLine(InstanceSave instance, VariableSave variable, VisualApi visualApi)
@@ -339,5 +357,7 @@ namespace CodeOutputPlugin.Manager
                 .ToArray();
             return variablesToConsider;
         }
+
+        private static string ToTabs(int tabCount) => new string(' ', tabCount * 4);
     }
 }

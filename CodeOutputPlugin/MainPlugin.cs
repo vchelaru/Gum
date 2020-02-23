@@ -46,6 +46,7 @@ namespace CodeOutputPlugin
         private void AssignEvents()
         {
             this.InstanceSelected += HandleInstanceSelected;
+            this.ElementSelected += HandleElementSelected;
             this.VariableSet += HandleVariableSet;
             this.StateWindowTreeNodeSelected += HandleStateSelected;
         }
@@ -61,6 +62,14 @@ namespace CodeOutputPlugin
         private void HandleInstanceSelected(ElementSave arg1, InstanceSave instance)
         {
             if(control != null)
+            {
+                RefreshCodeDisplay();
+            }
+        }
+
+        private void HandleElementSelected(ElementSave element)
+        {
+            if (control != null)
             {
                 RefreshCodeDisplay();
             }
