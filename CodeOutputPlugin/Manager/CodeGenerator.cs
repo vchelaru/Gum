@@ -71,6 +71,7 @@ namespace CodeOutputPlugin.Manager
 
             var stringBuilder = new StringBuilder();
 
+            FillWithStateEnums(element, stringBuilder, tabCount);
 
             foreach (var instance in element.Instances)
             {
@@ -117,6 +118,26 @@ namespace CodeOutputPlugin.Manager
             stringBuilder.AppendLine(ToTabs(tabCount) + "}");
 
             return stringBuilder.ToString();
+        }
+
+        private static void FillWithStateEnums(ElementSave element, StringBuilder stringBuilder, int tabCount)
+        {
+            // for now we'll just do categories. We may need to get uncategorized at some point...
+            foreach(var category in element.Categories)
+            {
+                string enumName = category.Name;
+
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"public enum {category.Name}");
+                stringBuilder.AppendLine("{");
+                tabCount++;
+
+                foreach(var state in category.States)
+                {
+                    stringBuilder.AppendLine(ToTabs(tabCount) + $"{state.Name},");
+                }
+
+                stringBuilder.AppendLine("}");
+            }
         }
 
         private static void FillWithExposedVariables(ElementSave element, StringBuilder stringBuilder, VisualApi visualApi, int tabCount)
