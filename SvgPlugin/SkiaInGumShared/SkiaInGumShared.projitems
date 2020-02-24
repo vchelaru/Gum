@@ -10,6 +10,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Renderables\RenderableCircle.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Renderables\RenderableRichText.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Renderables\RenderableRoundedRectangle.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Renderables\RenderableSkiaObject.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Renderables\RenderableSvg.cs" />

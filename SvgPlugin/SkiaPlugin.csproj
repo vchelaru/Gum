@@ -53,10 +53,13 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="HarfBuzzSharp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
+      <HintPath>..\packages\HarfBuzzSharp.2.6.1\lib\net45\HarfBuzzSharp.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Xna.Framework, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86" />
     <Reference Include="Microsoft.Xna.Framework.Graphics, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86" />
-    <Reference Include="SkiaSharp, Version=1.60.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
-      <HintPath>..\packages\SkiaSharp.1.60.0\lib\net45\SkiaSharp.dll</HintPath>
+    <Reference Include="SkiaSharp, Version=1.68.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
+      <HintPath>..\packages\SkiaSharp.1.68.1.1\lib\net45\SkiaSharp.dll</HintPath>
     </Reference>
     <Reference Include="SkiaSharp.Extended, Version=1.60.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
       <HintPath>..\packages\SkiaSharp.Extended.1.60.0\lib\netstandard2.0\SkiaSharp.Extended.dll</HintPath>
@@ -87,6 +90,9 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
+    <Reference Include="Topten.RichTextKit, Version=0.1.118.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Topten.RichTextKit.0.1.118\lib\net45\Topten.RichTextKit.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="MainSvgPlugin.cs" />
@@ -149,11 +155,13 @@ IF NOT EXIST "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetNa
 IF NOT EXIST "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)\x86" md "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)\x86"
 </PostBuildEvent>
   </PropertyGroup>
-  <Import Project="..\packages\SkiaSharp.1.60.0\build\net45\SkiaSharp.targets" Condition="Exists('..\packages\SkiaSharp.1.60.0\build\net45\SkiaSharp.targets')" />
+  <Import Project="..\packages\SkiaSharp.1.68.1.1\build\net45\SkiaSharp.targets" Condition="Exists('..\packages\SkiaSharp.1.68.1.1\build\net45\SkiaSharp.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\SkiaSharp.1.60.0\build\net45\SkiaSharp.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\SkiaSharp.1.60.0\build\net45\SkiaSharp.targets'))" />
+    <Error Condition="!Exists('..\packages\SkiaSharp.1.68.1.1\build\net45\SkiaSharp.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\SkiaSharp.1.68.1.1\build\net45\SkiaSharp.targets'))" />
+    <Error Condition="!Exists('..\packages\HarfBuzzSharp.2.6.1\build\net45\HarfBuzzSharp.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\HarfBuzzSharp.2.6.1\build\net45\HarfBuzzSharp.targets'))" />
   </Target>
+  <Import Project="..\packages\HarfBuzzSharp.2.6.1\build\net45\HarfBuzzSharp.targets" Condition="Exists('..\packages\HarfBuzzSharp.2.6.1\build\net45\HarfBuzzSharp.targets')" />
 </Project>
