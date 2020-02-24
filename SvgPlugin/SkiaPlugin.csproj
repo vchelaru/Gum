@@ -93,10 +93,6 @@
     <Compile Include="Managers\DefaultStateManager.cs" />
     <Compile Include="Managers\StandardAdder.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Renderables\RenderableCircle.cs" />
-    <Compile Include="Renderables\RenderableRoundedRectangle.cs" />
-    <Compile Include="Renderables\RenderableSkiaObject.cs" />
-    <Compile Include="Renderables\RenderableSvg.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\GumDataTypes\GumDataTypes.csproj">
@@ -127,6 +123,7 @@
     <EmbeddedResource Include="Embedded\RoundedRectangle.gutx" />
     <None Include="packages.config" />
   </ItemGroup>
+  <Import Project="SkiaInGumShared\SkiaInGumShared.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>echo Copying to "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)\"
