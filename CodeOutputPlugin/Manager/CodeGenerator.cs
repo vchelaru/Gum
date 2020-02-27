@@ -204,14 +204,22 @@ namespace CodeOutputPlugin.Manager
 
             foreach(var exposedVariable in exposedVariables)
             {
-                FillWithExposedVariable(exposedVariable, stringBuilder, tabCount);
+                FillWithExposedVariable(exposedVariable, element, stringBuilder, tabCount);
                 stringBuilder.AppendLine();
             }
         }
 
-        private static void FillWithExposedVariable(VariableSave exposedVariable, StringBuilder stringBuilder, int tabCount)
+        private static void FillWithExposedVariable(VariableSave exposedVariable, ElementSave container, StringBuilder stringBuilder, int tabCount)
         {
-            stringBuilder.AppendLine(ToTabs(tabCount) + $"public {exposedVariable.Type} {exposedVariable.ExposedAsName}");
+            var type = exposedVariable.Type;
+
+            if(exposedVariable.IsState(container, out ElementSave stateContainer, out StateSaveCategory category))
+            {
+                var stateContainerType = GetClassNameForType(stateContainer.Name, VisualApi.Gum);
+                type = $"{stateContainerType}.{category.Name}";
+            }
+
+            stringBuilder.AppendLine(ToTabs(tabCount) + $"public {type} {exposedVariable.ExposedAsName}");
             stringBuilder.AppendLine(ToTabs(tabCount) + "{");
             tabCount++;
             stringBuilder.AppendLine(ToTabs(tabCount) + $"get => {exposedVariable.Name};");
