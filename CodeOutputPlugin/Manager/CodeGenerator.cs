@@ -29,6 +29,8 @@ namespace CodeOutputPlugin.Manager
 
             FillWithStateEnums(element, stringBuilder, tabCount);
 
+            FillWithCurrentState(element, stringBuilder, tabCount);
+
             foreach (var instance in element.Instances)
             {
                 FillWithInstanceDeclaration(instance, stringBuilder, visualApi, tabCount);
@@ -78,6 +80,16 @@ namespace CodeOutputPlugin.Manager
 
         public static string GetCodeForState(ElementSave container, StateSave stateSave, VisualApi visualApi)
         {
+            var stringBuilder = new StringBuilder();
+
+            FillWithVariablesInState(container, stateSave, visualApi, stringBuilder, 0);
+
+            var code = stringBuilder.ToString();
+            return code;
+        }
+
+        private static void FillWithVariablesInState(ElementSave container, StateSave stateSave, VisualApi visualApi, StringBuilder stringBuilder, int tabCount)
+        {
             VariableSave[] variablesToConsider = stateSave.Variables
                 // make "Parent" first
                 .Where(item => item.GetRootName() != "Parent")
@@ -85,7 +97,6 @@ namespace CodeOutputPlugin.Manager
 
             string last = null;
 
-            var stringBuilder = new StringBuilder();
             foreach (var variable in variablesToConsider)
             {
                 InstanceSave instance = null;
@@ -97,27 +108,24 @@ namespace CodeOutputPlugin.Manager
                     instance = container.GetInstance(instanceName);
                 }
 
-                if(string.IsNullOrWhiteSpace(last) == false && last != instanceName)
+                if (string.IsNullOrWhiteSpace(last) == false && last != instanceName)
                 {
                     stringBuilder.AppendLine();
                 }
 
-                if(instance != null)
+                if (instance != null)
                 {
                     var codeLine = GetCodeLine(instance, variable, visualApi);
-                    stringBuilder.AppendLine(codeLine);
+                    stringBuilder.AppendLine(ToTabs(tabCount) + codeLine);
 
                     var suffixCodeLine = GetSuffixCodeLine(instance, variable, visualApi);
                     if (!string.IsNullOrEmpty(suffixCodeLine))
                     {
-                        stringBuilder.AppendLine(suffixCodeLine);
+                        stringBuilder.AppendLine(ToTabs(tabCount) + suffixCodeLine);
                     }
                 }
                 last = instanceName;
             }
-
-            var code = stringBuilder.ToString();
-            return code;
         }
 
         private static void FillWithStateEnums(ElementSave element, StringBuilder stringBuilder, int tabCount)
@@ -137,6 +145,54 @@ namespace CodeOutputPlugin.Manager
                 }
 
                 stringBuilder.AppendLine("}");
+                tabCount--;
+            }
+        }
+
+        private static void FillWithCurrentState(ElementSave element, StringBuilder stringBuilder, int tabCount)
+        {
+            foreach (var category in element.Categories)
+            {
+                stringBuilder.AppendLine();
+                string enumName = category.Name;
+
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"{category.Name} mCurrent{category.Name}State;");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"public {category.Name} Current{category.Name}State");
+
+                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+                tabCount++;
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"get => mCurrent{category.Name}State;");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"set");
+
+                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+                tabCount++;
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"mCurrent{category.Name}State = value;");
+
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"switch (value)");
+                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+                tabCount++;
+
+                foreach(var state in category.States)
+                {
+                    stringBuilder.AppendLine(ToTabs(tabCount) + $"case {category.Name}.{state.Name}:");
+                    tabCount++;
+
+                    FillWithVariablesInState(element, state, VisualApi.Gum, stringBuilder, tabCount);
+
+                    stringBuilder.AppendLine(ToTabs(tabCount) + $"break;");
+                    tabCount--;
+                }
+
+
+                tabCount--;
+                stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+
+
+                tabCount--;
+                stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+
+                tabCount--;
+                stringBuilder.AppendLine(ToTabs(tabCount) + "}");
             }
         }
 
@@ -260,7 +316,10 @@ namespace CodeOutputPlugin.Manager
 
             string className = GetClassNameForType(instance.BaseType, visualApi);
 
-            stringBuilder.AppendLine($"{tabs}{className} {instance.Name};");
+            bool isPublic = true;
+            string accessString = isPublic ? "public " : "";
+
+            stringBuilder.AppendLine($"{tabs}{accessString}{className} {instance.Name};");
         }
 
         private static string GetClassNameForType(string type, VisualApi visualApi)

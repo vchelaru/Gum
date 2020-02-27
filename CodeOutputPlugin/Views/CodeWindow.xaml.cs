@@ -24,5 +24,29 @@ namespace CodeOutputPlugin.Views
         {
             InitializeComponent();
         }
+
+        private void CopyButtonClicked(object sender, RoutedEventArgs e)
+        {
+            TextBoxInstance.Focus();
+            TextBoxInstance.SelectAll();
+            if (!string.IsNullOrEmpty(TextBoxInstance.Text))
+            {
+                // from: https://stackoverflow.com/questions/68666/clipbrd-e-cant-open-error-when-setting-the-clipboard-from-net
+                for (int i = 0; i < 10; i++)
+                {
+                    try
+                    {
+                        Clipboard.SetText(TextBoxInstance.Text);
+                        return;
+                    }
+                    catch { }
+                    System.Threading.Thread.Sleep(10);
+                }
+
+
+
+
+            }
+        }
     }
 }

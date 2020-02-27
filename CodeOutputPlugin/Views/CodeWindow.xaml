@@ -11,10 +11,19 @@
             <RowDefinition Height="Auto"></RowDefinition>
             <RowDefinition Height="*"></RowDefinition>
         </Grid.RowDefinitions>
-        <StackPanel>
-            <RadioButton VerticalContentAlignment="Center" IsChecked="{Binding IsSelectedObjectSelected}">Selected Object</RadioButton>
-            <RadioButton VerticalContentAlignment="Center" IsChecked="{Binding IsSelectedStateSelected}">Selected State</RadioButton>
-        </StackPanel>
-        <TextBox ScrollViewer.VerticalScrollBarVisibility="Auto" Grid.Row="1" Text="{Binding Code}"></TextBox>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"></ColumnDefinition>
+                <ColumnDefinition></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            <StackPanel Orientation="Horizontal" Margin="0,0,6,0">
+                <Button Click="CopyButtonClicked">Copy</Button>
+            </StackPanel>
+            <StackPanel Grid.Column="1">
+                <RadioButton VerticalContentAlignment="Center" IsChecked="{Binding IsSelectedObjectSelected}">Selected Object</RadioButton>
+                <RadioButton VerticalContentAlignment="Center" IsChecked="{Binding IsSelectedStateSelected}">Selected State</RadioButton>
+            </StackPanel>
+        </Grid>
+        <TextBox x:Name="TextBoxInstance" ScrollViewer.VerticalScrollBarVisibility="Auto" Grid.Row="1" Text="{Binding Code}"></TextBox>
     </Grid>
 </UserControl>
