@@ -67,7 +67,7 @@ namespace CodeOutputPlugin.Manager
 
             foreach (var instance in element.Instances)
             {
-                FillWithVariableAssignments(instance, visualApi, stringBuilder, tabCount);
+                FillWithVariableAssignments(instance, element, visualApi, stringBuilder, tabCount);
                 stringBuilder.AppendLine();
             }
             tabCount--;
@@ -115,7 +115,7 @@ namespace CodeOutputPlugin.Manager
 
                 if (instance != null)
                 {
-                    var codeLine = GetCodeLine(instance, variable, visualApi);
+                    var codeLine = GetCodeLine(instance, variable, container, visualApi);
                     stringBuilder.AppendLine(ToTabs(tabCount) + codeLine);
 
                     var suffixCodeLine = GetSuffixCodeLine(instance, variable, visualApi);
@@ -156,17 +156,17 @@ namespace CodeOutputPlugin.Manager
                 stringBuilder.AppendLine();
                 string enumName = category.Name;
 
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"{category.Name} mCurrent{category.Name}State;");
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"public {category.Name} Current{category.Name}State");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"{category.Name} m{category.Name}State;");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"public {category.Name} {category.Name}State");
 
                 stringBuilder.AppendLine(ToTabs(tabCount) + "{");
                 tabCount++;
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"get => mCurrent{category.Name}State;");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"get => m{category.Name}State;");
                 stringBuilder.AppendLine(ToTabs(tabCount) + $"set");
 
                 stringBuilder.AppendLine(ToTabs(tabCount) + "{");
                 tabCount++;
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"mCurrent{category.Name}State = value;");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"m{category.Name}State = value;");
 
                 stringBuilder.AppendLine(ToTabs(tabCount) + $"switch (value)");
                 stringBuilder.AppendLine(ToTabs(tabCount) + "{");
@@ -222,7 +222,7 @@ namespace CodeOutputPlugin.Manager
 
         }
 
-        public static string GetCodeForInstance(InstanceSave instance, VisualApi visualApi)
+        public static string GetCodeForInstance(InstanceSave instance, ElementSave element, VisualApi visualApi)
         {
             var stringBuilder = new StringBuilder();
 
@@ -230,7 +230,7 @@ namespace CodeOutputPlugin.Manager
 
             FillWithInstanceInstantiation(instance, visualApi, stringBuilder);
 
-            FillWithVariableAssignments(instance, visualApi, stringBuilder);
+            FillWithVariableAssignments(instance, element, visualApi, stringBuilder);
 
             var code = stringBuilder.ToString();
             return code;
@@ -267,7 +267,7 @@ namespace CodeOutputPlugin.Manager
 
             foreach (var variable in variablesToConsider)
             {
-                var codeLine = GetCodeLine(null, variable, visualApi);
+                var codeLine = GetCodeLine(null, variable, element, visualApi);
                 stringBuilder.AppendLine(tabs + codeLine);
 
                 var suffixCodeLine = GetSuffixCodeLine(null, variable, visualApi);
@@ -278,7 +278,7 @@ namespace CodeOutputPlugin.Manager
             }
         }
 
-        private static void FillWithVariableAssignments(InstanceSave instance, VisualApi visualApi, StringBuilder stringBuilder, int tabCount = 0)
+        private static void FillWithVariableAssignments(InstanceSave instance, ElementSave container, VisualApi visualApi, StringBuilder stringBuilder, int tabCount = 0)
         {
             VariableSave[] variablesToConsider = GetVariablesToConsider(instance)
                 // make "Parent" first
@@ -299,7 +299,7 @@ namespace CodeOutputPlugin.Manager
 
             foreach (var variable in variablesToConsider)
             {
-                var codeLine = GetCodeLine(instance, variable, visualApi);
+                var codeLine = GetCodeLine(instance, variable, container, visualApi);
                 stringBuilder.AppendLine(tabs + codeLine);
 
                 var suffixCodeLine = GetSuffixCodeLine(instance, variable, visualApi);
@@ -351,7 +351,7 @@ namespace CodeOutputPlugin.Manager
             return null;
         }
 
-        private static string GetCodeLine(InstanceSave instance, VariableSave variable, VisualApi visualApi)
+        private static string GetCodeLine(InstanceSave instance, VariableSave variable, ElementSave container, VisualApi visualApi)
         {
             string instancePrefix = instance != null ? $"{instance.Name}." : "this.";
 
@@ -365,7 +365,7 @@ namespace CodeOutputPlugin.Manager
                 }
                 else
                 {
-                    return $"{instancePrefix}{GetGumVariableName(variable)} = {VariableValueToGumCodeValue(variable)};";
+                    return $"{instancePrefix}{GetGumVariableName(variable, container)} = {VariableValueToGumCodeValue(variable, container)};";
                 }
 
             }
@@ -386,7 +386,7 @@ namespace CodeOutputPlugin.Manager
             return null;
         }
 
-        private static string VariableValueToGumCodeValue(VariableSave variable)
+        private static string VariableValueToGumCodeValue(VariableSave variable, ElementSave container)
         {
             if(variable.Value is float asFloat)
             {
@@ -397,6 +397,11 @@ namespace CodeOutputPlugin.Manager
                 if(variable.GetRootName() == "Parent")
                 {
                     return variable.Value.ToString();
+                }
+                else if(variable.IsState(container, out ElementSave categoryContainer, out StateSaveCategory category))
+                {
+                    var containerClassName = GetClassNameForType(categoryContainer.Name, VisualApi.Gum);
+                    return $"{containerClassName}.{category.Name}.{variable.Value}";
                 }
                 else
                 {
@@ -471,9 +476,16 @@ namespace CodeOutputPlugin.Manager
             }
         }
 
-        private static object GetGumVariableName(VariableSave variable)
+        private static object GetGumVariableName(VariableSave variable, ElementSave container)
         {
-            return variable.GetRootName().Replace(" ", "");
+            if(variable.IsState(container))
+            {
+                return variable.GetRootName().Replace(" ", "");
+            }
+            else
+            {
+                return variable.GetRootName().Replace(" ", "");
+            }
         }
 
         private static string GetXamarinFormsVariableName(VariableSave variable)

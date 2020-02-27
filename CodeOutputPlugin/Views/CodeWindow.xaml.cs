@@ -32,7 +32,7 @@ namespace CodeOutputPlugin.Views
             if (!string.IsNullOrEmpty(TextBoxInstance.Text))
             {
                 // from: https://stackoverflow.com/questions/68666/clipbrd-e-cant-open-error-when-setting-the-clipboard-from-net
-                for (int i = 0; i < 10; i++)
+                for (int i = 0; i < 11; i++)
                 {
                     try
                     {
@@ -40,7 +40,7 @@ namespace CodeOutputPlugin.Views
                         return;
                     }
                     catch { }
-                    System.Threading.Thread.Sleep(10);
+                    System.Threading.Thread.Sleep(15);
                 }
 
 

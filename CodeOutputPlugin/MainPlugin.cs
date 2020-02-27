@@ -107,8 +107,8 @@ namespace CodeOutputPlugin
 
                     if (instance != null)
                     {
-                        string gumCode = CodeGenerator.GetCodeForInstance(instance, VisualApi.Gum);
-                        string xamarinFormsCode = CodeGenerator.GetCodeForInstance(instance, VisualApi.XamarinForms);
+                        string gumCode = CodeGenerator.GetCodeForInstance(instance, selectedElement, VisualApi.Gum);
+                        string xamarinFormsCode = CodeGenerator.GetCodeForInstance(instance, selectedElement, VisualApi.XamarinForms);
                         viewModel.Code = $"//Gum Code:\n{gumCode}\n\n//Xamarin Forms Code:\n{xamarinFormsCode}";
                     }
                     else if(selectedElement != null)
