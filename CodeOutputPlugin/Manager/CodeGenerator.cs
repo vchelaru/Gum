@@ -21,50 +21,6 @@ namespace CodeOutputPlugin.Manager
     public static class CodeGenerator
     {
 
-        public static string GetCodeForState(ElementSave container, StateSave stateSave, VisualApi visualApi)
-        {
-            VariableSave[] variablesToConsider = stateSave.Variables
-                // make "Parent" first
-                .Where(item => item.GetRootName() != "Parent")
-                .ToArray();
-
-            string last = null;
-
-            var stringBuilder = new StringBuilder();
-            foreach (var variable in variablesToConsider)
-            {
-                InstanceSave instance = null;
-
-                var instanceName = variable.SourceObject;
-
-                if (instanceName != null)
-                {
-                    instance = container.GetInstance(instanceName);
-                }
-
-                if(string.IsNullOrWhiteSpace(last) == false && last != instanceName)
-                {
-                    stringBuilder.AppendLine();
-                }
-
-                if(instance != null)
-                {
-                    var codeLine = GetCodeLine(instance, variable, visualApi);
-                    stringBuilder.AppendLine(codeLine);
-
-                    var suffixCodeLine = GetSuffixCodeLine(instance, variable, visualApi);
-                    if (!string.IsNullOrEmpty(suffixCodeLine))
-                    {
-                        stringBuilder.AppendLine(suffixCodeLine);
-                    }
-                }
-                last = instanceName;
-            }
-
-            var code = stringBuilder.ToString();
-            return code;
-        }
-
         public static string GetCodeForElement(ElementSave element, VisualApi visualApi)
         {
             int tabCount = 0;
@@ -118,6 +74,50 @@ namespace CodeOutputPlugin.Manager
             stringBuilder.AppendLine(ToTabs(tabCount) + "}");
 
             return stringBuilder.ToString();
+        }
+
+        public static string GetCodeForState(ElementSave container, StateSave stateSave, VisualApi visualApi)
+        {
+            VariableSave[] variablesToConsider = stateSave.Variables
+                // make "Parent" first
+                .Where(item => item.GetRootName() != "Parent")
+                .ToArray();
+
+            string last = null;
+
+            var stringBuilder = new StringBuilder();
+            foreach (var variable in variablesToConsider)
+            {
+                InstanceSave instance = null;
+
+                var instanceName = variable.SourceObject;
+
+                if (instanceName != null)
+                {
+                    instance = container.GetInstance(instanceName);
+                }
+
+                if(string.IsNullOrWhiteSpace(last) == false && last != instanceName)
+                {
+                    stringBuilder.AppendLine();
+                }
+
+                if(instance != null)
+                {
+                    var codeLine = GetCodeLine(instance, variable, visualApi);
+                    stringBuilder.AppendLine(codeLine);
+
+                    var suffixCodeLine = GetSuffixCodeLine(instance, variable, visualApi);
+                    if (!string.IsNullOrEmpty(suffixCodeLine))
+                    {
+                        stringBuilder.AppendLine(suffixCodeLine);
+                    }
+                }
+                last = instanceName;
+            }
+
+            var code = stringBuilder.ToString();
+            return code;
         }
 
         private static void FillWithStateEnums(ElementSave element, StringBuilder stringBuilder, int tabCount)

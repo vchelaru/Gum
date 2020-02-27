@@ -19,9 +19,9 @@ namespace SkiaPlugin
     {
         #region Fields/Properties
 
-        public override string FriendlyName => "SVG (Skia) Plugin";
+        public override string FriendlyName => "Skia Plugin";
 
-        public override Version Version => new Version(1, 0);
+        public override Version Version => new Version(1, 1);
 
         #endregion
 
