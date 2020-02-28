@@ -40,6 +40,8 @@ namespace Gum.Wireframe
         float mRotation;
 
         LineRectangle[] mHandles = new LineRectangle[8];
+        LineRectangle[] mInnerHandles = new LineRectangle[8];
+
 
 
         OriginDisplay originDisplay;
@@ -102,10 +104,10 @@ namespace Gum.Wireframe
                 for (int i = 0; i < mHandles.Length; i++)
                 {
                     mHandles[i].Visible = value;
+                    mInnerHandles[i].Visible = true;
                 }
 
                 originDisplay.Visible = value && ShowOrigin;
-
             }
         }
 
@@ -129,6 +131,12 @@ namespace Gum.Wireframe
                 mHandles[i].Height = WidthAtNoZoom;
                 ShapeManager.Self.Add(mHandles[i], layer);
 
+                mInnerHandles[i] = new LineRectangle();
+                mInnerHandles[i].IsDotted = false;
+                mInnerHandles[i].Width = WidthAtNoZoom - 2;
+                mInnerHandles[i].Height = WidthAtNoZoom - 2;
+                mInnerHandles[i].Color = Color.Black;
+                ShapeManager.Self.Add(mInnerHandles[i], layer);
             }
 
             originDisplay = new OriginDisplay(layer);
@@ -142,6 +150,7 @@ namespace Gum.Wireframe
             for (int i = 0; i < mHandles.Length; i++)
             {
                 ShapeManager.Self.Remove(mHandles[i]);
+                ShapeManager.Self.Remove(mInnerHandles[i]);
             }
 
             originDisplay.Destroy();
@@ -217,16 +226,10 @@ namespace Gum.Wireframe
                     var asGue = first as GraphicalUiElement;
 
                     originDisplay.SetOriginXPosition(asGue);
-
                 }
-
-
-
             }
 
             UpdateToProperties();
-
-
         }
 
         public void UpdateHandleRadius()
@@ -235,6 +238,11 @@ namespace Gum.Wireframe
             {
                 handle.Width = WidthAtNoZoom / Renderer.Self.Camera.Zoom;
                 handle.Height = WidthAtNoZoom / Renderer.Self.Camera.Zoom;
+            }
+            foreach(var innerHandle in mInnerHandles)
+            {
+                innerHandle.Width = (WidthAtNoZoom-2) / Renderer.Self.Camera.Zoom;
+                innerHandle.Height = (WidthAtNoZoom-2) / Renderer.Self.Camera.Zoom;
             }
         }
 
@@ -269,9 +277,9 @@ namespace Gum.Wireframe
 
             Matrix rotationMatrix = Matrix.CreateRotationZ(-MathHelper.ToRadians( mRotation ));
 
-
-            foreach(var handle in mHandles)
+            for(int i = 0; i < mHandles.Length; i++)
             {
+                var handle = mHandles[i];
                 var xComponent = handle.X * rotationMatrix.Right;
                 var yComponent = handle.Y * rotationMatrix.Up;
 
@@ -279,8 +287,18 @@ namespace Gum.Wireframe
                 handle.Y = Y + xComponent.Y + yComponent.Y;
 
                 handle.Rotation = mRotation;
-            }
 
+                var innerHandle = mInnerHandles[i];
+                innerHandle.Rotation = mRotation;
+
+                var innerHandlePosition = new Vector3( handle.Position, 0);
+                // shift 1 pixel
+                innerHandlePosition += rotationMatrix.Right / Renderer.Self.Camera.Zoom;
+                innerHandlePosition += rotationMatrix.Up / Renderer.Self.Camera.Zoom;
+                innerHandle.Position.X = innerHandlePosition.X;
+                innerHandle.Position.Y = innerHandlePosition.Y;
+
+            }
         }
 
         #endregion
