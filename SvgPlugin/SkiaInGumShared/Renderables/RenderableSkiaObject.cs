@@ -16,6 +16,8 @@ namespace SkiaPlugin.Renderables
 {
     public abstract class RenderableSkiaObject : IRenderableIpso, IVisible
     {
+        #region Fields/Properties
+
         protected Microsoft.Xna.Framework.Vector2 Position;
 
         IRenderableIpso mParent;
@@ -85,8 +87,11 @@ namespace SkiaPlugin.Renderables
             get => width;
             set
             {
-                width = value;
-                needsUpdate = true;
+                if(value != width)
+                {
+                    width = value;
+                    needsUpdate = true;
+                }
             }
         }
 
@@ -96,8 +101,11 @@ namespace SkiaPlugin.Renderables
             get => height;
             set
             {
-                height = value;
-                needsUpdate = true;
+                if(value != height)
+                {
+                    height = value;
+                    needsUpdate = true;
+                }
             }
         }
 
@@ -153,6 +161,11 @@ namespace SkiaPlugin.Renderables
 
         protected bool needsUpdate = true;
 
+        protected virtual float XSizeSpillover => 0;
+        protected virtual float YSizeSpillover => 0;
+
+        #endregion
+
         #region IVisible Implementation
 
         public bool Visible
@@ -197,7 +210,23 @@ namespace SkiaPlugin.Renderables
         {
             if(AbsoluteVisible)
             {
+                var oldX = this.X;
+                var oldY = this.Y;
+                var oldWidth = this.Width;
+                var oldHeight = this.Height;
+
+                this.X -= XSizeSpillover;
+                this.Y -= YSizeSpillover;
+                // use fields not props, to not trigger a needsUpdate = true
+                this.width += XSizeSpillover * 2;
+                this.height += YSizeSpillover * 2;
+
                 Sprite.Render(managers, spriteRenderer, this, texture, Color.White, rotationInDegrees: Rotation);
+
+                this.X = oldX;
+                this.Y = oldY;
+                this.width = oldWidth;
+                this.height = oldHeight;
             }
         }
 
@@ -218,11 +247,11 @@ namespace SkiaPlugin.Renderables
 
                 var colorType = SKImageInfo.PlatformColorType;
 
-                var widthToUse = Math.Min(2048, Width);
-                var heightToUse = Math.Min(2048, Height);
+                var widthToUse = Math.Min(2048, Width + XSizeSpillover * 2);
+                var heightToUse = Math.Min(2048, Height + YSizeSpillover * 2);
 
                 //var imageInfo = new SKImageInfo((int)widthToUse, (int)heightToUse, colorType, SKAlphaType.Unpremul);
-                var imageInfo = new SKImageInfo((int)Width, (int)Height, colorType, SKAlphaType.Premul);
+                var imageInfo = new SKImageInfo((int)widthToUse, (int)heightToUse, colorType, SKAlphaType.Premul);
                 using (var surface = SKSurface.Create(imageInfo))
                 {
                     DrawToSurface(surface);

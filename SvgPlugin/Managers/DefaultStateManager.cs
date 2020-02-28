@@ -71,9 +71,23 @@ namespace SkiaPlugin.Managers
                 StandardElementsManager.AddDimensionsVariables(roundedRectangleState, 64, 64,
                     StandardElementsManager.DimensionVariableAction.ExcludeFileOptions);
                 StandardElementsManager.AddColorVariables(roundedRectangleState);
+                AddDropshadowVariables(roundedRectangleState);
             }
 
             return roundedRectangleState;
+        }
+
+        static void AddDropshadowVariables(StateSave stateSave)
+        {
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "HasDropshadow", Category = "Dropshadow" });
+
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0, Name = "DropshadowOffsetX", Category = "Dropshadow" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 3, Name = "DropshadowOffsetY", Category = "Dropshadow" });
+
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0, Name = "DropshadowBlurX", Category = "Dropshadow" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 3, Name = "DropshadowBlurY", Category = "Dropshadow" });
+
+
         }
     }
 }
