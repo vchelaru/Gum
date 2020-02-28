@@ -336,7 +336,17 @@ namespace Gum.Wireframe
 
                 string type = ses.Name;
 
-                if (type == "Sprite" || type == "ColoredRectangle" || type == "NineSlice" || type == "Text" || type == "Circle" || type == "Rectangle")
+                var renderable = PluginManager.Self.CreateRenderableForType(type);
+
+                if(renderable != null)
+                {
+                    rootIpso.SetContainedObject(renderable);
+                    rootIpso.Tag = instance;
+                    rootIpso.Component.Name = instance.Name;
+                    rootIpso.Component.Tag = instance;
+                }
+
+                else if (type == "Sprite" || type == "ColoredRectangle" || type == "NineSlice" || type == "Text" || type == "Circle" || type == "Rectangle")
                 {
                     ElementSave instanceBase = ObjectFinder.Self.GetElementSave(instance.BaseType);
                     rootIpso.CreateGraphicalComponent(instanceBase, null);
@@ -352,6 +362,8 @@ namespace Gum.Wireframe
                 }
                 else
                 {
+                    // give the plugin manager a shot at it:
+
                     CreateRectangleFor(instance, elementStack, rootIpso);
                 }
 

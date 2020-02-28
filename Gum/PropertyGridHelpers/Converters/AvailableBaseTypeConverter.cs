@@ -33,10 +33,12 @@ namespace Gum.PropertyGridHelpers.Converters
         {
             List<string> values = new List<string>();
 
-            if(elementViewing is ScreenSave)
+            var gumProject = ProjectManager.Self.GumProjectSave;
+
+            if (elementViewing is ScreenSave)
             {
                 values.Add("");
-                foreach(ScreenSave screenSave in ProjectManager.Self.GumProjectSave.Screens)
+                foreach(ScreenSave screenSave in gumProject.Screens)
                 {
                     if(elementViewing.IsOfType(screenSave.Name) == false)
                     {
@@ -46,9 +48,15 @@ namespace Gum.PropertyGridHelpers.Converters
             }
             else
             {
-                values.AddRange(Enum.GetNames(typeof(StandardElementTypes)));
+                // We used to use this, but why not just use the standard elements becuase those 
+                // can be modified by plugins:
+                //values.AddRange(Enum.GetNames(typeof(StandardElementTypes)));
+                foreach(var standard in gumProject.StandardElements)
+                {
+                    values.Add(standard.Name);
+                }
 
-                foreach (ComponentSave componentSave in ProjectManager.Self.GumProjectSave.Components)
+                foreach (ComponentSave componentSave in gumProject.Components)
                 {
                     //var shouldShow = element == null || element.IsOfType(componentSave.Name) == false || element.Name == instance?.BaseType;
                     var shouldShow = elementViewing == null || elementViewing.Name != componentSave.Name || elementViewing.Name == instance?.BaseType;
