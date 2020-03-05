@@ -42,7 +42,7 @@ namespace CodeOutputPlugin.Manager
 
             GenerateConstructor(element, visualApi, tabCount, stringBuilder);
 
-            stringBuilder.AppendLine(ToTabs(tabCount) + "private partial void CustomInitialize();");
+            stringBuilder.AppendLine(ToTabs(tabCount) + "partial void CustomInitialize();");
 
 
             return stringBuilder.ToString();
@@ -322,7 +322,14 @@ namespace CodeOutputPlugin.Manager
             foreach (var variable in variablesToConsider)
             {
                 var codeLine = GetCodeLine(instance, variable, container, visualApi);
-                stringBuilder.AppendLine(tabs + codeLine);
+
+                // the line of code could be " ", a string with a space. This happens
+                // if we want to skip a variable so we dont return null or empty.
+                // But we also don't want a ton of spaces generated.
+                if(!string.IsNullOrWhiteSpace(codeLine))
+                {
+                    stringBuilder.AppendLine(tabs + codeLine);
+                }
 
                 var suffixCodeLine = GetSuffixCodeLine(instance, variable, visualApi);
                 if (!string.IsNullOrEmpty(suffixCodeLine))
@@ -381,7 +388,7 @@ namespace CodeOutputPlugin.Manager
             {
                 var fullLineReplacement = TryGetFullGumLineReplacement(instance, variable);
 
-                if(!string.IsNullOrEmpty(fullLineReplacement))
+                if(fullLineReplacement != null)
                 {
                     return fullLineReplacement;
                 }
@@ -393,9 +400,124 @@ namespace CodeOutputPlugin.Manager
             }
             else // xamarin forms
             {
-                return $"{instancePrefix}{GetXamarinFormsVariableName(variable)} = {VariableValueToXamarinFormsCodeValue(variable)};";
+                var fullLineReplacement = TryGetFullXamarinFormsLineReplacement(instance, container, variable);
+                if(fullLineReplacement != null)
+                {
+                    return fullLineReplacement;
+                }
+                else
+                {
+                    return $"{instancePrefix}{GetXamarinFormsVariableName(variable)} = {VariableValueToXamarinFormsCodeValue(variable)};";
+                }
 
             }
+        }
+
+        private static string TryGetFullXamarinFormsLineReplacement(InstanceSave instance, ElementSave container, VariableSave variable)
+        {
+            var rootName = variable.GetRootName();
+
+            if(rootName == "X")
+            {
+                var defaultState = container.DefaultState;
+                var variableFinder = new RecursiveVariableFinder(instance, container);
+
+                var x = variableFinder.GetValue<float>("X");
+                var y = variableFinder.GetValue<float>("Y");
+                var width = variableFinder.GetValue<float>("Width");
+                var height = variableFinder.GetValue<float>("Height");
+
+                var xUnits = variableFinder.GetValue<PositionUnitType>("X Units");
+                var yUnits = variableFinder.GetValue<PositionUnitType>("Y Units");
+                var widthUnits = variableFinder.GetValue<DimensionUnitType>("Width Units");
+                var heightUnits = variableFinder.GetValue<DimensionUnitType>("Height Units");
+
+                List<string> proportionalFlags = new List<string>();
+
+
+                if (widthUnits == DimensionUnitType.Percentage)
+                {
+                    width /= 100.0f;
+                    proportionalFlags.Add("AbsoluteLayoutFlags.WidthProportional");
+                }
+                if (heightUnits == DimensionUnitType.Percentage)
+                {
+                    height /= 100.0f;
+                    proportionalFlags.Add("AbsoluteLayoutFlags.HeightProportional");
+                }
+
+                // Xamarin forms uses a weird anchoring system to combine both position and anchor into one value. Gum splits those into two values
+                // We need to convert from the gum units to xamforms units:
+                // for now assume it's all %'s:
+                if(xUnits == PositionUnitType.PercentageWidth)
+                {
+                    x /= 100.0f;
+                    var adjustedCanvasWidth = 1 - width;
+                    if(adjustedCanvasWidth > 0)
+                    {
+                        x /= adjustedCanvasWidth;
+                    }
+                    proportionalFlags.Add("AbsoluteLayoutFlags.XProportional");
+                }
+                if(yUnits == PositionUnitType.PercentageHeight)
+                {
+                    y /= 100.0f;
+                    var adjustedCanvasHeight = 1 - height;
+                    if(adjustedCanvasHeight > 0)
+                    {
+                        y /= adjustedCanvasHeight;
+                    }
+                    proportionalFlags.Add("AbsoluteLayoutFlags.YProportional");
+                }
+                
+
+                var xString = x.ToString(CultureInfo.InvariantCulture) + "f";
+                var yString = y.ToString(CultureInfo.InvariantCulture) + "f";
+                var widthString = width.ToString(CultureInfo.InvariantCulture) + "f";
+                var heightString = height.ToString(CultureInfo.InvariantCulture) + "f";
+
+
+
+                string boundsText =
+                    $"AbsoluteLayout.SetLayoutBounds({instance.Name}, new Rectangle({xString}, {yString}, {widthString}, {heightString}));";
+                string flagsText = null;
+                if(proportionalFlags.Count > 0)
+                {
+                    string flagsArguments = null;
+                    for(int i = 0; i < proportionalFlags.Count; i++)
+                    {
+                        if(i > 0)
+                        {
+                            flagsArguments += " | ";
+                        }
+                        flagsArguments += proportionalFlags[i];
+                    }
+                    flagsText = $"AbsoluteLayout.SetLayoutFlags({instance.Name}, {flagsArguments});";
+                }
+                // assume every object has X, which it won't, so we will have to improve this
+                if(string.IsNullOrWhiteSpace(flagsText))
+                {
+                    return boundsText;
+                }
+                else
+                {
+                    return $"{boundsText}\n{flagsText}";
+                }
+                //AbsoluteLayout.SetLayoutFlags(rightBox, AbsoluteLayoutFlags.PositionProportional);
+
+            }
+            else if(rootName == "Y" || 
+                rootName == "Width" || 
+                rootName == "Height" || 
+                rootName == "Width Units" || 
+                rootName == "Height Units" || 
+                rootName == "X Units" || 
+                rootName == "Y Units")
+            {
+                return " "; // force it to not process these:
+            }
+
+            return null;
         }
 
         private static string TryGetFullGumLineReplacement(InstanceSave instance, VariableSave variable)
