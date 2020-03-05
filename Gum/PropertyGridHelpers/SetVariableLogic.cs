@@ -24,6 +24,9 @@ namespace Gum.PropertyGridHelpers
 {
     public class SetVariableLogic : Singleton<SetVariableLogic>
     {
+
+        public bool AttemptToPersistPositionsOnUnitChanges { get; set; } = true;
+
         static HashSet<string> PropertiesSupportingIncrementalChange = new HashSet<string>
         {
             "Alpha",
@@ -304,7 +307,7 @@ namespace Gum.PropertyGridHelpers
 
 
                     float valueOnObject = 0;
-                    if (stateSave.TryGetValue<float>(GetQualifiedName(variableToSet), out valueOnObject))
+                    if (AttemptToPersistPositionsOnUnitChanges && stateSave.TryGetValue<float>(GetQualifiedName(variableToSet), out valueOnObject))
                     {
 
                         var defaultUnitType = GeneralUnitType.PixelsFromSmall;
@@ -330,7 +333,7 @@ namespace Gum.PropertyGridHelpers
                 }
             }
 
-            if (wasAnythingSet)
+            if (wasAnythingSet && AttemptToPersistPositionsOnUnitChanges)
             {
                 InstanceSave instanceSave = SelectedState.Self.SelectedInstance;
 

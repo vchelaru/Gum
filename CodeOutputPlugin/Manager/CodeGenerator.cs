@@ -40,10 +40,20 @@ namespace CodeOutputPlugin.Manager
             FillWithExposedVariables(element, stringBuilder, visualApi, tabCount);
             // -- no need for AppendLine here since FillWithExposedVariables does it after every variable --
 
+            GenerateConstructor(element, visualApi, tabCount, stringBuilder);
+
+            stringBuilder.AppendLine(ToTabs(tabCount) + "private partial void CustomInitialize();");
+
+
+            return stringBuilder.ToString();
+        }
+
+        private static void GenerateConstructor(ElementSave element, VisualApi visualApi, int tabCount, StringBuilder stringBuilder)
+        {
             var elementName = GetClassNameForType(element.Name, visualApi);
             stringBuilder.AppendLine(ToTabs(tabCount) + $"public {elementName}(bool fullInstantiation = true)");
-            stringBuilder.AppendLine(ToTabs(tabCount) + "{");
 
+            stringBuilder.AppendLine(ToTabs(tabCount) + "{");
             tabCount++;
 
             stringBuilder.AppendLine(ToTabs(tabCount) + "if(fullInstantiation)");
@@ -70,12 +80,16 @@ namespace CodeOutputPlugin.Manager
                 FillWithVariableAssignments(instance, element, visualApi, stringBuilder, tabCount);
                 stringBuilder.AppendLine();
             }
-            tabCount--;
-            stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+
+            stringBuilder.AppendLine(ToTabs(tabCount) + "CustomInitialize();");
+
+
             tabCount--;
             stringBuilder.AppendLine(ToTabs(tabCount) + "}");
 
-            return stringBuilder.ToString();
+
+            tabCount--;
+            stringBuilder.AppendLine(ToTabs(tabCount) + "}");
         }
 
         public static string GetCodeForState(ElementSave container, StateSave stateSave, VisualApi visualApi)

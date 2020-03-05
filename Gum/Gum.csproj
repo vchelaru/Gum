@@ -178,6 +178,7 @@
     <Compile Include="Logic\FileWatch\FileWatchManager.cs" />
     <Compile Include="Managers\GraphicalUiElementManager.cs" />
     <Compile Include="Managers\HotkeyManager.cs" />
+    <Compile Include="Plugins\AlignmentButtons\CommonControlLogic.cs" />
     <Compile Include="Plugins\CirclePlugin\MainCirclePlugin.cs" />
     <Compile Include="Plugins\Errors\AllErrorsViewModel.cs" />
     <Compile Include="Plugins\Errors\ErrorChecker.cs" />
