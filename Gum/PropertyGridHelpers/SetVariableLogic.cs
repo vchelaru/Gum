@@ -31,12 +31,15 @@ namespace Gum.PropertyGridHelpers
             "FlipHorizontal",
             "Green",
             "Height",
+            "Height Units",
+
             "MaxLettersToShow",
             "Red",
             "Rotation",
             "Text",
             "Texture Address",
             "Width",
+            "Width Units",
             "X",
             "X Origin",
             "X Units",
@@ -238,9 +241,6 @@ namespace Gum.PropertyGridHelpers
 
                 if (UnitConverter.TryConvertToGeneralUnit(oldValueAsObject, out oldValue))
                 {
-
-
-
                     IRenderableIpso currentIpso =
                         WireframeObjectManager.Self.GetSelectedRepresentation();
 
@@ -333,12 +333,25 @@ namespace Gum.PropertyGridHelpers
             if (wasAnythingSet)
             {
                 InstanceSave instanceSave = SelectedState.Self.SelectedInstance;
+
+                string unqualifiedVariableToSet = variableToSet;
                 if (SelectedState.Self.SelectedInstance != null)
                 {
                     variableToSet = SelectedState.Self.SelectedInstance.Name + "." + variableToSet;
                 }
 
                 stateSave.SetValue(variableToSet, valueToSet, instanceSave);
+
+                // Force update everything on the spot. We know we can just set this value instead of forcing a full refresh:
+                var gue = WireframeObjectManager.Self.GetSelectedRepresentation();
+
+                if (gue != null)
+                {
+                    gue.SetProperty(unqualifiedVariableToSet, valueToSet);
+                }
+                GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);
+
+
             }
         }
 

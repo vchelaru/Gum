@@ -105,7 +105,7 @@ namespace Gum.DataTypes.Variables
             if (value != null && value is T)
             {
                 result = (T)value;
-                value = true;
+                toReturn = true;
             }
             else
             {

@@ -4705,6 +4705,16 @@ namespace Gum.Wireframe
                     }
                 }
             }
+            else
+            {
+                foreach(var child in this.mWhatThisContains)
+                {
+                    if (child is GraphicalUiElement childGue)
+                    {
+                        childGue.AnimateSelf();
+                    }
+                }
+            }
         }
 
         void UpdateFrameBasedOffOfTimeIntoAnimation()
