@@ -12,7 +12,7 @@
             <RowDefinition Height="Auto"></RowDefinition>
         </Grid.RowDefinitions>
         <Label x:Name="MessageLabel" Content="{Binding Message, FallbackValue=Message for user}"></Label>
-        <ListBox x:Name="ListBox" Grid.Row="1" ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}"></ListBox>
+        <ListBox x:Name="ListBox" Grid.Row="1" MouseDoubleClick="ListBox_MouseDoubleClick" ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}"></ListBox>
         <StackPanel Orientation="Horizontal" FlowDirection="RightToLeft" Grid.Row="2">
             <Button Width="80" Content="OK" IsEnabled="{Binding CanProceed}" x:Name="OkButton" Click="OkButton_Click" />
             <Button Width="80" Content="Cancel" x:Name="CancelButton" Click="CancelButton_Click" />

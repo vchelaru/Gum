@@ -132,5 +132,12 @@ namespace StateAnimationPlugin.Views
             this.Close();
         }
 
+        private void ListBox_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if(SelectedItem != null)
+            {
+                OkButton_Click(null, null);
+            }
+        }
     }
 }
