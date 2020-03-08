@@ -46,7 +46,6 @@ namespace Gum.Logic.FileWatch
             fileSystemWatcher.Created += new FileSystemEventHandler(HandleFileSystemChange);
         }
 
-
         public void EnableWithDirectory(FilePath directoryFilePath)
         {
             var filePathAsString = directoryFilePath.Standardized;

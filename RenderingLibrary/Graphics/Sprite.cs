@@ -598,6 +598,7 @@ namespace RenderingLibrary.Graphics
             SpriteEffects effects = SpriteEffects.None;
 
             var flipHorizontal = ipso.GetAbsoluteFlipHorizontal();
+            var effectiveParentFlipHorizontal = ipso.Parent?.GetAbsoluteFlipHorizontal() ?? false;
 
             if (flipHorizontal)
             {

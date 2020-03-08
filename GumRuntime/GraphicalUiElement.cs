@@ -238,10 +238,21 @@ namespace Gum.Wireframe
                 {
                     return mContainedObjectAsIpso.X;
                 }
-            }
+            } 
             set
             {
                 throw new InvalidOperationException("This is a GraphicalUiElement. You must cast the instance to GraphicalUiElement to set its X so that its XUnits apply.");
+            }
+        }
+
+        float IPositionedSizedObject.Rotation
+        {
+            get => mContainedObjectAsIpso?.Rotation ?? 0;
+            set
+            {
+                throw new InvalidOperationException(
+                    "This is a GraphicalUiElement. You must cast the instance to GraphicalUiElement to set its Rotation so that its layout apply.");
+
             }
         }
 

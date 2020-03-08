@@ -649,14 +649,26 @@ namespace CodeOutputPlugin.Manager
 
         private static VariableSave[] GetVariablesToConsider(InstanceSave instance)
         {
+            var baseElement = Gum.Managers.ObjectFinder.Self.GetElementSave(instance.BaseType);
+            var baseDefaultState = baseElement?.DefaultState;
+            RecursiveVariableFinder baseRecursiveVariableFinder = new RecursiveVariableFinder(baseDefaultState);
+
             var defaultState = SelectedState.Self.SelectedElement.DefaultState;
             var variablesToConsider = defaultState.Variables
                 .Where(item =>
                 {
-                    return
+                    var shouldInclude = 
                         item.Value != null &&
                         item.SetsValue &&
                         item.SourceObject == instance.Name;
+
+                    if(shouldInclude)
+                    {
+                        var foundVariable = baseRecursiveVariableFinder.GetVariable(item.GetRootName());
+                        shouldInclude = foundVariable != null;
+                    }
+
+                    return shouldInclude;
                 })
                 .ToArray();
             return variablesToConsider;

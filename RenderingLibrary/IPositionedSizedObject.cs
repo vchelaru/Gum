@@ -29,7 +29,19 @@ namespace RenderingLibrary
 
         public static Matrix GetAbsoluteRotationMatrix(this IRenderableIpso ipso)
         {
-            return Matrix.CreateRotationZ(-MathHelper.ToRadians(ipso.GetAbsoluteRotation()));
+            var flipHorizontal = ipso.GetAbsoluteFlipHorizontal();
+
+            float rotationDegrees;
+            if (flipHorizontal)
+            {
+                rotationDegrees = -ipso.GetAbsoluteRotation();
+            }
+            else
+            {
+                rotationDegrees = ipso.GetAbsoluteRotation();
+            }
+
+            return Matrix.CreateRotationZ(-MathHelper.ToRadians(rotationDegrees));
         }
 
         public static bool GetAbsoluteFlipHorizontal(this IRenderableIpso ipso)
