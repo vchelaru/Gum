@@ -201,9 +201,10 @@ namespace RenderingLibrary.Math.Geometry
 
             if(mCircleOrigin == Geometry.CircleOrigin.TopLeft)
             {
-                if(Rotation != 0)
+                var rotation = this.GetAbsoluteRotation();
+                if(rotation != 0)
                 {
-                    Matrix matrix = Matrix.CreateRotationZ(-MathHelper.ToRadians(Rotation));
+                    Matrix matrix = Matrix.CreateRotationZ(-MathHelper.ToRadians(rotation));
 
                     var vector = Radius * matrix.Right + Radius * matrix.Up;
 

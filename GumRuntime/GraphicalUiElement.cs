@@ -1328,12 +1328,12 @@ namespace Gum.Wireframe
                             if(isParentFlippedHorizontally)
                             {
                                 mContainedObjectAsIpso.Rotation =
-                                    -mRotation + Parent.GetAbsoluteRotation();
+                                    -mRotation;// + Parent.GetAbsoluteRotation();
                             }
                             else
                             {
                                 mContainedObjectAsIpso.Rotation =
-                                    mRotation + Parent.GetAbsoluteRotation();
+                                    mRotation;// + Parent.GetAbsoluteRotation();
                             }
                         }
 

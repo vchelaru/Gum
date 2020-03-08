@@ -171,16 +171,15 @@ namespace Gum.Wireframe
 
         public void SetValuesFrom(IRenderableIpso ipso)
         {
-            if(ipso is GraphicalUiElement gue && (gue.RenderableComponent as IRenderableIpso) != null)
-            {
-                ipso = (gue.RenderableComponent as IRenderableIpso);
-            }
+            //if(ipso is GraphicalUiElement gue && (gue.RenderableComponent as IRenderableIpso) != null)
+            //{
+            //    ipso = (gue.RenderableComponent as IRenderableIpso);
+            //}
 
             this.mX = ipso.GetAbsoluteX();
             this.mY = ipso.GetAbsoluteY();
             this.mWidth = ipso.Width;
             this.mHeight = ipso.Height;
-            var flipHorizontal = ipso.GetAbsoluteFlipHorizontal();
 
             this.mRotation = ipso.GetAbsoluteRotation();
 

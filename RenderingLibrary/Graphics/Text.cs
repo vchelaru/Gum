@@ -849,7 +849,7 @@ namespace RenderingLibrary.Graphics
                     requiredWidth, widths, spriteRenderer, Color,
                     absoluteLeft,
                     absoluteTop, 
-                    this.Rotation, FontScale, FontScale, MaxLettersToShow);
+                    this.GetAbsoluteRotation(), FontScale, FontScale, MaxLettersToShow);
             }
         }
 
@@ -919,7 +919,7 @@ namespace RenderingLibrary.Graphics
                 alignmentOffset.Y = this.EffectiveHeight - mTempForRendering.Height;
             }
 
-            var absoluteRotation = this.Rotation;
+            var absoluteRotation = this.GetAbsoluteRotation();
             if(absoluteRotation != 0)
             {
                 var matrix = Matrix.CreateRotationZ(-MathHelper.ToRadians(absoluteRotation));

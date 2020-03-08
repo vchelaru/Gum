@@ -379,14 +379,16 @@ namespace RenderingLibrary.Graphics
                 Vector3 right;
                 Vector3 up;
 
-                if(Rotation == 0)
+                var rotation = this.GetAbsoluteRotation();
+
+                if(rotation == 0)
                 {
                     right = Vector3.Right;
                     up = Vector3.Up;
                 }
                 else
                 {
-                    var matrix = Matrix.CreateRotationZ(-MathHelper.ToRadians(Rotation));
+                    var matrix = Matrix.CreateRotationZ(-MathHelper.ToRadians(rotation));
 
                     right = matrix.Right;
                     up = matrix.Up;
@@ -394,38 +396,38 @@ namespace RenderingLibrary.Graphics
 
                 mSprites[(int)NineSliceSections.TopLeft].X = x + offsetX * right.X + offsetY * up.X;
                 mSprites[(int)NineSliceSections.TopLeft].Y = y + offsetX * right.Y + offsetY * up.Y; 
-                mSprites[(int)NineSliceSections.TopLeft].Rotation = this.Rotation;
+                mSprites[(int)NineSliceSections.TopLeft].Rotation = rotation;
 
                 offsetX = mSprites[(int)NineSliceSections.TopLeft].EffectiveWidth;
 
                 mSprites[(int)NineSliceSections.Top].X = x + offsetX * right.X + offsetY * up.X;
                 mSprites[(int)NineSliceSections.Top].Y = y + offsetX * right.Y + offsetY * up.Y;
-                mSprites[(int)NineSliceSections.Top].Rotation = this.Rotation;
+                mSprites[(int)NineSliceSections.Top].Rotation = rotation;
 
                 offsetX = mSprites[(int)NineSliceSections.TopLeft].EffectiveWidth + mSprites[(int)NineSliceSections.Top].Width;
 
                 mSprites[(int)NineSliceSections.TopRight].X = x + offsetX * right.X + offsetY * up.X;
                 mSprites[(int)NineSliceSections.TopRight].Y = y + offsetX * right.Y + offsetY * up.Y; 
-                mSprites[(int)NineSliceSections.TopRight].Rotation = this.Rotation;
+                mSprites[(int)NineSliceSections.TopRight].Rotation = rotation;
 
                 offsetX = 0;
                 offsetY = mSprites[(int)NineSliceSections.TopLeft].EffectiveHeight;
 
                 mSprites[(int)NineSliceSections.Left].X = x + offsetX * right.X + offsetY * up.X;
                 mSprites[(int)NineSliceSections.Left].Y = y + offsetX * right.Y + offsetY * up.Y; 
-                mSprites[(int)NineSliceSections.Left].Rotation = this.Rotation;
+                mSprites[(int)NineSliceSections.Left].Rotation = rotation;
 
                 offsetX = mSprites[(int)NineSliceSections.Left].EffectiveWidth;
 
                 mSprites[(int)NineSliceSections.Center].X = x + offsetX * right.X + offsetY * up.X;
                 mSprites[(int)NineSliceSections.Center].Y = y + offsetX * right.Y + offsetY * up.Y; 
-                mSprites[(int)NineSliceSections.Center].Rotation = this.Rotation;
+                mSprites[(int)NineSliceSections.Center].Rotation = rotation;
 
                 offsetX = mSprites[(int)NineSliceSections.Left].EffectiveWidth + mSprites[(int)NineSliceSections.Center].Width;
 
                 mSprites[(int)NineSliceSections.Right].X = x + offsetX * right.X + offsetY * up.X;
                 mSprites[(int)NineSliceSections.Right].Y = y + offsetX * right.Y + offsetY * up.Y; 
-                mSprites[(int)NineSliceSections.Right].Rotation = this.Rotation;
+                mSprites[(int)NineSliceSections.Right].Rotation = rotation;
 
 
                 offsetX = 0;
@@ -433,19 +435,19 @@ namespace RenderingLibrary.Graphics
 
                 mSprites[(int)NineSliceSections.BottomLeft].X = x + offsetX * right.X + offsetY * up.X;
                 mSprites[(int)NineSliceSections.BottomLeft].Y = y + offsetX * right.Y + offsetY * up.Y; 
-                mSprites[(int)NineSliceSections.BottomLeft].Rotation = this.Rotation;
+                mSprites[(int)NineSliceSections.BottomLeft].Rotation = rotation;
 
                 offsetX = mSprites[(int)NineSliceSections.BottomLeft].EffectiveWidth;
 
                 mSprites[(int)NineSliceSections.Bottom].X = x + offsetX * right.X + offsetY * up.X;
                 mSprites[(int)NineSliceSections.Bottom].Y = y + offsetX * right.Y + offsetY * up.Y; 
-                mSprites[(int)NineSliceSections.Bottom].Rotation = this.Rotation;
+                mSprites[(int)NineSliceSections.Bottom].Rotation = rotation;
 
                 offsetX = mSprites[(int)NineSliceSections.BottomLeft].EffectiveWidth + mSprites[(int)NineSliceSections.Bottom].Width;
 
                 mSprites[(int)NineSliceSections.BottomRight].X = x + offsetX * right.X + offsetY * up.X;
                 mSprites[(int)NineSliceSections.BottomRight].Y = y + offsetX * right.Y + offsetY * up.Y; 
-                mSprites[(int)NineSliceSections.BottomRight].Rotation = this.Rotation;
+                mSprites[(int)NineSliceSections.BottomRight].Rotation = rotation;
 
                 Render(mSprites[(int)NineSliceSections.TopLeft], managers, spriteRenderer);
                 if (mSprites[(int)NineSliceSections.Center].Width > 0)

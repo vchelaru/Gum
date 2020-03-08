@@ -342,7 +342,7 @@ namespace RenderingLibrary.Graphics
                         texture = AtlasedTexture.Texture;
                     }
 
-                    Render(managers, spriteRenderer, this, texture, Color, sourceRectangle, FlipVertical, Rotation);
+                    Render(managers, spriteRenderer, this, texture, Color, sourceRectangle, FlipVertical, this.GetAbsoluteRotation());
                 }
             }
         }

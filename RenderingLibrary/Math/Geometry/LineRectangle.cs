@@ -255,11 +255,9 @@ namespace RenderingLibrary.Math.Geometry
 
         }
 
-        public static void UpdateLinePrimitive(LinePrimitive linePrimitive, IPositionedSizedObject ipso)
+        public static void UpdateLinePrimitive(LinePrimitive linePrimitive, IRenderableIpso ipso)
         {
-            Matrix matrix = Matrix.CreateRotationZ(-MathHelper.ToRadians(ipso.Rotation));
-
-            
+            Matrix matrix = Matrix.CreateRotationZ(-MathHelper.ToRadians(ipso.GetAbsoluteRotation()));
 
             linePrimitive.Replace(0, Vector2.Zero);
             linePrimitive.Replace(1, Vector2.Transform(new Vector2(ipso.Width, 0), matrix) );
