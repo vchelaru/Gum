@@ -158,17 +158,14 @@ namespace CodeOutputPlugin.Manager
                     stringBuilder.AppendLine();
                 }
 
-                if (instance != null)
+                var codeLine = GetCodeLine(instance, variable, container, visualApi);
+                stringBuilder.AppendLine(ToTabs(tabCount) + codeLine);
+                var suffixCodeLine = GetSuffixCodeLine(instance, variable, visualApi);
+                if (!string.IsNullOrEmpty(suffixCodeLine))
                 {
-                    var codeLine = GetCodeLine(instance, variable, container, visualApi);
-                    stringBuilder.AppendLine(ToTabs(tabCount) + codeLine);
-
-                    var suffixCodeLine = GetSuffixCodeLine(instance, variable, visualApi);
-                    if (!string.IsNullOrEmpty(suffixCodeLine))
-                    {
-                        stringBuilder.AppendLine(ToTabs(tabCount) + suffixCodeLine);
-                    }
+                    stringBuilder.AppendLine(ToTabs(tabCount) + suffixCodeLine);
                 }
+
                 last = instanceName;
             }
         }
@@ -571,7 +568,7 @@ namespace CodeOutputPlugin.Manager
 
 
                 string boundsText =
-                    $"AbsoluteLayout.SetLayoutBounds({instance.Name}, new Rectangle({xString}, {yString}, {widthString}, {heightString}));";
+                    $"AbsoluteLayout.SetLayoutBounds({instance?.Name ?? "this"}, new Rectangle({xString}, {yString}, {widthString}, {heightString}));";
                 string flagsText = null;
                 if(proportionalFlags.Count > 0)
                 {
@@ -584,7 +581,7 @@ namespace CodeOutputPlugin.Manager
                         }
                         flagsArguments += proportionalFlags[i];
                     }
-                    flagsText = $"AbsoluteLayout.SetLayoutFlags({instance.Name}, {flagsArguments});";
+                    flagsText = $"AbsoluteLayout.SetLayoutFlags({instance?.Name ?? "this"}, {flagsArguments});";
                 }
                 // assume every object has X, which it won't, so we will have to improve this
                 if(string.IsNullOrWhiteSpace(flagsText))
@@ -620,6 +617,11 @@ namespace CodeOutputPlugin.Manager
             if (rootName == "Parent")
             {
                 return $"{variable.Value}.Children.Add({instance.Name});";
+            }
+            // ignored variables:
+            else if(rootName == "IsXamarinFormsControl")
+            {
+                return " "; 
             }
             return null;
         }
