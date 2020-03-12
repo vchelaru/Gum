@@ -112,6 +112,11 @@ namespace CodeOutputPlugin.Manager
                 tabCount--;
                 stringBuilder.AppendLine(ToTabs(tabCount) + "}");
             }
+            else
+            {
+                stringBuilder.AppendLine(ToTabs(tabCount) + "GraphicalUiElement.IsAllLayoutSuspended = false;");
+
+            }
 
 
             tabCount--;
@@ -448,11 +453,12 @@ namespace CodeOutputPlugin.Manager
             {
                 var rootName = variable.GetRootName();
 
-                switch(rootName)
-                {
-                    case "Width": return $"{instance.Name}.HorizontalOptions = LayoutOptions.Start;";
-                    case "Height": return $"{instance.Name}.VerticalOptions = LayoutOptions.Start;";
-                }
+                //switch(rootName)
+                //{
+                    // We don't do this anymore now that we are stuffing forms objects in absolute layouts
+                    //case "Width": return $"{instance.Name}.HorizontalOptions = LayoutOptions.Start;";
+                    //case "Height": return $"{instance.Name}.VerticalOptions = LayoutOptions.Start;";
+                //}
             }
 
             return null;
@@ -498,7 +504,15 @@ namespace CodeOutputPlugin.Manager
             if(rootName == "X")
             {
                 var defaultState = container.DefaultState;
-                var variableFinder = new RecursiveVariableFinder(instance, container);
+                RecursiveVariableFinder variableFinder;
+                if(instance != null)
+                {
+                    variableFinder = new RecursiveVariableFinder(instance, container);
+                }
+                else
+                {
+                    variableFinder = new RecursiveVariableFinder(container.DefaultState);
+                }
 
                 var x = variableFinder.GetValue<float>("X");
                 var y = variableFinder.GetValue<float>("Y");
@@ -681,6 +695,10 @@ namespace CodeOutputPlugin.Manager
                     return "\"" + variable.Value + "\"";
                 }
             }
+            else if(variable.Value is bool)
+            {
+                return variable.Value.ToString().ToLowerInvariant();
+            }
             else if (variable.Value.GetType().IsEnum)
             {
                 var type = variable.Value.GetType();
@@ -722,6 +740,7 @@ namespace CodeOutputPlugin.Manager
                 case "Width": return "WidthRequest";
                 case "X": return "PixelX";
                 case "Y": return "PixelY";
+                case "Visible": return "IsVisible";
 
                 default: return rootName;
             }
