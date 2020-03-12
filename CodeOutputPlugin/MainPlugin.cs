@@ -1,6 +1,7 @@
 ﻿using CodeOutputPlugin.Manager;
 using Gum;
 using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using Gum.Plugins;
 using Gum.Plugins.BaseClasses;
 using Gum.ToolStates;
@@ -49,6 +50,7 @@ namespace CodeOutputPlugin
             this.ElementSelected += HandleElementSelected;
             this.VariableSet += HandleVariableSet;
             this.StateWindowTreeNodeSelected += HandleStateSelected;
+            this.AddAndRemoveVariablesForType += HandleAddAndRemoveVariablesForType;
         }
 
         private void HandleStateSelected(TreeNode obj)
@@ -94,6 +96,12 @@ namespace CodeOutputPlugin
             GumCommands.Self.GuiCommands.ShowControl(control);
 
             RefreshCodeDisplay();
+        }
+
+        private void HandleAddAndRemoveVariablesForType(string type, StateSave stateSave)
+        {
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "IsXamarinFormsControl"});
+
         }
 
         private void RefreshCodeDisplay()

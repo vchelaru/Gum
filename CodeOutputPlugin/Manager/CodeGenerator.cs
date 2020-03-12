@@ -71,7 +71,7 @@ namespace CodeOutputPlugin.Manager
 
             foreach (var instance in element.Instances)
             {
-                FillWithInstanceInstantiation(instance, visualApi, stringBuilder, tabCount);
+                FillWithInstanceInstantiation(instance, element, visualApi, stringBuilder, tabCount);
             }
             stringBuilder.AppendLine();
 
@@ -250,7 +250,7 @@ namespace CodeOutputPlugin.Manager
 
             FillWithInstanceDeclaration(instance, stringBuilder, visualApi);
 
-            FillWithInstanceInstantiation(instance, visualApi, stringBuilder);
+            FillWithInstanceInstantiation(instance, element, visualApi, stringBuilder);
 
             FillWithVariableAssignments(instance, element, visualApi, stringBuilder);
 
@@ -258,7 +258,7 @@ namespace CodeOutputPlugin.Manager
             return code;
         }
 
-        private static void FillWithInstanceInstantiation(InstanceSave instance, VisualApi visualApi, StringBuilder stringBuilder, int tabCount = 0)
+        private static void FillWithInstanceInstantiation(InstanceSave instance, ElementSave element, VisualApi visualApi, StringBuilder stringBuilder, int tabCount = 0)
         {
             var strippedType = instance.BaseType;
             if (strippedType.Contains("/"))
@@ -266,6 +266,13 @@ namespace CodeOutputPlugin.Manager
                 strippedType = strippedType.Substring(strippedType.LastIndexOf("/") + 1);
             }
             var tabs = new String(' ', 4 * tabCount);
+
+            var defaultState = element.DefaultState;
+            var isXamForms = defaultState.GetValueRecursive($"{instance.Name}.IsXamarinFormsControl") as bool?;
+            if(isXamForms == true)
+            {
+                visualApi = VisualApi.XamarinForms;
+            }
 
             string suffix = visualApi == VisualApi.Gum ? "Runtime" : "";
             var className = $"{strippedType}{suffix}";
@@ -307,12 +314,22 @@ namespace CodeOutputPlugin.Manager
                 .OrderBy(item => item.GetRootName() != "Parent")
                 .ToArray();
 
-            var hasParent = variablesToConsider.FirstOrDefault()?.GetRootName() == "Parent";
+            var defaultState = container.DefaultState;
+            var isXamForms = defaultState.GetValueRecursive($"{instance.Name}.IsXamarinFormsControl") as bool?;
+            if (isXamForms == true)
+            {
+                visualApi = VisualApi.XamarinForms;
+            }
+
 
             var tabs = new String(' ', 4 * tabCount);
 
-            stringBuilder.AppendLine($"{tabs}{instance.Name}.Name = \"{instance.Name}\";");
+            if(visualApi == VisualApi.Gum)
+            {
+                stringBuilder.AppendLine($"{tabs}{instance.Name}.Name = \"{instance.Name}\";");
+            }
 
+            var hasParent = variablesToConsider.FirstOrDefault()?.GetRootName() == "Parent";
             if (!hasParent)
             {
                 // add it to "this"
@@ -512,9 +529,11 @@ namespace CodeOutputPlugin.Manager
                 rootName == "Width Units" || 
                 rootName == "Height Units" || 
                 rootName == "X Units" || 
-                rootName == "Y Units")
+                rootName == "Y Units" ||
+                rootName == "IsXamarinFormsControl" ||
+                rootName == "Name")
             {
-                return " "; // force it to not process these:
+                return " "; // Don't do anything with these variables::
             }
 
             return null;
