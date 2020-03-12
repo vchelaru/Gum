@@ -23,6 +23,14 @@ namespace CodeOutputPlugin.Manager
 
         public static string GetCodeForElement(ElementSave element, VisualApi visualApi)
         {
+            var defaultState = element.DefaultState;
+            var isXamForms = defaultState.GetValueRecursive($"IsXamarinFormsControl") as bool?;
+            if (isXamForms == true)
+            {
+                visualApi = VisualApi.XamarinForms;
+            }
+
+
             int tabCount = 0;
 
             var stringBuilder = new StringBuilder();
@@ -33,7 +41,7 @@ namespace CodeOutputPlugin.Manager
 
             foreach (var instance in element.Instances)
             {
-                FillWithInstanceDeclaration(instance, stringBuilder, visualApi, tabCount);
+                FillWithInstanceDeclaration(instance, element, stringBuilder, tabCount);
             }
             stringBuilder.AppendLine();
 
@@ -51,19 +59,34 @@ namespace CodeOutputPlugin.Manager
         private static void GenerateConstructor(ElementSave element, VisualApi visualApi, int tabCount, StringBuilder stringBuilder)
         {
             var elementName = GetClassNameForType(element.Name, visualApi);
-            stringBuilder.AppendLine(ToTabs(tabCount) + $"public {elementName}(bool fullInstantiation = true)");
 
-            stringBuilder.AppendLine(ToTabs(tabCount) + "{");
-            tabCount++;
+            if(visualApi == VisualApi.Gum)
+            {
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"public {elementName}(bool fullInstantiation = true)");
 
-            stringBuilder.AppendLine(ToTabs(tabCount) + "if(fullInstantiation)");
-            stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+                tabCount++;
 
-            tabCount++;
+                stringBuilder.AppendLine(ToTabs(tabCount) + "if(fullInstantiation)");
+                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+                tabCount++;
 
-            stringBuilder.AppendLine(ToTabs(tabCount) + "this.SetContainedObject(new InvisibleRenderable());");
+                stringBuilder.AppendLine(ToTabs(tabCount) + "this.SetContainedObject(new InvisibleRenderable());");
 
-            stringBuilder.AppendLine();
+                stringBuilder.AppendLine();
+
+            }
+            else // xamarin forms
+            {
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"public {elementName}()");
+
+                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+                tabCount++;
+
+                stringBuilder.AppendLine(ToTabs(tabCount) + "GraphicalUiElement.IsAllLayoutSuspended = true;");
+                stringBuilder.AppendLine(ToTabs(tabCount) + "var layout = new AbsoluteLayout();");
+                stringBuilder.AppendLine(ToTabs(tabCount) + "MainGrid.Children.Add(layout);");
+            }
 
             FillWithVariableAssignments(element, visualApi, stringBuilder, tabCount);
 
@@ -71,21 +94,24 @@ namespace CodeOutputPlugin.Manager
 
             foreach (var instance in element.Instances)
             {
-                FillWithInstanceInstantiation(instance, element, visualApi, stringBuilder, tabCount);
+                FillWithInstanceInstantiation(instance, element, stringBuilder, tabCount);
             }
             stringBuilder.AppendLine();
 
             foreach (var instance in element.Instances)
             {
-                FillWithVariableAssignments(instance, element, visualApi, stringBuilder, tabCount);
+                FillWithVariableAssignments(instance, element, stringBuilder, tabCount);
                 stringBuilder.AppendLine();
             }
 
             stringBuilder.AppendLine(ToTabs(tabCount) + "CustomInitialize();");
 
-
-            tabCount--;
-            stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+            if(visualApi == VisualApi.Gum)
+            {
+                // close the if check
+                tabCount--;
+                stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+            }
 
 
             tabCount--;
@@ -248,17 +274,17 @@ namespace CodeOutputPlugin.Manager
         {
             var stringBuilder = new StringBuilder();
 
-            FillWithInstanceDeclaration(instance, stringBuilder, visualApi);
+            FillWithInstanceDeclaration(instance, element, stringBuilder);
 
-            FillWithInstanceInstantiation(instance, element, visualApi, stringBuilder);
+            FillWithInstanceInstantiation(instance, element, stringBuilder);
 
-            FillWithVariableAssignments(instance, element, visualApi, stringBuilder);
+            FillWithVariableAssignments(instance, element, stringBuilder);
 
             var code = stringBuilder.ToString();
             return code;
         }
 
-        private static void FillWithInstanceInstantiation(InstanceSave instance, ElementSave element, VisualApi visualApi, StringBuilder stringBuilder, int tabCount = 0)
+        private static void FillWithInstanceInstantiation(InstanceSave instance, ElementSave element, StringBuilder stringBuilder, int tabCount = 0)
         {
             var strippedType = instance.BaseType;
             if (strippedType.Contains("/"))
@@ -266,6 +292,8 @@ namespace CodeOutputPlugin.Manager
                 strippedType = strippedType.Substring(strippedType.LastIndexOf("/") + 1);
             }
             var tabs = new String(' ', 4 * tabCount);
+
+            VisualApi visualApi = VisualApi.Gum;
 
             var defaultState = element.DefaultState;
             var isXamForms = defaultState.GetValueRecursive($"{instance.Name}.IsXamarinFormsControl") as bool?;
@@ -307,12 +335,20 @@ namespace CodeOutputPlugin.Manager
             }
         }
 
-        private static void FillWithVariableAssignments(InstanceSave instance, ElementSave container, VisualApi visualApi, StringBuilder stringBuilder, int tabCount = 0)
+        private static void FillWithVariableAssignments(InstanceSave instance, ElementSave container, StringBuilder stringBuilder, int tabCount = 0)
         {
+            #region Get variables to consider
+
             VariableSave[] variablesToConsider = GetVariablesToConsider(instance)
                 // make "Parent" first
                 .OrderBy(item => item.GetRootName() != "Parent")
                 .ToArray();
+
+            #endregion
+
+            #region Determine visual API (Gum or Forms)
+
+            VisualApi visualApi = VisualApi.Gum;
 
             var defaultState = container.DefaultState;
             var isXamForms = defaultState.GetValueRecursive($"{instance.Name}.IsXamarinFormsControl") as bool?;
@@ -321,20 +357,36 @@ namespace CodeOutputPlugin.Manager
                 visualApi = VisualApi.XamarinForms;
             }
 
+            #endregion
 
             var tabs = new String(' ', 4 * tabCount);
 
-            if(visualApi == VisualApi.Gum)
+            #region (Optionally) Assign Name
+
+            if (visualApi == VisualApi.Gum)
             {
                 stringBuilder.AppendLine($"{tabs}{instance.Name}.Name = \"{instance.Name}\";");
             }
 
+            #endregion
+
+            #region Assign Parent
+
             var hasParent = variablesToConsider.FirstOrDefault()?.GetRootName() == "Parent";
             if (!hasParent)
             {
-                // add it to "this"
-                stringBuilder.AppendLine($"{tabs}this.Children.Add({instance.Name});");
+                if(visualApi == VisualApi.Gum)
+                {
+                    // add it to "this"
+                    stringBuilder.AppendLine($"{tabs}this.Children.Add({instance.Name});");
+                }
+                else // forms
+                {
+                    stringBuilder.AppendLine($"{tabs}layout.Children.Add({instance.Name});");
+                }
             }
+
+            #endregion
 
             foreach (var variable in variablesToConsider)
             {
@@ -356,8 +408,17 @@ namespace CodeOutputPlugin.Manager
             }
         }
 
-        private static void FillWithInstanceDeclaration(InstanceSave instance, StringBuilder stringBuilder, VisualApi visualApi, int tabCount = 0)
+        private static void FillWithInstanceDeclaration(InstanceSave instance, ElementSave container, StringBuilder stringBuilder, int tabCount = 0)
         {
+            VisualApi visualApi = VisualApi.Gum;
+
+            var defaultState = container.DefaultState;
+            var isXamForms = defaultState.GetValueRecursive($"{instance.Name}.IsXamarinFormsControl") as bool?;
+            if (isXamForms == true)
+            {
+                visualApi = VisualApi.XamarinForms;
+            }
+
             var tabs = new String(' ', 4 * tabCount);
 
             string className = GetClassNameForType(instance.BaseType, visualApi);

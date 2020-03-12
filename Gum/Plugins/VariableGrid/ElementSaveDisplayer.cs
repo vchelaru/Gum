@@ -177,7 +177,8 @@ namespace Gum.PropertyGridHelpers
             // else if screen
             else if (instanceSave == null && elementSave as ScreenSave != null)
             {
-                foreach (var item in StandardElementsManager.Self.GetDefaultStateFor("Screen").Variables)
+                var screenDefaultState = StandardElementsManager.Self.GetDefaultStateFor("Screen");
+                foreach (var item in screenDefaultState.Variables)
                 {
 
                     TryDisplayVariableSave(pdc, elementSave, instanceSave, amountToDisplay, item);
@@ -258,6 +259,8 @@ namespace Gum.PropertyGridHelpers
                 amountToDisplay == AmountToDisplay.AllVariables || 
                 !string.IsNullOrEmpty(defaultVariable.ExposedAsName));
 
+            shouldInclude &= pdc.Any(item => item.Name == defaultVariable.Name) == false;
+
             if (shouldInclude)
             {
                 TypeConverter typeConverter = defaultVariable.GetTypeConverter(elementSave);
@@ -283,6 +286,9 @@ namespace Gum.PropertyGridHelpers
                 {
                     name = defaultVariable.ExposedAsName;
                 }
+
+                // if it already contains, do nothing
+                var alreadyContains = pdc.Any(item => item.Name == name);
 
                 var property = mHelper.AddProperty(pdc,
                     name,
