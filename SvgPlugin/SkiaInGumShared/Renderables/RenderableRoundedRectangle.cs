@@ -1,4 +1,5 @@
-﻿using SkiaSharp;
+﻿using Microsoft.Xna.Framework;
+using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,6 +20,48 @@ namespace SkiaPlugin.Renderables
         public float DropshadowBlurX { get; set; }
         public float DropshadowBlurY { get; set; }
 
+
+        public Color DropshadowColor = Color.White;
+
+        public int DropshadowAlpha
+        {
+            get => DropshadowColor.A;
+            set
+            {
+                DropshadowColor.A = (byte)value;
+                needsUpdate = true;
+            }
+        }
+
+        public int DropshadowRed
+        {
+            get => DropshadowColor.R;
+            set
+            {
+                DropshadowColor.R = (byte)value;
+                needsUpdate = true;
+            }
+        }
+
+        public int DropshadowGreen
+        {
+            get => DropshadowColor.G;
+            set
+            {
+                DropshadowColor.G = (byte)value;
+                needsUpdate = true;
+            }
+        }
+
+        public int DropshadowBlue
+        {
+            get => DropshadowColor.B;
+            set
+            {
+                DropshadowColor.B = (byte)value;
+                needsUpdate = true;
+            }
+        }
 
         protected override float XSizeSpillover => HasDropshadow ? DropshadowBlurX + Math.Abs(DropshadowOffsetX) : 0;
         protected override float YSizeSpillover => HasDropshadow ? DropshadowBlurY + Math.Abs(DropshadowOffsetY) : 0;
@@ -45,16 +88,18 @@ namespace SkiaPlugin.Renderables
             var paint = 
                 new SKPaint { Color = skColor, Style = SKPaintStyle.Fill, IsAntialias = true };
 
+            
+
             if(HasDropshadow)
             {
-
+                var dropshadowSkColor = new SKColor(DropshadowColor.R, DropshadowColor.G, DropshadowColor.B, DropshadowColor.A);
                 paint.ImageFilter = SKImageFilter.CreateDropShadow(
                             DropshadowOffsetX,
                             // See https://stackoverflow.com/questions/60456526/how-can-i-tell-the-amount-of-space-needed-for-a-skia-dropshadow
                             DropshadowOffsetY,
                             DropshadowBlurX/3.0f,
                             DropshadowBlurY/3.0f,
-                            SKColors.Black,
+                            dropshadowSkColor,
                             SKDropShadowImageFilterShadowMode.DrawShadowAndForeground);
             }
 
