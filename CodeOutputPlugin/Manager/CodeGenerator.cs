@@ -23,17 +23,22 @@ namespace CodeOutputPlugin.Manager
 
         public static string GetCodeForElement(ElementSave element, VisualApi visualApi)
         {
+            #region Determine if XamarinForms Control
             var defaultState = element.DefaultState;
             var isXamForms = defaultState.GetValueRecursive($"IsXamarinFormsControl") as bool?;
             if (isXamForms == true)
             {
                 visualApi = VisualApi.XamarinForms;
             }
-
+            #endregion
 
             int tabCount = 0;
 
             var stringBuilder = new StringBuilder();
+
+            stringBuilder.AppendLine(ToTabs(tabCount) + $"partial class {GetClassNameForType(element.Name, visualApi)}");
+            stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+            tabCount++;
 
             FillWithStateEnums(element, stringBuilder, tabCount);
 
@@ -51,6 +56,9 @@ namespace CodeOutputPlugin.Manager
             GenerateConstructor(element, visualApi, tabCount, stringBuilder);
 
             stringBuilder.AppendLine(ToTabs(tabCount) + "partial void CustomInitialize();");
+
+            tabCount--;
+            stringBuilder.AppendLine(ToTabs(tabCount) + "}");
 
 
             return stringBuilder.ToString();
@@ -178,7 +186,7 @@ namespace CodeOutputPlugin.Manager
                 string enumName = category.Name;
 
                 stringBuilder.AppendLine(ToTabs(tabCount) + $"public enum {category.Name}");
-                stringBuilder.AppendLine("{");
+                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
                 tabCount++;
 
                 foreach(var state in category.States)
@@ -186,7 +194,7 @@ namespace CodeOutputPlugin.Manager
                     stringBuilder.AppendLine(ToTabs(tabCount) + $"{state.Name},");
                 }
 
-                stringBuilder.AppendLine("}");
+                stringBuilder.AppendLine(ToTabs(tabCount) + "}");
                 tabCount--;
             }
         }
