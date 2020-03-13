@@ -488,7 +488,7 @@ namespace CodeOutputPlugin.Manager
                 }
                 else
                 {
-                    return $"{instancePrefix}{GetXamarinFormsVariableName(variable)} = {VariableValueToXamarinFormsCodeValue(variable)};";
+                    return $"{instancePrefix}{GetXamarinFormsVariableName(variable)} = {VariableValueToXamarinFormsCodeValue(variable, container)};";
                 }
 
             }
@@ -671,7 +671,7 @@ namespace CodeOutputPlugin.Manager
             }
         }
 
-        private static string VariableValueToXamarinFormsCodeValue(VariableSave variable)
+        private static string VariableValueToXamarinFormsCodeValue(VariableSave variable, ElementSave container)
         {
             if (variable.Value is float asFloat)
             {
@@ -691,6 +691,11 @@ namespace CodeOutputPlugin.Manager
                 if (variable.GetRootName() == "Parent")
                 {
                     return variable.Value.ToString();
+                }
+                else if (variable.IsState(container, out ElementSave categoryContainer, out StateSaveCategory category))
+                {
+                    var containerClassName = GetClassNameForType(categoryContainer.Name, VisualApi.XamarinForms);
+                    return $"{containerClassName}.{category.Name}.{variable.Value}";
                 }
                 else
                 {
