@@ -161,8 +161,9 @@ namespace Gum.Content.AnimationChain
                     //frame.Texture = FlatRedBallServices.Load<Texture2D>(TextureName, contentManagerName);
                     try
                     {
+                        var fileName = ToolsUtilities.FileManager.RemoveDotDotSlash(ToolsUtilities.FileManager.RelativeDirectory + TextureName);
                         frame.Texture = global::RenderingLibrary.Content.LoaderManager.Self.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(
-                            TextureName);
+                            fileName);
                     }
                     catch (System.IO.FileNotFoundException)
                     {
