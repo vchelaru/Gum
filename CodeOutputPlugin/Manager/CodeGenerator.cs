@@ -34,11 +34,13 @@ namespace CodeOutputPlugin.Manager
 
             int tabCount = 0;
 
+            #region Class Header/Opening {
             var stringBuilder = new StringBuilder();
 
             stringBuilder.AppendLine(ToTabs(tabCount) + $"partial class {GetClassNameForType(element.Name, visualApi)}");
             stringBuilder.AppendLine(ToTabs(tabCount) + "{");
             tabCount++;
+            #endregion
 
             FillWithStateEnums(element, stringBuilder, tabCount);
 
@@ -312,9 +314,7 @@ namespace CodeOutputPlugin.Manager
                 visualApi = VisualApi.XamarinForms;
             }
 
-            string suffix = visualApi == VisualApi.Gum ? "Runtime" : "";
-            var className = $"{strippedType}{suffix}";
-            stringBuilder.AppendLine($"{tabs}{instance.Name} = new {className}();");
+            stringBuilder.AppendLine($"{tabs}{instance.Name} = new {GetClassNameForType(instance.BaseType, visualApi)}();");
         }
 
         private static void FillWithVariableAssignments(ElementSave element, VisualApi visualApi, StringBuilder stringBuilder, int tabCount = 0)
@@ -331,7 +331,7 @@ namespace CodeOutputPlugin.Manager
                 .ToArray();
 
             var tabs = new String(' ', 4 * tabCount);
-
+            
             foreach (var variable in variablesToConsider)
             {
                 var codeLine = GetCodeLine(null, variable, element, visualApi);
@@ -349,10 +349,10 @@ namespace CodeOutputPlugin.Manager
         {
             #region Get variables to consider
 
-            VariableSave[] variablesToConsider = GetVariablesToConsider(instance)
+            var variablesToConsider = GetVariablesToConsider(instance)
                 // make "Parent" first
                 .OrderBy(item => item.GetRootName() != "Parent")
-                .ToArray();
+                .ToList();
 
             #endregion
 
@@ -398,6 +398,11 @@ namespace CodeOutputPlugin.Manager
 
             #endregion
 
+
+            // sometimes variables have to be processed in groups. For example, RGB values
+            // have to be assigned all at once in a Color value in XamForms;
+            ProcessVariableGroups(variablesToConsider, container.DefaultState, instance, visualApi, stringBuilder);
+
             foreach (var variable in variablesToConsider)
             {
                 var codeLine = GetCodeLine(instance, variable, container, visualApi);
@@ -416,6 +421,37 @@ namespace CodeOutputPlugin.Manager
                     stringBuilder.AppendLine(tabs + suffixCodeLine);
                 }
             }
+        }
+
+        private static void ProcessVariableGroups(List<VariableSave> variablesToConsider, StateSave defaultState, InstanceSave instance, VisualApi visualApi, StringBuilder stringBuilder)
+        {
+            if(visualApi == VisualApi.XamarinForms)
+            {
+                switch(instance.BaseType)
+                {
+                    case "Text":
+                        ProcessVariableGroupsForLabel(variablesToConsider, defaultState, instance, stringBuilder);
+                        break;
+                }
+            }
+        }
+
+        private static void ProcessVariableGroupsForLabel(List<VariableSave> variablesToConsider, StateSave defaultState, InstanceSave instance, StringBuilder stringBuilder)
+        {
+            var instanceName = instance.Name;
+            var rfv = new RecursiveVariableFinder(defaultState);
+
+            var red = rfv.GetValue<int>(instanceName + ".Red");
+            var green = rfv.GetValue<int>(instanceName + ".Green");
+            var blue = rfv.GetValue<int>(instanceName + ".Blue");
+            var alpha = rfv.GetValue<int>(instanceName + ".Alpha");
+
+            variablesToConsider.RemoveAll(item => item.Name == instanceName + ".Red");
+            variablesToConsider.RemoveAll(item => item.Name == instanceName + ".Green");
+            variablesToConsider.RemoveAll(item => item.Name == instanceName + ".Blue");
+            variablesToConsider.RemoveAll(item => item.Name == instanceName + ".Alpha");
+
+            stringBuilder.AppendLine($"{instanceName}.TextColor = Color.FromRgba({red}, {green}, {blue}, {alpha});");
         }
 
         private static void FillWithInstanceDeclaration(InstanceSave instance, ElementSave container, StringBuilder stringBuilder, int tabCount = 0)
@@ -439,16 +475,35 @@ namespace CodeOutputPlugin.Manager
             stringBuilder.AppendLine($"{tabs}{accessString}{className} {instance.Name};");
         }
 
-        private static string GetClassNameForType(string type, VisualApi visualApi)
+        private static string GetClassNameForType(string gumType, VisualApi visualApi)
         {
-            var strippedType = type;
-            if (strippedType.Contains("/"))
+            string className = null;
+            var specialHandledCase = false;
+
+            if(visualApi == VisualApi.XamarinForms)
             {
-                strippedType = strippedType.Substring(strippedType.LastIndexOf("/") + 1);
+                switch(gumType)
+                {
+                    case "Text":
+                        className = "Label";
+                        specialHandledCase = true;
+                        break;
+                }
             }
 
-            string suffix = visualApi == VisualApi.Gum ? "Runtime" : "";
-            var className = $"{strippedType}{suffix}";
+            if(!specialHandledCase)
+            {
+
+                var strippedType = gumType;
+                if (strippedType.Contains("/"))
+                {
+                    strippedType = strippedType.Substring(strippedType.LastIndexOf("/") + 1);
+                }
+
+                string suffix = visualApi == VisualApi.Gum ? "Runtime" : "";
+                className = $"{strippedType}{suffix}";
+
+            }
             return className;
         }
 
