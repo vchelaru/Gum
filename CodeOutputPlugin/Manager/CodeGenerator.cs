@@ -320,13 +320,26 @@ namespace CodeOutputPlugin.Manager
         private static void FillWithVariableAssignments(ElementSave element, VisualApi visualApi, StringBuilder stringBuilder, int tabCount = 0)
         {
             var defaultState = SelectedState.Self.SelectedElement.DefaultState;
+
+            var baseElement = ObjectFinder.Self.GetElementSave(element.BaseType);
+            RecursiveVariableFinder recursiveVariableFinder = new RecursiveVariableFinder(baseElement.DefaultState);
+
+
             var variablesToConsider = defaultState.Variables
                 .Where(item =>
                 {
-                    return
+                    var shouldInclude = 
                         item.Value != null &&
                         item.SetsValue &&
                         string.IsNullOrEmpty(item.SourceObject);
+
+                    if(shouldInclude)
+                    {
+                        var foundVariable = recursiveVariableFinder.GetValue(item.Name);
+                        shouldInclude = foundVariable != null;
+                    }
+
+                    return shouldInclude;
                 })
                 .ToArray();
 
@@ -682,7 +695,10 @@ namespace CodeOutputPlugin.Manager
                 return $"{variable.Value}.Children.Add({instance.Name});";
             }
             // ignored variables:
-            else if(rootName == "IsXamarinFormsControl")
+            else if(rootName == "IsXamarinFormsControl" ||
+                rootName == "ClipsChildren" ||
+                rootName == "ExposeChildrenEvents" ||
+                rootName == "HasEvents")
             {
                 return " "; 
             }
