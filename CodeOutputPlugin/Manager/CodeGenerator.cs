@@ -1,4 +1,5 @@
-﻿using Gum.Converters;
+﻿using CodeOutputPlugin.Models;
+using Gum.Converters;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
@@ -21,7 +22,7 @@ namespace CodeOutputPlugin.Manager
     public static class CodeGenerator
     {
 
-        public static string GetCodeForElement(ElementSave element, VisualApi visualApi)
+        public static string GetCodeForElement(ElementSave element, VisualApi visualApi, CodeOutputElementSettings settings)
         {
             #region Determine if XamarinForms Control
             var defaultState = element.DefaultState;
@@ -32,10 +33,21 @@ namespace CodeOutputPlugin.Manager
             }
             #endregion
 
+            var stringBuilder = new StringBuilder();
             int tabCount = 0;
 
+            #region Namespace Header/Opening {
+
+            if(!string.IsNullOrEmpty(settings?.Namespace))
+            {
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"namespace {settings.Namespace}");
+                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+                tabCount++;
+            }
+
+            #endregion
+
             #region Class Header/Opening {
-            var stringBuilder = new StringBuilder();
 
             stringBuilder.AppendLine(ToTabs(tabCount) + $"partial class {GetClassNameForType(element.Name, visualApi)}");
             stringBuilder.AppendLine(ToTabs(tabCount) + "{");
@@ -59,9 +71,16 @@ namespace CodeOutputPlugin.Manager
 
             stringBuilder.AppendLine(ToTabs(tabCount) + "partial void CustomInitialize();");
 
+            #region Class Closing }
             tabCount--;
             stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+            #endregion
 
+            if (!string.IsNullOrEmpty(settings?.Namespace))
+            {
+                tabCount--;
+                stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+            }
 
             return stringBuilder.ToString();
         }
@@ -322,7 +341,13 @@ namespace CodeOutputPlugin.Manager
             var defaultState = SelectedState.Self.SelectedElement.DefaultState;
 
             var baseElement = ObjectFinder.Self.GetElementSave(element.BaseType);
-            RecursiveVariableFinder recursiveVariableFinder = new RecursiveVariableFinder(baseElement.DefaultState);
+            RecursiveVariableFinder recursiveVariableFinder = null;
+
+            // This is null if it's a screen, or there's some bad reference
+            if(baseElement != null)
+            {
+                recursiveVariableFinder = new RecursiveVariableFinder(baseElement.DefaultState);
+            }
 
 
             var variablesToConsider = defaultState.Variables
@@ -333,7 +358,7 @@ namespace CodeOutputPlugin.Manager
                         item.SetsValue &&
                         string.IsNullOrEmpty(item.SourceObject);
 
-                    if(shouldInclude)
+                    if(shouldInclude && recursiveVariableFinder != null)
                     {
                         var foundVariable = recursiveVariableFinder.GetValue(item.Name);
                         shouldInclude = foundVariable != null;

@@ -5,6 +5,7 @@ using Gum.DataTypes.Variables;
 using Gum.Plugins;
 using Gum.Plugins.BaseClasses;
 using Gum.ToolStates;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
@@ -12,6 +13,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using ToolsUtilities;
 
 namespace CodeOutputPlugin
 {
@@ -73,7 +75,30 @@ namespace CodeOutputPlugin
         {
             if (control != null)
             {
+                LoadCodeSettingsFile();
+
                 RefreshCodeDisplay();
+            }
+        }
+
+        private void LoadCodeSettingsFile()
+        {
+            var element = SelectedState.Self.SelectedElement;
+            if(element != null)
+            {
+                var fileName = GetCodeSettingsFileFor(element);
+                if(fileName.Exists())
+                {
+                    var contents = System.IO.File.ReadAllText(fileName.FullPath);
+
+                    var settings = JsonConvert.DeserializeObject<Models.CodeOutputElementSettings>(contents);
+
+                    control.CodeOutputElementSettings = settings;
+                }
+                else
+                {
+                    control.CodeOutputElementSettings = new Models.CodeOutputElementSettings();
+                }
             }
         }
 
@@ -104,10 +129,18 @@ namespace CodeOutputPlugin
 
         }
 
+        // todo - move this to a controller:
         private void RefreshCodeDisplay()
         {
             var instance = SelectedState.Self.SelectedInstance;
             var selectedElement = SelectedState.Self.SelectedElement;
+
+            if(control.CodeOutputElementSettings == null)
+            {
+                control.CodeOutputElementSettings = new Models.CodeOutputElementSettings();
+            }
+
+            var settings = control.CodeOutputElementSettings;
 
             switch(viewModel.WhatToView)
             {
@@ -121,7 +154,7 @@ namespace CodeOutputPlugin
                     }
                     else if(selectedElement != null)
                     {
-                        string gumCode = CodeGenerator.GetCodeForElement(selectedElement, VisualApi.Gum);
+                        string gumCode = CodeGenerator.GetCodeForElement(selectedElement, VisualApi.Gum, settings);
                         viewModel.Code = $"//Code for {selectedElement.ToString()}\n{gumCode}";
                     }
                     break;
@@ -136,20 +169,42 @@ namespace CodeOutputPlugin
                     break;
             }
 
+
         }
 
         private void CreateControl()
         {
             control = new Views.CodeWindow();
-
             viewModel = new ViewModels.CodeWindowViewModel();
+
+            control.CodeOutputSettingsPropertyChanged += (not, used) => HandleCodeOutputPropertyChanged();
             viewModel.PropertyChanged += (not, used) => RefreshCodeDisplay();
+
             control.DataContext = viewModel;
 
             GumCommands.Self.GuiCommands.AddControl(control, "Code", TabLocation.Right);
 
         }
 
+        private void HandleCodeOutputPropertyChanged()
+        {
+            var element = SelectedState.Self.SelectedElement;
+            if(element != null)
+            {
+                // save the file
+                var fileName = GetCodeSettingsFileFor(element);
+                var serialized = JsonConvert.SerializeObject(control.CodeOutputElementSettings);
+                System.IO.File.WriteAllText(fileName.FullPath, serialized);
 
+                RefreshCodeDisplay();
+            }
+        }
+
+        private static FilePath GetCodeSettingsFileFor(ElementSave element)
+        {
+            FilePath fileName = element.GetFullPathXmlFile();
+            fileName = fileName.RemoveExtension() + ".codsj";
+            return fileName;
+        }
     }
 }

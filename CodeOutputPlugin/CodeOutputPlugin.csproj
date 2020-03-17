@@ -51,6 +51,9 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.12.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="System" />
@@ -69,6 +72,7 @@
   <ItemGroup>
     <Compile Include="MainPlugin.cs" />
     <Compile Include="Manager\CodeGenerator.cs" />
+    <Compile Include="Models\CodeOutputElementSettings.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ViewModels\CodeWindowViewModel.cs" />
     <Compile Include="Views\CodeWindow.xaml.cs">
@@ -92,6 +96,14 @@
       <Project>{938d9a00-8529-4ce8-9077-e0a3994a73ea}</Project>
       <Name>InputLibrary</Name>
     </ProjectReference>
+    <ProjectReference Include="..\ToolsUtilities\ToolsUtilities.csproj">
+      <Project>{B941A93F-6093-4DC6-AD11-91A058B6C2CC}</Project>
+      <Name>ToolsUtilities</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\WpfDataUi\WpfDataUi.csproj">
+      <Project>{47241002-7eb5-433b-b931-a530bb6b84ee}</Project>
+      <Name>WpfDataUi</Name>
+    </ProjectReference>
     <ProjectReference Include="..\XnaAndWinforms\XnaAndWinforms.csproj">
       <Project>{c39a973c-66d6-4a6c-82b5-ae0042f210f8}</Project>
       <Name>XnaAndWinforms</Name>
@@ -102,6 +114,9 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

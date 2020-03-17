@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CodeOutputPlugin.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,6 +13,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using WpfDataUi.EventArguments;
 
 namespace CodeOutputPlugin.Views
 {
@@ -20,9 +22,28 @@ namespace CodeOutputPlugin.Views
     /// </summary>
     public partial class CodeWindow : UserControl
     {
+        CodeOutputElementSettings codeOutputElementSettings;
+        public CodeOutputElementSettings CodeOutputElementSettings
+        {
+            get => codeOutputElementSettings;
+            set
+            {
+                codeOutputElementSettings = value;
+                DataGrid.Instance = codeOutputElementSettings;
+            }
+        }
+
+        public event EventHandler CodeOutputSettingsPropertyChanged;
+
         public CodeWindow()
         {
             InitializeComponent();
+            DataGrid.PropertyChange += HandleCodeOutputSettingsPropertyChanged;
+        }
+
+        private void HandleCodeOutputSettingsPropertyChanged(string arg1, PropertyChangedArgs arg2)
+        {
+            CodeOutputSettingsPropertyChanged?.Invoke(this, null);
         }
 
         private void CopyButtonClicked(object sender, RoutedEventArgs e)
@@ -42,10 +63,6 @@ namespace CodeOutputPlugin.Views
                     catch { }
                     System.Threading.Thread.Sleep(15);
                 }
-
-
-
-
             }
         }
     }
