@@ -13,6 +13,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using WpfDataUi.Controls;
 using WpfDataUi.DataTypes;
 using WpfDataUi.EventArguments;
 
@@ -82,6 +83,8 @@ namespace CodeOutputPlugin.Views
             {
                 return typeof(string);
             };
+
+            member.PreferredDisplayer = typeof(MultiLineTextBoxDisplay);
 
             return member;
         }
