@@ -13,6 +13,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using WpfDataUi.DataTypes;
 using WpfDataUi.EventArguments;
 
 namespace CodeOutputPlugin.Views
@@ -29,7 +30,11 @@ namespace CodeOutputPlugin.Views
             set
             {
                 codeOutputElementSettings = value;
+
                 DataGrid.Instance = codeOutputElementSettings;
+
+                CreateGridCategories();
+
             }
         }
 
@@ -39,6 +44,72 @@ namespace CodeOutputPlugin.Views
         {
             InitializeComponent();
             DataGrid.PropertyChange += HandleCodeOutputSettingsPropertyChanged;
+
+            CreateGridCategories();
+        }
+
+        private void CreateGridCategories()
+        {
+            var category = new MemberCategory("Code Generation");
+
+            category.Members.Add(CreateUsingStatementCategory());
+            category.Members.Add(CreateNamespaceCategory());
+
+            DataGrid.Categories.Clear();
+            DataGrid.Categories.Add(category);
+
+        }
+
+        private InstanceMember CreateUsingStatementCategory()
+        {
+            var member = new InstanceMember("Using Statements", this);
+
+            member.CustomSetEvent += (owner, value) =>
+            {
+                if(codeOutputElementSettings != null)
+                {
+                    codeOutputElementSettings.UsingStatements = (string)value;
+                    CodeOutputSettingsPropertyChanged?.Invoke(this, null);
+                }
+            };
+
+            member.CustomGetEvent += (owner) =>
+            {
+                return codeOutputElementSettings?.UsingStatements;
+            };
+
+            member.CustomGetTypeEvent += (owner) =>
+            {
+                return typeof(string);
+            };
+
+            return member;
+        }
+
+        private InstanceMember CreateNamespaceCategory()
+        {
+            var member = new InstanceMember("Namespace", this);
+
+            member.CustomSetEvent += (owner, value) =>
+            {
+                if (codeOutputElementSettings != null)
+                {
+                    codeOutputElementSettings.Namespace = (string)value;
+                    CodeOutputSettingsPropertyChanged?.Invoke(this, null);
+                }
+            };
+
+            member.CustomGetEvent += (owner) =>
+            {
+                return codeOutputElementSettings?.Namespace;
+            };
+
+            member.CustomGetTypeEvent += (owner) =>
+            {
+                return typeof(string);
+            };
+
+            return member;
         }
 
         private void HandleCodeOutputSettingsPropertyChanged(string arg1, PropertyChangedArgs arg2)

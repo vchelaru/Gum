@@ -86,19 +86,7 @@ namespace CodeOutputPlugin
             var element = SelectedState.Self.SelectedElement;
             if(element != null)
             {
-                var fileName = GetCodeSettingsFileFor(element);
-                if(fileName.Exists())
-                {
-                    var contents = System.IO.File.ReadAllText(fileName.FullPath);
-
-                    var settings = JsonConvert.DeserializeObject<Models.CodeOutputElementSettings>(contents);
-
-                    control.CodeOutputElementSettings = settings;
-                }
-                else
-                {
-                    control.CodeOutputElementSettings = new Models.CodeOutputElementSettings();
-                }
+                control.CodeOutputElementSettings = CodeOutputSettingsManager.LoadOrCreateSettingsFor(element);
             }
         }
 
@@ -129,7 +117,6 @@ namespace CodeOutputPlugin
 
         }
 
-        // todo - move this to a controller:
         private void RefreshCodeDisplay()
         {
             var instance = SelectedState.Self.SelectedInstance;
@@ -191,20 +178,11 @@ namespace CodeOutputPlugin
             var element = SelectedState.Self.SelectedElement;
             if(element != null)
             {
-                // save the file
-                var fileName = GetCodeSettingsFileFor(element);
-                var serialized = JsonConvert.SerializeObject(control.CodeOutputElementSettings);
-                System.IO.File.WriteAllText(fileName.FullPath, serialized);
+                CodeOutputSettingsManager.WriteSettingsForElement(element, control.CodeOutputElementSettings);
 
                 RefreshCodeDisplay();
             }
         }
 
-        private static FilePath GetCodeSettingsFileFor(ElementSave element)
-        {
-            FilePath fileName = element.GetFullPathXmlFile();
-            fileName = fileName.RemoveExtension() + ".codsj";
-            return fileName;
-        }
     }
 }
