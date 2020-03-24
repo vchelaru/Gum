@@ -32,6 +32,9 @@
             </Grid>
             <TextBox x:Name="TextBoxInstance" ScrollViewer.VerticalScrollBarVisibility="Auto" Grid.Row="1" Text="{Binding Code}"></TextBox>
         </Grid>
-        <WpfDataUi:DataUiGrid Name="DataGrid" Grid.Column="1"></WpfDataUi:DataUiGrid>
+        <StackPanel Grid.Column="1">
+            <WpfDataUi:DataUiGrid Name="DataGrid"></WpfDataUi:DataUiGrid>
+            <Button Click="GenerateCodeClicked">Generate Code</Button>
+        </StackPanel>
     </Grid>
 </UserControl>

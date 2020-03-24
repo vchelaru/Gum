@@ -9,7 +9,7 @@ namespace CodeOutputPlugin.Models
     public class CodeOutputElementSettings
     {
         public string Namespace { get; set; }
-        public string CodeFileLocation { get; set; }
         public string UsingStatements { get; set; }
+        public string GeneratedFileName { get; set; }
     }
 }

@@ -1,4 +1,6 @@
 ﻿using CodeOutputPlugin.Models;
+using CodeOutputPlugin.ViewModels;
+using Gum;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,6 +26,8 @@ namespace CodeOutputPlugin.Views
     /// </summary>
     public partial class CodeWindow : UserControl
     {
+        CodeWindowViewModel ViewModel => DataContext as CodeWindowViewModel;
+
         CodeOutputElementSettings codeOutputElementSettings;
         public CodeOutputElementSettings CodeOutputElementSettings
         {
@@ -53,15 +57,16 @@ namespace CodeOutputPlugin.Views
         {
             var category = new MemberCategory("Code Generation");
 
-            category.Members.Add(CreateUsingStatementCategory());
-            category.Members.Add(CreateNamespaceCategory());
+            category.Members.Add(CreateUsingStatementMember());
+            category.Members.Add(CreateNamespaceMember());
+            category.Members.Add(CreateFileLocationMember());
 
             DataGrid.Categories.Clear();
             DataGrid.Categories.Add(category);
 
         }
 
-        private InstanceMember CreateUsingStatementCategory()
+        private InstanceMember CreateUsingStatementMember()
         {
             var member = new InstanceMember("Using Statements", this);
 
@@ -89,7 +94,7 @@ namespace CodeOutputPlugin.Views
             return member;
         }
 
-        private InstanceMember CreateNamespaceCategory()
+        private InstanceMember CreateNamespaceMember()
         {
             var member = new InstanceMember("Namespace", this);
 
@@ -102,15 +107,32 @@ namespace CodeOutputPlugin.Views
                 }
             };
 
-            member.CustomGetEvent += (owner) =>
-            {
-                return codeOutputElementSettings?.Namespace;
-            };
+            member.CustomGetEvent += (owner) => codeOutputElementSettings?.Namespace;
 
             member.CustomGetTypeEvent += (owner) =>
             {
                 return typeof(string);
             };
+            
+            return member;
+        }
+
+        private InstanceMember CreateFileLocationMember()
+        {
+            var member = new InstanceMember("Generated File Name", this);
+
+            member.CustomSetEvent += (owner, value) =>
+            {
+                if (codeOutputElementSettings != null)
+                {
+                    codeOutputElementSettings.GeneratedFileName = (string)value;
+                    CodeOutputSettingsPropertyChanged?.Invoke(this, null);
+                }
+            };
+
+            member.CustomGetEvent += (owner) => codeOutputElementSettings?.GeneratedFileName;
+
+            member.CustomGetTypeEvent += (owner) => typeof(string);
 
             return member;
         }
@@ -118,6 +140,24 @@ namespace CodeOutputPlugin.Views
         private void HandleCodeOutputSettingsPropertyChanged(string arg1, PropertyChangedArgs arg2)
         {
             CodeOutputSettingsPropertyChanged?.Invoke(this, null);
+        }
+
+        private void GenerateCodeClicked(object sender, RoutedEventArgs e)
+        {
+            if(string.IsNullOrEmpty(codeOutputElementSettings.GeneratedFileName))
+            {
+                GumCommands.Self.GuiCommands.ShowMessage("Generated file name must be set first");
+            }
+            else
+            {
+                var contents = ViewModel.Code;
+                var filepath = codeOutputElementSettings.GeneratedFileName;
+
+                System.IO.File.WriteAllText(filepath, contents);
+
+                // show a message somewhere?
+                GumCommands.Self.GuiCommands.ShowMessage("Generated code");
+            }
         }
 
         private void CopyButtonClicked(object sender, RoutedEventArgs e)
