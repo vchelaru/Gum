@@ -15,6 +15,7 @@ namespace RenderingLibrary.Graphics
     public class RenderStateVariables
     {
         public BlendState BlendState;
+        public ColorOperation ColorOperation;
         public bool Filtering;
         public bool Wrap;
 
@@ -454,6 +455,12 @@ namespace RenderingLibrary.Graphics
 
                 shouldResetStates = true;
 
+            }
+
+            if(renderState.ColorOperation != renderable.ColorOperation)
+            {
+                renderState.ColorOperation = renderable.ColorOperation;
+                shouldResetStates = true;
             }
 
             if (renderState.Wrap != wrap)

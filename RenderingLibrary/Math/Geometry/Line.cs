@@ -26,6 +26,7 @@ namespace RenderingLibrary.Math.Geometry
         #endregion
 
         #region Properties
+        ColorOperation IRenderableIpso.ColorOperation => ColorOperation.Modulate;
 
 
         public float Rotation { get; set; }

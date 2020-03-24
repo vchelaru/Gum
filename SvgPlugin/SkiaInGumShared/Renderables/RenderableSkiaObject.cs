@@ -164,6 +164,8 @@ namespace SkiaPlugin.Renderables
         protected virtual float XSizeSpillover => 0;
         protected virtual float YSizeSpillover => 0;
 
+        ColorOperation IRenderableIpso.ColorOperation => ColorOperation.Modulate;
+
         #endregion
 
         #region IVisible Implementation

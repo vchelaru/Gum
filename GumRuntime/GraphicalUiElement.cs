@@ -132,6 +132,8 @@ namespace Gum.Wireframe
 
         #region Properties
 
+        ColorOperation IRenderableIpso.ColorOperation => mContainedObjectAsIpso.ColorOperation;
+
         public static MissingFileBehavior MissingFileBehavior { get; set; } = MissingFileBehavior.ConsumeSilently;
 
         public ElementSave ElementSave

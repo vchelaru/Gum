@@ -28,7 +28,7 @@ namespace RenderingLibrary.Graphics
 
         ObservableCollection<IRenderableIpso> children = new ObservableCollection<IRenderableIpso>();
         public ObservableCollection<IRenderableIpso> Children => children;
-
+        ColorOperation IRenderableIpso.ColorOperation => ColorOperation.Modulate;
         // If a GUE uses this, it needs to support storing the values.
         public bool ClipsChildren { get; set; }
 

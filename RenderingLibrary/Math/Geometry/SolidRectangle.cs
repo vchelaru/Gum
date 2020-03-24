@@ -24,6 +24,10 @@ namespace RenderingLibrary.Graphics
         #endregion
 
         #region Properties
+
+        ColorOperation IRenderableIpso.ColorOperation => ColorOperation.Modulate;
+
+
         public static string AtlasedTextureName { get; set; }
 
         public static Texture2D Texture

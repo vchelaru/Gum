@@ -111,6 +111,8 @@ namespace RenderingLibrary.Graphics
 
         #region Properties
 
+        ColorOperation IRenderableIpso.ColorOperation => ColorOperation.Modulate;
+
         /// <summary>
         /// The width needed to display the wrapped text. 
         /// </summary>

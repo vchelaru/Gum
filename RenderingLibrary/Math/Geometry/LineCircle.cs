@@ -33,6 +33,7 @@ namespace RenderingLibrary.Math.Geometry
         #endregion
 
         #region Properties
+        ColorOperation IRenderableIpso.ColorOperation => ColorOperation.Modulate;
 
         public string Name
         {

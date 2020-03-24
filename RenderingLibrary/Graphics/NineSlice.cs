@@ -48,6 +48,8 @@ namespace RenderingLibrary.Graphics
 
         #region Properties
 
+        ColorOperation IRenderableIpso.ColorOperation => ColorOperation.Modulate;
+
         public int Alpha
         {
             get

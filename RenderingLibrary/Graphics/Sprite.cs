@@ -10,6 +10,20 @@ using System.Collections.ObjectModel;
 
 namespace RenderingLibrary.Graphics
 {
+    public enum ColorOperation
+    {
+        //Texture,
+        //Add,
+        //Subtract,
+        Modulate = 3,
+        //InverseTexture,
+        //Color,
+        ColorTextureAlpha = 6,
+        //Modulate2X,
+        //Modulate4X,
+        //InterpolateColor
+
+    }
     public class Sprite : IRenderableIpso, IVisible, IAspectRatio
     {
         #region Fields
@@ -132,7 +146,6 @@ namespace RenderingLibrary.Graphics
             set;
         }
 
-
         bool IRenderableIpso.ClipsChildren
         {
             get
@@ -140,6 +153,7 @@ namespace RenderingLibrary.Graphics
                 return false;
             }
         }
+
         public IRenderableIpso Parent
         {
             get { return mParent; }
@@ -225,6 +239,10 @@ namespace RenderingLibrary.Graphics
             get;
             set;
         }
+
+        public ColorOperation ColorOperation { get; set; } = ColorOperation.Modulate;
+
+        
         
         public bool FlipHorizontal
         {

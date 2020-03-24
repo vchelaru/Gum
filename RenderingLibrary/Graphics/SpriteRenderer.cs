@@ -99,7 +99,7 @@ namespace RenderingLibrary.Graphics
 
             BasicEffect effectiveEffect = null;
 
-            if(Renderer.UseBasicEffectRendering)
+             if(Renderer.UseBasicEffectRendering)
             {
                 basicEffect.World = Matrix.CreateTranslation(
                     -width / 2f,
@@ -118,6 +118,29 @@ namespace RenderingLibrary.Graphics
                     Renderer.UseBasicEffectRendering ? basicEffect : null;
 
             }
+
+            switch(renderStates.ColorOperation)
+            {
+                case ColorOperation.ColorTextureAlpha:
+                    basicEffect.TextureEnabled = true;
+                    basicEffect.VertexColorEnabled = true;
+
+                    // Since MonoGame doesn't use custom shaders, we have to hack this
+                    // using Fog. It works...but it's slow and introduces a lot of render breaks. 
+                    // At some point in the future we should try to fix this.
+                    basicEffect.FogEnabled = true;
+                    basicEffect.FogStart = 0;
+                    basicEffect.FogEnd = 0;
+                    break;
+                case ColorOperation.Modulate:
+
+                    basicEffect.VertexColorEnabled = true;
+
+                    basicEffect.FogEnabled = false;
+                    basicEffect.TextureEnabled = true;
+                    break;
+            }
+
 
             if (beginType == BeginType.Begin)
             {
@@ -263,6 +286,10 @@ namespace RenderingLibrary.Graphics
 
         internal void Draw(Texture2D textureToUse, Vector2 position, Rectangle? sourceRectangle, Color color, float rotation, Vector2 origin, Vector2 scale, SpriteEffects effects, float depth, object objectRequestingChange)
         {
+            if(basicEffect.FogEnabled)
+            {
+                basicEffect.FogColor = new Vector3(color.R/255, color.G/255, color.B/255f);
+            }
             mSpriteBatch.Draw(textureToUse, position, sourceRectangle, color, rotation, origin, scale, effects, depth, objectRequestingChange);
         }
 

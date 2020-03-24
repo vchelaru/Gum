@@ -27,6 +27,7 @@ namespace RenderingLibrary.Math.Geometry
             get;
             set;
         }
+        ColorOperation IRenderableIpso.ColorOperation => ColorOperation.Modulate;
 
         // this doesn't do anything.
 

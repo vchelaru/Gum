@@ -38,6 +38,8 @@ namespace RenderingLibrary.Math.Geometry
 
         #region Properties
 
+        ColorOperation IRenderableIpso.ColorOperation => ColorOperation.Modulate;
+
         /// <summary>
         /// This is similar to the Visible property, but affects only this.
         /// This allows LineRectangles to not render without making their children invisible.
