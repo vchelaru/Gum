@@ -68,6 +68,14 @@ namespace SkiaPlugin.Renderables
 
         internal override void DrawToSurface(SKSurface surface)
         {
+            if(surface == null)
+            {
+                throw new ArgumentNullException(nameof(surface));
+            }
+            if(surface.Canvas == null)
+            {
+                throw new ArgumentNullException(nameof(surface.Canvas));
+            }
             surface.Canvas.Clear(SKColors.Transparent);
 
 

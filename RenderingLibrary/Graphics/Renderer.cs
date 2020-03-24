@@ -182,6 +182,8 @@ namespace RenderingLibrary.Graphics
             set;
         } = BlendState.NonPremultiplied;
 
+        public static bool UseBasicEffectRendering { get; set; } = true;
+
         #endregion
 
         #region Methods

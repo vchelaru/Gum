@@ -254,12 +254,16 @@ namespace SkiaPlugin.Renderables
                 var imageInfo = new SKImageInfo((int)widthToUse, (int)heightToUse, colorType, SKAlphaType.Premul);
                 using (var surface = SKSurface.Create(imageInfo))
                 {
-                    DrawToSurface(surface);
+                    // It's possible this can fail
+                    if(surface != null)
+                    {
+                        DrawToSurface(surface);
 
-                    var skImage = surface.Snapshot();
-                    texture = RenderImageToTexture2D(skImage, SystemManagers.Default.Renderer.GraphicsDevice, colorType);
+                        var skImage = surface.Snapshot();
+                        texture = RenderImageToTexture2D(skImage, SystemManagers.Default.Renderer.GraphicsDevice, colorType);
+                        needsUpdate = false;
+                    }
                 }
-                needsUpdate = false;
             }
         }
 

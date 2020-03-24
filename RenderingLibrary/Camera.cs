@@ -200,11 +200,11 @@ namespace RenderingLibrary
             UpdateClient();
         }
 
-        public Matrix GetTransformationMatrix()
+        public Matrix GetTransformationMatrix(bool forRendering = false)
         {
             if (CameraCenterOnScreen == RenderingLibrary.CameraCenterOnScreen.Center)
             {
-                return Camera.GetTransformationMatirx(X, Y, Zoom, ClientWidth, ClientHeight);
+                return Camera.GetTransformationMatrix(X, Y, Zoom, ClientWidth, ClientHeight, forRendering);
             }
             else
             {
@@ -213,11 +213,25 @@ namespace RenderingLibrary
             }
         }
 
-        public static Matrix GetTransformationMatirx(float x, float y, float zoom, int clientWidth, int clientHeight)
+        public static Matrix GetTransformationMatrix(float x, float y, float zoom, int clientWidth, int clientHeight, bool forRendering = false)
         {
-            return Matrix.CreateTranslation(new Vector3(-x, -y, 0)) *
-                   Matrix.CreateScale(new Vector3(zoom, zoom, 1)) *
-                   Matrix.CreateTranslation(new Vector3(clientWidth * 0.5f, clientHeight * 0.5f, 0));
+            if(Renderer.UseBasicEffectRendering && forRendering)
+            {
+                return
+                    Matrix.CreateTranslation(new Vector3(-x, -y, 0)) *
+                    Matrix.CreateTranslation(new Vector3(clientWidth * 0.5f, clientHeight * 0.5f, 0))*
+                    Matrix.CreateScale(new Vector3(zoom, zoom, 1)) 
+                    
+                    ;
+            }
+            else
+            {
+
+                return 
+                    Matrix.CreateTranslation(new Vector3(-x, -y, 0)) *
+                    Matrix.CreateScale(new Vector3(zoom, zoom, 1)) *
+                    Matrix.CreateTranslation(new Vector3(clientWidth * 0.5f, clientHeight * 0.5f, 0));
+            }
         }
 
 

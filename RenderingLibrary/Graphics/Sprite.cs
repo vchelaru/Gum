@@ -21,6 +21,54 @@ namespace RenderingLibrary.Graphics
 
         public Color Color = Color.White;
 
+        public int Alpha
+        {
+            get
+            {
+                return Color.A;
+            }
+            set
+            {
+                Color.A = (byte)value;
+            }
+        }
+
+        public int Red
+        {
+            get
+            {
+                return Color.R;
+            }
+            set
+            {
+                Color.R = (byte)value;
+            }
+        }
+
+        public int Green
+        {
+            get
+            {
+                return Color.G;
+            }
+            set
+            {
+                Color.G = (byte)value;
+            }
+        }
+
+        public int Blue
+        {
+            get
+            {
+                return Color.B;
+            }
+            set
+            {
+                Color.B = (byte)value;
+            }
+        }
+
         public Rectangle? SourceRectangle;
 
         Texture2D mTexture;
@@ -208,53 +256,7 @@ namespace RenderingLibrary.Graphics
             set;
         }
 
-        public int Alpha
-        {
-            get
-            {
-                return Color.A;
-            }
-            set
-            {
-                Color.A = (byte)value;
-            }
-        }
 
-        public int Red
-        {
-            get
-            {
-                return Color.R;
-            }
-            set
-            {
-                Color.R = (byte)value;
-            }
-        }
-
-        public int Green
-        {
-            get
-            {
-                return Color.G;
-            }
-            set
-            {
-                Color.G = (byte)value;
-            }
-        }
-
-        public int Blue
-        {
-            get
-            {
-                return Color.B;
-            }
-            set
-            {
-                Color.B = (byte)value;
-            }
-        }
 
         public Rectangle? EffectiveRectangle
         {

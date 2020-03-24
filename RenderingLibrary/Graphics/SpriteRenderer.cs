@@ -16,6 +16,8 @@ namespace RenderingLibrary.Graphics
         RasterizerState scissorTestEnabled;
         RasterizerState scissorTestDisabled;
 
+        BasicEffect basicEffect;
+
         public IEnumerable<BeginParameters> LastFrameDrawStates
         {
             get
@@ -41,6 +43,8 @@ namespace RenderingLibrary.Graphics
             mSpriteBatch = new SpriteBatchStack(graphicsDevice);
 
             CreateRasterizerStates();
+
+            CreateBasicEffect(graphicsDevice);
         }
 
         public void EndSpriteBatch()
@@ -52,7 +56,8 @@ namespace RenderingLibrary.Graphics
         public void BeginSpriteBatch(RenderStateVariables renderStates, Layer layer, BeginType beginType, Camera camera)
         {
 
-            Matrix matrix = GetZoomAndMatrix(layer, camera);
+            Matrix matrix = Renderer.UseBasicEffectRendering ?
+                Matrix.Identity : GetZoomAndMatrix(layer, camera);
 
             SamplerState samplerState = GetSamplerState(renderStates);
 
@@ -89,22 +94,51 @@ namespace RenderingLibrary.Graphics
 
             DepthStencilState depthStencilState = DepthStencilState.DepthRead;
 
+            var width = camera.ClientWidth;
+            var height = camera.ClientHeight;
+
+            BasicEffect effectiveEffect = null;
+
+            if(Renderer.UseBasicEffectRendering)
+            {
+                basicEffect.World = Matrix.CreateTranslation(
+                    -width / 2f,
+                    -height / 2f,
+                    0);
+                //effect.Projection = Matrix.CreateOrthographic(100, 100, 0.0001f, 1000);
+                basicEffect.Projection = Matrix.CreateOrthographic(
+                    width,
+                    -height,
+                    -1, 1);
+
+                basicEffect.View =
+                    GetZoomAndMatrix(layer, camera);
+
+                effectiveEffect =
+                    Renderer.UseBasicEffectRendering ? basicEffect : null;
+
+            }
+
             if (beginType == BeginType.Begin)
             {
-                mSpriteBatch.ReplaceRenderStates(SpriteSortMode.Immediate, renderStates.BlendState,
+                mSpriteBatch.ReplaceRenderStates(SpriteSortMode.Immediate, 
+                    renderStates.BlendState,
                     samplerState,
                     depthStencilState,
                     rasterizerState,
-                    null, matrix,
+                    effectiveEffect, 
+                    matrix,
                     scissorRectangle);
             }
             else
             {
-                mSpriteBatch.PushRenderStates(SpriteSortMode.Immediate, renderStates.BlendState,
+                mSpriteBatch.PushRenderStates(SpriteSortMode.Immediate, 
+                    renderStates.BlendState,
                     samplerState,
                     depthStencilState,
                     rasterizerState,
-                    null, matrix,
+                    effectiveEffect, 
+                    matrix,
                     scissorRectangle);
             }
         }
@@ -123,8 +157,10 @@ namespace RenderingLibrary.Graphics
                     {
                         zoom = layer.LayerCameraSettings.Zoom.Value;
                     }
-                    matrix = Matrix.CreateScale(zoom);
+                    // set this before applying the override
                     CurrentZoom = zoom;
+                    zoom = Renderer.UseBasicEffectRendering ? 1 : zoom;
+                    matrix = Matrix.CreateScale(zoom);
                 }
                 else
                 {
@@ -133,13 +169,15 @@ namespace RenderingLibrary.Graphics
                     {
                         zoom = layer.LayerCameraSettings.Zoom.Value;
                     }
-                    matrix = Camera.GetTransformationMatirx(camera.X, camera.Y, zoom, camera.ClientWidth, camera.ClientHeight);
+                    // set this before setting the overriding zoom
                     CurrentZoom = zoom;
+                    zoom = Renderer.UseBasicEffectRendering ? 1 : zoom;
+                    matrix = Camera.GetTransformationMatrix(camera.X, camera.Y, zoom, camera.ClientWidth, camera.ClientHeight, forRendering:true);
                 }
             }
             else
             {
-                matrix = camera.GetTransformationMatrix();
+                matrix = camera.GetTransformationMatrix(forRendering:true);
                 CurrentZoom = camera.Zoom;
             }
             return matrix;
@@ -185,6 +223,17 @@ namespace RenderingLibrary.Graphics
 
             scissorTestEnabled.ScissorTestEnable = true;
             scissorTestDisabled.ScissorTestEnable = false;
+        }
+
+        private void CreateBasicEffect(GraphicsDevice graphicsDevice)
+        {
+            basicEffect = new BasicEffect(graphicsDevice);
+            basicEffect.TextureEnabled = true;
+            basicEffect.LightingEnabled = false;
+            basicEffect.FogEnabled = false;
+            basicEffect.VertexColorEnabled = true;
+
+
         }
 
         public void Begin()
