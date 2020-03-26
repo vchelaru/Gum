@@ -97,10 +97,16 @@ namespace CodeOutputPlugin.Manager
 
             if(visualApi == VisualApi.Gum)
             {
+                #region Constructor Header
+
                 stringBuilder.AppendLine(ToTabs(tabCount) + $"public {elementName}(bool fullInstantiation = true)");
 
                 stringBuilder.AppendLine(ToTabs(tabCount) + "{");
                 tabCount++;
+
+                #endregion
+
+                #region Gum-required constructor code
 
                 stringBuilder.AppendLine(ToTabs(tabCount) + "if(fullInstantiation)");
                 stringBuilder.AppendLine(ToTabs(tabCount) + "{");
@@ -109,7 +115,7 @@ namespace CodeOutputPlugin.Manager
                 stringBuilder.AppendLine(ToTabs(tabCount) + "this.SetContainedObject(new InvisibleRenderable());");
 
                 stringBuilder.AppendLine();
-
+                #endregion
             }
             else // xamarin forms
             {
@@ -748,7 +754,11 @@ namespace CodeOutputPlugin.Manager
             var rootName = variable.GetRootName();
             
             if(rootName == "IsXamarinFormsControl" ||
-                rootName == "Name")
+                rootName == "Name" ||
+                rootName == "X Origin" ||
+                rootName == "XOrigin" ||
+                rootName == "Y Origin" ||
+                rootName == "YOrigin")
             {
                 return " "; // Don't do anything with these variables::
             }
@@ -780,20 +790,20 @@ namespace CodeOutputPlugin.Manager
             {
                 return asFloat.ToString(CultureInfo.InvariantCulture) + "f";
             }
-            else if(variable.Value is string)
+            else if(variable.Value is string asString)
             {
                 if(variable.GetRootName() == "Parent")
                 {
-                    return variable.Value.ToString();
+                    return asString;
                 }
                 else if(variable.IsState(container, out ElementSave categoryContainer, out StateSaveCategory category))
                 {
                     var containerClassName = GetClassNameForType(categoryContainer.Name, VisualApi.Gum);
-                    return $"{containerClassName}.{category.Name}.{variable.Value}";
+                    return $"{containerClassName}.{category.Name}.{asString}";
                 }
                 else
                 {
-                    return "\"" + variable.Value + "\"";
+                    return "\"" + asString.Replace("\n", "\\n") + "\"";
                 }
             }
             else if(variable.Value is bool)
