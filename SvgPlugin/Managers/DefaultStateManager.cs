@@ -14,6 +14,7 @@ namespace SkiaPlugin.Managers
         static StateSave svgState;
         static StateSave filledCircleState;
         static StateSave roundedRectangleState;
+        static StateSave arcState;
 
 
         public static StateSave GetSvgState()
@@ -22,12 +23,12 @@ namespace SkiaPlugin.Managers
             {
                 svgState = new StateSave();
                 svgState.Name = "Default";
-                svgState.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
+                AddVisibleVariable(svgState);
                 StandardElementsManager.AddPositioningVariables(svgState);
-                StandardElementsManager.AddDimensionsVariables(svgState, 100, 100, 
+                StandardElementsManager.AddDimensionsVariables(svgState, 100, 100,
                     Gum.Managers.StandardElementsManager.DimensionVariableAction.AllowFileOptions);
 
-                foreach(var variableSave in svgState.Variables.Where(item => item.Type == typeof(DimensionUnitType).Name))
+                foreach (var variableSave in svgState.Variables.Where(item => item.Type == typeof(DimensionUnitType).Name))
                 {
                     variableSave.Value = DimensionUnitType.Absolute;
                     variableSave.ExcludedValuesForEnum.Add(DimensionUnitType.PercentageOfSourceFile);
@@ -42,13 +43,19 @@ namespace SkiaPlugin.Managers
             return svgState;
         }
 
+        private static void AddVisibleVariable(StateSave state)
+        {
+            state.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
+        }
+
         public static StateSave GetColoredCircleState()
         {
             if(filledCircleState == null)
             {
                 filledCircleState = new StateSave();
                 filledCircleState.Name = "Default";
-                filledCircleState.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
+                AddVisibleVariable(filledCircleState);
+
                 StandardElementsManager.AddPositioningVariables(filledCircleState);
                 StandardElementsManager.AddDimensionsVariables(filledCircleState, 64, 64, 
                     StandardElementsManager.DimensionVariableAction.ExcludeFileOptions);
@@ -64,7 +71,8 @@ namespace SkiaPlugin.Managers
             {
                 roundedRectangleState = new StateSave();
                 roundedRectangleState.Name = "Default";
-                roundedRectangleState.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
+                AddVisibleVariable(roundedRectangleState);
+
                 roundedRectangleState.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 5, Name = "CornerRadius", Category="Dimensions" });
 
                 StandardElementsManager.AddPositioningVariables(roundedRectangleState);
@@ -75,6 +83,27 @@ namespace SkiaPlugin.Managers
             }
 
             return roundedRectangleState;
+        }
+
+        public static StateSave GetArcState()
+        {
+            if(arcState == null)
+            {
+                arcState = new StateSave();
+                arcState.Name = "Default";
+                arcState.Variables.Add(new VariableSave { Type = "float", Value = 10, Category = "Arc", Name = "Thickness" });
+                arcState.Variables.Add(new VariableSave { Type = "float", Value = 0, Category = "Arc", Name = "StartAngle" });
+                arcState.Variables.Add(new VariableSave { Type = "float", Value = 90, Category = "Arc", Name = "SweepAngle" });
+
+                AddVisibleVariable(arcState);
+
+                StandardElementsManager.AddPositioningVariables(arcState);
+                StandardElementsManager.AddDimensionsVariables(arcState, 64, 64,
+                    StandardElementsManager.DimensionVariableAction.ExcludeFileOptions);
+                StandardElementsManager.AddColorVariables(arcState);
+            }
+
+            return arcState;
         }
 
         static void AddDropshadowVariables(StateSave stateSave)

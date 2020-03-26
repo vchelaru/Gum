@@ -56,6 +56,7 @@ namespace SkiaPlugin
                 case "Svg": return new RenderableSvg();
                 case "ColoredCircle": return new RenderableCircle();
                 case "RoundedRectangle": return new RenderableRoundedRectangle();
+                case "Arc": return new RenderableArc();
             }
 
             return null;
@@ -68,6 +69,7 @@ namespace SkiaPlugin
                 case "Svg": return DefaultStateManager.GetSvgState();
                 case "ColoredCircle": return DefaultStateManager.GetColoredCircleState();
                 case "RoundedRectangle": return DefaultStateManager.GetRoundedRectangleState();
+                case "Arc": return DefaultStateManager.GetArcState();
             }
             return null;
         }

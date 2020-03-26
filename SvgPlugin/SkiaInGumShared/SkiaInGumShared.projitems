@@ -9,6 +9,7 @@
     <Import_RootNamespace>SkiaInGumShared</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Renderables\RenderableArc.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Renderables\RenderableCircle.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Renderables\RenderableRoundedRectangle.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Renderables\RenderableSkiaObject.cs" />

@@ -121,6 +121,7 @@
     <EmbeddedResource Include="Embedded\Svg.gutx" />
     <EmbeddedResource Include="Embedded\ColoredCircle.gutx" />
     <EmbeddedResource Include="Embedded\RoundedRectangle.gutx" />
+    <EmbeddedResource Include="Embedded\Arc.gutx" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="SkiaInGumShared\SkiaInGumShared.projitems" Label="Shared" />
