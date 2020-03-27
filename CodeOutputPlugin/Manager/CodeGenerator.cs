@@ -125,8 +125,19 @@ namespace CodeOutputPlugin.Manager
                 tabCount++;
 
                 stringBuilder.AppendLine(ToTabs(tabCount) + "GraphicalUiElement.IsAllLayoutSuspended = true;");
-                stringBuilder.AppendLine(ToTabs(tabCount) + "var layout = new AbsoluteLayout();");
-                stringBuilder.AppendLine(ToTabs(tabCount) + "MainGrid.Children.Add(layout);");
+
+                var isThisAbsoluteLayout = element.BaseType.EndsWith("/AbsoluteLayout");
+
+                if(isThisAbsoluteLayout)
+                {
+                    stringBuilder.AppendLine(ToTabs(tabCount) + "var layout = this;");
+                }
+                else
+                {
+                    stringBuilder.AppendLine(ToTabs(tabCount) + "var layout = new AbsoluteLayout();");
+                    stringBuilder.AppendLine(ToTabs(tabCount) + "MainGrid.Children.Add(layout);");
+                }
+
             }
 
             FillWithVariableAssignments(element, visualApi, stringBuilder, tabCount);

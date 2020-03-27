@@ -3476,6 +3476,10 @@ namespace Gum.Wireframe
                     this.ClipsChildren = (bool)value;
                     toReturn = true;
                     break;
+                case "CurrentChainName":
+                    this.CurrentChainName = (string)value;
+                    toReturn = true;
+                    break;
                 case "FlipHorizontal":
                     this.FlipHorizontal = (bool)value;
                     toReturn = true;
@@ -3707,6 +3711,8 @@ namespace Gum.Wireframe
                         var animationChainListSave = Content.AnimationChain.AnimationChainListSave.FromFile(asString);
 
                         this.mAnimationChains = animationChainListSave.ToAnimationChainList(null);
+
+                        RefreshCurrentChainToDesiredName();
 
                         UpdateToCurrentAnimationFrame();
                         handled = true;
@@ -4668,6 +4674,36 @@ namespace Gum.Wireframe
                 }
                 else
                     return null;
+            }
+        }
+
+        string desiredCurrentChainName;
+        public string CurrentChainName
+        {
+            get => CurrentChain?.Name;
+            set
+            {
+                desiredCurrentChainName = value;
+                mCurrentChainIndex = -1;
+                if(mAnimationChains?.Count > 0)
+                {
+                    RefreshCurrentChainToDesiredName();
+
+                    UpdateToCurrentAnimationFrame();
+
+                }
+            }
+        }
+
+        private void RefreshCurrentChainToDesiredName()
+        {
+            for (int i = 0; i < mAnimationChains.Count; i++)
+            {
+                if (mAnimationChains[i].Name == desiredCurrentChainName)
+                {
+                    mCurrentChainIndex = i;
+                    break;
+                }
             }
         }
 
