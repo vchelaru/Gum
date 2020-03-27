@@ -4,6 +4,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.ToolStates;
+using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -36,11 +37,13 @@ namespace CodeOutputPlugin.Manager
             var stringBuilder = new StringBuilder();
             int tabCount = 0;
 
-            if(!string.IsNullOrEmpty(settings?.UsingStatements))
+            #region Using Statements
+
+            if (!string.IsNullOrEmpty(settings?.UsingStatements))
             {
                 stringBuilder.AppendLine(settings.UsingStatements);
-
             }
+            #endregion
 
             #region Namespace Header/Opening {
 
@@ -119,10 +122,13 @@ namespace CodeOutputPlugin.Manager
             }
             else // xamarin forms
             {
+                #region Constructor Header
                 stringBuilder.AppendLine(ToTabs(tabCount) + $"public {elementName}()");
 
                 stringBuilder.AppendLine(ToTabs(tabCount) + "{");
                 tabCount++;
+
+                #endregion
 
                 stringBuilder.AppendLine(ToTabs(tabCount) + "GraphicalUiElement.IsAllLayoutSuspended = true;");
 
@@ -514,7 +520,8 @@ namespace CodeOutputPlugin.Manager
                 switch(instance.BaseType)
                 {
                     case "Text":
-                        ProcessVariableGroupsForLabel(variablesToConsider, defaultState, instance, stringBuilder);
+                        ProcessColorForLabel(variablesToConsider, defaultState, instance, stringBuilder);
+                        ProcessPositionAndSize(variablesToConsider, defaultState, instance, stringBuilder);
                         break;
                     default:
                         ProcessPositionAndSize(variablesToConsider, defaultState, instance, stringBuilder);
@@ -523,7 +530,7 @@ namespace CodeOutputPlugin.Manager
             }
         }
 
-        private static void ProcessVariableGroupsForLabel(List<VariableSave> variablesToConsider, StateSave defaultState, InstanceSave instance, StringBuilder stringBuilder)
+        private static void ProcessColorForLabel(List<VariableSave> variablesToConsider, StateSave defaultState, InstanceSave instance, StringBuilder stringBuilder)
         {
             var instanceName = instance.Name;
             var rfv = new RecursiveVariableFinder(defaultState);
@@ -590,10 +597,30 @@ namespace CodeOutputPlugin.Manager
                     width /= 100.0f;
                     proportionalFlags.Add("AbsoluteLayoutFlags.WidthProportional");
                 }
+                else if(widthUnits == DimensionUnitType.RelativeToContainer)
+                {
+                    if(width == 0)
+                    {
+                        width = 1;
+                        proportionalFlags.Add("AbsoluteLayoutFlags.WidthProportional");
+                    }
+                    else
+                    {
+                        // not allowed!!!
+                    }
+                }
                 if (heightUnits == DimensionUnitType.Percentage)
                 {
                     height /= 100.0f;
                     proportionalFlags.Add("AbsoluteLayoutFlags.HeightProportional");
+                }
+                else if(heightUnits == DimensionUnitType.RelativeToContainer)
+                {
+                    if(height == 0)
+                    {
+                        height = 1;
+                        proportionalFlags.Add("AbsoluteLayoutFlags.HeightProportional");
+                    }
                 }
 
                 // Xamarin forms uses a weird anchoring system to combine both position and anchor into one value. Gum splits those into two values
@@ -883,6 +910,34 @@ namespace CodeOutputPlugin.Manager
                     var converted = UnitConverter.ConvertToGeneralUnit(variable.Value);
                     return $"GeneralUnitType.{converted}";
                 }
+                else if(type == typeof(HorizontalAlignment))
+                {
+                    switch((HorizontalAlignment)variable.Value)
+                    {
+                        case HorizontalAlignment.Left:
+                            return "Xamarin.Forms.TextAlignment.Start";
+                        case HorizontalAlignment.Center:
+                            return "Xamarin.Forms.TextAlignment.Center";
+                        case HorizontalAlignment.Right:
+                            return "Xamarin.Forms.TextAlignment.End";
+                        default:
+                            return "";
+                    }
+                }
+                else if(type == typeof(VerticalAlignment))
+                {
+                    switch((VerticalAlignment)variable.Value)
+                    {
+                        case VerticalAlignment.Top:
+                            return "Xamarin.Forms.TextAlignment.Start";
+                        case VerticalAlignment.Center:
+                            return "Xamarin.Forms.TextAlignment.Center";
+                        case VerticalAlignment.Bottom:
+                            return "Xamarin.Forms.TextAlignment.End";
+                        default:
+                            return "";
+                    }
+                }
                 else
                 {
                     return variable.Value.GetType().Name + "." + variable.Value.ToString();
@@ -917,6 +972,8 @@ namespace CodeOutputPlugin.Manager
                 case "X": return "PixelX";
                 case "Y": return "PixelY";
                 case "Visible": return "IsVisible";
+                case "HorizontalAlignment": return "HorizontalTextAlignment";
+                case "VerticalAlignment": return "VerticalTextAlignment";
 
                 default: return rootName;
             }

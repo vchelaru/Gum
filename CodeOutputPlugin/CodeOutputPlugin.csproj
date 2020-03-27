@@ -97,6 +97,10 @@
       <Project>{938d9a00-8529-4ce8-9077-e0a3994a73ea}</Project>
       <Name>InputLibrary</Name>
     </ProjectReference>
+    <ProjectReference Include="..\RenderingLibrary\RenderingLibrary.csproj">
+      <Project>{a86ee399-7c93-42e1-80ed-ca4cbf4ca573}</Project>
+      <Name>RenderingLibrary</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ToolsUtilities\ToolsUtilities.csproj">
       <Project>{B941A93F-6093-4DC6-AD11-91A058B6C2CC}</Project>
       <Name>ToolsUtilities</Name>
