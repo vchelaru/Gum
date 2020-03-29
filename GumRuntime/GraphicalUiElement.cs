@@ -3466,161 +3466,169 @@ namespace Gum.Wireframe
         private bool TrySetValueOnThis(string propertyName, object value)
         {
             bool toReturn = false;
-            switch (propertyName)
+            try
             {
-                case "Children Layout":
-                    this.ChildrenLayout = (ChildrenLayout)value;
-                    toReturn = true;
-                    break;
-                case "Clips Children":
-                    this.ClipsChildren = (bool)value;
-                    toReturn = true;
-                    break;
-                case "CurrentChainName":
-                    this.CurrentChainName = (string)value;
-                    toReturn = true;
-                    break;
-                case "FlipHorizontal":
-                    this.FlipHorizontal = (bool)value;
-                    toReturn = true;
-                    break;
-                case "Height":
-                    this.Height = (float)value;
+                switch (propertyName)
+                {
+                    case "Children Layout":
+                        this.ChildrenLayout = (ChildrenLayout)value;
                         toReturn = true;
-                    break;
-                case "Height Units":
-                    this.HeightUnits = (DimensionUnitType)value;
-                    toReturn = true;
-                    break;
-                case "Parent":
-                    {
-                        string valueAsString = (string)value;
-
-                        if (!string.IsNullOrEmpty(valueAsString) && mWhatContainsThis != null)
+                        break;
+                    case "Clips Children":
+                        this.ClipsChildren = (bool)value;
+                        toReturn = true;
+                        break;
+                    case "CurrentChainName":
+                        this.CurrentChainName = (string)value;
+                        toReturn = true;
+                        break;
+                    case "FlipHorizontal":
+                        this.FlipHorizontal = (bool)value;
+                        toReturn = true;
+                        break;
+                    case "Height":
+                        this.Height = (float)value;
+                            toReturn = true;
+                        break;
+                    case "Height Units":
+                        this.HeightUnits = (DimensionUnitType)value;
+                        toReturn = true;
+                        break;
+                    case "Parent":
                         {
-                            var newParent = this.mWhatContainsThis.GetGraphicalUiElementByName(valueAsString);
-                            if (newParent != null)
+                            string valueAsString = (string)value;
+
+                            if (!string.IsNullOrEmpty(valueAsString) && mWhatContainsThis != null)
                             {
-                                Parent = newParent;
+                                var newParent = this.mWhatContainsThis.GetGraphicalUiElementByName(valueAsString);
+                                if (newParent != null)
+                                {
+                                    Parent = newParent;
+                                }
+                            }
+                            toReturn = true;
+                        }
+                        break;
+                    case "Rotation":
+                        this.Rotation = (float)value;
+                        toReturn = true;
+                        break;
+                    case "Width":
+                        this.Width = (float)value;
+                        toReturn = true;
+                        break;
+                    case "Width Units":
+                        this.WidthUnits = (DimensionUnitType)value;
+                        toReturn = true;
+                        break;
+                    case "Texture Left":
+                        this.TextureLeft = (int)value;
+                        toReturn = true;
+                        break;
+                    case "Texture Top":
+                        this.TextureTop = (int)value;
+                        toReturn = true;
+                        break;
+                    case "Texture Width":
+                        this.TextureWidth = (int)value;
+                        toReturn = true;
+                        break;
+                    case "Texture Height":
+                        this.TextureHeight = (int)value;
+                        toReturn = true;
+
+                        break;
+                    case "Texture Width Scale":
+                        this.TextureWidthScale = (float)value;
+                        toReturn = true;
+                        break;
+                    case "Texture Height Scale":
+                        this.TextureHeightScale = (float)value;
+                        toReturn = true;
+                        break;
+                    case "Texture Address":
+
+                        this.TextureAddress = (Gum.Managers.TextureAddress)value;
+                        toReturn = true;
+                        break;
+                    case "Visible":
+                        this.Visible = (bool)value;
+                        toReturn = true;
+                        break;
+                    case "X":
+                        this.X = (float)value;
+                        toReturn = true;
+                        break;
+                    case "X Origin":
+                        this.XOrigin = (HorizontalAlignment)value;
+                        toReturn = true;
+                        break;
+                    case "X Units":
+                        this.XUnits = UnitConverter.ConvertToGeneralUnit(value);
+                        toReturn = true;
+                        break;
+                    case "Y":
+                        this.Y = (float)value;
+                        toReturn = true;
+                        break;
+                    case "Y Origin":
+                        this.YOrigin = (VerticalAlignment)value;
+                        toReturn = true;
+                        break;
+                    case "Y Units":
+
+                        this.YUnits = UnitConverter.ConvertToGeneralUnit(value);
+                        toReturn = true;
+                        break;
+                    case "Wrap":
+                        this.Wrap = (bool)value;
+                        toReturn = true;
+                        break;
+                    case "Wraps Children":
+                        this.WrapsChildren = (bool)value;
+                        toReturn = true;
+                        break;
+                }
+
+                if (!toReturn)
+                {
+
+                    if (propertyName.EndsWith("State") && value is string)
+                    {
+                        var valueAsString = value as string;
+
+                        string nameWithoutState = propertyName.Substring(0, propertyName.Length - "State".Length);
+
+                        if (string.IsNullOrEmpty(nameWithoutState))
+                        {
+                            // This is an uncategorized state
+                            if (mStates.ContainsKey(valueAsString))
+                            {
+                                ApplyState(mStates[valueAsString]);
+                                toReturn = true;
                             }
                         }
-                        toReturn = true;
-                    }
-                    break;
-                case "Rotation":
-                    this.Rotation = (float)value;
-                    toReturn = true;
-                    break;
-                case "Width":
-                    this.Width = (float)value;
-                    toReturn = true;
-                    break;
-                case "Width Units":
-                    this.WidthUnits = (DimensionUnitType)value;
-                    toReturn = true;
-                    break;
-                case "Texture Left":
-                    this.TextureLeft = (int)value;
-                    toReturn = true;
-                    break;
-                case "Texture Top":
-                    this.TextureTop = (int)value;
-                    toReturn = true;
-                    break;
-                case "Texture Width":
-                    this.TextureWidth = (int)value;
-                    toReturn = true;
-                    break;
-                case "Texture Height":
-                    this.TextureHeight = (int)value;
-                    toReturn = true;
-
-                    break;
-                case "Texture Width Scale":
-                    this.TextureWidthScale = (float)value;
-                    toReturn = true;
-                    break;
-                case "Texture Height Scale":
-                    this.TextureHeightScale = (float)value;
-                    toReturn = true;
-                    break;
-                case "Texture Address":
-
-                    this.TextureAddress = (Gum.Managers.TextureAddress)value;
-                    toReturn = true;
-                    break;
-                case "Visible":
-                    this.Visible = (bool)value;
-                    toReturn = true;
-                    break;
-                case "X":
-                    this.X = (float)value;
-                    toReturn = true;
-                    break;
-                case "X Origin":
-                    this.XOrigin = (HorizontalAlignment)value;
-                    toReturn = true;
-                    break;
-                case "X Units":
-                    this.XUnits = UnitConverter.ConvertToGeneralUnit(value);
-                    toReturn = true;
-                    break;
-                case "Y":
-                    this.Y = (float)value;
-                    toReturn = true;
-                    break;
-                case "Y Origin":
-                    this.YOrigin = (VerticalAlignment)value;
-                    toReturn = true;
-                    break;
-                case "Y Units":
-
-                    this.YUnits = UnitConverter.ConvertToGeneralUnit(value);
-                    toReturn = true;
-                    break;
-                case "Wrap":
-                    this.Wrap = (bool)value;
-                    toReturn = true;
-                    break;
-                case "Wraps Children":
-                    this.WrapsChildren = (bool)value;
-                    toReturn = true;
-                    break;
-            }
-
-            if (!toReturn)
-            {
-
-                if (propertyName.EndsWith("State") && value is string)
-                {
-                    var valueAsString = value as string;
-
-                    string nameWithoutState = propertyName.Substring(0, propertyName.Length - "State".Length);
-
-                    if (string.IsNullOrEmpty(nameWithoutState))
-                    {
-                        // This is an uncategorized state
-                        if (mStates.ContainsKey(valueAsString))
+                        else if (mCategories.ContainsKey(nameWithoutState))
                         {
-                            ApplyState(mStates[valueAsString]);
-                            toReturn = true;
-                        }
-                    }
-                    else if (mCategories.ContainsKey(nameWithoutState))
-                    {
 
-                        var category = mCategories[nameWithoutState];
+                            var category = mCategories[nameWithoutState];
 
-                        var state = category.States.FirstOrDefault(item => item.Name == valueAsString);
-                        if (state != null)
-                        {
-                            ApplyState(state);
-                            toReturn = true;
+                            var state = category.States.FirstOrDefault(item => item.Name == valueAsString);
+                            if (state != null)
+                            {
+                                ApplyState(state);
+                                toReturn = true;
+                            }
                         }
                     }
                 }
             }
-
+            catch(InvalidCastException)
+            {
+                // There could be some rogue value set to the incorrect type, or maybe
+                // a new type or plugin initialized the default to the wrong type. We don't
+                // want to blow up if this happens
+            }
             return toReturn;
         }
 

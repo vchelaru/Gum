@@ -132,7 +132,7 @@ namespace CodeOutputPlugin.Manager
 
                 stringBuilder.AppendLine(ToTabs(tabCount) + "GraphicalUiElement.IsAllLayoutSuspended = true;");
 
-                var isThisAbsoluteLayout = element.BaseType.EndsWith("/AbsoluteLayout");
+                var isThisAbsoluteLayout = element?.BaseType?.EndsWith("/AbsoluteLayout") == true;
 
                 if(isThisAbsoluteLayout)
                 {
@@ -620,6 +620,10 @@ namespace CodeOutputPlugin.Manager
                     {
                         height = 1;
                         proportionalFlags.Add("AbsoluteLayoutFlags.HeightProportional");
+                    }
+                    else
+                    {
+                        // not allowed!
                     }
                 }
 
