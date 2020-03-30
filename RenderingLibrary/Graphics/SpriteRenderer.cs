@@ -99,12 +99,22 @@ namespace RenderingLibrary.Graphics
 
             BasicEffect effectiveEffect = null;
 
-             if(Renderer.UseBasicEffectRendering)
+            if(Renderer.UseBasicEffectRendering)
             {
-                basicEffect.World = Matrix.CreateTranslation(
-                    -width / 2f,
-                    -height / 2f,
-                    0);
+                if(Renderer.ApplyCameraZoomOnWorldTranslation)
+                {
+                    basicEffect.World = Matrix.CreateTranslation(
+                        -width / (2f * camera.Zoom),
+                        -height / (2f * camera.Zoom),
+                        0);
+                }
+                else
+                {
+                    basicEffect.World = Matrix.CreateTranslation(
+                        -width / (2f),
+                        -height / (2f),
+                        0);
+                }
                 //effect.Projection = Matrix.CreateOrthographic(100, 100, 0.0001f, 1000);
                 basicEffect.Projection = Matrix.CreateOrthographic(
                     width,

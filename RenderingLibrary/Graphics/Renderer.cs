@@ -184,7 +184,13 @@ namespace RenderingLibrary.Graphics
         } = BlendState.NonPremultiplied;
 
         public static bool UseBasicEffectRendering { get; set; } = true;
-
+        // Vic says March 29 2020
+        // For some reason the rendering
+        // in the tool works differently than
+        // in-game. Not sure if this is a DesktopGL
+        // vs XNA thing, but I traced it down to the zoom thing.
+        // I'm going to add a bool here to control it.
+        public static bool ApplyCameraZoomOnWorldTranslation { get; set; } = false;
         #endregion
 
         #region Methods
