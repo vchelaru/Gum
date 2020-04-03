@@ -254,6 +254,11 @@ namespace Gum.Converters
             {
                 relativeY = pixelYToConvert / (ownerWidthInPixels/100f);
             }
+            else if(generalY == GeneralUnitType.PixelsFromBaseline)
+            {
+                // This won't convert properly (currently) - maybe eventually?
+                relativeY = pixelYToConvert;
+            }
             else
             {
                 throw new NotImplementedException();
