@@ -130,18 +130,23 @@ namespace CodeOutputPlugin.Manager
 
                 #endregion
 
+
+                stringBuilder.AppendLine(ToTabs(tabCount) + "var wasSuspended = GraphicalUiElement.IsAllLayoutSuspended;");
                 stringBuilder.AppendLine(ToTabs(tabCount) + "GraphicalUiElement.IsAllLayoutSuspended = true;");
 
-                var isThisAbsoluteLayout = element?.BaseType?.EndsWith("/AbsoluteLayout") == true;
+                var elementBaseType = element?.BaseType;
+                var isThisAbsoluteLayout = elementBaseType?.EndsWith("/AbsoluteLayout") == true;
+
+                var isSkiaCanvasView = elementBaseType?.EndsWith("/SkiaGumCanvasView") == true;
 
                 if(isThisAbsoluteLayout)
                 {
                     stringBuilder.AppendLine(ToTabs(tabCount) + "var layout = this;");
                 }
-                else
+                else if(!isSkiaCanvasView)
                 {
                     stringBuilder.AppendLine(ToTabs(tabCount) + "var layout = new AbsoluteLayout();");
-                    stringBuilder.AppendLine(ToTabs(tabCount) + "MainGrid.Children.Add(layout);");
+                    stringBuilder.AppendLine(ToTabs(tabCount) + "BaseGrid.Children.Add(layout);");
                 }
 
             }
@@ -172,7 +177,7 @@ namespace CodeOutputPlugin.Manager
             }
             else
             {
-                stringBuilder.AppendLine(ToTabs(tabCount) + "GraphicalUiElement.IsAllLayoutSuspended = false;");
+                stringBuilder.AppendLine(ToTabs(tabCount) + "GraphicalUiElement.IsAllLayoutSuspended = wasSuspended;");
 
             }
 
@@ -234,7 +239,7 @@ namespace CodeOutputPlugin.Manager
 
 
                 List<VariableSave> variablesForThisInstance = group.ToList();
-                ProcessVariableGroups(variablesForThisInstance, stateSave, instance, visualApi, stringBuilder);
+                ProcessVariableGroups(variablesForThisInstance, stateSave, instance, container, visualApi, stringBuilder);
 
                 // Now that they've been processed, we can process the remainder regularly
                 foreach (var variable in variablesForThisInstance)
@@ -390,6 +395,7 @@ namespace CodeOutputPlugin.Manager
 
         private static void FillWithVariableAssignments(ElementSave element, VisualApi visualApi, StringBuilder stringBuilder, int tabCount = 0)
         {
+            #region Get variables to consider
             var defaultState = SelectedState.Self.SelectedElement.DefaultState;
 
             var baseElement = ObjectFinder.Self.GetElementSave(element.BaseType);
@@ -418,9 +424,13 @@ namespace CodeOutputPlugin.Manager
 
                     return shouldInclude;
                 })
-                .ToArray();
+                .ToList();
+
+            #endregion
 
             var tabs = new String(' ', 4 * tabCount);
+
+            ProcessVariableGroups(variablesToConsider, defaultState, null, element, visualApi, stringBuilder);
             
             foreach (var variable in variablesToConsider)
             {
@@ -491,7 +501,7 @@ namespace CodeOutputPlugin.Manager
 
             // sometimes variables have to be processed in groups. For example, RGB values
             // have to be assigned all at once in a Color value in XamForms;
-            ProcessVariableGroups(variablesToConsider, container.DefaultState, instance, visualApi, stringBuilder);
+            ProcessVariableGroups(variablesToConsider, container.DefaultState, instance, container, visualApi, stringBuilder);
 
             foreach (var variable in variablesToConsider)
             {
@@ -513,11 +523,20 @@ namespace CodeOutputPlugin.Manager
             }
         }
 
-        private static void ProcessVariableGroups(List<VariableSave> variablesToConsider, StateSave defaultState, InstanceSave instance, VisualApi visualApi, StringBuilder stringBuilder)
+        private static void ProcessVariableGroups(List<VariableSave> variablesToConsider, StateSave defaultState, InstanceSave instance, ElementSave container, VisualApi visualApi, StringBuilder stringBuilder)
         {
             if(visualApi == VisualApi.XamarinForms)
             {
-                switch(instance.BaseType)
+                string baseType = null;
+                if (instance != null)
+                {
+                    baseType = instance.BaseType;
+                }
+                else
+                {
+                    baseType = container.BaseType;
+                }
+                switch(baseType)
                 {
                     case "Text":
                         ProcessColorForLabel(variablesToConsider, defaultState, instance, stringBuilder);
@@ -550,9 +569,7 @@ namespace CodeOutputPlugin.Manager
 
         private static void ProcessPositionAndSize(List<VariableSave> variablesToConsider, StateSave defaultState, InstanceSave instance, StringBuilder stringBuilder)
         {
-            var instanceName = instance?.Name;
-
-            string prefix = instance == null ? "" : instanceName + ".";
+            string prefix = instance?.Name == null ? "" : instance.Name + ".";
 
             var setsAny =
                 defaultState.Variables.Any(item =>
@@ -580,14 +597,14 @@ namespace CodeOutputPlugin.Manager
                 var widthUnits = variableFinder.GetValue<DimensionUnitType>(prefix + "Width Units");
                 var heightUnits = variableFinder.GetValue<DimensionUnitType>(prefix + "Height Units");
 
-                variablesToConsider.RemoveAll(item => item.Name == instanceName + ".X");
-                variablesToConsider.RemoveAll(item => item.Name == instanceName + ".Y");
-                variablesToConsider.RemoveAll(item => item.Name == instanceName + ".Width");
-                variablesToConsider.RemoveAll(item => item.Name == instanceName + ".Height");
-                variablesToConsider.RemoveAll(item => item.Name == instanceName + ".X Units");
-                variablesToConsider.RemoveAll(item => item.Name == instanceName + ".Y Units");
-                variablesToConsider.RemoveAll(item => item.Name == instanceName + ".Width Units");
-                variablesToConsider.RemoveAll(item => item.Name == instanceName + ".Height Units");
+                variablesToConsider.RemoveAll(item => item.Name == prefix + "X");
+                variablesToConsider.RemoveAll(item => item.Name == prefix + "Y");
+                variablesToConsider.RemoveAll(item => item.Name == prefix + "Width");
+                variablesToConsider.RemoveAll(item => item.Name == prefix + "Height");
+                variablesToConsider.RemoveAll(item => item.Name == prefix + "X Units");
+                variablesToConsider.RemoveAll(item => item.Name == prefix + "Y Units");
+                variablesToConsider.RemoveAll(item => item.Name == prefix + "Width Units");
+                variablesToConsider.RemoveAll(item => item.Name == prefix + "Height Units");
 
                 List<string> proportionalFlags = new List<string>();
 

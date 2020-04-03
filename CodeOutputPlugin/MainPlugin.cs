@@ -108,7 +108,10 @@ namespace CodeOutputPlugin
 
             GumCommands.Self.GuiCommands.ShowControl(control);
 
+            LoadCodeSettingsFile();
+
             RefreshCodeDisplay();
+
         }
 
         private void HandleAddAndRemoveVariablesForType(string type, StateSave stateSave)

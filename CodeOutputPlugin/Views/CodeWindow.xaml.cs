@@ -1,6 +1,7 @@
 ﻿using CodeOutputPlugin.Models;
 using CodeOutputPlugin.ViewModels;
 using Gum;
+using Gum.ToolStates;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,6 +16,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using ToolsUtilities;
 using WpfDataUi.Controls;
 using WpfDataUi.DataTypes;
 using WpfDataUi.EventArguments;
@@ -125,7 +127,12 @@ namespace CodeOutputPlugin.Views
             {
                 if (codeOutputElementSettings != null)
                 {
-                    codeOutputElementSettings.GeneratedFileName = (string)value;
+                    var valueAsString = (string)value;
+                    if(!string.IsNullOrWhiteSpace(ProjectState.Self.ProjectDirectory) && FileManager.IsRelative(valueAsString) == false)
+                    {
+                        valueAsString = FileManager.MakeRelative(valueAsString, ProjectState.Self.ProjectDirectory, preserveCase:true);
+                    }
+                    codeOutputElementSettings.GeneratedFileName = valueAsString;
                     CodeOutputSettingsPropertyChanged?.Invoke(this, null);
                 }
             };
@@ -152,7 +159,10 @@ namespace CodeOutputPlugin.Views
             {
                 var contents = ViewModel.Code;
                 var filepath = codeOutputElementSettings.GeneratedFileName;
-
+                if(FileManager.IsRelative(filepath))
+                {
+                    filepath = ProjectState.Self.ProjectDirectory + filepath;
+                }
                 System.IO.File.WriteAllText(filepath, contents);
 
                 // show a message somewhere?

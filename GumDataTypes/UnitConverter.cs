@@ -139,6 +139,10 @@ namespace Gum.Converters
             {
                 absoluteX = fileWidth * relativeX / 100.0f;
             }
+            else if(generalX == GeneralUnitType.PercentageOfOtherDimension)
+            {
+                absoluteX = relativeX * relativeY;
+            }
             else
             {
                 throw new NotImplementedException();
@@ -205,8 +209,8 @@ namespace Gum.Converters
             }
             else if(generalX == GeneralUnitType.MaintainFileAspectRatio)
             {
-                throw new NotImplementedException();
-                //relativeX = pixelYToConvert / fileWidth;
+                // This requires possibly doing Y beforeX, so we'll just keep it for now:
+                relativeX = pixelXToConvert;
             }
             else if(generalX == GeneralUnitType.PercentageOfOtherDimension)
             {

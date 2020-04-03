@@ -335,7 +335,7 @@ namespace Gum.PropertyGridHelpers
                 }
             }
 
-            if (wasAnythingSet && AttemptToPersistPositionsOnUnitChanges)
+            if (wasAnythingSet && AttemptToPersistPositionsOnUnitChanges && !float.IsPositiveInfinity(valueToSet))
             {
                 InstanceSave instanceSave = SelectedState.Self.SelectedInstance;
 
