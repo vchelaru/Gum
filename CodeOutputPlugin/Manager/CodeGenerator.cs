@@ -903,7 +903,7 @@ namespace CodeOutputPlugin.Manager
                     return asFloat.ToString(CultureInfo.InvariantCulture) + " / DeviceDisplay.MainDisplayInfo.Density";
                 }
             }
-            else if (variable.Value is string)
+            else if (variable.Value is string asString)
             {
                 if (variable.GetRootName() == "Parent")
                 {
@@ -916,7 +916,7 @@ namespace CodeOutputPlugin.Manager
                 }
                 else
                 {
-                    return "\"" + variable.Value + "\"";
+                    return "\"" + asString.Replace("\n", "\\n") + "\"";
                 }
             }
             else if(variable.Value is bool)
