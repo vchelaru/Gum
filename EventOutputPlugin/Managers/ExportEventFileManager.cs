@@ -13,41 +13,45 @@ namespace EventOutputPlugin.Managers
 {
     public class ExportEventFileManager
     {
-        static string EventExportDirector =>
-            ProjectState.Self.ProjectDirectory + "EventExport/";
+        static string EventExportDirectory =>
+            ProjectState.Self.GumProjectSave != null
+            ? ProjectState.Self.ProjectDirectory + "EventExport/"
+            : null;
 
         public static void ExportEvent(string newName, string oldName, GumEventTypes eventType)
         {
-            var exportedEvent = new ExportedEvent();
+            if(!string.IsNullOrWhiteSpace(EventExportDirectory))
+            {
+                var exportedEvent = new ExportedEvent();
 
-            exportedEvent.NewName = newName;
-            exportedEvent.OldName = oldName;
-            exportedEvent.EventType = eventType;
+                exportedEvent.NewName = newName;
+                exportedEvent.OldName = oldName;
+                exportedEvent.EventType = eventType;
 
-            var serialized = JsonConvert.SerializeObject(exportedEvent);
+                var serialized = JsonConvert.SerializeObject(exportedEvent);
 
-            var file = new FilePath(EventExportDirector +
-                Environment.UserName + "_" +
-                DateTime.UtcNow.Ticks + ".json");
+                var file = new FilePath(EventExportDirectory +
+                    Environment.UserName + "_" +
+                    DateTime.UtcNow.Ticks + ".json");
 
-            GumCommands.Self.TryMultipleTimes(
-                () =>
-                {
-                    var directoryName = file.GetDirectoryContainingThis().FullPath;
-                    // make the directory
-                    System.IO.Directory.CreateDirectory(directoryName);
-                    System.IO.File.WriteAllText(file.FullPath, serialized);
-                });
-
+                GumCommands.Self.TryMultipleTimes(
+                    () =>
+                    {
+                        var directoryName = file.GetDirectoryContainingThis().FullPath;
+                        // make the directory
+                        System.IO.Directory.CreateDirectory(directoryName);
+                        System.IO.File.WriteAllText(file.FullPath, serialized);
+                    });
+            }
         }
 
         public static void DeleteOldEventFiles()
         {
             const int daysToKeep = 14;
 
-            if(System.IO.Directory.Exists(EventExportDirector))
+            if(!string.IsNullOrEmpty(EventExportDirectory) && System.IO.Directory.Exists(EventExportDirectory))
             {
-                var filesInDirectory = System.IO.Directory.GetFiles(EventExportDirector);
+                var filesInDirectory = System.IO.Directory.GetFiles(EventExportDirectory);
 
                 var cutoff = DateTime.UtcNow.AddDays(-daysToKeep);
 
