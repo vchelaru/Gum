@@ -28,6 +28,8 @@ namespace CodeOutputPlugin.Views
     /// </summary>
     public partial class CodeWindow : UserControl
     {
+        #region Fields/Properties
+
         CodeWindowViewModel ViewModel => DataContext as CodeWindowViewModel;
 
         CodeOutputElementSettings codeOutputElementSettings;
@@ -45,7 +47,10 @@ namespace CodeOutputPlugin.Views
             }
         }
 
+        #endregion
+
         public event EventHandler CodeOutputSettingsPropertyChanged;
+        public event EventHandler GenerateCodeClicked;
 
         public CodeWindow()
         {
@@ -149,25 +154,9 @@ namespace CodeOutputPlugin.Views
             CodeOutputSettingsPropertyChanged?.Invoke(this, null);
         }
 
-        private void GenerateCodeClicked(object sender, RoutedEventArgs e)
+        private void HandleGenerateCodeClicked(object sender, RoutedEventArgs e)
         {
-            if(string.IsNullOrEmpty(codeOutputElementSettings.GeneratedFileName))
-            {
-                GumCommands.Self.GuiCommands.ShowMessage("Generated file name must be set first");
-            }
-            else
-            {
-                var contents = ViewModel.Code;
-                var filepath = codeOutputElementSettings.GeneratedFileName;
-                if(FileManager.IsRelative(filepath))
-                {
-                    filepath = ProjectState.Self.ProjectDirectory + filepath;
-                }
-                System.IO.File.WriteAllText(filepath, contents);
-
-                // show a message somewhere?
-                GumCommands.Self.GuiCommands.ShowMessage("Generated code");
-            }
+            GenerateCodeClicked(this, null);
         }
 
         private void CopyButtonClicked(object sender, RoutedEventArgs e)

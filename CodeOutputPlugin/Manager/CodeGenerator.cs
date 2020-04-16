@@ -14,23 +14,32 @@ using System.Threading.Tasks;
 
 namespace CodeOutputPlugin.Manager
 {
+    #region Enums
+
     public enum VisualApi
     {
         Gum,
         XamarinForms
     }
 
+    #endregion
+
     public static class CodeGenerator
     {
 
-        public static string GetCodeForElement(ElementSave element, VisualApi visualApi, CodeOutputElementSettings settings)
+        public static string GetCodeForElement(ElementSave element, CodeOutputElementSettings settings)
         {
             #region Determine if XamarinForms Control
+            VisualApi visualApi;
             var defaultState = element.DefaultState;
             var isXamForms = defaultState.GetValueRecursive($"IsXamarinFormsControl") as bool?;
             if (isXamForms == true)
             {
                 visualApi = VisualApi.XamarinForms;
+            }
+            else
+            {
+                visualApi = VisualApi.Gum;
             }
             #endregion
 

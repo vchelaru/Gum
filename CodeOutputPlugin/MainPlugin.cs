@@ -144,7 +144,7 @@ namespace CodeOutputPlugin
                     }
                     else if(selectedElement != null)
                     {
-                        string gumCode = CodeGenerator.GetCodeForElement(selectedElement, VisualApi.Gum, settings);
+                        string gumCode = CodeGenerator.GetCodeForElement(selectedElement, settings);
                         viewModel.Code = $"//Code for {selectedElement.ToString()}\n{gumCode}";
                     }
                     break;
@@ -168,6 +168,7 @@ namespace CodeOutputPlugin
             viewModel = new ViewModels.CodeWindowViewModel();
 
             control.CodeOutputSettingsPropertyChanged += (not, used) => HandleCodeOutputPropertyChanged();
+            control.GenerateCodeClicked += (not, used) => HandleGenerateCodeButtonClicked();
             viewModel.PropertyChanged += (not, used) => RefreshCodeDisplay();
 
             control.DataContext = viewModel;
@@ -184,6 +185,35 @@ namespace CodeOutputPlugin
                 CodeOutputSettingsManager.WriteSettingsForElement(element, control.CodeOutputElementSettings);
 
                 RefreshCodeDisplay();
+            }
+        }
+
+        private void HandleGenerateCodeButtonClicked()
+        {
+            var settings = control.CodeOutputElementSettings;
+            if (string.IsNullOrEmpty(settings.GeneratedFileName))
+            {
+                GumCommands.Self.GuiCommands.ShowMessage("Generated file name must be set first");
+            }
+            else
+            {
+                // We used to use the view model code, but the viewmodel may have
+                // an instance within the element selected. Instead, we want to output
+                // the code for the whole selected element.
+                //var contents = ViewModel.Code;
+                var selectedElement = SelectedState.Self.SelectedElement;
+
+                string contents = CodeGenerator.GetCodeForElement(selectedElement, settings);
+                contents = $"//Code for {selectedElement.ToString()}\n{settings}";
+                var filepath = settings.GeneratedFileName;
+                if (FileManager.IsRelative(filepath))
+                {
+                    filepath = ProjectState.Self.ProjectDirectory + filepath;
+                }
+                System.IO.File.WriteAllText(filepath, contents);
+
+                // show a message somewhere?
+                GumCommands.Self.GuiCommands.ShowMessage($"Generated code to {FileManager.RemovePath(filepath)}");
             }
         }
 

@@ -34,7 +34,7 @@
         </Grid>
         <StackPanel Grid.Column="1">
             <WpfDataUi:DataUiGrid Name="DataGrid"></WpfDataUi:DataUiGrid>
-            <Button Click="GenerateCodeClicked">Generate Code</Button>
+            <Button Click="HandleGenerateCodeClicked">Generate Code</Button>
         </StackPanel>
     </Grid>
 </UserControl>
