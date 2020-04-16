@@ -951,9 +951,13 @@ namespace CodeOutputPlugin.Manager
                 {
                     return asFloat.ToString(CultureInfo.InvariantCulture) + "f";
                 }
+                else if(rootName == "CornerRadius")
+                {
+                    return $"(int)({asFloat.ToString(CultureInfo.InvariantCulture)} / DeviceDisplay.MainDisplayInfo.Density)";
+                }
                 else
                 {
-                    return asFloat.ToString(CultureInfo.InvariantCulture) + " / DeviceDisplay.MainDisplayInfo.Density";
+                    return $"{asFloat.ToString(CultureInfo.InvariantCulture)} / DeviceDisplay.MainDisplayInfo.Density";
                 }
             }
             else if (variable.Value is string asString)
