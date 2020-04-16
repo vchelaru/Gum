@@ -578,6 +578,9 @@ namespace CodeOutputPlugin.Manager
 
         private static void ProcessPositionAndSize(List<VariableSave> variablesToConsider, StateSave defaultState, InstanceSave instance, StringBuilder stringBuilder)
         {
+            const int canvasWidth = 480;
+            const int canvasHeight = 800;
+
             string prefix = instance?.Name == null ? "" : instance.Name + ".";
 
             var setsAny =
@@ -605,6 +608,9 @@ namespace CodeOutputPlugin.Manager
                 var yUnits = variableFinder.GetValue<PositionUnitType>(prefix + "Y Units");
                 var widthUnits = variableFinder.GetValue<DimensionUnitType>(prefix + "Width Units");
                 var heightUnits = variableFinder.GetValue<DimensionUnitType>(prefix + "Height Units");
+
+                var xOrigin = variableFinder.GetValue<HorizontalAlignment>(prefix + "X Origin");
+                var yOrigin = variableFinder.GetValue<VerticalAlignment>(prefix + "Y Origin");
 
                 variablesToConsider.RemoveAll(item => item.Name == prefix + "X");
                 variablesToConsider.RemoveAll(item => item.Name == prefix + "Y");
@@ -653,10 +659,22 @@ namespace CodeOutputPlugin.Manager
                     }
                 }
 
+                // special case
+                // If we're using the center with x=0 we'll pretend it's the same as 50% 
+                if(xUnits == PositionUnitType.PixelsFromCenterX && widthUnits == DimensionUnitType.Absolute && xOrigin == HorizontalAlignment.Center)
+                {
+                    if(x == 0)
+                    {
+                        // treat it like it's 50%:
+                        x = .5f;
+                        proportionalFlags.Add("AbsoluteLayoutFlags.XProportional");
+                    }
+                }
                 // Xamarin forms uses a weird anchoring system to combine both position and anchor into one value. Gum splits those into two values
                 // We need to convert from the gum units to xamforms units:
                 // for now assume it's all %'s:
-                if (xUnits == PositionUnitType.PercentageWidth)
+
+                else if (xUnits == PositionUnitType.PercentageWidth)
                 {
                     x /= 100.0f;
                     var adjustedCanvasWidth = 1 - width;
@@ -666,7 +684,27 @@ namespace CodeOutputPlugin.Manager
                     }
                     proportionalFlags.Add("AbsoluteLayoutFlags.XProportional");
                 }
-                if (yUnits == PositionUnitType.PercentageHeight)
+                else if(xUnits == PositionUnitType.PixelsFromLeft)
+                {
+
+                }
+                else if(xUnits == PositionUnitType.PixelsFromCenterX)
+                {
+                    if(widthUnits == DimensionUnitType.Absolute)
+                    {
+                        x = (canvasWidth - width) / 2.0f;
+                    }
+                }
+
+                if(yUnits == PositionUnitType.PixelsFromCenterY && heightUnits == DimensionUnitType.Absolute && yOrigin == VerticalAlignment.Center)
+                {
+                    if(y == 0)
+                    {
+                        y = .5f;
+                        proportionalFlags.Add("AbsoluteLayoutFlags.YProportional");
+                    }
+                }
+                else if (yUnits == PositionUnitType.PercentageHeight)
                 {
                     y /= 100.0f;
                     var adjustedCanvasHeight = 1 - height;
@@ -676,7 +714,13 @@ namespace CodeOutputPlugin.Manager
                     }
                     proportionalFlags.Add("AbsoluteLayoutFlags.YProportional");
                 }
-
+                else if(yUnits == PositionUnitType.PixelsFromCenterY)
+                {
+                    if(heightUnits == DimensionUnitType.Absolute)
+                    {
+                        y = (canvasHeight - height) / 2.0f;
+                    }
+                }
 
                 var xString = x.ToString(CultureInfo.InvariantCulture) + "f";
                 var yString = y.ToString(CultureInfo.InvariantCulture) + "f";

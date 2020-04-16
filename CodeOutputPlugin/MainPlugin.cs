@@ -204,7 +204,7 @@ namespace CodeOutputPlugin
                 var selectedElement = SelectedState.Self.SelectedElement;
 
                 string contents = CodeGenerator.GetCodeForElement(selectedElement, settings);
-                contents = $"//Code for {selectedElement.ToString()}\n{settings}";
+                contents = $"//Code for {selectedElement.ToString()}\n{contents}";
                 var filepath = settings.GeneratedFileName;
                 if (FileManager.IsRelative(filepath))
                 {
