@@ -164,6 +164,11 @@ namespace SkiaPlugin.Renderables
         protected virtual float XSizeSpillover => 0;
         protected virtual float YSizeSpillover => 0;
 
+        protected bool ForceUseColor
+        {
+            get; set;
+        }
+
         ColorOperation IRenderableIpso.ColorOperation => ColorOperation.Modulate;
 
         #endregion
@@ -262,7 +267,14 @@ namespace SkiaPlugin.Renderables
                         DrawToSurface(surface);
 
                         var skImage = surface.Snapshot();
-                        texture = RenderImageToTexture2D(skImage, SystemManagers.Default.Renderer.GraphicsDevice, colorType);
+
+                        Color? forcedColor = null;
+                        if(ForceUseColor)
+                        {
+                            forcedColor = this.Color;
+                        }
+
+                        texture = RenderImageToTexture2D(skImage, SystemManagers.Default.Renderer.GraphicsDevice, colorType, forcedColor);
                         needsUpdate = false;
                     }
                 }
@@ -271,7 +283,7 @@ namespace SkiaPlugin.Renderables
 
         internal abstract void DrawToSurface(SKSurface surface);
 
-        public static Texture2D RenderImageToTexture2D(SKImage image, GraphicsDevice graphicsDevice, SKColorType skiaColorType)
+        public static Texture2D RenderImageToTexture2D(SKImage image, GraphicsDevice graphicsDevice, SKColorType skiaColorType, Color? forcedColor = null)
         {
             var pixelMap = image.PeekPixels();
             var pointer = pixelMap.GetPixels();
@@ -307,6 +319,13 @@ namespace SkiaPlugin.Renderables
                         //convertedBytes[i + 2] = (byte)(b * ratio + .5);
                         //convertedBytes[i + 3] = a;
 
+                        if (forcedColor != null)
+                        {
+                            r = forcedColor.Value.R;
+                            g = forcedColor.Value.G;
+                            b = forcedColor.Value.B;
+                        }
+
                         convertedBytes[i + 0] = r;
                         convertedBytes[i + 1] = g;
                         convertedBytes[i + 2] = b;
@@ -322,6 +341,13 @@ namespace SkiaPlugin.Renderables
                         var r = originalPixels[i + 2];
                         var a = originalPixels[i + 3];
                         var ratio = a / 255.0f;
+
+                        if(forcedColor != null)
+                        {
+                            r = forcedColor.Value.R;
+                            g = forcedColor.Value.G;
+                            b = forcedColor.Value.B;
+                        }
 
                         // output will always be premult so we need to unpremult
                         convertedBytes[i + 0] = (byte)(r / ratio + .5);

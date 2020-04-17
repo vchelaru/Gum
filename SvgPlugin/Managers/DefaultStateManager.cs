@@ -35,7 +35,9 @@ namespace SkiaPlugin.Managers
                     //variableSave.ExcludedValuesForEnum.Add(DimensionUnitType.MaintainFileAspectRatio);
 
                 }
+                StandardElementsManager.AddColorVariables(filledCircleState);
                 svgState.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "SourceFile", IsFile = true });
+                svgState.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "UseColorTextureAlpha" });
 
                 svgState.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation" });
 

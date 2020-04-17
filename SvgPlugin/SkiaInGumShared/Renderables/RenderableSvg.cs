@@ -32,6 +32,12 @@ namespace SkiaPlugin.Renderables
             }
         }
 
+        public bool UseColorTextureAlpha
+        {
+            get => ForceUseColor;
+            set => ForceUseColor = value;
+        }
+
         SkiaSharp.Extended.Svg.SKSvg skiaSvg;
 
         public float AspectRatio => skiaSvg == null ? 1 : skiaSvg.ViewBox.Width / (float)skiaSvg.ViewBox.Height;
