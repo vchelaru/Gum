@@ -874,6 +874,25 @@ namespace CodeOutputPlugin.Manager
             {
                 return " "; // Don't do anything with these variables::
             }
+            else if(rootName == "Parent")
+            {
+                var parentName = variable.Value as string;
+
+                var parentInstance = container.GetInstance(parentName);
+
+                var hasContent =
+                    parentInstance?.BaseType.EndsWith("/ScrollView") == true ||
+                    parentInstance?.BaseType.EndsWith("/StickyScrollView") == true;
+                if(hasContent)
+                {
+                    return $"{parentName}.Content = {instance.Name};";
+                }
+                else
+                {
+                    return $"{parentName}.Children.Add({instance.Name});";
+                }
+            }
+
 
             return null;
         }
