@@ -247,7 +247,16 @@ namespace CodeOutputPlugin.Manager
                 #endregion
 
 
-                List<VariableSave> variablesForThisInstance = group.ToList();
+                var baseElement = Gum.Managers.ObjectFinder.Self.GetElementSave(instance.BaseType);
+                var baseDefaultState = baseElement?.DefaultState;
+                RecursiveVariableFinder baseRecursiveVariableFinder = new RecursiveVariableFinder(baseDefaultState);
+
+
+                List<VariableSave> variablesForThisInstance = group
+                    .Where(item => GetIfVariableShouldBeIncludedForInstance(instance, item, baseRecursiveVariableFinder))
+                    .ToList();
+
+
                 ProcessVariableGroups(variablesForThisInstance, stateSave, instance, container, visualApi, stringBuilder);
 
                 // Now that they've been processed, we can process the remainder regularly
@@ -1086,21 +1095,26 @@ namespace CodeOutputPlugin.Manager
             var variablesToConsider = defaultState.Variables
                 .Where(item =>
                 {
-                    var shouldInclude = 
-                        item.Value != null &&
-                        item.SetsValue &&
-                        item.SourceObject == instance.Name;
-
-                    if(shouldInclude)
-                    {
-                        var foundVariable = baseRecursiveVariableFinder.GetVariable(item.GetRootName());
-                        shouldInclude = foundVariable != null;
-                    }
-
-                    return shouldInclude;
+                    return GetIfVariableShouldBeIncludedForInstance(instance, item, baseRecursiveVariableFinder);
                 })
                 .ToArray();
             return variablesToConsider;
+        }
+
+        private static bool GetIfVariableShouldBeIncludedForInstance(InstanceSave instance, VariableSave item, RecursiveVariableFinder baseRecursiveVariableFinder)
+        {
+            var shouldInclude =
+                                    item.Value != null &&
+                                    item.SetsValue &&
+                                    item.SourceObject == instance.Name;
+
+            if (shouldInclude)
+            {
+                var foundVariable = baseRecursiveVariableFinder.GetVariable(item.GetRootName());
+                shouldInclude = foundVariable != null;
+            }
+
+            return shouldInclude;
         }
 
         private static string ToTabs(int tabCount) => new string(' ', tabCount * 4);

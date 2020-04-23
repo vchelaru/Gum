@@ -63,6 +63,9 @@ namespace SkiaPlugin.Renderables
             }
         }
 
+        public bool IsFilled { get; set; } = false;
+        public float StrokeWidth { get; set; } = 1;
+
         protected override float XSizeSpillover => HasDropshadow ? DropshadowBlurX + Math.Abs(DropshadowOffsetX) : 0;
         protected override float YSizeSpillover => HasDropshadow ? DropshadowBlurY + Math.Abs(DropshadowOffsetY) : 0;
 
@@ -83,9 +86,22 @@ namespace SkiaPlugin.Renderables
             {
                 var radius = Width / 2;
 
+
                 var leftMargin = XSizeSpillover;
                 var topMargin = YSizeSpillover;
-                surface.Canvas.DrawRoundRect(leftMargin,topMargin, Width, Height, CornerRadius, CornerRadius, paint);
+
+                var drawWidth = Width;
+                var drawHeight = Height;
+
+                if(IsFilled == false)
+                {
+                    leftMargin += StrokeWidth / 2.0f;
+                    topMargin += StrokeWidth / 2.0f;
+
+                    drawWidth -= StrokeWidth;
+                    drawHeight -= StrokeWidth;
+                }
+                surface.Canvas.DrawRoundRect(leftMargin,topMargin, drawWidth, drawHeight, CornerRadius, CornerRadius, paint);
             }
         }
 
@@ -93,8 +109,13 @@ namespace SkiaPlugin.Renderables
         {
             var skColor = new SKColor(Color.R, Color.G, Color.B, Color.A);
 
-            var paint = 
-                new SKPaint { Color = skColor, Style = SKPaintStyle.Fill, IsAntialias = true };
+            var paint = new SKPaint 
+            { 
+                Color = skColor, 
+                Style = IsFilled ? SKPaintStyle.Fill : SKPaintStyle.Stroke,
+                StrokeWidth = StrokeWidth,
+                IsAntialias = true 
+            };
 
             
 

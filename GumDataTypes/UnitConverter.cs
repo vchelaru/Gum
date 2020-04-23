@@ -243,7 +243,8 @@ namespace Gum.Converters
             }
             else if(generalY == GeneralUnitType.MaintainFileAspectRatio)
             {
-                throw new NotImplementedException();
+                // This won't convert properly - maybe eventually?
+                relativeY = pixelYToConvert;
             }
             else if (generalY == GeneralUnitType.PercentageOfFile)
             {

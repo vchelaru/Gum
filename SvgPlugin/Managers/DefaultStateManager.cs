@@ -35,7 +35,7 @@ namespace SkiaPlugin.Managers
                     //variableSave.ExcludedValuesForEnum.Add(DimensionUnitType.MaintainFileAspectRatio);
 
                 }
-                StandardElementsManager.AddColorVariables(filledCircleState);
+                //StandardElementsManager.AddColorVariables(svgState);
                 svgState.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "SourceFile", IsFile = true });
                 svgState.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "UseColorTextureAlpha" });
 
@@ -81,7 +81,11 @@ namespace SkiaPlugin.Managers
                 StandardElementsManager.AddDimensionsVariables(roundedRectangleState, 64, 64,
                     StandardElementsManager.DimensionVariableAction.ExcludeFileOptions);
                 StandardElementsManager.AddColorVariables(roundedRectangleState);
+
+
                 AddDropshadowVariables(roundedRectangleState);
+
+                AddStrokeAndFilledVariables(roundedRectangleState);
             }
 
             return roundedRectangleState;
@@ -122,7 +126,12 @@ namespace SkiaPlugin.Managers
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "DropshadowRed", Category = "Dropshadow" });
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "DropshadowGreen", Category = "Dropshadow" });
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "DropshadowBlue", Category = "Dropshadow" });
+        }
 
+        private static void AddStrokeAndFilledVariables(StateSave stateSave)
+        {
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "IsFilled", Category = "Stroke and Fill" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 2.0f, Name = "StrokeWidth", Category = "Stroke and Fill" });
 
         }
     }

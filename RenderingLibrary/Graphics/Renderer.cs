@@ -12,6 +12,8 @@ using RenderingLibrary;
 
 namespace RenderingLibrary.Graphics
 {
+    #region RenderStateVariables Class
+
     public class RenderStateVariables
     {
         public BlendState BlendState;
@@ -22,8 +24,15 @@ namespace RenderingLibrary.Graphics
         public Rectangle? ClipRectangle;
     }
 
+    #endregion
+
     public class Renderer
     {
+        /// <summary>
+        /// Whether renderable objects should call Render
+        /// on contained children. This is true by default, 
+        /// results in a hierarchical rendering order.
+        /// </summary>
         public static bool RenderUsingHierarchy = true;
 
         #region Fields

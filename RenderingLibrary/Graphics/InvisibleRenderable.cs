@@ -104,5 +104,10 @@ namespace RenderingLibrary.Graphics
         {
             mParent = parent;
         }
+
+        public override string ToString()
+        {
+            return Name;
+        }
     }
 }

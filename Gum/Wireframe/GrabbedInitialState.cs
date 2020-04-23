@@ -102,7 +102,10 @@ namespace Gum.Wireframe
             CursorPushX = cursor.X;
             CursorPushY = cursor.Y;
 
-            RecordInitialPositions();
+            if(SelectedState.Self.SelectedStateSave != null)
+            {
+                RecordInitialPositions();
+            }
         }
 
         private void RecordInitialPositions()
