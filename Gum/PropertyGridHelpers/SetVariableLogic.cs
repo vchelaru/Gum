@@ -168,9 +168,20 @@ namespace Gum.PropertyGridHelpers
                         var handledByDirectSet = false;
                         if(PropertiesSupportingIncrementalChange.Contains(unqualifiedMember) && (instance != null || SelectedState.Self.SelectedComponent != null))
                         {
-                            var gue = WireframeObjectManager.Self.GetSelectedRepresentation();
+                            // this assumes that the object having its variable set is the selected instance. If we're setting
+                            // an exposed variable, this is not the case - the object having its variable set is actually the instance.
+                            //GraphicalUiElement gue = WireframeObjectManager.Self.GetSelectedRepresentation();
+                            GraphicalUiElement gue = null;
+                            if (instance != null)
+                            {
+                                gue = WireframeObjectManager.Self.GetRepresentation(instance);
+                            }
+                            else
+                            {
+                                gue = WireframeObjectManager.Self.GetSelectedRepresentation();
+                            }
 
-                            if(gue != null)
+                            if (gue != null)
                             {
                                 gue.SetProperty(unqualifiedMember, value);
                                 handledByDirectSet = true;
