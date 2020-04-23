@@ -247,7 +247,7 @@ namespace CodeOutputPlugin.Manager
                 #endregion
 
 
-                var baseElement = Gum.Managers.ObjectFinder.Self.GetElementSave(instance.BaseType);
+                var baseElement = Gum.Managers.ObjectFinder.Self.GetElementSave(instance?.BaseType);
                 var baseDefaultState = baseElement?.DefaultState;
                 RecursiveVariableFinder baseRecursiveVariableFinder = new RecursiveVariableFinder(baseDefaultState);
 
