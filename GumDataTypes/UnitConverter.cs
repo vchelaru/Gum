@@ -172,6 +172,11 @@ namespace Gum.Converters
             {
                 absoluteY = fileHeight * relativeY / 100.0f;
             }
+            else if(generalY == GeneralUnitType.PercentageOfOtherDimension)
+            {
+                // not fully implemented
+                absoluteY = relativeY;
+            }
             else
             {
                 throw new NotImplementedException();

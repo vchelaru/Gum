@@ -246,8 +246,15 @@ namespace CodeOutputPlugin.Manager
 
                 #endregion
 
-
-                var baseElement = Gum.Managers.ObjectFinder.Self.GetElementSave(instance?.BaseType);
+                ElementSave baseElement = null;
+                if(instance == null)
+                {
+                    baseElement = Gum.Managers.ObjectFinder.Self.GetElementSave(container.BaseType) ?? container;
+                }
+                else
+                {
+                    baseElement = Gum.Managers.ObjectFinder.Self.GetElementSave(instance?.BaseType);
+                }
                 var baseDefaultState = baseElement?.DefaultState;
                 RecursiveVariableFinder baseRecursiveVariableFinder = new RecursiveVariableFinder(baseDefaultState);
 
@@ -1106,7 +1113,7 @@ namespace CodeOutputPlugin.Manager
             var shouldInclude =
                                     item.Value != null &&
                                     item.SetsValue &&
-                                    item.SourceObject == instance.Name;
+                                    item.SourceObject == instance?.Name;
 
             if (shouldInclude)
             {

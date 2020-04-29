@@ -192,8 +192,23 @@ namespace RenderingLibrary.Graphics
                     }
                     // set this before applying the override
                     CurrentZoom = zoom;
-                    zoom = Renderer.UseBasicEffectRendering ? 1 : zoom;
-                    matrix = Matrix.CreateScale(zoom);
+                    //zoom = Renderer.UseBasicEffectRendering ? 1 : zoom;
+
+                    if(Renderer.UseBasicEffectRendering)
+                    {
+                        var extraZoom = 1/camera.Zoom - 1;
+
+                        var clientWidth = camera.ClientWidth;
+                        var clientHeight = camera.ClientHeight;
+                        matrix = Matrix.CreateTranslation(new Vector3(0.5f * clientWidth * extraZoom, clientHeight * 0.5f, 0)) *
+                            Matrix.CreateScale(zoom);
+                    }
+                    else
+                    {
+                        matrix = Matrix.CreateScale(zoom);
+
+                    }
+
                 }
                 else
                 {
