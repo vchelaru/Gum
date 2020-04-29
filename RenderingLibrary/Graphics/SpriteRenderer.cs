@@ -200,7 +200,8 @@ namespace RenderingLibrary.Graphics
 
                         var clientWidth = camera.ClientWidth;
                         var clientHeight = camera.ClientHeight;
-                        matrix = Matrix.CreateTranslation(new Vector3(0.5f * clientWidth * extraZoom, clientHeight * 0.5f, 0)) *
+                        matrix = 
+                            Matrix.CreateTranslation(new Vector3(0.5f * clientWidth * extraZoom, 0.5f * clientHeight * extraZoom, 0)) *
                             Matrix.CreateScale(zoom);
                     }
                     else
