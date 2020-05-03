@@ -485,6 +485,12 @@ namespace Gum.Wireframe
             }
             set
             {
+#if DEBUG
+                if (float.IsNaN(value) || float.IsPositiveInfinity(value) || float.IsNegativeInfinity(value))
+                {
+                    throw new Exception($"Invalid Rotaiton value set: {value}");
+                }
+#endif
                 if (mRotation != value)
                 {
                     mRotation = value;
@@ -2327,6 +2333,12 @@ namespace Gum.Wireframe
 
         private void AdjustOffsetsByOrigin(bool isParentFlippedHorizontally, ref float unitOffsetX, ref float unitOffsetY)
         {
+#if DEBUG
+            if (float.IsPositiveInfinity(mRotation) || float.IsNegativeInfinity(mRotation))
+            {
+                throw new Exception("Rotation cannot be negative/positive infinity");
+            }
+#endif
             float offsetX = 0;
             float offsetY = 0;
 

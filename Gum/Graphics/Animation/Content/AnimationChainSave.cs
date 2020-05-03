@@ -225,9 +225,9 @@ namespace Gum.Content.AnimationChain
         //    return toReturn;
         //}
 
-        private static uint AsUint(System.Xml.Linq.XElement element)
-        {
-            return uint.Parse(element.Value, CultureInfo.InvariantCulture);
-        }
+        //private static uint AsUint(System.Xml.Linq.XElement element)
+        //{
+        //    return uint.Parse(element.Value, CultureInfo.InvariantCulture);
+        //}
     }
 }

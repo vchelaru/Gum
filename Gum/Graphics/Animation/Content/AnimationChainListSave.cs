@@ -361,37 +361,7 @@ namespace Gum.Content.AnimationChain
 
 
 
-        //private static void LoadFromElement(AnimationChainListSave toReturn, System.Xml.Linq.XElement element)
-        //{
-        //    foreach (var subElement in element.Elements())
-        //    {
-        //        switch (subElement.Name.LocalName)
-        //        {
-        //            case "FileRelativeTextures":
-        //                toReturn.FileRelativeTextures = AsBool(subElement);
-        //                break;
-        //            case "TimeMeasurementUnit":
-        //                toReturn.TimeMeasurementUnit =
-        //                    (TimeMeasurementUnit)Enum.Parse(typeof(TimeMeasurementUnit), subElement.Value, true);
-        //                break;
 
-
-        //            case "CoordinateType":
-        //                toReturn.CoordinateType =
-        //                    (TextureCoordinateType)Enum.Parse(typeof(TextureCoordinateType), subElement.Value, true);
-        //                break;
-        //            case "AnimationChain":
-        //                toReturn.AnimationChains.Add(AnimationChainSave.FromXElement(subElement));
-        //                break;
-
-        //        }
-        //    }
-        //}
-
-        internal static bool AsBool(System.Xml.Linq.XElement subElement)
-        {
-            return bool.Parse(subElement.Value);
-        }
 
         #endregion
     }
