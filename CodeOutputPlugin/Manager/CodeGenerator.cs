@@ -26,6 +26,10 @@ namespace CodeOutputPlugin.Manager
 
     public static class CodeGenerator
     {
+        /// <summary>
+        /// if true, then pixel sizes are maintained regardless of pixel density. This allows layouts to maintain pixel-perfect
+        /// </summary>
+        public static bool AdjustPixelValuesForDensity { get; set; } = true;
 
         public static string GetCodeForElement(ElementSave element, CodeOutputElementSettings settings)
         {
@@ -639,18 +643,22 @@ namespace CodeOutputPlugin.Manager
 
                 List<string> proportionalFlags = new List<string>();
 
+                const string WidthProportionalFlag = "AbsoluteLayoutFlags.WidthProportional";
+                const string HeightProportionalFlag = "AbsoluteLayoutFlags.HeightProportional";
+                const string XProportionalFlag = "AbsoluteLayoutFlags.XProportional";
+                const string YProportionalFlag = "AbsoluteLayoutFlags.YProportional";
 
                 if (widthUnits == DimensionUnitType.Percentage)
                 {
                     width /= 100.0f;
-                    proportionalFlags.Add("AbsoluteLayoutFlags.WidthProportional");
+                    proportionalFlags.Add(WidthProportionalFlag);
                 }
                 else if(widthUnits == DimensionUnitType.RelativeToContainer)
                 {
                     if(width == 0)
                     {
                         width = 1;
-                        proportionalFlags.Add("AbsoluteLayoutFlags.WidthProportional");
+                        proportionalFlags.Add(WidthProportionalFlag);
                     }
                     else
                     {
@@ -660,14 +668,14 @@ namespace CodeOutputPlugin.Manager
                 if (heightUnits == DimensionUnitType.Percentage)
                 {
                     height /= 100.0f;
-                    proportionalFlags.Add("AbsoluteLayoutFlags.HeightProportional");
+                    proportionalFlags.Add(HeightProportionalFlag);
                 }
                 else if(heightUnits == DimensionUnitType.RelativeToContainer)
                 {
                     if(height == 0)
                     {
                         height = 1;
-                        proportionalFlags.Add("AbsoluteLayoutFlags.HeightProportional");
+                        proportionalFlags.Add(HeightProportionalFlag);
                     }
                     else
                     {
@@ -683,7 +691,7 @@ namespace CodeOutputPlugin.Manager
                     {
                         // treat it like it's 50%:
                         x = .5f;
-                        proportionalFlags.Add("AbsoluteLayoutFlags.XProportional");
+                        proportionalFlags.Add(XProportionalFlag);
                     }
                 }
                 // Xamarin forms uses a weird anchoring system to combine both position and anchor into one value. Gum splits those into two values
@@ -698,7 +706,7 @@ namespace CodeOutputPlugin.Manager
                     {
                         x /= adjustedCanvasWidth;
                     }
-                    proportionalFlags.Add("AbsoluteLayoutFlags.XProportional");
+                    proportionalFlags.Add(XProportionalFlag);
                 }
                 else if(xUnits == PositionUnitType.PixelsFromLeft)
                 {
@@ -717,7 +725,7 @@ namespace CodeOutputPlugin.Manager
                     if(y == 0)
                     {
                         y = .5f;
-                        proportionalFlags.Add("AbsoluteLayoutFlags.YProportional");
+                        proportionalFlags.Add(YProportionalFlag);
                     }
                 }
                 else if (yUnits == PositionUnitType.PercentageHeight)
@@ -728,7 +736,7 @@ namespace CodeOutputPlugin.Manager
                     {
                         y /= adjustedCanvasHeight;
                     }
-                    proportionalFlags.Add("AbsoluteLayoutFlags.YProportional");
+                    proportionalFlags.Add(YProportionalFlag);
                 }
                 else if(yUnits == PositionUnitType.PixelsFromCenterY)
                 {
@@ -743,7 +751,25 @@ namespace CodeOutputPlugin.Manager
                 var widthString = width.ToString(CultureInfo.InvariantCulture) + "f";
                 var heightString = height.ToString(CultureInfo.InvariantCulture) + "f";
 
-
+                if(AdjustPixelValuesForDensity)
+                {
+                    if(proportionalFlags.Contains(XProportionalFlag) == false)
+                    {
+                        xString += "/Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density";
+                    }
+                    if(proportionalFlags.Contains(YProportionalFlag) == false)
+                    {
+                        yString += "/Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density";
+                    }
+                    if(proportionalFlags.Contains(WidthProportionalFlag) == false)
+                    {
+                        widthString += "/Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density";
+                    }
+                    if(proportionalFlags.Contains(HeightProportionalFlag) == false)
+                    {
+                        heightString += "/Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density";
+                    }
+                }
 
                 string boundsText =
                     $"AbsoluteLayout.SetLayoutBounds({instance?.Name ?? "this"}, new Rectangle({xString}, {yString}, {widthString}, {heightString}));";
