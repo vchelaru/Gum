@@ -80,10 +80,13 @@ namespace CodeOutputPlugin.Manager
 
             FillWithCurrentState(element, stringBuilder, tabCount);
 
-            foreach (var instance in element.Instances)
+            foreach (var instance in element.Instances.Where(item => item.DefinedByBase == false))
             {
                 FillWithInstanceDeclaration(instance, element, stringBuilder, tabCount);
             }
+
+            AddAbsoluteLayoutIfNecessary(element, tabCount, stringBuilder);
+
             stringBuilder.AppendLine();
 
             FillWithExposedVariables(element, stringBuilder, visualApi, tabCount);
@@ -105,6 +108,28 @@ namespace CodeOutputPlugin.Manager
             }
 
             return stringBuilder.ToString();
+        }
+
+        private static void AddAbsoluteLayoutIfNecessary(ElementSave element, int tabCount, StringBuilder stringBuilder)
+        {
+            var elementBaseType = element?.BaseType;
+            var isThisAbsoluteLayout = elementBaseType?.EndsWith("/AbsoluteLayout") == true;
+
+            var isSkiaCanvasView = elementBaseType?.EndsWith("/SkiaGumCanvasView") == true;
+
+            if (!isThisAbsoluteLayout && !isSkiaCanvasView)
+            {
+                var shouldAddMainLayout = true;
+                if (element is ScreenSave && !string.IsNullOrEmpty(element.BaseType))
+                {
+                    shouldAddMainLayout = false;
+                }
+
+                if (shouldAddMainLayout)
+                {
+                    stringBuilder.Append(ToTabs(tabCount) + "protected AbsoluteLayout MainLayout{get; private set;}");
+                }
+            }
         }
 
         private static void GenerateConstructor(ElementSave element, VisualApi visualApi, int tabCount, StringBuilder stringBuilder)
@@ -154,12 +179,21 @@ namespace CodeOutputPlugin.Manager
 
                 if(isThisAbsoluteLayout)
                 {
-                    stringBuilder.AppendLine(ToTabs(tabCount) + "var layout = this;");
+                    stringBuilder.AppendLine(ToTabs(tabCount) + "var MainLayout = this;");
                 }
                 else if(!isSkiaCanvasView)
                 {
-                    stringBuilder.AppendLine(ToTabs(tabCount) + "var layout = new AbsoluteLayout();");
-                    stringBuilder.AppendLine(ToTabs(tabCount) + "BaseGrid.Children.Add(layout);");
+                    var shouldAddMainLayout = true;
+                    if(element is ScreenSave && !string.IsNullOrEmpty(element.BaseType))
+                    {
+                        shouldAddMainLayout = false;
+                    }
+
+                    if(shouldAddMainLayout)
+                    {
+                        stringBuilder.AppendLine(ToTabs(tabCount) + "MainLayout = new AbsoluteLayout();");
+                        stringBuilder.AppendLine(ToTabs(tabCount) + "BaseGrid.Children.Add(MainLayout);");
+                    }
                 }
 
             }
@@ -168,7 +202,7 @@ namespace CodeOutputPlugin.Manager
 
             stringBuilder.AppendLine();
 
-            foreach (var instance in element.Instances)
+            foreach (var instance in element.Instances.Where(item => item.DefinedByBase == false))
             {
                 FillWithInstanceInstantiation(instance, element, stringBuilder, tabCount);
             }
@@ -512,7 +546,7 @@ namespace CodeOutputPlugin.Manager
             #region Assign Parent
 
             var hasParent = variablesToConsider.FirstOrDefault()?.GetRootName() == "Parent";
-            if (!hasParent)
+            if (!hasParent && !instance.DefinedByBase)
             {
                 if(visualApi == VisualApi.Gum)
                 {
@@ -521,7 +555,7 @@ namespace CodeOutputPlugin.Manager
                 }
                 else // forms
                 {
-                    stringBuilder.AppendLine($"{tabs}layout.Children.Add({instance.Name});");
+                    stringBuilder.AppendLine($"{tabs}MainLayout.Children.Add({instance.Name});");
                 }
             }
 

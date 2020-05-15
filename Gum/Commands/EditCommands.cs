@@ -329,12 +329,21 @@ namespace Gum.Commands
 
                     string whyNotValid;
 
-                    NameVerifier.Self.IsScreenNameValid(tiw.Result, null, out whyNotValid);
+                    string strippedName = tiw.Result;
+                    string prefix = null;
+                    if(tiw.Result.Contains("/"))
+                    {
+                        var indexOfSlash = tiw.Result.LastIndexOf("/");
+                        strippedName = tiw.Result.Substring(indexOfSlash + 1);
+                        prefix = tiw.Result.Substring(0, indexOfSlash + 1);
+                    }
+
+                    NameVerifier.Self.IsScreenNameValid(strippedName, null, out whyNotValid);
 
                     if (string.IsNullOrEmpty(whyNotValid))
                     {
                         var newScreen = (element as ScreenSave).Clone();
-                        newScreen.Name = name;
+                        newScreen.Name = prefix + strippedName;
                         newScreen.Initialize(null);
 
                         ProjectCommands.Self.AddScreen(newScreen);

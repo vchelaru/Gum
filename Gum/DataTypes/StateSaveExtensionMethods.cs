@@ -123,7 +123,7 @@ namespace Gum.DataTypes.Variables
                 }
             }
 
-            if(foundValue == null && !string.IsNullOrEmpty(baseElement.BaseType))
+            if(foundValue == null && !string.IsNullOrEmpty(baseElement?.BaseType))
             {
                 foundValue = TryToGetValueFromInheritance(variableName, baseElement.BaseType);
             }
