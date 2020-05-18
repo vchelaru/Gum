@@ -204,7 +204,13 @@ namespace RenderingLibrary
         {
             if (CameraCenterOnScreen == RenderingLibrary.CameraCenterOnScreen.Center)
             {
-                return Camera.GetTransformationMatrix(X, Y, Zoom, ClientWidth, ClientHeight, forRendering);
+                // make local vars to make stepping in faster if debugging
+                var x = X;
+                var y = Y;
+                var zoom = Zoom;
+                var width = ClientWidth;
+                var height = ClientHeight;
+                return Camera.GetTransformationMatrix(x, y, zoom, width, height, forRendering);
             }
             else
             {
@@ -219,7 +225,7 @@ namespace RenderingLibrary
             {
                 return
                     Matrix.CreateTranslation(new Vector3(-x, -y, 0)) *
-                    Matrix.CreateTranslation(new Vector3(clientWidth * 0.5f, clientHeight * 0.5f, 0))*
+                    Matrix.CreateTranslation(new Vector3(0, 0, 0))*
                     Matrix.CreateScale(new Vector3(zoom, zoom, 1)) 
                     
                     ;

@@ -101,20 +101,19 @@ namespace RenderingLibrary.Graphics
 
             if(Renderer.UseBasicEffectRendering)
             {
-                if(Renderer.ApplyCameraZoomOnWorldTranslation)
-                {
-                    basicEffect.World = Matrix.CreateTranslation(
-                        -width / (2f * camera.Zoom),
-                        -height / (2f * camera.Zoom),
-                        0);
-                }
-                else
-                {
-                    basicEffect.World = Matrix.CreateTranslation(
-                        -width / (2f),
-                        -height / (2f),
-                        0);
-                }
+                //float zoom = 1;
+                //if(Renderer.ApplyCameraZoomOnWorldTranslation)
+                //{
+                //    zoom = camera.Zoom;
+
+                //    if(layer.LayerCameraSettings?.Zoom != null)
+                //    {
+                //        zoom /= layer.LayerCameraSettings.Zoom.Value;
+                //    }
+                //}
+
+                basicEffect.World = Matrix.Identity;
+
                 //effect.Projection = Matrix.CreateOrthographic(100, 100, 0.0001f, 1000);
                 basicEffect.Projection = Matrix.CreateOrthographic(
                     width,
@@ -124,8 +123,12 @@ namespace RenderingLibrary.Graphics
                 basicEffect.View =
                     GetZoomAndMatrix(layer, camera);
 
-                effectiveEffect =
-                    Renderer.UseBasicEffectRendering ? basicEffect : null;
+                if(Renderer.ApplyCameraZoomOnWorldTranslation)
+                {
+                    basicEffect.View *= Matrix.CreateTranslation(-camera.ClientWidth / 2.0f, -camera.ClientHeight / 2.0f, 0);
+                }
+
+                effectiveEffect = basicEffect;
 
             }
 
@@ -194,21 +197,7 @@ namespace RenderingLibrary.Graphics
                     CurrentZoom = zoom;
                     //zoom = Renderer.UseBasicEffectRendering ? 1 : zoom;
 
-                    if(Renderer.UseBasicEffectRendering)
-                    {
-                        var extraZoom = 1/camera.Zoom - 1;
-
-                        var clientWidth = camera.ClientWidth;
-                        var clientHeight = camera.ClientHeight;
-                        matrix = 
-                            Matrix.CreateTranslation(new Vector3(0.5f * clientWidth * extraZoom, 0.5f * clientHeight * extraZoom, 0)) *
-                            Matrix.CreateScale(zoom);
-                    }
-                    else
-                    {
-                        matrix = Matrix.CreateScale(zoom);
-
-                    }
+                    matrix = Matrix.CreateScale(zoom);
 
                 }
                 else
