@@ -150,7 +150,24 @@ namespace RenderingLibrary.Graphics
         {
             var effectiveZoom = LayerCameraSettings?.Zoom ?? camera.Zoom;
 
-            var transformationMatrix = Camera.GetTransformationMatrix(camera.X, camera.Y, effectiveZoom, camera.ClientWidth, camera.ClientHeight);
+            Matrix transformationMatrix;
+
+            if (camera.CameraCenterOnScreen == RenderingLibrary.CameraCenterOnScreen.Center)
+            {
+                // make local vars to make stepping in faster if debugging
+                var x = camera.X;
+                var y = camera.Y;
+                var zoom = effectiveZoom;
+                var width = camera.ClientWidth;
+                var height = camera.ClientHeight;
+                transformationMatrix = Camera.GetTransformationMatrix(x, y, zoom, width, height, false);
+            }
+            else
+            {
+                transformationMatrix =  Matrix.CreateTranslation(-camera.X, -camera.Y, 0) *
+                                         Matrix.CreateScale(new Vector3(effectiveZoom, effectiveZoom, 1));
+            }
+
 
             Matrix matrix = Matrix.Invert(transformationMatrix);
 
