@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Collections.ObjectModel;
+using Microsoft.Xna.Framework;
 
 namespace RenderingLibrary.Graphics
 {
@@ -145,5 +146,20 @@ namespace RenderingLibrary.Graphics
             return false;
         }
 
+        public void ScreenToWorld(Camera camera, float screenX, float screenY, out float worldX, out float worldY)
+        {
+            var effectiveZoom = LayerCameraSettings?.Zoom ?? camera.Zoom;
+
+            var transformationMatrix = Camera.GetTransformationMatrix(camera.X, camera.Y, effectiveZoom, camera.ClientWidth, camera.ClientHeight);
+
+            Matrix matrix = Matrix.Invert(transformationMatrix);
+
+            Vector3 position = new Vector3(screenX, screenY, 0);
+            Vector3 transformed;
+            Vector3.Transform(ref position, ref matrix, out transformed);
+
+            worldX = transformed.X;
+            worldY = transformed.Y;
+        }
     }
 }
