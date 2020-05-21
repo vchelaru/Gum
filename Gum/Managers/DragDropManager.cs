@@ -324,8 +324,11 @@ namespace Gum.Managers
 
                 var newInstance = HandleDroppedElementInElement(draggedAsElementSave, targetInstance.ParentContainer, out handled);
 
-                // Since the user dropped on another instance, let's try to parent it:
-                HandleDroppingInstanceOnTarget(targetInstance, newInstance, targetInstance.ParentContainer);
+                if(newInstance != null)
+                {
+                    // Since the user dropped on another instance, let's try to parent it:
+                    HandleDroppingInstanceOnTarget(targetInstance, newInstance, targetInstance.ParentContainer);
+                }
 
             }
             else if (treeNodeDroppedOn.IsTopComponentContainerTreeNode())

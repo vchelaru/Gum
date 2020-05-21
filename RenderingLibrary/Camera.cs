@@ -227,8 +227,7 @@ namespace RenderingLibrary
                     Matrix.CreateTranslation(new Vector3(-x, -y, 0)) *
                     Matrix.CreateTranslation(new Vector3(0, 0, 0))*
                     Matrix.CreateScale(new Vector3(zoom, zoom, 1)) 
-                    
-                    ;
+                   ;
             }
             else
             {
