@@ -261,6 +261,20 @@ namespace WpfDataUi.DataTypes
             set { backgroundColor = value; }
         }
 
+        string detailText;
+        public string DetailText 
+        {
+            get => detailText;
+            set
+            {
+                if(detailText != value)
+                {
+                    detailText = value;
+                    OnPropertyChanged(nameof(DetailText));
+                }
+            }
+        }
+
         #endregion
 
         #region Events

@@ -34,7 +34,6 @@ namespace WpfDataUi.Controls
 
         #region Properties
 
-
         public InstanceMember InstanceMember
         {
             get
@@ -98,6 +97,9 @@ namespace WpfDataUi.Controls
 
                 this.Label.Text = InstanceMember.DisplayName;
                 this.RefreshContextMenu(TextBox.ContextMenu);
+
+                HintTextBlock.Visibility = !string.IsNullOrEmpty(InstanceMember?.DetailText) ? Visibility.Visible : Visibility.Collapsed;
+                HintTextBlock.Text = InstanceMember?.DetailText;
 
                 RefreshIsEnabled();
 

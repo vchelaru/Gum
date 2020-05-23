@@ -79,11 +79,7 @@ namespace WpfDataUi
             grid.PopulateCategories();
         }
 
-        
-
-
         #region Properties
-
 
         //public object Instance
         //{
@@ -219,18 +215,6 @@ namespace WpfDataUi
                     category.Members.Add(member);
                 }
             }
-        }
-
-        private MemberCategory GetCategoryIfVisible(InstanceMember instanceMember)
-        {
-            foreach (var category in Categories)
-            {
-                if (category.Members.Contains(instanceMember))
-                {
-                    return category;
-                }
-            }
-            return null;
         }
 
         private void ApplyDisplayPropertyToInstanceMember(InstanceMemberDisplayProperties displayProperties, InstanceMember member, MemberCategory category)
