@@ -10,6 +10,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="objNetFramework\**" />
+    <EmbeddedResource Remove="objNetFramework\**" />
+    <None Remove="objNetFramework\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Remove="Properties\AssemblyInfo.cs" />
   </ItemGroup>
 
