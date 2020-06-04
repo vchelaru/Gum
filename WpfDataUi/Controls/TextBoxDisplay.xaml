@@ -31,7 +31,11 @@
                 </ContextMenu>
             </TextBox.ContextMenu>
         </TextBox>
-        <TextBlock x:Name="HintTextBlock" Padding="8,0,0,0" Grid.Row="1" Grid.ColumnSpan="2" Foreground="{StaticResource HintTextBrush}" FontSize="10">
+        <TextBlock x:Name="HintTextBlock" 
+                   Padding="8,0,0,0" Grid.Row="1" 
+                   Grid.ColumnSpan="2" Foreground="{StaticResource HintTextBrush}" 
+                   TextWrapping="Wrap"
+                   FontSize="10">
             This is a property description.
         </TextBlock>
     </Grid>

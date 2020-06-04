@@ -13,10 +13,21 @@ namespace EventOutputPlugin.Managers
 {
     public class ExportEventFileManager
     {
-        static string EventExportDirectory =>
-            ProjectState.Self.GumProjectSave != null
-            ? ProjectState.Self.ProjectDirectory + "EventExport/"
-            : null;
+        static string EventExportDirectory
+        {
+            get
+            {
+
+                if (ProjectState.Self.GumProjectSave != null)
+                {
+                    return ProjectState.Self.ProjectDirectory + "EventExport/";
+                }
+                else
+                {
+                    return null;
+                }
+            }
+        }
 
         public static void ExportEvent(string newName, string oldName, GumEventTypes eventType)
         {

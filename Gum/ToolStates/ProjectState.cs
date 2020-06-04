@@ -38,7 +38,7 @@ namespace Gum.ToolStates
         {
             get
             {
-                if(GumProjectSave == null)
+                if(string.IsNullOrEmpty(GumProjectSave?.FullFileName))
                 {
                     return null;
                 }

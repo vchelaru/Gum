@@ -117,7 +117,9 @@ namespace CodeOutputPlugin.Manager
 
             var isSkiaCanvasView = elementBaseType?.EndsWith("/SkiaGumCanvasView") == true;
 
-            if (!isThisAbsoluteLayout && !isSkiaCanvasView)
+            var isContainer = elementBaseType == "Container";
+
+            if (!isThisAbsoluteLayout && !isSkiaCanvasView && !isContainer)
             {
                 var shouldAddMainLayout = true;
                 if (element is ScreenSave && !string.IsNullOrEmpty(element.BaseType))
