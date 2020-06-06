@@ -122,7 +122,15 @@ namespace Gum.Managers
                     EditingManager.Self.RemoveSelectedBehavior();
                 }
             }
-            if (objectDeleted != null)
+
+            var shouldDelete = objectDeleted != null;
+
+            if(shouldDelete && selectedInstance != null)
+            {
+                shouldDelete = selectedInstance.DefinedByBase == false;
+            }
+
+            if (shouldDelete)
             {
                 PluginManager.Self.DeleteConfirm(optionsWindow, objectDeleted);
             }
