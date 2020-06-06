@@ -36,14 +36,22 @@ namespace Gum.Logic.FileWatch
             fileSystemWatcher.IncludeSubdirectories = true;
             fileSystemWatcher.NotifyFilter =
                 NotifyFilters.LastWrite |
-                NotifyFilters.DirectoryName;
+                NotifyFilters.DirectoryName |
+                NotifyFilters.FileName;
 
-            // todo - turn it on once a project is loaded
+
 
             fileSystemWatcher.Deleted += new FileSystemEventHandler(HandleFileSystemDelete);
             fileSystemWatcher.Changed += new FileSystemEventHandler(HandleFileSystemChange);
             // Gum files get deleted and then created, rather than changed
             fileSystemWatcher.Created += new FileSystemEventHandler(HandleFileSystemChange);
+            fileSystemWatcher.Renamed += HandleRename;
+        }
+
+        private void HandleRename(object sender, RenamedEventArgs e)
+        {
+            var fileName = new FilePath(e.FullPath);
+            HandleFileSystemChange(fileName);
         }
 
         public void EnableWithDirectory(FilePath directoryFilePath)
@@ -62,13 +70,32 @@ namespace Gum.Logic.FileWatch
 
         private void HandleFileSystemDelete(object sender, FileSystemEventArgs e)
         {
+            var fileName = new FilePath(e.FullPath);
+
+            if(fileName.Extension == "png")
+            {
+                int m = 3;
+            }
             // do anything?
         }
 
         private void HandleFileSystemChange(object sender, FileSystemEventArgs e)
         {
             var fileName = new FilePath(e.FullPath);
-            
+            HandleFileSystemChange(fileName);
+        }
+
+        private void HandleFileSystemChange(FilePath fileName)
+        {
+            if (fileName.FullPath.Contains("png"))
+            {
+                int m = 3;
+            }
+
+            if (fileName.Extension == "png")
+            {
+                int m = 3;
+            }
             lock (LockObject)
             {
                 bool wasIgnored = TryIgnoreFileChange(fileName);
@@ -80,7 +107,7 @@ namespace Gum.Logic.FileWatch
                 lastFileChange = DateTime.Now;
             }
         }
-    
+
         bool TryIgnoreFileChange(FilePath fileName)
         {
             int timesToIgnore = 0;
