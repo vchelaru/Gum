@@ -36,8 +36,10 @@ namespace Gum.Logic.FileWatch
             fileSystemWatcher.IncludeSubdirectories = true;
             fileSystemWatcher.NotifyFilter =
                 NotifyFilters.LastWrite |
-                NotifyFilters.DirectoryName |
-                NotifyFilters.FileName;
+                NotifyFilters.DirectoryName
+                // This causes 2 events to fire for changes on files like screens
+                // ... but it's needed for file names on PNG
+                |NotifyFilters.FileName;
 
 
 
@@ -51,7 +53,12 @@ namespace Gum.Logic.FileWatch
         private void HandleRename(object sender, RenamedEventArgs e)
         {
             var fileName = new FilePath(e.FullPath);
-            HandleFileSystemChange(fileName);
+            // for now only do texture files like PNG:
+            var extension = fileName.Extension;
+            if(extension == "png")
+            {
+                HandleFileSystemChange(fileName);
+            }
         }
 
         public void EnableWithDirectory(FilePath directoryFilePath)
@@ -81,23 +88,22 @@ namespace Gum.Logic.FileWatch
 
         private void HandleFileSystemChange(object sender, FileSystemEventArgs e)
         {
-            var fileName = new FilePath(e.FullPath);
-            HandleFileSystemChange(fileName);
+            // for some reason if we include created here, we'll get double-adds for XML files like screens...
+            if(e.ChangeType != WatcherChangeTypes.Created)
+            {
+                var fileName = new FilePath(e.FullPath);
+                HandleFileSystemChange(fileName);
+            }
         }
 
         private void HandleFileSystemChange(FilePath fileName)
         {
-            if (fileName.FullPath.Contains("png"))
-            {
-                int m = 3;
-            }
-
-            if (fileName.Extension == "png")
-            {
-                int m = 3;
-            }
             lock (LockObject)
             {
+                if(fileName.Extension == "gusx")
+                {
+                    int m = 3;
+                }
                 bool wasIgnored = TryIgnoreFileChange(fileName);
                 if (!wasIgnored)
                 {
