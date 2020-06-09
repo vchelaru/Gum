@@ -100,10 +100,6 @@ namespace Gum.Logic.FileWatch
         {
             lock (LockObject)
             {
-                if(fileName.Extension == "gusx")
-                {
-                    int m = 3;
-                }
                 bool wasIgnored = TryIgnoreFileChange(fileName);
                 if (!wasIgnored)
                 {

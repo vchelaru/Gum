@@ -414,9 +414,6 @@ namespace Gum.Managers
 
             if (targetElementSave != null)
             {
-                // We aren't going to allow drag+drop within the same element - that may cause
-                // unexpected copy/paste if the user didn't mean to drag, and we may want to support
-                // reordering.
                 if (isSameElement)
                 {
                     HandleDroppingInstanceOnTarget(targetObject, draggedAsInstanceSave, targetElementSave);
@@ -471,9 +468,10 @@ namespace Gum.Managers
             // Since the Parent property can only be set in the default state, we will
             // set the Parent variable on that instead of the SelectedState.Self.SelectedStateSave
             var stateToAssignOn = targetElementSave.DefaultState;
-
+            Gum.Undo.UndoManager.Self.RecordState();
             var oldValue = stateToAssignOn.GetValue(variableName) as string;
             stateToAssignOn.SetValue(variableName, parentName, "string");
+            Gum.Undo.UndoManager.Self.RecordUndo();
             SetVariableLogic.Self.PropertyValueChanged("Parent", oldValue);
         }
 

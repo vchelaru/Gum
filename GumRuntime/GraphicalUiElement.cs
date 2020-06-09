@@ -4458,7 +4458,7 @@ namespace Gum.Wireframe
                     explicitParentVisible = ExplicitIVisibleParent.AbsoluteVisible;
                 }
 
-                return explicitParentVisible && mContainedObjectAsIVisible.AbsoluteVisible;
+                return explicitParentVisible && mContainedObjectAsIVisible?.AbsoluteVisible == true;
             }
         }
 

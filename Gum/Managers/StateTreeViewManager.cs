@@ -143,7 +143,11 @@ namespace Gum.Managers
 
             Select(treeNode);
 
-            UndoManager.Self.RecordUndo();
+            // Vic says - why is this recording an undo?
+            // Shouldn't this only happen whenever you end 
+            // some kind of edit?
+            // This change causes incorrect undos to register.
+            //UndoManager.Self.RecordUndo();
         }
 
         public void Select(StateSaveCategory stateSaveCategory)
