@@ -573,7 +573,7 @@ namespace CodeOutputPlugin.Manager
             // For scrollable GumContainers we need to have the parent assigned *after* the AbsoluteLayout rectangle:
             #region Assign Parent
 
-            var hasParent = variablesToConsider.FirstOrDefault()?.GetRootName() == "Parent";
+            var hasParent = variablesToConsider.Any(item => item.GetRootName() == "Parent");
 
             if (!hasParent && !instance.DefinedByBase)
             {
