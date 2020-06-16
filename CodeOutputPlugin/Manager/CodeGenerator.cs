@@ -516,7 +516,8 @@ namespace CodeOutputPlugin.Manager
 
             var variablesToConsider = GetVariablesToConsider(instance)
                 // make "Parent" first
-                .OrderBy(item => item.GetRootName() != "Parent")
+                // .. actually we need to make parent last so that it can properly assign parent on scrollables
+                .OrderBy(item => item.GetRootName() == "Parent")
                 .ToList();
 
             #endregion
@@ -545,24 +546,6 @@ namespace CodeOutputPlugin.Manager
 
             #endregion
 
-            #region Assign Parent
-
-            var hasParent = variablesToConsider.FirstOrDefault()?.GetRootName() == "Parent";
-            if (!hasParent && !instance.DefinedByBase)
-            {
-                if(visualApi == VisualApi.Gum)
-                {
-                    // add it to "this"
-                    stringBuilder.AppendLine($"{tabs}this.Children.Add({instance.Name});");
-                }
-                else // forms
-                {
-                    stringBuilder.AppendLine($"{tabs}MainLayout.Children.Add({instance.Name});");
-                }
-            }
-
-            #endregion
-
 
             // sometimes variables have to be processed in groups. For example, RGB values
             // have to be assigned all at once in a Color value in XamForms;
@@ -586,6 +569,38 @@ namespace CodeOutputPlugin.Manager
                     stringBuilder.AppendLine(tabs + suffixCodeLine);
                 }
             }
+
+            // For scrollable GumContainers we need to have the parent assigned *after* the AbsoluteLayout rectangle:
+            #region Assign Parent
+
+            var hasParent = variablesToConsider.FirstOrDefault()?.GetRootName() == "Parent";
+
+            if (!hasParent && !instance.DefinedByBase)
+            {
+
+                if(visualApi == VisualApi.Gum)
+                {
+                    // add it to "this"
+                    stringBuilder.AppendLine($"{tabs}this.Children.Add({instance.Name});");
+                }
+                else // forms
+                {
+                    var instanceBaseType = instance.BaseType;
+                    var isGumCollectionView = instanceBaseType.EndsWith("/GumCollectionView");
+
+                    if(isGumCollectionView)
+                    {
+                        stringBuilder.AppendLine($"{tabs}var tempFor{instance.Name} = GumScrollBar.CreateScrollableAbsoluteLayout({instance.Name}, ScrollableLayoutParentPlacement.Free);");
+                        stringBuilder.AppendLine($"{tabs}MainLayout.Children.Add(tempFor{instance.Name});");
+                    }
+                    else
+                    {
+                        stringBuilder.AppendLine($"{tabs}MainLayout.Children.Add({instance.Name});");
+                    }
+                }
+            }
+
+            #endregion
         }
 
         private static void ProcessVariableGroups(List<VariableSave> variablesToConsider, StateSave defaultState, InstanceSave instance, ElementSave container, VisualApi visualApi, StringBuilder stringBuilder)

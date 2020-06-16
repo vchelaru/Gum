@@ -177,6 +177,11 @@ namespace Gum.Converters
                 // not fully implemented
                 absoluteY = relativeY;
             }
+            else if(generalY == GeneralUnitType.PixelsFromBaseline)
+            {
+                // not fully implemented
+                absoluteY = relativeY;
+            }
             else
             {
                 throw new NotImplementedException();

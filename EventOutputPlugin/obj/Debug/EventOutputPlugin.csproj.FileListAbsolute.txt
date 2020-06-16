@@ -74,3 +74,4 @@ C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\bin\Debug\Gum.DataTypes.dl
 C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\bin\Debug\Gum.DataTypes.pdb
 C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\bin\Debug\Content\Icons\Origins\Baseline.png
 C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\bin\Debug\Content\Icons\Units\PixelsFromBaseline.png
+C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\obj\Debug\EventOutputPlugin.csproj.CoreCompileInputs.cache

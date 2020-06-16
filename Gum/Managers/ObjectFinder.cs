@@ -34,7 +34,11 @@ namespace Gum.Managers
             set;
         }
 
-
+        /// <summary>
+        /// Returns the ScreenSave with matching name in the current glue project. Case is ignored when making name comparisons
+        /// </summary>
+        /// <param name="screenName"></param>
+        /// <returns></returns>
         public ScreenSave GetScreen(string screenName)
         {
             GumProjectSave gps = GumProjectSave;

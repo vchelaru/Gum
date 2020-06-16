@@ -205,15 +205,25 @@ namespace CodeOutputPlugin
 
                 string contents = CodeGenerator.GetCodeForElement(selectedElement, settings);
                 contents = $"//Code for {selectedElement.ToString()}\n{contents}";
-                var filepath = settings.GeneratedFileName;
-                if (FileManager.IsRelative(filepath))
+                var fileName = settings.GeneratedFileName;
+                if (FileManager.IsRelative(fileName))
                 {
-                    filepath = ProjectState.Self.ProjectDirectory + filepath;
+                    fileName = ProjectState.Self.ProjectDirectory + fileName;
                 }
-                System.IO.File.WriteAllText(filepath, contents);
 
-                // show a message somewhere?
-                GumCommands.Self.GuiCommands.ShowMessage($"Generated code to {FileManager.RemovePath(filepath)}");
+                if(System.IO.File.Exists(fileName))
+                {
+
+                    System.IO.File.WriteAllText(fileName, contents);
+
+                    // show a message somewhere?
+                    GumCommands.Self.GuiCommands.ShowMessage($"Generated code to {FileManager.RemovePath(fileName)}");
+                }
+                else
+                {
+                    GumCommands.Self.GuiCommands.ShowMessage($"Could not find destination file on disk");
+
+                }
             }
         }
 
