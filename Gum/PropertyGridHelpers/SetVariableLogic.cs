@@ -251,7 +251,12 @@ namespace Gum.PropertyGridHelpers
             StateSave stateSave = SelectedState.Self.SelectedStateSave;
             float valueToSet = 0;
 
-            if (changedMember == "X Units" || changedMember == "Y Units" || changedMember == "Width Units" || changedMember == "Height Units")
+            var wereUnitValuesChanged =
+                changedMember == "X Units" || changedMember == "Y Units" || changedMember == "Width Units" || changedMember == "Height Units";
+
+            var shouldAttemptValueChange = wereUnitValuesChanged && ProjectManager.Self.GumProjectSave?.ConvertVariablesOnUnitTypeChange == true;
+
+            if (shouldAttemptValueChange)
             {
                 GeneralUnitType oldValue;
 

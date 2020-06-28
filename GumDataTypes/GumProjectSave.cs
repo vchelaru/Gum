@@ -76,6 +76,11 @@ namespace Gum.DataTypes
             set;
         }
 
+        public bool ConvertVariablesOnUnitTypeChange
+        {
+            get; set;
+        }
+
         public bool RestrictToUnitValues
         {
             get;
