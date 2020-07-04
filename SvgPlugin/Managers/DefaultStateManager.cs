@@ -76,6 +76,7 @@ namespace SkiaPlugin.Managers
                 AddVisibleVariable(roundedRectangleState);
 
                 roundedRectangleState.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 5, Name = "CornerRadius", Category="Dimensions" });
+                roundedRectangleState.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation" });
 
                 StandardElementsManager.AddPositioningVariables(roundedRectangleState);
                 StandardElementsManager.AddDimensionsVariables(roundedRectangleState, 64, 64,

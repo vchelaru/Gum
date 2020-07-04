@@ -537,11 +537,15 @@ namespace CodeOutputPlugin.Manager
 
             var tabs = new String(' ', 4 * tabCount);
 
-            #region (Optionally) Assign Name
+            #region Name/Automation Id
 
             if (visualApi == VisualApi.Gum)
             {
                 stringBuilder.AppendLine($"{tabs}{instance.Name}.Name = \"{instance.Name}\";");
+            }
+            else
+            {
+                stringBuilder.AppendLine($"{tabs}{instance.Name}.AutomationId = \"{instance.Name}\";");
             }
 
             #endregion
