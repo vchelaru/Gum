@@ -57,3 +57,5 @@ GumCoreShared.shproj.user
 EventOutputPlugin/obj/
 SkiaGum/bin/
 SkiaGum/obj/
+SkiaGum.Wpf/bin/
+SkiaGum.Wpf/obj/
