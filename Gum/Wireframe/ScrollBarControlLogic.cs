@@ -136,9 +136,9 @@ namespace Gum.Wireframe
 
                 var visibleAreaWidth = xnaControl.Width / camera.Zoom;
 
-                mHorizontalScrollBar.Minimum = 0;
-                mHorizontalScrollBar.Maximum = (int)(displayedAreaWidth + visibleAreaWidth);
-                mHorizontalScrollBar.LargeChange = (int)visibleAreaWidth;
+                mHorizontalScrollBar.Minimum = 0; // The minimum value for the scroll bar, which should be 0, since that's the furthest left the scrollbar can go
+                mHorizontalScrollBar.Maximum = (int)(displayedAreaWidth + visibleAreaWidth); // The total amount that the scrollbar can cover. This is the width of the area plus the screen width since we can scroll until the edges are at the middle, meaning we can see half a screen width on either side 
+                mHorizontalScrollBar.LargeChange = (int)visibleAreaWidth; // the amount of visible area. It's called LargeChange but it really means how much the scrollbar can see 
             }
         }
 
