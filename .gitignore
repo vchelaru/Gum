@@ -55,3 +55,5 @@ CodeOutputPlugin/bin/
 CodeOutputPlugin/obj/
 GumCoreShared.shproj.user
 EventOutputPlugin/obj/
+SkiaGum/bin/
+SkiaGum/obj/
