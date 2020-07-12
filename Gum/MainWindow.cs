@@ -63,6 +63,18 @@ namespace Gum
             scrollBarControlLogic.SetDisplayedArea(800, 600);
             wireframeControl1.CameraChanged += () =>
             {
+                if(ProjectManager.Self.GumProjectSave != null)
+                {
+                    
+                    scrollBarControlLogic.SetDisplayedArea(
+                        ProjectManager.Self.GumProjectSave.DefaultCanvasWidth,
+                        ProjectManager.Self.GumProjectSave.DefaultCanvasHeight);
+                }
+                else
+                {
+                    scrollBarControlLogic.SetDisplayedArea(800, 600);
+                }
+
                 scrollBarControlLogic.UpdateScrollBars();
                 scrollBarControlLogic.UpdateScrollBarsToCameraPosition();
 
