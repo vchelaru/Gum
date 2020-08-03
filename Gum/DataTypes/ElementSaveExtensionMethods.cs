@@ -366,7 +366,15 @@ namespace Gum.DataTypes
             {
                 var baseElement = ObjectFinder.Self.GetElementSave(element.BaseType);
 
-                return baseElement.GetStateSaveCategoryRecursively(categoryName, out categoryContainer);
+                if(baseElement == null)
+                {
+                    categoryContainer = null;
+                    return null;
+                }
+                else
+                {
+                    return baseElement.GetStateSaveCategoryRecursively(categoryName, out categoryContainer);
+                }
             }
 
             categoryContainer = null;
