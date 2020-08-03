@@ -15,7 +15,7 @@ For example, by default a Text object displays all of its letters. Note that the
 
 ![](NoMaxLettersToShow.png)
 
-Setting  Max Letters To Show value to 30 restricts the Text object to displaying its first 30 characters, but the size and line wrapping do not change.
+Setting Max Letters To Show value to 30 restricts the Text object to displaying its first 30 characters, but the size and line wrapping do not change.
 
 ![](MaxLettersToShow30.png)
 
