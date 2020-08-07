@@ -85,6 +85,12 @@ namespace WpfDataUi.Controls
             set;
         }
 
+        public bool IsEditable
+        {
+            get => ComboBox.IsEditable;
+            set => ComboBox.IsEditable = value;
+        }
+
         #endregion
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -109,10 +115,22 @@ namespace WpfDataUi.Controls
 
             this.ComboBox.DataContext = this;
 
+            //this.ComboBox.IsEditable = true;
+
             this.RefreshContextMenu(ComboBox.ContextMenu);
 
+            this.ComboBox.IsKeyboardFocusWithinChanged += HandleIsKeyboardFocusChanged;
+
         }
-        
+
+        private void HandleIsKeyboardFocusChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            if(ComboBox.IsKeyboardFocusWithin == false)
+            {
+                HandleChange();
+            }
+        }
+
         private void CreateLayout()
         {
             Grid = new Grid();
@@ -258,14 +276,32 @@ namespace WpfDataUi.Controls
 
         public ApplyValueResult TryGetValueOnUi(out object value)
         {
-            value = this.ComboBox.SelectedItem;
+            if(ComboBox.IsEditable)
+            {
+                value = ComboBox.Text;
+            }
+            else
+            {
+                value = this.ComboBox.SelectedItem;
+            }
 
             return ApplyValueResult.Success;
         }
 
         private void ComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            var canBroadcast = ComboBox.IsEditable == false ||
+                ComboBox.IsKeyboardFocusWithin == false;
 
+            if(canBroadcast)
+            {
+                HandleChange();
+            }
+
+        }
+
+        private void HandleChange()
+        {
             this.TrySetValueOnInstance();
 
             if (PropertyChanged != null)
@@ -273,9 +309,6 @@ namespace WpfDataUi.Controls
                 PropertyChanged(this, new PropertyChangedEventArgs("DesiredForegroundBrush"));
             }
             TextBlock.SetForeground(ComboBox, DesiredForegroundBrush);
-
         }
-
-
     }
 }

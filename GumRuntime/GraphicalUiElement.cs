@@ -3359,11 +3359,36 @@ namespace Gum.Wireframe
         /// <returns>The found GraphicalUiElement, or null if no match is found.</returns>
         public GraphicalUiElement GetGraphicalUiElementByName(string name)
         {
-            foreach (var item in mWhatThisContains)
+            var containsDots = ToolsUtilities.StringFunctions.ContainsNoAlloc(name, '.');
+            if(containsDots)
             {
-                if (item.Name == name)
+                // rare, so we can do allocation calls here:
+                var indexOfDot = name.IndexOf('.');
+
+                var prefix = name.Substring(0, indexOfDot);
+
+                GraphicalUiElement container = null;
+                foreach (var item in mWhatThisContains)
                 {
-                    return item;
+                    if (item.Name == prefix)
+                    {
+                        container = item;
+                        break;
+                    }
+                }
+
+                var suffix = name.Substring(indexOfDot + 1);
+
+                return container?.GetGraphicalUiElementByName(suffix);
+            }
+            else
+            {
+                foreach (var item in mWhatThisContains)
+                {
+                    if (item.Name == name)
+                    {
+                        return item;
+                    }
                 }
             }
 

@@ -6,12 +6,16 @@ using System.ComponentModel;
 
 namespace Gum.DataTypes.ComponentModel
 {
+    #region MemberChangeArgs
+
     public class MemberChangeArgs : EventArgs
     {
         public object Owner;
         public string Member;
         public object Value;
     }
+
+    #endregion
 
     public delegate void MemberChangeEventHandler(object sender, MemberChangeArgs args);
 

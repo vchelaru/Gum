@@ -614,6 +614,9 @@ namespace Gum.Managers
             variableSave.Name = "Parent";
             variableSave.CanOnlyBeSetInDefaultState = true;
             variableSave.CustomTypeConverter = new AvailableInstancesConverter() { IncludeScreenBounds = true };
+
+            variableSave.PropertiesToSetOnDisplayer["IsEditable"] = true;
+
             variables.Variables.Add(variableSave);
         }
 #endif

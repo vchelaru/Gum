@@ -154,6 +154,9 @@ namespace Gum.DataTypes.Variables
 
         // If adding stuff here, make sure to add to the Clone method!
 
+        [XmlIgnore]
+        public Dictionary<string, object> PropertiesToSetOnDisplayer { get; private set; } = new Dictionary<string, object>();
+
 
         public VariableSave Clone()
         {

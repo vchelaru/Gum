@@ -8,9 +8,12 @@ using Gum.ToolStates;
 
 namespace Gum.DataTypes.ComponentModel
 {
+    #region Delegate Definitions
 
     public delegate object GetValueDelegate(object component);
     public delegate void SetValueDelegate(object component, object value);
+
+    #endregion
 
     public class InstanceSavePropertyDescriptor
         //: PropertyDescriptor
@@ -66,13 +69,37 @@ namespace Gum.DataTypes.ComponentModel
 
         #endregion
 
+        // Eventually we're going to move off of using the base 
+        // PropertyDescriptor
+        public bool IsReadOnly
+        {
+            get;
+            set;
+        }
+
+        public string Category { get; set; } = "";
+
+        public Type PropertyType
+        {
+            get 
+			{
+				if (mParameterType == typeof(bool))
+				{
+					return typeof(bool);
+				}
+				else
+				{
+					return typeof(string);
+				}
+			}
+        }
+
         public InstanceSavePropertyDescriptor(string name, Type type, Attribute[] attrs)
         {
             this.Attributes = attrs;
 			mParameterType = type;
             Name = name;
         }
-
 
         public bool CanResetValue(object component)
         {
@@ -114,8 +141,6 @@ namespace Gum.DataTypes.ComponentModel
             }
             return name;
         }
-
-
 
         public void SetValue(object component, object value)
         {
@@ -160,39 +185,11 @@ namespace Gum.DataTypes.ComponentModel
             stateSave.SetValue(name, value, instanceSave, variableType);
         }
 
-
-
-        // Eventually we're going to move off of using the base 
-        // PropertyDescriptor
-        public bool IsReadOnly
-        {
-            get;
-            set;
-        }
-
-        public string Category { get; set; } = "";
-
-        public Type PropertyType
-        {
-            get 
-			{
-				if (mParameterType == typeof(bool))
-				{
-					return typeof(bool);
-				}
-				else
-				{
-					return typeof(string);
-				}
-			}
-        }
-
         public void ResetValue(object component)
         {
             
             // do nothing here
         }
-
 
         //private void SetEventValue(string categoryString, IEventContainer eventContainer, string value)
         //{

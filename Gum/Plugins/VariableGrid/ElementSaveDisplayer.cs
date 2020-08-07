@@ -298,6 +298,8 @@ namespace Gum.PropertyGridHelpers
                     customAttributes
                     );
                 property.Category = category;
+
+
             }
         }
 
