@@ -101,7 +101,7 @@ namespace Gum.PropertyGridHelpers
         public void AskRemoveVariableFromAllStatesInCategory(string variableName, StateSaveCategory stateCategory)
         {
             string message =
-                $"Are you sure you want to remove {variableName} from all states in {stateCategory.Name}? The following categories will be impacted:\n";
+                $"Are you sure you want to remove {variableName} from all states in {stateCategory.Name}? The following states will be impacted:\n";
 
             foreach (var state in stateCategory.States)
             {

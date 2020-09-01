@@ -28,6 +28,7 @@ namespace CodeOutputPlugin
 
         Views.CodeWindow control;
         ViewModels.CodeWindowViewModel viewModel;
+        Models.CodeOutputProjectSettings codeOutputProjectSettings;
 
         #endregion
 
@@ -53,6 +54,12 @@ namespace CodeOutputPlugin
             this.VariableSet += HandleVariableSet;
             this.StateWindowTreeNodeSelected += HandleStateSelected;
             this.AddAndRemoveVariablesForType += HandleAddAndRemoveVariablesForType;
+            this.ProjectLoad += HandleProjectLoaded;
+        }
+
+        private void HandleProjectLoaded(GumProjectSave project)
+        {
+            codeOutputProjectSettings = CodeOutputProjectSettingsManager.CreateOrLoadSettingsForProject();
         }
 
         private void HandleStateSelected(TreeNode obj)
@@ -86,7 +93,7 @@ namespace CodeOutputPlugin
             var element = SelectedState.Self.SelectedElement;
             if(element != null)
             {
-                control.CodeOutputElementSettings = CodeOutputSettingsManager.LoadOrCreateSettingsFor(element);
+                control.CodeOutputElementSettings = CodeOutputElementSettingsManager.LoadOrCreateSettingsFor(element);
             }
         }
 
@@ -125,6 +132,7 @@ namespace CodeOutputPlugin
             var instance = SelectedState.Self.SelectedInstance;
             var selectedElement = SelectedState.Self.SelectedElement;
 
+            control.CodeOutputProjectSettings = codeOutputProjectSettings;
             if(control.CodeOutputElementSettings == null)
             {
                 control.CodeOutputElementSettings = new Models.CodeOutputElementSettings();
@@ -144,7 +152,7 @@ namespace CodeOutputPlugin
                     }
                     else if(selectedElement != null)
                     {
-                        string gumCode = CodeGenerator.GetCodeForElement(selectedElement, settings);
+                        string gumCode = CodeGenerator.GetCodeForElement(selectedElement, settings, codeOutputProjectSettings);
                         viewModel.Code = $"//Code for {selectedElement.ToString()}\n{gumCode}";
                     }
                     break;
@@ -182,7 +190,8 @@ namespace CodeOutputPlugin
             var element = SelectedState.Self.SelectedElement;
             if(element != null)
             {
-                CodeOutputSettingsManager.WriteSettingsForElement(element, control.CodeOutputElementSettings);
+                CodeOutputElementSettingsManager.WriteSettingsForElement(element, control.CodeOutputElementSettings);
+                CodeOutputProjectSettingsManager.WriteSettingsForProject(codeOutputProjectSettings);
 
                 RefreshCodeDisplay();
             }
@@ -203,7 +212,7 @@ namespace CodeOutputPlugin
                 //var contents = ViewModel.Code;
                 var selectedElement = SelectedState.Self.SelectedElement;
 
-                string contents = CodeGenerator.GetCodeForElement(selectedElement, settings);
+                string contents = CodeGenerator.GetCodeForElement(selectedElement, settings, codeOutputProjectSettings);
                 contents = $"//Code for {selectedElement.ToString()}\n{contents}";
                 var fileName = settings.GeneratedFileName;
                 if (FileManager.IsRelative(fileName))

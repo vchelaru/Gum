@@ -10,9 +10,8 @@ using ToolsUtilities;
 
 namespace CodeOutputPlugin.Manager
 {
-    public static class CodeOutputSettingsManager
+    public static class CodeOutputElementSettingsManager
     {
-
         public static void WriteSettingsForElement(ElementSave element, CodeOutputElementSettings settings)
         {
             // save the file
@@ -30,15 +29,12 @@ namespace CodeOutputPlugin.Manager
 
         public static CodeOutputElementSettings LoadOrCreateSettingsFor(ElementSave element)
         {
-            CodeOutputElementSettings toReturn = null;
+            CodeOutputElementSettings toReturn;
             var fileName = GetCodeSettingsFileFor(element);
             if (fileName.Exists())
             {
                 var contents = System.IO.File.ReadAllText(fileName.FullPath);
-
-                var settings = JsonConvert.DeserializeObject<Models.CodeOutputElementSettings>(contents);
-
-                toReturn = settings;
+                toReturn = JsonConvert.DeserializeObject<Models.CodeOutputElementSettings>(contents);
             }
             else
             {

@@ -31,7 +31,7 @@ namespace CodeOutputPlugin.Manager
         /// </summary>
         public static bool AdjustPixelValuesForDensity { get; set; } = true;
 
-        public static string GetCodeForElement(ElementSave element, CodeOutputElementSettings settings)
+        public static string GetCodeForElement(ElementSave element, CodeOutputElementSettings elementSettings, CodeOutputProjectSettings projectSettings)
         {
             #region Determine if XamarinForms Control
             VisualApi visualApi;
@@ -52,17 +52,22 @@ namespace CodeOutputPlugin.Manager
 
             #region Using Statements
 
-            if (!string.IsNullOrEmpty(settings?.UsingStatements))
+            if(!string.IsNullOrWhiteSpace(projectSettings?.CommonUsingStatements))
             {
-                stringBuilder.AppendLine(settings.UsingStatements);
+                stringBuilder.AppendLine(projectSettings.CommonUsingStatements);
+            }
+
+            if (!string.IsNullOrEmpty(elementSettings?.UsingStatements))
+            {
+                stringBuilder.AppendLine(elementSettings.UsingStatements);
             }
             #endregion
 
             #region Namespace Header/Opening {
 
-            if (!string.IsNullOrEmpty(settings?.Namespace))
+            if (!string.IsNullOrEmpty(elementSettings?.Namespace))
             {
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"namespace {settings.Namespace}");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"namespace {elementSettings.Namespace}");
                 stringBuilder.AppendLine(ToTabs(tabCount) + "{");
                 tabCount++;
             }
@@ -101,7 +106,7 @@ namespace CodeOutputPlugin.Manager
             stringBuilder.AppendLine(ToTabs(tabCount) + "}");
             #endregion
 
-            if (!string.IsNullOrEmpty(settings?.Namespace))
+            if (!string.IsNullOrEmpty(elementSettings?.Namespace))
             {
                 tabCount--;
                 stringBuilder.AppendLine(ToTabs(tabCount) + "}");

@@ -32,6 +32,11 @@ namespace CodeOutputPlugin.Views
 
         CodeWindowViewModel ViewModel => DataContext as CodeWindowViewModel;
 
+        public CodeOutputProjectSettings CodeOutputProjectSettings
+        {
+            get; set;
+        }
+
         CodeOutputElementSettings codeOutputElementSettings;
         public CodeOutputElementSettings CodeOutputElementSettings
         {
@@ -62,15 +67,48 @@ namespace CodeOutputPlugin.Views
 
         private void CreateGridCategories()
         {
-            var category = new MemberCategory("Code Generation");
-
-            category.Members.Add(CreateUsingStatementMember());
-            category.Members.Add(CreateNamespaceMember());
-            category.Members.Add(CreateFileLocationMember());
-
             DataGrid.Categories.Clear();
-            DataGrid.Categories.Add(category);
 
+            var projectCategory = new MemberCategory("Project-Wide Code Generation");
+
+            projectCategory.Members.Add(CreateProjectUsingStatementsMember());
+
+            DataGrid.Categories.Add(projectCategory);
+
+
+            var elementCategory = new MemberCategory("Element Code Generation");
+
+            elementCategory.Members.Add(CreateUsingStatementMember());
+            elementCategory.Members.Add(CreateNamespaceMember());
+            elementCategory.Members.Add(CreateFileLocationMember());
+
+            DataGrid.Categories.Add(elementCategory);
+
+        }
+
+        private InstanceMember CreateProjectUsingStatementsMember()
+        {
+            var member = new InstanceMember("Project-wide Using Statements", this);
+
+            member.CustomSetEvent += (owner, value) =>
+            {
+                if (CodeOutputProjectSettings != null)
+                {
+                    CodeOutputProjectSettings.CommonUsingStatements = (string)value;
+                    CodeOutputSettingsPropertyChanged?.Invoke(this, null);
+                }
+            };
+
+            member.CustomGetEvent += (owner) =>
+            {
+                return CodeOutputProjectSettings?.CommonUsingStatements;
+            };
+
+            member.CustomGetTypeEvent += (owner) => typeof(string);
+
+            member.PreferredDisplayer = typeof(MultiLineTextBoxDisplay);
+
+            return member;
         }
 
         private InstanceMember CreateUsingStatementMember()
@@ -91,10 +129,7 @@ namespace CodeOutputPlugin.Views
                 return codeOutputElementSettings?.UsingStatements;
             };
 
-            member.CustomGetTypeEvent += (owner) =>
-            {
-                return typeof(string);
-            };
+            member.CustomGetTypeEvent += (owner) => typeof(string);
 
             member.PreferredDisplayer = typeof(MultiLineTextBoxDisplay);
 

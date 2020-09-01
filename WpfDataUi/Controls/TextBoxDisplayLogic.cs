@@ -303,10 +303,21 @@ namespace WpfDataUi.Controls
         {
             if(instancePropertyType == typeof(float))
             {
-                // do floats for now...
                 var result = new DataTable().Compute(usableString, null);
             
                 if(result is float || result is int || result is decimal || result is double)
+                {
+                    return result;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            else if(instancePropertyType == typeof(int))
+            {
+                var result = new DataTable().Compute(usableString, null);
+                if (result is float || result is int || result is decimal || result is double)
                 {
                     return result;
                 }

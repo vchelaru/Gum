@@ -333,6 +333,7 @@
     <Compile Include="ToolCommands\ElementCommands.cs" />
     <Compile Include="ToolCommands\GuiCommands.cs" />
     <Compile Include="ToolCommands\ProjectCommands.cs" />
+    <Compile Include="ToolStates\GumState.cs" />
     <Compile Include="ToolStates\ISelectedState.cs" />
     <Compile Include="ToolStates\ProjectState.cs" />
     <Compile Include="ToolStates\SelectedState.cs" />
