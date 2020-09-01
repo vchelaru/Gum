@@ -10,6 +10,7 @@
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition></ColumnDefinition>
+            <ColumnDefinition Width="5"></ColumnDefinition>
             <ColumnDefinition></ColumnDefinition>
         </Grid.ColumnDefinitions>
         <Grid>
@@ -32,7 +33,8 @@
             </Grid>
             <TextBox x:Name="TextBoxInstance" ScrollViewer.VerticalScrollBarVisibility="Auto" Grid.Row="1" Text="{Binding Code}"></TextBox>
         </Grid>
-        <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto">
+        <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" />
+        <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
             <StackPanel>
                 <WpfDataUi:DataUiGrid Name="DataGrid"></WpfDataUi:DataUiGrid>
                 <Button Click="HandleGenerateCodeClicked">Generate Code</Button>
