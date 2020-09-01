@@ -206,7 +206,7 @@ namespace Gum.Wireframe
                 }
                 else
                 {
-                    return oldValue.Equals(newValue);
+                    return oldValue.Equals(newValue) == false;
                 }
             }
         }

@@ -11,5 +11,6 @@ namespace CodeOutputPlugin.Models
         public string Namespace { get; set; }
         public string UsingStatements { get; set; }
         public string GeneratedFileName { get; set; }
+        public bool AutoGenerateOnChange { get; set; }
     }
 }

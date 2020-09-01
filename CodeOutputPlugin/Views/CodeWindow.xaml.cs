@@ -54,8 +54,12 @@ namespace CodeOutputPlugin.Views
 
         #endregion
 
+        #region Events
+
         public event EventHandler CodeOutputSettingsPropertyChanged;
         public event EventHandler GenerateCodeClicked;
+
+        #endregion
 
         public CodeWindow()
         {
@@ -78,12 +82,32 @@ namespace CodeOutputPlugin.Views
 
             var elementCategory = new MemberCategory("Element Code Generation");
 
+            elementCategory.Members.Add(CreateAutoGenerateOnChangeMember());
             elementCategory.Members.Add(CreateUsingStatementMember());
             elementCategory.Members.Add(CreateNamespaceMember());
             elementCategory.Members.Add(CreateFileLocationMember());
 
             DataGrid.Categories.Add(elementCategory);
 
+        }
+
+        private InstanceMember CreateAutoGenerateOnChangeMember()
+        {
+            var member = new InstanceMember("Auto-generate on change", this);
+
+            member.CustomSetEvent += (owner, value) =>
+            {
+                if (codeOutputElementSettings != null)
+                {
+                    codeOutputElementSettings.AutoGenerateOnChange = (bool)value;
+                    CodeOutputSettingsPropertyChanged?.Invoke(this, null);
+                }
+            };
+
+            member.CustomGetEvent += (owner) => codeOutputElementSettings?.AutoGenerateOnChange;
+            member.CustomGetTypeEvent += (owner) => typeof(bool);
+
+            return member;
         }
 
         private InstanceMember CreateProjectUsingStatementsMember()

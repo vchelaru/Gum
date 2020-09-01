@@ -97,11 +97,23 @@ namespace CodeOutputPlugin
             }
         }
 
-        private void HandleVariableSet(ElementSave arg1, InstanceSave instance, string arg3, object arg4)
+        private void HandleVariableSet(ElementSave element, InstanceSave instance, string arg3, object arg4)
         {
             if (control != null)
             {
                 RefreshCodeDisplay();
+
+                if (control.CodeOutputElementSettings == null)
+                {
+                    control.CodeOutputElementSettings = new Models.CodeOutputElementSettings();
+                }
+
+                var elementSettings = control.CodeOutputElementSettings;
+
+                if(elementSettings.AutoGenerateOnChange)
+                {
+                    GenerateCodeForSelectedElement(showPopups:false);
+                }
             }
         }
 
@@ -199,10 +211,18 @@ namespace CodeOutputPlugin
 
         private void HandleGenerateCodeButtonClicked()
         {
+            GenerateCodeForSelectedElement(showPopups:true);
+        }
+
+        private void GenerateCodeForSelectedElement(bool showPopups)
+        {
             var settings = control.CodeOutputElementSettings;
             if (string.IsNullOrEmpty(settings.GeneratedFileName))
             {
-                GumCommands.Self.GuiCommands.ShowMessage("Generated file name must be set first");
+                if(showPopups)
+                {
+                    GumCommands.Self.GuiCommands.ShowMessage("Generated file name must be set first");
+                }
             }
             else
             {
@@ -220,21 +240,25 @@ namespace CodeOutputPlugin
                     fileName = ProjectState.Self.ProjectDirectory + fileName;
                 }
 
-                if(System.IO.File.Exists(fileName))
+                if (System.IO.File.Exists(fileName))
                 {
 
                     System.IO.File.WriteAllText(fileName, contents);
 
                     // show a message somewhere?
-                    GumCommands.Self.GuiCommands.ShowMessage($"Generated code to {FileManager.RemovePath(fileName)}");
+                    if(showPopups)
+                    {
+                        GumCommands.Self.GuiCommands.ShowMessage($"Generated code to {FileManager.RemovePath(fileName)}");
+                    }
                 }
                 else
                 {
-                    GumCommands.Self.GuiCommands.ShowMessage($"Could not find destination file on disk");
-
+                    if (showPopups)
+                    {
+                        GumCommands.Self.GuiCommands.ShowMessage($"Could not find destination file on disk");
+                    }
                 }
             }
         }
-
     }
 }
