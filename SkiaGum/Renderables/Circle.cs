@@ -12,6 +12,8 @@ namespace SkiaGum.Renderables
             get; set;
         } = SKColors.Red;
 
+        public bool IsDimmed { get; set; }
+
         public int Alpha
         {
             get => Color.Alpha;
@@ -48,11 +50,28 @@ namespace SkiaGum.Renderables
             }
         }
 
-        SKPaint Paint => new SKPaint
+        SKPaint Paint
         {
-            Color = this.Color,
-            IsAntialias = true
-        };
+            get
+            {
+                var effectiveColor = this.Color;
+                if(IsDimmed)
+                {
+                    const double dimmingMuliplier = .9;
+
+                    effectiveColor = new SKColor(
+                        (byte)(this.Color.Red * dimmingMuliplier),
+                        (byte)(this.Color.Green * dimmingMuliplier),
+                        (byte)(this.Color.Blue * dimmingMuliplier),
+                        this.Color.Alpha);
+                }
+                return new SKPaint
+                {
+                    Color = effectiveColor,
+                    IsAntialias = true
+                };
+            }
+        }
 
         public override void DrawBound(SKRect boundingRect, SKCanvas canvas)
         {

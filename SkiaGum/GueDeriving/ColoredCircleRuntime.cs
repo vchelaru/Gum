@@ -51,6 +51,13 @@ namespace SkiaGum.GueDeriving
             set => ContainedCircle.Color = value;
         }
 
+        public bool IsDimmed 
+        {
+            get => ContainedCircle.IsDimmed;
+            set => ContainedCircle.IsDimmed = value;
+        }
+
+
         public ColoredCircleRuntime(bool fullInstantiation = true)
         {
             if (fullInstantiation)
