@@ -52,8 +52,6 @@ C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\bin\Debug\Microsoft.Xna.Fr
 C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\bin\Debug\InputLibrary.dll
 C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\bin\Debug\Xceed.Wpf.Toolkit.dll
 C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\bin\Debug\XnaAndWinforms.dll
-C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\bin\Debug\Gum.pdb
-C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\bin\Debug\Gum.exe.config
 C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\bin\Debug\Microsoft.Xna.Framework.xml
 C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\bin\Debug\ToolsUtilities.pdb
 C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\bin\Debug\CommonFormsAndControls.pdb
@@ -75,3 +73,5 @@ C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\bin\Debug\Gum.DataTypes.pd
 C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\bin\Debug\Content\Icons\Origins\Baseline.png
 C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\bin\Debug\Content\Icons\Units\PixelsFromBaseline.png
 C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\obj\Debug\EventOutputPlugin.csproj.CoreCompileInputs.cache
+C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\bin\Debug\Gum.pdb
+C:\Users\vchel\Documents\GitHub\Gum\EventOutputPlugin\bin\Debug\Gum.exe.config

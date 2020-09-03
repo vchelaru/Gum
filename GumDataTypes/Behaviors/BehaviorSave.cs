@@ -40,6 +40,11 @@ namespace Gum.DataTypes.Behaviors
         [XmlArrayItem(ElementName = "InstanceSave")]
         public List<BehaviorInstanceSave> RequiredInstances { get; set; } = new List<BehaviorInstanceSave>();
 
+        // Normally we reference the model type, but animations are in a plugin, so we can't do that here.
+        // I did try moving the animation classes (just the models) from the plugin into the GumDataTypes, but
+        // that required also bringing over interpolation so I didn't.
+        public List<string> RequiredAnimations { get; set; } = new List<string>();
+
         public override string ToString()
         {
             return Name;
