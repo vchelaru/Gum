@@ -171,6 +171,15 @@ namespace GumRuntime
 
             bool handled = InstanceSaveExtensionMethods.TryHandleAsBaseType(elementSave.Name, systemManagers, out containedObject);
 
+            if(!handled)
+            {
+                string type = elementSave.BaseType;
+                containedObject =
+                    Gum.Plugins.PluginManager.Self.CreateRenderableForType(type);
+
+                handled = containedObject != null;
+            }
+
             if (handled)
             {
                 graphicalElement.SetContainedObject(containedObject);

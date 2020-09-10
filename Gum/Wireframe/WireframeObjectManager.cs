@@ -278,6 +278,31 @@ namespace Gum.Wireframe
             }
         }
 
+        public GraphicalUiElement[] GetSelectedRepresentations()
+        {
+            if (!SelectionManager.Self.HasSelection)
+            {
+                return null;
+            }
+            else if(SelectedState.Self.SelectedInstances.Count() > 0)
+            {
+                return SelectedState.Self.SelectedInstances
+                    .Select(item => GetRepresentation(item, SelectedState.Self.GetTopLevelElementStack()))
+                    .ToArray();
+            }
+            else if (SelectedState.Self.SelectedElement != null)
+            {
+                return new GraphicalUiElement[]
+                {
+                    GetRepresentation(SelectedState.Self.SelectedElement)
+                };
+            }
+            else
+            {
+                throw new Exception("The SelectionManager believes it has a selection, but there is no selected instance or element");
+            }
+        }
+
         public GraphicalUiElement GetRepresentation(ElementSave elementSave)
         {
 #if DEBUG
