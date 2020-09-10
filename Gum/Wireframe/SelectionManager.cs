@@ -392,31 +392,30 @@ namespace Gum.Wireframe
             }
             else
             {
-                if ((selectedRepresentations.FirstOrDefault()?.Tag is ScreenSave) == false)
+                if ((selectedRepresentations?.FirstOrDefault()?.Tag is ScreenSave) == false)
                 {
-                    if(Cursor.SecondaryPush)
+                    if(selectedRepresentations != null)
                     {
-                        int m = 3;
-                    }
-                    var hasCursorOver = false;
-                    foreach(var selectedRepresentation in selectedRepresentations)
-                    {
-
-                        if (selectedRepresentation.RenderableComponent is LinePolygon)
+                        foreach(var selectedRepresentation in selectedRepresentations)
                         {
-                            hasCursorOver = (selectedRepresentation.RenderableComponent as LinePolygon).IsPointInside(x, y);
-                        }
-                        else
-                        {
-                            hasCursorOver = selectedRepresentation.HasCursorOver(x, y);
-                        }
+                            var hasCursorOver = false;
 
-                        if (hasCursorOver)
-                        {
-                            ipsoOver = selectedRepresentation;
-                            break;
-                        }
+                            if (selectedRepresentation.RenderableComponent is LinePolygon)
+                            {
+                                hasCursorOver = (selectedRepresentation.RenderableComponent as LinePolygon).IsPointInside(x, y);
+                            }
+                            else
+                            {
+                                hasCursorOver = selectedRepresentation.HasCursorOver(x, y);
+                            }
 
+                            if (hasCursorOver)
+                            {
+                                ipsoOver = selectedRepresentation;
+                                break;
+                            }
+
+                        }
                     }
                 }
             }

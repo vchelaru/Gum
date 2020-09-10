@@ -160,7 +160,10 @@ namespace CodeOutputPlugin.Manager
                 stringBuilder.AppendLine(ToTabs(tabCount) + "{");
                 tabCount++;
 
-                stringBuilder.AppendLine(ToTabs(tabCount) + "this.SetContainedObject(new InvisibleRenderable());");
+                if(element.BaseType == "Container")
+                {
+                    stringBuilder.AppendLine(ToTabs(tabCount) + "this.SetContainedObject(new InvisibleRenderable());");
+                }
 
                 stringBuilder.AppendLine();
                 #endregion
