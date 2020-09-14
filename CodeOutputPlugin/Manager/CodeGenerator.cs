@@ -553,7 +553,12 @@ namespace CodeOutputPlugin.Manager
             }
             else
             {
-                stringBuilder.AppendLine($"{tabs}{instance.Name}.AutomationId = \"{instance.Name}\";");
+                // If defined by base, then the automation ID will already be set there, and 
+                // Xamarin.Forms doesn't like an automation ID being set 2x
+                if(instance.DefinedByBase == false)
+                {
+                    stringBuilder.AppendLine($"{tabs}{instance.Name}.AutomationId = \"{instance.Name}\";");
+                }
             }
 
             #endregion
