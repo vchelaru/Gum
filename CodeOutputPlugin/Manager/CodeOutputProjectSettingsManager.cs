@@ -22,8 +22,15 @@ namespace CodeOutputPlugin.Manager
         private static FilePath GetProjectCodeSettingsFile()
         {
             FilePath folder = GumState.Self.ProjectState.ProjectDirectory;
-            var fileName = folder + "ProjectCodeSettings.codsj";
-            return fileName;
+            if(folder == null)
+            {
+                return null;
+            }
+            else
+            {
+                var fileName = folder + "ProjectCodeSettings.codsj";
+                return fileName;
+            }
         }
 
         public static CodeOutputProjectSettings CreateOrLoadSettingsForProject()

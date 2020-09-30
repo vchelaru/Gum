@@ -88,7 +88,9 @@ namespace Gum
 
             if(!CommandLineManager.Self.ShouldExitImmediately)
             {
-                if (!string.IsNullOrEmpty(CommandLineManager.Self.GlueProjectToLoad))
+                var isShift = (Control.ModifierKeys & Keys.Shift) != 0;
+
+                if (!isShift && !string.IsNullOrEmpty(CommandLineManager.Self.GlueProjectToLoad))
                 {
                     GumCommands.Self.FileCommands.LoadProject(CommandLineManager.Self.GlueProjectToLoad);
 
@@ -97,7 +99,7 @@ namespace Gum
                         SelectedState.Self.SelectedElement = ObjectFinder.Self.GetElementSave(CommandLineManager.Self.ElementName);
                     }
                 }
-                else if (!string.IsNullOrEmpty(GeneralSettingsFile.LastProject))
+                else if (!isShift && !string.IsNullOrEmpty(GeneralSettingsFile.LastProject))
                 {
                     GumCommands.Self.FileCommands.LoadProject(GeneralSettingsFile.LastProject);
                 }
