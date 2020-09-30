@@ -80,15 +80,18 @@ namespace Gum.PropertyGridHelpers
 
                 if (existingVariable == null)
                 {
-                    VariableSave newVariable = defaultVariable.Clone();
-                    newVariable.Value = defaultValue;
-                    newVariable.SetsValue = true;
-                    newVariable.Name = changedMember;
+                    if(defaultVariable != null)
+                    {
+                        VariableSave newVariable = defaultVariable.Clone();
+                        newVariable.Value = defaultValue;
+                        newVariable.SetsValue = true;
+                        newVariable.Name = changedMember;
 
-                    state.Variables.Add(newVariable);
+                        state.Variables.Add(newVariable);
 
-                    GumCommands.Self.GuiCommands.PrintOutput(
-                        $"Adding {changedMember} to {currentCategory.Name}/{state.Name}");
+                        GumCommands.Self.GuiCommands.PrintOutput(
+                            $"Adding {changedMember} to {currentCategory.Name}/{state.Name}");
+                    }
                 }
                 else if (existingVariable.SetsValue == false)
                 {

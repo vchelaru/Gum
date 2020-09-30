@@ -26,6 +26,9 @@ namespace CodeOutputPlugin.Manager
 
     public static class CodeGenerator
     {
+        public static int CanvasWidth { get; set; } = 480;
+        public static int CanvasHeight { get; set; } = 854;
+
         /// <summary>
         /// if true, then pixel sizes are maintained regardless of pixel density. This allows layouts to maintain pixel-perfect
         /// </summary>
@@ -312,7 +315,7 @@ namespace CodeOutputPlugin.Manager
                     .ToList();
 
 
-                ProcessVariableGroups(variablesForThisInstance, stateSave, instance, container, visualApi, stringBuilder);
+                ProcessVariableGroups(variablesForThisInstance, stateSave, instance, container, visualApi, stringBuilder, tabCount);
 
                 // Now that they've been processed, we can process the remainder regularly
                 foreach (var variable in variablesForThisInstance)
@@ -491,7 +494,11 @@ namespace CodeOutputPlugin.Manager
 
                     if(shouldInclude && recursiveVariableFinder != null)
                     {
-                        var foundVariable = recursiveVariableFinder.GetValue(item.Name);
+                        // We want to make sure that the variable is defined in the base object. If it isn't, then
+                        // it could be a leftover variable caused by having this object be of one type, using a variable
+                        // specific to that type, then changing it to another type. Gum holds on to these varibles in case
+                        // the type change was accidental, but it means we have to watch for these orphan variables when generating.
+                        var foundVariable = recursiveVariableFinder.GetVariable(item.Name);
                         shouldInclude = foundVariable != null;
                     }
 
@@ -503,7 +510,7 @@ namespace CodeOutputPlugin.Manager
 
             var tabs = new String(' ', 4 * tabCount);
 
-            ProcessVariableGroups(variablesToConsider, defaultState, null, element, visualApi, stringBuilder);
+            ProcessVariableGroups(variablesToConsider, defaultState, null, element, visualApi, stringBuilder, tabCount);
             
             foreach (var variable in variablesToConsider)
             {
@@ -566,7 +573,7 @@ namespace CodeOutputPlugin.Manager
 
             // sometimes variables have to be processed in groups. For example, RGB values
             // have to be assigned all at once in a Color value in XamForms;
-            ProcessVariableGroups(variablesToConsider, container.DefaultState, instance, container, visualApi, stringBuilder);
+            ProcessVariableGroups(variablesToConsider, container.DefaultState, instance, container, visualApi, stringBuilder, tabCount);
 
             foreach (var variable in variablesToConsider)
             {
@@ -620,7 +627,7 @@ namespace CodeOutputPlugin.Manager
             #endregion
         }
 
-        private static void ProcessVariableGroups(List<VariableSave> variablesToConsider, StateSave defaultState, InstanceSave instance, ElementSave container, VisualApi visualApi, StringBuilder stringBuilder)
+        private static void ProcessVariableGroups(List<VariableSave> variablesToConsider, StateSave defaultState, InstanceSave instance, ElementSave container, VisualApi visualApi, StringBuilder stringBuilder, int tabCount)
         {
             if(visualApi == VisualApi.XamarinForms)
             {
@@ -637,10 +644,10 @@ namespace CodeOutputPlugin.Manager
                 {
                     case "Text":
                         ProcessColorForLabel(variablesToConsider, defaultState, instance, stringBuilder);
-                        ProcessPositionAndSize(variablesToConsider, defaultState, instance, stringBuilder);
+                        ProcessPositionAndSize(variablesToConsider, defaultState, instance, stringBuilder, tabCount);
                         break;
                     default:
-                        ProcessPositionAndSize(variablesToConsider, defaultState, instance, stringBuilder);
+                        ProcessPositionAndSize(variablesToConsider, defaultState, instance, stringBuilder, tabCount);
                         break;
                 }
             }
@@ -664,10 +671,9 @@ namespace CodeOutputPlugin.Manager
             stringBuilder.AppendLine($"{instanceName}.TextColor = Color.FromRgba({red}, {green}, {blue}, {alpha});");
         }
 
-        private static void ProcessPositionAndSize(List<VariableSave> variablesToConsider, StateSave defaultState, InstanceSave instance, StringBuilder stringBuilder)
+        private static void ProcessPositionAndSize(List<VariableSave> variablesToConsider, StateSave defaultState, InstanceSave instance, StringBuilder stringBuilder, int tabCount)
         {
-            const int canvasWidth = 480;
-            const int canvasHeight = 800;
+
 
             string prefix = instance?.Name == null ? "" : instance.Name + ".";
 
@@ -681,7 +687,11 @@ namespace CodeOutputPlugin.Manager
                     item.Name == prefix + "X Units" ||
                     item.Name == prefix + "Y Units" ||
                     item.Name == prefix + "Width Units" ||
-                    item.Name == prefix + "Height Units" );
+                    item.Name == prefix + "Height Units"||
+                    item.Name == prefix + "X Origin" ||
+                    item.Name == prefix + "Y Origin" 
+                    
+                    );
 
             if(setsAny)
             {
@@ -784,7 +794,7 @@ namespace CodeOutputPlugin.Manager
                 {
                     if(widthUnits == DimensionUnitType.Absolute)
                     {
-                        x = (canvasWidth - width) / 2.0f;
+                        x = (CanvasWidth - width) / 2.0f;
                     }
                 }
 
@@ -810,9 +820,21 @@ namespace CodeOutputPlugin.Manager
                 {
                     if(heightUnits == DimensionUnitType.Absolute)
                     {
-                        y = (canvasHeight - height) / 2.0f;
+                        y = (CanvasHeight - height) / 2.0f;
                     }
                 }
+                else if(yUnits == PositionUnitType.PixelsFromBottom)
+                {
+                    y += CanvasHeight;
+
+                    if(yOrigin == VerticalAlignment.Bottom)
+                    {
+                        y -= height;
+                    }
+                }
+
+
+
 
                 var xString = x.ToString(CultureInfo.InvariantCulture) + "f";
                 var yString = y.ToString(CultureInfo.InvariantCulture) + "f";
@@ -840,7 +862,7 @@ namespace CodeOutputPlugin.Manager
                 }
 
                 string boundsText =
-                    $"AbsoluteLayout.SetLayoutBounds({instance?.Name ?? "this"}, new Rectangle({xString}, {yString}, {widthString}, {heightString}));";
+                    $"{ToTabs(tabCount)}AbsoluteLayout.SetLayoutBounds({instance?.Name ?? "this"}, new Rectangle({xString}, {yString}, {widthString}, {heightString}));";
                 string flagsText = null;
                 if (proportionalFlags.Count > 0)
                 {
@@ -853,7 +875,7 @@ namespace CodeOutputPlugin.Manager
                         }
                         flagsArguments += proportionalFlags[i];
                     }
-                    flagsText = $"AbsoluteLayout.SetLayoutFlags({instance?.Name ?? "this"}, {flagsArguments});";
+                    flagsText = $"{ToTabs(tabCount)}AbsoluteLayout.SetLayoutFlags({instance?.Name ?? "this"}, {flagsArguments});";
                 }
                 // assume every object has X, which it won't, so we will have to improve this
                 if (string.IsNullOrWhiteSpace(flagsText))
