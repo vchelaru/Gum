@@ -37,7 +37,7 @@ namespace CodeOutputPlugin.Manager
         {
             CodeOutputProjectSettings toReturn;
             var fileName = GetProjectCodeSettingsFile();
-            if(fileName.Exists())
+            if(fileName?.Exists() == true)
             {
                 var contents = System.IO.File.ReadAllText(fileName.FullPath);
 
