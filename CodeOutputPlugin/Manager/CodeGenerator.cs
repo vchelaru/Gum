@@ -908,7 +908,7 @@ namespace CodeOutputPlugin.Manager
             bool isPublic = true;
             string accessString = isPublic ? "public " : "";
 
-            stringBuilder.AppendLine($"{tabs}{accessString}{className} {instance.Name};");
+            stringBuilder.AppendLine($"{tabs}{accessString}{className} {instance.Name} {{ get; private set; }}");
         }
 
         private static string GetClassNameForType(string gumType, VisualApi visualApi)
