@@ -74,6 +74,8 @@ namespace CodeOutputPlugin
         {
             if(control != null)
             {
+                LoadCodeSettingsFile();
+
                 RefreshCodeDisplay();
             }
         }
