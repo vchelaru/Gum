@@ -17,6 +17,8 @@ namespace SkiaPlugin.Renderables
 {
     public class RenderableSvg : RenderableSkiaObject, IAspectRatio
     {
+        #region Fields/Properties
+
         string sourceFile;
         public string SourceFile
         {
@@ -41,6 +43,10 @@ namespace SkiaPlugin.Renderables
         SkiaSharp.Extended.Svg.SKSvg skiaSvg;
 
         public float AspectRatio => skiaSvg == null ? 1 : skiaSvg.ViewBox.Width / (float)skiaSvg.ViewBox.Height;
+
+        protected override bool ShouldApplyColorOnSpriteRender => true;
+
+        #endregion
 
         internal override void DrawToSurface(SKSurface surface)
         {

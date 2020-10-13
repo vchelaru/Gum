@@ -129,6 +129,12 @@ namespace SkiaPlugin.Renderables
             }
         }
 
+        /// <summary>
+        /// If this is false, then the DrawToSurface will handle applying the colors (like when creating a RoundedRectangle). If true,
+        /// then this will multiply the rendering by the argument color (like when rendering an SVG).
+        /// </summary>
+        protected virtual bool ShouldApplyColorOnSpriteRender => false;
+
         public int Red
         {
             get => Color.R;
@@ -228,7 +234,9 @@ namespace SkiaPlugin.Renderables
                 this.width += XSizeSpillover * 2;
                 this.height += YSizeSpillover * 2;
 
-                Sprite.Render(managers, spriteRenderer, this, texture, Color.White, rotationInDegrees: Rotation);
+                var color = ShouldApplyColorOnSpriteRender ? Color : Color.White;
+
+                Sprite.Render(managers, spriteRenderer, this, texture, color, rotationInDegrees: Rotation);
 
                 this.X = oldX;
                 this.Y = oldY;

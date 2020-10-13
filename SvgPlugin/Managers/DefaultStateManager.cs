@@ -11,11 +11,14 @@ namespace SkiaPlugin.Managers
 {
     public static class DefaultStateManager
     {
+        #region Fields/Properties
+
         static StateSave svgState;
         static StateSave filledCircleState;
         static StateSave roundedRectangleState;
         static StateSave arcState;
 
+        #endregion
 
         public static StateSave GetSvgState()
         {
@@ -35,7 +38,8 @@ namespace SkiaPlugin.Managers
                     //variableSave.ExcludedValuesForEnum.Add(DimensionUnitType.MaintainFileAspectRatio);
 
                 }
-                //StandardElementsManager.AddColorVariables(svgState);
+
+                StandardElementsManager.AddColorVariables(svgState);
                 svgState.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "SourceFile", IsFile = true });
                 svgState.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "UseColorTextureAlpha" });
 
@@ -43,11 +47,6 @@ namespace SkiaPlugin.Managers
 
             }
             return svgState;
-        }
-
-        private static void AddVisibleVariable(StateSave state)
-        {
-            state.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
         }
 
         public static StateSave GetColoredCircleState()
@@ -111,6 +110,11 @@ namespace SkiaPlugin.Managers
             }
 
             return arcState;
+        }
+
+        private static void AddVisibleVariable(StateSave state)
+        {
+            state.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
         }
 
         static void AddDropshadowVariables(StateSave stateSave)
