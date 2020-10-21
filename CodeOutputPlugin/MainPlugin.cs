@@ -50,12 +50,21 @@ namespace CodeOutputPlugin
         private void AssignEvents()
         {
             this.InstanceSelected += HandleInstanceSelected;
+            this.InstanceDelete += HandleInstanceDeleted;
+            this.InstanceAdd += HandleInstanceAdd;
+            this.InstanceReordered += HandleInstanceReordered;
+
             this.ElementSelected += HandleElementSelected;
+
             this.VariableSet += HandleVariableSet;
+            
             this.StateWindowTreeNodeSelected += HandleStateSelected;
+            this.StateRename += HandleStateRename;
+            
             this.AddAndRemoveVariablesForType += HandleAddAndRemoveVariablesForType;
             this.ProjectLoad += HandleProjectLoaded;
         }
+
 
         private void HandleProjectLoaded(GumProjectSave project)
         {
@@ -101,6 +110,32 @@ namespace CodeOutputPlugin
 
         private void HandleVariableSet(ElementSave element, InstanceSave instance, string arg3, object arg4)
         {
+            HandleRefreshAndExport();
+        }
+
+        private void HandleStateRename(StateSave arg1, string arg2)
+        {
+            HandleRefreshAndExport();
+        }
+
+        private void HandleInstanceDeleted(ElementSave arg1, InstanceSave arg2)
+        {
+            HandleRefreshAndExport();
+        }
+
+        private void HandleInstanceAdd(ElementSave arg1, InstanceSave arg2)
+        {
+            HandleRefreshAndExport();
+        }
+
+        private void HandleInstanceReordered(InstanceSave obj)
+        {
+            HandleRefreshAndExport();
+        }
+
+
+        private void HandleRefreshAndExport()
+        {
             if (control != null)
             {
                 RefreshCodeDisplay();
@@ -112,9 +147,9 @@ namespace CodeOutputPlugin
 
                 var elementSettings = control.CodeOutputElementSettings;
 
-                if(elementSettings.AutoGenerateOnChange)
+                if (elementSettings.AutoGenerateOnChange)
                 {
-                    GenerateCodeForSelectedElement(showPopups:false);
+                    GenerateCodeForSelectedElement(showPopups: false);
                 }
             }
         }
