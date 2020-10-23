@@ -22,12 +22,22 @@ namespace Gum.DataTypes
             gumProjectSave.ScreenReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
             gumProjectSave.ComponentReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
             gumProjectSave.StandardElementReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
-            gumProjectSave.BehaviorReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
+            gumProjectSave.BehaviorReferences.Sort((first, second) =>
+            {
+                if (first.Name == null)
+                {
+                    return 0;
+                }
+                else
+                {
+                    return first.Name.CompareTo(second.Name);
+                }
+            });
 
             gumProjectSave.Screens.Sort((first, second) => first.Name.CompareTo(second.Name));
             gumProjectSave.Components.Sort((first, second) => first.Name.CompareTo(second.Name));
             gumProjectSave.StandardElements.Sort((first, second) => first.Name.CompareTo(second.Name));
-            gumProjectSave.Behaviors.Sort((first, second) => first.Name.CompareTo(second.Name));
+            gumProjectSave.Behaviors.Sort((first, second) => first.Name?.CompareTo(second.Name) ?? 0);
 
             // Do StandardElements first
             // because the values here are

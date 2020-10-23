@@ -481,7 +481,12 @@ namespace Gum.Managers
             {
                 if(GetTreeNodeFor(behaviorSave) == null)
                 {
-                    string fullPath = FileLocations.Self.BehaviorsFolder + FileManager.GetDirectory(behaviorSave.Name);
+                    string fullPath = FileLocations.Self.BehaviorsFolder;
+                    
+                    if(behaviorSave.Name != null)
+                    {
+                        fullPath = FileLocations.Self.BehaviorsFolder + FileManager.GetDirectory(behaviorSave.Name);
+                    }
                     TreeNode parentNode = GetTreeNodeFor(fullPath);
 
                     AddTreeNodeForBehavior(behaviorSave, parentNode, BehaviorImageIndex);
