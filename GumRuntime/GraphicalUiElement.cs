@@ -753,7 +753,10 @@ namespace Gum.Wireframe
             }
             set
             {
-                mContainedObjectAsIpso.Name = value;
+                if (mContainedObjectAsIpso != null)
+                {
+                    mContainedObjectAsIpso.Name = value;
+                }
             }
         }
 
