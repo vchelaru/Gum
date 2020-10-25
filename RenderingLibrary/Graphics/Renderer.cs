@@ -232,8 +232,6 @@ namespace RenderingLibrary.Graphics
             mCamera.UpdateClient();
         }
 
-
-
         public Layer AddLayer()
         {
             Layer layer = new Layer();
