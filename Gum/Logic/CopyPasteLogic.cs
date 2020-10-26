@@ -266,7 +266,27 @@ namespace Gum.Logic
 
                     oldNewNameDictionary[oldName] = newName;
 
-                    targetElement.Instances.Add(newInstance);
+                    if(targetElement == sourceElement)
+                    {
+                        var original = sourceElement.Instances.FirstOrDefault(item => item.Name == sourceInstance.Name);
+                        int newIndex = -1;
+                        if(original != null)
+                        {
+                            newIndex = sourceElement.Instances.IndexOf(original);
+                        }
+                        if(newIndex != -1)
+                        {
+                            targetElement.Instances.Insert(newIndex+1, newInstance);
+                        }
+                        else
+                        {
+                            targetElement.Instances.Add(newInstance);
+                        }
+                    }
+                    else
+                    {
+                        targetElement.Instances.Add(newInstance);
+                    }
 
                 }
             }

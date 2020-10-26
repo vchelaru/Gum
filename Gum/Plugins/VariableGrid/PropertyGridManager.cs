@@ -214,7 +214,8 @@ namespace Gum.Managers
             if (hasChangedObjectShowing)
             {
                 List<MemberCategory> categories = GetMemberCategories(element, state, category, instance);
-                Application.DoEvents();
+                // UI is fast, I dont' think we need this....
+                //Application.DoEvents();
                 SimultaneousCalls ++;
                 lock (lockObject)
                 {
@@ -254,7 +255,7 @@ namespace Gum.Managers
                 }
 
                 SimultaneousCalls--;
-                Application.DoEvents();
+                //Application.DoEvents();
 
                 mVariablesDataGrid.Visibility = System.Windows.Visibility.Visible;
 

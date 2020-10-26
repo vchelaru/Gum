@@ -69,9 +69,9 @@ namespace Gum.Managers
                 // paste, ctrl v, ctrl + v
                 else if (e.KeyCode == Keys.V)
                 {
-                    CopyPasteLogic.OnPaste(CopyType.InstanceOrElement);
                     e.Handled = true;
                     e.SuppressKeyPress = true;
+                    CopyPasteLogic.OnPaste(CopyType.InstanceOrElement);
                 }
                 // cut, ctrl x, ctrl + x
                 else if (e.KeyCode == Keys.X)
