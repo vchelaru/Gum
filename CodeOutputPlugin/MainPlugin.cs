@@ -63,7 +63,14 @@ namespace CodeOutputPlugin
             
             this.StateWindowTreeNodeSelected += HandleStateSelected;
             this.StateRename += HandleStateRename;
-            
+            this.StateAdd += HandleStateAdd;
+            this.StateDelete += HandleStateDelete;
+
+            this.CategoryRename += (category,newName) => HandleRefreshAndExport();
+            this.CategoryAdd += (category) => HandleRefreshAndExport();
+            this.CategoryDelete += (category) => HandleRefreshAndExport();
+            this.VariableRemovedFromCategory += (name, category) => HandleRefreshAndExport();
+
             this.AddAndRemoveVariablesForType += HandleAddAndRemoveVariablesForType;
             this.ProjectLoad += HandleProjectLoaded;
         }
@@ -111,30 +118,15 @@ namespace CodeOutputPlugin
             }
         }
 
-        private void HandleVariableSet(ElementSave element, InstanceSave instance, string arg3, object arg4)
-        {
-            HandleRefreshAndExport();
-        }
+        private void HandleVariableSet(ElementSave element, InstanceSave instance, string arg3, object arg4) => HandleRefreshAndExport();
 
-        private void HandleStateRename(StateSave arg1, string arg2)
-        {
-            HandleRefreshAndExport();
-        }
+        private void HandleStateRename(StateSave arg1, string arg2) => HandleRefreshAndExport();
+        private void HandleStateAdd(StateSave obj) => HandleRefreshAndExport();
+        private void HandleStateDelete(StateSave obj) => HandleRefreshAndExport();
 
-        private void HandleInstanceDeleted(ElementSave arg1, InstanceSave arg2)
-        {
-            HandleRefreshAndExport();
-        }
-
-        private void HandleInstanceAdd(ElementSave arg1, InstanceSave arg2)
-        {
-            HandleRefreshAndExport();
-        }
-
-        private void HandleInstanceReordered(InstanceSave obj)
-        {
-            HandleRefreshAndExport();
-        }
+        private void HandleInstanceDeleted(ElementSave arg1, InstanceSave arg2) => HandleRefreshAndExport();
+        private void HandleInstanceAdd(ElementSave arg1, InstanceSave arg2) => HandleRefreshAndExport();
+        private void HandleInstanceReordered(InstanceSave obj) => HandleRefreshAndExport();
 
 
         private void HandleRefreshAndExport()
@@ -276,23 +268,26 @@ namespace CodeOutputPlugin
                     fileName = ProjectState.Self.ProjectDirectory + fileName;
                 }
 
+                string message;
                 if (System.IO.File.Exists(fileName))
                 {
 
                     System.IO.File.WriteAllText(fileName, contents);
 
                     // show a message somewhere?
-                    if(showPopups)
-                    {
-                        GumCommands.Self.GuiCommands.ShowMessage($"Generated code to {FileManager.RemovePath(fileName)}");
-                    }
+                    message = $"Generated code to {FileManager.RemovePath(fileName)}";
                 }
                 else
                 {
-                    if (showPopups)
-                    {
-                        GumCommands.Self.GuiCommands.ShowMessage($"Could not find destination file on disk");
-                    }
+                    message = $"Could not find destination file on disk";
+                }
+                if (showPopups)
+                {
+                    GumCommands.Self.GuiCommands.ShowMessage(message);
+                }
+                else
+                {
+                    GumCommands.Self.GuiCommands.PrintOutput(message); 
                 }
             }
         }

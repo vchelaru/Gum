@@ -329,6 +329,8 @@ namespace Gum.Managers
             PropertyGridManager.Self.RefreshUI();
             WireframeObjectManager.Self.RefreshAll(true);
             SelectionManager.Self.Refresh();
+
+            PluginManager.Self.CategoryDelete(category);
         }
 
         public List<BehaviorSave> GetBehaviorsNeedingCategory(StateSaveCategory category, ComponentSave componentSave)

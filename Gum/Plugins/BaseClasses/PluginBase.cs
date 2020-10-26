@@ -37,10 +37,18 @@ namespace Gum.Plugins.BaseClasses
         /// </remarks>
         public event Action<ElementSave, string> ElementRename;
         /// <summary>
-        /// Action raised when an event is renamed. String parameter is the State's old name.
+        /// Action raised when a state is renamed. String parameter is the State's old name.
         /// </summary>
         public event Action<StateSave, string> StateRename;
+        public event Action<StateSave> StateAdd;
+        public event Action<StateSave> StateDelete;
+
+
+
         public event Action<StateSaveCategory, string> CategoryRename;
+        public event Action<StateSaveCategory> CategoryAdd;
+        public event Action<StateSaveCategory> CategoryDelete;
+        public event Action<string, StateSaveCategory> VariableRemovedFromCategory;
 
         public event Action<VariableSave, List<Attribute>> FillVariableAttributes;
         public event Action<string, StateSave> AddAndRemoveVariablesForType;
@@ -217,13 +225,25 @@ namespace Gum.Plugins.BaseClasses
             }
         }
 
+        public void CallStateAdd(StateSave stateSave)
+        {
+            StateAdd?.Invoke(stateSave);
+        }
+
+        public void CallStateDelete(StateSave stateSave)
+        {
+            StateDelete?.Invoke(stateSave);
+        }
+
         public void CallStateCategoryRename(StateSaveCategory category, string oldName)
         {
-            if(CategoryRename != null)
-            {
-                CategoryRename(category, oldName);
-            }
+            CategoryRename?.Invoke(category, oldName);
         }
+
+        public void CallStateCategoryAdd(StateSaveCategory category) => CategoryAdd?.Invoke(category);
+        public void CallStateCategoryDelete(StateSaveCategory category) => CategoryDelete?.Invoke(category);
+        public void CallVariableRemovedFromCategory(string variableName, StateSaveCategory category) => VariableRemovedFromCategory?.Invoke(variableName, category);
+
 
         public void CallInstanceRename(ElementSave parentElement, InstanceSave instanceSave, string oldName)
         {

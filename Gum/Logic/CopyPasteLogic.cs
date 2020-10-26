@@ -152,7 +152,7 @@ namespace Gum.Logic
                 mCopiedInstances =
                         GetAllInstancesAndChildrenOf(selected, selected.FirstOrDefault()?.ParentContainer);
 
-                mCopiedState = SelectedState.Self.SelectedStateSave.Clone();
+                mCopiedState = SelectedState.Self.SelectedStateSave?.Clone() ?? SelectedState.Self.SelectedElement.DefaultState.Clone();
 
                 // Clear out any variables that don't pertain to the selected instance:
                 for (int i = mCopiedState.Variables.Count - 1; i > -1; i--)
@@ -292,7 +292,7 @@ namespace Gum.Logic
                     }
                     else
                     {
-                        targetState = SelectedState.Self.SelectedStateSave;
+                        targetState = SelectedState.Self.SelectedStateSave ?? SelectedState.Self.SelectedElement.DefaultState;
                     }
 
                     // why reverse loop?

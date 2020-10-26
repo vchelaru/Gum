@@ -1,6 +1,7 @@
 ﻿using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
+using Gum.Plugins;
 using Gum.ToolStates;
 using System;
 using System.Collections.Generic;
@@ -131,6 +132,8 @@ namespace Gum.PropertyGridHelpers
                 // no selection has changed, but we want to force refresh here because we know
                 // we really need a refresh - something was removed.
                 GumCommands.Self.GuiCommands.RefreshPropertyGrid(force:true);
+
+                PluginManager.Self.VariableRemovedFromCategory(variableName, stateCategory);
             }
         }
 

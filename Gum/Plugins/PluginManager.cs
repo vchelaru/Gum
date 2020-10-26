@@ -767,14 +767,43 @@ namespace Gum.Plugins
                 );
         }
 
+        internal void StateAdd(StateSave stateSave)
+        {
+            CallMethodOnPlugin((plugin) => plugin.CallStateAdd(stateSave),
+                nameof(StateAdd));
+        }
+
+        internal void StateDelete(StateSave stateSave)
+        {
+            CallMethodOnPlugin((plugin) => plugin.CallStateDelete(stateSave),
+                nameof(StateAdd));
+        }
+
         internal void CategoryRename(StateSaveCategory category, string oldName)
         {
-            CallMethodOnPlugin(
-                delegate (PluginBase plugin)
-                {
-                    plugin.CallStateCategoryRename(category, oldName);
-                },
+            CallMethodOnPlugin((plugin) => plugin.CallStateCategoryRename(category, oldName),
                 nameof(CategoryRename)
+                );
+        }
+
+        internal void CategoryAdd(StateSaveCategory category)
+        {
+            CallMethodOnPlugin((plugin) => plugin.CallStateCategoryAdd(category),
+                nameof(CategoryAdd)
+                );
+        }
+
+        internal void CategoryDelete(StateSaveCategory category)
+        {
+            CallMethodOnPlugin((plugin) => plugin.CallStateCategoryDelete(category),
+                nameof(CategoryDelete)
+                );
+        }
+
+        internal void VariableRemovedFromCategory(string variableName, StateSaveCategory category)
+        {
+            CallMethodOnPlugin((plugin) => plugin.CallVariableRemovedFromCategory(variableName, category),
+                nameof(VariableRemovedFromCategory)
                 );
         }
 
