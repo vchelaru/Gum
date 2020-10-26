@@ -44,7 +44,10 @@ namespace CodeOutputPlugin
             var item = this.AddMenuItem("Plugins", "View Code");
             item.Click += HandleViewCodeClicked;
 
-
+            if (control == null)
+            {
+                CreateControl();
+            }
         }
 
         private void AssignEvents()
@@ -156,13 +159,7 @@ namespace CodeOutputPlugin
 
         private void HandleViewCodeClicked(object sender, EventArgs e)
         {
-
-            if (control == null)
-            {
-                CreateControl();
-            }
-
-            GumCommands.Self.GuiCommands.ShowControl(control);
+            //GumCommands.Self.GuiCommands.ShowControl(control);
 
             LoadCodeSettingsFile();
 
@@ -230,8 +227,10 @@ namespace CodeOutputPlugin
 
             control.DataContext = viewModel;
 
+            // We don't actually want it to show, just associate, so add and immediately remove.
+            // Eventually we want this to be done with a single call but I don't know if there's Gum
+            // support for it yet
             GumCommands.Self.GuiCommands.AddControl(control, "Code", TabLocation.Right);
-
         }
 
         private void HandleCodeOutputPropertyChanged()
