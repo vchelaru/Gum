@@ -1061,8 +1061,19 @@ namespace CodeOutputPlugin.Manager
                 }
                 else if(variable.IsState(container, out ElementSave categoryContainer, out StateSaveCategory category))
                 {
-                    var containerClassName = GetClassNameForType(categoryContainer.Name, VisualApi.Gum);
-                    return $"{containerClassName}.{category.Name}.{asString}";
+                    if(categoryContainer != null && category != null)
+                    {
+                        string containerClassName = "VariableState";
+                        if (categoryContainer != null)
+                        {
+                            containerClassName = GetClassNameForType(categoryContainer.Name, VisualApi.Gum);
+                        }
+                        return $"{containerClassName}.{category.Name}.{asString}";
+                    }
+                    else
+                    {
+                        return null;
+                    }
                 }
                 else
                 {
