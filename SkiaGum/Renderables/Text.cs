@@ -213,8 +213,17 @@ namespace SkiaGum
                     ref result, rotationMatrix, scaleMatrix);
                 SKMatrix.Concat(
                     ref result, translateMatrix, result);
+
                 canvas.Save();
+
+                // set the clip rect *after* save so it gets undone and restored
+                var clipRect = this.GetEffectiveClipRect();
+                if(clipRect != null)
+                {
+                    canvas.ClipRect(clipRect.Value);
+                }
                 canvas.SetMatrix(result);
+
 
                 textBlock.Paint(canvas, new SKPoint(0, 0));
                 canvas.Restore();

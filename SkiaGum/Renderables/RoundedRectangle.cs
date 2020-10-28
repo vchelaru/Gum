@@ -10,7 +10,8 @@ namespace SkiaGum.Renderables
     {
         public SKColor Color
         {
-            get; set;
+            get; 
+            set;
         }
 
         public int Alpha

@@ -913,6 +913,12 @@ namespace Gum.Wireframe
             }
         }
 
+        public bool ClipsChildren
+        {
+            get;
+            set;
+        }
+
 
         #region Events
 
@@ -1275,14 +1281,14 @@ namespace Gum.Wireframe
 
                     if (mContainedObjectAsIpso != null)
                     {
-                        //if (mContainedObjectAsIpso is LineRectangle)
-                        //{
-                        //    (mContainedObjectAsIpso as LineRectangle).ClipsChildren = ClipsChildren;
-                        //}
-                        //else if (mContainedObjectAsIpso is InvisibleRenderable)
-                        //{
-                        //    (mContainedObjectAsIpso as InvisibleRenderable).ClipsChildren = ClipsChildren;
-                        //}
+                        if (false /*mContainedObjectAsIpso is LineRectangle*/)
+                        {
+                            //(mContainedObjectAsIpso as LineRectangle).ClipsChildren = ClipsChildren;
+                        }
+                        else if (mContainedObjectAsIpso is InvisibleRenderable)
+                        {
+                            (mContainedObjectAsIpso as InvisibleRenderable).ClipsChildren = ClipsChildren;
+                        }
 
                         if (this.mContainedObjectAsIpso != null)
                         {
@@ -1569,6 +1575,12 @@ namespace Gum.Wireframe
         {
             // If it stacks, then update this row/column's dimensions given the index of this
             var indexToUpdate = this.StackedRowOrColumnIndex;
+
+            if(indexToUpdate == -1)
+            {
+                return;
+            }
+
             var parentGue = EffectiveParentGue;
 
             if (this.Visible)
@@ -1585,7 +1597,10 @@ namespace Gum.Wireframe
                 }
                 else
                 {
-                    parentGue.StackedRowOrColumnDimensions[indexToUpdate] = 0;
+                    if(indexToUpdate >= 0  && indexToUpdate < parentGue.StackedRowOrColumnDimensions.Count)
+                    {
+                        parentGue.StackedRowOrColumnDimensions[indexToUpdate] = 0;
+                    }
                 }
                 foreach (GraphicalUiElement child in parentGue.Children)
                 {

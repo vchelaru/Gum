@@ -105,9 +105,9 @@ namespace SkiaGum.GueDeriving
             {
                 clickedAsync = value;
 
-                if(this.Managers != null && clickedAsync != null)
+                if(this.EffectiveManagers != null && clickedAsync != null)
                 {
-                    this.Managers.EnableTouchEvents = true;
+                    this.EffectiveManagers.EnableTouchEvents = true;
                 }
             }
         }
@@ -184,7 +184,17 @@ namespace SkiaGum.GueDeriving
                     }
                     else
                     {
-                        uiProperty.SetValue(this, vmValue, null);
+                        try
+                        {
+                            uiProperty.SetValue(this, vmValue, null);
+                        }
+                        catch(Exception e)
+                        {
+                            var message = $"Error reacting to view model property {vmPropertyName} with value {vmValue} and " +
+                                $"assigning it to UI prop {vmToUiProp.UiProperty} on element of type {this.GetType()}. See inner exception";
+
+                            throw new Exception(message, e);
+                        }
                     }
                     updated = true;
                 }
