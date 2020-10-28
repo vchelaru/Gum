@@ -398,21 +398,26 @@ namespace Gum.Wireframe
                     {
                         foreach(var selectedRepresentation in selectedRepresentations)
                         {
-                            var hasCursorOver = false;
+                            // If this is a container, and dotted lines are not drawn, then this has no renderable component:
+                            if(selectedRepresentation?.RenderableComponent != null)
+                            {
+                                var hasCursorOver = false;
 
-                            if (selectedRepresentation.RenderableComponent is LinePolygon)
-                            {
-                                hasCursorOver = (selectedRepresentation.RenderableComponent as LinePolygon).IsPointInside(x, y);
-                            }
-                            else
-                            {
-                                hasCursorOver = selectedRepresentation.HasCursorOver(x, y);
-                            }
+                                if (selectedRepresentation.RenderableComponent is LinePolygon)
+                                {
+                                    hasCursorOver = (selectedRepresentation.RenderableComponent as LinePolygon).IsPointInside(x, y);
+                                }
+                                else
+                                {
+                                    hasCursorOver = selectedRepresentation.HasCursorOver(x, y);
+                                }
 
-                            if (hasCursorOver)
-                            {
-                                ipsoOver = selectedRepresentation;
-                                break;
+                                if (hasCursorOver)
+                                {
+                                    ipsoOver = selectedRepresentation;
+                                    break;
+                                }
+
                             }
 
                         }
