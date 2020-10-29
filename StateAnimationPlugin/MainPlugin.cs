@@ -128,6 +128,7 @@ namespace StateAnimationPlugin
             }
 
         }
+
         private void CreateMenuItems()
         {
             var menuItem = AddMenuItem(new List<string> { "State Animation", "View Animations" });

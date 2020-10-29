@@ -66,7 +66,7 @@ namespace Gum.Mvvm
             }
             else
             {
-                propertyDictionary.Add(propertyName, propertyValue);
+                propertyDictionary[propertyName] = propertyValue;
 
                 // Even though the user is setting a new value, we want to make sure it's
                 // not the same:

@@ -1,6 +1,7 @@
 ﻿using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
+using Gum.ToolStates;
 using StateAnimationPlugin.SaveClasses;
 using StateAnimationPlugin.ViewModels;
 using System;
@@ -64,13 +65,23 @@ namespace StateAnimationPlugin.Managers
 
         public void HandleRename(StateSave stateSave, string oldName, ElementAnimationsViewModel viewModel)
         {
+            var parentCategory = SelectedState.Self.SelectedElement?.Categories.First(item => item.States.Contains(stateSave));
+
+            string prefix = "";
+            if(parentCategory != null)
+            {
+                prefix = parentCategory + "/";
+            }
+
+            oldName = prefix + oldName;
+
             foreach(var animation in viewModel.Animations)
             {
                 foreach(var keyframe in animation.Keyframes)
                 {
                     if(keyframe.StateName == oldName)
                     {
-                        keyframe.StateName = stateSave.Name;
+                        keyframe.StateName = prefix + stateSave.Name;
                     }
                 }
             }
