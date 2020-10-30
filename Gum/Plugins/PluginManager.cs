@@ -726,12 +726,8 @@ namespace Gum.Plugins
         internal void ElementRename(ElementSave elementSave, string oldName)
         {
             CallMethodOnPlugin(
-                delegate(PluginBase plugin)
-                {
-                    plugin.CallElementRename(elementSave, oldName);
-                },
-                "ElementRename"
-                );
+                (PluginBase plugin) => plugin.CallElementRename(elementSave, oldName), 
+                nameof(ElementRename));
         }
 
         internal void ElementAdd(ElementSave element)

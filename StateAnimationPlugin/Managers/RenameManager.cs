@@ -1,4 +1,5 @@
-﻿using Gum.DataTypes;
+﻿using Gum;
+using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.ToolStates;
@@ -17,28 +18,55 @@ namespace StateAnimationPlugin.Managers
     {
         public void HandleRename(ElementSave elementSave, string oldName, ElementAnimationsViewModel viewModel)
         {
-            // save the new:
-            bool succeeded = false;
-            try
+            if (elementSave == viewModel?.Element)
             {
-                AnimationCollectionViewModelManager.Self.Save(viewModel);
-                succeeded = true;
-            }
-            catch
-            {
-                succeeded = false;
-            }
-
-            if(succeeded)
-            {
-                var oldFileName = AnimationCollectionViewModelManager.Self.GetAbsoluteAnimationFileNameFor(oldName);
-
-                if(System.IO.File.Exists(oldFileName))
+                // save the new:
+                bool succeeded = false;
+                try
                 {
-                    System.IO.File.Delete(oldFileName);
+                    AnimationCollectionViewModelManager.Self.Save(viewModel);
+                    succeeded = true;
+                }
+                catch
+                {
+                    succeeded = false;
+                }
+
+                if (succeeded)
+                {
+                    var oldFileName = AnimationCollectionViewModelManager.Self.GetAbsoluteAnimationFileNameFor(oldName);
+
+                    if (System.IO.File.Exists(oldFileName))
+                    {
+                        System.IO.File.Delete(oldFileName);
+                    }
                 }
             }
+            else // renaming an element that is not currently selected. See if it has an animation, and if so move it
+            {
+                var projectDirectory = FileManager.GetDirectory(ProjectManager.Self.GumProjectSave.FullFileName);
+
+                
+
+                var oldFile = new FilePath( projectDirectory + elementSave.Subfolder + "/" + oldName + "Animations.ganx");
+                var newFile = new FilePath(projectDirectory + elementSave.Subfolder + "/" + elementSave.Name + "Animations.ganx");
+
+                if(oldFile.Exists())
+                {
+                    var newDirectory = newFile.GetDirectoryContainingThis();
+
+                    if(System.IO.Directory.Exists(newDirectory.FullPath) == false)
+                    {
+                        System.IO.Directory.CreateDirectory(newDirectory.FullPath);
+                    }
+
+                    System.IO.File.Move(oldFile.FullPath, newFile.FullPath);
+
+                }
+                // move the old file to the new location:
+            }
         }
+
 
 
         public void HandleRename(InstanceSave instanceSave, string oldName, ElementAnimationsViewModel viewModel)

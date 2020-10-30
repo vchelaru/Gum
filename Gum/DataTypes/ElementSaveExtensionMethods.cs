@@ -261,9 +261,11 @@ namespace Gum.DataTypes
                 return null;
             }
 
+            var extension = instance.FileExtension;
+
             string directory = FileManager.GetDirectory(ProjectManager.Self.GumProjectSave.FullFileName);
 
-            return directory + instance.Subfolder + "\\" + elementSaveName + "." + instance.FileExtension;
+            return directory + instance.Subfolder + "\\" + elementSaveName + "." + extension;
         }
 
 
