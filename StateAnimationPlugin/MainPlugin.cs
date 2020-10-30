@@ -159,6 +159,7 @@ namespace StateAnimationPlugin
                     // http://stackoverflow.com/questions/835878/wpf-textbox-not-accepting-input-when-in-elementhost-in-window-forms
                     ElementHost.EnableModelessKeyboardInterop(mMainWindow);
                     mMainWindow.Show();
+                    mMainWindow.Closed += (not, used) => Gum.ToolStates.SelectedState.Self.CustomCurrentStateSave = null;
                 }
                 else
                 {

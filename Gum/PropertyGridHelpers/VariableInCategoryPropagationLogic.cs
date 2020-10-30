@@ -14,7 +14,7 @@ namespace Gum.PropertyGridHelpers
 {
     public class VariableInCategoryPropagationLogic : Singleton<VariableInCategoryPropagationLogic> 
     {
-        public void PropagateVariablesInCategory(string changedMember)
+        public void PropagateVariablesInCategory(string memberName)
         {
             var currentCategory = SelectedState.Self.SelectedStateCategorySave;
             /////////////////////Early Out//////////////////////////
@@ -25,10 +25,10 @@ namespace Gum.PropertyGridHelpers
             ///////////////////End Early Out////////////////////////
 
             var defaultState = SelectedState.Self.SelectedElement.DefaultState;
-            var defaultVariable = defaultState.GetVariableSave(changedMember);
+            var defaultVariable = defaultState.GetVariableSave(memberName);
             if (defaultVariable == null)
             {
-                defaultVariable = defaultState.GetVariableRecursive(changedMember);
+                defaultVariable = defaultState.GetVariableRecursive(memberName);
             }
 
             // If the user is setting a variable that is a categorized state, the
@@ -39,7 +39,7 @@ namespace Gum.PropertyGridHelpers
                 var variableContainer = SelectedState.Self.SelectedElement;
 
 
-                var sourceObjectName = VariableSave.GetSourceObject(changedMember);
+                var sourceObjectName = VariableSave.GetSourceObject(memberName);
 
                 if(!string.IsNullOrEmpty(sourceObjectName))
                 {
@@ -77,7 +77,7 @@ namespace Gum.PropertyGridHelpers
 
             foreach (var state in currentCategory.States)
             {
-                var existingVariable = state.GetVariableSave(changedMember);
+                var existingVariable = state.GetVariableSave(memberName);
 
                 if (existingVariable == null)
                 {
@@ -86,12 +86,12 @@ namespace Gum.PropertyGridHelpers
                         VariableSave newVariable = defaultVariable.Clone();
                         newVariable.Value = defaultValue;
                         newVariable.SetsValue = true;
-                        newVariable.Name = changedMember;
+                        newVariable.Name = memberName;
 
                         state.Variables.Add(newVariable);
 
                         GumCommands.Self.GuiCommands.PrintOutput(
-                            $"Adding {changedMember} to {currentCategory.Name}/{state.Name}");
+                            $"Adding {memberName} to {currentCategory.Name}/{state.Name}");
                     }
                 }
                 else if (existingVariable.SetsValue == false)

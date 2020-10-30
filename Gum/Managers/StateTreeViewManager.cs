@@ -72,8 +72,6 @@ namespace Gum.Managers
             return null;
         }
 
-
-
         public void Initialize(MultiSelectTreeView treeView, ContextMenuStrip menuStrip)
         {
             mMenuStrip = menuStrip;

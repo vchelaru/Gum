@@ -684,11 +684,6 @@ namespace Gum.ToolStates
 
             return toReturn;
         }
-
-
-
-
-
     }
 
 

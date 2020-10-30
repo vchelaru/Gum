@@ -223,6 +223,14 @@ namespace Gum.Managers
         
         private static void DuplicateStateClick()
         {
+            // Is there a "custom" current state save, like an interpolation or animation?
+            if(SelectedState.Self.CustomCurrentStateSave != null)
+            {
+                GumCommands.Self.GuiCommands.ShowMessage("Cannot duplicate state while a custom state is displaying. Are you creating or playing animations?");
+                return;
+            }
+            ////////End Early Out///////////////
+
             StateSave newState = SelectedState.Self.SelectedStateSave.Clone();
 
 

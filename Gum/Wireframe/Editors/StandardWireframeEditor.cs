@@ -98,7 +98,7 @@ namespace Gum.Wireframe
 
         public override void Activity(ICollection<GraphicalUiElement> selectedObjects)
         {
-            if (selectedObjects.Count != 0)
+            if (selectedObjects.Count != 0 && SelectedState.Self.SelectedStateSave != null && SelectedState.Self.CustomCurrentStateSave == null)
             {
                 RefreshSideOver();
 
