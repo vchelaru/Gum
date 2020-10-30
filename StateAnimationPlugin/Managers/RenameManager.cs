@@ -46,13 +46,12 @@ namespace StateAnimationPlugin.Managers
             {
                 var projectDirectory = FileManager.GetDirectory(ProjectManager.Self.GumProjectSave.FullFileName);
 
-                
-
                 var oldFile = new FilePath( projectDirectory + elementSave.Subfolder + "/" + oldName + "Animations.ganx");
-                var newFile = new FilePath(projectDirectory + elementSave.Subfolder + "/" + elementSave.Name + "Animations.ganx");
-
+                
                 if(oldFile.Exists())
                 {
+                    var newFile = new FilePath(projectDirectory + elementSave.Subfolder + "/" + elementSave.Name + "Animations.ganx");
+
                     var newDirectory = newFile.GetDirectoryContainingThis();
 
                     if(System.IO.Directory.Exists(newDirectory.FullPath) == false)
@@ -61,9 +60,7 @@ namespace StateAnimationPlugin.Managers
                     }
 
                     System.IO.File.Move(oldFile.FullPath, newFile.FullPath);
-
                 }
-                // move the old file to the new location:
             }
         }
 

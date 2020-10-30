@@ -76,6 +76,12 @@ namespace StateAnimationPlugin
             this.StateRename += HandleStateRename;
             this.CategoryRename += HandleCategoryRename;
             this.ElementRename += HandleElementRename;
+            this.ElementDuplicate += HandleElementDuplicate;
+        }
+
+        private void HandleElementDuplicate(ElementSave oldElement, ElementSave newElement)
+        {
+            DuplicateManager.Self.HandleDuplicate(oldElement, newElement);
         }
 
         private void HandleElementRename(ElementSave element, string oldName)
@@ -128,6 +134,8 @@ namespace StateAnimationPlugin
             }
 
         }
+
+        
 
         private void CreateMenuItems()
         {

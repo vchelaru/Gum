@@ -64,6 +64,7 @@
     <Compile Include="Managers\AnimationCollectionViewModelManager.cs" />
     <Compile Include="MainPlugin.cs" />
     <Compile Include="Managers\BitmapLoader.cs" />
+    <Compile Include="Managers\DuplicateManager.cs" />
     <Compile Include="Managers\RenameManager.cs" />
     <Compile Include="SaveClasses\AnimatedStateSave.cs" />
     <Compile Include="SaveClasses\AnimationReferenceSave.cs" />

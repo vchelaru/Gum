@@ -744,11 +744,16 @@ namespace Gum.Plugins
         internal void ElementDelete(ElementSave element)
         {
             CallMethodOnPlugin(
-                delegate (PluginBase plugin)
-                {
-                    plugin.CallElementDelete(element);
-                },
+                (plugin) => plugin.CallElementDelete(element),
                 nameof(ElementDelete)
+                );
+        }
+
+        internal void ElementDuplicate(ElementSave oldElement, ElementSave newElement)
+        {
+            CallMethodOnPlugin(
+                (plugin) => plugin.CallElementDuplicate(oldElement, newElement),
+                nameof(ElementDuplicate)
                 );
         }
 

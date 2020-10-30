@@ -27,6 +27,10 @@ namespace Gum.Plugins.BaseClasses
 
         public event Action<ElementSave> ElementAdd;
         public event Action<ElementSave> ElementDelete;
+        /// <summary>
+        /// Raised when an element is duplicated. First argument is the old element, second is the new.
+        /// </summary>
+        public event Action<ElementSave, ElementSave> ElementDuplicate;
 
         /// <summary>
         /// Event raised when the element is renamed.
@@ -206,6 +210,11 @@ namespace Gum.Plugins.BaseClasses
         public void CallElementDelete(ElementSave element)
         {
             ElementDelete?.Invoke(element);
+        }
+
+        public void CallElementDuplicate(ElementSave oldElement, ElementSave newElement)
+        {
+            ElementDuplicate?.Invoke(oldElement, newElement);
         }
 
         public void CallElementRename(ElementSave elementSave, string oldName)

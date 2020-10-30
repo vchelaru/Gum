@@ -351,6 +351,8 @@ namespace Gum.Commands
                         newScreen.Initialize(null);
 
                         ProjectCommands.Self.AddScreen(newScreen);
+
+                        PluginManager.Self.ElementDuplicate(element, newScreen);
                     }
                     else
                     {
@@ -392,6 +394,8 @@ namespace Gum.Commands
                         newComponent.Initialize(null);
 
                         ProjectCommands.Self.AddComponent(newComponent);
+
+                        PluginManager.Self.ElementDuplicate(element, newComponent);
                     }
                     else
                     {
