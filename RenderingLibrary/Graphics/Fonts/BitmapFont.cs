@@ -9,6 +9,7 @@ using System.Collections;
 using RenderingLibrary.Math;
 using RenderingLibrary.Math.Geometry;
 using ToolsUtilities;
+using System.Collections.ObjectModel;
 
 namespace RenderingLibrary.Graphics
 {
@@ -75,6 +76,8 @@ namespace RenderingLibrary.Graphics
         }
 
         public int DescenderHeight => LineHeightInPixels - BaselineY;
+
+        public BitmapCharacterInfo[] Characters => mCharacterInfo;
 
         #endregion
 
