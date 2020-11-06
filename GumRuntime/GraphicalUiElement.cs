@@ -59,6 +59,7 @@ namespace Gum.Wireframe
         #region Fields
 
         private DirtyState currentDirtyState;
+        bool isFontDirty = false;
 
         public static int UpdateLayoutCallCount;
         public static int ChildrenUpdatingParentLayoutCalls;
@@ -3333,6 +3334,11 @@ namespace Gum.Wireframe
                         currentDirtyState.ChildrenUpdateDepth, 
                         currentDirtyState.XOrY);
                 }
+                if (isFontDirty)
+                {
+                    this.UpdateToFontValues();
+                    isFontDirty = false;
+                }
             }
         }
 
@@ -3346,6 +3352,12 @@ namespace Gum.Wireframe
                 UpdateLayout(currentDirtyState.UpdateParent,
                 currentDirtyState.ChildrenUpdateDepth,
                 currentDirtyState.XOrY);
+            }
+
+            if(isFontDirty)
+            {
+                this.UpdateToFontValues();
+                isFontDirty = false;
             }
 
             foreach (var item in this.mWhatThisContains)
@@ -4395,9 +4407,14 @@ namespace Gum.Wireframe
 
         void UpdateToFontValues()
         {
+            if(mIsLayoutSuspended || IsAllLayoutSuspended)
+            {
+                isFontDirty = true;
+            }
             // todo: This could make things faster, but it will require
             // extra calls in generated code, or an "UpdateAll" method
             //if (!mIsLayoutSuspended && !IsAllLayoutSuspended)
+            else
             {
                 BitmapFont font = null;
 
