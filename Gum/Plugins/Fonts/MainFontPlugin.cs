@@ -23,6 +23,14 @@ namespace Gum.Plugins.Fonts
             {
                 "Content", "Refresh Font Cache"
             });
+
+
+            var viewFontCache = this.AddMenuItem(new[]
+            {
+                "Content", "View Font Cache"});
+            viewFontCache.Click += HandleViewFontCache;
+
+
             refreshFontCacheMenuItem.Click += HandleRefreshFontCache;
 
         }
@@ -30,6 +38,11 @@ namespace Gum.Plugins.Fonts
         private void HandleClearFontCache(object sender, EventArgs e)
         {
             FontManager.Self.DeleteFontCacheFolder();
+        }
+
+        private void HandleViewFontCache(object sender, EventArgs e)
+        {
+            System.Diagnostics.Process.Start(FontManager.Self.AbsoluteFontCacheFolder);
         }
 
         private void HandleRefreshFontCache(object sender, EventArgs e)

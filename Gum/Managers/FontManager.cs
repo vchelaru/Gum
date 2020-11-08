@@ -16,7 +16,7 @@ namespace Gum.Managers
 {
     public class FontManager : Singleton<FontManager>
     {
-        string AbsoluteFontCacheFolder
+        public string AbsoluteFontCacheFolder
         {
             get
             {

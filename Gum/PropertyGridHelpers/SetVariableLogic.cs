@@ -34,6 +34,7 @@ namespace Gum.PropertyGridHelpers
             "Blue",
             "CurrentChainName",
             "FlipHorizontal",
+            "FontSize",
             "Green",
             "Height",
             "Height Units",
@@ -141,14 +142,14 @@ namespace Gum.PropertyGridHelpers
                     var value = SelectedState.Self.SelectedStateSave.GetValue(qualifiedName);
 
                     var areSame = value == null && oldValue == null;
-                    if(!areSame && value != null)
+                    if (!areSame && value != null)
                     {
                         areSame = value.Equals(oldValue);
                     }
 
                     // If the values are the same they may have been set to be the same by a plugin that
                     // didn't allow the assignment, so don't go through the work of saving and refreshing
-                    if(!areSame)
+                    if (!areSame)
                     {
                         GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
 
@@ -166,7 +167,8 @@ namespace Gum.PropertyGridHelpers
                         // if that will cause problems now, so instead I'm going
                         // to do it one by one:
                         var handledByDirectSet = false;
-                        if(PropertiesSupportingIncrementalChange.Contains(unqualifiedMember) && (instance != null || SelectedState.Self.SelectedComponent != null))
+                        if (PropertiesSupportingIncrementalChange.Contains(unqualifiedMember) && 
+                            (instance != null || SelectedState.Self.SelectedComponent != null || SelectedState.Self.SelectedStandardElement != null))
                         {
                             // this assumes that the object having its variable set is the selected instance. If we're setting
                             // an exposed variable, this is not the case - the object having its variable set is actually the instance.
