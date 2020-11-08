@@ -202,6 +202,12 @@ namespace Gum.Wireframe
             // remain after a single UpdateLayout call:
             //rootIpso.UpdateLayout();
             rootIpso.UpdateLayout();
+            rootIpso.UpdateFontRecursive();
+
+            if (elementSave is StandardElementSave && elementSave.Name == "Text")
+            {
+                rootIpso.UpdateToFontValues();
+            }
 
             return rootIpso;
         }

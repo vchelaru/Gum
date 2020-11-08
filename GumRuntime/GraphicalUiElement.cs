@@ -3347,6 +3347,12 @@ namespace Gum.Wireframe
 
             mIsLayoutSuspended = false;
 
+            if(isFontDirty)
+            {
+                this.UpdateToFontValues();
+                isFontDirty = false;
+            }
+
             if (currentDirtyState != null)
             {
                 UpdateLayout(currentDirtyState.UpdateParent,
@@ -3354,11 +3360,6 @@ namespace Gum.Wireframe
                 currentDirtyState.XOrY);
             }
 
-            if(isFontDirty)
-            {
-                this.UpdateToFontValues();
-                isFontDirty = false;
-            }
 
             foreach (var item in this.mWhatThisContains)
             {
@@ -4405,7 +4406,20 @@ namespace Gum.Wireframe
             set { outlineThickness = value; UpdateToFontValues(); }
         }
 
-        void UpdateToFontValues()
+        public void UpdateFontRecursive()
+        {
+            if(this.mContainedObjectAsIpso is Text)
+            {
+                UpdateToFontValues();
+            }
+
+            foreach(GraphicalUiElement child in this.Children)
+            {
+                child.UpdateFontRecursive();
+            }
+        }
+
+        public void UpdateToFontValues()
         {
             if(mIsLayoutSuspended || IsAllLayoutSuspended)
             {
