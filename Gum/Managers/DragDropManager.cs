@@ -361,15 +361,15 @@ namespace Gum.Managers
             {
                 var fullFolderPath = treeNodeDroppedOn.GetFullFilePath();
 
-                var fullElementFilePath = FileManager.GetDirectory( draggedAsElementSave.GetFullPathXmlFile());
+                var fullElementFilePath = draggedAsElementSave.GetFullPathXmlFile().GetDirectoryContainingThis();
 
                 handled = false;
 
-                if(FileManager.Standardize(fullFolderPath) != FileManager.Standardize(fullElementFilePath))
+                if(fullFolderPath != fullElementFilePath)
                 {
                     var projectFolder = FileManager.GetDirectory(ProjectManager.Self.GumProjectSave.FullFileName);
 
-                    string nodeRelativeToProject = FileManager.MakeRelative(fullFolderPath, projectFolder + draggedAsElementSave.Subfolder + "\\", preserveCase:true);
+                    string nodeRelativeToProject = FileManager.MakeRelative(fullFolderPath.FullPath, projectFolder + draggedAsElementSave.Subfolder + "\\", preserveCase:true);
 
                     string oldName = draggedAsElementSave.Name;
                     draggedAsElementSave.Name = nodeRelativeToProject + FileManager.RemovePath(draggedAsElementSave.Name);

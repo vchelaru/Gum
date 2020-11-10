@@ -78,25 +78,25 @@ namespace Gum.Logic
         private static void RenameXml(ElementSave elementSave, string oldName)
         {
             // If we got here that means all went okay, so we should delete the old files
-            string oldXml = elementSave.GetFullPathXmlFile(oldName);
-            string newXml = elementSave.GetFullPathXmlFile();
+            var oldXml = elementSave.GetFullPathXmlFile(oldName);
+            var newXml = elementSave.GetFullPathXmlFile();
 
             // Delete the XML.
             // If the file doesn't
             // exist, no biggie - we
             // were going to delete it
             // anyway.
-            if (System.IO.File.Exists(oldXml))
+            if (oldXml.Exists())
             {
-                System.IO.File.Delete(oldXml);
+                System.IO.File.Delete(oldXml.FullPath);
             }
 
             PluginManager.Self.ElementRename(elementSave, oldName);
 
             GumCommands.Self.FileCommands.TryAutoSaveProject();
 
-            var oldDirectory = FileManager.GetDirectory(oldXml);
-            var newDirectory = FileManager.GetDirectory(newXml);
+            var oldDirectory = oldXml.GetDirectoryContainingThis();
+            var newDirectory = newXml.GetDirectoryContainingThis();
 
             bool didMoveToNewDirectory = oldDirectory != newDirectory;
 

@@ -98,6 +98,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Math\MathFunctions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\SystemManagers.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ToolsUtilities\FileManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ToolsUtilities\FilePath.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ToolsUtilities\ReflectionManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ToolsUtilities\StringFunctions.cs" />
   </ItemGroup>

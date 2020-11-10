@@ -1222,17 +1222,25 @@ namespace CodeOutputPlugin.Manager
         private static VariableSave[] GetVariablesToConsider(InstanceSave instance)
         {
             var baseElement = Gum.Managers.ObjectFinder.Self.GetElementSave(instance.BaseType);
-            var baseDefaultState = baseElement?.DefaultState;
-            RecursiveVariableFinder baseRecursiveVariableFinder = new RecursiveVariableFinder(baseDefaultState);
+            if(baseElement == null)
+            {
+                // this could happen if the project references an object that has a missing type. Tolerate it, return an empty l ist
+                return new VariableSave[0];
+            }
+            else
+            {
+                var baseDefaultState = baseElement?.DefaultState;
+                RecursiveVariableFinder baseRecursiveVariableFinder = new RecursiveVariableFinder(baseDefaultState);
 
-            var defaultState = SelectedState.Self.SelectedElement.DefaultState;
-            var variablesToConsider = defaultState.Variables
-                .Where(item =>
-                {
-                    return GetIfVariableShouldBeIncludedForInstance(instance, item, baseRecursiveVariableFinder);
-                })
-                .ToArray();
-            return variablesToConsider;
+                var defaultState = SelectedState.Self.SelectedElement.DefaultState;
+                var variablesToConsider = defaultState.Variables
+                    .Where(item =>
+                    {
+                        return GetIfVariableShouldBeIncludedForInstance(instance, item, baseRecursiveVariableFinder);
+                    })
+                    .ToArray();
+                return variablesToConsider;
+            }
         }
 
         private static bool GetIfVariableShouldBeIncludedForInstance(InstanceSave instance, VariableSave item, RecursiveVariableFinder baseRecursiveVariableFinder)

@@ -44,6 +44,13 @@ namespace Gum.DataTypes
 
         public string Name;
 
+        /// <summary>
+        /// The location of the file relative to the project if it differs from the Name. By default
+        /// this will be empty, so the Name will be used to load/save the element. However, if this is not null,
+        /// then this value is used instead to load the referenced element.
+        /// </summary>
+        public string Link { get; set; }
+
         //public ElementSave ToElementSave(string projectroot, string extension)
         //{
         //    string fullName = projectroot + Subfolder + "/" + Name + "." + extension;
@@ -56,22 +63,28 @@ namespace Gum.DataTypes
 
         public T ToElementSave<T>(string projectroot, string extension, GumLoadResult result) where T : ElementSave, new()
         {
-            string fullName = projectroot + Subfolder + "/" + Name + "." + extension;
-
-            if (ToolsUtilities.FileManager.IsRelative(fullName))
+            FilePath fullName;
+            
+            if(string.IsNullOrWhiteSpace(this.Link))
             {
-                fullName = ToolsUtilities.FileManager.RelativeDirectory + fullName;
+                fullName = projectroot + Subfolder + "/" + Name + "." + extension;
             }
-            fullName = ToolsUtilities.FileManager.Standardize(fullName);
-
-
-            if (FileManager.FileExists(fullName))
+            else
             {
+                fullName = projectroot + this.Link;
+            }
 
+            if (ToolsUtilities.FileManager.IsRelative(fullName.Original))
+            {
+                fullName = ToolsUtilities.FileManager.RelativeDirectory + fullName.Original;
+            }
 
-                T elementSave = FileManager.XmlDeserialize<T>(fullName);
+            if (fullName.Exists())
+            {
+                T elementSave = FileManager.XmlDeserialize<T>(fullName.FullPath);
 
-                if (Name != elementSave.Name)
+                // If it's linked, the name may not match up 100%
+                if (Name != elementSave.Name && string.IsNullOrWhiteSpace(this.Link))
                 {
                     // The file name doesn't match the name of the element.  This can cause errors
                     // at runtime so let's tell the user:
@@ -91,7 +104,7 @@ namespace Gum.DataTypes
                 //errors += "\nCould not find the file name " + fullName;
                 // Update Feb 20, 2015
                 // But we can record it:
-                result.MissingFiles.Add(fullName);
+                result.MissingFiles.Add(fullName.FullPath);
 
 
                 T elementSave = new T();

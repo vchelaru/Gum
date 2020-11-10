@@ -461,19 +461,19 @@ namespace Gum
                 {
                     PluginManager.Self.BeforeElementSave(elementSave);
 
-                    string fileName = elementSave.GetFullPathXmlFile();
+                    var fileName = elementSave.GetFullPathXmlFile();
 
 
                     // if it's readonly, let's warn the user
-                    bool isReadOnly = IsFileReadOnly(fileName);
+                    bool isReadOnly = IsFileReadOnly(fileName.FullPath);
 
                     if (isReadOnly)
                     {
-                        ShowReadOnlyDialog(fileName);
+                        ShowReadOnlyDialog(fileName.FullPath);
                     }
                     else
                     {
-                        FileWatchLogic.Self.IgnoreNextChangeOn(fileName);
+                        FileWatchLogic.Self.IgnoreNextChangeOn(fileName.FullPath);
 
                         const int maxNumberOfTries = 5;
                         const int msBetweenSaves = 100;
@@ -486,7 +486,7 @@ namespace Gum
                         {
                             try
                             {
-                                elementSave.Save(fileName);
+                                elementSave.Save(fileName.FullPath);
                                 succeeded = true;
                                 break;
                             }

@@ -248,24 +248,37 @@ namespace Gum.DataTypes
 
         }
 #if GUM
-        public static string GetFullPathXmlFile(this ElementSave instance)
+        public static FilePath GetFullPathXmlFile(this ElementSave elementSave)
         {
-            return instance.GetFullPathXmlFile(instance.Name);
+            return elementSave.GetFullPathXmlFile(elementSave.Name);
         }
 
 
-        public static string GetFullPathXmlFile(this ElementSave instance, string elementSaveName)
+        public static FilePath GetFullPathXmlFile(this ElementSave instance, string elementSaveName)
         {
-            if (string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave.FullFileName))
+            var gumProject = ProjectManager.Self.GumProjectSave;
+            if (string.IsNullOrEmpty(gumProject.FullFileName))
             {
                 return null;
             }
 
             var extension = instance.FileExtension;
 
-            string directory = FileManager.GetDirectory(ProjectManager.Self.GumProjectSave.FullFileName);
+            var reference =
+                gumProject.ScreenReferences.FirstOrDefault(item => item.Name == instance.Name) ??
+                gumProject.ComponentReferences.FirstOrDefault(item => item.Name == instance.Name) ??
+                gumProject.StandardElementReferences.FirstOrDefault(item => item.Name == instance.Name);
 
-            return directory + instance.Subfolder + "\\" + elementSaveName + "." + extension;
+            FilePath gumDirectory = FileManager.GetDirectory(gumProject.FullFileName);
+            if(!string.IsNullOrWhiteSpace(reference?.Link))
+            {
+                return gumDirectory.Original + reference.Link;
+            }
+            else
+            {
+
+                return gumDirectory.Original + instance.Subfolder + "\\" + elementSaveName + "." + extension;
+            }
         }
 
 

@@ -127,7 +127,7 @@ namespace Gum.Managers
 
             if(currentElement != null)
             {
-                var currentElementFile = new FilePath(currentElement.GetFullPathXmlFile());
+                var currentElementFile = currentElement.GetFullPathXmlFile();
                 shouldReloadWireframe = currentElementFile == file;
             }
 

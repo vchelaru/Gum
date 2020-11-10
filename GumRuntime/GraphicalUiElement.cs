@@ -3328,16 +3328,16 @@ namespace Gum.Wireframe
             }
             else
             {
+                if (isFontDirty)
+                {
+                    this.UpdateToFontValues();
+                    isFontDirty = false;
+                }
                 if(currentDirtyState != null)
                 {
                     UpdateLayout(currentDirtyState.UpdateParent, 
                         currentDirtyState.ChildrenUpdateDepth, 
                         currentDirtyState.XOrY);
-                }
-                if (isFontDirty)
-                {
-                    this.UpdateToFontValues();
-                    isFontDirty = false;
                 }
             }
         }
@@ -3346,12 +3346,7 @@ namespace Gum.Wireframe
         {
 
             mIsLayoutSuspended = false;
-
-            if(isFontDirty)
-            {
-                this.UpdateToFontValues();
-                isFontDirty = false;
-            }
+            UpdateFontRecursive();
 
             if (currentDirtyState != null)
             {
@@ -4413,9 +4408,19 @@ namespace Gum.Wireframe
                 UpdateToFontValues();
             }
 
-            foreach(GraphicalUiElement child in this.Children)
+            if(this.Children != null)
             {
-                child.UpdateFontRecursive();
+                foreach(GraphicalUiElement child in this.Children)
+                {
+                    child.UpdateFontRecursive();
+                }
+            }
+            else
+            {
+                foreach(GraphicalUiElement child in this.mWhatThisContains)
+                {
+                    child.UpdateFontRecursive();
+                }
             }
         }
 
@@ -4576,7 +4581,10 @@ namespace Gum.Wireframe
             }
 
 #endif
-            this.SuspendLayout(true);
+            if (GraphicalUiElement.IsAllLayoutSuspended == false)
+            {
+                this.SuspendLayout(true);
+            }
 
             var variablesWithoutStatesOnParent =
                 state.Variables.Where(item =>
@@ -4619,7 +4627,12 @@ namespace Gum.Wireframe
             {
                 this.SetProperty(variableList.Name, variableList.ValueAsIList);
             }
-            this.ResumeLayout(true);
+
+            if(GraphicalUiElement.IsAllLayoutSuspended == false)
+            {
+                this.ResumeLayout(true);
+
+            }
         }
 
         private int GetOrderedIndexForParentVariable(VariableSave item)

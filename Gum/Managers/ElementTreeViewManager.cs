@@ -353,17 +353,17 @@ namespace Gum.Managers
                 string currentDirectory = FileManager.GetDirectory(ObjectFinder.Self.GumProjectSave.FullFileName);
 
                 // Let's make sure these folders exist, they better!
-                Directory.CreateDirectory(mStandardElementsTreeNode.GetFullFilePath());
-                Directory.CreateDirectory(mScreensTreeNode.GetFullFilePath());
-                Directory.CreateDirectory(mComponentsTreeNode.GetFullFilePath());
-                Directory.CreateDirectory(mBehaviorsTreeNode.GetFullFilePath());
+                Directory.CreateDirectory(mStandardElementsTreeNode.GetFullFilePath().FullPath);
+                Directory.CreateDirectory(mScreensTreeNode.GetFullFilePath().FullPath);
+                Directory.CreateDirectory(mComponentsTreeNode.GetFullFilePath().FullPath);
+                Directory.CreateDirectory(mBehaviorsTreeNode.GetFullFilePath().FullPath);
 
 
                 // add folders to the screens, entities, and standard elements
-                AddAndRemoveFolderNodes(mStandardElementsTreeNode.GetFullFilePath(), mStandardElementsTreeNode.Nodes);
-                AddAndRemoveFolderNodes(mScreensTreeNode.GetFullFilePath(), mScreensTreeNode.Nodes);
-                AddAndRemoveFolderNodes(mComponentsTreeNode.GetFullFilePath(), mComponentsTreeNode.Nodes);
-                AddAndRemoveFolderNodes(mBehaviorsTreeNode.GetFullFilePath(), mBehaviorsTreeNode.Nodes);
+                AddAndRemoveFolderNodes(mStandardElementsTreeNode.GetFullFilePath().FullPath, mStandardElementsTreeNode.Nodes);
+                AddAndRemoveFolderNodes(mScreensTreeNode.GetFullFilePath().FullPath, mScreensTreeNode.Nodes);
+                AddAndRemoveFolderNodes(mComponentsTreeNode.GetFullFilePath().FullPath, mComponentsTreeNode.Nodes);
+                AddAndRemoveFolderNodes(mBehaviorsTreeNode.GetFullFilePath().FullPath, mBehaviorsTreeNode.Nodes);
 
                 //AddAndRemoveFolderNodes(currentDirectory, this.mTreeView.Nodes);
             }
@@ -423,18 +423,6 @@ namespace Gum.Managers
             InstanceSave selectedInstance = SelectedState.Self.SelectedInstance;
             ElementSave selectedElement = SelectedState.Self.SelectedElement;
             BehaviorSave selectedBehavior = SelectedState.Self.SelectedBehavior;
-
-
-            if (!string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave.FullFileName))
-            {
-                string currentDirectory = FileManager.GetDirectory(ProjectManager.Self.GumProjectSave.FullFileName);
-
-                if (folderTreeNode != null)
-                {
-                    currentDirectory = folderTreeNode.GetFullFilePath();
-                }
-            }
-            
 
 
             #region Add nodes that haven't been added yet
@@ -1120,7 +1108,7 @@ namespace Gum.Managers
             return treeNode.Parent == null && treeNode.Text == "Standard";
         }
 
-        public static string GetFullFilePath(this TreeNode treeNode)
+        public static FilePath GetFullFilePath(this TreeNode treeNode)
         {
             if (treeNode.IsTopComponentContainerTreeNode() ||
                 treeNode.IsTopStandardElementTreeNode() ||

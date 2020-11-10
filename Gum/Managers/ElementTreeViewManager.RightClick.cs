@@ -160,7 +160,15 @@ namespace Gum.Managers
 
             if (treeNode != null)
             {
-                string fullFile = treeNode.GetFullFilePath();
+                string fullFile;
+                if (treeNode.Tag is ElementSave elementSave)
+                {
+                    fullFile = elementSave.GetFullPathXmlFile().FullPath;
+                }
+                else
+                {
+                    fullFile = treeNode.GetFullFilePath().FullPath;
+                }
                 fullFile = fullFile.Replace("/", "\\");
 
                 if (fullFile.EndsWith("\\") || fullFile.EndsWith("/"))
@@ -198,7 +206,7 @@ namespace Gum.Managers
 
             if (treeNode != null)
             {
-                string fullFile = treeNode.GetFullFilePath();
+                string fullFile = treeNode.GetFullFilePath().FullPath;
 
                 // Initially we won't allow deleting of the entire
                 // folder because the user may have to make decisions
@@ -354,7 +362,7 @@ namespace Gum.Managers
 
 
                 // see if it already exists:
-                string fullFilePath = FileManager.GetDirectory( SelectedNode.GetFullFilePath()) + tiw.Result + "\\";
+                string fullFilePath = FileManager.GetDirectory( SelectedNode.GetFullFilePath().FullPath) + tiw.Result + "\\";
 
                 if(System.IO.Directory.Exists(fullFilePath))
                 {
@@ -382,11 +390,11 @@ namespace Gum.Managers
                         throw new InvalidOperationException();
                     }
 
-                    string oldFullPath = SelectedNode.GetFullFilePath();
+                    var oldFullPath = SelectedNode.GetFullFilePath();
 
-                    string oldPathRelativeToElementsRoot = FileManager.MakeRelative(SelectedNode.GetFullFilePath(), rootForElement, preserveCase:true);
+                    string oldPathRelativeToElementsRoot = FileManager.MakeRelative(SelectedNode.GetFullFilePath().FullPath, rootForElement, preserveCase:true);
                     SelectedNode.Text = tiw.Result;
-                    string newPathRelativeToElementsRoot = FileManager.MakeRelative(SelectedNode.GetFullFilePath(), rootForElement, preserveCase:true);
+                    string newPathRelativeToElementsRoot = FileManager.MakeRelative(SelectedNode.GetFullFilePath().FullPath, rootForElement, preserveCase:true);
 
                     if (SelectedNode.IsScreensFolderTreeNode())
                     {
@@ -417,10 +425,10 @@ namespace Gum.Managers
                         }
                     }
 
-                    bool isNowEmpty = Directory.GetFiles(oldFullPath).Length == 0;
+                    bool isNowEmpty = Directory.GetFiles(oldFullPath.FullPath).Length == 0;
                     if(isNowEmpty)
                     {
-                        Directory.Delete(oldFullPath);
+                        Directory.Delete(oldFullPath.FullPath);
                         GumCommands.Self.GuiCommands.RefreshElementTreeView();
 
                     }
@@ -470,7 +478,7 @@ namespace Gum.Managers
                             nodeToAddTo = RootScreensTreeNode;
                         }
 
-                        string path = nodeToAddTo.GetFullFilePath();
+                        string path = nodeToAddTo.GetFullFilePath().FullPath;
 
                         string relativeToScreens = FileManager.MakeRelative(path,
                             FileLocations.Self.ScreensFolder);
