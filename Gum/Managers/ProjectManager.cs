@@ -209,6 +209,8 @@ namespace Gum
                 GraphicalUiElement.ShowLineRectangles = mGumProjectSave.ShowOutlines;
                 EditingManager.Self.RestrictToUnitValues = mGumProjectSave.RestrictToUnitValues;
 
+                CopyLinkedComponents();
+
                 PluginManager.Self.ProjectLoad(mGumProjectSave);
 
                 if (wasModified)
@@ -243,6 +245,45 @@ namespace Gum
                 RecentFilesUpdated();
             }
 
+        }
+
+        private void CopyLinkedComponents()
+        {
+            var gumDirectory = new FilePath(mGumProjectSave.FullFileName).GetDirectoryContainingThis();
+
+            void CopyReference(ElementReference reference)
+            {
+                if (reference.LinkType == LinkType.CopyLocally && !string.IsNullOrEmpty(reference.Link))
+                {
+                    // copy from the original location here
+                    var source = gumDirectory.Original + reference.Link;
+                    var destination = gumDirectory.Original + reference.Subfolder + "\\" + reference.Name + "." + reference.Extension;
+
+                    try
+                    {
+                        System.IO.File.Copy(source, destination, overwrite: true);
+                    }
+                    catch (Exception e)
+                    {
+                        GumCommands.Self.GuiCommands.PrintOutput($"Error {e}");
+                    }
+                }
+            }
+
+            foreach(var reference in mGumProjectSave.ScreenReferences)
+            {
+                CopyReference(reference);
+            }
+
+            foreach (var reference in mGumProjectSave.ComponentReferences)
+            {
+                CopyReference(reference);
+            }
+
+            foreach (var reference in mGumProjectSave.StandardElementReferences)
+            {
+                CopyReference(reference);
+            }
         }
 
         private bool FixSlashesInNames(GumProjectSave mGumProjectSave)

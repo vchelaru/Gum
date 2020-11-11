@@ -30,6 +30,7 @@ namespace Gum.Managers
 
         ToolStripMenuItem mAddComponent;
         ToolStripMenuItem mImportComponent;
+        ToolStripMenuItem mAddLinkedComponent;
 
         ToolStripMenuItem mAddInstance;
         ToolStripMenuItem mSaveObject;
@@ -61,6 +62,10 @@ namespace Gum.Managers
             mImportComponent = new ToolStripMenuItem();
             mImportComponent.Text = "Import Components";
             mImportComponent.Click += ImportComponentsClick;
+
+            mAddLinkedComponent = new ToolStripMenuItem();
+            mAddLinkedComponent.Text = "Add Linked Component";
+            mAddLinkedComponent.Click += HandleAddLinkedComponentClick;
 
             mAddInstance = new ToolStripMenuItem();
             mAddInstance.Text = "Add Instance";
@@ -637,6 +642,66 @@ namespace Gum.Managers
                 componentSave.InitializeDefaultAndComponentVariables();
 
                 GumCommands.Self.FileCommands.TryAutoSaveElement(componentSave);
+
+                lastImportedComponent = componentSave;
+            }
+
+            if (lastImportedComponent != null)
+            {
+                GumCommands.Self.GuiCommands.RefreshElementTreeView();
+                SelectedState.Self.SelectedComponent = lastImportedComponent;
+                GumCommands.Self.FileCommands.TryAutoSaveProject();
+            }
+        }
+
+        private void HandleAddLinkedComponentClick(object sender, EventArgs e)
+        {
+            ////////////////Early Out/////////////////////////
+            if (ObjectFinder.Self.GumProjectSave == null || string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave.FullFileName))
+            {
+                MessageBox.Show("You must first save the project before adding a new component");
+                return;
+            }
+            //////////////End Early Out////////////////////////
+
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+            openFileDialog.Multiselect = true;
+            openFileDialog.Filter = "Gum Component (*.gucx)|*.gucx";
+
+            /////////////////Another Early Out////////////////////////
+            if (openFileDialog.ShowDialog() != DialogResult.OK)
+            {
+                return;
+            }
+            ///////////End Another Early Out//////////////////////////
+
+            ComponentSave lastImportedComponent = null;
+
+            for (int i = 0; i < openFileDialog.FileNames.Length; ++i)
+            {
+                FilePath componentFilePath = openFileDialog.FileNames[i];
+
+                var gumProject = ObjectFinder.Self.GumProjectSave;
+                var gumProjectDirectory = new FilePath(gumProject.FullFileName).GetDirectoryContainingThis();
+
+                var relative = FileManager.MakeRelative(componentFilePath.FullPath, gumProjectDirectory.FullPath);
+
+                var componentSave = FileManager.XmlDeserialize<ComponentSave>(componentFilePath.FullPath);
+
+                var reference = new ElementReference();
+                reference.Name = componentSave.Name;
+                reference.Link = relative;
+                reference.LinkType = LinkType.CopyLocally; // This is what FRB needs, so we'll make it the default. Eventually...we can change this? Make it optional?
+                reference.ElementType = ElementType.Component;
+                gumProject.ComponentReferences.Add(reference);
+                gumProject.ComponentReferences.Sort();
+
+
+                var components = ProjectManager.Self.GumProjectSave.Components;
+                components.Add(componentSave);
+                components.Sort((first, second) => first.Name.CompareTo(second.Name));
+
+                componentSave.InitializeDefaultAndComponentVariables();
 
                 lastImportedComponent = componentSave;
             }

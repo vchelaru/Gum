@@ -13,6 +13,12 @@ namespace Gum.DataTypes
         Standard
     }
 
+    public enum LinkType
+    {
+        ReferenceOriginal,
+        CopyLocally
+    }
+
     public class ElementReference
     {
         public const string ScreenSubfolder = "Screens";
@@ -25,7 +31,26 @@ namespace Gum.DataTypes
             set;
         }
 
-        string Subfolder
+        public LinkType LinkType { get; set; }
+
+        public string Extension
+        {
+            get
+            {
+                switch (ElementType)
+                {
+                    case DataTypes.ElementType.Standard:
+                        return GumProjectSave.StandardExtension;
+                    case DataTypes.ElementType.Component:
+                        return GumProjectSave.ComponentExtension;
+                    case DataTypes.ElementType.Screen:
+                        return GumProjectSave.ScreenExtension;
+                }
+                throw new InvalidOperationException();
+            }
+        }
+
+        public string Subfolder
         {
             get
             {
@@ -61,30 +86,37 @@ namespace Gum.DataTypes
         //}
 
 
-        public T ToElementSave<T>(string projectroot, string extension, GumLoadResult result) where T : ElementSave, new()
+        public T ToElementSave<T>(string projectroot, string extension, GumLoadResult result, LinkLoadingPreference linkLoadingPreference = LinkLoadingPreference.PreferLinked) where T : ElementSave, new()
         {
-            FilePath fullName;
+            FilePath linkedName = null;
+            FilePath containedReferenceName = null;
             
-            if(string.IsNullOrWhiteSpace(this.Link))
+            if(!string.IsNullOrWhiteSpace(this.Link))
             {
-                fullName = projectroot + Subfolder + "/" + Name + "." + extension;
+                linkedName = projectroot + this.Link;
+
             }
-            else
+            containedReferenceName = projectroot + Subfolder + "/" + Name + "." + extension;
+
+            if (linkedName != null && ToolsUtilities.FileManager.IsRelative(linkedName.Original))
             {
-                fullName = projectroot + this.Link;
+                linkedName = ToolsUtilities.FileManager.RelativeDirectory + linkedName.Original;
+            }
+            if (ToolsUtilities.FileManager.IsRelative(containedReferenceName.Original))
+            {
+                containedReferenceName = ToolsUtilities.FileManager.RelativeDirectory + containedReferenceName.Original;
             }
 
-            if (ToolsUtilities.FileManager.IsRelative(fullName.Original))
+            if(linkedName?.Exists() == true)
             {
-                fullName = ToolsUtilities.FileManager.RelativeDirectory + fullName.Original;
+                T elementSave = FileManager.XmlDeserialize<T>(linkedName.FullPath);
+                return elementSave;
             }
-
-            if (fullName.Exists())
+            else if (containedReferenceName.Exists() && (linkedName == null || linkLoadingPreference == LinkLoadingPreference.PreferLinked))
             {
-                T elementSave = FileManager.XmlDeserialize<T>(fullName.FullPath);
+                T elementSave = FileManager.XmlDeserialize<T>(containedReferenceName.FullPath);
 
-                // If it's linked, the name may not match up 100%
-                if (Name != elementSave.Name && string.IsNullOrWhiteSpace(this.Link))
+                if (Name != elementSave.Name)
                 {
                     // The file name doesn't match the name of the element.  This can cause errors
                     // at runtime so let's tell the user:
@@ -104,7 +136,7 @@ namespace Gum.DataTypes
                 //errors += "\nCould not find the file name " + fullName;
                 // Update Feb 20, 2015
                 // But we can record it:
-                result.MissingFiles.Add(fullName.FullPath);
+                result.MissingFiles.Add(containedReferenceName.FullPath);
 
 
                 T elementSave = new T();

@@ -15,6 +15,9 @@ namespace Gum.Wireframe
         ScrollBar mVerticalScrollBar;
         ScrollBar mHorizontalScrollBar;
 
+        int minimumX = 0;
+        int minimumY = 0;
+
         int displayedAreaWidth = 2048;
         int displayedAreaHeight = 2048;
 
@@ -129,15 +132,22 @@ namespace Gum.Wireframe
 
                 var camera = Managers.Renderer.Camera;
 
+                var effectiveAreaHeight = -minimumY + displayedAreaHeight;
+
                 var visibleAreaHeight = xnaControl.Height / camera.Zoom;
-                mVerticalScrollBar.Minimum = 0;
-                mVerticalScrollBar.Maximum = (int)(displayedAreaHeight + visibleAreaHeight);
+                mVerticalScrollBar.Minimum = minimumY;
+                mVerticalScrollBar.Maximum = (int)(effectiveAreaHeight + visibleAreaHeight);
                 mVerticalScrollBar.LargeChange = (int)visibleAreaHeight;
 
                 var visibleAreaWidth = xnaControl.Width / camera.Zoom;
 
-                mHorizontalScrollBar.Minimum = 0; // The minimum value for the scroll bar, which should be 0, since that's the furthest left the scrollbar can go
-                mHorizontalScrollBar.Maximum = (int)(displayedAreaWidth + visibleAreaWidth); // The total amount that the scrollbar can cover. This is the width of the area plus the screen width since we can scroll until the edges are at the middle, meaning we can see half a screen width on either side 
+                var effectiveAreaWidth = -minimumX + displayedAreaWidth;
+
+                mHorizontalScrollBar.Minimum = minimumX; // The minimum value for the scroll bar, which should be 0, since that's the furthest left the scrollbar can go
+
+                // The total amount that the scrollbar can cover. This is the width of the area plus the screen width since we can scroll until the edges 
+                // are at the middle, meaning we can see half a screen width on either side 
+                mHorizontalScrollBar.Maximum = (int)(effectiveAreaWidth + visibleAreaWidth);
                 mHorizontalScrollBar.LargeChange = (int)visibleAreaWidth; // the amount of visible area. It's called LargeChange but it really means how much the scrollbar can see 
             }
         }
