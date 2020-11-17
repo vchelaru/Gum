@@ -14,7 +14,8 @@ using System.Windows;
 using Gum.DataTypes.Variables;
 using Gum.Wireframe;
 using FlatRedBall.Glue.StateInterpolation;
-using Gum.DataTypes; 
+using Gum.DataTypes;
+using Gum;
 
 namespace StateAnimationPlugin
 {
@@ -25,7 +26,7 @@ namespace StateAnimationPlugin
 
         ElementAnimationsViewModel mCurrentViewModel;
 
-        MainWindow mMainWindow;
+        StateAnimationPlugin.Views.MainWindow mMainWindow;
 
         #endregion
 
@@ -58,7 +59,12 @@ namespace StateAnimationPlugin
             return true;
         }
 
-        #endregion
+        private void CreateMenuItems()
+        {
+            var menuItem = AddMenuItem(new List<string> { "State Animation", "View Animations" });
+
+            menuItem.Click += HandleViewAnimationsClick;
+        }
 
         private void CreateEvents()
         {
@@ -78,6 +84,8 @@ namespace StateAnimationPlugin
             this.ElementRename += HandleElementRename;
             this.ElementDuplicate += HandleElementDuplicate;
         }
+
+        #endregion
 
         private void HandleElementDuplicate(ElementSave oldElement, ElementSave newElement)
         {
@@ -135,42 +143,28 @@ namespace StateAnimationPlugin
 
         }
 
-        
-
-        private void CreateMenuItems()
-        {
-            var menuItem = AddMenuItem(new List<string> { "State Animation", "View Animations" });
-
-            menuItem.Click += HandleViewAnimationsClick;
-        }
 
         private void HandleViewAnimationsClick(object sender, EventArgs e)
         {
-            if (SelectedState.Self.SelectedScreen == null && SelectedState.Self.SelectedElement == null)
+            if(mMainWindow == null || mMainWindow.IsVisible == false)
             {
-                MessageBox.Show("You need to select a Screen or Component first");
+                mMainWindow = new StateAnimationPlugin.Views.MainWindow();
+                // This fixes an issue where embedded wpf text boxes don't get input, as explained here:
+                // http://stackoverflow.com/questions/835878/wpf-textbox-not-accepting-input-when-in-elementhost-in-window-forms
+                //ElementHost.EnableModelessKeyboardInterop(mMainWindow);
+                //mMainWindow.Show();
+                //mMainWindow.Closed += (not, used) => Gum.ToolStates.SelectedState.Self.CustomCurrentStateSave = null;
             }
-            else
-            {
-                if(mMainWindow == null || mMainWindow.IsVisible == false)
-                {
-                    mMainWindow = new MainWindow();
-                    // This fixes an issue where embedded wpf text boxes don't get input, as explained here:
-                    // http://stackoverflow.com/questions/835878/wpf-textbox-not-accepting-input-when-in-elementhost-in-window-forms
-                    ElementHost.EnableModelessKeyboardInterop(mMainWindow);
-                    mMainWindow.Show();
-                    mMainWindow.Closed += (not, used) => Gum.ToolStates.SelectedState.Self.CustomCurrentStateSave = null;
-                }
-                else
-                {
-                    mMainWindow.Focus();
-                }
+                
+            GumCommands.Self.GuiCommands.AddControl(mMainWindow, "Animations", 
+                TabLocation.Right);
 
-                // forces a refresh:
-                mCurrentViewModel = new ElementAnimationsViewModel();
+            GumCommands.Self.GuiCommands.ShowControl(mMainWindow);
 
-                RefreshViewModel();
-            }
+            // forces a refresh:
+            mCurrentViewModel = new ElementAnimationsViewModel();
+
+            RefreshViewModel();
         }
 
         private void RefreshViewModel()

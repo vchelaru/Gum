@@ -23,11 +23,13 @@ using WpfDataUi.EventArguments;
 
 namespace WpfDataUi
 {
-
+    #region DataUiGridEntry class
     public class DataUiGridEntry
     {
         public string Name { get; set; }
     }
+
+    #endregion
 
     /// <summary>
     /// Interaction logic for DataUiGrid.xaml
@@ -46,7 +48,7 @@ namespace WpfDataUi
         Dictionary<InstanceMember, Func<InstanceMember, bool>> mMembersWithOptionalVisibility = new Dictionary<InstanceMember, Func<InstanceMember, bool>>();
         #endregion
 
-
+        #region Instance (Bindable)
 
         /// <summary>
         /// Sets the displayed instance.  Setting this property
@@ -78,6 +80,8 @@ namespace WpfDataUi
 
             grid.PopulateCategories();
         }
+
+        #endregion
 
         #region Properties
 
@@ -115,6 +119,12 @@ namespace WpfDataUi
         {
             get;
             private set;
+        }
+
+        public bool IsInnerGridEnabled
+        {
+            get => InternalControl.IsEnabled;
+            set => InternalControl.IsEnabled = value;
         }
 
         #endregion

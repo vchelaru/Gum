@@ -62,6 +62,9 @@ namespace StateAnimationPlugin.Views
             }
 
             string whyIsntValid = null;
+
+            whyIsntValid = GetWhyAddingAnimationIsInvalid();
+
             if(!string.IsNullOrEmpty(whyIsntValid))
             {
                 MessageBox.Show(whyIsntValid);
@@ -91,6 +94,17 @@ namespace StateAnimationPlugin.Views
                     }
                 }
             }
+        }
+
+        private string GetWhyAddingAnimationIsInvalid()
+        {
+            string whyIsntValid = null;
+            if (SelectedState.Self.SelectedScreen == null && SelectedState.Self.SelectedComponent == null)
+            {
+                whyIsntValid = "You must first select a Screen or Component";
+            }
+
+            return whyIsntValid;
         }
 
         private void AddStateButton_Click(object sender, RoutedEventArgs e)

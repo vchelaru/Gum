@@ -7,21 +7,40 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Media;
 
 namespace Gum.Plugins.VariableGrid
 {
     public class MainControlViewModel : ViewModel
     {
+        public Visibility HasStateInformation
+        {
+            get => Get<Visibility>();
+            set => Set(value);
+        }
+
         public Visibility HasErrors
         {
-            get { return Get<Visibility>(); }
-            set { Set(value); }
+            get => Get<Visibility>();
+            set => Set(value); 
+        }
+
+        public string StateInformation
+        {
+            get => Get<string>();
+            set => Set(value);
+        }
+
+        public Brush StateBackground
+        {
+            get => Get<Brush>();
+            set => Set(value);
         }
 
         public string ErrorInformation
         {
-            get { return Get<string>(); }
-            set { Set(value); }
+            get => Get<string>();
+            set => Set(value); 
         }
 
         public Visibility ShowBehaviorUi
@@ -38,8 +57,9 @@ namespace Gum.Plugins.VariableGrid
 
         public Visibility ShowVariableGrid
         {
-            get { return Get<Visibility>(); }
-            set { Set(value); }
+            //get => Visibility.Hidden;
+            get => Get<Visibility>();
+            set => Set(value);
         }
 
         public VariableSave SelectedBehaviorVariable

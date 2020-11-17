@@ -540,7 +540,8 @@ namespace Gum.ToolStates
                 SelectedStateSave = null;
 
             }
-            PropertyGridManager.Self.RefreshUI();
+            // no need to do this, because updating to the selected state save above refreshes the property grid
+            //PropertyGridManager.Self.RefreshUI();
 
             WireframeObjectManager.Self.RefreshAll(false);
 

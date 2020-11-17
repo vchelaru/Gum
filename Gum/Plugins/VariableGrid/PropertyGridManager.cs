@@ -27,6 +27,8 @@ using Gum.DataTypes.Behaviors;
 using Gum.Controls;
 using WpfDataUi.Controls;
 using System.ComponentModel;
+using System.Windows.Controls;
+using System.Windows.Media;
 
 namespace Gum.Managers
 {
@@ -35,6 +37,7 @@ namespace Gum.Managers
         #region Fields
 
         WpfDataUi.DataUiGrid mVariablesDataGrid;
+        TestWpfControl mainControl;
 
         static PropertyGridManager mPropertyGridManager;
 
@@ -83,13 +86,17 @@ namespace Gum.Managers
         #endregion
 
 
-        public void Initialize(TestWpfControl variablesDataUiGrid)
+        public void Initialize()
         {
-            mVariablesDataGrid = variablesDataUiGrid.DataGrid;
+            mainControl = new Gum.TestWpfControl();
+
+            GumCommands.Self.GuiCommands.AddControl(mainControl, "Variables", TabLocation.CenterBottom);
+
+            mVariablesDataGrid = mainControl.DataGrid;
             variableViewModel = new Plugins.VariableGrid.MainControlViewModel();
-            variablesDataUiGrid.DataContext = variableViewModel;
-            variablesDataUiGrid.SelectedBehaviorVariableChanged += HandleBehaviorVariableSelected;
-            variablesDataUiGrid.AddVariableClicked += HandleAddVariable;
+            mainControl.DataContext = variableViewModel;
+            mainControl.SelectedBehaviorVariableChanged += HandleBehaviorVariableSelected;
+            mainControl.AddVariableClicked += HandleAddVariable;
 
             InitializeRightClickMenu();
         }
@@ -150,8 +157,10 @@ namespace Gum.Managers
 
             isInRefresh = true;
 
-            bool showVariableGrid = SelectedState.Self.SelectedElement != null ||
-                SelectedState.Self.SelectedInstance != null;
+            bool showVariableGrid = 
+                (SelectedState.Self.SelectedElement != null ||
+                SelectedState.Self.SelectedInstance != null) && 
+                SelectedState.Self.CustomCurrentStateSave == null;
             variableViewModel.ShowVariableGrid = showVariableGrid ?
                 System.Windows.Visibility.Visible : System.Windows.Visibility.Hidden;
 
@@ -159,7 +168,7 @@ namespace Gum.Managers
             {
                 // I don't know if we want to eventually show these
                 // but for now we'll hide the PropertyGrid:
-                mVariablesDataGrid.Visibility = System.Windows.Visibility.Hidden;
+                mainControl.Visibility = System.Windows.Visibility.Hidden;
             }
             else
             {
@@ -172,13 +181,6 @@ namespace Gum.Managers
                 var behaviorSave = SelectedState.Self.SelectedBehavior;
                 var category = SelectedState.Self.SelectedStateCategorySave;
 
-                bool shouldMakeYellow = element != null && state != element.DefaultState;
-
-
-                // This can take a little bit of time and we don't want the app to pop/freeze
-
-
-                //Task task = new Task(() => RefreshDataGrid(element, state, instance));
                 RefreshDataGrid(element, state, category, instance, behaviorSave, force);
             }
 
@@ -210,10 +212,19 @@ namespace Gum.Managers
                 category != mLastCategory ||
                 force;
 
+            var hasCustomState = SelectedState.Self.CustomCurrentStateSave != null;
+
+            if (hasCustomState)
+            {
+                hasChangedObjectShowing = false;
+            }
+
+            mVariablesDataGrid.IsInnerGridEnabled = !hasCustomState;
+
+            var categories = GetMemberCategories(element, state, category, instance);
 
             if (hasChangedObjectShowing)
             {
-                List<MemberCategory> categories = GetMemberCategories(element, state, category, instance);
                 // UI is fast, I dont' think we need this....
                 //Application.DoEvents();
                 SimultaneousCalls ++;
@@ -227,8 +238,6 @@ namespace Gum.Managers
                     records.Add("in");
 
                     mVariablesDataGrid.Instance = SelectedState.Self.SelectedStateSave;
-
-                    mVariablesDataGrid.Visibility = System.Windows.Visibility.Hidden;
 
                     mVariablesDataGrid.Categories.Clear();
 
@@ -255,16 +264,9 @@ namespace Gum.Managers
                 }
 
                 SimultaneousCalls--;
-                //Application.DoEvents();
-
-                mVariablesDataGrid.Visibility = System.Windows.Visibility.Visible;
-
             }
             else
             {
-                // let's see if any variables have been added/removed
-                var categories = GetMemberCategories(element, state, category, instance);
-
                 foreach (var newCategory in categories)
                 {
                     // let's see if any variables have changed
@@ -282,10 +284,41 @@ namespace Gum.Managers
 
             RefreshErrors(element);
 
+            RefreshStateLabel(element, category, state);
+
             RefreshBehaviorUi(behaviorSave);
 
             mVariablesDataGrid.Refresh();
             
+        }
+
+        private void RefreshStateLabel(ElementSave element, StateSaveCategory category, StateSave state)
+        {
+            if(element == null)
+            {
+                variableViewModel.HasStateInformation = System.Windows.Visibility.Collapsed;
+            }
+            else if(state == element.DefaultState || state == null)
+            {
+                variableViewModel.HasStateInformation = System.Windows.Visibility.Collapsed;
+            }
+            else if(SelectedState.Self.CustomCurrentStateSave != null)
+            {
+                variableViewModel.HasStateInformation = System.Windows.Visibility.Visible;
+                variableViewModel.StateInformation = $"Displaying custom (animated) state";
+                variableViewModel.StateBackground = Brushes.Pink;
+            }
+            else
+            {
+                variableViewModel.StateBackground = Brushes.Yellow;
+                variableViewModel.HasStateInformation = System.Windows.Visibility.Visible;
+                string stateName = state.Name;
+                if(category != null)
+                {
+                    stateName = category.Name + "/" + stateName;
+                }
+                variableViewModel.StateInformation = $"Editing state {stateName}";
+            }
         }
 
         public void RefreshVariablesDataGridValues()

@@ -100,7 +100,7 @@ namespace StateAnimationPlugin.ViewModels
                     valueToSet = Math.Min(value, SelectedAnimation.Length);
                 }
 
-                Set(value);
+                Set(valueToSet);
             }
         }
 

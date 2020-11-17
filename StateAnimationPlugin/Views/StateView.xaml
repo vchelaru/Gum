@@ -5,44 +5,48 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" 
              d:DesignHeight="180" d:DesignWidth="200" Focusable="true" Background="#FFFFFE">
-    <Grid>
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
         
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto"></ColumnDefinition>
-            <ColumnDefinition></ColumnDefinition>
-        </Grid.ColumnDefinitions>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="26"></RowDefinition>
-            <RowDefinition Height="26"></RowDefinition>
-            <RowDefinition Height="26"></RowDefinition>
-            <RowDefinition Height="26"></RowDefinition>
-            <RowDefinition Height="Auto"></RowDefinition>
-            <RowDefinition Height="Auto"></RowDefinition>
-        </Grid.RowDefinitions>
+        <Grid>
+        
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"></ColumnDefinition>
+                <ColumnDefinition></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="26"></RowDefinition>
+                <RowDefinition Height="26"></RowDefinition>
+                <RowDefinition Height="26"></RowDefinition>
+                <RowDefinition Height="26"></RowDefinition>
+                <RowDefinition Height="Auto"></RowDefinition>
+                <RowDefinition Height="Auto"></RowDefinition>
+            </Grid.RowDefinitions>
 
-        <TextBox  x:Name="Focusable"  Width="0" Height="0" Margin="0" VerticalAlignment="Top" HorizontalAlignment="Left"/>
+            <TextBox  x:Name="Focusable"  Width="0" Height="0" Margin="0" VerticalAlignment="Top" HorizontalAlignment="Left"/>
 
-        <Label Grid.Row="0" x:Name="NameLabel" Grid.ColumnSpan="2" Content="{Binding DisplayName, FallbackValue=StateName}"></Label>
-        <Label Grid.Row="1">Time:</Label>
-        <Label Grid.Row="2" 
-               Visibility="{Binding InterpolationElementVisibility}">Interpolation Type:</Label>
-        <Label Grid.Row="3" 
-               Visibility="{Binding InterpolationElementVisibility}">In/Out:</Label>
-        <Label Grid.Row="4" 
-               Visibility="{Binding HasInvalidStateVisibility, TargetNullValue=Collapsed, FallbackValue=Collapsed}" 
-               Grid.ColumnSpan="2" Background="Red" x:Name="NotFoundLabel">Could not find state or animation</Label>
+            <Label Grid.Row="0" x:Name="NameLabel" Grid.ColumnSpan="2" Content="{Binding DisplayName, FallbackValue=StateName}"></Label>
+            <Label Grid.Row="1">Time:</Label>
+            <Label Grid.Row="2" 
+                   Visibility="{Binding InterpolationElementVisibility}">Interpolation Type:</Label>
+            <Label Grid.Row="3" 
+                   Visibility="{Binding InterpolationElementVisibility}">In/Out:</Label>
+            <Label Grid.Row="4" 
+                   Visibility="{Binding HasInvalidStateVisibility, TargetNullValue=Collapsed, FallbackValue=Collapsed}" 
+                   Grid.ColumnSpan="2" Background="Red" x:Name="NotFoundLabel">Could not find state or animation</Label>
 
-        <TextBlock Grid.Row="5" Grid.ColumnSpan="2" TextWrapping="Wrap" FontSize="10" Margin="5,0,5,0">
-            Interpolation values apply between this state and the next state.</TextBlock>
-        <TextBox Grid.Row="1" Grid.Column="1" x:Name="TimeTextBox"
-                Text="{Binding Time}" KeyDown="TextBox_KeyDown"   
-             />
+            <TextBlock Grid.Row="5" Grid.ColumnSpan="2" TextWrapping="Wrap" FontSize="10" Margin="5,0,5,0">
+                Interpolation values apply between this state and the next state.</TextBlock>
+            <TextBox Grid.Row="1" Grid.Column="1" x:Name="TimeTextBox"
+                    Text="{Binding Time}" KeyDown="TextBox_KeyDown"   
+                 />
 
-        <ComboBox Grid.Row="2" Grid.Column="1" x:Name="InterpolationTypeComboBox"
-                      Visibility="{Binding InterpolationElementVisibility}" SelectedItem="{Binding InterpolationType}"></ComboBox>
-        <ComboBox Grid.Row="3" Grid.Column="1" x:Name="EasingTypeComboBox"
-                      Visibility="{Binding InterpolationElementVisibility}" SelectedItem="{Binding Easing}"></ComboBox>
+            <ComboBox Grid.Row="2" Grid.Column="1" x:Name="InterpolationTypeComboBox"
+                          Visibility="{Binding InterpolationElementVisibility}" SelectedItem="{Binding InterpolationType}"></ComboBox>
+            <ComboBox Grid.Row="3" Grid.Column="1" x:Name="EasingTypeComboBox"
+                          Visibility="{Binding InterpolationElementVisibility}" SelectedItem="{Binding Easing}"></ComboBox>
 
 
-    </Grid>
+        </Grid>
+    </ScrollViewer>
+
 </UserControl>
