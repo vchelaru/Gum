@@ -63,9 +63,6 @@
             this.StatesAndVariablesContainer = new System.Windows.Forms.SplitContainer();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.MiddleTabControl = new System.Windows.Forms.TabControl();
-            this.tabPage2 = new System.Windows.Forms.TabPage();
-            this.VariableHost = new System.Windows.Forms.Integration.ElementHost();
-            this.testWpfControl2 = new Gum.TestWpfControl();
             this.PreviewSplitContainer = new System.Windows.Forms.SplitContainer();
             this.panel1 = new System.Windows.Forms.Panel();
             this.WireframeContextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
@@ -88,7 +85,6 @@
             this.StatesAndVariablesContainer.Panel2.SuspendLayout();
             this.StatesAndVariablesContainer.SuspendLayout();
             this.MiddleTabControl.SuspendLayout();
-            this.tabPage2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.PreviewSplitContainer)).BeginInit();
             this.PreviewSplitContainer.Panel1.SuspendLayout();
             this.PreviewSplitContainer.Panel2.SuspendLayout();
@@ -402,34 +398,12 @@
             // 
             // MiddleTabControl
             // 
-            this.MiddleTabControl.Controls.Add(this.tabPage2);
             this.MiddleTabControl.Dock = System.Windows.Forms.DockStyle.Fill;
             this.MiddleTabControl.Location = new System.Drawing.Point(0, 0);
             this.MiddleTabControl.Name = "MiddleTabControl";
             this.MiddleTabControl.SelectedIndex = 0;
             this.MiddleTabControl.Size = new System.Drawing.Size(332, 498);
             this.MiddleTabControl.TabIndex = 3;
-            // 
-            // tabPage2
-            // 
-            this.tabPage2.Controls.Add(this.VariableHost);
-            this.tabPage2.Location = new System.Drawing.Point(4, 22);
-            this.tabPage2.Name = "tabPage2";
-            this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(324, 472);
-            this.tabPage2.TabIndex = 1;
-            this.tabPage2.Text = "Variables";
-            this.tabPage2.UseVisualStyleBackColor = true;
-            // 
-            // VariableHost
-            // 
-            this.VariableHost.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.VariableHost.Location = new System.Drawing.Point(3, 3);
-            this.VariableHost.Name = "VariableHost";
-            this.VariableHost.Size = new System.Drawing.Size(318, 466);
-            this.VariableHost.TabIndex = 0;
-            this.VariableHost.Text = "elementHost1";
-            this.VariableHost.Child = this.testWpfControl2;
             // 
             // PreviewSplitContainer
             // 
@@ -538,7 +512,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.StatesAndVariablesContainer)).EndInit();
             this.StatesAndVariablesContainer.ResumeLayout(false);
             this.MiddleTabControl.ResumeLayout(false);
-            this.tabPage2.ResumeLayout(false);
             this.PreviewSplitContainer.Panel1.ResumeLayout(false);
             this.PreviewSplitContainer.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.PreviewSplitContainer)).EndInit();
@@ -595,9 +568,6 @@
         private System.Windows.Forms.TabControl tabControl1;
         private System.Windows.Forms.ToolStripMenuItem RemoveVariableMenuItem;
         private System.Windows.Forms.TabControl MiddleTabControl;
-        private System.Windows.Forms.TabPage tabPage2;
-        private System.Windows.Forms.Integration.ElementHost VariableHost;
-        private TestWpfControl testWpfControl2;
     }
 }
 

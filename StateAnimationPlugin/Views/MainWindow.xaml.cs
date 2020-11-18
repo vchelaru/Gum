@@ -42,6 +42,7 @@ namespace StateAnimationPlugin.Views
 
         #endregion
 
+        public event EventHandler AddStateKeyframeClicked;
 
         public MainWindow()
         {
@@ -62,6 +63,9 @@ namespace StateAnimationPlugin.Views
             }
 
             string whyIsntValid = null;
+
+            whyIsntValid = GetWhyAddingAnimationIsInvalid();
+
             if(!string.IsNullOrEmpty(whyIsntValid))
             {
                 MessageBox.Show(whyIsntValid);
@@ -93,71 +97,20 @@ namespace StateAnimationPlugin.Views
             }
         }
 
-        private void AddStateButton_Click(object sender, RoutedEventArgs e)
+        private string GetWhyAddingAnimationIsInvalid()
         {
-            if(ViewModel == null)
+            string whyIsntValid = null;
+            if (SelectedState.Self.SelectedScreen == null && SelectedState.Self.SelectedComponent == null)
             {
-                throw new NullReferenceException("The ViewModel for this is invalid - set the DataContext on this view before showing it.");
+                whyIsntValid = "You must first select a Screen or Component";
             }
 
-            string whyIsntValid = GetWhyAddingTimedStateIsInvalid();
+            return whyIsntValid;
+        }
 
-            if(!string.IsNullOrEmpty(whyIsntValid))
-            {
-                MessageBox.Show(whyIsntValid);
-
-            }
-            else
-            {
-                ListBoxMessageBox lbmb = new ListBoxMessageBox();
-                lbmb.RequiresSelection = true;
-                lbmb.Message = "Select a state";
-
-                var element = SelectedState.Self.SelectedElement;
-
-                foreach (var state in element.States)
-                {
-                    lbmb.Items.Add(state.Name);
-                }
-
-                foreach(var category in element.Categories)
-                {
-                    foreach(var state in category.States)
-                    {
-                        lbmb.Items.Add(category.Name + "/" + state.Name);
-                    }
-                }
-
-
-                var dialogResult = lbmb.ShowDialog();
-
-                if (dialogResult.HasValue && dialogResult.Value)
-                {
-                    var item = lbmb.SelectedItem;
-
-                    var newVm = new AnimatedKeyframeViewModel() { StateName = (string)item, 
-                        // User just selected the state, so it better be valid!
-                        HasValidState = true,
-                        InterpolationType = FlatRedBall.Glue.StateInterpolation.InterpolationType.Linear,
-                        Easing = FlatRedBall.Glue.StateInterpolation.Easing.Out
-                    
-                    };
-
-                    if(ViewModel.SelectedAnimation.SelectedKeyframe != null)
-                    {
-                        // put this after the current animation
-                        newVm.Time = ViewModel.SelectedAnimation.SelectedKeyframe.Time + 1f;
-                    }
-                    else if(ViewModel.SelectedAnimation.Keyframes.Count != 0)
-                    {
-                        newVm.Time = ViewModel.SelectedAnimation.Keyframes.Last().Time + 1f;
-                    }
-
-                    ViewModel.SelectedAnimation.Keyframes.Add(newVm);
-
-                    ViewModel.SelectedAnimation.Keyframes.BubbleSort();
-                }
-            }
+        private void AddStateKeyframeButton_Click(object sender, RoutedEventArgs e)
+        {
+            AddStateKeyframeClicked?.Invoke(this, null);
         }
 
         private void AddSubAnimationButton_Click(object sender, RoutedEventArgs e)
@@ -284,22 +237,6 @@ namespace StateAnimationPlugin.Views
             {
                 animation.ToggleLoop();
             }
-        }
-
-        private string GetWhyAddingTimedStateIsInvalid()
-        {
-            string whyIsntValid = null;
-
-            if (ViewModel.SelectedAnimation == null)
-            {
-                whyIsntValid = "You must first select an Animation";
-            }
-
-            if (SelectedState.Self.SelectedScreen == null && SelectedState.Self.SelectedComponent == null)
-            {
-                whyIsntValid = "You must first select a Screen or Component";
-            }
-            return whyIsntValid;
         }
 
         private void HandleDeleteAnimationPressed(object sender, KeyEventArgs e)

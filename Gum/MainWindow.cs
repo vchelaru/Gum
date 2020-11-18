@@ -99,9 +99,8 @@ namespace Gum
 
             ElementTreeViewManager.Self.Initialize(this.ObjectTreeView);
             StateTreeViewManager.Self.Initialize(this.stateView.TreeView, this.stateView.StateContextMenuStrip);
-            PropertyGridManager.Self.Initialize(
-                ((TestWpfControl)this.VariableHost.Child)
-                );
+
+            PropertyGridManager.Self.Initialize();
             StandardElementsManager.Self.Initialize();
             MenuStripManager.Self.Initialize(
                 RemoveElementMenuItem, RemoveStateMenuItem, RemoveVariableMenuItem);

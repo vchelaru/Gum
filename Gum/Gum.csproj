@@ -286,14 +286,14 @@
     <Compile Include="Managers\ObjectFinder.cs" />
     <Compile Include="Plugins\VariableGrid\PropertyGridManager.cs" />
     <Compile Include="Managers\StandardElementsManager.cs" />
-    <Compile Include="Managers\StateTreeViewManager.cs" />
+    <Compile Include="Plugins\StatePlugin\StateTreeViewManager.cs" />
     <Compile Include="MainWindow.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="MainWindow.Designer.cs">
       <DependentUpon>MainWindow.cs</DependentUpon>
     </Compile>
-    <Compile Include="Managers\StateTreeViewManager.RightClick.cs" />
+    <Compile Include="Plugins\StatePlugin\StateTreeViewManager.RightClick.cs" />
     <Compile Include="Plugins\BaseClasses\PluginBase.cs" />
     <Compile Include="Plugins\IPlugin.cs" />
     <Compile Include="Plugins\PluginContainer.cs" />
@@ -334,7 +334,7 @@
     <Compile Include="RenderingLibrary\Blend.cs" />
     <Compile Include="RenderingLibrary\IPositionedSizedObjectExtensionMethods.cs" />
     <Compile Include="Settings\GeneralSettingsFile.cs" />
-    <Compile Include="TestWpfControl.xaml.cs">
+    <Compile Include="Plugins\VariableGrid\TestWpfControl.xaml.cs">
       <DependentUpon>TestWpfControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="ToolCommands\ElementCommands.cs" />
@@ -675,7 +675,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="TestWpfControl.xaml">
+    <Page Include="Plugins\VariableGrid\TestWpfControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

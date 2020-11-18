@@ -5,6 +5,7 @@ using StateAnimationPlugin.Managers;
 using StateAnimationPlugin.SaveClasses;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
@@ -29,14 +30,20 @@ namespace StateAnimationPlugin.ViewModels
 
         public string StateName 
         {
-            get { return Get<string>(); } 
-            set { Set(value); }
+            get => Get<string>(); 
+            set => Set(value); 
         }
 
         public string AnimationName
         {
-            get { return Get<string>(); }
-            set { Set(value); }
+            get => Get<string>();
+            set => Set(value); 
+        }
+
+        public ObservableCollection<string> AvailableStates
+        {
+            get => Get<ObservableCollection<string>>();
+            set => Set(value);
         }
 
         public string EventName
@@ -49,25 +56,6 @@ namespace StateAnimationPlugin.ViewModels
         {
             get { return mSubAnimationViewModel; }
             set { mSubAnimationViewModel = value; }
-        }
-
-        public string DisplayName
-        {
-            get
-            {
-                if(!string.IsNullOrEmpty(StateName))
-                {
-                    return StateName;
-                }
-                else if(!string.IsNullOrEmpty(AnimationName))
-                {
-                    return AnimationName;
-                }
-                else
-                {
-                    return EventName;
-                }
-            }
         }
 
 
@@ -94,17 +82,20 @@ namespace StateAnimationPlugin.ViewModels
 
         public InterpolationType InterpolationType 
         {
-            get { return Get<InterpolationType>(); }
-            set { Set(value); }
+            get => Get<InterpolationType>();
+            set => Set(value);
         }
         
         public Easing Easing 
         {
-            get { return Get<Easing>(); }
-            set { Set(value); }
+            get => Get<Easing>();
+            set => Set(value); 
         }
 
         [DependsOn("Time")]
+        [DependsOn(nameof(StateName))]
+        [DependsOn(nameof(AnimationName))]
+        [DependsOn(nameof(EventName))]
         public string DisplayString 
         {
             get

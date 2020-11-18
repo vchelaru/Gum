@@ -77,6 +77,8 @@ namespace Gum.Managers
             mMenuStrip = menuStrip;
             mTreeView = treeView;
 
+            InitializeKeyboardShortcuts(treeView);
+
 
             mMenuStrip.Items.Clear();
 
@@ -98,6 +100,52 @@ namespace Gum.Managers
             });
             mMenuStrip.Items.Add(tsmi);
         }
+
+        private void InitializeKeyboardShortcuts(MultiSelectTreeView treeView)
+        {
+            treeView.KeyDown += HandleKeyDown;
+            //treeView.KeyPress += HandleTreeViewKeyPressed;
+        }
+
+        private void HandleKeyDown(object sender, KeyEventArgs e)
+        {
+            switch(e.KeyCode)
+            {
+                case Keys.F2:
+                    if(SelectedState.Self.SelectedStateSave != null )
+                    {
+                        if(SelectedState.Self.SelectedElement?.DefaultState != SelectedState.Self.SelectedStateSave)
+                        {
+                            RenameStateClick();
+
+                        }
+                    }
+                    else if(SelectedState.Self.SelectedStateCategorySave != null)
+                    {
+                        RenameCategoryClick();
+                    }
+                    break;
+                case Keys.Delete:
+                    if (SelectedState.Self.SelectedStateSave != null)
+                    {
+                        if (SelectedState.Self.SelectedElement?.DefaultState != SelectedState.Self.SelectedStateSave)
+                        {
+                            DeleteStateClick();
+
+                        }
+                    }
+                    else if (SelectedState.Self.SelectedStateCategorySave != null)
+                    {
+                        DeleteCategoryClick();
+                    }
+                    break;
+            }
+        }
+
+        //private void HandleTreeViewKeyPressed(object sender, KeyPressEventArgs e)
+        //{
+        //    switch(e.)
+        //}
 
         internal void OnSelect()
         {
