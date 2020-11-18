@@ -286,14 +286,14 @@
     <Compile Include="Managers\ObjectFinder.cs" />
     <Compile Include="Plugins\VariableGrid\PropertyGridManager.cs" />
     <Compile Include="Managers\StandardElementsManager.cs" />
-    <Compile Include="Managers\StateTreeViewManager.cs" />
+    <Compile Include="Plugins\StatePlugin\StateTreeViewManager.cs" />
     <Compile Include="MainWindow.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="MainWindow.Designer.cs">
       <DependentUpon>MainWindow.cs</DependentUpon>
     </Compile>
-    <Compile Include="Managers\StateTreeViewManager.RightClick.cs" />
+    <Compile Include="Plugins\StatePlugin\StateTreeViewManager.RightClick.cs" />
     <Compile Include="Plugins\BaseClasses\PluginBase.cs" />
     <Compile Include="Plugins\IPlugin.cs" />
     <Compile Include="Plugins\PluginContainer.cs" />

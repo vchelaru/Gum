@@ -16,6 +16,8 @@ using Gum.Wireframe;
 using FlatRedBall.Glue.StateInterpolation;
 using Gum.DataTypes;
 using Gum;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 
 namespace StateAnimationPlugin
 {
@@ -43,6 +45,8 @@ namespace StateAnimationPlugin
             get { return new Version(0, 0, 0, 2); }
         }
 
+        ObservableCollection<string> AvailableStates { get; set; } = new ObservableCollection<string>();
+
         #endregion
 
         #region StartUp/ShutDown
@@ -51,7 +55,7 @@ namespace StateAnimationPlugin
         {
             CreateMenuItems();
 
-            CreateEvents();
+            AssignEvents();
         }
 
         public override bool ShutDown(Gum.Plugins.PluginShutDownReason shutDownReason)
@@ -66,7 +70,7 @@ namespace StateAnimationPlugin
             menuItem.Click += HandleViewAnimationsClick;
         }
 
-        private void CreateEvents()
+        private void AssignEvents()
         {
             this.ElementSelected += delegate
             {
@@ -154,6 +158,7 @@ namespace StateAnimationPlugin
                 //ElementHost.EnableModelessKeyboardInterop(mMainWindow);
                 //mMainWindow.Show();
                 //mMainWindow.Closed += (not, used) => Gum.ToolStates.SelectedState.Self.CustomCurrentStateSave = null;
+                mMainWindow.AddStateKeyframeClicked += HandleAddStateKeyframe;
             }
                 
             GumCommands.Self.GuiCommands.AddControl(mMainWindow, "Animations", 
@@ -167,8 +172,106 @@ namespace StateAnimationPlugin
             RefreshViewModel();
         }
 
+        private void HandleAddStateKeyframe(object sender, EventArgs e)
+        {
+            string whyIsntValid = GetWhyAddingTimedStateIsInvalid();
+
+            if (!string.IsNullOrEmpty(whyIsntValid))
+            {
+                MessageBox.Show(whyIsntValid);
+
+            }
+            else
+            {
+                ListBoxMessageBox lbmb = new ListBoxMessageBox();
+                lbmb.RequiresSelection = true;
+                lbmb.Message = "Select a state";
+
+                var element = SelectedState.Self.SelectedElement;
+
+                foreach (var state in element.States)
+                {
+                    lbmb.Items.Add(state.Name);
+                }
+
+                foreach (var category in element.Categories)
+                {
+                    foreach (var state in category.States)
+                    {
+                        lbmb.Items.Add(category.Name + "/" + state.Name);
+                    }
+                }
+
+
+                var dialogResult = lbmb.ShowDialog();
+
+                if (dialogResult.HasValue && dialogResult.Value)
+                {
+                    var item = lbmb.SelectedItem;
+
+                    var newVm = new AnimatedKeyframeViewModel()
+                    {
+                        StateName = (string)item,
+                        // User just selected the state, so it better be valid!
+                        HasValidState = true,
+                        InterpolationType = FlatRedBall.Glue.StateInterpolation.InterpolationType.Linear,
+                        Easing = FlatRedBall.Glue.StateInterpolation.Easing.Out
+
+                    };
+
+                    newVm.AvailableStates = this.AvailableStates;
+                    newVm.PropertyChanged += HandleAnimatedKeyframePropertyChanged;
+
+                    if (mCurrentViewModel.SelectedAnimation.SelectedKeyframe != null)
+                    {
+                        // put this after the current animation
+                        newVm.Time = mCurrentViewModel.SelectedAnimation.SelectedKeyframe.Time + 1f;
+                    }
+                    else if (mCurrentViewModel.SelectedAnimation.Keyframes.Count != 0)
+                    {
+                        newVm.Time = mCurrentViewModel.SelectedAnimation.Keyframes.Last().Time + 1f;
+                    }
+
+                    mCurrentViewModel.SelectedAnimation.Keyframes.Add(newVm);
+
+                    mCurrentViewModel.SelectedAnimation.Keyframes.BubbleSort();
+                }
+            }
+        }
+
+        private string GetWhyAddingTimedStateIsInvalid()
+        {
+            string whyIsntValid = null;
+
+            if (mCurrentViewModel.SelectedAnimation == null)
+            {
+                whyIsntValid = "You must first select an Animation";
+            }
+
+            if (SelectedState.Self.SelectedScreen == null && SelectedState.Self.SelectedComponent == null)
+            {
+                whyIsntValid = "You must first select a Screen or Component";
+            }
+            return whyIsntValid;
+        }
+
         private void RefreshViewModel()
         {
+            AvailableStates.Clear();
+
+            var element = SelectedState.Self.SelectedElement;
+
+            if(element != null)
+            {
+                AvailableStates.AddRange(element.States.Select(item => item.Name));
+
+                foreach(var category in element.Categories)
+                {
+                    AvailableStates.AddRange(category.States.Select(item => category.Name + "/" + item.Name));
+                }
+
+            }
+
             CreateViewModel();
 
             if (mMainWindow != null)
@@ -195,9 +298,30 @@ namespace StateAnimationPlugin
                 {
                     mCurrentViewModel.PropertyChanged += HandlePropertyChanged;
                     mCurrentViewModel.AnyChange += HandleDataChange;
+
+                    foreach(var item in mCurrentViewModel.Animations)
+                    {
+                        foreach(var keyframe in item.Keyframes)
+                        {
+                            keyframe.AvailableStates = this.AvailableStates;
+                            keyframe.PropertyChanged += HandleAnimatedKeyframePropertyChanged;
+
+                        }
+                    }
                 }
 
 
+            }
+        }
+
+        private void HandleAnimatedKeyframePropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            switch(e.PropertyName)
+            {
+                case nameof(AnimatedKeyframeViewModel.StateName):
+                    // user may have changed a state that is currently being displayed so let's refresh it all!
+                    SetWireframeStateFromDisplayedAnimTime();
+                    break;
             }
         }
 
@@ -238,13 +362,13 @@ namespace StateAnimationPlugin
 
             bool shouldSave = true;
 
-            if(sender is ElementAnimationsViewModel)
+            if(sender is  ElementAnimationsViewModel)
             {
-                if(variableName == "SelectedAnimation")
+                if(variableName == nameof(ElementAnimationsViewModel.SelectedAnimation))
                 {
                     shouldSave = false;
                 }
-                else if(variableName == "DisplayedAnimationTime")
+                else if(variableName == nameof(ElementAnimationsViewModel.DisplayedAnimationTime))
                 {
                     shouldSave = false;
                 }
@@ -252,6 +376,7 @@ namespace StateAnimationPlugin
 
             if (sender is AnimationViewModel)
             {
+                // can this happen? I don't see anything on the view model
                 if(variableName == "SelectedState")
                 {
                     shouldSave = false;
@@ -260,7 +385,7 @@ namespace StateAnimationPlugin
 
             if( sender is AnimatedKeyframeViewModel)
             {
-                if(variableName == "DisplayString")
+                if(variableName == nameof(AnimatedKeyframeViewModel.DisplayString))
                 {
                     shouldSave = false;
                 }

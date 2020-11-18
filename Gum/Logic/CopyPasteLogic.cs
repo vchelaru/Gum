@@ -199,18 +199,14 @@ namespace Gum.Logic
         private static void PastedCopiedState()
         {
             ElementSave container = SelectedState.Self.SelectedElement;
+            var targetCategory = SelectedState.Self.SelectedStateCategorySave;
+
             /////////////////////Early Out//////////////////
             if (container == null)
             {
                 return;
             }
             //////////////////End Early Out////////////////
-
-            if (container.Categories.Count != 0)
-            {
-                MessageBox.Show("Pasting into elements with state categories may cause unexpected results.  Please complain on codeplex!");
-            }
-
 
             StateSave newStateSave = mCopiedState.Clone();
 
@@ -221,11 +217,20 @@ namespace Gum.Logic
 
             string name = mCopiedState.Name + "Copy";
 
-            name = StringFunctions.MakeStringUnique(name, container.States.Select(item => item.Name));
 
-            newStateSave.Name = name;
+            if(targetCategory != null)
+            {
+                name = StringFunctions.MakeStringUnique(name, targetCategory.States.Select(item => item.Name));
+                newStateSave.Name = name;
 
-            container.States.Add(newStateSave);
+                targetCategory.States.Add(newStateSave);
+            }
+            else
+            {
+                name = StringFunctions.MakeStringUnique(name, container.States.Select(item => item.Name));
+                newStateSave.Name = name;
+                container.States.Add(newStateSave);
+            }
 
             StateTreeViewManager.Self.RefreshUI(container);
 

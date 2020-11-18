@@ -105,7 +105,7 @@
                         <DataTemplate>
                           <StackPanel Orientation="Horizontal">
                             <Image Source="{Binding IconBitmapFrame}"/>
-                            <Label Foreground="{Binding LabelBrush}" Content="{Binding DisplayString}">
+                            <Label Foreground="{Binding LabelBrush}" Content="{Binding DisplayString}" VerticalAlignment="Center">
                             </Label>
                           </StackPanel>
                         </DataTemplate>
@@ -113,7 +113,7 @@
                     
               </ListBox>
               <StackPanel Grid.Row="1">
-                <Button x:Name="AddStateButton" Click="AddStateButton_Click">Add State</Button>
+                <Button x:Name="AddStateButton" Click="AddStateKeyframeButton_Click">Add State</Button>
                     <Button x:Name="AddSubAnimationButton" Click="AddSubAnimationButton_Click" Grid.Column="1">Add Sub-animation</Button>
                     <Button x:Name="AddNamedEvent" Click="AddNamedEventButton_Click" Grid.Column="1">Add Named Event</Button>
               </StackPanel>

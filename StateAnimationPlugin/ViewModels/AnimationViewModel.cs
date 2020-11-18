@@ -272,6 +272,11 @@ namespace StateAnimationPlugin.ViewModels
                 NotifyPropertyChanged("MarkerTimes");
 
             }
+            else if (e.PropertyName == nameof(AnimatedKeyframeViewModel.StateName))
+            {
+                RefreshCombinedStates(SelectedState.Self.SelectedElement);
+            }
+
 
             NotifyPropertyChanged(e.PropertyName);
         }

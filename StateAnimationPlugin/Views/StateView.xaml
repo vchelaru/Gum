@@ -24,7 +24,12 @@
 
             <TextBox  x:Name="Focusable"  Width="0" Height="0" Margin="0" VerticalAlignment="Top" HorizontalAlignment="Left"/>
 
-            <Label Grid.Row="0" x:Name="NameLabel" Grid.ColumnSpan="2" Content="{Binding DisplayName, FallbackValue=StateName}"></Label>
+            <!--<Label Grid.Row="0" x:Name="NameLabel" Grid.ColumnSpan="2" Content="{Binding DisplayName, FallbackValue=StateName}"></Label>-->
+            <ComboBox Grid.Row="0" x:Name="StateComboBox" Grid.ColumnSpan="2" 
+                      VerticalContentAlignment="Center"
+                      SelectedItem="{Binding StateName}"
+                      ItemsSource="{Binding AvailableStates}"
+                      ></ComboBox>
             <Label Grid.Row="1">Time:</Label>
             <Label Grid.Row="2" 
                    Visibility="{Binding InterpolationElementVisibility}">Interpolation Type:</Label>
@@ -37,12 +42,15 @@
             <TextBlock Grid.Row="5" Grid.ColumnSpan="2" TextWrapping="Wrap" FontSize="10" Margin="5,0,5,0">
                 Interpolation values apply between this state and the next state.</TextBlock>
             <TextBox Grid.Row="1" Grid.Column="1" x:Name="TimeTextBox"
+                      VerticalContentAlignment="Center"
                     Text="{Binding Time}" KeyDown="TextBox_KeyDown"   
                  />
 
             <ComboBox Grid.Row="2" Grid.Column="1" x:Name="InterpolationTypeComboBox"
+                      VerticalContentAlignment="Center"
                           Visibility="{Binding InterpolationElementVisibility}" SelectedItem="{Binding InterpolationType}"></ComboBox>
             <ComboBox Grid.Row="3" Grid.Column="1" x:Name="EasingTypeComboBox"
+                      VerticalContentAlignment="Center"
                           Visibility="{Binding InterpolationElementVisibility}" SelectedItem="{Binding Easing}"></ComboBox>
 
 

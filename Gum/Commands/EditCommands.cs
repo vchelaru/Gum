@@ -89,7 +89,7 @@ namespace Gum.Commands
             if (behaviorNeedingState.Any())
             {
                 string message =
-                    "This state cannot be removed because it is needed by the following behavior(s):";
+                    "This state cannot be renamed because it is needed by the following behavior(s):";
 
                 foreach (var behavior in behaviorNeedingState)
                 {
