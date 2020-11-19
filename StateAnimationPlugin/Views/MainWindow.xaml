@@ -69,7 +69,7 @@
                     <RowDefinition Height="Auto"></RowDefinition>
                 </Grid.RowDefinitions>
                 <ListBox ItemsSource="{Binding Animations}" 
-                         KeyDown="HandleDeleteAnimationPressed"
+                         PreviewKeyDown="HandleAnimationListKeyPressed"
                          SelectedItem="{Binding SelectedAnimation}">
                     <ListBox.ContextMenu>
                         <ContextMenu 

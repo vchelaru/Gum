@@ -303,7 +303,10 @@ namespace StateAnimationPlugin.ViewModels
             {
                 foreach(AnimationViewModel item in eventArgs.NewItems)
                 {
-                    item.PropertyChanged += HandleAnimationItemChange;
+                    if(item != null)
+                    {
+                        item.PropertyChanged += HandleAnimationItemChange;
+                    }
                 }
             }
             NotifyPropertyChanged(nameof(OverLengthTime));

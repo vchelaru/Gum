@@ -239,12 +239,41 @@ namespace StateAnimationPlugin.Views
             }
         }
 
-        private void HandleDeleteAnimationPressed(object sender, KeyEventArgs e)
+        private void HandleAnimationListKeyPressed(object sender, KeyEventArgs e)
         {
+            var alt = e.KeyboardDevice.Modifiers.HasFlag(ModifierKeys.Alt);
+
+            if (this.ViewModel.SelectedAnimation != null && alt)
+            {
+                if(e.SystemKey == Key.Up)
+                {
+                    var index = this.ViewModel.Animations.IndexOf(ViewModel.SelectedAnimation);
+
+                    if(index > 0)
+                    {
+                        this.ViewModel.Animations.Move(index, index - 1);
+                        e.Handled = true;
+                    }
+                }
+                else if(e.SystemKey == Key.Down)
+                {
+                    var index = this.ViewModel.Animations.IndexOf(ViewModel.SelectedAnimation);
+
+                    if(index < this.ViewModel.Animations.Count-1)
+                    {
+                        this.ViewModel.Animations.Move(index, index + 1);
+                        e.Handled = true;
+                    }
+                }
+
+
+            }
+
             if (e.Key == Key.Delete && this.ViewModel.SelectedAnimation != null)
             {
                 this.ViewModel.Animations.Remove(this.ViewModel.SelectedAnimation);
                 this.ViewModel.SelectedAnimation = null;
+                e.Handled = true;
             }
         }
 
