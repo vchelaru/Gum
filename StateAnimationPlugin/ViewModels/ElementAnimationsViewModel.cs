@@ -81,6 +81,11 @@ namespace StateAnimationPlugin.ViewModels
                     {
                         var selectedElement = SelectedState.Self.SelectedElement;
                         SelectedAnimation.RefreshCombinedStates(selectedElement);
+
+                        if(SelectedAnimation.SelectedKeyframe != null)
+                        {
+                            SelectedAnimation.TrySelectKeyframeReferencedStateSave();
+                        }
                     }
 
                     RefreshRightClickMenuItems();

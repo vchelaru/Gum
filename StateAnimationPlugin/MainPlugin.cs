@@ -382,7 +382,9 @@ namespace StateAnimationPlugin
             {
                 // can this happen? I don't see anything on the view model
                 if(variableName == "SelectedState" || 
-                    variableName == nameof(AnimationViewModel.SelectedKeyframe)) 
+                    variableName == nameof(AnimationViewModel.SelectedKeyframe) ||
+                    variableName == nameof(AnimationViewModel.Length) 
+                    )
                 {
                     shouldSave = false;
                 }
@@ -399,7 +401,14 @@ namespace StateAnimationPlugin
 
             if (shouldSave)
             {
-                AnimationCollectionViewModelManager.Self.Save(mCurrentViewModel);
+                try
+                {
+                    AnimationCollectionViewModelManager.Self.Save(mCurrentViewModel);
+                }
+                catch(Exception exc)
+                {
+                    GumCommands.Self.GuiCommands.PrintOutput($"Could not save animations for {mCurrentViewModel?.Element}:\n{exc}");
+                }
             }
         }
 

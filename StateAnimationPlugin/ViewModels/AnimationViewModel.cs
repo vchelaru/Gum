@@ -92,28 +92,33 @@ namespace StateAnimationPlugin.ViewModels
             {
                 if (Set(value))
                 {
-                    var stateName = value?.StateName;
-                    if (stateName != null)
-                    {
-                        string categoryName = null;
-                        if(stateName.Contains("/"))
-                        {
-                            categoryName = stateName.Substring(0, stateName.IndexOf('/'));
-                            stateName = stateName.Substring(stateName.IndexOf("/") + 1);
-                        }
+                    TrySelectKeyframeReferencedStateSave();
+                }
+            }
+        }
 
-                        var element = SelectedState.Self.SelectedElement;
-                        if (string.IsNullOrEmpty(categoryName))
-                        {
-                            SelectedState.Self.SelectedStateSave = element.GetStateSaveRecursively(stateName);
-                        }
-                        else
-                        {
-                            var category = element.GetStateSaveCategoryRecursively(categoryName);
+        public void TrySelectKeyframeReferencedStateSave()
+        {
+            var stateName = SelectedKeyframe?.StateName;
+            if (stateName != null)
+            {
+                string categoryName = null;
+                if (stateName.Contains("/"))
+                {
+                    categoryName = stateName.Substring(0, stateName.IndexOf('/'));
+                    stateName = stateName.Substring(stateName.IndexOf("/") + 1);
+                }
 
-                            SelectedState.Self.SelectedStateSave = category?.States.FirstOrDefault(item => item.Name == stateName);
-                        }
-                    }
+                var element = SelectedState.Self.SelectedElement;
+                if (string.IsNullOrEmpty(categoryName))
+                {
+                    SelectedState.Self.SelectedStateSave = element.GetStateSaveRecursively(stateName);
+                }
+                else
+                {
+                    var category = element.GetStateSaveCategoryRecursively(categoryName);
+
+                    SelectedState.Self.SelectedStateSave = category?.States.FirstOrDefault(item => item.Name == stateName);
                 }
             }
         }
@@ -255,7 +260,6 @@ namespace StateAnimationPlugin.ViewModels
             }
 
             NotifyPropertyChanged(nameof(Length));
-            NotifyPropertyChanged("MarkerTimes");
 
             NotifyPropertyChanged("States");
             
@@ -269,7 +273,6 @@ namespace StateAnimationPlugin.ViewModels
                 SortList();
 
                 NotifyPropertyChanged(nameof(Length));
-                NotifyPropertyChanged("MarkerTimes");
 
             }
             else if (e.PropertyName == nameof(AnimatedKeyframeViewModel.StateName))
