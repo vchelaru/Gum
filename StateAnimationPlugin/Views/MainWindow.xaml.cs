@@ -21,6 +21,7 @@ using System.Windows.Threading;
 using StateAnimationPlugin.Validation;
 using Gum.Managers;
 using StateAnimationPlugin.Managers;
+using Gum;
 
 namespace StateAnimationPlugin.Views
 {
@@ -271,9 +272,16 @@ namespace StateAnimationPlugin.Views
 
             if (e.Key == Key.Delete && this.ViewModel.SelectedAnimation != null)
             {
-                this.ViewModel.Animations.Remove(this.ViewModel.SelectedAnimation);
-                this.ViewModel.SelectedAnimation = null;
                 e.Handled = true;
+                var result = MessageBox.Show(
+                    $"Delete animation {ViewModel.SelectedAnimation.Name}?", 
+                    "Delete?", 
+                    MessageBoxButton.YesNo);
+                if(result == MessageBoxResult.Yes)
+                {
+                    this.ViewModel.Animations.Remove(this.ViewModel.SelectedAnimation);
+                    this.ViewModel.SelectedAnimation = null;
+                }
             }
         }
 
