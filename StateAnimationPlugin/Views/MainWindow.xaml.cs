@@ -32,14 +32,7 @@ namespace StateAnimationPlugin.Views
     {
         #region Properties
 
-        ElementAnimationsViewModel ViewModel
-        {
-            get
-            {
-                return DataContext as ElementAnimationsViewModel;
-            }
-        }
-
+        ElementAnimationsViewModel ViewModel => DataContext as ElementAnimationsViewModel;
 
         #endregion
 

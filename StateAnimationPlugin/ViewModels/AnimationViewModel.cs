@@ -83,6 +83,7 @@ namespace StateAnimationPlugin.ViewModels
 
         public ObservableCollection<AnimatedKeyframeViewModel> Keyframes { get; private set; }
 
+        public event PropertyChangedEventHandler FramePropertyChanged;
 
         public AnimatedKeyframeViewModel SelectedKeyframe 
         {
@@ -113,7 +114,6 @@ namespace StateAnimationPlugin.ViewModels
                             SelectedState.Self.SelectedStateSave = category?.States.FirstOrDefault(item => item.Name == stateName);
                         }
                     }
-                    NotifyPropertyChanged("HasSelectedKeyframeVisibility");
                 }
             }
         }
@@ -254,7 +254,7 @@ namespace StateAnimationPlugin.ViewModels
                 }
             }
 
-            NotifyPropertyChanged("Length");
+            NotifyPropertyChanged(nameof(Length));
             NotifyPropertyChanged("MarkerTimes");
 
             NotifyPropertyChanged("States");
@@ -268,7 +268,7 @@ namespace StateAnimationPlugin.ViewModels
             {
                 SortList();
 
-                NotifyPropertyChanged("Length");
+                NotifyPropertyChanged(nameof(Length));
                 NotifyPropertyChanged("MarkerTimes");
 
             }
@@ -281,7 +281,7 @@ namespace StateAnimationPlugin.ViewModels
             }
 
 
-            NotifyPropertyChanged(e.PropertyName);
+            FramePropertyChanged?.Invoke(sender, e);
         }
 
         public override string ToString()

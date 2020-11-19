@@ -257,26 +257,33 @@ namespace StateAnimationPlugin
 
         private void RefreshViewModel()
         {
-            AvailableStates.Clear();
-
-            var element = SelectedState.Self.SelectedElement;
-
-            if(element != null)
-            {
-                AvailableStates.AddRange(element.States.Select(item => item.Name));
-
-                foreach(var category in element.Categories)
-                {
-                    AvailableStates.AddRange(category.States.Select(item => category.Name + "/" + item.Name));
-                }
-
-            }
+            RefreshAvailableStates();
 
             CreateViewModel();
 
             if (mMainWindow != null)
             {
                 mMainWindow.DataContext = mCurrentViewModel;
+            }
+        }
+
+        private void RefreshAvailableStates()
+        {
+            // we always create the view model after refreshing states, so we can new up an observable collection:
+
+            AvailableStates = new ObservableCollection<string>();
+
+            var element = SelectedState.Self.SelectedElement;
+
+            if (element != null)
+            {
+                AvailableStates.AddRange(element.States.Select(item => item.Name));
+
+                foreach (var category in element.Categories)
+                {
+                    AvailableStates.AddRange(category.States.Select(item => category.Name + "/" + item.Name));
+                }
+
             }
         }
 
@@ -291,8 +298,6 @@ namespace StateAnimationPlugin
             if (currentlyReferencedElement != SelectedState.Self.SelectedElement)
             {
                 mCurrentViewModel = AnimationCollectionViewModelManager.Self.CurrentAnimationCollectionViewModel;
-
-
 
                 if (mCurrentViewModel != null)
                 {
@@ -309,8 +314,6 @@ namespace StateAnimationPlugin
                         }
                     }
                 }
-
-
             }
         }
 
@@ -364,7 +367,8 @@ namespace StateAnimationPlugin
 
             if(sender is  ElementAnimationsViewModel)
             {
-                if(variableName == nameof(ElementAnimationsViewModel.SelectedAnimation))
+                if(variableName == nameof(ElementAnimationsViewModel.SelectedAnimation) ||
+                    variableName == nameof(ElementAnimationsViewModel.OverLengthTime))
                 {
                     shouldSave = false;
                 }
@@ -377,7 +381,8 @@ namespace StateAnimationPlugin
             if (sender is AnimationViewModel)
             {
                 // can this happen? I don't see anything on the view model
-                if(variableName == "SelectedState")
+                if(variableName == "SelectedState" || 
+                    variableName == nameof(AnimationViewModel.SelectedKeyframe)) 
                 {
                     shouldSave = false;
                 }
@@ -385,7 +390,8 @@ namespace StateAnimationPlugin
 
             if( sender is AnimatedKeyframeViewModel)
             {
-                if(variableName == nameof(AnimatedKeyframeViewModel.DisplayString))
+                if(variableName == nameof(AnimatedKeyframeViewModel.DisplayString) || 
+                    variableName == nameof(AnimatedKeyframeViewModel.AvailableStates))
                 {
                     shouldSave = false;
                 }

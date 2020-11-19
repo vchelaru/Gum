@@ -25,6 +25,13 @@ namespace StateAnimationPlugin.Views
             InitializeComponent();
 
             PopulateComboBoxes();
+
+            this.DataContextChanged += HandleDataContextChanged;
+        }
+
+        private void HandleDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            int m = 3;
         }
 
         private void PopulateComboBoxes()

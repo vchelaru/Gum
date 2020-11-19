@@ -306,6 +306,7 @@ namespace StateAnimationPlugin.ViewModels
                     if(item != null)
                     {
                         item.PropertyChanged += HandleAnimationItemChange;
+                        item.FramePropertyChanged += HandleFrameItemChanged;
                     }
                 }
             }
@@ -314,9 +315,21 @@ namespace StateAnimationPlugin.ViewModels
             OnAnyChange(this, "Animations");
         }
 
+        private void HandleFrameItemChanged(object sender, PropertyChangedEventArgs e)
+        {
+            OnAnyChange(sender, e.PropertyName);
+        }
+
         private void HandleAnimationItemChange(object sender, PropertyChangedEventArgs e)
         {
-            NotifyPropertyChanged(nameof(OverLengthTime));
+            var shouldNotifyOfTimeChange = false;
+
+            // todo - depending on the sender, raise the event here
+
+            if(shouldNotifyOfTimeChange)
+            {
+                NotifyPropertyChanged(nameof(OverLengthTime));
+            }
 
             OnAnyChange(sender, e.PropertyName);
 
