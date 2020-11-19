@@ -10,6 +10,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
@@ -90,6 +91,35 @@ namespace StateAnimationPlugin.ViewModels
         {
             get => Get<Easing>();
             set => Set(value); 
+        }
+
+        public Visibility StateComboBoxVisibility =>
+            !string.IsNullOrEmpty(StateName) ? Visibility.Visible : Visibility.Collapsed;
+
+        public Visibility DisplayNameLabelVisibility =>
+            string.IsNullOrEmpty(StateName) ? Visibility.Visible : Visibility.Collapsed;
+
+
+        [DependsOn(nameof(StateName))]
+        [DependsOn(nameof(AnimationName))]
+        [DependsOn(nameof(EventName))]
+        public string DisplayName
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(StateName))
+                {
+                    return StateName;
+                }
+                else if (!string.IsNullOrEmpty(AnimationName))
+                {
+                    return AnimationName;
+                }
+                else
+                {
+                    return EventName;
+                }
+            }
         }
 
         [DependsOn("Time")]

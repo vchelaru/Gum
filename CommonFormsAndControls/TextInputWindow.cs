@@ -39,7 +39,7 @@ namespace CommonFormsAndControls
 
             DialogResult = DialogResult.Cancel;
 
-            FormUtilities.Self.PositionTopLeftToCursor(this);
+            FormUtilities.Self.PositionCenterToCursor(this);
 
             this.textBox1.KeyDown += HandleTextBoxKeyDown;
 

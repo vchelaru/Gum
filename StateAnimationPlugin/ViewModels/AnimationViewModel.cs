@@ -274,7 +274,10 @@ namespace StateAnimationPlugin.ViewModels
             }
             else if (e.PropertyName == nameof(AnimatedKeyframeViewModel.StateName))
             {
-                RefreshCombinedStates(SelectedState.Self.SelectedElement);
+                if(SelectedState.Self.SelectedElement != null)
+                {
+                    RefreshCombinedStates(SelectedState.Self.SelectedElement);
+                }
             }
 
 
@@ -404,7 +407,7 @@ namespace StateAnimationPlugin.ViewModels
 
             if(stateToSet != null)
             {
-                WireframeObjectManager.Self.RootGue.ApplyState(stateToSet);
+                WireframeObjectManager.Self.RootGue?.ApplyState(stateToSet);
             }
         }
 

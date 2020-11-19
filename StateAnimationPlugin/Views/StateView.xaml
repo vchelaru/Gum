@@ -25,11 +25,16 @@
             <TextBox  x:Name="Focusable"  Width="0" Height="0" Margin="0" VerticalAlignment="Top" HorizontalAlignment="Left"/>
 
             <!--<Label Grid.Row="0" x:Name="NameLabel" Grid.ColumnSpan="2" Content="{Binding DisplayName, FallbackValue=StateName}"></Label>-->
+            <Label Grid.Row="0" x:Name="NameLabel" Grid.ColumnSpan="2" 
+                      Content="{Binding DisplayName, FallbackValue=StateName}"
+                      Visibility="{Binding DisplayNameLabelVisibility}"></Label>
             <ComboBox Grid.Row="0" x:Name="StateComboBox" Grid.ColumnSpan="2" 
                       VerticalContentAlignment="Center"
                       SelectedItem="{Binding StateName}"
                       ItemsSource="{Binding AvailableStates}"
+                      Visibility="{Binding StateComboBoxVisibility}"
                       ></ComboBox>
+            <Label></Label>
             <Label Grid.Row="1">Time:</Label>
             <Label Grid.Row="2" 
                    Visibility="{Binding InterpolationElementVisibility}">Interpolation Type:</Label>
