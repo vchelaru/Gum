@@ -218,7 +218,8 @@ namespace StateAnimationPlugin.Views
                         {
                             rectangle.Width = 10;
                         }
-                        topValue = 10.0 + subAnimationIndex * (rectangle.Height + 1);
+                        // see below, keep all at 0
+                        //topValue = 10.0 + subAnimationIndex * (rectangle.Height + 1);
                         subAnimationIndex++;
                     }
 
@@ -234,7 +235,9 @@ namespace StateAnimationPlugin.Views
 
                     rectangle.SetValue(Canvas.TopProperty, topValue);
 
-                    requiredHeight = System.Math.Max(requiredHeight, topValue + rectangle.Height);
+                    // We used to make this control taller if there are multiple rectangles, but it causes problems
+                    // We are going to have the position of rectangles to be all on the same row.
+                    //requiredHeight = System.Math.Max(requiredHeight, topValue + rectangle.Height);
 
                     index++;
                 }
