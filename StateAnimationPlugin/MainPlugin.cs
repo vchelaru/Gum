@@ -84,6 +84,10 @@ namespace StateAnimationPlugin
 
             this.InstanceRename += HandleInstanceRename;
             this.StateRename += HandleStateRename;
+
+            this.StateAdd += HandleStateAdd;
+            this.StateDelete += HandleStateDelete;
+
             this.CategoryRename += HandleCategoryRename;
             this.ElementRename += HandleElementRename;
             this.ElementDuplicate += HandleElementDuplicate;
@@ -121,15 +125,22 @@ namespace StateAnimationPlugin
 
         private void HandleStateRename(StateSave stateSave, string oldName)
         {
-            if(mCurrentViewModel == null)
-            {
-                CreateViewModel();
-            }
+            RefreshViewModel();
 
             if (SelectedState.Self.SelectedElement != null)
             {
                 RenameManager.Self.HandleRename(stateSave, oldName, mCurrentViewModel);
             }
+        }
+
+        private void HandleStateAdd(StateSave state)
+        {
+            RefreshViewModel();
+        }
+
+        private void HandleStateDelete(StateSave state)
+        {
+            RefreshViewModel();
         }
 
         private void HandleCategoryRename(StateSaveCategory category, string oldName)
@@ -291,20 +302,24 @@ namespace StateAnimationPlugin
         {
             // we always create the view model after refreshing states, so we can new up an observable collection:
 
-            AvailableStates = new ObservableCollection<string>();
+            //AvailableStates = new ObservableCollection<string>();
+
+            var states = new List<string>();
 
             var element = SelectedState.Self.SelectedElement;
 
             if (element != null)
             {
-                AvailableStates.AddRange(element.States.Select(item => item.Name));
+                states.AddRange(element.States.Select(item => item.Name));
 
                 foreach (var category in element.Categories)
                 {
-                    AvailableStates.AddRange(category.States.Select(item => category.Name + "/" + item.Name));
+                    states.AddRange(category.States.Select(item => category.Name + "/" + item.Name));
                 }
 
             }
+
+            AvailableStates.ReplaceWith(states);
         }
 
         private void CreateViewModel()

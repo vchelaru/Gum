@@ -34,7 +34,7 @@
                       ItemsSource="{Binding AvailableStates}"
                       Visibility="{Binding StateComboBoxVisibility}"
                       ></ComboBox>
-            <Label></Label>
+
             <Label Grid.Row="1">Time:</Label>
             <Label Grid.Row="2" 
                    Visibility="{Binding InterpolationElementVisibility}">Interpolation Type:</Label>
