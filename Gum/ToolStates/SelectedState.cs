@@ -528,11 +528,14 @@ namespace Gum.ToolStates
         {
             StateTreeViewManager.Self.RefreshUI(SelectedElement);
 
+            var stateBefore = SelectedStateSave;
+
             if (SelectedElement != null && 
                 (SelectedStateSave == null || SelectedElement.AllStates.Contains(SelectedStateSave) == false) &&
                 SelectedElement.States.Count > 0
                 )
             {
+                
                 SelectedStateSave = SelectedElement.States[0];
             }
             else if (SelectedElement == null)
@@ -540,8 +543,12 @@ namespace Gum.ToolStates
                 SelectedStateSave = null;
 
             }
-            // no need to do this, because updating to the selected state save above refreshes the property grid
-            //PropertyGridManager.Self.RefreshUI();
+
+            if(stateBefore == SelectedStateSave)
+            {
+                // If the state changed (element changed) then no need to force the UI again
+                PropertyGridManager.Self.RefreshUI();
+            }
 
             WireframeObjectManager.Self.RefreshAll(false);
 

@@ -99,14 +99,15 @@ namespace Gum.Wireframe
                 parentAbsoluteY = parent.GetAbsoluteY();
 
                 parentFlips = parent.GetAbsoluteFlipHorizontal();
-                if (parentFlips)
-                {
-                    var rotationMatrix = parent.GetAbsoluteRotationMatrix();
-                    Vector3 offset = new Vector3(parent.GetAbsoluteWidth(), 0, 0);
-                    offset = Vector3.Transform(offset, rotationMatrix);
-                    parentOriginOffsetX += offset.X;
-                    parentOriginOffsetY += offset.Y;
-                }
+                // Vic says - I believe this is all handled in asGue.GetParentOffsets above
+                //if (parentFlips)
+                //{
+                //    var rotationMatrix = parent.GetAbsoluteRotationMatrix();
+                //    Vector3 offset = new Vector3(parent.GetAbsoluteWidth(), 0, 0);
+                //    offset = Vector3.Transform(offset, rotationMatrix);
+                //    parentOriginOffsetX += offset.X;
+                //    parentOriginOffsetY += offset.Y;
+                //}
 
 
                 if (parent.ChildrenLayout != Managers.ChildrenLayout.Regular &&

@@ -302,6 +302,8 @@ namespace Gum.Managers
             }
         }
 
+        #region Drop Element (like components)
+
         private void HandleDroppedElementSave(object draggedComponentOrElement, TreeNode treeNodeDroppedOn, object targetTag)
         {
             ElementSave draggedAsElementSave = draggedComponentOrElement as ElementSave;
@@ -399,6 +401,10 @@ namespace Gum.Managers
             }
         }
 
+        #endregion
+
+        #region Drop Instance
+
         private static void HandleDroppedInstance(object draggedObject, object targetObject)
         {
             InstanceSave draggedAsInstanceSave = draggedObject as InstanceSave;
@@ -425,22 +431,6 @@ namespace Gum.Managers
                     CopyPasteLogic.PasteInstanceSaves(instances,
                         draggedAsInstanceSave.ParentContainer.DefaultState.Clone(),
                         targetElementSave);
-                }
-            }
-        }
-
-        internal void HandleDragDropEvent(object sender, DragEventArgs e)
-        {
-            List<TreeNode> treeNodesToDrop = GetTreeNodesToDrop();
-            mDraggedItem = null;
-            TreeNode targetTreeNode = ElementTreeViewManager.Self.GetTreeNodeOver();
-            foreach(var draggedTreeNode in treeNodesToDrop )
-            {
-                object draggedObject = draggedTreeNode.Tag;
-
-                if (targetTreeNode != draggedTreeNode)
-                {
-                    HandleDroppedItemOnTreeView(draggedObject, targetTreeNode);
                 }
             }
         }
@@ -473,6 +463,24 @@ namespace Gum.Managers
             stateToAssignOn.SetValue(variableName, parentName, "string");
             Gum.Undo.UndoManager.Self.RecordUndo();
             SetVariableLogic.Self.PropertyValueChanged("Parent", oldValue);
+        }
+
+        #endregion
+
+        internal void HandleDragDropEvent(object sender, DragEventArgs e)
+        {
+            List<TreeNode> treeNodesToDrop = GetTreeNodesToDrop();
+            mDraggedItem = null;
+            TreeNode targetTreeNode = ElementTreeViewManager.Self.GetTreeNodeOver();
+            foreach(var draggedTreeNode in treeNodesToDrop )
+            {
+                object draggedObject = draggedTreeNode.Tag;
+
+                if (targetTreeNode != draggedTreeNode)
+                {
+                    HandleDroppedItemOnTreeView(draggedObject, targetTreeNode);
+                }
+            }
         }
 
         private void HandleDroppedItemInWireframe(object draggedObject, out bool handled)

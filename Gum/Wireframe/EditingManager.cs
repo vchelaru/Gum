@@ -258,6 +258,7 @@ namespace Gum.Wireframe
 
             if (shouldContinue)
             {
+                var graphicalUiElement = WireframeObjectManager.Self.GetRepresentation(instanceSave, null);
 
                 float currentValue = (float)currentValueAsObject;
 
@@ -278,10 +279,14 @@ namespace Gum.Wireframe
                     throw new InvalidOperationException("Cannot be infinite");
                 }
 
+                if(graphicalUiElement?.GetAbsoluteFlipHorizontal() == true && baseVariableName == "X")
+                {
+                    modificationAmount *= -1;
+                }
+
                 float newValue = currentValue + modificationAmount;
                 SelectedState.Self.SelectedStateSave.SetValue(nameWithInstance, newValue, instanceSave, "float");
 
-                var graphicalUiElement = WireframeObjectManager.Self.GetRepresentation(instanceSave, null);
 
                 graphicalUiElement.SetProperty(baseVariableName, newValue);
 

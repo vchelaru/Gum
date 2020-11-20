@@ -27,6 +27,8 @@ namespace Gum.Logic.FileWatch
 
         bool IsFlushing;
 
+        HashSet<FilePath> filePathsToWatch;
+
         #endregion
 
         public FileWatchManager()
@@ -50,20 +52,29 @@ namespace Gum.Logic.FileWatch
             fileSystemWatcher.Renamed += HandleRename;
         }
 
-        private void HandleRename(object sender, RenamedEventArgs e)
+        public void EnableWithDirectory(HashSet<FilePath> directories)
         {
-            var fileName = new FilePath(e.FullPath);
-            // for now only do texture files like PNG:
-            var extension = fileName.Extension;
-            if(extension == "png")
-            {
-                HandleFileSystemChange(fileName);
-            }
-        }
+            filePathsToWatch = directories;
 
-        public void EnableWithDirectory(FilePath directoryFilePath)
-        {
-            var filePathAsString = directoryFilePath.Standardized;
+            FilePath gumProjectFilePath = ProjectManager.Self.GumProjectSave.FullFileName;
+
+            char gumProjectDrive = gumProjectFilePath.Standardized[0];
+
+            var rootmostDirectory = directories.OrderBy(item => item.FullPath.Length).FirstOrDefault();
+
+            foreach (var path in directories)
+            {
+                // make sure this is on the same drive as the gum project. If not, don't include it:
+                if (path.Standardized.StartsWith(gumProjectDrive.ToString()))
+                {
+                    while (rootmostDirectory.IsRootOf(path) == false)
+                    {
+                        rootmostDirectory = rootmostDirectory.GetDirectoryContainingThis();
+                    }
+                }
+            }
+
+            var filePathAsString = rootmostDirectory.Standardized;
             // Gum standard is to have a trailing slash, 
             // but FileSystemWatcher expects no trailing slash:
             fileSystemWatcher.Path = filePathAsString.Substring(0, filePathAsString.Length - 1);
@@ -73,6 +84,17 @@ namespace Gum.Logic.FileWatch
         public void Disable()
         {
             fileSystemWatcher.EnableRaisingEvents = false;
+        }
+
+        private void HandleRename(object sender, RenamedEventArgs e)
+        {
+            var fileName = new FilePath(e.FullPath);
+            // for now only do texture files like PNG:
+            var extension = fileName.Extension;
+            if(extension == "png")
+            {
+                HandleFileSystemChange(fileName);
+            }
         }
 
         private void HandleFileSystemDelete(object sender, FileSystemEventArgs e)
@@ -100,17 +122,28 @@ namespace Gum.Logic.FileWatch
         {
             lock (LockObject)
             {
-                bool wasIgnored = TryIgnoreFileChange(fileName);
+                bool wasIgnored = TryGetIgnoreFileChange(fileName);
+
+                if(!wasIgnored)
+                {
+                    var isFolderConsidered = filePathsToWatch.Contains(fileName.GetDirectoryContainingThis());
+
+                    if(!isFolderConsidered)
+                    {
+                        wasIgnored = true;
+                    }
+                }
+
                 if (!wasIgnored)
                 {
                     changedFilesWaitingForFlush.Add(fileName);
 
+                    lastFileChange = DateTime.Now;
                 }
-                lastFileChange = DateTime.Now;
             }
         }
 
-        bool TryIgnoreFileChange(FilePath fileName)
+        bool TryGetIgnoreFileChange(FilePath fileName)
         {
             int timesToIgnore = 0;
 
