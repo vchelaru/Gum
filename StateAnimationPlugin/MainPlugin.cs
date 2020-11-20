@@ -152,13 +152,21 @@ namespace StateAnimationPlugin
         {
             if(mMainWindow == null || mMainWindow.IsVisible == false)
             {
+                SettingsManager.Self.LoadOrCreateSettings();
+
                 mMainWindow = new StateAnimationPlugin.Views.MainWindow();
+
+                var settings = SettingsManager.Self.GlobalSettings;
+
+                mMainWindow.FirstRowWidth = new GridLength((double)settings.FirstToSecondColumnRatio, GridUnitType.Star);
+                mMainWindow.SecondRowWidth = new GridLength(1, GridUnitType.Star);
                 // This fixes an issue where embedded wpf text boxes don't get input, as explained here:
                 // http://stackoverflow.com/questions/835878/wpf-textbox-not-accepting-input-when-in-elementhost-in-window-forms
                 //ElementHost.EnableModelessKeyboardInterop(mMainWindow);
                 //mMainWindow.Show();
                 //mMainWindow.Closed += (not, used) => Gum.ToolStates.SelectedState.Self.CustomCurrentStateSave = null;
                 mMainWindow.AddStateKeyframeClicked += HandleAddStateKeyframe;
+                mMainWindow.AnimationColumnsResized += HandleAnimationColumnsResized;
             }
                 
             GumCommands.Self.GuiCommands.AddControl(mMainWindow, "Animations", 
@@ -170,6 +178,18 @@ namespace StateAnimationPlugin
             mCurrentViewModel = new ElementAnimationsViewModel();
 
             RefreshViewModel();
+        }
+
+        private void HandleAnimationColumnsResized()
+        {
+            if(mMainWindow.SecondRowWidth.Value > 0)
+            {
+                var ratio = mMainWindow.FirstRowWidth.Value / mMainWindow.SecondRowWidth.Value;
+
+                SettingsManager.Self.GlobalSettings.FirstToSecondColumnRatio = (decimal)ratio;
+
+                SettingsManager.Self.SaveSettings();
+            }
         }
 
         private void HandleAddStateKeyframe(object sender, EventArgs e)

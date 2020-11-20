@@ -34,9 +34,23 @@ namespace StateAnimationPlugin.Views
 
         ElementAnimationsViewModel ViewModel => DataContext as ElementAnimationsViewModel;
 
+        public GridLength FirstRowWidth
+        {
+            get => BottomGrid.ColumnDefinitions[0].Width;
+            set => BottomGrid.ColumnDefinitions[0].Width = value;
+        }
+
+        public GridLength SecondRowWidth
+        {
+            get => BottomGrid.ColumnDefinitions[2].Width;
+            set => BottomGrid.ColumnDefinitions[2].Width = value;
+        }
+
         #endregion
 
         public event EventHandler AddStateKeyframeClicked;
+
+        public event Action AnimationColumnsResized;
 
         public MainWindow()
         {
@@ -302,6 +316,9 @@ namespace StateAnimationPlugin.Views
             ViewModel?.Stop();
         }
 
-
+        private void GridSplitter_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
+        {
+            AnimationColumnsResized?.Invoke();
+        }
     }
 }
