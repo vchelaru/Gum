@@ -528,10 +528,15 @@ namespace Gum.Managers
                         FileManager.GetDirectory(
                         ProjectManager.Self.GumProjectSave.FullFileName) + "Screens/";
 
+                    var shouldAdd = true;
+
+
                     if (FileManager.IsRelativeTo(fileName, desiredDirectory) == false)
                     {
-                        MessageBox.Show("The file must be in the Gum project's Screens folder.  " +
-                            "This file will be copied, and the copy will be referenced.");
+                        var copyResult = MessageBox.Show("The file must be in the Gum project's Screens folder.  " +
+                            "Would you like to copy the file?.", "Copy?", MessageBoxButtons.YesNo);
+
+                        shouldAdd = copyResult == DialogResult.Yes;
 
                         try
                         {
@@ -548,7 +553,7 @@ namespace Gum.Managers
                         }
                     }
 
-                    if (succeeded)
+                    if (succeeded && shouldAdd)
                     {
                         string strippedName = FileManager.RemovePath(FileManager.RemoveExtension(fileName));
 
@@ -606,44 +611,55 @@ namespace Gum.Managers
                 string desiredDirectory = FileManager.GetDirectory(
                     ProjectManager.Self.GumProjectSave.FullFileName) + "Components/";
 
+                var shouldAdd = true;
+
                 if (!FileManager.IsRelativeTo(fileName, desiredDirectory))
                 {
                     string fileNameWithoutPath = FileManager.RemovePath(fileName);
 
-                    MessageBox.Show("The file " + fileNameWithoutPath + " must be in the Gum project's Components folder. " +
-                        "This file will be copied, and the copy will be referenced.");
+                    var copyResult = MessageBox.Show("The file " + fileNameWithoutPath + " must be in the Gum project's Components folder. " +
+                        "Would you like to copy the file?", "Copy?", MessageBoxButtons.YesNo);
 
-                    try
-                    {
-                        string destination = desiredDirectory + fileNameWithoutPath;
-                        System.IO.File.Copy(fileName, destination);
+                    shouldAdd = copyResult == DialogResult.Yes;
 
-                        fileName = destination;
-                    }
-                    catch (Exception ex)
+                    if(shouldAdd)
                     {
-                        MessageBox.Show("Error copying the file: " + ex.ToString());
-                        break;
+                        try
+                        {
+                            string destination = desiredDirectory + fileNameWithoutPath;
+                            System.IO.File.Copy(fileName, destination);
+
+                            fileName = destination;
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show("Error copying the file: " + ex.ToString());
+                            break;
+                        }
+
                     }
                 }
 
-                string strippedName = FileManager.RemovePath(FileManager.RemoveExtension(fileName));
+                if(shouldAdd)
+                {
+                    string strippedName = FileManager.RemovePath(FileManager.RemoveExtension(fileName));
 
-                var componentSave = FileManager.XmlDeserialize<ComponentSave>(fileName);
+                    var componentSave = FileManager.XmlDeserialize<ComponentSave>(fileName);
 
-                var componentReferences = ProjectManager.Self.GumProjectSave.ComponentReferences;
-                componentReferences.Add(new ElementReference { Name = componentSave.Name, ElementType = ElementType.Component });
-                componentReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
+                    var componentReferences = ProjectManager.Self.GumProjectSave.ComponentReferences;
+                    componentReferences.Add(new ElementReference { Name = componentSave.Name, ElementType = ElementType.Component });
+                    componentReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
 
-                var components = ProjectManager.Self.GumProjectSave.Components;
-                components.Add(componentSave);
-                components.Sort((first, second) => first.Name.CompareTo(second.Name));
+                    var components = ProjectManager.Self.GumProjectSave.Components;
+                    components.Add(componentSave);
+                    components.Sort((first, second) => first.Name.CompareTo(second.Name));
 
-                componentSave.InitializeDefaultAndComponentVariables();
+                    componentSave.InitializeDefaultAndComponentVariables();
 
-                GumCommands.Self.FileCommands.TryAutoSaveElement(componentSave);
+                    GumCommands.Self.FileCommands.TryAutoSaveElement(componentSave);
 
-                lastImportedComponent = componentSave;
+                    lastImportedComponent = componentSave;
+                }
             }
 
             if (lastImportedComponent != null)
