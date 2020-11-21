@@ -113,6 +113,10 @@ namespace StateAnimationPlugin.Views
             //    instance.SelectedKeyframe.PropertyChanged += instance.SelectedKeyframeValueChanged;
             //}
 
+            // make sure rectangles exist:
+            instance.AddAndDestroyRectanglesToMatchSourceCount();
+
+
             instance.UpdateRectangleProperties();
         }
 
@@ -197,47 +201,52 @@ namespace StateAnimationPlugin.Views
 
                     var offset = Border + percentage * canvasWidth;
 
-                    var rectangle = mRectangles[index];
-                    rectangle.SetValue(Canvas.LeftProperty, offset);
-                    double topValue = 0;
+                    if(index < mRectangles.Count)
+                    {
+                        var rectangle = mRectangles[index];
+                        rectangle.SetValue(Canvas.LeftProperty, offset);
+                        double topValue = 0;
 
-                    if (isState)
-                    {
-                        rectangle.Fill = Brushes.Red;
-                        rectangle.Width = 10;
-                    }
-                    else
-                    {
-                        rectangle.Fill = Brushes.Blue;
-                        if (RangeMaximum != 0)
+                        if (isState)
                         {
-                            double widthPercentage = (keyframe.Length / RangeMaximum);
-                            rectangle.Width = Border + widthPercentage * canvasWidth;
+                            rectangle.Fill = Brushes.Red;
+                            rectangle.Width = 10;
                         }
                         else
                         {
-                            rectangle.Width = 10;
+                            rectangle.Fill = Brushes.Blue;
+                            if (RangeMaximum != 0)
+                            {
+                                double widthPercentage = (keyframe.Length / RangeMaximum);
+                                rectangle.Width = Border + widthPercentage * canvasWidth;
+                            }
+                            else
+                            {
+                                rectangle.Width = 10;
+                            }
+                            // see below, keep all at 0
+                            //topValue = 10.0 + subAnimationIndex * (rectangle.Height + 1);
+                            subAnimationIndex++;
                         }
-                        // see below, keep all at 0
-                        //topValue = 10.0 + subAnimationIndex * (rectangle.Height + 1);
-                        subAnimationIndex++;
-                    }
 
-                    if(keyframe == SelectedKeyframe)
-                    {
-                        rectangle.Fill = Brushes.Yellow;
-                        rectangle.Stroke = Brushes.Black;
-                    }
-                    else
-                    {
-                        rectangle.Stroke = null;
-                    }
+                        if(keyframe == SelectedKeyframe)
+                        {
+                            rectangle.Fill = Brushes.Yellow;
+                            rectangle.Stroke = Brushes.Black;
+                        }
+                        else
+                        {
+                            rectangle.Stroke = null;
+                        }
 
-                    rectangle.SetValue(Canvas.TopProperty, topValue);
+                        rectangle.SetValue(Canvas.TopProperty, topValue);
 
-                    // We used to make this control taller if there are multiple rectangles, but it causes problems
-                    // We are going to have the position of rectangles to be all on the same row.
-                    //requiredHeight = System.Math.Max(requiredHeight, topValue + rectangle.Height);
+                        // We used to make this control taller if there are multiple rectangles, but it causes problems
+                        // We are going to have the position of rectangles to be all on the same row.
+                        //requiredHeight = System.Math.Max(requiredHeight, topValue + rectangle.Height);
+
+
+                    }
 
                     index++;
                 }
