@@ -26,9 +26,6 @@ namespace TextureCoordinateSelectionPlugin
     {
         #region Fields/Properties
 
-        ImageRegionSelectionControl control;
-        LineRectangle textureOutlineRectangle = null;
-
         public override string FriendlyName
         {
             get
@@ -55,9 +52,8 @@ namespace TextureCoordinateSelectionPlugin
 
         public override void StartUp()
         {
-            control = Logic.ControlLogic.Self.CreateControl();
-            control.DoubleClick += (not, used) =>
-                Logic.ControlLogic.Self.HandleRegionDoubleClicked(control, ref textureOutlineRectangle);
+            Logic.ControlLogic.Self.CreateControl();
+
 
             this.TreeNodeSelected += HandleTreeNodeSelected;
             this.VariableSet += HandleVariableSet;
@@ -79,20 +75,16 @@ namespace TextureCoordinateSelectionPlugin
         {
             Texture2D textureToAssign = GetTextureToAssign();
 
-            control.CurrentTexture = textureToAssign;
-
-            Logic.ControlLogic.Self.RefreshSelector(control, Logic.RefreshType.OnlyIfGrabbed);
-
-            Logic.ControlLogic.Self.RefreshOutline(control, ref textureOutlineRectangle);
+            Logic.ControlLogic.Self.Refresh(textureToAssign);
         }
 
         private void HandleVariableSet(ElementSave element, InstanceSave instance, string variableName, object oldValue)
         {
             var shouldRefresh = true;
 
-            if(shouldRefresh && control.CurrentTexture != null)
+            if(shouldRefresh)
             {
-                Logic.ControlLogic.Self.RefreshSelector(control, Logic.RefreshType.Force);
+                Logic.ControlLogic.Self.RefreshSelector(Logic.RefreshType.Force);
             }
         }
 
