@@ -197,6 +197,9 @@
     <Compile Include="Plugins\Errors\ErrorViewModel.cs" />
     <Compile Include="Plugins\Errors\MainErrorsPlugin.cs" />
     <Compile Include="Plugins\Fonts\MainFontPlugin.cs" />
+    <Compile Include="Plugins\ImportPlugin\Views\ImportFileView.xaml.cs">
+      <DependentUpon>ImportFileView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Plugins\Inheritance\MainInheritancePlugin.cs" />
     <Compile Include="Plugins\ParentPlugin\MainParentPlugin.cs" />
     <Compile Include="Plugins\ProjectPropertiesWindowPlugin\MainPlugin.cs" />
@@ -636,6 +639,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Plugins\Errors\ErrorListEntry.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Plugins\ImportPlugin\Views\ImportFileView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

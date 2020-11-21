@@ -218,7 +218,7 @@ namespace Gum.DataTypes
             GumProjectSave gps = null;
 
 #if ANDROID || IOS || WINDOWS_8
-            gps = LoadFromTitleStorage(fileName, result);
+            gps = LoadFromTitleStorage(fileName, linkLoadingPreference, result);
 #else
             try
             {
@@ -245,7 +245,7 @@ namespace Gum.DataTypes
         }
 
 #if ANDROID || IOS
-        static GumProjectSave LoadFromTitleStorage(string fileName, GumLoadResult result)
+        static GumProjectSave LoadFromTitleStorage(string fileName, LinkLoadingPreference linkLoadingPreference, GumLoadResult result)
 		{
 			using (System.IO.Stream stream = Microsoft.Xna.Framework.TitleContainer.OpenStream(fileName))
 			{
@@ -253,7 +253,7 @@ namespace Gum.DataTypes
 
 				string projectRootDirectory = FileManager.GetDirectory(fileName);
 
-				gps.PopulateElementSavesFromReferences(projectRootDirectory, result);
+				gps.PopulateElementSavesFromReferences(projectRootDirectory, linkLoadingPreference, result);
 
 				gps.FullFileName = fileName;
 
