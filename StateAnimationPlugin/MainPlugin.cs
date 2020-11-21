@@ -266,6 +266,9 @@ namespace StateAnimationPlugin
                     mCurrentViewModel.SelectedAnimation.Keyframes.Add(newVm);
 
                     mCurrentViewModel.SelectedAnimation.Keyframes.BubbleSort();
+
+                    mCurrentViewModel.SelectedAnimation.SelectedKeyframe = newVm;
+
                 }
             }
         }

@@ -171,6 +171,8 @@ namespace StateAnimationPlugin.Views
                 ViewModel.SelectedAnimation.Keyframes.Add(newVm);
 
                 ViewModel.SelectedAnimation.Keyframes.BubbleSort();
+
+                ViewModel.SelectedAnimation.SelectedKeyframe = newVm;
             }
         }
 
@@ -208,6 +210,8 @@ namespace StateAnimationPlugin.Views
                 ViewModel.SelectedAnimation.Keyframes.Add(newVm);
 
                 ViewModel.SelectedAnimation.Keyframes.BubbleSort();
+
+                ViewModel.SelectedAnimation.SelectedKeyframe = newVm;
             }
         }
 
