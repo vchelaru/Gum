@@ -197,6 +197,8 @@
     <Compile Include="Plugins\Errors\ErrorViewModel.cs" />
     <Compile Include="Plugins\Errors\MainErrorsPlugin.cs" />
     <Compile Include="Plugins\Fonts\MainFontPlugin.cs" />
+    <Compile Include="Plugins\ImportPlugin\Manager\ImportLogic.cs" />
+    <Compile Include="Plugins\ImportPlugin\ViewModel\ImportFileViewModel.cs" />
     <Compile Include="Plugins\ImportPlugin\Views\ImportFileView.xaml.cs">
       <DependentUpon>ImportFileView.xaml</DependentUpon>
     </Compile>

@@ -5,8 +5,40 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:Gum.Plugins.ImportPlugin.Views"
              mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
+             Height="350" Width="550">
     <Grid>
-            
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"></RowDefinition>
+            <RowDefinition></RowDefinition>
+            <RowDefinition Height="Auto"></RowDefinition>
+            <RowDefinition Height="Auto"></RowDefinition>
+        </Grid.RowDefinitions>
+
+        <TextBox 
+                 x:Name="SearchTextBox"
+                 Margin="5" 
+                 KeyDown="TextBox_KeyDown"
+                 PreviewKeyDown="TextBox_PreviewKeyDown"
+                 Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"></TextBox>
+        <ListBox x:Name="ListBoxInstance"
+                 Grid.Row="1" Margin="5,0,5,5" 
+                 ItemsSource="{Binding FilteredFileList}"
+                 SelectedItem="{Binding SelectedListBoxItem}"
+                 SelectionChanged="ListBoxInstance_SelectionChanged"
+                 ></ListBox>
+        <TextBlock FontSize="10" Margin="5,0,5,5" TextWrapping="Wrap" Grid.Row="2">
+            The list above shows all files in the project folder. <LineBreak></LineBreak>
+            To add files from outside of the project folder, click the Browse button. Files from outside of the content folder will be copied to the content folder.</TextBlock>
+        <Grid Grid.Row="3" Margin="5,0,15,5">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition></ColumnDefinition>
+                <ColumnDefinition></ColumnDefinition>
+                <ColumnDefinition></ColumnDefinition>
+                <ColumnDefinition></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            <Button Click="HandleBrowseClicked">Browse...</Button>
+            <Button Grid.Column="2" Margin="0,0,5,0" Click="OkButtonClicked">OK</Button>
+            <Button Grid.Column="3" Click="CancelButtonClicked">Cancel</Button>
+        </Grid>
     </Grid>
 </Window>
