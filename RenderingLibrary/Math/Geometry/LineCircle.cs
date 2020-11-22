@@ -72,7 +72,10 @@ namespace RenderingLibrary.Math.Geometry
                 if(value != mRadius)
                 {
                     mRadius = value;
-                    UpdatePoints();
+                    if(mVisible)
+                    {
+                        UpdatePoints();
+                    }
                 }
             }
         }
