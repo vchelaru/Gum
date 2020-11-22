@@ -738,26 +738,17 @@ namespace Gum.Wireframe
             }
         }
 
-
+        string name;
         public string Name
         {
-            get
-            {
-                if (mContainedObjectAsIpso != null)
-                {
-                    return mContainedObjectAsIpso.Name;
-                }
-                else
-                {
-                    return null;
-                }
-            }
+            get => name;
             set
             {
                 if (mContainedObjectAsIpso != null)
                 {
                     mContainedObjectAsIpso.Name = value;
                 }
+                name = value;
             }
         }
 
@@ -1116,10 +1107,15 @@ namespace Gum.Wireframe
             if (mContainedObjectAsIpso != null)
             {
                 mContainedObjectAsIpso.Children.CollectionChanged -= HandleCollectionChanged;
+                if(string.IsNullOrEmpty(this.Name) && !string.IsNullOrEmpty(mContainedObjectAsIpso.Name))
+                {
+                    Name = mContainedObjectAsIpso.Name;
+                }
             }
 
             mContainedObjectAsIpso = containedObject as IRenderableIpso;
             mContainedObjectAsIVisible = containedObject as IVisible;
+
 
             if(mContainedObjectAsIpso != null)
             {
@@ -3311,9 +3307,9 @@ namespace Gum.Wireframe
 
             if (recursive)
             {
-                foreach (var item in this.mWhatThisContains)
+                for(int i = mWhatThisContains.Count-1; i > -1; i--)
                 {
-                    item.SuspendLayout(true);
+                    mWhatThisContains[i].SuspendLayout(true);
                 }
             }
         }
@@ -3355,10 +3351,10 @@ namespace Gum.Wireframe
                 currentDirtyState.XOrY);
             }
 
-
-            foreach (var item in this.mWhatThisContains)
+            int count = mWhatThisContains.Count;
+            for(int i = 0; i < count; i++)
             {
-                item.ResumeLayoutUpdateIfDirtyRecursive();
+                mWhatThisContains[i].ResumeLayoutUpdateIfDirtyRecursive();
             }
         }
 
@@ -3379,9 +3375,10 @@ namespace Gum.Wireframe
                 var prefix = name.Substring(0, indexOfDot);
 
                 GraphicalUiElement container = null;
-                foreach (var item in mWhatThisContains)
+                for (int i = mWhatThisContains.Count - 1; i > -1; i--)
                 {
-                    if (item.Name == prefix)
+                    var item = mWhatThisContains[i];
+                    if (item.name == prefix)
                     {
                         container = item;
                         break;
@@ -3394,9 +3391,10 @@ namespace Gum.Wireframe
             }
             else
             {
-                foreach (var item in mWhatThisContains)
+                for(int i = mWhatThisContains.Count-1; i > -1; i--)
                 {
-                    if (item.Name == name)
+                    var item = mWhatThisContains[i];
+                    if (item.name == name)
                     {
                         return item;
                     }
@@ -3640,8 +3638,14 @@ namespace Gum.Wireframe
 
                 if (!toReturn)
                 {
-
-                    if (propertyName.EndsWith("State") && value is string)
+                    var propertyNameLength = propertyName.Length;
+                    if(propertyNameLength > 5 
+                        && propertyName[propertyNameLength-1] == 'e'
+                        && propertyName[propertyNameLength-2] == 't'
+                        && propertyName[propertyNameLength-3] == 'a'
+                        && propertyName[propertyNameLength-4] == 't'
+                        && propertyName[propertyNameLength-5] == 'S'
+                        && value is string)
                     {
                         var valueAsString = value as string;
 
@@ -4615,8 +4619,10 @@ namespace Gum.Wireframe
                 parentSettingVariables.Concat(nonParentSettingVariables)
                 .ToArray() ;
 
-            foreach (var variable in variablesToConsider)
+            int variableCount = variablesToConsider.Length;
+            for(int i = 0; i < variableCount; i++)
             {
+                var variable = variablesToConsider[i];
                 if (variable.SetsValue && variable.Value != null)
                 {
                     this.SetProperty(variable.Name, variable.Value);

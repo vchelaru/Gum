@@ -372,7 +372,14 @@ namespace ToolsUtilities
 
         public static bool ContainsNoAlloc(string containingString, char charToLookFor)
         {
-            return containingString.IndexOf(charToLookFor) != -1;
+            for(int i = containingString.Length-1; i > -1; i--)
+            {
+                if(containingString[i] == charToLookFor)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }
