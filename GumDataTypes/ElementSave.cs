@@ -133,7 +133,14 @@ namespace Gum.DataTypes
 
         public InstanceSave GetInstance(string name)
         {
-            return Instances.FirstOrDefault(i => i.Name == name);
+            for(int i = Instances.Count-1; i > -1; i--)
+            {
+                if(Instances[i].Name == name)
+                {
+                    return Instances[i];
+                }
+            }
+            return null;
         }
 
         public void Save(string fileName)

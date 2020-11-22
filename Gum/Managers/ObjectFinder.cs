@@ -14,6 +14,8 @@ namespace Gum.Managers
 
         static ObjectFinder mObjectFinder;
 
+        Dictionary<string, ElementSave> cachedDictionary;
+
         #endregion
 
         public static ObjectFinder Self
@@ -26,6 +28,33 @@ namespace Gum.Managers
                 }
                 return mObjectFinder;
             }
+        }
+
+        public void EnableCache()
+        {
+            cachedDictionary = new Dictionary<string, ElementSave>();
+
+            var gumProject = GumProjectSave;
+
+            foreach (var screen in gumProject.Screens)
+            {
+                cachedDictionary.Add(screen.Name.ToLowerInvariant(), screen);
+            }
+
+            foreach(var component in gumProject.Components)
+            {
+                cachedDictionary.Add(component.Name.ToLowerInvariant(), component);
+            }
+
+            foreach (var standard in gumProject.StandardElements)
+            {
+                cachedDictionary.Add(standard.Name.ToLowerInvariant(), standard);
+            }
+        }
+
+        public void DisableCache()
+        {
+            cachedDictionary = null;
         }
 
         public GumProjectSave GumProjectSave
@@ -41,20 +70,31 @@ namespace Gum.Managers
         /// <returns></returns>
         public ScreenSave GetScreen(string screenName)
         {
-            GumProjectSave gps = GumProjectSave;
-
-            if (gps != null)
+            if(cachedDictionary != null)
             {
-                foreach (ScreenSave screenSave in gps.Screens)
+                var nameInvariant = screenName.ToLowerInvariant();
+                if (nameInvariant != null && cachedDictionary.ContainsKey(nameInvariant))
                 {
-                    // Since the screen name may come from a file we want to ignore case:
-                    //if (screenSave.Name == screenName)
-                    if (screenSave.Name.Equals(screenName, StringComparison.OrdinalIgnoreCase))
-                    {
-                        return screenSave;
-                    }
+                    return cachedDictionary[nameInvariant] as ScreenSave;
                 }
+            }
+            else
+            {
+                GumProjectSave gps = GumProjectSave;
 
+                if (gps != null)
+                {
+                    foreach (ScreenSave screenSave in gps.Screens)
+                    {
+                        // Since the screen name may come from a file we want to ignore case:
+                        //if (screenSave.Name == screenName)
+                        if (screenSave.Name.Equals(screenName, StringComparison.OrdinalIgnoreCase))
+                        {
+                            return screenSave;
+                        }
+                    }
+
+                }
             }
 
             return null;
@@ -62,21 +102,32 @@ namespace Gum.Managers
 
         public ComponentSave GetComponent(string componentName)
         {
-            GumProjectSave gps = GumProjectSave;
-
-            if (gps != null)
+            if (cachedDictionary != null)
             {
-                foreach (ComponentSave componentSave in gps.Components)
+                var nameInvariant = componentName.ToLowerInvariant();
+                if (nameInvariant != null && cachedDictionary.ContainsKey(nameInvariant))
                 {
-                    // Since the component name may come from a file name we want
-                    // to ignore case:
-                    //if (componentSave.Name == componentName)
-                    if (componentSave.Name.Equals(componentName, StringComparison.OrdinalIgnoreCase))
-                    {
-                        return componentSave;
-                    }
+                    return cachedDictionary[nameInvariant] as ComponentSave;
                 }
+            }
+            else
+            {
+                GumProjectSave gps = GumProjectSave;
 
+                if (gps != null)
+                {
+                    foreach (ComponentSave componentSave in gps.Components)
+                    {
+                        // Since the component name may come from a file name we want
+                        // to ignore case:
+                        //if (componentSave.Name == componentName)
+                        if (componentSave.Name.Equals(componentName, StringComparison.OrdinalIgnoreCase))
+                        {
+                            return componentSave;
+                        }
+                    }
+
+                }
             }
 
             return null;
@@ -84,18 +135,29 @@ namespace Gum.Managers
 
         public StandardElementSave GetStandardElement(string elementName)
         {
-            GumProjectSave gps = GumProjectSave;
-
-            if (gps != null)
+            if (cachedDictionary != null)
             {
-                foreach (StandardElementSave elementSave in gps.StandardElements)
+                var nameInvariant = elementName.ToLowerInvariant();
+                if (nameInvariant != null && cachedDictionary.ContainsKey(nameInvariant))
                 {
-                    if (elementSave.Name == elementName)
-                    {
-                        return elementSave;
-                    }
+                    return cachedDictionary[nameInvariant] as StandardElementSave;
                 }
+            }
+            else
+            {
+                GumProjectSave gps = GumProjectSave;
 
+                if (gps != null)
+                {
+                    foreach (StandardElementSave elementSave in gps.StandardElements)
+                    {
+                        if (elementSave.Name == elementName)
+                        {
+                            return elementSave;
+                        }
+                    }
+
+                }
             }
 
             return null;
@@ -118,22 +180,35 @@ namespace Gum.Managers
         /// <returns>The matching ElementSave, or null if none is found</returns>
         public ElementSave GetElementSave(string elementName)
         {
-            ScreenSave screenSave = GetScreen(elementName);
-            if (screenSave != null)
+            if(cachedDictionary != null)
             {
-                return screenSave;
-            }
+                var nameInvariant = elementName?.ToLowerInvariant();
 
-            ComponentSave componentSave = GetComponent(elementName);
-            if (componentSave != null)
-            {
-                return componentSave;
+                if(nameInvariant != null && cachedDictionary.ContainsKey(nameInvariant))
+                {
+                    return cachedDictionary[nameInvariant];
+                }
             }
-
-            StandardElementSave standardElementSave = GetStandardElement(elementName);
-            if (standardElementSave != null)
+            else
             {
-                return standardElementSave;
+                ScreenSave screenSave = GetScreen(elementName);
+                if (screenSave != null)
+                {
+                    return screenSave;
+                }
+
+                ComponentSave componentSave = GetComponent(elementName);
+                if (componentSave != null)
+                {
+                    return componentSave;
+                }
+
+                StandardElementSave standardElementSave = GetStandardElement(elementName);
+                if (standardElementSave != null)
+                {
+                    return standardElementSave;
+                }
+
             }
 
             // If we got here there's nothing by the argument name
