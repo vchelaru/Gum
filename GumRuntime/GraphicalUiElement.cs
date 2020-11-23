@@ -107,7 +107,7 @@ namespace Gum.Wireframe
 
         IRenderableIpso mParent;
 
-        bool mIsLayoutSuspended = false;
+        protected bool mIsLayoutSuspended = false;
 
         // We need ThreadStatic in case screens are being loaded
         // in the background - we don't want to interrupt the foreground
