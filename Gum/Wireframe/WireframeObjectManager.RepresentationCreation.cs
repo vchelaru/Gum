@@ -90,7 +90,7 @@ namespace Gum.Wireframe
                     // can be null if the element save references a bad file
                     if(rootIpso.Component != null)
                     {
-                        rootIpso.Component.Name = elementSave.Name;
+                        rootIpso.Name = elementSave.Name;
                         rootIpso.Component.Tag = elementSave;
 
                     }
@@ -224,7 +224,7 @@ namespace Gum.Wireframe
                 ElementSave instanceBase = ObjectFinder.Self.GetElementSave(instance.BaseType);
                 graphicalElement.SetContainedObject(renderable);
                 graphicalElement.Tag = instance;
-                graphicalElement.Component.Name = instance.Name;
+                graphicalElement.Name = instance.Name;
                 graphicalElement.Component.Tag = instance;
             }
 
@@ -235,7 +235,7 @@ namespace Gum.Wireframe
                 ElementSave instanceBase = ObjectFinder.Self.GetElementSave(type);
                 graphicalElement.CreateGraphicalComponent(instanceBase, null);
                 graphicalElement.Tag = instance;
-                graphicalElement.Component.Name = instance.Name;
+                graphicalElement.Name = instance.Name;
                 graphicalElement.Component.Tag = instance;
 
                 if (type == "Text")
@@ -343,7 +343,7 @@ namespace Gum.Wireframe
                 {
                     rootIpso.SetContainedObject(renderable);
                     rootIpso.Tag = instance;
-                    rootIpso.Component.Name = instance.Name;
+                    rootIpso.Name = instance.Name;
                     rootIpso.Component.Tag = instance;
                 }
 
@@ -352,7 +352,7 @@ namespace Gum.Wireframe
                     ElementSave instanceBase = ObjectFinder.Self.GetElementSave(instance.BaseType);
                     rootIpso.CreateGraphicalComponent(instanceBase, null);
                     rootIpso.Tag = instance;
-                    rootIpso.Component.Name = instance.Name;
+                    rootIpso.Name = instance.Name;
                     rootIpso.Component.Tag = instance;
 
                     if(type == "Text")
@@ -449,7 +449,7 @@ namespace Gum.Wireframe
             ElementSave instanceBase = ObjectFinder.Self.GetElementSave(instance.BaseType);
             graphicalUiElement.CreateGraphicalComponent(instanceBase, null);
             graphicalUiElement.Tag = instance;
-            graphicalUiElement.Component.Name = instance.Name;
+            graphicalUiElement.Name = instance.Name;
             graphicalUiElement.Component.Tag = instance;
             
             return graphicalUiElement;
