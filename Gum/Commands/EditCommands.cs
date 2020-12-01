@@ -142,10 +142,37 @@ namespace Gum.Commands
                 TextInputWindow tiw = new TextInputWindow();
                 tiw.Message = "Enter new category name:";
 
-                if (tiw.ShowDialog() == DialogResult.OK)
-                {
-                    string name = tiw.Result;
+                var canAdd = true;
 
+                var result = tiw.ShowDialog();
+
+                if(result != DialogResult.OK)
+                {
+                    canAdd = false;
+                }
+
+                string name = null;
+
+                if (canAdd)
+                {
+                    name = tiw.Result;
+
+                    // see if any base elements have thsi category
+                    if (target is ElementSave element)
+                    {
+                        var existingCategory = element.GetStateSaveCategoryRecursively(name, out ElementSave categoryContainer);
+
+                        if (existingCategory != null)
+                        {
+                            MessageBox.Show($"Cannot add category - a category with the name {name} is already defined in {categoryContainer}");
+                            canAdd = false;
+                        }
+                    }
+                }
+
+
+                if(canAdd)
+                { 
                     StateSaveCategory category = ElementCommands.Self.AddCategory(
                         target, name);
 
