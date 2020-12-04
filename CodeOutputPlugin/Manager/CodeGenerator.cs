@@ -483,7 +483,6 @@ namespace CodeOutputPlugin.Manager
                 recursiveVariableFinder = new RecursiveVariableFinder(baseElement.DefaultState);
             }
 
-
             var variablesToConsider = defaultState.Variables
                 .Where(item =>
                 {
@@ -492,14 +491,31 @@ namespace CodeOutputPlugin.Manager
                         item.SetsValue &&
                         string.IsNullOrEmpty(item.SourceObject);
 
-                    if(shouldInclude && recursiveVariableFinder != null)
+                    if(shouldInclude)
                     {
-                        // We want to make sure that the variable is defined in the base object. If it isn't, then
-                        // it could be a leftover variable caused by having this object be of one type, using a variable
-                        // specific to that type, then changing it to another type. Gum holds on to these varibles in case
-                        // the type change was accidental, but it means we have to watch for these orphan variables when generating.
-                        var foundVariable = recursiveVariableFinder.GetVariable(item.Name);
-                        shouldInclude = foundVariable != null;
+                        if(recursiveVariableFinder != null)
+                        {
+                            // We want to make sure that the variable is defined in the base object. If it isn't, then
+                            // it could be a leftover variable caused by having this object be of one type, using a variable
+                            // specific to that type, then changing it to another type. Gum holds on to these varibles in case
+                            // the type change was accidental, but it means we have to watch for these orphan variables when generating.
+                            var foundVariable = recursiveVariableFinder.GetVariable(item.Name);
+                            shouldInclude = foundVariable != null;
+                        }
+                        else
+                        {
+                            if(item.Name.EndsWith("State"))
+                            {
+                                var type = item.Type.Substring(item.Type.Length - 5);
+                                var hasCategory = element.GetStateSaveCategoryRecursively(type) != null;
+
+                                if(!hasCategory)
+                                {
+                                    shouldInclude = false;
+                                }
+                            }
+                        }
+
                     }
 
                     return shouldInclude;
