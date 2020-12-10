@@ -313,7 +313,7 @@ namespace Gum
 
         private void MainWindow_Load(object sender, EventArgs e)
         {
-            ProjectManager.Self.RecentFilesUpdated += RefreshRecentFiles;
+            ProjectManager.Self.RecentFilesUpdated += RefreshRecentFilesMenuItems;
             ProjectManager.Self.Initialize();
 
             if(CommandLine.CommandLineManager.Self.ShouldExitImmediately == false)
@@ -424,7 +424,7 @@ namespace Gum
             }
         }
 
-        public void RefreshRecentFiles()
+        public void RefreshRecentFilesMenuItems()
         {
             this.loadRecentToolStripMenuItem.DropDownItems.Clear();
 

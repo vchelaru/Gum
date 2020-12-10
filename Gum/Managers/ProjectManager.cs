@@ -152,11 +152,11 @@ namespace Gum
         }
 
         // made public so that File commands can access this function
-        public void LoadProject(string fileName)
+        public void LoadProject(FilePath fileName)
         {
             GumLoadResult result;
 
-            mGumProjectSave = GumProjectSave.Load(fileName, out result);
+            mGumProjectSave = GumProjectSave.Load(fileName.FullPath, out result);
 
             string errors = result.ErrorMessage;
 
@@ -166,7 +166,7 @@ namespace Gum
                 
                 // If the file doesn't exist, that's okay we will let the user still work - it's not like they can overwrite a file that doesn't exist
                 // But if it does exist, we want to be careful and not allow overwriting because they could be wiping out good data
-                if (FileManager.FileExists(fileName))
+                if (fileName.Exists())
                 {
                     mHaveErrorsOccurred = true;
                 }
@@ -182,7 +182,7 @@ namespace Gum
 
             ObjectFinder.Self.GumProjectSave = mGumProjectSave;
 
-            WpfDataUi.Controls.FileSelectionDisplay.FolderRelativeTo = FileManager.GetDirectory(fileName);
+            WpfDataUi.Controls.FileSelectionDisplay.FolderRelativeTo = fileName.GetDirectoryContainingThis().FullPath;
 
             if (mGumProjectSave != null)
             {
@@ -202,7 +202,7 @@ namespace Gum
 
                 mGumProjectSave.FixStandardVariables();
 
-                FileManager.RelativeDirectory = FileManager.GetDirectory(fileName);
+                FileManager.RelativeDirectory = fileName.GetDirectoryContainingThis().FullPath;
                 mGumProjectSave.RemoveDuplicateVariables();
 
 
@@ -234,9 +234,28 @@ namespace Gum
 
             GeneralSettingsFile.AddToRecentFilesIfNew(fileName);
 
+            var shouldSaveSettings = false;
             if (GeneralSettingsFile.LastProject != fileName)
             {
-                GeneralSettingsFile.LastProject = fileName;
+                GeneralSettingsFile.LastProject = fileName.FullPath;
+                shouldSaveSettings = true;
+            }
+
+            if(!string.IsNullOrEmpty(result.ErrorMessage))
+            {
+                if(!fileName.Exists())
+                {
+                    var numberRemoved = GeneralSettingsFile.RecentProjects.RemoveAll(item => item.FilePath == fileName);
+                    if(numberRemoved > 0)
+                    {
+                        shouldSaveSettings = true;
+                    }
+                }
+
+            }
+
+            if(shouldSaveSettings)
+            {
                 GeneralSettingsFile.Save();
             }
 
