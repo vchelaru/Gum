@@ -172,6 +172,8 @@ namespace Gum.Managers
             }
             else
             {
+                mainControl.Visibility = System.Windows.Visibility.Visible;
+
                 //mPropertyGrid.SelectedObject = mPropertyGridDisplayer;
                 //mPropertyGrid.Refresh();
 

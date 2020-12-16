@@ -123,8 +123,6 @@ namespace Gum.Wireframe
                 mWireframeEditControl = wireframeEditControl;
 
 
-
-
                 mWireframeEditControl.ZoomChanged += HandleZoomChanged;
 
                 SystemManagers.Default = new SystemManagers();
