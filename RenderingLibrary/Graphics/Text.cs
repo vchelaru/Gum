@@ -613,9 +613,10 @@ namespace RenderingLibrary.Graphics
                 }
 
                 // If it's the first word and it's empty, don't add anything
-                if ((!string.IsNullOrEmpty(word) || !string.IsNullOrEmpty(line)))
+                // update - but this prevents the word from sarting 
+                //if ((!string.IsNullOrEmpty(word) || !string.IsNullOrEmpty(line)))
                 {
-                    if(wordArray.Count > 1)
+                    if(wordArray.Count > 1 || word == "")
                     {
                         line = line + word + ' ';
                     }

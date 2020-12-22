@@ -4407,9 +4407,10 @@ namespace Gum.Wireframe
 
         public void UpdateFontRecursive()
         {
-            if(this.mContainedObjectAsIpso is Text)
+            if(this.mContainedObjectAsIpso is Text && isFontDirty)
             {
                 UpdateToFontValues();
+                isFontDirty = false;
             }
 
             if(this.Children != null)
