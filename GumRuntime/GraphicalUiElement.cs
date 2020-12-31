@@ -3326,8 +3326,11 @@ namespace Gum.Wireframe
             {
                 if (isFontDirty)
                 {
-                    this.UpdateToFontValues();
-                    isFontDirty = false;
+                    if(!IsAllLayoutSuspended)
+                    {
+                        this.UpdateToFontValues();
+                        isFontDirty = false;
+                    }
                 }
                 if(currentDirtyState != null)
                 {
