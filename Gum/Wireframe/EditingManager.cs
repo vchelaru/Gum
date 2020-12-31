@@ -279,7 +279,7 @@ namespace Gum.Wireframe
                     throw new InvalidOperationException("Cannot be infinite");
                 }
 
-                if(graphicalUiElement?.GetAbsoluteFlipHorizontal() == true && baseVariableName == "X")
+                if(graphicalUiElement?.Parent?.GetAbsoluteFlipHorizontal() == true && baseVariableName == "X")
                 {
                     modificationAmount *= -1;
                 }
