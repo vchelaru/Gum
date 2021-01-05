@@ -4,6 +4,7 @@ using Gum.ToolStates;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,6 +14,9 @@ namespace EventOutputPlugin.Managers
 {
     public class ExportEventFileManager
     {
+        const string masterFileName = "gum_events.json";
+        static ExportedEventCollection events;
+
         static string EventExportDirectory
         {
             get
@@ -20,7 +24,7 @@ namespace EventOutputPlugin.Managers
 
                 if (ProjectState.Self.GumProjectSave != null)
                 {
-                    return ProjectState.Self.ProjectDirectory + "EventExport/";
+                    return Path.Combine(ProjectState.Self.ProjectDirectory, "EventExport");
                 }
                 else
                 {
@@ -29,23 +33,102 @@ namespace EventOutputPlugin.Managers
             }
         }
 
+        static string EventFileFullPath
+        {
+            get
+            {
+                return Path.Combine(EventExportDirectory, masterFileName);
+            }
+        }
+
+        static ExportedEventCollection Events
+        {
+            get
+            {
+                if(events == null)
+                {
+                    events = GetOrCreateEventCollection();
+                }
+
+                return events;
+            }
+        }
+
+
+
         public static void ExportEvent(string newName, string oldName, GumEventTypes eventType)
         {
             if(!string.IsNullOrWhiteSpace(EventExportDirectory))
             {
                 var exportedEvent = new ExportedEvent();
+                var username = Environment.UserName;
 
                 exportedEvent.NewName = newName;
                 exportedEvent.OldName = oldName;
                 exportedEvent.EventType = eventType;
+                exportedEvent.Timestamp = DateTime.UtcNow;
 
-                var serialized = JsonConvert.SerializeObject(exportedEvent);
+                if(!Events.UserEvents.ContainsKey(username))
+                {
+                    Events.UserEvents[username] = new List<ExportedEvent>();
+                }
 
-                var file = new FilePath(EventExportDirectory +
-                    Environment.UserName + "_" +
-                    DateTime.UtcNow.Ticks + ".json");
+                Events.UserEvents[username].Add(exportedEvent);
 
-                GumCommands.Self.TryMultipleTimes(
+                SaveEventCollection();
+            }
+        }
+
+        public static void DeleteOldEventFiles()
+        {
+            const int daysToKeep = 14;
+            var keys = Events?.UserEvents?.Keys?.ToList();
+
+            // EARLY OUT: nothing to delete, probably a new file
+            if (keys == null)
+            {
+                return;
+            }
+
+            var cutoff = DateTime.UtcNow.AddDays(-daysToKeep);
+            foreach (var key in keys)
+            {
+                var list = Events.UserEvents[key];
+                for (var i = list.Count - 1; i > -1; i--)
+                {
+                    if (list[i].Timestamp < cutoff)
+                    {
+                        list.RemoveAt(i);
+                    }
+                }
+            }
+            SaveEventCollection();
+        }
+
+        static ExportedEventCollection GetOrCreateEventCollection()
+        {
+            ExportedEventCollection collection;
+            if(File.Exists(EventFileFullPath))
+            {
+                var text = File.ReadAllText(EventFileFullPath);
+                collection = JsonConvert.DeserializeObject<ExportedEventCollection>(text);
+            }
+            else
+            {
+                collection = new ExportedEventCollection();
+                collection.UserEvents = new Dictionary<string, List<ExportedEvent>>();
+            }
+
+            return collection;
+        }
+
+        static void SaveEventCollection()
+        {
+            var file = new FilePath(EventFileFullPath);
+            // using indented formatting results in "unminified" JSON. This is desired
+            // to prevent merge conflicts.
+            var serialized = JsonConvert.SerializeObject(Events, Formatting.Indented);
+            GumCommands.Self.TryMultipleTimes(
                     () =>
                     {
                         var directoryName = file.GetDirectoryContainingThis().FullPath;
@@ -53,52 +136,6 @@ namespace EventOutputPlugin.Managers
                         System.IO.Directory.CreateDirectory(directoryName);
                         System.IO.File.WriteAllText(file.FullPath, serialized);
                     });
-            }
-        }
-
-        public static void DeleteOldEventFiles()
-        {
-            const int daysToKeep = 14;
-
-            if(!string.IsNullOrEmpty(EventExportDirectory) && System.IO.Directory.Exists(EventExportDirectory))
-            {
-                var filesInDirectory = System.IO.Directory.GetFiles(EventExportDirectory);
-
-                var cutoff = DateTime.UtcNow.AddDays(-daysToKeep);
-
-                foreach(var file in filesInDirectory)
-                {
-                    var fileDate = GetFileDateTimeUtc(file);
-
-                    if(fileDate < cutoff)
-                    {
-                        try
-                        {
-                            System.IO.File.Delete(file);
-                        }
-                        catch(Exception e)
-                        {
-                            // if we can't, oh well
-                            GumCommands.Self.GuiCommands.PrintOutput(
-                                $"Error attempting to delete event file:\n{e}");
-                        }
-                    }
-                }
-            }
-
-        }
-
-        private static DateTime GetFileDateTimeUtc(FilePath fileName)
-        {
-            var stripped = fileName.RemoveExtension().FileNameNoPath;
-
-            var lastUnderscore = stripped.LastIndexOf("_");
-
-            var ticks = long.Parse(stripped.Substring(lastUnderscore + 1));
-
-            var dateUtc = new DateTime(ticks);
-
-            return dateUtc;
         }
 
         
