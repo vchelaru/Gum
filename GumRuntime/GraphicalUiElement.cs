@@ -4511,7 +4511,7 @@ namespace Gum.Wireframe
 
                 var text = this.mContainedObjectAsIpso as Text;
 
-                text.BitmapFont = font;
+                text.BitmapFont = font ?? global::RenderingLibrary.Content.LoaderManager.Self.DefaultBitmapFont;
             }
 
         }
