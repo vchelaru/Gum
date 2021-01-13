@@ -2970,6 +2970,10 @@ namespace Gum.Wireframe
 
         partial void CustomAddToManagers();
 
+        /// <summary>
+        /// Adds this as a renderable to the SystemManagers if not already added. If already added
+        /// this does not perform any operations - it can be safely called multiple times.
+        /// </summary>
         public virtual void AddToManagers()
         {
 
@@ -2977,6 +2981,13 @@ namespace Gum.Wireframe
 
         }
 
+
+        /// <summary>
+        /// Adds this as a renderable to the SystemManagers on the argument layer if not already added
+        /// to SystemManagers. If already added
+        /// this does not perform any operations - it can be safely called multiple times, but
+        /// calling it multiple times will not move this to a different layer.
+        /// </summary>
         public virtual void AddToManagers(SystemManagers managers, Layer layer)
         {
 #if DEBUG

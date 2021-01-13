@@ -579,8 +579,10 @@ namespace RenderingLibrary.Graphics
 
             int numberOfLettersRendered = 0;
 
-            foreach (string line in lines)
+            for(int i = 0; i < lines.Count; i++)
             {
+                var line = lines[i];
+
                 // scoot over to leave room for the outline
                 point.X = mOutlineThickness;
 
