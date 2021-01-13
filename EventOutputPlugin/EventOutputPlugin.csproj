@@ -48,6 +48,7 @@
     <Compile Include="MainEventOutputPlugin.cs" />
     <Compile Include="Managers\ExportEventFileManager.cs" />
     <Compile Include="Models\ExportedEvent.cs" />
+    <Compile Include="Models\ExportedEventCollection.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
