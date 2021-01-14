@@ -195,12 +195,6 @@ namespace Gum.Wireframe
             }
             GraphicalUiElement.IsAllLayoutSuspended = false;
 
-            // There is a bug that currently requires layout to be performed twice.
-            // Update Nov 19, 2019 - I don't know when this was written, but layout has
-            // been continually improving, even as recently as today. I'm going to remove
-            // the 2nd call to make things faster and to see if I can spot other issues that
-            // remain after a single UpdateLayout call:
-            //rootIpso.UpdateLayout();
             rootIpso.UpdateFontRecursive();
             rootIpso.UpdateLayout();
 

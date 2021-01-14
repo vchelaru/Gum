@@ -40,11 +40,13 @@ namespace Gum.Wireframe
     {
         #region Enums/Internal Classes
 
-        enum ChildrenUpdateType
+        enum ChildType
         {
-            AbsoluteOnly,
-            RelativeOnly,
-            Both
+            Absolute = 1,
+            Relative = 1 << 1,
+            BothAbsoluteAndRelative = Absolute | Relative,
+            StackedWrapped = 1 << 2,
+            All = Absolute | Relative | StackedWrapped
         }
 
         class DirtyState
@@ -1176,7 +1178,7 @@ namespace Gum.Wireframe
                 UpdateLayoutCallCount++;
 
                 // May 15, 2014
-                // This needs to be
+                // Parent needs to be
                 // set before we start
                 // doing the updates because
                 // we use foreaches internally
@@ -1285,10 +1287,23 @@ namespace Gum.Wireframe
                         if (this.WidthUnits.GetDependencyType() == HierarchyDependencyType.DependsOnChildren || 
                             this.HeightUnits.GetDependencyType() == HierarchyDependencyType.DependsOnChildren)
                         {
-                            UpdateChildren(childrenUpdateDepth, onlyAbsoluteLayoutChildren: true);
+                            UpdateChildren(childrenUpdateDepth, ChildType.Absolute);
                         }
 
-                        UpdateDimensions(parentWidth, parentHeight, xOrY);
+                        // This will update according to all absolute children
+                        UpdateDimensions(parentWidth, parentHeight, xOrY, considerWrappedStacked:false);
+
+                                            
+                        if(this.WrapsChildren && (this.ChildrenLayout == ChildrenLayout.LeftToRightStack || this.ChildrenLayout == ChildrenLayout.TopToBottomStack))
+                        {
+                            // Now we can update all children that are wrapped:
+                            UpdateChildren(childrenUpdateDepth, ChildType.StackedWrapped);
+                            if (this.WidthUnits.GetDependencyType() == HierarchyDependencyType.DependsOnChildren ||
+                                this.HeightUnits.GetDependencyType() == HierarchyDependencyType.DependsOnChildren)
+                            {
+                                UpdateDimensions(parentWidth, parentHeight, xOrY, considerWrappedStacked: true);
+                            }
+                        }
 
                         if (mContainedObjectAsIpso is Sprite || mContainedObjectAsIpso is NineSlice)
                         {
@@ -1350,7 +1365,7 @@ namespace Gum.Wireframe
 
                     if (childrenUpdateDepth > 0)
                     {
-                        UpdateChildren(childrenUpdateDepth);
+                        UpdateChildren(childrenUpdateDepth, ChildType.All);
 
                         var sizeDependsOnChildren = this.WidthUnits == DimensionUnitType.RelativeToChildren ||
                             this.HeightUnits == DimensionUnitType.RelativeToChildren;
@@ -1393,12 +1408,12 @@ namespace Gum.Wireframe
                             float widthBeforeSecondLayout = mContainedObjectAsIpso.Width;
                             float heightBeforeSecondLayout = mContainedObjectAsIpso.Height;
 
-                            UpdateDimensions(parentWidth, parentHeight, xOrY);
+                            UpdateDimensions(parentWidth, parentHeight, xOrY, considerWrappedStacked:true);
 
                             if ( widthBeforeSecondLayout != mContainedObjectAsIpso.Width || 
                                 heightBeforeSecondLayout != mContainedObjectAsIpso.Height)
                             {
-                                UpdateChildren(childrenUpdateDepth);
+                                UpdateChildren(childrenUpdateDepth, ChildType.BothAbsoluteAndRelative);
                             }
 
                         }
@@ -1432,31 +1447,57 @@ namespace Gum.Wireframe
 
         }
 
-        bool IsAllLayoutAbsolute()
+        ChildType GetChildLayoutType(GraphicalUiElement parent)
         {
-            return mWidthUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent &&
+            var doesParentWrapStack = parent.WrapsChildren && (parent.ChildrenLayout == ChildrenLayout.LeftToRightStack || parent.ChildrenLayout == ChildrenLayout.TopToBottomStack);
+
+
+            var isAbsolute = mWidthUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent &&
                 mHeightUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent &&
                 (mXUnits == GeneralUnitType.PixelsFromLarge || mXUnits == GeneralUnitType.PixelsFromMiddle ||
                     mXUnits == GeneralUnitType.PixelsFromSmall || mXUnits == GeneralUnitType.PixelsFromMiddleInverted) &&
                 (mYUnits == GeneralUnitType.PixelsFromLarge || mYUnits == GeneralUnitType.PixelsFromMiddle ||
                     mYUnits == GeneralUnitType.PixelsFromSmall || mYUnits == GeneralUnitType.PixelsFromMiddleInverted ||
                     mYUnits == GeneralUnitType.PixelsFromBaseline);
+
+            if(doesParentWrapStack)
+            {
+                return isAbsolute ? ChildType.StackedWrapped : ChildType.Relative;
+            }
+            else
+            {
+                return isAbsolute ? ChildType.Absolute : ChildType.Relative;
+            }
         }
 
-        bool IsAllLayoutAbsolute(XOrY xOrY)
+        ChildType GetChildLayoutType(XOrY xOrY, GraphicalUiElement parent)
         {
+            bool isAbsolute;
+            var doesParentWrapStack = parent.WrapsChildren && (parent.ChildrenLayout == ChildrenLayout.LeftToRightStack || parent.ChildrenLayout == ChildrenLayout.TopToBottomStack);
+
             if (xOrY == XOrY.X)
             {
-                return mWidthUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent &&
+                isAbsolute = mWidthUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent &&
                     (mXUnits == GeneralUnitType.PixelsFromLarge || mXUnits == GeneralUnitType.PixelsFromMiddle ||
                         mXUnits == GeneralUnitType.PixelsFromSmall || mXUnits == GeneralUnitType.PixelsFromMiddleInverted);
+
             }
             else // Y
             {
-                return mHeightUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent &&
+                isAbsolute = mHeightUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent &&
                     (mYUnits == GeneralUnitType.PixelsFromLarge || mYUnits == GeneralUnitType.PixelsFromMiddle ||
                         mYUnits == GeneralUnitType.PixelsFromSmall || mYUnits == GeneralUnitType.PixelsFromMiddleInverted &&
                         mYUnits == GeneralUnitType.PixelsFromBaseline);
+
+            }
+
+            if (doesParentWrapStack)
+            {
+                return isAbsolute ? ChildType.StackedWrapped : ChildType.Relative;
+            }
+            else
+            {
+                return isAbsolute ? ChildType.Absolute : ChildType.Relative;
             }
         }
 
@@ -1770,8 +1811,17 @@ namespace Gum.Wireframe
 
         }
 
-        private void UpdateChildren(int childrenUpdateDepth, bool onlyAbsoluteLayoutChildren = false)
+        private void UpdateChildren(int childrenUpdateDepth, ChildType childrenUpdateType)
         {
+            bool CanDoFullUpdate(ChildType thisChildUpdateType)
+            {
+
+                return
+                    childrenUpdateType == ChildType.All ||
+                    (childrenUpdateType == ChildType.Absolute && thisChildUpdateType == ChildType.Absolute )||
+                    (childrenUpdateType == ChildType.Relative && (thisChildUpdateType == ChildType.Relative || thisChildUpdateType == ChildType.BothAbsoluteAndRelative)) ||
+                    (childrenUpdateType == ChildType.StackedWrapped && thisChildUpdateType == ChildType.StackedWrapped);
+            }
             if (this.mContainedObjectAsIpso == null)
             {
                 foreach (var child in this.mWhatThisContains)
@@ -1783,19 +1833,19 @@ namespace Gum.Wireframe
                     // parents...
                     if (child.Parent == null || child.Parent == this)
                     {
-                        if (child.IsAllLayoutAbsolute() || onlyAbsoluteLayoutChildren == false)
+                        if (CanDoFullUpdate(child.GetChildLayoutType(this)))
                         {
-                                child.UpdateLayout(false, childrenUpdateDepth - 1);
+                            child.UpdateLayout(false, childrenUpdateDepth - 1);
                         }
                         else
                         { 
                             // only update absolute layout, and the child has some relative values, but let's see if 
                             // we can do only one axis:
-                            if (child.IsAllLayoutAbsolute(XOrY.X))
+                            if (CanDoFullUpdate(child.GetChildLayoutType(XOrY.X, this)))
                             {
                                 child.UpdateLayout(false, childrenUpdateDepth - 1, XOrY.X);
                             }
-                            else if (child.IsAllLayoutAbsolute(XOrY.Y))
+                            else if (CanDoFullUpdate(child.GetChildLayoutType(XOrY.Y, this)))
                             {
                                 child.UpdateLayout(false, childrenUpdateDepth - 1, XOrY.Y);
                             }
@@ -1811,9 +1861,8 @@ namespace Gum.Wireframe
 
                     if (ipsoChild is GraphicalUiElement)
                     {
-                        
                         var child = ipsoChild as GraphicalUiElement;
-                        if (child.IsAllLayoutAbsolute() || onlyAbsoluteLayoutChildren == false)
+                        if (CanDoFullUpdate(child.GetChildLayoutType(this)))
                         {
                             child.UpdateLayout(false, childrenUpdateDepth - 1);
                         }
@@ -1821,11 +1870,11 @@ namespace Gum.Wireframe
                         {
                             // only update absolute layout, and the child has some relative values, but let's see if 
                             // we can do only one axis:
-                            if (child.IsAllLayoutAbsolute(XOrY.X))
+                            if (CanDoFullUpdate(child.GetChildLayoutType(XOrY.X, this)))
                             {
                                 child.UpdateLayout(false, childrenUpdateDepth - 1, XOrY.X);
                             }
-                            else if (child.IsAllLayoutAbsolute(XOrY.Y))
+                            else if (CanDoFullUpdate(child.GetChildLayoutType(XOrY.Y, this)))
                             {
                                 child.UpdateLayout(false, childrenUpdateDepth - 1, XOrY.Y);
                             }
@@ -2526,7 +2575,7 @@ namespace Gum.Wireframe
             }
         }
 
-        private void UpdateDimensions(float parentWidth, float parentHeight, XOrY? xOrY)
+        private void UpdateDimensions(float parentWidth, float parentHeight, XOrY? xOrY, bool considerWrappedStacked)
         {
             // special case - if the user has set both values to depend on the other value, we don't want to have an infinite recursion so we'll just apply the width and height values as pixel values.
             // This really doesn't make much sense but...the alternative would be an object that may grow or shrink infinitely, which may cause lots of other problems:
@@ -2551,11 +2600,11 @@ namespace Gum.Wireframe
                     // if width depends on height, do height first:
                     if (xOrY == null || xOrY == XOrY.Y)
                     {
-                        UpdateHeight(parentHeight);
+                        UpdateHeight(parentHeight, considerWrappedStacked);
                     }
                     if (xOrY == null || xOrY == XOrY.X)
                     {
-                        UpdateWidth(parentWidth);
+                        UpdateWidth(parentWidth, considerWrappedStacked);
                     }
                 }
                 else // either width needs to be first, or it doesn't matter so we just do width first arbitrarily
@@ -2563,17 +2612,17 @@ namespace Gum.Wireframe
                     // If height depends on width, do width first
                     if (xOrY == null || xOrY == XOrY.X)
                     {
-                        UpdateWidth(parentWidth);
+                        UpdateWidth(parentWidth, considerWrappedStacked);
                     }
                     if (xOrY == null || xOrY == XOrY.Y)
                     {
-                        UpdateHeight(parentHeight);
+                        UpdateHeight(parentHeight, considerWrappedStacked);
                     }
                 }
             }
         }
 
-        private void UpdateHeight(float parentHeight)
+        private void UpdateHeight(float parentHeight, bool considerWrappedStacked)
         {
             float heightToSet = mHeight;
 
@@ -2593,7 +2642,9 @@ namespace Gum.Wireframe
 
                     foreach (GraphicalUiElement element in this.Children)
                     {
-                        if (element.IsAllLayoutAbsolute(XOrY.Y) && element.Visible)
+                        var childLayout = element.GetChildLayoutType(XOrY.Y, this);
+                        var considerChild = childLayout == ChildType.Absolute || (considerWrappedStacked && childLayout == ChildType.StackedWrapped);
+                        if (considerChild && element.Visible)
                         {
                             var elementHeight = element.GetRequiredParentHeight();
 
@@ -2613,7 +2664,10 @@ namespace Gum.Wireframe
 
                     foreach (var element in this.mWhatThisContains)
                     {
-                        if (element.IsAllLayoutAbsolute(XOrY.Y) && element.Visible)
+                        var childLayout = element.GetChildLayoutType(XOrY.Y, this);
+                        var considerChild = childLayout == ChildType.Absolute || (considerWrappedStacked && childLayout == ChildType.StackedWrapped);
+
+                        if (considerChild && element.Visible)
                         {
                             var elementHeight = element.GetRequiredParentHeight();
                             if(this.ChildrenLayout == ChildrenLayout.TopToBottomStack)
@@ -2738,7 +2792,7 @@ namespace Gum.Wireframe
             mContainedObjectAsIpso.Height = heightToSet;
         }
 
-        private void UpdateWidth(float parentWidth)
+        private void UpdateWidth(float parentWidth, bool considerWrappedStacked)
         {
             float widthToSet = mWidth;
 
@@ -2770,7 +2824,10 @@ namespace Gum.Wireframe
 
                     foreach (GraphicalUiElement element in this.Children)
                     {
-                        if (element.IsAllLayoutAbsolute(XOrY.X) && element.Visible)
+                        var childLayout = element.GetChildLayoutType(XOrY.X, this);
+                        var considerChild = childLayout == ChildType.Absolute || (considerWrappedStacked && childLayout == ChildType.StackedWrapped);
+
+                        if (considerChild && element.Visible)
                         {
                             var elementWidth = element.GetRequiredParentWidth();
 
@@ -2789,7 +2846,10 @@ namespace Gum.Wireframe
                 {
                     foreach (var element in this.mWhatThisContains)
                     {
-                        if (element.IsAllLayoutAbsolute(XOrY.X) && element.Visible)
+                        var childLayout = element.GetChildLayoutType(XOrY.X, this);
+                        var considerChild = childLayout == ChildType.Absolute || (considerWrappedStacked && childLayout == ChildType.StackedWrapped);
+
+                        if (considerChild && element.Visible)
                         {
                             var elementWidth = element.GetRequiredParentWidth();
 
