@@ -1,12 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
-
 
 #if MONOGAME
 using Texture2D = Microsoft.Xna.Framework.Graphics.Texture2D;
 #endif
-
 using System.Xml;
 using System.Xml.Serialization;
 
@@ -27,7 +25,7 @@ namespace Gum.Graphics.Animation
     /// the length of time to show the Texture2D for, texture coordinates (for sprite sheets), and
     /// relative positioning.
     /// </remarks>
-    public class AnimationFrame :  IEquatable<AnimationFrame>
+    public class AnimationFrame : IEquatable<AnimationFrame>
     {
         #region Fields
 
@@ -142,13 +140,13 @@ namespace Gum.Graphics.Animation
         /// Creates a new AnimationFrame.
         /// </summary>
         #endregion
-        public AnimationFrame() 
+        public AnimationFrame()
         {
             //Instructions = new List<Instruction>();
         }
 
-
 #if MONOGAME
+
         /// <summary>
         /// Creates a new AnimationFrame.
         /// </summary>
@@ -161,7 +159,7 @@ namespace Gum.Graphics.Animation
             FrameLength = frameLength;
             FlipHorizontal = false;
             FlipVertical = false;
-            
+
             //Instructions = new List<Instruction>();
 
             if (texture != null)
@@ -170,7 +168,6 @@ namespace Gum.Graphics.Animation
             }
         }
 #endif
-
 
         #endregion
 
@@ -189,7 +186,6 @@ namespace Gum.Graphics.Animation
             AnimationFrame animationFrame = this.MemberwiseClone() as AnimationFrame;
             return animationFrame;
         }
-
 
 #if MONOGAME
         /// <summary>

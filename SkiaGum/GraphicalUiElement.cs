@@ -1,42 +1,64 @@
 ﻿using Gum.Converters;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
+using Gum.Graphics.Animation;
+using Gum.Managers;
+using Gum.RenderingLibrary;
+using GumDataTypes.Variables;
+
+#if MONOGAME
+using GumRuntime;
+using RenderingLibrary.Math.Geometry;
+#endif
+
 using Microsoft.Xna.Framework;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
+using RenderingLibrary.Math;
+
+#if SKIA
 using SkiaGum;
 using SkiaGum.Graphics;
+using SkiaGum.GueDeriving;
 using SkiaGum.Managers;
 using SkiaGum.Renderables;
 using SkiaSharp;
+#endif
+
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.Linq;
 
 namespace Gum.Wireframe
 {
-    #region Children Layout
+    #region Enums
 
-    public enum ChildrenLayout
+    public enum MissingFileBehavior
     {
-        Regular,
-        TopToBottomStack,
-        LeftToRightStack
-
+        ConsumeSilently,
+        ThrowException
     }
 
     #endregion
 
+    /// <summary>
+    /// The base object for all Gum runtime objects. It contains functionality for
+    /// setting variables, states, and perofrming layout. The GraphicalUiElement can
+    /// wrap an underlying rendering object.
+    /// </summary>
     public class GraphicalUiElement : IRenderableIpso, IVisible
     {
         #region Enums/Internal Classes
 
-        enum ChildrenUpdateType
+        enum ChildType
         {
-            AbsoluteOnly,
-            RelativeOnly,
-            Both
+            Absolute = 1,
+            Relative = 1 << 1,
+            BothAbsoluteAndRelative = Absolute | Relative,
+            StackedWrapped = 1 << 2,
+            All = Absolute | Relative | StackedWrapped
         }
 
         class DirtyState
@@ -51,6 +73,7 @@ namespace Gum.Wireframe
         #region Fields
 
         private DirtyState currentDirtyState;
+        bool isFontDirty = false;
 
         public static int UpdateLayoutCallCount;
         public static int ChildrenUpdatingParentLayoutCalls;
@@ -63,6 +86,10 @@ namespace Gum.Wireframe
 
         GraphicalUiElement mWhatContainsThis;
 
+        /// <summary>
+        /// A flat list of all GraphicalUiElements contained by this element. For example, if this GraphicalUiElement
+        /// is a Screen, this list is all GraphicalUielements for every instance contained regardless of hierarchy.
+        /// </summary>
         List<GraphicalUiElement> mWhatThisContains = new List<GraphicalUiElement>();
 
         Dictionary<string, string> mExposedVariables = new Dictionary<string, string>();
@@ -73,6 +100,10 @@ namespace Gum.Wireframe
         VerticalAlignment mYOrigin;
         DimensionUnitType mWidthUnit;
         DimensionUnitType mHeightUnit;
+
+#if MONOGAME
+        SystemManagers mManagers;
+#endif
 
         int mTextureTop;
         int mTextureLeft;
@@ -97,9 +128,17 @@ namespace Gum.Wireframe
 
         bool mIsLayoutSuspended = false;
 
+        // We need ThreadStatic in case screens are being loaded
+        // in the background - we don't want to interrupt the foreground
+        // layout behavior.
         [ThreadStatic]
         public static bool IsAllLayoutSuspended = false;
 
+        Dictionary<string, Gum.DataTypes.Variables.StateSave> mStates =
+            new Dictionary<string, DataTypes.Variables.StateSave>();
+
+        Dictionary<string, Gum.DataTypes.Variables.StateSaveCategory> mCategories =
+            new Dictionary<string, Gum.DataTypes.Variables.StateSaveCategory>();
 
         //Dictionary<string, Gum.DataTypes.Variables.StateSave> mStates =
         //    new Dictionary<string, DataTypes.Variables.StateSave>();
@@ -116,20 +155,45 @@ namespace Gum.Wireframe
         public List<float> StackedRowOrColumnDimensions { get; private set; }
         #endregion
 
-
         #region Properties
 
-        //ColorOperation IRenderableIpso.ColorOperation => mContainedObjectAsIpso.ColorOperation;
+        ColorOperation IRenderableIpso.ColorOperation => mContainedObjectAsIpso.ColorOperation;
 
-        //public static MissingFileBehavior MissingFileBehavior { get; set; } = MissingFileBehavior.ConsumeSilently;
+        public static MissingFileBehavior MissingFileBehavior { get; set; } = MissingFileBehavior.ConsumeSilently;
 
-        //public ElementSave ElementSave
-        //{
-        //    get;
-        //    set;
-        //}
+        public ElementSave ElementSave
+        {
+            get;
+            set;
+        }
 
-
+#if MONOGAME
+        public SystemManagers Managers
+        {
+            get
+            {
+                return mManagers;
+            }
+        }
+        /// <summary>
+        /// Returns this instance's SystemManagers, or climbs up the parent/child relationship
+        /// until a non-null SystemsManager is found. Otherwise, returns null.
+        /// </summary>
+        public SystemManagers EffectiveManagers
+        {
+            get
+            {
+                if (mManagers != null)
+                {
+                    return mManagers;
+                }
+                else
+                {
+                    return this.ElementGueContainingThis?.EffectiveManagers;
+                }
+            }
+        }
+#endif
 
         public bool Visible
         {
@@ -231,6 +295,18 @@ namespace Gum.Wireframe
             }
         }
 
+
+        float IPositionedSizedObject.Rotation
+        {
+            get => mContainedObjectAsIpso?.Rotation ?? 0;
+            set
+            {
+                throw new InvalidOperationException(
+                    "This is a GraphicalUiElement. You must cast the instance to GraphicalUiElement to set its Rotation so that its layout apply.");
+
+            }
+        }
+
         float IPositionedSizedObject.Width
         {
             get
@@ -300,32 +376,42 @@ namespace Gum.Wireframe
             }
             set
             {
-                ((IPositionedSizedObject)mContainedObjectAsIpso).Z = value;
+                mContainedObjectAsIpso.Z = value;
             }
         }
 
         #region IRenderable properties
 
 
-        //        Microsoft.Xna.Framework.Graphics.BlendState IRenderable.BlendState
-        //        {
-        //            get
-        //            {
-        //#if DEBUG
-        //                if (mContainedObjectAsIpso == null)
-        //                {
-        //                    throw new NullReferenceException("This GraphicalUiElemente has not had its visual set, so it does not have a blend operation. This can happen if a GraphicalUiElement was added as a child without its contained renderable having been set.");
-        //                }
-        //#endif
-        //                return mContainedObjectAsIpso.BlendState;
-        //            }
-        //        }
+#if MONOGAME
+        Microsoft.Xna.Framework.Graphics.BlendState IRenderable.BlendState
+        {
+            get
+            {
+#if DEBUG
+                if(mContainedObjectAsIpso == null)
+                {
+                    throw new NullReferenceException("This GraphicalUiElemente has not had its visual set, so it does not have a blend operation. This can happen if a GraphicalUiElement was added as a child without its contained renderable having been set.");
+                }
+#endif
+                return mContainedObjectAsIpso.BlendState;
+            }
+        }
+#endif
 
         bool IRenderable.Wrap
         {
             get { return mContainedObjectAsIpso.Wrap; }
         }
 
+#if MONOGAME
+        void IRenderable.Render(SpriteRenderer spriteRenderer, SystemManagers managers)
+        {
+            mContainedObjectAsIpso.Render(spriteRenderer, managers);
+        }
+#endif
+
+#if SKIA
         public virtual void Render(SKCanvas canvas)
         {
             mContainedObjectAsIpso.Render(canvas);
@@ -335,14 +421,12 @@ namespace Gum.Wireframe
                 child.Render(canvas);
             }
         }
+#endif
 
 
-        /// <summary>
-        /// Used for clipping.
-        /// </summary>
-        //SortableLayer mSortableLayer;
-
-        //Layer mLayer;
+#if MONOGAME
+        Layer mLayer;
+#endif
 
         #endregion
 
@@ -448,21 +532,21 @@ namespace Gum.Wireframe
             }
         }
 
-        //public bool FlipHorizontal
-        //{
-        //    get => mContainedObjectAsIpso?.FlipHorizontal ?? false;
-        //    set
-        //    {
-        //        if (mContainedObjectAsIpso != null)
-        //        {
-        //            if (mContainedObjectAsIpso.FlipHorizontal != value)
-        //            {
-        //                mContainedObjectAsIpso.FlipHorizontal = value;
-        //                UpdateLayout();
-        //            }
-        //        }
-        //    }
-        //}
+        public bool FlipHorizontal
+        {
+            get => mContainedObjectAsIpso?.FlipHorizontal ?? false;
+            set
+            {
+                if (mContainedObjectAsIpso != null)
+                {
+                    if (mContainedObjectAsIpso.FlipHorizontal != value)
+                    {
+                        mContainedObjectAsIpso.FlipHorizontal = value;
+                        UpdateLayout();
+                    }
+                }
+            }
+        }
 
         public float X
         {
@@ -598,12 +682,15 @@ namespace Gum.Wireframe
             }
         }
 
-        #endregion
 
-
-
-
-
+        // Made obsolete November 4, 2017
+        [Obsolete("Use ElementGueContainingThis instead - it more clearly indicates the relationship, " +
+            "as the ParentGue may not actually be the parent. If the effective parent is desired, use EffectiveParentGue")]
+        public GraphicalUiElement ParentGue
+        {
+            get { return ElementGueContainingThis; }
+            set { ElementGueContainingThis = value; }
+        }
 
         /// <summary>
         /// The ScreenSave or Component which contains this instance.
@@ -679,7 +766,19 @@ namespace Gum.Wireframe
             }
         }
 
-        public string Name { get; set; }
+        string name;
+        public string Name
+        {
+            get => name;
+            set
+            {
+                if (mContainedObjectAsIpso != null)
+                {
+                    mContainedObjectAsIpso.Name = value;
+                }
+                name = value;
+            }
+        }
 
         /// <summary>
         /// Returns the direct hierarchical children of this. Note that this does not return all objects contained in the element. 
@@ -688,14 +787,7 @@ namespace Gum.Wireframe
         {
             get
             {
-                if (mContainedObjectAsIpso != null)
-                {
-                    return mContainedObjectAsIpso.Children;
-                }
-                else
-                {
-                    return null;
-                }
+                return mContainedObjectAsIpso?.Children;
             }
         }
 
@@ -704,22 +796,22 @@ namespace Gum.Wireframe
         {
             get
             {
-                //if (mContainedObjectAsIpso != null)
-                //{
-                //    return mContainedObjectAsIpso.Tag;
-                //}
-                //else
+                if (mContainedObjectAsIpso != null)
+                {
+                    return mContainedObjectAsIpso.Tag;
+                }
+                else
                 {
                     return mTagIfNoContainedObject;
                 }
             }
             set
             {
-                //if (mContainedObjectAsIpso != null)
-                //{
-                //    mContainedObjectAsIpso.Tag = value;
-                //}
-                //else
+                if (mContainedObjectAsIpso != null)
+                {
+                    mContainedObjectAsIpso.Tag = value;
+                }
+                else
                 {
                     mTagIfNoContainedObject = value;
                 }
@@ -816,11 +908,139 @@ namespace Gum.Wireframe
             }
         }
 
-
         public IVisible ExplicitIVisibleParent
         {
             get;
             set;
+        }
+
+        /// <summary>
+        /// The pixel coorinate of the top of the displayed region.
+        /// </summary>
+        public int TextureTop
+        {
+            get
+            {
+                return mTextureTop;
+            }
+            set
+            {
+                if (mTextureTop != value)
+                {
+                    mTextureTop = value;
+                    // changing the texture top won't update the dimensions, just
+                    // the contained graphical object. 
+                    UpdateLayout(updateParent: false, updateChildren: false);
+
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// The pixel coorinate of the left of the displayed region.
+        /// </summary>
+        public int TextureLeft
+        {
+            get
+            {
+                return mTextureLeft;
+            }
+            set
+            {
+                if (mTextureLeft != value)
+                {
+                    mTextureLeft = value;
+                    UpdateLayout(updateParent: false, updateChildren: false);
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// The pixel width of the displayed region.
+        /// </summary>
+        public int TextureWidth
+        {
+            get
+            {
+                return mTextureWidth;
+            }
+            set
+            {
+                if (mTextureWidth != value)
+                {
+                    mTextureWidth = value;
+                    UpdateLayout();
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// The pixel height of the displayed region.
+        /// </summary>
+        public int TextureHeight
+        {
+            get
+            {
+                return mTextureHeight;
+            }
+            set
+            {
+                if (mTextureHeight != value)
+                {
+                    mTextureHeight = value;
+                    UpdateLayout();
+                }
+            }
+        }
+
+        public float TextureWidthScale
+        {
+            get
+            {
+                return mTextureWidthScale;
+            }
+            set
+            {
+                if (mTextureWidthScale != value)
+                {
+                    mTextureWidthScale = value;
+                    UpdateLayout();
+                }
+            }
+        }
+        public float TextureHeightScale
+        {
+            get
+            {
+                return mTextureHeightScale;
+            }
+            set
+            {
+                if (mTextureHeightScale != value)
+                {
+                    mTextureHeightScale = value;
+                    UpdateLayout();
+                }
+            }
+        }
+
+        public TextureAddress TextureAddress
+        {
+            get
+            {
+                return mTextureAddress;
+            }
+            set
+            {
+                if (mTextureAddress != value)
+                {
+                    mTextureAddress = value;
+                    UpdateLayout();
+                }
+            }
         }
 
         public bool Wrap
@@ -838,7 +1058,6 @@ namespace Gum.Wireframe
                 }
             }
         }
-
 
         public bool WrapsChildren
         {
@@ -858,6 +1077,7 @@ namespace Gum.Wireframe
             set;
         }
 
+        #endregion
 
         #region Events
 

@@ -80,11 +80,10 @@ namespace Gum.DataTypes
         //{
         //    string fullName = projectroot + Subfolder + "/" + Name + "." + extension;
 
-        //    ElementSave elementSave = FileManager.XmlDeserialize<ElementSave>(fullName);
+//    ElementSave elementSave = FileManager.XmlDeserialize<ElementSave>(fullName);
 
-        //    return elementSave;
-        //}
-
+//    return elementSave;
+//}
 
         public T ToElementSave<T>(string projectroot, string extension, GumLoadResult result, LinkLoadingPreference linkLoadingPreference = LinkLoadingPreference.PreferLinked) where T : ElementSave, new()
         {

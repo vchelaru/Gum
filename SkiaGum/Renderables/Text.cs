@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using SkiaGum.Graphics;
+using SkiaGum.GueDeriving;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
@@ -182,6 +183,22 @@ namespace SkiaGum
                     //UpdatePreRenderDimensions();
                 }
             }
+        }
+
+        public ColorOperation ColorOperation { get; set; } = ColorOperation.Modulate;
+
+        public object Tag { get; set; }
+
+        public bool FlipHorizontal
+        {
+            get;
+            set;
+        }
+
+        public bool FlipVertical
+        {
+            get;
+            set;
         }
 
         #endregion

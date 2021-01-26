@@ -5,12 +5,26 @@ using Gum.Graphics.Animation;
 using Gum.Managers;
 using Gum.RenderingLibrary;
 using GumDataTypes.Variables;
+
+#if MONOGAME
 using GumRuntime;
+using RenderingLibrary.Math.Geometry;
+#endif
+
 using Microsoft.Xna.Framework;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Math;
-using RenderingLibrary.Math.Geometry;
+
+#if SKIA
+using SkiaGum;
+using SkiaGum.Graphics;
+using SkiaGum.GueDeriving;
+using SkiaGum.Managers;
+using SkiaGum.Renderables;
+using SkiaSharp;
+#endif
+
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -87,7 +101,9 @@ namespace Gum.Wireframe
         DimensionUnitType mWidthUnit;
         DimensionUnitType mHeightUnit;
 
+#if MONOGAME
         SystemManagers mManagers;
+#endif
 
 
         int mTextureTop;
@@ -132,7 +148,6 @@ namespace Gum.Wireframe
         // null by default, non-null if an object uses
         // stacked layout for its children.
         public List<float> StackedRowOrColumnDimensions { get; private set; }
-
         #endregion
 
         #region Properties
@@ -147,6 +162,7 @@ namespace Gum.Wireframe
             set;
         }
 
+#if MONOGAME
         public SystemManagers Managers
         {
             get
@@ -154,7 +170,6 @@ namespace Gum.Wireframe
                 return mManagers;
             }
         }
-
         /// <summary>
         /// Returns this instance's SystemManagers, or climbs up the parent/child relationship
         /// until a non-null SystemsManager is found. Otherwise, returns null.
@@ -173,6 +188,7 @@ namespace Gum.Wireframe
                 }
             }
         }
+#endif
 
         public bool Visible
         {
@@ -252,17 +268,6 @@ namespace Gum.Wireframe
             }
         }
 
-        float IPositionedSizedObject.Rotation
-        {
-            get => mContainedObjectAsIpso?.Rotation ?? 0;
-            set
-            {
-                throw new InvalidOperationException(
-                    "This is a GraphicalUiElement. You must cast the instance to GraphicalUiElement to set its Rotation so that its layout apply.");
-
-            }
-        }
-
 
         /// <summary>
         /// The Y position of this object as an IPositionedSizedObject. This does not consider origins
@@ -284,6 +289,17 @@ namespace Gum.Wireframe
             set
             {
                 throw new InvalidOperationException("This is a GraphicalUiElement. You must cast the instance to GraphicalUiElement to set its Y so that its YUnits apply.");
+            }
+        }
+
+        float IPositionedSizedObject.Rotation
+        {
+            get => mContainedObjectAsIpso?.Rotation ?? 0;
+            set
+            {
+                throw new InvalidOperationException(
+                    "This is a GraphicalUiElement. You must cast the instance to GraphicalUiElement to set its Rotation so that its layout apply.");
+
             }
         }
 
@@ -361,7 +377,7 @@ namespace Gum.Wireframe
             }
             set
             {
-                ((IPositionedSizedObject)mContainedObjectAsIpso).Z = value;
+                mContainedObjectAsIpso.Z = value;
             }
         }
 
@@ -369,6 +385,7 @@ namespace Gum.Wireframe
         #region IRenderable properties
 
 
+#if MONOGAME
         Microsoft.Xna.Framework.Graphics.BlendState IRenderable.BlendState
         {
             get
@@ -382,23 +399,36 @@ namespace Gum.Wireframe
                 return mContainedObjectAsIpso.BlendState;
             }
         }
+#endif
 
         bool IRenderable.Wrap
         {
             get { return mContainedObjectAsIpso.Wrap; }
         }
 
+#if MONOGAME
         void IRenderable.Render(SpriteRenderer spriteRenderer, SystemManagers managers)
         {
             mContainedObjectAsIpso.Render(spriteRenderer, managers);
         }
+#endif
 
-        /// <summary>
-        /// Used for clipping.
-        /// </summary>
-        SortableLayer mSortableLayer;
+#if SKIA
+        public virtual void Render(SKCanvas canvas)
+        {
+            mContainedObjectAsIpso.Render(canvas);
 
+            foreach (var child in this.Children)
+            {
+                child.Render(canvas);
+            }
+        }
+#endif
+
+
+#if MONOGAME
         Layer mLayer;
+#endif
 
         #endregion
 
@@ -422,7 +452,8 @@ namespace Gum.Wireframe
             {
                 if (mYUnits != value)
                 {
-                    mYUnits = value; UpdateLayout();
+                    mYUnits = value; 
+                    UpdateLayout();
                 }
             }
         }
@@ -710,7 +741,6 @@ namespace Gum.Wireframe
         }
 
 
-
         public IRenderable RenderableComponent
         {
             get
@@ -763,14 +793,7 @@ namespace Gum.Wireframe
         {
             get
             {
-                if (mContainedObjectAsIpso != null)
-                {
-                    return mContainedObjectAsIpso.Children;
-                }
-                else
-                {
-                    return null;
-                }
+                return mContainedObjectAsIpso?.Children;
             }
         }
 
@@ -895,7 +918,6 @@ namespace Gum.Wireframe
                 return toReturn + originOffset.Y;
             }
         }
-
 
         public IVisible ExplicitIVisibleParent
         {
@@ -1073,7 +1095,7 @@ namespace Gum.Wireframe
         public event EventHandler PositionChanged;
         public event EventHandler ParentChanged;
 
-        #endregion
+#endregion
 
         #region Constructor
 
@@ -1133,7 +1155,7 @@ namespace Gum.Wireframe
         }
 
 
-        #endregion
+#endregion
 
         #region Methods
 
@@ -1897,10 +1919,6 @@ namespace Gum.Wireframe
 
         private void UpdateLayerScissor()
         {
-            if (mSortableLayer != null)
-            {
-                mSortableLayer.ScissorIpso = this;
-            }
         }
 
         private void GetParentDimensions(out float parentWidth, out float parentHeight)
@@ -2637,7 +2655,7 @@ namespace Gum.Wireframe
         {
             float heightToSet = mHeight;
 
-            #region RelativeToChildren
+#region RelativeToChildren
 
             if (mHeightUnit == DimensionUnitType.RelativeToChildren)
             {
@@ -2696,18 +2714,18 @@ namespace Gum.Wireframe
                 heightToSet = maxHeight + mHeight;
             }
 
-            #endregion
+#endregion
 
-            #region Percentage
+#region Percentage
 
             else if (mHeightUnit == DimensionUnitType.Percentage)
             {
                 heightToSet = parentHeight * mHeight / 100.0f;
             }
 
-            #endregion
+#endregion
 
-            #region PercentageOfSourceFile
+#region PercentageOfSourceFile
 
             else if (mHeightUnit == DimensionUnitType.PercentageOfSourceFile)
             {
@@ -2746,9 +2764,9 @@ namespace Gum.Wireframe
                 }
             }
 
-            #endregion
+#endregion
 
-            #region MaintainFileAspectRatio
+#region MaintainFileAspectRatio
 
             else if (mHeightUnit == DimensionUnitType.MaintainFileAspectRatio)
             {
@@ -2780,25 +2798,25 @@ namespace Gum.Wireframe
                 }
             }
 
-            #endregion
+#endregion
 
-            #region RelativeToContainer (in pixels)
+#region RelativeToContainer (in pixels)
 
             else if (mHeightUnit == DimensionUnitType.RelativeToContainer)
             {
                 heightToSet = parentHeight + mHeight;
             }
 
-            #endregion
+#endregion
 
-            #region PercentageOfOtherDimension
+#region PercentageOfOtherDimension
 
             else if (mHeightUnit == DimensionUnitType.PercentageOfOtherDimension)
             {
                 heightToSet = mContainedObjectAsIpso.Width * mHeight / 100.0f;
             }
 
-            #endregion
+#endregion
 
             mContainedObjectAsIpso.Height = heightToSet;
         }
@@ -2807,7 +2825,7 @@ namespace Gum.Wireframe
         {
             float widthToSet = mWidth;
 
-            #region RelativeToChildren
+#region RelativeToChildren
 
             if (mWidthUnit == DimensionUnitType.RelativeToChildren)
             {
@@ -2878,18 +2896,18 @@ namespace Gum.Wireframe
 
                 widthToSet = maxWidth + mWidth;
             }
-            #endregion
+#endregion
 
-            #region Percentage (of parent)
+#region Percentage (of parent)
 
             else if (mWidthUnit == DimensionUnitType.Percentage)
             {
                 widthToSet = parentWidth * mWidth / 100.0f;
             }
 
-            #endregion
+#endregion
 
-            #region PercentageOfSourceFile
+#region PercentageOfSourceFile
 
             else if (mWidthUnit == DimensionUnitType.PercentageOfSourceFile)
             {
@@ -2929,9 +2947,9 @@ namespace Gum.Wireframe
                 }
             }
 
-            #endregion
+#endregion
 
-            #region MaintainFileAspectRatio
+#region MaintainFileAspectRatio
 
             else if (mWidthUnit == DimensionUnitType.MaintainFileAspectRatio)
             {
@@ -2957,25 +2975,25 @@ namespace Gum.Wireframe
                 }
             }
 
-            #endregion
+#endregion
 
-            #region RelativeToContainer (in pixels)
+#region RelativeToContainer (in pixels)
 
             else if (mWidthUnit == DimensionUnitType.RelativeToContainer)
             {
                 widthToSet = parentWidth + mWidth;
             }
 
-            #endregion
+#endregion
 
-            #region PercentageOfOtherDimension
+#region PercentageOfOtherDimension
 
             else if (mWidthUnit == DimensionUnitType.PercentageOfOtherDimension)
             {
                 widthToSet = mContainedObjectAsIpso.Height * mWidth / 100.0f;
             }
 
-            #endregion
+#endregion
 
             mContainedObjectAsIpso.Width = widthToSet;
         }
@@ -3332,11 +3350,6 @@ namespace Gum.Wireframe
             // if mManagers is null, then it was never added to the managers
             if (mManagers != null)
             {
-                if (mSortableLayer != null)
-                {
-                    mManagers.Renderer.RemoveLayer(this.mSortableLayer);
-                }
-
                 if (mContainedObjectAsIpso is Sprite)
                 {
                     mManagers.SpriteManager.Remove(mContainedObjectAsIpso as Sprite);
@@ -4564,9 +4577,9 @@ namespace Gum.Wireframe
 
                         string fullFileName = ToolsUtilities.FileManager.Standardize(fontName, false, true);
 
-    #if ANDROID || IOS
+#if ANDROID || IOS
                         fullFileName = fullFileName.ToLowerInvariant();
-    #endif
+#endif
 
 
                         font = contentLoader.TryGetCachedDisposable<BitmapFont>(fullFileName);
@@ -4582,12 +4595,12 @@ namespace Gum.Wireframe
                             }
                         }
 
-    #if DEBUG
+#if DEBUG
                         if (font?.Textures.Any(item => item?.IsDisposed == true) == true)
                         {
                             throw new InvalidOperationException("The returned font has a disposed texture");
                         }
-    #endif
+#endif
                     }
                 }
 
@@ -4599,7 +4612,7 @@ namespace Gum.Wireframe
         }
 
 
-        #region IVisible Implementation
+#region IVisible Implementation
 
 
         bool IVisible.AbsoluteVisible
@@ -4621,7 +4634,7 @@ namespace Gum.Wireframe
             get { return this.Parent as IVisible; }
         }
 
-        #endregion
+#endregion
 
         public void ApplyState(string name)
         {
@@ -5033,6 +5046,6 @@ namespace Gum.Wireframe
         }
 
 
-        #endregion
+#endregion
     }
 }

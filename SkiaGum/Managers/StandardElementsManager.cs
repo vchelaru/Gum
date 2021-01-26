@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace SkiaGum.Managers
+namespace Gum.Managers
 {
     public enum TextureAddress
     {
@@ -11,7 +11,27 @@ namespace SkiaGum.Managers
         DimensionsBased
     }
 
-    class StandardElementsManager
+    public enum ChildrenLayout
     {
+        Regular,
+        TopToBottomStack,
+        LeftToRightStack
+
+    }
+
+    public class StandardElementsManager
+    {
+        #region Enums
+
+        public enum DimensionVariableAction
+        {
+            ExcludeFileOptions,
+            AllowFileOptions,
+            DefaultToPercentageOfFile
+        }
+
+        #endregion
+
+
     }
 }

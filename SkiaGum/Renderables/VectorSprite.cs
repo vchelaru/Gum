@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
+using SkiaGum.GueDeriving;
 using SkiaSharp;
 using SkiaSharp.Extended.Svg;
 using System;
@@ -41,6 +42,9 @@ namespace SkiaGum
                 }
             }
         }
+
+        public object Tag { get; set; }
+
 
         ObservableCollection<IRenderableIpso> mChildren;
         public ObservableCollection<IRenderableIpso> Children
@@ -85,6 +89,19 @@ namespace SkiaGum
 
         public bool Wrap => false;
 
+        public ColorOperation ColorOperation { get; set; } = ColorOperation.Modulate;
+
+        public bool FlipHorizontal
+        {
+            get;
+            set;
+        }
+
+        public bool FlipVertical
+        {
+            get;
+            set;
+        }
 
         #endregion
 

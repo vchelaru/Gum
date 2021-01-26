@@ -1,4 +1,5 @@
 ﻿using RenderingLibrary.Graphics;
+using SkiaGum.GueDeriving;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
@@ -88,6 +89,9 @@ namespace SkiaGum.Renderables
         public float Z { get; set; }
 
         public bool FlipHorizontal { get; set; }
+
+        public ColorOperation ColorOperation { get; set; } = ColorOperation.Modulate;
+
 
         IVisible IVisible.Parent { get { return Parent as IVisible; } }
 

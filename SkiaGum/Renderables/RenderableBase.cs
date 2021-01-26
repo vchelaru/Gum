@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
+using SkiaGum.GueDeriving;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
@@ -77,6 +78,24 @@ namespace SkiaGum.Renderables
 
         public bool Wrap => false;
 
+
+        public ColorOperation ColorOperation { get; set; } = ColorOperation.Modulate;
+
+
+
+        public bool FlipHorizontal
+        {
+            get;
+            set;
+        }
+
+        public bool FlipVertical
+        {
+            get;
+            set;
+        }
+
+        public object Tag { get; set; }
 
         public RenderableBase()
         {

@@ -16,4 +16,8 @@
     <PackageReference Include="Topten.RichTextKit" Version="0.2.123" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\ToolsUtilities\ToolsUtilitiesStandard.csproj" />
+  </ItemGroup>
+
 </Project>
