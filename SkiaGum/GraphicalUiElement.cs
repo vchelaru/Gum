@@ -4703,6 +4703,232 @@ namespace Gum.Wireframe
         }
 #endif
 
+        // When interpolating between two states,
+        // the code is goign to merge the values from
+        // the two states to create a 3rd set of (merged)
+        // values. Interpolation can happen in complex animations
+        // resulting in lots of merged lists being created. This allocates
+        // tons of memory. Therefore we create a static set of variable lists
+        // to store the merged values. We don't know how deep the stack will go
+        // (animations within animations) so we need to support a dynamically growing
+        // list. The numberOfUsedInterpolationLists stores how many times this is being
+        // called so it knows if it needs to add more lists.
+        static List<List<Gum.DataTypes.Variables.VariableSaveValues>> listOfListsForReducingAllocInInterpolation = new List<List<Gum.DataTypes.Variables.VariableSaveValues>>();
+        int numberOfUsedInterpolationLists = 0;
+
+        public void InterpolateBetween(Gum.DataTypes.Variables.StateSave first, Gum.DataTypes.Variables.StateSave second, float interpolationValue)
+        {
+            if (numberOfUsedInterpolationLists >= listOfListsForReducingAllocInInterpolation.Count)
+            {
+                const int capacity = 20;
+                var newList = new List<DataTypes.Variables.VariableSaveValues>(capacity);
+                listOfListsForReducingAllocInInterpolation.Add(newList);
+            }
+
+            List<Gum.DataTypes.Variables.VariableSaveValues> values = listOfListsForReducingAllocInInterpolation[numberOfUsedInterpolationLists];
+            values.Clear();
+            numberOfUsedInterpolationLists++;
+
+            Gum.DataTypes.Variables.StateSaveExtensionMethods.Merge(first, second, interpolationValue, values);
+
+            this.ApplyState(values);
+            numberOfUsedInterpolationLists--;
+        }
+
+        #region AnimationChain 
+#if MONOGAME
+        public bool Animate { get; set; } = true;
+        int mCurrentChainIndex;
+        int mCurrentFrameIndex;
+        AnimationChainList mAnimationChains;
+        float mAnimationSpeed = 1;
+        double mTimeIntoAnimation;
+        public AnimationChain CurrentChain
+        {
+            get
+            {
+                if (mCurrentChainIndex != -1 && mAnimationChains.Count > 0 && mCurrentChainIndex < mAnimationChains.Count)
+                {
+                    return mAnimationChains[mCurrentChainIndex];
+                }
+                else
+                    return null;
+            }
+        }
+
+        string desiredCurrentChainName;
+        public string CurrentChainName
+        {
+            get => CurrentChain?.Name;
+            set
+            {
+                desiredCurrentChainName = value;
+                mCurrentChainIndex = -1;
+                if(mAnimationChains?.Count > 0)
+                {
+                    RefreshCurrentChainToDesiredName();
+
+                    UpdateToCurrentAnimationFrame();
+
+                }
+            }
+        }
+
+        private void RefreshCurrentChainToDesiredName()
+        {
+            for (int i = 0; i < mAnimationChains.Count; i++)
+            {
+                if (mAnimationChains[i].Name == desiredCurrentChainName)
+                {
+                    mCurrentChainIndex = i;
+                    break;
+                }
+            }
+        }
+
+        bool mJustChangedFrame;
+        bool mJustCycled;
+
+        public void AnimateSelf()
+        {
+            var shouldAnimateSelf = true;
+            //mJustChangedFrame = false;
+            //mJustCycled = false;
+            if (Animate == false || mCurrentChainIndex == -1 || mAnimationChains == null || mAnimationChains.Count == 0 || mAnimationChains[mCurrentChainIndex].Count == 0)
+            {
+                shouldAnimateSelf = false;
+            }
+
+            if(shouldAnimateSelf)
+            {
+                int frameBefore = mCurrentFrameIndex;
+
+                // June 10, 2011
+                // A negative animation speed should cause the animation to play in reverse
+                //Removed the System.Math.Abs on the mAnimationSpeed variable to restore the correct behaviour.
+                //double modifiedTimePassed = TimeManager.SecondDifference * System.Math.Abs(mAnimationSpeed);
+                double modifiedTimePassed = TimeManager.Self.SecondDifference * mAnimationSpeed;
+
+                mTimeIntoAnimation += modifiedTimePassed;
+
+                AnimationChain animationChain = mAnimationChains[mCurrentChainIndex];
+
+                mTimeIntoAnimation = MathFunctions.Loop(mTimeIntoAnimation, animationChain.TotalLength, out mJustCycled);
+
+                UpdateFrameBasedOffOfTimeIntoAnimation();
+
+                if (mCurrentFrameIndex != frameBefore)
+                {
+                    UpdateToCurrentAnimationFrame();
+                    mJustChangedFrame = true;
+                }
+            }
+            if(Children != null)
+            {
+                foreach(var child in this.Children)
+                {
+                    if(child is GraphicalUiElement childGue)
+                    {
+                        childGue.AnimateSelf();
+                    }
+                }
+            }
+            else
+            {
+                foreach(var child in this.mWhatThisContains)
+                {
+                    if (child is GraphicalUiElement childGue)
+                    {
+                        childGue.AnimateSelf();
+                    }
+                }
+            }
+        }
+
+        void UpdateFrameBasedOffOfTimeIntoAnimation()
+        {
+            double timeIntoAnimation = mTimeIntoAnimation;
+
+            if (timeIntoAnimation < 0)
+            {
+                throw new ArgumentException("The timeIntoAnimation argument must be 0 or positive");
+            }
+            else if (CurrentChain != null && CurrentChain.Count > 1)
+            {
+                int frameIndex = 0;
+                while (timeIntoAnimation >= 0)
+                {
+                    double frameTime = CurrentChain[frameIndex].FrameLength;
+
+                    if (timeIntoAnimation < frameTime)
+                    {
+                        mCurrentFrameIndex = frameIndex;
+
+                        break;
+                    }
+                    else
+                    {
+                        timeIntoAnimation -= frameTime;
+
+                        frameIndex = (frameIndex + 1) % CurrentChain.Count;
+                    }
+                }
+            }
+        }
+
+        public void UpdateToCurrentAnimationFrame()
+        {
+            if (mAnimationChains != null && mAnimationChains.Count > mCurrentChainIndex && mCurrentChainIndex != -1 &&
+                mCurrentFrameIndex > -1 &&
+                mCurrentFrameIndex < mAnimationChains[mCurrentChainIndex].Count)
+            {
+                var frame = mAnimationChains[mCurrentChainIndex][mCurrentFrameIndex];
+                // Set the property so that any necessary values change:
+                //				mTexture = mAnimationChains[mCurrentChainIndex][mCurrentFrameIndex].Texture;
+                //this.Vertices[0].TextureCoordinate.X = frame.LeftCoordinate;
+                //this.Vertices[1].TextureCoordinate.X = frame.RightCoordinate;
+                //this.Vertices[2].TextureCoordinate.X = frame.RightCoordinate;
+                //this.Vertices[3].TextureCoordinate.X = frame.LeftCoordinate;
+
+                //this.Vertices[0].TextureCoordinate.Y = frame.TopCoordinate;
+                //this.Vertices[1].TextureCoordinate.Y = frame.TopCoordinate;
+                //this.Vertices[2].TextureCoordinate.Y = frame.BottomCoordinate;
+                //this.Vertices[3].TextureCoordinate.Y = frame.BottomCoordinate;
+                if(mContainedObjectAsIpso is Sprite sprite)
+                {
+                    sprite.Texture = frame.Texture;
+                }
+                this.TextureLeft = (int)(frame.LeftCoordinate * frame.Texture.Width);
+                this.TextureWidth = (int)(frame.RightCoordinate * frame.Texture.Width) - this.TextureLeft;
+
+                this.TextureTop = (int)(frame.TopCoordinate * frame.Texture.Height);
+                this.TextureHeight = (int)(frame.BottomCoordinate * frame.Texture.Height) - this.TextureTop;
+
+                //if (mIgnoreAnimationChainTextureFlip == false)
+                //{
+                //    mFlipHorizontal = frame.FlipHorizontal;
+                //    mFlipVertical = frame.FlipVertical;
+                //}
+
+                //if (mUseAnimationRelativePosition)
+                //{
+
+                //    RelativePosition.X = frame.RelativeX;
+                //    RelativePosition.Y = frame.RelativeY;
+                //}
+
+                //foreach (var instruction in frame.Instructions)
+                //{
+                //    instruction.Execute();
+                //}
+
+                //UpdateScale();
+
+            }
+        }
+#endif
+        #endregion
+
         #endregion
 
         // currently missing animation chains and interpolation
@@ -4749,7 +4975,6 @@ namespace Gum.Wireframe
                 x < absoluteX + this.GetAbsoluteWidth() &&
                 y < absoluteY + this.GetAbsoluteHeight();
         }
-
 
     }
 }
