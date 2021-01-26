@@ -1095,7 +1095,7 @@ namespace Gum.Wireframe
         public event EventHandler PositionChanged;
         public event EventHandler ParentChanged;
 
-#endregion
+        #endregion
 
         #region Constructor
 

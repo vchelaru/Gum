@@ -13,6 +13,7 @@ namespace SkiaGum.GueDeriving
             if(fullInstantiation)
             {
                 SetContainedObject(new RenderableBase());
+                Height = 150;
             }
         }
 

@@ -15,6 +15,12 @@ namespace SkiaGum
     public class VectorSprite : IRenderableIpso, IVisible
     {
         #region Fields/Properties
+
+        public SKColor Color
+        {
+            get; set;
+        } = SKColors.White;
+
         Vector2 Position;
         IRenderableIpso mParent;
 
@@ -89,6 +95,42 @@ namespace SkiaGum
 
         public bool Wrap => false;
 
+        public int Alpha
+        {
+            get => Color.Alpha;
+            set
+            {
+                this.Color = new SKColor(this.Color.Red, this.Color.Green, this.Color.Blue, (byte)value);
+            }
+        }
+
+        public int Blue
+        {
+            get => Color.Blue;
+            set
+            {
+                this.Color = new SKColor(this.Color.Red, this.Color.Green, (byte)value, this.Color.Alpha);
+            }
+        }
+
+        public int Green
+        {
+            get => Color.Green;
+            set
+            {
+                this.Color = new SKColor(this.Color.Red, (byte)value, this.Color.Blue, this.Color.Alpha);
+            }
+        }
+
+        public int Red
+        {
+            get => Color.Red;
+            set
+            {
+                this.Color = new SKColor((byte)value, this.Color.Green, this.Color.Blue, this.Color.Alpha);
+            }
+        }
+
         public ColorOperation ColorOperation { get; set; } = ColorOperation.Modulate;
 
         public bool FlipHorizontal
@@ -136,7 +178,17 @@ namespace SkiaGum
                 SKMatrix.Concat(
                     ref result, translateMatrix, result);
 
-                canvas.DrawPicture(Texture.Picture, ref result);
+                if (Color.Red != 255 || Color.Green != 255 || Color.Blue != 255 || Color.Alpha != 255)
+                {
+                    using (var paint = new SKPaint() { Color = Color })
+                    {
+                        canvas.DrawPicture(Texture.Picture, ref result, paint);
+                    }
+                }
+                else
+                {
+                    canvas.DrawPicture(Texture.Picture, ref result);
+                }
             }
         }
 

@@ -41,6 +41,30 @@ namespace SkiaGum.GueDeriving
             set => ContainedSprite.Texture = value;
         }
 
+        public int Alpha
+        {
+            get => ContainedSprite.Alpha;
+            set => ContainedSprite.Alpha = value;
+        }
+
+        public int Red
+        {
+            get => ContainedSprite.Red;
+            set => ContainedSprite.Red = value;
+        }
+
+        public int Green
+        {
+            get => ContainedSprite.Green;
+            set => ContainedSprite.Green = value;
+        }
+
+        public int Blue
+        {
+            get => ContainedSprite.Blue;
+            set => ContainedSprite.Blue = value;
+        }
+
         public SvgRuntime(bool fullInstantiation = true)
         {
             if (fullInstantiation)
