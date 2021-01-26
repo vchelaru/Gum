@@ -27,7 +27,7 @@ namespace GumRuntime
             GraphicalUiElement toReturn = null;
 
             var elementName = elementSave.Name;
-            if(!string.IsNullOrEmpty(genericType))
+            if (!string.IsNullOrEmpty(genericType))
             {
                 elementName = elementName + "<T>";
             }
@@ -38,14 +38,14 @@ namespace GumRuntime
                 // strongly-typed Gum objects.
                 var type = mElementToGueTypes[elementName];
 
-                if(!string.IsNullOrEmpty(genericType))
+                if (!string.IsNullOrEmpty(genericType))
                 {
                     type = type.MakeGenericType(mElementToGueTypes[genericType]);
                 }
-                var constructor = type.GetConstructor(new Type[] { typeof(bool), typeof(bool)});
+                var constructor = type.GetConstructor(new Type[] { typeof(bool), typeof(bool) });
 
 
-                toReturn = constructor.Invoke(new object[] { fullInstantiation, true}) as GraphicalUiElement;
+                toReturn = constructor.Invoke(new object[] { fullInstantiation, true }) as GraphicalUiElement;
             }
             else
             {
@@ -124,7 +124,7 @@ namespace GumRuntime
             }
         }
 
-        public static GraphicalUiElement ToGraphicalUiElement(this ElementSave elementSave, SystemManagers systemManagers, 
+        public static GraphicalUiElement ToGraphicalUiElement(this ElementSave elementSave, SystemManagers systemManagers,
             bool addToManagers)
         {
             GraphicalUiElement toReturn = CreateGueForElement(elementSave);
@@ -142,14 +142,14 @@ namespace GumRuntime
 
         public static void SetStatesAndCategoriesRecursively(this GraphicalUiElement graphicalElement, ElementSave elementSave)
         {
-            if(graphicalElement == null)
+            if (graphicalElement == null)
             {
                 throw new ArgumentNullException(nameof(graphicalElement));
             }
-            if(!string.IsNullOrEmpty(elementSave.BaseType))
+            if (!string.IsNullOrEmpty(elementSave.BaseType))
             {
                 var baseElementSave = Gum.Managers.ObjectFinder.Self.GetElementSave(elementSave.BaseType);
-                if(baseElementSave != null)
+                if (baseElementSave != null)
                 {
                     graphicalElement.SetStatesAndCategoriesRecursively(baseElementSave);
                 }
@@ -227,7 +227,7 @@ namespace GumRuntime
         //{
         //    graphicalElement.SetVariablesRecursively(elementSave, elementSave.DefaultState);
         //}
-        
+
         public static void SetVariablesRecursively(this GraphicalUiElement graphicalElement, ElementSave elementSave, Gum.DataTypes.Variables.StateSave stateSave)
         {
             if (!string.IsNullOrEmpty(elementSave.BaseType))
@@ -262,5 +262,5 @@ namespace GumRuntime
 #endif
 
 
-        }
+    }
 }

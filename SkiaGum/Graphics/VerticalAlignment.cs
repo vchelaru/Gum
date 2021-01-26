@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace SkiaGum.Graphics
+namespace RenderingLibrary.Graphics
 {
     public enum VerticalAlignment
     {

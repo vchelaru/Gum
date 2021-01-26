@@ -2,7 +2,6 @@
 using Microsoft.Xna.Framework;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
-using SkiaGum.Graphics;
 using SkiaGum.GueDeriving;
 using SkiaSharp;
 using System;

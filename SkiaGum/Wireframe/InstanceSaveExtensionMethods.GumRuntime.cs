@@ -1,13 +1,18 @@
 ﻿using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Wireframe;
+#if MONOGAME
 using Microsoft.Xna.Framework.Graphics;
+#endif
+
 #if !NO_XNA
 
 using RenderingLibrary;
 using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
+#if MONOGAME
 using RenderingLibrary.Math.Geometry;
+#endif
 #endif
 using System;
 
@@ -24,7 +29,7 @@ namespace GumRuntime
         public static GraphicalUiElement ToGraphicalUiElement(this InstanceSave instanceSave, SystemManagers systemManagers)
         {
 #if DEBUG
-            if(ObjectFinder.Self.GumProjectSave == null)
+            if (ObjectFinder.Self.GumProjectSave == null)
             {
                 throw new InvalidOperationException("You need to set the ObjectFinder's GumProjectSave first so it can track references");
             }
@@ -37,7 +42,7 @@ namespace GumRuntime
                 string genericType = null;
 
 
-                if(instanceElement.Name == "Container" && instanceElement is StandardElementSave)
+                if (instanceElement.Name == "Container" && instanceElement is StandardElementSave)
                 {
                     genericType = instanceSave.ParentContainer.DefaultState.GetValueOrDefault<string>(instanceSave.Name + "." + "Contained Type");
                 }
@@ -47,7 +52,7 @@ namespace GumRuntime
                 // If we get here but there's no contained graphical object then that means we don't
                 // have a strongly-typed system (like when a game is running in FRB). Therefore, we'll
                 // just fall back to the regular creation of graphical objects, like is done in the Gum tool:
-                if(toReturn.RenderableComponent == null)
+                if (toReturn.RenderableComponent == null)
                 {
                     instanceElement.SetGraphicalUiElement(toReturn, systemManagers);
                 }
@@ -82,13 +87,14 @@ namespace GumRuntime
         {
             bool handledAsBaseType = true;
             containedObject = null;
+
 #if MONOGAME
             switch (baseType)
             {
 
                 case "Container":
 
-                    if(GraphicalUiElement.ShowLineRectangles)
+                    if (GraphicalUiElement.ShowLineRectangles)
                     {
                         LineRectangle lineRectangle = new LineRectangle(systemManagers);
                         containedObject = lineRectangle;
@@ -144,6 +150,7 @@ namespace GumRuntime
             return handledAsBaseType;
         }
 
+#if MONOGAME
         private static void SetAlphaAndColorValues(SolidRectangle solidRectangle, RecursiveVariableFinder rvf)
         {
             solidRectangle.Color = ColorFromRvf(rvf);
@@ -185,6 +192,7 @@ namespace GumRuntime
             text.HorizontalAlignment = rvf.GetValue<HorizontalAlignment>("HorizontalAlignment");
             text.VerticalAlignment = rvf.GetValue<VerticalAlignment>("VerticalAlignment");
         }
+#endif
 #endif
     }
 }

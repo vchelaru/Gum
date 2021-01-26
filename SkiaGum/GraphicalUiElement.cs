@@ -5,9 +5,9 @@ using Gum.Graphics.Animation;
 using Gum.Managers;
 using Gum.RenderingLibrary;
 using GumDataTypes.Variables;
+using GumRuntime;
 
 #if MONOGAME
-using GumRuntime;
 using RenderingLibrary.Math.Geometry;
 #endif
 
@@ -18,7 +18,6 @@ using RenderingLibrary.Math;
 
 #if SKIA
 using SkiaGum;
-using SkiaGum.Graphics;
 using SkiaGum.GueDeriving;
 using SkiaGum.Managers;
 using SkiaGum.Renderables;
@@ -48,7 +47,7 @@ namespace Gum.Wireframe
     /// setting variables, states, and perofrming layout. The GraphicalUiElement can
     /// wrap an underlying rendering object.
     /// </summary>
-    public class GraphicalUiElement : IRenderableIpso, IVisible
+    public partial class GraphicalUiElement : IRenderableIpso, IVisible
     {
         #region Enums/Internal Classes
 
@@ -101,9 +100,7 @@ namespace Gum.Wireframe
         DimensionUnitType mWidthUnit;
         DimensionUnitType mHeightUnit;
 
-#if MONOGAME
         SystemManagers mManagers;
-#endif
 
         int mTextureTop;
         int mTextureLeft;
@@ -424,9 +421,7 @@ namespace Gum.Wireframe
 #endif
 
 
-#if MONOGAME
         Layer mLayer;
-#endif
 
         #endregion
 
@@ -1087,6 +1082,17 @@ namespace Gum.Wireframe
 
         #endregion
 
+        #region Constructor
+
+#if MONOGAME
+        public GraphicalUiElement()
+            : this(null, null)
+        {
+
+        }
+#endif
+
+#if SKIA
         public GraphicalUiElement()
         {
             mIsLayoutSuspended = true;
@@ -1094,6 +1100,24 @@ namespace Gum.Wireframe
             Height = 32;
             mIsLayoutSuspended = false;
 
+        }
+#endif
+
+        public GraphicalUiElement(IRenderable containedObject, GraphicalUiElement whatContainsThis)
+        {
+            SetContainedObject(containedObject);
+
+            mWhatContainsThis = whatContainsThis;
+            if (mWhatContainsThis != null)
+            {
+                mWhatContainsThis.mWhatThisContains.Add(this);
+
+                // I don't think we want to do this. 
+                if (whatContainsThis.mContainedObjectAsIpso != null)
+                {
+                    this.Parent = whatContainsThis;
+                }
+            }
         }
 
 
@@ -1108,6 +1132,10 @@ namespace Gum.Wireframe
             if (mContainedObjectAsIpso != null)
             {
                 mContainedObjectAsIpso.Children.CollectionChanged -= HandleCollectionChanged;
+                if (string.IsNullOrEmpty(this.Name) && !string.IsNullOrEmpty(mContainedObjectAsIpso.Name))
+                {
+                    Name = mContainedObjectAsIpso.Name;
+                }
             }
 
             mContainedObjectAsIpso = containedObject as IRenderableIpso;
@@ -1123,170 +1151,9 @@ namespace Gum.Wireframe
                 UpdateLayout();
             }
         }
+        #endregion
 
-        private void HandleCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            if (e.Action == NotifyCollectionChangedAction.Add)
-            {
-                foreach (IRenderableIpso ipso in e.NewItems)
-                {
-                    if (ipso.Parent != this)
-                    {
-                        ipso.Parent = this;
-
-                    }
-                }
-            }
-            else if (e.Action == NotifyCollectionChangedAction.Remove)
-            {
-                foreach (IRenderableIpso ipso in e.OldItems)
-                {
-                    if (ipso.Parent == this)
-                    {
-                        ipso.Parent = null;
-                    }
-                }
-            }
-        }
-
-
-        bool IsAllLayoutAbsolute()
-        {
-            return 
-                //mWidthUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent &&
-                //mHeightUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent &&
-                (mXUnits == GeneralUnitType.PixelsFromLarge || mXUnits == GeneralUnitType.PixelsFromMiddle ||
-                    mXUnits == GeneralUnitType.PixelsFromSmall || mXUnits == GeneralUnitType.PixelsFromMiddleInverted) &&
-                (mYUnits == GeneralUnitType.PixelsFromLarge || mYUnits == GeneralUnitType.PixelsFromMiddle ||
-                    mYUnits == GeneralUnitType.PixelsFromSmall || mYUnits == GeneralUnitType.PixelsFromMiddleInverted ||
-                    mYUnits == GeneralUnitType.PixelsFromBaseline);
-        }
-
-        bool IsAllLayoutAbsolute(XOrY xOrY)
-        {
-            if (xOrY == XOrY.X)
-            {
-                return //mWidthUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent &&
-                    (mXUnits == GeneralUnitType.PixelsFromLarge || mXUnits == GeneralUnitType.PixelsFromMiddle ||
-                        mXUnits == GeneralUnitType.PixelsFromSmall || mXUnits == GeneralUnitType.PixelsFromMiddleInverted);
-            }
-            else // Y
-            {
-                return //mHeightUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent &&
-                    (mYUnits == GeneralUnitType.PixelsFromLarge || mYUnits == GeneralUnitType.PixelsFromMiddle ||
-                        mYUnits == GeneralUnitType.PixelsFromSmall || mYUnits == GeneralUnitType.PixelsFromMiddleInverted &&
-                        mYUnits == GeneralUnitType.PixelsFromBaseline);
-            }
-        }
-
-        float GetRequiredParentWidth()
-        {
-            var effectiveParent = this.EffectiveParentGue;
-            if (effectiveParent != null && effectiveParent.ChildrenLayout == ChildrenLayout.TopToBottomStack && effectiveParent.WrapsChildren)
-            {
-                var asIpso = this as IPositionedSizedObject;
-                return asIpso.X + asIpso.Width;
-            }
-            else
-            {
-                float positionValue = mX;
-
-                // This GUE hasn't been set yet so it can't give
-                // valid widths/heights
-                if (this.mContainedObjectAsIpso == null)
-                {
-                    return 0;
-                }
-                float smallEdge = positionValue;
-                if (mXOrigin == HorizontalAlignment.Center)
-                {
-                    smallEdge = positionValue - ((IPositionedSizedObject)this).Width / 2.0f;
-                }
-                else if (mXOrigin == HorizontalAlignment.Right)
-                {
-                    smallEdge = positionValue - ((IPositionedSizedObject)this).Width;
-                }
-
-                float bigEdge = positionValue;
-                if (mXOrigin == HorizontalAlignment.Center)
-                {
-                    bigEdge = positionValue + ((IPositionedSizedObject)this).Width / 2.0f;
-                }
-                if (mXOrigin == HorizontalAlignment.Left)
-                {
-                    bigEdge = positionValue + ((IPositionedSizedObject)this).Width;
-                }
-
-                var units = mXUnits;
-
-                float dimensionToReturn = GetDimensionFromEdges(smallEdge, bigEdge, units);
-
-                return dimensionToReturn;
-            }
-        }
-
-        float GetRequiredParentHeight()
-        {
-            var effectiveParent = this.EffectiveParentGue;
-            if (effectiveParent != null && effectiveParent.ChildrenLayout == ChildrenLayout.LeftToRightStack && effectiveParent.WrapsChildren)
-            {
-                var asIpso = this as IPositionedSizedObject;
-                return asIpso.Y + asIpso.Height;
-            }
-            else
-            {
-                float positionValue = mY;
-
-                // This GUE hasn't been set yet so it can't give
-                // valid widths/heights
-                if (this.mContainedObjectAsIpso == null)
-                {
-                    return 0;
-                }
-                float smallEdge = positionValue;
-
-                var units = mYUnits;
-                if (units == GeneralUnitType.PixelsFromMiddleInverted)
-                {
-                    smallEdge *= -1;
-                }
-
-                if (mYOrigin == VerticalAlignment.Center)
-                {
-                    smallEdge = positionValue - ((IPositionedSizedObject)this).Height / 2.0f;
-                }
-                else if (mYOrigin == VerticalAlignment.TextBaseline)
-                {
-                    if (mContainedObjectAsIpso is Text text)
-                    {
-                        smallEdge = positionValue - ((IPositionedSizedObject)this).Height + text.DescenderHeight * text.FontScale;
-                    }
-                    else
-                    {
-                        smallEdge = positionValue - ((IPositionedSizedObject)this).Height;
-                    }
-                }
-                else if (mYOrigin == VerticalAlignment.Bottom)
-                {
-                    smallEdge = positionValue - ((IPositionedSizedObject)this).Height;
-                }
-
-                float bigEdge = positionValue;
-                if (mYOrigin == VerticalAlignment.Center)
-                {
-                    bigEdge = positionValue + ((IPositionedSizedObject)this).Height / 2.0f;
-                }
-                if (mYOrigin == VerticalAlignment.Top)
-                {
-                    bigEdge = positionValue + ((IPositionedSizedObject)this).Height;
-                }
-
-                float dimensionToReturn = GetDimensionFromEdges(smallEdge, bigEdge, units);
-
-                return dimensionToReturn;
-            }
-
-        }
+        #region Methods
 
         /// <summary>
         /// Sets the default state.
@@ -1295,58 +1162,16 @@ namespace Gum.Wireframe
         /// This function is virtual so that derived classes can override it
         /// and provide a quicker method for setting default states
         /// </remarks>
-        //public virtual void SetInitialState()
-        //{
-        //    var elementSave = this.Tag as ElementSave;
-        //    this.SetVariablesRecursively(elementSave, elementSave.DefaultState);
-        //}
-
-        private static float GetDimensionFromEdges(float smallEdge, float bigEdge, GeneralUnitType units)
+        public virtual void SetInitialState()
         {
-            float dimensionToReturn = 0;
-            if (units == GeneralUnitType.PixelsFromSmall)
-            // The value already comes in properly inverted
-            {
-                smallEdge = 0;
-
-                bigEdge = System.Math.Max(0, bigEdge);
-                dimensionToReturn = bigEdge - smallEdge;
-            }
-            else if (units == GeneralUnitType.PixelsFromMiddle ||
-                units == GeneralUnitType.PixelsFromMiddleInverted)
-            {
-                // use the full width
-                float abs1 = System.Math.Abs(smallEdge);
-                float abs2 = System.Math.Abs(bigEdge);
-
-                dimensionToReturn = 2 * System.Math.Max(abs1, abs2);
-            }
-            else if (units == GeneralUnitType.PixelsFromLarge)
-            {
-                smallEdge = System.Math.Min(0, smallEdge);
-                bigEdge = 0;
-                dimensionToReturn = bigEdge - smallEdge;
-
-            }
-            return dimensionToReturn;
+            var elementSave = this.Tag as ElementSave;
+            this.SetVariablesRecursively(elementSave, elementSave.DefaultState);
         }
-
 
         public void UpdateLayout()
         {
             UpdateLayout(true, true);
         }
-
-        public bool GetIfDimensionsDependOnChildren()
-        {
-            // If this is a Screen, then it doesn't have a size. Screens cannot depend on children:
-            //bool isScreen = ElementSave != null && ElementSave is ScreenSave;
-            bool isScreen = false;
-            return !isScreen &&
-                (this.WidthUnits.GetDependencyType() == HierarchyDependencyType.DependsOnChildren ||
-                this.HeightUnits.GetDependencyType() == HierarchyDependencyType.DependsOnChildren);
-        }
-
 
         public void UpdateLayout(bool updateParent, bool updateChildren)
         {
@@ -1356,21 +1181,6 @@ namespace Gum.Wireframe
                 value = 0;
             }
             UpdateLayout(updateParent, value);
-        }
-
-        bool GetIfShouldCallUpdateOnParent()
-        {
-            var asGue = this.Parent as GraphicalUiElement;
-
-            if (asGue != null)
-            {
-                //return asGue.GetIfDimensionsDependOnChildren() || asGue.ChildrenLayout != Gum.Managers.ChildrenLayout.Regular;
-                return false;
-            }
-            else
-            {
-                return false;
-            }
         }
 
         public void UpdateLayout(bool updateParent, int childrenUpdateDepth, XOrY? xOrY = null)
@@ -1599,6 +1409,658 @@ namespace Gum.Wireframe
             }
         }
 
+        ChildType GetChildLayoutType(GraphicalUiElement parent)
+        {
+            var doesParentWrapStack = parent.WrapsChildren && (parent.ChildrenLayout == ChildrenLayout.LeftToRightStack || parent.ChildrenLayout == ChildrenLayout.TopToBottomStack);
+
+
+            var isAbsolute = mWidthUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent &&
+                mHeightUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent &&
+                (mXUnits == GeneralUnitType.PixelsFromLarge || mXUnits == GeneralUnitType.PixelsFromMiddle ||
+                    mXUnits == GeneralUnitType.PixelsFromSmall || mXUnits == GeneralUnitType.PixelsFromMiddleInverted) &&
+                (mYUnits == GeneralUnitType.PixelsFromLarge || mYUnits == GeneralUnitType.PixelsFromMiddle ||
+                    mYUnits == GeneralUnitType.PixelsFromSmall || mYUnits == GeneralUnitType.PixelsFromMiddleInverted ||
+                    mYUnits == GeneralUnitType.PixelsFromBaseline);
+
+            if (doesParentWrapStack)
+            {
+                return isAbsolute ? ChildType.StackedWrapped : ChildType.Relative;
+            }
+            else
+            {
+                return isAbsolute ? ChildType.Absolute : ChildType.Relative;
+            }
+        }
+
+        ChildType GetChildLayoutType(XOrY xOrY, GraphicalUiElement parent)
+        {
+            bool isAbsolute;
+            var doesParentWrapStack = parent.WrapsChildren && (parent.ChildrenLayout == ChildrenLayout.LeftToRightStack || parent.ChildrenLayout == ChildrenLayout.TopToBottomStack);
+
+            if (xOrY == XOrY.X)
+            {
+                isAbsolute = mWidthUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent &&
+                    (mXUnits == GeneralUnitType.PixelsFromLarge || mXUnits == GeneralUnitType.PixelsFromMiddle ||
+                        mXUnits == GeneralUnitType.PixelsFromSmall || mXUnits == GeneralUnitType.PixelsFromMiddleInverted);
+
+            }
+            else // Y
+            {
+                isAbsolute = mHeightUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent &&
+                    (mYUnits == GeneralUnitType.PixelsFromLarge || mYUnits == GeneralUnitType.PixelsFromMiddle ||
+                        mYUnits == GeneralUnitType.PixelsFromSmall || mYUnits == GeneralUnitType.PixelsFromMiddleInverted &&
+                        mYUnits == GeneralUnitType.PixelsFromBaseline);
+
+            }
+
+            if (doesParentWrapStack)
+            {
+                return isAbsolute ? ChildType.StackedWrapped : ChildType.Relative;
+            }
+            else
+            {
+                return isAbsolute ? ChildType.Absolute : ChildType.Relative;
+            }
+        }
+
+        float GetRequiredParentWidth()
+        {
+            var effectiveParent = this.EffectiveParentGue;
+            if (effectiveParent != null && effectiveParent.ChildrenLayout == ChildrenLayout.TopToBottomStack && effectiveParent.WrapsChildren)
+            {
+                var asIpso = this as IPositionedSizedObject;
+                return asIpso.X + asIpso.Width;
+            }
+            else
+            {
+                float positionValue = mX;
+
+                // This GUE hasn't been set yet so it can't give
+                // valid widths/heights
+                if (this.mContainedObjectAsIpso == null)
+                {
+                    return 0;
+                }
+                float smallEdge = positionValue;
+                if (mXOrigin == HorizontalAlignment.Center)
+                {
+                    smallEdge = positionValue - ((IPositionedSizedObject)this).Width / 2.0f;
+                }
+                else if (mXOrigin == HorizontalAlignment.Right)
+                {
+                    smallEdge = positionValue - ((IPositionedSizedObject)this).Width;
+                }
+
+                float bigEdge = positionValue;
+                if (mXOrigin == HorizontalAlignment.Center)
+                {
+                    bigEdge = positionValue + ((IPositionedSizedObject)this).Width / 2.0f;
+                }
+                if (mXOrigin == HorizontalAlignment.Left)
+                {
+                    bigEdge = positionValue + ((IPositionedSizedObject)this).Width;
+                }
+
+                var units = mXUnits;
+
+                float dimensionToReturn = GetDimensionFromEdges(smallEdge, bigEdge, units);
+
+                return dimensionToReturn;
+            }
+        }
+
+        float GetRequiredParentHeight()
+        {
+            var effectiveParent = this.EffectiveParentGue;
+            if (effectiveParent != null && effectiveParent.ChildrenLayout == ChildrenLayout.LeftToRightStack && effectiveParent.WrapsChildren)
+            {
+                var asIpso = this as IPositionedSizedObject;
+                return asIpso.Y + asIpso.Height;
+            }
+            else
+            {
+                float positionValue = mY;
+
+                // This GUE hasn't been set yet so it can't give
+                // valid widths/heights
+                if (this.mContainedObjectAsIpso == null)
+                {
+                    return 0;
+                }
+                float smallEdge = positionValue;
+
+                var units = mYUnits;
+                if (units == GeneralUnitType.PixelsFromMiddleInverted)
+                {
+                    smallEdge *= -1;
+                }
+
+                if (mYOrigin == VerticalAlignment.Center)
+                {
+                    smallEdge = positionValue - ((IPositionedSizedObject)this).Height / 2.0f;
+                }
+                else if (mYOrigin == VerticalAlignment.TextBaseline)
+                {
+                    if (mContainedObjectAsIpso is Text text)
+                    {
+                        smallEdge = positionValue - ((IPositionedSizedObject)this).Height + text.DescenderHeight * text.FontScale;
+                    }
+                    else
+                    {
+                        smallEdge = positionValue - ((IPositionedSizedObject)this).Height;
+                    }
+                }
+                else if (mYOrigin == VerticalAlignment.Bottom)
+                {
+                    smallEdge = positionValue - ((IPositionedSizedObject)this).Height;
+                }
+
+                float bigEdge = positionValue;
+                if (mYOrigin == VerticalAlignment.Center)
+                {
+                    bigEdge = positionValue + ((IPositionedSizedObject)this).Height / 2.0f;
+                }
+                if (mYOrigin == VerticalAlignment.Top)
+                {
+                    bigEdge = positionValue + ((IPositionedSizedObject)this).Height;
+                }
+
+                float dimensionToReturn = GetDimensionFromEdges(smallEdge, bigEdge, units);
+
+                return dimensionToReturn;
+            }
+
+        }
+
+        private static float GetDimensionFromEdges(float smallEdge, float bigEdge, GeneralUnitType units)
+        {
+            float dimensionToReturn = 0;
+            if (units == GeneralUnitType.PixelsFromSmall)
+            // The value already comes in properly inverted
+            {
+                smallEdge = 0;
+
+                bigEdge = System.Math.Max(0, bigEdge);
+                dimensionToReturn = bigEdge - smallEdge;
+            }
+            else if (units == GeneralUnitType.PixelsFromMiddle ||
+                units == GeneralUnitType.PixelsFromMiddleInverted)
+            {
+                // use the full width
+                float abs1 = System.Math.Abs(smallEdge);
+                float abs2 = System.Math.Abs(bigEdge);
+
+                dimensionToReturn = 2 * System.Math.Max(abs1, abs2);
+            }
+            else if (units == GeneralUnitType.PixelsFromLarge)
+            {
+                smallEdge = System.Math.Min(0, smallEdge);
+                bigEdge = 0;
+                dimensionToReturn = bigEdge - smallEdge;
+
+            }
+            return dimensionToReturn;
+        }
+
+        public bool GetIfDimensionsDependOnChildren()
+        {
+            // If this is a Screen, then it doesn't have a size. Screens cannot depend on children:
+            //bool isScreen = ElementSave != null && ElementSave is ScreenSave;
+            bool isScreen = false;
+            return !isScreen &&
+                (this.WidthUnits.GetDependencyType() == HierarchyDependencyType.DependsOnChildren ||
+                this.HeightUnits.GetDependencyType() == HierarchyDependencyType.DependsOnChildren);
+        }
+
+#if MONOGAME
+        void IRenderable.PreRender()
+        {
+            if (mContainedObjectAsIpso != null)
+            {
+                mContainedObjectAsIpso.PreRender();
+            }
+        }
+#endif
+
+        public virtual void CreateChildrenRecursively(ElementSave elementSave, SystemManagers systemManagers)
+        {
+            bool isScreen = elementSave is ScreenSave;
+
+            foreach (var instance in elementSave.Instances)
+            {
+#if MONOGAME
+                var childGue = instance.ToGraphicalUiElement(systemManagers);
+
+                if (childGue != null)
+                {
+                    if (!isScreen)
+                    {
+                        childGue.Parent = this;
+                    }
+                    childGue.ElementGueContainingThis = this;
+                }
+#endif
+            }
+        }
+
+
+        bool GetIfShouldCallUpdateOnParent()
+        {
+            var asGue = this.Parent as GraphicalUiElement;
+
+            if (asGue != null)
+            {
+                return asGue.GetIfDimensionsDependOnChildren() || asGue.ChildrenLayout != Gum.Managers.ChildrenLayout.Regular;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        private static bool GetIfOneDimensionCanChangeOtherDimension(GraphicalUiElement gue)
+        {
+            var canOneDimensionChangeTheOtherOnChild = gue.RenderableComponent is Text ||
+                    gue.WidthUnits == DimensionUnitType.PercentageOfOtherDimension ||
+                    gue.HeightUnits == DimensionUnitType.PercentageOfOtherDimension ||
+                    gue.WidthUnits == DimensionUnitType.MaintainFileAspectRatio ||
+                    gue.HeightUnits == DimensionUnitType.MaintainFileAspectRatio ||
+
+
+                    ((gue.ChildrenLayout == ChildrenLayout.LeftToRightStack || gue.ChildrenLayout == ChildrenLayout.TopToBottomStack) && gue.WrapsChildren);
+
+            // If the child cannot be directly changed by a dimension, it may be indirectly changed by a dimension recursively. This can happen
+            // if the child either depends on its own children's widths and heights, and one of its children can have its dimension changed.
+
+            if (!canOneDimensionChangeTheOtherOnChild && gue.GetIfDimensionsDependOnChildren())
+            {
+                for (int i = 0; i < gue.Children.Count; i++)
+                {
+                    var uncastedChild = gue.Children[i];
+
+                    if (uncastedChild is GraphicalUiElement child)
+                    {
+
+                        if (GetIfOneDimensionCanChangeOtherDimension(child))
+                        {
+                            canOneDimensionChangeTheOtherOnChild = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            return canOneDimensionChangeTheOtherOnChild;
+
+        }
+
+        // Records the type of update needed when layout resumes
+        private void MakeDirty(bool updateParent, int childrenUpdateDepth, XOrY? xOrY)
+        {
+            if (currentDirtyState == null)
+            {
+                currentDirtyState = new DirtyState();
+
+                currentDirtyState.XOrY = xOrY;
+            }
+
+            currentDirtyState.UpdateParent = currentDirtyState.UpdateParent || updateParent;
+            currentDirtyState.ChildrenUpdateDepth = Math.Max(
+                currentDirtyState.ChildrenUpdateDepth, childrenUpdateDepth);
+
+            // If the update is supposed to update all associations, make it null...
+            if (xOrY == null)
+            {
+                currentDirtyState.XOrY = null;
+            }
+            // If neither are null and they differ, then that means update both, so set it to null
+            else if (currentDirtyState.XOrY != null && currentDirtyState.XOrY != xOrY)
+            {
+                currentDirtyState.XOrY = null;
+            }
+            //It's not possible to set either X or Y here. That can only happen on initialization
+            // of the currentDirtyState
+        }
+
+        #endregion
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        partial void CustomAddToManagers();
+
+        /// <summary>
+        /// Adds this as a renderable to the SystemManagers if not already added. If already added
+        /// this does not perform any operations - it can be safely called multiple times.
+        /// </summary>
+        public virtual void AddToManagers()
+        {
+
+            AddToManagers(SystemManagers.Default, null);
+
+        }
+
+        /// <summary>
+        /// Adds this as a renderable to the SystemManagers on the argument layer if not already added
+        /// to SystemManagers. If already added
+        /// this does not perform any operations - it can be safely called multiple times, but
+        /// calling it multiple times will not move this to a different layer.
+        /// </summary>
+        public virtual void AddToManagers(SystemManagers managers, Layer layer)
+        {
+#if DEBUG
+            if (managers == null)
+            {
+                throw new ArgumentNullException("managers cannot be null");
+            }
+#endif
+            // If mManagers isn't null, it's already been added
+            if (mManagers == null)
+            {
+                mLayer = layer;
+                mManagers = managers;
+
+#if MONOGAME
+                AddContainedRenderableToManagers(managers, layer);
+
+                // Custom should be called before children have their Custom called
+                CustomAddToManagers();
+
+                // that means this is a screen, so the children need to be added directly to managers
+                if (this.mContainedObjectAsIpso == null)
+                {
+                    AddChildren(managers, layer);
+                }
+                else
+                {
+                    CustomAddChildren();
+                }
+#endif
+            }
+        }
+
+        private void CustomAddChildren()
+        {
+            foreach (var child in this.mWhatThisContains)
+            {
+                child.mManagers = this.mManagers;
+                child.CustomAddToManagers();
+
+                child.CustomAddChildren();
+            }
+        }
+
+        private void HandleCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.Action == NotifyCollectionChangedAction.Add)
+            {
+                foreach (IRenderableIpso ipso in e.NewItems)
+                {
+                    if (ipso.Parent != this)
+                    {
+                        ipso.Parent = this;
+
+                    }
+                }
+            }
+            else if (e.Action == NotifyCollectionChangedAction.Remove)
+            {
+                foreach (IRenderableIpso ipso in e.OldItems)
+                {
+                    if (ipso.Parent == this)
+                    {
+                        ipso.Parent = null;
+                    }
+                }
+            }
+        }
+
+
+        bool IsAllLayoutAbsolute()
+        {
+            return 
+                //mWidthUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent &&
+                //mHeightUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent &&
+                (mXUnits == GeneralUnitType.PixelsFromLarge || mXUnits == GeneralUnitType.PixelsFromMiddle ||
+                    mXUnits == GeneralUnitType.PixelsFromSmall || mXUnits == GeneralUnitType.PixelsFromMiddleInverted) &&
+                (mYUnits == GeneralUnitType.PixelsFromLarge || mYUnits == GeneralUnitType.PixelsFromMiddle ||
+                    mYUnits == GeneralUnitType.PixelsFromSmall || mYUnits == GeneralUnitType.PixelsFromMiddleInverted ||
+                    mYUnits == GeneralUnitType.PixelsFromBaseline);
+        }
+
+        bool IsAllLayoutAbsolute(XOrY xOrY)
+        {
+            if (xOrY == XOrY.X)
+            {
+                return //mWidthUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent &&
+                    (mXUnits == GeneralUnitType.PixelsFromLarge || mXUnits == GeneralUnitType.PixelsFromMiddle ||
+                        mXUnits == GeneralUnitType.PixelsFromSmall || mXUnits == GeneralUnitType.PixelsFromMiddleInverted);
+            }
+            else // Y
+            {
+                return //mHeightUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent &&
+                    (mYUnits == GeneralUnitType.PixelsFromLarge || mYUnits == GeneralUnitType.PixelsFromMiddle ||
+                        mYUnits == GeneralUnitType.PixelsFromSmall || mYUnits == GeneralUnitType.PixelsFromMiddleInverted &&
+                        mYUnits == GeneralUnitType.PixelsFromBaseline);
+            }
+        }
+
+
+
+        public void ApplyState(string name)
+        {
+            if (mStates.ContainsKey(name))
+            {
+                var state = mStates[name];
+
+                ApplyState(state);
+
+            }
+
+
+            // This is a little dangerous because it's ambiguous.
+            // Technically categories could have same-named states.
+            foreach (var category in mCategories.Values)
+            {
+                var foundState = category.States.FirstOrDefault(item => item.Name == name);
+
+                if (foundState != null)
+                {
+                    ApplyState(foundState);
+                }
+            }
+        }
+
+        public void ApplyState(string categoryName, string stateName)
+        {
+            if (mCategories.ContainsKey(categoryName))
+            {
+                var category = mCategories[categoryName];
+
+                var state = category.States.FirstOrDefault(item => item.Name == stateName);
+
+                if (state != null)
+                {
+                    ApplyState(state);
+                }
+            }
+        }
+
+        public virtual void ApplyState(DataTypes.Variables.StateSave state)
+        {
+#if DEBUG
+            if (state.ParentContainer == null)
+            {
+                throw new InvalidOperationException("State.ParentContainer is null - did you remember to initialize the state?");
+            }
+
+#endif
+            if (GraphicalUiElement.IsAllLayoutSuspended == false)
+            {
+                this.SuspendLayout(true);
+            }
+
+            var variablesWithoutStatesOnParent =
+                state.Variables.Where(item =>
+                    // We can set the variable if it's not setting a state (to prevent recursive setting).                   
+                    (item.IsState(state.ParentContainer) == false ||
+                    // If it is setting a state we'll allow it if it's on a child.
+                    !string.IsNullOrEmpty(item.SourceObject)) &&
+                    item.SetsValue
+
+                    ).ToArray();
+
+
+            var parentSettingVariables =
+                variablesWithoutStatesOnParent
+                    .Where(item => item.GetRootName() == "Parent")
+                    .OrderBy(item => GetOrderedIndexForParentVariable(item))
+                    .ToArray();
+
+            var nonParentSettingVariables =
+                variablesWithoutStatesOnParent
+                    .Except(parentSettingVariables)
+                    // Even though we removed state-setting variables on the parent, we still allow setting
+                    // states on the contained objects
+                    .OrderBy(item => !item.IsState(state.ParentContainer))
+                    .ToArray();
+
+            var variablesToConsider =
+                parentSettingVariables.Concat(nonParentSettingVariables)
+                .ToArray();
+
+            int variableCount = variablesToConsider.Length;
+            for (int i = 0; i < variableCount; i++)
+            {
+                var variable = variablesToConsider[i];
+                if (variable.SetsValue && variable.Value != null)
+                {
+                    this.SetProperty(variable.Name, variable.Value);
+                }
+            }
+
+            foreach (var variableList in state.VariableLists)
+            {
+                this.SetProperty(variableList.Name, variableList.ValueAsIList);
+            }
+
+            if (GraphicalUiElement.IsAllLayoutSuspended == false)
+            {
+                this.ResumeLayout(true);
+
+            }
+        }
+
+        private int GetOrderedIndexForParentVariable(VariableSave item)
+        {
+            var objectName = item.SourceObject;
+            for (int i = 0; i < ElementSave.Instances.Count; i++)
+            {
+                if (objectName == ElementSave.Instances[i].Name)
+                {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        public void SuspendLayout(bool recursive = false)
+        {
+            mIsLayoutSuspended = true;
+
+            if (recursive)
+            {
+                for (int i = mWhatThisContains.Count - 1; i > -1; i--)
+                {
+                    mWhatThisContains[i].SuspendLayout(true);
+                }
+            }
+        }
+
+        public void ResumeLayout(bool recursive = false)
+        {
+            mIsLayoutSuspended = false;
+
+            if (recursive)
+            {
+                ResumeLayoutUpdateIfDirtyRecursive();
+            }
+            else
+            {
+                if (isFontDirty)
+                {
+                    if (!IsAllLayoutSuspended)
+                    {
+                        this.UpdateToFontValues();
+                        isFontDirty = false;
+                    }
+                }
+                if (currentDirtyState != null)
+                {
+                    UpdateLayout(currentDirtyState.UpdateParent,
+                        currentDirtyState.ChildrenUpdateDepth,
+                        currentDirtyState.XOrY);
+                }
+            }
+        }
+
+        private void ResumeLayoutUpdateIfDirtyRecursive()
+        {
+
+            mIsLayoutSuspended = false;
+            UpdateFontRecursive();
+
+            if (currentDirtyState != null)
+            {
+                UpdateLayout(currentDirtyState.UpdateParent,
+                currentDirtyState.ChildrenUpdateDepth,
+                currentDirtyState.XOrY);
+            }
+
+            int count = mWhatThisContains.Count;
+            for (int i = 0; i < count; i++)
+            {
+                mWhatThisContains[i].ResumeLayoutUpdateIfDirtyRecursive();
+            }
+        }
+
+        public void UpdateFontRecursive()
+        {
+            if (this.mContainedObjectAsIpso is Text && isFontDirty)
+            {
+                UpdateToFontValues();
+                isFontDirty = false;
+            }
+
+            if (this.Children != null)
+            {
+                foreach (GraphicalUiElement child in this.Children)
+                {
+                    child.UpdateFontRecursive();
+                }
+            }
+            else
+            {
+                foreach (GraphicalUiElement child in this.mWhatThisContains)
+                {
+                    child.UpdateFontRecursive();
+                }
+            }
+        }
+
+
         private void UpdateChildren(int childrenUpdateDepth, bool onlyAbsoluteLayoutChildren = false)
         {
             if (this.mContainedObjectAsIpso == null)
@@ -1664,71 +2126,6 @@ namespace Gum.Wireframe
             }
         }
 
-
-        private static bool GetIfOneDimensionCanChangeOtherDimension(GraphicalUiElement gue)
-        {
-            var canOneDimensionChangeTheOtherOnChild = 
-                gue.RenderableComponent is Text ||
-                    gue.WidthUnits == DimensionUnitType.PercentageOfOtherDimension ||
-                    gue.HeightUnits == DimensionUnitType.PercentageOfOtherDimension ||
-                    gue.WidthUnits == DimensionUnitType.MaintainFileAspectRatio ||
-                    gue.HeightUnits == DimensionUnitType.MaintainFileAspectRatio 
-                    //||
-                    //((gue.ChildrenLayout == ChildrenLayout.LeftToRightStack || gue.ChildrenLayout == ChildrenLayout.TopToBottomStack) && gue.WrapsChildren)
-                    ;
-
-            // If the child cannot be directly changed by a dimension, it may be indirectly changed by a dimension recursively. This can happen
-            // if the child either depends on its own children's widths and heights, and one of its children can have its dimension changed.
-
-            if (!canOneDimensionChangeTheOtherOnChild && gue.GetIfDimensionsDependOnChildren())
-            {
-                for (int i = 0; i < gue.Children.Count; i++)
-                {
-                    var uncastedChild = gue.Children[i];
-
-                    if (uncastedChild is GraphicalUiElement child)
-                    {
-
-                        if (GetIfOneDimensionCanChangeOtherDimension(child))
-                        {
-                            canOneDimensionChangeTheOtherOnChild = true;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            return canOneDimensionChangeTheOtherOnChild;
-
-        }
-
-        // Records the type of update needed when layout resumes
-        private void MakeDirty(bool updateParent, int childrenUpdateDepth, XOrY? xOrY)
-        {
-            if (currentDirtyState == null)
-            {
-                currentDirtyState = new DirtyState();
-
-                currentDirtyState.XOrY = xOrY;
-            }
-
-            currentDirtyState.UpdateParent = currentDirtyState.UpdateParent || updateParent;
-            currentDirtyState.ChildrenUpdateDepth = Math.Max(
-                currentDirtyState.ChildrenUpdateDepth, childrenUpdateDepth);
-
-            // If the update is supposed to update all associations, make it null...
-            if (xOrY == null)
-            {
-                currentDirtyState.XOrY = null;
-            }
-            // If neither are null and they differ, then that means update both, so set it to null
-            else if (currentDirtyState.XOrY != null && currentDirtyState.XOrY != xOrY)
-            {
-                currentDirtyState.XOrY = null;
-            }
-            //It's not possible to set either X or Y here. That can only happen on initialization
-            // of the currentDirtyState
-        }
 
         private void RefreshParentRowColumnDimensionForThis()
         {
@@ -2333,7 +2730,11 @@ namespace Gum.Wireframe
             }
         }
 
-
+        // todo:  This should be called on instances and not just on element saves.  This is messing up animation
+        public void AddExposedVariable(string variableName, string underlyingVariable)
+        {
+            mExposedVariables[variableName] = underlyingVariable;
+        }
 
         private void UpdateDimensions(float parentWidth, float parentHeight, XOrY? xOrY)
         {
@@ -2394,7 +2795,7 @@ namespace Gum.Wireframe
         {
             float heightToSet = mHeight;
 
-            #region RelativeToChildren
+#region RelativeToChildren
 
             if (mHeightUnit == DimensionUnitType.RelativeToChildren)
             {
@@ -2455,16 +2856,16 @@ namespace Gum.Wireframe
 
                 heightToSet = maxHeight + mHeight;
             }
-            #endregion
+#endregion
 
-            #region Percentage
+#region Percentage
 
             else if (mHeightUnit == DimensionUnitType.Percentage)
             {
                 heightToSet = parentHeight * mHeight / 100.0f;
             }
 
-            #endregion
+#endregion
 
             else if (mHeightUnit == DimensionUnitType.PercentageOfSourceFile)
             {
@@ -3350,6 +3751,22 @@ namespace Gum.Wireframe
             set { font = value; UpdateToFontValues(); }
         }
 
+        public void AddCategory(DataTypes.Variables.StateSaveCategory category)
+        {
+            //mCategories[category.Name] = category;
+            mCategories.Add(category.Name, category);
+        }
+
+        public void AddStates(List<DataTypes.Variables.StateSave> list)
+        {
+            foreach (var state in list)
+            {
+                // Right now this doesn't support inheritance
+                // Need to investigate this....at some point:
+                mStates[state.Name] = state;
+            }
+        }
+
         public bool IsPointInside(float x, float y)
         {
             var asIpso = this as IRenderableIpso;
@@ -3388,7 +3805,7 @@ namespace Gum.Wireframe
             }
         }
 
-        #region IVisible Implementation
+#region IVisible Implementation
 
 
         bool IVisible.AbsoluteVisible
@@ -3410,6 +3827,6 @@ namespace Gum.Wireframe
             get { return this.Parent as IVisible; }
         }
 
-        #endregion
+#endregion
     }
 }

@@ -1,4 +1,10 @@
-﻿using Microsoft.Xna.Framework.Graphics;
+﻿#if MONOGAME
+using Microsoft.Xna.Framework.Graphics;
+#endif
+
+#if SKIA
+using SkiaGum.Xna;
+#endif
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,7 +24,7 @@ namespace Gum.RenderingLibrary
 
     public static class BlendExtensions
     {
-#if !NO_XNA
+#if !NO_XNA && !SKIA
         public static Microsoft.Xna.Framework.Graphics.BlendState ToBlendState(this Blend blend)
         {
             switch (blend)

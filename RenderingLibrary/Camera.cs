@@ -25,8 +25,6 @@ namespace RenderingLibrary
         public Vector2 Position;
         SystemManagers mManagers;
 
-
-
         #endregion
 
         #region Properties
@@ -270,11 +268,13 @@ namespace RenderingLibrary
         // renders?  Hard to say.
         internal void UpdateClient()
         {
+#if MONOGAME
             if (Renderer.GraphicsDevice != null)
             {
                 ClientWidth = Renderer.GraphicsDevice.Viewport.Width;
                 ClientHeight = Renderer.GraphicsDevice.Viewport.Height;
             }
+#endif
         }
 
         #endregion

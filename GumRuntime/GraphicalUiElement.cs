@@ -5,9 +5,9 @@ using Gum.Graphics.Animation;
 using Gum.Managers;
 using Gum.RenderingLibrary;
 using GumDataTypes.Variables;
+using GumRuntime;
 
 #if MONOGAME
-using GumRuntime;
 using RenderingLibrary.Math.Geometry;
 #endif
 
@@ -18,7 +18,6 @@ using RenderingLibrary.Math;
 
 #if SKIA
 using SkiaGum;
-using SkiaGum.Graphics;
 using SkiaGum.GueDeriving;
 using SkiaGum.Managers;
 using SkiaGum.Renderables;
@@ -101,9 +100,7 @@ namespace Gum.Wireframe
         DimensionUnitType mWidthUnit;
         DimensionUnitType mHeightUnit;
 
-#if MONOGAME
         SystemManagers mManagers;
-#endif
 
 
         int mTextureTop;
@@ -426,9 +423,7 @@ namespace Gum.Wireframe
 #endif
 
 
-#if MONOGAME
         Layer mLayer;
-#endif
 
         #endregion
 
@@ -1099,12 +1094,25 @@ namespace Gum.Wireframe
 
         #region Constructor
 
+
+#if MONOGAME
         public GraphicalUiElement()
             : this(null, null)
         {
 
         }
+#endif
 
+#if SKIA
+        public GraphicalUiElement()
+        {
+            mIsLayoutSuspended = true;
+            Width = 32;
+            Height = 32;
+            mIsLayoutSuspended = false;
+
+        }
+#endif
         public GraphicalUiElement(IRenderable containedObject, GraphicalUiElement whatContainsThis)
         {
             SetContainedObject(containedObject);
@@ -1155,7 +1163,7 @@ namespace Gum.Wireframe
         }
 
 
-#endregion
+        #endregion
 
         #region Methods
 
@@ -1673,6 +1681,7 @@ namespace Gum.Wireframe
                 this.HeightUnits.GetDependencyType() == HierarchyDependencyType.DependsOnChildren);
         }
 
+#if MONOGAME
         void IRenderable.PreRender()
         {
             if (mContainedObjectAsIpso != null)
@@ -1680,13 +1689,14 @@ namespace Gum.Wireframe
                 mContainedObjectAsIpso.PreRender();
             }
         }
-
+#endif
         public virtual void CreateChildrenRecursively(ElementSave elementSave, SystemManagers systemManagers)
         {
             bool isScreen = elementSave is ScreenSave;
 
             foreach (var instance in elementSave.Instances)
             {
+#if MONOGAME
                 var childGue = instance.ToGraphicalUiElement(systemManagers);
 
                 if (childGue != null)
@@ -1697,6 +1707,7 @@ namespace Gum.Wireframe
                     }
                     childGue.ElementGueContainingThis = this;
                 }
+#endif
             }
         }
 
@@ -3091,6 +3102,7 @@ namespace Gum.Wireframe
                 mLayer = layer;
                 mManagers = managers;
 
+#if MONOGAME
                 AddContainedRenderableToManagers(managers, layer);
 
                 // Custom should be called before children have their Custom called
@@ -3105,6 +3117,7 @@ namespace Gum.Wireframe
                 {
                     CustomAddChildren();
                 }
+#endif
             }
         }
 
@@ -4612,7 +4625,7 @@ namespace Gum.Wireframe
         }
 
 
-#region IVisible Implementation
+        #region IVisible Implementation
 
 
         bool IVisible.AbsoluteVisible
