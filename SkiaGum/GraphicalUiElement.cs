@@ -1643,7 +1643,6 @@ namespace Gum.Wireframe
             }
         }
 
-
         bool GetIfShouldCallUpdateOnParent()
         {
             var asGue = this.Parent as GraphicalUiElement;
@@ -1722,344 +1721,70 @@ namespace Gum.Wireframe
             // of the currentDirtyState
         }
 
-        #endregion
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        partial void CustomAddToManagers();
-
-        /// <summary>
-        /// Adds this as a renderable to the SystemManagers if not already added. If already added
-        /// this does not perform any operations - it can be safely called multiple times.
-        /// </summary>
-        public virtual void AddToManagers()
+        private void RefreshParentRowColumnDimensionForThis()
         {
+            // If it stacks, then update this row/column's dimensions given the index of this
+            var indexToUpdate = this.StackedRowOrColumnIndex;
 
-            AddToManagers(SystemManagers.Default, null);
-
-        }
-
-        /// <summary>
-        /// Adds this as a renderable to the SystemManagers on the argument layer if not already added
-        /// to SystemManagers. If already added
-        /// this does not perform any operations - it can be safely called multiple times, but
-        /// calling it multiple times will not move this to a different layer.
-        /// </summary>
-        public virtual void AddToManagers(SystemManagers managers, Layer layer)
-        {
-#if DEBUG
-            if (managers == null)
+            if (indexToUpdate == -1)
             {
-                throw new ArgumentNullException("managers cannot be null");
+                return;
             }
-#endif
-            // If mManagers isn't null, it's already been added
-            if (mManagers == null)
+
+            var parentGue = EffectiveParentGue;
+
+            if (this.Visible)
             {
-                mLayer = layer;
-                mManagers = managers;
 
-#if MONOGAME
-                AddContainedRenderableToManagers(managers, layer);
-
-                // Custom should be called before children have their Custom called
-                CustomAddToManagers();
-
-                // that means this is a screen, so the children need to be added directly to managers
-                if (this.mContainedObjectAsIpso == null)
+                if (parentGue.StackedRowOrColumnDimensions == null)
                 {
-                    AddChildren(managers, layer);
+                    parentGue.StackedRowOrColumnDimensions = new List<float>();
+                }
+
+                if (parentGue.StackedRowOrColumnDimensions.Count <= indexToUpdate)
+                {
+                    parentGue.StackedRowOrColumnDimensions.Add(0);
                 }
                 else
                 {
-                    CustomAddChildren();
-                }
-#endif
-            }
-        }
-
-        private void CustomAddChildren()
-        {
-            foreach (var child in this.mWhatThisContains)
-            {
-                child.mManagers = this.mManagers;
-                child.CustomAddToManagers();
-
-                child.CustomAddChildren();
-            }
-        }
-
-        private void HandleCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            if (e.Action == NotifyCollectionChangedAction.Add)
-            {
-                foreach (IRenderableIpso ipso in e.NewItems)
-                {
-                    if (ipso.Parent != this)
+                    if (indexToUpdate >= 0 && indexToUpdate < parentGue.StackedRowOrColumnDimensions.Count)
                     {
-                        ipso.Parent = this;
+                        parentGue.StackedRowOrColumnDimensions[indexToUpdate] = 0;
+                    }
+                }
+                foreach (GraphicalUiElement child in parentGue.Children)
+                {
+                    if (child.Visible)
+                    {
+                        var asIpso = child as IPositionedSizedObject;
 
+
+                        if (child.StackedRowOrColumnIndex == indexToUpdate)
+                        {
+                            if (parentGue.ChildrenLayout == ChildrenLayout.LeftToRightStack)
+                            {
+                                parentGue.StackedRowOrColumnDimensions[indexToUpdate] =
+                                    System.Math.Max(parentGue.StackedRowOrColumnDimensions[indexToUpdate],
+                                    child.Y + child.GetAbsoluteHeight());
+                            }
+                            else
+                            {
+                                parentGue.StackedRowOrColumnDimensions[indexToUpdate] =
+                                    System.Math.Max(parentGue.StackedRowOrColumnDimensions[indexToUpdate],
+                                    child.X + child.GetAbsoluteWidth());
+                            }
+
+                            // We don't need to worry about the children after this, because the siblings will get updated in order:
+                            // This can (on average) make this run 2x as fast
+                            if (this == child)
+                            {
+                                break;
+                            }
+                        }
                     }
                 }
             }
-            else if (e.Action == NotifyCollectionChangedAction.Remove)
-            {
-                foreach (IRenderableIpso ipso in e.OldItems)
-                {
-                    if (ipso.Parent == this)
-                    {
-                        ipso.Parent = null;
-                    }
-                }
-            }
         }
-
-
-        bool IsAllLayoutAbsolute()
-        {
-            return 
-                //mWidthUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent &&
-                //mHeightUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent &&
-                (mXUnits == GeneralUnitType.PixelsFromLarge || mXUnits == GeneralUnitType.PixelsFromMiddle ||
-                    mXUnits == GeneralUnitType.PixelsFromSmall || mXUnits == GeneralUnitType.PixelsFromMiddleInverted) &&
-                (mYUnits == GeneralUnitType.PixelsFromLarge || mYUnits == GeneralUnitType.PixelsFromMiddle ||
-                    mYUnits == GeneralUnitType.PixelsFromSmall || mYUnits == GeneralUnitType.PixelsFromMiddleInverted ||
-                    mYUnits == GeneralUnitType.PixelsFromBaseline);
-        }
-
-        bool IsAllLayoutAbsolute(XOrY xOrY)
-        {
-            if (xOrY == XOrY.X)
-            {
-                return //mWidthUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent &&
-                    (mXUnits == GeneralUnitType.PixelsFromLarge || mXUnits == GeneralUnitType.PixelsFromMiddle ||
-                        mXUnits == GeneralUnitType.PixelsFromSmall || mXUnits == GeneralUnitType.PixelsFromMiddleInverted);
-            }
-            else // Y
-            {
-                return //mHeightUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent &&
-                    (mYUnits == GeneralUnitType.PixelsFromLarge || mYUnits == GeneralUnitType.PixelsFromMiddle ||
-                        mYUnits == GeneralUnitType.PixelsFromSmall || mYUnits == GeneralUnitType.PixelsFromMiddleInverted &&
-                        mYUnits == GeneralUnitType.PixelsFromBaseline);
-            }
-        }
-
-
-
-        public void ApplyState(string name)
-        {
-            if (mStates.ContainsKey(name))
-            {
-                var state = mStates[name];
-
-                ApplyState(state);
-
-            }
-
-
-            // This is a little dangerous because it's ambiguous.
-            // Technically categories could have same-named states.
-            foreach (var category in mCategories.Values)
-            {
-                var foundState = category.States.FirstOrDefault(item => item.Name == name);
-
-                if (foundState != null)
-                {
-                    ApplyState(foundState);
-                }
-            }
-        }
-
-        public void ApplyState(string categoryName, string stateName)
-        {
-            if (mCategories.ContainsKey(categoryName))
-            {
-                var category = mCategories[categoryName];
-
-                var state = category.States.FirstOrDefault(item => item.Name == stateName);
-
-                if (state != null)
-                {
-                    ApplyState(state);
-                }
-            }
-        }
-
-        public virtual void ApplyState(DataTypes.Variables.StateSave state)
-        {
-#if DEBUG
-            if (state.ParentContainer == null)
-            {
-                throw new InvalidOperationException("State.ParentContainer is null - did you remember to initialize the state?");
-            }
-
-#endif
-            if (GraphicalUiElement.IsAllLayoutSuspended == false)
-            {
-                this.SuspendLayout(true);
-            }
-
-            var variablesWithoutStatesOnParent =
-                state.Variables.Where(item =>
-                    // We can set the variable if it's not setting a state (to prevent recursive setting).                   
-                    (item.IsState(state.ParentContainer) == false ||
-                    // If it is setting a state we'll allow it if it's on a child.
-                    !string.IsNullOrEmpty(item.SourceObject)) &&
-                    item.SetsValue
-
-                    ).ToArray();
-
-
-            var parentSettingVariables =
-                variablesWithoutStatesOnParent
-                    .Where(item => item.GetRootName() == "Parent")
-                    .OrderBy(item => GetOrderedIndexForParentVariable(item))
-                    .ToArray();
-
-            var nonParentSettingVariables =
-                variablesWithoutStatesOnParent
-                    .Except(parentSettingVariables)
-                    // Even though we removed state-setting variables on the parent, we still allow setting
-                    // states on the contained objects
-                    .OrderBy(item => !item.IsState(state.ParentContainer))
-                    .ToArray();
-
-            var variablesToConsider =
-                parentSettingVariables.Concat(nonParentSettingVariables)
-                .ToArray();
-
-            int variableCount = variablesToConsider.Length;
-            for (int i = 0; i < variableCount; i++)
-            {
-                var variable = variablesToConsider[i];
-                if (variable.SetsValue && variable.Value != null)
-                {
-                    this.SetProperty(variable.Name, variable.Value);
-                }
-            }
-
-            foreach (var variableList in state.VariableLists)
-            {
-                this.SetProperty(variableList.Name, variableList.ValueAsIList);
-            }
-
-            if (GraphicalUiElement.IsAllLayoutSuspended == false)
-            {
-                this.ResumeLayout(true);
-
-            }
-        }
-
-        private int GetOrderedIndexForParentVariable(VariableSave item)
-        {
-            var objectName = item.SourceObject;
-            for (int i = 0; i < ElementSave.Instances.Count; i++)
-            {
-                if (objectName == ElementSave.Instances[i].Name)
-                {
-                    return i;
-                }
-            }
-            return -1;
-        }
-
-        public void SuspendLayout(bool recursive = false)
-        {
-            mIsLayoutSuspended = true;
-
-            if (recursive)
-            {
-                for (int i = mWhatThisContains.Count - 1; i > -1; i--)
-                {
-                    mWhatThisContains[i].SuspendLayout(true);
-                }
-            }
-        }
-
-        public void ResumeLayout(bool recursive = false)
-        {
-            mIsLayoutSuspended = false;
-
-            if (recursive)
-            {
-                ResumeLayoutUpdateIfDirtyRecursive();
-            }
-            else
-            {
-                if (isFontDirty)
-                {
-                    if (!IsAllLayoutSuspended)
-                    {
-                        this.UpdateToFontValues();
-                        isFontDirty = false;
-                    }
-                }
-                if (currentDirtyState != null)
-                {
-                    UpdateLayout(currentDirtyState.UpdateParent,
-                        currentDirtyState.ChildrenUpdateDepth,
-                        currentDirtyState.XOrY);
-                }
-            }
-        }
-
-        private void ResumeLayoutUpdateIfDirtyRecursive()
-        {
-
-            mIsLayoutSuspended = false;
-            UpdateFontRecursive();
-
-            if (currentDirtyState != null)
-            {
-                UpdateLayout(currentDirtyState.UpdateParent,
-                currentDirtyState.ChildrenUpdateDepth,
-                currentDirtyState.XOrY);
-            }
-
-            int count = mWhatThisContains.Count;
-            for (int i = 0; i < count; i++)
-            {
-                mWhatThisContains[i].ResumeLayoutUpdateIfDirtyRecursive();
-            }
-        }
-
-        public void UpdateFontRecursive()
-        {
-            if (this.mContainedObjectAsIpso is Text && isFontDirty)
-            {
-                UpdateToFontValues();
-                isFontDirty = false;
-            }
-
-            if (this.Children != null)
-            {
-                foreach (GraphicalUiElement child in this.Children)
-                {
-                    child.UpdateFontRecursive();
-                }
-            }
-            else
-            {
-                foreach (GraphicalUiElement child in this.mWhatThisContains)
-                {
-                    child.UpdateFontRecursive();
-                }
-            }
-        }
-
 
         private void UpdateChildren(int childrenUpdateDepth, bool onlyAbsoluteLayoutChildren = false)
         {
@@ -2126,70 +1851,138 @@ namespace Gum.Wireframe
             }
         }
 
-
-        private void RefreshParentRowColumnDimensionForThis()
+        private void GetParentDimensions(out float parentWidth, out float parentHeight)
         {
-            // If it stacks, then update this row/column's dimensions given the index of this
-            var indexToUpdate = this.StackedRowOrColumnIndex;
+            parentWidth = CanvasWidth;
+            parentHeight = CanvasHeight;
 
-            if(indexToUpdate == -1)
+            if (this.Parent != null)
             {
-                return;
+                parentWidth = Parent.Width;
+                parentHeight = Parent.Height;
+            }
+            else if (this.ElementGueContainingThis != null && this.ElementGueContainingThis.mContainedObjectAsIpso != null)
+            {
+                parentWidth = this.ElementGueContainingThis.mContainedObjectAsIpso.Width;
+                parentHeight = this.ElementGueContainingThis.mContainedObjectAsIpso.Height;
             }
 
-            var parentGue = EffectiveParentGue;
-
-            if (this.Visible)
+#if DEBUG
+            if (float.IsPositiveInfinity(parentHeight))
             {
+                throw new Exception();
+            }
+#endif
+        }
 
-                if (parentGue.StackedRowOrColumnDimensions == null)
+        private void UpdateTextureCoordinatesDimensionBased()
+        {
+            if (mContainedObjectAsIpso is Sprite)
+            {
+                var sprite = mContainedObjectAsIpso as Sprite;
+                var textureAddress = mTextureAddress;
+                switch (textureAddress)
                 {
-                    parentGue.StackedRowOrColumnDimensions = new List<float>();
-                }
+                    case TextureAddress.DimensionsBased:
+                        //int left = mTextureLeft;
+                        //int top = mTextureTop;
+                        //int width = (int)(sprite.EffectiveWidth / mTextureWidthScale);
+                        //int height = (int)(sprite.EffectiveHeight / mTextureHeightScale);
 
-                if (parentGue.StackedRowOrColumnDimensions.Count <= indexToUpdate)
-                {
-                    parentGue.StackedRowOrColumnDimensions.Add(0);
-                }
-                else
-                {
-                    if(indexToUpdate >= 0  && indexToUpdate < parentGue.StackedRowOrColumnDimensions.Count)
-                    {
-                        parentGue.StackedRowOrColumnDimensions[indexToUpdate] = 0;
-                    }
-                }
-                foreach (GraphicalUiElement child in parentGue.Children)
-                {
-                    if (child.Visible)
-                    {
-                        var asIpso = child as IPositionedSizedObject;
+                        //sprite.SourceRectangle = new Rectangle(
+                        //    left,
+                        //    top,
+                        //    width,
+                        //    height);
+                        //sprite.Wrap = mWrap;
 
-
-                        if (child.StackedRowOrColumnIndex == indexToUpdate)
-                        {
-                            if (parentGue.ChildrenLayout == ChildrenLayout.LeftToRightStack)
-                            {
-                                parentGue.StackedRowOrColumnDimensions[indexToUpdate] =
-                                    System.Math.Max(parentGue.StackedRowOrColumnDimensions[indexToUpdate],
-                                    child.Y + child.GetAbsoluteHeight());
-                            }
-                            else
-                            {
-                                parentGue.StackedRowOrColumnDimensions[indexToUpdate] =
-                                    System.Math.Max(parentGue.StackedRowOrColumnDimensions[indexToUpdate],
-                                    child.X + child.GetAbsoluteWidth());
-                            }
-
-                            // We don't need to worry about the children after this, because the siblings will get updated in order:
-                            // This can (on average) make this run 2x as fast
-                            if (this == child)
-                            {
-                                break;
-                            }
-                        }
-                    }
+                        break;
                 }
             }
+            //else if (mContainedObjectAsIpso is NineSlice)
+            //{
+            //    var nineSlice = mContainedObjectAsIpso as NineSlice;
+            //    var textureAddress = mTextureAddress;
+            //    switch (textureAddress)
+            //    {
+            //        case TextureAddress.DimensionsBased:
+            //            int left = mTextureLeft;
+            //            int top = mTextureTop;
+            //            int width = (int)(nineSlice.EffectiveWidth / mTextureWidthScale);
+            //            int height = (int)(nineSlice.EffectiveHeight / mTextureHeightScale);
+
+            //            nineSlice.SourceRectangle = new Rectangle(
+            //                left,
+            //                top,
+            //                width,
+            //                height);
+
+            //            break;
+            //    }
+            //}
+
+
+        }
+
+        private void UpdateTextureCoordinatesNotDimensionBased()
+        {
+            if (mContainedObjectAsIpso is Sprite)
+            {
+                var sprite = mContainedObjectAsIpso as Sprite;
+                var textureAddress = mTextureAddress;
+                switch (textureAddress)
+                {
+                    case TextureAddress.EntireTexture:
+                        //sprite.SourceRectangle = null;
+                        //sprite.Wrap = false;
+                        break;
+                    case TextureAddress.Custom:
+                        //sprite.SourceRectangle = new Microsoft.Xna.Framework.Rectangle(
+                        //    mTextureLeft,
+                        //    mTextureTop,
+                        //    mTextureWidth,
+                        //    mTextureHeight);
+                        //sprite.Wrap = mWrap;
+
+                        break;
+                    case TextureAddress.DimensionsBased:
+                        // This is done *after* setting dimensions
+
+                        break;
+                }
+            }
+            //else if (mContainedObjectAsIpso is NineSlice)
+            //{
+            //    var nineSlice = mContainedObjectAsIpso as NineSlice;
+            //    var textureAddress = mTextureAddress;
+            //    switch (textureAddress)
+            //    {
+            //        case TextureAddress.EntireTexture:
+            //            nineSlice.SourceRectangle = null;
+            //            break;
+            //        case TextureAddress.Custom:
+            //            nineSlice.SourceRectangle = new Microsoft.Xna.Framework.Rectangle(
+            //                mTextureLeft,
+            //                mTextureTop,
+            //                mTextureWidth,
+            //                mTextureHeight);
+
+            //            break;
+            //        case TextureAddress.DimensionsBased:
+            //            int left = mTextureLeft;
+            //            int top = mTextureTop;
+            //            int width = (int)(nineSlice.EffectiveWidth / mTextureWidthScale);
+            //            int height = (int)(nineSlice.EffectiveHeight / mTextureHeightScale);
+
+            //            nineSlice.SourceRectangle = new Rectangle(
+            //                left,
+            //                top,
+            //                width,
+            //                height);
+
+            //            break;
+            //    }
+            //}
         }
 
 
@@ -2266,7 +2059,7 @@ namespace Gum.Wireframe
             var unitXOffsetBeforeAdjustByOrigin = unitOffsetX;
             var unitYOffsetBeforeAdjustByOrigin = unitOffsetY;
 #endif
-            
+
 
 
             AdjustOffsetsByOrigin(ref unitOffsetX, ref unitOffsetY);
@@ -2309,148 +2102,6 @@ namespace Gum.Wireframe
                 this.mContainedObjectAsIpso.Y = unitOffsetY;
             }
         }
-
-        private void AdjustOffsetsByOrigin(ref float unitOffsetX, ref float unitOffsetY)
-        {
-#if DEBUG
-            if(float.IsPositiveInfinity(mRotation) || float.IsNegativeInfinity(mRotation))
-            {
-                throw new Exception("Rotation cannot be negative/positive infinity");
-            }
-#endif
-            float offsetX = 0;
-            float offsetY = 0;
-
-            if (mXOrigin == HorizontalAlignment.Center)
-            {
-                offsetX -= mContainedObjectAsIpso.Width / 2.0f;
-            }
-            else if (mXOrigin == HorizontalAlignment.Right)
-            {
-                offsetX -= mContainedObjectAsIpso.Width;
-            }
-            // no need to handle left
-
-
-            if (mYOrigin == VerticalAlignment.Center)
-            {
-                offsetY -= mContainedObjectAsIpso.Height / 2.0f;
-            }
-            else if (mYOrigin == VerticalAlignment.TextBaseline)
-            {
-                if (mContainedObjectAsIpso is Text text)
-                {
-                    offsetY += -mContainedObjectAsIpso.Height + text.DescenderHeight * text.FontScale;
-                }
-                else
-                {
-                    offsetY -= mContainedObjectAsIpso.Height;
-                }
-            }
-            else if (mYOrigin == VerticalAlignment.Bottom)
-            {
-                offsetY -= mContainedObjectAsIpso.Height;
-            }
-            // no need to handle top
-
-            // Adjust offsets by rotation
-            if (mRotation != 0)
-            {
-                var matrix = Matrix.CreateRotationZ(-MathHelper.ToRadians(mRotation));
-
-                var unrotatedX = offsetX;
-                var unrotatedY = offsetY;
-
-                offsetX = matrix.Right.X * unrotatedX + matrix.Up.X * unrotatedY;
-                offsetY = matrix.Right.Y * unrotatedX + matrix.Up.Y * unrotatedY;
-            }
-
-            unitOffsetX += offsetX;
-            unitOffsetY += offsetY;
-        }
-
-
-        private void AdjustOffsetsByUnits(float parentWidth, float parentHeight, XOrY? xOrY, ref float unitOffsetX, ref float unitOffsetY)
-        {
-            bool doX = xOrY == null || xOrY == XOrY.X;
-            bool doY = xOrY == null || xOrY == XOrY.Y;
-
-            if (doX)
-            {
-                if (mXUnits == GeneralUnitType.Percentage)
-                {
-                    unitOffsetX = parentWidth * mX / 100.0f;
-                }
-                else if (mXUnits == GeneralUnitType.PercentageOfFile)
-                {
-                    bool wasSet = false;
-
-                    if (mContainedObjectAsIpso is Sprite)
-                    {
-                        Sprite sprite = mContainedObjectAsIpso as Sprite;
-
-                        if (sprite.Texture != null)
-                        {
-                            unitOffsetX = sprite.Texture.Width * mX / 100.0f;
-                        }
-                    }
-
-                    if (!wasSet)
-                    {
-                        unitOffsetX = 64 * mX / 100.0f;
-                    }
-                }
-                else
-                {
-                    unitOffsetX += mX;
-                }
-            }
-
-#if DEBUG
-            if (float.IsNaN(unitOffsetX))
-            {
-                throw new Exception("Invalid unit offsets");
-            }
-#endif
-
-            if (doY)
-            {
-                if (mYUnits == GeneralUnitType.Percentage)
-                {
-                    unitOffsetY = parentHeight * mY / 100.0f;
-                }
-                else if (mYUnits == GeneralUnitType.PercentageOfFile)
-                {
-
-                    bool wasSet = false;
-
-
-                    if (mContainedObjectAsIpso is Sprite)
-                    {
-                        Sprite sprite = mContainedObjectAsIpso as Sprite;
-
-                        if (sprite.Texture != null)
-                        {
-                            unitOffsetY = sprite.Texture.Height * mY / 100.0f;
-                        }
-                    }
-
-                    if (!wasSet)
-                    {
-                        unitOffsetY = 64 * mY / 100.0f;
-                    }
-                }
-                else if (mYUnits == GeneralUnitType.PixelsFromMiddleInverted)
-                {
-                    unitOffsetY += -mY;
-                }
-                else
-                {
-                    unitOffsetY += mY;
-                }
-            }
-        }
-
 
         public void GetParentOffsets(out float parentOriginOffsetX, out float parentOriginOffsetY)
         {
@@ -2679,6 +2330,64 @@ namespace Gum.Wireframe
             return whatToStackAfter;
         }
 
+        private void AdjustOffsetsByOrigin(ref float unitOffsetX, ref float unitOffsetY)
+        {
+#if DEBUG
+            if (float.IsPositiveInfinity(mRotation) || float.IsNegativeInfinity(mRotation))
+            {
+                throw new Exception("Rotation cannot be negative/positive infinity");
+            }
+#endif
+            float offsetX = 0;
+            float offsetY = 0;
+
+            if (mXOrigin == HorizontalAlignment.Center)
+            {
+                offsetX -= mContainedObjectAsIpso.Width / 2.0f;
+            }
+            else if (mXOrigin == HorizontalAlignment.Right)
+            {
+                offsetX -= mContainedObjectAsIpso.Width;
+            }
+            // no need to handle left
+
+
+            if (mYOrigin == VerticalAlignment.Center)
+            {
+                offsetY -= mContainedObjectAsIpso.Height / 2.0f;
+            }
+            else if (mYOrigin == VerticalAlignment.TextBaseline)
+            {
+                if (mContainedObjectAsIpso is Text text)
+                {
+                    offsetY += -mContainedObjectAsIpso.Height + text.DescenderHeight * text.FontScale;
+                }
+                else
+                {
+                    offsetY -= mContainedObjectAsIpso.Height;
+                }
+            }
+            else if (mYOrigin == VerticalAlignment.Bottom)
+            {
+                offsetY -= mContainedObjectAsIpso.Height;
+            }
+            // no need to handle top
+
+            // Adjust offsets by rotation
+            if (mRotation != 0)
+            {
+                var matrix = Matrix.CreateRotationZ(-MathHelper.ToRadians(mRotation));
+
+                var unrotatedX = offsetX;
+                var unrotatedY = offsetY;
+
+                offsetX = matrix.Right.X * unrotatedX + matrix.Up.X * unrotatedY;
+                offsetY = matrix.Right.Y * unrotatedX + matrix.Up.Y * unrotatedY;
+            }
+
+            unitOffsetX += offsetX;
+            unitOffsetY += offsetY;
+        }
 
         private void AdjustParentOriginOffsetsByUnits(float parentWidth, float parentHeight,
             ref float unitOffsetX, ref float unitOffsetY, ref bool wasHandledX, ref bool wasHandledY)
@@ -2730,11 +2439,87 @@ namespace Gum.Wireframe
             }
         }
 
-        // todo:  This should be called on instances and not just on element saves.  This is messing up animation
-        public void AddExposedVariable(string variableName, string underlyingVariable)
+        private void AdjustOffsetsByUnits(float parentWidth, float parentHeight, XOrY? xOrY, ref float unitOffsetX, ref float unitOffsetY)
         {
-            mExposedVariables[variableName] = underlyingVariable;
+            bool doX = xOrY == null || xOrY == XOrY.X;
+            bool doY = xOrY == null || xOrY == XOrY.Y;
+
+            if (doX)
+            {
+                if (mXUnits == GeneralUnitType.Percentage)
+                {
+                    unitOffsetX = parentWidth * mX / 100.0f;
+                }
+                else if (mXUnits == GeneralUnitType.PercentageOfFile)
+                {
+                    bool wasSet = false;
+
+                    if (mContainedObjectAsIpso is Sprite)
+                    {
+                        Sprite sprite = mContainedObjectAsIpso as Sprite;
+
+                        if (sprite.Texture != null)
+                        {
+                            unitOffsetX = sprite.Texture.Width * mX / 100.0f;
+                        }
+                    }
+
+                    if (!wasSet)
+                    {
+                        unitOffsetX = 64 * mX / 100.0f;
+                    }
+                }
+                else
+                {
+                    unitOffsetX += mX;
+                }
+            }
+
+#if DEBUG
+            if (float.IsNaN(unitOffsetX))
+            {
+                throw new Exception("Invalid unit offsets");
+            }
+#endif
+
+            if (doY)
+            {
+                if (mYUnits == GeneralUnitType.Percentage)
+                {
+                    unitOffsetY = parentHeight * mY / 100.0f;
+                }
+                else if (mYUnits == GeneralUnitType.PercentageOfFile)
+                {
+
+                    bool wasSet = false;
+
+
+                    if (mContainedObjectAsIpso is Sprite)
+                    {
+                        Sprite sprite = mContainedObjectAsIpso as Sprite;
+
+                        if (sprite.Texture != null)
+                        {
+                            unitOffsetY = sprite.Texture.Height * mY / 100.0f;
+                        }
+                    }
+
+                    if (!wasSet)
+                    {
+                        unitOffsetY = 64 * mY / 100.0f;
+                    }
+                }
+                else if (mYUnits == GeneralUnitType.PixelsFromMiddleInverted)
+                {
+                    unitOffsetY += -mY;
+                }
+                else
+                {
+                    unitOffsetY += mY;
+                }
+            }
         }
+
 
         private void UpdateDimensions(float parentWidth, float parentHeight, XOrY? xOrY)
         {
@@ -2795,7 +2580,7 @@ namespace Gum.Wireframe
         {
             float heightToSet = mHeight;
 
-#region RelativeToChildren
+            #region RelativeToChildren
 
             if (mHeightUnit == DimensionUnitType.RelativeToChildren)
             {
@@ -2807,7 +2592,7 @@ namespace Gum.Wireframe
                     if (mContainedObjectAsIpso is Text asText)
                     {
                         var oldWidth = asText.Width;
-                        if(WidthUnits == DimensionUnitType.RelativeToChildren)
+                        if (WidthUnits == DimensionUnitType.RelativeToChildren)
                         {
                             asText.Width = float.PositiveInfinity;
                         }
@@ -2856,16 +2641,16 @@ namespace Gum.Wireframe
 
                 heightToSet = maxHeight + mHeight;
             }
-#endregion
+            #endregion
 
-#region Percentage
+            #region Percentage
 
             else if (mHeightUnit == DimensionUnitType.Percentage)
             {
                 heightToSet = parentHeight * mHeight / 100.0f;
             }
 
-#endregion
+            #endregion
 
             else if (mHeightUnit == DimensionUnitType.PercentageOfSourceFile)
             {
@@ -3006,24 +2791,24 @@ namespace Gum.Wireframe
                         {
                             maxWidth = textBlock.MeasuredWidth;
                         }
-                        catch(BadImageFormatException)
+                        catch (BadImageFormatException)
                         {
                             // not sure why but let's tolerate:
                             // https://appcenter.ms/orgs/Mtn-Green-Engineering/apps/BioCheck-2/crashes/errors/738313670/overview
                             maxWidth = 64;
                         }
-                //        // It's possible that the text has itself wrapped, but the dimensions changed.
-                //        if (asText.WrappedText.Count > 0 &&
-                //            (asText.Width != 0 && float.IsPositiveInfinity(asText.Width) == false))
-                //        {
-                //            // this could be either because it wrapped, or because the raw text
-                //            // actually has newlines. Vic says - this difference could maybe be tested
-                //            // but I'm not sure it's worth the extra code for the minor savings here, so just
-                //            // set the wrap width to positive infinity and refresh the text
-                //            asText.Width = float.PositiveInfinity;
-                //        }
+                        //        // It's possible that the text has itself wrapped, but the dimensions changed.
+                        //        if (asText.WrappedText.Count > 0 &&
+                        //            (asText.Width != 0 && float.IsPositiveInfinity(asText.Width) == false))
+                        //        {
+                        //            // this could be either because it wrapped, or because the raw text
+                        //            // actually has newlines. Vic says - this difference could maybe be tested
+                        //            // but I'm not sure it's worth the extra code for the minor savings here, so just
+                        //            // set the wrap width to positive infinity and refresh the text
+                        //            asText.Width = float.PositiveInfinity;
+                        //        }
 
-                //        maxWidth = asText.WrappedTextWidth;
+                        //        maxWidth = asText.WrappedTextWidth;
                     }
 
                     foreach (GraphicalUiElement element in this.Children)
@@ -3178,177 +2963,608 @@ namespace Gum.Wireframe
             mContainedObjectAsIpso.Width = widthToSet;
         }
 
-
-
-        private void GetParentDimensions(out float parentWidth, out float parentHeight)
+        public override string ToString()
         {
-            parentWidth = CanvasWidth;
-            parentHeight = CanvasHeight;
+            return Name;
+        }
 
-            if (this.Parent != null)
+        public void SetGueValues(IVariableFinder rvf)
+        {
+
+            this.SuspendLayout();
+
+            this.Width = rvf.GetValue<float>("Width");
+            this.Height = rvf.GetValue<float>("Height");
+
+            this.HeightUnits = rvf.GetValue<DimensionUnitType>("Height Units");
+            this.WidthUnits = rvf.GetValue<DimensionUnitType>("Width Units");
+
+            this.XOrigin = rvf.GetValue<HorizontalAlignment>("X Origin");
+            this.YOrigin = rvf.GetValue<VerticalAlignment>("Y Origin");
+
+            this.X = rvf.GetValue<float>("X");
+            this.Y = rvf.GetValue<float>("Y");
+
+            this.XUnits = UnitConverter.ConvertToGeneralUnit(rvf.GetValue<PositionUnitType>("X Units"));
+            this.YUnits = UnitConverter.ConvertToGeneralUnit(rvf.GetValue<PositionUnitType>("Y Units"));
+
+            this.TextureWidth = rvf.GetValue<int>("Texture Width");
+            this.TextureHeight = rvf.GetValue<int>("Texture Height");
+            this.TextureLeft = rvf.GetValue<int>("Texture Left");
+            this.TextureTop = rvf.GetValue<int>("Texture Top");
+
+            this.TextureWidthScale = rvf.GetValue<float>("Texture Width Scale");
+            this.TextureHeightScale = rvf.GetValue<float>("Texture Height Scale");
+
+            this.Wrap = rvf.GetValue<bool>("Wrap");
+
+            this.TextureAddress = rvf.GetValue<TextureAddress>("Texture Address");
+
+            this.ChildrenLayout = rvf.GetValue<ChildrenLayout>("Children Layout");
+            this.WrapsChildren = rvf.GetValue<bool>("Wraps Children");
+            this.ClipsChildren = rvf.GetValue<bool>("Clips Children");
+
+            if (this.ElementSave != null)
             {
-                parentWidth = Parent.Width;
-                parentHeight = Parent.Height;
-            }
-            else if (this.ElementGueContainingThis != null && this.ElementGueContainingThis.mContainedObjectAsIpso != null)
-            {
-                parentWidth = this.ElementGueContainingThis.mContainedObjectAsIpso.Width;
-                parentHeight = this.ElementGueContainingThis.mContainedObjectAsIpso.Height;
+                foreach (var category in ElementSave.Categories)
+                {
+                    string valueOnThisState = rvf.GetValue<string>(category.Name + "State");
+
+                    if (!string.IsNullOrEmpty(valueOnThisState))
+                    {
+                        this.ApplyState(valueOnThisState);
+                    }
+                }
             }
 
+            this.ResumeLayout();
+        }
+
+        partial void CustomAddToManagers();
+
+        /// <summary>
+        /// Adds this as a renderable to the SystemManagers if not already added. If already added
+        /// this does not perform any operations - it can be safely called multiple times.
+        /// </summary>
+        public virtual void AddToManagers()
+        {
+
+            AddToManagers(SystemManagers.Default, null);
+
+        }
+
+        /// <summary>
+        /// Adds this as a renderable to the SystemManagers on the argument layer if not already added
+        /// to SystemManagers. If already added
+        /// this does not perform any operations - it can be safely called multiple times, but
+        /// calling it multiple times will not move this to a different layer.
+        /// </summary>
+        public virtual void AddToManagers(SystemManagers managers, Layer layer)
+        {
 #if DEBUG
-            if (float.IsPositiveInfinity(parentHeight))
+            if (managers == null)
             {
-                throw new Exception();
+                throw new ArgumentNullException("managers cannot be null");
             }
 #endif
+            // If mManagers isn't null, it's already been added
+            if (mManagers == null)
+            {
+                mLayer = layer;
+                mManagers = managers;
+
+#if MONOGAME
+                AddContainedRenderableToManagers(managers, layer);
+
+                // Custom should be called before children have their Custom called
+                CustomAddToManagers();
+
+                // that means this is a screen, so the children need to be added directly to managers
+                if (this.mContainedObjectAsIpso == null)
+                {
+                    AddChildren(managers, layer);
+                }
+                else
+                {
+                    CustomAddChildren();
+                }
+#endif
+            }
         }
 
-        private void UpdateTextureCoordinatesDimensionBased()
+        private void CustomAddChildren()
         {
-            if (mContainedObjectAsIpso is Sprite)
+            foreach (var child in this.mWhatThisContains)
             {
-                var sprite = mContainedObjectAsIpso as Sprite;
-                var textureAddress = mTextureAddress;
-                switch (textureAddress)
-                {
-                    case TextureAddress.DimensionsBased:
-                        //int left = mTextureLeft;
-                        //int top = mTextureTop;
-                        //int width = (int)(sprite.EffectiveWidth / mTextureWidthScale);
-                        //int height = (int)(sprite.EffectiveHeight / mTextureHeightScale);
+                child.mManagers = this.mManagers;
+                child.CustomAddToManagers();
 
-                        //sprite.SourceRectangle = new Rectangle(
-                        //    left,
-                        //    top,
-                        //    width,
-                        //    height);
-                        //sprite.Wrap = mWrap;
-
-                        break;
-                }
+                child.CustomAddChildren();
             }
-            //else if (mContainedObjectAsIpso is NineSlice)
-            //{
-            //    var nineSlice = mContainedObjectAsIpso as NineSlice;
-            //    var textureAddress = mTextureAddress;
-            //    switch (textureAddress)
-            //    {
-            //        case TextureAddress.DimensionsBased:
-            //            int left = mTextureLeft;
-            //            int top = mTextureTop;
-            //            int width = (int)(nineSlice.EffectiveWidth / mTextureWidthScale);
-            //            int height = (int)(nineSlice.EffectiveHeight / mTextureHeightScale);
-
-            //            nineSlice.SourceRectangle = new Rectangle(
-            //                left,
-            //                top,
-            //                width,
-            //                height);
-
-            //            break;
-            //    }
-            //}
-
-
         }
 
-
-        private void UpdateTextureCoordinatesNotDimensionBased()
+        private void HandleCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            if (mContainedObjectAsIpso is Sprite)
+            if (e.Action == NotifyCollectionChangedAction.Add)
             {
-                var sprite = mContainedObjectAsIpso as Sprite;
-                var textureAddress = mTextureAddress;
-                switch (textureAddress)
+                foreach (IRenderableIpso ipso in e.NewItems)
                 {
-                    case TextureAddress.EntireTexture:
-                        //sprite.SourceRectangle = null;
-                        //sprite.Wrap = false;
-                        break;
-                    case TextureAddress.Custom:
-                        //sprite.SourceRectangle = new Microsoft.Xna.Framework.Rectangle(
-                        //    mTextureLeft,
-                        //    mTextureTop,
-                        //    mTextureWidth,
-                        //    mTextureHeight);
-                        //sprite.Wrap = mWrap;
+                    if (ipso.Parent != this)
+                    {
+                        ipso.Parent = this;
 
-                        break;
-                    case TextureAddress.DimensionsBased:
-                        // This is done *after* setting dimensions
-
-                        break;
+                    }
                 }
             }
-            //else if (mContainedObjectAsIpso is NineSlice)
-            //{
-            //    var nineSlice = mContainedObjectAsIpso as NineSlice;
-            //    var textureAddress = mTextureAddress;
-            //    switch (textureAddress)
-            //    {
-            //        case TextureAddress.EntireTexture:
-            //            nineSlice.SourceRectangle = null;
-            //            break;
-            //        case TextureAddress.Custom:
-            //            nineSlice.SourceRectangle = new Microsoft.Xna.Framework.Rectangle(
-            //                mTextureLeft,
-            //                mTextureTop,
-            //                mTextureWidth,
-            //                mTextureHeight);
+            else if (e.Action == NotifyCollectionChangedAction.Remove)
+            {
+                foreach (IRenderableIpso ipso in e.OldItems)
+                {
+                    if (ipso.Parent == this)
+                    {
+                        ipso.Parent = null;
+                    }
+                }
+            }
+        }
 
-            //            break;
-            //        case TextureAddress.DimensionsBased:
-            //            int left = mTextureLeft;
-            //            int top = mTextureTop;
-            //            int width = (int)(nineSlice.EffectiveWidth / mTextureWidthScale);
-            //            int height = (int)(nineSlice.EffectiveHeight / mTextureHeightScale);
+        private void AddChildren(SystemManagers managers, Layer layer)
+        {
+            // In a simple situation we'd just loop through the
+            // ContainedElements and add them to the manager.  However,
+            // this means that the container will dictate the Layer that
+            // its children reside on.  This is not what we want if we have
+            // two children, one of which is attached to the other, and the parent
+            // instance clips its children.  Therefore, we should make sure that we're
+            // only adding direct children and letting instances handle their own children
 
-            //            nineSlice.SourceRectangle = new Rectangle(
-            //                left,
-            //                top,
-            //                width,
-            //                height);
+            if (this.ElementSave != null && this.ElementSave is ScreenSave)
+            {
 
-            //            break;
-            //    }
-            //}
+                //Recursively add children to the managers
+                foreach (var child in this.mWhatThisContains)
+                {
+                    // July 27, 2014
+                    // Is this an unnecessary check?
+                    // if (child is GraphicalUiElement)
+                    {
+                        // December 1, 2014
+                        // I think that when we
+                        // add a screen we should
+                        // add all of the children of
+                        // the screen.  There's nothing
+                        // "above" that.
+                        if (child.Parent == null || child.Parent == this)
+                        {
+                            (child as GraphicalUiElement).AddToManagers(managers, layer);
+                        }
+                        else
+                        {
+                            child.mManagers = this.mManagers;
+
+                            child.CustomAddToManagers();
+
+                            child.CustomAddChildren();
+                        }
+                    }
+                }
+            }
+            else if (this.Children != null)
+            {
+                foreach (var child in this.Children)
+                {
+                    if (child is GraphicalUiElement)
+                    {
+                        var childGue = child as GraphicalUiElement;
+
+                        if (child.Parent == null || child.Parent == this)
+                        {
+                            childGue.AddToManagers(managers, layer);
+                        }
+                        else
+                        {
+                            childGue.mManagers = this.mManagers;
+
+                            childGue.CustomAddToManagers();
+
+                            childGue.CustomAddChildren();
+                        }
+                    }
+                }
+
+                // If a Component contains a child and that child is parented to the screen bounds then we should still add it
+                foreach (var child in this.mWhatThisContains)
+                {
+                    var childGue = child as GraphicalUiElement;
+
+                    // We'll check if this child has a parent, and if that parent isn't part of this component. If not, then
+                    // we'll add it
+                    if (child.Parent != null && this.mWhatThisContains.Contains(child.Parent) == false)
+                    {
+                        childGue.AddToManagers(managers, layer);
+                    }
+                    else
+                    {
+                        childGue.mManagers = this.mManagers;
+
+                        childGue.CustomAddToManagers();
+
+                        childGue.CustomAddChildren();
+                    }
+                }
+            }
+        }
+
+        private void AddContainedRenderableToManagers(SystemManagers managers, Layer layer)
+        {
+            // This may be a Screen
+            if (mContainedObjectAsIpso != null)
+            {
+#if MONOGAME
+                if (mContainedObjectAsIpso is Sprite)
+                {
+                    managers.SpriteManager.Add(mContainedObjectAsIpso as Sprite, layer);
+                }
+                else if (mContainedObjectAsIpso is NineSlice)
+                {
+                    managers.SpriteManager.Add(mContainedObjectAsIpso as NineSlice, layer);
+                }
+                else if (mContainedObjectAsIpso is LineRectangle)
+                {
+                    managers.ShapeManager.Add(mContainedObjectAsIpso as LineRectangle, layer);
+                }
+                else if (mContainedObjectAsIpso is SolidRectangle)
+                {
+                    managers.ShapeManager.Add(mContainedObjectAsIpso as SolidRectangle, layer);
+                }
+                else if (mContainedObjectAsIpso is Text)
+                {
+                    managers.TextManager.Add(mContainedObjectAsIpso as Text, layer);
+                }
+                else if (mContainedObjectAsIpso is LineCircle)
+                {
+                    managers.ShapeManager.Add(mContainedObjectAsIpso as LineCircle, layer);
+                }
+                else if (mContainedObjectAsIpso is LinePolygon)
+                {
+                    managers.ShapeManager.Add(mContainedObjectAsIpso as LinePolygon, layer);
+                }
+                else if (mContainedObjectAsIpso is InvisibleRenderable)
+                {
+                    managers.SpriteManager.Add(mContainedObjectAsIpso as InvisibleRenderable, layer);
+                }
+
+                else
+                {
+                    if (layer == null)
+                    {
+                        managers.Renderer.Layers[0].Add(mContainedObjectAsIpso);
+                    }
+                    else
+                    {
+                        layer.Add(mContainedObjectAsIpso);
+                    }
+                }
+#endif
+            }
+        }
+
+        // todo:  This should be called on instances and not just on element saves.  This is messing up animation
+        public void AddExposedVariable(string variableName, string underlyingVariable)
+        {
+            mExposedVariables[variableName] = underlyingVariable;
+        }
+
+        public bool IsExposedVariable(string variableName)
+        {
+            return this.mExposedVariables.ContainsKey(variableName);
+        }
+
+        partial void CustomRemoveFromManagers();
+
+        public void MoveToLayer(Layer layer)
+        {
+            var layerToRemoveFrom = mLayer;
+            if (mLayer == null && mManagers != null)
+            {
+#if MONOGAME
+                layerToRemoveFrom = mManagers.Renderer.Layers[0];
+#endif
+            }
+
+            var layerToAddTo = layer;
+            if (layerToAddTo == null)
+            {
+#if MONOGAME
+                layerToAddTo = mManagers.Renderer.Layers[0];
+#endif
+            }
+
+            bool isScreen = mContainedObjectAsIpso == null;
+            if (!isScreen)
+            {
+                if (layerToRemoveFrom != null)
+                {
+                    layerToRemoveFrom.Remove(mContainedObjectAsIpso);
+                }
+                layerToAddTo.Add(mContainedObjectAsIpso);
+            }
+            else
+            {
+                // move all contained objects:
+                foreach (var containedInstance in this.ContainedElements)
+                {
+                    var containedAsGue = containedInstance as GraphicalUiElement;
+                    // If it's got a parent, the parent will handle it
+                    if (containedAsGue.Parent == null)
+                    {
+                        containedAsGue.MoveToLayer(layer);
+                    }
+                }
+
+            }
+        }
+
+        public void RemoveFromManagers()
+        {
+            foreach (var child in this.mWhatThisContains)
+            {
+                if (child is GraphicalUiElement)
+                {
+                    (child as GraphicalUiElement).RemoveFromManagers();
+                }
+            }
+
+            // if mManagers is null, then it was never added to the managers
+            if (mManagers != null)
+            {
+#if MONOGAME
+                if (mContainedObjectAsIpso is Sprite)
+                {
+                    mManagers.SpriteManager.Remove(mContainedObjectAsIpso as Sprite);
+                }
+                else if (mContainedObjectAsIpso is NineSlice)
+                {
+                    mManagers.SpriteManager.Remove(mContainedObjectAsIpso as NineSlice);
+                }
+                else if (mContainedObjectAsIpso is global::RenderingLibrary.Math.Geometry.LineRectangle)
+                {
+                    mManagers.ShapeManager.Remove(mContainedObjectAsIpso as global::RenderingLibrary.Math.Geometry.LineRectangle);
+                }
+                else if (mContainedObjectAsIpso is global::RenderingLibrary.Math.Geometry.LinePolygon)
+                {
+                    mManagers.ShapeManager.Remove(mContainedObjectAsIpso as global::RenderingLibrary.Math.Geometry.LinePolygon);
+                }
+                else if (mContainedObjectAsIpso is global::RenderingLibrary.Graphics.SolidRectangle)
+                {
+                    mManagers.ShapeManager.Remove(mContainedObjectAsIpso as global::RenderingLibrary.Graphics.SolidRectangle);
+                }
+                else if (mContainedObjectAsIpso is Text)
+                {
+                    mManagers.TextManager.Remove(mContainedObjectAsIpso as Text);
+                }
+                else if (mContainedObjectAsIpso is LineCircle)
+                {
+                    mManagers.ShapeManager.Remove(mContainedObjectAsIpso as LineCircle);
+                }
+                else if (mContainedObjectAsIpso is InvisibleRenderable)
+                {
+                    mManagers.SpriteManager.Remove(mContainedObjectAsIpso as InvisibleRenderable);
+                }
+                else if (mContainedObjectAsIpso != null)
+                {
+                    // This could be a custom visual object, so don't do anything:
+                    //throw new NotImplementedException();
+                    mManagers.Renderer.RemoveRenderable(mContainedObjectAsIpso);
+                }
+#endif
+
+                CustomRemoveFromManagers();
+
+                mManagers = null;
+            }
+        }
+
+        public void SuspendLayout(bool recursive = false)
+        {
+            mIsLayoutSuspended = true;
+
+            if (recursive)
+            {
+                for (int i = mWhatThisContains.Count - 1; i > -1; i--)
+                {
+                    mWhatThisContains[i].SuspendLayout(true);
+                }
+            }
+        }
+
+        public void ResumeLayout(bool recursive = false)
+        {
+            mIsLayoutSuspended = false;
+
+            if (recursive)
+            {
+                ResumeLayoutUpdateIfDirtyRecursive();
+            }
+            else
+            {
+                if (isFontDirty)
+                {
+                    if (!IsAllLayoutSuspended)
+                    {
+                        this.UpdateToFontValues();
+                        isFontDirty = false;
+                    }
+                }
+                if (currentDirtyState != null)
+                {
+                    UpdateLayout(currentDirtyState.UpdateParent,
+                        currentDirtyState.ChildrenUpdateDepth,
+                        currentDirtyState.XOrY);
+                }
+            }
+        }
+
+        private void ResumeLayoutUpdateIfDirtyRecursive()
+        {
+
+            mIsLayoutSuspended = false;
+            UpdateFontRecursive();
+
+            if (currentDirtyState != null)
+            {
+                UpdateLayout(currentDirtyState.UpdateParent,
+                currentDirtyState.ChildrenUpdateDepth,
+                currentDirtyState.XOrY);
+            }
+
+            int count = mWhatThisContains.Count;
+            for (int i = 0; i < count; i++)
+            {
+                mWhatThisContains[i].ResumeLayoutUpdateIfDirtyRecursive();
+            }
+        }
+
+        /// <summary>
+        /// Searches for and returns a GraphicalUiElement in this instance by name. Returns null
+        /// if not found.
+        /// </summary>
+        /// <param name="name">The case-sensitive name to search for.</param>
+        /// <returns>The found GraphicalUiElement, or null if no match is found.</returns>
+        public GraphicalUiElement GetGraphicalUiElementByName(string name)
+        {
+            var containsDots = ToolsUtilities.StringFunctions.ContainsNoAlloc(name, '.');
+            if (containsDots)
+            {
+                // rare, so we can do allocation calls here:
+                var indexOfDot = name.IndexOf('.');
+
+                var prefix = name.Substring(0, indexOfDot);
+
+                GraphicalUiElement container = null;
+                for (int i = mWhatThisContains.Count - 1; i > -1; i--)
+                {
+                    var item = mWhatThisContains[i];
+                    if (item.name == prefix)
+                    {
+                        container = item;
+                        break;
+                    }
+                }
+
+                var suffix = name.Substring(indexOfDot + 1);
+
+                return container?.GetGraphicalUiElementByName(suffix);
+            }
+            else
+            {
+                for (int i = mWhatThisContains.Count - 1; i > -1; i--)
+                {
+                    var item = mWhatThisContains[i];
+                    if (item.name == name)
+                    {
+                        return item;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Performs a recursive search for graphical UI elements, where eacn name in the parameters
+        /// is the name of a GraphicalUiElement one level deeper than the last.
+        /// </summary>
+        /// <param name="names">The names to search for, allowing retrieval multiple levels deep.</param>
+        /// <returns>The found element, or null if no match is found.</returns>
+        public GraphicalUiElement GetGraphicalUiElementByName(params string[] names)
+        {
+            if (names.Length > 0)
+            {
+                var directChild = GetGraphicalUiElementByName(names[0]);
+
+                if (names.Length == 1)
+                {
+                    return directChild;
+                }
+                else
+                {
+                    var subArray = names.Skip(1).ToArray();
+
+                    return directChild?.GetGraphicalUiElementByName(subArray);
+                }
+            }
+            return null;
+        }
+
+        public IPositionedSizedObject GetChildByName(string name)
+        {
+            foreach (IPositionedSizedObject child in Children)
+            {
+                if (child.Name == name)
+                {
+                    return child;
+                }
+            }
+            return null;
+        }
+
+        public IRenderableIpso GetChildByNameRecursively(string name)
+        {
+            return GetChildByName(Children, name);
+        }
+
+        private IRenderableIpso GetChildByName(ObservableCollection<IRenderableIpso> children, string name)
+        {
+            foreach (var child in children)
+            {
+                if (child.Name == name)
+                {
+                    return child;
+                }
+
+                var subChild = GetChildByName(child.Children, name);
+                if (subChild != null)
+                {
+                    return subChild;
+                }
+            }
+            return null;
         }
 
         public void SetProperty(string propertyName, object value)
         {
 
-            //if (mExposedVariables.ContainsKey(propertyName))
-            //{
-            //    string underlyingProperty = mExposedVariables[propertyName];
-            //    int indexOfDot = underlyingProperty.IndexOf('.');
-            //    string instanceName = underlyingProperty.Substring(0, indexOfDot);
-            //    GraphicalUiElement containedGue = GetGraphicalUiElementByName(instanceName);
-            //    string variable = underlyingProperty.Substring(indexOfDot + 1);
+            if (mExposedVariables.ContainsKey(propertyName))
+            {
+                string underlyingProperty = mExposedVariables[propertyName];
+                int indexOfDot = underlyingProperty.IndexOf('.');
+                string instanceName = underlyingProperty.Substring(0, indexOfDot);
+                GraphicalUiElement containedGue = GetGraphicalUiElementByName(instanceName);
+                string variable = underlyingProperty.Substring(indexOfDot + 1);
 
-            //    // Children may not have been created yet
-            //    if (containedGue != null)
-            //    {
-            //        containedGue.SetProperty(variable, value);
-            //    }
-            //}
-            //else if (ToolsUtilities.StringFunctions.ContainsNoAlloc(propertyName, '.'))
-            //{
-            //    int indexOfDot = propertyName.IndexOf('.');
-            //    string instanceName = propertyName.Substring(0, indexOfDot);
-            //    GraphicalUiElement containedGue = GetGraphicalUiElementByName(instanceName);
-            //    string variable = propertyName.Substring(indexOfDot + 1);
+                // Children may not have been created yet
+                if (containedGue != null)
+                {
+                    containedGue.SetProperty(variable, value);
+                }
+            }
+            else if (ToolsUtilities.StringFunctions.ContainsNoAlloc(propertyName, '.'))
+            {
+                int indexOfDot = propertyName.IndexOf('.');
+                string instanceName = propertyName.Substring(0, indexOfDot);
+                GraphicalUiElement containedGue = GetGraphicalUiElementByName(instanceName);
+                string variable = propertyName.Substring(indexOfDot + 1);
 
-            //    // instances may not have been set yet
-            //    if (containedGue != null)
-            //    {
-            //        containedGue.SetProperty(variable, value);
-            //    }
+                // instances may not have been set yet
+                if (containedGue != null)
+                {
+                    containedGue.SetProperty(variable, value);
+                }
 
 
-            //}
-            //else 
-            if (TrySetValueOnThis(propertyName, value))
+            }
+            else if (TrySetValueOnThis(propertyName, value))
             {
                 // success, do nothing, but it's in an else if to prevent the following else if's from evaluating
             }
@@ -3362,8 +3578,178 @@ namespace Gum.Wireframe
         private bool TrySetValueOnThis(string propertyName, object value)
         {
             bool toReturn = false;
-            return toReturn;
+            try
+            {
+                switch (propertyName)
+                {
+                    case "Children Layout":
+                        this.ChildrenLayout = (ChildrenLayout)value;
+                        toReturn = true;
+                        break;
+                    case "Clips Children":
+                        this.ClipsChildren = (bool)value;
+                        toReturn = true;
+                        break;
+#if MONOGAME
+                    case "CurrentChainName":
+                        this.CurrentChainName = (string)value;
+                        toReturn = true;
+                        break;
+#endif
+                    case "FlipHorizontal":
+                        this.FlipHorizontal = (bool)value;
+                        toReturn = true;
+                        break;
+                    case "Height":
+                        this.Height = (float)value;
+                        toReturn = true;
+                        break;
+                    case "Height Units":
+                        this.HeightUnits = (DimensionUnitType)value;
+                        toReturn = true;
+                        break;
+                    case "Parent":
+                        {
+                            string valueAsString = (string)value;
 
+                            if (!string.IsNullOrEmpty(valueAsString) && mWhatContainsThis != null)
+                            {
+                                var newParent = this.mWhatContainsThis.GetGraphicalUiElementByName(valueAsString);
+                                if (newParent != null)
+                                {
+                                    Parent = newParent;
+                                }
+                            }
+                            toReturn = true;
+                        }
+                        break;
+                    case "Rotation":
+                        this.Rotation = (float)value;
+                        toReturn = true;
+                        break;
+                    case "Width":
+                        this.Width = (float)value;
+                        toReturn = true;
+                        break;
+                    case "Width Units":
+                        this.WidthUnits = (DimensionUnitType)value;
+                        toReturn = true;
+                        break;
+                    case "Texture Left":
+                        this.TextureLeft = (int)value;
+                        toReturn = true;
+                        break;
+                    case "Texture Top":
+                        this.TextureTop = (int)value;
+                        toReturn = true;
+                        break;
+                    case "Texture Width":
+                        this.TextureWidth = (int)value;
+                        toReturn = true;
+                        break;
+                    case "Texture Height":
+                        this.TextureHeight = (int)value;
+                        toReturn = true;
+
+                        break;
+                    case "Texture Width Scale":
+                        this.TextureWidthScale = (float)value;
+                        toReturn = true;
+                        break;
+                    case "Texture Height Scale":
+                        this.TextureHeightScale = (float)value;
+                        toReturn = true;
+                        break;
+                    case "Texture Address":
+
+                        this.TextureAddress = (Gum.Managers.TextureAddress)value;
+                        toReturn = true;
+                        break;
+                    case "Visible":
+                        this.Visible = (bool)value;
+                        toReturn = true;
+                        break;
+                    case "X":
+                        this.X = (float)value;
+                        toReturn = true;
+                        break;
+                    case "X Origin":
+                        this.XOrigin = (HorizontalAlignment)value;
+                        toReturn = true;
+                        break;
+                    case "X Units":
+                        this.XUnits = UnitConverter.ConvertToGeneralUnit(value);
+                        toReturn = true;
+                        break;
+                    case "Y":
+                        this.Y = (float)value;
+                        toReturn = true;
+                        break;
+                    case "Y Origin":
+                        this.YOrigin = (VerticalAlignment)value;
+                        toReturn = true;
+                        break;
+                    case "Y Units":
+
+                        this.YUnits = UnitConverter.ConvertToGeneralUnit(value);
+                        toReturn = true;
+                        break;
+                    case "Wrap":
+                        this.Wrap = (bool)value;
+                        toReturn = true;
+                        break;
+                    case "Wraps Children":
+                        this.WrapsChildren = (bool)value;
+                        toReturn = true;
+                        break;
+                }
+
+                if (!toReturn)
+                {
+                    var propertyNameLength = propertyName.Length;
+                    if (propertyNameLength > 5
+                        && propertyName[propertyNameLength - 1] == 'e'
+                        && propertyName[propertyNameLength - 2] == 't'
+                        && propertyName[propertyNameLength - 3] == 'a'
+                        && propertyName[propertyNameLength - 4] == 't'
+                        && propertyName[propertyNameLength - 5] == 'S'
+                        && value is string)
+                    {
+                        var valueAsString = value as string;
+
+                        string nameWithoutState = propertyName.Substring(0, propertyName.Length - "State".Length);
+
+                        if (string.IsNullOrEmpty(nameWithoutState))
+                        {
+                            // This is an uncategorized state
+                            if (mStates.ContainsKey(valueAsString))
+                            {
+                                ApplyState(mStates[valueAsString]);
+                                toReturn = true;
+                            }
+                        }
+                        else if (mCategories.ContainsKey(nameWithoutState))
+                        {
+
+                            var category = mCategories[nameWithoutState];
+
+                            var state = category.States.FirstOrDefault(item => item.Name == valueAsString);
+                            if (state != null)
+                            {
+                                ApplyState(state);
+                                toReturn = true;
+                            }
+                        }
+                    }
+                }
+            }
+            catch (InvalidCastException)
+            {
+                // There could be some rogue value set to the incorrect type, or maybe
+                // a new type or plugin initialized the default to the wrong type. We don't
+                // want to blow up if this happens
+            }
+            return toReturn;
         }
 
         private void SetPropertyOnRenderable(string propertyName, object value)
@@ -3585,6 +3971,266 @@ namespace Gum.Wireframe
             //}
         }
 
+#if MONOGAME
+
+        private bool TrySetPropertyOnLinePolygon(string propertyName, object value)
+        {
+            bool handled = false;
+
+
+            if (propertyName == "Alpha")
+            {
+                int valueAsInt = (int)value;
+
+                var color =
+                    ((LinePolygon)mContainedObjectAsIpso).Color;
+                color.A = (byte)valueAsInt;
+
+                ((LinePolygon)mContainedObjectAsIpso).Color = color;
+                handled = true;
+            }
+
+            else if (propertyName == "Red")
+            {
+                int valueAsInt = (int)value;
+
+                var color =
+                    ((LinePolygon)mContainedObjectAsIpso).Color;
+                color.R = (byte)valueAsInt;
+
+                ((LinePolygon)mContainedObjectAsIpso).Color = color;
+                handled = true;
+            }
+
+            else if (propertyName == "Green")
+            {
+                int valueAsInt = (int)value;
+
+                var color =
+                    ((LinePolygon)mContainedObjectAsIpso).Color;
+                color.G = (byte)valueAsInt;
+
+                ((LinePolygon)mContainedObjectAsIpso).Color = color;
+                handled = true;
+            }
+
+            else if (propertyName == "Blue")
+            {
+                int valueAsInt = (int)value;
+
+                var color =
+                    ((LinePolygon)mContainedObjectAsIpso).Color;
+                color.B = (byte)valueAsInt;
+
+                ((LinePolygon)mContainedObjectAsIpso).Color = color;
+                handled = true;
+            }
+
+            else if (propertyName == "Color")
+            {
+                var valueAsColor = (Color)value;
+                ((LinePolygon)mContainedObjectAsIpso).Color = valueAsColor;
+                handled = true;
+            }
+
+
+            else if (propertyName == "Points")
+            {
+                var points = (List<Vector2>)value;
+
+                ((LinePolygon)mContainedObjectAsIpso).SetPoints(points);
+                handled = true;
+            }
+
+            return handled;
+        }
+
+        private bool TrySetPropertyOnLineRectangle(string propertyName, object value)
+        {
+            bool handled = false;
+
+            if (propertyName == "Alpha")
+            {
+                int valueAsInt = (int)value;
+
+                var color =
+                    ((LineRectangle)mContainedObjectAsIpso).Color;
+                color.A = (byte)valueAsInt;
+
+                ((LineRectangle)mContainedObjectAsIpso).Color = color;
+                handled = true;
+            }
+
+            else if (propertyName == "Red")
+            {
+                int valueAsInt = (int)value;
+
+                var color =
+                    ((LineRectangle)mContainedObjectAsIpso).Color;
+                color.R = (byte)valueAsInt;
+
+                ((LineRectangle)mContainedObjectAsIpso).Color = color;
+                handled = true;
+            }
+
+            else if (propertyName == "Green")
+            {
+                int valueAsInt = (int)value;
+
+                var color =
+                    ((LineRectangle)mContainedObjectAsIpso).Color;
+                color.G = (byte)valueAsInt;
+
+                ((LineRectangle)mContainedObjectAsIpso).Color = color;
+                handled = true;
+            }
+
+            else if (propertyName == "Blue")
+            {
+                int valueAsInt = (int)value;
+
+                var color =
+                    ((LineRectangle)mContainedObjectAsIpso).Color;
+                color.B = (byte)valueAsInt;
+
+                ((LineRectangle)mContainedObjectAsIpso).Color = color;
+                handled = true;
+            }
+            else if (propertyName == "Color")
+            {
+                var valueAsColor = (Color)value;
+                ((LineRectangle)mContainedObjectAsIpso).Color = valueAsColor;
+                handled = true;
+            }
+
+            return handled;
+        }
+
+        private bool TrySetPropertyOnLineCircle(string propertyName, object value)
+        {
+            bool handled = false;
+
+            if (propertyName == "Alpha")
+            {
+                int valueAsInt = (int)value;
+
+                var color =
+                    ((LineCircle)mContainedObjectAsIpso).Color;
+                color.A = (byte)valueAsInt;
+
+                ((LineCircle)mContainedObjectAsIpso).Color = color;
+                handled = true;
+            }
+
+            else if (propertyName == "Red")
+            {
+                int valueAsInt = (int)value;
+
+                var color =
+                    ((LineCircle)mContainedObjectAsIpso).Color;
+                color.R = (byte)valueAsInt;
+
+                ((LineCircle)mContainedObjectAsIpso).Color = color;
+                handled = true;
+            }
+
+            else if (propertyName == "Green")
+            {
+                int valueAsInt = (int)value;
+
+                var color =
+                    ((LineCircle)mContainedObjectAsIpso).Color;
+                color.G = (byte)valueAsInt;
+
+                ((LineCircle)mContainedObjectAsIpso).Color = color;
+                handled = true;
+            }
+
+            else if (propertyName == "Blue")
+            {
+                int valueAsInt = (int)value;
+
+                var color =
+                    ((LineCircle)mContainedObjectAsIpso).Color;
+                color.B = (byte)valueAsInt;
+
+                ((LineCircle)mContainedObjectAsIpso).Color = color;
+                handled = true;
+            }
+
+            else if(propertyName == "Color")
+            {
+                var valueAsColor = (Color)value;
+                ((LineCircle)mContainedObjectAsIpso).Color = valueAsColor;
+                handled = true;
+            }
+
+            else if(propertyName == "Radius")
+            {
+                var valueAsFloat = (float)value;
+                ((LineCircle)mContainedObjectAsIpso).Width = 2*valueAsFloat;
+                ((LineCircle)mContainedObjectAsIpso).Height = 2*valueAsFloat;
+                ((LineCircle)mContainedObjectAsIpso).Radius = valueAsFloat;
+                this.Width = 2 * valueAsFloat;
+                this.Height = 2 * valueAsFloat;
+            }
+
+            return handled;
+        }
+
+        private bool AssignSourceFileOnSprite(string value, Sprite sprite)
+        {
+            bool handled;
+
+            if (string.IsNullOrEmpty(value))
+            {
+                sprite.Texture = null;
+                sprite.AtlasedTexture = null;
+
+                UpdateLayout();
+            }
+            else
+            {
+                if (ToolsUtilities.FileManager.IsRelative(value))
+                {
+                    value = ToolsUtilities.FileManager.RelativeDirectory + value;
+
+                    value = ToolsUtilities.FileManager.RemoveDotDotSlash(value);
+                }
+
+                // see if an atlas exists:
+                var atlasedTexture = global::RenderingLibrary.Content.LoaderManager.Self.TryLoadContent<AtlasedTexture>(value);
+
+                if (atlasedTexture != null)
+                {
+                    sprite.AtlasedTexture = atlasedTexture;
+                    UpdateLayout();
+                }
+                else
+                {
+                    // We used to check if the file exists. But internally something may
+                    // alias a file. Ultimately the content loader should make that decision,
+                    // not the GUE
+                    try
+                    {
+                        sprite.Texture = global::RenderingLibrary.Content.LoaderManager.Self.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(value);
+                    }
+                    catch(System.IO.FileNotFoundException)
+                    {
+                        if(MissingFileBehavior == MissingFileBehavior.ThrowException)
+                        {
+                            string message = $"Error setting SourceFile on Sprite in {this.Tag}:\n{value}";
+                            throw new System.IO.FileNotFoundException(message);
+                        }
+                        sprite.Texture = null;
+                    }
+                    UpdateLayout();
+                }
+            }
+            handled = true;
+            return handled;
+        }
+#endif
         private bool TrySetPropertyOnText(string propertyName, object value)
         {
             bool handled = false;
@@ -3744,6 +4390,23 @@ namespace Gum.Wireframe
             return handled;
         }
 
+
+#if MONOGAME
+        bool useCustomFont;
+        public bool UseCustomFont
+        {
+            get { return useCustomFont; }
+            set { useCustomFont = value; UpdateToFontValues(); }
+        }
+
+        string customFontFile;
+        public string CustomFontFile
+        {
+            get { return customFontFile; }
+            set { customFontFile = value; UpdateToFontValues(); }
+        }
+#endif
+
         string font;
         public string Font
         {
@@ -3751,34 +4414,58 @@ namespace Gum.Wireframe
             set { font = value; UpdateToFontValues(); }
         }
 
-        public void AddCategory(DataTypes.Variables.StateSaveCategory category)
+        int fontSize;
+        public int FontSize
         {
-            //mCategories[category.Name] = category;
-            mCategories.Add(category.Name, category);
+            get { return fontSize; }
+            set { fontSize = value; UpdateToFontValues(); }
         }
 
-        public void AddStates(List<DataTypes.Variables.StateSave> list)
+        bool isItalic;
+        public bool IsItalic
         {
-            foreach (var state in list)
+            get { return isItalic; }
+            set { isItalic = value; UpdateToFontValues(); }
+        }
+
+        // Not sure if we need to make this a public value, but we do need to store it
+        // Update - yes we do need this to be public so it can be assigned in codegen:
+        bool useFontSmoothing = true;
+        public bool UseFontSmoothing
+        {
+            get { return useFontSmoothing; }
+            set { useFontSmoothing = value; UpdateToFontValues(); }
+        }
+
+        int outlineThickness;
+        public int OutlineThickness
+        {
+            get { return outlineThickness; }
+            set { outlineThickness = value; UpdateToFontValues(); }
+        }
+
+        public void UpdateFontRecursive()
+        {
+            if (this.mContainedObjectAsIpso is Text && isFontDirty)
             {
-                // Right now this doesn't support inheritance
-                // Need to investigate this....at some point:
-                mStates[state.Name] = state;
+                UpdateToFontValues();
+                isFontDirty = false;
             }
-        }
 
-        public bool IsPointInside(float x, float y)
-        {
-            var asIpso = this as IRenderableIpso;
-
-            var absoluteX = asIpso.GetAbsoluteX();
-            var absoluteY = asIpso.GetAbsoluteY();
-
-            return
-                x > absoluteX &&
-                y > absoluteY &&
-                x < absoluteX + this.GetAbsoluteWidth() &&
-                y < absoluteY + this.GetAbsoluteHeight();
+            if (this.Children != null)
+            {
+                foreach (GraphicalUiElement child in this.Children)
+                {
+                    child.UpdateFontRecursive();
+                }
+            }
+            else
+            {
+                foreach (GraphicalUiElement child in this.mWhatThisContains)
+                {
+                    child.UpdateFontRecursive();
+                }
+            }
         }
 
         void UpdateToFontValues()
@@ -3805,7 +4492,7 @@ namespace Gum.Wireframe
             }
         }
 
-#region IVisible Implementation
+        #region IVisible Implementation
 
 
         bool IVisible.AbsoluteVisible
@@ -3827,6 +4514,242 @@ namespace Gum.Wireframe
             get { return this.Parent as IVisible; }
         }
 
-#endregion
+        #endregion
+
+        public void ApplyState(string name)
+        {
+            if (mStates.ContainsKey(name))
+            {
+                var state = mStates[name];
+
+                ApplyState(state);
+
+            }
+
+
+            // This is a little dangerous because it's ambiguous.
+            // Technically categories could have same-named states.
+            foreach (var category in mCategories.Values)
+            {
+                var foundState = category.States.FirstOrDefault(item => item.Name == name);
+
+                if (foundState != null)
+                {
+                    ApplyState(foundState);
+                }
+            }
+        }
+
+        public void ApplyState(string categoryName, string stateName)
+        {
+            if (mCategories.ContainsKey(categoryName))
+            {
+                var category = mCategories[categoryName];
+
+                var state = category.States.FirstOrDefault(item => item.Name == stateName);
+
+                if (state != null)
+                {
+                    ApplyState(state);
+                }
+            }
+        }
+
+        public virtual void ApplyState(DataTypes.Variables.StateSave state)
+        {
+#if DEBUG
+            if (state.ParentContainer == null)
+            {
+                throw new InvalidOperationException("State.ParentContainer is null - did you remember to initialize the state?");
+            }
+
+#endif
+            if (GraphicalUiElement.IsAllLayoutSuspended == false)
+            {
+                this.SuspendLayout(true);
+            }
+
+            var variablesWithoutStatesOnParent =
+                state.Variables.Where(item =>
+                    // We can set the variable if it's not setting a state (to prevent recursive setting).                   
+                    (item.IsState(state.ParentContainer) == false ||
+                    // If it is setting a state we'll allow it if it's on a child.
+                    !string.IsNullOrEmpty(item.SourceObject)) &&
+                    item.SetsValue
+
+                    ).ToArray();
+
+
+            var parentSettingVariables =
+                variablesWithoutStatesOnParent
+                    .Where(item => item.GetRootName() == "Parent")
+                    .OrderBy(item => GetOrderedIndexForParentVariable(item))
+                    .ToArray();
+
+            var nonParentSettingVariables =
+                variablesWithoutStatesOnParent
+                    .Except(parentSettingVariables)
+                    // Even though we removed state-setting variables on the parent, we still allow setting
+                    // states on the contained objects
+                    .OrderBy(item => !item.IsState(state.ParentContainer))
+                    .ToArray();
+
+            var variablesToConsider =
+                parentSettingVariables.Concat(nonParentSettingVariables)
+                .ToArray();
+
+            int variableCount = variablesToConsider.Length;
+            for (int i = 0; i < variableCount; i++)
+            {
+                var variable = variablesToConsider[i];
+                if (variable.SetsValue && variable.Value != null)
+                {
+                    this.SetProperty(variable.Name, variable.Value);
+                }
+            }
+
+            foreach (var variableList in state.VariableLists)
+            {
+                this.SetProperty(variableList.Name, variableList.ValueAsIList);
+            }
+
+            if (GraphicalUiElement.IsAllLayoutSuspended == false)
+            {
+                this.ResumeLayout(true);
+
+            }
+        }
+
+        private int GetOrderedIndexForParentVariable(VariableSave item)
+        {
+            var objectName = item.SourceObject;
+            for (int i = 0; i < ElementSave.Instances.Count; i++)
+            {
+                if (objectName == ElementSave.Instances[i].Name)
+                {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        public void ApplyState(List<DataTypes.Variables.VariableSaveValues> variableSaveValues)
+        {
+            this.SuspendLayout(true);
+
+            foreach (var variable in variableSaveValues)
+            {
+                if (variable.Value != null)
+                {
+                    this.SetProperty(variable.Name, variable.Value);
+                }
+            }
+            this.ResumeLayout(true);
+        }
+
+        public void AddCategory(DataTypes.Variables.StateSaveCategory category)
+        {
+            //mCategories[category.Name] = category;
+            mCategories.Add(category.Name, category);
+        }
+
+        public void AddStates(List<DataTypes.Variables.StateSave> list)
+        {
+            foreach (var state in list)
+            {
+                // Right now this doesn't support inheritance
+                // Need to investigate this....at some point:
+                mStates[state.Name] = state;
+            }
+        }
+
+#if MONOGAME
+        public void GetUsedTextures(List<Microsoft.Xna.Framework.Graphics.Texture2D> listToFill)
+        {
+            var renderable = this.mContainedObjectAsIpso;
+
+            if (renderable is Sprite)
+            {
+                var texture = (renderable as Sprite).Texture;
+
+                if (texture != null && !listToFill.Contains(texture)) listToFill.Add(texture);
+            }
+            else if (renderable is NineSlice)
+            {
+                var nineSlice = renderable as NineSlice;
+
+                if (nineSlice.TopLeftTexture != null && !listToFill.Contains(nineSlice.TopLeftTexture)) listToFill.Add(nineSlice.TopLeftTexture);
+                if (nineSlice.TopTexture != null && !listToFill.Contains(nineSlice.TopTexture)) listToFill.Add(nineSlice.TopTexture);
+                if (nineSlice.TopRightTexture != null && !listToFill.Contains(nineSlice.TopRightTexture)) listToFill.Add(nineSlice.TopRightTexture);
+
+                if (nineSlice.LeftTexture != null && !listToFill.Contains(nineSlice.LeftTexture)) listToFill.Add(nineSlice.LeftTexture);
+                if (nineSlice.CenterTexture != null && !listToFill.Contains(nineSlice.CenterTexture)) listToFill.Add(nineSlice.CenterTexture);
+                if (nineSlice.RightTexture != null && !listToFill.Contains(nineSlice.RightTexture)) listToFill.Add(nineSlice.RightTexture);
+
+                if (nineSlice.BottomLeftTexture != null && !listToFill.Contains(nineSlice.BottomLeftTexture)) listToFill.Add(nineSlice.BottomLeftTexture);
+                if (nineSlice.BottomTexture != null && !listToFill.Contains(nineSlice.BottomTexture)) listToFill.Add(nineSlice.BottomTexture);
+                if (nineSlice.BottomRightTexture != null && !listToFill.Contains(nineSlice.BottomRightTexture)) listToFill.Add(nineSlice.BottomRightTexture);
+            }
+            else if (renderable is Text)
+            {
+                // what do we do here?  Texts could change so do we want to return them if used in a atlas?
+                // This is todo for later
+            }
+
+            foreach (var item in this.mWhatThisContains)
+            {
+                item.GetUsedTextures(listToFill);
+            }
+        }
+#endif
+
+        #endregion
+
+        // currently missing animation chains and interpolation
+
+        bool IsAllLayoutAbsolute()
+        {
+            return 
+                //mWidthUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent &&
+                //mHeightUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent &&
+                (mXUnits == GeneralUnitType.PixelsFromLarge || mXUnits == GeneralUnitType.PixelsFromMiddle ||
+                    mXUnits == GeneralUnitType.PixelsFromSmall || mXUnits == GeneralUnitType.PixelsFromMiddleInverted) &&
+                (mYUnits == GeneralUnitType.PixelsFromLarge || mYUnits == GeneralUnitType.PixelsFromMiddle ||
+                    mYUnits == GeneralUnitType.PixelsFromSmall || mYUnits == GeneralUnitType.PixelsFromMiddleInverted ||
+                    mYUnits == GeneralUnitType.PixelsFromBaseline);
+        }
+
+        bool IsAllLayoutAbsolute(XOrY xOrY)
+        {
+            if (xOrY == XOrY.X)
+            {
+                return //mWidthUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent &&
+                    (mXUnits == GeneralUnitType.PixelsFromLarge || mXUnits == GeneralUnitType.PixelsFromMiddle ||
+                        mXUnits == GeneralUnitType.PixelsFromSmall || mXUnits == GeneralUnitType.PixelsFromMiddleInverted);
+            }
+            else // Y
+            {
+                return //mHeightUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent &&
+                    (mYUnits == GeneralUnitType.PixelsFromLarge || mYUnits == GeneralUnitType.PixelsFromMiddle ||
+                        mYUnits == GeneralUnitType.PixelsFromSmall || mYUnits == GeneralUnitType.PixelsFromMiddleInverted &&
+                        mYUnits == GeneralUnitType.PixelsFromBaseline);
+            }
+        }
+
+        public bool IsPointInside(float x, float y)
+        {
+            var asIpso = this as IRenderableIpso;
+
+            var absoluteX = asIpso.GetAbsoluteX();
+            var absoluteY = asIpso.GetAbsoluteY();
+
+            return
+                x > absoluteX &&
+                y > absoluteY &&
+                x < absoluteX + this.GetAbsoluteWidth() &&
+                y < absoluteY + this.GetAbsoluteHeight();
+        }
+
+
     }
 }

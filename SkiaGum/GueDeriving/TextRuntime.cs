@@ -15,7 +15,8 @@ namespace SkiaGum.GueDeriving
         {
             White,
             DefaultColor,
-            LightBlue
+            LightBlue,
+            LightGray
         }
 
         ColorCategory mColorCategoryState;
@@ -41,6 +42,11 @@ namespace SkiaGum.GueDeriving
                         this.Blue = 193;
                         this.Green = 145;
                         this.Red = 0;
+                        break;
+                    case ColorCategory.LightGray:
+                        this.Blue = 227;
+                        this.Green = 226;
+                        this.Red = 226;
                         break;
                 }
             }

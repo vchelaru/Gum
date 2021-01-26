@@ -146,6 +146,30 @@ namespace SkiaGum.GueDeriving
             }
         }
 
+        protected void PushValueToViewModel([System.Runtime.CompilerServices.CallerMemberName] string uiPropertyName = null)
+        {
+            var kvp = vmPropsToUiProps.FirstOrDefault(item => item.UiProperty == uiPropertyName);
+
+            if (kvp.UiProperty == uiPropertyName)
+            {
+                var vmPropName = kvp.VmProperty;
+
+                var vmProperty = BindingContext?.GetType().GetProperty(vmPropName);
+
+                if (vmProperty != null)
+                {
+                    var uiProperty = this.GetType().GetProperty(uiPropertyName);
+                    if (uiProperty != null)
+                    {
+                        var uiValue = uiProperty.GetValue(this, null);
+
+                        vmProperty.SetValue(BindingContext, uiValue, null);
+                    }
+                }
+            }
+        }
+
+
         private void HandleViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             var vmPropertyName = e.PropertyName;

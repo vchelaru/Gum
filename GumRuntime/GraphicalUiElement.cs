@@ -1473,7 +1473,6 @@ namespace Gum.Wireframe
                         }
                     }
 
-                    UpdateLayerScissor();
                 }
             }
 
@@ -1690,6 +1689,7 @@ namespace Gum.Wireframe
             }
         }
 #endif
+
         public virtual void CreateChildrenRecursively(ElementSave elementSave, SystemManagers systemManagers)
         {
             bool isScreen = elementSave is ScreenSave;
@@ -1926,10 +1926,6 @@ namespace Gum.Wireframe
                     }
                 }
             }
-        }
-
-        private void UpdateLayerScissor()
-        {
         }
 
         private void GetParentDimensions(out float parentWidth, out float parentHeight)
@@ -3250,7 +3246,7 @@ namespace Gum.Wireframe
             // This may be a Screen
             if (mContainedObjectAsIpso != null)
             {
-
+#if MONOGAME
                 if (mContainedObjectAsIpso is Sprite)
                 {
                     managers.SpriteManager.Add(mContainedObjectAsIpso as Sprite, layer);
@@ -3295,6 +3291,7 @@ namespace Gum.Wireframe
                         layer.Add(mContainedObjectAsIpso);
                     }
                 }
+#endif
             }
         }
 
@@ -3316,13 +3313,17 @@ namespace Gum.Wireframe
             var layerToRemoveFrom = mLayer;
             if (mLayer == null && mManagers != null)
             {
+#if MONOGAME
                 layerToRemoveFrom = mManagers.Renderer.Layers[0];
+#endif
             }
 
             var layerToAddTo = layer;
             if (layerToAddTo == null)
             {
+#if MONOGAME
                 layerToAddTo = mManagers.Renderer.Layers[0];
+#endif
             }
 
             bool isScreen = mContainedObjectAsIpso == null;
@@ -3635,10 +3636,12 @@ namespace Gum.Wireframe
                         this.ClipsChildren = (bool)value;
                         toReturn = true;
                         break;
+#if MONOGAME
                     case "CurrentChainName":
                         this.CurrentChainName = (string)value;
                         toReturn = true;
                         break;
+#endif
                     case "FlipHorizontal":
                         this.FlipHorizontal = (bool)value;
                         toReturn = true;
@@ -4036,6 +4039,8 @@ namespace Gum.Wireframe
             }
         }
 
+#if MONOGAME
+
         private bool TrySetPropertyOnLinePolygon(string propertyName, object value)
         {
             bool handled = false;
@@ -4293,7 +4298,7 @@ namespace Gum.Wireframe
             handled = true;
             return handled;
         }
-
+#endif
         private bool TrySetPropertyOnText(string propertyName, object value)
         {
             bool handled = false;
@@ -4464,6 +4469,7 @@ namespace Gum.Wireframe
             return handled;
         }
 
+#if MONOGAME
         bool useCustomFont;
         public bool UseCustomFont
         {
@@ -4471,13 +4477,13 @@ namespace Gum.Wireframe
             set { useCustomFont = value; UpdateToFontValues(); }
         }
 
-
         string customFontFile;
         public string CustomFontFile
         {
             get { return customFontFile; }
             set { customFontFile = value; UpdateToFontValues(); }
         }
+#endif
 
         string font;
         public string Font
@@ -4796,7 +4802,7 @@ namespace Gum.Wireframe
             }
         }
 
-
+#if MONOGAME
         public void GetUsedTextures(List<Microsoft.Xna.Framework.Graphics.Texture2D> listToFill)
         {
             var renderable = this.mContainedObjectAsIpso;
@@ -4834,7 +4840,7 @@ namespace Gum.Wireframe
                 item.GetUsedTextures(listToFill);
             }
         }
-
+#endif
         // When interpolating between two states,
         // the code is goign to merge the values from
         // the two states to create a 3rd set of (merged)
