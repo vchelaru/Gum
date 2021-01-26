@@ -103,9 +103,9 @@
       <Project>{a86ee399-7c93-42e1-80ed-ca4cbf4ca573}</Project>
       <Name>RenderingLibrary</Name>
     </ProjectReference>
-    <ProjectReference Include="..\ToolsUtilities\ToolsUtilities.csproj">
-      <Project>{B941A93F-6093-4DC6-AD11-91A058B6C2CC}</Project>
-      <Name>ToolsUtilities</Name>
+    <ProjectReference Include="..\ToolsUtilities\ToolsUtilitiesStandard.csproj">
+      <Project>{cae35f4b-8a10-4a85-b2fb-7f4a8d7c7138}</Project>
+      <Name>ToolsUtilitiesStandard</Name>
     </ProjectReference>
     <ProjectReference Include="..\WpfDataUi\WpfDataUi.csproj">
       <Project>{47241002-7eb5-433b-b931-a530bb6b84ee}</Project>

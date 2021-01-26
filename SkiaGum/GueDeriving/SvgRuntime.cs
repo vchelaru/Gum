@@ -1,4 +1,5 @@
-﻿using Gum.Wireframe;
+﻿using Gum.DataTypes;
+using Gum.Wireframe;
 using SkiaSharp.Extended.Svg;
 using System;
 using System.Collections.Generic;

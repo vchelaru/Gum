@@ -1,23 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using Gum.Converters;
+using Gum.DataTypes;
+using Gum.DataTypes.Variables;
+using Gum.Graphics.Animation;
+using Gum.Managers;
+using Gum.RenderingLibrary;
+using GumDataTypes.Variables;
+using GumRuntime;
+using Microsoft.Xna.Framework;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
-using Gum.DataTypes;
-using Gum.Managers;
-using Gum.Converters;
-using GumDataTypes.Variables;
-using Microsoft.Xna.Framework;
+using RenderingLibrary.Math;
 using RenderingLibrary.Math.Geometry;
-using Gum.RenderingLibrary;
-using System.Reflection;
-using GumRuntime;
-using Gum.DataTypes.Variables;
+using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
-using Gum.Graphics.Animation;
-using RenderingLibrary.Math;
+using System.Linq;
 
 namespace Gum.Wireframe
 {

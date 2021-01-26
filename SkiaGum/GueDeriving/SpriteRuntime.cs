@@ -1,4 +1,5 @@
-﻿using SkiaGum.Renderables;
+﻿using Gum.DataTypes;
+using SkiaGum.Renderables;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
@@ -46,8 +47,8 @@ namespace SkiaGum.GueDeriving
             {
                 SetContainedObject(new Sprite());
 
-                WidthUnits = Gum.Wireframe.DimensionUnitType.PercentageOfSourceFile;
-                HeightUnits = Gum.Wireframe.DimensionUnitType.PercentageOfSourceFile;
+                WidthUnits = DimensionUnitType.PercentageOfSourceFile;
+                HeightUnits = DimensionUnitType.PercentageOfSourceFile;
 
                 Width = 100;
                 Height = 100;
