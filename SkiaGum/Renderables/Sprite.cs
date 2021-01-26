@@ -10,7 +10,7 @@ using System.Text;
 
 namespace SkiaGum.Renderables
 {
-    public class Sprite : IRenderableIpso, IVisible
+    public class Sprite : IRenderableIpso, IVisible, IAspectRatio
     {
         Vector2 Position;
 

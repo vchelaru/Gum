@@ -1288,11 +1288,14 @@ namespace Gum.Wireframe
 
                     if (mContainedObjectAsIpso != null)
                     {
+#if MONOGAME
                         if (mContainedObjectAsIpso is LineRectangle)
                         {
                             (mContainedObjectAsIpso as LineRectangle).ClipsChildren = ClipsChildren;
                         }
-                        else if (mContainedObjectAsIpso is InvisibleRenderable)
+                        else
+#endif
+                        if (mContainedObjectAsIpso is InvisibleRenderable)
                         {
                             (mContainedObjectAsIpso as InvisibleRenderable).ClipsChildren = ClipsChildren;
                         }
@@ -1311,7 +1314,11 @@ namespace Gum.Wireframe
                         // However, if the texture coordinates depend on the dimensions
                         // (like for a tiling background) then this also needs to be set
                         // after UpdateDimensions. 
-                        if (mContainedObjectAsIpso is Sprite || mContainedObjectAsIpso is NineSlice)
+                        if (mContainedObjectAsIpso is Sprite
+#if MONOGAME
+                            || mContainedObjectAsIpso is NineSlice
+#endif
+                            )
                         {
                             UpdateTextureCoordinatesNotDimensionBased();
                         }
@@ -1337,7 +1344,11 @@ namespace Gum.Wireframe
                             }
                         }
 
-                        if (mContainedObjectAsIpso is Sprite || mContainedObjectAsIpso is NineSlice)
+                        if (mContainedObjectAsIpso is Sprite
+#if MONOGAME
+                            || mContainedObjectAsIpso is NineSlice
+#endif
+                            )
                         {
                             UpdateTextureCoordinatesDimensionBased();
                         }
@@ -1353,9 +1364,10 @@ namespace Gum.Wireframe
                                 // I think this should only happen when actually rendering:
                                 //((Text)mContainedObjectAsIpso).UpdateTextureToRender();
                                 var asText = mContainedObjectAsIpso as Text;
-
+#if MONOGAME
                                 asText.SetNeedsRefreshToTrue();
                                 asText.UpdatePreRenderDimensions();
+#endif
                             }
                         }
 
@@ -2662,7 +2674,7 @@ namespace Gum.Wireframe
         {
             float heightToSet = mHeight;
 
-#region RelativeToChildren
+            #region RelativeToChildren
 
             if (mHeightUnit == DimensionUnitType.RelativeToChildren)
             {
@@ -2671,9 +2683,22 @@ namespace Gum.Wireframe
 
                 if (this.mContainedObjectAsIpso != null)
                 {
-                    if (mContainedObjectAsIpso is Text)
+                    if (mContainedObjectAsIpso is Text asText)
                     {
-                        maxHeight = ((Text)mContainedObjectAsIpso).WrappedTextHeight;
+#if MONOGAME
+                        maxHeight = asText.WrappedTextHeight;
+#endif
+#if SKIA
+                        var oldWidth = asText.Width;
+                        if (WidthUnits == DimensionUnitType.RelativeToChildren)
+                        {
+                            asText.Width = float.PositiveInfinity;
+                        }
+                        var textBlock = asText.GetTextBlock();
+                        maxHeight = textBlock.MeasuredHeight;
+
+                        asText.Width = oldWidth;
+#endif
                     }
 
                     foreach (GraphicalUiElement element in this.Children)
@@ -2706,7 +2731,7 @@ namespace Gum.Wireframe
                         if (considerChild && element.Visible)
                         {
                             var elementHeight = element.GetRequiredParentHeight();
-                            if(this.ChildrenLayout == ChildrenLayout.TopToBottomStack)
+                            if (this.ChildrenLayout == ChildrenLayout.TopToBottomStack)
                             {
                                 maxHeight += elementHeight;
                             }
@@ -2721,34 +2746,60 @@ namespace Gum.Wireframe
                 heightToSet = maxHeight + mHeight;
             }
 
-#endregion
+            #endregion
 
-#region Percentage
+            #region Percentage
 
             else if (mHeightUnit == DimensionUnitType.Percentage)
             {
                 heightToSet = parentHeight * mHeight / 100.0f;
             }
 
-#endregion
+            #endregion
 
-#region PercentageOfSourceFile
+            #region PercentageOfSourceFile
 
             else if (mHeightUnit == DimensionUnitType.PercentageOfSourceFile)
             {
                 bool wasSet = false;
 
+#if SKIA
+                if (mContainedObjectAsIpso is VectorSprite vectorSprite)
+                {
+                    if (vectorSprite.Texture != null)
+                    {
+                        heightToSet = vectorSprite.Texture.ViewBox.Height * mHeight / 100.0f;
+                        wasSet = true;
+                    }
+
+                    if (wasSet)
+                    {
+                        // If the address is dimension based, then that means texture coords depend on dimension...but we
+                        // can't make dimension based on texture coords as that would cause a circular reference
+                        //if (sprite.EffectiveRectangle.HasValue && mTextureAddress != TextureAddress.DimensionsBased)
+                        //{
+                        //    heightToSet = sprite.EffectiveRectangle.Value.Height * mHeight / 100.0f;
+                        //}
+                    }
+                }
+
+
+#endif
+
                 if (mContainedObjectAsIpso is Sprite)
                 {
                     Sprite sprite = mContainedObjectAsIpso as Sprite;
 
+#if MONOGAME
                     if (sprite.AtlasedTexture != null)
                     {
                         var atlasedTexture = sprite.AtlasedTexture;
                         heightToSet = atlasedTexture.SourceRectangle.Height * mHeight / 100.0f;
                         wasSet = true;
                     }
-                    else if (sprite.Texture != null)
+                    else
+#endif
+                    if (sprite.Texture != null)
                     {
                         heightToSet = sprite.Texture.Height * mHeight / 100.0f;
                         wasSet = true;
@@ -2771,24 +2822,55 @@ namespace Gum.Wireframe
                 }
             }
 
-#endregion
+            #endregion
 
-#region MaintainFileAspectRatio
+            #region MaintainFileAspectRatio
 
             else if (mHeightUnit == DimensionUnitType.MaintainFileAspectRatio)
             {
                 bool wasSet = false;
-                if(mContainedObjectAsIpso is IAspectRatio aspectRatioObject)
+
+
+#if SKIA
+                if (mContainedObjectAsIpso is VectorSprite vectorSprite)
+                {
+                    //if (sprite.AtlasedTexture != null)
+                    //{
+                    //    throw new NotImplementedException();
+                    //}
+                    //else 
+                    if (vectorSprite.Texture != null)
+                    {
+                        var scale = GetAbsoluteWidth() / vectorSprite.Texture.ViewBox.Width;
+                        heightToSet = vectorSprite.Texture.ViewBox.Height * scale * mHeight / 100.0f;
+                        wasSet = true;
+                    }
+
+                    //if (wasSet)
+                    //{
+                    //    // If the address is dimension based, then that means texture coords depend on dimension...but we
+                    //    // can't make dimension based on texture coords as that would cause a circular reference
+                    //    if (sprite.EffectiveRectangle.HasValue && mTextureAddress != TextureAddress.DimensionsBased)
+                    //    {
+                    //        var scale = GetAbsoluteWidth() / sprite.EffectiveRectangle.Value.Width;
+                    //        heightToSet = sprite.EffectiveRectangle.Value.Height * scale * mHeight / 100.0f;
+                    //    }
+                    //}
+                }
+
+#endif
+
+                if (mContainedObjectAsIpso is IAspectRatio aspectRatioObject)
                 {
                     //if(sprite.AtlasedTexture != null)
                     //{
                     //    throw new NotImplementedException();
                     //}
                     //else 
-                    heightToSet = GetAbsoluteWidth() * (mHeight/100.0f) / aspectRatioObject.AspectRatio;
+                    heightToSet = GetAbsoluteWidth() * (mHeight / 100.0f) / aspectRatioObject.AspectRatio;
                     wasSet = true;
 
-                    if(wasSet && mContainedObjectAsIpso is Sprite sprite)
+                    if (wasSet && mContainedObjectAsIpso is Sprite sprite)
                     {
                         // If the address is dimension based, then that means texture coords depend on dimension...but we
                         // can't make dimension based on texture coords as that would cause a circular reference
@@ -2805,25 +2887,25 @@ namespace Gum.Wireframe
                 }
             }
 
-#endregion
+            #endregion
 
-#region RelativeToContainer (in pixels)
+            #region RelativeToContainer (in pixels)
 
             else if (mHeightUnit == DimensionUnitType.RelativeToContainer)
             {
                 heightToSet = parentHeight + mHeight;
             }
 
-#endregion
+            #endregion
 
-#region PercentageOfOtherDimension
+            #region PercentageOfOtherDimension
 
             else if (mHeightUnit == DimensionUnitType.PercentageOfOtherDimension)
             {
                 heightToSet = mContainedObjectAsIpso.Width * mHeight / 100.0f;
             }
 
-#endregion
+            #endregion
 
             mContainedObjectAsIpso.Height = heightToSet;
         }
@@ -4873,7 +4955,8 @@ namespace Gum.Wireframe
             numberOfUsedInterpolationLists--;
         }
 
-
+        #region AnimationChain 
+#if MONOGAME
         public bool Animate { get; set; } = true;
         int mCurrentChainIndex;
         int mCurrentFrameIndex;
@@ -5063,8 +5146,9 @@ namespace Gum.Wireframe
 
             }
         }
+#endif
+        #endregion
 
-
-#endregion
+        #endregion
     }
 }

@@ -777,5 +777,21 @@ namespace RenderingLibrary.Graphics
 
         #endregion
 
+#if SKIA
+        public bool IsPointInside(float x, float y)
+        {
+            var asIpso = this as IRenderableIpso;
+
+            var absoluteX = asIpso.GetAbsoluteX();
+            var absoluteY = asIpso.GetAbsoluteY();
+
+            return
+                x > absoluteX &&
+                y > absoluteY &&
+                x < absoluteX + this.GetAbsoluteWidth() &&
+                y < absoluteY + this.GetAbsoluteHeight();
+        }
+#endif
+
     }
 }
