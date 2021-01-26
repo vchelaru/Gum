@@ -137,12 +137,6 @@ namespace Gum.Wireframe
         Dictionary<string, Gum.DataTypes.Variables.StateSaveCategory> mCategories =
             new Dictionary<string, Gum.DataTypes.Variables.StateSaveCategory>();
 
-        //Dictionary<string, Gum.DataTypes.Variables.StateSave> mStates =
-        //    new Dictionary<string, DataTypes.Variables.StateSave>();
-
-        //Dictionary<string, Gum.DataTypes.Variables.StateSaveCategory> mCategories =
-        //    new Dictionary<string, Gum.DataTypes.Variables.StateSaveCategory>();
-
         // the row or column index when anobject is sorted.
         // This is used by the stacking logic to properly sort objects
         public int StackedRowOrColumnIndex { get; set; } = -1;
@@ -242,6 +236,7 @@ namespace Gum.Wireframe
         }
 
         #region IPSO properties
+
         /// <summary>
         /// The X position of this object as an IPositionedSizedObject. This does not consider origins
         /// so it will use the default origin, which is top-left for most types.
@@ -268,7 +263,6 @@ namespace Gum.Wireframe
             }
         }
 
-
         /// <summary>
         /// The Y position of this object as an IPositionedSizedObject. This does not consider origins
         /// so it will use the default origin, which is top-left for most types.
@@ -291,7 +285,6 @@ namespace Gum.Wireframe
                 throw new InvalidOperationException("This is a GraphicalUiElement. You must cast the instance to GraphicalUiElement to set its Y so that its YUnits apply.");
             }
         }
-
 
         float IPositionedSizedObject.Rotation
         {
@@ -342,6 +335,10 @@ namespace Gum.Wireframe
             }
         }
 
+        /// <summary>
+        /// Returns the absolute width of the GraphicalUiElement in pixels (as opposed to using its WidthUnits)
+        /// </summary>
+        /// <returns>The absolute width in pixels.</returns>
         public float GetAbsoluteWidth() => ((IPositionedSizedObject)this).Width;
 
         /// <summary>
@@ -354,7 +351,6 @@ namespace Gum.Wireframe
         {
             mContainedObjectAsIpso.SetParentDirect(parent);
         }
-
 
         #endregion
 
@@ -427,7 +423,7 @@ namespace Gum.Wireframe
 
         public GeneralUnitType XUnits
         {
-            get { return mXUnits; }
+            get => mXUnits;
             set
             {
                 if (value != mXUnits)
@@ -445,7 +441,8 @@ namespace Gum.Wireframe
             {
                 if (mYUnits != value)
                 {
-                    mYUnits = value; UpdateLayout();
+                    mYUnits = value;
+                    UpdateLayout();
                 }
             }
         }
@@ -677,7 +674,6 @@ namespace Gum.Wireframe
             }
         }
 
-
         // Made obsolete November 4, 2017
         [Obsolete("Use ElementGueContainingThis instead - it more clearly indicates the relationship, " +
             "as the ParentGue may not actually be the parent. If the effective parent is desired, use EffectiveParentGue")]
@@ -861,6 +857,10 @@ namespace Gum.Wireframe
             }
         }
 
+        /// <summary>
+        /// Returns the absolute Y of the origin of the GraphicalUiElement. Note that
+        /// this considers the YOrigin, and will apply rotation
+        /// </summary>
         public float AbsoluteY
         {
             get
@@ -931,7 +931,6 @@ namespace Gum.Wireframe
             }
         }
 
-
         /// <summary>
         /// The pixel coorinate of the left of the displayed region.
         /// </summary>
@@ -951,7 +950,6 @@ namespace Gum.Wireframe
             }
         }
 
-
         /// <summary>
         /// The pixel width of the displayed region.
         /// </summary>
@@ -970,7 +968,6 @@ namespace Gum.Wireframe
                 }
             }
         }
-
 
         /// <summary>
         /// The pixel height of the displayed region.
@@ -1071,7 +1068,6 @@ namespace Gum.Wireframe
             get;
             set;
         }
-
         #endregion
 
         #region Events
@@ -1120,7 +1116,6 @@ namespace Gum.Wireframe
             }
         }
 
-
         public void SetContainedObject(IRenderable containedObject)
         {
             if (containedObject == this)
@@ -1151,6 +1146,7 @@ namespace Gum.Wireframe
                 UpdateLayout();
             }
         }
+
         #endregion
 
         #region Methods
@@ -1220,6 +1216,9 @@ namespace Gum.Wireframe
                 float xBeforeLayout = 0;
                 float yBeforeLayout = 0;
 
+                // Not sure why we use the ParentGue and not the Parent itself...
+                // We want to do it on the actual Parent so that objects attached to components
+                // should update the components
                 if (updateParent && GetIfShouldCallUpdateOnParent())
                 {
                     var asGue = this.Parent as GraphicalUiElement;

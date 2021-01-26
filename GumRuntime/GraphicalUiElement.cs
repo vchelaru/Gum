@@ -102,7 +102,6 @@ namespace Gum.Wireframe
 
         SystemManagers mManagers;
 
-
         int mTextureTop;
         int mTextureLeft;
         int mTextureWidth;
@@ -236,7 +235,6 @@ namespace Gum.Wireframe
             set;
         }
 
-
         #region IPSO properties
 
         /// <summary>
@@ -264,7 +262,6 @@ namespace Gum.Wireframe
                 throw new InvalidOperationException("This is a GraphicalUiElement. You must cast the instance to GraphicalUiElement to set its X so that its XUnits apply.");
             }
         }
-
 
         /// <summary>
         /// The Y position of this object as an IPositionedSizedObject. This does not consider origins
@@ -299,7 +296,6 @@ namespace Gum.Wireframe
 
             }
         }
-
 
         float IPositionedSizedObject.Width
         {
@@ -358,7 +354,6 @@ namespace Gum.Wireframe
 
         #endregion
 
-
         public float Z
         {
             get
@@ -377,7 +372,6 @@ namespace Gum.Wireframe
                 mContainedObjectAsIpso.Z = value;
             }
         }
-
 
         #region IRenderable properties
 
@@ -429,7 +423,7 @@ namespace Gum.Wireframe
 
         public GeneralUnitType XUnits
         {
-            get { return mXUnits; }
+            get => mXUnits; 
             set
             {
                 if (value != mXUnits)
@@ -507,7 +501,6 @@ namespace Gum.Wireframe
             set;
         }
 
-
         public float Rotation
         {
             get
@@ -546,8 +539,6 @@ namespace Gum.Wireframe
                 }
             }
         }
-
-
 
         public float X
         {
@@ -735,7 +726,6 @@ namespace Gum.Wireframe
             }
         }
 
-
         public IRenderable RenderableComponent
         {
             get
@@ -867,7 +857,6 @@ namespace Gum.Wireframe
             }
         }
 
-
         /// <summary>
         /// Returns the absolute Y of the origin of the GraphicalUiElement. Note that
         /// this considers the YOrigin, and will apply rotation
@@ -942,7 +931,6 @@ namespace Gum.Wireframe
             }
         }
 
-
         /// <summary>
         /// The pixel coorinate of the left of the displayed region.
         /// </summary>
@@ -962,7 +950,6 @@ namespace Gum.Wireframe
             }
         }
 
-
         /// <summary>
         /// The pixel width of the displayed region.
         /// </summary>
@@ -981,7 +968,6 @@ namespace Gum.Wireframe
                 }
             }
         }
-
 
         /// <summary>
         /// The pixel height of the displayed region.
@@ -1094,7 +1080,6 @@ namespace Gum.Wireframe
 
         #region Constructor
 
-
 #if MONOGAME
         public GraphicalUiElement()
             : this(null, null)
@@ -1113,6 +1098,7 @@ namespace Gum.Wireframe
 
         }
 #endif
+
         public GraphicalUiElement(IRenderable containedObject, GraphicalUiElement whatContainsThis)
         {
             SetContainedObject(containedObject);
@@ -1150,7 +1136,6 @@ namespace Gum.Wireframe
             mContainedObjectAsIpso = containedObject as IRenderableIpso;
             mContainedObjectAsIVisible = containedObject as IVisible;
 
-
             if (mContainedObjectAsIpso != null)
             {
                 mContainedObjectAsIpso.Children.CollectionChanged += HandleCollectionChanged;
@@ -1161,7 +1146,6 @@ namespace Gum.Wireframe
                 UpdateLayout();
             }
         }
-
 
         #endregion
 
@@ -1226,6 +1210,7 @@ namespace Gum.Wireframe
                     //mContainedObjectAsIpso.Parent = mParent;
                     mContainedObjectAsIpso.SetParentDirect(mParent);
                 }
+
                 float widthBeforeLayout = 0;
                 float heightBeforeLayout = 0;
                 float xBeforeLayout = 0;
@@ -1332,7 +1317,6 @@ namespace Gum.Wireframe
                         // This will update according to all absolute children
                         UpdateDimensions(parentWidth, parentHeight, xOrY, considerWrappedStacked: false);
 
-
                         if (this.WrapsChildren && (this.ChildrenLayout == ChildrenLayout.LeftToRightStack || this.ChildrenLayout == ChildrenLayout.TopToBottomStack))
                         {
                             // Now we can update all children that are wrapped:
@@ -1405,7 +1389,6 @@ namespace Gum.Wireframe
                         }
 
                     }
-
 
                     if (childrenUpdateDepth > 0)
                     {
