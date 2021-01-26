@@ -513,7 +513,7 @@ namespace Gum.Wireframe
             set
             {
 #if DEBUG
-                if(float.IsNaN(value) || float.IsPositiveInfinity(value) || float.IsNegativeInfinity(value))
+                if (float.IsNaN(value) || float.IsPositiveInfinity(value) || float.IsNegativeInfinity(value))
                 {
                     throw new Exception($"Invalid Rotaiton value set: {value}");
                 }
@@ -2724,7 +2724,7 @@ namespace Gum.Wireframe
                 heightToSet = maxHeight + mHeight;
             }
 
-#endregion
+            #endregion
 
             #region Percentage
 
@@ -2949,9 +2949,9 @@ namespace Gum.Wireframe
 
                         maxWidth = asText.WrappedTextWidth;
 #endif
-                        }
+                    }
 
-                        foreach (GraphicalUiElement element in this.Children)
+                    foreach (GraphicalUiElement element in this.Children)
                     {
                         var childLayout = element.GetChildLayoutType(XOrY.X, this);
                         var considerChild = childLayout == ChildType.Absolute || (considerWrappedStacked && childLayout == ChildType.StackedWrapped);
@@ -4669,7 +4669,7 @@ namespace Gum.Wireframe
                 if (/*FontSize > 0 &&*/ !string.IsNullOrEmpty(Font))
                 {
                     //SKTypeface font = contentLoader.LoadContent<SKTypeface>(Font);
-                    if(font != null && mContainedObjectAsIpso is Text text)
+                    if (font != null && mContainedObjectAsIpso is Text text)
                     {
                         text.FontName = font;
                     }
@@ -4677,7 +4677,7 @@ namespace Gum.Wireframe
             }
         }
 
-#region IVisible Implementation
+        #region IVisible Implementation
 
 
         bool IVisible.AbsoluteVisible
@@ -4699,7 +4699,7 @@ namespace Gum.Wireframe
             get { return this.Parent as IVisible; }
         }
 
-#endregion
+        #endregion
 
         public void ApplyState(string name)
         {
