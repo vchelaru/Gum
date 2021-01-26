@@ -74,6 +74,10 @@ namespace Gum.Wireframe
 
         GraphicalUiElement mWhatContainsThis;
 
+        /// <summary>
+        /// A flat list of all GraphicalUiElements contained by this element. For example, if this GraphicalUiElement
+        /// is a Screen, this list is all GraphicalUielements for every instance contained regardless of hierarchy.
+        /// </summary>
         List<GraphicalUiElement> mWhatThisContains = new List<GraphicalUiElement>();
 
         Dictionary<string, string> mExposedVariables = new Dictionary<string, string>();
