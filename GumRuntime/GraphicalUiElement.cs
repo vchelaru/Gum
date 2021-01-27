@@ -423,7 +423,7 @@ namespace Gum.Wireframe
 
         public GeneralUnitType XUnits
         {
-            get => mXUnits; 
+            get => mXUnits;
             set
             {
                 if (value != mXUnits)
@@ -4699,6 +4699,33 @@ namespace Gum.Wireframe
             }
         }
 
+#if SKIA
+        void UpdateToFontValues()
+        {
+            // BitmapFont font = null;
+
+            var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
+            var contentLoader = loaderManager.ContentLoader;
+
+            //if(UseCustomFont)
+            //{
+
+            //}
+            //else
+            {
+                if (/*FontSize > 0 &&*/ !string.IsNullOrEmpty(Font))
+                {
+                    //SKTypeface font = contentLoader.LoadContent<SKTypeface>(Font);
+                    if (font != null && mContainedObjectAsIpso is Text text)
+                    {
+                        text.FontName = font;
+                    }
+                }
+            }
+        }
+#endif
+
+#if MONOGAME
         public void UpdateToFontValues()
         {
             if (mIsLayoutSuspended || IsAllLayoutSuspended)
@@ -4780,11 +4807,11 @@ namespace Gum.Wireframe
 
                 text.BitmapFont = font ?? global::RenderingLibrary.Content.LoaderManager.Self.DefaultBitmapFont;
             }
-
         }
 
-        #region IVisible Implementation
+#endif
 
+        #region IVisible Implementation
 
         bool IVisible.AbsoluteVisible
         {
@@ -4993,6 +5020,7 @@ namespace Gum.Wireframe
             }
         }
 #endif
+
         // When interpolating between two states,
         // the code is goign to merge the values from
         // the two states to create a 3rd set of (merged)

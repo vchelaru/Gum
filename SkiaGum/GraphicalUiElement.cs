@@ -4699,6 +4699,7 @@ namespace Gum.Wireframe
             }
         }
 
+#if SKIA
         void UpdateToFontValues()
         {
             // BitmapFont font = null;
@@ -4722,9 +4723,95 @@ namespace Gum.Wireframe
                 }
             }
         }
+#endif
+
+#if MONOGAME
+        public void UpdateToFontValues()
+        {
+            if (mIsLayoutSuspended || IsAllLayoutSuspended)
+            {
+                isFontDirty = true;
+            }
+            // todo: This could make things faster, but it will require
+            // extra calls in generated code, or an "UpdateAll" method
+            //if (!mIsLayoutSuspended && !IsAllLayoutSuspended)
+            else
+            {
+                BitmapFont font = null;
+
+                var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
+                var contentLoader = loaderManager.ContentLoader;
+
+                if (UseCustomFont)
+                {
+
+                    if (!string.IsNullOrEmpty(CustomFontFile))
+                    {
+                        font = contentLoader.TryGetCachedDisposable<BitmapFont>(CustomFontFile);
+                        if (font == null)
+                        {
+                            // so normally we would just let the content loader check if the file exists but since we're not going to
+                            // use the content loader for BitmapFont, we're going to protect this with a file.exists.
+                            if (ToolsUtilities.FileManager.FileExists(CustomFontFile))
+                            {
+                                font = new BitmapFont(CustomFontFile, SystemManagers.Default);
+                                contentLoader.AddDisposable(CustomFontFile, font);
+                            }
+                        }
+                    }
+
+
+                }
+                else
+                {
+                    if (FontSize > 0 && !string.IsNullOrEmpty(Font))
+                    {
+
+                        string fontName = global::RenderingLibrary.Graphics.Fonts.BmfcSave.GetFontCacheFileNameFor(
+                            FontSize,
+                            Font,
+                            OutlineThickness,
+                            useFontSmoothing,
+                            IsItalic);
+
+                        string fullFileName = ToolsUtilities.FileManager.Standardize(fontName, false, true);
+
+#if ANDROID || IOS
+                        fullFileName = fullFileName.ToLowerInvariant();
+#endif
+
+
+                        font = contentLoader.TryGetCachedDisposable<BitmapFont>(fullFileName);
+                        if (font == null)
+                        {
+                            // so normally we would just let the content loader check if the file exists but since we're not going to
+                            // use the content loader for BitmapFont, we're going to protect this with a file.exists.
+                            if (ToolsUtilities.FileManager.FileExists(fullFileName))
+                            {
+                                font = new BitmapFont(fullFileName, SystemManagers.Default);
+
+                                contentLoader.AddDisposable(fullFileName, font);
+                            }
+                        }
+
+#if DEBUG
+                        if (font?.Textures.Any(item => item?.IsDisposed == true) == true)
+                        {
+                            throw new InvalidOperationException("The returned font has a disposed texture");
+                        }
+#endif
+                    }
+                }
+
+                var text = this.mContainedObjectAsIpso as Text;
+
+                text.BitmapFont = font ?? global::RenderingLibrary.Content.LoaderManager.Self.DefaultBitmapFont;
+            }
+        }
+
+#endif
 
         #region IVisible Implementation
-
 
         bool IVisible.AbsoluteVisible
         {
@@ -5178,7 +5265,5 @@ namespace Gum.Wireframe
 #endif
 
         #endregion
-
-
     }
 }
