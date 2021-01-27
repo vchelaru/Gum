@@ -2008,7 +2008,6 @@ namespace Gum.Wireframe
 
         }
 
-
         private void UpdateTextureCoordinatesNotDimensionBased()
         {
             if (mContainedObjectAsIpso is Sprite)
@@ -2909,6 +2908,36 @@ namespace Gum.Wireframe
                 {
                     if (mContainedObjectAsIpso is Text asText)
                     {
+#if SKIA
+                        // This is relative to children so no wrapping:
+                        var textBlock = asText.GetTextBlock(float.PositiveInfinity);
+
+                        // Sometimes this crashes, not sure why, but I think it is some kind of internal error. We can tolerate it instead of blow up:
+                        try
+                        {
+                            maxWidth = textBlock.MeasuredWidth;
+                        }
+                        catch (BadImageFormatException)
+                        {
+                            // not sure why but let's tolerate:
+                            // https://appcenter.ms/orgs/Mtn-Green-Engineering/apps/BioCheck-2/crashes/errors/738313670/overview
+                            maxWidth = 64;
+
+                            //        // It's possible that the text has itself wrapped, but the dimensions changed.
+                            //        if (asText.WrappedText.Count > 0 &&
+                            //            (asText.Width != 0 && float.IsPositiveInfinity(asText.Width) == false))
+                            //        {
+                            //            // this could be either because it wrapped, or because the raw text
+                            //            // actually has newlines. Vic says - this difference could maybe be tested
+                            //            // but I'm not sure it's worth the extra code for the minor savings here, so just
+                            //            // set the wrap width to positive infinity and refresh the text
+                            //            asText.Width = float.PositiveInfinity;
+                            //        }
+
+                            //        maxWidth = asText.WrappedTextWidth;
+                        }
+#endif
+#if MONOGAME
                         // It's possible that the text has itself wrapped, but the dimensions changed.
                         if (asText.WrappedText.Count > 0 &&
                             (asText.Width != 0 && float.IsPositiveInfinity(asText.Width) == false))
@@ -2921,6 +2950,7 @@ namespace Gum.Wireframe
                         }
 
                         maxWidth = asText.WrappedTextWidth;
+#endif
                     }
 
                     foreach (GraphicalUiElement element in this.Children)
@@ -2985,9 +3015,29 @@ namespace Gum.Wireframe
             {
                 bool wasSet = false;
 
+#if SKIA
+                if (mContainedObjectAsIpso is VectorSprite vectorSprite)
+                {
+                    if (vectorSprite.Texture != null)
+                    {
+                        widthToSet = vectorSprite.Texture.ViewBox.Width * mWidth / 100.0f;
+                    }
+                    if (wasSet)
+                    {
+                        //        // If the address is dimension based, then that means texture coords depend on dimension...but we
+                        //        // can't make dimension based on texture coords as that would cause a circular reference
+                        //        if (sprite.EffectiveRectangle.HasValue && mTextureAddress != TextureAddress.DimensionsBased)
+                        //        {
+                        //            widthToSet = sprite.EffectiveRectangle.Value.Width * mWidth / 100.0f;
+                        //        }
+                    }
+                }
+#endif
+
                 if (mContainedObjectAsIpso is Sprite)
                 {
                     Sprite sprite = mContainedObjectAsIpso as Sprite;
+#if MONOGAME
 
                     if (sprite.AtlasedTexture != null)
                     {
@@ -2996,7 +3046,10 @@ namespace Gum.Wireframe
                         wasSet = true;
                     }
 
-                    else if (sprite.Texture != null)
+                    else
+
+#endif
+                    if (sprite.Texture != null)
                     {
                         widthToSet = sprite.Texture.Width * mWidth / 100.0f;
                         wasSet = true;
@@ -3026,6 +3079,33 @@ namespace Gum.Wireframe
             else if (mWidthUnit == DimensionUnitType.MaintainFileAspectRatio)
             {
                 bool wasSet = false;
+
+#if SKIA
+                if (mContainedObjectAsIpso is VectorSprite vectorSprite)
+                {
+                    //if (sprite.AtlasedTexture != null)
+                    //{
+                    //    throw new NotImplementedException();
+                    //}
+                    //else 
+                    if (vectorSprite.Texture != null)
+                    {
+                        var scale = GetAbsoluteHeight() / vectorSprite.Texture.ViewBox.Height;
+                        widthToSet = vectorSprite.Texture.ViewBox.Width * scale * mWidth / 100.0f;
+                        wasSet = true;
+                    }
+
+                    //if (wasSet)
+                    //{
+                    //    if (sprite.EffectiveRectangle.HasValue && mTextureAddress != TextureAddress.DimensionsBased)
+                    //    {
+                    //        var scale = GetAbsoluteHeight() / sprite.EffectiveRectangle.Value.Height;
+                    //        widthToSet = sprite.EffectiveRectangle.Value.Width * scale * mWidth / 100.0f;
+                    //    }
+                    //}
+                }
+#endif
+
                 if (mContainedObjectAsIpso is IAspectRatio aspectRatioObject)
                 {
                     // mWidth is a percent where 100 means maintain aspect ratio
@@ -3069,7 +3149,6 @@ namespace Gum.Wireframe
 
             mContainedObjectAsIpso.Width = widthToSet;
         }
-
 
         public override string ToString()
         {
@@ -3128,7 +3207,6 @@ namespace Gum.Wireframe
             this.ResumeLayout();
         }
 
-
         partial void CustomAddToManagers();
 
         /// <summary>
@@ -3141,7 +3219,6 @@ namespace Gum.Wireframe
             AddToManagers(SystemManagers.Default, null);
 
         }
-
 
         /// <summary>
         /// Adds this as a renderable to the SystemManagers on the argument layer if not already added
@@ -3181,7 +3258,6 @@ namespace Gum.Wireframe
 #endif
             }
         }
-
 
         private void CustomAddChildren()
         {
@@ -3429,6 +3505,7 @@ namespace Gum.Wireframe
             // if mManagers is null, then it was never added to the managers
             if (mManagers != null)
             {
+#if MONOGAME
                 if (mContainedObjectAsIpso is Sprite)
                 {
                     mManagers.SpriteManager.Remove(mContainedObjectAsIpso as Sprite);
@@ -3467,7 +3544,7 @@ namespace Gum.Wireframe
                     //throw new NotImplementedException();
                     mManagers.Renderer.RemoveRenderable(mContainedObjectAsIpso);
                 }
-
+#endif
 
                 CustomRemoveFromManagers();
 
@@ -3683,7 +3760,6 @@ namespace Gum.Wireframe
                 SetPropertyOnRenderable(propertyName, value);
 
             }
-
         }
 
         private bool TrySetValueOnThis(string propertyName, object value)
@@ -3873,6 +3949,7 @@ namespace Gum.Wireframe
             {
                 handled = TrySetPropertyOnText(propertyName, value);
             }
+#if MONOGAME
             else if (mContainedObjectAsIpso is LineCircle)
             {
                 handled = TrySetPropertyOnLineCircle(propertyName, value);
@@ -4102,6 +4179,7 @@ namespace Gum.Wireframe
                     }
                 }
             }
+#endif
         }
 
 #if MONOGAME
@@ -4408,6 +4486,7 @@ namespace Gum.Wireframe
                 }
                 handled = true;
             }
+#if MONOGAME
             else if (propertyName == nameof(UseCustomFont))
             {
                 this.UseCustomFont = (bool)value;
@@ -4431,6 +4510,7 @@ namespace Gum.Wireframe
                 }
                 handled = true;
             }
+#endif
             else if (propertyName == nameof(FontSize))
             {
                 FontSize = (int)value;
@@ -4476,6 +4556,7 @@ namespace Gum.Wireframe
             }
             else if (propertyName == nameof(Blend))
             {
+#if MONOGAME
                 var valueAsGumBlend = (RenderingLibrary.Blend)value;
 
                 var valueAsXnaBlend = valueAsGumBlend.ToBlendState();
@@ -4483,12 +4564,15 @@ namespace Gum.Wireframe
                 var text = mContainedObjectAsIpso as Text;
                 text.BlendState = valueAsXnaBlend;
                 handled = true;
+#endif
             }
             else if (propertyName == "Alpha")
             {
+#if MONOGAME
                 int valueAsInt = (int)value;
                 ((Text)mContainedObjectAsIpso).Alpha = valueAsInt;
                 handled = true;
+#endif
             }
             else if (propertyName == "Red")
             {
@@ -4510,9 +4594,11 @@ namespace Gum.Wireframe
             }
             else if (propertyName == "Color")
             {
+#if MONOGAME
                 var valueAsColor = (Color)value;
                 ((Text)mContainedObjectAsIpso).Color = valueAsColor;
                 handled = true;
+#endif
             }
 
             else if (propertyName == "HorizontalAlignment")
@@ -4527,8 +4613,10 @@ namespace Gum.Wireframe
             }
             else if (propertyName == "MaxLettersToShow")
             {
+#if MONOGAME
                 ((Text)mContainedObjectAsIpso).MaxLettersToShow = (int)value;
                 handled = true;
+#endif
             }
 
             return handled;

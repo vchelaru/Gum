@@ -1194,7 +1194,7 @@ namespace Gum.Wireframe
                 UpdateLayoutCallCount++;
 
                 // May 15, 2014
-                // This needs to be
+                // Parent needs to be
                 // set before we start
                 // doing the updates because
                 // we use foreaches internally
@@ -1348,7 +1348,6 @@ namespace Gum.Wireframe
                                 // I think this should only happen when actually rendering:
                                 //((Text)mContainedObjectAsIpso).UpdateTextureToRender();
                                 var asText = mContainedObjectAsIpso as Text;
-
 #if MONOGAME
                                 asText.SetNeedsRefreshToTrue();
                                 asText.UpdatePreRenderDimensions();
@@ -1371,7 +1370,6 @@ namespace Gum.Wireframe
                             RefreshParentRowColumnDimensionForThis();
                         }
 
-
                         if (this.Parent == null)
                         {
                             mContainedObjectAsIpso.Rotation = mRotation;
@@ -1389,6 +1387,7 @@ namespace Gum.Wireframe
                                     mRotation;// + Parent.GetAbsoluteRotation();
                             }
                         }
+
                     }
 
                     if (childrenUpdateDepth > 0)
@@ -1445,7 +1444,6 @@ namespace Gum.Wireframe
                             }
 
                         }
-
                     }
 
                     // Eventually add more conditions here to make it fire less often
@@ -1472,6 +1470,7 @@ namespace Gum.Wireframe
 
                 }
             }
+
         }
 
         ChildType GetChildLayoutType(GraphicalUiElement parent)
@@ -1670,8 +1669,7 @@ namespace Gum.Wireframe
         public bool GetIfDimensionsDependOnChildren()
         {
             // If this is a Screen, then it doesn't have a size. Screens cannot depend on children:
-            //bool isScreen = ElementSave != null && ElementSave is ScreenSave;
-            bool isScreen = false;
+            bool isScreen = ElementSave != null && ElementSave is ScreenSave;
             return !isScreen &&
                 (this.WidthUnits.GetDependencyType() == HierarchyDependencyType.DependsOnChildren ||
                 this.HeightUnits.GetDependencyType() == HierarchyDependencyType.DependsOnChildren);
@@ -1849,6 +1847,7 @@ namespace Gum.Wireframe
                     }
                 }
             }
+
         }
 
         private void UpdateChildren(int childrenUpdateDepth, ChildType childrenUpdateType)
@@ -1924,11 +1923,22 @@ namespace Gum.Wireframe
             }
         }
 
-
         private void GetParentDimensions(out float parentWidth, out float parentHeight)
         {
             parentWidth = CanvasWidth;
             parentHeight = CanvasHeight;
+
+            // I think we want to obey the non GUE parent first if it exists, then the GUE
+            //if (this.ParentGue != null && this.ParentGue.mContainedObjectAsRenderable != null)
+            //{
+            //    parentWidth = this.ParentGue.mContainedObjectAsIpso.Width;
+            //    parentHeight = this.ParentGue.mContainedObjectAsIpso.Height;
+            //}
+            //else if (this.Parent != null)
+            //{
+            //    parentWidth = Parent.Width;
+            //    parentHeight = Parent.Height;
+            //}
 
             if (this.Parent != null)
             {
@@ -2058,7 +2068,6 @@ namespace Gum.Wireframe
             //    }
             //}
         }
-
 
         private void UpdatePosition(float parentWidth, float parentHeight, XOrY? xOrY, float parentAbsoluteRotation, bool isParentFlippedHorizontally)
         {
@@ -2464,7 +2473,6 @@ namespace Gum.Wireframe
             unitOffsetY += offsetY;
         }
 
-
         private void AdjustParentOriginOffsetsByUnits(float parentWidth, float parentHeight, bool isParentFlippedHorizontally,
             ref float unitOffsetX, ref float unitOffsetY, ref bool wasHandledX, ref bool wasHandledY)
         {
@@ -2597,8 +2605,6 @@ namespace Gum.Wireframe
             }
         }
 
-
-
         private void UpdateDimensions(float parentWidth, float parentHeight, XOrY? xOrY, bool considerWrappedStacked)
         {
             // special case - if the user has set both values to depend on the other value, we don't want to have an infinite recursion so we'll just apply the width and height values as pixel values.
@@ -2645,7 +2651,6 @@ namespace Gum.Wireframe
                 }
             }
         }
-
 
         private void UpdateHeight(float parentHeight, bool considerWrappedStacked)
         {
@@ -2901,8 +2906,6 @@ namespace Gum.Wireframe
 
                 if (this.mContainedObjectAsIpso != null)
                 {
-
-
                     if (mContainedObjectAsIpso is Text asText)
                     {
 #if SKIA
@@ -3946,213 +3949,237 @@ namespace Gum.Wireframe
             {
                 handled = TrySetPropertyOnText(propertyName, value);
             }
-            //else if (mContainedObjectAsIpso is LineCircle)
-            //{
-            //    handled = TrySetPropertyOnLineCircle(propertyName, value);
-            //}
-            //else if (mContainedObjectAsIpso is LineRectangle)
-            //{
-            //    handled = TrySetPropertyOnLineRectangle(propertyName, value);
-            //}
-            //else if (mContainedObjectAsIpso is LinePolygon)
-            //{
-            //    handled = TrySetPropertyOnLinePolygon(propertyName, value);
-            //}
-            //else if (mContainedObjectAsIpso is SolidRectangle)
-            //{
-            //    var solidRect = mContainedObjectAsIpso as SolidRectangle;
+#if MONOGAME
+            else if (mContainedObjectAsIpso is LineCircle)
+            {
+                handled = TrySetPropertyOnLineCircle(propertyName, value);
+            }
+            else if (mContainedObjectAsIpso is LineRectangle)
+            {
+                handled = TrySetPropertyOnLineRectangle(propertyName, value);
+            }
+            else if (mContainedObjectAsIpso is LinePolygon)
+            {
+                handled = TrySetPropertyOnLinePolygon(propertyName, value);
+            }
+            else if (mContainedObjectAsIpso is SolidRectangle)
+            {
+                var solidRect = mContainedObjectAsIpso as SolidRectangle;
 
-            //    if (propertyName == "Blend")
-            //    {
-            //        var valueAsGumBlend = (RenderingLibrary.Blend)value;
+                if (propertyName == "Blend")
+                {
+                    var valueAsGumBlend = (RenderingLibrary.Blend)value;
 
-            //        var valueAsXnaBlend = valueAsGumBlend.ToBlendState();
+                    var valueAsXnaBlend = valueAsGumBlend.ToBlendState();
 
-            //        solidRect.BlendState = valueAsXnaBlend;
+                    solidRect.BlendState = valueAsXnaBlend;
 
-            //        handled = true;
-            //    }
-            //    else if (propertyName == "Alpha")
-            //    {
-            //        int valueAsInt = (int)value;
-            //        solidRect.Alpha = valueAsInt;
-            //        handled = true;
-            //    }
-            //    else if (propertyName == "Red")
-            //    {
-            //        int valueAsInt = (int)value;
-            //        solidRect.Red = valueAsInt;
-            //        handled = true;
-            //    }
-            //    else if (propertyName == "Green")
-            //    {
-            //        int valueAsInt = (int)value;
-            //        solidRect.Green = valueAsInt;
-            //        handled = true;
-            //    }
-            //    else if (propertyName == "Blue")
-            //    {
-            //        int valueAsInt = (int)value;
-            //        solidRect.Blue = valueAsInt;
-            //        handled = true;
-            //    }
-            //    else if (propertyName == "Color")
-            //    {
-            //        var valueAsColor = (Color)value;
-            //        solidRect.Color = valueAsColor;
-            //        handled = true;
-            //    }
+                    handled = true;
+                }
+                else if (propertyName == "Alpha")
+                {
+                    int valueAsInt = (int)value;
+                    solidRect.Alpha = valueAsInt;
+                    handled = true;
+                }
+                else if (propertyName == "Red")
+                {
+                    int valueAsInt = (int)value;
+                    solidRect.Red = valueAsInt;
+                    handled = true;
+                }
+                else if (propertyName == "Green")
+                {
+                    int valueAsInt = (int)value;
+                    solidRect.Green = valueAsInt;
+                    handled = true;
+                }
+                else if (propertyName == "Blue")
+                {
+                    int valueAsInt = (int)value;
+                    solidRect.Blue = valueAsInt;
+                    handled = true;
+                }
+                else if (propertyName == "Color")
+                {
+                    var valueAsColor = (Color)value;
+                    solidRect.Color = valueAsColor;
+                    handled = true;
+                }
 
-            //}
-            //else if (mContainedObjectAsIpso is Sprite)
-            //{
-            //    var sprite = mContainedObjectAsIpso as Sprite;
+            }
+            else if (mContainedObjectAsIpso is Sprite)
+            {
+                var sprite = mContainedObjectAsIpso as Sprite;
 
-            //    if (propertyName == "SourceFile")
-            //    {
-            //        handled = AssignSourceFileOnSprite(value, sprite);
-            //    }
-            //    else if (propertyName == "Alpha")
-            //    {
-            //        int valueAsInt = (int)value;
-            //        sprite.Alpha = valueAsInt;
-            //        handled = true;
-            //    }
-            //    else if (propertyName == "Red")
-            //    {
-            //        int valueAsInt = (int)value;
-            //        sprite.Red = valueAsInt;
-            //        handled = true;
-            //    }
-            //    else if (propertyName == "Green")
-            //    {
-            //        int valueAsInt = (int)value;
-            //        sprite.Green = valueAsInt;
-            //        handled = true;
-            //    }
-            //    else if (propertyName == "Blue")
-            //    {
-            //        int valueAsInt = (int)value;
-            //        sprite.Blue = valueAsInt;
-            //        handled = true;
-            //    }
-            //    else if (propertyName == "Color")
-            //    {
-            //        var valueAsColor = (Color)value;
-            //        sprite.Color = valueAsColor;
-            //        handled = true;
-            //    }
+                if (propertyName == "SourceFile")
+                {
+                    var asString = value as String;
+                    if (asString?.EndsWith(".achx") == true)
+                    {
+                        if (ToolsUtilities.FileManager.IsRelative(asString))
+                        {
+                            asString = ToolsUtilities.FileManager.RelativeDirectory + asString;
 
-            //    else if (propertyName == "Blend")
-            //    {
-            //        var valueAsGumBlend = (RenderingLibrary.Blend)value;
+                            asString = ToolsUtilities.FileManager.RemoveDotDotSlash(asString);
+                        }
 
-            //        var valueAsXnaBlend = valueAsGumBlend.ToBlendState();
+                        var animationChainListSave = Content.AnimationChain.AnimationChainListSave.FromFile(asString);
 
-            //        sprite.BlendState = valueAsXnaBlend;
+                        this.mAnimationChains = animationChainListSave.ToAnimationChainList(null);
 
-            //        handled = true;
-            //    }
-            //    if (!handled)
-            //    {
-            //        int m = 3;
-            //    }
-            //}
-            //else if (mContainedObjectAsIpso is NineSlice)
-            //{
-            //    var nineSlice = mContainedObjectAsIpso as NineSlice;
+                        RefreshCurrentChainToDesiredName();
 
-            //    if (propertyName == "SourceFile")
-            //    {
-            //        string valueAsString = value as string;
+                        UpdateToCurrentAnimationFrame();
+                        handled = true;
+                    }
+                    else
+                    {
+                        handled = AssignSourceFileOnSprite(asString, sprite);
+                    }
+                }
+                else if (propertyName == "Alpha")
+                {
+                    int valueAsInt = (int)value;
+                    sprite.Alpha = valueAsInt;
+                    handled = true;
+                }
+                else if (propertyName == "Red")
+                {
+                    int valueAsInt = (int)value;
+                    sprite.Red = valueAsInt;
+                    handled = true;
+                }
+                else if (propertyName == "Green")
+                {
+                    int valueAsInt = (int)value;
+                    sprite.Green = valueAsInt;
+                    handled = true;
+                }
+                else if (propertyName == "Blue")
+                {
+                    int valueAsInt = (int)value;
+                    sprite.Blue = valueAsInt;
+                    handled = true;
+                }
+                else if (propertyName == "Color")
+                {
+                    var valueAsColor = (Color)value;
+                    sprite.Color = valueAsColor;
+                    handled = true;
+                }
 
-            //        if (string.IsNullOrEmpty(valueAsString))
-            //        {
-            //            nineSlice.SetSingleTexture(null);
-            //        }
-            //        else
-            //        {
-            //            if (ToolsUtilities.FileManager.IsRelative(valueAsString))
-            //            {
-            //                valueAsString = ToolsUtilities.FileManager.RelativeDirectory + valueAsString;
-            //                valueAsString = ToolsUtilities.FileManager.RemoveDotDotSlash(valueAsString);
-            //            }
+                else if (propertyName == "Blend")
+                {
+                    var valueAsGumBlend = (RenderingLibrary.Blend)value;
 
-            //            //check if part of atlas
-            //            //Note: assumes that if this filename is in an atlas that all 9 are in an atlas
-            //            var atlasedTexture = global::RenderingLibrary.Content.LoaderManager.Self.TryLoadContent<AtlasedTexture>(valueAsString);
-            //            if (atlasedTexture != null)
-            //            {
-            //                nineSlice.LoadAtlasedTexture(valueAsString, atlasedTexture);
-            //            }
-            //            else
-            //            {
-            //                if (NineSlice.GetIfShouldUsePattern(valueAsString))
-            //                {
-            //                    nineSlice.SetTexturesUsingPattern(valueAsString, SystemManagers.Default, false);
-            //                }
-            //                else
-            //                {
-            //                    var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
+                    var valueAsXnaBlend = valueAsGumBlend.ToBlendState();
 
-            //                    Microsoft.Xna.Framework.Graphics.Texture2D texture =
-            //                        global::RenderingLibrary.Content.LoaderManager.Self.InvalidTexture;
+                    sprite.BlendState = valueAsXnaBlend;
 
-            //                    try
-            //                    {
-            //                        texture =
-            //                            loaderManager.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(valueAsString);
-            //                    }
-            //                    catch (Exception e)
-            //                    {
-            //                        if (MissingFileBehavior == MissingFileBehavior.ThrowException)
-            //                        {
-            //                            string message = $"Error setting SourceFile on NineSlice in {this.Tag}:\n{valueAsString}";
-            //                            throw new System.IO.FileNotFoundException(message);
-            //                        }
-            //                        // do nothing?
-            //                    }
-            //                    nineSlice.SetSingleTexture(texture);
+                    handled = true;
+                }
+                if (!handled)
+                {
+                    int m = 3;
+                }
+            }
+            else if (mContainedObjectAsIpso is NineSlice)
+            {
+                var nineSlice = mContainedObjectAsIpso as NineSlice;
 
-            //                }
-            //            }
-            //        }
-            //        handled = true;
-            //    }
-            //    else if (propertyName == "Blend")
-            //    {
-            //        var valueAsGumBlend = (RenderingLibrary.Blend)value;
+                if (propertyName == "SourceFile")
+                {
+                    string valueAsString = value as string;
 
-            //        var valueAsXnaBlend = valueAsGumBlend.ToBlendState();
+                    if (string.IsNullOrEmpty(valueAsString))
+                    {
+                        nineSlice.SetSingleTexture(null);
+                    }
+                    else
+                    {
+                        if (ToolsUtilities.FileManager.IsRelative(valueAsString))
+                        {
+                            valueAsString = ToolsUtilities.FileManager.RelativeDirectory + valueAsString;
+                            valueAsString = ToolsUtilities.FileManager.RemoveDotDotSlash(valueAsString);
+                        }
 
-            //        nineSlice.BlendState = valueAsXnaBlend;
+                        //check if part of atlas
+                        //Note: assumes that if this filename is in an atlas that all 9 are in an atlas
+                        var atlasedTexture = global::RenderingLibrary.Content.LoaderManager.Self.TryLoadContent<AtlasedTexture>(valueAsString);
+                        if (atlasedTexture != null)
+                        {
+                            nineSlice.LoadAtlasedTexture(valueAsString, atlasedTexture);
+                        }
+                        else
+                        {
+                            if (NineSliceExtensions.GetIfShouldUsePattern(valueAsString))
+                            {
+                                nineSlice.SetTexturesUsingPattern(valueAsString, SystemManagers.Default, false);
+                            }
+                            else
+                            {
+                                var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
 
-            //        handled = true;
-            //    }
-            //}
+                                Microsoft.Xna.Framework.Graphics.Texture2D texture =
+                                    global::RenderingLibrary.Content.LoaderManager.Self.InvalidTexture;
 
-            //// If special case didn't work, let's try reflection
-            //if (!handled)
-            //{
-            //    if (propertyName == "Parent")
-            //    {
-            //        // do something
-            //    }
-            //    else
-            //    {
-            //        System.Reflection.PropertyInfo propertyInfo = mContainedObjectAsIpso.GetType().GetProperty(propertyName);
+                                try
+                                {
+                                    texture =
+                                        loaderManager.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(valueAsString);
+                                }
+                                catch (Exception e)
+                                {
+                                    if (MissingFileBehavior == MissingFileBehavior.ThrowException)
+                                    {
+                                        string message = $"Error setting SourceFile on NineSlice in {this.Tag}:\n{valueAsString}";
+                                        throw new System.IO.FileNotFoundException(message);
+                                    }
+                                    // do nothing?
+                                }
+                                nineSlice.SetSingleTexture(texture);
 
-            //        if (propertyInfo != null && propertyInfo.CanWrite)
-            //        {
+                            }
+                        }
+                    }
+                    handled = true;
+                }
+                else if (propertyName == "Blend")
+                {
+                    var valueAsGumBlend = (RenderingLibrary.Blend)value;
 
-            //            if (value.GetType() != propertyInfo.PropertyType)
-            //            {
-            //                value = System.Convert.ChangeType(value, propertyInfo.PropertyType);
-            //            }
-            //            propertyInfo.SetValue(mContainedObjectAsIpso, value, null);
-            //        }
-            //    }
-            //}
+                    var valueAsXnaBlend = valueAsGumBlend.ToBlendState();
+
+                    nineSlice.BlendState = valueAsXnaBlend;
+
+                    handled = true;
+                }
+            }
+
+            // If special case didn't work, let's try reflection
+            if (!handled)
+            {
+                if (propertyName == "Parent")
+                {
+                    // do something
+                }
+                else
+                {
+                    System.Reflection.PropertyInfo propertyInfo = mContainedObjectAsIpso.GetType().GetProperty(propertyName);
+
+                    if (propertyInfo != null && propertyInfo.CanWrite)
+                    {
+
+                        if (value.GetType() != propertyInfo.PropertyType)
+                        {
+                            value = System.Convert.ChangeType(value, propertyInfo.PropertyType);
+                        }
+                        propertyInfo.SetValue(mContainedObjectAsIpso, value, null);
+                    }
+                }
+            }
+#endif
         }
 
 #if MONOGAME
@@ -4436,17 +4463,17 @@ namespace Gum.Wireframe
                 }
                 handled = true;
             }
-            //else if (propertyName == "Font Scale")
-            //{
-            //    ((Text)mContainedObjectAsIpso).FontScale = (float)value;
-            //    // we want to update if the text's size is based on its "children" (the letters it contains)
-            //    if (this.WidthUnits == DimensionUnitType.RelativeToChildren)
-            //    {
-            //        UpdateLayout();
-            //    }
-            //    handled = true;
+            else if (propertyName == "Font Scale")
+            {
+                ((Text)mContainedObjectAsIpso).FontScale = (float)value;
+                // we want to update if the text's size is based on its "children" (the letters it contains)
+                if (this.WidthUnits == DimensionUnitType.RelativeToChildren)
+                {
+                    UpdateLayout();
+                }
+                handled = true;
 
-            //}
+            }
             else if (propertyName == "Font")
             {
                 this.Font = value as string;
@@ -4482,98 +4509,97 @@ namespace Gum.Wireframe
             //    }
             //    handled = true;
             //}
-            //else if (propertyName == "FontSize")
-            //{
-            //    FontSize = (int)value;
-            //    UpdateToFontValues();
-            //    // we want to update if the text's size is based on its "children" (the letters it contains)
-            //    if (this.WidthUnits == DimensionUnitType.RelativeToChildren)
-            //    {
-            //        UpdateLayout();
-            //    }
-            //    handled = true;
-            //}
-            //else if (propertyName == "OutlineThickness")
-            //{
-            //    OutlineThickness = (int)value;
-            //    UpdateToFontValues();
-            //    // we want to update if the text's size is based on its "children" (the letters it contains)
-            //    if (this.WidthUnits == DimensionUnitType.RelativeToChildren)
-            //    {
-            //        UpdateLayout();
-            //    }
-            //    handled = true;
-            //}
-            //else if (propertyName == "UseFontSmoothing")
-            //{
-            //    useFontSmoothing = (bool)value;
-            //    UpdateToFontValues();
-            //    if (this.WidthUnits == DimensionUnitType.RelativeToChildren)
-            //    {
-            //        UpdateLayout();
-            //    }
-            //    handled = true;
-            //}
-            //else if (propertyName == "Blend")
-            //{
-            //    var valueAsGumBlend = (RenderingLibrary.Blend)value;
+            else if (propertyName == "FontSize")
+            {
+                FontSize = (int)value;
+                UpdateToFontValues();
+                // we want to update if the text's size is based on its "children" (the letters it contains)
+                if (this.WidthUnits == DimensionUnitType.RelativeToChildren)
+                {
+                    UpdateLayout();
+                }
+                handled = true;
+            }
+            else if (propertyName == "OutlineThickness")
+            {
+                OutlineThickness = (int)value;
+                UpdateToFontValues();
+                // we want to update if the text's size is based on its "children" (the letters it contains)
+                if (this.WidthUnits == DimensionUnitType.RelativeToChildren)
+                {
+                    UpdateLayout();
+                }
+                handled = true;
+            }
+            else if (propertyName == "UseFontSmoothing")
+            {
+                useFontSmoothing = (bool)value;
+                UpdateToFontValues();
+                if (this.WidthUnits == DimensionUnitType.RelativeToChildren)
+                {
+                    UpdateLayout();
+                }
+                handled = true;
+            }
+            else if (propertyName == "Blend")
+            {
+                var valueAsGumBlend = (RenderingLibrary.Blend)value;
 
-            //    var valueAsXnaBlend = valueAsGumBlend.ToBlendState();
+                var valueAsXnaBlend = valueAsGumBlend.ToBlendState();
 
-            //    var text = mContainedObjectAsIpso as Text;
-            //    text.BlendState = valueAsXnaBlend;
-            //    handled = true;
-            //}
-            //else if (propertyName == "Alpha")
-            //{
-            //    int valueAsInt = (int)value;
-            //    ((Text)mContainedObjectAsIpso).Alpha = valueAsInt;
-            //    handled = true;
-            //}
-            //else if (propertyName == "Red")
-            //{
-            //    int valueAsInt = (int)value;
-            //    ((Text)mContainedObjectAsIpso).Red = valueAsInt;
-            //    handled = true;
-            //}
-            //else if (propertyName == "Green")
-            //{
-            //    int valueAsInt = (int)value;
-            //    ((Text)mContainedObjectAsIpso).Green = valueAsInt;
-            //    handled = true;
-            //}
-            //else if (propertyName == "Blue")
-            //{
-            //    int valueAsInt = (int)value;
-            //    ((Text)mContainedObjectAsIpso).Blue = valueAsInt;
-            //    handled = true;
-            //}
-            //else if (propertyName == "Color")
-            //{
-            //    var valueAsColor = (Color)value;
-            //    ((Text)mContainedObjectAsIpso).Color = valueAsColor;
-            //    handled = true;
-            //}
+                var text = mContainedObjectAsIpso as Text;
+                text.BlendState = valueAsXnaBlend;
+                handled = true;
+            }
+            else if (propertyName == "Alpha")
+            {
+                int valueAsInt = (int)value;
+                ((Text)mContainedObjectAsIpso).Alpha = valueAsInt;
+                handled = true;
+            }
+            else if (propertyName == "Red")
+            {
+                int valueAsInt = (int)value;
+                ((Text)mContainedObjectAsIpso).Red = valueAsInt;
+                handled = true;
+            }
+            else if (propertyName == "Green")
+            {
+                int valueAsInt = (int)value;
+                ((Text)mContainedObjectAsIpso).Green = valueAsInt;
+                handled = true;
+            }
+            else if (propertyName == "Blue")
+            {
+                int valueAsInt = (int)value;
+                ((Text)mContainedObjectAsIpso).Blue = valueAsInt;
+                handled = true;
+            }
+            else if (propertyName == "Color")
+            {
+                var valueAsColor = (Color)value;
+                ((Text)mContainedObjectAsIpso).Color = valueAsColor;
+                handled = true;
+            }
 
-            //else if (propertyName == "HorizontalAlignment")
-            //{
-            //    ((Text)mContainedObjectAsIpso).HorizontalAlignment = (HorizontalAlignment)value;
-            //    handled = true;
-            //}
-            //else if (propertyName == "VerticalAlignment")
-            //{
-            //    ((Text)mContainedObjectAsIpso).VerticalAlignment = (VerticalAlignment)value;
-            //    handled = true;
-            //}
-            //else if (propertyName == "MaxLettersToShow")
-            //{
-            //    ((Text)mContainedObjectAsIpso).MaxLettersToShow = (int)value;
-            //    handled = true;
-            //}
+            else if (propertyName == "HorizontalAlignment")
+            {
+                ((Text)mContainedObjectAsIpso).HorizontalAlignment = (HorizontalAlignment)value;
+                handled = true;
+            }
+            else if (propertyName == "VerticalAlignment")
+            {
+                ((Text)mContainedObjectAsIpso).VerticalAlignment = (VerticalAlignment)value;
+                handled = true;
+            }
+            else if (propertyName == "MaxLettersToShow")
+            {
+                ((Text)mContainedObjectAsIpso).MaxLettersToShow = (int)value;
+                handled = true;
+            }
 
             return handled;
         }
-
 
 #if MONOGAME
         bool useCustomFont;
@@ -4676,7 +4702,7 @@ namespace Gum.Wireframe
             }
         }
 
-        #region IVisible Implementation
+#region IVisible Implementation
 
 
         bool IVisible.AbsoluteVisible
@@ -4698,7 +4724,7 @@ namespace Gum.Wireframe
             get { return this.Parent as IVisible; }
         }
 
-        #endregion
+#endregion
 
         public void ApplyState(string name)
         {
@@ -4919,7 +4945,7 @@ namespace Gum.Wireframe
             numberOfUsedInterpolationLists--;
         }
 
-        #region AnimationChain 
+#region AnimationChain 
 #if MONOGAME
         public bool Animate { get; set; } = true;
         int mCurrentChainIndex;
@@ -5111,7 +5137,7 @@ namespace Gum.Wireframe
             }
         }
 #endif
-        #endregion
+#endregion
 
 
 #if SKIA
@@ -5130,7 +5156,7 @@ namespace Gum.Wireframe
         }
 #endif
 
-        #endregion
+#endregion
 
 
     }
