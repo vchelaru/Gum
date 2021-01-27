@@ -4486,30 +4486,32 @@ namespace Gum.Wireframe
                 }
                 handled = true;
             }
-            //else if (propertyName == "UseCustomFont")
-            //{
-            //    this.UseCustomFont = (bool)value;
-            //    UpdateToFontValues();
-            //    // we want to update if the text's size is based on its "children" (the letters it contains)
-            //    if (this.WidthUnits == DimensionUnitType.RelativeToChildren)
-            //    {
-            //        UpdateLayout();
-            //    }
-            //    handled = true;
-            //}
+#if MONOGAME
+            else if (propertyName == nameof(UseCustomFont))
+            {
+                this.UseCustomFont = (bool)value;
+                UpdateToFontValues();
+                // we want to update if the text's size is based on its "children" (the letters it contains)
+                if (this.WidthUnits == DimensionUnitType.RelativeToChildren)
+                {
+                    UpdateLayout();
+                }
+                handled = true;
+            }
 
-            //else if (propertyName == "CustomFontFile")
-            //{
-            //    CustomFontFile = (string)value;
-            //    UpdateToFontValues();
-            //    // we want to update if the text's size is based on its "children" (the letters it contains)
-            //    if (this.WidthUnits == DimensionUnitType.RelativeToChildren)
-            //    {
-            //        UpdateLayout();
-            //    }
-            //    handled = true;
-            //}
-            else if (propertyName == "FontSize")
+            else if (propertyName == nameof(CustomFontFile))
+            {
+                CustomFontFile = (string)value;
+                UpdateToFontValues();
+                // we want to update if the text's size is based on its "children" (the letters it contains)
+                if (this.WidthUnits == DimensionUnitType.RelativeToChildren)
+                {
+                    UpdateLayout();
+                }
+                handled = true;
+            }
+#endif
+            else if (propertyName == nameof(FontSize))
             {
                 FontSize = (int)value;
                 UpdateToFontValues();
@@ -4520,7 +4522,7 @@ namespace Gum.Wireframe
                 }
                 handled = true;
             }
-            else if (propertyName == "OutlineThickness")
+            else if (propertyName == nameof(OutlineThickness))
             {
                 OutlineThickness = (int)value;
                 UpdateToFontValues();
@@ -4531,7 +4533,18 @@ namespace Gum.Wireframe
                 }
                 handled = true;
             }
-            else if (propertyName == "UseFontSmoothing")
+            else if (propertyName == nameof(IsItalic))
+            {
+                IsItalic = (bool)value;
+                UpdateToFontValues();
+                // we want to update if the text's size is based on its "children" (the letters it contains)
+                if (this.WidthUnits == DimensionUnitType.RelativeToChildren)
+                {
+                    UpdateLayout();
+                }
+                handled = true;
+            }
+            else if (propertyName == nameof(UseFontSmoothing))
             {
                 useFontSmoothing = (bool)value;
                 UpdateToFontValues();
@@ -4541,8 +4554,9 @@ namespace Gum.Wireframe
                 }
                 handled = true;
             }
-            else if (propertyName == "Blend")
+            else if (propertyName == nameof(Blend))
             {
+#if MONOGAME
                 var valueAsGumBlend = (RenderingLibrary.Blend)value;
 
                 var valueAsXnaBlend = valueAsGumBlend.ToBlendState();
@@ -4550,12 +4564,15 @@ namespace Gum.Wireframe
                 var text = mContainedObjectAsIpso as Text;
                 text.BlendState = valueAsXnaBlend;
                 handled = true;
+#endif
             }
             else if (propertyName == "Alpha")
             {
+#if MONOGAME
                 int valueAsInt = (int)value;
                 ((Text)mContainedObjectAsIpso).Alpha = valueAsInt;
                 handled = true;
+#endif
             }
             else if (propertyName == "Red")
             {
@@ -4577,9 +4594,11 @@ namespace Gum.Wireframe
             }
             else if (propertyName == "Color")
             {
+#if MONOGAME
                 var valueAsColor = (Color)value;
                 ((Text)mContainedObjectAsIpso).Color = valueAsColor;
                 handled = true;
+#endif
             }
 
             else if (propertyName == "HorizontalAlignment")
@@ -4594,8 +4613,10 @@ namespace Gum.Wireframe
             }
             else if (propertyName == "MaxLettersToShow")
             {
+#if MONOGAME
                 ((Text)mContainedObjectAsIpso).MaxLettersToShow = (int)value;
                 handled = true;
+#endif
             }
 
             return handled;
@@ -4702,7 +4723,7 @@ namespace Gum.Wireframe
             }
         }
 
-#region IVisible Implementation
+        #region IVisible Implementation
 
 
         bool IVisible.AbsoluteVisible
@@ -4724,7 +4745,7 @@ namespace Gum.Wireframe
             get { return this.Parent as IVisible; }
         }
 
-#endregion
+        #endregion
 
         public void ApplyState(string name)
         {
@@ -4945,7 +4966,7 @@ namespace Gum.Wireframe
             numberOfUsedInterpolationLists--;
         }
 
-#region AnimationChain 
+        #region AnimationChain 
 #if MONOGAME
         public bool Animate { get; set; } = true;
         int mCurrentChainIndex;
@@ -5137,7 +5158,7 @@ namespace Gum.Wireframe
             }
         }
 #endif
-#endregion
+        #endregion
 
 
 #if SKIA
@@ -5156,7 +5177,7 @@ namespace Gum.Wireframe
         }
 #endif
 
-#endregion
+        #endregion
 
 
     }

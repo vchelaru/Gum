@@ -4783,7 +4783,6 @@ namespace Gum.Wireframe
 
         }
 
-
         #region IVisible Implementation
 
 
