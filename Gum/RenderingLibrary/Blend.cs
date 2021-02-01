@@ -40,6 +40,8 @@ namespace Gum.RenderingLibrary
         }
 #endif
 
+#if MONOGAME || SKIA
+
         public static Blend ToBlend(this BlendState blendState)
         {
             if (blendState == BlendState.NonPremultiplied)
@@ -60,5 +62,6 @@ namespace Gum.RenderingLibrary
             }
 
         }
+#endif 
     }
 }

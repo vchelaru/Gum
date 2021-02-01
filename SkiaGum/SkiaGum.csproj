@@ -8,6 +8,10 @@
     <DefineConstants>TRACE;SKIA</DefineConstants>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DefineConstants>TRACE;SKIA</DefineConstants>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="SkiaSharp" Version="1.68.1.1" />
     <PackageReference Include="SkiaSharp.Extended" Version="1.60.0" />
