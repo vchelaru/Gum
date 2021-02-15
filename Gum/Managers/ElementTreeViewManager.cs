@@ -14,12 +14,14 @@ using Gum.Events;
 using Gum.Wireframe;
 using Gum.DataTypes.Behaviors;
 using Gum.Plugins;
+using System.ComponentModel;
 
 namespace Gum.Managers
 {
     public partial class ElementTreeViewManager
     {
         #region Fields
+
 
         public const int TransparentImageIndex = 0;
         public const int FolderImageIndex = 1;
@@ -32,8 +34,9 @@ namespace Gum.Managers
         public const int BehaviorImageIndex = 8;
 
         static ElementTreeViewManager mSelf;
+        private System.Windows.Forms.ContextMenuStrip ElementMenuStrip;
 
-        MultiSelectTreeView mTreeView;
+        MultiSelectTreeView ObjectTreeView;
 
         TreeNode mScreensTreeNode;
         TreeNode mComponentsTreeNode;
@@ -68,18 +71,18 @@ namespace Gum.Managers
             get
             {
                 // This could be called before the tree is created:
-                if (mTreeView == null)
+                if (ObjectTreeView == null)
                 {
                     return null;
                 }
                 else
                 {
-                    return mTreeView.SelectedNode;
+                    return ObjectTreeView.SelectedNode;
                 }
             }
             set
             {
-                mTreeView.SelectedNode = value;
+                ObjectTreeView.SelectedNode = value;
             }
         }
 
@@ -87,7 +90,7 @@ namespace Gum.Managers
         {
             get
             {
-                return mTreeView.SelectedNodes;
+                return ObjectTreeView.SelectedNodes;
             }
         }
         #endregion
@@ -267,9 +270,9 @@ namespace Gum.Managers
 
         public TreeNode GetTreeNodeOver()
         {
-            System.Drawing.Point point = mTreeView.PointToClient(Cursor.Position);
+            System.Drawing.Point point = ObjectTreeView.PointToClient(Cursor.Position);
 
-            return mTreeView.GetNodeAt(point);
+            return ObjectTreeView.GetNodeAt(point);
         }
 
         #endregion
@@ -309,34 +312,94 @@ namespace Gum.Managers
             }
         }
 
-        public void Initialize(MultiSelectTreeView treeView)
+        public void Initialize(IContainer components, System.Windows.Forms.ImageList elementTreeImages)
         {
-            mTreeView = treeView;
-            mMenuStrip = mTreeView.ContextMenuStrip;
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWindow));
+
+            this.ObjectTreeView = new CommonFormsAndControls.MultiSelectTreeView();
+            this.ElementMenuStrip = new System.Windows.Forms.ContextMenuStrip(components);
+
+            // 
+            // ElementMenuStrip
+            // 
+            this.ElementMenuStrip.Name = "ElementMenuStrip";
+            this.ElementMenuStrip.Size = new System.Drawing.Size(61, 4);
+
+            // 
+            // ElementTreeImages
+            //// 
+            //this.ElementTreeImages.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("ElementTreeImages.ImageStream")));
+            //this.ElementTreeImages.TransparentColor = System.Drawing.Color.Transparent;
+            //this.ElementTreeImages.Images.SetKeyName(0, "transparent.png");
+            //this.ElementTreeImages.Images.SetKeyName(1, "folder.png");
+            //this.ElementTreeImages.Images.SetKeyName(2, "Component.png");
+            //this.ElementTreeImages.Images.SetKeyName(3, "Instance.png");
+            //this.ElementTreeImages.Images.SetKeyName(4, "screen.png");
+            //this.ElementTreeImages.Images.SetKeyName(5, "StandardElement.png");
+            //this.ElementTreeImages.Images.SetKeyName(6, "redExclamation.png");
+            //this.ElementTreeImages.Images.SetKeyName(7, "state.png");
+            //this.ElementTreeImages.Images.SetKeyName(8, "behavior.png");
+
+
+            // 
+            // ObjectTreeView
+            // 
+            this.ObjectTreeView.AllowDrop = true;
+            this.ObjectTreeView.AlwaysHaveOneNodeSelected = false;
+            this.ObjectTreeView.ContextMenuStrip = this.ElementMenuStrip;
+            this.ObjectTreeView.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.ObjectTreeView.HotTracking = true;
+            this.ObjectTreeView.ImageIndex = 0;
+            this.ObjectTreeView.ImageList = elementTreeImages;
+            this.ObjectTreeView.Location = new System.Drawing.Point(0, 0);
+            this.ObjectTreeView.MultiSelectBehavior = CommonFormsAndControls.MultiSelectBehavior.CtrlDown;
+            this.ObjectTreeView.Name = "ObjectTreeView";
+            this.ObjectTreeView.SelectedImageIndex = 0;
+            this.ObjectTreeView.SelectedNodes = ((System.Collections.Generic.List<System.Windows.Forms.TreeNode>)(resources.GetObject("ObjectTreeView.SelectedNodes")));
+            this.ObjectTreeView.Size = new System.Drawing.Size(196, 621);
+            this.ObjectTreeView.TabIndex = 0;
+            this.ObjectTreeView.AfterClickSelect += new System.Windows.Forms.TreeViewEventHandler(this.ObjectTreeView_AfterClickSelect);
+            this.ObjectTreeView.ItemDrag += new System.Windows.Forms.ItemDragEventHandler(this.ObjectTreeView_ItemDrag);
+            this.ObjectTreeView.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.ObjectTreeView_AfterSelect_1);
+            this.ObjectTreeView.KeyDown += new System.Windows.Forms.KeyEventHandler(this.ObjectTreeView_KeyDown);
+            this.ObjectTreeView.MouseClick += new System.Windows.Forms.MouseEventHandler(this.ObjectTreeView_MouseClick);
+            this.ObjectTreeView.MouseMove += new System.Windows.Forms.MouseEventHandler(this.ObjectTreeView_MouseMove);
+
+
+
+            mMenuStrip = ObjectTreeView.ContextMenuStrip;
             GumCommands.Self.GuiCommands.RefreshElementTreeView();
 
-            mTreeView.DragDrop += HandleDragDropEvent;
+            ObjectTreeView.DragDrop += HandleDragDropEvent;
 
-            mTreeView.ItemDrag += (sender, e) =>
+            ObjectTreeView.ItemDrag += (sender, e) =>
             {
                 TreeNode node = e.Item as TreeNode;
 
-                mTreeView.DoDragDrop(node, DragDropEffects.Move | DragDropEffects.Copy);
+                ObjectTreeView.DoDragDrop(node, DragDropEffects.Move | DragDropEffects.Copy);
 
             };
 
-            mTreeView.DragEnter += (sender, e) =>
+            ObjectTreeView.DragEnter += (sender, e) =>
             {
                 e.Effect = DragDropEffects.All;
 
             };
 
-            mTreeView.DragOver += (sender, e) =>
+            ObjectTreeView.DragOver += (sender, e) =>
             {
                 e.Effect = DragDropEffects.Move;
             };
 
             InitializeMenuItems();
+
+
+            // 
+            // LeftAndEverythingContainer.Panel1
+            // 
+            //this.LeftAndEverythingContainer.Panel1.Controls.Add(this.ObjectTreeView);
+            GumCommands.Self.GuiCommands.AddControl(ObjectTreeView, "Project", TabLocation.Left);
+
         }
 
         private void HandleDragDropEvent(object sender, DragEventArgs e)
@@ -626,19 +689,19 @@ namespace Gum.Managers
             {
                 mScreensTreeNode = new TreeNode("Screens");
                 mScreensTreeNode.ImageIndex = FolderImageIndex;
-                mTreeView.Nodes.Add(mScreensTreeNode);
+                ObjectTreeView.Nodes.Add(mScreensTreeNode);
 
                 mComponentsTreeNode = new TreeNode("Components");
                 mComponentsTreeNode.ImageIndex = FolderImageIndex;
-                mTreeView.Nodes.Add(mComponentsTreeNode);
+                ObjectTreeView.Nodes.Add(mComponentsTreeNode);
 
                 mStandardElementsTreeNode = new TreeNode("Standard");
                 mStandardElementsTreeNode.ImageIndex = FolderImageIndex;
-                mTreeView.Nodes.Add(mStandardElementsTreeNode);
+                ObjectTreeView.Nodes.Add(mStandardElementsTreeNode);
 
                 mBehaviorsTreeNode = new TreeNode("Behaviors");
                 mBehaviorsTreeNode.ImageIndex = FolderImageIndex;
-                mTreeView.Nodes.Add(mBehaviorsTreeNode);
+                ObjectTreeView.Nodes.Add(mBehaviorsTreeNode);
             }
         }
 
@@ -751,9 +814,9 @@ namespace Gum.Managers
         {
             if (elementSave == null)
             {
-                if (mTreeView.SelectedNode != null && mTreeView.SelectedNode.Tag != null && mTreeView.SelectedNode.Tag is ElementSave)
+                if (ObjectTreeView.SelectedNode != null && ObjectTreeView.SelectedNode.Tag != null && ObjectTreeView.SelectedNode.Tag is ElementSave)
                 {
-                    mTreeView.SelectedNode = null;
+                    ObjectTreeView.SelectedNode = null;
                 }
             }
             else
@@ -764,29 +827,29 @@ namespace Gum.Managers
 
         private void Select(TreeNode treeNode)
         {
-            if (mTreeView.SelectedNode != treeNode)
+            if (ObjectTreeView.SelectedNode != treeNode)
             {
                 // See comment above about why we have to manually raise the AfterClick
 
-                mTreeView.SelectedNode = treeNode;
+                ObjectTreeView.SelectedNode = treeNode;
 
                 if (treeNode != null)
                 {
                     treeNode.EnsureVisible();
                 }
 
-                mTreeView.CallAfterClickSelect(null, new TreeViewEventArgs(treeNode));
+                ObjectTreeView.CallAfterClickSelect(null, new TreeViewEventArgs(treeNode));
             }
         }
 
         private void Select(List<TreeNode> treeNodes)
         {
-            mTreeView.SelectedNodes = treeNodes;
+            ObjectTreeView.SelectedNodes = treeNodes;
 
             if (treeNodes.Count != 0)
             {
                 treeNodes[0]?.EnsureVisible();
-                mTreeView.CallAfterClickSelect(null, new TreeViewEventArgs(treeNodes[0]));
+                ObjectTreeView.CallAfterClickSelect(null, new TreeViewEventArgs(treeNodes[0]));
             }
         }
 
@@ -957,10 +1020,9 @@ namespace Gum.Managers
             return null;
         }
 
-        
         internal void OnSelect(TreeNode selectedTreeNode)
         {
-            TreeNode treeNode = mTreeView.SelectedNode;
+            TreeNode treeNode = ObjectTreeView.SelectedNode;
 
             object selectedObject = null;
 
@@ -992,8 +1054,6 @@ namespace Gum.Managers
             PluginManager.Self.TreeNodeSelected(selectedTreeNode);
         }
 
-
-
         public void VerifyComponentsAreInTreeView(GumProjectSave gumProject)
         {
             foreach (ComponentSave component in gumProject.Components)
@@ -1010,13 +1070,54 @@ namespace Gum.Managers
             HotkeyManager.Self.HandleKeyDownElementTreeView(e);
         }
 
+        private void ObjectTreeView_AfterSelect_1(object sender, TreeViewEventArgs e)
+        {
+            // If we use AfterClickSelect instead of AfterSelect then
+            // we don't get notified when the user selects nothing.
+            // Update - we only want to do this if it's null:
+            // Otherwise we can't drag drop
+            if (ObjectTreeView.SelectedNode == null)
+            {
+                ElementTreeViewManager.Self.OnSelect(ObjectTreeView.SelectedNode);
+            }
+        }
+
+        private void ObjectTreeView_AfterClickSelect(object sender, TreeViewEventArgs e)
+        {
+            ElementTreeViewManager.Self.OnSelect(ObjectTreeView.SelectedNode);
+        }
+
+        private void ObjectTreeView_MouseClick(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Right)
+            {
+                ElementTreeViewManager.Self.PopulateMenuStrip();
+            }
+        }
+
+        private void ObjectTreeView_KeyDown(object sender, KeyEventArgs e)
+        {
+            ElementTreeViewManager.Self.HandleKeyDown(e);
+        }
+
+        private void ObjectTreeView_ItemDrag(object sender, ItemDragEventArgs e)
+        {
+            DragDropManager.Self.OnItemDrag(e.Item);
+        }
+
+        private void ObjectTreeView_MouseMove(object sender, MouseEventArgs e)
+        {
+            HandleMouseOver(e.X, e.Y);
+        }
+
+
         #endregion
 
 
 
         internal void HandleMouseOver(int x, int y)
         {
-            var objectOver = this.mTreeView.GetNodeAt(x, y);
+            var objectOver = this.ObjectTreeView.GetNodeAt(x, y);
 
             ElementSave element = null;
             InstanceSave instance = null;

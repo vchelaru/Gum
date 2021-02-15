@@ -21,11 +21,6 @@ namespace Gum.Commands
             mMainWindow = mainWindow;
         }
 
-        public void AddControl(Control control)
-        {
-            mFlowLayoutPanel.Controls.Add(control);
-        }
-
         internal void RefreshStateTreeView()
         {
             StateTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedElement);
@@ -47,6 +42,11 @@ namespace Gum.Commands
         public TabPage AddControl(System.Windows.Controls.UserControl control, string tabTitle, TabLocation tabLocation = TabLocation.CenterBottom)
         {
             return mMainWindow.AddWpfControl(control, tabTitle, tabLocation);
+        }
+
+        public TabPage AddControl(System.Windows.Forms.Control control, string tabTitle, TabLocation tabLocation )
+        {
+            return mMainWindow.AddWinformsControl(control, tabTitle, tabLocation);
         }
 
         public TabPage AddWinformsControl(Control control, string tabTitle, TabLocation tabLocation)

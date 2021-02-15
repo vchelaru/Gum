@@ -30,7 +30,8 @@ namespace Gum
         Center,
         Right,
         CenterTop, 
-        CenterBottom
+        CenterBottom,
+        Left
     }
 
     public partial class MainWindow : Form
@@ -96,7 +97,7 @@ namespace Gum
 
             TypeManager.Self.Initialize();
 
-            ElementTreeViewManager.Self.Initialize(this.ObjectTreeView);
+            ElementTreeViewManager.Self.Initialize(this.components, this.ElementTreeImages);
             // State Tree ViewManager needs init before MenuStripManager
             StateTreeViewManager.Self.Initialize(this.stateView.TreeView, this.stateView.StateContextMenuStrip);
             // ProperGridManager before MenuSTripManager
@@ -249,31 +250,12 @@ namespace Gum
             SetVariableLogic.Self.PropertyValueChanged(s, e);
         }
 
-        private void ObjectTreeView_MouseClick(object sender, MouseEventArgs e)
-        {
-            if (e.Button == MouseButtons.Right)
-            {
-                ElementTreeViewManager.Self.PopulateMenuStrip();
-            }
-        }
-
         private void wireframeControl1_MouseClick(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Right)
             {
                 EditingManager.Self.OnRightClick();
             }
-        }
-
-        private void ObjectTreeView_KeyDown(object sender, KeyEventArgs e)
-        {
-            ElementTreeViewManager.Self.HandleKeyDown(e);
-        }
-
-
-        private void ObjectTreeView_ItemDrag(object sender, ItemDragEventArgs e)
-        {
-            DragDropManager.Self.OnItemDrag(e.Item);
         }
 
         private void PropertyGridMenuStrip_Opening(object sender, CancelEventArgs e)
@@ -343,23 +325,6 @@ namespace Gum
         private void wireframeControl1_DragDrop(object sender, DragEventArgs e)
         {
             DragDropManager.Self.HandleFileDragDrop(sender, e);
-        }
-
-        private void ObjectTreeView_AfterSelect_1(object sender, TreeViewEventArgs e)
-        {
-            // If we use AfterClickSelect instead of AfterSelect then
-            // we don't get notified when the user selects nothing.
-            // Update - we only want to do this if it's null:
-            // Otherwise we can't drag drop
-            if (ObjectTreeView.SelectedNode == null)
-            {
-                ElementTreeViewManager.Self.OnSelect(ObjectTreeView.SelectedNode);
-            }
-        }
-
-        private void ObjectTreeView_AfterClickSelect(object sender, TreeViewEventArgs e)
-        {
-            ElementTreeViewManager.Self.OnSelect(ObjectTreeView.SelectedNode);
         }
 
         public TabPage AddWinformsControl(Control control, string tabTitle, TabLocation tabLocation)
@@ -434,6 +399,9 @@ namespace Gum
                     break;
                 case TabLocation.CenterTop:
                     tabControl = this.tabControl1;
+                    break;
+                case TabLocation.Left:
+                    tabControl = this.LeftTabControl;
                     break;
                 default:
                     throw new NotImplementedException($"Tab location {tabLocation} not supported");
@@ -526,9 +494,5 @@ namespace Gum
             return foundHost != null && foundHost.Child == control;
         }
 
-        private void ObjectTreeView_MouseMove(object sender, MouseEventArgs e)
-        {
-            ElementTreeViewManager.Self.HandleMouseOver(e.X, e.Y);
-        }
     }
 }
