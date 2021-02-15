@@ -42,7 +42,6 @@
             this.RightTabControl = new System.Windows.Forms.TabControl();
             this.tabPage3 = new System.Windows.Forms.TabPage();
             this.OutputTextBox = new System.Windows.Forms.RichTextBox();
-            this.ElementTreeImages = new System.Windows.Forms.ImageList(this.components);
             this.WireframeContextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.PropertyGridMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.LeftAndEverythingContainer)).BeginInit();
@@ -214,20 +213,7 @@
             this.OutputTextBox.Size = new System.Drawing.Size(526, 78);
             this.OutputTextBox.TabIndex = 0;
             this.OutputTextBox.Text = "";
-            // 
-            // ElementTreeImages
-            // 
-            this.ElementTreeImages.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("ElementTreeImages.ImageStream")));
-            this.ElementTreeImages.TransparentColor = System.Drawing.Color.Transparent;
-            this.ElementTreeImages.Images.SetKeyName(0, "transparent.png");
-            this.ElementTreeImages.Images.SetKeyName(1, "folder.png");
-            this.ElementTreeImages.Images.SetKeyName(2, "Component.png");
-            this.ElementTreeImages.Images.SetKeyName(3, "Instance.png");
-            this.ElementTreeImages.Images.SetKeyName(4, "screen.png");
-            this.ElementTreeImages.Images.SetKeyName(5, "StandardElement.png");
-            this.ElementTreeImages.Images.SetKeyName(6, "redExclamation.png");
-            this.ElementTreeImages.Images.SetKeyName(7, "state.png");
-            this.ElementTreeImages.Images.SetKeyName(8, "behavior.png");
+
             // 
             // WireframeContextMenuStrip
             // 
@@ -284,7 +270,6 @@
         private System.Windows.Forms.Panel panel2;
 
         private System.Windows.Forms.ContextMenuStrip WireframeContextMenuStrip;
-        private System.Windows.Forms.ImageList ElementTreeImages;
         private System.Windows.Forms.ContextMenuStrip PropertyGridMenuStrip;
         private System.Windows.Forms.RichTextBox OutputTextBox;
         private System.Windows.Forms.TabControl RightTabControl;

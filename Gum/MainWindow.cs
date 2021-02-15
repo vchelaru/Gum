@@ -56,6 +56,8 @@ namespace Gum
 
             InitializeComponent();
 
+
+
             // Create the wireframe control, but don't add it...
             CreateWireframeControl();
 
@@ -97,7 +99,8 @@ namespace Gum
 
             TypeManager.Self.Initialize();
 
-            ElementTreeViewManager.Self.Initialize(this.components, this.ElementTreeImages);
+
+            ElementTreeViewManager.Self.Initialize(this.components);
             // State Tree ViewManager needs init before MenuStripManager
             StateTreeViewManager.Self.Initialize(this.stateView.TreeView, this.stateView.StateContextMenuStrip);
             // ProperGridManager before MenuSTripManager
