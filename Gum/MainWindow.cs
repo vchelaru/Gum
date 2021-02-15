@@ -95,15 +95,20 @@ namespace Gum
             GumCommands.Self.Initialize(this);
 
             TypeManager.Self.Initialize();
-            PluginManager.Self.Initialize(this);
 
             ElementTreeViewManager.Self.Initialize(this.ObjectTreeView);
+            // State Tree ViewManager needs init before MenuStripManager
             StateTreeViewManager.Self.Initialize(this.stateView.TreeView, this.stateView.StateContextMenuStrip);
-
+            // ProperGridManager before MenuSTripManager
             PropertyGridManager.Self.Initialize();
+            // menu strip manager needs to be initialized before plugins:
+            MenuStripManager.Self.Initialize(this);
+
+            PluginManager.Self.Initialize(this);
+
             StandardElementsManager.Self.Initialize();
-            MenuStripManager.Self.Initialize(
-                RemoveElementMenuItem, RemoveStateMenuItem, RemoveVariableMenuItem);
+
+            
             ToolCommands.GuiCommands.Self.Initialize(wireframeControl1);
             Wireframe.WireframeObjectManager.Self.Initialize(WireframeEditControl, wireframeControl1);
 
@@ -239,39 +244,9 @@ namespace Gum
 
         }
 
-        private void undoToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            UndoManager.Self.PerformUndo();
-        }
-
-        private void screenToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            ElementTreeViewManager.Self.AddScreenClick(sender, e);
-        }
-
-        private void componentToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            ElementTreeViewManager.Self.AddComponentClick(sender, e);
-        }
-
-        private void instanceToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            ElementTreeViewManager.Self.AddInstanceClick(sender, e);
-        }
-
-        private void loadProjectToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            bool newProjectLoaded = ProjectManager.Self.LoadProject();
-        }
-
         private void VariablePropertyGrid_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
         {
             SetVariableLogic.Self.PropertyValueChanged(s, e);
-        }
-
-        private void stateToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            StateTreeViewManager.Self.AddStateClick();
         }
 
         private void ObjectTreeView_MouseClick(object sender, MouseEventArgs e)
@@ -301,19 +276,13 @@ namespace Gum
             DragDropManager.Self.OnItemDrag(e.Item);
         }
 
-        private void managePluginsToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            PluginsWindow pluginsWindow = new PluginsWindow();
-            pluginsWindow.Show();
-        }
-
         private void PropertyGridMenuStrip_Opening(object sender, CancelEventArgs e)
         {
         }
 
         private void MainWindow_Load(object sender, EventArgs e)
         {
-            ProjectManager.Self.RecentFilesUpdated += RefreshRecentFilesMenuItems;
+            ProjectManager.Self.RecentFilesUpdated += MenuStripManager.Self.RefreshRecentFilesMenuItems;
             ProjectManager.Self.Initialize();
 
             if(CommandLine.CommandLineManager.Self.ShouldExitImmediately == false)
@@ -366,19 +335,6 @@ namespace Gum
 
         }
 
-        private void saveProjectToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            if (ObjectFinder.Self.GumProjectSave == null)
-            {
-                MessageBox.Show("There is no project loaded.  Either load a project or create a new project before saving");
-            }
-            else
-            {
-                // Don't do an auto save, force it!
-                GumCommands.Self.FileCommands.ForceSaveProject();
-            }
-        }
-
         private void wireframeControl1_DragEnter(object sender, DragEventArgs e)
         {
             DragDropManager.Self.HandleFileDragEnter(sender, e);
@@ -387,29 +343,6 @@ namespace Gum
         private void wireframeControl1_DragDrop(object sender, DragEventArgs e)
         {
             DragDropManager.Self.HandleFileDragDrop(sender, e);
-        }
-
-        private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            MessageBox.Show("Gum version " + Application.ProductVersion);
-        }
-
-        private void newProjectToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            GumCommands.Self.FileCommands.NewProject();
-        }
-
-        private void saveAllToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            if (ObjectFinder.Self.GumProjectSave == null)
-            {
-                MessageBox.Show("There is no project loaded.  Either load a project or create a new project before saving");
-            }
-            else
-            {
-                // Don't do an auto save, force it!
-                GumCommands.Self.FileCommands.ForceSaveProject(true);
-            }
         }
 
         private void ObjectTreeView_AfterSelect_1(object sender, TreeViewEventArgs e)
@@ -421,24 +354,6 @@ namespace Gum
             if (ObjectTreeView.SelectedNode == null)
             {
                 ElementTreeViewManager.Self.OnSelect(ObjectTreeView.SelectedNode);
-            }
-        }
-
-        public void RefreshRecentFilesMenuItems()
-        {
-            this.loadRecentToolStripMenuItem.DropDownItems.Clear();
-
-            foreach (var item in ProjectManager.Self.GeneralSettingsFile.RecentProjects.OrderByDescending(item=>item.LastTimeOpened))
-            {
-                ToolStripMenuItem menuItem = new ToolStripMenuItem();
-                menuItem.Text = item.AbsoluteFileName;
-
-                this.loadRecentToolStripMenuItem.DropDownItems.Add(menuItem);
-
-                menuItem.Click += delegate
-                {
-                    GumCommands.Self.FileCommands.LoadProject(menuItem.Text);
-                };
             }
         }
 
@@ -609,33 +524,6 @@ namespace Gum
                 as System.Windows.Forms.Integration.ElementHost;
 
             return foundHost != null && foundHost.Child == control;
-        }
-
-        private void findFileReferencesToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            CommonFormsAndControls.TextInputWindow tiw = new CommonFormsAndControls.TextInputWindow();
-            tiw.Message = "Enter entire or partial file name:";
-            var dialogResult = tiw.ShowDialog();
-
-            if (dialogResult == System.Windows.Forms.DialogResult.OK)
-            {
-                var elements = ObjectFinder.Self.GetElementsReferencing(tiw.Result);
-
-                string message = "File referenced by:";
-
-                if (elements.Count == 0)
-                {
-                    message += "\nNothing references this file";
-                }
-                else
-                {
-                    foreach (var element in elements)
-                    {
-                        message += "\n" + element.ToString();
-                    }
-                }
-                MessageBox.Show(message);
-            }
         }
 
         private void ObjectTreeView_MouseMove(object sender, MouseEventArgs e)

@@ -74,6 +74,10 @@ namespace Gum.Managers
 
         public void Initialize(MultiSelectTreeView treeView, ContextMenuStrip menuStrip)
         {
+            if(treeView == null)
+            {
+                throw new ArgumentNullException(nameof(treeView));
+            }
             mMenuStrip = menuStrip;
             mTreeView = treeView;
 
