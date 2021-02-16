@@ -28,13 +28,6 @@ namespace Gum.Managers
 
         private ToolStripMenuItem helpToolStripMenuItem;
         
-        private ToolStripMenuItem undoToolStripMenuItem;
-        private ToolStripSeparator toolStripSeparator1;
-        private ToolStripMenuItem addToolStripMenuItem;
-        private ToolStripMenuItem componentToolStripMenuItem;
-        private ToolStripMenuItem instanceToolStripMenuItem;
-        private ToolStripMenuItem stateToolStripMenuItem;
-        private ToolStripMenuItem removeToolStripMenuItem;
         private ToolStripMenuItem RemoveStateMenuItem;
         private ToolStripMenuItem RemoveElementMenuItem;
         private ToolStripMenuItem RemoveVariableMenuItem;
@@ -69,24 +62,7 @@ namespace Gum.Managers
 
         public void Initialize(Form mainWindow)
         {
-
-            this.addToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.componentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.instanceToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.removeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.stateToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.RemoveElementMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.RemoveStateMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.RemoveVariableMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.loadRecentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.saveAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.newProjectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.contentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.findFileReferencesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.pluginsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.managePluginsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-
+            #region Local Functions
             ToolStripMenuItem Add(ToolStripMenuItem parent, string text, Action clickEvent)
             {
                 var tsmi = new ToolStripMenuItem();
@@ -99,40 +75,54 @@ namespace Gum.Managers
                 return tsmi;
             }
 
+            void AddSeparator(ToolStripMenuItem parent)
+            {
+                var separator = new System.Windows.Forms.ToolStripSeparator();
+                parent.DropDownItems.Add(separator);
+            }
+            #endregion
+
+            this.RemoveElementMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.RemoveStateMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.RemoveVariableMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.loadRecentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.saveAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.newProjectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.contentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.findFileReferencesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.pluginsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.managePluginsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+
+            this.editToolStripMenuItem = new ToolStripMenuItem();
+            this.editToolStripMenuItem.Name = "editToolStripMenuItem";
+            this.editToolStripMenuItem.Size = new System.Drawing.Size(39, 20);
+            this.editToolStripMenuItem.Text = "Edit";
+
+            Add(editToolStripMenuItem, "Undo", UndoManager.Self.PerformUndo)
+                .ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Z)));
+
+            AddSeparator(editToolStripMenuItem);
+
+            var addToolStripMenuItem = Add(editToolStripMenuItem, "Add", null);
+            var removeToolStripMenuItem = Add(editToolStripMenuItem, "Remove", null);
+
+
+            // 
+            // removeToolStripMenuItem
+            // 
+            removeToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.RemoveElementMenuItem,
+            this.RemoveStateMenuItem,
+            this.RemoveVariableMenuItem});
+
+
+
+
             Add(addToolStripMenuItem, "Screen", () => ElementTreeViewManager.Self.AddScreenClick(this, null));
-            
-            // 
-            // componentToolStripMenuItem
-            // 
-            this.componentToolStripMenuItem.Name = "componentToolStripMenuItem";
-            this.componentToolStripMenuItem.Size = new System.Drawing.Size(138, 22);
-            this.componentToolStripMenuItem.Text = "Component";
-            this.componentToolStripMenuItem.Click += ElementTreeViewManager.Self.AddComponentClick;
-            // 
-            // instanceToolStripMenuItem
-            // 
-            this.instanceToolStripMenuItem.Name = "instanceToolStripMenuItem";
-            this.instanceToolStripMenuItem.Size = new System.Drawing.Size(138, 22);
-            this.instanceToolStripMenuItem.Text = "Object";
-            this.instanceToolStripMenuItem.Click += ElementTreeViewManager.Self.AddInstanceClick;
-
-            // 
-            // stateToolStripMenuItem
-            // 
-            this.stateToolStripMenuItem.Name = "stateToolStripMenuItem";
-            this.stateToolStripMenuItem.Size = new System.Drawing.Size(138, 22);
-            this.stateToolStripMenuItem.Text = "State";
-            this.stateToolStripMenuItem.Click += (not, used) => StateTreeViewManager.Self.AddStateClick();
-
-            // 
-            // addToolStripMenuItem
-            // 
-            this.addToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.componentToolStripMenuItem,
-            this.instanceToolStripMenuItem});
-            this.addToolStripMenuItem.Name = "addToolStripMenuItem";
-            this.addToolStripMenuItem.Size = new System.Drawing.Size(144, 22);
-            this.addToolStripMenuItem.Text = "Add";
+            Add(addToolStripMenuItem, "Component", () => ElementTreeViewManager.Self.AddComponentClick(this, null));
+            Add(addToolStripMenuItem, "Instance", () => ElementTreeViewManager.Self.AddInstanceClick(this, null));
+            Add(addToolStripMenuItem, "State", () => GumCommands.Self.Edit.AddState());
 
             // 
             // RemoveElementMenuItem
@@ -254,24 +244,6 @@ namespace Gum.Managers
             
 
             // 
-            // removeToolStripMenuItem
-            // 
-            this.removeToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.RemoveElementMenuItem,
-            this.RemoveStateMenuItem,
-            this.RemoveVariableMenuItem});
-            this.removeToolStripMenuItem.Name = "removeToolStripMenuItem";
-            this.removeToolStripMenuItem.Size = new System.Drawing.Size(144, 22);
-            this.removeToolStripMenuItem.Text = "Remove";
-
-            this.undoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.undoToolStripMenuItem.Name = "undoToolStripMenuItem";
-            this.undoToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Z)));
-            this.undoToolStripMenuItem.Size = new System.Drawing.Size(144, 22);
-            this.undoToolStripMenuItem.Text = "Undo";
-            this.undoToolStripMenuItem.Click += (not, used) => UndoManager.Self.PerformUndo();
-
-            // 
             // aboutToolStripMenuItem
             // 
             this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
@@ -279,7 +251,6 @@ namespace Gum.Managers
             this.aboutToolStripMenuItem.Text = "About...";
             this.aboutToolStripMenuItem.Click += (not, used) => MessageBox.Show("Gum version " + Application.ProductVersion); 
 
-            this.editToolStripMenuItem = new ToolStripMenuItem();
 
             this.viewToolStripMenuItem = new ToolStripMenuItem();
             viewToolStripMenuItem.Text = "View";
@@ -294,21 +265,8 @@ namespace Gum.Managers
                 GumCommands.Self.GuiCommands.ShowTools();
             });
 
-            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-            // 
-            // toolStripSeparator1
-            // 
-            this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(141, 6);
 
-            this.editToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.undoToolStripMenuItem,
-            this.toolStripSeparator1,
-            this.addToolStripMenuItem,
-            this.removeToolStripMenuItem});
-            this.editToolStripMenuItem.Name = "editToolStripMenuItem";
-            this.editToolStripMenuItem.Size = new System.Drawing.Size(39, 20);
-            this.editToolStripMenuItem.Text = "Edit";
+
 
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {

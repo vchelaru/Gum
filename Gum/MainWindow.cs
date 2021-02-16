@@ -52,13 +52,14 @@ namespace Gum
 #if DEBUG
         // This suppresses annoying, useless output from WPF, as explained here:
         http://weblogs.asp.net/akjoshi/resolving-un-harmful-binding-errors-in-wpf
-            System.Diagnostics.PresentationTraceSources.DataBindingSource.Switch.Level = System.Diagnostics.SourceLevels.Critical;
+            System.Diagnostics.PresentationTraceSources.DataBindingSource.Switch.Level = 
+                System.Diagnostics.SourceLevels.Critical;
 #endif
-
 
             InitializeComponent();
 
-
+            this.KeyPreview = true;
+            this.KeyDown += HandleKeyDown;
 
             // Create the wireframe control, but don't add it...
             CreateWireframeControl();
@@ -144,6 +145,18 @@ namespace Gum
 
             InitializeFileWatchTimer();
 
+        }
+
+        private void HandleKeyDown(object sender, KeyEventArgs args)
+        {
+            if (args.KeyCode == Keys.F
+                 && (args.Modifiers & Keys.Control) == Keys.Control
+                )
+            {
+                GumCommands.Self.GuiCommands.FocusSearch();
+                args.Handled = true;
+                args.SuppressKeyPress = true;
+            }
         }
 
         private void CreateToolbarPanel()

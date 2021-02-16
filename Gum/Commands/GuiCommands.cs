@@ -145,5 +145,10 @@ namespace Gum.Commands
             mMainWindow.PreviewSplitContainer.Panel2Collapsed = false;
 
         }
+
+        internal void FocusSearch()
+        {
+            ElementTreeViewManager.Self.FocusSearch();
+        }
     }
 }
