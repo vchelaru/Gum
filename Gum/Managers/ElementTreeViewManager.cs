@@ -174,7 +174,7 @@ namespace Gum.Managers
 
                     RefreshUi();
 
-                    if(!string.IsNullOrEmpty(filterText) && SelectedNode == null)
+                    if(!string.IsNullOrEmpty(filterText) && SelectedNode?.Tag == null)
                     {
                         SelectFirstElement();
                     }
@@ -464,6 +464,8 @@ namespace Gum.Managers
                 {
                     searchTextBox.Text = null;
                     args.Handled = true;
+                    args.SuppressKeyPress = true;
+                    ObjectTreeView.Focus();
                 }
                 else if(args.KeyCode == Keys.Back
                  && (args.Modifiers & Keys.Control) == Keys.Control
