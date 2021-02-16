@@ -222,7 +222,7 @@ namespace CodeOutputPlugin
             // We don't actually want it to show, just associate, so add and immediately remove.
             // Eventually we want this to be done with a single call but I don't know if there's Gum
             // support for it yet
-            GumCommands.Self.GuiCommands.AddControl(control, "Code", TabLocation.Right);
+            GumCommands.Self.GuiCommands.AddControl(control, "Code", TabLocation.RightBottom);
         }
 
         private void HandleCodeOutputPropertyChanged()

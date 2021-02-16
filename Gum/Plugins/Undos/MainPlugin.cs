@@ -20,7 +20,7 @@ namespace Gum.Plugins.Undos
 
             control.DataContext = new UndosViewModel();
 
-            GumCommands.Self.GuiCommands.AddControl(control, "Undos", TabLocation.Right);
+            GumCommands.Self.GuiCommands.AddControl(control, "Undos", TabLocation.RightBottom);
 
         }
     }

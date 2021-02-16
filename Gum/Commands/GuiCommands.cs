@@ -41,12 +41,22 @@ namespace Gum.Commands
 
         public TabPage AddControl(System.Windows.Controls.UserControl control, string tabTitle, TabLocation tabLocation = TabLocation.CenterBottom)
         {
+            CheckForInitialization();
             return mMainWindow.AddWpfControl(control, tabTitle, tabLocation);
         }
 
         public TabPage AddControl(System.Windows.Forms.Control control, string tabTitle, TabLocation tabLocation )
         {
+            CheckForInitialization();
             return mMainWindow.AddWinformsControl(control, tabTitle, tabLocation);
+        }
+
+        private void CheckForInitialization()
+        {
+            if(mMainWindow == null)
+            {
+                throw new InvalidOperationException("Need to call Initialize first");
+            }
         }
 
         public TabPage AddWinformsControl(Control control, string tabTitle, TabLocation tabLocation)
@@ -119,6 +129,21 @@ namespace Gum.Commands
         public System.Drawing.Point GetMousePosition()
         {
             return MainWindow.MousePosition;
+        }
+
+        public void HideTools()
+        {
+            mMainWindow.LeftAndEverythingContainer.Panel1Collapsed = true;
+            mMainWindow.VariablesAndEverythingElse.Panel1Collapsed = true;
+            mMainWindow.PreviewSplitContainer.Panel2Collapsed = true;
+        }
+
+        public void ShowTools()
+        {
+            mMainWindow.LeftAndEverythingContainer.Panel1Collapsed = false;
+            mMainWindow.VariablesAndEverythingElse.Panel1Collapsed = false;
+            mMainWindow.PreviewSplitContainer.Panel2Collapsed = false;
+
         }
     }
 }

@@ -83,7 +83,7 @@ namespace TextureCoordinateSelectionPlugin.Logic
 
             //GumCommands.Self.GuiCommands.AddWinformsControl(control, "Texture Coordinates", TabLocation.Right);
 
-            GumCommands.Self.GuiCommands.AddControl(mainControl, "Texture Coordinates", TabLocation.Right);
+            GumCommands.Self.GuiCommands.AddControl(mainControl, "Texture Coordinates", TabLocation.RightBottom);
             innerControl.DoubleClick += (not, used) =>
                 HandleRegionDoubleClicked(innerControl, ref textureOutlineRectangle);
 

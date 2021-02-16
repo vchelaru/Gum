@@ -312,21 +312,10 @@ namespace Gum.Managers
             }
         }
 
-        public void Initialize(IContainer components)
+        public void Initialize(IContainer components, ImageList ElementTreeImages)
         {
-            var ElementTreeImages = new System.Windows.Forms.ImageList(components);
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWindow));
-            ElementTreeImages.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("ElementTreeImages.ImageStream")));
-            ElementTreeImages.TransparentColor = System.Drawing.Color.Transparent;
-            ElementTreeImages.Images.SetKeyName(0, "transparent.png");
-            ElementTreeImages.Images.SetKeyName(1, "folder.png");
-            ElementTreeImages.Images.SetKeyName(2, "Component.png");
-            ElementTreeImages.Images.SetKeyName(3, "Instance.png");
-            ElementTreeImages.Images.SetKeyName(4, "screen.png");
-            ElementTreeImages.Images.SetKeyName(5, "StandardElement.png");
-            ElementTreeImages.Images.SetKeyName(6, "redExclamation.png");
-            ElementTreeImages.Images.SetKeyName(7, "state.png");
-            ElementTreeImages.Images.SetKeyName(8, "behavior.png");
+
 
             //System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWindow));
 

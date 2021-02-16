@@ -181,7 +181,7 @@ namespace StateAnimationPlugin
             }
                 
             GumCommands.Self.GuiCommands.AddControl(mMainWindow, "Animations", 
-                TabLocation.Right);
+                TabLocation.RightBottom);
 
             GumCommands.Self.GuiCommands.ShowControl(mMainWindow);
 

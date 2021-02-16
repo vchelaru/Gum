@@ -30,6 +30,7 @@
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWindow));
+            this.ElementTreeImages = new System.Windows.Forms.ImageList(this.components);
             this.LeftAndEverythingContainer = new System.Windows.Forms.SplitContainer();
             this.LeftTabControl = new System.Windows.Forms.TabControl();
             this.VariablesAndEverythingElse = new System.Windows.Forms.SplitContainer();
@@ -38,8 +39,9 @@
             this.MiddleTabControl = new System.Windows.Forms.TabControl();
             this.PreviewSplitContainer = new System.Windows.Forms.SplitContainer();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.RightTopTabControl = new System.Windows.Forms.TabControl();
             this.panel2 = new System.Windows.Forms.Panel();
-            this.RightTabControl = new System.Windows.Forms.TabControl();
+            this.RightBottomTabControl = new System.Windows.Forms.TabControl();
             this.tabPage3 = new System.Windows.Forms.TabPage();
             this.OutputTextBox = new System.Windows.Forms.RichTextBox();
             this.WireframeContextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
@@ -60,10 +62,25 @@
             this.PreviewSplitContainer.Panel1.SuspendLayout();
             this.PreviewSplitContainer.Panel2.SuspendLayout();
             this.PreviewSplitContainer.SuspendLayout();
+            this.panel1.SuspendLayout();
             this.panel2.SuspendLayout();
-            this.RightTabControl.SuspendLayout();
+            this.RightBottomTabControl.SuspendLayout();
             this.tabPage3.SuspendLayout();
             this.SuspendLayout();
+            // 
+            // ElementTreeImages
+            // 
+            this.ElementTreeImages.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("ElementTreeImages.ImageStream")));
+            this.ElementTreeImages.TransparentColor = System.Drawing.Color.Transparent;
+            this.ElementTreeImages.Images.SetKeyName(0, "transparent.png");
+            this.ElementTreeImages.Images.SetKeyName(1, "folder.png");
+            this.ElementTreeImages.Images.SetKeyName(2, "Component.png");
+            this.ElementTreeImages.Images.SetKeyName(3, "Instance.png");
+            this.ElementTreeImages.Images.SetKeyName(4, "screen.png");
+            this.ElementTreeImages.Images.SetKeyName(5, "StandardElement.png");
+            this.ElementTreeImages.Images.SetKeyName(6, "redExclamation.png");
+            this.ElementTreeImages.Images.SetKeyName(7, "state.png");
+            this.ElementTreeImages.Images.SetKeyName(8, "behavior.png");
             // 
             // LeftAndEverythingContainer
             // 
@@ -169,30 +186,40 @@
             // 
             this.panel1.BackColor = System.Drawing.SystemColors.Control;
             this.panel1.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.panel1.Controls.Add(this.RightTopTabControl);
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(540, 531);
             this.panel1.TabIndex = 0;
             // 
+            // RightTopTabControl
+            // 
+            this.RightTopTabControl.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.RightTopTabControl.Location = new System.Drawing.Point(0, 0);
+            this.RightTopTabControl.Name = "RightTopTabControl";
+            this.RightTopTabControl.SelectedIndex = 0;
+            this.RightTopTabControl.Size = new System.Drawing.Size(536, 527);
+            this.RightTopTabControl.TabIndex = 2;
+            // 
             // panel2
             // 
-            this.panel2.Controls.Add(this.RightTabControl);
+            this.panel2.Controls.Add(this.RightBottomTabControl);
             this.panel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel2.Location = new System.Drawing.Point(0, 0);
             this.panel2.Name = "panel2";
             this.panel2.Size = new System.Drawing.Size(540, 110);
             this.panel2.TabIndex = 0;
             // 
-            // RightTabControl
+            // RightBottomTabControl
             // 
-            this.RightTabControl.Controls.Add(this.tabPage3);
-            this.RightTabControl.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.RightTabControl.Location = new System.Drawing.Point(0, 0);
-            this.RightTabControl.Name = "RightTabControl";
-            this.RightTabControl.SelectedIndex = 0;
-            this.RightTabControl.Size = new System.Drawing.Size(540, 110);
-            this.RightTabControl.TabIndex = 1;
+            this.RightBottomTabControl.Controls.Add(this.tabPage3);
+            this.RightBottomTabControl.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.RightBottomTabControl.Location = new System.Drawing.Point(0, 0);
+            this.RightBottomTabControl.Name = "RightBottomTabControl";
+            this.RightBottomTabControl.SelectedIndex = 0;
+            this.RightBottomTabControl.Size = new System.Drawing.Size(540, 110);
+            this.RightBottomTabControl.TabIndex = 1;
             // 
             // tabPage3
             // 
@@ -213,7 +240,6 @@
             this.OutputTextBox.Size = new System.Drawing.Size(526, 78);
             this.OutputTextBox.TabIndex = 0;
             this.OutputTextBox.Text = "";
-
             // 
             // WireframeContextMenuStrip
             // 
@@ -253,30 +279,32 @@
             this.PreviewSplitContainer.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.PreviewSplitContainer)).EndInit();
             this.PreviewSplitContainer.ResumeLayout(false);
+            this.panel1.ResumeLayout(false);
             this.panel2.ResumeLayout(false);
-            this.RightTabControl.ResumeLayout(false);
+            this.RightBottomTabControl.ResumeLayout(false);
             this.tabPage3.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
 
         #endregion
-
-        private System.Windows.Forms.SplitContainer LeftAndEverythingContainer;
-        private System.Windows.Forms.SplitContainer VariablesAndEverythingElse;
         private System.Windows.Forms.SplitContainer StatesAndVariablesContainer;
-        private System.Windows.Forms.SplitContainer PreviewSplitContainer;
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.Panel panel2;
 
         private System.Windows.Forms.ContextMenuStrip WireframeContextMenuStrip;
         private System.Windows.Forms.ContextMenuStrip PropertyGridMenuStrip;
         private System.Windows.Forms.RichTextBox OutputTextBox;
-        private System.Windows.Forms.TabControl RightTabControl;
+        private System.Windows.Forms.TabControl RightBottomTabControl;
         private System.Windows.Forms.TabPage tabPage3;
         private System.Windows.Forms.TabControl tabControl1;
         private System.Windows.Forms.TabControl MiddleTabControl;
         private System.Windows.Forms.TabControl LeftTabControl;
+        private System.Windows.Forms.TabControl RightTopTabControl;
+        private System.Windows.Forms.ImageList ElementTreeImages;
+        public System.Windows.Forms.SplitContainer LeftAndEverythingContainer;
+        public System.Windows.Forms.SplitContainer VariablesAndEverythingElse;
+        public System.Windows.Forms.SplitContainer PreviewSplitContainer;
     }
 }
 

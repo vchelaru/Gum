@@ -8,6 +8,7 @@ using Gum.DataTypes;
 using Gum.Wireframe;
 using Gum.Undo;
 using Gum.Gui.Forms;
+using Gum.Commands;
 
 namespace Gum.Managers
 {
@@ -15,32 +16,35 @@ namespace Gum.Managers
     {
         #region Fields
 
-        private System.Windows.Forms.MenuStrip menuStrip1;
+        private MenuStrip menuStrip1;
 
-        private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem editToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem helpToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem undoToolStripMenuItem;
-        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
-        private System.Windows.Forms.ToolStripMenuItem addToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem screenToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem componentToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem instanceToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem loadProjectToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem stateToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem removeToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem RemoveStateMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem RemoveElementMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem RemoveVariableMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem loadRecentToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem saveProjectToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem saveAllToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem newProjectToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem contentToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem findFileReferencesToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem pluginsToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem managePluginsToolStripMenuItem;
+        private ToolStripMenuItem fileToolStripMenuItem;
+
+        private ToolStripMenuItem editToolStripMenuItem;
+
+        private ToolStripMenuItem viewToolStripMenuItem;
+
+        private ToolStripMenuItem contentToolStripMenuItem;
+
+        private ToolStripMenuItem helpToolStripMenuItem;
+        
+        private ToolStripMenuItem undoToolStripMenuItem;
+        private ToolStripSeparator toolStripSeparator1;
+        private ToolStripMenuItem addToolStripMenuItem;
+        private ToolStripMenuItem componentToolStripMenuItem;
+        private ToolStripMenuItem instanceToolStripMenuItem;
+        private ToolStripMenuItem stateToolStripMenuItem;
+        private ToolStripMenuItem removeToolStripMenuItem;
+        private ToolStripMenuItem RemoveStateMenuItem;
+        private ToolStripMenuItem RemoveElementMenuItem;
+        private ToolStripMenuItem RemoveVariableMenuItem;
+        private ToolStripMenuItem aboutToolStripMenuItem;
+        private ToolStripMenuItem loadRecentToolStripMenuItem;
+        private ToolStripMenuItem saveAllToolStripMenuItem;
+        private ToolStripMenuItem newProjectToolStripMenuItem;
+        private ToolStripMenuItem findFileReferencesToolStripMenuItem;
+        private ToolStripMenuItem pluginsToolStripMenuItem;
+        private ToolStripMenuItem managePluginsToolStripMenuItem;
 
         static MenuStripManager mSelf;
 
@@ -66,9 +70,7 @@ namespace Gum.Managers
         public void Initialize(Form mainWindow)
         {
 
-            this.loadProjectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.addToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.screenToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.componentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.instanceToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -78,7 +80,6 @@ namespace Gum.Managers
             this.RemoveVariableMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.loadRecentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.saveProjectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.newProjectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.contentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -86,21 +87,20 @@ namespace Gum.Managers
             this.pluginsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.managePluginsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 
-            // 
-            // loadProjectToolStripMenuItem
-            // 
-            this.loadProjectToolStripMenuItem.Name = "loadProjectToolStripMenuItem";
-            this.loadProjectToolStripMenuItem.Size = new System.Drawing.Size(149, 22);
-            this.loadProjectToolStripMenuItem.Text = "Load Project...";
-            this.loadProjectToolStripMenuItem.Click += (not, used) => ProjectManager.Self.LoadProject();
+            ToolStripMenuItem Add(ToolStripMenuItem parent, string text, Action clickEvent)
+            {
+                var tsmi = new ToolStripMenuItem();
+                tsmi.Text = text;
+                if(clickEvent != null)
+                {
+                    tsmi.Click += (not, used) => clickEvent();
+                }
+                parent.DropDownItems.Add(tsmi);
+                return tsmi;
+            }
 
-            // 
-            // screenToolStripMenuItem
-            // 
-            this.screenToolStripMenuItem.Name = "screenToolStripMenuItem";
-            this.screenToolStripMenuItem.Size = new System.Drawing.Size(138, 22);
-            this.screenToolStripMenuItem.Text = "Screen";
-            this.screenToolStripMenuItem.Click += ElementTreeViewManager.Self.AddScreenClick;
+            Add(addToolStripMenuItem, "Screen", () => ElementTreeViewManager.Self.AddScreenClick(this, null));
+            
             // 
             // componentToolStripMenuItem
             // 
@@ -128,7 +128,6 @@ namespace Gum.Managers
             // addToolStripMenuItem
             // 
             this.addToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.screenToolStripMenuItem,
             this.componentToolStripMenuItem,
             this.instanceToolStripMenuItem});
             this.addToolStripMenuItem.Name = "addToolStripMenuItem";
@@ -159,12 +158,6 @@ namespace Gum.Managers
             this.RemoveVariableMenuItem.Text = "Variable";
             this.RemoveVariableMenuItem.Click += HanldeRemoveBehaviorVariableClicked;
 
-            // 
-            // loadRecentToolStripMenuItem
-            // 
-            this.loadRecentToolStripMenuItem.Name = "loadRecentToolStripMenuItem";
-            this.loadRecentToolStripMenuItem.Size = new System.Drawing.Size(149, 22);
-            this.loadRecentToolStripMenuItem.Text = "Load Recent";
 
             // 
             // newProjectToolStripMenuItem
@@ -257,26 +250,7 @@ namespace Gum.Managers
                     GumCommands.Self.FileCommands.ForceSaveProject(true);
                 }
             };
-            
 
-            // 
-            // saveProjectToolStripMenuItem
-            // 
-            this.saveProjectToolStripMenuItem.Name = "saveProjectToolStripMenuItem";
-            this.saveProjectToolStripMenuItem.Size = new System.Drawing.Size(149, 22);
-            this.saveProjectToolStripMenuItem.Text = "Save Project";
-            this.saveProjectToolStripMenuItem.Click += (not, used) =>
-            {
-                if (ObjectFinder.Self.GumProjectSave == null)
-                {
-                    MessageBox.Show("There is no project loaded.  Either load a project or create a new project before saving");
-                }
-                else
-                {
-                    // Don't do an auto save, force it!
-                    GumCommands.Self.FileCommands.ForceSaveProject();
-                }
-            };
             
 
             // 
@@ -305,7 +279,20 @@ namespace Gum.Managers
             this.aboutToolStripMenuItem.Text = "About...";
             this.aboutToolStripMenuItem.Click += (not, used) => MessageBox.Show("Gum version " + Application.ProductVersion); 
 
-            this.editToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.editToolStripMenuItem = new ToolStripMenuItem();
+
+            this.viewToolStripMenuItem = new ToolStripMenuItem();
+            viewToolStripMenuItem.Text = "View";
+
+            Add(viewToolStripMenuItem, "Hide Tools", () =>
+            {
+                GumCommands.Self.GuiCommands.HideTools();
+            });
+
+            Add(viewToolStripMenuItem, "Show Tools", () =>
+            {
+                GumCommands.Self.GuiCommands.ShowTools();
+            });
 
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             // 
@@ -332,13 +319,29 @@ namespace Gum.Managers
 
 
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+
+            Add(fileToolStripMenuItem, "Load Project...", () => ProjectManager.Self.LoadProject());
+            loadRecentToolStripMenuItem = Add(fileToolStripMenuItem, "Load Recent", null);
+
+
+            Add(fileToolStripMenuItem, "Save Project", () =>
+            {
+                if (ObjectFinder.Self.GumProjectSave == null)
+                {
+                    MessageBox.Show("There is no project loaded.  Either load a project or create a new project before saving");
+                }
+                else
+                {
+                    // Don't do an auto save, force it!
+                    GumCommands.Self.FileCommands.ForceSaveProject();
+                }
+            });
+
             // 
             // fileToolStripMenuItem
             // 
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.loadProjectToolStripMenuItem,
-            this.loadRecentToolStripMenuItem,
-            this.saveProjectToolStripMenuItem,
+            
             this.saveAllToolStripMenuItem,
             this.newProjectToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
@@ -354,6 +357,7 @@ namespace Gum.Managers
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
                 this.fileToolStripMenuItem,
                 this.editToolStripMenuItem,
+                this.viewToolStripMenuItem,
                 this.contentToolStripMenuItem,
                 this.pluginsToolStripMenuItem,
                 this.helpToolStripMenuItem});

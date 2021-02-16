@@ -28,7 +28,8 @@ namespace Gum
     {
         [Obsolete("Use either CenterTop or CenterBottom")]
         Center,
-        Right,
+        RightBottom,
+        RightTop,
         CenterTop, 
         CenterBottom,
         Left
@@ -41,6 +42,7 @@ namespace Gum
         private Wireframe.WireframeControl wireframeControl1;
         ScrollBarControlLogic scrollBarControlLogic;
         public System.Windows.Forms.FlowLayoutPanel ToolbarPanel;
+        Panel gumEditorPanel;
 
 
         StateView stateView;
@@ -61,8 +63,10 @@ namespace Gum
             // Create the wireframe control, but don't add it...
             CreateWireframeControl();
 
+            gumEditorPanel = new Panel();
+
             // place the scrollbars first so they are in front of everything
-            scrollBarControlLogic = new ScrollBarControlLogic(this.panel1, wireframeControl1);
+            scrollBarControlLogic = new ScrollBarControlLogic(gumEditorPanel, wireframeControl1);
             scrollBarControlLogic.SetDisplayedArea(800, 600);
             wireframeControl1.CameraChanged += () =>
             {
@@ -85,7 +89,7 @@ namespace Gum
 
 
             //... add it here, so it can be done after scroll bars and other controls
-            this.panel1.Controls.Add(this.wireframeControl1);
+            gumEditorPanel.Controls.Add(this.wireframeControl1);
 
             CreateWireframeEditControl();
             CreateToolbarPanel();
@@ -96,11 +100,20 @@ namespace Gum
 
             ((SelectedState)SelectedState.Self).Initialize(stateView);
             GumCommands.Self.Initialize(this);
+            GumCommands.Self.GuiCommands.AddControl(gumEditorPanel, "Editor", TabLocation.RightTop);
 
             TypeManager.Self.Initialize();
 
-
-            ElementTreeViewManager.Self.Initialize(this.components);
+            // Vic says - I tried
+            // to instantiate the ElementTreeImages
+            // in the ElementTreeViewManager. I move 
+            // the code there and it works, but then at
+            // some point it stops working and it breaks. Not 
+            // sure why, Winforms editor must be doing something
+            // beyond the generation of code which isn't working when
+            // I move it to custom code. Oh well, maybe one day I'll move
+            // to a wpf window and can get rid of this
+            ElementTreeViewManager.Self.Initialize(this.components, ElementTreeImages);
             // State Tree ViewManager needs init before MenuStripManager
             StateTreeViewManager.Self.Initialize(this.stateView.TreeView, this.stateView.StateContextMenuStrip);
             // ProperGridManager before MenuSTripManager
@@ -136,7 +149,7 @@ namespace Gum
         private void CreateToolbarPanel()
         {
             this.ToolbarPanel = new System.Windows.Forms.FlowLayoutPanel();
-            this.panel1.Controls.Add(this.ToolbarPanel);
+            gumEditorPanel.Controls.Add(this.ToolbarPanel);
             // 
             // ToolbarPanel
             // 
@@ -179,7 +192,7 @@ namespace Gum
         private void CreateWireframeEditControl()
         {
             this.WireframeEditControl = new FlatRedBall.AnimationEditorForms.Controls.WireframeEditControl();
-            this.panel1.Controls.Add(this.WireframeEditControl);
+            gumEditorPanel.Controls.Add(this.WireframeEditControl);
             // 
             // WireframeEditControl
             // 
@@ -214,7 +227,7 @@ namespace Gum
         //void HandleXnaInitialize(object sender, EventArgs e)
         void HandleXnaInitialize()
         {
-            this.wireframeControl1.Initialize(WireframeEditControl, panel1);
+            this.wireframeControl1.Initialize(WireframeEditControl, gumEditorPanel);
             scrollBarControlLogic.Managers = global::RenderingLibrary.SystemManagers.Default;
             scrollBarControlLogic.UpdateScrollBars();
 
@@ -396,9 +409,12 @@ namespace Gum
                 case TabLocation.CenterBottom:
                     tabControl = this.MiddleTabControl;
                     break;
-                case TabLocation.Right:
-                    tabControl = this.RightTabControl;
+                case TabLocation.RightBottom:
+                    tabControl = this.RightBottomTabControl;
 
+                    break;
+                case TabLocation.RightTop:
+                    tabControl = this.RightTopTabControl;
                     break;
                 case TabLocation.CenterTop:
                     tabControl = this.tabControl1;
@@ -436,13 +452,13 @@ namespace Gum
 
             if (tabControl == null)
             {
-                foreach (var uncastedTabPage in this.RightTabControl.Controls)
+                foreach (var uncastedTabPage in this.RightBottomTabControl.Controls)
                 {
                     tabPage = uncastedTabPage as TabPage;
 
                     if (tabPage != null && DoesTabContainControl(tabPage, control))
                     {
-                        tabControl = this.RightTabControl;
+                        tabControl = this.RightBottomTabControl;
                         break;
                     }
                     else
