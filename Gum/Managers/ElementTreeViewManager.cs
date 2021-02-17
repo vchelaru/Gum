@@ -83,7 +83,8 @@ namespace Gum.Managers
         public const int BehaviorImageIndex = 8;
 
         static ElementTreeViewManager mSelf;
-        private System.Windows.Forms.ContextMenuStrip ElementMenuStrip;
+        ContextMenuStrip mMenuStrip;
+        
 
         MultiSelectTreeView ObjectTreeView;
 
@@ -422,7 +423,7 @@ namespace Gum.Managers
         #endregion
 
 
-        public void Initialize(IContainer components, ImageList ElementTreeImages)
+        public void Initialize(IContainer components, ImageList ElementTreeImages, ContextMenuStrip contextMenuStrip)
         {
             CreateObjectTreeView(ElementTreeImages);
 
@@ -528,10 +529,10 @@ namespace Gum.Managers
 
         private void CreateContextMenuStrip(IContainer components)
         {
-            this.ElementMenuStrip = new System.Windows.Forms.ContextMenuStrip(components);
-            this.ElementMenuStrip.Name = "ElementMenuStrip";
-            this.ElementMenuStrip.Size = new System.Drawing.Size(61, 4);
-            this.ObjectTreeView.ContextMenuStrip = this.ElementMenuStrip;
+            this.mMenuStrip = new System.Windows.Forms.ContextMenuStrip(components);
+            this.mMenuStrip.Name = "ElementMenuStrip";
+            this.mMenuStrip.Size = new System.Drawing.Size(61, 4);
+            this.ObjectTreeView.ContextMenuStrip = this.mMenuStrip;
         }
 
         private void CreateObjectTreeView(ImageList ElementTreeImages)
@@ -557,7 +558,6 @@ namespace Gum.Managers
             this.ObjectTreeView.KeyDown += new System.Windows.Forms.KeyEventHandler(this.ObjectTreeView_KeyDown);
             this.ObjectTreeView.MouseClick += new System.Windows.Forms.MouseEventHandler(this.ObjectTreeView_MouseClick);
             this.ObjectTreeView.MouseMove += new System.Windows.Forms.MouseEventHandler(this.ObjectTreeView_MouseMove);
-            mMenuStrip = ObjectTreeView.ContextMenuStrip;
             ObjectTreeView.DragDrop += HandleDragDropEvent;
 
             ObjectTreeView.ItemDrag += (sender, e) =>

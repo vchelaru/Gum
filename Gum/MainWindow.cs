@@ -114,7 +114,7 @@ namespace Gum
             // beyond the generation of code which isn't working when
             // I move it to custom code. Oh well, maybe one day I'll move
             // to a wpf window and can get rid of this
-            ElementTreeViewManager.Self.Initialize(this.components, ElementTreeImages);
+            ElementTreeViewManager.Self.Initialize(this.components, ElementTreeImages, ContextMenuStrip);
             // State Tree ViewManager needs init before MenuStripManager
             StateTreeViewManager.Self.Initialize(this.stateView.TreeView, this.stateView.StateContextMenuStrip);
             // ProperGridManager before MenuSTripManager

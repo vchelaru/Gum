@@ -22,7 +22,6 @@ namespace Gum.Managers
 
         #region Fields
 
-        ContextMenuStrip mMenuStrip;
 
 
         ToolStripMenuItem mAddScreen;
