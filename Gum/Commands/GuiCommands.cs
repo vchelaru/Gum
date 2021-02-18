@@ -150,5 +150,19 @@ namespace Gum.Commands
         {
             ElementTreeViewManager.Self.FocusSearch();
         }
+
+        internal void ToggleToolVisibility()
+        {
+            var areToolsVisible = mMainWindow.LeftAndEverythingContainer.Panel1Collapsed == false;
+
+            if(areToolsVisible)
+            {
+                HideTools();
+            }
+            else
+            {
+                ShowTools();
+            }
+        }
     }
 }

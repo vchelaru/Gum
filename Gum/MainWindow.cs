@@ -24,6 +24,7 @@ using Gum.Commands;
 
 namespace Gum
 {
+    #region TabLocation Enum
     public enum TabLocation
     {
         [Obsolete("Use either CenterTop or CenterBottom")]
@@ -34,18 +35,21 @@ namespace Gum
         CenterBottom,
         Left
     }
+    #endregion
 
     public partial class MainWindow : Form
     {
+        #region Fields/Properties
+
         private System.Windows.Forms.Timer FileWatchTimer;
         private FlatRedBall.AnimationEditorForms.Controls.WireframeEditControl WireframeEditControl;
         private Wireframe.WireframeControl wireframeControl1;
         ScrollBarControlLogic scrollBarControlLogic;
         public System.Windows.Forms.FlowLayoutPanel ToolbarPanel;
         Panel gumEditorPanel;
-
-
         StateView stateView;
+
+        #endregion
 
         public MainWindow()
         {
@@ -93,7 +97,7 @@ namespace Gum
             gumEditorPanel.Controls.Add(this.wireframeControl1);
 
             CreateWireframeEditControl();
-            CreateToolbarPanel();
+            CreateEditorToolbarPanel();
 
 
             stateView = new StateView();
@@ -159,7 +163,7 @@ namespace Gum
             }
         }
 
-        private void CreateToolbarPanel()
+        private void CreateEditorToolbarPanel()
         {
             this.ToolbarPanel = new System.Windows.Forms.FlowLayoutPanel();
             gumEditorPanel.Controls.Add(this.ToolbarPanel);
@@ -198,6 +202,13 @@ namespace Gum
             this.wireframeControl1.DragDrop += new System.Windows.Forms.DragEventHandler(this.wireframeControl1_DragDrop);
             this.wireframeControl1.DragEnter += new System.Windows.Forms.DragEventHandler(this.wireframeControl1_DragEnter);
             this.wireframeControl1.MouseClick += new System.Windows.Forms.MouseEventHandler(this.wireframeControl1_MouseClick);
+            this.wireframeControl1.KeyDown += (o, args) =>
+            {
+                if(args.KeyCode == Keys.Tab)
+                {
+                    GumCommands.Self.GuiCommands.ToggleToolVisibility();
+                }
+            };
 
 
         }
