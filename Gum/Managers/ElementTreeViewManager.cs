@@ -15,6 +15,7 @@ using Gum.Wireframe;
 using Gum.DataTypes.Behaviors;
 using Gum.Plugins;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace Gum.Managers
 {
@@ -678,12 +679,13 @@ namespace Gum.Managers
 
             foreach (ScreenSave screenSave in ProjectManager.Self.GumProjectSave.Screens)
             {
-                if (GetTreeNodeFor(screenSave) == null && ShouldShow(screenSave))
+                var treeNode = GetTreeNodeFor(screenSave);
+                if (treeNode == null && ShouldShow(screenSave))
                 {
                     string fullPath = FileLocations.Self.ScreensFolder + FileManager.GetDirectory(screenSave.Name);
                     TreeNode parentNode = GetTreeNodeFor(fullPath);
 
-                    AddTreeNodeForElement(screenSave, parentNode, ScreenImageIndex);
+                    treeNode = AddTreeNodeForElement(screenSave, parentNode, ScreenImageIndex);
                 }
             }
 
@@ -863,7 +865,7 @@ namespace Gum.Managers
             #endregion
         }
 
-        private static void AddTreeNodeForElement(ElementSave element, TreeNode parentNode, int defaultImageIndex)
+        private static TreeNode AddTreeNodeForElement(ElementSave element, TreeNode parentNode, int defaultImageIndex)
         {
             if (parentNode == null)
             {
@@ -879,6 +881,8 @@ namespace Gum.Managers
             treeNode.Tag = element;
             
             parentNode.Nodes.Add(treeNode);
+
+            return treeNode;
         }
 
         private static void AddTreeNodeForBehavior(BehaviorSave behavior, TreeNode parentNode, int defaultImageIndex)
@@ -1118,12 +1122,19 @@ namespace Gum.Managers
             else if (node.Tag is InstanceSave)
             {
                 InstanceSave instanceSave = node.Tag as InstanceSave;
-                node.Text = instanceSave.Name;
+                // this if check improves speed quite a bit!
+                if(instanceSave.Name != node.Text)
+                {
+                    node.Text = instanceSave.Name;
+                }
             }
             else if(node.Tag is BehaviorSave)
             {
                 var behavior = node.Tag as BehaviorSave;
-                node.Text = behavior.Name;
+                if(behavior.Name != node.Text)
+                {
+                    node.Text = behavior.Name;
+                }
             }
 
             foreach (TreeNode treeNode in node.Nodes)
@@ -1147,8 +1158,27 @@ namespace Gum.Managers
                 }
             }
 
-            node.Text = FileManager.RemovePath(elementSave.Name);
-            node.Nodes.Clear();
+            var nodeText = FileManager.RemovePath(elementSave.Name);
+            if(nodeText != node.Text)
+            {
+                node.Text = nodeText;
+            }
+
+            var allTreeNodesRecursively = node.GetAllChildrenNodesRecursively();
+            
+            // why do we clear? wouldn't this require re-creation of all nodes? that seems like it might be slow...
+            //node.Nodes.Clear();
+            // Let's be smart about removal...
+            foreach(TreeNode instanceNode in allTreeNodesRecursively)
+            {
+                var instance = instanceNode.Tag as InstanceSave;
+
+                if(!allInstances.Contains(instance))
+                {
+                    instanceNode.Remove();
+                }
+            }
+
 
             foreach (InstanceSave instance in allInstances)
             {
@@ -1607,6 +1637,24 @@ namespace Gum.Managers
             {
                 return first.Text.CompareTo(second.Text) < 0;
             }
+        }
+
+        public static List<TreeNode> GetAllChildrenNodesRecursively(this TreeNode treeNode)
+        {
+            List<TreeNode> toReturn = new List<TreeNode>();
+
+            void Fill(TreeNode parent)
+            {
+                foreach(TreeNode child in parent.Nodes)
+                {
+                    toReturn.Add(child);
+                    Fill(child);
+                }
+            }
+
+            Fill(treeNode);
+
+            return toReturn;
         }
     }
 
