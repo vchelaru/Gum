@@ -17,8 +17,9 @@
                Background="{Binding StateBackground}" Content="{Binding StateInformation}" ></Label>
         <Label Grid.Row="1" Visibility="{Binding HasErrors}" Content="{Binding ErrorInformation}" ></Label>
         <Grid Grid.Row="2">
-            <WpfDataUi:DataUiGrid Grid.Row="1" Name="DataGrid" Visibility="{Binding ShowVariableGrid}">
-            </WpfDataUi:DataUiGrid>
+            <ScrollViewer Focusable="False" VerticalScrollBarVisibility="Auto">
+                <WpfDataUi:DataUiGrid Grid.Row="1" Name="DataGrid" Visibility="{Binding ShowVariableGrid}"/>
+            </ScrollViewer>
             <Grid Visibility="{Binding ShowBehaviorUi}">
                 <Grid.RowDefinitions>
                     <RowDefinition></RowDefinition>

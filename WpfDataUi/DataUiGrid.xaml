@@ -9,7 +9,7 @@
              d:DesignHeight="300" d:DesignWidth="300"
              >
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
+    <StackPanel>
         <ItemsControl Name="InternalControl" ItemsSource="{Binding Categories}">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
@@ -31,5 +31,5 @@
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
-    </ScrollViewer>
+    </StackPanel>
 </UserControl>
