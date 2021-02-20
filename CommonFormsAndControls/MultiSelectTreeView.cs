@@ -941,7 +941,6 @@ namespace CommonFormsAndControls
 
         #endregion
 
-
         #region IEnumerable<TreeNode> Members
 
         public IEnumerator<TreeNode> GetEnumerator()
