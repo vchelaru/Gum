@@ -1189,6 +1189,7 @@ namespace Gum.Managers
                     nodeForInstance = AddTreeNodeForInstance(instance, node);
                 }
 
+
                 if (expandedInstances.Contains(instance))
                 {
                     nodeForInstance.Expand();
@@ -1196,6 +1197,26 @@ namespace Gum.Managers
 
                 var siblingInstances = instance.GetSiblingsIncludingThis();
                 var desiredIndex = siblingInstances.IndexOf(instance);
+
+                var container = instance.ParentContainer;
+                var defaultState = container.DefaultState;
+                var thisParentValue = defaultState.GetValueOrDefault<string>($"{instance.Name}.Parent");
+
+                var desiredParentNode = node;
+                if(!string.IsNullOrEmpty(thisParentValue))
+                {
+                    var instanceParent = allInstances.FirstOrDefault(item => item.Name == thisParentValue);
+
+                    if(instanceParent != null)
+                    {
+                        desiredParentNode = GetTreeNodeFor(instanceParent, node);
+                    }
+                }
+                if(desiredParentNode != nodeForInstance.Parent)
+                {
+                    nodeForInstance.Remove();
+                    desiredParentNode.Nodes.Add(nodeForInstance);
+                }
 
                 var nodeParent = nodeForInstance.Parent;
                 if (desiredIndex != nodeParent.Nodes.IndexOf(nodeForInstance))

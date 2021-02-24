@@ -293,18 +293,18 @@ namespace Gum.Managers
 
                 if (draggedComponentOrElement is ElementSave)
                 {
-                    HandleDroppedElementSave(draggedComponentOrElement, treeNodeDroppedOn, targetTag);
+                    HandleDroppedElementSave(draggedComponentOrElement, treeNodeDroppedOn, targetTag, treeNodeDroppedOn);
                 }
                 else if (draggedComponentOrElement is InstanceSave)
                 {
-                    HandleDroppedInstance(draggedComponentOrElement, targetTag);
+                    HandleDroppedInstance(draggedComponentOrElement, treeNodeDroppedOn, targetTag);
                 }
             }
         }
 
         #region Drop Element (like components)
 
-        private void HandleDroppedElementSave(object draggedComponentOrElement, TreeNode treeNodeDroppedOn, object targetTag)
+        private void HandleDroppedElementSave(object draggedComponentOrElement, TreeNode treeNodeDroppedOn, object targetTag, TreeNode targetTreeNode)
         {
             ElementSave draggedAsElementSave = draggedComponentOrElement as ElementSave;
 
@@ -329,7 +329,7 @@ namespace Gum.Managers
                 if(newInstance != null)
                 {
                     // Since the user dropped on another instance, let's try to parent it:
-                    HandleDroppingInstanceOnTarget(targetInstance, newInstance, targetInstance.ParentContainer);
+                    HandleDroppingInstanceOnTarget(targetInstance, newInstance, targetInstance.ParentContainer, targetTreeNode);
                 }
 
             }
@@ -405,7 +405,7 @@ namespace Gum.Managers
 
         #region Drop Instance
 
-        private static void HandleDroppedInstance(object draggedObject, object targetObject)
+        private static void HandleDroppedInstance(object draggedObject, TreeNode targetTreeNode, object targetObject)
         {
             InstanceSave draggedAsInstanceSave = draggedObject as InstanceSave;
 
@@ -422,7 +422,7 @@ namespace Gum.Managers
             {
                 if (isSameElement)
                 {
-                    HandleDroppingInstanceOnTarget(targetObject, draggedAsInstanceSave, targetElementSave);
+                    HandleDroppingInstanceOnTarget(targetObject, draggedAsInstanceSave, targetElementSave, targetTreeNode);
 
                 }
                 else
@@ -435,7 +435,7 @@ namespace Gum.Managers
             }
         }
 
-        private static void HandleDroppingInstanceOnTarget(object targetObject, InstanceSave dragDroppedInstance, ElementSave targetElementSave)
+        private static void HandleDroppingInstanceOnTarget(object targetObject, InstanceSave dragDroppedInstance, ElementSave targetElementSave, TreeNode targetTreeNode)
         {
             if (targetObject != dragDroppedInstance)
             {
@@ -443,12 +443,10 @@ namespace Gum.Managers
             }
             string parentName;
             string variableName = dragDroppedInstance.Name + ".Parent";
-            if (targetObject is InstanceSave)
+            if (targetObject is InstanceSave targetInstance)
             {
                 // setting the parent:
-                parentName = (targetObject as InstanceSave).Name;
-
-
+                parentName = targetInstance.Name;
             }
             else
             {
@@ -463,6 +461,7 @@ namespace Gum.Managers
             stateToAssignOn.SetValue(variableName, parentName, "string");
             Gum.Undo.UndoManager.Self.RecordUndo();
             SetVariableLogic.Self.PropertyValueChanged("Parent", oldValue);
+            targetTreeNode?.Expand();
         }
 
         #endregion
