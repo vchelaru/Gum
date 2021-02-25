@@ -381,5 +381,33 @@ namespace ToolsUtilities
             }
             return false;
         }
+
+        public static void ReplaceLine(ref string contents, string contentsOfLineToReplace, string whatToReplaceWith)
+        {
+            int startOfLine;
+            int endOfLine;
+            GetStartAndEndOfLineContaining(contents, contentsOfLineToReplace, out startOfLine, out endOfLine);
+
+            if (startOfLine != -1)
+            {
+                contents = contents.Remove(startOfLine, endOfLine - startOfLine);
+                contents = contents.Insert(startOfLine, whatToReplaceWith);
+            }
+        }
+
+        public static void GetStartAndEndOfLineContaining(string contents, string whatToSearchFor, out int start, out int end)
+        {
+            int indexOfWhatToSearchFor = contents.IndexOf(whatToSearchFor);
+
+            start = -1;
+            end = -1;
+
+            if (indexOfWhatToSearchFor != -1)
+            {
+                start = contents.LastIndexOfAny(new char[] { '\n', '\r' }, indexOfWhatToSearchFor) + 1;
+                end = contents.IndexOfAny(new char[] { '\n', '\r' }, indexOfWhatToSearchFor);
+            }
+        }
+
     }
 }
