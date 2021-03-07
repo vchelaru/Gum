@@ -36,19 +36,34 @@ namespace Gum.Managers
 
             var gumProject = GumProjectSave;
 
+            // Although it's not valid, we want to prevent a dupe from breaking the plugin, so we
+            // need to do ContainsKey checks
+
             foreach (var screen in gumProject.Screens)
             {
-                cachedDictionary.Add(screen.Name.ToLowerInvariant(), screen);
+                var name = screen.Name.ToLowerInvariant();
+                if(!cachedDictionary.ContainsKey(name))
+                {
+                    cachedDictionary.Add(name, screen);
+                }
             }
 
             foreach(var component in gumProject.Components)
             {
-                cachedDictionary.Add(component.Name.ToLowerInvariant(), component);
+                var name = component.Name.ToLowerInvariant();
+                if (!cachedDictionary.ContainsKey(name))
+                {
+                    cachedDictionary.Add(name, component);
+                }
             }
 
             foreach (var standard in gumProject.StandardElements)
             {
-                cachedDictionary.Add(standard.Name.ToLowerInvariant(), standard);
+                var name = standard.Name.ToLowerInvariant();
+                if (!cachedDictionary.ContainsKey(name))
+                {
+                    cachedDictionary.Add(name, standard);
+                }
             }
         }
 
