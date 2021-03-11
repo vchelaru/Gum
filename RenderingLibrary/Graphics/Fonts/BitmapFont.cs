@@ -409,6 +409,10 @@ namespace RenderingLibrary.Graphics
                         int secondCharacter = StringFunctions.GetIntAfter("second=", fontPattern, index);
                         int kearningAmount = StringFunctions.GetIntAfter("amount=", fontPattern, index);
 
+                        if(mCharacterInfo[ID].SecondLetterKearning.ContainsKey(secondCharacter))
+                        {
+                            throw new InvalidOperationException($"Trying to add the character {secondCharacter} to the mCharacterInfo {ID}, but this entry already exists");
+                        }
                         mCharacterInfo[ID].SecondLetterKearning.Add(secondCharacter, kearningAmount);
 
                         index = fontPattern.IndexOf("first=", index + 1);
