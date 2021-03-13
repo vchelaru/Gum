@@ -385,7 +385,7 @@ namespace Gum.Wireframe
             int indexToStartAt = -1;
             if (skipSelected)
             {
-                if (selectedRepresentations.Length > 0)
+                if (selectedRepresentations?.Length > 0)
                 {
                     indexToStartAt = WireframeObjectManager.Self.AllIpsos.IndexOf(selectedRepresentations.First());
                 }
