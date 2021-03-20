@@ -113,6 +113,10 @@ namespace ToolsUtilities
 
         public FilePath(string path)
         {
+            if(string.IsNullOrEmpty(path))
+            {
+                throw new InvalidOperationException("Cannot create a FilePath with an empty string");
+            }
             Original = path;
         }
 
