@@ -1,13 +1,13 @@
-#if XBOX360 || WINDOWS_PHONE || SILVERLIGHT || WINDOWS_8 || IOS
+#if IOS
 #define NO_CODE_EMIT
 #endif
 
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-#if !XBOX360 && !ZUNE && !WINDOWS_PHONE
+
 using System.Reflection.Emit;
-#endif
+
 
 #if WpfDataUi
 namespace WpfDataUi
