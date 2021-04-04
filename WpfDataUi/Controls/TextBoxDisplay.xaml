@@ -6,10 +6,6 @@
              mc:Ignorable="d" >
     
     <Grid Margin="0,0,0,4">
-        <Grid.Resources>
-            <Color x:Key="HintTextColor">#222222</Color>
-            <SolidColorBrush x:Key="HintTextBrush" Color="{StaticResource HintTextColor}" />
-        </Grid.Resources>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Name="FirstColumn" Width="{Binding FirstGridLength}"></ColumnDefinition>
             <ColumnDefinition Width="*"></ColumnDefinition>
@@ -33,7 +29,7 @@
         </TextBox>
         <TextBlock x:Name="HintTextBlock" 
                    Padding="8,0,0,0" Grid.Row="1" 
-                   Grid.ColumnSpan="2" Foreground="{StaticResource HintTextBrush}" 
+                   Grid.ColumnSpan="2"  
                    TextWrapping="Wrap"
                    FontSize="10">
             This is a property description.

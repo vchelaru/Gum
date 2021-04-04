@@ -383,6 +383,20 @@ namespace Gum
 
         public TabPage AddWpfControl(System.Windows.Controls.UserControl control, string tabTitle, TabLocation tabLocation = TabLocation.Center)
         {
+            string AppTheme = "Light";
+            control.Resources = new System.Windows.ResourceDictionary();
+            control.Resources.Source = 
+                new Uri($"/Themes/{AppTheme}.xaml", UriKind.Relative);
+
+
+            //Style style = this.TryFindResource("UserControlStyle") as Style;
+            //if (style != null)
+            //{
+            //    this.Style = style;
+            //}
+
+            //ResourceDictionary = Resources;
+
             TabPage existingTabPage;
             TabControl existingTabControl;
             GetContainers(control, out existingTabPage, out existingTabControl);

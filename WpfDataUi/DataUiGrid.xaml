@@ -16,7 +16,7 @@
                     <!--  Each Expander is one MemberCategory -->
                     <Expander Header="{Binding Name}" Visibility="{Binding Visibility}" 
                               FontSize="{Binding FontSize}" 
-                              IsExpanded="True" BorderBrush="DarkGray" Margin="1"
+                              IsExpanded="True" Margin="1"
                               
                               local:DataGridAttachedProperties.HideExpanderArrow="{Binding HideHeader}"
                               >

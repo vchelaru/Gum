@@ -254,11 +254,10 @@ namespace WpfDataUi.DataTypes
             }
         }
 
-        Brush backgroundColor;
         public Brush BackgroundColor
         {
-            get { return backgroundColor; }
-            set { backgroundColor = value; }
+            get;
+            set;
         }
 
         string detailText;
