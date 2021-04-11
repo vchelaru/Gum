@@ -4018,28 +4018,8 @@ namespace Gum.Wireframe
                 if (propertyName == "SourceFile")
                 {
                     var asString = value as String;
-                    if (asString?.EndsWith(".achx") == true)
-                    {
-                        if (ToolsUtilities.FileManager.IsRelative(asString))
-                        {
-                            asString = ToolsUtilities.FileManager.RelativeDirectory + asString;
-
-                            asString = ToolsUtilities.FileManager.RemoveDotDotSlash(asString);
-                        }
-
-                        var animationChainListSave = Content.AnimationChain.AnimationChainListSave.FromFile(asString);
-
-                        this.mAnimationChains = animationChainListSave.ToAnimationChainList(null);
-
-                        RefreshCurrentChainToDesiredName();
-
-                        UpdateToCurrentAnimationFrame();
-                        handled = true;
-                    }
-                    else
-                    {
-                        handled = AssignSourceFileOnSprite(asString, sprite);
-                    }
+                    handled = AssignSourceFileOnSprite(asString, sprite);
+                    
                 }
                 else if (propertyName == "Alpha")
                 {
@@ -4396,12 +4376,50 @@ namespace Gum.Wireframe
         {
             bool handled;
 
+            var loaderManager =
+                global::RenderingLibrary.Content.LoaderManager.Self;
+
             if (string.IsNullOrEmpty(value))
             {
                 sprite.Texture = null;
                 sprite.AtlasedTexture = null;
 
                 UpdateLayout();
+            }
+            else if(value.EndsWith(".achx"))
+            {
+                if (ToolsUtilities.FileManager.IsRelative(value))
+                {
+                    value = ToolsUtilities.FileManager.RelativeDirectory + value;
+
+                    value = ToolsUtilities.FileManager.RemoveDotDotSlash(value);
+                }
+
+
+
+                AnimationChainList animationChainList = null;
+
+                if(loaderManager.CacheTextures)
+                {
+                    animationChainList = loaderManager.GetDisposable(value) as AnimationChainList;
+                }
+
+                if(animationChainList == null)
+                {
+                    var animationChainListSave = Content.AnimationChain.AnimationChainListSave.FromFile(value);
+                    animationChainList = animationChainListSave.ToAnimationChainList(null);
+                    if (loaderManager.CacheTextures)
+                    {
+                        loaderManager.AddDisposable(value, animationChainList);
+                    }
+                }
+
+                this.mAnimationChains = animationChainList;
+
+                RefreshCurrentChainToDesiredName();
+
+                UpdateToCurrentAnimationFrame();
+                handled = true;
             }
             else
             {
@@ -4413,7 +4431,7 @@ namespace Gum.Wireframe
                 }
 
                 // see if an atlas exists:
-                var atlasedTexture = global::RenderingLibrary.Content.LoaderManager.Self.TryLoadContent<AtlasedTexture>(value);
+                var atlasedTexture = loaderManager.TryLoadContent<AtlasedTexture>(value);
 
                 if (atlasedTexture != null)
                 {
@@ -4427,7 +4445,7 @@ namespace Gum.Wireframe
                     // not the GUE
                     try
                     {
-                        sprite.Texture = global::RenderingLibrary.Content.LoaderManager.Self.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(value);
+                        sprite.Texture = loaderManager.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(value);
                     }
                     catch (System.IO.FileNotFoundException)
                     {

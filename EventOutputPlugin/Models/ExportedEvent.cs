@@ -10,8 +10,9 @@ namespace EventOutputPlugin.Models
     {
         public string NewName { get; set; }
         public string OldName { get; set; }
+        public string ElementType { get; set; }
         public GumEventTypes EventType { get; set; }
-        public DateTime Timestamp { get; set; }
+        public DateTime TimestampUtc { get; set; }
     }
 
 

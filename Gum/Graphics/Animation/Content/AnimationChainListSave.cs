@@ -22,7 +22,7 @@ using TimeMeasurementUnit = Gum.Graphics.Animation.TimeMeasurementUnit;
 namespace Gum.Content.AnimationChain
 {
     [XmlType("AnimationChainArraySave")]
-    public class AnimationChainListSave
+    public class AnimationChainListSave : IDisposable
     {
 #if ANDROID || IOS
         public static bool ManualDeserialization = true;
@@ -246,6 +246,11 @@ namespace Gum.Content.AnimationChain
             }
 
             return list;
+        }
+
+        public void Dispose()
+        {
+            // do nothing, just need this to add it to the loader manager
         }
 
 

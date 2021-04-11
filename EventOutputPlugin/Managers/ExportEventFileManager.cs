@@ -54,7 +54,7 @@ namespace EventOutputPlugin.Managers
 
 
 
-        public static void ExportEvent(string newName, string oldName, GumEventTypes eventType)
+        public static void ExportEvent(string newName, string oldName, GumEventTypes eventType, string elementType)
         {
             if(!string.IsNullOrWhiteSpace(EventExportDirectory))
             {
@@ -63,8 +63,9 @@ namespace EventOutputPlugin.Managers
 
                 exportedEvent.NewName = newName;
                 exportedEvent.OldName = oldName;
+                exportedEvent.ElementType = elementType;
                 exportedEvent.EventType = eventType;
-                exportedEvent.Timestamp = DateTime.UtcNow;
+                exportedEvent.TimestampUtc = DateTime.UtcNow;
 
                 if(!Events.UserEvents.ContainsKey(username))
                 {
@@ -94,7 +95,7 @@ namespace EventOutputPlugin.Managers
                 var list = Events.UserEvents[key];
                 for (var i = list.Count - 1; i > -1; i--)
                 {
-                    if (list[i].Timestamp < cutoff)
+                    if (list[i].TimestampUtc < cutoff)
                     {
                         list.RemoveAt(i);
                     }

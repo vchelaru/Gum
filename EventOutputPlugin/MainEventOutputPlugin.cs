@@ -2,6 +2,7 @@
 using EventOutputPlugin.Models;
 using Gum;
 using Gum.DataTypes;
+using Gum.Managers;
 using Gum.Plugins;
 using Gum.Plugins.BaseClasses;
 using Gum.ToolStates;
@@ -51,21 +52,21 @@ namespace EventOutputPlugin
                 ExportEventFileManager.DeleteOldEventFiles();
 
             this.ElementAdd += (newElement) =>
-                ExportEventFileManager.ExportEvent(GetElementPrefix(newElement) + newElement.Name, null, GumEventTypes.ElementAdded);
+                ExportEventFileManager.ExportEvent(newElement.Name, null, GumEventTypes.ElementAdded, GetElementPrefix(newElement) );
             this.ElementDelete += (deletedElement) =>
-                ExportEventFileManager.ExportEvent(null, GetElementPrefix(deletedElement) + deletedElement.Name, GumEventTypes.ElementDeleted);
+                ExportEventFileManager.ExportEvent(null, deletedElement.Name, GumEventTypes.ElementDeleted, GetElementPrefix(deletedElement));
             this.ElementRename += (renamedElement, oldName) =>
-                ExportEventFileManager.ExportEvent(GetElementPrefix(renamedElement) + renamedElement.Name, oldName, GumEventTypes.ElementRenamed);
+                ExportEventFileManager.ExportEvent(renamedElement.Name, oldName, GumEventTypes.ElementRenamed, GetElementPrefix(renamedElement));
             this.StateRename += (renamedState, oldName) =>
-                ExportEventFileManager.ExportEvent(renamedState.Name, oldName, GumEventTypes.StateRenamed);
+                ExportEventFileManager.ExportEvent(renamedState.Name, oldName, GumEventTypes.StateRenamed, GetElementPrefix(renamedState.ParentContainer));
             this.CategoryRename += (renamedCategory, oldName) =>
-                ExportEventFileManager.ExportEvent(renamedCategory.Name, oldName, GumEventTypes.StateCategoryRenamed);
+                ExportEventFileManager.ExportEvent(renamedCategory.Name, oldName, GumEventTypes.StateCategoryRenamed, GetElementPrefix(ObjectFinder.Self.GetContainerOf(renamedCategory)));
             this.InstanceAdd += (element, newInstance) =>
-                ExportEventFileManager.ExportEvent(GetElementPrefix(element) + element + "." + newInstance.Name, null, GumEventTypes.InstanceAdded);
+                ExportEventFileManager.ExportEvent(element + "." + newInstance.Name, null, GumEventTypes.InstanceAdded, GetElementPrefix(element));
             this.InstanceRename += (element, instance, oldName) =>
-                ExportEventFileManager.ExportEvent(GetElementPrefix(element) + element + "." + instance.Name, element + "." + oldName, GumEventTypes.InstanceRenamed);
+                ExportEventFileManager.ExportEvent(element + "." + instance.Name, element + "." + oldName, GumEventTypes.InstanceRenamed, GetElementPrefix(element));
             this.InstanceDelete += (element, instance) =>
-                ExportEventFileManager.ExportEvent(null, GetElementPrefix(element) + element + "." + instance, GumEventTypes.InstanceDeleted);
+                ExportEventFileManager.ExportEvent(null,  element + "." + instance, GumEventTypes.InstanceDeleted, GetElementPrefix(element));
 
 
         }
@@ -74,15 +75,15 @@ namespace EventOutputPlugin
         {
             if (element is ScreenSave)
             {
-                return ElementReference.ScreenSubfolder + "/";
+                return ElementReference.ScreenSubfolder;
             }
             else if(element is ComponentSave)
             {
-                return ElementReference.ComponentSubfolder + "/";
+                return ElementReference.ComponentSubfolder;
             }
             else if(element is StandardElementSave)
             {
-                return ElementReference.StandardSubfolder + "/";
+                return ElementReference.StandardSubfolder;
             }
             else
             {
