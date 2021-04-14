@@ -4470,7 +4470,9 @@ namespace Gum.Wireframe
             if (propertyName == "Text")
             {
                 var asText = ((Text)mContainedObjectAsIpso);
-                if (this.WidthUnits == DimensionUnitType.RelativeToChildren)
+                if (this.WidthUnits == DimensionUnitType.RelativeToChildren ||
+                    // If height is relative to children, it could be in a stack
+                    this.HeightUnits == DimensionUnitType.RelativeToChildren)
                 {
                     // make it have no line wrap width before assignign the text:
                     asText.Width = 0;
@@ -4478,7 +4480,9 @@ namespace Gum.Wireframe
 
                 asText.RawText = value as string;
                 // we want to update if the text's size is based on its "children" (the letters it contains)
-                if (this.WidthUnits == DimensionUnitType.RelativeToChildren)
+                if (this.WidthUnits == DimensionUnitType.RelativeToChildren ||
+                    // If height is relative to children, it could be in a stack
+                    this.HeightUnits == DimensionUnitType.RelativeToChildren)
                 {
                     UpdateLayout();
                 }
@@ -4488,7 +4492,9 @@ namespace Gum.Wireframe
             {
                 ((Text)mContainedObjectAsIpso).FontScale = (float)value;
                 // we want to update if the text's size is based on its "children" (the letters it contains)
-                if (this.WidthUnits == DimensionUnitType.RelativeToChildren)
+                if (this.WidthUnits == DimensionUnitType.RelativeToChildren ||
+                    // If height is relative to children, it could be in a stack
+                    this.HeightUnits == DimensionUnitType.RelativeToChildren)
                 {
                     UpdateLayout();
                 }
@@ -4501,7 +4507,9 @@ namespace Gum.Wireframe
 
                 UpdateToFontValues();
                 // we want to update if the text's size is based on its "children" (the letters it contains)
-                if (this.WidthUnits == DimensionUnitType.RelativeToChildren)
+                if (this.WidthUnits == DimensionUnitType.RelativeToChildren ||
+                    // If height is relative to children, it could be in a stack
+                    this.HeightUnits == DimensionUnitType.RelativeToChildren)
                 {
                     UpdateLayout();
                 }
@@ -4513,7 +4521,9 @@ namespace Gum.Wireframe
                 this.UseCustomFont = (bool)value;
                 UpdateToFontValues();
                 // we want to update if the text's size is based on its "children" (the letters it contains)
-                if (this.WidthUnits == DimensionUnitType.RelativeToChildren)
+                if (this.WidthUnits == DimensionUnitType.RelativeToChildren ||
+                    // If height is relative to children, it could be in a stack
+                    this.HeightUnits == DimensionUnitType.RelativeToChildren)
                 {
                     UpdateLayout();
                 }
@@ -4525,7 +4535,9 @@ namespace Gum.Wireframe
                 CustomFontFile = (string)value;
                 UpdateToFontValues();
                 // we want to update if the text's size is based on its "children" (the letters it contains)
-                if (this.WidthUnits == DimensionUnitType.RelativeToChildren)
+                if (this.WidthUnits == DimensionUnitType.RelativeToChildren ||
+                    // If height is relative to children, it could be in a stack
+                    this.HeightUnits == DimensionUnitType.RelativeToChildren)
                 {
                     UpdateLayout();
                 }
@@ -4537,7 +4549,9 @@ namespace Gum.Wireframe
                 FontSize = (int)value;
                 UpdateToFontValues();
                 // we want to update if the text's size is based on its "children" (the letters it contains)
-                if (this.WidthUnits == DimensionUnitType.RelativeToChildren)
+                if (this.WidthUnits == DimensionUnitType.RelativeToChildren ||
+                    // If height is relative to children, it could be in a stack
+                    this.HeightUnits == DimensionUnitType.RelativeToChildren)
                 {
                     UpdateLayout();
                 }
@@ -4548,7 +4562,9 @@ namespace Gum.Wireframe
                 OutlineThickness = (int)value;
                 UpdateToFontValues();
                 // we want to update if the text's size is based on its "children" (the letters it contains)
-                if (this.WidthUnits == DimensionUnitType.RelativeToChildren)
+                if (this.WidthUnits == DimensionUnitType.RelativeToChildren ||
+                    // If height is relative to children, it could be in a stack
+                    this.HeightUnits == DimensionUnitType.RelativeToChildren)
                 {
                     UpdateLayout();
                 }
@@ -4559,7 +4575,9 @@ namespace Gum.Wireframe
                 IsItalic = (bool)value;
                 UpdateToFontValues();
                 // we want to update if the text's size is based on its "children" (the letters it contains)
-                if (this.WidthUnits == DimensionUnitType.RelativeToChildren)
+                if (this.WidthUnits == DimensionUnitType.RelativeToChildren ||
+                    // If height is relative to children, it could be in a stack
+                    this.HeightUnits == DimensionUnitType.RelativeToChildren)
                 {
                     UpdateLayout();
                 }
@@ -4569,7 +4587,9 @@ namespace Gum.Wireframe
             {
                 useFontSmoothing = (bool)value;
                 UpdateToFontValues();
-                if (this.WidthUnits == DimensionUnitType.RelativeToChildren)
+                if (this.WidthUnits == DimensionUnitType.RelativeToChildren ||
+                    // If height is relative to children, it could be in a stack
+                    this.HeightUnits == DimensionUnitType.RelativeToChildren)
                 {
                     UpdateLayout();
                 }
