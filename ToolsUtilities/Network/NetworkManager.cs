@@ -36,11 +36,16 @@ namespace ToolsUtilitiesStandard.Network
                 using (var response = await _httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead))
                 {
                     var totalBytes = response.Content.Headers.ContentLength;
-                    progressChanged(totalBytes, 0);
+                    progressChanged?.Invoke(totalBytes, 0);
 
                     if(destination.Exists())
                     {
                         System.IO.File.Delete(destination.FullPath);
+                    }
+
+                    if(!Directory.Exists(destination.GetDirectoryContainingThis().FullPath))
+                    {
+                        System.IO.Directory.CreateDirectory(destination.GetDirectoryContainingThis().FullPath);
                     }
 
                     using (var contentStream = await response.Content.ReadAsStreamAsync())
@@ -74,7 +79,7 @@ namespace ToolsUtilitiesStandard.Network
                 if (bytesRead == 0)
                 {
                     isMoreToRead = false;
-                    progressChanged(totalDownloadSize, totalBytesRead);
+                    progressChanged?.Invoke(totalDownloadSize, totalBytesRead);
                     continue;
                 }
 
@@ -83,7 +88,7 @@ namespace ToolsUtilitiesStandard.Network
                 totalBytesRead += bytesRead;
                 readCount += 1;
 
-                progressChanged(totalDownloadSize, totalBytesRead);
+                progressChanged?.Invoke(totalDownloadSize, totalBytesRead);
 
             }
             while (isMoreToRead);
