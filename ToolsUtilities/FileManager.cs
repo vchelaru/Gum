@@ -737,6 +737,10 @@ namespace ToolsUtilities
     public static partial class FileManager
     {
 #if !UWP
+
+        public static string UserApplicationData =>
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + @"\";
+
         public static void CopyFilesRecursively(string source, string target)
         {
             DirectoryInfo sourceDirectory = new DirectoryInfo(source);
