@@ -20,7 +20,7 @@ namespace EventOutputPlugin.Managers
             get
             {
 
-                if (ProjectState.Self.GumProjectSave != null)
+                if (string.IsNullOrEmpty(ProjectState.Self.ProjectDirectory) == false)
                 {
                     return Path.Combine(ProjectState.Self.ProjectDirectory, "EventExport");
                 }
@@ -35,7 +35,10 @@ namespace EventOutputPlugin.Managers
         {
             get
             {
-                return Path.Combine(EventExportDirectory, masterFileName);
+                if (string.IsNullOrEmpty(EventExportDirectory) == false)
+                    return Path.Combine(EventExportDirectory, masterFileName);
+                else
+                    return null;
             }
         }
 
@@ -123,11 +126,13 @@ namespace EventOutputPlugin.Managers
 
         static void SaveEventCollection()
         {
-            var file = new FilePath(EventFileFullPath);
-            // using indented formatting results in "unminified" JSON. This is desired
-            // to prevent merge conflicts.
-            var serialized = JsonConvert.SerializeObject(Events, Formatting.Indented);
-            GumCommands.Self.TryMultipleTimes(
+            if (string.IsNullOrEmpty(EventFileFullPath) == false)
+            {
+                var file = new FilePath(EventFileFullPath);
+                // using indented formatting results in "unminified" JSON. This is desired
+                // to prevent merge conflicts.
+                var serialized = JsonConvert.SerializeObject(Events, Formatting.Indented);
+                GumCommands.Self.TryMultipleTimes(
                     () =>
                     {
                         var directoryName = file.GetDirectoryContainingThis().FullPath;
@@ -135,6 +140,7 @@ namespace EventOutputPlugin.Managers
                         System.IO.Directory.CreateDirectory(directoryName);
                         System.IO.File.WriteAllText(file.FullPath, serialized);
                     });
+            }
         }
 
         
