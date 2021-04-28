@@ -87,7 +87,7 @@ namespace GumRuntime
             {
 
                 case "Container":
-
+                case "Component": // this should never be set in Gum, but there could be XML errors or someone could have used an old Gum...
                     if(GraphicalUiElement.ShowLineRectangles)
                     {
                         LineRectangle lineRectangle = new LineRectangle(systemManagers);

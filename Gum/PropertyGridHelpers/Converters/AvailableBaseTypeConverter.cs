@@ -48,12 +48,17 @@ namespace Gum.PropertyGridHelpers.Converters
             }
             else
             {
-                // We used to use this, but why not just use the standard elements becuase those 
+                // We used to use this enum, but why not just use the standard elements becuase those 
                 // can be modified by plugins:
                 //values.AddRange(Enum.GetNames(typeof(StandardElementTypes)));
                 foreach(var standard in gumProject.StandardElements)
                 {
-                    values.Add(standard.Name);
+                    // Component is a special base type but we don't actually want to inherit from component.
+                    // The closest match would actually be "Container" so let's use that...
+                    if(standard.Name != "Component")
+                    {
+                        values.Add(standard.Name);
+                    }
                 }
 
                 foreach (ComponentSave componentSave in gumProject.Components)
