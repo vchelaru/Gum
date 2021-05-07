@@ -36,6 +36,7 @@ namespace SkiaGum
         Func<Task> customClickEventToRaise;
         Func<float, float, Task> customTouchEvent;
 
+        BindableGraphicalUiElement elementPushed;
 
         #endregion
 
@@ -46,8 +47,7 @@ namespace SkiaGum
             base.Touch += HandleTouch;
         }
 
-
-        BindableGraphicalUiElement elementPushed;
+        #region Touch-related logic
 
         private async void HandleTouch(object sender, SKTouchEventArgs args)
         {
@@ -167,6 +167,60 @@ namespace SkiaGum
             }
         }
 
+        private async Task TryClickOnContainedGumObjects(float x, float y)
+        {
+            var clickableElement = FindClickableElement(x, y, GumElementsInternal);
+
+            if(clickableElement != null)
+            {
+                var canProceed = await ExclusiveUiInteractionSemaphor.WaitAsync(0);
+
+                if (canProceed)
+                {
+                    try
+                    {
+                        await clickableElement.ClickedAsync();
+                    }
+                    finally
+                    {
+                        ExclusiveUiInteractionSemaphor.Release(1);
+                    }
+                }
+            }
+        }
+
+        public void SetClickEvent(Func<Task> eventToRaise)
+        {
+            customClickEventToRaise = eventToRaise;
+            EnableTouchEvents = true;
+        }
+
+        public async Task RaiseClickEvent()
+        {
+            if (customClickEventToRaise != null)
+            {
+                var canProceed = await ExclusiveUiInteractionSemaphor.WaitAsync(0);
+
+                if (canProceed)
+                {
+                    try
+                    {
+                        await customClickEventToRaise();
+                    }
+                    finally
+                    {
+                        ExclusiveUiInteractionSemaphor.Release(1);
+                    }
+                }
+            }
+        }
+
+        public void SetTouchEvent(Func<float, float, Task> eventHandlingXY)
+        {
+            customTouchEvent = eventHandlingXY;
+            EnableTouchEvents = true;
+        }
+
         private BindableGraphicalUiElement FindClickableElement(float x, float y, IList<BindableGraphicalUiElement> list)
         {
             for (int i = 0; i < list.Count; i++)
@@ -195,28 +249,6 @@ namespace SkiaGum
             return null;
         }
 
-        private async Task TryClickOnContainedGumObjects(float x, float y)
-        {
-            var clickableElement = FindClickableElement(x, y, GumElementsInternal);
-
-            if(clickableElement != null)
-            {
-                var canProceed = await ExclusiveUiInteractionSemaphor.WaitAsync(0);
-
-                if (canProceed)
-                {
-                    try
-                    {
-                        await clickableElement.ClickedAsync();
-                    }
-                    finally
-                    {
-                        ExclusiveUiInteractionSemaphor.Release(1);
-                    }
-                }
-            }
-        }
-
         private void HandleCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             switch(e.Action)
@@ -233,6 +265,8 @@ namespace SkiaGum
                     break;
             }
         }
+
+        #endregion
 
         public void Add(BindableGraphicalUiElement toAdd)
         {
@@ -271,7 +305,7 @@ namespace SkiaGum
                     ((IRenderable)element).Render(canvas);
                 }
             }
-            //canvas.Restore();
+            base.OnPaintSurface(args);
         }
 
         public GraphicalUiElement GetViewAt(float x, float y)
@@ -289,38 +323,6 @@ namespace SkiaGum
             });
 
             return found;
-        }
-
-        public void SetClickEvent(Func<Task> eventToRaise)
-        {
-            customClickEventToRaise = eventToRaise;
-            EnableTouchEvents = true;
-        }
-
-        public void SetTouchEvent(Func<float, float, Task> eventHandlingXY)
-        {
-            customTouchEvent = eventHandlingXY;
-            EnableTouchEvents = true;
-        }
-
-        public async Task RaiseClickEvent()
-        {
-            if (customClickEventToRaise != null)
-            {
-                var canProceed = await ExclusiveUiInteractionSemaphor.WaitAsync(0);
-
-                if (canProceed)
-                {
-                    try
-                    {
-                        await customClickEventToRaise();
-                    }
-                    finally
-                    {
-                        ExclusiveUiInteractionSemaphor.Release(1);
-                    }
-                }
-            }
         }
     }
 }
