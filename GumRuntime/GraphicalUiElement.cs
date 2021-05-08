@@ -3772,6 +3772,9 @@ namespace Gum.Wireframe
             {
                 switch (propertyName)
                 {
+                    case nameof(Animate):
+                        this.Animate = (bool)value;
+                        break;
                     case "Children Layout":
                         this.ChildrenLayout = (ChildrenLayout)value;
                         toReturn = true;

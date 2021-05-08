@@ -29,7 +29,7 @@ namespace Gum.PropertyGridHelpers
 
         static HashSet<string> PropertiesSupportingIncrementalChange = new HashSet<string>
         {
-
+            "Animate",
             "Alpha",
             "Blue",
             "CurrentChainName",
