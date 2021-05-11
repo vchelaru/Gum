@@ -239,6 +239,8 @@ namespace Gum.Managers
 
         public TreeNode RootBehaviorsTreeNode => mBehaviorsTreeNode;
 
+        System.Windows.Forms.Cursor AddCursor { get; set; }
+
         #endregion
 
         #region Methods
@@ -424,8 +426,11 @@ namespace Gum.Managers
         #endregion
 
 
-        public void Initialize(IContainer components, ImageList ElementTreeImages, ContextMenuStrip contextMenuStrip)
+        public void Initialize(IContainer components, ImageList ElementTreeImages,
+            System.Windows.Forms.Cursor addCursor)
         {
+            AddCursor = addCursor;
+
             CreateObjectTreeView(ElementTreeImages);
 
             CreateContextMenuStrip(components);
@@ -553,20 +558,18 @@ namespace Gum.Managers
             this.ObjectTreeView.SelectedNodes = ((System.Collections.Generic.List<System.Windows.Forms.TreeNode>)(resources.GetObject("ObjectTreeView.SelectedNodes")));
             this.ObjectTreeView.Size = new System.Drawing.Size(196, 621);
             this.ObjectTreeView.TabIndex = 0;
-            this.ObjectTreeView.AfterClickSelect += new System.Windows.Forms.TreeViewEventHandler(this.ObjectTreeView_AfterClickSelect);
-            this.ObjectTreeView.ItemDrag += new System.Windows.Forms.ItemDragEventHandler(this.ObjectTreeView_ItemDrag);
-            this.ObjectTreeView.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.ObjectTreeView_AfterSelect_1);
-            this.ObjectTreeView.KeyDown += new System.Windows.Forms.KeyEventHandler(this.ObjectTreeView_KeyDown);
-            this.ObjectTreeView.MouseClick += new System.Windows.Forms.MouseEventHandler(this.ObjectTreeView_MouseClick);
-            this.ObjectTreeView.MouseMove += new System.Windows.Forms.MouseEventHandler(this.ObjectTreeView_MouseMove);
+            this.ObjectTreeView.AfterClickSelect += this.ObjectTreeView_AfterClickSelect;
+            this.ObjectTreeView.AfterSelect += this.ObjectTreeView_AfterSelect_1;
+            this.ObjectTreeView.KeyDown += this.ObjectTreeView_KeyDown;
+            this.ObjectTreeView.MouseClick += this.ObjectTreeView_MouseClick;
+            this.ObjectTreeView.MouseMove += (sender, e) => HandleMouseOver(e.X, e.Y);
             ObjectTreeView.DragDrop += HandleDragDropEvent;
 
             ObjectTreeView.ItemDrag += (sender, e) =>
             {
-                TreeNode node = e.Item as TreeNode;
+                DragDropManager.Self.OnItemDrag(e.Item);
 
-                ObjectTreeView.DoDragDrop(node, DragDropEffects.Move | DragDropEffects.Copy);
-
+                ObjectTreeView.DoDragDrop(e.Item, DragDropEffects.Move | DragDropEffects.Copy);
             };
 
             ObjectTreeView.DragEnter += (sender, e) =>
@@ -578,6 +581,24 @@ namespace Gum.Managers
             ObjectTreeView.DragOver += (sender, e) =>
             {
                 e.Effect = DragDropEffects.Move;
+            };
+
+            ObjectTreeView.GiveFeedback += (sender, e) =>
+            {
+                // Use custom cursors if the check box is checked.
+                // Sets the custom cursor based upon the effect.
+                //InputManager.
+                if(InputLibrary.Cursor.Self.IsInWindow)
+                {
+                    e.UseDefaultCursors = false;
+                    System.Windows.Forms.Cursor.Current = AddCursor;
+                }
+
+
+                //if ((e.Effect & DragDropEffects.Move) == DragDropEffects.Move)
+                //    Cursor.Current = MyNormalCursor;
+                //else
+                //    Cursor.Current = MyNoDropCursor;
             };
         }
 
@@ -1364,16 +1385,6 @@ namespace Gum.Managers
         private void ObjectTreeView_KeyDown(object sender, KeyEventArgs e)
         {
             ElementTreeViewManager.Self.HandleKeyDown(e);
-        }
-
-        private void ObjectTreeView_ItemDrag(object sender, ItemDragEventArgs e)
-        {
-            DragDropManager.Self.OnItemDrag(e.Item);
-        }
-
-        private void ObjectTreeView_MouseMove(object sender, MouseEventArgs e)
-        {
-            HandleMouseOver(e.X, e.Y);
         }
 
 

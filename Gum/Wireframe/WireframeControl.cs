@@ -211,14 +211,9 @@ namespace Gum.Wireframe
 
                     SpriteManager.Self.Activity(TimeManager.Self.CurrentTime);
 
-                    DragDropManager.Self.Activity();
 
                     InputLibrary.Cursor.Self.Activity(TimeManager.Self.CurrentTime);
                     InputLibrary.Keyboard.Self.Activity();
-                    if (InputLibrary.Keyboard.Self.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Space))
-                    {
-                        int m = 3;
-                    }
 
                     bool isOver = this.mTopRuler.HandleXnaUpdate(InputLibrary.Cursor.Self.IsInWindow) ||
                         mLeftRuler.HandleXnaUpdate(InputLibrary.Cursor.Self.IsInWindow);
@@ -230,10 +225,9 @@ namespace Gum.Wireframe
 
                     // Update 1/15/2019
                     // When the user uses scroll bars we get selection to underlying objects.
-                    // We want to not have that happen, so we'll check if the mouse has entered
-                    // the control. I may have to update this at some point to force deselection
-                    // if the mouse has not entered so things don't stay highlighted when exiting
-                    // the control
+                    // We don't want that, so we'll check if the mouse has entered the control.
+                    // I may have to update this at some point to force deselection if the mouse
+                    // has not entered so things don't stay highlighted when exiting the control
                     // Update 2 - yea, we def need to pass in mouseHasEntered == false to force no highlight
                     
                     if (mTopRuler.IsCursorOver == false && mLeftRuler.IsCursorOver == false)
@@ -244,6 +238,7 @@ namespace Gum.Wireframe
 
                         SelectionManager.Self.LateActivity();
                     }
+                    DragDropManager.Self.Activity();
 
                     InputLibrary.Cursor.Self.EndCursorSettingFrameStart();
                 }

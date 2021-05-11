@@ -109,6 +109,7 @@ namespace Gum
 
             TypeManager.Self.Initialize();
 
+            var addCursor = new System.Windows.Forms.Cursor(this.GetType(), "Content.Cursors.AddCursor.cur");
             // Vic says - I tried
             // to instantiate the ElementTreeImages
             // in the ElementTreeViewManager. I move 
@@ -118,7 +119,7 @@ namespace Gum
             // beyond the generation of code which isn't working when
             // I move it to custom code. Oh well, maybe one day I'll move
             // to a wpf window and can get rid of this
-            ElementTreeViewManager.Self.Initialize(this.components, ElementTreeImages, ContextMenuStrip);
+            ElementTreeViewManager.Self.Initialize(this.components, ElementTreeImages, addCursor);
             // State Tree ViewManager needs init before MenuStripManager
             StateTreeViewManager.Self.Initialize(this.stateView.TreeView, this.stateView.StateContextMenuStrip);
             // ProperGridManager before MenuStripManager
@@ -132,7 +133,9 @@ namespace Gum
 
             
             ToolCommands.GuiCommands.Self.Initialize(wireframeControl1);
-            Wireframe.WireframeObjectManager.Self.Initialize(WireframeEditControl, wireframeControl1);
+
+
+            Wireframe.WireframeObjectManager.Self.Initialize(WireframeEditControl, wireframeControl1, addCursor);
 
             wireframeControl1.XnaUpdate += () =>
                 Wireframe.WireframeObjectManager.Self.Activity();
@@ -199,9 +202,22 @@ namespace Gum
             this.wireframeControl1.TabIndex = 0;
             this.wireframeControl1.Text = "wireframeControl1";
 
-            this.wireframeControl1.DragDrop += new System.Windows.Forms.DragEventHandler(this.wireframeControl1_DragDrop);
-            this.wireframeControl1.DragEnter += new System.Windows.Forms.DragEventHandler(this.wireframeControl1_DragEnter);
+            this.wireframeControl1.DragDrop += DragDropManager.Self.HandleFileDragDrop;
+            this.wireframeControl1.DragEnter += DragDropManager.Self.HandleFileDragEnter;
+            this.wireframeControl1.DragOver += (sender, e) =>
+            {
+                //this.DoDragDrop(e.Data, DragDropEffects.Move | DragDropEffects.Copy);
+                //DragDropManager.Self.HandleDragOver(sender, e);
+
+            };
+
+            this.wireframeControl1.QueryContinueDrag += (sender, args) =>
+            {
+                args.Action = DragAction.Continue;
+            };
+
             this.wireframeControl1.MouseClick += new System.Windows.Forms.MouseEventHandler(this.wireframeControl1_MouseClick);
+
             this.wireframeControl1.KeyDown += (o, args) =>
             {
                 if(args.KeyCode == Keys.Tab)
@@ -357,15 +373,7 @@ namespace Gum
 
         }
 
-        private void wireframeControl1_DragEnter(object sender, DragEventArgs e)
-        {
-            DragDropManager.Self.HandleFileDragEnter(sender, e);
-        }
 
-        private void wireframeControl1_DragDrop(object sender, DragEventArgs e)
-        {
-            DragDropManager.Self.HandleFileDragDrop(sender, e);
-        }
 
         public TabPage AddWinformsControl(Control control, string tabTitle, TabLocation tabLocation)
         {

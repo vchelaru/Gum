@@ -20,6 +20,7 @@ using Gum.PropertyGridHelpers;
 using System.Drawing;
 using Gum.Converters;
 using Gum.Logic;
+using System.Windows.Input;
 
 namespace Gum.Managers
 {
@@ -66,6 +67,10 @@ namespace Gum.Managers
             Renderer.Self.Camera.ScreenToWorld(Cursor.X, Cursor.Y, out worldX, out worldY);
             string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
 
+            if(files == null)
+            {
+                return;
+            }
 
             var handled = false;
             bool shouldUpdate = false;
@@ -229,35 +234,36 @@ namespace Gum.Managers
 
         public void Activity()
         {
-            if (!Cursor.PrimaryDownIgnoringIsInWindow)
+            if (mDraggedItem != null)
             {
-                if (mDraggedItem != null)
+                // May 11, 2021
+                // I thought that
+                // we had to manually
+                // set the cursor here
+                // if drag+dropping a tree
+                // node. It turns out that this
+                // is handled by HandleFileDragEnter
+                //if (InputLibrary.Cursor.Self.IsInWindow)
+                //{
+                //    InputLibrary.Cursor.Self.SetWinformsCursor(
+                //        System.Windows.Forms.Cursors.Arrow);
+
+                //}
+
+                if (!Cursor.PrimaryDownIgnoringIsInWindow)
                 {
                     List<TreeNode> treeNodesToDrop = GetTreeNodesToDrop();
 
-                    // I don't know if we need this now that we're moving to things being event based:
-                    //mDraggedItem = null; // to prevent this from getting hit again if a message box is up
                     foreach (var draggedTreeNode in treeNodesToDrop)
                     {
                         object draggedObject = draggedTreeNode.Tag;
 
-                        bool handled = false;
-
-                        HandleDroppedItemInWireframe(draggedObject, out handled);
+                        HandleDroppedItemInWireframe(draggedObject, out bool handled);
 
                         if(handled)
                         {
                             mDraggedItem = null;
                         }
-                        // This used to be handled here, but now we handle it with events so it's not tied to fps
-                        //if (!handled)
-                        //{
-                        //    TreeNode targetTreeNode = ElementTreeViewManager.Self.GetTreeNodeOver();
-                        //    if (targetTreeNode != draggedTreeNode)
-                        //    {
-                        //        HandleDroppedItemOnTreeView(draggedObject, targetTreeNode);
-                        //    }
-                        //}
                     }
                 }
             }
@@ -613,9 +619,26 @@ namespace Gum.Managers
 
         internal void HandleFileDragEnter(object sender, DragEventArgs e)
         {
-            if (CanDrop() && e.Data.GetDataPresent(DataFormats.FileDrop))
+            UpdateEffectsForDragging(e);
+        }
+
+        internal void HandleDragOver(object sender, DragEventArgs e)
+        {
+            UpdateEffectsForDragging(e);
+        }
+
+        private void UpdateEffectsForDragging(DragEventArgs e)
+        {
+            if (CanDrop())
             {
-                e.Effect = DragDropEffects.Copy;
+                if (e.Data.GetDataPresent(DataFormats.FileDrop))
+                {
+                    e.Effect = DragDropEffects.Copy;
+                }
+                else if (mDraggedItem != null)
+                {
+                    e.Effect = DragDropEffects.Copy;
+                }
             }
         }
 

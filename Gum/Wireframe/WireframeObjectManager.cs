@@ -110,12 +110,16 @@ namespace Gum.Wireframe
             private set;
         }
 
+        public System.Windows.Forms.Cursor AddCursor { get; private set; }
+
         #endregion
 
         #region Initialize
 
-        public void Initialize(WireframeEditControl editControl, WireframeControl wireframeControl)
+        public void Initialize(WireframeEditControl editControl, WireframeControl wireframeControl, System.Windows.Forms.Cursor addCursor)
         {
+            AddCursor = addCursor;
+
             mWireframeControl = wireframeControl;
             mWireframeControl.AfterXnaInitialize += HandleAfterXnaIntiailize;
 
