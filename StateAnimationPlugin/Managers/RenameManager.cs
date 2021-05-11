@@ -1,6 +1,8 @@
-﻿using Gum.DataTypes;
+﻿using Gum;
+using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
+using Gum.ToolStates;
 using StateAnimationPlugin.SaveClasses;
 using StateAnimationPlugin.ViewModels;
 using System;
@@ -16,28 +18,52 @@ namespace StateAnimationPlugin.Managers
     {
         public void HandleRename(ElementSave elementSave, string oldName, ElementAnimationsViewModel viewModel)
         {
-            // save the new:
-            bool succeeded = false;
-            try
+            if (elementSave == viewModel?.Element)
             {
-                AnimationCollectionViewModelManager.Self.Save(viewModel);
-                succeeded = true;
-            }
-            catch
-            {
-                succeeded = false;
-            }
-
-            if(succeeded)
-            {
-                var oldFileName = AnimationCollectionViewModelManager.Self.GetAbsoluteAnimationFileNameFor(oldName);
-
-                if(System.IO.File.Exists(oldFileName))
+                // save the new:
+                bool succeeded = false;
+                try
                 {
-                    System.IO.File.Delete(oldFileName);
+                    AnimationCollectionViewModelManager.Self.Save(viewModel);
+                    succeeded = true;
+                }
+                catch
+                {
+                    succeeded = false;
+                }
+
+                if (succeeded)
+                {
+                    var oldFileName = AnimationCollectionViewModelManager.Self.GetAbsoluteAnimationFileNameFor(oldName);
+
+                    if (System.IO.File.Exists(oldFileName))
+                    {
+                        System.IO.File.Delete(oldFileName);
+                    }
+                }
+            }
+            else // renaming an element that is not currently selected. See if it has an animation, and if so move it
+            {
+                var projectDirectory = FileManager.GetDirectory(ProjectManager.Self.GumProjectSave.FullFileName);
+
+                var oldFile = new FilePath( projectDirectory + elementSave.Subfolder + "/" + oldName + "Animations.ganx");
+                
+                if(oldFile.Exists())
+                {
+                    var newFile = new FilePath(projectDirectory + elementSave.Subfolder + "/" + elementSave.Name + "Animations.ganx");
+
+                    var newDirectory = newFile.GetDirectoryContainingThis();
+
+                    if(System.IO.Directory.Exists(newDirectory.FullPath) == false)
+                    {
+                        System.IO.Directory.CreateDirectory(newDirectory.FullPath);
+                    }
+
+                    System.IO.File.Move(oldFile.FullPath, newFile.FullPath);
                 }
             }
         }
+
 
 
         public void HandleRename(InstanceSave instanceSave, string oldName, ElementAnimationsViewModel viewModel)
@@ -64,13 +90,23 @@ namespace StateAnimationPlugin.Managers
 
         public void HandleRename(StateSave stateSave, string oldName, ElementAnimationsViewModel viewModel)
         {
+            var parentCategory = SelectedState.Self.SelectedElement?.Categories.First(item => item.States.Contains(stateSave));
+
+            string prefix = "";
+            if(parentCategory != null)
+            {
+                prefix = parentCategory + "/";
+            }
+
+            oldName = prefix + oldName;
+
             foreach(var animation in viewModel.Animations)
             {
                 foreach(var keyframe in animation.Keyframes)
                 {
                     if(keyframe.StateName == oldName)
                     {
-                        keyframe.StateName = stateSave.Name;
+                        keyframe.StateName = prefix + stateSave.Name;
                     }
                 }
             }

@@ -14,7 +14,10 @@ using System.Windows;
 using Gum.DataTypes.Variables;
 using Gum.Wireframe;
 using FlatRedBall.Glue.StateInterpolation;
-using Gum.DataTypes; 
+using Gum.DataTypes;
+using Gum;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 
 namespace StateAnimationPlugin
 {
@@ -25,7 +28,7 @@ namespace StateAnimationPlugin
 
         ElementAnimationsViewModel mCurrentViewModel;
 
-        MainWindow mMainWindow;
+        StateAnimationPlugin.Views.MainWindow mMainWindow;
 
         #endregion
 
@@ -42,6 +45,8 @@ namespace StateAnimationPlugin
             get { return new Version(0, 0, 0, 2); }
         }
 
+        ObservableCollection<string> AvailableStates { get; set; } = new ObservableCollection<string>();
+
         #endregion
 
         #region StartUp/ShutDown
@@ -50,7 +55,7 @@ namespace StateAnimationPlugin
         {
             CreateMenuItems();
 
-            CreateEvents();
+            AssignEvents();
         }
 
         public override bool ShutDown(Gum.Plugins.PluginShutDownReason shutDownReason)
@@ -58,9 +63,14 @@ namespace StateAnimationPlugin
             return true;
         }
 
-        #endregion
+        private void CreateMenuItems()
+        {
+            var menuItem = AddMenuItem(new List<string> { "State Animation", "View Animations" });
 
-        private void CreateEvents()
+            menuItem.Click += HandleViewAnimationsClick;
+        }
+
+        private void AssignEvents()
         {
             this.ElementSelected += delegate
             {
@@ -74,8 +84,20 @@ namespace StateAnimationPlugin
 
             this.InstanceRename += HandleInstanceRename;
             this.StateRename += HandleStateRename;
+
+            this.StateAdd += HandleStateAdd;
+            this.StateDelete += HandleStateDelete;
+
             this.CategoryRename += HandleCategoryRename;
             this.ElementRename += HandleElementRename;
+            this.ElementDuplicate += HandleElementDuplicate;
+        }
+
+        #endregion
+
+        private void HandleElementDuplicate(ElementSave oldElement, ElementSave newElement)
+        {
+            DuplicateManager.Self.HandleDuplicate(oldElement, newElement);
         }
 
         private void HandleElementRename(ElementSave element, string oldName)
@@ -88,7 +110,7 @@ namespace StateAnimationPlugin
             RenameManager.Self.HandleRename(element, oldName, mCurrentViewModel);
         }
 
-        private void HandleInstanceRename(InstanceSave instanceSave, string oldName)
+        private void HandleInstanceRename(ElementSave element, InstanceSave instanceSave, string oldName)
         {
             if (mCurrentViewModel == null)
             {
@@ -103,15 +125,22 @@ namespace StateAnimationPlugin
 
         private void HandleStateRename(StateSave stateSave, string oldName)
         {
-            if(mCurrentViewModel == null)
-            {
-                CreateViewModel();
-            }
+            RefreshViewModel();
 
             if (SelectedState.Self.SelectedElement != null)
             {
                 RenameManager.Self.HandleRename(stateSave, oldName, mCurrentViewModel);
             }
+        }
+
+        private void HandleStateAdd(StateSave state)
+        {
+            RefreshViewModel();
+        }
+
+        private void HandleStateDelete(StateSave state)
+        {
+            RefreshViewModel();
         }
 
         private void HandleCategoryRename(StateSaveCategory category, string oldName)
@@ -128,46 +157,172 @@ namespace StateAnimationPlugin
             }
 
         }
-        private void CreateMenuItems()
-        {
-            var menuItem = AddMenuItem(new List<string> { "State Animation", "View Animations" });
 
-            menuItem.Click += HandleViewAnimationsClick;
-        }
 
         private void HandleViewAnimationsClick(object sender, EventArgs e)
         {
-            if (SelectedState.Self.SelectedScreen == null && SelectedState.Self.SelectedElement == null)
+            if(mMainWindow == null || mMainWindow.IsVisible == false)
             {
-                MessageBox.Show("You need to select a Screen or Component first");
+                SettingsManager.Self.LoadOrCreateSettings();
+
+                mMainWindow = new StateAnimationPlugin.Views.MainWindow();
+
+                var settings = SettingsManager.Self.GlobalSettings;
+
+                mMainWindow.FirstRowWidth = new GridLength((double)settings.FirstToSecondColumnRatio, GridUnitType.Star);
+                mMainWindow.SecondRowWidth = new GridLength(1, GridUnitType.Star);
+                // This fixes an issue where embedded wpf text boxes don't get input, as explained here:
+                // http://stackoverflow.com/questions/835878/wpf-textbox-not-accepting-input-when-in-elementhost-in-window-forms
+                //ElementHost.EnableModelessKeyboardInterop(mMainWindow);
+                //mMainWindow.Show();
+                //mMainWindow.Closed += (not, used) => Gum.ToolStates.SelectedState.Self.CustomCurrentStateSave = null;
+                mMainWindow.AddStateKeyframeClicked += HandleAddStateKeyframe;
+                mMainWindow.AnimationColumnsResized += HandleAnimationColumnsResized;
+            }
+                
+            GumCommands.Self.GuiCommands.AddControl(mMainWindow, "Animations", 
+                TabLocation.RightBottom);
+
+            GumCommands.Self.GuiCommands.ShowControl(mMainWindow);
+
+            // forces a refresh:
+            mCurrentViewModel = new ElementAnimationsViewModel();
+
+            RefreshViewModel();
+        }
+
+        private void HandleAnimationColumnsResized()
+        {
+            if(mMainWindow.SecondRowWidth.Value > 0)
+            {
+                var ratio = mMainWindow.FirstRowWidth.Value / mMainWindow.SecondRowWidth.Value;
+
+                SettingsManager.Self.GlobalSettings.FirstToSecondColumnRatio = (decimal)ratio;
+
+                SettingsManager.Self.SaveSettings();
+            }
+        }
+
+        private void HandleAddStateKeyframe(object sender, EventArgs e)
+        {
+            string whyIsntValid = GetWhyAddingTimedStateIsInvalid();
+
+            if (!string.IsNullOrEmpty(whyIsntValid))
+            {
+                MessageBox.Show(whyIsntValid);
+
             }
             else
             {
-                if(mMainWindow == null || mMainWindow.IsVisible == false)
+                ListBoxMessageBox lbmb = new ListBoxMessageBox();
+                lbmb.RequiresSelection = true;
+                lbmb.Message = "Select a state";
+
+                var element = SelectedState.Self.SelectedElement;
+
+                foreach (var state in element.States)
                 {
-                    mMainWindow = new MainWindow();
-                    // This fixes an issue where embedded wpf text boxes don't get input, as explained here:
-                    // http://stackoverflow.com/questions/835878/wpf-textbox-not-accepting-input-when-in-elementhost-in-window-forms
-                    ElementHost.EnableModelessKeyboardInterop(mMainWindow);
-                    mMainWindow.Show();
-                }
-                else
-                {
-                    mMainWindow.Focus();
+                    lbmb.Items.Add(state.Name);
                 }
 
-                RefreshViewModel();
+                foreach (var category in element.Categories)
+                {
+                    foreach (var state in category.States)
+                    {
+                        lbmb.Items.Add(category.Name + "/" + state.Name);
+                    }
+                }
+
+
+                var dialogResult = lbmb.ShowDialog();
+
+                if (dialogResult.HasValue && dialogResult.Value)
+                {
+                    var item = lbmb.SelectedItem;
+
+                    var newVm = new AnimatedKeyframeViewModel()
+                    {
+                        StateName = (string)item,
+                        // User just selected the state, so it better be valid!
+                        HasValidState = true,
+                        InterpolationType = FlatRedBall.Glue.StateInterpolation.InterpolationType.Linear,
+                        Easing = FlatRedBall.Glue.StateInterpolation.Easing.Out
+
+                    };
+
+                    newVm.AvailableStates = this.AvailableStates;
+                    newVm.PropertyChanged += HandleAnimatedKeyframePropertyChanged;
+
+                    if (mCurrentViewModel.SelectedAnimation.SelectedKeyframe != null)
+                    {
+                        // put this after the current animation
+                        newVm.Time = mCurrentViewModel.SelectedAnimation.SelectedKeyframe.Time + 1f;
+                    }
+                    else if (mCurrentViewModel.SelectedAnimation.Keyframes.Count != 0)
+                    {
+                        newVm.Time = mCurrentViewModel.SelectedAnimation.Keyframes.Last().Time + 1f;
+                    }
+
+                    mCurrentViewModel.SelectedAnimation.Keyframes.Add(newVm);
+
+                    mCurrentViewModel.SelectedAnimation.Keyframes.BubbleSort();
+
+                    mCurrentViewModel.SelectedAnimation.SelectedKeyframe = newVm;
+
+                }
             }
+        }
+
+        private string GetWhyAddingTimedStateIsInvalid()
+        {
+            string whyIsntValid = null;
+
+            if (mCurrentViewModel.SelectedAnimation == null)
+            {
+                whyIsntValid = "You must first select an Animation";
+            }
+
+            if (SelectedState.Self.SelectedScreen == null && SelectedState.Self.SelectedComponent == null)
+            {
+                whyIsntValid = "You must first select a Screen or Component";
+            }
+            return whyIsntValid;
         }
 
         private void RefreshViewModel()
         {
+            RefreshAvailableStates();
+
             CreateViewModel();
 
             if (mMainWindow != null)
             {
                 mMainWindow.DataContext = mCurrentViewModel;
             }
+        }
+
+        private void RefreshAvailableStates()
+        {
+            // we always create the view model after refreshing states, so we can new up an observable collection:
+
+            //AvailableStates = new ObservableCollection<string>();
+
+            var states = new List<string>();
+
+            var element = SelectedState.Self.SelectedElement;
+
+            if (element != null)
+            {
+                states.AddRange(element.States.Select(item => item.Name));
+
+                foreach (var category in element.Categories)
+                {
+                    states.AddRange(category.States.Select(item => category.Name + "/" + item.Name));
+                }
+
+            }
+
+            AvailableStates.ReplaceWith(states);
         }
 
         private void CreateViewModel()
@@ -182,15 +337,32 @@ namespace StateAnimationPlugin
             {
                 mCurrentViewModel = AnimationCollectionViewModelManager.Self.CurrentAnimationCollectionViewModel;
 
-
-
                 if (mCurrentViewModel != null)
                 {
                     mCurrentViewModel.PropertyChanged += HandlePropertyChanged;
                     mCurrentViewModel.AnyChange += HandleDataChange;
+
+                    foreach(var item in mCurrentViewModel.Animations)
+                    {
+                        foreach(var keyframe in item.Keyframes)
+                        {
+                            keyframe.AvailableStates = this.AvailableStates;
+                            keyframe.PropertyChanged += HandleAnimatedKeyframePropertyChanged;
+
+                        }
+                    }
                 }
+            }
+        }
 
-
+        private void HandleAnimatedKeyframePropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            switch(e.PropertyName)
+            {
+                case nameof(AnimatedKeyframeViewModel.StateName):
+                    // user may have changed a state that is currently being displayed so let's refresh it all!
+                    SetWireframeStateFromDisplayedAnimTime();
+                    break;
             }
         }
 
@@ -231,13 +403,14 @@ namespace StateAnimationPlugin
 
             bool shouldSave = true;
 
-            if(sender is ElementAnimationsViewModel)
+            if(sender is  ElementAnimationsViewModel)
             {
-                if(variableName == "SelectedAnimation")
+                if(variableName == nameof(ElementAnimationsViewModel.SelectedAnimation) ||
+                    variableName == nameof(ElementAnimationsViewModel.OverLengthTime))
                 {
                     shouldSave = false;
                 }
-                else if(variableName == "DisplayedAnimationTime")
+                else if(variableName == nameof(ElementAnimationsViewModel.DisplayedAnimationTime))
                 {
                     shouldSave = false;
                 }
@@ -245,7 +418,11 @@ namespace StateAnimationPlugin
 
             if (sender is AnimationViewModel)
             {
-                if(variableName == "SelectedState")
+                // can this happen? I don't see anything on the view model
+                if(variableName == "SelectedState" || 
+                    variableName == nameof(AnimationViewModel.SelectedKeyframe) ||
+                    variableName == nameof(AnimationViewModel.Length) 
+                    )
                 {
                     shouldSave = false;
                 }
@@ -253,7 +430,8 @@ namespace StateAnimationPlugin
 
             if( sender is AnimatedKeyframeViewModel)
             {
-                if(variableName == "DisplayString")
+                if(variableName == nameof(AnimatedKeyframeViewModel.DisplayString) || 
+                    variableName == nameof(AnimatedKeyframeViewModel.AvailableStates))
                 {
                     shouldSave = false;
                 }
@@ -261,7 +439,14 @@ namespace StateAnimationPlugin
 
             if (shouldSave)
             {
-                AnimationCollectionViewModelManager.Self.Save(mCurrentViewModel);
+                try
+                {
+                    AnimationCollectionViewModelManager.Self.Save(mCurrentViewModel);
+                }
+                catch(Exception exc)
+                {
+                    GumCommands.Self.GuiCommands.PrintOutput($"Could not save animations for {mCurrentViewModel?.Element}:\n{exc}");
+                }
             }
         }
 

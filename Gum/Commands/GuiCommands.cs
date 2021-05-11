@@ -21,11 +21,6 @@ namespace Gum.Commands
             mMainWindow = mainWindow;
         }
 
-        public void AddControl(Control control)
-        {
-            mFlowLayoutPanel.Controls.Add(control);
-        }
-
         internal void RefreshStateTreeView()
         {
             StateTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedElement);
@@ -46,7 +41,22 @@ namespace Gum.Commands
 
         public TabPage AddControl(System.Windows.Controls.UserControl control, string tabTitle, TabLocation tabLocation = TabLocation.CenterBottom)
         {
+            CheckForInitialization();
             return mMainWindow.AddWpfControl(control, tabTitle, tabLocation);
+        }
+
+        public TabPage AddControl(System.Windows.Forms.Control control, string tabTitle, TabLocation tabLocation )
+        {
+            CheckForInitialization();
+            return mMainWindow.AddWinformsControl(control, tabTitle, tabLocation);
+        }
+
+        private void CheckForInitialization()
+        {
+            if(mMainWindow == null)
+            {
+                throw new InvalidOperationException("Need to call Initialize first");
+            }
         }
 
         public TabPage AddWinformsControl(Control control, string tabTitle, TabLocation tabLocation)
@@ -54,11 +64,43 @@ namespace Gum.Commands
             return mMainWindow.AddWinformsControl(control, tabTitle, tabLocation);
         }
         
+        public void PositionWindowByCursor(System.Windows.Window window)
+        {
+            window.WindowStartupLocation = System.Windows.WindowStartupLocation.Manual;
+
+            double width = window.Width;
+            if (double.IsNaN(width))
+            {
+                width = 0;
+            }
+            double height = window.Height;
+            if (double.IsNaN(height))
+            {
+                height = 0;
+            }
+
+            var mousePosition = GumCommands.Self.GuiCommands.GetMousePosition();
+            window.Left = mousePosition.X - width / 2;
+            window.Top = mousePosition.Y - height / 2;
+        }
+
+
+        public void PositionWindowByCursor(System.Windows.Forms.Form window)
+        {
+            var mousePosition = GumCommands.Self.GuiCommands.GetMousePosition();
+
+            window.Location = new System.Drawing.Point(mousePosition.X - window.Width / 2, mousePosition.Y - window.Height / 2);
+        }
+
         public void RemoveControl(System.Windows.Controls.UserControl control)
         {
             mMainWindow.RemoveWpfControl(control);
         }
 
+        /// <summary>
+        /// Selects the tab which contains the argument control
+        /// </summary>
+        /// <param name="control"></param>
         public void ShowControl(System.Windows.Controls.UserControl control)
         {
             mMainWindow.ShowTabForControl(control);
@@ -82,6 +124,45 @@ namespace Gum.Commands
         public void ShowMessage(string message)
         {
             MessageBox.Show(message);
+        }
+
+        public System.Drawing.Point GetMousePosition()
+        {
+            return MainWindow.MousePosition;
+        }
+
+        public void HideTools()
+        {
+            mMainWindow.LeftAndEverythingContainer.Panel1Collapsed = true;
+            mMainWindow.VariablesAndEverythingElse.Panel1Collapsed = true;
+            mMainWindow.PreviewSplitContainer.Panel2Collapsed = true;
+        }
+
+        public void ShowTools()
+        {
+            mMainWindow.LeftAndEverythingContainer.Panel1Collapsed = false;
+            mMainWindow.VariablesAndEverythingElse.Panel1Collapsed = false;
+            mMainWindow.PreviewSplitContainer.Panel2Collapsed = false;
+
+        }
+
+        internal void FocusSearch()
+        {
+            ElementTreeViewManager.Self.FocusSearch();
+        }
+
+        internal void ToggleToolVisibility()
+        {
+            var areToolsVisible = mMainWindow.LeftAndEverythingContainer.Panel1Collapsed == false;
+
+            if(areToolsVisible)
+            {
+                HideTools();
+            }
+            else
+            {
+                ShowTools();
+            }
         }
     }
 }

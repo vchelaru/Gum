@@ -362,7 +362,7 @@ namespace CommonFormsAndControls
                     mFirstSearchChar = e.KeyChar;
                     mSearchString = e.KeyChar.ToString();
                     mSearchTimer.Start();
-                    if (FindAndSelectNode(mSelectedNode))
+                    if (mSelectedNode != null && FindAndSelectNode(mSelectedNode))
                     {
                         return;
                     }
@@ -680,6 +680,10 @@ namespace CommonFormsAndControls
 
         private bool FindAndSelectNode(TreeNode node)
         {
+            if(node == null)
+            {
+                throw new ArgumentNullException(nameof(node));
+            }
             while ((node.NextVisibleNode != null))
             {
                 node = node.NextVisibleNode;
@@ -936,7 +940,6 @@ namespace CommonFormsAndControls
         #endregion
 
         #endregion
-
 
         #region IEnumerable<TreeNode> Members
 

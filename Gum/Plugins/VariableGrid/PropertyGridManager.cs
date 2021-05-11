@@ -27,6 +27,8 @@ using Gum.DataTypes.Behaviors;
 using Gum.Controls;
 using WpfDataUi.Controls;
 using System.ComponentModel;
+using System.Windows.Controls;
+using System.Windows.Media;
 
 namespace Gum.Managers
 {
@@ -35,6 +37,7 @@ namespace Gum.Managers
         #region Fields
 
         WpfDataUi.DataUiGrid mVariablesDataGrid;
+        TestWpfControl mainControl;
 
         static PropertyGridManager mPropertyGridManager;
 
@@ -83,13 +86,17 @@ namespace Gum.Managers
         #endregion
 
 
-        public void Initialize(TestWpfControl variablesDataUiGrid)
+        public void Initialize()
         {
-            mVariablesDataGrid = variablesDataUiGrid.DataGrid;
+            mainControl = new Gum.TestWpfControl();
+
+            GumCommands.Self.GuiCommands.AddControl(mainControl, "Variables", TabLocation.CenterBottom);
+
+            mVariablesDataGrid = mainControl.DataGrid;
             variableViewModel = new Plugins.VariableGrid.MainControlViewModel();
-            variablesDataUiGrid.DataContext = variableViewModel;
-            variablesDataUiGrid.SelectedBehaviorVariableChanged += HandleBehaviorVariableSelected;
-            variablesDataUiGrid.AddVariableClicked += HandleAddVariable;
+            mainControl.DataContext = variableViewModel;
+            mainControl.SelectedBehaviorVariableChanged += HandleBehaviorVariableSelected;
+            mainControl.AddVariableClicked += HandleAddVariable;
 
             InitializeRightClickMenu();
         }
@@ -150,8 +157,10 @@ namespace Gum.Managers
 
             isInRefresh = true;
 
-            bool showVariableGrid = SelectedState.Self.SelectedElement != null ||
-                SelectedState.Self.SelectedInstance != null;
+            bool showVariableGrid = 
+                (SelectedState.Self.SelectedElement != null ||
+                SelectedState.Self.SelectedInstance != null) && 
+                SelectedState.Self.CustomCurrentStateSave == null;
             variableViewModel.ShowVariableGrid = showVariableGrid ?
                 System.Windows.Visibility.Visible : System.Windows.Visibility.Hidden;
 
@@ -159,10 +168,12 @@ namespace Gum.Managers
             {
                 // I don't know if we want to eventually show these
                 // but for now we'll hide the PropertyGrid:
-                mVariablesDataGrid.Visibility = System.Windows.Visibility.Hidden;
+                mainControl.Visibility = System.Windows.Visibility.Hidden;
             }
             else
             {
+                mainControl.Visibility = System.Windows.Visibility.Visible;
+
                 //mPropertyGrid.SelectedObject = mPropertyGridDisplayer;
                 //mPropertyGrid.Refresh();
 
@@ -172,13 +183,6 @@ namespace Gum.Managers
                 var behaviorSave = SelectedState.Self.SelectedBehavior;
                 var category = SelectedState.Self.SelectedStateCategorySave;
 
-                bool shouldMakeYellow = element != null && state != element.DefaultState;
-
-
-                // This can take a little bit of time and we don't want the app to pop/freeze
-
-
-                //Task task = new Task(() => RefreshDataGrid(element, state, instance));
                 RefreshDataGrid(element, state, category, instance, behaviorSave, force);
             }
 
@@ -210,11 +214,21 @@ namespace Gum.Managers
                 category != mLastCategory ||
                 force;
 
+            var hasCustomState = SelectedState.Self.CustomCurrentStateSave != null;
+
+            if (hasCustomState)
+            {
+                hasChangedObjectShowing = false;
+            }
+
+            mVariablesDataGrid.IsInnerGridEnabled = !hasCustomState;
+
+            var categories = GetMemberCategories(element, state, category, instance);
 
             if (hasChangedObjectShowing)
             {
-                List<MemberCategory> categories = GetMemberCategories(element, state, category, instance);
-                Application.DoEvents();
+                // UI is fast, I dont' think we need this....
+                //Application.DoEvents();
                 SimultaneousCalls ++;
                 lock (lockObject)
                 {
@@ -226,8 +240,6 @@ namespace Gum.Managers
                     records.Add("in");
 
                     mVariablesDataGrid.Instance = SelectedState.Self.SelectedStateSave;
-
-                    mVariablesDataGrid.Visibility = System.Windows.Visibility.Hidden;
 
                     mVariablesDataGrid.Categories.Clear();
 
@@ -254,16 +266,9 @@ namespace Gum.Managers
                 }
 
                 SimultaneousCalls--;
-                Application.DoEvents();
-
-                mVariablesDataGrid.Visibility = System.Windows.Visibility.Visible;
-
             }
             else
             {
-                // let's see if any variables have been added/removed
-                var categories = GetMemberCategories(element, state, category, instance);
-
                 foreach (var newCategory in categories)
                 {
                     // let's see if any variables have changed
@@ -281,10 +286,41 @@ namespace Gum.Managers
 
             RefreshErrors(element);
 
+            RefreshStateLabel(element, category, state);
+
             RefreshBehaviorUi(behaviorSave);
 
             mVariablesDataGrid.Refresh();
             
+        }
+
+        private void RefreshStateLabel(ElementSave element, StateSaveCategory category, StateSave state)
+        {
+            if(element == null)
+            {
+                variableViewModel.HasStateInformation = System.Windows.Visibility.Collapsed;
+            }
+            else if(state == element.DefaultState || state == null)
+            {
+                variableViewModel.HasStateInformation = System.Windows.Visibility.Collapsed;
+            }
+            else if(SelectedState.Self.CustomCurrentStateSave != null)
+            {
+                variableViewModel.HasStateInformation = System.Windows.Visibility.Visible;
+                variableViewModel.StateInformation = $"Displaying custom (animated) state";
+                variableViewModel.StateBackground = Brushes.Pink;
+            }
+            else
+            {
+                variableViewModel.StateBackground = Brushes.Yellow;
+                variableViewModel.HasStateInformation = System.Windows.Visibility.Visible;
+                string stateName = state.Name;
+                if(category != null)
+                {
+                    stateName = category.Name + "/" + stateName;
+                }
+                variableViewModel.StateInformation = $"Editing state {stateName}";
+            }
         }
 
         public void RefreshVariablesDataGridValues()
@@ -448,7 +484,7 @@ namespace Gum.Managers
             foreach (InstanceSavePropertyDescriptor propertyDescriptor in properties)
             {
                 // early continue
-                var browsableAttribute = propertyDescriptor.Attributes.FirstOrDefault(item => item is BrowsableAttribute);
+                var browsableAttribute = propertyDescriptor.Attributes?.FirstOrDefault(item => item is BrowsableAttribute);
                 
                 var isMarkedAsNotBrowsable = browsableAttribute != null && (browsableAttribute as BrowsableAttribute).Browsable == false;
                 if(isMarkedAsNotBrowsable)
@@ -535,47 +571,48 @@ namespace Gum.Managers
             {
                 foreach (var member in category.Members)
                 {
-                    if (member.PropertyType == typeof(global::RenderingLibrary.Graphics.HorizontalAlignment) &&
+                    var propertyType = member.PropertyType;
+                    if (propertyType == typeof(global::RenderingLibrary.Graphics.HorizontalAlignment) &&
                         member.Name == "HorizontalAlignment" || member.Name.EndsWith(".HorizontalAlignment"))
                     {
                         member.PreferredDisplayer = typeof(TextHorizontalAlignmentControl);
                     }
-                    else if (member.PropertyType == typeof(global::RenderingLibrary.Graphics.VerticalAlignment) &&
+                    else if (propertyType == typeof(global::RenderingLibrary.Graphics.VerticalAlignment) &&
                         member.Name == "VerticalAlignment" || member.Name.EndsWith(".VerticalAlignment"))
                     {
                         member.PreferredDisplayer = typeof(TextVerticalAlignmentControl);
                     }
-                    else if (member.PropertyType == typeof(PositionUnitType) &&
+                    else if (propertyType == typeof(PositionUnitType) &&
                         member.Name == "X Units" || member.Name.EndsWith(".X Units"))
                     {
                         member.PreferredDisplayer = typeof(XUnitsControl);
                     }
-                    else if (member.PropertyType == typeof(PositionUnitType) &&
+                    else if (propertyType == typeof(PositionUnitType) &&
                         member.Name == "Y Units" || member.Name.EndsWith(".Y Units"))
                     {
                         member.PreferredDisplayer = typeof(YUnitsControl);
                     }
-                    else if (member.PropertyType == typeof(global::RenderingLibrary.Graphics.HorizontalAlignment) &&
+                    else if (propertyType == typeof(global::RenderingLibrary.Graphics.HorizontalAlignment) &&
                         member.Name == "X Origin" || member.Name.EndsWith(".X Origin"))
                     {
                         member.PreferredDisplayer = typeof(XOriginControl);
                     }
-                    else if (member.PropertyType == typeof(global::RenderingLibrary.Graphics.VerticalAlignment) &&
+                    else if (propertyType == typeof(global::RenderingLibrary.Graphics.VerticalAlignment) &&
                         member.Name == "Y Origin" || member.Name.EndsWith(".Y Origin"))
                     {
                         member.PreferredDisplayer = typeof(YOriginControl);
                     }
-                    else if (member.PropertyType == typeof(DimensionUnitType) &&
+                    else if (propertyType == typeof(DimensionUnitType) &&
                         member.Name == "Width Units" || member.Name.EndsWith(".Width Units"))
                     {
                         member.PreferredDisplayer = typeof(WidthUnitsControl);
                     }
-                    else if (member.PropertyType == typeof(DimensionUnitType) &&
+                    else if (propertyType == typeof(DimensionUnitType) &&
                         member.Name == "Height Units" || member.Name.EndsWith(".Height Units"))
                     {
                         member.PreferredDisplayer = typeof(HeightUnitsControl);
                     }
-                    else if (member.PropertyType == typeof(ChildrenLayout) &&
+                    else if (propertyType == typeof(ChildrenLayout) &&
                         member.Name == "Children Layout" || member.Name.EndsWith(".Children Layout"))
                     {
                         member.PreferredDisplayer = typeof(ChildrenLayoutControl);
@@ -678,24 +715,27 @@ namespace Gum.Managers
             var selectedState = SelectedState.Self.SelectedStateSave;
 
             int red = 0;
-            object redAsObject = selectedState.GetValueRecursive(redVariableName);
-            if(redAsObject != null)
-            {
-                red = (int)redAsObject;
-            }
-
             int green = 0;
-            object greenAsObject = selectedState.GetValueRecursive(greenVariableName);
-            if (greenAsObject != null)
-            {
-                green = (int)greenAsObject;
-            }
-
             int blue = 0;
-            object blueAsObject = selectedState.GetValueRecursive(blueVariableName);
-            if (blueAsObject != null)
+            if(selectedState != null)
             {
-                blue = (int)blueAsObject;
+                object redAsObject = selectedState.GetValueRecursive(redVariableName);
+                if(redAsObject != null)
+                {
+                    red = (int)redAsObject;
+                }
+
+                object greenAsObject = selectedState.GetValueRecursive(greenVariableName);
+                if (greenAsObject != null)
+                {
+                    green = (int)greenAsObject;
+                }
+
+                object blueAsObject = selectedState.GetValueRecursive(blueVariableName);
+                if (blueAsObject != null)
+                {
+                    blue = (int)blueAsObject;
+                }
             }
 
             return new Microsoft.Xna.Framework.Color(red, green, blue);
@@ -734,14 +774,16 @@ namespace Gum.Managers
             state.SetValue(blueVariableName, (int)color.B, "int");
 
             // Only need to refresh on one of the colors, so do it on any that have changed:
-            var refreshRed = oldColor.R != color.R;
-            var refreshGreen = !refreshRed && oldColor.G != color.G;
-            var refreshBlue = !refreshRed && !refreshGreen && oldColor.B != color.B;
+            // actually why not refresh all? It's fast now since it doesn't re-create the entire view, 
+            // and plugins may depend on it:
+            //var refreshRed = oldColor.R != color.R;
+            //var refreshGreen = !refreshRed && oldColor.G != color.G;
+            //var refreshBlue = !refreshRed && !refreshGreen && oldColor.B != color.B;
 
             // These functions take unqualified:
-            SetVariableLogic.Self.PropertyValueChanged("Red", (int)oldColor.R, refreshRed);
-            SetVariableLogic.Self.PropertyValueChanged("Green", (int)oldColor.G, refreshGreen );
-            SetVariableLogic.Self.PropertyValueChanged("Blue", (int)oldColor.B, refreshBlue);
+            SetVariableLogic.Self.PropertyValueChanged("Red", (int)oldColor.R, true);
+            SetVariableLogic.Self.PropertyValueChanged("Green", (int)oldColor.G, true);
+            SetVariableLogic.Self.PropertyValueChanged("Blue", (int)oldColor.B, true);
 
             RefreshUI();
         }
@@ -777,6 +819,8 @@ namespace Gum.Managers
             bool shouldReset = false;
             bool affectsTreeView = false;
 
+            var selectedElement = SelectedState.Self.SelectedElement;
+
             if (SelectedState.Self.SelectedInstance != null)
             {
                 affectsTreeView = variableName == "Parent";
@@ -784,31 +828,33 @@ namespace Gum.Managers
 
                 shouldReset = true;
             }
-            else if (SelectedState.Self.SelectedElement != null)
+            else if (selectedElement != null)
             {
                 shouldReset =
                     // Don't let the user reset standard element variables, they have to have some actual value
-                    (SelectedState.Self.SelectedElement is StandardElementSave) == false ||
+                    (selectedElement is StandardElementSave) == false ||
                     // ... unless it's not the default
                     SelectedState.Self.SelectedStateSave != SelectedState.Self.SelectedElement.DefaultState;
             }
 
-            if(shouldReset)
-            {
-                // If the variable is part of a category, then we don't allow setting the variable to default - they gotta do it through the cateory itself
-                bool isPartOfCategory = srim.StateSaveCategory != null;
+            // now we reset, but we don't remove the variable:
+            //if(shouldReset)
+            //{
+            //    // If the variable is part of a category, then we don't allow setting the variable to default - they gotta do it through the cateory itself
 
-                if (isPartOfCategory)
-                {
-                    var window = new DeletingVariablesInCategoriesMessageBox();
-                    window.ShowDialog();
+            //    if (isPartOfCategory)
+            //    {
+            //        var window = new DeletingVariablesInCategoriesMessageBox();
+            //        window.ShowDialog();
                     
-                    shouldReset = false;
-                }
-            }
+            //        shouldReset = false;
+            //    }
+            //}
 
             if (shouldReset)
             {
+                bool isPartOfCategory = srim.StateSaveCategory != null;
+
                 StateSave state = SelectedState.Self.SelectedStateSave;
                 bool wasChangeMade = false;
                 VariableSave variable = state.GetVariableSave(variableName);
@@ -826,13 +872,46 @@ namespace Gum.Managers
                     // the variable now. In fact, we should
                     //bool shouldRemove = SelectedState.Self.SelectedInstance != null ||
                     //    SelectedState.Self.SelectedStateSave != SelectedState.Self.SelectedElement.DefaultState;
-
                     // Also, don't remove it if it's an exposed variable, this un-exposes things
-                    bool shouldRemove = string.IsNullOrEmpty(variable.ExposedAsName);
+                    bool shouldRemove = string.IsNullOrEmpty(variable.ExposedAsName) && !isPartOfCategory;
+
+                    // Update October 7, 2019
+                    // Actually, we can remove any variable so long as the current state isn't the "base definition" for it
+                    // For elements - no variables are the base variable definitions except for variables that are categorized
+                    // state variables for categories defined in this element
+                    if(shouldRemove)
+                    {
+                        var isState = variable.IsState(selectedElement, out ElementSave categoryContainer, out StateSaveCategory categoryForVariable);
+
+                        if(isState)
+                        {
+                            var isDefinedHere = categoryForVariable != null && categoryContainer == selectedElement;
+
+                            shouldRemove = !isDefinedHere;
+                        }
+                    }
+
 
                     if (shouldRemove)
                     {
                         state.Variables.Remove(variable);
+                    }
+                    else if(isPartOfCategory)
+                    {
+                        var variableInDefault = SelectedState.Self.SelectedElement.DefaultState.GetVariableSave(variable.Name);
+                        if(variableInDefault != null)
+                        {
+                            GumCommands.Self.GuiCommands.PrintOutput(
+                                $"The variable {variable.Name} is part of the category {srim.StateSaveCategory.Name} so it cannot be removed. Instead, the value has been set to the value in the default state");
+
+                            variable.Value = variableInDefault.Value;
+                        }
+                        else
+                        {
+                            GumCommands.Self.GuiCommands.PrintOutput("Could not set value to default because the default state doesn't set this value");
+
+                        }
+
                     }
                     else
                     {
@@ -860,7 +939,7 @@ namespace Gum.Managers
 
                 if (wasChangeMade)
                 {
-                    RefreshUI();
+                    RefreshUI(force:true);
                     WireframeObjectManager.Self.RefreshAll(true);
                     SelectionManager.Self.Refresh();
 

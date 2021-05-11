@@ -6,12 +6,16 @@ using System.ComponentModel;
 
 namespace Gum.DataTypes.ComponentModel
 {
+    #region MemberChangeArgs
+
     public class MemberChangeArgs : EventArgs
     {
         public object Owner;
         public string Member;
         public object Value;
     }
+
+    #endregion
 
     public delegate void MemberChangeEventHandler(object sender, MemberChangeArgs args);
 
@@ -61,7 +65,7 @@ namespace Gum.DataTypes.ComponentModel
         }
 
         public InstanceSavePropertyDescriptor AddProperty(List<InstanceSavePropertyDescriptor> pdc, string propertyName, Type propertyType, TypeConverter converter,
-            Attribute[] attributes)
+            Attribute[] attributes = null)
         {
             InstanceSavePropertyDescriptor newProperty = new InstanceSavePropertyDescriptor(
                 propertyName, propertyType, attributes);

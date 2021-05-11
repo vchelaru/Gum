@@ -51,7 +51,6 @@ namespace Gum.Wireframe
 
         LineRectangle mScreenBounds;
 
-        public Color BackgroundColor = Color.DimGray;
         public Color ScreenBoundsColor = Color.LightBlue;
 
         bool mHasInitialized = false;
@@ -124,8 +123,6 @@ namespace Gum.Wireframe
                 mWireframeEditControl = wireframeEditControl;
 
 
-
-
                 mWireframeEditControl.ZoomChanged += HandleZoomChanged;
 
                 SystemManagers.Default = new SystemManagers();
@@ -153,7 +150,7 @@ namespace Gum.Wireframe
                 this.MouseDown += CameraController.Self.HandleMouseDown;
                 this.MouseMove += CameraController.Self.HandleMouseMove;
                 this.MouseWheel += CameraController.Self.HandleMouseWheel;
-                this.mTopRuler = new Ruler(this, null, InputLibrary.Cursor.Self);
+                this.mTopRuler = new Ruler(this, null, InputLibrary.Cursor.Self, InputLibrary.Keyboard.Self);
 
                 this.MouseEnter += (not, used) =>
                 {
@@ -167,7 +164,7 @@ namespace Gum.Wireframe
                     mouseHasEntered = false;
                 };
 
-                mLeftRuler = new Ruler(this, null, InputLibrary.Cursor.Self);
+                mLeftRuler = new Ruler(this, null, InputLibrary.Cursor.Self, InputLibrary.Keyboard.Self);
                 mLeftRuler.RulerSide = RulerSide.Left;
 
                 if (AfterXnaInitialize != null)
@@ -285,7 +282,20 @@ namespace Gum.Wireframe
         {
             if (mHasInitialized)
             {
-                GraphicsDevice.Clear(BackgroundColor);
+                Color backgroundColor = new Color();
+                if(ProjectManager.Self.GeneralSettingsFile != null)
+                {
+                    backgroundColor.R = ProjectManager.Self.GeneralSettingsFile.CheckerColor1R;
+                    backgroundColor.G = ProjectManager.Self.GeneralSettingsFile.CheckerColor1G;
+                    backgroundColor.B = ProjectManager.Self.GeneralSettingsFile.CheckerColor1B;
+                }
+                else
+                {
+                    backgroundColor.R = 150;
+                    backgroundColor.G = 150;
+                    backgroundColor.B = 150;
+                }
+                GraphicsDevice.Clear(backgroundColor);
 
                 Renderer.Self.Draw(null);
             }

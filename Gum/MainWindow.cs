@@ -24,45 +24,69 @@ using Gum.Commands;
 
 namespace Gum
 {
+    #region TabLocation Enum
     public enum TabLocation
     {
         [Obsolete("Use either CenterTop or CenterBottom")]
         Center,
-        Right,
+        RightBottom,
+        RightTop,
         CenterTop, 
-        CenterBottom
+        CenterBottom,
+        Left
     }
+    #endregion
 
     public partial class MainWindow : Form
     {
+        #region Fields/Properties
+
         private System.Windows.Forms.Timer FileWatchTimer;
         private FlatRedBall.AnimationEditorForms.Controls.WireframeEditControl WireframeEditControl;
         private Wireframe.WireframeControl wireframeControl1;
         ScrollBarControlLogic scrollBarControlLogic;
         public System.Windows.Forms.FlowLayoutPanel ToolbarPanel;
-
-
+        Panel gumEditorPanel;
         StateView stateView;
+
+        #endregion
 
         public MainWindow()
         {
 #if DEBUG
         // This suppresses annoying, useless output from WPF, as explained here:
         http://weblogs.asp.net/akjoshi/resolving-un-harmful-binding-errors-in-wpf
-            System.Diagnostics.PresentationTraceSources.DataBindingSource.Switch.Level = System.Diagnostics.SourceLevels.Critical;
+            System.Diagnostics.PresentationTraceSources.DataBindingSource.Switch.Level = 
+                System.Diagnostics.SourceLevels.Critical;
 #endif
 
-
             InitializeComponent();
+
+            this.KeyPreview = true;
+            this.KeyDown += HandleKeyDown;
 
             // Create the wireframe control, but don't add it...
             CreateWireframeControl();
 
+            gumEditorPanel = new Panel();
+
             // place the scrollbars first so they are in front of everything
-            scrollBarControlLogic = new ScrollBarControlLogic(this.panel1, wireframeControl1);
+            scrollBarControlLogic = new ScrollBarControlLogic(gumEditorPanel, wireframeControl1);
             scrollBarControlLogic.SetDisplayedArea(800, 600);
             wireframeControl1.CameraChanged += () =>
             {
+                if(ProjectManager.Self.GumProjectSave != null)
+                {
+                    
+                    scrollBarControlLogic.SetDisplayedArea(
+                        ProjectManager.Self.GumProjectSave.DefaultCanvasWidth,
+                        ProjectManager.Self.GumProjectSave.DefaultCanvasHeight);
+                }
+                else
+                {
+                    scrollBarControlLogic.SetDisplayedArea(800, 600);
+                }
+
                 scrollBarControlLogic.UpdateScrollBars();
                 scrollBarControlLogic.UpdateScrollBarsToCameraPosition();
 
@@ -70,10 +94,10 @@ namespace Gum
 
 
             //... add it here, so it can be done after scroll bars and other controls
-            this.panel1.Controls.Add(this.wireframeControl1);
+            gumEditorPanel.Controls.Add(this.wireframeControl1);
 
             CreateWireframeEditControl();
-            CreateToolbarPanel();
+            CreateEditorToolbarPanel();
 
 
             stateView = new StateView();
@@ -81,20 +105,38 @@ namespace Gum
 
             ((SelectedState)SelectedState.Self).Initialize(stateView);
             GumCommands.Self.Initialize(this);
+            GumCommands.Self.GuiCommands.AddControl(gumEditorPanel, "Editor", TabLocation.RightTop);
 
             TypeManager.Self.Initialize();
+
+            // Vic says - I tried
+            // to instantiate the ElementTreeImages
+            // in the ElementTreeViewManager. I move 
+            // the code there and it works, but then at
+            // some point it stops working and it breaks. Not 
+            // sure why, Winforms editor must be doing something
+            // beyond the generation of code which isn't working when
+            // I move it to custom code. Oh well, maybe one day I'll move
+            // to a wpf window and can get rid of this
+            ElementTreeViewManager.Self.Initialize(this.components, ElementTreeImages, ContextMenuStrip);
+            // State Tree ViewManager needs init before MenuStripManager
+            StateTreeViewManager.Self.Initialize(this.stateView.TreeView, this.stateView.StateContextMenuStrip);
+            // ProperGridManager before MenuStripManager
+            PropertyGridManager.Self.Initialize();
+            // menu strip manager needs to be initialized before plugins:
+            MenuStripManager.Self.Initialize(this);
+
             PluginManager.Self.Initialize(this);
 
-            ElementTreeViewManager.Self.Initialize(this.ObjectTreeView);
-            StateTreeViewManager.Self.Initialize(this.stateView.TreeView, this.stateView.StateContextMenuStrip);
-            PropertyGridManager.Self.Initialize(
-                ((TestWpfControl)this.VariableHost.Child)
-                );
             StandardElementsManager.Self.Initialize();
-            MenuStripManager.Self.Initialize(
-                RemoveElementMenuItem, RemoveStateMenuItem, RemoveVariableMenuItem);
+
+            
             ToolCommands.GuiCommands.Self.Initialize(wireframeControl1);
             Wireframe.WireframeObjectManager.Self.Initialize(WireframeEditControl, wireframeControl1);
+
+            wireframeControl1.XnaUpdate += () =>
+                Wireframe.WireframeObjectManager.Self.Activity();
+
 
             EditingManager.Self.Initialize(this.WireframeContextMenuStrip);
             OutputManager.Self.Initialize(this.OutputTextBox);
@@ -109,10 +151,22 @@ namespace Gum
 
         }
 
-        private void CreateToolbarPanel()
+        private void HandleKeyDown(object sender, KeyEventArgs args)
+        {
+            if (args.KeyCode == Keys.F
+                 && (args.Modifiers & Keys.Control) == Keys.Control
+                )
+            {
+                GumCommands.Self.GuiCommands.FocusSearch();
+                args.Handled = true;
+                args.SuppressKeyPress = true;
+            }
+        }
+
+        private void CreateEditorToolbarPanel()
         {
             this.ToolbarPanel = new System.Windows.Forms.FlowLayoutPanel();
-            this.panel1.Controls.Add(this.ToolbarPanel);
+            gumEditorPanel.Controls.Add(this.ToolbarPanel);
             // 
             // ToolbarPanel
             // 
@@ -148,6 +202,13 @@ namespace Gum
             this.wireframeControl1.DragDrop += new System.Windows.Forms.DragEventHandler(this.wireframeControl1_DragDrop);
             this.wireframeControl1.DragEnter += new System.Windows.Forms.DragEventHandler(this.wireframeControl1_DragEnter);
             this.wireframeControl1.MouseClick += new System.Windows.Forms.MouseEventHandler(this.wireframeControl1_MouseClick);
+            this.wireframeControl1.KeyDown += (o, args) =>
+            {
+                if(args.KeyCode == Keys.Tab)
+                {
+                    GumCommands.Self.GuiCommands.ToggleToolVisibility();
+                }
+            };
 
 
         }
@@ -155,7 +216,7 @@ namespace Gum
         private void CreateWireframeEditControl()
         {
             this.WireframeEditControl = new FlatRedBall.AnimationEditorForms.Controls.WireframeEditControl();
-            this.panel1.Controls.Add(this.WireframeEditControl);
+            gumEditorPanel.Controls.Add(this.WireframeEditControl);
             // 
             // WireframeEditControl
             // 
@@ -190,7 +251,7 @@ namespace Gum
         //void HandleXnaInitialize(object sender, EventArgs e)
         void HandleXnaInitialize()
         {
-            this.wireframeControl1.Initialize(WireframeEditControl, panel1);
+            this.wireframeControl1.Initialize(WireframeEditControl, gumEditorPanel);
             scrollBarControlLogic.Managers = global::RenderingLibrary.SystemManagers.Default;
             scrollBarControlLogic.UpdateScrollBars();
 
@@ -224,47 +285,9 @@ namespace Gum
 
         }
 
-        private void undoToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            UndoManager.Self.PerformUndo();
-        }
-
-        private void screenToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            ElementTreeViewManager.Self.AddScreenClick(sender, e);
-        }
-
-        private void componentToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            ElementTreeViewManager.Self.AddComponentClick(sender, e);
-        }
-
-        private void instanceToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            ElementTreeViewManager.Self.AddInstanceClick(sender, e);
-        }
-
-        private void loadProjectToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            bool newProjectLoaded = ProjectManager.Self.LoadProject();
-        }
-
         private void VariablePropertyGrid_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
         {
             SetVariableLogic.Self.PropertyValueChanged(s, e);
-        }
-
-        private void stateToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            StateTreeViewManager.Self.AddStateClick();
-        }
-
-        private void ObjectTreeView_MouseClick(object sender, MouseEventArgs e)
-        {
-            if (e.Button == MouseButtons.Right)
-            {
-                ElementTreeViewManager.Self.PopulateMenuStrip();
-            }
         }
 
         private void wireframeControl1_MouseClick(object sender, MouseEventArgs e)
@@ -275,30 +298,13 @@ namespace Gum
             }
         }
 
-        private void ObjectTreeView_KeyDown(object sender, KeyEventArgs e)
-        {
-            ElementTreeViewManager.Self.HandleKeyDown(e);
-        }
-
-
-        private void ObjectTreeView_ItemDrag(object sender, ItemDragEventArgs e)
-        {
-            DragDropManager.Self.OnItemDrag(e.Item);
-        }
-
-        private void managePluginsToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            PluginsWindow pluginsWindow = new PluginsWindow();
-            pluginsWindow.Show();
-        }
-
         private void PropertyGridMenuStrip_Opening(object sender, CancelEventArgs e)
         {
         }
 
         private void MainWindow_Load(object sender, EventArgs e)
         {
-            ProjectManager.Self.RecentFilesUpdated += RefreshRecentFiles;
+            ProjectManager.Self.RecentFilesUpdated += MenuStripManager.Self.RefreshRecentFilesMenuItems;
             ProjectManager.Self.Initialize();
 
             if(CommandLine.CommandLineManager.Self.ShouldExitImmediately == false)
@@ -351,19 +357,6 @@ namespace Gum
 
         }
 
-        private void saveProjectToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            if (ObjectFinder.Self.GumProjectSave == null)
-            {
-                MessageBox.Show("There is no project loaded.  Either load a project or create a new project before saving");
-            }
-            else
-            {
-                // Don't do an auto save, force it!
-                GumCommands.Self.FileCommands.ForceSaveProject();
-            }
-        }
-
         private void wireframeControl1_DragEnter(object sender, DragEventArgs e)
         {
             DragDropManager.Self.HandleFileDragEnter(sender, e);
@@ -372,64 +365,6 @@ namespace Gum
         private void wireframeControl1_DragDrop(object sender, DragEventArgs e)
         {
             DragDropManager.Self.HandleFileDragDrop(sender, e);
-        }
-
-        private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            MessageBox.Show("Gum version " + Application.ProductVersion);
-        }
-
-        private void newProjectToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            GumCommands.Self.FileCommands.NewProject();
-        }
-
-        private void saveAllToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            if (ObjectFinder.Self.GumProjectSave == null)
-            {
-                MessageBox.Show("There is no project loaded.  Either load a project or create a new project before saving");
-            }
-            else
-            {
-                // Don't do an auto save, force it!
-                GumCommands.Self.FileCommands.ForceSaveProject(true);
-            }
-        }
-
-        private void ObjectTreeView_AfterSelect_1(object sender, TreeViewEventArgs e)
-        {
-            // If we use AfterClickSelect instead of AfterSelect then
-            // we don't get notified when the user selects nothing.
-            // Update - we only want to do this if it's null:
-            // Otherwise we can't drag drop
-            if (ObjectTreeView.SelectedNode == null)
-            {
-                ElementTreeViewManager.Self.OnSelect(ObjectTreeView.SelectedNode);
-            }
-        }
-
-        public void RefreshRecentFiles()
-        {
-            this.loadRecentToolStripMenuItem.DropDownItems.Clear();
-
-            foreach (var item in ProjectManager.Self.GeneralSettingsFile.RecentProjects.OrderByDescending(item=>item.LastTimeOpened))
-            {
-                ToolStripMenuItem menuItem = new ToolStripMenuItem();
-                menuItem.Text = item.AbsoluteFileName;
-
-                this.loadRecentToolStripMenuItem.DropDownItems.Add(menuItem);
-
-                menuItem.Click += delegate
-                {
-                    GumCommands.Self.FileCommands.LoadProject(menuItem.Text);
-                };
-            }
-        }
-
-        private void ObjectTreeView_AfterClickSelect(object sender, TreeViewEventArgs e)
-        {
-            ElementTreeViewManager.Self.OnSelect(ObjectTreeView.SelectedNode);
         }
 
         public TabPage AddWinformsControl(Control control, string tabTitle, TabLocation tabLocation)
@@ -448,6 +383,20 @@ namespace Gum
 
         public TabPage AddWpfControl(System.Windows.Controls.UserControl control, string tabTitle, TabLocation tabLocation = TabLocation.Center)
         {
+            string AppTheme = "Light";
+            control.Resources = new System.Windows.ResourceDictionary();
+            control.Resources.Source = 
+                new Uri($"/Themes/{AppTheme}.xaml", UriKind.Relative);
+
+
+            //Style style = this.TryFindResource("UserControlStyle") as Style;
+            //if (style != null)
+            //{
+            //    this.Style = style;
+            //}
+
+            //ResourceDictionary = Resources;
+
             TabPage existingTabPage;
             TabControl existingTabControl;
             GetContainers(control, out existingTabPage, out existingTabControl);
@@ -498,12 +447,18 @@ namespace Gum
                 case TabLocation.CenterBottom:
                     tabControl = this.MiddleTabControl;
                     break;
-                case TabLocation.Right:
-                    tabControl = this.RightTabControl;
+                case TabLocation.RightBottom:
+                    tabControl = this.RightBottomTabControl;
 
+                    break;
+                case TabLocation.RightTop:
+                    tabControl = this.RightTopTabControl;
                     break;
                 case TabLocation.CenterTop:
                     tabControl = this.tabControl1;
+                    break;
+                case TabLocation.Left:
+                    tabControl = this.LeftTabControl;
                     break;
                 default:
                     throw new NotImplementedException($"Tab location {tabLocation} not supported");
@@ -535,13 +490,13 @@ namespace Gum
 
             if (tabControl == null)
             {
-                foreach (var uncastedTabPage in this.RightTabControl.Controls)
+                foreach (var uncastedTabPage in this.RightBottomTabControl.Controls)
                 {
                     tabPage = uncastedTabPage as TabPage;
 
                     if (tabPage != null && DoesTabContainControl(tabPage, control))
                     {
-                        tabControl = this.RightTabControl;
+                        tabControl = this.RightBottomTabControl;
                         break;
                     }
                     else
@@ -596,36 +551,5 @@ namespace Gum
             return foundHost != null && foundHost.Child == control;
         }
 
-        private void findFileReferencesToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            CommonFormsAndControls.TextInputWindow tiw = new CommonFormsAndControls.TextInputWindow();
-            tiw.Message = "Enter entire or partial file name:";
-            var dialogResult = tiw.ShowDialog();
-
-            if (dialogResult == System.Windows.Forms.DialogResult.OK)
-            {
-                var elements = ObjectFinder.Self.GetElementsReferencing(tiw.Result);
-
-                string message = "File referenced by:";
-
-                if (elements.Count == 0)
-                {
-                    message += "\nNothing references this file";
-                }
-                else
-                {
-                    foreach (var element in elements)
-                    {
-                        message += "\n" + element.ToString();
-                    }
-                }
-                MessageBox.Show(message);
-            }
-        }
-
-        private void ObjectTreeView_MouseMove(object sender, MouseEventArgs e)
-        {
-            ElementTreeViewManager.Self.HandleMouseOver(e.X, e.Y);
-        }
     }
 }

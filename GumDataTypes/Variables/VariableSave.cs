@@ -47,10 +47,40 @@ namespace Gum.DataTypes.Variables
             set;
         }
 
+        // rootName and sourceObject are used so frequently that storing them off 
+        // should save in performance.
+        string name;
+        string rootName;
+        string sourceObject;
         public string Name
         {
-            get;
-            set;
+            get => name;
+            set
+            {
+                name = value;
+
+                if(name != null)
+                {
+                    int dotIndex = name.IndexOf('.');
+                    if (dotIndex == -1)
+                    {
+                        rootName = name;
+                    }
+                    else
+                    {
+                        rootName = name.Substring(1 + dotIndex);
+                    }
+
+                    if (dotIndex != -1)
+                    {
+                        sourceObject = name.Substring(0, dotIndex);
+                    }
+                    else
+                    {
+                        sourceObject = null;
+                    }
+                }
+            }
         }
 
         public object Value
@@ -63,13 +93,7 @@ namespace Gum.DataTypes.Variables
         }
 
         [XmlIgnore]
-        public string SourceObject
-        {
-            get
-            {
-                return GetSourceObject(Name);
-            }
-        }
+        public string SourceObject => sourceObject;
 
         public static string GetSourceObject(string variableName)
         {
@@ -154,6 +178,9 @@ namespace Gum.DataTypes.Variables
 
         // If adding stuff here, make sure to add to the Clone method!
 
+        [XmlIgnore]
+        public Dictionary<string, object> PropertiesToSetOnDisplayer { get; private set; } = new Dictionary<string, object>();
+
 
         public VariableSave Clone()
         {
@@ -168,18 +195,7 @@ namespace Gum.DataTypes.Variables
             return toReturn;
         }
 
-        public string GetRootName()
-        {
-            int dotIndex = Name.IndexOf('.');
-            if (dotIndex == -1)
-            {
-                return Name;
-            }
-            else
-            {
-                return Name.Substring(1 + dotIndex);
-            }
-        }
+        public string GetRootName() => rootName;
 
         public static string GetRootName(string variableName)
         {

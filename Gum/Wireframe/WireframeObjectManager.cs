@@ -49,7 +49,7 @@ namespace Gum.Wireframe
         const int left = -4096;
         const int width = 8192;
 
-
+        GraphicalUiElementManager gueManager;
 
 
         #endregion
@@ -112,7 +112,7 @@ namespace Gum.Wireframe
 
         #endregion
 
-        #region Methods
+        #region Initialize
 
         public void Initialize(WireframeEditControl editControl, WireframeControl wireframeControl)
         {
@@ -123,7 +123,28 @@ namespace Gum.Wireframe
 
             mEditControl = editControl;
             mEditControl.ZoomChanged += HandleControlZoomChange;
+
+            gueManager = new GraphicalUiElementManager();
         }
+
+        #endregion
+
+        #region Activity
+
+        public void Activity()
+        {
+            gueManager.Activity();
+
+            if(ProjectManager.Self.GeneralSettingsFile != null)
+            {
+                mBackgroundSprite.Color.R = ProjectManager.Self.GeneralSettingsFile.CheckerColor2R;
+                mBackgroundSprite.Color.G = ProjectManager.Self.GeneralSettingsFile.CheckerColor2G;
+                mBackgroundSprite.Color.B = ProjectManager.Self.GeneralSettingsFile.CheckerColor2B;
+
+            }
+        }
+
+        #endregion
 
         private void HandleKeyPress(object sender, System.Windows.Forms.KeyEventArgs e)
         {
@@ -135,10 +156,8 @@ namespace Gum.Wireframe
             // Create the Texture2D here
             ImageData imageData = new ImageData(2, 2, null);
 
-            int lightColor = 150;
-            int darkColor = 170;
-            Color darkGray = new Color(lightColor, lightColor, lightColor);
-            Color lightGray = new Color(darkColor, darkColor, darkColor);
+            Color opaqueColor = Microsoft.Xna.Framework.Color.White;
+            Color transparent = new Microsoft.Xna.Framework.Color(0,0,0,0);
 
             for (int y = 0; y < 2; y++)
             {
@@ -147,12 +166,12 @@ namespace Gum.Wireframe
                     bool isDark = ((x + y) % 2 == 0);
                     if (isDark)
                     {
-                        imageData.SetPixel(x, y, darkGray);
+                        imageData.SetPixel(x, y, transparent);
 
                     }
                     else
                     {
-                        imageData.SetPixel(x, y, lightGray);
+                        imageData.SetPixel(x, y, opaqueColor);
                     }
                 }
             }
@@ -165,6 +184,7 @@ namespace Gum.Wireframe
             mBackgroundSprite.Y = -4096;
             mBackgroundSprite.Width = 8192;
             mBackgroundSprite.Height = 8192;
+            mBackgroundSprite.Color = new Color(150, 150, 150);
 
             mBackgroundSprite.Wrap = true;
             int timesToRepeat = 256;
@@ -183,13 +203,15 @@ namespace Gum.Wireframe
         {
             foreach (var element in mGraphicalElements)
             {
+                gueManager.Remove(element);
+
                 element.RemoveFromManagers();
             }
 
             mGraphicalElements.Clear();
         }
 
-        public void RefreshAll(bool forceLayout, bool forceReloadTextures = true)
+        public void RefreshAll(bool forceLayout, bool forceReloadTextures = false)
         {
             ElementSave elementSave = SelectedState.Self.SelectedElement;
 
@@ -205,7 +227,10 @@ namespace Gum.Wireframe
         private void RefreshAll(bool forceLayout, bool forceReloadTextures, ElementSave elementSave)
         {
             bool shouldRecreateIpso = forceLayout || elementSave != ElementShowing;
-            bool shouldReloadTextures = forceReloadTextures || elementSave != ElementShowing;
+            //bool shouldReloadTextures = forceReloadTextures || elementSave != ElementShowing;
+            bool shouldReloadTextures =
+                false;
+                //forceReloadTextures || elementSave != ElementShowing;
 
             if (elementSave == null || elementSave.IsSourceFileMissing)
             {
@@ -246,6 +271,31 @@ namespace Gum.Wireframe
             else if (SelectedState.Self.SelectedElement != null)
             {
                 return GetRepresentation(SelectedState.Self.SelectedElement);
+            }
+            else
+            {
+                throw new Exception("The SelectionManager believes it has a selection, but there is no selected instance or element");
+            }
+        }
+
+        public GraphicalUiElement[] GetSelectedRepresentations()
+        {
+            if (!SelectionManager.Self.HasSelection)
+            {
+                return null;
+            }
+            else if(SelectedState.Self.SelectedInstances.Count() > 0)
+            {
+                return SelectedState.Self.SelectedInstances
+                    .Select(item => GetRepresentation(item, SelectedState.Self.GetTopLevelElementStack()))
+                    .ToArray();
+            }
+            else if (SelectedState.Self.SelectedElement != null)
+            {
+                return new GraphicalUiElement[]
+                {
+                    GetRepresentation(SelectedState.Self.SelectedElement)
+                };
             }
             else
             {
@@ -466,6 +516,5 @@ namespace Gum.Wireframe
             }
         }
 
-        #endregion
     }
 }

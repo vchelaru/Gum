@@ -248,22 +248,37 @@ namespace Gum.DataTypes
 
         }
 #if GUM
-        public static string GetFullPathXmlFile(this ElementSave instance)
+        public static FilePath GetFullPathXmlFile(this ElementSave elementSave)
         {
-            return instance.GetFullPathXmlFile(instance.Name);
+            return elementSave.GetFullPathXmlFile(elementSave.Name);
         }
 
 
-        public static string GetFullPathXmlFile(this ElementSave instance, string elementSaveName)
+        public static FilePath GetFullPathXmlFile(this ElementSave elementSave, string elementSaveName)
         {
-            if (string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave.FullFileName))
+            var gumProject = ProjectManager.Self.GumProjectSave;
+            if (string.IsNullOrEmpty(gumProject.FullFileName))
             {
                 return null;
             }
 
-            string directory = FileManager.GetDirectory(ProjectManager.Self.GumProjectSave.FullFileName);
+            var extension = elementSave.FileExtension;
 
-            return directory + instance.Subfolder + "\\" + elementSaveName + "." + instance.FileExtension;
+            var reference =
+                gumProject.ScreenReferences.FirstOrDefault(item => item.Name == elementSave.Name) ??
+                gumProject.ComponentReferences.FirstOrDefault(item => item.Name == elementSave.Name) ??
+                gumProject.StandardElementReferences.FirstOrDefault(item => item.Name == elementSave.Name);
+
+            FilePath gumDirectory = FileManager.GetDirectory(gumProject.FullFileName);
+            if(!string.IsNullOrWhiteSpace(reference?.Link))
+            {
+                return gumDirectory.Original + reference.Link;
+            }
+            else
+            {
+
+                return gumDirectory.Original + elementSave.Subfolder + "\\" + elementSaveName + "." + extension;
+            }
         }
 
 
@@ -366,7 +381,15 @@ namespace Gum.DataTypes
             {
                 var baseElement = ObjectFinder.Self.GetElementSave(element.BaseType);
 
-                return baseElement.GetStateSaveCategoryRecursively(categoryName, out categoryContainer);
+                if(baseElement == null)
+                {
+                    categoryContainer = null;
+                    return null;
+                }
+                else
+                {
+                    return baseElement.GetStateSaveCategoryRecursively(categoryName, out categoryContainer);
+                }
             }
 
             categoryContainer = null;

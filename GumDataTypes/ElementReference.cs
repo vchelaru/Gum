@@ -13,6 +13,12 @@ namespace Gum.DataTypes
         Standard
     }
 
+    public enum LinkType
+    {
+        ReferenceOriginal,
+        CopyLocally
+    }
+
     public class ElementReference
     {
         public const string ScreenSubfolder = "Screens";
@@ -25,7 +31,26 @@ namespace Gum.DataTypes
             set;
         }
 
-        string Subfolder
+        public LinkType LinkType { get; set; }
+
+        public string Extension
+        {
+            get
+            {
+                switch (ElementType)
+                {
+                    case DataTypes.ElementType.Standard:
+                        return GumProjectSave.StandardExtension;
+                    case DataTypes.ElementType.Component:
+                        return GumProjectSave.ComponentExtension;
+                    case DataTypes.ElementType.Screen:
+                        return GumProjectSave.ScreenExtension;
+                }
+                throw new InvalidOperationException();
+            }
+        }
+
+        public string Subfolder
         {
             get
             {
@@ -44,32 +69,51 @@ namespace Gum.DataTypes
 
         public string Name;
 
-        public ElementSave ToElementSave(string projectroot, string extension)
+        /// <summary>
+        /// The location of the file relative to the project if it differs from the Name. By default
+        /// this will be empty, so the Name will be used to load/save the element. However, if this is not null,
+        /// then this value is used instead to load the referenced element.
+        /// </summary>
+        public string Link { get; set; }
+
+        //public ElementSave ToElementSave(string projectroot, string extension)
+        //{
+        //    string fullName = projectroot + Subfolder + "/" + Name + "." + extension;
+
+//    ElementSave elementSave = FileManager.XmlDeserialize<ElementSave>(fullName);
+
+//    return elementSave;
+//}
+
+        public T ToElementSave<T>(string projectroot, string extension, GumLoadResult result, LinkLoadingPreference linkLoadingPreference = LinkLoadingPreference.PreferLinked) where T : ElementSave, new()
         {
-            string fullName = projectroot + Subfolder + "/" + Name + "." + extension;
-
-            ElementSave elementSave = FileManager.XmlDeserialize<ElementSave>(fullName);
-
-            return elementSave;
-        }
-
-
-        public T ToElementSave<T>(string projectroot, string extension, GumLoadResult result) where T : ElementSave, new()
-        {
-            string fullName = projectroot + Subfolder + "/" + Name + "." + extension;
-
-            if (ToolsUtilities.FileManager.IsRelative(fullName))
+            FilePath linkedName = null;
+            FilePath containedReferenceName = null;
+            
+            if(!string.IsNullOrWhiteSpace(this.Link))
             {
-                fullName = ToolsUtilities.FileManager.RelativeDirectory + fullName;
+                linkedName = projectroot + this.Link;
+
             }
-            fullName = ToolsUtilities.FileManager.Standardize(fullName);
+            containedReferenceName = projectroot + Subfolder + "/" + Name + "." + extension;
 
-
-            if (FileManager.FileExists(fullName))
+            if (linkedName != null && ToolsUtilities.FileManager.IsRelative(linkedName.Original))
             {
+                linkedName = ToolsUtilities.FileManager.RelativeDirectory + linkedName.Original;
+            }
+            if (ToolsUtilities.FileManager.IsRelative(containedReferenceName.Original))
+            {
+                containedReferenceName = ToolsUtilities.FileManager.RelativeDirectory + containedReferenceName.Original;
+            }
 
-
-                T elementSave = FileManager.XmlDeserialize<T>(fullName);
+            if(linkedName?.Exists() == true)
+            {
+                T elementSave = FileManager.XmlDeserialize<T>(linkedName.FullPath);
+                return elementSave;
+            }
+            else if (containedReferenceName.Exists() && (linkedName == null || linkLoadingPreference == LinkLoadingPreference.PreferLinked))
+            {
+                T elementSave = FileManager.XmlDeserialize<T>(containedReferenceName.FullPath);
 
                 if (Name != elementSave.Name)
                 {
@@ -91,7 +135,7 @@ namespace Gum.DataTypes
                 //errors += "\nCould not find the file name " + fullName;
                 // Update Feb 20, 2015
                 // But we can record it:
-                result.MissingFiles.Add(fullName);
+                result.MissingFiles.Add(containedReferenceName.FullPath);
 
 
                 T elementSave = new T();

@@ -2,6 +2,7 @@
 using Gum.Mvvm;
 using Gum.Settings;
 using Gum.Wireframe;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,20 +31,26 @@ namespace Gum.Plugins.PropertiesWindowPlugin
 
         public bool RestrictToUnitValues
         {
-            get { return Get<bool>(); }
-            set { Set(value); }
+            get => Get<bool>();
+            set => Set(value); 
         }
 
         public int CanvasWidth
         {
-            get { return Get<int>(); }
-            set { Set(value); }
+            get => Get<int>();
+            set => Set(value); 
         }
 
         public int CanvasHeight
         {
-            get { return Get<int>(); }
-            set { Set(value); }
+            get => Get<int>();
+            set => Set(value);
+        }
+
+        public decimal DisplayDensity
+        {
+            get => Get<decimal>();
+            set => Set(value);
         }
 
         public bool RestrictFileNamesForAndroid
@@ -56,6 +63,18 @@ namespace Gum.Plugins.PropertiesWindowPlugin
         {
             get { return Get<bool>(); }
             set { Set(value); }
+        }
+
+        public Color CheckerboardColor1
+        {
+            get => Get<Color>();
+            set => Set(value);
+        }
+
+        public Color CheckerboardColor2
+        {
+            get => Get<Color>();
+            set => Set(value);
         }
 
         public void BindTo(GeneralSettingsFile generalSettings, GumProjectSave gumProject)
@@ -72,9 +91,14 @@ namespace Gum.Plugins.PropertiesWindowPlugin
             RenderTextCharacterByCharacter = global::RenderingLibrary.Graphics.Text.TextRenderingMode ==
                 global::RenderingLibrary.Graphics.TextRenderingMode.CharacterByCharacter;
 
+            CheckerboardColor1 = new Color(generalSettings.CheckerColor1R, generalSettings.CheckerColor1G, generalSettings.CheckerColor1B);
+            CheckerboardColor2 = new Color(generalSettings.CheckerColor2R, generalSettings.CheckerColor2G, generalSettings.CheckerColor2B);
+
+
+
         }
 
-        public void ApplyToBoundObjects()
+        public void ApplyToModelObjects()
         {
             this.generalSettings.AutoSave = AutoSave;
             this.gumProject.ShowOutlines = ShowOutlines;
@@ -97,6 +121,15 @@ namespace Gum.Plugins.PropertiesWindowPlugin
                 global::RenderingLibrary.Graphics.Text.TextRenderingMode =
                     global::RenderingLibrary.Graphics.TextRenderingMode.RenderTarget;
             }
+
+            generalSettings.CheckerColor1R = CheckerboardColor1.R;
+            generalSettings.CheckerColor1G = CheckerboardColor1.G;
+            generalSettings.CheckerColor1B = CheckerboardColor1.B;
+
+            generalSettings.CheckerColor2R = CheckerboardColor2.R;
+            generalSettings.CheckerColor2G = CheckerboardColor2.G;
+            generalSettings.CheckerColor2B = CheckerboardColor2.B;
+
         }
 
 

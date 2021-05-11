@@ -98,7 +98,7 @@ namespace Gum.Wireframe
 
         public override void Activity(ICollection<GraphicalUiElement> selectedObjects)
         {
-            if (selectedObjects.Count != 0)
+            if (selectedObjects.Count != 0 && SelectedState.Self.SelectedStateSave != null && SelectedState.Self.CustomCurrentStateSave == null)
             {
                 RefreshSideOver();
 
@@ -376,6 +376,11 @@ namespace Gum.Wireframe
             var cursor = InputLibrary.Cursor.Self;
             if (cursor.PrimaryPush)
             {
+                // do this first to get the rotation handles to update to the right size/position to prevent accidental clicks
+                UpdateRotationHandlePosition();
+
+                RefreshRotationGrabbed();
+
                 rotationGrabbed = rotationHighlighted;
 
                 mHasChangedAnythingSinceLastPush = false;
@@ -654,7 +659,7 @@ namespace Gum.Wireframe
             widthMultiplier = 0;
             heightMultiplier = 0;
 
-            IPositionedSizedObject ipso = WireframeObjectManager.Self.GetRepresentation(instanceSave, elementStack);
+            var ipso = WireframeObjectManager.Self.GetRepresentation(instanceSave, elementStack);
             if (ipso == null)
             {
                 ipso = WireframeObjectManager.Self.GetRepresentation(SelectedState.Self.SelectedElement);
@@ -708,12 +713,12 @@ namespace Gum.Wireframe
 
             if (mResizeHandles.Width != 0)
             {
-                widthMultiplier *= (ipso.Width / mResizeHandles.Width);
+                widthMultiplier *= (((IPositionedSizedObject)ipso).Width / mResizeHandles.Width);
             }
 
             if (mResizeHandles.Height != 0)
             {
-                heightMultiplier *= (ipso.Height / mResizeHandles.Height);
+                heightMultiplier *= (((IPositionedSizedObject)ipso).Height / mResizeHandles.Height);
             }
 
             if (GetIsAltDown())
@@ -810,7 +815,7 @@ namespace Gum.Wireframe
         }
 
 
-        private float GetYMultiplierForTop(InstanceSave instanceSave, IPositionedSizedObject ipso)
+        private float GetYMultiplierForTop(InstanceSave instanceSave, GraphicalUiElement gue)
         {
             object yOriginAsObject = EditingManager.GetCurrentValueForVariable("Y Origin", instanceSave);
             bool shouldContiue = yOriginAsObject != null;
@@ -818,7 +823,7 @@ namespace Gum.Wireframe
             {
                 VerticalAlignment yOrigin = (VerticalAlignment)yOriginAsObject;
 
-                float ratioOver = GetRatioYDownInSelection(ipso, yOrigin);
+                float ratioOver = GetRatioYDownInSelection(gue, yOrigin);
                 float toReturn = 1 - ratioOver;
 
 
@@ -831,7 +836,7 @@ namespace Gum.Wireframe
             }
         }
 
-        private float GetYMultiplierForBottom(InstanceSave instanceSave, IPositionedSizedObject ipso)
+        private float GetYMultiplierForBottom(InstanceSave instanceSave, GraphicalUiElement ipso)
         {
             object yOriginAsObject = EditingManager.GetCurrentValueForVariable("Y Origin", instanceSave);
             bool shouldContiue = yOriginAsObject != null;
@@ -888,11 +893,23 @@ namespace Gum.Wireframe
             }
         }
 
-        private static float GetRatioYDownInSelection(IPositionedSizedObject ipso, VerticalAlignment verticalAlignment)
+        private static float GetRatioYDownInSelection(GraphicalUiElement gue, VerticalAlignment verticalAlignment)
         {
             if (verticalAlignment == VerticalAlignment.Top)
             {
                 return 0;
+            }
+            else if(verticalAlignment == VerticalAlignment.TextBaseline)
+            {
+                if(gue.RenderableComponent is Text text && text.Height > 0)
+                {
+                    return 1 - (text.DescenderHeight * text.FontScale / text.Height);
+                }
+                else
+                {
+                    return 1;
+                }
+
             }
             else if (verticalAlignment == VerticalAlignment.Center)
             {

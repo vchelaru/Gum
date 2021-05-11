@@ -225,7 +225,7 @@ namespace RenderingLibrary.Content
         /// <returns></returns>
         // TODO: Need to remove this to ContentLoader, but that would
         // require moving the cached textures there too
-        [Obsolete("Use LoadContent instead")]
+        [Obsolete("Use LoadContent instead for general loading, LoadTexture2D for Texture2D specific implementation")]
         internal Texture2D Load(string fileName, SystemManagers managers)
         {
             string fileNameStandardized = FileManager.Standardize(fileName, false, false);
@@ -250,18 +250,46 @@ namespace RenderingLibrary.Content
                     }
                 }
 
-                string extension = FileManager.GetExtension(fileName);
-                Renderer renderer = null;
-                if (managers == null)
+                toReturn = LoadTextureFromFile(fileName, managers);
+                if (CacheTextures)
                 {
-                    renderer = Renderer.Self;
+                    mCachedDisposables.Add(fileNameStandardized, toReturn);
                 }
-                else
-                {
-                    renderer = managers.Renderer;
-                }
-                if (extension == "tga")
-                {
+            }
+            return toReturn;
+        }
+
+        /// <summary>
+        /// Performs a no-caching load of the texture. This will always go to disk to access a file and 
+        /// will always return a unique Texture2D. This should not be used in most cases, as caching is preferred
+        /// </summary>
+        /// <param name="fileName">The filename to load</param>
+        /// <param name="managers">The optional SystemManagers to use when loading the file to obtain a GraphicsDevice</param>
+        /// <returns>The loaded Texture2D</returns>
+        public Texture2D LoadTextureFromFile(string fileName, SystemManagers managers = null)
+        {
+            string fileNameStandardized = FileManager.Standardize(fileName, false, false);
+
+            if (FileManager.IsRelative(fileNameStandardized))
+            {
+                fileNameStandardized = FileManager.RelativeDirectory + fileNameStandardized;
+
+                fileNameStandardized = FileManager.RemoveDotDotSlash(fileNameStandardized);
+            }
+
+            Texture2D toReturn;
+            string extension = FileManager.GetExtension(fileName);
+            Renderer renderer = null;
+            if (managers == null)
+            {
+                renderer = Renderer.Self;
+            }
+            else
+            {
+                renderer = managers.Renderer;
+            }
+            if (extension == "tga")
+            {
 #if RENDERING_LIB_SUPPORTS_TGA
                     if (renderer.GraphicsDevice == null)
                     {
@@ -277,29 +305,25 @@ namespace RenderingLibrary.Content
                         toReturn.Name = fileName;
                     }
 #else
-                    throw new NotImplementedException();
+                throw new NotImplementedException();
 #endif
-                }
-                else
+            }
+            else
+            {
+                using (var stream = FileManager.GetStreamForFile(fileNameStandardized))
                 {
-                    using (var stream = FileManager.GetStreamForFile(fileNameStandardized))
-                    {
-                        Texture2D texture = null;
+                    Texture2D texture = null;
 
-                        texture = Texture2D.FromStream(renderer.GraphicsDevice,
-                            stream);
+                    texture = Texture2D.FromStream(renderer.GraphicsDevice,
+                        stream);
 
-                        texture.Name = fileNameStandardized;
+                    texture.Name = fileNameStandardized;
 
-                        toReturn = texture;
+                    toReturn = texture;
 
-                    }
-                }
-                if (CacheTextures)
-                {
-                    mCachedDisposables.Add(fileNameStandardized, toReturn);
                 }
             }
+
             return toReturn;
         }
 

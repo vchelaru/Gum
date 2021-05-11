@@ -39,12 +39,24 @@ namespace CommonFormsAndControls
 
             DialogResult = DialogResult.Cancel;
 
-            FormUtilities.Self.PositionTopLeftToCursor(this);
+            FormUtilities.Self.PositionCenterToCursor(this);
+
+            this.textBox1.KeyDown += HandleTextBoxKeyDown;
 
             //StartPosition = FormStartPosition.Manual;
             //Location = new Point(TextInputWindow.MousePosition.X, TextInputWindow.MousePosition.Y);
 
             this.Shown += OnShown;
+        }
+
+        private void HandleTextBoxKeyDown(object sender, KeyEventArgs e)
+        {
+            switch(e.KeyCode)
+            {
+                case Keys.Escape:
+                    CancelButton_Click(this, null);
+                    break;
+            }
         }
 
         void OnShown(object sender, EventArgs e)

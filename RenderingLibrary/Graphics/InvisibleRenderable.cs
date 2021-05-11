@@ -28,7 +28,7 @@ namespace RenderingLibrary.Graphics
 
         ObservableCollection<IRenderableIpso> children = new ObservableCollection<IRenderableIpso>();
         public ObservableCollection<IRenderableIpso> Children => children;
-
+        ColorOperation IRenderableIpso.ColorOperation => ColorOperation.Modulate;
         // If a GUE uses this, it needs to support storing the values.
         public bool ClipsChildren { get; set; }
 
@@ -87,6 +87,8 @@ namespace RenderingLibrary.Graphics
 
         public float Z { get; set; }
 
+        public bool FlipHorizontal { get; set; }
+
         IVisible IVisible.Parent { get { return Parent as IVisible; } }
 
         public void PreRender()
@@ -101,6 +103,11 @@ namespace RenderingLibrary.Graphics
         void IRenderableIpso.SetParentDirect(IRenderableIpso parent)
         {
             mParent = parent;
+        }
+
+        public override string ToString()
+        {
+            return Name;
         }
     }
 }

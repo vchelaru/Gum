@@ -20,6 +20,7 @@ using Gum.Converters;
 using Gum.PropertyGridHelpers.Converters;
 using GumRuntime;
 using Microsoft.Xna.Framework.Graphics;
+using Gum.Plugins;
 
 namespace Gum.Wireframe
 {
@@ -89,7 +90,7 @@ namespace Gum.Wireframe
                     // can be null if the element save references a bad file
                     if(rootIpso.Component != null)
                     {
-                        rootIpso.Component.Name = elementSave.Name;
+                        rootIpso.Name = elementSave.Name;
                         rootIpso.Component.Tag = elementSave;
 
                     }
@@ -100,7 +101,15 @@ namespace Gum.Wireframe
                     SetGuideParent(null, rootIpso, guide);
                 }
 
-                foreach (var exposedVariable in elementSave.DefaultState.Variables.Where(item => !string.IsNullOrEmpty(item.ExposedAsName)))
+                var exposedVariables = elementSave
+                    .DefaultState
+                    .Variables
+                    .Where(item => 
+                        !string.IsNullOrEmpty(item.ExposedAsName) &&
+                        string.IsNullOrEmpty(item.SourceObject))
+                    .ToArray();
+
+                foreach (var exposedVariable in exposedVariables)
                 {
                     rootIpso.AddExposedVariable(exposedVariable.ExposedAsName, exposedVariable.Name);
                 }
@@ -178,12 +187,15 @@ namespace Gum.Wireframe
                 // I think this has to be *after* we set varaibles because that's where clipping gets set
                 if (rootIpso != null)
                 {
+                    gueManager.Add(rootIpso);
+
                     rootIpso.AddToManagers();
+
                 }
             }
             GraphicalUiElement.IsAllLayoutSuspended = false;
-            // There is a bug that currently requires layout to be performed twice.
-            rootIpso.UpdateLayout();
+
+            rootIpso.UpdateFontRecursive();
             rootIpso.UpdateLayout();
 
             return rootIpso;
@@ -198,13 +210,26 @@ namespace Gum.Wireframe
 
             string type = instance.BaseType;
 
-            if (type == "Sprite" || type == "ColoredRectangle" || type == "NineSlice" || type == "Text" || type == "Circle" || type == "Rectangle")
+            var renderable = PluginManager.Self.CreateRenderableForType(type);
+
+            if(renderable != null)
             {
                 graphicalElement = new GraphicalUiElement(null, container);
                 ElementSave instanceBase = ObjectFinder.Self.GetElementSave(instance.BaseType);
+                graphicalElement.SetContainedObject(renderable);
+                graphicalElement.Tag = instance;
+                graphicalElement.Name = instance.Name;
+                graphicalElement.Component.Tag = instance;
+            }
+
+
+            else if (type == "Sprite" || type == "ColoredRectangle" || type == "NineSlice" || type == "Text" || type == "Circle" || type == "Rectangle")
+            {
+                graphicalElement = new GraphicalUiElement(null, container);
+                ElementSave instanceBase = ObjectFinder.Self.GetElementSave(type);
                 graphicalElement.CreateGraphicalComponent(instanceBase, null);
                 graphicalElement.Tag = instance;
-                graphicalElement.Component.Name = instance.Name;
+                graphicalElement.Name = instance.Name;
                 graphicalElement.Component.Tag = instance;
 
                 if (type == "Text")
@@ -276,18 +301,18 @@ namespace Gum.Wireframe
                 string parent = rvf.GetValue<string>(instance.Name + ".Parent");
 
                 SetGuideParent(container, graphicalElement, guide);
-            }
 
-            if (baseElement != null)
-            {
-                graphicalElement.SetStatesAndCategoriesRecursively(baseElement);
-
-                // for performance reasons, we'll suspend the layout here:
-                graphicalElement.SuspendLayout();
+                if (baseElement != null)
                 {
-                    graphicalElement.SetVariablesRecursively(baseElement, baseElement.DefaultState);
+                    graphicalElement.SetStatesAndCategoriesRecursively(baseElement);
+
+                    // for performance reasons, we'll suspend the layout here:
+                    graphicalElement.SuspendLayout();
+                    {
+                        graphicalElement.SetVariablesRecursively(baseElement, baseElement.DefaultState);
+                    }
+                    graphicalElement.ResumeLayout();
                 }
-                graphicalElement.ResumeLayout();
             }
 
             return graphicalElement;
@@ -306,12 +331,22 @@ namespace Gum.Wireframe
 
                 string type = ses.Name;
 
-                if (type == "Sprite" || type == "ColoredRectangle" || type == "NineSlice" || type == "Text" || type == "Circle" || type == "Rectangle")
+                var renderable = PluginManager.Self.CreateRenderableForType(type);
+
+                if(renderable != null)
+                {
+                    rootIpso.SetContainedObject(renderable);
+                    rootIpso.Tag = instance;
+                    rootIpso.Name = instance.Name;
+                    rootIpso.Component.Tag = instance;
+                }
+
+                else if (type == "Sprite" || type == "ColoredRectangle" || type == "NineSlice" || type == "Text" || type == "Circle" || type == "Rectangle")
                 {
                     ElementSave instanceBase = ObjectFinder.Self.GetElementSave(instance.BaseType);
                     rootIpso.CreateGraphicalComponent(instanceBase, null);
                     rootIpso.Tag = instance;
-                    rootIpso.Component.Name = instance.Name;
+                    rootIpso.Name = instance.Name;
                     rootIpso.Component.Tag = instance;
 
                     if(type == "Text")
@@ -322,6 +357,8 @@ namespace Gum.Wireframe
                 }
                 else
                 {
+                    // give the plugin manager a shot at it:
+
                     CreateRectangleFor(instance, elementStack, rootIpso);
                 }
 
@@ -406,7 +443,7 @@ namespace Gum.Wireframe
             ElementSave instanceBase = ObjectFinder.Self.GetElementSave(instance.BaseType);
             graphicalUiElement.CreateGraphicalComponent(instanceBase, null);
             graphicalUiElement.Tag = instance;
-            graphicalUiElement.Component.Name = instance.Name;
+            graphicalUiElement.Name = instance.Name;
             graphicalUiElement.Component.Tag = instance;
             
             return graphicalUiElement;

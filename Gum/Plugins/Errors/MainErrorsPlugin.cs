@@ -28,7 +28,7 @@ namespace Gum.Plugins.Errors
             control = new ErrorDisplay();
             control.DataContext = viewModel;
 
-            tabPage = GumCommands.Self.GuiCommands.AddControl(control, "Errors", TabLocation.Right);
+            tabPage = GumCommands.Self.GuiCommands.AddControl(control, "Errors", TabLocation.RightBottom);
 
             this.ElementSelected += HandleElementSelected;
             this.InstanceAdd += HandleInstanceAdd;

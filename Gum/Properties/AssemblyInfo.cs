@@ -147,5 +147,15 @@ using System.Runtime.InteropServices;
 // - Fixed a bug where sometimes exposed variables would not display the right default value. 
 // - Fixed a bug where changing an exposed variable that was defined in a base component would not change the derived 
 //   object display in the preview window.
-[assembly: AssemblyVersion("0.9.9.1")]
-[assembly: AssemblyFileVersion("0.9.9.1")]
+// 0.9.9.2
+// - Fixed possible crash when clicking on a component with an exposed variable
+// 1.0
+// - Line wrapped text now properly scales when the width units are dependent on children
+// - Added new event export system allowing tools to respond to actions performed in Gum
+// - Added Text.MaxLettersToShow which will pre-line wrap text, and allow only a certain number of letters to be shown
+// - Added support for nullable (int?) variables in Gum
+// - Started expanding incremental variable setting to make Gum faster
+// - Added Newtonsoft for json parsing in Gum and plugins.
+// - 
+[assembly: AssemblyVersion("1.0.0")]
+[assembly: AssemblyFileVersion("1.0.0")]

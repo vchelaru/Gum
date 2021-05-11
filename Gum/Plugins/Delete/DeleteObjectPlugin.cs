@@ -9,6 +9,7 @@ using System.Drawing;
 using Gum.DataTypes.Behaviors;
 using System.Windows.Controls;
 using Gum.ToolCommands;
+using ToolsUtilities;
 
 namespace Gum.Gui.Plugins
 {
@@ -60,13 +61,13 @@ namespace Gum.Gui.Plugins
 
             if (deleteXmlCheckBox.IsChecked == true)
             {
-                string fileName = GetFileNameForObject(deletedObject);
+                var fileName = GetFileNameForObject(deletedObject);
 
-                if (!string.IsNullOrEmpty(fileName) && System.IO.File.Exists(fileName))
+                if (fileName?.Exists() == true)
                 {
                     try
                     {
-                        System.IO.File.Delete(fileName);
+                        System.IO.File.Delete(fileName.FullPath);
                     }
                     catch
                     {
@@ -163,7 +164,7 @@ namespace Gum.Gui.Plugins
             return instanceSaveList.ToArray();
         }
 
-        public string GetFileNameForObject(object deletedObject)
+        public FilePath GetFileNameForObject(object deletedObject)
         {
             if (deletedObject is ElementSave)
             {

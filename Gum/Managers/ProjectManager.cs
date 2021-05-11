@@ -88,7 +88,9 @@ namespace Gum
 
             if(!CommandLineManager.Self.ShouldExitImmediately)
             {
-                if (!string.IsNullOrEmpty(CommandLineManager.Self.GlueProjectToLoad))
+                var isShift = (Control.ModifierKeys & Keys.Shift) != 0;
+
+                if (!isShift && !string.IsNullOrEmpty(CommandLineManager.Self.GlueProjectToLoad))
                 {
                     GumCommands.Self.FileCommands.LoadProject(CommandLineManager.Self.GlueProjectToLoad);
 
@@ -97,7 +99,7 @@ namespace Gum
                         SelectedState.Self.SelectedElement = ObjectFinder.Self.GetElementSave(CommandLineManager.Self.ElementName);
                     }
                 }
-                else if (!string.IsNullOrEmpty(GeneralSettingsFile.LastProject))
+                else if (!isShift && !string.IsNullOrEmpty(GeneralSettingsFile.LastProject))
                 {
                     GumCommands.Self.FileCommands.LoadProject(GeneralSettingsFile.LastProject);
                 }
@@ -150,11 +152,11 @@ namespace Gum
         }
 
         // made public so that File commands can access this function
-        public void LoadProject(string fileName)
+        public void LoadProject(FilePath fileName)
         {
             GumLoadResult result;
 
-            mGumProjectSave = GumProjectSave.Load(fileName, out result);
+            mGumProjectSave = GumProjectSave.Load(fileName.FullPath, out result);
 
             string errors = result.ErrorMessage;
 
@@ -164,7 +166,7 @@ namespace Gum
                 
                 // If the file doesn't exist, that's okay we will let the user still work - it's not like they can overwrite a file that doesn't exist
                 // But if it does exist, we want to be careful and not allow overwriting because they could be wiping out good data
-                if (FileManager.FileExists(fileName))
+                if (fileName.Exists())
                 {
                     mHaveErrorsOccurred = true;
                 }
@@ -180,7 +182,7 @@ namespace Gum
 
             ObjectFinder.Self.GumProjectSave = mGumProjectSave;
 
-            WpfDataUi.Controls.FileSelectionDisplay.FolderRelativeTo = FileManager.GetDirectory(fileName);
+            WpfDataUi.Controls.FileSelectionDisplay.FolderRelativeTo = fileName.GetDirectoryContainingThis().FullPath;
 
             if (mGumProjectSave != null)
             {
@@ -200,12 +202,14 @@ namespace Gum
 
                 mGumProjectSave.FixStandardVariables();
 
-                FileManager.RelativeDirectory = FileManager.GetDirectory(fileName);
+                FileManager.RelativeDirectory = fileName.GetDirectoryContainingThis().FullPath;
                 mGumProjectSave.RemoveDuplicateVariables();
 
 
                 GraphicalUiElement.ShowLineRectangles = mGumProjectSave.ShowOutlines;
                 EditingManager.Self.RestrictToUnitValues = mGumProjectSave.RestrictToUnitValues;
+
+                CopyLinkedComponents();
 
                 PluginManager.Self.ProjectLoad(mGumProjectSave);
 
@@ -230,9 +234,28 @@ namespace Gum
 
             GeneralSettingsFile.AddToRecentFilesIfNew(fileName);
 
+            var shouldSaveSettings = false;
             if (GeneralSettingsFile.LastProject != fileName)
             {
-                GeneralSettingsFile.LastProject = fileName;
+                GeneralSettingsFile.LastProject = fileName.FullPath;
+                shouldSaveSettings = true;
+            }
+
+            if(!string.IsNullOrEmpty(result.ErrorMessage))
+            {
+                if(!fileName.Exists())
+                {
+                    var numberRemoved = GeneralSettingsFile.RecentProjects.RemoveAll(item => item.FilePath == fileName);
+                    if(numberRemoved > 0)
+                    {
+                        shouldSaveSettings = true;
+                    }
+                }
+
+            }
+
+            if(shouldSaveSettings)
+            {
                 GeneralSettingsFile.Save();
             }
 
@@ -241,6 +264,45 @@ namespace Gum
                 RecentFilesUpdated();
             }
 
+        }
+
+        private void CopyLinkedComponents()
+        {
+            var gumDirectory = new FilePath(mGumProjectSave.FullFileName).GetDirectoryContainingThis();
+
+            void CopyReference(ElementReference reference)
+            {
+                if (reference.LinkType == LinkType.CopyLocally && !string.IsNullOrEmpty(reference.Link))
+                {
+                    // copy from the original location here
+                    var source = gumDirectory.Original + reference.Link;
+                    var destination = gumDirectory.Original + reference.Subfolder + "\\" + reference.Name + "." + reference.Extension;
+
+                    try
+                    {
+                        System.IO.File.Copy(source, destination, overwrite: true);
+                    }
+                    catch (Exception e)
+                    {
+                        GumCommands.Self.GuiCommands.PrintOutput($"Error {e}");
+                    }
+                }
+            }
+
+            foreach(var reference in mGumProjectSave.ScreenReferences)
+            {
+                CopyReference(reference);
+            }
+
+            foreach (var reference in mGumProjectSave.ComponentReferences)
+            {
+                CopyReference(reference);
+            }
+
+            foreach (var reference in mGumProjectSave.StandardElementReferences)
+            {
+                CopyReference(reference);
+            }
         }
 
         private bool FixSlashesInNames(GumProjectSave mGumProjectSave)
@@ -317,9 +379,10 @@ namespace Gum
                 {
                     PluginManager.Self.BeforeProjectSave(GumProjectSave);
 
+                    bool saveContainedElements = isNewProject || forceSaveContainedElements;
+                    
                     try
                     {
-                        bool saveContainedElements = isNewProject || forceSaveContainedElements;
 
                         if (saveContainedElements)
                         {
@@ -338,7 +401,8 @@ namespace Gum
                         }
                         FileWatchLogic.Self.IgnoreNextChangeOn(GumProjectSave.FullFileName);
 
-                        GumProjectSave.Save(GumProjectSave.FullFileName, saveContainedElements);
+                        GumCommands.Self.TryMultipleTimes(() => GumProjectSave.Save(GumProjectSave.FullFileName, saveContainedElements));
+
                         succeeded = true;
 
                         if (succeeded && saveContainedElements)
@@ -359,6 +423,9 @@ namespace Gum
                     }
                     catch(UnauthorizedAccessException exception)
                     {
+                        var tempFileName = FileManager.RemoveExtension(GumProjectSave.FullFileName) + DateTime.Now.ToString("s") + "gumx";
+                        GumCommands.Self.TryMultipleTimes(() => GumProjectSave.Save(tempFileName, saveContainedElements));
+
                         string fileName = TryGetFileNameFromException(exception);
                         if (fileName != null && IsFileReadOnly(fileName))
                         {
@@ -366,7 +433,7 @@ namespace Gum
                         }
                         else
                         {
-                            MessageBox.Show("Unknown error trying to save the project:\n\n" + exception.ToString());
+                            MessageBox.Show($"Error trying to save the project, but backup was saved at \n\n{tempFileName}\n\n Additional information:\n\n" + exception.ToString());
                         }
                     }
 
@@ -454,19 +521,19 @@ namespace Gum
                 {
                     PluginManager.Self.BeforeElementSave(elementSave);
 
-                    string fileName = elementSave.GetFullPathXmlFile();
+                    var fileName = elementSave.GetFullPathXmlFile();
 
 
                     // if it's readonly, let's warn the user
-                    bool isReadOnly = IsFileReadOnly(fileName);
+                    bool isReadOnly = IsFileReadOnly(fileName.FullPath);
 
                     if (isReadOnly)
                     {
-                        ShowReadOnlyDialog(fileName);
+                        ShowReadOnlyDialog(fileName.FullPath);
                     }
                     else
                     {
-                        FileWatchLogic.Self.IgnoreNextChangeOn(fileName);
+                        FileWatchLogic.Self.IgnoreNextChangeOn(fileName.FullPath);
 
                         const int maxNumberOfTries = 5;
                         const int msBetweenSaves = 100;
@@ -479,7 +546,7 @@ namespace Gum
                         {
                             try
                             {
-                                elementSave.Save(fileName);
+                                elementSave.Save(fileName.FullPath);
                                 succeeded = true;
                                 break;
                             }
@@ -512,6 +579,12 @@ namespace Gum
         public static void ShowReadOnlyDialog(string fileName)
         {
             MultiButtonMessageBox mbmb = new MultiButtonMessageBox();
+
+            mbmb.StartPosition = FormStartPosition.Manual;
+
+            mbmb.Location = new System.Drawing.Point(MainWindow.MousePosition.X - mbmb.Width / 2,
+                 MainWindow.MousePosition.Y - mbmb.Height / 2);
+
             mbmb.MessageText = "Could not save the file\n\n" + fileName + "\n\nbecause it is read-only." +
                 "What would you like to do?";
 

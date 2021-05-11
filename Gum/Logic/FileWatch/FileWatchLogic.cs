@@ -28,58 +28,56 @@ namespace Gum.Logic.FileWatch
             fileWatchManager.EnableWithDirectory(directory);
         }
 
-        private static FilePath GetFileWatchRootDirectory()
+        private static HashSet<FilePath> GetFileWatchRootDirectory()
         {
-            var allReferencedFiles = new List<FilePath>();
+            HashSet<FilePath> directories = new HashSet<FilePath>();
+
+            void AddRange(IEnumerable<FilePath> directoriesToAdd)
+            {
+                foreach(var directory in directoriesToAdd)
+                {
+                    directories.Add(directory);
+                }
+            }
+
+            //var allReferencedFiles = new List<FilePath>();
 
             foreach (var screen in ProjectState.Self.GumProjectSave.Screens)
             {
                 var screenPaths = ObjectFinder.Self.GetFilesReferencedBy(screen)
-                    .Select(item => (FilePath)item);
+                    .Select(item => ((FilePath)item).GetDirectoryContainingThis());
 
-                allReferencedFiles.AddRange(screenPaths);
+                AddRange(screenPaths);
 
             }
             foreach (var component in ProjectState.Self.GumProjectSave.Components)
             {
                 var componentPaths = ObjectFinder.Self.GetFilesReferencedBy(component)
-                    .Select(item => (FilePath)item);
+                    .Select(item => ((FilePath)item).GetDirectoryContainingThis());
 
-                allReferencedFiles.AddRange(componentPaths);
+                AddRange(componentPaths);
             }
             foreach (var standardElement in ProjectState.Self.GumProjectSave.StandardElements)
             {
                 var standardElementPaths = ObjectFinder.Self.GetFilesReferencedBy(standardElement)
-                    .Select(item => (FilePath)item);
+                    .Select(item => ((FilePath)item).GetDirectoryContainingThis());
 
-                allReferencedFiles.AddRange(standardElementPaths);
+                AddRange(standardElementPaths);
             }
 
             FilePath gumProjectFilePath = ProjectManager.Self.GumProjectSave.FullFileName;
 
             char gumProjectDrive = gumProjectFilePath.Standardized[0];
 
-            allReferencedFiles.Add(gumProjectFilePath);
+            directories.Add(gumProjectFilePath.GetDirectoryContainingThis());
+            directories.Add(gumProjectFilePath.GetDirectoryContainingThis() + "Screens/");
+            directories.Add(gumProjectFilePath.GetDirectoryContainingThis() + "Components/");
+            directories.Add(gumProjectFilePath.GetDirectoryContainingThis() + "Standards/");
+            directories.Add(gumProjectFilePath.GetDirectoryContainingThis() + "Behaviors/");
+            directories.Add(gumProjectFilePath.GetDirectoryContainingThis() + "FontCache/");
+            
 
-
-            allReferencedFiles = allReferencedFiles.Distinct().ToList();
-
-            var rootmostFile = allReferencedFiles.OrderBy(item => item.Standardized.Split('/').Length).FirstOrDefault();
-            var rootmostDirectory = rootmostFile.GetDirectoryContainingThis();
-
-            foreach (var path in allReferencedFiles)
-            {
-                // make sure this is on the same drive as the gum project. If not, don't include it:
-                if (path.Standardized.StartsWith(gumProjectDrive.ToString()))
-                {
-                    while (rootmostDirectory.IsRootOf(path) == false)
-                    {
-                        rootmostDirectory = rootmostDirectory.GetDirectoryContainingThis();
-                    }
-                }
-            }
-
-            return rootmostDirectory;
+            return directories;
         }
 
         public void HandleProjectUnloaded()

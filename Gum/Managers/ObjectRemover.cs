@@ -6,6 +6,7 @@ using CommonFormsAndControls.Forms;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Debug;
+using Gum.Plugins;
 using Gum.ToolCommands;
 using Gum.ToolStates;
 using Gum.Wireframe;
@@ -19,8 +20,8 @@ namespace Gum.Managers
         public void Remove(StateSave stateSave)
         {
             bool shouldProgress = TryAskForRemovalConfirmation(stateSave, SelectedState.Self.SelectedElement);
-
             ElementCommands.Self.RemoveState(stateSave, SelectedState.Self.SelectedStateContainer);
+            PluginManager.Self.StateDelete(stateSave);
             StateTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedStateContainer);
             PropertyGridManager.Self.RefreshUI();
             WireframeObjectManager.Self.RefreshAll(true);
@@ -55,6 +56,12 @@ namespace Gum.Managers
                     if (foundVariable != null && foundVariable.Value == stateSave.Name)
                     {
                         MultiButtonMessageBox mbmb = new MultiButtonMessageBox();
+
+                        mbmb.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
+
+                        mbmb.Location = new System.Drawing.Point(MainWindow.MousePosition.X - mbmb.Width / 2,
+                             MainWindow.MousePosition.Y - mbmb.Height / 2);
+
                         mbmb.MessageText = "The state " + stateSave.Name + " is used in the element " + 
                             elementSave + " in its state " + stateInContainer + ".\n  What would you like to do?";
 

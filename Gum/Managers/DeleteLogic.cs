@@ -122,7 +122,15 @@ namespace Gum.Managers
                     EditingManager.Self.RemoveSelectedBehavior();
                 }
             }
-            if (objectDeleted != null)
+
+            var shouldDelete = objectDeleted != null;
+
+            if(shouldDelete && selectedInstance != null)
+            {
+                shouldDelete = selectedInstance.DefinedByBase == false;
+            }
+
+            if (shouldDelete)
             {
                 PluginManager.Self.DeleteConfirm(optionsWindow, objectDeleted);
             }
@@ -156,6 +164,8 @@ namespace Gum.Managers
             optionsWindow.Title = titleText;
             optionsWindow.Message = "Are you sure you want to delete:\n" + objectToDelete.ToString();
             optionsWindow.ObjectToDelete = objectToDelete;
+
+            GumCommands.Self.GuiCommands.PositionWindowByCursor(optionsWindow);
 
             PluginManager.Self.ShowDeleteDialog(optionsWindow, objectToDelete);
 
@@ -319,6 +329,8 @@ namespace Gum.Managers
             PropertyGridManager.Self.RefreshUI();
             WireframeObjectManager.Self.RefreshAll(true);
             SelectionManager.Self.Refresh();
+
+            PluginManager.Self.CategoryDelete(category);
         }
 
         public List<BehaviorSave> GetBehaviorsNeedingCategory(StateSaveCategory category, ComponentSave componentSave)

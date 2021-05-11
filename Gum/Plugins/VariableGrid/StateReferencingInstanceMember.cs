@@ -115,16 +115,19 @@ namespace Gum.PropertyGridHelpers
                 {
                     var attributes = mPropertyDescriptor.Attributes;
 
-                    foreach(var attribute in attributes)
-                    {
-                        if(attribute is EditorAttribute)
+                    if (attributes != null)
+                    { 
+                        foreach(var attribute in attributes)
                         {
-                            EditorAttribute editorAttribute = attribute as EditorAttribute;
+                            if(attribute is EditorAttribute)
+                            {
+                                EditorAttribute editorAttribute = attribute as EditorAttribute;
 
-                            return editorAttribute.EditorTypeName.StartsWith("System.Windows.Forms.Design.FileNameEditor");
+                                return editorAttribute.EditorTypeName.StartsWith("System.Windows.Forms.Design.FileNameEditor");
+                            }
                         }
+                        //EditorAttribute(typeof(System.Windows.Forms.Design.FileNameEditor), typeof(System.Drawing.Design.UITypeEditor))
                     }
-                    //EditorAttribute(typeof(System.Windows.Forms.Design.FileNameEditor), typeof(System.Drawing.Design.UITypeEditor))
 
                 }
 
@@ -258,8 +261,24 @@ namespace Gum.PropertyGridHelpers
 
             if (standardVariable != null)
             {
+                var defaultStates = StandardElementsManager.Self.DefaultStates;
+                if(defaultStates.ContainsKey(standardElement?.Name))
+                {
+                    var defaultState = defaultStates[standardElement.Name];
+
+                    var defaultStateVariable = defaultState.Variables.FirstOrDefault(item => item.Name == RootVariableName);
+
+                    if(defaultStateVariable != null)
+                    {
+                        foreach(var kvp in defaultStateVariable.PropertiesToSetOnDisplayer)
+                        {
+                            this.PropertiesToSetOnDisplayer[kvp.Key] = kvp.Value;
+                        }
+                    }
+                }
                 this.SortValue = standardVariable.DesiredOrder;
             }
+
         }
 
         private void TryAddExposeVariableMenuOptions(InstanceSave instance)
@@ -275,7 +294,7 @@ namespace Gum.PropertyGridHelpers
                 }
                 else
                 {
-                    ContextMenuEvents.Add("Un-expose Variable", HandleUnExposeVariableClick);
+                    ContextMenuEvents.Add($"Un-expose Variable {VariableSave.ExposedAsName}", HandleUnExposeVariableClick);
                 }
             }
             else

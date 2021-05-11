@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -258,9 +259,30 @@ namespace WpfDataUi.Controls
                         {
                             result = ApplyValueResult.InvalidSyntax;
                         }
-                        catch
+                        catch(Exception e)
                         {
-                            result = ApplyValueResult.InvalidSyntax;
+                            var wasMathOperation = false;
+                            if(e.InnerException is FormatException)
+                            {
+                                var computedValue = TryHandleMathOperation(usableString, InstancePropertyType);
+                                if(computedValue != null)
+                                {
+                                    wasMathOperation = true;
+                                    value = converter.ConvertFrom(computedValue.ToString());
+                                }
+                                else
+                                {
+                                    wasMathOperation = false;
+                                }
+                            }
+                            if(wasMathOperation)
+                            {
+                                result = ApplyValueResult.Success;
+                            }
+                            else
+                            {
+                                result = ApplyValueResult.InvalidSyntax;
+                            }
                         }
                     }
                     else
@@ -275,6 +297,39 @@ namespace WpfDataUi.Controls
             }
 
             return result;
+        }
+
+        private object TryHandleMathOperation(string usableString, Type instancePropertyType)
+        {
+            if(instancePropertyType == typeof(float))
+            {
+                var result = new DataTable().Compute(usableString, null);
+            
+                if(result is float || result is int || result is decimal || result is double)
+                {
+                    return result;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            else if(instancePropertyType == typeof(int))
+            {
+                var result = new DataTable().Compute(usableString, null);
+                if (result is float || result is int || result is decimal || result is double)
+                {
+                    return result;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            else
+            {
+                return null;
+            }
         }
 
         public void RefreshDisplay()

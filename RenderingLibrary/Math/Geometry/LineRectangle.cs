@@ -38,6 +38,8 @@ namespace RenderingLibrary.Math.Geometry
 
         #region Properties
 
+        ColorOperation IRenderableIpso.ColorOperation => ColorOperation.Modulate;
+
         /// <summary>
         /// This is similar to the Visible property, but affects only this.
         /// This allows LineRectangles to not render without making their children invisible.
@@ -103,6 +105,8 @@ namespace RenderingLibrary.Math.Geometry
                 UpdatePoints();
             }
         }
+
+        public bool FlipHorizontal { get; set; }
 
         public float Width
         {
@@ -253,11 +257,9 @@ namespace RenderingLibrary.Math.Geometry
 
         }
 
-        public static void UpdateLinePrimitive(LinePrimitive linePrimitive, IPositionedSizedObject ipso)
+        public static void UpdateLinePrimitive(LinePrimitive linePrimitive, IRenderableIpso ipso)
         {
-            Matrix matrix = Matrix.CreateRotationZ(-MathHelper.ToRadians(ipso.Rotation));
-
-            
+            Matrix matrix = Matrix.CreateRotationZ(-MathHelper.ToRadians(ipso.GetAbsoluteRotation()));
 
             linePrimitive.Replace(0, Vector2.Zero);
             linePrimitive.Replace(1, Vector2.Transform(new Vector2(ipso.Width, 0), matrix) );

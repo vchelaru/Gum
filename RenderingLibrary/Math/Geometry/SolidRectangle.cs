@@ -24,6 +24,10 @@ namespace RenderingLibrary.Graphics
         #endregion
 
         #region Properties
+
+        ColorOperation IRenderableIpso.ColorOperation => ColorOperation.Modulate;
+
+
         public static string AtlasedTextureName { get; set; }
 
         public static Texture2D Texture
@@ -100,6 +104,8 @@ namespace RenderingLibrary.Graphics
         }
 
         public float Rotation { get; set; }
+
+        public bool FlipHorizontal { get; set; }
 
         public ObservableCollection<IRenderableIpso> Children
         {
@@ -223,7 +229,7 @@ namespace RenderingLibrary.Graphics
                     sourceRect = SinglePixelTextureSourceRectangle;
                 }
 
-                Sprite.Render(managers, spriteRenderer, this, texture, Color, sourceRect, false, false, Rotation);
+                Sprite.Render(managers, spriteRenderer, this, texture, Color, sourceRect, false, this.GetAbsoluteRotation());
             }
         }
 

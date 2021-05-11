@@ -35,13 +35,13 @@ namespace Gum.RenderingLibrary
             fileWidth = 32;
             fileHeight = 32;
 
+#if MONOGAME
             Microsoft.Xna.Framework.Graphics.Texture2D texture = null;
 
 
             if (ipso is Sprite)
             {
                 texture = ((Sprite)ipso).Texture;
-
             }
             else if (ipso is GraphicalUiElement && ((GraphicalUiElement)ipso).RenderableComponent is Sprite)
             {
@@ -55,8 +55,10 @@ namespace Gum.RenderingLibrary
                 fileWidth = texture.Width;
                 fileHeight = texture.Height;
             }
+#endif
         }
 
+#if MONOGAME
         public static string GetQualifiedPrefixWithDot(IRenderableIpso ipso, ElementSave elementSaveForIpso, ElementSave containerElement)
         {
             string qualifiedVariablePrefixWithDot = ipso.Name + ".";
@@ -109,7 +111,6 @@ namespace Gum.RenderingLibrary
 
             return qualifiedVariablePrefixWithDot;
         }
-
                 
         public static string GetAttachmentQualifiedName(this IRenderableIpso ipso, List<ElementWithState> elementStack)
         {
@@ -160,6 +161,7 @@ namespace Gum.RenderingLibrary
             }
 
         }
+#endif
 
 
     }

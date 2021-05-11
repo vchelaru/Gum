@@ -111,7 +111,7 @@ namespace Gum.Managers
                 {
                     ElementTreeViewManager.Self.Select((ElementSave)null);
                 }
-                ElementTreeViewManager.Self.RefreshUi();
+                GumCommands.Self.GuiCommands.RefreshElementTreeView();
 
                 if(refreshingSelected)
                 {
@@ -127,7 +127,7 @@ namespace Gum.Managers
 
             if(currentElement != null)
             {
-                var currentElementFile = new FilePath(currentElement.GetFullPathXmlFile());
+                var currentElementFile = currentElement.GetFullPathXmlFile();
                 shouldReloadWireframe = currentElementFile == file;
             }
 
@@ -157,9 +157,9 @@ namespace Gum.Managers
                 {
                     ElementTreeViewManager.Self.Select((BehaviorSave)null);
                 }
-                ElementTreeViewManager.Self.RefreshUi();
+                GumCommands.Self.GuiCommands.RefreshElementTreeView();
 
-                if(refreshingSelected)
+                if (refreshingSelected)
                 {
                     behavior = ProjectState.Self.GumProjectSave.Behaviors.FirstOrDefault(item =>
                         item.Name.ToLowerInvariant() == file.StandardizedNoPathNoExtension.ToLowerInvariant());

@@ -62,21 +62,21 @@ namespace Gum.Managers
                 // copy, ctrl c, ctrl + c
                 if (e.KeyCode == Keys.C)
                 {
-                    EditingManager.Self.OnCopy(CopyType.InstanceOrElement);
+                    CopyPasteLogic.OnCopy(CopyType.InstanceOrElement);
                     e.Handled = true;
                     e.SuppressKeyPress = true;
                 }
                 // paste, ctrl v, ctrl + v
                 else if (e.KeyCode == Keys.V)
                 {
-                    EditingManager.Self.OnPaste(CopyType.InstanceOrElement);
                     e.Handled = true;
                     e.SuppressKeyPress = true;
+                    CopyPasteLogic.OnPaste(CopyType.InstanceOrElement);
                 }
                 // cut, ctrl x, ctrl + x
                 else if (e.KeyCode == Keys.X)
                 {
-                    EditingManager.Self.OnCut(CopyType.InstanceOrElement);
+                    CopyPasteLogic.OnCut(CopyType.InstanceOrElement);
                     e.Handled = true;
                     e.SuppressKeyPress = true;
                 }
@@ -208,14 +208,14 @@ namespace Gum.Managers
                 // copy, ctrl c, ctrl + c
                 if (e.KeyCode == Keys.C)
                 {
-                    EditingManager.Self.OnCopy(CopyType.State);
+                    CopyPasteLogic.OnCopy(CopyType.State);
                     e.Handled = true;
                     e.SuppressKeyPress = true;
                 }
                 // paste, ctrl v, ctrl + v
                 else if (e.KeyCode == Keys.V)
                 {
-                    EditingManager.Self.OnPaste(CopyType.State);
+                    CopyPasteLogic.OnPaste(CopyType.State);
                     e.Handled = true;
                     e.SuppressKeyPress = true;
                 }

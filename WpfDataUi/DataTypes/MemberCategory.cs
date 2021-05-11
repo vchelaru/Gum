@@ -11,7 +11,6 @@ namespace WpfDataUi.DataTypes
 {
     public class MemberCategory : INotifyPropertyChanged
     {
-
         #region Properties
 
         public string Name { get; set; }

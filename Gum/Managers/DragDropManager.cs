@@ -19,6 +19,7 @@ using RenderingLibrary.Graphics;
 using Gum.PropertyGridHelpers;
 using System.Drawing;
 using Gum.Converters;
+using Gum.Logic;
 
 namespace Gum.Managers
 {
@@ -292,16 +293,18 @@ namespace Gum.Managers
 
                 if (draggedComponentOrElement is ElementSave)
                 {
-                    HandleDroppedElementSave(draggedComponentOrElement, treeNodeDroppedOn, targetTag);
+                    HandleDroppedElementSave(draggedComponentOrElement, treeNodeDroppedOn, targetTag, treeNodeDroppedOn);
                 }
                 else if (draggedComponentOrElement is InstanceSave)
                 {
-                    HandleDroppedInstance(draggedComponentOrElement, targetTag);
+                    HandleDroppedInstance(draggedComponentOrElement, treeNodeDroppedOn, targetTag);
                 }
             }
         }
 
-        private void HandleDroppedElementSave(object draggedComponentOrElement, TreeNode treeNodeDroppedOn, object targetTag)
+        #region Drop Element (like components)
+
+        private void HandleDroppedElementSave(object draggedComponentOrElement, TreeNode treeNodeDroppedOn, object targetTag, TreeNode targetTreeNode)
         {
             ElementSave draggedAsElementSave = draggedComponentOrElement as ElementSave;
 
@@ -323,8 +326,11 @@ namespace Gum.Managers
 
                 var newInstance = HandleDroppedElementInElement(draggedAsElementSave, targetInstance.ParentContainer, out handled);
 
-                // Since the user dropped on another instance, let's try to parent it:
-                HandleDroppingInstanceOnTarget(targetInstance, newInstance, targetInstance.ParentContainer);
+                if(newInstance != null)
+                {
+                    // Since the user dropped on another instance, let's try to parent it:
+                    HandleDroppingInstanceOnTarget(targetInstance, newInstance, targetInstance.ParentContainer, targetTreeNode);
+                }
 
             }
             else if (treeNodeDroppedOn.IsTopComponentContainerTreeNode())
@@ -357,19 +363,19 @@ namespace Gum.Managers
             {
                 var fullFolderPath = treeNodeDroppedOn.GetFullFilePath();
 
-                var fullElementFilePath = FileManager.GetDirectory( draggedAsElementSave.GetFullPathXmlFile());
+                var fullElementFilePath = draggedAsElementSave.GetFullPathXmlFile().GetDirectoryContainingThis();
 
                 handled = false;
 
-                if(FileManager.Standardize(fullFolderPath) != FileManager.Standardize(fullElementFilePath))
+                if(fullFolderPath != fullElementFilePath)
                 {
                     var projectFolder = FileManager.GetDirectory(ProjectManager.Self.GumProjectSave.FullFileName);
 
-                    string nodeRelativeToProject = FileManager.MakeRelative(fullFolderPath, projectFolder + draggedAsElementSave.Subfolder + "\\", preserveCase:true);
+                    string nodeRelativeToProject = FileManager.MakeRelative(fullFolderPath.FullPath, projectFolder + draggedAsElementSave.Subfolder + "\\", preserveCase:true);
 
                     string oldName = draggedAsElementSave.Name;
                     draggedAsElementSave.Name = nodeRelativeToProject + FileManager.RemovePath(draggedAsElementSave.Name);
-                    RenameManager.Self.HandleRename(draggedAsElementSave, (InstanceSave)null,  oldName, NameChangeAction.Move);
+                    RenameLogic.HandleRename(draggedAsElementSave, (InstanceSave)null,  oldName, NameChangeAction.Move);
 
                     handled = true;
                 }
@@ -389,13 +395,17 @@ namespace Gum.Managers
             {
                 // It's in a directory, we're going to move it out
                 draggedAsElementSave.Name = FileManager.RemovePath(name);
-                RenameManager.Self.HandleRename(draggedAsElementSave, (InstanceSave)null, name, NameChangeAction.Move);
+                RenameLogic.HandleRename(draggedAsElementSave, (InstanceSave)null, name, NameChangeAction.Move);
 
                 handled = true;
             }
         }
 
-        private static void HandleDroppedInstance(object draggedObject, object targetObject)
+        #endregion
+
+        #region Drop Instance
+
+        private static void HandleDroppedInstance(object draggedObject, TreeNode targetTreeNode, object targetObject)
         {
             InstanceSave draggedAsInstanceSave = draggedObject as InstanceSave;
 
@@ -410,23 +420,51 @@ namespace Gum.Managers
 
             if (targetElementSave != null)
             {
-                // We aren't going to allow drag+drop within the same element - that may cause
-                // unexpected copy/paste if the user didn't mean to drag, and we may want to support
-                // reordering.
                 if (isSameElement)
                 {
-                    HandleDroppingInstanceOnTarget(targetObject, draggedAsInstanceSave, targetElementSave);
+                    HandleDroppingInstanceOnTarget(targetObject, draggedAsInstanceSave, targetElementSave, targetTreeNode);
 
                 }
                 else
                 {
                     List<InstanceSave> instances = new List<InstanceSave>() { draggedAsInstanceSave };
-                    EditingManager.Self.PasteInstanceSaves(instances,
+                    CopyPasteLogic.PasteInstanceSaves(instances,
                         draggedAsInstanceSave.ParentContainer.DefaultState.Clone(),
                         targetElementSave);
                 }
             }
         }
+
+        private static void HandleDroppingInstanceOnTarget(object targetObject, InstanceSave dragDroppedInstance, ElementSave targetElementSave, TreeNode targetTreeNode)
+        {
+            if (targetObject != dragDroppedInstance)
+            {
+
+            }
+            string parentName;
+            string variableName = dragDroppedInstance.Name + ".Parent";
+            if (targetObject is InstanceSave targetInstance)
+            {
+                // setting the parent:
+                parentName = targetInstance.Name;
+            }
+            else
+            {
+                // drag+drop on the container, so detach:
+                parentName = null;
+            }
+            // Since the Parent property can only be set in the default state, we will
+            // set the Parent variable on that instead of the SelectedState.Self.SelectedStateSave
+            var stateToAssignOn = targetElementSave.DefaultState;
+            Gum.Undo.UndoManager.Self.RecordState();
+            var oldValue = stateToAssignOn.GetValue(variableName) as string;
+            stateToAssignOn.SetValue(variableName, parentName, "string");
+            Gum.Undo.UndoManager.Self.RecordUndo();
+            SetVariableLogic.Self.PropertyValueChanged("Parent", oldValue);
+            targetTreeNode?.Expand();
+        }
+
+        #endregion
 
         internal void HandleDragDropEvent(object sender, DragEventArgs e)
         {
@@ -442,35 +480,6 @@ namespace Gum.Managers
                     HandleDroppedItemOnTreeView(draggedObject, targetTreeNode);
                 }
             }
-        }
-
-        private static void HandleDroppingInstanceOnTarget(object targetObject, InstanceSave dragDroppedInstance, ElementSave targetElementSave)
-        {
-            if (targetObject != dragDroppedInstance)
-            {
-
-            }
-            string parentName;
-            string variableName = dragDroppedInstance.Name + ".Parent";
-            if (targetObject is InstanceSave)
-            {
-                // setting the parent:
-                parentName = (targetObject as InstanceSave).Name;
-
-
-            }
-            else
-            {
-                // drag+drop on the container, so detach:
-                parentName = null;
-            }
-            // Since the Parent property can only be set in the default state, we will
-            // set the Parent variable on that instead of the SelectedState.Self.SelectedStateSave
-            var stateToAssignOn = targetElementSave.DefaultState;
-
-            var oldValue = stateToAssignOn.GetValue(variableName) as string;
-            stateToAssignOn.SetValue(variableName, parentName, "string");
-            SetVariableLogic.Self.PropertyValueChanged("Parent", oldValue);
         }
 
         private void HandleDroppedItemInWireframe(object draggedObject, out bool handled)

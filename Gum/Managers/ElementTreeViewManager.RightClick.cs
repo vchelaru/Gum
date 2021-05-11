@@ -13,6 +13,7 @@ using System.Diagnostics;
 using System.IO;
 using ToolsUtilities;
 using Gum.Wireframe;
+using Gum.Logic;
 
 namespace Gum.Managers
 {
@@ -21,7 +22,6 @@ namespace Gum.Managers
 
         #region Fields
 
-        ContextMenuStrip mMenuStrip;
 
 
         ToolStripMenuItem mAddScreen;
@@ -29,6 +29,7 @@ namespace Gum.Managers
 
         ToolStripMenuItem mAddComponent;
         ToolStripMenuItem mImportComponent;
+        ToolStripMenuItem mAddLinkedComponent;
 
         ToolStripMenuItem mAddInstance;
         ToolStripMenuItem mSaveObject;
@@ -60,6 +61,10 @@ namespace Gum.Managers
             mImportComponent = new ToolStripMenuItem();
             mImportComponent.Text = "Import Components";
             mImportComponent.Click += ImportComponentsClick;
+
+            mAddLinkedComponent = new ToolStripMenuItem();
+            mAddLinkedComponent.Text = "Add Linked Component";
+            mAddLinkedComponent.Click += HandleAddLinkedComponentClick;
 
             mAddInstance = new ToolStripMenuItem();
             mAddInstance.Text = "Add Instance";
@@ -153,13 +158,22 @@ namespace Gum.Managers
             }
         }
 
+
         void HandleViewInExplorer(object sender, EventArgs e)
         {
             TreeNode treeNode = SelectedState.Self.SelectedTreeNode;
 
             if (treeNode != null)
             {
-                string fullFile = treeNode.GetFullFilePath();
+                string fullFile;
+                if (treeNode.Tag is ElementSave elementSave)
+                {
+                    fullFile = elementSave.GetFullPathXmlFile().FullPath;
+                }
+                else
+                {
+                    fullFile = treeNode.GetFullFilePath().FullPath;
+                }
                 fullFile = fullFile.Replace("/", "\\");
 
                 if (fullFile.EndsWith("\\") || fullFile.EndsWith("/"))
@@ -197,7 +211,7 @@ namespace Gum.Managers
 
             if (treeNode != null)
             {
-                string fullFile = treeNode.GetFullFilePath();
+                string fullFile = treeNode.GetFullFilePath().FullPath;
 
                 // Initially we won't allow deleting of the entire
                 // folder because the user may have to make decisions
@@ -263,13 +277,13 @@ namespace Gum.Managers
                 {
                     mMenuStrip.Items.Add("View in explorer", null, HandleViewInExplorer);
 
+                    mMenuStrip.Items.Add("View References", null, HandleViewReferences);
+
+                    mMenuStrip.Items.Add("-");
+
                     mAddInstance.Text = "Add object to " + SelectedState.Self.SelectedElement.Name;
                     mMenuStrip.Items.Add(mAddInstance);
                     mMenuStrip.Items.Add(mSaveObject);
-
-                    mDeleteObject.Text = "Delete " + SelectedState.Self.SelectedElement.ToString();
-                    mMenuStrip.Items.Add(mDeleteObject);
-
                     if(SelectedState.Self.SelectedScreen != null)
                     {
                         duplicateElement.Text = $"Duplicate {SelectedState.Self.SelectedScreen.Name}";
@@ -279,6 +293,13 @@ namespace Gum.Managers
                         duplicateElement.Text = $"Duplicate {SelectedState.Self.SelectedComponent.Name}";
                     }
                     mMenuStrip.Items.Add(duplicateElement);
+
+                    mMenuStrip.Items.Add("-");
+
+
+                    mDeleteObject.Text = "Delete " + SelectedState.Self.SelectedElement.ToString();
+                    mMenuStrip.Items.Add(mDeleteObject);
+
                 }
                 else if(SelectedState.Self.SelectedBehavior != null)
                 {
@@ -323,6 +344,11 @@ namespace Gum.Managers
             }
         }
 
+        private void HandleViewReferences(object sender, EventArgs e)
+        {
+            GumCommands.Self.Edit.DisplayReferencesTo(SelectedState.Self.SelectedElement);
+        }
+
         private void HandleRenameFolder(object sender, EventArgs e)
         {
             var tiw = new TextInputWindow();
@@ -341,7 +367,7 @@ namespace Gum.Managers
 
 
                 // see if it already exists:
-                string fullFilePath = FileManager.GetDirectory( SelectedNode.GetFullFilePath()) + tiw.Result + "\\";
+                string fullFilePath = FileManager.GetDirectory( SelectedNode.GetFullFilePath().FullPath) + tiw.Result + "\\";
 
                 if(System.IO.Directory.Exists(fullFilePath))
                 {
@@ -369,11 +395,11 @@ namespace Gum.Managers
                         throw new InvalidOperationException();
                     }
 
-                    string oldFullPath = SelectedNode.GetFullFilePath();
+                    var oldFullPath = SelectedNode.GetFullFilePath();
 
-                    string oldPathRelativeToElementsRoot = FileManager.MakeRelative(SelectedNode.GetFullFilePath(), rootForElement, preserveCase:true);
+                    string oldPathRelativeToElementsRoot = FileManager.MakeRelative(SelectedNode.GetFullFilePath().FullPath, rootForElement, preserveCase:true);
                     SelectedNode.Text = tiw.Result;
-                    string newPathRelativeToElementsRoot = FileManager.MakeRelative(SelectedNode.GetFullFilePath(), rootForElement, preserveCase:true);
+                    string newPathRelativeToElementsRoot = FileManager.MakeRelative(SelectedNode.GetFullFilePath().FullPath, rootForElement, preserveCase:true);
 
                     if (SelectedNode.IsScreensFolderTreeNode())
                     {
@@ -385,7 +411,7 @@ namespace Gum.Managers
                                 string newName = newPathRelativeToElementsRoot + screen.Name.Substring(oldPathRelativeToElementsRoot.Length);
 
                                 screen.Name = newName;
-                                RenameManager.Self.HandleRename(screen, (InstanceSave)null, oldVaue, NameChangeAction.Move, askAboutRename: false);
+                                RenameLogic.HandleRename(screen, (InstanceSave)null, oldVaue, NameChangeAction.Move, askAboutRename: false);
                             }
                         }
                     }
@@ -399,15 +425,15 @@ namespace Gum.Managers
                                 string newName = newPathRelativeToElementsRoot + component.Name.Substring(oldPathRelativeToElementsRoot.Length);
                                 component.Name = newName;
 
-                                RenameManager.Self.HandleRename(component, (InstanceSave)null, oldVaue, NameChangeAction.Move, askAboutRename:false);
+                                RenameLogic.HandleRename(component, (InstanceSave)null, oldVaue, NameChangeAction.Move, askAboutRename:false);
                             }
                         }
                     }
 
-                    bool isNowEmpty = Directory.GetFiles(oldFullPath).Length == 0;
+                    bool isNowEmpty = Directory.GetFiles(oldFullPath.FullPath).Length == 0;
                     if(isNowEmpty)
                     {
-                        Directory.Delete(oldFullPath);
+                        Directory.Delete(oldFullPath.FullPath);
                         GumCommands.Self.GuiCommands.RefreshElementTreeView();
 
                     }
@@ -457,7 +483,7 @@ namespace Gum.Managers
                             nodeToAddTo = RootScreensTreeNode;
                         }
 
-                        string path = nodeToAddTo.GetFullFilePath();
+                        string path = nodeToAddTo.GetFullFilePath().FullPath;
 
                         string relativeToScreens = FileManager.MakeRelative(path,
                             FileLocations.Self.ScreensFolder);
@@ -483,139 +509,62 @@ namespace Gum.Managers
 
         public void ImportScreenClick(object sender, EventArgs e)
         {
-            bool succeeded = true;
-            if (ObjectFinder.Self.GumProjectSave == null || string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave.FullFileName))
-            {
-                MessageBox.Show("You must first save the project before adding a new screen");
-                succeeded = false;
-            }
-            else
-            {
-                OpenFileDialog openFileDialog = new OpenFileDialog();
-                openFileDialog.Filter = "Gum Screen (*.gusx)|*.gusx";
-
-                if (openFileDialog.ShowDialog() == DialogResult.OK)
-                {
-                    string fileName = openFileDialog.FileName;
-
-                    string desiredDirectory =
-                        FileManager.GetDirectory(
-                        ProjectManager.Self.GumProjectSave.FullFileName) + "Screens/";
-
-                    if (FileManager.IsRelativeTo(fileName, desiredDirectory) == false)
-                    {
-                        MessageBox.Show("The file must be in the Gum project's Screens folder.  " +
-                            "This file will be copied, and the copy will be referenced.");
-
-                        try
-                        {
-                            string destination = desiredDirectory + FileManager.RemovePath(fileName);
-                            System.IO.File.Copy(fileName,
-                                destination);
-
-                            fileName = destination;
-                        }
-                        catch (Exception ex)
-                        {
-                            MessageBox.Show("Error copying the file: " + ex.ToString());
-                            succeeded = false;
-                        }
-                    }
-
-                    if (succeeded)
-                    {
-                        string strippedName = FileManager.RemovePath(FileManager.RemoveExtension(fileName));
-
-                        ProjectManager.Self.GumProjectSave.ScreenReferences.Add(
-                            new ElementReference { Name = strippedName, ElementType = ElementType.Screen });
-
-                        ProjectManager.Self.GumProjectSave.ScreenReferences.Sort(
-                            (first, second) => first.Name.CompareTo(second.Name));
-
-                        var screenSave = FileManager.XmlDeserialize<ScreenSave>(fileName);
-
-                        ProjectManager.Self.GumProjectSave.Screens.Add(screenSave);
-
-                        ProjectManager.Self.GumProjectSave.Screens.Sort(
-                            (first, second) => first.Name.CompareTo(second.Name));
-
-                        screenSave.Initialize(null);
-
-                        GumCommands.Self.GuiCommands.RefreshElementTreeView();
-
-                        SelectedState.Self.SelectedScreen = screenSave;
-
-                        GumCommands.Self.FileCommands.TryAutoSaveProject();
-                        GumCommands.Self.FileCommands.TryAutoSaveElement(screenSave);
-                    }
-
-                }
-                else
-                {
-                    succeeded = false;
-                }
-            }
+            Plugins.ImportPlugin.Manager.ImportLogic.ShowImportScreenUi();
         }
 
         public void ImportComponentsClick(object sender, EventArgs e)
         {
+            Plugins.ImportPlugin.Manager.ImportLogic.ShowImportComponentUi();
+        }
+
+        private void HandleAddLinkedComponentClick(object sender, EventArgs e)
+        {
+            ////////////////Early Out/////////////////////////
             if (ObjectFinder.Self.GumProjectSave == null || string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave.FullFileName))
             {
                 MessageBox.Show("You must first save the project before adding a new component");
                 return;
             }
+            //////////////End Early Out////////////////////////
 
             OpenFileDialog openFileDialog = new OpenFileDialog();
             openFileDialog.Multiselect = true;
             openFileDialog.Filter = "Gum Component (*.gucx)|*.gucx";
 
+            /////////////////Another Early Out////////////////////////
             if (openFileDialog.ShowDialog() != DialogResult.OK)
+            {
                 return;
+            }
+            ///////////End Another Early Out//////////////////////////
 
             ComponentSave lastImportedComponent = null;
 
             for (int i = 0; i < openFileDialog.FileNames.Length; ++i)
             {
-                string fileName = openFileDialog.FileNames[i];
-                string desiredDirectory = FileManager.GetDirectory(
-                    ProjectManager.Self.GumProjectSave.FullFileName) + "Components/";
+                FilePath componentFilePath = openFileDialog.FileNames[i];
 
-                if (!FileManager.IsRelativeTo(fileName, desiredDirectory))
-                {
-                    string fileNameWithoutPath = FileManager.RemovePath(fileName);
+                var gumProject = ObjectFinder.Self.GumProjectSave;
+                var gumProjectDirectory = new FilePath(gumProject.FullFileName).GetDirectoryContainingThis();
 
-                    MessageBox.Show("The file " + fileNameWithoutPath + " must be in the Gum project's Components folder. " +
-                        "This file will be copied, and the copy will be referenced.");
+                var relative = FileManager.MakeRelative(componentFilePath.FullPath, gumProjectDirectory.FullPath);
 
-                    try
-                    {
-                        string destination = desiredDirectory + fileNameWithoutPath;
-                        System.IO.File.Copy(fileName, destination);
+                var componentSave = FileManager.XmlDeserialize<ComponentSave>(componentFilePath.FullPath);
 
-                        fileName = destination;
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show("Error copying the file: " + ex.ToString());
-                        break;
-                    }
-                }
+                var reference = new ElementReference();
+                reference.Name = componentSave.Name;
+                reference.Link = relative;
+                reference.LinkType = LinkType.CopyLocally; // This is what FRB needs, so we'll make it the default. Eventually...we can change this? Make it optional?
+                reference.ElementType = ElementType.Component;
+                gumProject.ComponentReferences.Add(reference);
+                gumProject.ComponentReferences.Sort();
 
-                string strippedName = FileManager.RemovePath(FileManager.RemoveExtension(fileName));
-
-                var componentSave = FileManager.XmlDeserialize<ComponentSave>(fileName);
-
-                var componentReferences = ProjectManager.Self.GumProjectSave.ComponentReferences;
-                componentReferences.Add(new ElementReference { Name = componentSave.Name, ElementType = ElementType.Component });
-                componentReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
 
                 var components = ProjectManager.Self.GumProjectSave.Components;
                 components.Add(componentSave);
                 components.Sort((first, second) => first.Name.CompareTo(second.Name));
 
                 componentSave.InitializeDefaultAndComponentVariables();
-
-                GumCommands.Self.FileCommands.TryAutoSaveElement(componentSave);
 
                 lastImportedComponent = componentSave;
             }

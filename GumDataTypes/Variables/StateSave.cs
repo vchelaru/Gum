@@ -12,19 +12,12 @@ namespace Gum.DataTypes.Variables
     {
         #region Properties
 
-#if !UWP
-        [Browsable(false)]
-#endif
         public string Name
         {
             get;
             set;
         }
 
-#if !UWP
-
-        [Browsable(false)]
-#endif
         [XmlElement("Variable")]
         public List<VariableSave> Variables
         {
@@ -32,9 +25,6 @@ namespace Gum.DataTypes.Variables
             set;
         }
 
-#if !UWP
-        [Browsable(false)]
-#endif
         [XmlElement("VariableList")]
         public List<VariableListSave> VariableLists
         {
@@ -42,9 +32,6 @@ namespace Gum.DataTypes.Variables
             set;
         }
 
-#if !UWP
-        [Browsable(false)]
-#endif
         [XmlIgnore]
         public ElementSave ParentContainer
         {
@@ -89,7 +76,15 @@ namespace Gum.DataTypes.Variables
 
         public VariableSave GetVariableSave(string variableName)
         {
-            return Variables.FirstOrDefault(v => v.Name == variableName || v.ExposedAsName == variableName);
+            for(int i = Variables.Count-1; i > -1; i--)
+            {
+                var variable = Variables[i];
+                if(variable.Name == variableName || variable.ExposedAsName == variableName)
+                {
+                    return variable;
+                }
+            }
+            return null;
         }
 
         public VariableListSave GetVariableListSave(string variableName)
@@ -105,7 +100,7 @@ namespace Gum.DataTypes.Variables
             if (value != null && value is T)
             {
                 result = (T)value;
-                value = true;
+                toReturn = true;
             }
             else
             {

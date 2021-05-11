@@ -6,6 +6,7 @@ using Gum.Managers;
 using Gum.Plugins;
 using Gum.ToolCommands;
 using Gum.ToolStates;
+using StateAnimationPlugin.Views;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -36,6 +37,8 @@ namespace Gum.Commands
 
                     StateSave stateSave = ElementCommands.Self.AddState(
                         SelectedState.Self.SelectedElement, SelectedState.Self.SelectedStateCategorySave, name);
+
+                    PluginManager.Self.StateAdd(stateSave);
 
                     StateTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedStateContainer);
 
@@ -86,7 +89,7 @@ namespace Gum.Commands
             if (behaviorNeedingState.Any())
             {
                 string message =
-                    "This state cannot be removed because it is needed by the following behavior(s):";
+                    "This state cannot be renamed because it is needed by the following behavior(s):";
 
                 foreach (var behavior in behaviorNeedingState)
                 {
@@ -139,16 +142,45 @@ namespace Gum.Commands
                 TextInputWindow tiw = new TextInputWindow();
                 tiw.Message = "Enter new category name:";
 
-                if (tiw.ShowDialog() == DialogResult.OK)
-                {
-                    string name = tiw.Result;
+                var canAdd = true;
 
+                var result = tiw.ShowDialog();
+
+                if(result != DialogResult.OK)
+                {
+                    canAdd = false;
+                }
+
+                string name = null;
+
+                if (canAdd)
+                {
+                    name = tiw.Result;
+
+                    // see if any base elements have thsi category
+                    if (target is ElementSave element)
+                    {
+                        var existingCategory = element.GetStateSaveCategoryRecursively(name, out ElementSave categoryContainer);
+
+                        if (existingCategory != null)
+                        {
+                            MessageBox.Show($"Cannot add category - a category with the name {name} is already defined in {categoryContainer}");
+                            canAdd = false;
+                        }
+                    }
+                }
+
+
+                if(canAdd)
+                { 
                     StateSaveCategory category = ElementCommands.Self.AddCategory(
                         target, name);
 
                     ElementTreeViewManager.Self.RefreshUi(SelectedState.Self.SelectedStateContainer);
 
                     StateTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedStateContainer);
+
+                    PluginManager.Self.CategoryAdd(category);
 
                     SelectedState.Self.SelectedStateCategorySave = category;
 
@@ -299,8 +331,7 @@ namespace Gum.Commands
 
         #endregion
 
-        #region Component
-
+        #region Element
 
         public void DuplicateSelectedElement()
         {
@@ -329,15 +360,26 @@ namespace Gum.Commands
 
                     string whyNotValid;
 
-                    NameVerifier.Self.IsScreenNameValid(tiw.Result, null, out whyNotValid);
+                    string strippedName = tiw.Result;
+                    string prefix = null;
+                    if(tiw.Result.Contains("/"))
+                    {
+                        var indexOfSlash = tiw.Result.LastIndexOf("/");
+                        strippedName = tiw.Result.Substring(indexOfSlash + 1);
+                        prefix = tiw.Result.Substring(0, indexOfSlash + 1);
+                    }
+
+                    NameVerifier.Self.IsScreenNameValid(strippedName, null, out whyNotValid);
 
                     if (string.IsNullOrEmpty(whyNotValid))
                     {
                         var newScreen = (element as ScreenSave).Clone();
-                        newScreen.Name = name;
+                        newScreen.Name = prefix + strippedName;
                         newScreen.Initialize(null);
 
                         ProjectCommands.Self.AddScreen(newScreen);
+
+                        PluginManager.Self.ElementDuplicate(element, newScreen);
                     }
                     else
                     {
@@ -379,6 +421,8 @@ namespace Gum.Commands
                         newComponent.Initialize(null);
 
                         ProjectCommands.Self.AddComponent(newComponent);
+
+                        PluginManager.Self.ElementDuplicate(element, newComponent);
                     }
                     else
                     {
@@ -387,6 +431,114 @@ namespace Gum.Commands
                 }
             }
 
+        }
+
+        public void DisplayReferencesTo(ElementSave element)
+        {
+            var elementName = element.Name;
+            List<object> references = new List<object>();
+            foreach (var screen in ProjectState.Self.GumProjectSave.Screens)
+            {
+                foreach (var instanceInScreen in screen.Instances)
+                {
+                    if (instanceInScreen.BaseType == elementName)
+                    {
+                        references.Add(instanceInScreen);
+                    }
+                }
+
+                foreach (var variable in screen.DefaultState.Variables.Where(item => item.GetRootName() == "Contained Type"))
+                {
+                    if (variable.Value as string == elementName)
+                    {
+                        references.Add(variable);
+                    }
+                }
+            }
+
+            foreach (var component in ProjectState.Self.GumProjectSave.Components)
+            {
+                if (component.BaseType == elementName)
+                {
+                    references.Add(component);
+                }
+
+                foreach (var instanceInScreen in component.Instances)
+                {
+                    if (instanceInScreen.BaseType == elementName)
+                    {
+                        references.Add(instanceInScreen);
+                    }
+                }
+
+                foreach (var variable in component.DefaultState.Variables.Where(item => item.GetRootName() == "Contained Type"))
+                {
+                    if (variable.Value as string == elementName)
+                    {
+                        references.Add(variable);
+                    }
+                }
+            }
+
+            if(references.Count > 0)
+            {
+                //var stringBuilder = new StringBuilder();
+                //stringBuilder.AppendLine($"The following objects reference {element}");
+                //foreach(var reference in references)
+                //{
+                //    stringBuilder.AppendLine(reference.ToString());
+                //}
+
+                //GumCommands.Self.GuiCommands.ShowMessage(stringBuilder.ToString());
+
+                ListBoxMessageBox lbmb = new ListBoxMessageBox();
+                lbmb.RequiresSelection = true;
+                lbmb.Message = $"The following objects reference {element}";
+                lbmb.ItemSelected += (not, used) =>
+                {
+                    var selectedItem = lbmb.SelectedItem;
+
+                    if(selectedItem is InstanceSave instance)
+                    {
+                        SelectedState.Self.SelectedInstance = instance;
+                    }
+                    else if(selectedItem is ElementSave selectedElement)
+                    {
+                        SelectedState.Self.SelectedElement = selectedElement;
+                    }
+                    else if(selectedItem is VariableSave variable)
+                    {
+                        ElementSave foundElement = ObjectFinder.Self.GumProjectSave.Screens
+                            .FirstOrDefault(item => item.DefaultState.Variables.Contains(variable));
+                        if(foundElement == null)
+                        {
+                            foundElement = ObjectFinder.Self.GumProjectSave.Components
+                                .FirstOrDefault(item => item.DefaultState.Variables.Contains(variable));
+                        }
+                        if(foundElement != null)
+                        {
+                            // what's the instance?
+                            var instanceWithVariable = foundElement.GetInstance(variable.SourceObject);
+
+                            if(instanceWithVariable != null)
+                            {
+                                SelectedState.Self.SelectedInstance = instanceWithVariable;
+                            }
+                        }
+                    }
+                };
+                foreach (var reference in references)
+                {
+                    lbmb.Items.Add(reference);
+                }
+                lbmb.HideCancelNoDialog();
+                lbmb.Show();
+
+            }
+            else
+            {
+                GumCommands.Self.GuiCommands.ShowMessage($"{element} is not referenced by any other Screen/Component");
+            }
         }
 
         #endregion

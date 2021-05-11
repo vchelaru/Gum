@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>FlatRedBall.SpecializedXnaControls</RootNamespace>
     <AssemblyName>FlatRedBall.SpecializedXnaControls</AssemblyName>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
   </PropertyGroup>
@@ -77,9 +77,18 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.Xna.Framework, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86" />
-    <Reference Include="Microsoft.Xna.Framework.Game, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86" />
-    <Reference Include="Microsoft.Xna.Framework.Graphics, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86" />
+    <Reference Include="Microsoft.Xna.Framework, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Gum\Libraries\Xna\Microsoft.Xna.Framework.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Xna.Framework.Game, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Gum\Libraries\Xna\Microsoft.Xna.Framework.Game.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Xna.Framework.Graphics, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Gum\Libraries\Xna\Microsoft.Xna.Framework.Graphics.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -117,9 +126,9 @@
       <Project>{a86ee399-7c93-42e1-80ed-ca4cbf4ca573}</Project>
       <Name>RenderingLibrary</Name>
     </ProjectReference>
-    <ProjectReference Include="..\ToolsUtilities\ToolsUtilities.csproj">
-      <Project>{b941a93f-6093-4dc6-ad11-91a058b6c2cc}</Project>
-      <Name>ToolsUtilities</Name>
+    <ProjectReference Include="..\ToolsUtilities\ToolsUtilitiesStandard.csproj">
+      <Project>{cae35f4b-8a10-4a85-b2fb-7f4a8d7c7138}</Project>
+      <Name>ToolsUtilitiesStandard</Name>
     </ProjectReference>
     <ProjectReference Include="..\XnaAndWinforms\XnaAndWinforms.csproj">
       <Project>{c39a973c-66d6-4a6c-82b5-ae0042f210f8}</Project>

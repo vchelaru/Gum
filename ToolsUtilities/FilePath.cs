@@ -31,8 +31,14 @@ namespace ToolsUtilities
 
         public static implicit operator FilePath(string s)
         {
-            // Code to convert the book into an XML structure
-            return new FilePath(s);
+            if(s == null)
+            {
+                return null;
+            }
+            else
+            {
+                return new FilePath(s);
+            }
         }
 
         #endregion
@@ -107,6 +113,10 @@ namespace ToolsUtilities
 
         public FilePath(string path)
         {
+            if(string.IsNullOrEmpty(path))
+            {
+                throw new InvalidOperationException("Cannot create a FilePath with an empty string");
+            }
             Original = path;
         }
 

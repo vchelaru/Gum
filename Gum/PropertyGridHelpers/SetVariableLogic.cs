@@ -18,11 +18,42 @@ using CommonFormsAndControls.Forms;
 using ToolsUtilities;
 using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary.Graphics;
+using Gum.Logic;
 
 namespace Gum.PropertyGridHelpers
 {
     public class SetVariableLogic : Singleton<SetVariableLogic>
     {
+
+        public bool AttemptToPersistPositionsOnUnitChanges { get; set; } = true;
+
+        static HashSet<string> PropertiesSupportingIncrementalChange = new HashSet<string>
+        {
+            "Animate",
+            "Alpha",
+            "Blue",
+            "CurrentChainName",
+            "FlipHorizontal",
+            "FontSize",
+            "Green",
+            "Height",
+            "Height Units",
+
+            "MaxLettersToShow",
+            "Red",
+            "Rotation",
+            "Text",
+            "Texture Address",
+            "Width",
+            "Width Units",
+            "X",
+            "X Origin",
+            "X Units",
+            "Y",
+            "Y Origin",
+            "Y Units",
+        };
+
         internal void PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
         {
             string changedMember = e.ChangedItem.PropertyDescriptor.Name;
@@ -111,19 +142,58 @@ namespace Gum.PropertyGridHelpers
                     var value = SelectedState.Self.SelectedStateSave.GetValue(qualifiedName);
 
                     var areSame = value == null && oldValue == null;
-                    if(!areSame && value != null)
+                    if (!areSame && value != null)
                     {
                         areSame = value.Equals(oldValue);
                     }
 
                     // If the values are the same they may have been set to be the same by a plugin that
                     // didn't allow the assignment, so don't go through the work of saving and refreshing
-                    if(!areSame)
+                    if (!areSame)
                     {
                         GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
 
                         // Inefficient but let's do this for now - we can make it more efficient later
-                        WireframeObjectManager.Self.RefreshAll(true, forceReloadTextures:false);
+                        // November 19, 2019
+                        // While this is inefficient
+                        // at runtime, it is *really*
+                        // inefficient for debugging. If
+                        // a set value fails, we have to trace
+                        // the entire variable assignment and that
+                        // can take forever. Therefore, we're going to
+                        // migrate towards setting the individual values
+                        // here. This can expand over time to just exclude
+                        // the RefreshAll call completely....but I don't know
+                        // if that will cause problems now, so instead I'm going
+                        // to do it one by one:
+                        var handledByDirectSet = false;
+                        if (PropertiesSupportingIncrementalChange.Contains(unqualifiedMember) && 
+                            (instance != null || SelectedState.Self.SelectedComponent != null || SelectedState.Self.SelectedStandardElement != null))
+                        {
+                            // this assumes that the object having its variable set is the selected instance. If we're setting
+                            // an exposed variable, this is not the case - the object having its variable set is actually the instance.
+                            //GraphicalUiElement gue = WireframeObjectManager.Self.GetSelectedRepresentation();
+                            GraphicalUiElement gue = null;
+                            if (instance != null)
+                            {
+                                gue = WireframeObjectManager.Self.GetRepresentation(instance);
+                            }
+                            else
+                            {
+                                gue = WireframeObjectManager.Self.GetSelectedRepresentation();
+                            }
+
+                            if (gue != null)
+                            {
+                                gue.SetProperty(unqualifiedMember, value);
+                                handledByDirectSet = true;
+                            }
+                        }
+                        
+                        if(!handledByDirectSet)
+                        {
+                            WireframeObjectManager.Self.RefreshAll(true, forceReloadTextures:false);
+                        }
                         SelectionManager.Self.Refresh();
                     }
                 }
@@ -158,7 +228,7 @@ namespace Gum.PropertyGridHelpers
         {
             if (changedMember == "Name")
             {
-                RenameManager.Self.HandleRename(container, instance, (string)oldValue, NameChangeAction.Rename);
+                RenameLogic.HandleRename(container, instance, (string)oldValue, NameChangeAction.Rename);
             }
         }
 
@@ -183,15 +253,17 @@ namespace Gum.PropertyGridHelpers
             StateSave stateSave = SelectedState.Self.SelectedStateSave;
             float valueToSet = 0;
 
-            if (changedMember == "X Units" || changedMember == "Y Units" || changedMember == "Width Units" || changedMember == "Height Units")
+            var wereUnitValuesChanged =
+                changedMember == "X Units" || changedMember == "Y Units" || changedMember == "Width Units" || changedMember == "Height Units";
+
+            var shouldAttemptValueChange = wereUnitValuesChanged && ProjectManager.Self.GumProjectSave?.ConvertVariablesOnUnitTypeChange == true;
+
+            if (shouldAttemptValueChange)
             {
                 GeneralUnitType oldValue;
 
                 if (UnitConverter.TryConvertToGeneralUnit(oldValueAsObject, out oldValue))
                 {
-
-
-
                     IRenderableIpso currentIpso =
                         WireframeObjectManager.Self.GetSelectedRepresentation();
 
@@ -255,7 +327,7 @@ namespace Gum.PropertyGridHelpers
 
 
                     float valueOnObject = 0;
-                    if (stateSave.TryGetValue<float>(GetQualifiedName(variableToSet), out valueOnObject))
+                    if (AttemptToPersistPositionsOnUnitChanges && stateSave.TryGetValue<float>(GetQualifiedName(variableToSet), out valueOnObject))
                     {
 
                         var defaultUnitType = GeneralUnitType.PixelsFromSmall;
@@ -281,15 +353,28 @@ namespace Gum.PropertyGridHelpers
                 }
             }
 
-            if (wasAnythingSet)
+            if (wasAnythingSet && AttemptToPersistPositionsOnUnitChanges && !float.IsPositiveInfinity(valueToSet))
             {
                 InstanceSave instanceSave = SelectedState.Self.SelectedInstance;
+
+                string unqualifiedVariableToSet = variableToSet;
                 if (SelectedState.Self.SelectedInstance != null)
                 {
                     variableToSet = SelectedState.Self.SelectedInstance.Name + "." + variableToSet;
                 }
 
                 stateSave.SetValue(variableToSet, valueToSet, instanceSave);
+
+                // Force update everything on the spot. We know we can just set this value instead of forcing a full refresh:
+                var gue = WireframeObjectManager.Self.GetSelectedRepresentation();
+
+                if (gue != null)
+                {
+                    gue.SetProperty(unqualifiedVariableToSet, valueToSet);
+                }
+                GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);
+
+
             }
         }
 
@@ -363,7 +448,9 @@ namespace Gum.PropertyGridHelpers
 
             bool isValidExtension = extension == "gif" ||
                 extension == "jpg" ||
-                extension == "png";
+                extension == "png" ||
+                extension == "svg" || // todo - this should be plugin controlled
+                extension == "achx";
             if(!isValidExtension)
             {
                 whyInvalid = "The extension " + extension + " is not supported for textures";
@@ -388,6 +475,11 @@ namespace Gum.PropertyGridHelpers
             // Ask the user what to do - make it relative?
             MultiButtonMessageBox mbmb = new
                 MultiButtonMessageBox();
+
+            mbmb.StartPosition = FormStartPosition.Manual;
+
+            mbmb.Location = new System.Drawing.Point(MainWindow.MousePosition.X - mbmb.Width / 2,
+                 MainWindow.MousePosition.Y - mbmb.Height / 2);
 
             mbmb.MessageText = "The file\n" + value + "\nis not relative to the project.  What would you like to do?";
             mbmb.AddButton("Reference the file in its current location", DialogResult.OK);
@@ -547,14 +639,29 @@ namespace Gum.PropertyGridHelpers
 
                         if (System.IO.File.Exists(absolute))
                         {
-                            var texture = LoaderManager.Self.LoadContent<Texture2D>(absolute);
-
-                            if (texture != null && instance != null)
+                            if(absolute.ToLowerInvariant().EndsWith(".achx"))
                             {
-                                parentElement.DefaultState.SetValue(instance.Name + ".Texture Top", 0);
-                                parentElement.DefaultState.SetValue(instance.Name + ".Texture Left", 0);
-                                parentElement.DefaultState.SetValue(instance.Name + ".Texture Width", texture.Width);
-                                parentElement.DefaultState.SetValue(instance.Name + ".Texture Height", texture.Height);
+                                // I think this is already loaded here, because when the GUE has
+                                // its ACXH set, the texture and texture coordinate values are set
+                                // immediately...
+                                // But I'm not 100% certain.
+                                // update: okay, so it turns out what this does is it sets values on the Element itself
+                                // so those values get saved to disk and displayed in the property grid. I could update the
+                                // property grid here, but doing so would possibly immediately make the values be out-of-date
+                                // because the animation chain can change the coordinates constantly as it animates. I'm not sure
+                                // what to do here...
+                            }
+                            else
+                            {
+                                var texture = LoaderManager.Self.LoadContent<Texture2D>(absolute);
+
+                                if (texture != null && instance != null)
+                                {
+                                    parentElement.DefaultState.SetValue(instance.Name + ".Texture Top", 0);
+                                    parentElement.DefaultState.SetValue(instance.Name + ".Texture Left", 0);
+                                    parentElement.DefaultState.SetValue(instance.Name + ".Texture Width", texture.Width);
+                                    parentElement.DefaultState.SetValue(instance.Name + ".Texture Height", texture.Height);
+                                }
                             }
                         }
                     }

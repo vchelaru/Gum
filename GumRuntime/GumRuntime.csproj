@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -9,8 +9,11 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>GumRuntime</RootNamespace>
     <AssemblyName>GumRuntime</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -20,6 +23,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -28,28 +32,32 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\x86\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;NO_XNA; MONOGAME</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>x86</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
     <OutputPath>bin\x86\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;NO_XNA; MONOGAME</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>x86</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.Xna.Framework, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86" />
-    <Reference Include="Microsoft.Xna.Framework.Graphics, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86" />
+    <Reference Include="MonoGame.Framework, Version=3.8.0.13, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\FlatRedBall\FRBDK\Glue\packages\MonoGame.Framework.DesktopGL.Core.3.8.0.13\lib\net452\MonoGame.Framework.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -89,34 +97,40 @@
     <Compile Include="..\Gum\Wireframe\ElementWithState.cs">
       <Link>ElementWithState.cs</Link>
     </Compile>
+    <Compile Include="..\RenderingLibrary\Graphics\HorizontalAlignment.cs">
+      <Link>HorizontalAlignment.cs</Link>
+    </Compile>
+    <Compile Include="..\RenderingLibrary\Graphics\NineSliceExtensions.cs">
+      <Link>NineSliceExtensions.cs</Link>
+    </Compile>
+    <Compile Include="..\RenderingLibrary\Graphics\VerticalAlignment.cs">
+      <Link>VerticalAlignment.cs</Link>
+    </Compile>
     <Compile Include="ElementSaveExtensions.GumRuntime.cs" />
-    <Compile Include="GraphicalUiElement.cs" />
     <Compile Include="InstanceSaveExtensionMethods.GumRuntime.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ContentLibrary\ContentLibrary.csproj">
-      <Project>{6e3deca0-b292-4fba-b585-7460a329de2e}</Project>
-      <Name>ContentLibrary</Name>
+    <ProjectReference Include="..\GumDataTypes\GumDataTypesStandard.csproj">
+      <Project>{049d8e60-b8fd-4b57-909c-ef83124e242f}</Project>
+      <Name>GumDataTypesStandard</Name>
     </ProjectReference>
-    <ProjectReference Include="..\GumDataTypes\GumDataTypes.csproj">
-      <Project>{5971a187-f6b2-4d65-a277-5613ded1f50f}</Project>
-      <Name>GumDataTypes</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\InputLibrary\InputLibrary.csproj">
-      <Project>{938d9a00-8529-4ce8-9077-e0a3994a73ea}</Project>
-      <Name>InputLibrary</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\RenderingLibrary\RenderingLibrary.csproj">
-      <Project>{a86ee399-7c93-42e1-80ed-ca4cbf4ca573}</Project>
-      <Name>RenderingLibrary</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ToolsUtilities\ToolsUtilities.csproj">
-      <Project>{b941a93f-6093-4dc6-ad11-91a058b6c2cc}</Project>
-      <Name>ToolsUtilities</Name>
+    <ProjectReference Include="..\ToolsUtilities\ToolsUtilitiesStandard.csproj">
+      <Project>{f8b5d6be-7f58-46ba-a982-aa56c19e67aa}</Project>
+      <Name>ToolsUtilitiesStandard</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="..\..\FlatRedBall\FRBDK\Glue\packages\MonoGame.Framework.DesktopGL.Core.3.8.0.13\build\MonoGame.Framework.DesktopGL.Core.targets" Condition="Exists('..\..\FlatRedBall\FRBDK\Glue\packages\MonoGame.Framework.DesktopGL.Core.3.8.0.13\build\MonoGame.Framework.DesktopGL.Core.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\..\FlatRedBall\FRBDK\Glue\packages\MonoGame.Framework.DesktopGL.Core.3.8.0.13\build\MonoGame.Framework.DesktopGL.Core.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\FlatRedBall\FRBDK\Glue\packages\MonoGame.Framework.DesktopGL.Core.3.8.0.13\build\MonoGame.Framework.DesktopGL.Core.targets'))" />
+  </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

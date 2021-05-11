@@ -27,6 +27,7 @@ namespace RenderingLibrary.Math.Geometry
             get;
             set;
         }
+        ColorOperation IRenderableIpso.ColorOperation => ColorOperation.Modulate;
 
         // this doesn't do anything.
 
@@ -132,6 +133,8 @@ namespace RenderingLibrary.Math.Geometry
             get;
             set;
         }
+
+        public bool FlipHorizontal { get; set; }
 
         public bool IsDotted { get; set; }
 

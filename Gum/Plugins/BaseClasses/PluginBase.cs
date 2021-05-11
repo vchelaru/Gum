@@ -7,6 +7,7 @@ using Gum.Gui.Windows;
 using Gum.DataTypes.Variables;
 using System.Windows.Forms;
 using Gum.DataTypes.Behaviors;
+using RenderingLibrary.Graphics;
 
 namespace Gum.Plugins.BaseClasses
 {
@@ -26,17 +27,33 @@ namespace Gum.Plugins.BaseClasses
 
         public event Action<ElementSave> ElementAdd;
         public event Action<ElementSave> ElementDelete;
-        public event Action<ElementSave, string> ElementRename;
         /// <summary>
-        /// Action raised when an event is renamed. String parameter is the State's old name.
+        /// Raised when an element is duplicated. First argument is the old element, second is the new.
         /// </summary>
-        public event Action<StateSave, string> StateRename;
-        public event Action<StateSaveCategory, string> CategoryRename;
+        public event Action<ElementSave, ElementSave> ElementDuplicate;
 
         /// <summary>
-        /// Event raised whenever an instance is renamed. Second parameter is the old name.
+        /// Event raised when the element is renamed.
         /// </summary>
-        public event Action<InstanceSave, string> InstanceRename;
+        /// <remarks>
+        /// ElementSave is the element that was renamed
+        /// string is the old name
+        /// </remarks>
+        public event Action<ElementSave, string> ElementRename;
+        /// <summary>
+        /// Action raised when a state is renamed. String parameter is the State's old name.
+        /// </summary>
+        public event Action<StateSave, string> StateRename;
+        public event Action<StateSave> StateAdd;
+        public event Action<StateSave> StateDelete;
+
+
+
+        public event Action<StateSaveCategory, string> CategoryRename;
+        public event Action<StateSaveCategory> CategoryAdd;
+        public event Action<StateSaveCategory> CategoryDelete;
+        public event Action<string, StateSaveCategory> VariableRemovedFromCategory;
+
         public event Action<VariableSave, List<Attribute>> FillVariableAttributes;
         public event Action<string, StateSave> AddAndRemoveVariablesForType;
         public event Func<VariableSave, RecursiveVariableFinder, bool> VariableExcluded;
@@ -57,9 +74,23 @@ namespace Gum.Plugins.BaseClasses
         public event Action<ElementSave, InstanceSave> InstanceSelected;
         public event Action<ElementSave, InstanceSave> InstanceAdd;
         public event Action<ElementSave, InstanceSave> InstanceDelete;
+        /// <summary>
+        /// Event raised whenever an instance is renamed. Third parameter is the old name.
+        /// </summary>
+        public event Action<ElementSave, InstanceSave, string> InstanceRename;
         public event Action<InstanceSave> InstanceReordered;
 
         public event Action<ElementSave> BehaviorReferencesChanged;
+
+        /// <summary>
+        /// Method which allows a plugin to provide a default StateSave for a given type. This can be used
+        /// to return a set of variables and their defaults for a completely custom StandardElementSave instead
+        /// of relying on StandardElementsManager
+        /// </summary>
+        public event Func<string, StateSave> GetDefaultStateForType;
+
+
+        public event Func<string, IRenderableIpso> CreateRenderableForType;
 
         #endregion
 
@@ -114,6 +145,11 @@ namespace Gum.Plugins.BaseClasses
             menuToAddTo.DropDownItems.Add(menuItem);
             return menuItem;
 
+        }
+
+        public ToolStripMenuItem AddMenuItem(params string[] menuAndSubmenus)
+        {
+            return AddMenuItem((IEnumerable<string>)menuAndSubmenus);
         }
 
         #region Event calling
@@ -176,6 +212,11 @@ namespace Gum.Plugins.BaseClasses
             ElementDelete?.Invoke(element);
         }
 
+        public void CallElementDuplicate(ElementSave oldElement, ElementSave newElement)
+        {
+            ElementDuplicate?.Invoke(oldElement, newElement);
+        }
+
         public void CallElementRename(ElementSave elementSave, string oldName)
         {
             if (ElementRename != null)
@@ -193,17 +234,29 @@ namespace Gum.Plugins.BaseClasses
             }
         }
 
-        public void CallStateCategoryRename(StateSaveCategory category, string oldName)
+        public void CallStateAdd(StateSave stateSave)
         {
-            if(CategoryRename != null)
-            {
-                CategoryRename(category, oldName);
-            }
+            StateAdd?.Invoke(stateSave);
         }
 
-        public void CallInstanceRename(InstanceSave instanceSave, string oldName)
+        public void CallStateDelete(StateSave stateSave)
         {
-            InstanceRename?.Invoke(instanceSave, oldName);
+            StateDelete?.Invoke(stateSave);
+        }
+
+        public void CallStateCategoryRename(StateSaveCategory category, string oldName)
+        {
+            CategoryRename?.Invoke(category, oldName);
+        }
+
+        public void CallStateCategoryAdd(StateSaveCategory category) => CategoryAdd?.Invoke(category);
+        public void CallStateCategoryDelete(StateSaveCategory category) => CategoryDelete?.Invoke(category);
+        public void CallVariableRemovedFromCategory(string variableName, StateSaveCategory category) => VariableRemovedFromCategory?.Invoke(variableName, category);
+
+
+        public void CallInstanceRename(ElementSave parentElement, InstanceSave instanceSave, string oldName)
+        {
+            InstanceRename?.Invoke(parentElement, instanceSave, oldName);
         }
 
         public void CallFillVariableAttributes(VariableSave variableSave, List<Attribute> listToFill)
@@ -315,7 +368,15 @@ namespace Gum.Plugins.BaseClasses
             WireframeRefreshed?.Invoke();
         }
 
+        public StateSave CallGetDefaultStateFor(string type)
+        {
+            return GetDefaultStateForType?.Invoke(type);
+        }
 
+        public IRenderableIpso CallCreateRenderableForType(string type)
+        {
+            return CreateRenderableForType?.Invoke(type);
+        }
 
         internal bool GetIfVariableIsExcluded(VariableSave defaultVariable, RecursiveVariableFinder rvf)
         {

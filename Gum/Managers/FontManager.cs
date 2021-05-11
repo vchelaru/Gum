@@ -16,7 +16,7 @@ namespace Gum.Managers
 {
     public class FontManager : Singleton<FontManager>
     {
-        string AbsoluteFontCacheFolder
+        public string AbsoluteFontCacheFolder
         {
             get
             {
@@ -24,10 +24,10 @@ namespace Gum.Managers
             }
         }
 
-        public BitmapFont GetBitmapFontFor(string fontName, int fontSize, int outlineThickness, bool useFontSmoothing)
+        public BitmapFont GetBitmapFontFor(string fontName, int fontSize, int outlineThickness, bool useFontSmoothing, bool isItalic = false)
         {
             string fileName = AbsoluteFontCacheFolder + 
-                FileManager.RemovePath(BmfcSave.GetFontCacheFileNameFor(fontSize, fontName, outlineThickness, useFontSmoothing));
+                FileManager.RemovePath(BmfcSave.GetFontCacheFileNameFor(fontSize, fontName, outlineThickness, useFontSmoothing, isItalic));
 
             if (FileManager.FileExists(fileName))
             {
@@ -129,38 +129,21 @@ namespace Gum.Managers
                 prefix = instance.Name + ".";
             }
 
-            int? fontSize = null;
-            object fontSizeAsObject = stateSave.GetValueRecursive(prefix + "FontSize");
-            if(fontSizeAsObject != null)
-            {
-                fontSize = (int)fontSizeAsObject;
-            }
-
-            var fontValue =
-                (string)stateSave.GetValueRecursive(prefix + "Font");
-
-            int? outlineValue = 0;
-            var outlineValueAsObject = stateSave.GetValueRecursive(prefix + "OutlineThickness");
-            if (outlineValueAsObject != null)
-            {
-                outlineValue = (int)outlineValueAsObject;
-            }
+            int? fontSize = stateSave.GetValueRecursive(prefix + "FontSize") as int?;
+            var fontValue = (string)stateSave.GetValueRecursive(prefix + "Font");
+            int outlineValue = stateSave.GetValueRecursive(prefix + "OutlineThickness") as int? ?? 0;
 
             // default to true to match how old behavior worked
-            bool fontSmoothing = true;
-            var fontSmoothingAsObject = stateSave.GetValueRecursive(prefix + "UseFontSmoothing");
-            if (fontSmoothingAsObject != null)
-            {
-                fontSmoothing = (bool)fontSmoothingAsObject;
-            }
+            bool fontSmoothing = stateSave.GetValueRecursive(prefix + "UseFontSmoothing") as bool? ?? true;
+            bool isItalic = stateSave.GetValueRecursive(prefix + "IsItalic") as bool? ?? false;
 
-            if (fontValue != null && fontSize != null && outlineValue != null)
+            if (fontValue != null && fontSize != null)
             {
                 BmfcSave.CreateBitmapFontFilesIfNecessary(
                     fontSize.Value,
                     fontValue,
-                    outlineValue.Value,
-                    fontSmoothing);
+                    outlineValue,
+                    fontSmoothing, isItalic);
             }
         }
     }

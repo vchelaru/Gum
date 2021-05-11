@@ -17,6 +17,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using static Gum.Plugins.AlignmentButtons.CommonControlLogic;
 
 namespace Gum.Plugins.AlignmentButtons
 {
@@ -57,6 +58,7 @@ namespace Gum.Plugins.AlignmentButtons
 
             RefreshAndSave();
         }
+
 
         private void TopButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {
@@ -160,66 +162,6 @@ namespace Gum.Plugins.AlignmentButtons
                 PositionUnitType.PixelsFromBottom);
 
             RefreshAndSave();
-        }
-
-        private void SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment alignment, PositionUnitType xUnits)
-        {
-            SetAndCallReact("X", 0.0f, "float");
-            SetAndCallReact("X Origin",
-                alignment, "HorizontalAlignment");
-            SetAndCallReact("X Units",
-               xUnits, typeof(Gum.Managers.PositionUnitType).Name);
-
-            if (SelectedState.Self.SelectedInstance?.BaseType == "Text")
-            {
-                SetAndCallReact("HorizontalAlignment", alignment, "HorizontalAlignment");
-            }
-        }
-
-
-        private void SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment alignment, PositionUnitType yUnits)
-        {
-            var state = CurrentState;
-
-            SetAndCallReact("Y", 0.0f, "float");
-            SetAndCallReact("Y Origin",
-                alignment, typeof(global::RenderingLibrary.Graphics.VerticalAlignment).Name);
-            SetAndCallReact("Y Units",
-                yUnits, typeof(PositionUnitType).Name);
-
-            if (SelectedState.Self.SelectedInstance?.BaseType == "Text")
-            {
-                SetAndCallReact("VerticalAlignment", alignment, "VerticalAlignment");
-            }
-
-        }
-
-        private void SetAndCallReact(string unqualified, object value, string typeName)
-        {
-            var instance = SelectedState.Self.SelectedInstance;
-            string GetVariablePrefix()
-            {
-                string prefixInternal = "";
-                if (instance != null)
-                {
-                    prefixInternal = instance.Name + ".";
-                }
-                return prefixInternal;
-            }
-            var state = SelectedState.Self.SelectedStateSave;
-            string prefix = GetVariablePrefix();
-
-
-            var oldValue = state.GetValue(prefix + unqualified);
-            state.SetValue(prefix + unqualified, value, typeName);
-            SetVariableLogic.Self.ReactToPropertyValueChanged(unqualified, oldValue, SelectedState.Self.SelectedElement, instance, refresh: false);
-        }
-
-        private static void RefreshAndSave()
-        {
-            GumCommands.Self.GuiCommands.RefreshPropertyGrid(force:true);
-            GumCommands.Self.WireframeCommands.Refresh();
-            GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
         }
     }
 }

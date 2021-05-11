@@ -9,14 +9,14 @@
              d:DesignHeight="300" d:DesignWidth="300"
              >
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
+    <StackPanel>
         <ItemsControl Name="InternalControl" ItemsSource="{Binding Categories}">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
                     <!--  Each Expander is one MemberCategory -->
                     <Expander Header="{Binding Name}" Visibility="{Binding Visibility}" 
                               FontSize="{Binding FontSize}" 
-                              IsExpanded="True" BorderBrush="DarkGray" Margin="1"
+                              IsExpanded="True" Margin="1"
                               
                               local:DataGridAttachedProperties.HideExpanderArrow="{Binding HideHeader}"
                               >
@@ -31,5 +31,5 @@
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
-    </ScrollViewer>
+    </StackPanel>
 </UserControl>

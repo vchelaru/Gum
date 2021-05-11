@@ -19,6 +19,13 @@ namespace System.Linq
             }
             return null;
         }
-
+        public static object FirstOrDefault(this IEnumerable enumerable)
+        {
+            foreach (var item in enumerable)
+            {
+                return item;
+            }
+            return null;
+        }
     }
 }

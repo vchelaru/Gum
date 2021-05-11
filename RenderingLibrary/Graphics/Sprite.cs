@@ -10,7 +10,21 @@ using System.Collections.ObjectModel;
 
 namespace RenderingLibrary.Graphics
 {
-    public class Sprite : IRenderableIpso, IVisible
+    public enum ColorOperation
+    {
+        //Texture,
+        //Add,
+        //Subtract,
+        Modulate = 3,
+        //InverseTexture,
+        //Color,
+        ColorTextureAlpha = 6,
+        //Modulate2X,
+        //Modulate4X,
+        //InterpolateColor
+
+    }
+    public class Sprite : IRenderableIpso, IVisible, IAspectRatio
     {
         #region Fields
 
@@ -20,6 +34,54 @@ namespace RenderingLibrary.Graphics
         ObservableCollection<IRenderableIpso> mChildren;
 
         public Color Color = Color.White;
+
+        public int Alpha
+        {
+            get
+            {
+                return Color.A;
+            }
+            set
+            {
+                Color.A = (byte)value;
+            }
+        }
+
+        public int Red
+        {
+            get
+            {
+                return Color.R;
+            }
+            set
+            {
+                Color.R = (byte)value;
+            }
+        }
+
+        public int Green
+        {
+            get
+            {
+                return Color.G;
+            }
+            set
+            {
+                Color.G = (byte)value;
+            }
+        }
+
+        public int Blue
+        {
+            get
+            {
+                return Color.B;
+            }
+            set
+            {
+                Color.B = (byte)value;
+            }
+        }
 
         public Rectangle? SourceRectangle;
 
@@ -84,7 +146,6 @@ namespace RenderingLibrary.Graphics
             set;
         }
 
-
         bool IRenderableIpso.ClipsChildren
         {
             get
@@ -92,6 +153,7 @@ namespace RenderingLibrary.Graphics
                 return false;
             }
         }
+
         public IRenderableIpso Parent
         {
             get { return mParent; }
@@ -178,6 +240,10 @@ namespace RenderingLibrary.Graphics
             set;
         }
 
+        public ColorOperation ColorOperation { get; set; } = ColorOperation.Modulate;
+
+        
+        
         public bool FlipHorizontal
         {
             get;
@@ -208,53 +274,7 @@ namespace RenderingLibrary.Graphics
             set;
         }
 
-        public int Alpha
-        {
-            get
-            {
-                return Color.A;
-            }
-            set
-            {
-                Color.A = (byte)value;
-            }
-        }
 
-        public int Red
-        {
-            get
-            {
-                return Color.R;
-            }
-            set
-            {
-                Color.R = (byte)value;
-            }
-        }
-
-        public int Green
-        {
-            get
-            {
-                return Color.G;
-            }
-            set
-            {
-                Color.G = (byte)value;
-            }
-        }
-
-        public int Blue
-        {
-            get
-            {
-                return Color.B;
-            }
-            set
-            {
-                Color.B = (byte)value;
-            }
-        }
 
         public Rectangle? EffectiveRectangle
         {
@@ -285,6 +305,8 @@ namespace RenderingLibrary.Graphics
                 return sourceRectangle;
             }
         }
+
+        float IAspectRatio.AspectRatio => Texture != null ? (Texture.Width / (float)Texture.Height) : 1.0f;
 
         #endregion
 
@@ -340,7 +362,7 @@ namespace RenderingLibrary.Graphics
                         texture = AtlasedTexture.Texture;
                     }
 
-                    Render(managers, spriteRenderer, this, texture, Color, sourceRectangle, FlipHorizontal, FlipVertical, Rotation);
+                    Render(managers, spriteRenderer, this, texture, Color, sourceRectangle, FlipVertical, this.GetAbsoluteRotation());
                 }
             }
         }
@@ -517,7 +539,7 @@ namespace RenderingLibrary.Graphics
                                 sourceWidth,
                                 sourceHeight);
 
-                            Render(managers, spriteRenderer, this, AtlasedTexture.Texture, Color, rectangle, FlipHorizontal, FlipVertical, rotationInDegrees: Rotation);
+                            Render(managers, spriteRenderer, this, AtlasedTexture.Texture, Color, rectangle, FlipVertical, rotationInDegrees: Rotation);
                         }
                         else
                         {
@@ -527,7 +549,7 @@ namespace RenderingLibrary.Graphics
                                 sourceWidth,
                                 sourceHeight);
 
-                            Render(managers, spriteRenderer, this, Texture, Color, SourceRectangle, FlipHorizontal, FlipVertical, rotationInDegrees: Rotation);
+                            Render(managers, spriteRenderer, this, Texture, Color, SourceRectangle, FlipVertical, rotationInDegrees: Rotation);
                         }
                         currentX = System.Math.Max(0, currentX);
                         currentX += this.Width * matrix.Right.X;
@@ -559,7 +581,6 @@ namespace RenderingLibrary.Graphics
         public static void Render(SystemManagers managers, SpriteRenderer spriteRenderer,
             IRenderableIpso ipso, Texture2D texture, Color color,
             Rectangle? sourceRectangle = null,
-            bool flipHorizontal = false,
             bool flipVertical = false,
             float rotationInDegrees = 0,
             bool treat0AsFullDimensions = false,
@@ -595,10 +616,34 @@ namespace RenderingLibrary.Graphics
             }
 
             SpriteEffects effects = SpriteEffects.None;
+
+            var flipHorizontal = ipso.GetAbsoluteFlipHorizontal();
+            var effectiveParentFlipHorizontal = ipso.Parent?.GetAbsoluteFlipHorizontal() ?? false;
+
             if (flipHorizontal)
             {
                 effects |= SpriteEffects.FlipHorizontally;
+                //rotationInDegrees *= -1;
             }
+
+            var rotationInRadians = MathHelper.ToRadians(rotationInDegrees);
+
+
+            float leftAbsolute = ipso.GetAbsoluteX();
+            float topAbsolute = ipso.GetAbsoluteY();
+
+            Vector2 origin = Vector2.Zero;
+
+            //if(flipHorizontal)
+            //{
+            //    var offsetX = (float)System.Math.Cos(rotationInRadians);
+            //    var offsetY = (float)System.Math.Sin(rotationInRadians);
+            //    origin.X = 1;
+
+                
+
+            //}
+
             if (flipVertical)
             {
                 effects |= SpriteEffects.FlipVertically;
@@ -638,17 +683,19 @@ namespace RenderingLibrary.Graphics
                         ipso.Height / (ratioHeight * textureToUse.Height));
                 }
 
+#if DEBUG
                 if (textureToUse != null && textureToUse.IsDisposed)
                 {
                     throw new ObjectDisposedException($"Texture is disposed.  Texture name: {textureToUse.Name}, sprite scale: {scale}, Sprite name: {ipso.Name}");
                 }
+#endif
 
                 spriteRenderer.Draw(textureToUse,
-                    new Vector2(ipso.GetAbsoluteX(), ipso.GetAbsoluteY()),
+                    new Vector2(leftAbsolute, topAbsolute),
                     sourceRectangle,
                     modifiedColor,
-                    Microsoft.Xna.Framework.MathHelper.TwoPi * -rotationInDegrees / 360.0f,
-                    Vector2.Zero,
+                    -rotationInRadians,
+                    origin,
                     scale,
                     effects,
                     0,
@@ -666,8 +713,8 @@ namespace RenderingLibrary.Graphics
                 }
 
                 Rectangle destinationRectangle = new Rectangle(
-                    (int)(ipso.GetAbsoluteX()),
-                    (int)(ipso.GetAbsoluteY()),
+                    (int)(leftAbsolute),
+                    (int)(topAbsolute),
                     width,
                     height);
 
@@ -676,8 +723,8 @@ namespace RenderingLibrary.Graphics
                     destinationRectangle,
                     sourceRectangle,
                     modifiedColor,
-                    rotationInDegrees / 360.0f,
-                    Vector2.Zero,
+                    rotationInRadians,
+                    origin,
                     effects,
                     0,
                     objectCausingRenering
@@ -731,6 +778,7 @@ namespace RenderingLibrary.Graphics
         }
 
         #endregion
+
 
     }
 }

@@ -32,10 +32,10 @@ namespace Gum.Controls
 
             StandardElementSave rootElement = GetRootElement();
 
-            if (rootElement != null && StandardElementsManager.Self.DefaultStates.ContainsKey(rootElement.Name))
-            {
-                var state = StandardElementsManager.Self.DefaultStates[rootElement.Name];
+            var state = StandardElementsManager.Self.GetDefaultStateFor(rootElement?.Name);
 
+            if (state != null)
+            {
                 var variable = state.Variables.FirstOrDefault(item => item.Name == "Height Units");
 
                 if (variable?.ExcludedValuesForEnum?.Any() == true)
@@ -56,43 +56,30 @@ namespace Gum.Controls
             return toReturn.ToArray();
         }
 
-        private static StandardElementSave GetRootElement()
-        {
-            StandardElementSave rootElement = null;
 
-            if (SelectedState.Self.SelectedInstance != null)
-            {
-                rootElement =
-                    ObjectFinder.Self.GetRootStandardElementSave(SelectedState.Self.SelectedInstance);
-            }
-            else if (SelectedState.Self.SelectedElement != null)
-            {
-                rootElement =
-                    ObjectFinder.Self.GetRootStandardElementSave(SelectedState.Self.SelectedElement);
-            }
-
-            return rootElement;
-        }
 
         private static void CreateCachedOptions()
         {
-            BitmapImage absoluteBitmap =
-                                CreateBitmapFromFile("Content/Icons/HeightUnits/AbsoluteHeight.png");
+            var absoluteBitmap =
+               CreateBitmapFromFile("Content/Icons/HeightUnits/AbsoluteHeight.png");
 
-            BitmapImage percentageOfHeightBitmap =
+            var percentageOfHeightBitmap =
                 CreateBitmapFromFile("Content/Icons/HeightUnits/PercentageOfOtherWidth.png");
 
-            BitmapImage percentOfParentBitmap =
+            var percentOfParentBitmap =
                 CreateBitmapFromFile("Content/Icons/HeightUnits/PercentOfParent.png");
 
-            BitmapImage relativeToChildrenBitmap =
+            var relativeToChildrenBitmap =
                 CreateBitmapFromFile("Content/Icons/HeightUnits/RelativeToChildren.png");
 
-            BitmapImage relativeToParentBitmap =
+            var relativeToParentBitmap =
                 CreateBitmapFromFile("Content/Icons/HeightUnits/RelativeToParent.png");
 
-            BitmapImage percentageOfFileHeightBitmap =
+            var percentageOfFileHeightBitmap =
                 CreateBitmapFromFile("Content/Icons/HeightUnits/PercentageOfFileHeight.png");
+
+            var maintainFileAspectRatio =
+                CreateBitmapFromFile("Content/Icons/HeightUnits/MaintainFileAspectRatioHeight.png");
 
             cachedOptions = new Option[]
             {
@@ -132,6 +119,12 @@ namespace Gum.Controls
                         Name = "Percentage of File Height",
                         Value = DimensionUnitType.PercentageOfSourceFile,
                         Image = percentageOfFileHeightBitmap
+                    },
+                    new Option
+                    {
+                        Name = "Maintain File Aspect Ratio Height",
+                        Value = DimensionUnitType.MaintainFileAspectRatio,
+                        Image = maintainFileAspectRatio
                     }
             };
         }

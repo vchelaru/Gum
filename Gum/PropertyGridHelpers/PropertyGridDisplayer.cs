@@ -21,7 +21,6 @@ namespace Gum.PropertyGridHelpers
 
         protected static EditorAttribute mFileWindowAttribute = new EditorAttribute(typeof(System.Windows.Forms.Design.FileNameEditor), typeof(System.Drawing.Design.UITypeEditor));
 
-
         protected static List<Attribute> mListOfAttributes = new List<Attribute>();
 
         #endregion

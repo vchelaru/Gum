@@ -9,6 +9,7 @@ using System.Collections;
 using RenderingLibrary.Math;
 using RenderingLibrary.Math.Geometry;
 using ToolsUtilities;
+using System.Collections.ObjectModel;
 
 namespace RenderingLibrary.Graphics
 {
@@ -68,6 +69,15 @@ namespace RenderingLibrary.Graphics
         {
             get { return mLineHeightInPixels; }
         }
+
+        public int BaselineY
+        {
+            get; set;
+        }
+
+        public int DescenderHeight => LineHeightInPixels - BaselineY;
+
+        public BitmapCharacterInfo[] Characters => mCharacterInfo;
 
         #endregion
 
@@ -348,6 +358,9 @@ namespace RenderingLibrary.Graphics
                 StringFunctions.GetIntAfter(
                 "lineHeight=", fontPattern);
 
+            BaselineY = StringFunctions.GetIntAfter(
+                "base=", fontPattern);
+
             if (mTextures.Length > 0 && mTextures[0] != null)
             {
                 //ToDo: Atlas support  **************************************************************
@@ -396,6 +409,10 @@ namespace RenderingLibrary.Graphics
                         int secondCharacter = StringFunctions.GetIntAfter("second=", fontPattern, index);
                         int kearningAmount = StringFunctions.GetIntAfter("amount=", fontPattern, index);
 
+                        if(mCharacterInfo[ID].SecondLetterKearning.ContainsKey(secondCharacter))
+                        {
+                            throw new InvalidOperationException($"Trying to add the character {secondCharacter} to the mCharacterInfo {ID}, but this entry already exists");
+                        }
                         mCharacterInfo[ID].SecondLetterKearning.Add(secondCharacter, kearningAmount);
 
                         index = fontPattern.IndexOf("first=", index + 1);
@@ -426,7 +443,7 @@ namespace RenderingLibrary.Graphics
         {
             var lines = whatToRender.Split('\n').ToList();
 
-            return RenderToTexture2D(lines, HorizontalAlignment.Left, managers, null, objectRequestingRender);
+            return RenderToTexture2D(lines, HorizontalAlignment.Left, managers, null, objectRequestingRender, null);
         }
 
         public Texture2D RenderToTexture2D(string whatToRender, HorizontalAlignment horizontalAlignment, SystemManagers managers, object objectRequestingRender)
@@ -447,9 +464,11 @@ namespace RenderingLibrary.Graphics
         /// <param name="managers"></param>
         /// <param name="toReplace"></param>
         /// <param name="objectRequestingRender"></param>
-        /// <param name="charLocations">Used to store char locations for drawing directly to screen.</param>
+        /// <param name="numberOfLettersToRender">The maximum number of characters to render.</param>
         /// <returns></returns>
-        public Texture2D RenderToTexture2D(List<string> lines, HorizontalAlignment horizontalAlignment, SystemManagers managers, Texture2D toReplace, object objectRequestingRender)
+        public Texture2D RenderToTexture2D(List<string> lines, HorizontalAlignment horizontalAlignment, 
+            SystemManagers managers, Texture2D toReplace, object objectRequestingRender, 
+            int? numberOfLettersToRender = null)
         {
             if (managers == null)
             {
@@ -511,7 +530,8 @@ namespace RenderingLibrary.Graphics
                 managers.Renderer.GraphicsDevice.Clear(Color.Transparent);
                 spriteRenderer.Begin();
 
-                DrawTextLines(lines, horizontalAlignment, objectRequestingRender, requiredWidth, widths, spriteRenderer, Color.White);
+                DrawTextLines(lines, horizontalAlignment, objectRequestingRender, requiredWidth, widths, 
+                    spriteRenderer, Color.White, numberOfLettersToRender: numberOfLettersToRender);
                 
                 spriteRenderer.End();
 
@@ -523,9 +543,12 @@ namespace RenderingLibrary.Graphics
             return renderTarget;
         }
 
-        public void DrawTextLines(List<string> lines, HorizontalAlignment horizontalAlignment, object objectRequestingChange, int requiredWidth, List<int> widths, SpriteRenderer spriteRenderer, 
+        public void DrawTextLines(List<string> lines, HorizontalAlignment horizontalAlignment, 
+            object objectRequestingChange, int requiredWidth, List<int> widths, 
+            SpriteRenderer spriteRenderer, 
             Color color,
-            float xOffset = 0, float yOffset = 0, float rotation = 0, float scaleX = 1, float scaleY = 1)
+            float xOffset = 0, float yOffset = 0, float rotation = 0, float scaleX = 1, float scaleY = 1,
+            int? numberOfLettersToRender = null)
         {
             var point = new Vector2();
 
@@ -558,8 +581,12 @@ namespace RenderingLibrary.Graphics
                 yAxis.Y = (float)System.Math.Sin(-rotationRadians + MathHelper.PiOver2);
             }
 
-            foreach (string line in lines)
+            int numberOfLettersRendered = 0;
+
+            for(int i = 0; i < lines.Count; i++)
             {
+                var line = lines[i];
+
                 // scoot over to leave room for the outline
                 point.X = mOutlineThickness;
 
@@ -603,9 +630,22 @@ namespace RenderingLibrary.Graphics
 
                         spriteRenderer.Draw(mTextures[pageIndex], position, sourceRect, color, 0, Vector2.Zero, new Vector2(scaleX, scaleY), SpriteEffects.None, 0, this);
                     }
+
+                    numberOfLettersRendered++;
+
+                    if(numberOfLettersToRender <= numberOfLettersRendered)
+                    {
+                        break;
+                    }
+
                 }
                 point.X = 0;
                 lineNumber++;
+
+                if (numberOfLettersToRender <= numberOfLettersRendered)
+                {
+                    break;
+                }
             }
         }
 
@@ -674,7 +714,7 @@ namespace RenderingLibrary.Graphics
                         mCharRect.Y += textObject.Parent.GetAbsoluteY();
                     }
 
-                    Sprite.Render(managers, spriteRenderer, mCharRect, mTextures[0], color, sourceRect, false, false, rotation,
+                    Sprite.Render(managers, spriteRenderer, mCharRect, mTextures[0], color, sourceRect, false, rotation,
                         treat0AsFullDimensions: false, objectCausingRenering: objectRequestingChange);
                 }
                 point.X = 0;
@@ -1000,7 +1040,6 @@ namespace RenderingLibrary.Graphics
         #endregion
 
         #endregion
-
 
         public void Dispose()
         {

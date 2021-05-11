@@ -13,6 +13,7 @@ namespace RenderingLibrary
         float Y { get; set; }
         float Z { get; set; }
         float Rotation { get; set; }
+        bool FlipHorizontal { get; set; }
         float Width { get; set; }
         float Height { get; set; }
         string Name { get; set; }
@@ -28,11 +29,30 @@ namespace RenderingLibrary
 
         public static Matrix GetAbsoluteRotationMatrix(this IRenderableIpso ipso)
         {
-            return Matrix.CreateRotationZ(-MathHelper.ToRadians(ipso.GetAbsoluteRotation()));
+            var flipHorizontal = ipso.GetAbsoluteFlipHorizontal();
+
+            float rotationDegrees;
+            if (flipHorizontal)
+            {
+                rotationDegrees = -ipso.GetAbsoluteRotation();
+            }
+            else
+            {
+                rotationDegrees = ipso.GetAbsoluteRotation();
+            }
+
+            return Matrix.CreateRotationZ(-MathHelper.ToRadians(rotationDegrees));
+        }
+
+        public static bool GetAbsoluteFlipHorizontal(this IRenderableIpso ipso)
+        {
+            var effectiveParentFlipHorizontal = ipso.Parent?.GetAbsoluteFlipHorizontal() ?? false;
+
+            return ipso.FlipHorizontal != effectiveParentFlipHorizontal;
         }
 
         /// <summary>
-        /// Returns the world X coordinate of the argument RenderableIpso.
+        /// Returns the top-left world X coordinate of the argument RenderableIpso.
         /// </summary>
         /// <param name="ipso">The RenderableIpso to return the value for.</param>
         /// <returns>The world X coordinate.</returns>
@@ -45,7 +65,18 @@ namespace RenderingLibrary
             }
             else
             {
-                return ipso.X + ipso.Parent.GetAbsoluteX();
+                //var parentFlip = ipso.Parent.GetAbsoluteFlipHorizontal();
+
+                //if (parentFlip)
+                //{
+                //    return
+                //        -ipso.X - ipso.Width + 
+                //        ipso.Parent.GetAbsoluteX() + ipso.Parent.Width;
+                //}
+                //else
+                {
+                    return ipso.X + ipso.Parent.GetAbsoluteX();
+                }
             }
         }
 
@@ -84,6 +115,16 @@ namespace RenderingLibrary
         public static float GetAbsoluteBottom(this IRenderableIpso ipso)
         {
             return ipso.GetAbsoluteY() + ipso.Height;
+        }
+
+        public static float GetAbsoluteCenterX(this IRenderableIpso ipso)
+        {
+            return ipso.GetAbsoluteX() + ipso.Width/2.0f;
+        }
+
+        public static float GetAbsoluteCenterY(this IRenderableIpso ipso)
+        {
+            return ipso.GetAbsoluteTop() + ipso.Height / 2.0f;
         }
 
         public static bool HasCursorOver(this IRenderableIpso ipso, float x, float y)
@@ -133,7 +174,7 @@ namespace RenderingLibrary
             }
             else
             {
-                return ipso.Parent;
+                return ipso.Parent.GetTopParent();
             }
 
         }

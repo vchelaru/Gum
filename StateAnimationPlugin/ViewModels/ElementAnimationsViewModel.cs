@@ -19,17 +19,16 @@ using StateAnimationPlugin.Validation;
 using Gum.Managers;
 using ToolsUtilities;
 using System.Globalization;
+using Gum.Mvvm;
 
 namespace StateAnimationPlugin.ViewModels
 {
-    public class ElementAnimationsViewModel : INotifyPropertyChanged
+    public class ElementAnimationsViewModel : ViewModel
     {
         #region Fields
 
-        AnimationViewModel mSelectedAnimation;
         ObservableCollection<AnimationViewModel> mAnimations;
 
-        double mDisplayedAnimationTime;
         double timeAnimationStarted;
 
         // 50 isn't smooth enough, we want more fps!
@@ -73,27 +72,58 @@ namespace StateAnimationPlugin.ViewModels
 
         public AnimationViewModel SelectedAnimation
         {
-            get { return mSelectedAnimation; }
+            get => Get<AnimationViewModel>();
             set
             {
-                mSelectedAnimation = value;
-                OnPropertyChanged("SelectedAnimation");
+                if (Set(value))
+                {
+                    if (SelectedAnimation != null)
+                    {
+                        var selectedElement = SelectedState.Self.SelectedElement;
+                        SelectedAnimation.RefreshCombinedStates(selectedElement);
+
+                        if(SelectedAnimation.SelectedKeyframe != null)
+                        {
+                            SelectedAnimation.TrySelectKeyframeReferencedStateSave();
+                        }
+                    }
+
+                    RefreshRightClickMenuItems();
+
+                }
             }
         }
 
         public double DisplayedAnimationTime
         {
-            get { return mDisplayedAnimationTime; }
+            get => Get<double>();
             set
             {
-                mDisplayedAnimationTime = value;
-
+                var valueToSet = value;
                 if (SelectedAnimation != null)
                 {
-                    mDisplayedAnimationTime = Math.Min(value, SelectedAnimation.Length);
+                    valueToSet = Math.Min(value, SelectedAnimation.Length);
                 }
 
-                OnPropertyChanged("DisplayedAnimationTime");
+                Set(valueToSet);
+            }
+        }
+
+        [DependsOn(nameof(SelectedAnimation))]
+        public string OverLengthTime
+        {
+            get
+            {
+                if(SelectedAnimation == null || SelectedAnimation.Keyframes.Count == 0)
+                {
+                    return null;
+                }
+                else
+                {
+                    var maxLength = SelectedAnimation.Keyframes.Max(item => item.Time);
+                    return "/" + maxLength;
+
+                }
             }
         }
 
@@ -122,7 +152,6 @@ namespace StateAnimationPlugin.ViewModels
 
         #region Events
 
-        public event PropertyChangedEventHandler PropertyChanged;
 
         public event PropertyChangedEventHandler AnyChange;
 
@@ -136,6 +165,7 @@ namespace StateAnimationPlugin.ViewModels
         {
             Animations = new ObservableCollection<AnimationViewModel>();
 
+            this.PropertyChanged += (sender, args) => OnPropertyChanged(args.PropertyName);
 
             mPlayTimer = new DispatcherTimer();
             mPlayTimer.Interval = new TimeSpan(0, 0, 0, 0, mTimerFrequencyInMs);
@@ -174,23 +204,6 @@ namespace StateAnimationPlugin.ViewModels
 
         private void OnPropertyChanged(string propertyName)
         {
-            
-            if (propertyName == nameof(SelectedAnimation))
-            {
-                if(SelectedAnimation != null)
-                {
-                    var selectedElement = SelectedState.Self.SelectedElement;
-                    SelectedAnimation.RefreshCombinedStates(selectedElement);
-                }
-
-                RefreshRightClickMenuItems();
-            }
-
-            if(PropertyChanged != null)
-            {
-                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-            }
-
             OnAnyChange(this, propertyName);
         }
 
@@ -295,15 +308,34 @@ namespace StateAnimationPlugin.ViewModels
             {
                 foreach(AnimationViewModel item in eventArgs.NewItems)
                 {
-                    item.PropertyChanged += HandleAnimationItemChange;
+                    if(item != null)
+                    {
+                        item.PropertyChanged += HandleAnimationItemChange;
+                        item.FramePropertyChanged += HandleFrameItemChanged;
+                    }
                 }
             }
+            NotifyPropertyChanged(nameof(OverLengthTime));
 
             OnAnyChange(this, "Animations");
         }
 
+        private void HandleFrameItemChanged(object sender, PropertyChangedEventArgs e)
+        {
+            OnAnyChange(sender, e.PropertyName);
+        }
+
         private void HandleAnimationItemChange(object sender, PropertyChangedEventArgs e)
         {
+            var shouldNotifyOfTimeChange = false;
+
+            // todo - depending on the sender, raise the event here
+
+            if(shouldNotifyOfTimeChange)
+            {
+                NotifyPropertyChanged(nameof(OverLengthTime));
+            }
+
             OnAnyChange(sender, e.PropertyName);
 
         }
@@ -352,7 +384,7 @@ namespace StateAnimationPlugin.ViewModels
                 DisplayedAnimationTime = 0;
             }
 
-            OnPropertyChanged("ButtonBitmapFrame");
+            NotifyPropertyChanged(nameof(ButtonBitmapFrame));
         }
 
         public void Stop()
@@ -360,7 +392,7 @@ namespace StateAnimationPlugin.ViewModels
             if (mPlayTimer.IsEnabled)
             {
                 mPlayTimer.Stop();
-                OnPropertyChanged("ButtonBitmapFrame");
+                NotifyPropertyChanged(nameof(ButtonBitmapFrame));
 
             }
         }

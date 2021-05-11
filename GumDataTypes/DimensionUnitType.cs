@@ -12,7 +12,8 @@ namespace Gum.DataTypes
         RelativeToContainer,
         PercentageOfSourceFile,
         RelativeToChildren,
-        PercentageOfOtherDimension
+        PercentageOfOtherDimension,
+        MaintainFileAspectRatio
     }
 
     public enum HierarchyDependencyType
@@ -42,6 +43,7 @@ namespace Gum.DataTypes
                 case DimensionUnitType.Absolute:
                 case DimensionUnitType.PercentageOfSourceFile:
                 case DimensionUnitType.PercentageOfOtherDimension:
+                case DimensionUnitType.MaintainFileAspectRatio:
                     return HierarchyDependencyType.NoDependency;
                 case DimensionUnitType.Percentage:
                 case DimensionUnitType.RelativeToContainer:

@@ -25,6 +25,7 @@ namespace RenderingLibrary.Math.Geometry
         #endregion
 
         #region Properties
+        ColorOperation IRenderableIpso.ColorOperation => ColorOperation.Modulate;
 
         public float RowWidth
         {
@@ -188,6 +189,9 @@ namespace RenderingLibrary.Math.Geometry
             {
             }
         }
+
+        public bool FlipHorizontal { get; set; }
+
 
         float IPositionedSizedObject.Width
         {

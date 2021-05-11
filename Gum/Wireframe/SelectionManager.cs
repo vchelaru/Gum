@@ -380,34 +380,47 @@ namespace Gum.Wireframe
 
 
             // First check if we're over the current
-            GraphicalUiElement selectedRepresentation = WireframeObjectManager.Self.GetSelectedRepresentation();
+            var selectedRepresentations = WireframeObjectManager.Self.GetSelectedRepresentations();
 
             int indexToStartAt = -1;
             if (skipSelected)
             {
-                if (selectedRepresentation != null)
+                if (selectedRepresentations?.Length > 0)
                 {
-                    indexToStartAt = WireframeObjectManager.Self.AllIpsos.IndexOf(selectedRepresentation);
+                    indexToStartAt = WireframeObjectManager.Self.AllIpsos.IndexOf(selectedRepresentations.First());
                 }
             }
             else
             {
-                if (selectedRepresentation != null && selectedRepresentation.Tag is ScreenSave == false)
+                if ((selectedRepresentations?.FirstOrDefault()?.Tag is ScreenSave) == false)
                 {
-                    var hasCursorOver = false;
+                    if(selectedRepresentations != null)
+                    {
+                        foreach(var selectedRepresentation in selectedRepresentations)
+                        {
+                            // If this is a container, and dotted lines are not drawn, then this has no renderable component:
+                            if(selectedRepresentation?.RenderableComponent != null)
+                            {
+                                var hasCursorOver = false;
 
-                    if (selectedRepresentation.RenderableComponent is LinePolygon)
-                    {
-                        hasCursorOver = (selectedRepresentation.RenderableComponent as LinePolygon).IsPointInside(x, y);
-                    }
-                    else
-                    {
-                        hasCursorOver = selectedRepresentation.HasCursorOver(x, y);
-                    }
+                                if (selectedRepresentation.RenderableComponent is LinePolygon)
+                                {
+                                    hasCursorOver = (selectedRepresentation.RenderableComponent as LinePolygon).IsPointInside(x, y);
+                                }
+                                else
+                                {
+                                    hasCursorOver = selectedRepresentation.HasCursorOver(x, y);
+                                }
 
-                    if (hasCursorOver)
-                    {
-                        ipsoOver = selectedRepresentation;
+                                if (hasCursorOver)
+                                {
+                                    ipsoOver = selectedRepresentation;
+                                    break;
+                                }
+
+                            }
+
+                        }
                     }
                 }
             }

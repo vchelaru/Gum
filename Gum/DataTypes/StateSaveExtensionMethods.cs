@@ -6,7 +6,7 @@ using Gum.DataTypes.Variables;
 using Gum.Managers;
 using System.Collections;
 using ToolsUtilities;
-using Gum.Wireframe;
+//using Gum.Wireframe;
 
 #if GUM
 using Gum.Plugins;
@@ -123,7 +123,7 @@ namespace Gum.DataTypes.Variables
                 }
             }
 
-            if(foundValue == null && !string.IsNullOrEmpty(baseElement.BaseType))
+            if(foundValue == null && !string.IsNullOrEmpty(baseElement?.BaseType))
             {
                 foundValue = TryToGetValueFromInheritance(variableName, baseElement.BaseType);
             }
@@ -188,24 +188,32 @@ namespace Gum.DataTypes.Variables
 
                     var isVariableOnInstance = variableName.Contains('.');
                     InstanceSave instance = null;
+                    bool canGoToBase = false;
+
+                    var hasBaseType = !string.IsNullOrEmpty(elementContainingState.BaseType);
+                    var isVariableDefinedOnThisInheritanceLevel = false;
+
+                    var instanceName = VariableSave.GetSourceObject(variableName);
+                    instance = elementContainingState.Instances.FirstOrDefault(item => item.Name == instanceName);
+
+                    if (isVariableOnInstance && hasBaseType)
+                    {
+                        if (instance != null && instance.DefinedByBase == false)
+                        {
+                            isVariableDefinedOnThisInheritanceLevel = true;
+                        }
+                    }
+                    else if(!hasBaseType)
+                    {
+                        isVariableDefinedOnThisInheritanceLevel = true;
+                    }
+
+                    canGoToBase = isVariableOnInstance == false ||
+                        isVariableDefinedOnThisInheritanceLevel == false;
+
                     if (!shouldGoToDefaultState)
                     {
-                        var hasBaseType = !string.IsNullOrEmpty(elementContainingState.BaseType);
-                        var isVariableDefinedOnThisInheritanceLevel = false;
-
-                        var instanceName = VariableSave.GetSourceObject(variableName);
-                        instance = elementContainingState.Instances.FirstOrDefault(item => item.Name == instanceName);
-
-                        if (isVariableOnInstance && hasBaseType)
-                        {
-                            if (instance != null && instance.DefinedByBase == false)
-                            {
-                                isVariableDefinedOnThisInheritanceLevel = true;
-                            }
-                        }
-
-                        shouldGoToBaseType = isVariableOnInstance == false ||
-                            isVariableDefinedOnThisInheritanceLevel == false;
+                        shouldGoToBaseType = canGoToBase;
                     }
 
                     if(!shouldGoToDefaultState && !shouldGoToBaseType)
@@ -217,8 +225,13 @@ namespace Gum.DataTypes.Variables
                     if(shouldGoToDefaultState)
                     {
                         variableSave = elementContainingState.DefaultState.GetVariableSave(variableName);
+                        if(variableSave == null)
+                        {
+                            shouldGoToBaseType = canGoToBase;
+                        }
                     }
-                    else if(shouldGoToBaseType)
+
+                    if (shouldGoToBaseType)
                     {
                         var baseElement = ObjectFinder.Self.GetElementSave(elementContainingState.BaseType);
 
@@ -229,7 +242,12 @@ namespace Gum.DataTypes.Variables
                     }
                     else if(shouldGoToInstanceComponent)
                     {
-                        var instanceElement = ObjectFinder.Self.GetElementSave(instance);
+                        ElementSave instanceElement = null;
+                        if (instance != null)
+                        {
+                            instanceElement = ObjectFinder.Self.GetElementSave(instance);
+                        }
+
                         if(instanceElement != null)
                         {
                             variableSave = instanceElement.DefaultState.GetVariableRecursive(VariableSave.GetRootName(variableName));
@@ -312,7 +330,7 @@ namespace Gum.DataTypes.Variables
             }
 
 #if GUM
-            PluginManager.Self.InstanceRename(instanceSave, oldName);
+            PluginManager.Self.InstanceRename(instanceSave.ParentContainer, instanceSave, oldName);
 #endif
 
         }
@@ -327,7 +345,7 @@ namespace Gum.DataTypes.Variables
             var coreVariableDefinition = stateSave.GetVariableRecursive(variableName);
 
             string exposedVariableSourceName = null;
-            if(!string.IsNullOrEmpty(coreVariableDefinition?.ExposedAsName))
+            if(!string.IsNullOrEmpty(coreVariableDefinition?.ExposedAsName) && instanceSave == null)
             {
                 exposedVariableSourceName = coreVariableDefinition.Name;
             }
@@ -534,6 +552,10 @@ namespace Gum.DataTypes.Variables
                 {
                     variableSave.Type = "int";
                 }
+                else if (value is int?)
+                {
+                    variableSave.Type = "int?";
+                }
                 // account for enums
                 else if (value is string)
                 {
@@ -678,7 +700,14 @@ namespace Gum.DataTypes.Variables
 #endif
         }
 
-#if GUM
+        public static void ConvertEnumerationValuesToInts(this StateSave stateSave)
+        {
+            foreach (VariableSave variable in stateSave.Variables)
+            {
+                variable.ConvertEnumerationValuesToInts();
+            }
+        }
+
         public static void FixEnumerations(this StateSave stateSave)
         {
             foreach (VariableSave variable in stateSave.Variables)
@@ -694,7 +723,6 @@ namespace Gum.DataTypes.Variables
 
 
         }
-#endif
         // I wrote this for animation but it turns out it isn't going to work how I expected
         //public static StateSave CombineBaseValuesAndClone(this StateSave stateSave)
         //{

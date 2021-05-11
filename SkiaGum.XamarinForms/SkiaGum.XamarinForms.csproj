@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SkiaSharp" Version="1.68.1.1" />
+    <PackageReference Include="SkiaSharp.Extended" Version="1.60.0" />
+    <PackageReference Include="SkiaSharp.Svg" Version="1.60.0" />
+    <PackageReference Include="SkiaSharp.Views.Forms" Version="1.68.1.1" />
+    <PackageReference Include="Topten.RichTextKit" Version="0.2.123" />
+    <PackageReference Include="Xamarin.Forms" Version="4.5.0.617" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SkiaGum\SkiaGum.csproj" />
+  </ItemGroup>
+
+</Project>

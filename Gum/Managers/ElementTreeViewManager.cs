@@ -14,12 +14,64 @@ using Gum.Events;
 using Gum.Wireframe;
 using Gum.DataTypes.Behaviors;
 using Gum.Plugins;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace Gum.Managers
 {
+    #region ExpandedState class
+    class ExpandedState
+    {
+        public bool ScreensExpanded { get; set; }
+        public bool ComponentsExpanded { get; set; }
+        public bool StandardsExpanded { get; set; }
+        public bool BehaviorsExpanded { get; set; }
+
+        public Dictionary<TreeNode, bool> ExpandedStates { get; set; } = new Dictionary<TreeNode, bool>();
+
+        public void Record(TreeNode treeNode)
+        {
+            ExpandedStates[treeNode] = treeNode.IsExpanded;
+
+            foreach(TreeNode subNode in treeNode.Nodes)
+            {
+                // we only care about directory nodes, as only those are going to be recorded.
+                if (subNode.Nodes.Count > 0 && subNode.Tag == null)
+                {
+                    // record this bad boy:
+                    Record(subNode);
+                }
+            }
+        }
+        public void Apply()
+        {
+            foreach(var kvp in ExpandedStates)
+            {
+                if(kvp.Value)
+                {
+                    kvp.Key.Expand();
+                }
+                else// if(nodesToKeepExpanded.Contains(kvp.Key) == false)
+                {
+                    kvp.Key.Collapse();
+                }
+            }
+        }
+
+        public void ExpandAll()
+        {
+            foreach(var kvp in ExpandedStates)
+            {
+                kvp.Key.Expand();
+            }
+        }
+    }
+    #endregion
+
     public partial class ElementTreeViewManager
     {
         #region Fields
+
 
         public const int TransparentImageIndex = 0;
         public const int FolderImageIndex = 1;
@@ -32,8 +84,10 @@ namespace Gum.Managers
         public const int BehaviorImageIndex = 8;
 
         static ElementTreeViewManager mSelf;
+        ContextMenuStrip mMenuStrip;
+        
 
-        MultiSelectTreeView mTreeView;
+        MultiSelectTreeView ObjectTreeView;
 
         TreeNode mScreensTreeNode;
         TreeNode mComponentsTreeNode;
@@ -47,9 +101,11 @@ namespace Gum.Managers
         /// </summary>
         object mRecordedSelectedObject;
 
+        TextBox searchTextBox;
         #endregion
 
         #region Properties
+
 
         public static ElementTreeViewManager Self
         {
@@ -68,18 +124,18 @@ namespace Gum.Managers
             get
             {
                 // This could be called before the tree is created:
-                if (mTreeView == null)
+                if (ObjectTreeView == null)
                 {
                     return null;
                 }
                 else
                 {
-                    return mTreeView.SelectedNode;
+                    return ObjectTreeView.SelectedNode;
                 }
             }
             set
             {
-                mTreeView.SelectedNode = value;
+                ObjectTreeView.SelectedNode = value;
             }
         }
 
@@ -87,9 +143,102 @@ namespace Gum.Managers
         {
             get
             {
-                return mTreeView.SelectedNodes;
+                return ObjectTreeView.SelectedNodes;
             }
         }
+
+        ExpandedState expandedStateBeforeFilter;
+        string filterText;
+        public string FilterText
+        {
+            get => filterText;
+            set 
+            {
+                if(value != filterText)
+                {
+                    filterText = value;
+
+                    var shouldExpand = false;
+
+                    if(!string.IsNullOrEmpty(filterText))
+                    {
+                        if(expandedStateBeforeFilter == null)
+                        {
+                            expandedStateBeforeFilter = new ExpandedState();
+                            expandedStateBeforeFilter.Record(mScreensTreeNode);
+                            expandedStateBeforeFilter.Record(mComponentsTreeNode);
+                            expandedStateBeforeFilter.Record(mStandardElementsTreeNode);
+                            expandedStateBeforeFilter.Record(mBehaviorsTreeNode);
+
+                        }
+                        shouldExpand = true;
+                    }
+
+                    RefreshUi();
+
+                    if(!string.IsNullOrEmpty(filterText) && SelectedNode?.Tag == null)
+                    {
+                        SelectFirstElement();
+                    }
+
+                    if(shouldExpand)
+                    {
+                        expandedStateBeforeFilter.ExpandAll();
+                    }
+
+                    //do this after refreshing the UI or else the tree nodes won't expand
+                    if(string.IsNullOrEmpty(filterText))
+                    {
+                        List<TreeNode> nodesToKeepExpanded = new List<TreeNode>();
+
+                        var node = SelectedNode;
+
+                        while(node != null)
+                        {
+                            nodesToKeepExpanded.Add(node);
+                            node = node.Parent;
+                        }
+
+                        if(expandedStateBeforeFilter != null)
+                        {
+                            expandedStateBeforeFilter.Apply();
+                            expandedStateBeforeFilter = null;
+                        }
+
+                        SelectedNode?.EnsureVisible();
+                    }
+
+                }
+            }
+        }
+
+        private void SelectFirstElement()
+        {
+            TreeNode treeNode = 
+                ObjectTreeView.Nodes.FirstOrDefault() as TreeNode;
+
+            while(treeNode != null)
+            {
+                if (treeNode.Tag != null)
+                {
+                    Select(treeNode);
+                    break;
+                }
+                else
+                {
+                    treeNode = treeNode.NextVisibleNode;
+                }
+            }
+        }
+
+        public TreeNode RootScreensTreeNode => mScreensTreeNode;
+
+        public TreeNode RootComponentsTreeNode => mComponentsTreeNode;
+
+        public TreeNode RootStandardElementsTreeNode => mStandardElementsTreeNode;
+
+        public TreeNode RootBehaviorsTreeNode => mBehaviorsTreeNode;
+
         #endregion
 
         #region Methods
@@ -267,76 +416,169 @@ namespace Gum.Managers
 
         public TreeNode GetTreeNodeOver()
         {
-            System.Drawing.Point point = mTreeView.PointToClient(Cursor.Position);
+            System.Drawing.Point point = ObjectTreeView.PointToClient(Cursor.Position);
 
-            return mTreeView.GetNodeAt(point);
+            return ObjectTreeView.GetNodeAt(point);
         }
 
         #endregion
 
 
-
-
-        public TreeNode RootScreensTreeNode
+        public void Initialize(IContainer components, ImageList ElementTreeImages, ContextMenuStrip contextMenuStrip)
         {
-            get
-            {
-                return mScreensTreeNode;
-            }
-        }
+            CreateObjectTreeView(ElementTreeImages);
 
-        public TreeNode RootComponentsTreeNode
-        {
-            get
-            {
-                return mComponentsTreeNode;
-            }
-        }
+            CreateContextMenuStrip(components);
 
-        public TreeNode RootStandardElementsTreeNode
-        {
-            get
-            {
-                return mStandardElementsTreeNode;
-            }
-        }
-
-        public TreeNode RootBehaviorsTreeNode
-        {
-            get
-            {
-                return mBehaviorsTreeNode;
-            }
-        }
-
-        public void Initialize(MultiSelectTreeView treeView)
-        {
-            mTreeView = treeView;
-            mMenuStrip = mTreeView.ContextMenuStrip;
             GumCommands.Self.GuiCommands.RefreshElementTreeView();
 
-            mTreeView.DragDrop += HandleDragDropEvent;
+            InitializeMenuItems();
 
-            mTreeView.ItemDrag += (sender, e) =>
+            var panel = new Panel();
+
+            ObjectTreeView.Dock = DockStyle.Fill;
+            panel.Controls.Add(ObjectTreeView);
+
+            var searchBarUi = CreateSearchBoxUi();
+            panel.Controls.Add(searchBarUi);
+
+
+
+            GumCommands.Self.GuiCommands.AddControl(panel, "Project", TabLocation.Left);
+        }
+
+
+        internal void FocusSearch()
+        {
+            searchTextBox.Focus();
+        }
+
+        private Control CreateSearchBoxUi()
+        {
+            var panel = new Panel();
+            panel.Dock = DockStyle.Top;
+
+            searchTextBox = new TextBox();
+            searchTextBox.TextChanged += (not, used) => FilterText = searchTextBox.Text;
+            searchTextBox.KeyDown += (sender, args) =>
+            {
+                if (args.KeyCode == Keys.Escape)
+                {
+                    searchTextBox.Text = null;
+                    args.Handled = true;
+                    args.SuppressKeyPress = true;
+                    ObjectTreeView.Focus();
+                }
+                else if(args.KeyCode == Keys.Back
+                 && (args.Modifiers & Keys.Control) == Keys.Control
+                )
+                {
+                    searchTextBox.Text = null;
+                    args.Handled = true;
+                    args.SuppressKeyPress = true;
+                }
+                else if(args.KeyCode == Keys.Down)
+                {
+                    if(SelectedNode == null)
+                    {
+                        Select(ObjectTreeView.Nodes.FirstOrDefault() as TreeNode);
+                    }
+                    else
+                    {
+                        if(SelectedNode.NextVisibleNode != null)
+                        {
+                            Select(SelectedNode.NextVisibleNode);
+                        }
+                    }
+                    args.Handled = true;
+                }
+                else if (args.KeyCode == Keys.Up)
+                {
+                    if (SelectedNode == null)
+                    {
+                        Select(ObjectTreeView.Nodes.FirstOrDefault() as TreeNode);
+                    }
+                    else
+                    {
+                        if (SelectedNode.PrevVisibleNode != null)
+                        {
+                            Select(SelectedNode.PrevVisibleNode);
+                        }
+                    }
+                    args.Handled = true;
+                }
+                else if(args.KeyCode == Keys.Enter)
+                {
+                    args.Handled = true;
+                    args.SuppressKeyPress = true;
+                    ObjectTreeView.Focus();
+                    searchTextBox.Text = null;
+                }
+            };
+            searchTextBox.Dock = DockStyle.Fill;
+            panel.Controls.Add(searchTextBox);
+
+            var xButton = new Button();
+            xButton.Text = "X";
+            xButton.Click += (not, used) => searchTextBox.Text = null;
+            xButton.Dock = DockStyle.Right;
+            xButton.Width = 24;
+            panel.Controls.Add(xButton);
+            panel.Height = 20;
+            return panel;
+        }
+
+        private void CreateContextMenuStrip(IContainer components)
+        {
+            this.mMenuStrip = new System.Windows.Forms.ContextMenuStrip(components);
+            this.mMenuStrip.Name = "ElementMenuStrip";
+            this.mMenuStrip.Size = new System.Drawing.Size(61, 4);
+            this.ObjectTreeView.ContextMenuStrip = this.mMenuStrip;
+        }
+
+        private void CreateObjectTreeView(ImageList ElementTreeImages)
+        {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWindow));
+            this.ObjectTreeView = new CommonFormsAndControls.MultiSelectTreeView();
+            this.ObjectTreeView.AllowDrop = true;
+            this.ObjectTreeView.AlwaysHaveOneNodeSelected = false;
+            this.ObjectTreeView.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.ObjectTreeView.HotTracking = true;
+            this.ObjectTreeView.ImageIndex = 0;
+            this.ObjectTreeView.ImageList = ElementTreeImages;
+            this.ObjectTreeView.Location = new System.Drawing.Point(0, 0);
+            this.ObjectTreeView.MultiSelectBehavior = CommonFormsAndControls.MultiSelectBehavior.CtrlDown;
+            this.ObjectTreeView.Name = "ObjectTreeView";
+            this.ObjectTreeView.SelectedImageIndex = 0;
+            this.ObjectTreeView.SelectedNodes = ((System.Collections.Generic.List<System.Windows.Forms.TreeNode>)(resources.GetObject("ObjectTreeView.SelectedNodes")));
+            this.ObjectTreeView.Size = new System.Drawing.Size(196, 621);
+            this.ObjectTreeView.TabIndex = 0;
+            this.ObjectTreeView.AfterClickSelect += new System.Windows.Forms.TreeViewEventHandler(this.ObjectTreeView_AfterClickSelect);
+            this.ObjectTreeView.ItemDrag += new System.Windows.Forms.ItemDragEventHandler(this.ObjectTreeView_ItemDrag);
+            this.ObjectTreeView.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.ObjectTreeView_AfterSelect_1);
+            this.ObjectTreeView.KeyDown += new System.Windows.Forms.KeyEventHandler(this.ObjectTreeView_KeyDown);
+            this.ObjectTreeView.MouseClick += new System.Windows.Forms.MouseEventHandler(this.ObjectTreeView_MouseClick);
+            this.ObjectTreeView.MouseMove += new System.Windows.Forms.MouseEventHandler(this.ObjectTreeView_MouseMove);
+            ObjectTreeView.DragDrop += HandleDragDropEvent;
+
+            ObjectTreeView.ItemDrag += (sender, e) =>
             {
                 TreeNode node = e.Item as TreeNode;
 
-                mTreeView.DoDragDrop(node, DragDropEffects.Move | DragDropEffects.Copy);
+                ObjectTreeView.DoDragDrop(node, DragDropEffects.Move | DragDropEffects.Copy);
 
             };
 
-            mTreeView.DragEnter += (sender, e) =>
+            ObjectTreeView.DragEnter += (sender, e) =>
             {
                 e.Effect = DragDropEffects.All;
 
             };
 
-            mTreeView.DragOver += (sender, e) =>
+            ObjectTreeView.DragOver += (sender, e) =>
             {
                 e.Effect = DragDropEffects.Move;
             };
-
-            InitializeMenuItems();
         }
 
         private void HandleDragDropEvent(object sender, DragEventArgs e)
@@ -353,17 +595,17 @@ namespace Gum.Managers
                 string currentDirectory = FileManager.GetDirectory(ObjectFinder.Self.GumProjectSave.FullFileName);
 
                 // Let's make sure these folders exist, they better!
-                Directory.CreateDirectory(mStandardElementsTreeNode.GetFullFilePath());
-                Directory.CreateDirectory(mScreensTreeNode.GetFullFilePath());
-                Directory.CreateDirectory(mComponentsTreeNode.GetFullFilePath());
-                Directory.CreateDirectory(mBehaviorsTreeNode.GetFullFilePath());
+                Directory.CreateDirectory(mStandardElementsTreeNode.GetFullFilePath().FullPath);
+                Directory.CreateDirectory(mScreensTreeNode.GetFullFilePath().FullPath);
+                Directory.CreateDirectory(mComponentsTreeNode.GetFullFilePath().FullPath);
+                Directory.CreateDirectory(mBehaviorsTreeNode.GetFullFilePath().FullPath);
 
 
                 // add folders to the screens, entities, and standard elements
-                AddAndRemoveFolderNodes(mStandardElementsTreeNode.GetFullFilePath(), mStandardElementsTreeNode.Nodes);
-                AddAndRemoveFolderNodes(mScreensTreeNode.GetFullFilePath(), mScreensTreeNode.Nodes);
-                AddAndRemoveFolderNodes(mComponentsTreeNode.GetFullFilePath(), mComponentsTreeNode.Nodes);
-                AddAndRemoveFolderNodes(mBehaviorsTreeNode.GetFullFilePath(), mBehaviorsTreeNode.Nodes);
+                AddAndRemoveFolderNodes(mStandardElementsTreeNode.GetFullFilePath().FullPath, mStandardElementsTreeNode.Nodes);
+                AddAndRemoveFolderNodes(mScreensTreeNode.GetFullFilePath().FullPath, mScreensTreeNode.Nodes);
+                AddAndRemoveFolderNodes(mComponentsTreeNode.GetFullFilePath().FullPath, mComponentsTreeNode.Nodes);
+                AddAndRemoveFolderNodes(mBehaviorsTreeNode.GetFullFilePath().FullPath, mBehaviorsTreeNode.Nodes);
 
                 //AddAndRemoveFolderNodes(currentDirectory, this.mTreeView.Nodes);
             }
@@ -376,7 +618,7 @@ namespace Gum.Managers
         private void AddAndRemoveFolderNodes(string currentDirectory, TreeNodeCollection nodesToAddTo)
         {
             // todo: removes
-            var directories = Directory.EnumerateDirectories(currentDirectory);
+            var directories = Directory.EnumerateDirectories(currentDirectory).ToArray();
 
             foreach (string directory in directories)
             {
@@ -407,17 +649,25 @@ namespace Gum.Managers
                     }
                 }
 
-                if (!found)
+                // only remove nodes if they are directory nodes (aka they have a null tag)
+                if (!found && node.Tag == null)
                 {
                     nodesToAddTo.RemoveAt(i);
                 }               
             }
         }
 
+        bool ShouldShow(ScreenSave screen) => string.IsNullOrEmpty(filterText) || screen.Name.ToLower().Contains(filterText.ToLower());
+        bool ShouldShow(ComponentSave component) => string.IsNullOrEmpty(filterText) || component.Name.ToLower().Contains(filterText.ToLower());
+        bool ShouldShow(StandardElementSave standardElementSave) => string.IsNullOrEmpty(filterText) || standardElementSave.Name.ToLower().Contains(filterText.ToLower());
+        bool ShouldShow(BehaviorSave behavior) => string.IsNullOrEmpty(filterText) || behavior.Name?.ToLower().Contains(filterText.ToLower()) == true;
+
         private void AddAndRemoveScreensComponentsAndStandards(TreeNode folderTreeNode)
         {
+            /////////////Early Out////////////////
             if (ProjectManager.Self.GumProjectSave == null)
                 return;
+            ////////////End Early Out////////////
 
             // Save off old selected stuff
             InstanceSave selectedInstance = SelectedState.Self.SelectedInstance;
@@ -425,34 +675,23 @@ namespace Gum.Managers
             BehaviorSave selectedBehavior = SelectedState.Self.SelectedBehavior;
 
 
-            if (!string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave.FullFileName))
-            {
-                string currentDirectory = FileManager.GetDirectory(ProjectManager.Self.GumProjectSave.FullFileName);
-
-                if (folderTreeNode != null)
-                {
-                    currentDirectory = folderTreeNode.GetFullFilePath();
-                }
-            }
-            
-
-
             #region Add nodes that haven't been added yet
 
             foreach (ScreenSave screenSave in ProjectManager.Self.GumProjectSave.Screens)
             {
-                if (GetTreeNodeFor(screenSave) == null)
+                var treeNode = GetTreeNodeFor(screenSave);
+                if (treeNode == null && ShouldShow(screenSave))
                 {
                     string fullPath = FileLocations.Self.ScreensFolder + FileManager.GetDirectory(screenSave.Name);
                     TreeNode parentNode = GetTreeNodeFor(fullPath);
 
-                    AddTreeNodeForElement(screenSave, parentNode, ScreenImageIndex);
+                    treeNode = AddTreeNodeForElement(screenSave, parentNode, ScreenImageIndex);
                 }
             }
 
             foreach (ComponentSave componentSave in ProjectManager.Self.GumProjectSave.Components)
             {
-                if (GetTreeNodeFor(componentSave) == null)
+                if (GetTreeNodeFor(componentSave) == null && ShouldShow(componentSave))
                 {
                     string fullPath = FileLocations.Self.ComponentsFolder + FileManager.GetDirectory(componentSave.Name);
                     TreeNode parentNode = GetTreeNodeFor(fullPath);
@@ -470,7 +709,7 @@ namespace Gum.Managers
             {
                 if (standardSave.Name != "Component")
                 {
-                    if (GetTreeNodeFor(standardSave) == null)
+                    if (GetTreeNodeFor(standardSave) == null &&  ShouldShow(standardSave))
                     {
                         AddTreeNodeForElement(standardSave, mStandardElementsTreeNode, StandardElementImageIndex);
                     }
@@ -479,9 +718,14 @@ namespace Gum.Managers
 
             foreach(BehaviorSave behaviorSave in ProjectManager.Self.GumProjectSave.Behaviors)
             {
-                if(GetTreeNodeFor(behaviorSave) == null)
+                if(GetTreeNodeFor(behaviorSave) == null && ShouldShow(behaviorSave))
                 {
-                    string fullPath = FileLocations.Self.BehaviorsFolder + FileManager.GetDirectory(behaviorSave.Name);
+                    string fullPath = FileLocations.Self.BehaviorsFolder;
+                    
+                    if(behaviorSave.Name != null)
+                    {
+                        fullPath = FileLocations.Self.BehaviorsFolder + FileManager.GetDirectory(behaviorSave.Name);
+                    }
                     TreeNode parentNode = GetTreeNodeFor(fullPath);
 
                     AddTreeNodeForBehavior(behaviorSave, parentNode, BehaviorImageIndex);
@@ -492,32 +736,58 @@ namespace Gum.Managers
 
             #region Remove nodes that are no longer needed
 
-            for (int i = mScreensTreeNode.Nodes.Count - 1; i > -1; i--)
+            void RemoveScreenRecursively(TreeNode treeNode, int i, TreeNode container)
             {
-                ScreenSave screen = mScreensTreeNode.Nodes[i].Tag as ScreenSave;
+                ScreenSave screen = treeNode.Tag as ScreenSave;
 
                 // If the screen is null, that means that it's a folder TreeNode, so we don't want to remove it
                 if (screen != null)
                 {
-                    if (!ProjectManager.Self.GumProjectSave.Screens.Contains(screen))
+                    if (!ProjectManager.Self.GumProjectSave.Screens.Contains(screen) || !ShouldShow(screen))
                     {
-                        mScreensTreeNode.Nodes.RemoveAt(i);
+                        container.Nodes.RemoveAt(i);
+                    }
+                }
+                else if(treeNode.Nodes != null)
+                {
+                    for(int subI = treeNode.Nodes.Count - 1; subI > -1; subI--)
+                    {
+                        var subnode = treeNode.Nodes[subI];
+                        RemoveScreenRecursively(subnode, subI, treeNode);
+                    }
+                }
+            }
+
+            for (int i = mScreensTreeNode.Nodes.Count - 1; i > -1; i--)
+            {
+                RemoveScreenRecursively(mScreensTreeNode.Nodes[i] as TreeNode, i, mScreensTreeNode);
+            }
+
+            void RemoveComponentRecursively(TreeNode treeNode, int i, TreeNode container)
+            {
+                ComponentSave component = treeNode.Tag as ComponentSave;
+
+                // If the component is null, that means that it's a folder TreeNode, so we don't want to remove it
+                if (component != null)
+                {
+                    if (!ProjectManager.Self.GumProjectSave.Components.Contains(component) || !ShouldShow(component))
+                    {
+                        container.Nodes.RemoveAt(i);
+                    }
+                }
+                else if (treeNode.Nodes != null)
+                {
+                    for (int subI = treeNode.Nodes.Count - 1; subI > -1; subI--)
+                    {
+                        var subnode = treeNode.Nodes[subI];
+                        RemoveComponentRecursively(subnode, subI, treeNode);
                     }
                 }
             }
 
             for (int i = mComponentsTreeNode.Nodes.Count - 1; i > -1; i--)
             {
-                ComponentSave component = mComponentsTreeNode.Nodes[i].Tag as ComponentSave;
-
-                // If the component is null, that means that it's a folder TreeNode, so we don't want to remove it
-                if (component != null)
-                {
-                    if (!ProjectManager.Self.GumProjectSave.Components.Contains(component))
-                    {
-                        mComponentsTreeNode.Nodes.RemoveAt(i);
-                    }
-                }
+                RemoveComponentRecursively(mComponentsTreeNode.Nodes[i], i, mComponentsTreeNode);
             }
 
             for (int i = mStandardElementsTreeNode.Nodes.Count - 1; i > -1; i-- )
@@ -525,7 +795,7 @@ namespace Gum.Managers
                 // Do we want to support folders here?
                 StandardElementSave standardElement = mStandardElementsTreeNode.Nodes[i].Tag as StandardElementSave;
 
-                if (!ProjectManager.Self.GumProjectSave.StandardElements.Contains(standardElement))
+                if (!ProjectManager.Self.GumProjectSave.StandardElements.Contains(standardElement) || !ShouldShow(standardElement))
                 {
                     mStandardElementsTreeNode.Nodes.RemoveAt(i);
                 }
@@ -537,7 +807,7 @@ namespace Gum.Managers
 
                 if(behavior != null)
                 {
-                    if(!ProjectManager.Self.GumProjectSave.Behaviors.Contains(behavior))
+                    if(!ProjectManager.Self.GumProjectSave.Behaviors.Contains(behavior) || !ShouldShow(behavior))
                     {
                         mBehaviorsTreeNode.Nodes.RemoveAt(i);
                     }
@@ -595,7 +865,7 @@ namespace Gum.Managers
             #endregion
         }
 
-        private static void AddTreeNodeForElement(ElementSave element, TreeNode parentNode, int defaultImageIndex)
+        private static TreeNode AddTreeNodeForElement(ElementSave element, TreeNode parentNode, int defaultImageIndex)
         {
             if (parentNode == null)
             {
@@ -611,6 +881,8 @@ namespace Gum.Managers
             treeNode.Tag = element;
             
             parentNode.Nodes.Add(treeNode);
+
+            return treeNode;
         }
 
         private static void AddTreeNodeForBehavior(BehaviorSave behavior, TreeNode parentNode, int defaultImageIndex)
@@ -633,19 +905,19 @@ namespace Gum.Managers
             {
                 mScreensTreeNode = new TreeNode("Screens");
                 mScreensTreeNode.ImageIndex = FolderImageIndex;
-                mTreeView.Nodes.Add(mScreensTreeNode);
+                ObjectTreeView.Nodes.Add(mScreensTreeNode);
 
                 mComponentsTreeNode = new TreeNode("Components");
                 mComponentsTreeNode.ImageIndex = FolderImageIndex;
-                mTreeView.Nodes.Add(mComponentsTreeNode);
+                ObjectTreeView.Nodes.Add(mComponentsTreeNode);
 
                 mStandardElementsTreeNode = new TreeNode("Standard");
                 mStandardElementsTreeNode.ImageIndex = FolderImageIndex;
-                mTreeView.Nodes.Add(mStandardElementsTreeNode);
+                ObjectTreeView.Nodes.Add(mStandardElementsTreeNode);
 
                 mBehaviorsTreeNode = new TreeNode("Behaviors");
                 mBehaviorsTreeNode.ImageIndex = FolderImageIndex;
-                mTreeView.Nodes.Add(mBehaviorsTreeNode);
+                ObjectTreeView.Nodes.Add(mBehaviorsTreeNode);
             }
         }
 
@@ -758,9 +1030,9 @@ namespace Gum.Managers
         {
             if (elementSave == null)
             {
-                if (mTreeView.SelectedNode != null && mTreeView.SelectedNode.Tag != null && mTreeView.SelectedNode.Tag is ElementSave)
+                if (ObjectTreeView.SelectedNode != null && ObjectTreeView.SelectedNode.Tag != null && ObjectTreeView.SelectedNode.Tag is ElementSave)
                 {
-                    mTreeView.SelectedNode = null;
+                    ObjectTreeView.SelectedNode = null;
                 }
             }
             else
@@ -771,29 +1043,29 @@ namespace Gum.Managers
 
         private void Select(TreeNode treeNode)
         {
-            if (mTreeView.SelectedNode != treeNode)
+            if (ObjectTreeView.SelectedNode != treeNode)
             {
                 // See comment above about why we have to manually raise the AfterClick
 
-                mTreeView.SelectedNode = treeNode;
+                ObjectTreeView.SelectedNode = treeNode;
 
                 if (treeNode != null)
                 {
                     treeNode.EnsureVisible();
                 }
 
-                mTreeView.CallAfterClickSelect(null, new TreeViewEventArgs(treeNode));
+                ObjectTreeView.CallAfterClickSelect(null, new TreeViewEventArgs(treeNode));
             }
         }
 
         private void Select(List<TreeNode> treeNodes)
         {
-            mTreeView.SelectedNodes = treeNodes;
+            ObjectTreeView.SelectedNodes = treeNodes;
 
             if (treeNodes.Count != 0)
             {
-                treeNodes[0].EnsureVisible();
-                mTreeView.CallAfterClickSelect(null, new TreeViewEventArgs(treeNodes[0]));
+                treeNodes[0]?.EnsureVisible();
+                ObjectTreeView.CallAfterClickSelect(null, new TreeViewEventArgs(treeNodes[0]));
             }
         }
 
@@ -803,11 +1075,14 @@ namespace Gum.Managers
             // brackets are used simply to indicate the recording and selection should
             // go around the rest of the function:
             {
+                ObjectTreeView.SuspendLayout();
                 CreateRootTreeNodesIfNecessary();
 
                 AddAndRemoveFolderNodes();
 
                 AddAndRemoveScreensComponentsAndStandards(null);
+                ObjectTreeView.ResumeLayout(performLayout:true);
+
             }
             SelectRecordedSelection();
         }
@@ -847,12 +1122,19 @@ namespace Gum.Managers
             else if (node.Tag is InstanceSave)
             {
                 InstanceSave instanceSave = node.Tag as InstanceSave;
-                node.Text = instanceSave.Name;
+                // this if check improves speed quite a bit!
+                if(instanceSave.Name != node.Text)
+                {
+                    node.Text = instanceSave.Name;
+                }
             }
             else if(node.Tag is BehaviorSave)
             {
                 var behavior = node.Tag as BehaviorSave;
-                node.Text = behavior.Name;
+                if(behavior.Name != node.Text)
+                {
+                    node.Text = behavior.Name;
+                }
             }
 
             foreach (TreeNode treeNode in node.Nodes)
@@ -876,8 +1158,27 @@ namespace Gum.Managers
                 }
             }
 
-            node.Text = FileManager.RemovePath(elementSave.Name);
-            node.Nodes.Clear();
+            var nodeText = FileManager.RemovePath(elementSave.Name);
+            if(nodeText != node.Text)
+            {
+                node.Text = nodeText;
+            }
+
+            var allTreeNodesRecursively = node.GetAllChildrenNodesRecursively();
+            
+            // why do we clear? wouldn't this require re-creation of all nodes? that seems like it might be slow...
+            //node.Nodes.Clear();
+            // Let's be smart about removal...
+            foreach(TreeNode instanceNode in allTreeNodesRecursively)
+            {
+                var instance = instanceNode.Tag as InstanceSave;
+
+                if(!allInstances.Contains(instance))
+                {
+                    instanceNode.Remove();
+                }
+            }
+
 
             foreach (InstanceSave instance in allInstances)
             {
@@ -888,6 +1189,7 @@ namespace Gum.Managers
                     nodeForInstance = AddTreeNodeForInstance(instance, node);
                 }
 
+
                 if (expandedInstances.Contains(instance))
                 {
                     nodeForInstance.Expand();
@@ -895,6 +1197,26 @@ namespace Gum.Managers
 
                 var siblingInstances = instance.GetSiblingsIncludingThis();
                 var desiredIndex = siblingInstances.IndexOf(instance);
+
+                var container = instance.ParentContainer;
+                var defaultState = container.DefaultState;
+                var thisParentValue = defaultState.GetValueOrDefault<string>($"{instance.Name}.Parent");
+
+                var desiredParentNode = node;
+                if(!string.IsNullOrEmpty(thisParentValue))
+                {
+                    var instanceParent = allInstances.FirstOrDefault(item => item.Name == thisParentValue);
+
+                    if(instanceParent != null)
+                    {
+                        desiredParentNode = GetTreeNodeFor(instanceParent, node);
+                    }
+                }
+                if(desiredParentNode != nodeForInstance.Parent)
+                {
+                    nodeForInstance.Remove();
+                    desiredParentNode.Nodes.Add(nodeForInstance);
+                }
 
                 var nodeParent = nodeForInstance.Parent;
                 if (desiredIndex != nodeParent.Nodes.IndexOf(nodeForInstance))
@@ -964,10 +1286,9 @@ namespace Gum.Managers
             return null;
         }
 
-        
         internal void OnSelect(TreeNode selectedTreeNode)
         {
-            TreeNode treeNode = mTreeView.SelectedNode;
+            TreeNode treeNode = ObjectTreeView.SelectedNode;
 
             object selectedObject = null;
 
@@ -999,8 +1320,6 @@ namespace Gum.Managers
             PluginManager.Self.TreeNodeSelected(selectedTreeNode);
         }
 
-
-
         public void VerifyComponentsAreInTreeView(GumProjectSave gumProject)
         {
             foreach (ComponentSave component in gumProject.Components)
@@ -1017,13 +1336,52 @@ namespace Gum.Managers
             HotkeyManager.Self.HandleKeyDownElementTreeView(e);
         }
 
+        private void ObjectTreeView_AfterSelect_1(object sender, TreeViewEventArgs e)
+        {
+            // If we use AfterClickSelect instead of AfterSelect then
+            // we don't get notified when the user selects nothing.
+            // Update - we only want to do this if it's null:
+            // Otherwise we can't drag drop
+            if (ObjectTreeView.SelectedNode == null)
+            {
+                ElementTreeViewManager.Self.OnSelect(ObjectTreeView.SelectedNode);
+            }
+        }
+
+        private void ObjectTreeView_AfterClickSelect(object sender, TreeViewEventArgs e)
+        {
+            ElementTreeViewManager.Self.OnSelect(ObjectTreeView.SelectedNode);
+        }
+
+        private void ObjectTreeView_MouseClick(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Right)
+            {
+                ElementTreeViewManager.Self.PopulateMenuStrip();
+            }
+        }
+
+        private void ObjectTreeView_KeyDown(object sender, KeyEventArgs e)
+        {
+            ElementTreeViewManager.Self.HandleKeyDown(e);
+        }
+
+        private void ObjectTreeView_ItemDrag(object sender, ItemDragEventArgs e)
+        {
+            DragDropManager.Self.OnItemDrag(e.Item);
+        }
+
+        private void ObjectTreeView_MouseMove(object sender, MouseEventArgs e)
+        {
+            HandleMouseOver(e.X, e.Y);
+        }
+
+
         #endregion
-
-
 
         internal void HandleMouseOver(int x, int y)
         {
-            var objectOver = this.mTreeView.GetNodeAt(x, y);
+            var objectOver = this.ObjectTreeView.GetNodeAt(x, y);
 
             ElementSave element = null;
             InstanceSave instance = null;
@@ -1115,7 +1473,7 @@ namespace Gum.Managers
             return treeNode.Parent == null && treeNode.Text == "Standard";
         }
 
-        public static string GetFullFilePath(this TreeNode treeNode)
+        public static FilePath GetFullFilePath(this TreeNode treeNode)
         {
             if (treeNode.IsTopComponentContainerTreeNode() ||
                 treeNode.IsTopStandardElementTreeNode() ||
@@ -1300,6 +1658,24 @@ namespace Gum.Managers
             {
                 return first.Text.CompareTo(second.Text) < 0;
             }
+        }
+
+        public static List<TreeNode> GetAllChildrenNodesRecursively(this TreeNode treeNode)
+        {
+            List<TreeNode> toReturn = new List<TreeNode>();
+
+            void Fill(TreeNode parent)
+            {
+                foreach(TreeNode child in parent.Nodes)
+                {
+                    toReturn.Add(child);
+                    Fill(child);
+                }
+            }
+
+            Fill(treeNode);
+
+            return toReturn;
         }
     }
 

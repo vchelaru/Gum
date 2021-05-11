@@ -1,0 +1,34 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
+	<GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
+	<GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+	<GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
+	<Platforms>AnyCPU;x86</Platforms>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="objNetFramework\**" />
+    <EmbeddedResource Remove="objNetFramework\**" />
+    <None Remove="objNetFramework\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MonoGame.Framework.DesktopGL.Core" Version="3.8.0.13" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Properties\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ToolsUtilities\ToolsUtilitiesStandard.csproj" />
+  </ItemGroup>
+
+</Project>

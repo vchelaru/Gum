@@ -8,12 +8,15 @@ using RenderingLibrary.Graphics;
 
 namespace RenderingLibrary
 {
+    #region Enums
+
     public enum CameraCenterOnScreen
     {
         Center,
         TopLeft
     }
 
+    #endregion
 
     public class Camera
     {
@@ -21,8 +24,6 @@ namespace RenderingLibrary
 
         public Vector2 Position;
         SystemManagers mManagers;
-
-
 
         #endregion
 
@@ -169,7 +170,10 @@ namespace RenderingLibrary
             private set;
         }
 
-
+        /// <summary>
+        /// The zoom value for everything on this camera. Default value of 1.
+        /// A value of 2 will make everything appear twice as large.
+        /// </summary>
         public float Zoom
         {
             get;
@@ -194,11 +198,17 @@ namespace RenderingLibrary
             UpdateClient();
         }
 
-        public Matrix GetTransformationMatrix()
+        public Matrix GetTransformationMatrix(bool forRendering = false)
         {
             if (CameraCenterOnScreen == RenderingLibrary.CameraCenterOnScreen.Center)
             {
-                return Camera.GetTransformationMatirx(X, Y, Zoom, ClientWidth, ClientHeight);
+                // make local vars to make stepping in faster if debugging
+                var x = X;
+                var y = Y;
+                var zoom = Zoom;
+                var width = ClientWidth;
+                var height = ClientHeight;
+                return Camera.GetTransformationMatrix(x, y, zoom, width, height, forRendering);
             }
             else
             {
@@ -207,11 +217,24 @@ namespace RenderingLibrary
             }
         }
 
-        public static Matrix GetTransformationMatirx(float x, float y, float zoom, int clientWidth, int clientHeight)
+        public static Matrix GetTransformationMatrix(float x, float y, float zoom, int clientWidth, int clientHeight, bool forRendering = false)
         {
-            return Matrix.CreateTranslation(new Vector3(-x, -y, 0)) *
-                   Matrix.CreateScale(new Vector3(zoom, zoom, 1)) *
-                   Matrix.CreateTranslation(new Vector3(clientWidth * 0.5f, clientHeight * 0.5f, 0));
+            if(Renderer.UseBasicEffectRendering && forRendering)
+            {
+                return
+                    Matrix.CreateTranslation(new Vector3(-x, -y, 0)) *
+                    Matrix.CreateTranslation(new Vector3(0, 0, 0))*
+                    Matrix.CreateScale(new Vector3(zoom, zoom, 1)) 
+                   ;
+            }
+            else
+            {
+
+                return 
+                    Matrix.CreateTranslation(new Vector3(-x, -y, 0)) *
+                    Matrix.CreateScale(new Vector3(zoom, zoom, 1)) *
+                    Matrix.CreateTranslation(new Vector3(clientWidth * 0.5f, clientHeight * 0.5f, 0));
+            }
         }
 
 
@@ -245,11 +268,13 @@ namespace RenderingLibrary
         // renders?  Hard to say.
         internal void UpdateClient()
         {
+#if MONOGAME
             if (Renderer.GraphicsDevice != null)
             {
                 ClientWidth = Renderer.GraphicsDevice.Viewport.Width;
                 ClientHeight = Renderer.GraphicsDevice.Viewport.Height;
             }
+#endif
         }
 
         #endregion

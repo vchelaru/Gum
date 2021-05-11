@@ -114,11 +114,10 @@ namespace Gum.PropertyGridHelpers.Converters
                 }
                 else
                 {
-                    var category = elementSave.Categories.FirstOrDefault(item => item.Name == categoryName);
-                    if (category != null)
-                    {
-                        toReturn = category.States.Select(item => item.Name).ToList();
-                    }
+                    // This could be defined in a base:
+                    var category = elementSave.GetStateSaveCategoryRecursively(categoryName);
+
+                    toReturn = category?.States.Select(item => item.Name).ToList();
                 }
             }
             return toReturn;

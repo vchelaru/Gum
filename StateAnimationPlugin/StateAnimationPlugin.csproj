@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>StateAnimationPlugin</RootNamespace>
     <AssemblyName>StateAnimationPlugin</AssemblyName>
-    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
   </PropertyGroup>
@@ -45,6 +45,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Libraries\FlatRedBall.InterpolationCore.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.12.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="System" />
@@ -64,22 +67,22 @@
     <Compile Include="Managers\AnimationCollectionViewModelManager.cs" />
     <Compile Include="MainPlugin.cs" />
     <Compile Include="Managers\BitmapLoader.cs" />
+    <Compile Include="Managers\DuplicateManager.cs" />
     <Compile Include="Managers\RenameManager.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Managers\SettingsManager.cs" />
+    <Compile Include="Models\AnimationPluginSettings.cs" />
     <Compile Include="SaveClasses\AnimatedStateSave.cs" />
     <Compile Include="SaveClasses\AnimationReferenceSave.cs" />
     <Compile Include="SaveClasses\AnimationSave.cs" />
     <Compile Include="SaveClasses\ElementAnimationReferenceSave.cs" />
     <Compile Include="SaveClasses\ElementAnimationsSave.cs" />
     <Compile Include="SaveClasses\NamedEventSave.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Validation\NameValidator.cs" />
     <Compile Include="ViewModels\AnimatedKeyframeViewModel.cs" />
     <Compile Include="ViewModels\AnimationContainerViewModel.cs" />
     <Compile Include="ViewModels\ElementAnimationsViewModel.cs" />
     <Compile Include="ViewModels\AnimationViewModel.cs" />
-    <Compile Include="Views\ListBoxMessageBox.xaml.cs">
-      <DependentUpon>ListBoxMessageBox.xaml</DependentUpon>
-    </Compile>
     <Compile Include="Views\MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </Compile>
@@ -117,19 +120,15 @@
       <Project>{a86ee399-7c93-42e1-80ed-ca4cbf4ca573}</Project>
       <Name>RenderingLibrary</Name>
     </ProjectReference>
-    <ProjectReference Include="..\ToolsUtilities\ToolsUtilities.csproj">
-      <Project>{b941a93f-6093-4dc6-ad11-91a058b6c2cc}</Project>
-      <Name>ToolsUtilities</Name>
+    <ProjectReference Include="..\ToolsUtilities\ToolsUtilitiesStandard.csproj">
+      <Project>{cae35f4b-8a10-4a85-b2fb-7f4a8d7c7138}</Project>
+      <Name>ToolsUtilitiesStandard</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Page Include="Views\ListBoxMessageBox.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="Views\MainWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -173,7 +172,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>md "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)"
+    <PostBuildEvent>IF NOT EXIST "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)" md "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)"
 copy "$(TargetPath)" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)"
 copy "$(TargetDir)$(TargetName).pdb" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)"
 copy "$(TargetDir)FlatRedBall.InterpolationCore.dll" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)"

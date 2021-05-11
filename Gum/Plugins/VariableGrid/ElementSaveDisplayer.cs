@@ -78,7 +78,8 @@ namespace Gum.PropertyGridHelpers
 
             if(elementSave is StandardElementSave)
             {
-                var variablesToAdd = StandardElementsManager.Self.DefaultStates[elementSave.Name].Variables
+                var defaultStates = StandardElementsManager.Self.GetDefaultStateFor(elementSave.Name);
+                var variablesToAdd = defaultStates.Variables
                     .Select(item => item.Clone())
                     .Where(item => existingVariableNames.Contains(item.Name) == false);
 
@@ -176,7 +177,8 @@ namespace Gum.PropertyGridHelpers
             // else if screen
             else if (instanceSave == null && elementSave as ScreenSave != null)
             {
-                foreach (var item in StandardElementsManager.Self.GetDefaultStateFor("Screen").Variables)
+                var screenDefaultState = StandardElementsManager.Self.GetDefaultStateFor("Screen");
+                foreach (var item in screenDefaultState.Variables)
                 {
 
                     TryDisplayVariableSave(pdc, elementSave, instanceSave, amountToDisplay, item);
@@ -257,6 +259,8 @@ namespace Gum.PropertyGridHelpers
                 amountToDisplay == AmountToDisplay.AllVariables || 
                 !string.IsNullOrEmpty(defaultVariable.ExposedAsName));
 
+            shouldInclude &= pdc.Any(item => item.Name == defaultVariable.Name) == false;
+
             if (shouldInclude)
             {
                 TypeConverter typeConverter = defaultVariable.GetTypeConverter(elementSave);
@@ -283,6 +287,9 @@ namespace Gum.PropertyGridHelpers
                     name = defaultVariable.ExposedAsName;
                 }
 
+                // if it already contains, do nothing
+                var alreadyContains = pdc.Any(item => item.Name == name);
+
                 var property = mHelper.AddProperty(pdc,
                     name,
                     type,
@@ -291,6 +298,8 @@ namespace Gum.PropertyGridHelpers
                     customAttributes
                     );
                 property.Category = category;
+
+
             }
         }
 
@@ -300,11 +309,7 @@ namespace Gum.PropertyGridHelpers
                 pdc,
                 "Name", 
                 typeof(string), 
-                TypeDescriptor.GetConverter(typeof(string)), 
-                new Attribute[]
-                        { 
-                            new CategoryAttribute("\tObject") // \t isn't rendered, but it is sorted on.  Hack to get this property to appear first
-                        });
+                TypeDescriptor.GetConverter(typeof(string)));
 
             nameProperty.IsReadOnly = isReadOnly;
 
@@ -313,10 +318,7 @@ namespace Gum.PropertyGridHelpers
 
                 // We may want to support Screens inheriting from other Screens in the future, but for now we won't allow it
             var baseTypeProperty = mHelper.AddProperty(pdc,
-                "Base Type", typeof(string), baseTypeConverter, new Attribute[]
-                    { 
-                        new CategoryAttribute("\tObject") // \t isn't rendered, but it is sorted on.  Hack to get this property to appear first
-                    });
+                "Base Type", typeof(string), baseTypeConverter);
 
             baseTypeProperty.IsReadOnly = isReadOnly;
         }

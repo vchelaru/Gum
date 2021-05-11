@@ -15,6 +15,7 @@ using Gum.Gui.Plugins;
 using Gum.Gui.Windows;
 using ToolsUtilities;
 using Gum.DataTypes.Behaviors;
+using RenderingLibrary.Graphics;
 
 namespace Gum.Plugins
 {
@@ -310,7 +311,8 @@ namespace Gum.Plugins
                 }
             }
 
-            MessageBox.Show("Couldn't find assembly: " + args.Name + " for " + args.RequestingAssembly);
+            //MessageBox.Show("Couldn't find assembly: " + args.Name + " for " + args.RequestingAssembly);
+            GumCommands.Self.GuiCommands.PrintOutput("Couldn't find assembly: " + args.Name + " for " + args.RequestingAssembly);
 
             return null;
         }
@@ -396,9 +398,17 @@ namespace Gum.Plugins
                 dllFiles.Add(executablePath + "Gum.exe");
                 foreach (string dll in dllFiles)
                 {
-                    Assembly loadedAssembly = Assembly.LoadFrom(dll);
+                    try
+                    {
+                        Assembly loadedAssembly = Assembly.LoadFrom(dll);
 
-                    returnValue.Catalogs.Add(new AssemblyCatalog(loadedAssembly));
+                        returnValue.Catalogs.Add(new AssemblyCatalog(loadedAssembly));
+
+                    }
+                    catch
+                    {
+                        // todo - report the error
+                    }
                 }
             }
 
@@ -716,12 +726,8 @@ namespace Gum.Plugins
         internal void ElementRename(ElementSave elementSave, string oldName)
         {
             CallMethodOnPlugin(
-                delegate(PluginBase plugin)
-                {
-                    plugin.CallElementRename(elementSave, oldName);
-                },
-                "ElementRename"
-                );
+                (PluginBase plugin) => plugin.CallElementRename(elementSave, oldName), 
+                nameof(ElementRename));
         }
 
         internal void ElementAdd(ElementSave element)
@@ -738,11 +744,16 @@ namespace Gum.Plugins
         internal void ElementDelete(ElementSave element)
         {
             CallMethodOnPlugin(
-                delegate (PluginBase plugin)
-                {
-                    plugin.CallElementDelete(element);
-                },
+                (plugin) => plugin.CallElementDelete(element),
                 nameof(ElementDelete)
+                );
+        }
+
+        internal void ElementDuplicate(ElementSave oldElement, ElementSave newElement)
+        {
+            CallMethodOnPlugin(
+                (plugin) => plugin.CallElementDuplicate(oldElement, newElement),
+                nameof(ElementDuplicate)
                 );
         }
 
@@ -753,29 +764,58 @@ namespace Gum.Plugins
                 {
                     plugin.CallStateRename(stateSave, oldName);
                 },
-                "StateRename"
+                nameof(StateRename)
                 );
+        }
+
+        internal void StateAdd(StateSave stateSave)
+        {
+            CallMethodOnPlugin((plugin) => plugin.CallStateAdd(stateSave),
+                nameof(StateAdd));
+        }
+
+        internal void StateDelete(StateSave stateSave)
+        {
+            CallMethodOnPlugin((plugin) => plugin.CallStateDelete(stateSave),
+                nameof(StateAdd));
         }
 
         internal void CategoryRename(StateSaveCategory category, string oldName)
         {
-            CallMethodOnPlugin(
-                delegate (PluginBase plugin)
-                {
-                    plugin.CallStateCategoryRename(category, oldName);
-                },
-                "CategoryRename"
+            CallMethodOnPlugin((plugin) => plugin.CallStateCategoryRename(category, oldName),
+                nameof(CategoryRename)
                 );
         }
 
-        internal void InstanceRename(InstanceSave instanceSave, string oldName)
+        internal void CategoryAdd(StateSaveCategory category)
+        {
+            CallMethodOnPlugin((plugin) => plugin.CallStateCategoryAdd(category),
+                nameof(CategoryAdd)
+                );
+        }
+
+        internal void CategoryDelete(StateSaveCategory category)
+        {
+            CallMethodOnPlugin((plugin) => plugin.CallStateCategoryDelete(category),
+                nameof(CategoryDelete)
+                );
+        }
+
+        internal void VariableRemovedFromCategory(string variableName, StateSaveCategory category)
+        {
+            CallMethodOnPlugin((plugin) => plugin.CallVariableRemovedFromCategory(variableName, category),
+                nameof(VariableRemovedFromCategory)
+                );
+        }
+
+        internal void InstanceRename(ElementSave element, InstanceSave instanceSave, string oldName)
         {
             CallMethodOnPlugin(
                 delegate (PluginBase plugin)
                 {
-                    plugin.CallInstanceRename(instanceSave, oldName);
+                    plugin.CallInstanceRename(element, instanceSave, oldName);
                 },
-                "InstanceRename"
+                nameof(InstanceRename)
                 );
 
         }
@@ -787,7 +827,7 @@ namespace Gum.Plugins
                 {
                     plugin.CallGuidesChanged();
                 },
-                "GuidesChanged"
+                nameof(GuidesChanged)
             );
         }
 
@@ -930,6 +970,26 @@ namespace Gum.Plugins
             );
         }
 
+        internal StateSave GetDefaultStateFor(string type)
+        {
+            StateSave toReturn = null;
+
+            CallMethodOnPlugin(
+                (plugin) =>
+                {
+                    var innerToReturn = plugin.CallGetDefaultStateFor(type);
+
+                    if (innerToReturn != null)
+                    {
+                        toReturn = innerToReturn;
+                    }
+
+                },
+                nameof(GetDefaultStateFor));
+
+            return toReturn;
+        }
+
         internal void InstanceReordered(InstanceSave instance)
         {
             CallMethodOnPlugin(
@@ -952,6 +1012,27 @@ namespace Gum.Plugins
                 (plugin) => plugin.CallWireframeRefreshed(),
                 nameof(WireframeRefreshed)
                 );
+        }
+
+        internal IRenderableIpso CreateRenderableForType(string type)
+        {
+            IRenderableIpso toReturn = null;
+
+
+            CallMethodOnPlugin(
+                (plugin) =>
+                {
+                    var innerToReturn = plugin.CallCreateRenderableForType(type);
+
+                    if (innerToReturn != null)
+                    {
+                        toReturn = innerToReturn;
+                    }
+
+                },
+                nameof(CreateRenderableForType));
+
+            return toReturn;
         }
 
         #endregion

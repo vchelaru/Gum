@@ -9,6 +9,7 @@ using Gum.DataTypes;
 using Gum.ToolCommands;
 using Gum.Wireframe;
 using ToolsUtilities;
+using Gum.Logic;
 
 namespace Gum.Undo
 {
@@ -237,7 +238,7 @@ namespace Gum.Undo
                 {
                     string oldName = toApplyTo.Name;
                     toApplyTo.Name = elementToUndo.Name;
-                    RenameManager.Self.HandleRename(toApplyTo, (InstanceSave)null, oldName, NameChangeAction.Rename, askAboutRename:false);
+                    RenameLogic.HandleRename(toApplyTo, (InstanceSave)null, oldName, NameChangeAction.Rename, askAboutRename:false);
                 }
 
                 if(undoSnapshot.CategoryName != SelectedState.Self.SelectedStateCategorySave?.Name ||

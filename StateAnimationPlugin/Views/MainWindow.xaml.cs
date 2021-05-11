@@ -21,6 +21,7 @@ using System.Windows.Threading;
 using StateAnimationPlugin.Validation;
 using Gum.Managers;
 using StateAnimationPlugin.Managers;
+using Gum;
 
 namespace StateAnimationPlugin.Views
 {
@@ -31,17 +32,25 @@ namespace StateAnimationPlugin.Views
     {
         #region Properties
 
-        ElementAnimationsViewModel ViewModel
+        ElementAnimationsViewModel ViewModel => DataContext as ElementAnimationsViewModel;
+
+        public GridLength FirstRowWidth
         {
-            get
-            {
-                return DataContext as ElementAnimationsViewModel;
-            }
+            get => BottomGrid.ColumnDefinitions[0].Width;
+            set => BottomGrid.ColumnDefinitions[0].Width = value;
         }
 
+        public GridLength SecondRowWidth
+        {
+            get => BottomGrid.ColumnDefinitions[2].Width;
+            set => BottomGrid.ColumnDefinitions[2].Width = value;
+        }
 
         #endregion
 
+        public event EventHandler AddStateKeyframeClicked;
+
+        public event Action AnimationColumnsResized;
 
         public MainWindow()
         {
@@ -62,6 +71,9 @@ namespace StateAnimationPlugin.Views
             }
 
             string whyIsntValid = null;
+
+            whyIsntValid = GetWhyAddingAnimationIsInvalid();
+
             if(!string.IsNullOrEmpty(whyIsntValid))
             {
                 MessageBox.Show(whyIsntValid);
@@ -93,71 +105,20 @@ namespace StateAnimationPlugin.Views
             }
         }
 
-        private void AddStateButton_Click(object sender, RoutedEventArgs e)
+        private string GetWhyAddingAnimationIsInvalid()
         {
-            if(ViewModel == null)
+            string whyIsntValid = null;
+            if (SelectedState.Self.SelectedScreen == null && SelectedState.Self.SelectedComponent == null)
             {
-                throw new NullReferenceException("The ViewModel for this is invalid - set the DataContext on this view before showing it.");
+                whyIsntValid = "You must first select a Screen or Component";
             }
 
-            string whyIsntValid = GetWhyAddingTimedStateIsInvalid();
+            return whyIsntValid;
+        }
 
-            if(!string.IsNullOrEmpty(whyIsntValid))
-            {
-                MessageBox.Show(whyIsntValid);
-
-            }
-            else
-            {
-                ListBoxMessageBox lbmb = new ListBoxMessageBox();
-                lbmb.RequiresSelection = true;
-                lbmb.Message = "Select a state";
-
-                var element = SelectedState.Self.SelectedElement;
-
-                foreach (var state in element.States)
-                {
-                    lbmb.Items.Add(state.Name);
-                }
-
-                foreach(var category in element.Categories)
-                {
-                    foreach(var state in category.States)
-                    {
-                        lbmb.Items.Add(category.Name + "/" + state.Name);
-                    }
-                }
-
-
-                var dialogResult = lbmb.ShowDialog();
-
-                if (dialogResult.HasValue && dialogResult.Value)
-                {
-                    var item = lbmb.SelectedItem;
-
-                    var newVm = new AnimatedKeyframeViewModel() { StateName = (string)item, 
-                        // User just selected the state, so it better be valid!
-                        HasValidState = true,
-                        InterpolationType = FlatRedBall.Glue.StateInterpolation.InterpolationType.Linear,
-                        Easing = FlatRedBall.Glue.StateInterpolation.Easing.Out
-                    
-                    };
-
-                    if(ViewModel.SelectedAnimation.SelectedKeyframe != null)
-                    {
-                        // put this after the current animation
-                        newVm.Time = ViewModel.SelectedAnimation.SelectedKeyframe.Time + 1f;
-                    }
-                    else if(ViewModel.SelectedAnimation.Keyframes.Count != 0)
-                    {
-                        newVm.Time = ViewModel.SelectedAnimation.Keyframes.Last().Time + 1f;
-                    }
-
-                    ViewModel.SelectedAnimation.Keyframes.Add(newVm);
-
-                    ViewModel.SelectedAnimation.Keyframes.BubbleSort();
-                }
-            }
+        private void AddStateKeyframeButton_Click(object sender, RoutedEventArgs e)
+        {
+            AddStateKeyframeClicked?.Invoke(this, null);
         }
 
         private void AddSubAnimationButton_Click(object sender, RoutedEventArgs e)
@@ -210,6 +171,8 @@ namespace StateAnimationPlugin.Views
                 ViewModel.SelectedAnimation.Keyframes.Add(newVm);
 
                 ViewModel.SelectedAnimation.Keyframes.BubbleSort();
+
+                ViewModel.SelectedAnimation.SelectedKeyframe = newVm;
             }
         }
 
@@ -247,6 +210,8 @@ namespace StateAnimationPlugin.Views
                 ViewModel.SelectedAnimation.Keyframes.Add(newVm);
 
                 ViewModel.SelectedAnimation.Keyframes.BubbleSort();
+
+                ViewModel.SelectedAnimation.SelectedKeyframe = newVm;
             }
         }
 
@@ -286,28 +251,48 @@ namespace StateAnimationPlugin.Views
             }
         }
 
-        private string GetWhyAddingTimedStateIsInvalid()
+        private void HandleAnimationListKeyPressed(object sender, KeyEventArgs e)
         {
-            string whyIsntValid = null;
+            var alt = e.KeyboardDevice.Modifiers.HasFlag(ModifierKeys.Alt);
 
-            if (ViewModel.SelectedAnimation == null)
+            if (this.ViewModel.SelectedAnimation != null && alt)
             {
-                whyIsntValid = "You must first select an Animation";
+                if(e.SystemKey == Key.Up)
+                {
+                    var index = this.ViewModel.Animations.IndexOf(ViewModel.SelectedAnimation);
+
+                    if(index > 0)
+                    {
+                        this.ViewModel.Animations.Move(index, index - 1);
+                        e.Handled = true;
+                    }
+                }
+                else if(e.SystemKey == Key.Down)
+                {
+                    var index = this.ViewModel.Animations.IndexOf(ViewModel.SelectedAnimation);
+
+                    if(index < this.ViewModel.Animations.Count-1)
+                    {
+                        this.ViewModel.Animations.Move(index, index + 1);
+                        e.Handled = true;
+                    }
+                }
+
+
             }
 
-            if (SelectedState.Self.SelectedScreen == null && SelectedState.Self.SelectedComponent == null)
-            {
-                whyIsntValid = "You must first select a Screen or Component";
-            }
-            return whyIsntValid;
-        }
-
-        private void HandleDeleteAnimationPressed(object sender, KeyEventArgs e)
-        {
             if (e.Key == Key.Delete && this.ViewModel.SelectedAnimation != null)
             {
-                this.ViewModel.Animations.Remove(this.ViewModel.SelectedAnimation);
-                this.ViewModel.SelectedAnimation = null;
+                e.Handled = true;
+                var result = MessageBox.Show(
+                    $"Delete animation {ViewModel.SelectedAnimation.Name}?", 
+                    "Delete?", 
+                    MessageBoxButton.YesNo);
+                if(result == MessageBoxResult.Yes)
+                {
+                    this.ViewModel.Animations.Remove(this.ViewModel.SelectedAnimation);
+                    this.ViewModel.SelectedAnimation = null;
+                }
             }
         }
 
@@ -335,6 +320,9 @@ namespace StateAnimationPlugin.Views
             ViewModel?.Stop();
         }
 
-
+        private void GridSplitter_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
+        {
+            AnimationColumnsResized?.Invoke();
+        }
     }
 }

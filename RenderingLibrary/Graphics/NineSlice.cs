@@ -10,22 +10,7 @@ using System.Collections.ObjectModel;
 
 namespace RenderingLibrary.Graphics
 {
-    #region Enums
 
-    public enum NineSliceSections
-    {
-        TopLeft,
-        Top,
-        TopRight,
-        Left,
-        Center,
-        Right,
-        BottomLeft,
-        Bottom,
-        BottomRight
-    }
-
-    #endregion
 
     public class NineSlice : IRenderableIpso, IVisible
     {
@@ -59,10 +44,11 @@ namespace RenderingLibrary.Graphics
 
         public Rectangle? SourceRectangle;
 
-
         #endregion
 
         #region Properties
+
+        ColorOperation IRenderableIpso.ColorOperation => ColorOperation.Modulate;
 
         public int Alpha
         {
@@ -124,15 +110,16 @@ namespace RenderingLibrary.Graphics
             }
         }
 
-
         public float Rotation { get; set; }
 
+        public bool FlipHorizontal { get; set; }
 
         public string Name
         {
             get;
             set;
         }
+
         public object Tag { get; set; }
 
         public float Width
@@ -354,11 +341,7 @@ namespace RenderingLibrary.Graphics
             get { return mChildren; }
         }
 
-        public static string[] PossibleNineSliceEndings
-        {
-            get;
-            private set;
-        }
+
 
         public float OutsideSpriteWidth
         {
@@ -398,14 +381,16 @@ namespace RenderingLibrary.Graphics
                 Vector3 right;
                 Vector3 up;
 
-                if(Rotation == 0)
+                var rotation = this.GetAbsoluteRotation();
+
+                if(rotation == 0)
                 {
                     right = Vector3.Right;
                     up = Vector3.Up;
                 }
                 else
                 {
-                    var matrix = Matrix.CreateRotationZ(-MathHelper.ToRadians(Rotation));
+                    var matrix = Matrix.CreateRotationZ(-MathHelper.ToRadians(rotation));
 
                     right = matrix.Right;
                     up = matrix.Up;
@@ -413,38 +398,38 @@ namespace RenderingLibrary.Graphics
 
                 mSprites[(int)NineSliceSections.TopLeft].X = x + offsetX * right.X + offsetY * up.X;
                 mSprites[(int)NineSliceSections.TopLeft].Y = y + offsetX * right.Y + offsetY * up.Y; 
-                mSprites[(int)NineSliceSections.TopLeft].Rotation = this.Rotation;
+                mSprites[(int)NineSliceSections.TopLeft].Rotation = rotation;
 
                 offsetX = mSprites[(int)NineSliceSections.TopLeft].EffectiveWidth;
 
                 mSprites[(int)NineSliceSections.Top].X = x + offsetX * right.X + offsetY * up.X;
                 mSprites[(int)NineSliceSections.Top].Y = y + offsetX * right.Y + offsetY * up.Y;
-                mSprites[(int)NineSliceSections.Top].Rotation = this.Rotation;
+                mSprites[(int)NineSliceSections.Top].Rotation = rotation;
 
                 offsetX = mSprites[(int)NineSliceSections.TopLeft].EffectiveWidth + mSprites[(int)NineSliceSections.Top].Width;
 
                 mSprites[(int)NineSliceSections.TopRight].X = x + offsetX * right.X + offsetY * up.X;
                 mSprites[(int)NineSliceSections.TopRight].Y = y + offsetX * right.Y + offsetY * up.Y; 
-                mSprites[(int)NineSliceSections.TopRight].Rotation = this.Rotation;
+                mSprites[(int)NineSliceSections.TopRight].Rotation = rotation;
 
                 offsetX = 0;
                 offsetY = mSprites[(int)NineSliceSections.TopLeft].EffectiveHeight;
 
                 mSprites[(int)NineSliceSections.Left].X = x + offsetX * right.X + offsetY * up.X;
                 mSprites[(int)NineSliceSections.Left].Y = y + offsetX * right.Y + offsetY * up.Y; 
-                mSprites[(int)NineSliceSections.Left].Rotation = this.Rotation;
+                mSprites[(int)NineSliceSections.Left].Rotation = rotation;
 
                 offsetX = mSprites[(int)NineSliceSections.Left].EffectiveWidth;
 
                 mSprites[(int)NineSliceSections.Center].X = x + offsetX * right.X + offsetY * up.X;
                 mSprites[(int)NineSliceSections.Center].Y = y + offsetX * right.Y + offsetY * up.Y; 
-                mSprites[(int)NineSliceSections.Center].Rotation = this.Rotation;
+                mSprites[(int)NineSliceSections.Center].Rotation = rotation;
 
                 offsetX = mSprites[(int)NineSliceSections.Left].EffectiveWidth + mSprites[(int)NineSliceSections.Center].Width;
 
                 mSprites[(int)NineSliceSections.Right].X = x + offsetX * right.X + offsetY * up.X;
                 mSprites[(int)NineSliceSections.Right].Y = y + offsetX * right.Y + offsetY * up.Y; 
-                mSprites[(int)NineSliceSections.Right].Rotation = this.Rotation;
+                mSprites[(int)NineSliceSections.Right].Rotation = rotation;
 
 
                 offsetX = 0;
@@ -452,19 +437,19 @@ namespace RenderingLibrary.Graphics
 
                 mSprites[(int)NineSliceSections.BottomLeft].X = x + offsetX * right.X + offsetY * up.X;
                 mSprites[(int)NineSliceSections.BottomLeft].Y = y + offsetX * right.Y + offsetY * up.Y; 
-                mSprites[(int)NineSliceSections.BottomLeft].Rotation = this.Rotation;
+                mSprites[(int)NineSliceSections.BottomLeft].Rotation = rotation;
 
                 offsetX = mSprites[(int)NineSliceSections.BottomLeft].EffectiveWidth;
 
                 mSprites[(int)NineSliceSections.Bottom].X = x + offsetX * right.X + offsetY * up.X;
                 mSprites[(int)NineSliceSections.Bottom].Y = y + offsetX * right.Y + offsetY * up.Y; 
-                mSprites[(int)NineSliceSections.Bottom].Rotation = this.Rotation;
+                mSprites[(int)NineSliceSections.Bottom].Rotation = rotation;
 
                 offsetX = mSprites[(int)NineSliceSections.BottomLeft].EffectiveWidth + mSprites[(int)NineSliceSections.Bottom].Width;
 
                 mSprites[(int)NineSliceSections.BottomRight].X = x + offsetX * right.X + offsetY * up.X;
                 mSprites[(int)NineSliceSections.BottomRight].Y = y + offsetX * right.Y + offsetY * up.Y; 
-                mSprites[(int)NineSliceSections.BottomRight].Rotation = this.Rotation;
+                mSprites[(int)NineSliceSections.BottomRight].Rotation = rotation;
 
                 Render(mSprites[(int)NineSliceSections.TopLeft], managers, spriteRenderer);
                 if (mSprites[(int)NineSliceSections.Center].Width > 0)
@@ -901,7 +886,7 @@ namespace RenderingLibrary.Graphics
             if (sprite.AtlasedTexture != null) texture = sprite.AtlasedTexture.Texture;
 
             Sprite.Render(managers, spriteRenderer, sprite, texture, sprite.Color, 
-                sourceRectangle, sprite.FlipHorizontal, sprite.FlipVertical, sprite.Rotation, treat0AsFullDimensions:false);
+                sourceRectangle, sprite.FlipVertical, sprite.Rotation, treat0AsFullDimensions:false);
         }
 
         void IRenderableIpso.SetParentDirect(IRenderableIpso parent)
@@ -945,16 +930,7 @@ namespace RenderingLibrary.Graphics
 
         static NineSlice()
         {
-            PossibleNineSliceEndings = new string[9];
-            PossibleNineSliceEndings[(int) NineSliceSections.Center] = "_center";
-            PossibleNineSliceEndings[(int) NineSliceSections.Left] = "_left";
-            PossibleNineSliceEndings[(int) NineSliceSections.Right] = "_right";
-            PossibleNineSliceEndings[(int) NineSliceSections.TopLeft] = "_topLeft";
-            PossibleNineSliceEndings[(int) NineSliceSections.Top] = "_topCenter";
-            PossibleNineSliceEndings[(int) NineSliceSections.TopRight] = "_topRight";
-            PossibleNineSliceEndings[(int) NineSliceSections.BottomLeft] = "_bottomLeft";
-            PossibleNineSliceEndings[(int) NineSliceSections.Bottom] = "_bottomCenter";
-            PossibleNineSliceEndings[(int) NineSliceSections.BottomRight] = "_bottomRight";
+
 
         }
 
@@ -978,7 +954,7 @@ namespace RenderingLibrary.Graphics
         public void LoadAtlasedTexture(string valueAsString, AtlasedTexture atlasedTexture)
         {
             //if made up of seperate textures
-            if (GetIfShouldUsePattern(valueAsString))
+            if (NineSliceExtensions.GetIfShouldUsePattern(valueAsString))
             {
                 SetTexturesUsingPattern(valueAsString, SystemManagers.Default, true);
             }
@@ -1018,72 +994,33 @@ namespace RenderingLibrary.Graphics
 
             string extension = FileManager.GetExtension(absoluteTexture);
 
-            string bareTexture = GetBareTextureForNineSliceTexture(absoluteTexture);
+            string bareTexture = NineSliceExtensions.GetBareTextureForNineSliceTexture(absoluteTexture);
             string error;
             if (!string.IsNullOrEmpty(bareTexture))
             {
                 if (inAtlas)
                 {
                     //loop through all nine sprite names
-                    for (var sprite = 0; sprite < PossibleNineSliceEndings.Count(); sprite++)
+                    for (var sprite = 0; sprite < NineSliceExtensions.PossibleNineSliceEndings.Count(); sprite++)
                     {
                         var atlasedTexture = LoaderManager.Self.TryLoadContent<AtlasedTexture>
-                            (bareTexture + PossibleNineSliceEndings[sprite] + "." + extension);
+                            (bareTexture + NineSliceExtensions.PossibleNineSliceEndings[sprite] + "." + extension);
 
                         if (atlasedTexture != null) mSprites[sprite].AtlasedTexture = atlasedTexture;
                     }
                 }
                 else
                 {
-                    for (var sprite = 0; sprite < PossibleNineSliceEndings.Count(); sprite++)
+                    for (var sprite = 0; sprite < NineSliceExtensions.PossibleNineSliceEndings.Count(); sprite++)
                     {
                         mSprites[sprite].Texture = LoaderManager.Self.LoadOrInvalid(
-                            bareTexture + PossibleNineSliceEndings[sprite] + "." + extension, managers, out error);
+                            bareTexture + NineSliceExtensions.PossibleNineSliceEndings[sprite] + "." + extension, managers, out error);
                     }
                 }
             }
         }
 
 
-        public static bool GetIfShouldUsePattern(string absoluteTexture)
-        {
-            bool usePattern = false;
-
-            string withoutExtension = FileManager.RemoveExtension(absoluteTexture);
-            foreach (var kvp in PossibleNineSliceEndings)
-            {
-                if (withoutExtension.EndsWith(kvp, StringComparison.OrdinalIgnoreCase))
-                {
-                    usePattern = true;
-                    break;
-                }
-            }
-            return usePattern;
-        }
-
-        
-        public static string GetBareTextureForNineSliceTexture(string absoluteTexture)
-        {
-            string extension = FileManager.GetExtension(absoluteTexture);
-
-            string withoutExtension = FileManager.RemoveExtension(absoluteTexture);
-
-            string toReturn = withoutExtension;
-
-            foreach (var kvp in PossibleNineSliceEndings)
-            {
-                if (withoutExtension.EndsWith(kvp, StringComparison.OrdinalIgnoreCase))
-                {
-                    toReturn = withoutExtension.Substring(0, withoutExtension.Length - kvp.Length);
-                    break;
-                }
-            }
-
-            // No extensions, because we'll need to append that
-            //toReturn += "." + extension;
-
-            return toReturn;
-        }
 
         void IRenderable.PreRender() { }
         #endregion

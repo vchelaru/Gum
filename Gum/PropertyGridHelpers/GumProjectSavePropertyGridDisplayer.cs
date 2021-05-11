@@ -26,7 +26,6 @@ namespace Gum.PropertyGridHelpers
             set;
         }
 
-
         public override System.ComponentModel.PropertyDescriptorCollection GetProperties(Attribute[] attributes)
         {
             PropertyDescriptorCollection pdc = mHelper.GetEmpty();

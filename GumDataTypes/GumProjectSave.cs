@@ -9,6 +9,11 @@ using ToolsUtilities;
 
 namespace Gum.DataTypes
 {
+    public enum LinkLoadingPreference
+    {
+        PreferLinked,
+        RequireLinked
+    }
 
     public class GumLoadResult
     {
@@ -74,6 +79,11 @@ namespace Gum.DataTypes
         {
             get;
             set;
+        }
+
+        public bool ConvertVariablesOnUnitTypeChange
+        {
+            get; set;
         }
 
         public bool RestrictToUnitValues
@@ -188,6 +198,11 @@ namespace Gum.DataTypes
 
         public static GumProjectSave Load(string fileName, out GumLoadResult result)
         {
+            return Load(fileName, LinkLoadingPreference.PreferLinked, out result);
+        }
+
+        public static GumProjectSave Load(string fileName, LinkLoadingPreference linkLoadingPreference, out GumLoadResult result)
+        {
             result = new GumLoadResult();
             if (string.IsNullOrEmpty(fileName))
             {
@@ -203,7 +218,7 @@ namespace Gum.DataTypes
             GumProjectSave gps = null;
 
 #if ANDROID || IOS || WINDOWS_8
-            gps = LoadFromTitleStorage(fileName, result);
+            gps = LoadFromTitleStorage(fileName, linkLoadingPreference, result);
 #else
             try
             {
@@ -223,14 +238,14 @@ namespace Gum.DataTypes
 
             string projectRootDirectory = FileManager.GetDirectory(fileName);
 
-            gps.PopulateElementSavesFromReferences(projectRootDirectory, result);
+            gps.PopulateElementSavesFromReferences(projectRootDirectory, linkLoadingPreference, result);
             gps.FullFileName = fileName.Replace('\\', '/');
 
             return gps;
         }
 
 #if ANDROID || IOS
-        static GumProjectSave LoadFromTitleStorage(string fileName, GumLoadResult result)
+        static GumProjectSave LoadFromTitleStorage(string fileName, LinkLoadingPreference linkLoadingPreference, GumLoadResult result)
 		{
 			using (System.IO.Stream stream = Microsoft.Xna.Framework.TitleContainer.OpenStream(fileName))
 			{
@@ -238,7 +253,7 @@ namespace Gum.DataTypes
 
 				string projectRootDirectory = FileManager.GetDirectory(fileName);
 
-				gps.PopulateElementSavesFromReferences(projectRootDirectory, result);
+				gps.PopulateElementSavesFromReferences(projectRootDirectory, linkLoadingPreference, result);
 
 				gps.FullFileName = fileName;
 
@@ -247,7 +262,7 @@ namespace Gum.DataTypes
 		}
 #endif
 
-        private void PopulateElementSavesFromReferences(string projectRootDirectory, GumLoadResult result)
+        private void PopulateElementSavesFromReferences(string projectRootDirectory, LinkLoadingPreference linkLoadingPreference, GumLoadResult result)
         {
             string errors = "";
 

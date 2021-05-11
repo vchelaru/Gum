@@ -1,6 +1,7 @@
 ﻿using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
+using Gum.Plugins;
 using Gum.ToolStates;
 using System;
 using System.Collections.Generic;
@@ -13,7 +14,7 @@ namespace Gum.PropertyGridHelpers
 {
     public class VariableInCategoryPropagationLogic : Singleton<VariableInCategoryPropagationLogic> 
     {
-        public void PropagateVariablesInCategory(string changedMember)
+        public void PropagateVariablesInCategory(string memberName)
         {
             var currentCategory = SelectedState.Self.SelectedStateCategorySave;
             /////////////////////Early Out//////////////////////////
@@ -24,10 +25,10 @@ namespace Gum.PropertyGridHelpers
             ///////////////////End Early Out////////////////////////
 
             var defaultState = SelectedState.Self.SelectedElement.DefaultState;
-            var defaultVariable = defaultState.GetVariableSave(changedMember);
+            var defaultVariable = defaultState.GetVariableSave(memberName);
             if (defaultVariable == null)
             {
-                defaultVariable = defaultState.GetVariableRecursive(changedMember);
+                defaultVariable = defaultState.GetVariableRecursive(memberName);
             }
 
             // If the user is setting a variable that is a categorized state, the
@@ -38,7 +39,7 @@ namespace Gum.PropertyGridHelpers
                 var variableContainer = SelectedState.Self.SelectedElement;
 
 
-                var sourceObjectName = VariableSave.GetSourceObject(changedMember);
+                var sourceObjectName = VariableSave.GetSourceObject(memberName);
 
                 if(!string.IsNullOrEmpty(sourceObjectName))
                 {
@@ -72,23 +73,26 @@ namespace Gum.PropertyGridHelpers
                 }
             }
 
-            var defaultValue = defaultVariable.Value;
+            var defaultValue = defaultVariable?.Value;
 
             foreach (var state in currentCategory.States)
             {
-                var existingVariable = state.GetVariableSave(changedMember);
+                var existingVariable = state.GetVariableSave(memberName);
 
                 if (existingVariable == null)
                 {
-                    VariableSave newVariable = defaultVariable.Clone();
-                    newVariable.Value = defaultValue;
-                    newVariable.SetsValue = true;
-                    newVariable.Name = changedMember;
+                    if(defaultVariable != null)
+                    {
+                        VariableSave newVariable = defaultVariable.Clone();
+                        newVariable.Value = defaultValue;
+                        newVariable.SetsValue = true;
+                        newVariable.Name = memberName;
 
-                    state.Variables.Add(newVariable);
+                        state.Variables.Add(newVariable);
 
-                    GumCommands.Self.GuiCommands.PrintOutput(
-                        $"Adding {changedMember} to {currentCategory.Name}/{state.Name}");
+                        GumCommands.Self.GuiCommands.PrintOutput(
+                            $"Adding {memberName} to {currentCategory.Name}/{state.Name}");
+                    }
                 }
                 else if (existingVariable.SetsValue == false)
                 {
@@ -101,7 +105,7 @@ namespace Gum.PropertyGridHelpers
         public void AskRemoveVariableFromAllStatesInCategory(string variableName, StateSaveCategory stateCategory)
         {
             string message =
-                $"Are you sure you want to remove {variableName} from all states in {stateCategory.Name}? The following categories will be impacted:\n";
+                $"Are you sure you want to remove {variableName} from all states in {stateCategory.Name}? The following states will be impacted:\n";
 
             foreach (var state in stateCategory.States)
             {
@@ -128,6 +132,8 @@ namespace Gum.PropertyGridHelpers
                 // no selection has changed, but we want to force refresh here because we know
                 // we really need a refresh - something was removed.
                 GumCommands.Self.GuiCommands.RefreshPropertyGrid(force:true);
+
+                PluginManager.Self.VariableRemovedFromCategory(variableName, stateCategory);
             }
         }
 

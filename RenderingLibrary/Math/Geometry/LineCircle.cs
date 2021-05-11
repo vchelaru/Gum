@@ -33,6 +33,7 @@ namespace RenderingLibrary.Math.Geometry
         #endregion
 
         #region Properties
+        ColorOperation IRenderableIpso.ColorOperation => ColorOperation.Modulate;
 
         public string Name
         {
@@ -71,7 +72,10 @@ namespace RenderingLibrary.Math.Geometry
                 if(value != mRadius)
                 {
                     mRadius = value;
-                    UpdatePoints();
+                    if(mVisible)
+                    {
+                        UpdatePoints();
+                    }
                 }
             }
         }
@@ -120,13 +124,23 @@ namespace RenderingLibrary.Math.Geometry
             }
         }
 
+        float mRotation;
         public float Rotation
         {
             // even though it doesn't rotate itself, its children
             // can rotate, so it should store rotation values:
-            get;
-            set;
+            get => mRotation;
+            set
+            {
+                if(mRotation != value)
+                {
+                    mRotation = value;
+                    UpdatePoints();
+                }
+            }
         }
+
+        public bool FlipHorizontal { get; set; }
 
         public float Width
         {
@@ -191,9 +205,10 @@ namespace RenderingLibrary.Math.Geometry
 
             if(mCircleOrigin == Geometry.CircleOrigin.TopLeft)
             {
-                if(Rotation != 0)
+                var rotation = this.GetAbsoluteRotation();
+                if(rotation != 0)
                 {
-                    Matrix matrix = Matrix.CreateRotationZ(-MathHelper.ToRadians(Rotation));
+                    Matrix matrix = Matrix.CreateRotationZ(-MathHelper.ToRadians(rotation));
 
                     var vector = Radius * matrix.Right + Radius * matrix.Up;
 

@@ -12,17 +12,27 @@ using RenderingLibrary;
 
 namespace RenderingLibrary.Graphics
 {
+    #region RenderStateVariables Class
+
     public class RenderStateVariables
     {
         public BlendState BlendState;
+        public ColorOperation ColorOperation;
         public bool Filtering;
         public bool Wrap;
 
         public Rectangle? ClipRectangle;
     }
 
+    #endregion
+
     public class Renderer
     {
+        /// <summary>
+        /// Whether renderable objects should call Render
+        /// on contained children. This is true by default, 
+        /// results in a hierarchical rendering order.
+        /// </summary>
         public static bool RenderUsingHierarchy = true;
 
         #region Fields
@@ -182,6 +192,14 @@ namespace RenderingLibrary.Graphics
             set;
         } = BlendState.NonPremultiplied;
 
+        public static bool UseBasicEffectRendering { get; set; } = true;
+        // Vic says March 29 2020
+        // For some reason the rendering
+        // in the tool works differently than
+        // in-game. Not sure if this is a DesktopGL
+        // vs XNA thing, but I traced it down to the zoom thing.
+        // I'm going to add a bool here to control it.
+        public static bool ApplyCameraZoomOnWorldTranslation { get; set; } = false;
         #endregion
 
         #region Methods
@@ -213,8 +231,6 @@ namespace RenderingLibrary.Graphics
 
             mCamera.UpdateClient();
         }
-
-
 
         public Layer AddLayer()
         {
@@ -454,6 +470,12 @@ namespace RenderingLibrary.Graphics
 
             }
 
+            if(renderState.ColorOperation != renderable.ColorOperation)
+            {
+                renderState.ColorOperation = renderable.ColorOperation;
+                shouldResetStates = true;
+            }
+
             if (renderState.Wrap != wrap)
             {
                 renderState.Wrap = wrap;
@@ -499,7 +521,8 @@ namespace RenderingLibrary.Graphics
             return new Rectangle(x, y, right - x, bottom - y);
         }
 
-        internal void RemoveRenderable(IRenderableIpso renderable)
+        // Made public to allow custom renderable objects to be removed:
+        public void RemoveRenderable(IRenderableIpso renderable)
         {
             foreach (Layer layer in this.Layers)
             {

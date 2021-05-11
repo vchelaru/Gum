@@ -737,6 +737,10 @@ namespace ToolsUtilities
     public static partial class FileManager
     {
 #if !UWP
+
+        public static string UserApplicationData =>
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + @"\";
+
         public static void CopyFilesRecursively(string source, string target)
         {
             DirectoryInfo sourceDirectory = new DirectoryInfo(source);
@@ -1197,6 +1201,11 @@ namespace ToolsUtilities
             }
 
             return objectToReturn;
+        }
+
+        public static bool IsUrl(string fileName)
+        {
+            return fileName.IndexOf("http:") == 0 || fileName.IndexOf("https:") == 0;
         }
 #endif
     }

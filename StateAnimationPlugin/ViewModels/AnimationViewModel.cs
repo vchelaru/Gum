@@ -1,7 +1,9 @@
 ﻿using FlatRedBall.Glue.StateInterpolation;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
+using Gum.Managers;
 using Gum.Mvvm;
+using Gum.ToolStates;
 using Gum.Wireframe;
 using StateAnimationPlugin.Managers;
 using StateAnimationPlugin.SaveClasses;
@@ -20,8 +22,6 @@ namespace StateAnimationPlugin.ViewModels
     public class AnimationViewModel : ViewModel, INotifyPropertyChanged
     {
         #region Fields
-
-        AnimatedKeyframeViewModel mSelectedState;
 
         bool mIsInMiddleOfSort = false;
 
@@ -83,18 +83,43 @@ namespace StateAnimationPlugin.ViewModels
 
         public ObservableCollection<AnimatedKeyframeViewModel> Keyframes { get; private set; }
 
+        public event PropertyChangedEventHandler FramePropertyChanged;
+
         public AnimatedKeyframeViewModel SelectedKeyframe 
         {
-            get
+            get => Get<AnimatedKeyframeViewModel>();
+            set 
             {
-                return mSelectedState;
+                if (Set(value))
+                {
+                    TrySelectKeyframeReferencedStateSave();
+                }
             }
-            set
-            {
-                mSelectedState = value;
+        }
 
-                NotifyPropertyChanged("SelectedKeyframe");
-                NotifyPropertyChanged("HasSelectedKeyframeVisibility");
+        public void TrySelectKeyframeReferencedStateSave()
+        {
+            var stateName = SelectedKeyframe?.StateName;
+            if (stateName != null)
+            {
+                string categoryName = null;
+                if (stateName.Contains("/"))
+                {
+                    categoryName = stateName.Substring(0, stateName.IndexOf('/'));
+                    stateName = stateName.Substring(stateName.IndexOf("/") + 1);
+                }
+
+                var element = SelectedState.Self.SelectedElement;
+                if (string.IsNullOrEmpty(categoryName))
+                {
+                    SelectedState.Self.SelectedStateSave = element.GetStateSaveRecursively(stateName);
+                }
+                else
+                {
+                    var category = element.GetStateSaveCategoryRecursively(categoryName);
+
+                    SelectedState.Self.SelectedStateSave = category?.States.FirstOrDefault(item => item.Name == stateName);
+                }
             }
         }
 
@@ -234,8 +259,7 @@ namespace StateAnimationPlugin.ViewModels
                 }
             }
 
-            NotifyPropertyChanged("Length");
-            NotifyPropertyChanged("MarkerTimes");
+            NotifyPropertyChanged(nameof(Length));
 
             NotifyPropertyChanged("States");
             
@@ -248,12 +272,19 @@ namespace StateAnimationPlugin.ViewModels
             {
                 SortList();
 
-                NotifyPropertyChanged("Length");
-                NotifyPropertyChanged("MarkerTimes");
+                NotifyPropertyChanged(nameof(Length));
 
             }
+            else if (e.PropertyName == nameof(AnimatedKeyframeViewModel.StateName))
+            {
+                if(SelectedState.Self.SelectedElement != null)
+                {
+                    RefreshCombinedStates(SelectedState.Self.SelectedElement);
+                }
+            }
 
-            NotifyPropertyChanged(e.PropertyName);
+
+            FramePropertyChanged?.Invoke(sender, e);
         }
 
         public override string ToString()
@@ -379,7 +410,7 @@ namespace StateAnimationPlugin.ViewModels
 
             if(stateToSet != null)
             {
-                WireframeObjectManager.Self.RootGue.ApplyState(stateToSet);
+                WireframeObjectManager.Self.RootGue?.ApplyState(stateToSet);
             }
         }
 
@@ -453,7 +484,7 @@ namespace StateAnimationPlugin.ViewModels
                     }
                 }
 
-                Gum.ToolStates.SelectedState.Self.CustomCurrentStateSave = stateVmAfter.CachedCumulativeState;
+                SetCustomState(stateVmAfter.CachedCumulativeState);
 
                 // The custom state can be null if the animation window references states which don't exist:
                 stateToSet = Gum.ToolStates.SelectedState.Self.CustomCurrentStateSave?.Clone();
@@ -467,7 +498,8 @@ namespace StateAnimationPlugin.ViewModels
                         RefreshCombinedStates(element);
                     }
                 }
-                Gum.ToolStates.SelectedState.Self.CustomCurrentStateSave = stateVmBefore.CachedCumulativeState;
+                SetCustomState(stateVmBefore.CachedCumulativeState);
+
                 stateToSet = Gum.ToolStates.SelectedState.Self.CustomCurrentStateSave.Clone();
             }
             else if (stateVmBefore != null && stateVmAfter != null)
@@ -492,7 +524,7 @@ namespace StateAnimationPlugin.ViewModels
                     var combined = stateBefore.Clone();
                     combined.MergeIntoThis(stateAfter, (float)processedRatio);
 
-                    Gum.ToolStates.SelectedState.Self.CustomCurrentStateSave = combined;
+                    SetCustomState(combined);
 
                     // for performance we will only update wireframe:
                     //SelectedState.Self.UpdateToSelectedStateSave();
@@ -514,6 +546,13 @@ namespace StateAnimationPlugin.ViewModels
             return stateToSet;
         }
 
+        private static void SetCustomState(StateSave combined)
+        {
+
+            Gum.ToolStates.SelectedState.Self.CustomCurrentStateSave = combined;
+            Gum.ToolStates.SelectedState.Self.SelectedStateSave = null;
+            PropertyGridManager.Self.RefreshUI();
+        }
 
         private double ProcessRatio(FlatRedBall.Glue.StateInterpolation.InterpolationType interpolationType, FlatRedBall.Glue.StateInterpolation.Easing easing, double linearRatio)
         {

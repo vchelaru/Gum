@@ -10,10 +10,11 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Gum</RootNamespace>
     <AssemblyName>Gum</AssemblyName>
-    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
+    <BaseIntermediateOutputPath>objNetFramework\</BaseIntermediateOutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <PlatformTarget>x86</PlatformTarget>
@@ -21,7 +22,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\Data\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;GUM</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;GUM; MONOGAME</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
@@ -59,8 +60,17 @@
     <StartupObject>Gum.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.Xna.Framework, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86" />
-    <Reference Include="Microsoft.Xna.Framework.Graphics, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86" />
+    <Reference Include="Microsoft.Xna.Framework, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Libraries\Xna\Microsoft.Xna.Framework.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Xna.Framework.Graphics, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Libraries\Xna\Microsoft.Xna.Framework.Graphics.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.12.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="System" />
@@ -127,6 +137,9 @@
       <DependentUpon>ColorDisplay.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\HeightUnitsControl.cs" />
+    <Compile Include="Controls\ListBoxMessageBox.xaml.cs">
+      <DependentUpon>ListBoxMessageBox.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\StateView.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -153,16 +166,25 @@
     <Compile Include="DataTypes\VariableSaveExtensionMethods.cs" />
     <Compile Include="Debug\ProjectVerifier.cs" />
     <Compile Include="Events\GumEvents.cs" />
+    <Compile Include="Graphics\Animation\AnimationChain.cs" />
+    <Compile Include="Graphics\Animation\AnimationChainList.cs" />
+    <Compile Include="Graphics\Animation\AnimationFrame.cs" />
+    <Compile Include="Graphics\Animation\Content\AnimationChainListSave.cs" />
+    <Compile Include="Graphics\Animation\Content\AnimationChainSave.cs" />
+    <Compile Include="Graphics\Animation\Content\AnimationFrameSave.cs" />
     <Compile Include="Gui\Window\DeleteOptionsWindow.xaml.cs">
       <DependentUpon>DeleteOptionsWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Logic\CopyPasteLogic.cs" />
     <Compile Include="Logic\FileWatch\FileWatchLogic.cs" />
     <Compile Include="Logic\ReorderLogic.cs" />
     <Compile Include="Logic\VariableSaveLogic.cs" />
     <Compile Include="Managers\DeleteLogic.cs" />
     <Compile Include="Managers\FileChangeReactionLogic.cs" />
     <Compile Include="Logic\FileWatch\FileWatchManager.cs" />
+    <Compile Include="Managers\GraphicalUiElementManager.cs" />
     <Compile Include="Managers\HotkeyManager.cs" />
+    <Compile Include="Plugins\AlignmentButtons\CommonControlLogic.cs" />
     <Compile Include="Plugins\CirclePlugin\MainCirclePlugin.cs" />
     <Compile Include="Plugins\Errors\AllErrorsViewModel.cs" />
     <Compile Include="Plugins\Errors\ErrorChecker.cs" />
@@ -175,6 +197,11 @@
     <Compile Include="Plugins\Errors\ErrorViewModel.cs" />
     <Compile Include="Plugins\Errors\MainErrorsPlugin.cs" />
     <Compile Include="Plugins\Fonts\MainFontPlugin.cs" />
+    <Compile Include="Plugins\ImportPlugin\Manager\ImportLogic.cs" />
+    <Compile Include="Plugins\ImportPlugin\ViewModel\ImportFileViewModel.cs" />
+    <Compile Include="Plugins\ImportPlugin\Views\ImportFileView.xaml.cs">
+      <DependentUpon>ImportFileView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Plugins\Inheritance\MainInheritancePlugin.cs" />
     <Compile Include="Plugins\ParentPlugin\MainParentPlugin.cs" />
     <Compile Include="Plugins\ProjectPropertiesWindowPlugin\MainPlugin.cs" />
@@ -216,10 +243,11 @@
     <Compile Include="Managers\ObjectRemover.cs" />
     <Compile Include="Managers\OutputManager.cs" />
     <Compile Include="Plugins\RenameLogicPlugin\MainRenameLogic.cs" />
+    <Compile Include="Plugins\StatePlugin\MainStatePlugin.cs" />
     <Compile Include="Plugins\VariableGrid\DeletingVariablesInCategoriesMessageBox.xaml.cs">
       <DependentUpon>DeletingVariablesInCategoriesMessageBox.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Managers\RenameManager.cs" />
+    <Compile Include="Logic\RenameLogic.cs" />
     <Compile Include="Managers\Singleton.cs" />
     <Compile Include="Mvvm\ObservableCollectionExtensions.cs" />
     <Compile Include="Mvvm\ViewModel.cs" />
@@ -263,14 +291,14 @@
     <Compile Include="Managers\ObjectFinder.cs" />
     <Compile Include="Plugins\VariableGrid\PropertyGridManager.cs" />
     <Compile Include="Managers\StandardElementsManager.cs" />
-    <Compile Include="Managers\StateTreeViewManager.cs" />
+    <Compile Include="Plugins\StatePlugin\StateTreeViewManager.cs" />
     <Compile Include="MainWindow.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="MainWindow.Designer.cs">
       <DependentUpon>MainWindow.cs</DependentUpon>
     </Compile>
-    <Compile Include="Managers\StateTreeViewManager.RightClick.cs" />
+    <Compile Include="Plugins\StatePlugin\StateTreeViewManager.RightClick.cs" />
     <Compile Include="Plugins\BaseClasses\PluginBase.cs" />
     <Compile Include="Plugins\IPlugin.cs" />
     <Compile Include="Plugins\PluginContainer.cs" />
@@ -311,12 +339,13 @@
     <Compile Include="RenderingLibrary\Blend.cs" />
     <Compile Include="RenderingLibrary\IPositionedSizedObjectExtensionMethods.cs" />
     <Compile Include="Settings\GeneralSettingsFile.cs" />
-    <Compile Include="TestWpfControl.xaml.cs">
+    <Compile Include="Plugins\VariableGrid\TestWpfControl.xaml.cs">
       <DependentUpon>TestWpfControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="ToolCommands\ElementCommands.cs" />
     <Compile Include="ToolCommands\GuiCommands.cs" />
     <Compile Include="ToolCommands\ProjectCommands.cs" />
+    <Compile Include="ToolStates\GumState.cs" />
     <Compile Include="ToolStates\ISelectedState.cs" />
     <Compile Include="ToolStates\ProjectState.cs" />
     <Compile Include="ToolStates\SelectedState.cs" />
@@ -385,6 +414,7 @@
     </None>
     <Compile Include="Plugins\VariableGrid\PropertyGridManager.RightClick.cs" />
     <None Include="Launcher.au3" />
+    <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -401,7 +431,7 @@
       <Name>CommonFormsAndControls</Name>
     </ProjectReference>
     <ProjectReference Include="..\GumDataTypes\GumDataTypes.csproj">
-      <Project>{5971A187-F6B2-4D65-A277-5613DED1F50F}</Project>
+      <Project>{5971a187-f6b2-4d65-a277-5613ded1f50f}</Project>
       <Name>GumDataTypes</Name>
     </ProjectReference>
     <ProjectReference Include="..\InputLibrary\InputLibrary.csproj">
@@ -412,9 +442,9 @@
       <Project>{A86EE399-7C93-42E1-80ED-CA4CBF4CA573}</Project>
       <Name>RenderingLibrary</Name>
     </ProjectReference>
-    <ProjectReference Include="..\ToolsUtilities\ToolsUtilities.csproj">
-      <Project>{b941a93f-6093-4dc6-ad11-91a058b6c2cc}</Project>
-      <Name>ToolsUtilities</Name>
+    <ProjectReference Include="..\ToolsUtilities\ToolsUtilitiesStandard.csproj">
+      <Project>{cae35f4b-8a10-4a85-b2fb-7f4a8d7c7138}</Project>
+      <Name>ToolsUtilitiesStandard</Name>
     </ProjectReference>
     <ProjectReference Include="..\WpfDataUi\WpfDataUi.csproj">
       <Project>{47241002-7eb5-433b-b931-a530bb6b84ee}</Project>
@@ -565,6 +595,18 @@
     <None Include="Content\AddPoint.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="Content\Icons\HeightUnits\MaintainFileAspectRatioHeight.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Icons\WidthUnits\MaintainFileAspectRatioWidth.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <Content Include="Content\Icons\Origins\Baseline.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Icons\Units\PixelsFromBaseline.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Libraries\TargaImage.dll" />
     <Content Include="Libraries\TargaImage.xml" />
     <None Include="Content\InvalidTexture.png">
@@ -579,9 +621,14 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Converters\" />
+    <Folder Include="Libraries\Xna\" />
   </ItemGroup>
   <ItemGroup>
     <Page Include="Controls\ColorDisplay.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Controls\ListBoxMessageBox.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -594,6 +641,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Plugins\Errors\ErrorListEntry.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Plugins\ImportPlugin\Views\ImportFileView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -633,9 +684,13 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="TestWpfControl.xaml">
+    <Page Include="Plugins\VariableGrid\TestWpfControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Themes\Light.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

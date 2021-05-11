@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Gum.DataTypes;
+using ToolsUtilities;
 
 namespace Gum.ToolStates
 {
@@ -38,7 +39,7 @@ namespace Gum.ToolStates
         {
             get
             {
-                if(GumProjectSave == null)
+                if(string.IsNullOrEmpty(GumProjectSave?.FullFileName))
                 {
                     return null;
                 }
@@ -48,5 +49,9 @@ namespace Gum.ToolStates
                 }
             }
         }
+
+        public FilePath ComponentFilePath => ProjectDirectory + "Components/";
+        public FilePath ScreenFilePath => ProjectDirectory + "Screens/";
     }
+
 }

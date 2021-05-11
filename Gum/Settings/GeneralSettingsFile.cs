@@ -6,6 +6,8 @@ using System.IO;
 using ToolsUtilities;
 using System.Windows.Forms;
 using System.Drawing;
+using System.Xml.Serialization;
+using Newtonsoft.Json;
 
 namespace Gum.Settings
 {
@@ -13,6 +15,10 @@ namespace Gum.Settings
     {
         public DateTime LastTimeOpened;
         public string AbsoluteFileName;
+
+        [XmlIgnore]
+        [JsonIgnore]
+        public FilePath FilePath => AbsoluteFileName;
     }
 
 
@@ -20,7 +26,7 @@ namespace Gum.Settings
     {
         #region Properties
 
-        public string LastProject 
+        public string LastProject
         {
             get;
             set;
@@ -88,6 +94,15 @@ namespace Gum.Settings
             set;
         }
 
+
+        public byte CheckerColor1R { get; set; } = 150;
+        public byte CheckerColor1G { get; set; } = 150;
+        public byte CheckerColor1B { get; set; } = 150;
+
+        public byte CheckerColor2R { get; set; } = 170;
+        public byte CheckerColor2G { get; set; } = 170;
+        public byte CheckerColor2B { get; set; } = 170;
+
         #endregion
 
         #region Methods
@@ -101,6 +116,8 @@ namespace Gum.Settings
             PreviewSplitterDistance = 558;
             StatesAndVariablesSplitterDistance = 119;
             RecentProjects = new List<RecentProjectReference>();
+
+
         }
 
         public static GeneralSettingsFile LoadOrCreateNew()
@@ -131,14 +148,14 @@ namespace Gum.Settings
             FileManager.XmlSerialize(this, GeneralSettingsFileName);
         }
 
-        public void AddToRecentFilesIfNew(string file)
+        public void AddToRecentFilesIfNew(FilePath file)
         {
-            var item = RecentProjects.FirstOrDefault(candidate => candidate.AbsoluteFileName == file);
+            var item = RecentProjects.FirstOrDefault(candidate => candidate.FilePath == file);
 
             if(item == null)
             {
                 item = new RecentProjectReference();
-                item.AbsoluteFileName = file;
+                item.AbsoluteFileName = file.FullPath;
                 RecentProjects.Add(item);
             }
 

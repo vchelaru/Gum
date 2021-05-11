@@ -10,27 +10,7 @@ using System.Collections.ObjectModel;
 
 namespace RenderingLibrary.Graphics
 {
-    #region HorizontalAlignment Enum
-
-    public enum HorizontalAlignment
-    {
-        Left,
-        Center,
-        Right
-    }
-
-    #endregion
-
-    #region VerticalAlignment Enum
-
-    public enum VerticalAlignment
-    {
-        Top,
-        Center,
-        Bottom
-    }
-
-    #endregion
+    #region TextRenderingMode Enum
 
     public enum TextRenderingMode
     {
@@ -38,11 +18,17 @@ namespace RenderingLibrary.Graphics
         CharacterByCharacter
     }
 
+    #endregion
+
+    #region TextRenderingPositionMode
+
     public enum TextRenderingPositionMode
     {
         SnapToPixel,
         FreeFloating
     }
+
+    #endregion
 
     public class Text : IRenderableIpso, IVisible
     {
@@ -91,6 +77,8 @@ namespace RenderingLibrary.Graphics
         float mHeight = 200;
         LinePrimitive mBounds;
 
+
+
         BitmapFont mBitmapFont;
         Texture2D mTextureToRender;
 
@@ -123,6 +111,8 @@ namespace RenderingLibrary.Graphics
 
         #region Properties
 
+        ColorOperation IRenderableIpso.ColorOperation => ColorOperation.Modulate;
+
         /// <summary>
         /// The width needed to display the wrapped text. 
         /// </summary>
@@ -130,11 +120,11 @@ namespace RenderingLibrary.Graphics
         {
             get
             {
-                if(mPreRenderWidth != null)
+                if (mPreRenderWidth != null)
                 {
                     return mPreRenderWidth.Value * mFontScale;
                 }
-                else if(mTextureToRender?.Width > 0)
+                else if (mTextureToRender?.Width > 0)
                 {
                     return mTextureToRender.Width * mFontScale;
                 }
@@ -149,11 +139,11 @@ namespace RenderingLibrary.Graphics
         {
             get
             {
-                if(mPreRenderHeight != null)
+                if (mPreRenderHeight != null)
                 {
                     return mPreRenderHeight.Value * mFontScale;
                 }
-                else if(mTextureToRender?.Height > 0)
+                else if (mTextureToRender?.Height > 0)
                 {
                     return mTextureToRender.Height * mFontScale;
                 }
@@ -174,6 +164,25 @@ namespace RenderingLibrary.Graphics
         {
             get;
             set;
+        }
+
+        int? maxLettersToShow;
+        /// <summary>
+        /// The maximum letters to display. This can be used to 
+        /// create an effect where the text prints out letter-by-letter.
+        /// </summary>
+        public int? MaxLettersToShow
+        {
+            get => maxLettersToShow;
+            set
+            {
+                if (maxLettersToShow != value)
+                {
+                    maxLettersToShow = value;
+
+                    mNeedsBitmapFontRefresh = true;
+                }
+            }
         }
 
         public string RawText
@@ -225,6 +234,8 @@ namespace RenderingLibrary.Graphics
                 Position.Y = value;
             }
         }
+
+        public bool FlipHorizontal { get; set;}
 
         public float Rotation { get; set; }
 
@@ -494,6 +505,8 @@ namespace RenderingLibrary.Graphics
             }
         }
 
+        public float DescenderHeight => BitmapFont?.DescenderHeight ?? 0;
+
         #endregion
 
         #region Methods
@@ -600,9 +613,17 @@ namespace RenderingLibrary.Graphics
                 }
 
                 // If it's the first word and it's empty, don't add anything
-                if (!string.IsNullOrEmpty(word) || !string.IsNullOrEmpty(line))
+                // update - but this prevents the word from sarting 
+                //if ((!string.IsNullOrEmpty(word) || !string.IsNullOrEmpty(line)))
                 {
-                    line = line + word + ' ';
+                    if(wordArray.Count > 1 || word == "")
+                    {
+                        line = line + word + ' ';
+                    }
+                    else
+                    {
+                        line = line + word;
+                    }
                 }
 
                 wordArray.RemoveAt(0);
@@ -619,21 +640,27 @@ namespace RenderingLibrary.Graphics
             // We want to remove any trailing spaces on any lines except the last. On the last we allow
             // the user to have as many spaces as they want
             // count-1 to exclude the last line
-            for(int i = 0; i < mWrappedText.Count - 1; i++)
-            {
-                var lineToTrim = mWrappedText[i];
-                var reAssign = false;
-                while (lineToTrim.EndsWith(" "))
-                {
-                    lineToTrim = lineToTrim.Substring(0, lineToTrim.Length - 1);
-                    reAssign = true;
-                }
+            // Update Dec 10 2019
+            // Why do we trim the ending
+            // spaces? This means lines won't
+            // have spaces at the end, but they 
+            // should for FRB.Forms to properly show
+            // ending spaces for character count.
+            //for(int i = 0; i < mWrappedText.Count - 1; i++)
+            //{
+            //    var lineToTrim = mWrappedText[i];
+            //    var reAssign = false;
+            //    while (lineToTrim.EndsWith(" "))
+            //    {
+            //        lineToTrim = lineToTrim.Substring(0, lineToTrim.Length - 1);
+            //        reAssign = true;
+            //    }
 
-                if(reAssign)
-                {
-                    mWrappedText[i] = lineToTrim;
-                }
-            }
+            //    if(reAssign)
+            //    {
+            //        mWrappedText[i] = lineToTrim;
+            //    }
+            //}
 
             // June 30, 2018
             // We no longer want
@@ -713,7 +740,7 @@ namespace RenderingLibrary.Graphics
                     //}
 
                     var returnedRenderTarget = fontToUse.RenderToTexture2D(WrappedText, this.HorizontalAlignment,
-                        mManagers, mTextureToRender, this);
+                        mManagers, mTextureToRender, this, MaxLettersToShow);
                     bool isNewInstance = returnedRenderTarget != mTextureToRender;
 
                     if (isNewInstance && mTextureToRender != null)
@@ -820,11 +847,12 @@ namespace RenderingLibrary.Graphics
                 var absoluteLeft = mTempForRendering.GetAbsoluteLeft();
                 var absoluteTop = mTempForRendering.GetAbsoluteTop();
 
-                fontToUse.DrawTextLines(WrappedText, HorizontalAlignment, this,
+                fontToUse.DrawTextLines(WrappedText, HorizontalAlignment, 
+                    this,
                     requiredWidth, widths, spriteRenderer, Color,
                     absoluteLeft,
                     absoluteTop, 
-                    this.Rotation, FontScale, FontScale);
+                    this.GetAbsoluteRotation(), FontScale, FontScale, MaxLettersToShow);
             }
         }
 
@@ -840,7 +868,8 @@ namespace RenderingLibrary.Graphics
             else
             {
                 Sprite.Render(managers, spriteRenderer, mTempForRendering, mTextureToRender,
-                    new Color(mRed, mGreen, mBlue, mAlpha), null, false, false, Rotation, treat0AsFullDimensions: false,
+                    new Color(mRed, mGreen, mBlue, mAlpha), null, false, Rotation, 
+                    treat0AsFullDimensions: false,
                     objectCausingRenering: this);
 
             }
@@ -893,7 +922,7 @@ namespace RenderingLibrary.Graphics
                 alignmentOffset.Y = this.EffectiveHeight - mTempForRendering.Height;
             }
 
-            var absoluteRotation = this.Rotation;
+            var absoluteRotation = this.GetAbsoluteRotation();
             if(absoluteRotation != 0)
             {
                 var matrix = Matrix.CreateRotationZ(-MathHelper.ToRadians(absoluteRotation));
