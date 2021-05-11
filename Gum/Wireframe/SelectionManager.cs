@@ -201,6 +201,12 @@ namespace Gum.Wireframe
             highlightManager = new HighlightManager(mUiLayer);
         }
 
+        /// <summary>
+        /// Attempts to perform a delete given the current selection. This allows
+        /// for custom deletes, such as deleting a point on a polygon. Most of
+        /// the time, this does nothing and returns false.
+        /// </summary>
+        /// <returns>Whether something was deleted in the selection.</returns>
         public bool TryHandleDelete()
         {
             var toReturn = false;

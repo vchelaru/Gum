@@ -57,6 +57,9 @@ namespace Gum.Managers
 
                     if (result == true)
                     {
+                        var siblings = selectedInstance.GetSiblingsIncludingThis();
+                        var parentInstance = selectedInstance.GetParentInstance();
+
                         // This will delete all references to this, meaning, all 
                         // instances attached to the deleted object will be detached, 
                         // but we don't want that, we want to only do that if the user wants to do it, which 
@@ -67,25 +70,43 @@ namespace Gum.Managers
 
                         selectedElement.Events.RemoveAll(item => item.GetSourceObject() == instanceName);
 
-                        foreach(var state in selectedElement.AllStates)
-                        {
-                            state.Variables.RemoveAll(item => item.SourceObject == instanceName);
-                        }
-
                         // March 17, 2019
                         // Let's also delete
                         // any variables referencing
                         // this object
                         var objectName = selectedInstance.Name;
+
+
+                        foreach(var state in selectedElement.AllStates)
+                        {
+                            state.Variables.RemoveAll(item => item.SourceObject == instanceName);
+                        }
+
                         
 
                         PluginManager.Self.InstanceDelete(selectedElement, selectedInstance);
-                        if (SelectedState.Self.SelectedInstance == selectedInstance)
-                        {
-                            SelectedState.Self.SelectedInstance = null;
-                        }
+
+                        var deletedSelection = SelectedState.Self.SelectedInstance == selectedInstance;
 
                         RefreshAndSaveAfterInstanceRemoval(selectedElement);
+
+                        if (deletedSelection)
+                        {
+                            var index = siblings.IndexOf(selectedInstance);
+                            if(index + 1 < siblings.Count)
+                            {
+                                SelectedState.Self.SelectedInstance = siblings[index + 1];
+                            }
+                            else if(index > 0)
+                            {
+                                SelectedState.Self.SelectedInstance = siblings[index - 1];
+                            }
+                            else
+                            {
+                                // no siblings so select the container or null if none exists:
+                                SelectedState.Self.SelectedInstance = parentInstance;
+                            }
+                        }
                     }
                 }
             }

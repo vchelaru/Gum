@@ -621,6 +621,16 @@ namespace Gum.Managers
             }
         }
 
+        public static InstanceSave GetParentInstance(this InstanceSave instanceSave)
+        {
+            var container = instanceSave.ParentContainer;
+            var defaultState = container.DefaultState;
+            var thisParentValue = defaultState.GetValueOrDefault<string>($"{instanceSave.Name}.Parent");
+
+            return container.Instances.FirstOrDefault(item => item.Name == thisParentValue);
+
+        }
+
         public static List<InstanceSave> GetSiblingsIncludingThis(this InstanceSave thisInstance)
         {
             var container = thisInstance.ParentContainer;

@@ -90,6 +90,7 @@ namespace Gum.Managers
         public void HandleKeyDownWireframe(KeyEventArgs e)
         {
             HandleCopyCutPaste(e);
+
             HandleDelete(e);
             // Up moves the control "up" in the tree view, but when you are in the wireframe
             // up should move it the opposite direction. We'll see how it goes...
