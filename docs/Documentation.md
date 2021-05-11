@@ -10,7 +10,7 @@ Gum is written using C#, Windows Forms (aka winforms), and XNA.  It uses Managed
 
 # Sample Project
 
-[http://download-codeplex.sec.s-msft.com/Download?ProjectName=gum&DownloadId=1426617](http://download-codeplex.sec.s-msft.com/Download?ProjectName=gum&DownloadId=1426617)
+[https://github.com/vchelaru/Gum/raw/master/docs/Documentation_GumSampleProject.zip](https://github.com/vchelaru/Gum/raw/master/docs/Documentation_GumSampleProject.zip)
 
 # Subsections
 
