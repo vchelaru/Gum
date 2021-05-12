@@ -111,9 +111,19 @@ namespace Gum.DataTypes
                 T elementSave = FileManager.XmlDeserialize<T>(linkedName.FullPath);
                 return elementSave;
             }
+#if ANDROID || IOS
+            else if (containedReferenceName != null && (linkedName == null || linkLoadingPreference == LinkLoadingPreference.PreferLinked))
+#else
             else if (containedReferenceName.Exists() && (linkedName == null || linkLoadingPreference == LinkLoadingPreference.PreferLinked))
+#endif
             {
-                T elementSave = FileManager.XmlDeserialize<T>(containedReferenceName.FullPath);
+
+                T elementSave = FileManager.XmlDeserialize<T>(
+#if ANDROID || IOS
+                    containedReferenceName.Standardized);
+#else
+                    containedReferenceName.FullPath);
+#endif
 
                 if (Name != elementSave.Name)
                 {

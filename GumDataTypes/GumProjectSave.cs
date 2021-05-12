@@ -235,11 +235,11 @@ namespace Gum.DataTypes
                 return null;
             }
 #endif
-
             string projectRootDirectory = FileManager.GetDirectory(fileName);
 
             gps.PopulateElementSavesFromReferences(projectRootDirectory, linkLoadingPreference, result);
             gps.FullFileName = fileName.Replace('\\', '/');
+
 
             return gps;
         }
@@ -250,10 +250,6 @@ namespace Gum.DataTypes
 			using (System.IO.Stream stream = Microsoft.Xna.Framework.TitleContainer.OpenStream(fileName))
 			{
 				GumProjectSave gps = FileManager.XmlDeserializeFromStream<GumProjectSave>(stream);
-
-				string projectRootDirectory = FileManager.GetDirectory(fileName);
-
-				gps.PopulateElementSavesFromReferences(projectRootDirectory, linkLoadingPreference, result);
 
 				gps.FullFileName = fileName;
 
