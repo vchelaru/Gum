@@ -21,6 +21,8 @@ using Gum.DataTypes;
 using Gum.Controls;
 using Gum.Logic.FileWatch;
 using Gum.Commands;
+using Microsoft.AppCenter;
+using Microsoft.AppCenter.Crashes;
 
 namespace Gum
 {
@@ -67,34 +69,6 @@ namespace Gum
 
             // Create the wireframe control, but don't add it...
             CreateWireframeControl();
-
-            gumEditorPanel = new Panel();
-
-            // place the scrollbars first so they are in front of everything
-            scrollBarControlLogic = new ScrollBarControlLogic(gumEditorPanel, wireframeControl1);
-            scrollBarControlLogic.SetDisplayedArea(800, 600);
-            wireframeControl1.CameraChanged += () =>
-            {
-                if(ProjectManager.Self.GumProjectSave != null)
-                {
-                    
-                    scrollBarControlLogic.SetDisplayedArea(
-                        ProjectManager.Self.GumProjectSave.DefaultCanvasWidth,
-                        ProjectManager.Self.GumProjectSave.DefaultCanvasHeight);
-                }
-                else
-                {
-                    scrollBarControlLogic.SetDisplayedArea(800, 600);
-                }
-
-                scrollBarControlLogic.UpdateScrollBars();
-                scrollBarControlLogic.UpdateScrollBarsToCameraPosition();
-
-            };
-
-
-            //... add it here, so it can be done after scroll bars and other controls
-            gumEditorPanel.Controls.Add(this.wireframeControl1);
 
             CreateWireframeEditControl();
             CreateEditorToolbarPanel();
@@ -211,6 +185,9 @@ namespace Gum
 
             };
 
+                
+            wireframeControl1.ErrorOccurred += (exception) => Crashes.TrackError(exception);
+
             this.wireframeControl1.QueryContinueDrag += (sender, args) =>
             {
                 args.Action = DragAction.Continue;
@@ -226,7 +203,33 @@ namespace Gum
                 }
             };
 
+            gumEditorPanel = new Panel();
 
+            // place the scrollbars first so they are in front of everything
+            scrollBarControlLogic = new ScrollBarControlLogic(gumEditorPanel, wireframeControl1);
+            scrollBarControlLogic.SetDisplayedArea(800, 600);
+            wireframeControl1.CameraChanged += () =>
+            {
+                if (ProjectManager.Self.GumProjectSave != null)
+                {
+
+                    scrollBarControlLogic.SetDisplayedArea(
+                        ProjectManager.Self.GumProjectSave.DefaultCanvasWidth,
+                        ProjectManager.Self.GumProjectSave.DefaultCanvasHeight);
+                }
+                else
+                {
+                    scrollBarControlLogic.SetDisplayedArea(800, 600);
+                }
+
+                scrollBarControlLogic.UpdateScrollBars();
+                scrollBarControlLogic.UpdateScrollBarsToCameraPosition();
+
+            };
+
+
+            //... add it here, so it can be done after scroll bars and other controls
+            gumEditorPanel.Controls.Add(this.wireframeControl1);
         }
 
         private void CreateWireframeEditControl()

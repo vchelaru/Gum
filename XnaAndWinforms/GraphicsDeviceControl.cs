@@ -142,6 +142,7 @@ namespace XnaAndWinforms
 
         public event Action XnaDraw;
         public event Action XnaUpdate;
+        public event Action<Exception> ErrorOccurred;
 
         #endregion
 
@@ -206,6 +207,7 @@ namespace XnaAndWinforms
                         }
                         catch (Exception exception)
                         {
+                            ErrorOccurred?.Invoke(exception);
                             mRenderError.Message = exception.ToString();
                         }
                     }
