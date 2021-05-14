@@ -380,63 +380,64 @@ namespace Gum.PropertyGridHelpers
 
         private void ReactIfChangedMemberIsSourceFile(ElementSave parentElement, InstanceSave instance, string changedMember, object oldValue)
         {
+            ////////////Early Out /////////////////////////////
             string variableFullName;
-            if(instance != null)
-            {
-                variableFullName = $"{instance.Name}.{changedMember}";
-            }
-            else
-            {
-                variableFullName = changedMember;
-            }
+
+            var instancePrefix = instance != null ? $"{instance.Name}." : "";
+
+            variableFullName = $"{instancePrefix}{changedMember}";
 
             VariableSave variable = SelectedState.Self.SelectedStateSave?.GetVariableSave(variableFullName);
 
             bool isSourcefile = variable?.GetRootName() == "SourceFile";
             
-            string errorMessage = null;
-
-            if(isSourcefile)
+            if(!isSourcefile)
             {
-                errorMessage = GetWhySourcefileIsInvalid(variable.Value as string);
+                return;
+            }
 
-                if(!string.IsNullOrEmpty(errorMessage))
+            string errorMessage = GetWhySourcefileIsInvalid(variable.Value as string);
+
+            if(!string.IsNullOrEmpty(errorMessage))
+            {
+                MessageBox.Show(errorMessage);
+
+                variable.Value = oldValue;
+            }
+            else
+            {
+                string value;
+
+                value = variable.Value as string;
+                StateSave stateSave = SelectedState.Self.SelectedStateSave;
+
+                if (!string.IsNullOrEmpty(value))
                 {
-                    MessageBox.Show(errorMessage);
+                    var filePath = new FilePath(ProjectState.Self.ProjectDirectory + value);
 
-                    variable.Value = oldValue;
-                }
-                else
-                {
-                    string value;
+                    // See if this is relative to the project
+                    var isRelativeToProject = FileManager.IsRelativeTo(
+                        filePath.FullPath,
+                        ProjectState.Self.ProjectDirectory);
 
-                    value = variable.Value as string;
-
-                    if (!string.IsNullOrEmpty(value))
+                    if (!isRelativeToProject)
                     {
-                        var fullValue = new FilePath(ProjectState.Self.ProjectDirectory + value);
-
-                        // See if this is relative to the project
-                        var isRelativeToProject = FileManager.IsRelativeTo(
-                            fullValue.FullPath,
-                            ProjectState.Self.ProjectDirectory);
-
-                        if (!isRelativeToProject)
+                        bool shouldCopy = AskIfShouldCopy(variable, value);
+                        if(shouldCopy)
                         {
-                            bool shouldCopy = AskIfShouldCopy(variable, value);
-                            if(shouldCopy)
-                            {
-                                PerformCopy(variable, value);
-                            }
+                            PerformCopy(variable, value);
                         }
                     }
 
-                    StateSave stateSave = SelectedState.Self.SelectedStateSave;
-
-                    RecursiveVariableFinder rvf = new RecursiveVariableFinder(stateSave);
-
-                    stateSave.SetValue("AnimationFrames", new List<string>());
+                    if(filePath.Extension == "achx")
+                    {
+                        stateSave.SetValue($"{instancePrefix}Texture Address", Gum.Managers.TextureAddress.Custom);
+                        GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);
+                    }
                 }
+
+
+                stateSave.SetValue($"{instancePrefix}AnimationFrames", new List<string>());
             }
         }
 

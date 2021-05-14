@@ -5266,6 +5266,10 @@ namespace Gum.Wireframe
                 this.TextureTop = (int)(frame.TopCoordinate * frame.Texture.Height);
                 this.TextureHeight = (int)(frame.BottomCoordinate * frame.Texture.Height) - this.TextureTop;
 
+                this.FlipHorizontal = frame.FlipHorizontal;
+
+                //frame.FlipVertical
+
                 //if (mIgnoreAnimationChainTextureFlip == false)
                 //{
                 //    mFlipHorizontal = frame.FlipHorizontal;
