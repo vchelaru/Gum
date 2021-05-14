@@ -361,6 +361,7 @@ namespace ToolsUtilities
 
         public static bool IsRelativeTo(string fileName, string directory)
         {
+            directory = RemoveDotDotSlash(directory);
             if (!IsRelative(fileName))
             {
                 // the filename is an absolute path

@@ -9,11 +9,15 @@ using ToolsUtilities;
 
 namespace Gum.DataTypes
 {
+    #region Enums
+
     public enum LinkLoadingPreference
     {
         PreferLinked,
         RequireLinked
     }
+
+    #endregion
 
     public class GumLoadResult
     {
@@ -42,12 +46,18 @@ namespace Gum.DataTypes
         }
     }
 
+
     /// <summary>
     /// Represents the data stored in a .gumx file. GumProjectSave
     /// instances can be XML Serialized to a .gumx file.
     /// </summary>
     public class GumProjectSave
     {
+        public enum GumxVersions
+        {
+            InitialVersion = 1,
+        }
+
         #region Fields
 
         public const string ScreenExtension = "gusx";
@@ -99,6 +109,12 @@ namespace Gum.DataTypes
             get;
             set;
         }
+
+        /// <summary>
+        /// The folder of the root of the parent project if this Gum project is part of a larger project (like a game project or android app).
+        /// This is a relative path like "../../"
+        /// </summary>
+        public string ParentProjectRoot { get; set; }
 
         [XmlIgnore]
         public string FullFileName

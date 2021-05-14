@@ -5260,11 +5260,11 @@ namespace Gum.Wireframe
                 {
                     sprite.Texture = frame.Texture;
                 }
-                this.TextureLeft = (int)(frame.LeftCoordinate * frame.Texture.Width);
-                this.TextureWidth = (int)(frame.RightCoordinate * frame.Texture.Width) - this.TextureLeft;
+                this.TextureLeft = MathFunctions.RoundToInt(frame.LeftCoordinate * frame.Texture.Width);
+                this.TextureWidth = MathFunctions.RoundToInt(frame.RightCoordinate * frame.Texture.Width) - this.TextureLeft;
 
-                this.TextureTop = (int)(frame.TopCoordinate * frame.Texture.Height);
-                this.TextureHeight = (int)(frame.BottomCoordinate * frame.Texture.Height) - this.TextureTop;
+                this.TextureTop = MathFunctions.RoundToInt(frame.TopCoordinate * frame.Texture.Height);
+                this.TextureHeight = MathFunctions.RoundToInt(frame.BottomCoordinate * frame.Texture.Height) - this.TextureTop;
 
                 this.FlipHorizontal = frame.FlipHorizontal;
 

@@ -416,11 +416,18 @@ namespace Gum.PropertyGridHelpers
                     var filePath = new FilePath(ProjectState.Self.ProjectDirectory + value);
 
                     // See if this is relative to the project
-                    var isRelativeToProject = FileManager.IsRelativeTo(
+                    var shouldAskToCopy = !FileManager.IsRelativeTo(
                         filePath.FullPath,
                         ProjectState.Self.ProjectDirectory);
 
-                    if (!isRelativeToProject)
+                    if (shouldAskToCopy && 
+                        !string.IsNullOrEmpty(ProjectState.Self.GumProjectSave?.ParentProjectRoot) &&
+                         FileManager.IsRelativeTo(filePath.FullPath, ProjectState.Self.ProjectDirectory + ProjectState.Self.GumProjectSave.ParentProjectRoot))
+                    {
+                        shouldAskToCopy = false;
+                    }
+
+                    if (shouldAskToCopy)
                     {
                         bool shouldCopy = AskIfShouldCopy(variable, value);
                         if(shouldCopy)

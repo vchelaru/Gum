@@ -160,5 +160,10 @@ namespace ToolsUtilities
         {
             return StandardizedCaseSensitive;
         }
+
+        public string RelativeTo(FilePath otherFilePath)
+        {
+            return FileManager.MakeRelative(this.FullPath, otherFilePath.FullPath);
+        }
     }
 }
