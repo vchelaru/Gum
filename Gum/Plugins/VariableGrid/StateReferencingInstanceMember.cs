@@ -505,7 +505,7 @@ namespace Gum.PropertyGridHelpers
 
                 if(!handledByExposedVariable)
                 {
-                    SetVariableLogic.Self.PropertyValueChanged(name, oldValue);
+                    SetVariableLogic.Self.PropertyValueChanged(name, oldValue, instance as InstanceSave);
                 }
             }
             else

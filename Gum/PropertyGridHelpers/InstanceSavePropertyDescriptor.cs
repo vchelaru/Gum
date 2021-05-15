@@ -123,7 +123,7 @@ namespace Gum.DataTypes.ComponentModel
             StateSave stateSave = SelectedState.Self.SelectedStateSave;
             if (stateSave != null)
             {
-                string name = GetVariableNameConsideringSelection();
+                string name = GetVariableNameConsideringSelection(component as InstanceSave);
                 return stateSave.GetValue(name);
             }
             else
@@ -132,26 +132,35 @@ namespace Gum.DataTypes.ComponentModel
             }
         }
 
-        private string GetVariableNameConsideringSelection()
+        private string GetVariableNameConsideringSelection(InstanceSave instance)
         {
             string name = this.Name;
-            if (SelectedState.Self.SelectedInstance != null)
+            if (instance != null)
             {
-                name = SelectedState.Self.SelectedInstance.Name + "." + name;
+                name = instance.Name + "." + name;
             }
             return name;
         }
 
-        public void SetValue(object component, object value)
+        public void SetValue(object selectedItem, object value)
         {
-
-
-            ElementSave elementSave = SelectedState.Self.SelectedElement;
+            ElementSave elementSave = null;
             StateSave stateSave = SelectedState.Self.SelectedStateSave;
-            InstanceSave instanceSave = SelectedState.Self.SelectedInstance;
+            //InstanceSave instanceSave = SelectedState.Self.SelectedInstance;
+
+            var instanceSave = selectedItem as InstanceSave;
+
+            if(instanceSave != null)
+            {
+                elementSave = instanceSave.ParentContainer;
+            }
+            else // instance is null, so assign the element
+            {
+                elementSave = selectedItem as ElementSave;
+            }
 
             //////////////// Early Out/////////////
-            if(stateSave == null || elementSave == null)
+            if (stateSave == null || elementSave == null)
             {
                 return;
             }
@@ -159,9 +168,7 @@ namespace Gum.DataTypes.ComponentModel
 
             ///////////////End Early Out///////////
 
-            string name = GetVariableNameConsideringSelection();
-
-
+            string name = GetVariableNameConsideringSelection(instanceSave);
 
             // <None> is a reserved 
             // value for when we want

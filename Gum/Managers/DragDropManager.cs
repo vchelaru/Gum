@@ -143,7 +143,7 @@ namespace Gum.Managers
 
                     SelectedState.Self.SelectedStateSave.SetValue(instance.Name + ".SourceFile", fileName, instance);
                     ProjectState.Self.Selected.SelectedInstance = instance;
-                    SetVariableLogic.Self.PropertyValueChanged("SourceFile", oldValue);
+                    SetVariableLogic.Self.PropertyValueChanged("SourceFile", oldValue, instance);
 
                     shouldUpdate = true;
                     handled = true;
@@ -190,7 +190,7 @@ namespace Gum.Managers
 
                     SelectedState.Self.SelectedStateSave.SetValue("SourceFile", fileName);
                     ProjectState.Self.Selected.SelectedInstance = null;
-                    SetVariableLogic.Self.PropertyValueChanged("SourceFile", oldValue);
+                    SetVariableLogic.Self.PropertyValueChanged("SourceFile", oldValue, SelectedState.Self.SelectedInstance);
 
                     shouldUpdate = true;
                     handled = true;
@@ -466,7 +466,7 @@ namespace Gum.Managers
             var oldValue = stateToAssignOn.GetValue(variableName) as string;
             stateToAssignOn.SetValue(variableName, parentName, "string");
             Gum.Undo.UndoManager.Self.RecordUndo();
-            SetVariableLogic.Self.PropertyValueChanged("Parent", oldValue);
+            SetVariableLogic.Self.PropertyValueChanged("Parent", oldValue, dragDroppedInstance);
             targetTreeNode?.Expand();
         }
 

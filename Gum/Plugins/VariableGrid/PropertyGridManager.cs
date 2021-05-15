@@ -780,10 +780,12 @@ namespace Gum.Managers
             //var refreshGreen = !refreshRed && oldColor.G != color.G;
             //var refreshBlue = !refreshRed && !refreshGreen && oldColor.B != color.B;
 
+            var instance = SelectedState.Self.SelectedInstance;
             // These functions take unqualified:
-            SetVariableLogic.Self.PropertyValueChanged("Red", (int)oldColor.R, true);
-            SetVariableLogic.Self.PropertyValueChanged("Green", (int)oldColor.G, true);
-            SetVariableLogic.Self.PropertyValueChanged("Blue", (int)oldColor.B, true);
+
+            SetVariableLogic.Self.PropertyValueChanged("Red", (int)oldColor.R, instance, true);
+            SetVariableLogic.Self.PropertyValueChanged("Green", (int)oldColor.G, instance, true);
+            SetVariableLogic.Self.PropertyValueChanged("Blue", (int)oldColor.B, instance, true);
 
             RefreshUI();
         }

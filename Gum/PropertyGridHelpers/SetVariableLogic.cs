@@ -59,21 +59,19 @@ namespace Gum.PropertyGridHelpers
             string changedMember = e.ChangedItem.PropertyDescriptor.Name;
             object oldValue = e.OldValue;
 
-            PropertyValueChanged(changedMember, oldValue);
+            PropertyValueChanged(changedMember, oldValue, SelectedState.Self.SelectedInstance);
         }
 
-
-        public void PropertyValueChanged(string unqualifiedMemberName, object oldValue, bool refresh = true)
+        // added instance property so we can change values even if a tree view is selected
+        public void PropertyValueChanged(string unqualifiedMemberName, object oldValue, InstanceSave instance, bool refresh = true)
         {
             var selectedStateSave = SelectedState.Self.SelectedStateSave;
 
             ElementSave parentElement = null;
-            InstanceSave instance = null;
 
             if (selectedStateSave != null)
             {
                 parentElement = selectedStateSave.ParentContainer;
-                instance = SelectedState.Self.SelectedInstance;
 
                 if (instance != null)
                 {
