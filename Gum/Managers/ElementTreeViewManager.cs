@@ -1090,6 +1090,9 @@ namespace Gum.Managers
             }
         }
 
+        /// <summary>
+        /// Refreshes the entirety of the tree view, preserving selection.
+        /// </summary>
         public void RefreshUi()
         {
             RecordSelection();
@@ -1108,6 +1111,11 @@ namespace Gum.Managers
             SelectRecordedSelection();
         }
 
+        /// <summary>
+        /// Refreshes the tree nodes for the argument ElementSave. This includes the displayed text and contained nodes, and the parent
+        /// folder node.
+        /// </summary>
+        /// <param name="elementSave">The ElementSave to refresh.</param>
         public void RefreshUi(ElementSave elementSave)
         {
             TreeNode foundNode = GetTreeNodeFor(elementSave);
@@ -1132,7 +1140,7 @@ namespace Gum.Managers
             }
         }
 
-        void RefreshUi(TreeNode node)
+        public void RefreshUi(TreeNode node)
         {
             if (node.Tag is ElementSave)
             {
@@ -1168,6 +1176,44 @@ namespace Gum.Managers
         {
             List<InstanceSave> expandedInstances = new List<InstanceSave>();
             List<InstanceSave> allInstances = elementSave.Instances;
+
+            if(elementSave is ScreenSave)
+            {
+                string fullPath = FileLocations.Self.ScreensFolder + FileManager.GetDirectory(elementSave.Name);
+                TreeNode desiredNode = GetTreeNodeFor(fullPath);
+                var parentNode = node.Parent;
+                if(parentNode != desiredNode)
+                {
+                    if (parentNode != null)
+                    {
+                        parentNode.Nodes.Remove(node);
+                    }
+                    if(desiredNode != null)
+                    {
+                        desiredNode.Nodes.Add(node);
+                    }
+                }
+            }
+            else if(elementSave is ComponentSave)
+            {
+                string fullPath = FileLocations.Self.ComponentsFolder + FileManager.GetDirectory(elementSave.Name);
+                TreeNode desiredNode = GetTreeNodeFor(fullPath);
+                var parentNode = node.Parent;
+
+                if (parentNode != desiredNode)
+                {
+                    if (parentNode != null)
+                    {
+                        parentNode.Nodes.Remove(node);
+                    }
+                    if (desiredNode != null)
+                    {
+                        desiredNode.Nodes.Add(node);
+                    }
+                }
+            }
+
+
 
             foreach (InstanceSave instance in allInstances)
             {

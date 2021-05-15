@@ -54,6 +54,8 @@ namespace Gum.Logic
                     {
                         RenameXml(elementSave, oldName);
                     }
+
+                    GumCommands.Self.GuiCommands.RefreshElementTreeView(elementSave);
                 }
 
                 if (!shouldContinue && isRenamingXmlFile)
