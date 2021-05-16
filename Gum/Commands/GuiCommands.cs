@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using Gum.DataTypes;
+using Gum.Plugins;
 
 namespace Gum.Commands
 {
@@ -39,13 +40,13 @@ namespace Gum.Commands
             PropertyGridManager.Self.RefreshVariablesDataGridValues();
         }
 
-        public TabPage AddControl(System.Windows.Controls.UserControl control, string tabTitle, TabLocation tabLocation = TabLocation.CenterBottom)
+        public PluginTab AddControl(System.Windows.Controls.UserControl control, string tabTitle, TabLocation tabLocation = TabLocation.CenterBottom)
         {
             CheckForInitialization();
             return mMainWindow.AddWpfControl(control, tabTitle, tabLocation);
         }
 
-        public TabPage AddControl(System.Windows.Forms.Control control, string tabTitle, TabLocation tabLocation )
+        public PluginTab AddControl(System.Windows.Forms.Control control, string tabTitle, TabLocation tabLocation )
         {
             CheckForInitialization();
             return mMainWindow.AddWinformsControl(control, tabTitle, tabLocation);
@@ -59,7 +60,7 @@ namespace Gum.Commands
             }
         }
 
-        public TabPage AddWinformsControl(Control control, string tabTitle, TabLocation tabLocation)
+        public PluginTab AddWinformsControl(Control control, string tabTitle, TabLocation tabLocation)
         {
             return mMainWindow.AddWinformsControl(control, tabTitle, tabLocation);
         }

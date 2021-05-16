@@ -42,8 +42,6 @@
             this.RightTopTabControl = new System.Windows.Forms.TabControl();
             this.panel2 = new System.Windows.Forms.Panel();
             this.RightBottomTabControl = new System.Windows.Forms.TabControl();
-            this.tabPage3 = new System.Windows.Forms.TabPage();
-            this.OutputTextBox = new System.Windows.Forms.RichTextBox();
             this.WireframeContextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.PropertyGridMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.LeftAndEverythingContainer)).BeginInit();
@@ -65,7 +63,6 @@
             this.panel1.SuspendLayout();
             this.panel2.SuspendLayout();
             this.RightBottomTabControl.SuspendLayout();
-            this.tabPage3.SuspendLayout();
             this.SuspendLayout();
             // 
             // ElementTreeImages
@@ -213,33 +210,12 @@
             // 
             // RightBottomTabControl
             // 
-            this.RightBottomTabControl.Controls.Add(this.tabPage3);
             this.RightBottomTabControl.Dock = System.Windows.Forms.DockStyle.Fill;
             this.RightBottomTabControl.Location = new System.Drawing.Point(0, 0);
             this.RightBottomTabControl.Name = "RightBottomTabControl";
             this.RightBottomTabControl.SelectedIndex = 0;
             this.RightBottomTabControl.Size = new System.Drawing.Size(540, 110);
             this.RightBottomTabControl.TabIndex = 1;
-            // 
-            // tabPage3
-            // 
-            this.tabPage3.Controls.Add(this.OutputTextBox);
-            this.tabPage3.Location = new System.Drawing.Point(4, 22);
-            this.tabPage3.Name = "tabPage3";
-            this.tabPage3.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage3.Size = new System.Drawing.Size(532, 84);
-            this.tabPage3.TabIndex = 0;
-            this.tabPage3.Text = "Output";
-            this.tabPage3.UseVisualStyleBackColor = true;
-            // 
-            // OutputTextBox
-            // 
-            this.OutputTextBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.OutputTextBox.Location = new System.Drawing.Point(3, 3);
-            this.OutputTextBox.Name = "OutputTextBox";
-            this.OutputTextBox.Size = new System.Drawing.Size(526, 78);
-            this.OutputTextBox.TabIndex = 0;
-            this.OutputTextBox.Text = "";
             // 
             // WireframeContextMenuStrip
             // 
@@ -282,7 +258,6 @@
             this.panel1.ResumeLayout(false);
             this.panel2.ResumeLayout(false);
             this.RightBottomTabControl.ResumeLayout(false);
-            this.tabPage3.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -294,9 +269,7 @@
 
         private System.Windows.Forms.ContextMenuStrip WireframeContextMenuStrip;
         private System.Windows.Forms.ContextMenuStrip PropertyGridMenuStrip;
-        private System.Windows.Forms.RichTextBox OutputTextBox;
         private System.Windows.Forms.TabControl RightBottomTabControl;
-        private System.Windows.Forms.TabPage tabPage3;
         private System.Windows.Forms.TabControl tabControl1;
         private System.Windows.Forms.TabControl MiddleTabControl;
         private System.Windows.Forms.TabControl LeftTabControl;

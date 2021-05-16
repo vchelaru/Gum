@@ -17,7 +17,7 @@ namespace Gum.Plugins.Errors
         AllErrorsViewModel viewModel;
         ErrorChecker errorChecker;
         ErrorDisplay control;
-        TabPage tabPage;
+        PluginTab tabPage;
 
         public override void StartUp()
         {
@@ -72,7 +72,7 @@ namespace Gum.Plugins.Errors
                 viewModel.Errors.Add(item);
             }
 
-            tabPage.Text = $"Errors ({errors.Length})";
+            tabPage.Title = $"Errors ({errors.Length})";
         }
     }
 }

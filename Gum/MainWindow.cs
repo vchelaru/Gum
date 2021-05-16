@@ -116,7 +116,6 @@ namespace Gum
 
 
             EditingManager.Self.Initialize(this.WireframeContextMenuStrip);
-            OutputManager.Self.Initialize(this.OutputTextBox);
             // ProjectManager.Initialize used to happen here, but I 
             // moved it down to the Load event for MainWindow because
             // ProjectManager.Initialize may load a project, and if it
@@ -126,7 +125,10 @@ namespace Gum
 
             InitializeFileWatchTimer();
 
+
         }
+
+
 
         private void HandleKeyDown(object sender, KeyEventArgs args)
         {
@@ -378,7 +380,7 @@ namespace Gum
 
 
 
-        public TabPage AddWinformsControl(Control control, string tabTitle, TabLocation tabLocation)
+        public PluginTab AddWinformsControl(Control control, string tabTitle, TabLocation tabLocation)
         {
             // todo: check if control has already been added. Right now this can't be done trough the Gum commands
             // so it's only used "internally", so no checking is being done.
@@ -389,10 +391,13 @@ namespace Gum
 
             tabPage.Controls.Add(control);
 
-            return tabPage;
+            return new PluginTab
+            {
+                Page = tabPage
+            };
         }
 
-        public TabPage AddWpfControl(System.Windows.Controls.UserControl control, string tabTitle, TabLocation tabLocation = TabLocation.Center)
+        public PluginTab AddWpfControl(System.Windows.Controls.UserControl control, string tabTitle, TabLocation tabLocation = TabLocation.Center)
         {
             string AppTheme = "Light";
             control.Resources = new System.Windows.ResourceDictionary();
@@ -433,7 +438,10 @@ namespace Gum
 
             }
 
-            return tabPage;
+            return new PluginTab
+            {
+                Page = tabPage
+            };
         }
 
         private static TabPage CreateTabPage(string tabTitle)

@@ -14,6 +14,10 @@ namespace Gum.Managers
 
         public void Initialize(RichTextBox richTextBox)
         {
+            if(richTextBox == null)
+            {
+                throw new ArgumentNullException(nameof(richTextBox));
+            }
             mRichTextBox = richTextBox;
         }
 
