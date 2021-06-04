@@ -3,7 +3,7 @@ title: 1 - The Basics
 order: 1
 ---
 
-# Usage Guide \_ The Basics
+# 1 - The Basics
 
 ## Introduction
 

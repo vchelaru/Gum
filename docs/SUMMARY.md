@@ -1,11 +1,10 @@
 # Table of contents
 
 * [Introduction](README.md)
-* [Usage Guide](usage-guide.md)
 * [Intro Tutorials](intro-tutorials/README.md)
+  * [1 - The Basics](intro-tutorials/the-basics.md)
   * [Usage Guide \_ Exposing Variables](intro-tutorials/usage-guide-_-exposing-variables.md)
   * [Usage Guide \_ Components](intro-tutorials/usage-guide-_-components.md)
-  * [Usage Guide \_ The Basics](intro-tutorials/usage-guide-_-the-basics.md)
   * [Usage Guide \_ Properties Window](intro-tutorials/usage-guide-_-properties-window.md)
   * [Usage Guide \_ State Categories](intro-tutorials/usage-guide-_-state-categories.md)
   * [Usage Guide \_ Files](intro-tutorials/usage-guide-_-files.md)
