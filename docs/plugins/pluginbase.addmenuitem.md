@@ -2,7 +2,7 @@
 title: AddMenuItem
 ---
 
-# PluginBase.AddMenuItem
+# AddMenuItem
 
 ## Introduction
 

@@ -2,7 +2,7 @@
 title: X Units
 ---
 
-# Introduction
+# X Units
 
 The **X Units** variable controls how a unit is horizontally positioned relative to its parent. By default an object is positioned relative to the left of its parent, where each unit represents 1 pixel.
 

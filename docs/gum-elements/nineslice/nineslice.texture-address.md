@@ -2,7 +2,7 @@
 title: Texture Address
 ---
 
-# NineSlice.Texture Address
+# Texture Address
 
 ## Introduction
 

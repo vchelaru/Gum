@@ -2,7 +2,7 @@
 title: AddAndRemoveVariablesForType
 ---
 
-# PluginBase.AddAndRemoveVariablesForType
+# AddAndRemoveVariablesForType
 
 ## Introduction
 
