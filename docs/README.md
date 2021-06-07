@@ -36,5 +36,5 @@ These images were taken from the free sample project here: [http://download-code
 
 ## How do I use Gum?
 
-For information on how to use Gum, head over to the [**Documentation**](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Documentation/README.md) page.
+For information on how to use Gum, head over to the [**Documentation** ](https://flatredball.gitbook.io/gum/)page.
 
