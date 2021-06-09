@@ -24,16 +24,15 @@ For information on how to write Gum plugins, visit this page: [Plugins](https://
 
 ## Code Reference
 
-* [Gum Class Overview](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Code%20Reference/Gum-Class-Overview/README.md)
-* [Gum.DataTypes.ComponentSave](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Code%20Reference/Gum.DataTypes.ComponentSave)
-* [Gum.DataTypes.GumProjectSave](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Code%20Reference/Gum.DataTypes.GumProjectSave)
-* [Gum.DataTypes.InstanceSave](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Code%20Reference/Gum.DataTypes.InstanceSave)
-* [Gum.DataTypes.ScreenSave](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Code%20Reference/Gum.DataTypes.ScreenSave)
-* [Gum.DataTypes.VariableSave](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Code%20Reference/Gum.DataTypes.VariableSave)
-* [Gum.ToolStates.SelectedState](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Code%20Reference/Gum.ToolStates.SelectedState)
-* [Gum.Wireframe.GraphicalUiElement](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Code%20Reference/Gum.Wireframe.GraphicalUiElement)
-* [RenderingLibrary.IPositionedSizedObject](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Code%20Reference/RenderingLibrary.IPositionedSizedObject)
-* [WpfDataUi.DataUiGrid](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Code%20Reference/WpfDataUi.DataUiGrid)
-* [WpfDataUi.IDataUi](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Code%20Reference/WpfDataUi.IDataUi)
-* [WpfDataUi.DataTypes.InstanceMember](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Code%20Reference/WpfDataUi.DataTypes.InstanceMember)
+* [Gum Class Overview](gum-class-overview.md)
+* [Gum.DataTypes.GumProjectSave](gumprojectsave.md)
+* [Gum.DataTypes.InstanceSave](instancesave.md)
+* [Gum.DataTypes.VariableSave](variablesave.md)
+* [Gum.ToolStates.SelectedState](selectedstate.md)
+* [Gum.Wireframe.GraphicalUiElement](graphicaluielement.md)
+* [RenderingLibrary.IPositionedSizedObject](ipositionedsizedobject.md)
+* [WpfDataUi.DataUiGrid](datauigrid.md)
+* [WpfDataUi.IDataUi](idataui.md)
+
+
 
