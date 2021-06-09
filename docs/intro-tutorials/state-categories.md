@@ -27,9 +27,13 @@ For this tutorial we'll create a new component. This component will have state c
 
 1. Open Gum
 2. Create a new Component called "CategoryDemo"
-3. Right-click anywhere in the State box and select "Add Category" ![](../.gitbook/assets/GumAddCategory.png)
-4. Enter the name "Size" for the new category and click OK ![](../.gitbook/assets/GumAddCategoryCalledSize.PNG)
+3. Right-click anywhere in the State box and select "Add Category" 
+4. Enter the name "Size" for the new category and click OK 
 5. Repeat the above steps to create a "Color" category
+
+![](../.gitbook/assets/GumAddCategoryCalledSize.PNG)
+
+![](../.gitbook/assets/GumAddCategory.png)
 
 Now we can add states to the categories. To do this:
 
@@ -59,16 +63,24 @@ Just like with states which do not belong to categories, you can simply select a
 First we'll set the Size states. To do this:
 
 1. Select the "Big" state
-2. Resize the colored rectangle so it is larger than the default ![](../.gitbook/assets/GumBigState.PNG)
+2. Resize the colored rectangle so it is larger than the default 
 3. Select the "Small" state
-4. Resize the colored rectangle so it is smaller than the default ![](../.gitbook/assets/GumSmallState.PNG)
+4. Resize the colored rectangle so it is smaller than the default 
+
+![](../.gitbook/assets/GumSmallState.PNG)
+
+![](../.gitbook/assets/GumBigState.PNG)
 
 Next we'll set the Color states. To do this:
 
 1. Select the "Red" state
-2. Set the Red, Green, Blue values to:  255, 0, 0 ![](../.gitbook/assets/GumRedState.PNG)
+2. Set the Red, Green, Blue values to:  255, 0, 0 
 3. Select the "Blue" state
-4. Set the Red, Green, Blue values to:  0, 0, 255 ![](../.gitbook/assets/GumBlueState.PNG)
+4. Set the Red, Green, Blue values to:  0, 0, 255 
+
+![](../.gitbook/assets/GumBlueState.PNG)
+
+![](../.gitbook/assets/GumRedState.PNG)
 
 ## Viewing multiple states on an instance
 
@@ -77,6 +89,10 @@ Now that we have our CategoryDemo component set up with multiple categories, we 
 1. Create a Screen called CategoryDemoScreen
 2. Drop an instance of the CategoryDemo component into the CategoryDemoScreen
 3. Select the newly-created CategoryDemoInstance
-4. Scroll down in the Variables list and notice that the instance has drop-downs for each category.  ![](../.gitbook/assets/GumLookCategoriesOnInstance.PNG)
-5. You can set each state independently and the states will combine ![](../.gitbook/assets/GumCombinedStates.PNG)
+4. Scroll down in the Variables list and notice that the instance has drop-downs for each category.  
+5. You can set each state independently and the states will combine 
+
+![](../.gitbook/assets/GumCombinedStates.PNG)
+
+![](../.gitbook/assets/GumLookCategoriesOnInstance.PNG)
 

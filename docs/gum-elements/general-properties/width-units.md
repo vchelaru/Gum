@@ -70,5 +70,5 @@ The [Sprite](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de6
 
 The following image shows a child [Sprite](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Elements/General%20Properties/Sprite/README.md) with 200 **PercentageOfSourceFile** Width, which means it will draw two times as wide as its source image:
 
-![](../../.gitbook/assets/PercentageOfSourceWidth.png)
+![](../../.gitbook/assets/Width%20Units_PercentageOfSourceWidth%20%281%29.png)
 

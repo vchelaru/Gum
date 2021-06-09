@@ -21,11 +21,17 @@ This tutorial builds upon the previous tutorial where a Button component was cre
 
 First we'll define two new states. All components and screens have a "Default" state automatically. To add a new state:
 
-1. Select Edit-&gt;Add State ![](../.gitbook/assets/GumEditAddState.png)
+1. Select Edit-&gt;Add State 
 2. Enter the name "Highlighted"
-3. Click OK ![](../.gitbook/assets/GumEnterStateName.PNG)
+3. Click OK 
 
-The Button component will now have a new state called Highlighted: ![](../.gitbook/assets/GumState.png)
+![](../.gitbook/assets/GumEnterStateName.PNG)
+
+![](../.gitbook/assets/GumEditAddState.png)
+
+The Button component will now have a new state called Highlighted: 
+
+![](../.gitbook/assets/GumState.png)
 
 ## Setting variables in states
 
