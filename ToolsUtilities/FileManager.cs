@@ -941,7 +941,7 @@ namespace ToolsUtilities
                 }
             }
         }
-        private static byte[] GetByteArrayFromEmbeddedResource(Assembly assembly, string resourceName)
+        public static byte[] GetByteArrayFromEmbeddedResource(Assembly assembly, string resourceName)
         {
             if (string.IsNullOrEmpty(resourceName))
             {
