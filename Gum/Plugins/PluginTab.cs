@@ -11,8 +11,8 @@ namespace Gum.Plugins
     {
         public string Title
         {
-            get => Page.Text;
-            set => Page.Text = value;
+            get => (string)Page.Header;
+            set => Page.Header = value;
         }
 
         public TabLocation SuggestedLocation
@@ -20,22 +20,8 @@ namespace Gum.Plugins
             get; set;
         } = TabLocation.RightBottom;
 
-        //PluginTabPage page;
-        //internal PluginTabPage Page
-        //{
-        //    get => page;
-        //    set
-        //    {
-        //        if (page != value)
-        //        {
-        //            page = value;
-        //            page.TabSelected = RaiseTabShown;
-        //        }
-        //    }
-        //}
-
-        TabPage page;
-        internal TabPage Page
+        System.Windows.Controls.TabItem page;
+        internal System.Windows.Controls.TabItem Page
         {
             get => page;
             set
@@ -47,6 +33,20 @@ namespace Gum.Plugins
                 }
             }
         }
+
+        //TabPage page;
+        //internal TabPage Page
+        //{
+        //    get => page;
+        //    set
+        //    {
+        //        if (page != value)
+        //        {
+        //            page = value;
+        //            //page.TabSelected = RaiseTabShown;
+        //        }
+        //    }
+        //}
 
 
 

@@ -146,6 +146,9 @@
     <Compile Include="Controls\ListBoxMessageBox.xaml.cs">
       <DependentUpon>ListBoxMessageBox.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\MainPanelControl.xaml.cs">
+      <DependentUpon>MainPanelControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\StateView.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -640,6 +643,10 @@
     <Page Include="Controls\ListBoxMessageBox.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Controls\MainPanelControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Gui\Window\DeleteOptionsWindow.xaml">
       <SubType>Designer</SubType>

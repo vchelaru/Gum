@@ -134,16 +134,16 @@ namespace Gum.Commands
 
         public void HideTools()
         {
-            mMainWindow.LeftAndEverythingContainer.Panel1Collapsed = true;
-            mMainWindow.VariablesAndEverythingElse.Panel1Collapsed = true;
-            mMainWindow.PreviewSplitContainer.Panel2Collapsed = true;
+            //mMainWindow.LeftAndEverythingContainer.Panel1Collapsed = true;
+            //mMainWindow.VariablesAndEverythingElse.Panel1Collapsed = true;
+            //mMainWindow.PreviewSplitContainer.Panel2Collapsed = true;
         }
 
         public void ShowTools()
         {
-            mMainWindow.LeftAndEverythingContainer.Panel1Collapsed = false;
-            mMainWindow.VariablesAndEverythingElse.Panel1Collapsed = false;
-            mMainWindow.PreviewSplitContainer.Panel2Collapsed = false;
+            //mMainWindow.LeftAndEverythingContainer.Panel1Collapsed = false;
+            //mMainWindow.VariablesAndEverythingElse.Panel1Collapsed = false;
+            //mMainWindow.PreviewSplitContainer.Panel2Collapsed = false;
 
         }
 
@@ -154,16 +154,16 @@ namespace Gum.Commands
 
         internal void ToggleToolVisibility()
         {
-            var areToolsVisible = mMainWindow.LeftAndEverythingContainer.Panel1Collapsed == false;
+            //var areToolsVisible = mMainWindow.LeftAndEverythingContainer.Panel1Collapsed == false;
 
-            if(areToolsVisible)
-            {
-                HideTools();
-            }
-            else
-            {
-                ShowTools();
-            }
+            //if(areToolsVisible)
+            //{
+            //    HideTools();
+            //}
+            //else
+            //{
+            //    ShowTools();
+            //}
         }
     }
 }

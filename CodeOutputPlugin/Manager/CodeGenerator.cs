@@ -306,26 +306,31 @@ namespace CodeOutputPlugin.Manager
                 {
                     baseElement = Gum.Managers.ObjectFinder.Self.GetElementSave(instance?.BaseType);
                 }
-                var baseDefaultState = baseElement?.DefaultState;
-                RecursiveVariableFinder baseRecursiveVariableFinder = new RecursiveVariableFinder(baseDefaultState);
 
-
-                List<VariableSave> variablesForThisInstance = group
-                    .Where(item => GetIfVariableShouldBeIncludedForInstance(instance, item, baseRecursiveVariableFinder))
-                    .ToList();
-
-
-                ProcessVariableGroups(variablesForThisInstance, stateSave, instance, container, visualApi, stringBuilder, tabCount);
-
-                // Now that they've been processed, we can process the remainder regularly
-                foreach (var variable in variablesForThisInstance)
+                // could be null if the element references an element that doesn't exist.
+                if(baseElement != null)
                 {
-                    var codeLine = GetCodeLine(instance, variable, container, visualApi, stateSave);
-                    stringBuilder.AppendLine(ToTabs(tabCount) + codeLine);
-                    var suffixCodeLine = GetSuffixCodeLine(instance, variable, visualApi);
-                    if (!string.IsNullOrEmpty(suffixCodeLine))
+                    var baseDefaultState = baseElement?.DefaultState;
+                    RecursiveVariableFinder baseRecursiveVariableFinder = new RecursiveVariableFinder(baseDefaultState);
+
+
+                    List<VariableSave> variablesForThisInstance = group
+                        .Where(item => GetIfVariableShouldBeIncludedForInstance(instance, item, baseRecursiveVariableFinder))
+                        .ToList();
+
+
+                    ProcessVariableGroups(variablesForThisInstance, stateSave, instance, container, visualApi, stringBuilder, tabCount);
+
+                    // Now that they've been processed, we can process the remainder regularly
+                    foreach (var variable in variablesForThisInstance)
                     {
-                        stringBuilder.AppendLine(ToTabs(tabCount) + suffixCodeLine);
+                        var codeLine = GetCodeLine(instance, variable, container, visualApi, stateSave);
+                        stringBuilder.AppendLine(ToTabs(tabCount) + codeLine);
+                        var suffixCodeLine = GetSuffixCodeLine(instance, variable, visualApi);
+                        if (!string.IsNullOrEmpty(suffixCodeLine))
+                        {
+                            stringBuilder.AppendLine(ToTabs(tabCount) + suffixCodeLine);
+                        }
                     }
                 }
 
