@@ -51,6 +51,8 @@ namespace Gum
         Panel gumEditorPanel;
         StateView stateView;
 
+        MainPanelControl mainPanelControl;
+
         #endregion
 
         public MainWindow()
@@ -63,6 +65,19 @@ namespace Gum
 #endif
 
             InitializeComponent();
+
+
+            var wpfHost = new ElementHost();
+            wpfHost.Dock = DockStyle.Fill;
+            mainPanelControl = new MainPanelControl();
+            wpfHost.Child = mainPanelControl;
+            this.Controls.Add(wpfHost);
+            this.PerformLayout();
+
+
+
+
+
 
             this.KeyPreview = true;
             this.KeyDown += HandleKeyDown;
@@ -347,12 +362,12 @@ namespace Gum
                     WindowState = settings.MainWindowState;
                 }
 
-                LeftAndEverythingContainer.SplitterDistance
-                    = Math.Max(0, settings.LeftAndEverythingSplitterDistance);
-                PreviewSplitContainer.SplitterDistance
-                    = Math.Max(0, settings.PreviewSplitterDistance);
-                StatesAndVariablesContainer.SplitterDistance
-                    = Math.Max(0, settings.StatesAndVariablesSplitterDistance);
+                //LeftAndEverythingContainer.SplitterDistance
+                //    = Math.Max(0, settings.LeftAndEverythingSplitterDistance);
+                //PreviewSplitContainer.SplitterDistance
+                //    = Math.Max(0, settings.PreviewSplitterDistance);
+                //StatesAndVariablesContainer.SplitterDistance
+                //    = Math.Max(0, settings.StatesAndVariablesSplitterDistance);
             }
         }
 
@@ -363,12 +378,12 @@ namespace Gum
             settings.MainWindowBounds = DesktopBounds;
             settings.MainWindowState = WindowState;
 
-            settings.LeftAndEverythingSplitterDistance
-                = LeftAndEverythingContainer.SplitterDistance;
-            settings.PreviewSplitterDistance
-                = PreviewSplitContainer.SplitterDistance;
-            settings.StatesAndVariablesSplitterDistance
-                = StatesAndVariablesContainer.SplitterDistance;
+            //settings.LeftAndEverythingSplitterDistance
+            //    = LeftAndEverythingContainer.SplitterDistance;
+            //settings.PreviewSplitterDistance
+            //    = PreviewSplitContainer.SplitterDistance;
+            //settings.StatesAndVariablesSplitterDistance
+            //    = StatesAndVariablesContainer.SplitterDistance;
 
             settings.Save();
         }
@@ -384,24 +399,30 @@ namespace Gum
         {
             // todo: check if control has already been added. Right now this can't be done trough the Gum commands
             // so it's only used "internally", so no checking is being done.
-            var tabControl = GetTabFromLocation(tabLocation);
-            var tabPage = CreateTabPage(tabTitle);
-            control.Dock = DockStyle.Fill;
-            tabControl.Controls.Add(tabPage);
+            //var tabControl = GetTabFromLocation(tabLocation);
+            //var tabPage = CreateTabPage(tabTitle);
+            //control.Dock = DockStyle.Fill;
+            //tabControl.Controls.Add(tabPage);
 
-            tabPage.Controls.Add(control);
+            //tabPage.Controls.Add(control);
 
-            return new PluginTab
-            {
-                Page = tabPage
-            };
+            //return new PluginTab
+            //{
+            //    Page = tabPage
+            //};
+
+            var host = new System.Windows.Forms.Integration.WindowsFormsHost();
+
+            host.Child = control;
+
+            return AddWpfControl(host, tabTitle, tabLocation);
         }
 
-        public PluginTab AddWpfControl(System.Windows.Controls.UserControl control, string tabTitle, TabLocation tabLocation = TabLocation.Center)
+        public PluginTab AddWpfControl(System.Windows.FrameworkElement control, string tabTitle, TabLocation tabLocation = TabLocation.CenterBottom)
         {
             string AppTheme = "Light";
             control.Resources = new System.Windows.ResourceDictionary();
-            control.Resources.Source = 
+            control.Resources.Source =
                 new Uri($"/Themes/{AppTheme}.xaml", UriKind.Relative);
 
 
@@ -412,36 +433,48 @@ namespace Gum
             //}
 
             //ResourceDictionary = Resources;
+            var tabControl = GetTabFromLocation(tabLocation);
 
-            TabPage existingTabPage;
-            TabControl existingTabControl;
-            GetContainers(control, out existingTabPage, out existingTabControl);
+            var page = new System.Windows.Controls.TabItem();
+            page.Header = tabTitle;
+            page.Content = control;
 
-            bool alreadyExists = existingTabControl != null;
 
-            TabPage tabPage = existingTabPage;
+            tabControl.Items.Add(page);
 
-            if (!alreadyExists)
+            return new PluginTab()
             {
-
-                System.Windows.Forms.Integration.ElementHost wpfHost;
-                wpfHost = new System.Windows.Forms.Integration.ElementHost();
-                wpfHost.Dock = DockStyle.Fill;
-                wpfHost.Child = control;
-
-                tabPage = CreateTabPage(tabTitle);
-
-                TabControl tabControl = GetTabFromLocation(tabLocation);
-                tabControl.Controls.Add(tabPage);
-
-                tabPage.Controls.Add(wpfHost);
-
-            }
-
-            return new PluginTab
-            {
-                Page = tabPage
+                Page = page
             };
+            //TabPage existingTabPage;
+            //TabControl existingTabControl;
+            //GetContainers(control, out existingTabPage, out existingTabControl);
+
+            //bool alreadyExists = existingTabControl != null;
+
+            //TabPage tabPage = existingTabPage;
+
+            //if (!alreadyExists)
+            //{
+
+            //    System.Windows.Forms.Integration.ElementHost wpfHost;
+            //    wpfHost = new System.Windows.Forms.Integration.ElementHost();
+            //    wpfHost.Dock = DockStyle.Fill;
+            //    wpfHost.Child = control;
+
+            //    tabPage = CreateTabPage(tabTitle);
+
+            //    TabControl tabControl = GetTabFromLocation(tabLocation);
+            //    tabControl.Controls.Add(tabPage);
+
+            //    tabPage.Controls.Add(wpfHost);
+
+            //}
+
+            //return new PluginTab
+            //{
+            //    Page = tabPage
+            //};
         }
 
         private static TabPage CreateTabPage(string tabTitle)
@@ -456,28 +489,28 @@ namespace Gum
             return tabPage;
         }
 
-        private TabControl GetTabFromLocation(TabLocation tabLocation)
+        private System.Windows.Controls.TabControl GetTabFromLocation(TabLocation tabLocation)
         {
-            TabControl tabControl = null;
+            System.Windows.Controls.TabControl tabControl = null;
 
             switch (tabLocation)
             {
                 case TabLocation.Center:
                 case TabLocation.CenterBottom:
-                    tabControl = this.MiddleTabControl;
+                    tabControl = this.mainPanelControl.CenterBottomTabControl;
                     break;
                 case TabLocation.RightBottom:
-                    tabControl = this.RightBottomTabControl;
+                    tabControl = this.mainPanelControl.RightBottomTabControl;
 
                     break;
                 case TabLocation.RightTop:
-                    tabControl = this.RightTopTabControl;
+                    tabControl = this.mainPanelControl.RightTopTabControl;
                     break;
                 case TabLocation.CenterTop:
-                    tabControl = this.tabControl1;
+                    tabControl = this.mainPanelControl.CenterTopTabControl;
                     break;
                 case TabLocation.Left:
-                    tabControl = this.LeftTabControl;
+                    tabControl = this.mainPanelControl.LeftTabControl;
                     break;
                 default:
                     throw new NotImplementedException($"Tab location {tabLocation} not supported");
@@ -486,18 +519,18 @@ namespace Gum
             return tabControl;
         }
 
-        private void GetContainers(System.Windows.Controls.UserControl control, out TabPage tabPage, out TabControl tabControl)
+        private void GetContainers(System.Windows.Controls.UserControl control, out System.Windows.Controls.TabItem tabPage, out System.Windows.Controls.TabControl tabControl)
         {
             tabPage = null;
             tabControl = null;
 
-            foreach (var uncastedTabPage in this.MiddleTabControl.Controls)
+            foreach (var uncastedTabPage in this.mainPanelControl.CenterBottomTabControl.Items)
             {
-                tabPage = uncastedTabPage as TabPage;
+                tabPage = uncastedTabPage as System.Windows.Controls.TabItem;
 
                 if (tabPage != null && DoesTabContainControl(tabPage, control))
                 {
-                    tabControl = this.MiddleTabControl;
+                    tabControl = this.mainPanelControl.CenterBottomTabControl;
 
                     break;
                 }
@@ -509,13 +542,13 @@ namespace Gum
 
             if (tabControl == null)
             {
-                foreach (var uncastedTabPage in this.RightBottomTabControl.Controls)
+                foreach (var uncastedTabPage in this.mainPanelControl.RightBottomTabControl.Items)
                 {
-                    tabPage = uncastedTabPage as TabPage;
+                    tabPage = uncastedTabPage as System.Windows.Controls.TabItem;
 
                     if (tabPage != null && DoesTabContainControl(tabPage, control))
                     {
-                        tabControl = this.RightBottomTabControl;
+                        tabControl = this.mainPanelControl.RightBottomTabControl;
                         break;
                     }
                     else
@@ -529,13 +562,13 @@ namespace Gum
 
         internal void ShowTabForControl(System.Windows.Controls.UserControl control)
         {
-            TabControl tabControl = null;
-            TabPage tabPage = null;
-            GetContainers(control, out tabPage, out tabControl);
+            //TabControl tabControl = null;
+            //TabPage tabPage = null;
+            //GetContainers(control, out tabPage, out tabControl);
 
-            var index = tabControl.TabPages.IndexOf(tabPage);
+            //var index = tabControl.TabPages.IndexOf(tabPage);
 
-            tabControl.SelectedIndex = index;
+            //tabControl.SelectedIndex = index;
         }
 
 
@@ -543,31 +576,27 @@ namespace Gum
         {
             List<Control> controls = new List<Control>();
 
-            TabControl tabControl = null;
-            TabPage tabPage = null;
+            System.Windows.Controls.TabControl tabControl = null;
+            System.Windows.Controls.TabItem tabPage = null;
             GetContainers(control, out tabPage, out tabControl);
             
             if(tabControl != null)
             {
-                foreach(var controlInTabPage in tabPage.Controls)
+                var controlInTabPage = tabPage.Content;
                 {
                     if(controlInTabPage is ElementHost)
                     {
                         (controlInTabPage as ElementHost).Child = null;
                     }
                 }
-                tabPage.Controls.Clear();
-                tabControl.Controls.Remove(tabPage);
+                tabPage.Content = null;
+                tabControl.Items.Remove(tabPage);
             }
         }
 
-        bool DoesTabContainControl(TabPage tabPage, System.Windows.Controls.UserControl control)
+        bool DoesTabContainControl(System.Windows.Controls.TabItem tabPage, System.Windows.FrameworkElement control)
         {
-            var foundHost = tabPage.Controls
-                .FirstOrDefault(item => item is System.Windows.Forms.Integration.ElementHost)
-                as System.Windows.Forms.Integration.ElementHost;
-
-            return foundHost != null && foundHost.Child == control;
+            return tabPage.Content == control;
         }
 
     }
