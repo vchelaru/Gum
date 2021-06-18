@@ -32,9 +32,11 @@ namespace CodeOutputPlugin.Manager
 
             #region Namespace Header/Opening {
 
-            if (!string.IsNullOrEmpty(elementSettings?.Namespace))
+            string namespaceName = CodeGenerator.GetElementNamespace(element, elementSettings, projectSettings);
+
+            if (!string.IsNullOrEmpty(namespaceName))
             {
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"namespace {elementSettings.Namespace}");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"namespace {namespaceName}");
                 stringBuilder.AppendLine(ToTabs(tabCount) + "{");
                 tabCount++;
             }
@@ -46,7 +48,11 @@ namespace CodeOutputPlugin.Manager
             // todo - this needs work! It's just placeholder so I can finish the rest of this method to get something with the right # of brackets
 
             string inheritance = null;
-            if(element.BaseType == "XamarinForms/SkiaGumCanvasView")
+            if(element is ScreenSave)
+            {
+                inheritance = element.BaseType ?? "Xamarin.Forms.BioCheckPage";
+            }
+            else if(element.BaseType == "XamarinForms/SkiaGumCanvasView")
             {
                 inheritance = "SkiaGum.SkiaGumCanvasView";
             }
@@ -70,7 +76,7 @@ namespace CodeOutputPlugin.Manager
             stringBuilder.AppendLine(ToTabs(tabCount) + "}");
             #endregion
 
-            if (!string.IsNullOrEmpty(elementSettings?.Namespace))
+            if (!string.IsNullOrEmpty(namespaceName))
             {
                 tabCount--;
                 stringBuilder.AppendLine(ToTabs(tabCount) + "}");

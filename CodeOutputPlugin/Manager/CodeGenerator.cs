@@ -56,9 +56,11 @@ namespace CodeOutputPlugin.Manager
 
             #region Namespace Header/Opening {
 
-            if (!string.IsNullOrEmpty(elementSettings?.Namespace))
+            string namespaceName = GetElementNamespace(element, elementSettings, projectSettings);
+
+            if (!string.IsNullOrEmpty(namespaceName))
             {
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"namespace {elementSettings.Namespace}");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"namespace {namespaceName}");
                 stringBuilder.AppendLine(ToTabs(tabCount) + "{");
                 tabCount++;
             }
@@ -97,13 +99,45 @@ namespace CodeOutputPlugin.Manager
             stringBuilder.AppendLine(ToTabs(tabCount) + "}");
             #endregion
 
-            if (!string.IsNullOrEmpty(elementSettings?.Namespace))
+            if (!string.IsNullOrEmpty(namespaceName))
             {
                 tabCount--;
                 stringBuilder.AppendLine(ToTabs(tabCount) + "}");
             }
 
             return stringBuilder.ToString();
+        }
+
+        public static string GetElementNamespace(ElementSave element, CodeOutputElementSettings elementSettings, CodeOutputProjectSettings projectSettings)
+        {
+            var namespaceName = elementSettings?.Namespace;
+
+            if (string.IsNullOrEmpty(namespaceName) && !string.IsNullOrWhiteSpace(projectSettings.RootNamespace))
+            {
+                namespaceName = projectSettings.RootNamespace;
+                if (element is ScreenSave)
+                {
+                    namespaceName += ".Screens";
+                }
+                else if (element is ComponentSave)
+                {
+                    namespaceName += ".Components";
+                }
+                else // standard element
+                {
+                    namespaceName += ".Standards";
+                }
+
+                var splitElementName = element.Name.Split('\\').ToArray();
+                var splitPrefix = splitElementName.Take(splitElementName.Length - 1).ToArray();
+                var whatToAppend = string.Join(".", splitPrefix);
+                if (!string.IsNullOrEmpty(whatToAppend))
+                {
+                    namespaceName += "." + whatToAppend;
+                }
+            }
+
+            return namespaceName;
         }
 
         public static VisualApi GetVisualApiForElement(ElementSave element)

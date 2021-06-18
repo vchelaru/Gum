@@ -93,6 +93,7 @@ namespace CodeOutputPlugin.Views
             var projectCategory = new MemberCategory("Project-Wide Code Generation");
             projectCategory.Members.Add(CreateProjectUsingStatementsMember());
             projectCategory.Members.Add(CreateCodeProjectRootMember());
+            projectCategory.Members.Add(CreateRootNamespaceMember());
             DataGrid.Categories.Add(projectCategory);
         }
 
@@ -142,6 +143,25 @@ namespace CodeOutputPlugin.Views
             // selecting files, and we want to select a folder. Maybe at some point 
             // in the future this could have a property for selecting folder, but until then....
             //member.PreferredDisplayer = typeof(FileSelectionDisplay);
+
+            return member;
+        }
+
+        private InstanceMember CreateRootNamespaceMember()
+        {
+            var member = new InstanceMember("Root Namespace", this);
+
+            member.CustomSetEvent += (owner, value) =>
+            {
+                if(CodeOutputProjectSettings != null)
+                {
+                    CodeOutputProjectSettings.RootNamespace = (string)value;
+                    CodeOutputSettingsPropertyChanged?.Invoke(this, null);
+                }
+            };
+
+            member.CustomGetEvent += (owner) => CodeOutputProjectSettings?.RootNamespace;
+            member.CustomGetTypeEvent += (owner) => typeof(string);
 
             return member;
         }
