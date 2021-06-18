@@ -73,12 +73,7 @@ namespace CodeOutputPlugin.Views
         {
             DataGrid.Categories.Clear();
 
-            var projectCategory = new MemberCategory("Project-Wide Code Generation");
-
-            projectCategory.Members.Add(CreateProjectUsingStatementsMember());
-
-            DataGrid.Categories.Add(projectCategory);
-
+            CreateProjectWideUi();
 
             var elementCategory = new MemberCategory("Element Code Generation");
 
@@ -91,9 +86,73 @@ namespace CodeOutputPlugin.Views
 
         }
 
+        #region Project-wide UI
+
+        private void CreateProjectWideUi()
+        {
+            var projectCategory = new MemberCategory("Project-Wide Code Generation");
+            projectCategory.Members.Add(CreateProjectUsingStatementsMember());
+            projectCategory.Members.Add(CreateCodeProjectRootMember());
+            DataGrid.Categories.Add(projectCategory);
+        }
+
+        private InstanceMember CreateProjectUsingStatementsMember()
+        {
+            var member = new InstanceMember("Project-wide Using Statements", this);
+
+            member.CustomSetEvent += (owner, value) =>
+            {
+                if (CodeOutputProjectSettings != null)
+                {
+                    CodeOutputProjectSettings.CommonUsingStatements = (string)value;
+                    CodeOutputSettingsPropertyChanged?.Invoke(this, null);
+                }
+            };
+
+            member.CustomGetEvent += (owner) => CodeOutputProjectSettings?.CommonUsingStatements;
+            member.CustomGetTypeEvent += (owner) => typeof(string);
+            member.PreferredDisplayer = typeof(MultiLineTextBoxDisplay);
+
+            return member;
+        }
+
+        private InstanceMember CreateCodeProjectRootMember()
+        {
+            var member = new InstanceMember("Code Project Root", this);
+
+            member.CustomSetEvent += (owner, value) =>
+            {
+                if (CodeOutputProjectSettings != null)
+                {
+                    CodeOutputProjectSettings.CodeProjectRoot = (string)value;
+                    var needsAppendedSlash = !string.IsNullOrEmpty(CodeOutputProjectSettings.CodeProjectRoot) &&
+                        !CodeOutputProjectSettings.CodeProjectRoot.EndsWith("\\") &&
+                        !CodeOutputProjectSettings.CodeProjectRoot.EndsWith("/");
+                    if (needsAppendedSlash)
+                    {
+                        CodeOutputProjectSettings.CodeProjectRoot += "\\";
+                    }
+                    CodeOutputSettingsPropertyChanged?.Invoke(this, null);
+                }
+            };
+
+            member.CustomGetEvent += (owner) => CodeOutputProjectSettings?.CodeProjectRoot;
+            member.CustomGetTypeEvent += (owner) => typeof(string);
+            // Don't use a FileSelectionDisplay since it currently only supports
+            // selecting files, and we want to select a folder. Maybe at some point 
+            // in the future this could have a property for selecting folder, but until then....
+            //member.PreferredDisplayer = typeof(FileSelectionDisplay);
+
+            return member;
+        }
+
+        #endregion
+
+        #region Current Element UI
+
         private InstanceMember CreateAutoGenerateOnChangeMember()
         {
-            var member = new InstanceMember("Auto-generate on change", this);
+            var member = new InstanceMember("Auto-generate", this);
 
             member.CustomSetEvent += (owner, value) =>
             {
@@ -110,30 +169,6 @@ namespace CodeOutputPlugin.Views
             return member;
         }
 
-        private InstanceMember CreateProjectUsingStatementsMember()
-        {
-            var member = new InstanceMember("Project-wide Using Statements", this);
-
-            member.CustomSetEvent += (owner, value) =>
-            {
-                if (CodeOutputProjectSettings != null)
-                {
-                    CodeOutputProjectSettings.CommonUsingStatements = (string)value;
-                    CodeOutputSettingsPropertyChanged?.Invoke(this, null);
-                }
-            };
-
-            member.CustomGetEvent += (owner) =>
-            {
-                return CodeOutputProjectSettings?.CommonUsingStatements;
-            };
-
-            member.CustomGetTypeEvent += (owner) => typeof(string);
-
-            member.PreferredDisplayer = typeof(MultiLineTextBoxDisplay);
-
-            return member;
-        }
 
         private InstanceMember CreateUsingStatementMember()
         {
@@ -207,6 +242,8 @@ namespace CodeOutputPlugin.Views
 
             return member;
         }
+
+        #endregion
 
         private void HandleCodeOutputSettingsPropertyChanged(string arg1, PropertyChangedArgs arg2)
         {

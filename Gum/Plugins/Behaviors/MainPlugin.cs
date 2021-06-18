@@ -115,6 +115,7 @@ namespace Gum.Plugins.Behaviors
             }
         }
 
+        bool hasBeenAdded = false;
         private void HandleElementSelected(ElementSave element)
         {
             var asComponent = element as ComponentSave;
@@ -127,12 +128,17 @@ namespace Gum.Plugins.Behaviors
             if(asComponent != null)
             {
                 UpdateViewModelTo(asComponent);
-                GumCommands.Self.GuiCommands.AddControl(control, "Behaviors");
+                if(!hasBeenAdded)
+                {
+                    GumCommands.Self.GuiCommands.AddControl(control, "Behaviors");
+                    hasBeenAdded = true;
+                }
 
             }
             else
             {
                 GumCommands.Self.GuiCommands.RemoveControl(control);
+                hasBeenAdded = false;
             }
         }
 

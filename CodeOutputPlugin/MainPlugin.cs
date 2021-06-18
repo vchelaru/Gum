@@ -79,6 +79,8 @@ namespace CodeOutputPlugin
         private void HandleProjectLoaded(GumProjectSave project)
         {
             codeOutputProjectSettings = CodeOutputProjectSettingsManager.CreateOrLoadSettingsForProject();
+
+            RefreshCodeDisplay();
         }
 
         private void HandleStateSelected(TreeNode obj)
@@ -190,7 +192,7 @@ namespace CodeOutputPlugin
                     }
                     else if(selectedElement != null)
                     {
-                        string gumCode = CodeGenerator.GetCodeForElement(selectedElement, settings, codeOutputProjectSettings);
+                        string gumCode = CodeGenerator.GetGeneratedCodeForElement(selectedElement, settings, codeOutputProjectSettings);
                         viewModel.Code = $"//Code for {selectedElement.ToString()}\n{gumCode}";
                     }
                     break;
@@ -231,10 +233,10 @@ namespace CodeOutputPlugin
             if(element != null)
             {
                 CodeOutputElementSettingsManager.WriteSettingsForElement(element, control.CodeOutputElementSettings);
-                CodeOutputProjectSettingsManager.WriteSettingsForProject(codeOutputProjectSettings);
 
                 RefreshCodeDisplay();
             }
+            CodeOutputProjectSettingsManager.WriteSettingsForProject(codeOutputProjectSettings);
         }
 
         private void HandleGenerateCodeButtonClicked()
@@ -244,8 +246,28 @@ namespace CodeOutputPlugin
 
         private void GenerateCodeForSelectedElement(bool showPopups)
         {
+            var selectedElement = SelectedState.Self.SelectedElement;
             var settings = control.CodeOutputElementSettings;
-            if (string.IsNullOrEmpty(settings.GeneratedFileName))
+
+            string generatedFileName = settings.GeneratedFileName;
+
+            if(string.IsNullOrEmpty(generatedFileName) && !string.IsNullOrEmpty(this.codeOutputProjectSettings.CodeProjectRoot))
+            {
+                string prefix = selectedElement is ScreenSave ? "Screens"
+                    : selectedElement is ComponentSave ? "Components"
+                    : "Standards";
+                var splitName = (prefix + "/" + selectedElement.Name).Split('/');
+                var nameWithNamespaceArray = splitName.Take(splitName.Length - 1).Append(CodeGenerator.GetClassNameForType(selectedElement.Name, CodeGenerator.GetVisualApiForElement(selectedElement)));
+                generatedFileName = this.codeOutputProjectSettings.CodeProjectRoot + string.Join("\\", nameWithNamespaceArray) + ".Generated.cs";
+            }
+
+            if (!string.IsNullOrEmpty(generatedFileName) && FileManager.IsRelative(generatedFileName))
+            {
+                generatedFileName = ProjectState.Self.ProjectDirectory + generatedFileName;
+            }
+
+
+            if (string.IsNullOrEmpty(generatedFileName))
             {
                 if(showPopups)
                 {
@@ -258,29 +280,34 @@ namespace CodeOutputPlugin
                 // an instance within the element selected. Instead, we want to output
                 // the code for the whole selected element.
                 //var contents = ViewModel.Code;
-                var selectedElement = SelectedState.Self.SelectedElement;
 
-                string contents = CodeGenerator.GetCodeForElement(selectedElement, settings, codeOutputProjectSettings);
+                string contents = CodeGenerator.GetGeneratedCodeForElement(selectedElement, settings, codeOutputProjectSettings);
                 contents = $"//Code for {selectedElement.ToString()}\n{contents}";
-                var fileName = settings.GeneratedFileName;
-                if (FileManager.IsRelative(fileName))
+                
+                string message = string.Empty;
+
+                var codeDirectory = FileManager.GetDirectory(generatedFileName);
+                if(!System.IO.Directory.Exists(codeDirectory))
                 {
-                    fileName = ProjectState.Self.ProjectDirectory + fileName;
+                    System.IO.Directory.CreateDirectory(codeDirectory);
                 }
 
-                string message;
-                if (System.IO.File.Exists(fileName))
-                {
+                System.IO.File.WriteAllText(generatedFileName, contents);
 
-                    System.IO.File.WriteAllText(fileName, contents);
+                // show a message somewhere?
+                message += $"Generated code to {FileManager.RemovePath(generatedFileName)}";
 
-                    // show a message somewhere?
-                    message = $"Generated code to {FileManager.RemovePath(fileName)}";
-                }
-                else
+                if(!string.IsNullOrEmpty(this.codeOutputProjectSettings.CodeProjectRoot))
                 {
-                    message = $"Could not find destination file on disk";
+                    var splitFileWithoutGenerated = generatedFileName.Split('.').ToArray();
+                    var customCodeFileName = string.Join("\\", splitFileWithoutGenerated.Take(splitFileWithoutGenerated.Length-2)) + ".cs";
+
+                    // todo - only save this if it doesn't already exist
+                    var customCodeContents = CustomCodeGenerator.GetCustomCodeForElement(selectedElement, settings, codeOutputProjectSettings);
+                    System.IO.File.WriteAllText(customCodeFileName, customCodeContents);
                 }
+
+
                 if (showPopups)
                 {
                     GumCommands.Self.GuiCommands.ShowMessage(message);

@@ -74,6 +74,7 @@
     <Compile Include="Manager\CodeGenerator.cs" />
     <Compile Include="Manager\CodeOutputElementSettingsManager.cs" />
     <Compile Include="Manager\CodeOutputProjectSettingsManager.cs" />
+    <Compile Include="Manager\CustomCodeGenerator.cs" />
     <Compile Include="Models\CodeOutputElementSettings.cs" />
     <Compile Include="Models\CodeOutputProjectSettings.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

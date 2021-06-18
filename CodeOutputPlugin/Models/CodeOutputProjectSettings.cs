@@ -9,5 +9,7 @@ namespace CodeOutputPlugin.Models
     public class CodeOutputProjectSettings
     {
         public string CommonUsingStatements { get; set; }
+
+        public string CodeProjectRoot { get; set; }
     }
 }

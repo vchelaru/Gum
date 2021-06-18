@@ -34,28 +34,16 @@ namespace CodeOutputPlugin.Manager
         /// </summary>
         public static bool AdjustPixelValuesForDensity { get; set; } = true;
 
-        public static string GetCodeForElement(ElementSave element, CodeOutputElementSettings elementSettings, CodeOutputProjectSettings projectSettings)
+        public static string GetGeneratedCodeForElement(ElementSave element, CodeOutputElementSettings elementSettings, CodeOutputProjectSettings projectSettings)
         {
-            #region Determine if XamarinForms Control
-            VisualApi visualApi;
-            var defaultState = element.DefaultState;
-            var isXamForms = defaultState.GetValueRecursive($"IsXamarinFormsControl") as bool?;
-            if (isXamForms == true)
-            {
-                visualApi = VisualApi.XamarinForms;
-            }
-            else
-            {
-                visualApi = VisualApi.Gum;
-            }
-            #endregion
+            VisualApi visualApi = GetVisualApiForElement(element);
 
             var stringBuilder = new StringBuilder();
             int tabCount = 0;
 
             #region Using Statements
 
-            if(!string.IsNullOrWhiteSpace(projectSettings?.CommonUsingStatements))
+            if (!string.IsNullOrWhiteSpace(projectSettings?.CommonUsingStatements))
             {
                 stringBuilder.AppendLine(projectSettings.CommonUsingStatements);
             }
@@ -116,6 +104,23 @@ namespace CodeOutputPlugin.Manager
             }
 
             return stringBuilder.ToString();
+        }
+
+        public static VisualApi GetVisualApiForElement(ElementSave element)
+        {
+            VisualApi visualApi;
+            var defaultState = element.DefaultState;
+            var isXamForms = defaultState.GetValueRecursive($"IsXamarinFormsControl") as bool?;
+            if (isXamForms == true)
+            {
+                visualApi = VisualApi.XamarinForms;
+            }
+            else
+            {
+                visualApi = VisualApi.Gum;
+            }
+
+            return visualApi;
         }
 
         private static void AddAbsoluteLayoutIfNecessary(ElementSave element, int tabCount, StringBuilder stringBuilder)
@@ -932,7 +937,7 @@ namespace CodeOutputPlugin.Manager
             stringBuilder.AppendLine($"{tabs}{accessString}{className} {instance.Name} {{ get; private set; }}");
         }
 
-        private static string GetClassNameForType(string gumType, VisualApi visualApi)
+        public static string GetClassNameForType(string gumType, VisualApi visualApi)
         {
             string className = null;
             var specialHandledCase = false;
