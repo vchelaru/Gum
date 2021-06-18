@@ -303,8 +303,11 @@ namespace CodeOutputPlugin
                     var customCodeFileName = string.Join("\\", splitFileWithoutGenerated.Take(splitFileWithoutGenerated.Length-2)) + ".cs";
 
                     // todo - only save this if it doesn't already exist
-                    var customCodeContents = CustomCodeGenerator.GetCustomCodeForElement(selectedElement, settings, codeOutputProjectSettings);
-                    System.IO.File.WriteAllText(customCodeFileName, customCodeContents);
+                    if(!System.IO.File.Exists(customCodeFileName))
+                    {
+                        var customCodeContents = CustomCodeGenerator.GetCustomCodeForElement(selectedElement, settings, codeOutputProjectSettings);
+                        System.IO.File.WriteAllText(customCodeFileName, customCodeContents);
+                    }
                 }
 
 
