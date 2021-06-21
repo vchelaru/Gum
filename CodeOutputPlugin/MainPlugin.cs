@@ -87,6 +87,8 @@ namespace CodeOutputPlugin
         {
             if (control != null)
             {
+                LoadCodeSettingsFile();
+
                 RefreshCodeDisplay();
             }
         }
@@ -180,31 +182,39 @@ namespace CodeOutputPlugin
 
             var settings = control.CodeOutputElementSettings;
 
-            switch(viewModel.WhatToView)
+            if(settings.GenerationBehavior != Models.GenerationBehavior.NeverGenerate)
             {
-                case ViewModels.WhatToView.SelectedElement:
+                switch(viewModel.WhatToView)
+                {
+                    case ViewModels.WhatToView.SelectedElement:
 
-                    if (instance != null)
-                    {
-                        string gumCode = CodeGenerator.GetCodeForInstance(instance, selectedElement, VisualApi.Gum);
-                        string xamarinFormsCode = CodeGenerator.GetCodeForInstance(instance, selectedElement, VisualApi.XamarinForms);
-                        viewModel.Code = $"//Gum Code:\n{gumCode}\n\n//Xamarin Forms Code:\n{xamarinFormsCode}";
-                    }
-                    else if(selectedElement != null)
-                    {
-                        string gumCode = CodeGenerator.GetGeneratedCodeForElement(selectedElement, settings, codeOutputProjectSettings);
-                        viewModel.Code = $"//Code for {selectedElement.ToString()}\n{gumCode}";
-                    }
-                    break;
-                case ViewModels.WhatToView.SelectedState:
-                    var state = SelectedState.Self.SelectedStateSave;
+                        if (instance != null)
+                        {
+                            string gumCode = CodeGenerator.GetCodeForInstance(instance, selectedElement, VisualApi.Gum);
+                            string xamarinFormsCode = CodeGenerator.GetCodeForInstance(instance, selectedElement, VisualApi.XamarinForms);
+                            viewModel.Code = $"//Gum Code:\n{gumCode}\n\n//Xamarin Forms Code:\n{xamarinFormsCode}";
+                        }
+                        else if(selectedElement != null)
+                        {
 
-                    if (state != null && selectedElement != null)
-                    {
-                        string gumCode = CodeGenerator.GetCodeForState(selectedElement, state, VisualApi.Gum);
-                        viewModel.Code = $"//State Code for {state.Name ?? "Default"}:\n{gumCode}";
-                    }
-                    break;
+                            string gumCode = CodeGenerator.GetGeneratedCodeForElement(selectedElement, settings, codeOutputProjectSettings);
+                            viewModel.Code = $"//Code for {selectedElement.ToString()}\n{gumCode}";
+                        }
+                        break;
+                    case ViewModels.WhatToView.SelectedState:
+                        var state = SelectedState.Self.SelectedStateSave;
+
+                        if (state != null && selectedElement != null)
+                        {
+                            string gumCode = CodeGenerator.GetCodeForState(selectedElement, state, VisualApi.Gum);
+                            viewModel.Code = $"//State Code for {state.Name ?? "Default"}:\n{gumCode}";
+                        }
+                        break;
+                }
+            }
+            else
+            {
+                viewModel.Code = "// code generation disabled for this object";
             }
 
 

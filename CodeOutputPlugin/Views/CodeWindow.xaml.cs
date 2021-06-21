@@ -64,7 +64,7 @@ namespace CodeOutputPlugin.Views
         public CodeWindow()
         {
             InitializeComponent();
-            DataGrid.PropertyChange += HandleCodeOutputSettingsPropertyChanged;
+            DataGrid.PropertyChange += (not, used) => CodeOutputSettingsPropertyChanged?.Invoke(this, null);
 
             CreateGridCategories();
         }
@@ -172,23 +172,22 @@ namespace CodeOutputPlugin.Views
 
         private InstanceMember CreateAutoGenerateOnChangeMember()
         {
-            var member = new InstanceMember("Auto-generate", this);
+            var member = new InstanceMember("Generation Behavior", this);
 
             member.CustomSetEvent += (owner, value) =>
             {
                 if (codeOutputElementSettings != null)
                 {
-                    codeOutputElementSettings.AutoGenerateOnChange = (bool)value;
+                    codeOutputElementSettings.GenerationBehavior = (GenerationBehavior)value;
                     CodeOutputSettingsPropertyChanged?.Invoke(this, null);
                 }
             };
 
-            member.CustomGetEvent += (owner) => codeOutputElementSettings?.AutoGenerateOnChange;
-            member.CustomGetTypeEvent += (owner) => typeof(bool);
+            member.CustomGetEvent += (owner) => codeOutputElementSettings?.GenerationBehavior;
+            member.CustomGetTypeEvent += (owner) => typeof(GenerationBehavior);
 
             return member;
         }
-
 
         private InstanceMember CreateUsingStatementMember()
         {
@@ -265,10 +264,7 @@ namespace CodeOutputPlugin.Views
 
         #endregion
 
-        private void HandleCodeOutputSettingsPropertyChanged(string arg1, PropertyChangedArgs arg2)
-        {
-            CodeOutputSettingsPropertyChanged?.Invoke(this, null);
-        }
+        #region Button Event Handlers
 
         private void HandleGenerateCodeClicked(object sender, RoutedEventArgs e)
         {
@@ -294,5 +290,7 @@ namespace CodeOutputPlugin.Views
                 }
             }
         }
+
+        #endregion
     }
 }

@@ -715,18 +715,19 @@ namespace CodeOutputPlugin.Manager
 
         private static void ProcessColorForLabel(List<VariableSave> variablesToConsider, StateSave defaultState, InstanceSave instance, StringBuilder stringBuilder)
         {
+            var instancePrefix = instance != null ? instance.Name + "." : string.Empty;
             var instanceName = instance.Name;
             var rfv = new RecursiveVariableFinder(defaultState);
 
-            var red = rfv.GetValue<int>(instanceName + ".Red");
-            var green = rfv.GetValue<int>(instanceName + ".Green");
-            var blue = rfv.GetValue<int>(instanceName + ".Blue");
-            var alpha = rfv.GetValue<int>(instanceName + ".Alpha");
+            var red = rfv.GetValue<int>(instancePrefix + "Red");
+            var green = rfv.GetValue<int>(instancePrefix + "Green");
+            var blue = rfv.GetValue<int>(instancePrefix + "Blue");
+            var alpha = rfv.GetValue<int>(instancePrefix + "Alpha");
 
-            variablesToConsider.RemoveAll(item => item.Name == instanceName + ".Red");
-            variablesToConsider.RemoveAll(item => item.Name == instanceName + ".Green");
-            variablesToConsider.RemoveAll(item => item.Name == instanceName + ".Blue");
-            variablesToConsider.RemoveAll(item => item.Name == instanceName + ".Alpha");
+            variablesToConsider.RemoveAll(item => item.Name == instancePrefix + "Red");
+            variablesToConsider.RemoveAll(item => item.Name == instancePrefix + "Green");
+            variablesToConsider.RemoveAll(item => item.Name == instancePrefix + "Blue");
+            variablesToConsider.RemoveAll(item => item.Name == instancePrefix + "Alpha");
 
             stringBuilder.AppendLine($"{instanceName}.TextColor = Color.FromRgba({red}, {green}, {blue}, {alpha});");
         }
