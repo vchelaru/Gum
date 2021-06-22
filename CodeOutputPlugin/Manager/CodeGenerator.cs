@@ -31,9 +31,11 @@ namespace CodeOutputPlugin.Manager
         public static int CanvasHeight { get; set; } = 854;
 
         /// <summary>
-        /// if true, then pixel sizes are maintained regardless of pixel density. This allows layouts to maintain pixel-perfect
+        /// if true, then pixel sizes are maintained regardless of pixel density. This allows layouts to maintain pixel-perfect.
+        /// Update: This is now set to false because .... well, it makes it hard to create flexible layouts. It's best to set a resolution of 
+        /// 320 wide and let density scale things up
         /// </summary>
-        public static bool AdjustPixelValuesForDensity { get; set; } = true;
+        public static bool AdjustPixelValuesForDensity { get; set; } = false;
 
         public static string GetGeneratedCodeForElement(ElementSave element, CodeOutputElementSettings elementSettings, CodeOutputProjectSettings projectSettings)
         {
@@ -763,28 +765,25 @@ namespace CodeOutputPlugin.Manager
                     
                     );
 
-            if(setsAny)
+            InstanceSave parent = null;
+            if(instance != null)
             {
-                InstanceSave parent = null;
-                if(instance != null)
+                var parentName = defaultState.GetValueRecursive( instance.Name + ".Parent") as string;
+                if(!string.IsNullOrEmpty(parentName))
                 {
-                    var parentName = defaultState.GetValueRecursive( instance.Name + ".Parent") as string;
-                    if(!string.IsNullOrEmpty(parentName))
-                    {
-                        parent = container.GetInstance(parentName);
-                    }
+                    parent = container.GetInstance(parentName);
                 }
+            }
 
-                if(parent?.BaseType?.EndsWith("/StackLayout") == true)
-                {
-                    SetStackLayoutPosition(variablesToConsider, defaultState, instance, stringBuilder, tabCount, prefix);
-                }
-                else
-                {
-                    // If this is part of an absolute layout, we put it in an absolute layout. This is the default
+            if(parent?.BaseType?.EndsWith("/StackLayout") == true)
+            {
+                SetStackLayoutPosition(variablesToConsider, defaultState, instance, stringBuilder, tabCount, prefix);
+            }
+            else
+            {
+                // If this is part of an absolute layout, we put it in an absolute layout. This is the default
 
-                    SetAbsoluteLayoutPosition(variablesToConsider, defaultState, instance, stringBuilder, tabCount, prefix);
-                }
+                SetAbsoluteLayoutPosition(variablesToConsider, defaultState, instance, stringBuilder, tabCount, prefix);
             }
 
         }

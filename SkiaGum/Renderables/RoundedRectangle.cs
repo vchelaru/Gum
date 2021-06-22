@@ -122,7 +122,7 @@ namespace SkiaGum.Renderables
 
                 var applyRotation = rotation != 0;
 
-                if(applyRotation)
+                if (applyRotation)
                 {
                     var oldX = boundingRect.Left;
                     var oldY = boundingRect.Top;
@@ -137,9 +137,20 @@ namespace SkiaGum.Renderables
                     canvas.Translate(oldX, oldY);
                     canvas.RotateDegrees(-rotation);
                 }
+
+                // If this is stroke-only, then the stroke is centered around the bounds 
+                // we pass in. Therefore, we need to move the bounds "in" by half of the 
+                // stroke width
+                if (IsFilled == false)
+                {
+                    boundingRect.Left += StrokeWidth / 2.0f;
+                    boundingRect.Top += StrokeWidth / 2.0f;
+                    boundingRect.Right -= StrokeWidth / 2.0f;
+                    boundingRect.Bottom -= StrokeWidth / 2.0f;
+                }
                 canvas.DrawRoundRect(boundingRect, CornerRadius, CornerRadius, paint);
 
-                if(applyRotation)
+                if (applyRotation)
                 {
                     canvas.Restore();
                 }
