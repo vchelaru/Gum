@@ -1163,6 +1163,24 @@ namespace CodeOutputPlugin.Manager
                 }
             }
 
+            #region Children Layout
+
+            else if (rootName == "Children Layout")
+            {
+                if (instance.BaseType.EndsWith("/StackLayout") && variable.Value is ChildrenLayout valueAsChildrenLayout)
+                {
+                    if(valueAsChildrenLayout == ChildrenLayout.LeftToRightStack)
+                    {
+                        return $"{instance.Name}.Orientation = StackOrientation.Horizontal;";
+                    }
+                    else
+                    {
+                        return $"{instance.Name}.Orientation = StackOrientation.Vertical;";
+                    }
+                }
+            }
+
+            #endregion
 
             return null;
         }
@@ -1170,12 +1188,18 @@ namespace CodeOutputPlugin.Manager
         private static string TryGetFullGumLineReplacement(InstanceSave instance, VariableSave variable)
         {
             var rootName = variable.GetRootName();
+            #region Parent
+
             if (rootName == "Parent")
             {
                 return $"{variable.Value}.Children.Add({instance.Name});";
             }
-            // ignored variables:
-            else if(rootName == "IsXamarinFormsControl" ||
+            #endregion
+
+
+
+                    // ignored variables:
+            else if (rootName == "IsXamarinFormsControl" ||
                 rootName == "ClipsChildren" ||
                 rootName == "ExposeChildrenEvents" ||
                 rootName == "HasEvents")
