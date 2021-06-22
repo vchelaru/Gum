@@ -775,20 +775,20 @@ namespace CodeOutputPlugin.Manager
                 }
             }
 
-            if(parent?.BaseType?.EndsWith("/StackLayout") == true)
-            {
-                SetStackLayoutPosition(variablesToConsider, defaultState, instance, stringBuilder, tabCount, prefix);
-            }
-            else
+            if(parent == null || parent.BaseType?.EndsWith("/AbsoluteLayout") == true)
             {
                 // If this is part of an absolute layout, we put it in an absolute layout. This is the default
 
                 SetAbsoluteLayoutPosition(variablesToConsider, defaultState, instance, stringBuilder, tabCount, prefix);
             }
+            else //if(parent?.BaseType?.EndsWith("/StackLayout") == true)
+            {
+                SetNonAbsoluteLayoutPosition(variablesToConsider, defaultState, instance, stringBuilder, tabCount, prefix);
+            }
 
         }
 
-        private static void SetStackLayoutPosition(List<VariableSave> variablesToConsider, StateSave defaultState, InstanceSave instance, StringBuilder stringBuilder, int tabCount, string prefix)
+        private static void SetNonAbsoluteLayoutPosition(List<VariableSave> variablesToConsider, StateSave defaultState, InstanceSave instance, StringBuilder stringBuilder, int tabCount, string prefix)
         {
             var variableFinder = new RecursiveVariableFinder(defaultState);
 
@@ -826,7 +826,36 @@ namespace CodeOutputPlugin.Manager
                     $"{ToTabs(tabCount)}{instance?.Name ?? "this"}.HeightRequest = {height.ToString(CultureInfo.InvariantCulture)}f;");
             }
 
-            if (xUnits == PositionUnitType.PixelsFromLeft && widthUnits == DimensionUnitType.Absolute)
+            float leftMargin = 0;
+            float rightMargin = 0;
+            float topMargin = 0;
+            float bottomMargin = 0;
+
+            if(xUnits == PositionUnitType.PixelsFromLeft)
+            {
+                leftMargin = x;
+            }
+            if(xUnits == PositionUnitType.PixelsFromLeft && widthUnits == DimensionUnitType.RelativeToContainer)
+            {
+                rightMargin = -width - x;
+            }
+
+            if(yUnits == PositionUnitType.PixelsFromTop)
+            {
+                topMargin = y;
+            }
+            if(yUnits == PositionUnitType.PixelsFromTop && heightUnits == DimensionUnitType.RelativeToChildren)
+            {
+                bottomMargin = -height - y;
+            }
+
+            stringBuilder.AppendLine($"{ToTabs(tabCount)}{instance?.Name}.Margin = new Thickness(" +
+                $"{leftMargin.ToString(CultureInfo.InvariantCulture)}, " +
+                $"{topMargin.ToString(CultureInfo.InvariantCulture)}, " +
+                $"{rightMargin.ToString(CultureInfo.InvariantCulture)}, " +
+                $"{bottomMargin.ToString(CultureInfo.InvariantCulture)});");
+
+            if (widthUnits == DimensionUnitType.Absolute)
             {
                 stringBuilder.AppendLine(
                     $"{ToTabs(tabCount)}{instance?.Name ?? "this"}.HorizontalOptions = LayoutOptions.Start;");
