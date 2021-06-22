@@ -675,12 +675,18 @@ namespace CodeOutputPlugin.Manager
                 else // forms
                 {
                     var instanceBaseType = instance.BaseType;
-                    var isGumCollectionView = instanceBaseType.EndsWith("/GumCollectionView");
 
-                    if(isGumCollectionView)
+                    if(instanceBaseType.EndsWith("/GumCollectionView"))
                     {
                         stringBuilder.AppendLine($"{tabs}var tempFor{instance.Name} = GumScrollBar.CreateScrollableAbsoluteLayout({instance.Name}, ScrollableLayoutParentPlacement.Free);");
                         stringBuilder.AppendLine($"{tabs}MainLayout.Children.Add(tempFor{instance.Name});");
+                    }
+                    else if (instanceBaseType.EndsWith("/ScrollView"))
+                    {
+                        // assume that stack view will be at the base
+                        //stringBuilder.AppendLine($"{tabs}MainLayout.Children.Add(tempFor{instance.Name});");
+                        stringBuilder.AppendLine($"{tabs}this.Content = {instance.Name};");
+                        
                     }
                     else
                     {
@@ -769,7 +775,7 @@ namespace CodeOutputPlugin.Manager
                     }
                 }
 
-                if(parent.BaseType?.EndsWith("/StackLayout") == true)
+                if(parent?.BaseType?.EndsWith("/StackLayout") == true)
                 {
                     SetStackLayoutPosition(variablesToConsider, defaultState, instance, stringBuilder, tabCount, prefix);
                 }
