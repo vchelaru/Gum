@@ -822,8 +822,9 @@ namespace Gum.Managers
             bool affectsTreeView = false;
 
             var selectedElement = SelectedState.Self.SelectedElement;
+            var selectedInstance = SelectedState.Self.SelectedInstance;
 
-            if (SelectedState.Self.SelectedInstance != null)
+            if (selectedInstance != null)
             {
                 affectsTreeView = variableName == "Parent";
                 //variableName = SelectedState.Self.SelectedInstance.Name + "." + variableName;
@@ -860,6 +861,7 @@ namespace Gum.Managers
                 StateSave state = SelectedState.Self.SelectedStateSave;
                 bool wasChangeMade = false;
                 VariableSave variable = state.GetVariableSave(variableName);
+                var oldValue = variable?.Value;
                 if (variable != null)
                 {
                     // Don't remove the variable if it's part of an element - we still want it there
@@ -944,6 +946,8 @@ namespace Gum.Managers
                     RefreshUI(force:true);
                     WireframeObjectManager.Self.RefreshAll(true);
                     SelectionManager.Self.Refresh();
+
+                    PluginManager.Self.VariableSet(selectedElement, selectedInstance, variableName, oldValue);
 
                     if (affectsTreeView)
                     {
