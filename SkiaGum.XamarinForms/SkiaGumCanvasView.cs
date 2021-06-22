@@ -38,18 +38,30 @@ namespace SkiaGum
 
         BindableGraphicalUiElement elementPushed;
 
+        /// <summary>
+        /// The scale used when rendering the visuals. This is usually the device density.
+        /// Leaving this at 1 will make everything draw to-the-pixel regardles of device density.
+        /// </summary>
+        public static float GlobalScale { get; set; } = 1;
+
         #endregion
 
         public SkiaGumCanvasView()
         {
             GumElementsInternal.CollectionChanged += HandleCollectionChanged;
 
+            if (SystemManagers.Default == null)
+            {
+                SystemManagers.Default = new SystemManagers();
+                SystemManagers.Default.Initialize();
+            }
+
             base.Touch += HandleTouch;
         }
 
-        #region Touch-related logic
+        #region Touch-related Logic
 
-        private async void HandleTouch(object sender, SKTouchEventArgs args)
+        protected virtual async void HandleTouch(object sender, SKTouchEventArgs args)
         {
             // Maybe we need to adjust this for other devices?
             float threshold = (float)20;
@@ -68,7 +80,7 @@ namespace SkiaGum
 
                     isWithinThreshold = true;
 
-                    if(customClickEventToRaise != null)
+                    if (customClickEventToRaise != null)
                     {
                         var canProceed = await ExclusiveUiInteractionSemaphor.WaitAsync(0);
 
@@ -120,11 +132,11 @@ namespace SkiaGum
                 case SKTouchAction.Released:
                     {
                         var whatToLighten = elementPushed;
-                        if(whatToLighten != null)
+                        if (whatToLighten != null)
                         {
                             LightenElement(whatToLighten);
                         }
-                        if(customTouchEvent != null)
+                        if (customTouchEvent != null)
                         {
                             var canProceed = await ExclusiveUiInteractionSemaphor.WaitAsync(0);
 
@@ -151,7 +163,7 @@ namespace SkiaGum
 
         private void LightenElement(GraphicalUiElement whatToLighten)
         {
-            if(whatToLighten is ColoredCircleRuntime circleRuntime)
+            if (whatToLighten is ColoredCircleRuntime circleRuntime)
             {
                 circleRuntime.IsDimmed = false;
                 InvalidateSurface();
@@ -171,7 +183,7 @@ namespace SkiaGum
         {
             var clickableElement = FindClickableElement(x, y, GumElementsInternal);
 
-            if(clickableElement != null)
+            if (clickableElement != null)
             {
                 var canProceed = await ExclusiveUiInteractionSemaphor.WaitAsync(0);
 
@@ -195,6 +207,12 @@ namespace SkiaGum
             EnableTouchEvents = true;
         }
 
+        public void SetTouchEvent(Func<float, float, Task> eventHandlingXY)
+        {
+            customTouchEvent = eventHandlingXY;
+            EnableTouchEvents = true;
+        }
+
         public async Task RaiseClickEvent()
         {
             if (customClickEventToRaise != null)
@@ -215,12 +233,6 @@ namespace SkiaGum
             }
         }
 
-        public void SetTouchEvent(Func<float, float, Task> eventHandlingXY)
-        {
-            customTouchEvent = eventHandlingXY;
-            EnableTouchEvents = true;
-        }
-
         private BindableGraphicalUiElement FindClickableElement(float x, float y, IList<BindableGraphicalUiElement> list)
         {
             for (int i = 0; i < list.Count; i++)
@@ -237,9 +249,9 @@ namespace SkiaGum
                     {
                         var children = gumElement.Children.Select(item => item as BindableGraphicalUiElement).Where(item => item != null).ToList();
 
-                        var foundElement =  FindClickableElement(x, y, children);
+                        var foundElement = FindClickableElement(x, y, children);
 
-                        if(foundElement != null)
+                        if (foundElement != null)
                         {
                             return foundElement;
                         }
@@ -249,12 +261,21 @@ namespace SkiaGum
             return null;
         }
 
+        public void SimulateSkTouchAction(SKTouchAction action, float x, float y)
+        {
+            HandleTouch(this, new SKTouchEventArgs(0, action, new SKPoint(x, y), inContact: true));
+        }
+
+        #endregion
+
+
+
         private void HandleCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            switch(e.Action)
+            switch (e.Action)
             {
                 case NotifyCollectionChangedAction.Add:
-                    foreach(var toAdd in e.NewItems)
+                    foreach (var toAdd in e.NewItems)
                     {
                         var bindableGue = toAdd as BindableGraphicalUiElement;
 
@@ -265,8 +286,6 @@ namespace SkiaGum
                     break;
             }
         }
-
-        #endregion
 
         public void Add(BindableGraphicalUiElement toAdd)
         {
@@ -279,7 +298,7 @@ namespace SkiaGum
 
             foreach (var element in GumElementsInternal)
             {
-                if(element is BindableGraphicalUiElement bindableGue)
+                if (element is BindableGraphicalUiElement bindableGue)
                 {
                     bindableGue.BindingContext = this.BindingContext;
                 }
@@ -293,18 +312,29 @@ namespace SkiaGum
 
             canvas.Clear();
 
+            GraphicalUiElement.CanvasWidth = info.Width / GlobalScale;
+            GraphicalUiElement.CanvasHeight = info.Height / GlobalScale;
+            SystemManagers.Default.Renderer.Camera.Zoom = GlobalScale;
 
-            GraphicalUiElement.CanvasWidth = info.Width;
-            GraphicalUiElement.CanvasHeight = info.Height;
+            // Eventually we may want multiple cameras, but for now we can apply the zoom here:
+            canvas.Save();
+
+            if (GlobalScale != 1)
+            {
+                canvas.Scale(GlobalScale);
+            }
 
             foreach (var element in GumElementsInternal)
             {
-                if(element.Visible)
+                if (element.Visible)
                 {
                     element.UpdateLayout();
                     ((IRenderable)element).Render(canvas);
                 }
             }
+
+            canvas.Restore();
+
             base.OnPaintSurface(args);
         }
 

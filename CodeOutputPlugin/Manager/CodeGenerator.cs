@@ -771,46 +771,7 @@ namespace CodeOutputPlugin.Manager
 
                 if(parent.BaseType?.EndsWith("/StackLayout") == true)
                 {
-                    var variableFinder = new RecursiveVariableFinder(defaultState);
-
-                    var x = variableFinder.GetValue<float>(prefix + "X");
-                    var y = variableFinder.GetValue<float>(prefix + "Y");
-                    var width = variableFinder.GetValue<float>(prefix + "Width");
-                    var height = variableFinder.GetValue<float>(prefix + "Height");
-
-                    var xUnits = variableFinder.GetValue<PositionUnitType>(prefix + "X Units");
-                    var yUnits = variableFinder.GetValue<PositionUnitType>(prefix + "Y Units");
-                    var widthUnits = variableFinder.GetValue<DimensionUnitType>(prefix + "Width Units");
-                    var heightUnits = variableFinder.GetValue<DimensionUnitType>(prefix + "Height Units");
-
-                    var xOrigin = variableFinder.GetValue<HorizontalAlignment>(prefix + "X Origin");
-                    var yOrigin = variableFinder.GetValue<VerticalAlignment>(prefix + "Y Origin");
-
-                    variablesToConsider.RemoveAll(item => item.Name == prefix + "X");
-                    variablesToConsider.RemoveAll(item => item.Name == prefix + "Y");
-                    variablesToConsider.RemoveAll(item => item.Name == prefix + "Width");
-                    variablesToConsider.RemoveAll(item => item.Name == prefix + "Height");
-                    variablesToConsider.RemoveAll(item => item.Name == prefix + "X Units");
-                    variablesToConsider.RemoveAll(item => item.Name == prefix + "Y Units");
-                    variablesToConsider.RemoveAll(item => item.Name == prefix + "Width Units");
-                    variablesToConsider.RemoveAll(item => item.Name == prefix + "Height Units");
-
-                    if(widthUnits == DimensionUnitType.Absolute)
-                    {
-                        stringBuilder.AppendLine(
-                            $"{ToTabs(tabCount)}{instance?.Name ?? "this"}.WidthRequest = {width.ToString(CultureInfo.InvariantCulture)}f;");
-                    }
-                    if(heightUnits == DimensionUnitType.Absolute)
-                    {
-                        stringBuilder.AppendLine(
-                            $"{ToTabs(tabCount)}{instance?.Name ?? "this"}.HeightRequest = {height.ToString(CultureInfo.InvariantCulture)}f;");
-                    }
-
-                    if(xUnits == PositionUnitType.PixelsFromLeft)
-                    {
-                        stringBuilder.AppendLine(
-                            $"{ToTabs(tabCount)}{instance?.Name ?? "this"}.HorizontalOptions = LayoutOptions.Start;");
-                    }
+                    SetStackLayoutPosition(variablesToConsider, defaultState, instance, stringBuilder, tabCount, prefix);
                 }
                 else
                 {
@@ -820,6 +781,56 @@ namespace CodeOutputPlugin.Manager
                 }
             }
 
+        }
+
+        private static void SetStackLayoutPosition(List<VariableSave> variablesToConsider, StateSave defaultState, InstanceSave instance, StringBuilder stringBuilder, int tabCount, string prefix)
+        {
+            var variableFinder = new RecursiveVariableFinder(defaultState);
+
+            var x = variableFinder.GetValue<float>(prefix + "X");
+            var y = variableFinder.GetValue<float>(prefix + "Y");
+            var width = variableFinder.GetValue<float>(prefix + "Width");
+            var height = variableFinder.GetValue<float>(prefix + "Height");
+
+            var xUnits = variableFinder.GetValue<PositionUnitType>(prefix + "X Units");
+            var yUnits = variableFinder.GetValue<PositionUnitType>(prefix + "Y Units");
+            var widthUnits = variableFinder.GetValue<DimensionUnitType>(prefix + "Width Units");
+            var heightUnits = variableFinder.GetValue<DimensionUnitType>(prefix + "Height Units");
+
+            var xOrigin = variableFinder.GetValue<HorizontalAlignment>(prefix + "X Origin");
+            var yOrigin = variableFinder.GetValue<VerticalAlignment>(prefix + "Y Origin");
+
+            variablesToConsider.RemoveAll(item => item.Name == prefix + "X");
+            variablesToConsider.RemoveAll(item => item.Name == prefix + "Y");
+            variablesToConsider.RemoveAll(item => item.Name == prefix + "Width");
+            variablesToConsider.RemoveAll(item => item.Name == prefix + "Height");
+            variablesToConsider.RemoveAll(item => item.Name == prefix + "X Units");
+            variablesToConsider.RemoveAll(item => item.Name == prefix + "Y Units");
+            variablesToConsider.RemoveAll(item => item.Name == prefix + "Width Units");
+            variablesToConsider.RemoveAll(item => item.Name == prefix + "Height Units");
+
+            if (widthUnits == DimensionUnitType.Absolute)
+            {
+                stringBuilder.AppendLine(
+                    $"{ToTabs(tabCount)}{instance?.Name ?? "this"}.WidthRequest = {width.ToString(CultureInfo.InvariantCulture)}f;");
+            }
+
+            if (heightUnits == DimensionUnitType.Absolute)
+            {
+                stringBuilder.AppendLine(
+                    $"{ToTabs(tabCount)}{instance?.Name ?? "this"}.HeightRequest = {height.ToString(CultureInfo.InvariantCulture)}f;");
+            }
+
+            if (xUnits == PositionUnitType.PixelsFromLeft && widthUnits == DimensionUnitType.Absolute)
+            {
+                stringBuilder.AppendLine(
+                    $"{ToTabs(tabCount)}{instance?.Name ?? "this"}.HorizontalOptions = LayoutOptions.Start;");
+            }
+            else if(widthUnits == DimensionUnitType.RelativeToContainer)
+            {
+                stringBuilder.AppendLine(
+                    $"{ToTabs(tabCount)}{instance?.Name ?? "this"}.HorizontalOptions = LayoutOptions.Fill;");
+            }
         }
 
         private static void SetAbsoluteLayoutPosition(List<VariableSave> variablesToConsider, StateSave defaultState, InstanceSave instance, StringBuilder stringBuilder, int tabCount, string prefix)
