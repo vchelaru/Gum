@@ -17,19 +17,13 @@ namespace SkiaGum.Renderables
         public int Alpha
         {
             get => Color.Alpha;
-            set
-            {
-                this.Color = new SKColor(this.Color.Red, this.Color.Green, this.Color.Blue, (byte)value);
-            }
+            set => this.Color = new SKColor(this.Color.Red, this.Color.Green, this.Color.Blue, (byte)value);
         }
 
         public int Blue
         {
             get => Color.Blue;
-            set
-            {
-                this.Color = new SKColor(this.Color.Red, this.Color.Green, (byte)value, this.Color.Alpha);
-            }
+            set => this.Color = new SKColor(this.Color.Red, this.Color.Green, (byte)value, this.Color.Alpha);
         }
 
         public int Green

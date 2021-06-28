@@ -747,6 +747,13 @@ namespace CodeOutputPlugin.Manager
 
         private static void ProcessPositionAndSize(List<VariableSave> variablesToConsider, StateSave defaultState, InstanceSave instance, ElementSave container, StringBuilder stringBuilder, int tabCount)
         {
+            //////////////////Early out/////////////////////
+            if(container is ScreenSave && instance == null)
+            {
+                // screens can't be positioned
+                return;
+            }
+            /////////////// End Early Out/////////////
             string prefix = instance?.Name == null ? "" : instance.Name + ".";
 
             var setsAny =
@@ -779,7 +786,7 @@ namespace CodeOutputPlugin.Manager
             {
                 // If this is part of an absolute layout, we put it in an absolute layout. This is the default
 
-                SetAbsoluteLayoutPosition(variablesToConsider, defaultState, instance, stringBuilder, tabCount, prefix);
+                SetAbsoluteLayoutPosition(variablesToConsider, defaultState, instance, container, stringBuilder, tabCount);
             }
             else //if(parent?.BaseType?.EndsWith("/StackLayout") == true)
             {
@@ -867,9 +874,13 @@ namespace CodeOutputPlugin.Manager
             }
         }
 
-        private static void SetAbsoluteLayoutPosition(List<VariableSave> variablesToConsider, StateSave defaultState, InstanceSave instance, StringBuilder stringBuilder, int tabCount, string prefix)
+        private static void SetAbsoluteLayoutPosition(List<VariableSave> variablesToConsider, StateSave defaultState, InstanceSave instance, ElementSave container, StringBuilder stringBuilder, int tabCount)
         {
+            string prefix = instance?.Name == null ? "" : instance.Name + ".";
+
             var variableFinder = new RecursiveVariableFinder(defaultState);
+
+            #region Get recursive values for position and size
 
             var x = variableFinder.GetValue<float>(prefix + "X");
             var y = variableFinder.GetValue<float>(prefix + "Y");
@@ -893,6 +904,8 @@ namespace CodeOutputPlugin.Manager
             variablesToConsider.RemoveAll(item => item.Name == prefix + "Width Units");
             variablesToConsider.RemoveAll(item => item.Name == prefix + "Height Units");
 
+            #endregion
+
             List<string> proportionalFlags = new List<string>();
 
             const string WidthProportionalFlag = "AbsoluteLayoutFlags.WidthProportional";
@@ -914,7 +927,7 @@ namespace CodeOutputPlugin.Manager
                 }
                 else
                 {
-                    // not allowed!!!
+                    width = CalculateAbsoluteWidth(instance, container, variableFinder);
                 }
             }
             if (heightUnits == DimensionUnitType.Percentage)
@@ -931,13 +944,17 @@ namespace CodeOutputPlugin.Manager
                 }
                 else
                 {
-                    // not allowed!
+                    height = CalculateAbsoluteHeight(instance, container, variableFinder);
+                    
                 }
             }
 
             // special case
             // If we're using the center with x=0 we'll pretend it's the same as 50% 
-            if (xUnits == PositionUnitType.PixelsFromCenterX && widthUnits == DimensionUnitType.Absolute && xOrigin == HorizontalAlignment.Center)
+            if (xUnits == PositionUnitType.PixelsFromCenterX && 
+                // why does the width unit even matter? Should be the same regardless of width unit...
+                //widthUnits == DimensionUnitType.Absolute && 
+                xOrigin == HorizontalAlignment.Center)
             {
                 if (x == 0)
                 {
@@ -1035,8 +1052,10 @@ namespace CodeOutputPlugin.Manager
                 }
             }
 
+            var instanceOrThis =
+                instance?.Name ?? "this";
             string boundsText =
-                $"{ToTabs(tabCount)}AbsoluteLayout.SetLayoutBounds({instance?.Name ?? "this"}, new Rectangle({xString}, {yString}, {widthString}, {heightString}));";
+                $"{ToTabs(tabCount)}AbsoluteLayout.SetLayoutBounds({instanceOrThis}, new Rectangle({xString}, {yString}, {widthString}, {heightString}));";
             string flagsText = null;
             if (proportionalFlags.Count > 0)
             {
@@ -1049,7 +1068,7 @@ namespace CodeOutputPlugin.Manager
                     }
                     flagsArguments += proportionalFlags[i];
                 }
-                flagsText = $"{ToTabs(tabCount)}AbsoluteLayout.SetLayoutFlags({instance?.Name ?? "this"}, {flagsArguments});";
+                flagsText = $"{ToTabs(tabCount)}AbsoluteLayout.SetLayoutFlags({instanceOrThis}, {flagsArguments});";
             }
             // assume every object has X, which it won't, so we will have to improve this
             if (string.IsNullOrWhiteSpace(flagsText))
@@ -1060,6 +1079,109 @@ namespace CodeOutputPlugin.Manager
             {
                 stringBuilder.AppendLine($"{boundsText}\n{flagsText}");
             }
+
+            // not sure why these apply even though we're using values on the AbsoluteLayout
+            if(!proportionalFlags.Contains(WidthProportionalFlag) && (widthUnits == DimensionUnitType.RelativeToContainer || widthUnits == DimensionUnitType.Absolute))
+            {
+                stringBuilder.AppendLine($"{ToTabs(tabCount)}{instanceOrThis}.WidthRequest = {width.ToString(CultureInfo.InvariantCulture)}f;");
+            }
+            if (!proportionalFlags.Contains(HeightProportionalFlag) && heightUnits == DimensionUnitType.RelativeToContainer || heightUnits == DimensionUnitType.Absolute)
+            {
+                stringBuilder.AppendLine($"{ToTabs(tabCount)}{instanceOrThis}.HeightRequest = {height.ToString(CultureInfo.InvariantCulture)}f;");
+            }
+
+            //If the object is width proportional, then it must use a .HorizontalOptions = LayoutOptions.Fill; or else the proportional width won't apply
+            if(proportionalFlags.Contains(WidthProportionalFlag))
+            {
+                stringBuilder.AppendLine($"{ToTabs(tabCount)}{instanceOrThis}.HorizontalOptions = LayoutOptions.Fill;");
+            }
+            // should we do the same to vertical? Maybe, but waiting for a natural use case to test it
+        }
+
+        private static float CalculateAbsoluteWidth(InstanceSave instance, ElementSave container, RecursiveVariableFinder variableFinder)
+        {
+            string prefix = instance?.Name == null ? "" : instance.Name + ".";
+
+
+            var x = variableFinder.GetValue<float>(prefix + "X");
+            var width = variableFinder.GetValue<float>(prefix + "Width");
+
+            var xUnits = variableFinder.GetValue<PositionUnitType>(prefix + "X Units");
+            var widthUnits = variableFinder.GetValue<DimensionUnitType>(prefix + "Width Units");
+
+            var xOrigin = variableFinder.GetValue<HorizontalAlignment>(prefix + "X Origin");
+
+            var parentName = variableFinder.GetValue<string>(prefix + "Parent");
+
+            var parent = container.GetInstance(parentName);
+
+            float toReturn = 0;
+            if (instance == null)
+            {
+                toReturn = width; // handle this eventually?
+            }
+            else if(widthUnits == DimensionUnitType.Absolute)
+            {
+                toReturn = width;
+            }
+            else if(widthUnits == DimensionUnitType.RelativeToContainer)
+            {
+                if(parent == null)
+                {
+                    toReturn = width + GumState.Self.ProjectState.GumProjectSave.DefaultCanvasWidth;
+                }
+                else
+                {
+                    var parentWidth = CalculateAbsoluteWidth(parent, container, variableFinder);
+
+                    toReturn = parentWidth + width;
+                }
+            }
+
+            return toReturn;
+        }
+
+        private static float CalculateAbsoluteHeight(InstanceSave instance, ElementSave container, RecursiveVariableFinder variableFinder)
+        {
+            string prefix = instance?.Name == null ? "" : instance.Name + ".";
+
+
+            var y = variableFinder.GetValue<float>(prefix + "Y");
+            var height = variableFinder.GetValue<float>(prefix + "Height");
+
+            var yUnits = variableFinder.GetValue<PositionUnitType>(prefix + "Y Units");
+            var heightUnits = variableFinder.GetValue<DimensionUnitType>(prefix + "Height Units");
+
+            var yOrigin = variableFinder.GetValue<HorizontalAlignment>(prefix + "Y Origin");
+
+            var parentName = variableFinder.GetValue<string>(prefix + "Parent");
+
+            var parent = container.GetInstance(parentName);
+
+            float toReturn = 0;
+            if (instance == null)
+            {
+                toReturn = height; // handle this eventually?
+            }
+            else if (heightUnits == DimensionUnitType.Absolute)
+            {
+                toReturn = height;
+            }
+            else if (heightUnits == DimensionUnitType.RelativeToContainer)
+            {
+                if (parent == null)
+                {
+                    toReturn = height + GumState.Self.ProjectState.GumProjectSave.DefaultCanvasHeight;
+                }
+                else
+                {
+                    var parentWidth = CalculateAbsoluteHeight(parent, container, variableFinder);
+
+                    toReturn = parentWidth + height;
+                }
+            }
+
+            return toReturn;
         }
 
         private static void FillWithInstanceDeclaration(InstanceSave instance, ElementSave container, StringBuilder stringBuilder, int tabCount = 0)
