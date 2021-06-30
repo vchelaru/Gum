@@ -4,6 +4,7 @@ using Gum.DataTypes.ComponentModel;
 using Gum.DataTypes.Variables;
 using Gum.Logic;
 using Gum.Managers;
+using Gum.Plugins;
 using Gum.Reflection;
 using Gum.ToolStates;
 using Gum.Wireframe;
@@ -427,6 +428,8 @@ namespace Gum.PropertyGridHelpers
                         }
 
                         variableSave.ExposedAsName = tiw.Result;
+
+                        PluginManager.Self.VariableAdd(elementSave, tiw.Result);
 
                         GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
                         GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);

@@ -59,6 +59,7 @@ namespace CodeOutputPlugin
 
             this.ElementSelected += HandleElementSelected;
 
+            this.VariableAdd += HandleVariableAdd;
             this.VariableSet += HandleVariableSet;
             
             this.StateWindowTreeNodeSelected += HandleStateSelected;
@@ -123,6 +124,7 @@ namespace CodeOutputPlugin
         }
 
         private void HandleVariableSet(ElementSave element, InstanceSave instance, string arg3, object arg4) => HandleRefreshAndExport();
+        private void HandleVariableAdd(ElementSave elementSave, string variableName) => HandleRefreshAndExport();
 
         private void HandleStateRename(StateSave arg1, string arg2) => HandleRefreshAndExport();
         private void HandleStateAdd(StateSave obj) => HandleRefreshAndExport();
