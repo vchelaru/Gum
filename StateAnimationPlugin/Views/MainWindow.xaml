@@ -5,7 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:views="clr-namespace:StateAnimationPlugin.Views"
              mc:Ignorable="d" 
-             Height="400" Width="580">
+             d:DesignWidth="400" d:DesignHeight="580">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"></RowDefinition>

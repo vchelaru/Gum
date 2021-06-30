@@ -72,11 +72,10 @@ namespace Gum.Plugins
         //    }
         //}
 
-        //public void Focus()
-        //{
-        //    Page.Focus();
-        //    Page.LastTimeClicked = DateTime.Now;
-        //}
+        public void Focus()
+        {
+            Page.Focus();
+        }
 
         //public bool CanClose
         //{

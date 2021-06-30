@@ -486,6 +486,8 @@ namespace Gum.Logic
 
             SelectedState.Self.SelectedElement = toAdd;
 
+            PluginManager.Self.ElementDuplicate(mCopiedElement, toAdd);
+
             GumCommands.Self.FileCommands.TryAutoSaveElement(toAdd);
             GumCommands.Self.FileCommands.TryAutoSaveProject();
         }

@@ -72,15 +72,9 @@ namespace StateAnimationPlugin
 
         private void AssignEvents()
         {
-            this.ElementSelected += delegate
-            {
-                RefreshViewModel();
-            };
+            this.ElementSelected += (_) => RefreshViewModel();
 
-            this.InstanceSelected += delegate
-            {
-                RefreshViewModel();
-            };
+            this.InstanceSelected += (_, __) => RefreshViewModel();
 
             this.InstanceRename += HandleInstanceRename;
             this.StateRename += HandleStateRename;
@@ -171,19 +165,16 @@ namespace StateAnimationPlugin
 
                 mMainWindow.FirstRowWidth = new GridLength((double)settings.FirstToSecondColumnRatio, GridUnitType.Star);
                 mMainWindow.SecondRowWidth = new GridLength(1, GridUnitType.Star);
-                // This fixes an issue where embedded wpf text boxes don't get input, as explained here:
-                // http://stackoverflow.com/questions/835878/wpf-textbox-not-accepting-input-when-in-elementhost-in-window-forms
-                //ElementHost.EnableModelessKeyboardInterop(mMainWindow);
-                //mMainWindow.Show();
-                //mMainWindow.Closed += (not, used) => Gum.ToolStates.SelectedState.Self.CustomCurrentStateSave = null;
                 mMainWindow.AddStateKeyframeClicked += HandleAddStateKeyframe;
                 mMainWindow.AnimationColumnsResized += HandleAnimationColumnsResized;
             }
                 
-            GumCommands.Self.GuiCommands.AddControl(mMainWindow, "Animations", 
+            var pluginTab = GumCommands.Self.GuiCommands.AddControl(mMainWindow, "Animations", 
                 TabLocation.RightBottom);
-
             GumCommands.Self.GuiCommands.ShowControl(mMainWindow);
+            
+            pluginTab.Focus();
+
 
             // forces a refresh:
             mCurrentViewModel = new ElementAnimationsViewModel();
