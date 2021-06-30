@@ -263,6 +263,12 @@ namespace CodeOutputPlugin.Manager
             }
             stringBuilder.AppendLine();
 
+            // fill with variable binding after the instances have been created
+            if(visualApi == VisualApi.XamarinForms)
+            {
+                FillWithVariableBinding(element, stringBuilder, tabCount);
+            }
+
             foreach (var instance in element.Instances)
             {
                 FillWithVariableAssignments(instance, element, stringBuilder, tabCount);
@@ -286,6 +292,29 @@ namespace CodeOutputPlugin.Manager
 
             tabCount--;
             stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+        }
+
+        private static void FillWithVariableBinding(ElementSave element, StringBuilder stringBuilder, int tabCount)
+        {
+            var boundVariables = new List<VariableSave>();
+
+            foreach (var variable in element.DefaultState.Variables)
+            {
+                if (!string.IsNullOrEmpty(variable.ExposedAsName))
+                {
+                    var instanceName = variable.SourceObject;
+                    // make sure this instance is a XamForms object otherwise we don't need to set the binding
+                    var isXamForms = (element.DefaultState.GetValueRecursive($"{instanceName}.IsXamarinFormsControl") as bool?) ?? false;
+
+                    if(isXamForms)
+                    {
+                        var instance = element.GetInstance(instanceName);
+                        var instanceType = GetClassNameForType(instance.BaseType, VisualApi.XamarinForms); 
+                        stringBuilder.AppendLine(ToTabs(tabCount) + $"{instanceName}.SetBinding({instanceType}.{variable.GetRootName()}Property, nameof({variable.ExposedAsName}));");
+                    }
+                }
+            
+            }
         }
 
         public static string GetCodeForState(ElementSave container, StateSave stateSave, VisualApi visualApi)
@@ -462,23 +491,52 @@ namespace CodeOutputPlugin.Manager
 
         private static void FillWithExposedVariable(VariableSave exposedVariable, ElementSave container, StringBuilder stringBuilder, int tabCount)
         {
+
+            // if both the container and the instance are xamarin forms objects, then we can try to do some bubble-up binding
+            var instanceName = exposedVariable.SourceObject;
+            bool usesBinding = GetIfInstanceShouldBind(container, instanceName);
             var type = exposedVariable.Type;
 
-            if(exposedVariable.IsState(container, out ElementSave stateContainer, out StateSaveCategory category))
+            if (exposedVariable.IsState(container, out ElementSave stateContainer, out StateSaveCategory category))
             {
                 var stateContainerType = GetClassNameForType(stateContainer.Name, VisualApi.Gum);
                 type = $"{stateContainerType}.{category.Name}";
             }
 
-            stringBuilder.AppendLine(ToTabs(tabCount) + $"public {type} {exposedVariable.ExposedAsName}");
-            stringBuilder.AppendLine(ToTabs(tabCount) + "{");
-            tabCount++;
-            stringBuilder.AppendLine(ToTabs(tabCount) + $"get => {exposedVariable.Name};");
-            stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {exposedVariable.Name} = value;");
-            tabCount--;
+            if (usesBinding)
+            {
+                var containerClassName = GetClassNameForType(container.Name, VisualApi.XamarinForms);
+                stringBuilder.AppendLine($"{ToTabs(tabCount)}public static readonly BindableProperty {exposedVariable.ExposedAsName}Property = " +
+                    $"BindableProperty.Create(nameof({exposedVariable.ExposedAsName}),typeof({type}),typeof({containerClassName}));");
 
-            stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"public string {exposedVariable.ExposedAsName}");
+                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+                tabCount++;
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"get => ({type})GetValue({exposedVariable.ExposedAsName}Property);");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"set => SetValue({exposedVariable.ExposedAsName}Property, value);");
+                tabCount--;
+                stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+            }
+            else
+            {
 
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"public {type} {exposedVariable.ExposedAsName}");
+                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+                tabCount++;
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"get => {exposedVariable.Name};");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {exposedVariable.Name} = value;");
+                tabCount--;
+
+                stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+            }
+        }
+
+        private static bool GetIfInstanceShouldBind(ElementSave container, string instanceName)
+        {
+            var isContainerXamarinForms = (container.DefaultState.GetValueRecursive("IsXamarinFormsControl") as bool?) ?? false;
+            var isInstanceXamarinForms = (container.DefaultState.GetValueRecursive($"{instanceName}.IsXamarinFormsControl") as bool?) ?? false;
+            var usesBinding = isContainerXamarinForms && isInstanceXamarinForms;
+            return usesBinding;
         }
 
         public static string GetCodeForInstance(InstanceSave instance, ElementSave element, VisualApi visualApi)
@@ -507,13 +565,21 @@ namespace CodeOutputPlugin.Manager
             VisualApi visualApi = VisualApi.Gum;
 
             var defaultState = element.DefaultState;
-            var isXamForms = defaultState.GetValueRecursive($"{instance.Name}.IsXamarinFormsControl") as bool?;
-            if(isXamForms == true)
+            var isXamForms = (defaultState.GetValueRecursive($"{instance.Name}.IsXamarinFormsControl") as bool?) ?? false;
+            if(isXamForms)
             {
                 visualApi = VisualApi.XamarinForms;
             }
 
             stringBuilder.AppendLine($"{tabs}{instance.Name} = new {GetClassNameForType(instance.BaseType, visualApi)}();");
+
+            var shouldSetBinding =
+                isXamForms && defaultState.Variables.Any(item => !string.IsNullOrEmpty(item.ExposedAsName) && item.SourceObject == instance.Name);
+            // If it's xamarin forms and we have exposed variables, then let's set up binding to this
+            if (shouldSetBinding)
+            {
+                stringBuilder.AppendLine($"{tabs}{instance.Name}.BindingContext = this;");
+            }
         }
 
         private static void FillWithVariableAssignments(ElementSave element, VisualApi visualApi, StringBuilder stringBuilder, int tabCount = 0)
@@ -592,7 +658,7 @@ namespace CodeOutputPlugin.Manager
         {
             #region Get variables to consider
 
-            var variablesToConsider = GetVariablesToConsider(instance)
+            var variablesToAssignValues = GetVariablesForValueAssignmentCode(instance)
                 // make "Parent" first
                 // .. actually we need to make parent last so that it can properly assign parent on scrollables
                 .OrderBy(item => item.GetRootName() == "Parent")
@@ -640,9 +706,9 @@ namespace CodeOutputPlugin.Manager
 
             // sometimes variables have to be processed in groups. For example, RGB values
             // have to be assigned all at once in a Color value in XamForms;
-            ProcessVariableGroups(variablesToConsider, container.DefaultState, instance, container, visualApi, stringBuilder, tabCount);
+            ProcessVariableGroups(variablesToAssignValues, container.DefaultState, instance, container, visualApi, stringBuilder, tabCount);
 
-            foreach (var variable in variablesToConsider)
+            foreach (var variable in variablesToAssignValues)
             {
                 var codeLine = GetCodeLine(instance, variable, container, visualApi, defaultState);
 
@@ -664,7 +730,7 @@ namespace CodeOutputPlugin.Manager
             // For scrollable GumContainers we need to have the parent assigned *after* the AbsoluteLayout rectangle:
             #region Assign Parent
 
-            var hasParent = variablesToConsider.Any(item => item.GetRootName() == "Parent");
+            var hasParent = variablesToAssignValues.Any(item => item.GetRootName() == "Parent");
 
             if (!hasParent && !instance.DefinedByBase)
             {
@@ -1547,7 +1613,7 @@ namespace CodeOutputPlugin.Manager
             }
         }
 
-        private static VariableSave[] GetVariablesToConsider(InstanceSave instance)
+        private static VariableSave[] GetVariablesForValueAssignmentCode(InstanceSave instance)
         {
             var baseElement = Gum.Managers.ObjectFinder.Self.GetElementSave(instance.BaseType);
             if(baseElement == null)

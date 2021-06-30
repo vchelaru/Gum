@@ -92,6 +92,9 @@ namespace Gum.DataTypes.Variables
             }
         }
 
+        /// <summary>
+        /// The name of the object that this variable references. For example if the variable is "MyButton.Text", then the SourceObject is "MyButton"
+        /// </summary>
         [XmlIgnore]
         public string SourceObject => sourceObject;
 
