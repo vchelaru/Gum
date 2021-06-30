@@ -930,6 +930,11 @@ namespace CodeOutputPlugin.Manager
                     width = CalculateAbsoluteWidth(instance, container, variableFinder);
                 }
             }
+            else if(widthUnits == DimensionUnitType.RelativeToChildren)
+            {
+                // in this case we want to auto-size, which is what -1 indicates
+                width = -1;
+            }
             if (heightUnits == DimensionUnitType.Percentage)
             {
                 height /= 100.0f;
@@ -947,6 +952,11 @@ namespace CodeOutputPlugin.Manager
                     height = CalculateAbsoluteHeight(instance, container, variableFinder);
                     
                 }
+            }
+            if(heightUnits == DimensionUnitType.RelativeToChildren)
+            {
+                // see above on width relative to container for information
+                height = -1;
             }
 
             // special case

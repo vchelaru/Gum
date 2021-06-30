@@ -75,7 +75,7 @@ namespace Gum.Wireframe
             {
 
                 rootIpso.Tag = elementSave;
-                mGraphicalElements.Add(rootIpso);
+                AllIpsos.Add(rootIpso);
 
                 rootIpso.ElementSave = elementSave;
                 if (isScreen == false)
@@ -83,7 +83,7 @@ namespace Gum.Wireframe
                     // We used to not add the IPSO for the root element to the list of graphical elements
                     // and this prevented selection.  I'm not sure if this was intentionally left out or not
                     // but I think it should be here
-                    mGraphicalElements.Add(rootIpso);
+                    AllIpsos.Add(rootIpso);
 
                     rootIpso.CreateGraphicalComponent(elementSave, null);
 
@@ -150,7 +150,7 @@ namespace Gum.Wireframe
                     else
                     {
                         newlyAdded.Add(child);
-                        mGraphicalElements.Add(child);
+                        AllIpsos.Add(child);
                     }
                 }
 
@@ -195,10 +195,27 @@ namespace Gum.Wireframe
             }
             GraphicalUiElement.IsAllLayoutSuspended = false;
 
+            var tempSorted = AllIpsos.OrderBy(item => GetDepth(item)).ToArray();
+            AllIpsos.Clear();
+            AllIpsos.AddRange(tempSorted);
+
             rootIpso.UpdateFontRecursive();
             rootIpso.UpdateLayout();
 
             return rootIpso;
+        }
+
+        private int GetDepth(GraphicalUiElement item)
+        {
+            var parentGue = item.Parent as GraphicalUiElement;
+            if(parentGue == null)
+            {
+                return 0;
+            }
+            else
+            {
+                return 1 + GetDepth(parentGue);
+            }
         }
 
         private GraphicalUiElement CreateRepresentationForInstance(InstanceSave instance, InstanceSave parentInstance, List<ElementWithState> elementStack, GraphicalUiElement container)

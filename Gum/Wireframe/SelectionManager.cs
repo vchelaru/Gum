@@ -260,10 +260,6 @@ namespace Gum.Wireframe
         /// to un-highlight anything if the cursor is outside of the window</param>
         void HighlightActivity(bool forceNoHighlight)
         {
-            if(forceNoHighlight && HighlightedIpso != null)
-            {
-                int m = 3;
-            }
             if (!InputLibrary.Cursor.Self.PrimaryDownIgnoringIsInWindow)
             {
                 // There is currently a known
@@ -279,7 +275,6 @@ namespace Gum.Wireframe
 
                 IPositionedSizedObject representationOver = null;
 
-
                 if (EditingManager.Self.ContextMenuStrip != null && EditingManager.Self.ContextMenuStrip.Visible)
                 {
                     // do nothing!
@@ -289,7 +284,6 @@ namespace Gum.Wireframe
                     if(WireframeEditor != null)
                     {
                         cursorToSet = WireframeEditor.GetWindowsCursorToShow(cursorToSet, worldXAt, worldYAt);
-
                     }
 
                     #region Selecting element activity
@@ -318,7 +312,6 @@ namespace Gum.Wireframe
                             {
                                 List<ElementWithState> elementStack = new List<ElementWithState>();
                                 elementStack.Add(new ElementWithState(SelectedState.Self.SelectedElement));
-
 
                                 representationOver =
                                     GetRepresentationAt(worldXAt, worldYAt, false, elementStack);
@@ -384,7 +377,6 @@ namespace Gum.Wireframe
         {
             GraphicalUiElement ipsoOver = null;
 
-
             // First check if we're over the current
             var selectedRepresentations = WireframeObjectManager.Self.GetSelectedRepresentations();
 
@@ -425,7 +417,6 @@ namespace Gum.Wireframe
                                 }
 
                             }
-
                         }
                     }
                 }
@@ -439,7 +430,6 @@ namespace Gum.Wireframe
                 // in the Renderer's Layer[0], test if they're part of one of the WireframeObjectManager's
                 // lists, and if so, check collision.
 
-                
                 if (indexToStartAt == -1)
                 {
                     indexToStartAt = WireframeObjectManager.Self.AllIpsos.Count;
