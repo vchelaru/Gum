@@ -507,7 +507,7 @@ namespace CodeOutputPlugin.Manager
             {
                 var containerClassName = GetClassNameForType(container.Name, VisualApi.XamarinForms);
                 stringBuilder.AppendLine($"{ToTabs(tabCount)}public static readonly BindableProperty {exposedVariable.ExposedAsName}Property = " +
-                    $"BindableProperty.Create(nameof({exposedVariable.ExposedAsName}),typeof({type}),typeof({containerClassName}));");
+                    $"BindableProperty.Create(nameof({exposedVariable.ExposedAsName}),typeof({type}),typeof({containerClassName}), defaultBindingMode: BindingMode.TwoWay);");
 
                 stringBuilder.AppendLine(ToTabs(tabCount) + $"public string {exposedVariable.ExposedAsName}");
                 stringBuilder.AppendLine(ToTabs(tabCount) + "{");
@@ -856,12 +856,13 @@ namespace CodeOutputPlugin.Manager
             }
             else //if(parent?.BaseType?.EndsWith("/StackLayout") == true)
             {
-                SetNonAbsoluteLayoutPosition(variablesToConsider, defaultState, instance, stringBuilder, tabCount, prefix);
+                SetNonAbsoluteLayoutPosition(variablesToConsider, defaultState, instance, stringBuilder, tabCount, prefix, parent.BaseType);
             }
 
         }
 
-        private static void SetNonAbsoluteLayoutPosition(List<VariableSave> variablesToConsider, StateSave defaultState, InstanceSave instance, StringBuilder stringBuilder, int tabCount, string prefix)
+        private static void SetNonAbsoluteLayoutPosition(List<VariableSave> variablesToConsider, StateSave defaultState, InstanceSave instance, 
+            StringBuilder stringBuilder, int tabCount, string prefix, string parentBaseType)
         {
             var variableFinder = new RecursiveVariableFinder(defaultState);
 
@@ -904,7 +905,9 @@ namespace CodeOutputPlugin.Manager
             float topMargin = 0;
             float bottomMargin = 0;
 
-            if(xUnits == PositionUnitType.PixelsFromLeft)
+            var isStackLayout = parentBaseType?.EndsWith("/StackLayout") == true;
+
+            if (xUnits == PositionUnitType.PixelsFromLeft)
             {
                 leftMargin = x;
             }
@@ -919,7 +922,11 @@ namespace CodeOutputPlugin.Manager
             }
             if(yUnits == PositionUnitType.PixelsFromTop && heightUnits == DimensionUnitType.RelativeToChildren)
             {
-                bottomMargin = -height - y;
+                if(isStackLayout == false)
+                {
+                    // If it's a stack layout, we don't want to subtract from here.
+                    bottomMargin = -height - y;
+                }
             }
 
             stringBuilder.AppendLine($"{ToTabs(tabCount)}{instance?.Name}.Margin = new Thickness(" +
@@ -928,7 +935,7 @@ namespace CodeOutputPlugin.Manager
                 $"{rightMargin.ToString(CultureInfo.InvariantCulture)}, " +
                 $"{bottomMargin.ToString(CultureInfo.InvariantCulture)});");
 
-            if (widthUnits == DimensionUnitType.Absolute)
+            if (widthUnits == DimensionUnitType.Absolute || widthUnits == DimensionUnitType.RelativeToChildren)
             {
                 stringBuilder.AppendLine(
                     $"{ToTabs(tabCount)}{instance?.Name ?? "this"}.HorizontalOptions = LayoutOptions.Start;");
