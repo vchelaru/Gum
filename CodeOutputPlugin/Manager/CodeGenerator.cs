@@ -5,6 +5,7 @@ using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.ToolStates;
 using RenderingLibrary.Graphics;
+using RenderingLibrary.Math;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -979,12 +980,17 @@ namespace CodeOutputPlugin.Manager
 
             #endregion
 
-            List<string> proportionalFlags = new List<string>();
+            var proportionalFlags = new HashSet<string>();
 
             const string WidthProportionalFlag = "AbsoluteLayoutFlags.WidthProportional";
             const string HeightProportionalFlag = "AbsoluteLayoutFlags.HeightProportional";
             const string XProportionalFlag = "AbsoluteLayoutFlags.XProportional";
             const string YProportionalFlag = "AbsoluteLayoutFlags.YProportional";
+
+            int leftMargin = 0;
+            int topMargin = 0;
+            int rightMargin = 0;
+            int bottomMargin = 0;
 
             if (widthUnits == DimensionUnitType.Percentage)
             {
@@ -1003,7 +1009,7 @@ namespace CodeOutputPlugin.Manager
                     width = CalculateAbsoluteWidth(instance, container, variableFinder);
                 }
             }
-            else if(widthUnits == DimensionUnitType.RelativeToChildren)
+            else if (widthUnits == DimensionUnitType.RelativeToChildren)
             {
                 // in this case we want to auto-size, which is what -1 indicates
                 width = -1;
@@ -1023,10 +1029,10 @@ namespace CodeOutputPlugin.Manager
                 else
                 {
                     height = CalculateAbsoluteHeight(instance, container, variableFinder);
-                    
+
                 }
             }
-            if(heightUnits == DimensionUnitType.RelativeToChildren)
+            if (heightUnits == DimensionUnitType.RelativeToChildren)
             {
                 // see above on width relative to container for information
                 height = -1;
@@ -1034,7 +1040,7 @@ namespace CodeOutputPlugin.Manager
 
             // special case
             // If we're using the center with x=0 we'll pretend it's the same as 50% 
-            if (xUnits == PositionUnitType.PixelsFromCenterX && 
+            if (xUnits == PositionUnitType.PixelsFromCenterX &&
                 // why does the width unit even matter? Should be the same regardless of width unit...
                 //widthUnits == DimensionUnitType.Absolute && 
                 xOrigin == HorizontalAlignment.Center)
@@ -1069,6 +1075,15 @@ namespace CodeOutputPlugin.Manager
                 if (widthUnits == DimensionUnitType.Absolute)
                 {
                     x = (CanvasWidth - width) / 2.0f;
+                }
+            }
+            else if (xUnits == PositionUnitType.PixelsFromRight)
+            {
+                if (xOrigin == HorizontalAlignment.Right)
+                {
+                    rightMargin = MathFunctions.RoundToInt(-x);
+                    x = 1;
+                    proportionalFlags.Add(XProportionalFlag);
                 }
             }
 
@@ -1143,13 +1158,15 @@ namespace CodeOutputPlugin.Manager
             if (proportionalFlags.Count > 0)
             {
                 string flagsArguments = null;
-                for (int i = 0; i < proportionalFlags.Count; i++)
+                int i = 0;
+                foreach (var flag in proportionalFlags)
                 {
                     if (i > 0)
                     {
                         flagsArguments += " | ";
                     }
-                    flagsArguments += proportionalFlags[i];
+                    flagsArguments += flag;
+                    i++;
                 }
                 flagsText = $"{ToTabs(tabCount)}AbsoluteLayout.SetLayoutFlags({instanceOrThis}, {flagsArguments});";
             }
@@ -1164,7 +1181,7 @@ namespace CodeOutputPlugin.Manager
             }
 
             // not sure why these apply even though we're using values on the AbsoluteLayout
-            if(!proportionalFlags.Contains(WidthProportionalFlag) && (widthUnits == DimensionUnitType.RelativeToContainer || widthUnits == DimensionUnitType.Absolute))
+            if (!proportionalFlags.Contains(WidthProportionalFlag) && (widthUnits == DimensionUnitType.RelativeToContainer || widthUnits == DimensionUnitType.Absolute))
             {
                 stringBuilder.AppendLine($"{ToTabs(tabCount)}{instanceOrThis}.WidthRequest = {width.ToString(CultureInfo.InvariantCulture)}f;");
             }
@@ -1174,9 +1191,14 @@ namespace CodeOutputPlugin.Manager
             }
 
             //If the object is width proportional, then it must use a .HorizontalOptions = LayoutOptions.Fill; or else the proportional width won't apply
-            if(proportionalFlags.Contains(WidthProportionalFlag))
+            if (proportionalFlags.Contains(WidthProportionalFlag))
             {
                 stringBuilder.AppendLine($"{ToTabs(tabCount)}{instanceOrThis}.HorizontalOptions = LayoutOptions.Fill;");
+            }
+
+            if (leftMargin != 0 || rightMargin != 0 || topMargin != 0 || bottomMargin != 0)
+            {
+                stringBuilder.AppendLine($"{ToTabs(tabCount)}{instanceOrThis}.Margin = new Thickness({leftMargin}, {topMargin}, {rightMargin}, {bottomMargin});");
             }
             // should we do the same to vertical? Maybe, but waiting for a natural use case to test it
         }

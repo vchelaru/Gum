@@ -253,7 +253,10 @@ namespace CodeOutputPlugin
 
         private void HandleGenerateCodeButtonClicked()
         {
-            GenerateCodeForSelectedElement(showPopups:true);
+            if(SelectedState.Self.SelectedElement != null)
+            {
+                GenerateCodeForSelectedElement(showPopups:true);
+            }
         }
 
         private void GenerateCodeForSelectedElement(bool showPopups)
