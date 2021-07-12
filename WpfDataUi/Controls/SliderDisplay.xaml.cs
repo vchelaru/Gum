@@ -23,14 +23,21 @@ namespace WpfDataUi.Controls
     {
         public double MaxValue
         {
-            get
-            {
-                return Slider.Maximum;
-            }
+            get => Slider.Maximum;
             set
             {
                 Slider.Maximum = value;
                 mTextBoxLogic.MaxValue = (decimal)this.MaxValue;
+            }
+        }
+
+        public double MinValue
+        {
+            get => Slider.Minimum;
+            set
+            {
+                Slider.Minimum = value;
+                mTextBoxLogic.MinValue = (decimal)this.MinValue;
             }
         }
 

@@ -1114,11 +1114,17 @@ namespace CodeOutputPlugin.Manager
             }
             else if (yUnits == PositionUnitType.PixelsFromBottom)
             {
-                y += CanvasHeight;
-
                 if (yOrigin == VerticalAlignment.Bottom)
                 {
-                    y -= height;
+                    bottomMargin = MathFunctions.RoundToInt(-y);
+                    y = 1;
+                    proportionalFlags.Add(YProportionalFlag);
+                }
+                else
+                {
+                    // We could be smarter about this but we'll add this
+                    // when it's needed.
+                    y += CanvasHeight;
                 }
             }
 
