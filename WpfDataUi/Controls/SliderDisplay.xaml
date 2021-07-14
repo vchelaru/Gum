@@ -109,7 +109,12 @@
                  MinWidth="60" Height="20" VerticalAlignment="Center" Style="{StaticResource MyCustomStyleForSlider}"></Slider>
 
         <TextBox Grid.Column="2" x:Name="TextBox" Margin="1"
-                     LostFocus="TextBox_LostFocus_1"></TextBox>
+                     LostFocus="TextBox_LostFocus_1">
+            <TextBox.ContextMenu>
+                <ContextMenu>
+                </ContextMenu>
+            </TextBox.ContextMenu>
+        </TextBox>
         
     </Grid>
 </UserControl>

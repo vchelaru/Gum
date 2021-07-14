@@ -21,6 +21,8 @@ namespace WpfDataUi.Controls
     /// </summary>
     public partial class SliderDisplay : UserControl, IDataUi, ISetDefaultable
     {
+        #region Fields/Properties
+
         public double MaxValue
         {
             get => Slider.Maximum;
@@ -76,6 +78,10 @@ namespace WpfDataUi.Controls
 
         TextBoxDisplayLogic mTextBoxLogic;
 
+        public bool SuppressSettingProperty { get; set; }
+
+        #endregion
+
         private void HandlePropertyChange(object sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(InstanceMember.Value))
@@ -84,7 +90,6 @@ namespace WpfDataUi.Controls
 
             }
         }
-        public bool SuppressSettingProperty { get; set; }
 
         public SliderDisplay()
         {
@@ -93,6 +98,9 @@ namespace WpfDataUi.Controls
             mTextBoxLogic = new TextBoxDisplayLogic(this, TextBox);
             mTextBoxLogic.MinValue = 0;
             mTextBoxLogic.MaxValue = (decimal)this.MaxValue;
+
+            this.RefreshContextMenu(TextBox.ContextMenu);
+            this.ContextMenu = TextBox.ContextMenu;
         }
 
         public void Refresh(bool forceRefreshEvenIfFocused = false)
@@ -132,9 +140,6 @@ namespace WpfDataUi.Controls
 
             SetSliderValue(valueOnInstance);
 
-
-            // todo: set it on the slider too
-
             return ApplyValueResult.Success;
         }
 
@@ -153,19 +158,9 @@ namespace WpfDataUi.Controls
             {
                 this.Slider.Value = (double)valueOnInstance;
             }
+
             // todo: support int...
         }
-
-        private void ApplyTextBoxText()
-        {
-            //todo: set the slider value==
-
-
-            // This also applies to instance, but it stores
-            // the value in the text box logic so ESC works properly
-            mTextBoxLogic.TryApplyToInstance();
-        }
-
 
         private void Slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {

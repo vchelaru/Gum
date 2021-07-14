@@ -165,12 +165,13 @@ namespace CodeOutputPlugin.Manager
         {
             var elementBaseType = element?.BaseType;
             var isThisAbsoluteLayout = elementBaseType?.EndsWith("/AbsoluteLayout") == true;
+            var isThisStackLayout = elementBaseType?.EndsWith("/StackLayout") == true;
 
             var isSkiaCanvasView = elementBaseType?.EndsWith("/SkiaGumCanvasView") == true;
 
             var isContainer = elementBaseType == "Container";
 
-            if (!isThisAbsoluteLayout && !isSkiaCanvasView && !isContainer)
+            if (!isThisAbsoluteLayout && !isSkiaCanvasView && !isContainer && !isThisStackLayout)
             {
                 var shouldAddMainLayout = true;
                 if (element is ScreenSave && !string.IsNullOrEmpty(element.BaseType))
@@ -230,6 +231,7 @@ namespace CodeOutputPlugin.Manager
 
                 var elementBaseType = element?.BaseType;
                 var isThisAbsoluteLayout = elementBaseType?.EndsWith("/AbsoluteLayout") == true;
+                var isStackLayout = elementBaseType?.EndsWith("/StackLayout") == true;
 
                 var isSkiaCanvasView = elementBaseType?.EndsWith("/SkiaGumCanvasView") == true;
 
@@ -237,7 +239,7 @@ namespace CodeOutputPlugin.Manager
                 {
                     stringBuilder.AppendLine(ToTabs(tabCount) + "var MainLayout = this;");
                 }
-                else if(!isSkiaCanvasView)
+                else if(!isSkiaCanvasView && !isStackLayout)
                 {
                     var shouldAddMainLayout = true;
                     if(element is ScreenSave && !string.IsNullOrEmpty(element.BaseType))
@@ -735,7 +737,6 @@ namespace CodeOutputPlugin.Manager
 
             if (!hasParent && !instance.DefinedByBase)
             {
-
                 if(visualApi == VisualApi.Gum)
                 {
                     // add it to "this"
@@ -744,6 +745,7 @@ namespace CodeOutputPlugin.Manager
                 else // forms
                 {
                     var instanceBaseType = instance.BaseType;
+                    var isContainerStackLayout = container.BaseType?.EndsWith("/StackLayout") == true;
 
                     if(instanceBaseType.EndsWith("/GumCollectionView"))
                     {
@@ -756,6 +758,10 @@ namespace CodeOutputPlugin.Manager
                         //stringBuilder.AppendLine($"{tabs}MainLayout.Children.Add(tempFor{instance.Name});");
                         stringBuilder.AppendLine($"{tabs}this.Content = {instance.Name};");
                         
+                    }
+                    else if(isContainerStackLayout)
+                    {
+                        stringBuilder.AppendLine($"{tabs}this.Children.Add({instance.Name});");
                     }
                     else
                     {
