@@ -1005,15 +1005,10 @@ namespace CodeOutputPlugin.Manager
             }
             else if (widthUnits == DimensionUnitType.RelativeToContainer)
             {
-                if (width == 0)
-                {
-                    width = 1;
-                    proportionalFlags.Add(WidthProportionalFlag);
-                }
-                else
-                {
-                    width = CalculateAbsoluteWidth(instance, container, variableFinder);
-                }
+                // we'll achieve margins with offsets
+                rightMargin = MathFunctions.RoundToInt(-x - width);
+                width = 1;
+                proportionalFlags.Add(WidthProportionalFlag);
             }
             else if (widthUnits == DimensionUnitType.RelativeToChildren)
             {
@@ -1074,7 +1069,11 @@ namespace CodeOutputPlugin.Manager
             }
             else if (xUnits == PositionUnitType.PixelsFromLeft)
             {
-
+                if(widthUnits == DimensionUnitType.RelativeToContainer)
+                {
+                    leftMargin = MathFunctions.RoundToInt(x);
+                    x = 0;
+                }
             }
             else if (xUnits == PositionUnitType.PixelsFromCenterX)
             {
