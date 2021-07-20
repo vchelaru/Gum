@@ -818,7 +818,7 @@ namespace CodeOutputPlugin.Manager
             stringBuilder.AppendLine($"{instanceName}.TextColor = Color.FromRgba({red}, {green}, {blue}, {alpha});");
         }
 
-        private static void ProcessPositionAndSize(List<VariableSave> variablesToConsider, StateSave defaultState, InstanceSave instance, ElementSave container, StringBuilder stringBuilder, int tabCount)
+        private static void ProcessPositionAndSize(List<VariableSave> variablesToConsider, StateSave state, InstanceSave instance, ElementSave container, StringBuilder stringBuilder, int tabCount)
         {
             //////////////////Early out/////////////////////
             if(container is ScreenSave && instance == null)
@@ -830,7 +830,7 @@ namespace CodeOutputPlugin.Manager
             string prefix = instance?.Name == null ? "" : instance.Name + ".";
 
             var setsAny =
-                defaultState.Variables.Any(item =>
+                state.Variables.Any(item =>
                     item.Name == prefix + "X" ||
                     item.Name == prefix + "Y" ||
                     item.Name == prefix + "Width" ||
@@ -848,7 +848,7 @@ namespace CodeOutputPlugin.Manager
             InstanceSave parent = null;
             if(instance != null)
             {
-                var parentName = defaultState.GetValueRecursive( instance.Name + ".Parent") as string;
+                var parentName = state.GetValueRecursive( instance.Name + ".Parent") as string;
                 if(!string.IsNullOrEmpty(parentName))
                 {
                     parent = container.GetInstance(parentName);
@@ -858,12 +858,15 @@ namespace CodeOutputPlugin.Manager
             if(parent == null || parent.BaseType?.EndsWith("/AbsoluteLayout") == true)
             {
                 // If this is part of an absolute layout, we put it in an absolute layout. This is the default
-
-                SetAbsoluteLayoutPosition(variablesToConsider, defaultState, instance, container, stringBuilder, tabCount);
+                // only do this layout if we're either the default state, or the variables are set in the state:
+                if(setsAny || state == container.DefaultState)
+                {
+                    SetAbsoluteLayoutPosition(variablesToConsider, state, instance, container, stringBuilder, tabCount);
+                }
             }
             else //if(parent?.BaseType?.EndsWith("/StackLayout") == true)
             {
-                SetNonAbsoluteLayoutPosition(variablesToConsider, defaultState, instance, stringBuilder, tabCount, prefix, parent.BaseType);
+                SetNonAbsoluteLayoutPosition(variablesToConsider, state, instance, stringBuilder, tabCount, prefix, parent.BaseType);
             }
 
         }
@@ -954,11 +957,11 @@ namespace CodeOutputPlugin.Manager
             }
         }
 
-        private static void SetAbsoluteLayoutPosition(List<VariableSave> variablesToConsider, StateSave defaultState, InstanceSave instance, ElementSave container, StringBuilder stringBuilder, int tabCount)
+        private static void SetAbsoluteLayoutPosition(List<VariableSave> variablesToConsider, StateSave state, InstanceSave instance, ElementSave container, StringBuilder stringBuilder, int tabCount)
         {
             string prefix = instance?.Name == null ? "" : instance.Name + ".";
 
-            var variableFinder = new RecursiveVariableFinder(defaultState);
+            var variableFinder = new RecursiveVariableFinder(state);
 
             #region Get recursive values for position and size
 
@@ -1022,18 +1025,12 @@ namespace CodeOutputPlugin.Manager
             }
             else if (heightUnits == DimensionUnitType.RelativeToContainer)
             {
-                if (height == 0)
-                {
-                    height = 1;
-                    proportionalFlags.Add(HeightProportionalFlag);
-                }
-                else
-                {
-                    height = CalculateAbsoluteHeight(instance, container, variableFinder);
-
-                }
+                // just like width units, achieve this with margins:
+                bottomMargin = MathFunctions.RoundToInt(-y - height);
+                height = 1;
+                proportionalFlags.Add(HeightProportionalFlag);
             }
-            if (heightUnits == DimensionUnitType.RelativeToChildren)
+            else if (heightUnits == DimensionUnitType.RelativeToChildren)
             {
                 // see above on width relative to container for information
                 height = -1;
@@ -1098,6 +1095,14 @@ namespace CodeOutputPlugin.Manager
                 {
                     y = .5f;
                     proportionalFlags.Add(YProportionalFlag);
+                }
+            }
+            else if(yUnits == PositionUnitType.PixelsFromTop)
+            {
+                if(heightUnits == DimensionUnitType.RelativeToContainer)
+                {
+                    topMargin = MathFunctions.RoundToInt(y);
+                    y = 0;
                 }
             }
             else if (yUnits == PositionUnitType.PercentageHeight)
