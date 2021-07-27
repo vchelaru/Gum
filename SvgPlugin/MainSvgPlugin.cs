@@ -47,6 +47,8 @@ namespace SkiaPlugin
         {
             GetDefaultStateForType += HandleGetDefaultStateForType;
             CreateRenderableForType += HandleCreateRenderbleFor;
+            VariableExcluded += DefaultStateManager.GetIfVariableIsExcluded;
+            VariableSet += DefaultStateManager.HandleVariableSet;
         }
 
         private IRenderableIpso HandleCreateRenderbleFor(string type)

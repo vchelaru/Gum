@@ -1057,10 +1057,14 @@ namespace CodeOutputPlugin.Manager
             else if (xUnits == PositionUnitType.PercentageWidth)
             {
                 x /= 100.0f;
-                var adjustedCanvasWidth = 1 - width;
-                if (adjustedCanvasWidth > 0)
+
+                if(widthUnits == DimensionUnitType.Percentage)
                 {
-                    x /= adjustedCanvasWidth;
+                    var adjustedCanvasWidth = 1 - width;
+                    if (adjustedCanvasWidth > 0)
+                    {
+                        x /= adjustedCanvasWidth;
+                    }
                 }
                 proportionalFlags.Add(XProportionalFlag);
             }
