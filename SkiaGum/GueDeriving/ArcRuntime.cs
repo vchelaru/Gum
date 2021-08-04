@@ -1,4 +1,7 @@
-﻿using SkiaGum.Renderables;
+﻿using Gum.Converters;
+using Gum.DataTypes;
+using Gum.Managers;
+using SkiaGum.Renderables;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
@@ -99,12 +102,22 @@ namespace SkiaGum.GueDeriving
             get => ContainedArc.GradientX1;
             set => ContainedArc.GradientX1 = value;
         }
+        public GeneralUnitType GradientX1Units
+        {
+            get => ContainedArc.GradientX1Units;
+            set => ContainedArc.GradientX1Units = value;
+        }
+
         public float GradientY1
         {
             get => ContainedArc.GradientY1;
             set => ContainedArc.GradientY1 = value;
         }
-
+        public GeneralUnitType GradientY1Units
+        {
+            get => ContainedArc.GradientY1Units;
+            set => ContainedArc.GradientY1Units = value;
+        }
 
         public float GradientX2
         {
@@ -141,11 +154,24 @@ namespace SkiaGum.GueDeriving
             set => ContainedArc.GradientInnerRadius = value;
         }
 
+        public DimensionUnitType GradientInnerRadiusUnits
+        {
+            get => ContainedArc.GradientInnerRadiusUnits;
+            set => ContainedArc.GradientInnerRadiusUnits = value;
+        }
+
         public float GradientOuterRadius
         {
             get => ContainedArc.GradientOuterRadius;
             set => ContainedArc.GradientOuterRadius = value;
         }
+
+        public DimensionUnitType GradientOuterRadiusUnits
+        {
+            get => ContainedArc.GradientOuterRadiusUnits;
+            set => ContainedArc.GradientOuterRadiusUnits = value;
+        }
+
 
         #endregion
 

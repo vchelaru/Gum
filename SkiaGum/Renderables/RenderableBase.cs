@@ -1,4 +1,7 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Gum.Converters;
+using Gum.DataTypes;
+using Gum.Managers;
+using Microsoft.Xna.Framework;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using SkiaGum.GueDeriving;
@@ -87,7 +90,19 @@ namespace SkiaGum.Renderables
 
         public ColorOperation ColorOperation { get; set; } = ColorOperation.Modulate;
 
+        public float GradientX1 { get; set; }
+        public GeneralUnitType GradientX1Units { get; set; }
+        public float GradientY1 { get; set; }
+        public GeneralUnitType GradientY1Units { get; set; }
 
+        public float GradientX2 { get; set; }
+        public float GradientY2 { get; set; }
+
+        public float GradientInnerRadius { get; set; }
+        public DimensionUnitType GradientInnerRadiusUnits { get; set; }
+
+        public float GradientOuterRadius { get; set; }
+        public DimensionUnitType GradientOuterRadiusUnits { get; set; }
 
         public bool FlipHorizontal
         {
