@@ -117,9 +117,12 @@ namespace SkiaPlugin.Renderables
                 IsAntialias = true 
             };
 
-            
+            if (UseGradient)
+            {
+                SetGradientOnPaint(paint);
+            }
 
-            if(HasDropshadow)
+            if (HasDropshadow)
             {
                 var dropshadowSkColor = new SKColor(DropshadowColor.R, DropshadowColor.G, DropshadowColor.B, DropshadowColor.A);
                 paint.ImageFilter = SKImageFilter.CreateDropShadow(

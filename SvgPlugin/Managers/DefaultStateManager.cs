@@ -76,7 +76,12 @@ namespace SkiaPlugin.Managers
                 StandardElementsManager.AddPositioningVariables(filledCircleState);
                 StandardElementsManager.AddDimensionsVariables(filledCircleState, 64, 64, 
                     StandardElementsManager.DimensionVariableAction.ExcludeFileOptions);
+
+                AddGradientVariables(filledCircleState);
+
                 StandardElementsManager.AddColorVariables(filledCircleState);
+
+
             }
 
             return filledCircleState;
@@ -98,6 +103,7 @@ namespace SkiaPlugin.Managers
                     StandardElementsManager.DimensionVariableAction.ExcludeFileOptions);
                 StandardElementsManager.AddColorVariables(roundedRectangleState);
 
+                AddGradientVariables(roundedRectangleState);
 
                 AddDropshadowVariables(roundedRectangleState);
 
@@ -152,34 +158,37 @@ namespace SkiaPlugin.Managers
 
             state.Variables.Add(new VariableSave { Type = "bool", Value = false, Category = "Rendering", Name = "UseGradient" });
 
-            state.Variables.Add(new VariableSave { Type = typeof(GradientType).Name, Value = GradientType.Linear, Name = "GradientType", Category = "Rendering", 
+            state.Variables.Add(new VariableSave { SetsValue = true, Type = typeof(GradientType).Name, Value = GradientType.Linear, Name = "GradientType", Category = "Rendering", 
                 CustomTypeConverter = new EnumConverter(typeof(GradientType))});
 
 
-            state.Variables.Add(new VariableSave { Type = "float", Value = 0, Category = "Rendering", Name = "GradientX1" });
-            state.Variables.Add(new VariableSave { Type = typeof(PositionUnitType).Name, Value = PositionUnitType.PixelsFromLeft, Name = "GradientX1Units", Category = "Rendering", ExcludedValuesForEnum = xUnitsExclusions });
+            state.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0, Category = "Rendering", Name = "GradientX1" });
+            state.Variables.Add(new VariableSave { SetsValue = true, Type = typeof(PositionUnitType).Name, Value = PositionUnitType.PixelsFromLeft, Name = "GradientX1Units", Category = "Rendering", ExcludedValuesForEnum = xUnitsExclusions });
 
 
-            state.Variables.Add(new VariableSave { Type = "float", Value = 0, Category = "Rendering", Name = "GradientY1" });
-            state.Variables.Add(new VariableSave { Type = typeof(PositionUnitType).Name, Value = PositionUnitType.PixelsFromTop, Name = "GradientY1Units", Category = "Rendering", ExcludedValuesForEnum = yUnitsExclusions });
+            state.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0, Category = "Rendering", Name = "GradientY1" });
+            state.Variables.Add(new VariableSave { SetsValue = true, Type = typeof(PositionUnitType).Name, Value = PositionUnitType.PixelsFromTop, Name = "GradientY1Units", Category = "Rendering", ExcludedValuesForEnum = yUnitsExclusions });
 
-            state.Variables.Add(new VariableSave { Type = "int", Value = 255, Name = "Red1", Category = "Rendering" });
-            state.Variables.Add(new VariableSave { Type = "int", Value = 255, Name = "Green1", Category = "Rendering" });
-            state.Variables.Add(new VariableSave { Type = "int", Value = 255, Name = "Blue1", Category = "Rendering" });
+            state.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "Red1", Category = "Rendering" });
+            state.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "Green1", Category = "Rendering" });
+            state.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "Blue1", Category = "Rendering" });
 
-            state.Variables.Add(new VariableSave { Type = "float", Value = 100, Category = "Rendering", Name = "GradientX2" });
-            state.Variables.Add(new VariableSave { Type = "float", Value = 100, Category = "Rendering", Name = "GradientY2" });
+            state.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 100, Category = "Rendering", Name = "GradientX2" });
+            state.Variables.Add(new VariableSave { SetsValue = true, Type = typeof(PositionUnitType).Name, Value = PositionUnitType.PixelsFromLeft, Name = "GradientX2Units", Category = "Rendering", ExcludedValuesForEnum = xUnitsExclusions });
 
-            state.Variables.Add(new VariableSave { Type = "float", Value = 50, Category = "Rendering", Name = "GradientInnerRadius" });
-            state.Variables.Add(new VariableSave { Type = typeof(DimensionUnitType).Name, Value = DimensionUnitType.Absolute, Name = "GradientInnerRadiusUnits", Category = "Rendering" });
+            state.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 100, Category = "Rendering", Name = "GradientY2" });
+            state.Variables.Add(new VariableSave { SetsValue = true, Type = typeof(PositionUnitType).Name, Value = PositionUnitType.PixelsFromTop, Name = "GradientY2Units", Category = "Rendering", ExcludedValuesForEnum = yUnitsExclusions });
+
+            state.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 50, Category = "Rendering", Name = "GradientInnerRadius" });
+            state.Variables.Add(new VariableSave { SetsValue = true, Type = typeof(DimensionUnitType).Name, Value = DimensionUnitType.Absolute, Name = "GradientInnerRadiusUnits", Category = "Rendering" });
 
 
-            state.Variables.Add(new VariableSave { Type = "float", Value = 100, Category = "Rendering", Name = "GradientOuterRadius" });
-            state.Variables.Add(new VariableSave { Type = typeof(DimensionUnitType).Name, Value = DimensionUnitType.Absolute, Name = "GradientOuterRadiusUnits", Category = "Rendering" });
+            state.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 100, Category = "Rendering", Name = "GradientOuterRadius" });
+            state.Variables.Add(new VariableSave { SetsValue = true, Type = typeof(DimensionUnitType).Name, Value = DimensionUnitType.Absolute, Name = "GradientOuterRadiusUnits", Category = "Rendering" });
 
-            state.Variables.Add(new VariableSave { Type = "int", Value = 255, Name = "Red2", Category = "Rendering" });
-            state.Variables.Add(new VariableSave { Type = "int", Value = 255, Name = "Green2", Category = "Rendering" });
-            state.Variables.Add(new VariableSave { Type = "int", Value = 0, Name = "Blue2", Category = "Rendering" });
+            state.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "Red2", Category = "Rendering" });
+            state.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "Green2", Category = "Rendering" });
+            state.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "Blue2", Category = "Rendering" });
         }
 
         private static void AddVisibleVariable(StateSave state)
@@ -226,7 +235,9 @@ namespace SkiaPlugin.Managers
                 }
 
             }
-            else if (rootName == "Red1" || rootName == "Green1" || rootName == "Blue1" || rootName == "GradientX1" || rootName == "GradientY1" ||
+            else if (rootName == "Red1" || rootName == "Green1" || rootName == "Blue1" || 
+                rootName == "GradientX1" || rootName == "GradientY1" ||
+                rootName == "GradientX1Units" || rootName == "GradientY1Units" ||
                 rootName == "Red2" || rootName == "Green2" || rootName == "Blue2" ||
                 rootName == "GradientType")
             {
@@ -234,7 +245,7 @@ namespace SkiaPlugin.Managers
                 var effectiveUsesGradient = usesGradients is bool asBool && asBool;
                 return !effectiveUsesGradient;
             }
-            else if(rootName == "GradientX2" || rootName == "GradientY2")
+            else if(rootName == "GradientX2" || rootName == "GradientY2" || rootName == "GradientX2Units" || rootName == "GradientY2Units")
             {
                 var usesGradients = recursiveVariableFinder.GetValue(prefix + "UseGradient");
                 var effectiveUsesGradient = usesGradients is bool asBool && asBool;
@@ -246,7 +257,8 @@ namespace SkiaPlugin.Managers
 
                 return hide;
             }
-            else if(rootName == "GradientInnerRadius" || rootName == "GradientOuterRadius")
+            else if(rootName == "GradientInnerRadius" || rootName == "GradientOuterRadius" ||
+                rootName == "GradientInnerRadiusUnits" || rootName == "GradientOuterRadiusUnits")
             {
                 var usesGradients = recursiveVariableFinder.GetValue(prefix + "UseGradient");
                 var effectiveUsesGradient = usesGradients is bool asBool && asBool;
