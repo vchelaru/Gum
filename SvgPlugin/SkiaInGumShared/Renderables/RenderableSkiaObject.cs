@@ -26,7 +26,7 @@ namespace SkiaPlugin.Renderables
 
     public abstract class RenderableSkiaObject : IRenderableIpso, IVisible
     {
-        #region Fields/Properties
+        #region General Fields/Properties
 
         protected Microsoft.Xna.Framework.Vector2 Position;
 
@@ -177,9 +177,6 @@ namespace SkiaPlugin.Renderables
 
         protected bool needsUpdate = true;
 
-        protected virtual float XSizeSpillover => 0;
-        protected virtual float YSizeSpillover => 0;
-
         protected bool ForceUseColor
         {
             get; set;
@@ -187,6 +184,9 @@ namespace SkiaPlugin.Renderables
 
         ColorOperation IRenderableIpso.ColorOperation => ColorOperation.Modulate;
 
+        #endregion
+
+        #region Gradients
 
         bool useGradient;
         public bool UseGradient
@@ -472,6 +472,65 @@ namespace SkiaPlugin.Renderables
 
         #endregion
 
+        #region Dropshadow
+
+        public bool HasDropshadow { get; set; }
+
+        public float DropshadowOffsetX { get; set; }
+        public float DropshadowOffsetY { get; set; }
+
+        public float DropshadowBlurX { get; set; }
+        public float DropshadowBlurY { get; set; }
+
+
+        public Color DropshadowColor = Color.White;
+
+        public int DropshadowAlpha
+        {
+            get => DropshadowColor.A;
+            set
+            {
+                DropshadowColor.A = (byte)value;
+                needsUpdate = true;
+            }
+        }
+
+        public int DropshadowRed
+        {
+            get => DropshadowColor.R;
+            set
+            {
+                DropshadowColor.R = (byte)value;
+                needsUpdate = true;
+            }
+        }
+
+        public int DropshadowGreen
+        {
+            get => DropshadowColor.G;
+            set
+            {
+                DropshadowColor.G = (byte)value;
+                needsUpdate = true;
+            }
+        }
+
+        public int DropshadowBlue
+        {
+            get => DropshadowColor.B;
+            set
+            {
+                DropshadowColor.B = (byte)value;
+                needsUpdate = true;
+            }
+        }
+
+
+        protected float XSizeSpillover => HasDropshadow ? DropshadowBlurX + Math.Abs(DropshadowOffsetX) : 0;
+        protected float YSizeSpillover => HasDropshadow ? DropshadowBlurY + Math.Abs(DropshadowOffsetY) : 0;
+
+        #endregion
+
         #region IVisible Implementation
 
         public bool Visible
@@ -669,59 +728,74 @@ namespace SkiaPlugin.Renderables
             var firstColor = new SKColor((byte)red1, (byte)green1, (byte)blue1);
             var secondColor = new SKColor((byte)red2, (byte)green2, (byte)blue2);
 
+            var effectiveWidth = Width + XSizeSpillover*2;
+            var effectiveHeight = Height + YSizeSpillover*2;
+
             var effectiveGradientX1 = gradientX1;
             switch (this.GradientX1Units)
             {
+                case PositionUnitType.PixelsFromLeft:
+                    effectiveGradientX1 += XSizeSpillover;
+                    break;
                 case PositionUnitType.PixelsFromCenterX:
-                    effectiveGradientX1 += Width / 2.0f;
+                    effectiveGradientX1 += effectiveWidth / 2.0f;
                     break;
                 case PositionUnitType.PixelsFromRight:
-                    effectiveGradientX1 += Width;
+                    effectiveGradientX1 += effectiveWidth;
                     break;
                 case PositionUnitType.PercentageWidth:
-                    effectiveGradientX1 = Width * gradientX1 / 100;
+                    effectiveGradientX1 = effectiveWidth * gradientX1 / 100;
                     break;
             }
 
             var effectiveGradientX2 = gradientX1;
             switch (this.GradientX2Units)
             {
+                case PositionUnitType.PixelsFromLeft:
+                    effectiveGradientX2 += XSizeSpillover;
+                    break;
                 case PositionUnitType.PixelsFromCenterX:
-                    effectiveGradientX2 += Width / 2.0f;
+                    effectiveGradientX2 += effectiveWidth / 2.0f;
                     break;
                 case PositionUnitType.PixelsFromRight:
-                    effectiveGradientX2 += Width;
+                    effectiveGradientX2 += effectiveWidth;
                     break;
                 case PositionUnitType.PercentageWidth:
-                    effectiveGradientX2 = Width * gradientX2 / 100;
+                    effectiveGradientX2 = effectiveWidth * gradientX2 / 100;
                     break;
             }
 
             var effectiveGradientY1 = gradientY1;
             switch (this.GradientY1Units)
             {
+                case PositionUnitType.PixelsFromTop:
+                    effectiveGradientY1 += YSizeSpillover;
+                    break;
                 case PositionUnitType.PixelsFromCenterY:
-                    effectiveGradientY1 += Height / 2.0f;
+                    effectiveGradientY1 += effectiveHeight / 2.0f;
                     break;
                 case PositionUnitType.PixelsFromBottom:
-                    effectiveGradientY1 += Height;
+                    effectiveGradientY1 += effectiveHeight;
                     break;
                 case PositionUnitType.PercentageHeight:
-                    effectiveGradientY1 = Height * gradientY1/100;
+                    effectiveGradientY1 = effectiveHeight * gradientY1/100;
                     break;
             }
 
             var effectiveGradientY2 = gradientY2;
             switch (this.GradientY2Units)
             {
+                case PositionUnitType.PixelsFromTop:
+                    effectiveGradientY2 += YSizeSpillover;
+                    break;
                 case PositionUnitType.PixelsFromCenterY:
-                    effectiveGradientY2 += Height / 2.0f;
+                    effectiveGradientY2 += effectiveHeight / 2.0f;
                     break;
                 case PositionUnitType.PixelsFromBottom:
-                    effectiveGradientY2 += Height;
+                    effectiveGradientY2 += effectiveHeight;
                     break;
                 case PositionUnitType.PercentageHeight:
-                    effectiveGradientY2 = Height * gradientY2 / 100;
+                    effectiveGradientY2 = effectiveHeight * gradientY2 / 100;
                     break;
             }
 
@@ -743,10 +817,10 @@ namespace SkiaPlugin.Renderables
                 switch (gradientOuterRadiusUnits)
                 {
                     case Gum.DataTypes.DimensionUnitType.Percentage:
-                        effectiveOuterRadius = Width * gradientOuterRadius / 100;
+                        effectiveOuterRadius = effectiveWidth * gradientOuterRadius / 100;
                         break;
                     case Gum.DataTypes.DimensionUnitType.RelativeToContainer:
-                        effectiveOuterRadius = Width / 2 + gradientOuterRadius;
+                        effectiveOuterRadius = effectiveWidth  / 2 + gradientOuterRadius;
                         break;
                 }
 
@@ -760,10 +834,10 @@ namespace SkiaPlugin.Renderables
                 switch (gradientInnerRadiusUnits)
                 {
                     case Gum.DataTypes.DimensionUnitType.Percentage:
-                        effectiveInnerRadius = Width * gradientInnerRadius / 100;
+                        effectiveInnerRadius = effectiveWidth * gradientInnerRadius / 100;
                         break;
                     case Gum.DataTypes.DimensionUnitType.RelativeToContainer:
-                        effectiveInnerRadius = Width / 2 + gradientInnerRadius;
+                        effectiveInnerRadius = effectiveWidth / 2 + gradientInnerRadius;
                         break;
                 }
 
