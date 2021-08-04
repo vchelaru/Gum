@@ -135,6 +135,21 @@ namespace SkiaPlugin.Managers
 
         private static void AddGradientVariables(StateSave state)
         {
+            List<object> xUnitsExclusions = new List<object>();
+            xUnitsExclusions.Add(PositionUnitType.PixelsFromTop);
+            xUnitsExclusions.Add(PositionUnitType.PercentageHeight);
+            xUnitsExclusions.Add(PositionUnitType.PixelsFromBottom);
+            xUnitsExclusions.Add(PositionUnitType.PixelsFromCenterY);
+            xUnitsExclusions.Add(PositionUnitType.PixelsFromCenterYInverted);
+            xUnitsExclusions.Add(PositionUnitType.PixelsFromBaseline);
+
+            List<object> yUnitsExclusions = new List<object>();
+            yUnitsExclusions.Add(PositionUnitType.PixelsFromLeft);
+            yUnitsExclusions.Add(PositionUnitType.PixelsFromCenterX);
+            yUnitsExclusions.Add(PositionUnitType.PercentageWidth);
+            yUnitsExclusions.Add(PositionUnitType.PixelsFromRight);
+
+
             state.Variables.Add(new VariableSave { Type = "bool", Value = false, Category = "Rendering", Name = "UseGradient" });
 
             state.Variables.Add(new VariableSave { Type = typeof(GradientType).Name, Value = GradientType.Linear, Name = "GradientType", Category = "Rendering", 
@@ -142,7 +157,11 @@ namespace SkiaPlugin.Managers
 
 
             state.Variables.Add(new VariableSave { Type = "float", Value = 0, Category = "Rendering", Name = "GradientX1" });
+            state.Variables.Add(new VariableSave { Type = typeof(PositionUnitType).Name, Value = PositionUnitType.PixelsFromLeft, Name = "GradientX1Units", Category = "Rendering", ExcludedValuesForEnum = xUnitsExclusions });
+
+
             state.Variables.Add(new VariableSave { Type = "float", Value = 0, Category = "Rendering", Name = "GradientY1" });
+            state.Variables.Add(new VariableSave { Type = typeof(PositionUnitType).Name, Value = PositionUnitType.PixelsFromTop, Name = "GradientY1Units", Category = "Rendering", ExcludedValuesForEnum = yUnitsExclusions });
 
             state.Variables.Add(new VariableSave { Type = "int", Value = 255, Name = "Red1", Category = "Rendering" });
             state.Variables.Add(new VariableSave { Type = "int", Value = 255, Name = "Green1", Category = "Rendering" });
@@ -152,7 +171,11 @@ namespace SkiaPlugin.Managers
             state.Variables.Add(new VariableSave { Type = "float", Value = 100, Category = "Rendering", Name = "GradientY2" });
 
             state.Variables.Add(new VariableSave { Type = "float", Value = 50, Category = "Rendering", Name = "GradientInnerRadius" });
+            state.Variables.Add(new VariableSave { Type = typeof(DimensionUnitType).Name, Value = DimensionUnitType.Absolute, Name = "GradientInnerRadiusUnits", Category = "Rendering" });
+
+
             state.Variables.Add(new VariableSave { Type = "float", Value = 100, Category = "Rendering", Name = "GradientOuterRadius" });
+            state.Variables.Add(new VariableSave { Type = typeof(DimensionUnitType).Name, Value = DimensionUnitType.Absolute, Name = "GradientOuterRadiusUnits", Category = "Rendering" });
 
             state.Variables.Add(new VariableSave { Type = "int", Value = 255, Name = "Red2", Category = "Rendering" });
             state.Variables.Add(new VariableSave { Type = "int", Value = 255, Name = "Green2", Category = "Rendering" });

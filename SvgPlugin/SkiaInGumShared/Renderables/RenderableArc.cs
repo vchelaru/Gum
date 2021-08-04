@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Gum.Converters;
+using Gum.Managers;
 using Microsoft.Xna.Framework.Graphics;
 using SkiaSharp;
 
@@ -85,61 +87,7 @@ namespace SkiaPlugin.Renderables
             }
         }
 
-        float gradientX1;
-        public float GradientX1
-        {
-            get => gradientX1;
-            set
-            {
-                if(value != gradientX1)
-                {
-                    gradientX1 = value;
-                    needsUpdate = true;
-                }
-            }
-        }
 
-        float gradientY1;
-        public float GradientY1
-        {
-            get => gradientY1;
-            set
-            {
-                if (value != gradientY1)
-                {
-                    gradientY1 = value;
-                    needsUpdate = true;
-                }
-            }
-        }
-
-        float gradientX2;
-        public float GradientX2
-        {
-            get => gradientX2;
-            set
-            {
-                if (value != gradientX2)
-                {
-                    gradientX2 = value;
-                    needsUpdate = true;
-                }
-            }
-        }
-
-        float gradientY2;
-        public float GradientY2
-        {
-            get => gradientY2;
-            set
-            {
-                if (value != gradientY2)
-                {
-                    gradientY2 = value;
-                    needsUpdate = true;
-                }
-            }
-        }
 
         float gradientInnerRadius;
         public float GradientInnerRadius
@@ -168,6 +116,8 @@ namespace SkiaPlugin.Renderables
                 }
             }
         }
+
+
 
         int red1;
         public int Red1
@@ -284,28 +234,109 @@ namespace SkiaPlugin.Renderables
                     var firstColor = new SKColor((byte)red1, (byte)green1, (byte)blue1);
                     var secondColor = new SKColor((byte)red2, (byte)green2, (byte)blue2);
 
-                    if(gradientType == GradientType.Linear)
+                    var effectiveGradientX1 = gradientX1;
+                    switch(this.GradientX1Units)
+                    {
+                        case PositionUnitType.PixelsFromCenterX:
+                            effectiveGradientX1 += Width / 2.0f;
+                            break;
+                        case PositionUnitType.PixelsFromRight:
+                            effectiveGradientX1 += Width;
+                            break;
+                        case PositionUnitType.PercentageWidth:
+                            effectiveGradientX1 = Width * 100 / gradientX1;
+                            break;
+                    }
+
+                    var effectiveGradientX2 = gradientX1;
+                    switch (this.GradientX2Units)
+                    {
+                        case PositionUnitType.PixelsFromCenterX:
+                            effectiveGradientX2 += Width / 2.0f;
+                            break;
+                        case PositionUnitType.PixelsFromRight:
+                            effectiveGradientX2 += Width;
+                            break;
+                        case PositionUnitType.PercentageWidth:
+                            effectiveGradientX2 = Width * 100 / gradientX2;
+                            break;
+                    }
+
+                    var effectiveGradientY1 = gradientY1;
+                    switch(this.GradientY1Units)
+                    {
+                        case PositionUnitType.PixelsFromCenterY:
+                            effectiveGradientY1 += Height / 2.0f;
+                            break;
+                        case PositionUnitType.PixelsFromBottom:
+                            effectiveGradientY1 += Height;
+                            break;
+                        case PositionUnitType.PercentageHeight:
+                            effectiveGradientY1 = Height * 100 / gradientY1;
+                            break;
+                    }
+
+                    var effectiveGradientY2 = gradientY2;
+                    switch (this.GradientY2Units)
+                    {
+                        case PositionUnitType.PixelsFromCenterY:
+                            effectiveGradientY2 += Height / 2.0f;
+                            break;
+                        case PositionUnitType.PixelsFromBottom:
+                            effectiveGradientY2 += Height;
+                            break;
+                        case PositionUnitType.PercentageHeight:
+                            effectiveGradientY2 = Height * 100 / gradientY2;
+                            break;
+                    }
+
+
+                    if (gradientType == GradientType.Linear)
                     {
 
                         paint.Shader = SKShader.CreateLinearGradient(
-                            new SKPoint(gradientX1, gradientY1), // left, top
-                            new SKPoint(gradientX2, gradientY2), // right, bottom
+                            new SKPoint(effectiveGradientX1, effectiveGradientY1), // left, top
+                            new SKPoint(effectiveGradientX2, effectiveGradientY2), // right, bottom
                             new SKColor[] { firstColor, secondColor },
                             new float[] { 0, 1 },
                             SKShaderTileMode.Clamp);
                     }
                     else if(gradientType == GradientType.Radial)
                     {
-                        var outerRadius = gradientOuterRadius;
-                        if (gradientOuterRadius <= 0)
+                        var effectiveOuterRadius = gradientOuterRadius;
+
+                        switch(gradientOuterRadiusUnits)
                         {
-                            outerRadius = 100;
+                            case Gum.DataTypes.DimensionUnitType.Percentage:
+                                effectiveOuterRadius = Width * gradientOuterRadius / 100;
+                                break;
+                            case Gum.DataTypes.DimensionUnitType.RelativeToContainer:
+                                effectiveOuterRadius = Width/2 + gradientOuterRadius;
+                                break;
                         }
-                        var innerToOuterRatio = gradientInnerRadius / outerRadius;
+
+                        if (effectiveOuterRadius <= 0)
+                        {
+                            effectiveOuterRadius = 100;
+                        }
+
+                        var effectiveInnerRadius = gradientInnerRadius;
+
+                        switch(gradientInnerRadiusUnits)
+                        {
+                            case Gum.DataTypes.DimensionUnitType.Percentage:
+                                effectiveInnerRadius = Width * gradientInnerRadius / 100;
+                                break;
+                            case Gum.DataTypes.DimensionUnitType.RelativeToContainer:
+                                effectiveInnerRadius = Width/2 + gradientInnerRadius;
+                                break;
+                        }
+
+                        var innerToOuterRatio = effectiveInnerRadius / effectiveOuterRadius;
 
                         paint.Shader = SKShader.CreateRadialGradient(
-                            new SKPoint(gradientX1, gradientY1), // center
-                            outerRadius,
+                            new SKPoint(effectiveGradientX1, effectiveGradientY1), // center
+                            effectiveOuterRadius,
                             new SKColor[] { firstColor, secondColor },
                             new float[] { innerToOuterRatio, 1 },
                             SKShaderTileMode.Clamp);

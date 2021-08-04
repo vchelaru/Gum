@@ -1,4 +1,7 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Gum.Converters;
+using Gum.DataTypes;
+using Gum.Managers;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
@@ -176,6 +179,148 @@ namespace SkiaPlugin.Renderables
         }
 
         ColorOperation IRenderableIpso.ColorOperation => ColorOperation.Modulate;
+
+        protected float gradientX1;
+        public float GradientX1
+        {
+            get => gradientX1;
+            set
+            {
+                if (value != gradientX1)
+                {
+                    gradientX1 = value;
+                    needsUpdate = true;
+                }
+            }
+        }
+
+        protected float gradientY1;
+        public float GradientY1
+        {
+            get => gradientY1;
+            set
+            {
+                if (value != gradientY1)
+                {
+                    gradientY1 = value;
+                    needsUpdate = true;
+                }
+            }
+        }
+
+        protected float gradientX2;
+        public float GradientX2
+        {
+            get => gradientX2;
+            set
+            {
+                if (value != gradientX2)
+                {
+                    gradientX2 = value;
+                    needsUpdate = true;
+                }
+            }
+        }
+
+        protected float gradientY2;
+        public float GradientY2
+        {
+            get => gradientY2;
+            set
+            {
+                if (value != gradientY2)
+                {
+                    gradientY2 = value;
+                    needsUpdate = true;
+                }
+            }
+        }
+
+
+        PositionUnitType gradientX1Units;
+        public PositionUnitType GradientX1Units
+        {
+            get => gradientX1Units;
+            set
+            {
+                if(value != gradientX1Units)
+                {
+                    gradientX1Units = value;
+                    needsUpdate = true;
+                }
+            }
+        }
+
+        PositionUnitType gradientX2Units;
+        public PositionUnitType GradientX2Units
+        {
+            get => gradientX2Units;
+            set
+            {
+                if (value != gradientX2Units)
+                {
+                    gradientX2Units = value;
+                    needsUpdate = true;
+                }
+            }
+        }
+
+        PositionUnitType gradientY1Units;
+        public PositionUnitType GradientY1Units
+        {
+            get => gradientY1Units;
+            set
+            {
+                if (value != gradientY1Units)
+                {
+                    gradientY1Units = value;
+                    needsUpdate = true;
+                }
+            }
+        }
+
+        PositionUnitType gradientY2Units;
+        public PositionUnitType GradientY2Units
+        {
+            get => gradientY2Units;
+            set
+            {
+                if (value != gradientY2Units)
+                {
+                    gradientY2Units = value;
+                    needsUpdate = true;
+                }
+            }
+        }
+
+
+        protected DimensionUnitType gradientInnerRadiusUnits;
+        public DimensionUnitType GradientInnerRadiusUnits
+        {
+            get => gradientInnerRadiusUnits;
+            set
+            {
+                if(value != gradientInnerRadiusUnits)
+                {
+                    gradientInnerRadiusUnits = value;
+                    needsUpdate = true;
+                }
+            }
+        }
+
+        protected DimensionUnitType gradientOuterRadiusUnits;
+        public DimensionUnitType GradientOuterRadiusUnits
+        {
+            get => gradientOuterRadiusUnits;
+            set
+            {
+                if (value != gradientOuterRadiusUnits)
+                {
+                    gradientOuterRadiusUnits = value;
+                    needsUpdate = true;
+                }
+            }
+        }
 
         #endregion
 
