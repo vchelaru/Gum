@@ -141,6 +141,34 @@ namespace SkiaPlugin.Renderables
             }
         }
 
+        float gradientInnerRadius;
+        public float GradientInnerRadius
+        {
+            get => gradientInnerRadius;
+            set
+            {
+                if(value != gradientInnerRadius)
+                {
+                    gradientInnerRadius = value;
+                    needsUpdate = true;
+                }
+            }
+        }
+
+        float gradientOuterRadius;
+        public float GradientOuterRadius
+        {
+            get => gradientOuterRadius;
+            set
+            {
+                if (value != gradientOuterRadius)
+                {
+                    gradientOuterRadius = value;
+                    needsUpdate = true;
+                }
+            }
+        }
+
         int red1;
         public int Red1
         {
@@ -268,14 +296,18 @@ namespace SkiaPlugin.Renderables
                     }
                     else if(gradientType == GradientType.Radial)
                     {
-                        var radiusSquared = (gradientX2 - gradientX1) * (gradientX2 - gradientX1) +
-                            (gradientY2 - gradientY1) * (gradientY2 - gradientY1);
-                        var radius = (float)Math.Sqrt(radiusSquared);
+                        var outerRadius = gradientOuterRadius;
+                        if (gradientOuterRadius <= 0)
+                        {
+                            outerRadius = 100;
+                        }
+                        var innerToOuterRatio = gradientInnerRadius / outerRadius;
+
                         paint.Shader = SKShader.CreateRadialGradient(
                             new SKPoint(gradientX1, gradientY1), // center
-                            radius,
+                            outerRadius,
                             new SKColor[] { firstColor, secondColor },
-                            new float[] { 0, 1 },
+                            new float[] { innerToOuterRatio, 1 },
                             SKShaderTileMode.Clamp);
                     }
                 }

@@ -56,7 +56,8 @@ namespace SkiaPlugin.Managers
         {
             var rootName = VariableSave.GetRootName(variableName);
 
-            var shouldRefresh = rootName == "UseGradient";
+            var shouldRefresh = rootName == "UseGradient" ||
+                rootName == "GradientType";
 
             if(shouldRefresh)
             {
@@ -150,10 +151,12 @@ namespace SkiaPlugin.Managers
             state.Variables.Add(new VariableSave { Type = "float", Value = 100, Category = "Rendering", Name = "GradientX2" });
             state.Variables.Add(new VariableSave { Type = "float", Value = 100, Category = "Rendering", Name = "GradientY2" });
 
+            state.Variables.Add(new VariableSave { Type = "float", Value = 50, Category = "Rendering", Name = "GradientInnerRadius" });
+            state.Variables.Add(new VariableSave { Type = "float", Value = 100, Category = "Rendering", Name = "GradientOuterRadius" });
+
             state.Variables.Add(new VariableSave { Type = "int", Value = 255, Name = "Red2", Category = "Rendering" });
             state.Variables.Add(new VariableSave { Type = "int", Value = 255, Name = "Green2", Category = "Rendering" });
             state.Variables.Add(new VariableSave { Type = "int", Value = 0, Name = "Blue2", Category = "Rendering" });
-
         }
 
         private static void AddVisibleVariable(StateSave state)
@@ -201,14 +204,38 @@ namespace SkiaPlugin.Managers
 
             }
             else if (rootName == "Red1" || rootName == "Green1" || rootName == "Blue1" || rootName == "GradientX1" || rootName == "GradientY1" ||
-                rootName == "Red2" || rootName == "Green2" || rootName == "Blue2" || rootName == "GradientX2" || rootName == "GradientY2" ||
+                rootName == "Red2" || rootName == "Green2" || rootName == "Blue2" ||
                 rootName == "GradientType")
             {
                 var usesGradients = recursiveVariableFinder.GetValue(prefix + "UseGradient");
                 var effectiveUsesGradient = usesGradients is bool asBool && asBool;
                 return !effectiveUsesGradient;
             }
-            // eventually exclude things here based on gradients
+            else if(rootName == "GradientX2" || rootName == "GradientY2")
+            {
+                var usesGradients = recursiveVariableFinder.GetValue(prefix + "UseGradient");
+                var effectiveUsesGradient = usesGradients is bool asBool && asBool;
+
+                var gradientTypeAsObject = recursiveVariableFinder.GetValue(prefix + "GradientType");
+                GradientType? gradientType = gradientTypeAsObject as GradientType?;
+
+                var hide = effectiveUsesGradient == false || gradientType != GradientType.Linear;
+
+                return hide;
+            }
+            else if(rootName == "GradientInnerRadius" || rootName == "GradientOuterRadius")
+            {
+                var usesGradients = recursiveVariableFinder.GetValue(prefix + "UseGradient");
+                var effectiveUsesGradient = usesGradients is bool asBool && asBool;
+
+                var gradientTypeAsObject = recursiveVariableFinder.GetValue(prefix + "GradientType");
+                GradientType? gradientType = gradientTypeAsObject as GradientType?;
+
+                var hide = effectiveUsesGradient == false || gradientType != GradientType.Radial;
+
+                return hide;
+
+            }
             return false;
         }
 
