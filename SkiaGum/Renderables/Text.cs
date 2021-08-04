@@ -217,7 +217,7 @@ namespace SkiaGum
             if (AbsoluteVisible)
             {
                 var textBlock = GetTextBlock();
-
+                
                 //// Gum uses counter clockwise rotation, Skia uses clockwise, so invert:
                 SKMatrix rotationMatrix = SKMatrix.MakeRotationDegrees(-Rotation);
                 SKMatrix translateMatrix = SKMatrix.MakeTranslation(this.GetAbsoluteX(), this.GetAbsoluteY());
@@ -234,7 +234,7 @@ namespace SkiaGum
 
                 // set the clip rect *after* save so it gets undone and restored
                 var clipRect = this.GetEffectiveClipRect();
-                if (clipRect != null)
+                if(clipRect != null)
                 {
                     canvas.ClipRect(clipRect.Value);
                 }

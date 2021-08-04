@@ -10,6 +10,12 @@ using System.Text;
 
 namespace SkiaGum.Renderables
 {
+    public enum GradientType
+    {
+        Linear,
+        Radial
+    }
+
     public class RenderableBase : IRenderableIpso, IVisible
     {
         Vector2 Position;
