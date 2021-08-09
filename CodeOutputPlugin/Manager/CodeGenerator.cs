@@ -756,8 +756,17 @@ namespace CodeOutputPlugin.Manager
                     {
                         // assume that stack view will be at the base
                         //stringBuilder.AppendLine($"{tabs}MainLayout.Children.Add(tempFor{instance.Name});");
-                        stringBuilder.AppendLine($"{tabs}this.Content = {instance.Name};");
-                        
+                        // Update Aug 9, 2021
+                        // Why do we assume that 
+                        // the stack view will be
+                        // at the base? Was it because
+                        // earlier versions of the code
+                        // generator didn't properly position
+                        // objects? This has been improving, and
+                        // this assumption causes confusion if a scrollview
+                        // is at the root of the page...
+                        //stringBuilder.AppendLine($"{tabs}this.Content = {instance.Name};");
+                        stringBuilder.AppendLine($"{tabs}MainLayout.Children.Add({instance.Name});");
                     }
                     else if(isContainerStackLayout)
                     {
@@ -1008,8 +1017,17 @@ namespace CodeOutputPlugin.Manager
             }
             else if (widthUnits == DimensionUnitType.RelativeToContainer)
             {
-                // we'll achieve margins with offsets
-                rightMargin = MathFunctions.RoundToInt(-x - width);
+                if(xOrigin == HorizontalAlignment.Center)
+                {
+                    // we'll achieve margins with offsets
+                    leftMargin = MathFunctions.RoundToInt(x - width/2);
+                    rightMargin = MathFunctions.RoundToInt(-x - width/2);
+                }
+                else
+                {
+                    // we'll achieve margins with offsets
+                    rightMargin = MathFunctions.RoundToInt(-x - width);
+                }
                 width = 1;
                 proportionalFlags.Add(WidthProportionalFlag);
             }
@@ -1018,6 +1036,7 @@ namespace CodeOutputPlugin.Manager
                 // in this case we want to auto-size, which is what -1 indicates
                 width = -1;
             }
+
             if (heightUnits == DimensionUnitType.Percentage)
             {
                 height /= 100.0f;
@@ -1026,7 +1045,15 @@ namespace CodeOutputPlugin.Manager
             else if (heightUnits == DimensionUnitType.RelativeToContainer)
             {
                 // just like width units, achieve this with margins:
-                bottomMargin = MathFunctions.RoundToInt(-y - height);
+                if(yOrigin == VerticalAlignment.Center)
+                {
+                    topMargin = MathFunctions.RoundToInt(y - height / 2);
+                    bottomMargin = MathFunctions.RoundToInt(-y - height / 2);
+                }
+                else
+                {
+                    bottomMargin = MathFunctions.RoundToInt(-y - height);
+                }
                 height = 1;
                 proportionalFlags.Add(HeightProportionalFlag);
             }
