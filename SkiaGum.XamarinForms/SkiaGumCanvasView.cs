@@ -66,6 +66,11 @@ namespace SkiaGum
             // Maybe we need to adjust this for other devices?
             float threshold = (float)20;
 
+            float touchX = args.Location.X / GlobalScale;
+            float touchY = args.Location.Y / GlobalScale;
+
+
+
             // SkiaSharp views return
             // whether they handle touches
             // through args.Handled. If the 
@@ -76,7 +81,7 @@ namespace SkiaGum
             switch (args.ActionType)
             {
                 case SKTouchAction.Pressed:
-                    yPushed = args.Location.Y;
+                    yPushed = touchY;
 
                     isWithinThreshold = true;
 
@@ -102,7 +107,7 @@ namespace SkiaGum
 
                         if (canProceed)
                         {
-                            elementPushed = FindClickableElement(args.Location.X, args.Location.Y, GumElementsInternal);
+                            elementPushed = FindClickableElement(touchX, touchY, GumElementsInternal);
                             if (elementPushed != null)
                             {
                                 DarkenElement(elementPushed);
@@ -116,7 +121,7 @@ namespace SkiaGum
                 case SKTouchAction.Moved:
                     if (isWithinThreshold)
                     {
-                        if (System.Math.Abs(args.Location.Y - yPushed) > threshold)
+                        if (System.Math.Abs(touchY - yPushed) > threshold)
                         {
                             isWithinThreshold = false;
                             var whatToLighten = elementPushed;
@@ -144,7 +149,7 @@ namespace SkiaGum
                             {
                                 try
                                 {
-                                    await customTouchEvent(args.Location.X, args.Location.Y);
+                                    await customTouchEvent(touchX, touchY);
                                 }
                                 finally
                                 {
@@ -153,7 +158,7 @@ namespace SkiaGum
                             }
                         }
 
-                        await TryClickOnContainedGumObjects(args.Location.X, args.Location.Y);
+                        await TryClickOnContainedGumObjects(touchX, touchY);
                     }
 
 
@@ -268,8 +273,6 @@ namespace SkiaGum
 
         #endregion
 
-
-
         private void HandleCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             switch (e.Action)
@@ -354,5 +357,6 @@ namespace SkiaGum
 
             return found;
         }
+
     }
 }

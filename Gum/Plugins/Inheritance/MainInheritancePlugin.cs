@@ -122,33 +122,36 @@ namespace Gum.Plugins.Inheritance
             // kill the old instances:
             asElementSave.Instances.RemoveAll(item => item.DefinedByBase);
 
-            if (StandardElementsManager.Self.IsDefaultType(newValue))
+            if(!string.IsNullOrEmpty(newValue))
             {
-
-                StateSave defaultStateSave = StandardElementsManager.Self.GetDefaultStateFor(newValue);
-
-                asElementSave.Initialize(defaultStateSave);
-            }
-            else
-            {
-                var baseElement = ObjectFinder.Self.GetElementSave(asElementSave.BaseType);
-
-                StateSave stateSave = new StateSave();
-                if (baseElement != null)
+                if (StandardElementsManager.Self.IsDefaultType(newValue))
                 {
-                    // This copies the values to this explicitly, which we don't want
-                    //FillWithDefaultRecursively(baseElement, stateSave);
 
+                    StateSave defaultStateSave = StandardElementsManager.Self.GetDefaultStateFor(newValue);
 
-                    foreach (var instance in baseElement.Instances)
-                    {
-                        var derivedInstance = instance.Clone();
-                        derivedInstance.DefinedByBase = true;
-                        asElementSave.Instances.Add(derivedInstance);
-                    }
-                    asElementSave.Initialize(stateSave);
+                    asElementSave.Initialize(defaultStateSave);
                 }
+                else
+                {
+                    var baseElement = ObjectFinder.Self.GetElementSave(asElementSave.BaseType);
 
+                    StateSave stateSave = new StateSave();
+                    if (baseElement != null)
+                    {
+                        // This copies the values to this explicitly, which we don't want
+                        //FillWithDefaultRecursively(baseElement, stateSave);
+
+
+                        foreach (var instance in baseElement.Instances)
+                        {
+                            var derivedInstance = instance.Clone();
+                            derivedInstance.DefinedByBase = true;
+                            asElementSave.Instances.Add(derivedInstance);
+                        }
+                        asElementSave.Initialize(stateSave);
+                    }
+
+                }
             }
             const bool fullRefresh = true;
             // since the type might change:
