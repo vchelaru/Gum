@@ -1311,8 +1311,33 @@ namespace Gum.Wireframe
                             UpdateTextureCoordinatesNotDimensionBased();
                         }
 
-                        if (this.WidthUnits.GetDependencyType() == HierarchyDependencyType.DependsOnChildren ||
-                            this.HeightUnits.GetDependencyType() == HierarchyDependencyType.DependsOnChildren)
+                        // August 12, 2021
+                        // If we can update one
+                        // of the dimensions first
+                        // (if it doesn't depend on
+                        // any children), we should, since
+                        // it can make the children update have
+                        // the real width/height set properly
+                        var widthDependencyType = this.WidthUnits.GetDependencyType();
+                        var heightDependencyType = this.HeightUnits.GetDependencyType();
+
+                        var hasChildDependency = widthDependencyType == HierarchyDependencyType.DependsOnChildren ||
+                            heightDependencyType == HierarchyDependencyType.DependsOnChildren;
+
+                        if (hasChildDependency && widthDependencyType != heightDependencyType)
+                        {
+                            // we can do one of them first
+                            if (widthDependencyType != HierarchyDependencyType.DependsOnChildren)
+                            {
+                                UpdateDimensions(parentWidth, parentHeight, XOrY.X, considerWrappedStacked: false);
+                            }
+                            else if (heightDependencyType != HierarchyDependencyType.DependsOnChildren)
+                            {
+                                UpdateDimensions(parentWidth, parentHeight, XOrY.Y, considerWrappedStacked: false);
+                            }
+                        }
+
+                        if (hasChildDependency)
                         {
                             UpdateChildren(childrenUpdateDepth, ChildType.Absolute);
                         }
