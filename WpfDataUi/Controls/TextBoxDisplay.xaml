@@ -3,36 +3,40 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             mc:Ignorable="d" >
-    
-    <Grid Margin="0,0,0,4">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Name="FirstColumn" Width="{Binding FirstGridLength}"></ColumnDefinition>
-            <ColumnDefinition Width="*"></ColumnDefinition>
-        </Grid.ColumnDefinitions>
+             mc:Ignorable="d">
+    <StackPanel>
+        <Grid Margin="0,0,0,4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Name="FirstColumn" Width="{Binding FirstGridLength}"></ColumnDefinition>
+                <ColumnDefinition Width="*"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
 
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"></RowDefinition>
-            <RowDefinition Height="Auto"></RowDefinition>
-        </Grid.RowDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"></RowDefinition>
+                <RowDefinition Height="Auto"></RowDefinition>
+            </Grid.RowDefinitions>
         
-        <TextBlock x:Name="Label" MinWidth="100" TextWrapping="Wrap"  VerticalAlignment="Center"
-                   Padding="4,4,4,0"
-                   >Property Label:</TextBlock>
-        <TextBox Grid.Column="1" x:Name="TextBox" LostFocus="TextBox_LostFocus_1" 
-                 VerticalContentAlignment="Center"
-                 MinWidth="60" Height="20" VerticalAlignment="Center">
-            <TextBox.ContextMenu>
-                <ContextMenu>
-                </ContextMenu>
-            </TextBox.ContextMenu>
-        </TextBox>
+            <TextBlock x:Name="Label" MinWidth="100" TextWrapping="Wrap"  VerticalAlignment="Center"
+                       Padding="4,4,4,0"
+                       >Property Label:</TextBlock>
+            <TextBox Grid.Column="1" x:Name="TextBox" LostFocus="TextBox_LostFocus_1" 
+                     VerticalContentAlignment="Center"
+                     MinWidth="60" Height="20" VerticalAlignment="Center">
+                <TextBox.ContextMenu>
+                    <ContextMenu>
+                    </ContextMenu>
+                </TextBox.ContextMenu>
+            </TextBox>
+        </Grid>
+        <!--Vic says: If this is really long, it extends the entire control horizontally rather than wrapping. I don't know how to control this.
+        In Gum we would just mark this Width as RelativeToParent and be done with it-->
         <TextBlock x:Name="HintTextBlock" 
-                   Padding="8,0,0,0" Grid.Row="1" 
-                   Grid.ColumnSpan="2"  
-                   TextWrapping="Wrap"
-                   FontSize="10">
+                    Padding="8,0,0,0" Grid.Row="1" 
+                    Grid.ColumnSpan="2"  
+                    TextWrapping="Wrap"
+                    HorizontalAlignment="Stretch"
+                    FontSize="10">
             This is a property description.
         </TextBlock>
-    </Grid>
+    </StackPanel>
 </UserControl>

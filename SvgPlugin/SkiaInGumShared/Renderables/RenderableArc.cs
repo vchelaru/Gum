@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Gum.Converters;
+using Gum.Managers;
+using Microsoft.Xna.Framework.Graphics;
 using SkiaSharp;
 
 namespace SkiaPlugin.Renderables
@@ -50,6 +53,20 @@ namespace SkiaPlugin.Renderables
             }
         }
 
+        bool isEndRounded;
+        public bool IsEndRounded
+        {
+            get => isEndRounded;
+            set
+            {
+                if(isEndRounded != value)
+                {
+                    isEndRounded = value;
+                    needsUpdate = true;
+                }
+            }
+        }
+
         internal override void DrawToSurface(SKSurface surface)
         {
             surface.Canvas.Clear(SKColors.Transparent);
@@ -58,8 +75,15 @@ namespace SkiaPlugin.Renderables
 
             using (var paint = new SKPaint { Color = skColor, Style = SKPaintStyle.Stroke, StrokeWidth = Thickness, IsAntialias = true })
             {
+                paint.StrokeCap = IsEndRounded ? SKStrokeCap.Round : SKStrokeCap.Butt;
                 //var radius = Width / 2;
                 //surface.Canvas.DrawCircle(new SKPoint(radius, radius), radius, paint);
+
+                if(UseGradient)
+                {
+                    SetGradientOnPaint(paint);
+                }
+
 
                 var adjustedRect = new SKRect(
                     0 + Thickness / 2,

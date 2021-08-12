@@ -60,13 +60,25 @@ namespace Gum.Plugins.BaseClasses
         public event Action WireframeRefreshed;
 
         /// <summary>
-        /// Event which is raised when an ElementSave's variable is set.
+        /// Event raised when an ElementSave's variable is set.
         /// ElementSave - current ElementSave (like the Screen)
         /// InstanceSave - current InstanceSave (like a sprite in a Screen). This may be null
         /// string - name of the variable set
         /// object - OLD value of the variable.  New value must be obtained through the InstanceSave
         /// </summary>
         public event Action<ElementSave, InstanceSave, string, object> VariableSet;
+        /// <summary>
+        /// Event raised when a new variable is added. At the time of this writing
+        /// this will only occur when a new exposed variable is added.
+        /// ElementSave - the element which contains the variable
+        /// string - the name of the variable added, which may be an exposed name
+        /// </summary>
+        /// <remarks>
+        /// Technically this
+        /// is not a new variable but rather a "public" alias of an existing variable. However,
+        /// plugins may need to respond to this so it is treated as an event.
+        /// </remarks>
+        public event Action<ElementSave, string> VariableAdd;
         public event Action<ElementSave> ElementSelected;
         public event Action<TreeNode> TreeNodeSelected;
         public event Action<TreeNode> StateWindowTreeNodeSelected;
@@ -268,12 +280,12 @@ namespace Gum.Plugins.BaseClasses
             }
         }
 
+        public void CallVariableAdd(ElementSave elementSave, string variableName) =>
+            VariableAdd?.Invoke(elementSave, variableName);
+
         public void CallVariableSet(ElementSave parentElement, InstanceSave instance, string changedMember, object oldValue)
         {
-            if (VariableSet != null)
-            {
-                VariableSet(parentElement, instance, changedMember, oldValue);
-            }
+            VariableSet?.Invoke(parentElement, instance, changedMember, oldValue);
         }
 
         public void CallAddAndRemoveVariablesForType(string type, StateSave standardDefaultStateSave)

@@ -1,4 +1,6 @@
-﻿using SkiaSharp;
+﻿using Gum.Converters;
+using Gum.Managers;
+using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -66,17 +68,35 @@ namespace SkiaGum.Renderables
             set;
         } = 90;
 
-        SKPaint Paint => new SKPaint
+
+        public bool IsEndRounded { get; set; }
+
+        SKPaint GetPaint(SKRect boundingRect)
         {
-            Color = this.Color,
-            IsAntialias = true,
-            StrokeWidth = Thickness,
-            Style = SKPaintStyle.Stroke
-        };
+            var paint = new SKPaint
+            {
+                Color = this.Color,
+                IsAntialias = true,
+                StrokeWidth = Thickness,
+                Style = SKPaintStyle.Stroke
+            };
+
+            paint.StrokeCap = IsEndRounded ? SKStrokeCap.Round : SKStrokeCap.Butt;
+
+
+            if (UseGradient)
+            {
+                ApplyGradientToPaint(boundingRect, paint);
+            }
+
+            return paint;
+
+
+        }
 
         public override void DrawBound(SKRect boundingRect, SKCanvas canvas)
         {
-            using (var paint = Paint)
+            using (var paint = GetPaint(boundingRect))
             {
                 var adjustedRect = new SKRect(
                     boundingRect.Left + Thickness / 2,

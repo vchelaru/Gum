@@ -17,10 +17,7 @@ namespace SkiaGum.Renderables
         public int Alpha
         {
             get => Color.Alpha;
-            set
-            {
-                this.Color = new SKColor(this.Color.Red, this.Color.Green, this.Color.Blue, (byte)value);
-            }
+            set => this.Color = new SKColor(this.Color.Red, this.Color.Green, this.Color.Blue, (byte)value);
         }
 
         public int Blue
@@ -116,7 +113,7 @@ namespace SkiaGum.Renderables
 
         public override void DrawBound(SKRect boundingRect, SKCanvas canvas)
         {
-            using (var paint = CreatePaint())
+            using (var paint = CreatePaint(boundingRect))
             {
                 var rotation = this.GetAbsoluteRotation();
 
@@ -137,6 +134,17 @@ namespace SkiaGum.Renderables
                     canvas.Translate(oldX, oldY);
                     canvas.RotateDegrees(-rotation);
                 }
+
+                // If this is stroke-only, then the stroke is centered around the bounds 
+                // we pass in. Therefore, we need to move the bounds "in" by half of the 
+                // stroke width
+                if(IsFilled == false)
+                {
+                    boundingRect.Left += StrokeWidth / 2.0f;
+                    boundingRect.Top += StrokeWidth / 2.0f;
+                    boundingRect.Right -= StrokeWidth / 2.0f;
+                    boundingRect.Bottom -= StrokeWidth / 2.0f;
+                }
                 canvas.DrawRoundRect(boundingRect, CornerRadius, CornerRadius, paint);
 
                 if(applyRotation)
@@ -147,11 +155,8 @@ namespace SkiaGum.Renderables
             }
         }
 
-        private SKPaint CreatePaint()
+        private SKPaint CreatePaint(SKRect boundingRect)
         {
-            // why create a color here using color values?
-            //var skColor = new SKColor(Color.Red, Color.Green, Color.Blue, Color.Alpha);
-
             var paint = new SKPaint 
             { 
                 Color = Color,
@@ -162,7 +167,6 @@ namespace SkiaGum.Renderables
 
             if (HasDropshadow)
             {
-
                 paint.ImageFilter = SKImageFilter.CreateDropShadow(
                             DropshadowOffsetX,
                             // See https://stackoverflow.com/questions/60456526/how-can-i-tell-the-amount-of-space-needed-for-a-skia-dropshadow
@@ -171,6 +175,12 @@ namespace SkiaGum.Renderables
                             DropshadowBlurY / 3.0f,
                             DropshadowColor,
                             SKDropShadowImageFilterShadowMode.DrawShadowAndForeground);
+            }
+
+
+            if (UseGradient)
+            {
+                ApplyGradientToPaint(boundingRect, paint);
             }
 
             return paint;

@@ -15,7 +15,7 @@
             <RowDefinition Height="Auto"></RowDefinition>
         </Grid.RowDefinitions>
         
-        <Label x:Name="Label" MinWidth="100">Property Label:</Label>        
+        <TextBlock x:Name="Label" MinWidth="100" TextWrapping="Wrap" VerticalAlignment="Center">Property Label:</TextBlock>        
         
         <TextBox Grid.Column="1" x:Name="TextBox" 
                  Margin="0,0,51,0" LostFocus="TextBox_LostFocus_1" 

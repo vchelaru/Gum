@@ -440,7 +440,7 @@ namespace Gum.DataTypes.Variables
             }
             else if (variableName == "Base Type")
             {
-                stateSave.ParentContainer.BaseType = value.ToString();
+                stateSave.ParentContainer.BaseType = value?.ToString();
                 isReservedName = true; // don't do anything
             }
 

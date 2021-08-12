@@ -218,16 +218,17 @@ namespace SkiaGum
             {
                 var textBlock = GetTextBlock();
                 
-                SKMatrix scaleMatrix = SKMatrix.MakeScale(1,1);
                 //// Gum uses counter clockwise rotation, Skia uses clockwise, so invert:
                 SKMatrix rotationMatrix = SKMatrix.MakeRotationDegrees(-Rotation);
                 SKMatrix translateMatrix = SKMatrix.MakeTranslation(this.GetAbsoluteX(), this.GetAbsoluteY());
-                SKMatrix result = SKMatrix.MakeIdentity();
+                // Continue to apply the previou matrix in case there is scaling
+                // for device density
+                SKMatrix result = rotationMatrix;
 
                 SKMatrix.Concat(
-                    ref result, rotationMatrix, scaleMatrix);
-                SKMatrix.Concat(
                     ref result, translateMatrix, result);
+                SKMatrix.Concat(
+                    ref result, canvas.TotalMatrix, result);
 
                 canvas.Save();
 
@@ -237,8 +238,8 @@ namespace SkiaGum
                 {
                     canvas.ClipRect(clipRect.Value);
                 }
-                canvas.SetMatrix(result);
 
+                canvas.SetMatrix(result);
 
                 textBlock.Paint(canvas, new SKPoint(0, 0));
                 canvas.Restore();

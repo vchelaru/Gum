@@ -50,35 +50,38 @@ namespace SkiaGum.Renderables
             }
         }
 
-        SKPaint Paint
+        SKPaint GetPaint(SKRect boundingRect)
         {
-            get
+            var effectiveColor = this.Color;
+            if(IsDimmed)
             {
-                var effectiveColor = this.Color;
-                if(IsDimmed)
-                {
-                    const double dimmingMuliplier = .9;
+                const double dimmingMuliplier = .9;
 
-                    effectiveColor = new SKColor(
-                        (byte)(this.Color.Red * dimmingMuliplier),
-                        (byte)(this.Color.Green * dimmingMuliplier),
-                        (byte)(this.Color.Blue * dimmingMuliplier),
-                        this.Color.Alpha);
-                }
-                return new SKPaint
-                {
-                    Color = effectiveColor,
-                    IsAntialias = true
-                };
+                effectiveColor = new SKColor(
+                    (byte)(this.Color.Red * dimmingMuliplier),
+                    (byte)(this.Color.Green * dimmingMuliplier),
+                    (byte)(this.Color.Blue * dimmingMuliplier),
+                    this.Color.Alpha);
             }
+            return new SKPaint
+            {
+                Color = effectiveColor,
+                IsAntialias = true
+            };
         }
 
         public override void DrawBound(SKRect boundingRect, SKCanvas canvas)
         {
-            using (var paint = Paint)
+            using (var paint = GetPaint(boundingRect))
             {
+
+                if (UseGradient)
+                {
+                    ApplyGradientToPaint(boundingRect, paint);
+                }
+
                 var radius = System.Math.Min(boundingRect.Width, boundingRect.Height) / 2.0f;
-                canvas.DrawCircle(boundingRect.MidX, boundingRect.MidY, radius, Paint);
+                canvas.DrawCircle(boundingRect.MidX, boundingRect.MidY, radius, paint);
             }
         }
     }

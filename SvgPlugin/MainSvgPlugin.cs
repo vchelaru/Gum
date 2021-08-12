@@ -2,6 +2,7 @@
 using Gum.Managers;
 using Gum.Plugins;
 using Gum.Plugins.BaseClasses;
+using Gum.Reflection;
 using RenderingLibrary.Graphics;
 using SkiaPlugin.Managers;
 using SkiaPlugin.Renderables;
@@ -35,6 +36,13 @@ namespace SkiaPlugin
             AssignEvents();
 
             AddMenuItems();
+
+            RegisterEnumTypes();
+        }
+
+        private void RegisterEnumTypes()
+        {
+            TypeManager.Self.AddType(typeof(GradientType));
         }
 
         private void AddMenuItems()
@@ -47,6 +55,8 @@ namespace SkiaPlugin
         {
             GetDefaultStateForType += HandleGetDefaultStateForType;
             CreateRenderableForType += HandleCreateRenderbleFor;
+            VariableExcluded += DefaultStateManager.GetIfVariableIsExcluded;
+            VariableSet += DefaultStateManager.HandleVariableSet;
         }
 
         private IRenderableIpso HandleCreateRenderbleFor(string type)

@@ -801,6 +801,20 @@ namespace Gum.Plugins
                 );
         }
 
+        internal void VariableAdd(ElementSave elementSave, string variableName)
+        {
+            CallMethodOnPlugin((plugin) => plugin.CallVariableAdd(elementSave, variableName),
+                nameof(VariableAdd));
+        }
+
+        internal void VariableSet(ElementSave parentElement, InstanceSave instance, string changedMember, object oldValue)
+        {
+            CallMethodOnPlugin((plugin) => plugin.CallVariableSet(parentElement, instance, changedMember, oldValue),
+                nameof(VariableSet)
+            );
+
+        }
+
         internal void VariableRemovedFromCategory(string variableName, StateSaveCategory category)
         {
             CallMethodOnPlugin((plugin) => plugin.CallVariableRemovedFromCategory(variableName, category),
@@ -893,17 +907,6 @@ namespace Gum.Plugins
             return listToFill;
         }
 
-        internal void VariableSet(ElementSave parentElement, InstanceSave instance, string changedMember, object oldValue)
-        {
-            CallMethodOnPlugin(
-                delegate(PluginBase plugin)
-                {
-                    plugin.CallVariableSet(parentElement, instance, changedMember, oldValue);
-                },
-                nameof(VariableSet)
-            );
-
-        }
 
         internal void ElementSelected(ElementSave elementSave)
         {

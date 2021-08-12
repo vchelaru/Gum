@@ -20,6 +20,10 @@ namespace Gum.DataTypes
 #if GUM
         public static bool GetIsEnumeration(this VariableSave variableSave)
         {
+            if(variableSave.CustomTypeConverter is EnumConverter)
+            {
+                return true;
+            }
             if (string.IsNullOrEmpty(variableSave.Type))
             {
                 return false;
@@ -51,7 +55,23 @@ namespace Gum.DataTypes
 
             if (variableSave.GetIsEnumeration())
             {
-                return TypeManager.Self.GetTypeFromString(variableSave.Type);
+                if(variableSave.CustomTypeConverter is EnumConverter enumConverter)
+                {
+                    var values = enumConverter.GetStandardValues();
+
+                    if(values.Count > 0)
+                    {
+                        return values.FirstOrDefault().GetType();
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                }
+                else
+                {
+                    return TypeManager.Self.GetTypeFromString(variableSave.Type);
+                }
             }
             else
             {
@@ -234,8 +254,8 @@ namespace Gum.DataTypes
                         // let's try going recursively:
                         // this happens in a background so let's create a copy to prevent thread access bugs:
                         //var subVariable = element.DefaultState.Variables.FirstOrDefault(item => item.ExposedAsName == variableSave.GetRootName());
-                        var subVariable = element.DefaultState.Variables.ToArray().FirstOrDefault(item => item.ExposedAsName == variableSave.GetRootName());
-
+                        var rootName = variableSave.GetRootName();
+                        var subVariable = element.DefaultState.Variables.ToArray().FirstOrDefault(item => item.ExposedAsName == rootName);
 
                         if (subVariable != null && recursive)
                         {

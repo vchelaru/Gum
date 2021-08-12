@@ -39,8 +39,6 @@ namespace Gum.Wireframe
 
         static WireframeObjectManager mSelf;
 
-        List<GraphicalUiElement> mGraphicalElements = new List<GraphicalUiElement>();
-
         WireframeEditControl mEditControl;
         WireframeControl mWireframeControl;
 
@@ -56,35 +54,7 @@ namespace Gum.Wireframe
 
         #region Properties
 
-        public List<GraphicalUiElement> AllIpsos
-        {
-            get
-            {
-                return mGraphicalElements;
-                //foreach (Sprite sprite in mSprites)
-                //{
-                //    yield return sprite;
-                //}
-
-                //foreach (Text text in mTexts)
-                //{
-                //    yield return text;
-                //}
-                //foreach (LineRectangle rectangle in mLineRectangles)
-                //{
-                //    yield return rectangle;
-                //}
-                //foreach (SolidRectangle solidRectangle in mSolidRectangles)
-                //{
-                //    yield return solidRectangle;
-                //}
-                //foreach (NineSlice nineSlice in mNineSlices)
-                //{
-                //    yield return nineSlice;
-                //}
-            }
-
-        }
+        public List<GraphicalUiElement> AllIpsos { get; private set; } = new List<GraphicalUiElement>();
 
         public ElementSave ElementShowing
         {
@@ -205,14 +175,14 @@ namespace Gum.Wireframe
 
         private void ClearAll()
         {
-            foreach (var element in mGraphicalElements)
+            foreach (var element in AllIpsos)
             {
                 gueManager.Remove(element);
 
                 element.RemoveFromManagers();
             }
 
-            mGraphicalElements.Clear();
+            AllIpsos.Clear();
         }
 
         public void RefreshAll(bool forceLayout, bool forceReloadTextures = false)
@@ -456,10 +426,7 @@ namespace Gum.Wireframe
         }
 
 
-        public bool IsRepresentation(IPositionedSizedObject ipso)
-        {
-            return mGraphicalElements.Contains(ipso);
-        }
+        public bool IsRepresentation(IPositionedSizedObject ipso) => AllIpsos.Contains(ipso);
 
         public ElementSave GetElement(IPositionedSizedObject representation)
         {
@@ -472,19 +439,7 @@ namespace Gum.Wireframe
             return null;
         }
 
-        public T GetIpsoAt<T>(float x, float y, IList<T> list) where T : IRenderableIpso
-        {
-            foreach (T ipso in list)
-            {
-                if (ipso.HasCursorOver(x, y))
-                {
-                    return ipso;
-                }
-            }
-            return default(T);
-        }
-
-               
+              
         private static bool TryAddToElementStack(InstanceSave instanceSave, List<ElementWithState> elementStack, out ElementSave selectedElement)
         {
             bool toReturn = false;
@@ -498,7 +453,6 @@ namespace Gum.Wireframe
 
                 if (elementStack.Count == 0 || elementStack.Last().Element != selectedElement)
                 {
-
                     ElementWithState elementWithState = new ElementWithState(selectedElement);
                     var state = new DataTypes.RecursiveVariableFinder(instanceSave, elementStack).GetValue("State") as string;
                     elementWithState.StateName = state;

@@ -64,7 +64,7 @@ namespace CodeOutputPlugin.Views
         public CodeWindow()
         {
             InitializeComponent();
-            DataGrid.PropertyChange += HandleCodeOutputSettingsPropertyChanged;
+            DataGrid.PropertyChange += (not, used) => CodeOutputSettingsPropertyChanged?.Invoke(this, null);
 
             CreateGridCategories();
         }
@@ -73,12 +73,7 @@ namespace CodeOutputPlugin.Views
         {
             DataGrid.Categories.Clear();
 
-            var projectCategory = new MemberCategory("Project-Wide Code Generation");
-
-            projectCategory.Members.Add(CreateProjectUsingStatementsMember());
-
-            DataGrid.Categories.Add(projectCategory);
-
+            CreateProjectWideUi();
 
             var elementCategory = new MemberCategory("Element Code Generation");
 
@@ -91,23 +86,15 @@ namespace CodeOutputPlugin.Views
 
         }
 
-        private InstanceMember CreateAutoGenerateOnChangeMember()
+        #region Project-wide UI
+
+        private void CreateProjectWideUi()
         {
-            var member = new InstanceMember("Auto-generate on change", this);
-
-            member.CustomSetEvent += (owner, value) =>
-            {
-                if (codeOutputElementSettings != null)
-                {
-                    codeOutputElementSettings.AutoGenerateOnChange = (bool)value;
-                    CodeOutputSettingsPropertyChanged?.Invoke(this, null);
-                }
-            };
-
-            member.CustomGetEvent += (owner) => codeOutputElementSettings?.AutoGenerateOnChange;
-            member.CustomGetTypeEvent += (owner) => typeof(bool);
-
-            return member;
+            var projectCategory = new MemberCategory("Project-Wide Code Generation");
+            projectCategory.Members.Add(CreateProjectUsingStatementsMember());
+            projectCategory.Members.Add(CreateCodeProjectRootMember());
+            projectCategory.Members.Add(CreateRootNamespaceMember());
+            DataGrid.Categories.Add(projectCategory);
         }
 
         private InstanceMember CreateProjectUsingStatementsMember()
@@ -123,14 +110,81 @@ namespace CodeOutputPlugin.Views
                 }
             };
 
-            member.CustomGetEvent += (owner) =>
+            member.CustomGetEvent += (owner) => CodeOutputProjectSettings?.CommonUsingStatements;
+            member.CustomGetTypeEvent += (owner) => typeof(string);
+            member.PreferredDisplayer = typeof(MultiLineTextBoxDisplay);
+
+            return member;
+        }
+
+        private InstanceMember CreateCodeProjectRootMember()
+        {
+            var member = new InstanceMember("Code Project Root", this);
+
+            member.CustomSetEvent += (owner, value) =>
             {
-                return CodeOutputProjectSettings?.CommonUsingStatements;
+                if (CodeOutputProjectSettings != null)
+                {
+                    CodeOutputProjectSettings.CodeProjectRoot = (string)value;
+                    var needsAppendedSlash = !string.IsNullOrEmpty(CodeOutputProjectSettings.CodeProjectRoot) &&
+                        !CodeOutputProjectSettings.CodeProjectRoot.EndsWith("\\") &&
+                        !CodeOutputProjectSettings.CodeProjectRoot.EndsWith("/");
+                    if (needsAppendedSlash)
+                    {
+                        CodeOutputProjectSettings.CodeProjectRoot += "\\";
+                    }
+                    CodeOutputSettingsPropertyChanged?.Invoke(this, null);
+                }
             };
 
+            member.CustomGetEvent += (owner) => CodeOutputProjectSettings?.CodeProjectRoot;
+            member.CustomGetTypeEvent += (owner) => typeof(string);
+            // Don't use a FileSelectionDisplay since it currently only supports
+            // selecting files, and we want to select a folder. Maybe at some point 
+            // in the future this could have a property for selecting folder, but until then....
+            //member.PreferredDisplayer = typeof(FileSelectionDisplay);
+
+            return member;
+        }
+
+        private InstanceMember CreateRootNamespaceMember()
+        {
+            var member = new InstanceMember("Root Namespace", this);
+
+            member.CustomSetEvent += (owner, value) =>
+            {
+                if(CodeOutputProjectSettings != null)
+                {
+                    CodeOutputProjectSettings.RootNamespace = (string)value;
+                    CodeOutputSettingsPropertyChanged?.Invoke(this, null);
+                }
+            };
+
+            member.CustomGetEvent += (owner) => CodeOutputProjectSettings?.RootNamespace;
             member.CustomGetTypeEvent += (owner) => typeof(string);
 
-            member.PreferredDisplayer = typeof(MultiLineTextBoxDisplay);
+            return member;
+        }
+
+        #endregion
+
+        #region Current Element UI
+
+        private InstanceMember CreateAutoGenerateOnChangeMember()
+        {
+            var member = new InstanceMember("Generation Behavior", this);
+
+            member.CustomSetEvent += (owner, value) =>
+            {
+                if (codeOutputElementSettings != null)
+                {
+                    codeOutputElementSettings.GenerationBehavior = (GenerationBehavior)value;
+                    CodeOutputSettingsPropertyChanged?.Invoke(this, null);
+                }
+            };
+
+            member.CustomGetEvent += (owner) => codeOutputElementSettings?.GenerationBehavior;
+            member.CustomGetTypeEvent += (owner) => typeof(GenerationBehavior);
 
             return member;
         }
@@ -208,10 +262,9 @@ namespace CodeOutputPlugin.Views
             return member;
         }
 
-        private void HandleCodeOutputSettingsPropertyChanged(string arg1, PropertyChangedArgs arg2)
-        {
-            CodeOutputSettingsPropertyChanged?.Invoke(this, null);
-        }
+        #endregion
+
+        #region Button Event Handlers
 
         private void HandleGenerateCodeClicked(object sender, RoutedEventArgs e)
         {
@@ -237,5 +290,7 @@ namespace CodeOutputPlugin.Views
                 }
             }
         }
+
+        #endregion
     }
 }

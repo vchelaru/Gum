@@ -19,6 +19,11 @@ namespace SkiaPlugin.Renderables
 
             using (var paint = new SKPaint { Color = skColor, Style = SKPaintStyle.Fill, IsAntialias = true })
             {
+                if (UseGradient)
+                {
+                    SetGradientOnPaint(paint);
+                }
+
                 var radius = Width / 2;
                 surface.Canvas.DrawCircle(new SKPoint(radius, radius), radius, paint);
             }

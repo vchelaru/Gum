@@ -5,10 +5,12 @@ using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.ToolStates;
 using RenderingLibrary.Graphics;
+using RenderingLibrary.Math;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -30,32 +32,22 @@ namespace CodeOutputPlugin.Manager
         public static int CanvasHeight { get; set; } = 854;
 
         /// <summary>
-        /// if true, then pixel sizes are maintained regardless of pixel density. This allows layouts to maintain pixel-perfect
+        /// if true, then pixel sizes are maintained regardless of pixel density. This allows layouts to maintain pixel-perfect.
+        /// Update: This is now set to false because .... well, it makes it hard to create flexible layouts. It's best to set a resolution of 
+        /// 320 wide and let density scale things up
         /// </summary>
-        public static bool AdjustPixelValuesForDensity { get; set; } = true;
+        public static bool AdjustPixelValuesForDensity { get; set; } = false;
 
-        public static string GetCodeForElement(ElementSave element, CodeOutputElementSettings elementSettings, CodeOutputProjectSettings projectSettings)
+        public static string GetGeneratedCodeForElement(ElementSave element, CodeOutputElementSettings elementSettings, CodeOutputProjectSettings projectSettings)
         {
-            #region Determine if XamarinForms Control
-            VisualApi visualApi;
-            var defaultState = element.DefaultState;
-            var isXamForms = defaultState.GetValueRecursive($"IsXamarinFormsControl") as bool?;
-            if (isXamForms == true)
-            {
-                visualApi = VisualApi.XamarinForms;
-            }
-            else
-            {
-                visualApi = VisualApi.Gum;
-            }
-            #endregion
+            VisualApi visualApi = GetVisualApiForElement(element);
 
             var stringBuilder = new StringBuilder();
             int tabCount = 0;
 
             #region Using Statements
 
-            if(!string.IsNullOrWhiteSpace(projectSettings?.CommonUsingStatements))
+            if (!string.IsNullOrWhiteSpace(projectSettings?.CommonUsingStatements))
             {
                 stringBuilder.AppendLine(projectSettings.CommonUsingStatements);
             }
@@ -68,9 +60,11 @@ namespace CodeOutputPlugin.Manager
 
             #region Namespace Header/Opening {
 
-            if (!string.IsNullOrEmpty(elementSettings?.Namespace))
+            string namespaceName = GetElementNamespace(element, elementSettings, projectSettings);
+
+            if (!string.IsNullOrEmpty(namespaceName))
             {
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"namespace {elementSettings.Namespace}");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"namespace {namespaceName}");
                 stringBuilder.AppendLine(ToTabs(tabCount) + "{");
                 tabCount++;
             }
@@ -109,7 +103,7 @@ namespace CodeOutputPlugin.Manager
             stringBuilder.AppendLine(ToTabs(tabCount) + "}");
             #endregion
 
-            if (!string.IsNullOrEmpty(elementSettings?.Namespace))
+            if (!string.IsNullOrEmpty(namespaceName))
             {
                 tabCount--;
                 stringBuilder.AppendLine(ToTabs(tabCount) + "}");
@@ -118,16 +112,66 @@ namespace CodeOutputPlugin.Manager
             return stringBuilder.ToString();
         }
 
+        public static string GetElementNamespace(ElementSave element, CodeOutputElementSettings elementSettings, CodeOutputProjectSettings projectSettings)
+        {
+            var namespaceName = elementSettings?.Namespace;
+
+            if (string.IsNullOrEmpty(namespaceName) && !string.IsNullOrWhiteSpace(projectSettings.RootNamespace))
+            {
+                namespaceName = projectSettings.RootNamespace;
+                if (element is ScreenSave)
+                {
+                    namespaceName += ".Screens";
+                }
+                else if (element is ComponentSave)
+                {
+                    namespaceName += ".Components";
+                }
+                else // standard element
+                {
+                    namespaceName += ".Standards";
+                }
+
+                var splitElementName = element.Name.Split('\\').ToArray();
+                var splitPrefix = splitElementName.Take(splitElementName.Length - 1).ToArray();
+                var whatToAppend = string.Join(".", splitPrefix);
+                if (!string.IsNullOrEmpty(whatToAppend))
+                {
+                    namespaceName += "." + whatToAppend;
+                }
+            }
+
+            return namespaceName;
+        }
+
+        public static VisualApi GetVisualApiForElement(ElementSave element)
+        {
+            VisualApi visualApi;
+            var defaultState = element.DefaultState;
+            var isXamForms = defaultState.GetValueRecursive($"IsXamarinFormsControl") as bool?;
+            if (isXamForms == true)
+            {
+                visualApi = VisualApi.XamarinForms;
+            }
+            else
+            {
+                visualApi = VisualApi.Gum;
+            }
+
+            return visualApi;
+        }
+
         private static void AddAbsoluteLayoutIfNecessary(ElementSave element, int tabCount, StringBuilder stringBuilder)
         {
             var elementBaseType = element?.BaseType;
             var isThisAbsoluteLayout = elementBaseType?.EndsWith("/AbsoluteLayout") == true;
+            var isThisStackLayout = elementBaseType?.EndsWith("/StackLayout") == true;
 
             var isSkiaCanvasView = elementBaseType?.EndsWith("/SkiaGumCanvasView") == true;
 
             var isContainer = elementBaseType == "Container";
 
-            if (!isThisAbsoluteLayout && !isSkiaCanvasView && !isContainer)
+            if (!isThisAbsoluteLayout && !isSkiaCanvasView && !isContainer && !isThisStackLayout)
             {
                 var shouldAddMainLayout = true;
                 if (element is ScreenSave && !string.IsNullOrEmpty(element.BaseType))
@@ -187,6 +231,7 @@ namespace CodeOutputPlugin.Manager
 
                 var elementBaseType = element?.BaseType;
                 var isThisAbsoluteLayout = elementBaseType?.EndsWith("/AbsoluteLayout") == true;
+                var isStackLayout = elementBaseType?.EndsWith("/StackLayout") == true;
 
                 var isSkiaCanvasView = elementBaseType?.EndsWith("/SkiaGumCanvasView") == true;
 
@@ -194,7 +239,7 @@ namespace CodeOutputPlugin.Manager
                 {
                     stringBuilder.AppendLine(ToTabs(tabCount) + "var MainLayout = this;");
                 }
-                else if(!isSkiaCanvasView)
+                else if(!isSkiaCanvasView && !isStackLayout)
                 {
                     var shouldAddMainLayout = true;
                     if(element is ScreenSave && !string.IsNullOrEmpty(element.BaseType))
@@ -221,6 +266,12 @@ namespace CodeOutputPlugin.Manager
             }
             stringBuilder.AppendLine();
 
+            // fill with variable binding after the instances have been created
+            if(visualApi == VisualApi.XamarinForms)
+            {
+                FillWithVariableBinding(element, stringBuilder, tabCount);
+            }
+
             foreach (var instance in element.Instances)
             {
                 FillWithVariableAssignments(instance, element, stringBuilder, tabCount);
@@ -244,6 +295,29 @@ namespace CodeOutputPlugin.Manager
 
             tabCount--;
             stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+        }
+
+        private static void FillWithVariableBinding(ElementSave element, StringBuilder stringBuilder, int tabCount)
+        {
+            var boundVariables = new List<VariableSave>();
+
+            foreach (var variable in element.DefaultState.Variables)
+            {
+                if (!string.IsNullOrEmpty(variable.ExposedAsName))
+                {
+                    var instanceName = variable.SourceObject;
+                    // make sure this instance is a XamForms object otherwise we don't need to set the binding
+                    var isXamForms = (element.DefaultState.GetValueRecursive($"{instanceName}.IsXamarinFormsControl") as bool?) ?? false;
+
+                    if(isXamForms)
+                    {
+                        var instance = element.GetInstance(instanceName);
+                        var instanceType = GetClassNameForType(instance.BaseType, VisualApi.XamarinForms); 
+                        stringBuilder.AppendLine(ToTabs(tabCount) + $"{instanceName}.SetBinding({instanceType}.{variable.GetRootName()}Property, nameof({variable.ExposedAsName}));");
+                    }
+                }
+            
+            }
         }
 
         public static string GetCodeForState(ElementSave container, StateSave stateSave, VisualApi visualApi)
@@ -306,26 +380,31 @@ namespace CodeOutputPlugin.Manager
                 {
                     baseElement = Gum.Managers.ObjectFinder.Self.GetElementSave(instance?.BaseType);
                 }
-                var baseDefaultState = baseElement?.DefaultState;
-                RecursiveVariableFinder baseRecursiveVariableFinder = new RecursiveVariableFinder(baseDefaultState);
 
-
-                List<VariableSave> variablesForThisInstance = group
-                    .Where(item => GetIfVariableShouldBeIncludedForInstance(instance, item, baseRecursiveVariableFinder))
-                    .ToList();
-
-
-                ProcessVariableGroups(variablesForThisInstance, stateSave, instance, container, visualApi, stringBuilder, tabCount);
-
-                // Now that they've been processed, we can process the remainder regularly
-                foreach (var variable in variablesForThisInstance)
+                // could be null if the element references an element that doesn't exist.
+                if(baseElement != null)
                 {
-                    var codeLine = GetCodeLine(instance, variable, container, visualApi, stateSave);
-                    stringBuilder.AppendLine(ToTabs(tabCount) + codeLine);
-                    var suffixCodeLine = GetSuffixCodeLine(instance, variable, visualApi);
-                    if (!string.IsNullOrEmpty(suffixCodeLine))
+                    var baseDefaultState = baseElement?.DefaultState;
+                    RecursiveVariableFinder baseRecursiveVariableFinder = new RecursiveVariableFinder(baseDefaultState);
+
+
+                    List<VariableSave> variablesForThisInstance = group
+                        .Where(item => GetIfVariableShouldBeIncludedForInstance(instance, item, baseRecursiveVariableFinder))
+                        .ToList();
+
+
+                    ProcessVariableGroups(variablesForThisInstance, stateSave, instance, container, visualApi, stringBuilder, tabCount);
+
+                    // Now that they've been processed, we can process the remainder regularly
+                    foreach (var variable in variablesForThisInstance)
                     {
-                        stringBuilder.AppendLine(ToTabs(tabCount) + suffixCodeLine);
+                        var codeLine = GetCodeLine(instance, variable, container, visualApi, stateSave);
+                        stringBuilder.AppendLine(ToTabs(tabCount) + codeLine);
+                        var suffixCodeLine = GetSuffixCodeLine(instance, variable, visualApi);
+                        if (!string.IsNullOrEmpty(suffixCodeLine))
+                        {
+                            stringBuilder.AppendLine(ToTabs(tabCount) + suffixCodeLine);
+                        }
                     }
                 }
 
@@ -415,23 +494,52 @@ namespace CodeOutputPlugin.Manager
 
         private static void FillWithExposedVariable(VariableSave exposedVariable, ElementSave container, StringBuilder stringBuilder, int tabCount)
         {
+
+            // if both the container and the instance are xamarin forms objects, then we can try to do some bubble-up binding
+            var instanceName = exposedVariable.SourceObject;
+            bool usesBinding = GetIfInstanceShouldBind(container, instanceName);
             var type = exposedVariable.Type;
 
-            if(exposedVariable.IsState(container, out ElementSave stateContainer, out StateSaveCategory category))
+            if (exposedVariable.IsState(container, out ElementSave stateContainer, out StateSaveCategory category))
             {
                 var stateContainerType = GetClassNameForType(stateContainer.Name, VisualApi.Gum);
                 type = $"{stateContainerType}.{category.Name}";
             }
 
-            stringBuilder.AppendLine(ToTabs(tabCount) + $"public {type} {exposedVariable.ExposedAsName}");
-            stringBuilder.AppendLine(ToTabs(tabCount) + "{");
-            tabCount++;
-            stringBuilder.AppendLine(ToTabs(tabCount) + $"get => {exposedVariable.Name};");
-            stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {exposedVariable.Name} = value;");
-            tabCount--;
+            if (usesBinding)
+            {
+                var containerClassName = GetClassNameForType(container.Name, VisualApi.XamarinForms);
+                stringBuilder.AppendLine($"{ToTabs(tabCount)}public static readonly BindableProperty {exposedVariable.ExposedAsName}Property = " +
+                    $"BindableProperty.Create(nameof({exposedVariable.ExposedAsName}),typeof({type}),typeof({containerClassName}), defaultBindingMode: BindingMode.TwoWay);");
 
-            stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"public string {exposedVariable.ExposedAsName}");
+                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+                tabCount++;
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"get => ({type})GetValue({exposedVariable.ExposedAsName}Property);");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"set => SetValue({exposedVariable.ExposedAsName}Property, value);");
+                tabCount--;
+                stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+            }
+            else
+            {
 
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"public {type} {exposedVariable.ExposedAsName}");
+                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+                tabCount++;
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"get => {exposedVariable.Name};");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {exposedVariable.Name} = value;");
+                tabCount--;
+
+                stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+            }
+        }
+
+        private static bool GetIfInstanceShouldBind(ElementSave container, string instanceName)
+        {
+            var isContainerXamarinForms = (container.DefaultState.GetValueRecursive("IsXamarinFormsControl") as bool?) ?? false;
+            var isInstanceXamarinForms = (container.DefaultState.GetValueRecursive($"{instanceName}.IsXamarinFormsControl") as bool?) ?? false;
+            var usesBinding = isContainerXamarinForms && isInstanceXamarinForms;
+            return usesBinding;
         }
 
         public static string GetCodeForInstance(InstanceSave instance, ElementSave element, VisualApi visualApi)
@@ -460,13 +568,21 @@ namespace CodeOutputPlugin.Manager
             VisualApi visualApi = VisualApi.Gum;
 
             var defaultState = element.DefaultState;
-            var isXamForms = defaultState.GetValueRecursive($"{instance.Name}.IsXamarinFormsControl") as bool?;
-            if(isXamForms == true)
+            var isXamForms = (defaultState.GetValueRecursive($"{instance.Name}.IsXamarinFormsControl") as bool?) ?? false;
+            if(isXamForms)
             {
                 visualApi = VisualApi.XamarinForms;
             }
 
             stringBuilder.AppendLine($"{tabs}{instance.Name} = new {GetClassNameForType(instance.BaseType, visualApi)}();");
+
+            var shouldSetBinding =
+                isXamForms && defaultState.Variables.Any(item => !string.IsNullOrEmpty(item.ExposedAsName) && item.SourceObject == instance.Name);
+            // If it's xamarin forms and we have exposed variables, then let's set up binding to this
+            if (shouldSetBinding)
+            {
+                stringBuilder.AppendLine($"{tabs}{instance.Name}.BindingContext = this;");
+            }
         }
 
         private static void FillWithVariableAssignments(ElementSave element, VisualApi visualApi, StringBuilder stringBuilder, int tabCount = 0)
@@ -545,7 +661,7 @@ namespace CodeOutputPlugin.Manager
         {
             #region Get variables to consider
 
-            var variablesToConsider = GetVariablesToConsider(instance)
+            var variablesToAssignValues = GetVariablesForValueAssignmentCode(instance)
                 // make "Parent" first
                 // .. actually we need to make parent last so that it can properly assign parent on scrollables
                 .OrderBy(item => item.GetRootName() == "Parent")
@@ -582,6 +698,10 @@ namespace CodeOutputPlugin.Manager
                 {
                     stringBuilder.AppendLine($"{tabs}{instance.Name}.AutomationId = \"{instance.Name}\";");
                 }
+                if(instance.BaseType?.EndsWith("/StackLayout") == true)
+                {
+                    stringBuilder.AppendLine($"{tabs}{instance.Name}.Spacing = 0;");
+                }
             }
 
             #endregion
@@ -589,9 +709,9 @@ namespace CodeOutputPlugin.Manager
 
             // sometimes variables have to be processed in groups. For example, RGB values
             // have to be assigned all at once in a Color value in XamForms;
-            ProcessVariableGroups(variablesToConsider, container.DefaultState, instance, container, visualApi, stringBuilder, tabCount);
+            ProcessVariableGroups(variablesToAssignValues, container.DefaultState, instance, container, visualApi, stringBuilder, tabCount);
 
-            foreach (var variable in variablesToConsider)
+            foreach (var variable in variablesToAssignValues)
             {
                 var codeLine = GetCodeLine(instance, variable, container, visualApi, defaultState);
 
@@ -613,11 +733,10 @@ namespace CodeOutputPlugin.Manager
             // For scrollable GumContainers we need to have the parent assigned *after* the AbsoluteLayout rectangle:
             #region Assign Parent
 
-            var hasParent = variablesToConsider.Any(item => item.GetRootName() == "Parent");
+            var hasParent = variablesToAssignValues.Any(item => item.GetRootName() == "Parent");
 
             if (!hasParent && !instance.DefinedByBase)
             {
-
                 if(visualApi == VisualApi.Gum)
                 {
                     // add it to "this"
@@ -626,12 +745,32 @@ namespace CodeOutputPlugin.Manager
                 else // forms
                 {
                     var instanceBaseType = instance.BaseType;
-                    var isGumCollectionView = instanceBaseType.EndsWith("/GumCollectionView");
+                    var isContainerStackLayout = container.BaseType?.EndsWith("/StackLayout") == true;
 
-                    if(isGumCollectionView)
+                    if(instanceBaseType.EndsWith("/GumCollectionView"))
                     {
                         stringBuilder.AppendLine($"{tabs}var tempFor{instance.Name} = GumScrollBar.CreateScrollableAbsoluteLayout({instance.Name}, ScrollableLayoutParentPlacement.Free);");
                         stringBuilder.AppendLine($"{tabs}MainLayout.Children.Add(tempFor{instance.Name});");
+                    }
+                    else if (instanceBaseType.EndsWith("/ScrollView"))
+                    {
+                        // assume that stack view will be at the base
+                        //stringBuilder.AppendLine($"{tabs}MainLayout.Children.Add(tempFor{instance.Name});");
+                        // Update Aug 9, 2021
+                        // Why do we assume that 
+                        // the stack view will be
+                        // at the base? Was it because
+                        // earlier versions of the code
+                        // generator didn't properly position
+                        // objects? This has been improving, and
+                        // this assumption causes confusion if a scrollview
+                        // is at the root of the page...
+                        //stringBuilder.AppendLine($"{tabs}this.Content = {instance.Name};");
+                        stringBuilder.AppendLine($"{tabs}MainLayout.Children.Add({instance.Name});");
+                    }
+                    else if(isContainerStackLayout)
+                    {
+                        stringBuilder.AppendLine($"{tabs}this.Children.Add({instance.Name});");
                     }
                     else
                     {
@@ -660,10 +799,10 @@ namespace CodeOutputPlugin.Manager
                 {
                     case "Text":
                         ProcessColorForLabel(variablesToConsider, defaultState, instance, stringBuilder);
-                        ProcessPositionAndSize(variablesToConsider, defaultState, instance, stringBuilder, tabCount);
+                        ProcessPositionAndSize(variablesToConsider, defaultState, instance, container, stringBuilder, tabCount);
                         break;
                     default:
-                        ProcessPositionAndSize(variablesToConsider, defaultState, instance, stringBuilder, tabCount);
+                        ProcessPositionAndSize(variablesToConsider, defaultState, instance, container, stringBuilder, tabCount);
                         break;
                 }
             }
@@ -671,30 +810,36 @@ namespace CodeOutputPlugin.Manager
 
         private static void ProcessColorForLabel(List<VariableSave> variablesToConsider, StateSave defaultState, InstanceSave instance, StringBuilder stringBuilder)
         {
+            var instancePrefix = instance != null ? instance.Name + "." : string.Empty;
             var instanceName = instance.Name;
             var rfv = new RecursiveVariableFinder(defaultState);
 
-            var red = rfv.GetValue<int>(instanceName + ".Red");
-            var green = rfv.GetValue<int>(instanceName + ".Green");
-            var blue = rfv.GetValue<int>(instanceName + ".Blue");
-            var alpha = rfv.GetValue<int>(instanceName + ".Alpha");
+            var red = rfv.GetValue<int>(instancePrefix + "Red");
+            var green = rfv.GetValue<int>(instancePrefix + "Green");
+            var blue = rfv.GetValue<int>(instancePrefix + "Blue");
+            var alpha = rfv.GetValue<int>(instancePrefix + "Alpha");
 
-            variablesToConsider.RemoveAll(item => item.Name == instanceName + ".Red");
-            variablesToConsider.RemoveAll(item => item.Name == instanceName + ".Green");
-            variablesToConsider.RemoveAll(item => item.Name == instanceName + ".Blue");
-            variablesToConsider.RemoveAll(item => item.Name == instanceName + ".Alpha");
+            variablesToConsider.RemoveAll(item => item.Name == instancePrefix + "Red");
+            variablesToConsider.RemoveAll(item => item.Name == instancePrefix + "Green");
+            variablesToConsider.RemoveAll(item => item.Name == instancePrefix + "Blue");
+            variablesToConsider.RemoveAll(item => item.Name == instancePrefix + "Alpha");
 
             stringBuilder.AppendLine($"{instanceName}.TextColor = Color.FromRgba({red}, {green}, {blue}, {alpha});");
         }
 
-        private static void ProcessPositionAndSize(List<VariableSave> variablesToConsider, StateSave defaultState, InstanceSave instance, StringBuilder stringBuilder, int tabCount)
+        private static void ProcessPositionAndSize(List<VariableSave> variablesToConsider, StateSave state, InstanceSave instance, ElementSave container, StringBuilder stringBuilder, int tabCount)
         {
-
-
+            //////////////////Early out/////////////////////
+            if(container is ScreenSave && instance == null)
+            {
+                // screens can't be positioned
+                return;
+            }
+            /////////////// End Early Out/////////////
             string prefix = instance?.Name == null ? "" : instance.Name + ".";
 
             var setsAny =
-                defaultState.Variables.Any(item =>
+                state.Variables.Any(item =>
                     item.Name == prefix + "X" ||
                     item.Name == prefix + "Y" ||
                     item.Name == prefix + "Width" ||
@@ -709,201 +854,486 @@ namespace CodeOutputPlugin.Manager
                     
                     );
 
-            if(setsAny)
+            InstanceSave parent = null;
+            if(instance != null)
             {
-                var variableFinder = new RecursiveVariableFinder(defaultState);
-
-                var x = variableFinder.GetValue<float>(prefix + "X");
-                var y = variableFinder.GetValue<float>(prefix + "Y");
-                var width = variableFinder.GetValue<float>(prefix + "Width");
-                var height = variableFinder.GetValue<float>(prefix + "Height");
-
-                var xUnits = variableFinder.GetValue<PositionUnitType>(prefix + "X Units");
-                var yUnits = variableFinder.GetValue<PositionUnitType>(prefix + "Y Units");
-                var widthUnits = variableFinder.GetValue<DimensionUnitType>(prefix + "Width Units");
-                var heightUnits = variableFinder.GetValue<DimensionUnitType>(prefix + "Height Units");
-
-                var xOrigin = variableFinder.GetValue<HorizontalAlignment>(prefix + "X Origin");
-                var yOrigin = variableFinder.GetValue<VerticalAlignment>(prefix + "Y Origin");
-
-                variablesToConsider.RemoveAll(item => item.Name == prefix + "X");
-                variablesToConsider.RemoveAll(item => item.Name == prefix + "Y");
-                variablesToConsider.RemoveAll(item => item.Name == prefix + "Width");
-                variablesToConsider.RemoveAll(item => item.Name == prefix + "Height");
-                variablesToConsider.RemoveAll(item => item.Name == prefix + "X Units");
-                variablesToConsider.RemoveAll(item => item.Name == prefix + "Y Units");
-                variablesToConsider.RemoveAll(item => item.Name == prefix + "Width Units");
-                variablesToConsider.RemoveAll(item => item.Name == prefix + "Height Units");
-
-                List<string> proportionalFlags = new List<string>();
-
-                const string WidthProportionalFlag = "AbsoluteLayoutFlags.WidthProportional";
-                const string HeightProportionalFlag = "AbsoluteLayoutFlags.HeightProportional";
-                const string XProportionalFlag = "AbsoluteLayoutFlags.XProportional";
-                const string YProportionalFlag = "AbsoluteLayoutFlags.YProportional";
-
-                if (widthUnits == DimensionUnitType.Percentage)
+                var parentName = state.GetValueRecursive( instance.Name + ".Parent") as string;
+                if(!string.IsNullOrEmpty(parentName))
                 {
-                    width /= 100.0f;
-                    proportionalFlags.Add(WidthProportionalFlag);
+                    parent = container.GetInstance(parentName);
                 }
-                else if(widthUnits == DimensionUnitType.RelativeToContainer)
-                {
-                    if(width == 0)
-                    {
-                        width = 1;
-                        proportionalFlags.Add(WidthProportionalFlag);
-                    }
-                    else
-                    {
-                        // not allowed!!!
-                    }
-                }
-                if (heightUnits == DimensionUnitType.Percentage)
-                {
-                    height /= 100.0f;
-                    proportionalFlags.Add(HeightProportionalFlag);
-                }
-                else if(heightUnits == DimensionUnitType.RelativeToContainer)
-                {
-                    if(height == 0)
-                    {
-                        height = 1;
-                        proportionalFlags.Add(HeightProportionalFlag);
-                    }
-                    else
-                    {
-                        // not allowed!
-                    }
-                }
+            }
 
-                // special case
-                // If we're using the center with x=0 we'll pretend it's the same as 50% 
-                if(xUnits == PositionUnitType.PixelsFromCenterX && widthUnits == DimensionUnitType.Absolute && xOrigin == HorizontalAlignment.Center)
+            if(parent == null || parent.BaseType?.EndsWith("/AbsoluteLayout") == true)
+            {
+                // If this is part of an absolute layout, we put it in an absolute layout. This is the default
+                // only do this layout if we're either the default state, or the variables are set in the state:
+                if(setsAny || state == container.DefaultState)
                 {
-                    if(x == 0)
-                    {
-                        // treat it like it's 50%:
-                        x = .5f;
-                        proportionalFlags.Add(XProportionalFlag);
-                    }
+                    SetAbsoluteLayoutPosition(variablesToConsider, state, instance, container, stringBuilder, tabCount);
                 }
-                // Xamarin forms uses a weird anchoring system to combine both position and anchor into one value. Gum splits those into two values
-                // We need to convert from the gum units to xamforms units:
-                // for now assume it's all %'s:
+            }
+            else //if(parent?.BaseType?.EndsWith("/StackLayout") == true)
+            {
+                SetNonAbsoluteLayoutPosition(variablesToConsider, state, instance, stringBuilder, tabCount, prefix, parent.BaseType);
+            }
 
-                else if (xUnits == PositionUnitType.PercentageWidth)
+        }
+
+        private static void SetNonAbsoluteLayoutPosition(List<VariableSave> variablesToConsider, StateSave defaultState, InstanceSave instance, 
+            StringBuilder stringBuilder, int tabCount, string prefix, string parentBaseType)
+        {
+            var variableFinder = new RecursiveVariableFinder(defaultState);
+
+            var x = variableFinder.GetValue<float>(prefix + "X");
+            var y = variableFinder.GetValue<float>(prefix + "Y");
+            var width = variableFinder.GetValue<float>(prefix + "Width");
+            var height = variableFinder.GetValue<float>(prefix + "Height");
+
+            var xUnits = variableFinder.GetValue<PositionUnitType>(prefix + "X Units");
+            var yUnits = variableFinder.GetValue<PositionUnitType>(prefix + "Y Units");
+            var widthUnits = variableFinder.GetValue<DimensionUnitType>(prefix + "Width Units");
+            var heightUnits = variableFinder.GetValue<DimensionUnitType>(prefix + "Height Units");
+
+            var xOrigin = variableFinder.GetValue<HorizontalAlignment>(prefix + "X Origin");
+            var yOrigin = variableFinder.GetValue<VerticalAlignment>(prefix + "Y Origin");
+
+            variablesToConsider.RemoveAll(item => item.Name == prefix + "X");
+            variablesToConsider.RemoveAll(item => item.Name == prefix + "Y");
+            variablesToConsider.RemoveAll(item => item.Name == prefix + "Width");
+            variablesToConsider.RemoveAll(item => item.Name == prefix + "Height");
+            variablesToConsider.RemoveAll(item => item.Name == prefix + "X Units");
+            variablesToConsider.RemoveAll(item => item.Name == prefix + "Y Units");
+            variablesToConsider.RemoveAll(item => item.Name == prefix + "Width Units");
+            variablesToConsider.RemoveAll(item => item.Name == prefix + "Height Units");
+
+            if (widthUnits == DimensionUnitType.Absolute)
+            {
+                stringBuilder.AppendLine(
+                    $"{ToTabs(tabCount)}{instance?.Name ?? "this"}.WidthRequest = {width.ToString(CultureInfo.InvariantCulture)}f;");
+            }
+
+            if (heightUnits == DimensionUnitType.Absolute)
+            {
+                stringBuilder.AppendLine(
+                    $"{ToTabs(tabCount)}{instance?.Name ?? "this"}.HeightRequest = {height.ToString(CultureInfo.InvariantCulture)}f;");
+            }
+
+            float leftMargin = 0;
+            float rightMargin = 0;
+            float topMargin = 0;
+            float bottomMargin = 0;
+
+            var isStackLayout = parentBaseType?.EndsWith("/StackLayout") == true;
+
+            if (xUnits == PositionUnitType.PixelsFromLeft)
+            {
+                leftMargin = x;
+            }
+            if(xUnits == PositionUnitType.PixelsFromLeft && widthUnits == DimensionUnitType.RelativeToContainer)
+            {
+                rightMargin = -width - x;
+            }
+
+            if(yUnits == PositionUnitType.PixelsFromTop)
+            {
+                topMargin = y;
+            }
+            if(yUnits == PositionUnitType.PixelsFromTop && heightUnits == DimensionUnitType.RelativeToChildren)
+            {
+                if(isStackLayout == false)
                 {
-                    x /= 100.0f;
+                    // If it's a stack layout, we don't want to subtract from here.
+                    bottomMargin = -height - y;
+                }
+            }
+
+            stringBuilder.AppendLine($"{ToTabs(tabCount)}{instance?.Name}.Margin = new Thickness(" +
+                $"{leftMargin.ToString(CultureInfo.InvariantCulture)}, " +
+                $"{topMargin.ToString(CultureInfo.InvariantCulture)}, " +
+                $"{rightMargin.ToString(CultureInfo.InvariantCulture)}, " +
+                $"{bottomMargin.ToString(CultureInfo.InvariantCulture)});");
+
+            if (widthUnits == DimensionUnitType.Absolute || widthUnits == DimensionUnitType.RelativeToChildren)
+            {
+                stringBuilder.AppendLine(
+                    $"{ToTabs(tabCount)}{instance?.Name ?? "this"}.HorizontalOptions = LayoutOptions.Start;");
+            }
+            else if(widthUnits == DimensionUnitType.RelativeToContainer)
+            {
+                stringBuilder.AppendLine(
+                    $"{ToTabs(tabCount)}{instance?.Name ?? "this"}.HorizontalOptions = LayoutOptions.Fill;");
+            }
+        }
+
+        private static void SetAbsoluteLayoutPosition(List<VariableSave> variablesToConsider, StateSave state, InstanceSave instance, ElementSave container, StringBuilder stringBuilder, int tabCount)
+        {
+            string prefix = instance?.Name == null ? "" : instance.Name + ".";
+
+            var variableFinder = new RecursiveVariableFinder(state);
+
+            #region Get recursive values for position and size
+
+            var x = variableFinder.GetValue<float>(prefix + "X");
+            var y = variableFinder.GetValue<float>(prefix + "Y");
+            var width = variableFinder.GetValue<float>(prefix + "Width");
+            var height = variableFinder.GetValue<float>(prefix + "Height");
+
+            var xUnits = variableFinder.GetValue<PositionUnitType>(prefix + "X Units");
+            var yUnits = variableFinder.GetValue<PositionUnitType>(prefix + "Y Units");
+            var widthUnits = variableFinder.GetValue<DimensionUnitType>(prefix + "Width Units");
+            var heightUnits = variableFinder.GetValue<DimensionUnitType>(prefix + "Height Units");
+
+            var xOrigin = variableFinder.GetValue<HorizontalAlignment>(prefix + "X Origin");
+            var yOrigin = variableFinder.GetValue<VerticalAlignment>(prefix + "Y Origin");
+
+            variablesToConsider.RemoveAll(item => item.Name == prefix + "X");
+            variablesToConsider.RemoveAll(item => item.Name == prefix + "Y");
+            variablesToConsider.RemoveAll(item => item.Name == prefix + "Width");
+            variablesToConsider.RemoveAll(item => item.Name == prefix + "Height");
+            variablesToConsider.RemoveAll(item => item.Name == prefix + "X Units");
+            variablesToConsider.RemoveAll(item => item.Name == prefix + "Y Units");
+            variablesToConsider.RemoveAll(item => item.Name == prefix + "Width Units");
+            variablesToConsider.RemoveAll(item => item.Name == prefix + "Height Units");
+
+            #endregion
+
+            var proportionalFlags = new HashSet<string>();
+
+            const string WidthProportionalFlag = "AbsoluteLayoutFlags.WidthProportional";
+            const string HeightProportionalFlag = "AbsoluteLayoutFlags.HeightProportional";
+            const string XProportionalFlag = "AbsoluteLayoutFlags.XProportional";
+            const string YProportionalFlag = "AbsoluteLayoutFlags.YProportional";
+
+            int leftMargin = 0;
+            int topMargin = 0;
+            int rightMargin = 0;
+            int bottomMargin = 0;
+
+            if (widthUnits == DimensionUnitType.Percentage)
+            {
+                width /= 100.0f;
+                proportionalFlags.Add(WidthProportionalFlag);
+            }
+            else if (widthUnits == DimensionUnitType.RelativeToContainer)
+            {
+                if(xOrigin == HorizontalAlignment.Center)
+                {
+                    // we'll achieve margins with offsets
+                    leftMargin = MathFunctions.RoundToInt(x - width/2);
+                    rightMargin = MathFunctions.RoundToInt(-x - width/2);
+                }
+                else
+                {
+                    // we'll achieve margins with offsets
+                    rightMargin = MathFunctions.RoundToInt(-x - width);
+                }
+                width = 1;
+                proportionalFlags.Add(WidthProportionalFlag);
+            }
+            else if (widthUnits == DimensionUnitType.RelativeToChildren)
+            {
+                // in this case we want to auto-size, which is what -1 indicates
+                width = -1;
+            }
+
+            if (heightUnits == DimensionUnitType.Percentage)
+            {
+                height /= 100.0f;
+                proportionalFlags.Add(HeightProportionalFlag);
+            }
+            else if (heightUnits == DimensionUnitType.RelativeToContainer)
+            {
+                // just like width units, achieve this with margins:
+                if(yOrigin == VerticalAlignment.Center)
+                {
+                    topMargin = MathFunctions.RoundToInt(y - height / 2);
+                    bottomMargin = MathFunctions.RoundToInt(-y - height / 2);
+                }
+                else
+                {
+                    bottomMargin = MathFunctions.RoundToInt(-y - height);
+                }
+                height = 1;
+                proportionalFlags.Add(HeightProportionalFlag);
+            }
+            else if (heightUnits == DimensionUnitType.RelativeToChildren)
+            {
+                // see above on width relative to container for information
+                height = -1;
+            }
+
+            // special case
+            // If we're using the center with x=0 we'll pretend it's the same as 50% 
+            if (xUnits == PositionUnitType.PixelsFromCenterX &&
+                // why does the width unit even matter? Should be the same regardless of width unit...
+                //widthUnits == DimensionUnitType.Absolute && 
+                xOrigin == HorizontalAlignment.Center)
+            {
+                if (x == 0)
+                {
+                    // treat it like it's 50%:
+                    x = .5f;
+                    proportionalFlags.Add(XProportionalFlag);
+                }
+            }
+            // Xamarin forms uses a weird anchoring system to combine both position and anchor into one value. Gum splits those into two values
+            // We need to convert from the gum units to xamforms units:
+            // for now assume it's all %'s:
+
+            else if (xUnits == PositionUnitType.PercentageWidth)
+            {
+                x /= 100.0f;
+
+                if(widthUnits == DimensionUnitType.Percentage)
+                {
                     var adjustedCanvasWidth = 1 - width;
                     if (adjustedCanvasWidth > 0)
                     {
                         x /= adjustedCanvasWidth;
                     }
+                }
+                proportionalFlags.Add(XProportionalFlag);
+            }
+            else if (xUnits == PositionUnitType.PixelsFromLeft)
+            {
+                if(widthUnits == DimensionUnitType.RelativeToContainer)
+                {
+                    leftMargin = MathFunctions.RoundToInt(x);
+                    x = 0;
+                }
+            }
+            else if (xUnits == PositionUnitType.PixelsFromCenterX)
+            {
+                if (widthUnits == DimensionUnitType.Absolute)
+                {
+                    x = (CanvasWidth - width) / 2.0f;
+                }
+            }
+            else if (xUnits == PositionUnitType.PixelsFromRight)
+            {
+                if (xOrigin == HorizontalAlignment.Right)
+                {
+                    rightMargin = MathFunctions.RoundToInt(-x);
+                    x = 1;
                     proportionalFlags.Add(XProportionalFlag);
-                }
-                else if(xUnits == PositionUnitType.PixelsFromLeft)
-                {
-
-                }
-                else if(xUnits == PositionUnitType.PixelsFromCenterX)
-                {
-                    if(widthUnits == DimensionUnitType.Absolute)
-                    {
-                        x = (CanvasWidth - width) / 2.0f;
-                    }
-                }
-
-                if(yUnits == PositionUnitType.PixelsFromCenterY && heightUnits == DimensionUnitType.Absolute && yOrigin == VerticalAlignment.Center)
-                {
-                    if(y == 0)
-                    {
-                        y = .5f;
-                        proportionalFlags.Add(YProportionalFlag);
-                    }
-                }
-                else if (yUnits == PositionUnitType.PercentageHeight)
-                {
-                    y /= 100.0f;
-                    var adjustedCanvasHeight = 1 - height;
-                    if (adjustedCanvasHeight > 0)
-                    {
-                        y /= adjustedCanvasHeight;
-                    }
-                    proportionalFlags.Add(YProportionalFlag);
-                }
-                else if(yUnits == PositionUnitType.PixelsFromCenterY)
-                {
-                    if(heightUnits == DimensionUnitType.Absolute)
-                    {
-                        y = (CanvasHeight - height) / 2.0f;
-                    }
-                }
-                else if(yUnits == PositionUnitType.PixelsFromBottom)
-                {
-                    y += CanvasHeight;
-
-                    if(yOrigin == VerticalAlignment.Bottom)
-                    {
-                        y -= height;
-                    }
-                }
-
-
-
-
-                var xString = x.ToString(CultureInfo.InvariantCulture) + "f";
-                var yString = y.ToString(CultureInfo.InvariantCulture) + "f";
-                var widthString = width.ToString(CultureInfo.InvariantCulture) + "f";
-                var heightString = height.ToString(CultureInfo.InvariantCulture) + "f";
-
-                if(AdjustPixelValuesForDensity)
-                {
-                    if(proportionalFlags.Contains(XProportionalFlag) == false)
-                    {
-                        xString += "/Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density";
-                    }
-                    if(proportionalFlags.Contains(YProportionalFlag) == false)
-                    {
-                        yString += "/Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density";
-                    }
-                    if(proportionalFlags.Contains(WidthProportionalFlag) == false)
-                    {
-                        widthString += "/Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density";
-                    }
-                    if(proportionalFlags.Contains(HeightProportionalFlag) == false)
-                    {
-                        heightString += "/Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density";
-                    }
-                }
-
-                string boundsText =
-                    $"{ToTabs(tabCount)}AbsoluteLayout.SetLayoutBounds({instance?.Name ?? "this"}, new Rectangle({xString}, {yString}, {widthString}, {heightString}));";
-                string flagsText = null;
-                if (proportionalFlags.Count > 0)
-                {
-                    string flagsArguments = null;
-                    for (int i = 0; i < proportionalFlags.Count; i++)
-                    {
-                        if (i > 0)
-                        {
-                            flagsArguments += " | ";
-                        }
-                        flagsArguments += proportionalFlags[i];
-                    }
-                    flagsText = $"{ToTabs(tabCount)}AbsoluteLayout.SetLayoutFlags({instance?.Name ?? "this"}, {flagsArguments});";
-                }
-                // assume every object has X, which it won't, so we will have to improve this
-                if (string.IsNullOrWhiteSpace(flagsText))
-                {
-                    stringBuilder.AppendLine(boundsText);
-                }
-                else
-                {
-                    stringBuilder.AppendLine($"{boundsText}\n{flagsText}");
                 }
             }
 
+            if (yUnits == PositionUnitType.PixelsFromCenterY && heightUnits == DimensionUnitType.Absolute && yOrigin == VerticalAlignment.Center)
+            {
+                if (y == 0)
+                {
+                    y = .5f;
+                    proportionalFlags.Add(YProportionalFlag);
+                }
+            }
+            else if(yUnits == PositionUnitType.PixelsFromTop)
+            {
+                if(heightUnits == DimensionUnitType.RelativeToContainer)
+                {
+                    topMargin = MathFunctions.RoundToInt(y);
+                    y = 0;
+                }
+            }
+            else if (yUnits == PositionUnitType.PercentageHeight)
+            {
+                y /= 100.0f;
+                var adjustedCanvasHeight = 1 - height;
+                if (adjustedCanvasHeight > 0)
+                {
+                    y /= adjustedCanvasHeight;
+                }
+                proportionalFlags.Add(YProportionalFlag);
+            }
+            else if (yUnits == PositionUnitType.PixelsFromCenterY)
+            {
+                if (heightUnits == DimensionUnitType.Absolute)
+                {
+                    y = (CanvasHeight - height) / 2.0f;
+                }
+            }
+            else if (yUnits == PositionUnitType.PixelsFromBottom)
+            {
+                if (yOrigin == VerticalAlignment.Bottom)
+                {
+                    bottomMargin = MathFunctions.RoundToInt(-y);
+                    y = 1;
+                    proportionalFlags.Add(YProportionalFlag);
+                }
+                else
+                {
+                    // We could be smarter about this but we'll add this
+                    // when it's needed.
+                    y += CanvasHeight;
+                }
+            }
+
+
+
+
+            var xString = x.ToString(CultureInfo.InvariantCulture) + "f";
+            var yString = y.ToString(CultureInfo.InvariantCulture) + "f";
+            var widthString = width.ToString(CultureInfo.InvariantCulture) + "f";
+            var heightString = height.ToString(CultureInfo.InvariantCulture) + "f";
+
+            if (AdjustPixelValuesForDensity)
+            {
+                if (proportionalFlags.Contains(XProportionalFlag) == false)
+                {
+                    xString += "/Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density";
+                }
+                if (proportionalFlags.Contains(YProportionalFlag) == false)
+                {
+                    yString += "/Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density";
+                }
+                if (proportionalFlags.Contains(WidthProportionalFlag) == false)
+                {
+                    widthString += "/Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density";
+                }
+                if (proportionalFlags.Contains(HeightProportionalFlag) == false)
+                {
+                    heightString += "/Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density";
+                }
+            }
+
+            var instanceOrThis =
+                instance?.Name ?? "this";
+            string boundsText =
+                $"{ToTabs(tabCount)}AbsoluteLayout.SetLayoutBounds({instanceOrThis}, new Rectangle({xString}, {yString}, {widthString}, {heightString}));";
+            string flagsText = null;
+            if (proportionalFlags.Count > 0)
+            {
+                string flagsArguments = null;
+                int i = 0;
+                foreach (var flag in proportionalFlags)
+                {
+                    if (i > 0)
+                    {
+                        flagsArguments += " | ";
+                    }
+                    flagsArguments += flag;
+                    i++;
+                }
+                flagsText = $"{ToTabs(tabCount)}AbsoluteLayout.SetLayoutFlags({instanceOrThis}, {flagsArguments});";
+            }
+            // assume every object has X, which it won't, so we will have to improve this
+            if (string.IsNullOrWhiteSpace(flagsText))
+            {
+                stringBuilder.AppendLine(boundsText);
+            }
+            else
+            {
+                stringBuilder.AppendLine($"{boundsText}\n{flagsText}");
+            }
+
+            // not sure why these apply even though we're using values on the AbsoluteLayout
+            if (!proportionalFlags.Contains(WidthProportionalFlag) && (widthUnits == DimensionUnitType.RelativeToContainer || widthUnits == DimensionUnitType.Absolute))
+            {
+                stringBuilder.AppendLine($"{ToTabs(tabCount)}{instanceOrThis}.WidthRequest = {width.ToString(CultureInfo.InvariantCulture)}f;");
+            }
+            if (!proportionalFlags.Contains(HeightProportionalFlag) && heightUnits == DimensionUnitType.RelativeToContainer || heightUnits == DimensionUnitType.Absolute)
+            {
+                stringBuilder.AppendLine($"{ToTabs(tabCount)}{instanceOrThis}.HeightRequest = {height.ToString(CultureInfo.InvariantCulture)}f;");
+            }
+
+            //If the object is width proportional, then it must use a .HorizontalOptions = LayoutOptions.Fill; or else the proportional width won't apply
+            if (proportionalFlags.Contains(WidthProportionalFlag))
+            {
+                stringBuilder.AppendLine($"{ToTabs(tabCount)}{instanceOrThis}.HorizontalOptions = LayoutOptions.Fill;");
+            }
+
+            if (leftMargin != 0 || rightMargin != 0 || topMargin != 0 || bottomMargin != 0)
+            {
+                stringBuilder.AppendLine($"{ToTabs(tabCount)}{instanceOrThis}.Margin = new Thickness({leftMargin}, {topMargin}, {rightMargin}, {bottomMargin});");
+            }
+            // should we do the same to vertical? Maybe, but waiting for a natural use case to test it
+        }
+
+        private static float CalculateAbsoluteWidth(InstanceSave instance, ElementSave container, RecursiveVariableFinder variableFinder)
+        {
+            string prefix = instance?.Name == null ? "" : instance.Name + ".";
+
+
+            var x = variableFinder.GetValue<float>(prefix + "X");
+            var width = variableFinder.GetValue<float>(prefix + "Width");
+
+            var xUnits = variableFinder.GetValue<PositionUnitType>(prefix + "X Units");
+            var widthUnits = variableFinder.GetValue<DimensionUnitType>(prefix + "Width Units");
+
+            var xOrigin = variableFinder.GetValue<HorizontalAlignment>(prefix + "X Origin");
+
+            var parentName = variableFinder.GetValue<string>(prefix + "Parent");
+
+            var parent = container.GetInstance(parentName);
+
+            float toReturn = 0;
+            if (instance == null)
+            {
+                toReturn = width; // handle this eventually?
+            }
+            else if(widthUnits == DimensionUnitType.Absolute)
+            {
+                toReturn = width;
+            }
+            else if(widthUnits == DimensionUnitType.RelativeToContainer)
+            {
+                if(parent == null)
+                {
+                    toReturn = width + GumState.Self.ProjectState.GumProjectSave.DefaultCanvasWidth;
+                }
+                else
+                {
+                    var parentWidth = CalculateAbsoluteWidth(parent, container, variableFinder);
+
+                    toReturn = parentWidth + width;
+                }
+            }
+
+            return toReturn;
+        }
+
+        private static float CalculateAbsoluteHeight(InstanceSave instance, ElementSave container, RecursiveVariableFinder variableFinder)
+        {
+            string prefix = instance?.Name == null ? "" : instance.Name + ".";
+
+
+            var y = variableFinder.GetValue<float>(prefix + "Y");
+            var height = variableFinder.GetValue<float>(prefix + "Height");
+
+            var yUnits = variableFinder.GetValue<PositionUnitType>(prefix + "Y Units");
+            var heightUnits = variableFinder.GetValue<DimensionUnitType>(prefix + "Height Units");
+
+            var yOrigin = variableFinder.GetValue<HorizontalAlignment>(prefix + "Y Origin");
+
+            var parentName = variableFinder.GetValue<string>(prefix + "Parent");
+
+            var parent = container.GetInstance(parentName);
+
+            float toReturn = 0;
+            if (instance == null)
+            {
+                toReturn = height; // handle this eventually?
+            }
+            else if (heightUnits == DimensionUnitType.Absolute)
+            {
+                toReturn = height;
+            }
+            else if (heightUnits == DimensionUnitType.RelativeToContainer)
+            {
+                if (parent == null)
+                {
+                    toReturn = height + GumState.Self.ProjectState.GumProjectSave.DefaultCanvasHeight;
+                }
+                else
+                {
+                    var parentWidth = CalculateAbsoluteHeight(parent, container, variableFinder);
+
+                    toReturn = parentWidth + height;
+                }
+            }
+
+            return toReturn;
         }
 
         private static void FillWithInstanceDeclaration(InstanceSave instance, ElementSave container, StringBuilder stringBuilder, int tabCount = 0)
@@ -927,7 +1357,7 @@ namespace CodeOutputPlugin.Manager
             stringBuilder.AppendLine($"{tabs}{accessString}{className} {instance.Name} {{ get; private set; }}");
         }
 
-        private static string GetClassNameForType(string gumType, VisualApi visualApi)
+        public static string GetClassNameForType(string gumType, VisualApi visualApi)
         {
             string className = null;
             var specialHandledCase = false;
@@ -1041,6 +1471,24 @@ namespace CodeOutputPlugin.Manager
                 }
             }
 
+            #region Children Layout
+
+            else if (rootName == "Children Layout")
+            {
+                if (instance.BaseType.EndsWith("/StackLayout") && variable.Value is ChildrenLayout valueAsChildrenLayout)
+                {
+                    if(valueAsChildrenLayout == ChildrenLayout.LeftToRightStack)
+                    {
+                        return $"{instance.Name}.Orientation = StackOrientation.Horizontal;";
+                    }
+                    else
+                    {
+                        return $"{instance.Name}.Orientation = StackOrientation.Vertical;";
+                    }
+                }
+            }
+
+            #endregion
 
             return null;
         }
@@ -1048,12 +1496,18 @@ namespace CodeOutputPlugin.Manager
         private static string TryGetFullGumLineReplacement(InstanceSave instance, VariableSave variable)
         {
             var rootName = variable.GetRootName();
+            #region Parent
+
             if (rootName == "Parent")
             {
                 return $"{variable.Value}.Children.Add({instance.Name});";
             }
-            // ignored variables:
-            else if(rootName == "IsXamarinFormsControl" ||
+            #endregion
+
+
+
+                    // ignored variables:
+            else if (rootName == "IsXamarinFormsControl" ||
                 rootName == "ClipsChildren" ||
                 rootName == "ExposeChildrenEvents" ||
                 rootName == "HasEvents")
@@ -1235,7 +1689,7 @@ namespace CodeOutputPlugin.Manager
             }
         }
 
-        private static VariableSave[] GetVariablesToConsider(InstanceSave instance)
+        private static VariableSave[] GetVariablesForValueAssignmentCode(InstanceSave instance)
         {
             var baseElement = Gum.Managers.ObjectFinder.Self.GetElementSave(instance.BaseType);
             if(baseElement == null)
