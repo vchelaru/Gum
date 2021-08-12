@@ -250,9 +250,12 @@ namespace Gum.DataTypes
                             throw new NullReferenceException(
                                 $"Could not find a default state for {element} - this happens if the element wasn't initialized, or if its file was not loaded properly.");
                         }
+                        
                         // let's try going recursively:
+                        // this happens in a background so let's create a copy to prevent thread access bugs:
+                        //var subVariable = element.DefaultState.Variables.FirstOrDefault(item => item.ExposedAsName == variableSave.GetRootName());
                         var rootName = variableSave.GetRootName();
-                        var subVariable = element.DefaultState.Variables.FirstOrDefault(item => item.ExposedAsName == rootName);
+                        var subVariable = element.DefaultState.Variables.ToArray().FirstOrDefault(item => item.ExposedAsName == rootName);
 
                         if (subVariable != null && recursive)
                         {
