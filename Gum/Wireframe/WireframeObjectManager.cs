@@ -18,6 +18,7 @@ using FlatRedBall.AnimationEditorForms.Controls;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Gum.Plugins;
+using System.Security.Policy;
 
 namespace Gum.Wireframe
 {
@@ -225,11 +226,65 @@ namespace Gum.Wireframe
 
                 RootGue = CreateIpsoForElement(elementSave);
 
+                if(LocalizationManager.HasDatabase)
+                {
+                    ApplyLocalization();
+                }
             }
             ElementShowing = elementSave;
 
         }
 
+        public void ApplyLocalization()
+        {
+            if(LocalizationManager.HasDatabase == false)
+            {
+                throw new InvalidOperationException("Cannot apply localization - the LocalizationManager doesn't have a localization database loaded");
+            }
+
+            foreach(var textContainer in GetTextsRecurisve(RootGue))
+            {
+                var textInstance = textContainer.RenderableComponent as Text;
+
+                // Go through the GraphicalUiElement to kick off a layout adjustment if necessary
+                textContainer.SetProperty("Text", LocalizationManager.Translate(textInstance.RawText));
+            }
+        }
+
+        public IEnumerable<GraphicalUiElement> GetTextsRecurisve(GraphicalUiElement parent)
+        {
+            if(parent.RenderableComponent is Text)
+            {
+                yield return parent;
+            }
+            if(parent.Tag is ScreenSave)
+            {
+                // it won't have children, so go to the toplevel objects
+                foreach(var child in parent.ContainedElements)
+                {
+                    if(child.Parent == null)
+                    {
+                        var textsInChild = GetTextsRecurisve(child);
+                        foreach(var textInChild in textsInChild)
+                        {
+                            yield return textInChild;
+                        }
+
+                    }
+                }
+            }
+            else
+            {
+                foreach(var child in parent.Children)
+                {
+                    var textsInChild = GetTextsRecurisve(child as GraphicalUiElement);
+                    foreach (var textInChild in textsInChild)
+                    {
+                        yield return textInChild;
+                    }
+                }
+            }
+        }
 
 
         public GraphicalUiElement GetSelectedRepresentation()

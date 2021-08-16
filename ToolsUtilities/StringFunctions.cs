@@ -343,7 +343,7 @@ namespace ToolsUtilities
             return true;
         }
 
-        public static int CountOf(string whatToLookFor, string entireString)
+        public static int CountOf(this string whatToLookFor, string entireString)
         {
             if (string.IsNullOrEmpty(entireString))
             {
@@ -368,6 +368,28 @@ namespace ToolsUtilities
             }
 
             return toReturn;
+        }
+
+        public static int CountOf(this string instanceToSearchIn, char characterToSearchFor)
+        {
+            return instanceToSearchIn.CountOf(characterToSearchFor, 0, instanceToSearchIn.Length);
+        }
+
+        public static int CountOf(this string instanceToSearchIn, char characterToSearchFor, int startIndex, int searchLength)
+        {
+            int count = 0;
+
+            for (int i = startIndex; i < searchLength; i++)
+            {
+                char characterAtIndex = instanceToSearchIn[i];
+
+                if (characterAtIndex == characterToSearchFor)
+                {
+                    count++;
+                }
+            }
+
+            return count;
         }
 
         public static bool ContainsNoAlloc(string containingString, char charToLookFor)
@@ -409,5 +431,15 @@ namespace ToolsUtilities
             }
         }
 
+        public static string RemoveWhitespace(string stringToRemoveWhitespaceFrom)
+        {
+            return stringToRemoveWhitespaceFrom.Replace(" ", "").Replace("\t", "").Replace("\n", "").Replace("\r", "");
+        }
+
+        public static bool IsNumber(string stringToCheck)
+        {
+            double throwaway;
+            return double.TryParse(stringToCheck, out throwaway);
+        }
     }
 }

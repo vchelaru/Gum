@@ -77,8 +77,23 @@ namespace Gum.Plugins.PropertiesWindowPlugin
             set => Set(value);
         }
 
+        public string LocalizationFile
+        {
+            get => Get<string>();
+            set => Set(value);
+        }
+
+        public int LanguageIndex
+        {
+            get => Get<int>();
+            set => Set(value);
+        }
+
+        public bool IsUpdatingFromModel { get; private set; }
+
         public void BindTo(GeneralSettingsFile generalSettings, GumProjectSave gumProject)
         {
+            IsUpdatingFromModel = true;
             this.generalSettings = generalSettings;
             this.gumProject = gumProject;
 
@@ -94,7 +109,9 @@ namespace Gum.Plugins.PropertiesWindowPlugin
             CheckerboardColor1 = new Color(generalSettings.CheckerColor1R, generalSettings.CheckerColor1G, generalSettings.CheckerColor1B);
             CheckerboardColor2 = new Color(generalSettings.CheckerColor2R, generalSettings.CheckerColor2G, generalSettings.CheckerColor2B);
 
-
+            LocalizationFile = this.gumProject.LocalizationFile;
+            LanguageIndex = this.gumProject.CurrentLanguageIndex;
+            IsUpdatingFromModel = false;
 
         }
 
@@ -130,6 +147,8 @@ namespace Gum.Plugins.PropertiesWindowPlugin
             generalSettings.CheckerColor2G = CheckerboardColor2.G;
             generalSettings.CheckerColor2B = CheckerboardColor2.B;
 
+            this.gumProject.LocalizationFile = LocalizationFile;
+            this.gumProject.CurrentLanguageIndex = LanguageIndex;
         }
 
 

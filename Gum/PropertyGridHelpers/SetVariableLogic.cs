@@ -192,6 +192,12 @@ namespace Gum.PropertyGridHelpers
                         {
                             WireframeObjectManager.Self.RefreshAll(true, forceReloadTextures:false);
                         }
+
+                        if(unqualifiedMember == "Text" && LocalizationManager.HasDatabase)
+                        {
+                            WireframeObjectManager.Self.ApplyLocalization();
+                        }
+
                         SelectionManager.Self.Refresh();
                     }
                 }
@@ -221,6 +227,8 @@ namespace Gum.PropertyGridHelpers
 
             PluginManager.Self.VariableSet(parentElement, instance, changedMember, oldValue);
         }
+
+
 
         private static void ReactIfChangedMemberIsName(ElementSave container, InstanceSave instance, string changedMember, object oldValue)
         {

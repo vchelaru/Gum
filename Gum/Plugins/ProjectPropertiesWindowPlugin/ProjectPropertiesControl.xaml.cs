@@ -14,6 +14,8 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Gum.Plugins.PropertiesWindowPlugin;
+using ToolsUtilities;
+using WpfDataUi.Controls;
 
 namespace Gum.Gui.Controls
 {
@@ -22,7 +24,6 @@ namespace Gum.Gui.Controls
     /// </summary>
     public partial class ProjectPropertiesControl : UserControl
     {
-        public event EventHandler PropertyChanged;
         public event EventHandler CloseClicked;
 
         public ProjectPropertiesViewModel ViewModel
@@ -35,26 +36,11 @@ namespace Gum.Gui.Controls
             {
                 if(value != DataGrid.Instance)
                 {
-                    if (DataGrid.Instance != null)
-                    {
-                        ((ProjectPropertiesViewModel)DataGrid.Instance).PropertyChanged -= HandleViewModelPropertyChanged;
-                    }
-
                     DataGrid.Instance = value;
-
-                    if(value != null)
-                    {
-                        value.PropertyChanged += HandleViewModelPropertyChanged;
-                    }
 
                     UpdateToInstance();
                 }
             }
-        }
-
-        private void HandleViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            PropertyChanged?.Invoke(this, null);
         }
 
         private void UpdateToInstance()
@@ -74,6 +60,17 @@ namespace Gum.Gui.Controls
                             member.PreferredDisplayer = typeof(Gum.Controls.DataUi.ColorDisplay);
                             break;
                     }
+
+                    if(member.Name == nameof(ViewModel.LocalizationFile))
+                    {
+                        member.PreferredDisplayer = typeof(FileSelectionDisplay);
+                    }
+                }
+
+                var isUpdatingMember = category.Members.FirstOrDefault(item => item.Name == nameof(ViewModel.IsUpdatingFromModel));
+                if(isUpdatingMember != null)
+                {
+                    category.Members.Remove(isUpdatingMember);
                 }
             }
         }

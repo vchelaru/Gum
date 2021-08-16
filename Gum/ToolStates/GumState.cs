@@ -11,6 +11,5 @@ namespace Gum.ToolStates
     {
         public ProjectState ProjectState => ProjectState.Self;
         public ISelectedState SelectedState => Gum.ToolStates.SelectedState.Self;
-
     }
 }

@@ -19,6 +19,7 @@ namespace Gum.DataTypes
 
     #endregion
 
+    #region LoadGumResult class
     public class GumLoadResult
     {
         /// <summary>
@@ -45,7 +46,7 @@ namespace Gum.DataTypes
             MissingFiles = new List<string>();
         }
     }
-
+    #endregion
 
     /// <summary>
     /// Represents the data stored in a .gumx file. GumProjectSave
@@ -115,6 +116,10 @@ namespace Gum.DataTypes
         /// This is a relative path like "../../"
         /// </summary>
         public string ParentProjectRoot { get; set; }
+
+        // This should be in the GumProjectSave, not the settings, because the settings apply to all projects
+        public string LocalizationFile { get; set; }
+        public int CurrentLanguageIndex { get; set; }
 
         [XmlIgnore]
         public string FullFileName

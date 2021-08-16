@@ -63,6 +63,7 @@
     <Compile Include="MissingFieldAction.cs" />
     <Compile Include="ParseErrorAction.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Reflection\PropertyValuePair.cs" />
     <Compile Include="Resources\ExceptionMessage.Designer.cs" />
     <Compile Include="RuntimeCsvRepresentation.cs" />
   </ItemGroup>

@@ -193,6 +193,7 @@
     <Compile Include="Logic\FileWatch\FileWatchManager.cs" />
     <Compile Include="Managers\GraphicalUiElementManager.cs" />
     <Compile Include="Managers\HotkeyManager.cs" />
+    <Compile Include="Managers\LocalizationManager.cs" />
     <Compile Include="Plugins\AlignmentButtons\CommonControlLogic.cs" />
     <Compile Include="Plugins\CirclePlugin\MainCirclePlugin.cs" />
     <Compile Include="Plugins\Errors\AllErrorsViewModel.cs" />
@@ -439,6 +440,10 @@
     <ProjectReference Include="..\CommonFormsAndControls\CommonFormsAndControls.csproj">
       <Project>{54bfe18a-84b4-48ab-92e0-0774ea019202}</Project>
       <Name>CommonFormsAndControls</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\CsvLibrary\CsvLibrary.csproj">
+      <Project>{277A9E05-C5DF-4A30-AD43-F7C16A6893ED}</Project>
+      <Name>CsvLibrary</Name>
     </ProjectReference>
     <ProjectReference Include="..\GumDataTypes\GumDataTypes.csproj">
       <Project>{5971a187-f6b2-4d65-a277-5613ded1f50f}</Project>

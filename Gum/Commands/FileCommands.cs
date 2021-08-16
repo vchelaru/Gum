@@ -98,6 +98,18 @@ namespace Gum.Commands
             }
         }
 
+        internal void LoadLocalizationFile()
+        {
+            LocalizationManager.Clear();
+            FilePath file = GumState.Self.ProjectState.ProjectDirectory + GumState.Self.ProjectState.GumProjectSave.LocalizationFile;
+
+            if (file.Exists())
+            {
+                LocalizationManager.AddDatabase(file.FullPath, ',');
+                LocalizationManager.CurrentLanguage = GumState.Self.ProjectState.GumProjectSave.CurrentLanguageIndex;
+            }
+        }
+
         private void ForceSaveBehavior(BehaviorSave behavior)
         {
             if (behavior.IsSourceFileMissing)

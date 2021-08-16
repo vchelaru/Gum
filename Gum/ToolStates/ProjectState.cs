@@ -27,13 +27,7 @@ namespace Gum.ToolStates
             }
         }
 
-        public GumProjectSave GumProjectSave
-        {
-            get
-            {
-                return ProjectManager.Self.GumProjectSave;
-            }
-        }
+        public GumProjectSave GumProjectSave => ProjectManager.Self.GumProjectSave;
 
         public string ProjectDirectory
         {

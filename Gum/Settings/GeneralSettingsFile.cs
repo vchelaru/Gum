@@ -103,6 +103,7 @@ namespace Gum.Settings
         public byte CheckerColor2G { get; set; } = 170;
         public byte CheckerColor2B { get; set; } = 170;
 
+
         #endregion
 
         #region Methods

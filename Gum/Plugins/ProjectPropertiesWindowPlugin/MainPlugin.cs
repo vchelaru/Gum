@@ -1,15 +1,19 @@
 ﻿using Gum.Commands;
 using Gum.Gui.Controls;
+using Gum.Managers;
 using Gum.Plugins.BaseClasses;
 using Gum.Plugins.Behaviors;
 using Gum.ToolStates;
 using Gum.Wireframe;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.Composition;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ToolsUtilities;
+using WpfDataUi.EventArguments;
 
 namespace Gum.Plugins.PropertiesWindowPlugin
 {
@@ -28,6 +32,7 @@ namespace Gum.Plugins.PropertiesWindowPlugin
             this.AddMenuItem(new List<string> { "Edit", "Properties" }).Click += HandlePropertiesClicked;
 
             viewModel = new PropertiesWindowPlugin.ProjectPropertiesViewModel();
+            viewModel.PropertyChanged += HandlePropertyChanged;
 
             // todo - handle loading new Gum project when this window is shown - re-call BindTo
         }
@@ -39,7 +44,6 @@ namespace Gum.Plugins.PropertiesWindowPlugin
                 if(control == null)
                 {
                     control = new ProjectPropertiesControl();
-                    control.PropertyChanged += HandlePropertyChanged;
 
                     control.CloseClicked += HandleCloseClicked;
                 }
@@ -55,13 +59,44 @@ namespace Gum.Plugins.PropertiesWindowPlugin
             }
         }
 
-        private void HandlePropertyChanged(object sender, EventArgs e)
+        private void HandlePropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            viewModel.ApplyToModelObjects();
+            if(!viewModel.IsUpdatingFromModel)
+            {
+                viewModel.ApplyToModelObjects();
 
-            GumCommands.Self.WireframeCommands.Refresh();
+                var shouldSaveAndRefresh = true;
 
-            GumCommands.Self.FileCommands.TryAutoSaveProject();
+                switch(e.PropertyName)
+                {
+                    case nameof(viewModel.LocalizationFile):
+
+
+                        if (!string.IsNullOrEmpty(viewModel.LocalizationFile) && FileManager.IsRelative(viewModel.LocalizationFile) == false)
+                        {
+                            viewModel.LocalizationFile = FileManager.MakeRelative(viewModel.LocalizationFile, 
+                                GumState.Self.ProjectState.ProjectDirectory);
+                            shouldSaveAndRefresh = false;
+                        }
+                        else
+                        {
+                            GumCommands.Self.FileCommands.LoadLocalizationFile();
+
+                            WireframeObjectManager.Self.RefreshAll(forceLayout: true, forceReloadTextures: false);
+                        }
+                        break;
+                    case nameof(viewModel.LanguageIndex):
+                        LocalizationManager.CurrentLanguage = viewModel.LanguageIndex;
+                        break;
+                }
+
+                if(shouldSaveAndRefresh)
+                {
+                    GumCommands.Self.WireframeCommands.Refresh();
+
+                    GumCommands.Self.FileCommands.TryAutoSaveProject();
+                }
+            }
         }
 
         private void HandleCloseClicked(object sender, EventArgs e)
