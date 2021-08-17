@@ -644,7 +644,7 @@ namespace Gum.Managers
                             // give it options!
                             member.PreferredDisplayer = typeof(WpfDataUi.Controls.ComboBoxDisplay);
                             member.PropertiesToSetOnDisplayer[nameof(WpfDataUi.Controls.ComboBoxDisplay.IsEditable)] = true;
-                            member.CustomOptions = LocalizationManager.Keys.ToArray();
+                            member.CustomOptions = LocalizationManager.Keys.OrderBy(item => item).ToArray();
                         }
                         else
                         {

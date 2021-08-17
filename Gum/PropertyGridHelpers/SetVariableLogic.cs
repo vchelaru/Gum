@@ -188,7 +188,7 @@ namespace Gum.PropertyGridHelpers
                             }
                             if(unqualifiedMember == "Text" && LocalizationManager.HasDatabase)
                             {
-                                WireframeObjectManager.Self.ApplyLocalization(gue);
+                                WireframeObjectManager.Self.ApplyLocalization(gue, value as string);
                             }
                         }
                         

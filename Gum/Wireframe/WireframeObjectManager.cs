@@ -249,12 +249,16 @@ namespace Gum.Wireframe
         }
 
 
-        public void ApplyLocalization(GraphicalUiElement gue)
+        public void ApplyLocalization(GraphicalUiElement gue, string forcedId = null)
         {
-            var textInstance = gue.RenderableComponent as Text;
-
+            var stringId = forcedId;
+            if(string.IsNullOrWhiteSpace(stringId) && gue.RenderableComponent is Text asText)
+            {
+                stringId = asText.RawText;
+            }
+ 
             // Go through the GraphicalUiElement to kick off a layout adjustment if necessary
-            gue.SetProperty("Text", LocalizationManager.Translate(textInstance.RawText));
+            gue.SetProperty("Text", LocalizationManager.Translate(stringId));
         }
 
         public IEnumerable<GraphicalUiElement> GetTextsRecurisve(GraphicalUiElement parent)
