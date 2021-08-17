@@ -290,11 +290,20 @@ namespace WpfDataUi.Controls
 
         private void ComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            var canBroadcast = ComboBox.IsEditable == false ||
-                ComboBox.IsKeyboardFocusWithin == false;
+            // August 17, 2021 - If we check ComboBox.IsKeyboardFocusWithin,
+            // then selecting a new item in the drop-down won't update the UI
+            // immediately because the text is focused. Why? This seems annoying
+            // for the user to have to tab out of the textbox...
+            //var canBroadcast = ComboBox.IsEditable == false ||
+            //    ComboBox.IsKeyboardFocusWithin == false;
+            var canBroadcast = true;
 
-            if(canBroadcast)
+
+
+            if (canBroadcast)
             {
+                // The text hasn't yet been set by default, so we need to force the text value here:
+                ComboBox.Text = this.ComboBox.SelectedItem as string;
                 HandleChange();
             }
 

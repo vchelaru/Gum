@@ -540,7 +540,7 @@ namespace Gum.Managers
         {
             // Hack! I would like to have this set by variables, but that's going to require a ton
             // of refatoring. We need to move off of the intermediate PropertyDescriptor class.
-            MakeTextMultiline(categories);
+            AdjustTextPreferredDisplayer(categories);
 
             UpdateColorCategory(categories);
 
@@ -622,20 +622,36 @@ namespace Gum.Managers
             }
         }
 
-        private void MakeTextMultiline(List<MemberCategory> categories)
+        private void AdjustTextPreferredDisplayer(List<MemberCategory> categories)
         {
             // This used to only make Text objects multiline, but...maybe we should make all string values multiline?
             foreach(var category in categories)
             {
                 foreach(var member in category.Members)
                 {
-                    if(member.PreferredDisplayer == null && 
+                    var isStringMember = member.PreferredDisplayer == null &&
                         member.PropertyType == typeof(string) &&
-                        member.Name != "Name" && member.Name.EndsWith(".Name") == false)
+                        member.Name != "Name" && member.Name.EndsWith(".Name") == false;
+                    if (isStringMember)
                     {
-                        //member.PreferredDisplayer = typeof(ToggleButtonOptionDisplay);
-                        member.PreferredDisplayer = typeof(WpfDataUi.Controls.MultiLineTextBoxDisplay);
-                        //ToggleButtonOptionDisplay
+                        var rootVariable = (member as StateReferencingInstanceMember)?.GetRootVariableSave();
+
+                        
+
+                        if (LocalizationManager.HasDatabase && (member.CustomOptions?.Count > 0) == false &&
+                            ((member as StateReferencingInstanceMember)?.GetRootVariableSave())?.GetRootName() == "Text")
+                        {
+                            // give it options!
+                            member.PreferredDisplayer = typeof(WpfDataUi.Controls.ComboBoxDisplay);
+                            member.PropertiesToSetOnDisplayer[nameof(WpfDataUi.Controls.ComboBoxDisplay.IsEditable)] = true;
+                            member.CustomOptions = LocalizationManager.Keys.ToArray();
+                        }
+                        else
+                        {
+                            //member.PreferredDisplayer = typeof(ToggleButtonOptionDisplay);
+                            member.PreferredDisplayer = typeof(WpfDataUi.Controls.MultiLineTextBoxDisplay);
+                            //ToggleButtonOptionDisplay
+                        }
                     }
                 }
             }

@@ -34,6 +34,9 @@ namespace Gum.PropertyGridHelpers
 
         public StateSaveCategory StateSaveCategory { get; set; }
 
+        public StateSave StateSave => mStateSave;
+
+
         public override bool IsReadOnly
         {
             get
@@ -92,16 +95,18 @@ namespace Gum.PropertyGridHelpers
                     (mPropertyDescriptor.Converter is System.ComponentModel.BooleanConverter == false))
                 {
                     var values = mPropertyDescriptor.Converter.GetStandardValues(null);
-
-                    List<object> toReturn = new List<object>();
-                    if (values != null)
+                    if(values != null)
                     {
-                        foreach (var item in values)
+                        List<object> toReturn = new List<object>();
+                        if (values != null)
                         {
-                            toReturn.Add(item);
+                            foreach (var item in values)
+                            {
+                                toReturn.Add(item);
+                            }
                         }
+                        return toReturn;
                     }
-                    return toReturn;
                 }
 
                 return base.CustomOptions;
@@ -549,6 +554,20 @@ namespace Gum.PropertyGridHelpers
 
         private Type GetTypeFromVariableRecursively()
         {
+            VariableSave variableSave = GetRootVariableSave();
+
+            if (variableSave?.Type != null)
+            {
+                return TypeManager.Self.GetTypeFromString(variableSave.Type);
+            }
+            else
+            {
+                return typeof(string);
+            }
+        }
+
+        public VariableSave GetRootVariableSave()
+        {
             VariableSave variableSave = null;
 
             if (mInstanceSave != null)
@@ -562,14 +581,7 @@ namespace Gum.PropertyGridHelpers
                     RootVariableName);
             }
 
-            if (variableSave?.Type != null)
-            {
-                return TypeManager.Self.GetTypeFromString(variableSave.Type);
-            }
-            else
-            {
-                return typeof(string);
-            }
+            return variableSave;
         }
 #endif
 

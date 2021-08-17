@@ -244,11 +244,17 @@ namespace Gum.Wireframe
 
             foreach(var textContainer in GetTextsRecurisve(RootGue))
             {
-                var textInstance = textContainer.RenderableComponent as Text;
-
-                // Go through the GraphicalUiElement to kick off a layout adjustment if necessary
-                textContainer.SetProperty("Text", LocalizationManager.Translate(textInstance.RawText));
+                ApplyLocalization(textContainer);
             }
+        }
+
+
+        public void ApplyLocalization(GraphicalUiElement gue)
+        {
+            var textInstance = gue.RenderableComponent as Text;
+
+            // Go through the GraphicalUiElement to kick off a layout adjustment if necessary
+            gue.SetProperty("Text", LocalizationManager.Translate(textInstance.RawText));
         }
 
         public IEnumerable<GraphicalUiElement> GetTextsRecurisve(GraphicalUiElement parent)

@@ -9,7 +9,7 @@ using ToolsUtilities;
 
 namespace Gum.Managers
 {
-    static class LocalizationManager
+    public static class LocalizationManager
     {
 
         public static ReadOnlyCollection<string> Languages
@@ -19,6 +19,9 @@ namespace Gum.Managers
         }
 
         static Dictionary<string, string[]> mStringDatabase = new Dictionary<string, string[]>();
+
+        static string[] emptyStringArray = new string[0];
+        public static IEnumerable<string> Keys => mStringDatabase?.Keys.ToArray() ?? emptyStringArray;
 
         public static bool HasDatabase
         {
@@ -55,7 +58,14 @@ namespace Gum.Managers
 
             CsvFileManager.CsvDeserializeDictionary<string, string[]>(fileName, entryDictionary, out rcr);
             //CsvFileManager.Delimiter = oldDelimiter;
-
+            var keys = entryDictionary.Keys.ToArray();
+            foreach(var key in keys)
+            {
+                if(key?.Trim().StartsWith("//") == true)
+                {
+                    entryDictionary.Remove(key);
+                }
+            }
 
             List<string> headerList = new List<string>();
 

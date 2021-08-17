@@ -1439,11 +1439,15 @@ namespace CodeOutputPlugin.Manager
             }
         }
 
+        public static string StringIdPrefix = "T_";
+        public static string FormattedLocalizationCode = "Strings.Get(\"{0}\")";
+
         private static string TryGetFullXamarinFormsLineReplacement(InstanceSave instance, ElementSave container, VariableSave variable, StateSave state)
         {
             var rootName = variable.GetRootName();
-            
-            if(rootName == "IsXamarinFormsControl" ||
+
+
+            if (rootName == "IsXamarinFormsControl" ||
                 rootName == "Name" ||
                 rootName == "X Origin" ||
                 rootName == "XOrigin" ||
@@ -1452,7 +1456,7 @@ namespace CodeOutputPlugin.Manager
             {
                 return " "; // Don't do anything with these variables::
             }
-            else if(rootName == "Parent")
+            else if (rootName == "Parent")
             {
                 var parentName = variable.Value as string;
 
@@ -1461,7 +1465,7 @@ namespace CodeOutputPlugin.Manager
                 var hasContent =
                     parentInstance?.BaseType.EndsWith("/ScrollView") == true ||
                     parentInstance?.BaseType.EndsWith("/StickyScrollView") == true;
-                if(hasContent)
+                if (hasContent)
                 {
                     return $"{parentName}.Content = {instance.Name};";
                 }
@@ -1477,7 +1481,7 @@ namespace CodeOutputPlugin.Manager
             {
                 if (instance.BaseType.EndsWith("/StackLayout") && variable.Value is ChildrenLayout valueAsChildrenLayout)
                 {
-                    if(valueAsChildrenLayout == ChildrenLayout.LeftToRightStack)
+                    if (valueAsChildrenLayout == ChildrenLayout.LeftToRightStack)
                     {
                         return $"{instance.Name}.Orientation = StackOrientation.Horizontal;";
                     }
@@ -1489,8 +1493,30 @@ namespace CodeOutputPlugin.Manager
             }
 
             #endregion
+            else if (GetIsShouldBeLocalized(variable))
+            {
+                string assignment = GetLocaliedLine(instance, variable);
+
+                return assignment;
+            }
 
             return null;
+        }
+
+        private static string GetLocaliedLine(InstanceSave instance, VariableSave variable)
+        {
+            var valueAsString = variable.Value as string;
+            var formattedStringIdAssignment = string.Format(FormattedLocalizationCode, valueAsString);
+            var assignment = $"{instance.Name}.{variable.GetRootName()} = {formattedStringIdAssignment};";
+            return assignment;
+        }
+
+        private static bool GetIsShouldBeLocalized(VariableSave variable)
+        {
+            return LocalizationManager.HasDatabase && 
+                // This could be exposed of exposed, so the name wouldn't be "Text"
+                //variable.GetRootName() == "Text" && 
+                variable.Value is string valueAsString && valueAsString?.StartsWith(StringIdPrefix) == true;
         }
 
         private static string TryGetFullGumLineReplacement(InstanceSave instance, VariableSave variable)
@@ -1503,9 +1529,6 @@ namespace CodeOutputPlugin.Manager
                 return $"{variable.Value}.Children.Add({instance.Name});";
             }
             #endregion
-
-
-
                     // ignored variables:
             else if (rootName == "IsXamarinFormsControl" ||
                 rootName == "ClipsChildren" ||
@@ -1514,6 +1537,13 @@ namespace CodeOutputPlugin.Manager
             {
                 return " "; 
             }
+            else if (GetIsShouldBeLocalized(variable))
+            {
+                string assignment = GetLocaliedLine(instance, variable);
+
+                return assignment;
+            }
+
             return null;
         }
 

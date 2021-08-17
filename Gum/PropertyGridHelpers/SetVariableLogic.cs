@@ -186,6 +186,10 @@ namespace Gum.PropertyGridHelpers
                                 gue.SetProperty(unqualifiedMember, value);
                                 handledByDirectSet = true;
                             }
+                            if(unqualifiedMember == "Text" && LocalizationManager.HasDatabase)
+                            {
+                                WireframeObjectManager.Self.ApplyLocalization(gue);
+                            }
                         }
                         
                         if(!handledByDirectSet)
@@ -193,10 +197,6 @@ namespace Gum.PropertyGridHelpers
                             WireframeObjectManager.Self.RefreshAll(true, forceReloadTextures:false);
                         }
 
-                        if(unqualifiedMember == "Text" && LocalizationManager.HasDatabase)
-                        {
-                            WireframeObjectManager.Self.ApplyLocalization();
-                        }
 
                         SelectionManager.Self.Refresh();
                     }
