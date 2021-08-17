@@ -96,6 +96,8 @@ namespace CodeOutputPlugin.Manager
 
             GenerateConstructor(element, visualApi, tabCount, stringBuilder);
 
+            GenerateApplyLocalizationMethod(element, tabCount, stringBuilder);
+
             stringBuilder.AppendLine(ToTabs(tabCount) + "partial void CustomInitialize();");
 
             #region Class Closing }
@@ -295,6 +297,53 @@ namespace CodeOutputPlugin.Manager
 
             tabCount--;
             stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+        }
+
+        private static void GenerateApplyLocalizationMethod(ElementSave element, int tabCount, StringBuilder stringBuilder)
+        {
+            if(LocalizationManager.HasDatabase)
+            {
+                // Vic says - we may want this to be recursive eventually, but that introduces
+                // some complexity. How do we know which views have a call available? 
+                var line = "public void ApplyLocalization()";
+                stringBuilder.AppendLine(ToTabs(tabCount) + line);
+                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+                tabCount++;
+                foreach(var variable in element.DefaultState.Variables)
+                {
+                    InstanceSave instance = null;
+                    if(!string.IsNullOrEmpty(variable.SourceObject))
+                    {
+                        instance = element.GetInstance(variable.SourceObject);
+                    }
+
+                    if(instance != null)
+                    {
+                        if (GetIsShouldBeLocalized(variable))
+                        {
+                            string assignment = GetLocaliedLine(instance, variable);
+                            stringBuilder.AppendLine(ToTabs(tabCount) + assignment);
+                        }
+                        //else if(!string.IsNullOrEmpty(instance.BaseType))
+                        //{
+                        //    var instanceBase = ObjectFinder.Self.GetElementSave(instance.BaseType);
+
+                        //    var isComponent = instanceBase is ComponentSave;
+
+                        //    var shouldCallLocalize = !isComponent;
+
+                        //    if(shouldCallLocalize)
+                        //    {
+                        //        stringBuilder.AppendLine(ToTabs(tabCount) + $"{instance.Name}.ApplyLocalization();");
+                        //    }
+                        //}
+                    }
+                }
+
+                //stringBuilder.AppendLine(ToTabs(tabCount) + "base.ApplyLocalization();");
+                tabCount--;
+                stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+            }
         }
 
         private static void FillWithVariableBinding(ElementSave element, StringBuilder stringBuilder, int tabCount)
