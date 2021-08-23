@@ -1,4 +1,5 @@
 ﻿using Gum.Wireframe;
+using RenderingLibrary;
 using SkiaGum.GueDeriving;
 using SkiaGum.Managers;
 using SkiaSharp;
@@ -9,6 +10,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Text;
+using System.Windows;
 
 namespace SkiaGum.Wpf
 {
@@ -26,6 +28,11 @@ namespace SkiaGum.Wpf
 
         public bool EnableTouchEvents { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
+        SystemManagers SystemManagers;
+
+        public static float GlobalScale { get; set; } = 1;
+
+
         //public SemaphoreSlim ExclusiveUiInteractionSemaphor = new SemaphoreSlim(1, 1);
 
         //float yPushed;
@@ -41,7 +48,14 @@ namespace SkiaGum.Wpf
         public GumSKElement()
         {
             GumElementsInternal.CollectionChanged += HandleCollectionChanged;
+
+
+            SystemManagers = new SystemManagers();
+            SystemManagers.Initialize();
+
+            DataContextChanged += HandleDataContextChanged;
         }
+
 
         private void HandleCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
@@ -53,7 +67,7 @@ namespace SkiaGum.Wpf
                         var bindableGue = toAdd as BindableGraphicalUiElement;
 
                         bindableGue.AddToManagers(this);
-                        //bindableGue.BindingContext = this.BindingContext;
+                        bindableGue.BindingContext = this.DataContext;
                     }
 
                     break;
@@ -66,18 +80,16 @@ namespace SkiaGum.Wpf
             GumElementsInternal.Add(toAdd);
         }
 
-        //protected override void OnBindingContextChanged()
-        //{
-        //    base.OnBindingContextChanged();
-
-        //    foreach (var element in GumElementsInternal)
-        //    {
-        //        if (element is BindableGraphicalUiElement bindableGue)
-        //        {
-        //            bindableGue.BindingContext = this.BindingContext;
-        //        }
-        //    }
-        //}
+        private void HandleDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            foreach (var element in GumElementsInternal)
+            {
+                if (element is BindableGraphicalUiElement bindableGue)
+                {
+                    bindableGue.BindingContext = this.DataContext;
+                }
+            }
+        }
 
 
         protected override void OnPaintSurface(SKPaintSurfaceEventArgs args)
@@ -85,17 +97,15 @@ namespace SkiaGum.Wpf
             var canvas = args.Surface.Canvas;
             SKImageInfo info = args.Info;
 
-            canvas.Clear();
+            SystemManagers.Canvas = canvas;
 
+            GraphicalUiElement.CanvasWidth = info.Width / GlobalScale;
+            GraphicalUiElement.CanvasHeight = info.Height / GlobalScale;
+            SystemManagers.Renderer.Camera.Zoom = GlobalScale;
 
-            GraphicalUiElement.CanvasWidth = info.Width;
-            GraphicalUiElement.CanvasHeight = info.Height;
+            SystemManagers.Renderer.Draw(this.GumElementsInternal, SystemManagers);
 
-            foreach (var element in GumElementsInternal)
-            {
-                element.UpdateLayout();
-                ((IRenderable)element).Render(canvas);
-            }
+            base.OnPaintSurface(args);
         }
 
         public void InvalidateSurface()

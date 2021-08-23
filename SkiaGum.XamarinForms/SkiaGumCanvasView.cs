@@ -28,6 +28,8 @@ namespace SkiaGum
         // this is public to support adding GUE's directly in gencode.
         public ObservableCollection<BindableGraphicalUiElement> Children => GumElementsInternal;
 
+        SystemManagers SystemManagers;
+
         public SemaphoreSlim ExclusiveUiInteractionSemaphor = new SemaphoreSlim(1, 1);
 
         float yPushed;
@@ -50,11 +52,8 @@ namespace SkiaGum
         {
             GumElementsInternal.CollectionChanged += HandleCollectionChanged;
 
-            if (SystemManagers.Default == null)
-            {
-                SystemManagers.Default = new SystemManagers();
-                SystemManagers.Default.Initialize();
-            }
+            SystemManagers = new SystemManagers();
+            SystemManagers.Initialize();
 
             base.Touch += HandleTouch;
         }
@@ -313,30 +312,13 @@ namespace SkiaGum
             var canvas = args.Surface.Canvas;
             SKImageInfo info = args.Info;
 
-            canvas.Clear();
+            SystemManagers.Canvas = canvas;
 
             GraphicalUiElement.CanvasWidth = info.Width / GlobalScale;
             GraphicalUiElement.CanvasHeight = info.Height / GlobalScale;
-            SystemManagers.Default.Renderer.Camera.Zoom = GlobalScale;
+            SystemManagers.Renderer.Camera.Zoom = GlobalScale;
 
-            // Eventually we may want multiple cameras, but for now we can apply the zoom here:
-            canvas.Save();
-
-            if (GlobalScale != 1)
-            {
-                canvas.Scale(GlobalScale);
-            }
-
-            foreach (var element in GumElementsInternal)
-            {
-                if (element.Visible)
-                {
-                    element.UpdateLayout();
-                    ((IRenderable)element).Render(canvas);
-                }
-            }
-
-            canvas.Restore();
+            SystemManagers.Renderer.Draw(this.GumElementsInternal, SystemManagers);
 
             base.OnPaintSurface(args);
         }

@@ -14,6 +14,9 @@ namespace RenderingLibrary
             set;
         }
 
+        public SkiaSharp.SKCanvas Canvas { get; set; }
+
+
         public RenderingLibrary.Graphics.Renderer Renderer { get; private set; }
 
         public void Initialize()
@@ -33,5 +36,7 @@ namespace RenderingLibrary
             //ShapeManager.Managers = this;
             //Tex
         }
+
+
     }
 }
