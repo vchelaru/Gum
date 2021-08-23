@@ -202,6 +202,17 @@ namespace SkiaGum.GueDeriving
                 this.Color = SKColors.White;
                 Width = 100;
                 Height = 100;
+
+                Red1 = 255;
+                Green1 = 255;
+                Blue1 = 255;
+
+                Red2 = 255;
+                Green2 = 255;
+                Blue2 = 0;
+
+                GradientX2 = 100;
+                GradientY2 = 100;
             }
         }
 

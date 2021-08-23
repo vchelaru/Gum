@@ -91,10 +91,41 @@ namespace CodeOutputPlugin.Views
         private void CreateProjectWideUi()
         {
             var projectCategory = new MemberCategory("Project-Wide Code Generation");
+            projectCategory.Members.Add(CreateProjectTypeSelectionMember());
             projectCategory.Members.Add(CreateProjectUsingStatementsMember());
             projectCategory.Members.Add(CreateCodeProjectRootMember());
             projectCategory.Members.Add(CreateRootNamespaceMember());
+            projectCategory.Members.Add(CreateDefaultScreenBaseMember());
             DataGrid.Categories.Add(projectCategory);
+        }
+
+        private InstanceMember CreateProjectTypeSelectionMember()
+        {
+            var member = new InstanceMember("Output Library", this);
+
+            member.CustomSetEvent += (owner, value) =>
+            {
+                if (CodeOutputProjectSettings != null)
+                {
+                    CodeOutputProjectSettings.OutputLibrary = (OutputLibrary)value;
+                    CodeOutputSettingsPropertyChanged?.Invoke(this, null);
+                }
+            };
+
+            member.CustomGetEvent += (owner) => CodeOutputProjectSettings?.OutputLibrary;
+
+
+
+            var optionsArray = Enum.GetValues(typeof(OutputLibrary));
+            List<object> options = new List<object>();
+            foreach(var option in optionsArray)
+            {
+                options.Add(option);
+            }
+            member.CustomOptions = options;
+
+
+            return member;
         }
 
         private InstanceMember CreateProjectUsingStatementsMember()
@@ -164,6 +195,28 @@ namespace CodeOutputPlugin.Views
             member.CustomGetTypeEvent += (owner) => typeof(string);
 
             return member;
+        }
+
+        private InstanceMember CreateDefaultScreenBaseMember()
+        {
+
+            var member = new InstanceMember("Default Screen Base", this);
+            member.DetailText = "Base class for screens";
+            member.CustomSetEvent += (owner, value) =>
+            {
+                if (CodeOutputProjectSettings != null)
+                {
+                    CodeOutputProjectSettings.DefaultScreenBase = (string)value;
+                    CodeOutputSettingsPropertyChanged?.Invoke(this, null);
+                }
+            };
+
+            member.CustomGetEvent += (owner) => CodeOutputProjectSettings?.DefaultScreenBase;
+            member.CustomGetTypeEvent += (owner) => typeof(string);
+
+            return member;
+
+            
         }
 
         #endregion

@@ -81,7 +81,7 @@ namespace CodeOutputPlugin
         {
             codeOutputProjectSettings = CodeOutputProjectSettingsManager.CreateOrLoadSettingsForProject();
 
-            RefreshCodeDisplay();
+            HandleElementSelected(null);
         }
 
         private void HandleStateSelected(TreeNode obj)
@@ -120,6 +120,10 @@ namespace CodeOutputPlugin
             if(element != null)
             {
                 control.CodeOutputElementSettings = CodeOutputElementSettingsManager.LoadOrCreateSettingsFor(element);
+            }
+            else
+            {
+                control.CodeOutputElementSettings = new Models.CodeOutputElementSettings();
             }
         }
 
@@ -213,6 +217,10 @@ namespace CodeOutputPlugin
                         }
                         break;
                 }
+            }
+            else if(selectedElement == null)
+            {
+                viewModel.Code = "// Select a Screen, Component, or Standard to see generated code";
             }
             else
             {

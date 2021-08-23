@@ -87,7 +87,7 @@ namespace CodeOutputPlugin.Manager
                 FillWithInstanceDeclaration(instance, element, stringBuilder, tabCount);
             }
 
-            AddAbsoluteLayoutIfNecessary(element, tabCount, stringBuilder);
+            AddAbsoluteLayoutIfNecessary(element, tabCount, stringBuilder, projectSettings);
 
             stringBuilder.AppendLine();
 
@@ -163,7 +163,7 @@ namespace CodeOutputPlugin.Manager
             return visualApi;
         }
 
-        private static void AddAbsoluteLayoutIfNecessary(ElementSave element, int tabCount, StringBuilder stringBuilder)
+        private static void AddAbsoluteLayoutIfNecessary(ElementSave element, int tabCount, StringBuilder stringBuilder, CodeOutputProjectSettings projectSettings)
         {
             var elementBaseType = element?.BaseType;
             var isThisAbsoluteLayout = elementBaseType?.EndsWith("/AbsoluteLayout") == true;
@@ -173,7 +173,7 @@ namespace CodeOutputPlugin.Manager
 
             var isContainer = elementBaseType == "Container";
 
-            if (!isThisAbsoluteLayout && !isSkiaCanvasView && !isContainer && !isThisStackLayout)
+            if (!isThisAbsoluteLayout && !isSkiaCanvasView && !isContainer && !isThisStackLayout && projectSettings.OutputLibrary == OutputLibrary.XamarinForms)
             {
                 var shouldAddMainLayout = true;
                 if (element is ScreenSave && !string.IsNullOrEmpty(element.BaseType))

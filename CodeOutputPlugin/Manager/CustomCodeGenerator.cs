@@ -50,7 +50,7 @@ namespace CodeOutputPlugin.Manager
             string inheritance = null;
             if(element is ScreenSave)
             {
-                inheritance = element.BaseType ?? "Xamarin.Forms.BioCheckPage";
+                inheritance = element.BaseType ?? projectSettings.DefaultScreenBase;
             }
             else if(element.BaseType == "XamarinForms/SkiaGumCanvasView")
             {
