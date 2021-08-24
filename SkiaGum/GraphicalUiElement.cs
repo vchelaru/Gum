@@ -2068,9 +2068,9 @@ namespace Gum.Wireframe
                         break;
                 }
             }
-#if !SKIA
             else if (mContainedObjectAsIpso is NineSlice)
             {
+#if !SKIA
                 var nineSlice = mContainedObjectAsIpso as NineSlice;
                 var textureAddress = mTextureAddress;
                 switch (textureAddress)
@@ -2100,8 +2100,8 @@ namespace Gum.Wireframe
 
                         break;
                 }
-            }
 #endif
+            }
         }
 
         private void UpdatePosition(float parentWidth, float parentHeight, XOrY? xOrY, float parentAbsoluteRotation, bool isParentFlippedHorizontally)
@@ -2691,7 +2691,7 @@ namespace Gum.Wireframe
         {
             float heightToSet = mHeight;
 
-#region RelativeToChildren
+            #region RelativeToChildren
 
             if (mHeightUnit == DimensionUnitType.RelativeToChildren)
             {
@@ -2763,18 +2763,18 @@ namespace Gum.Wireframe
                 heightToSet = maxHeight + mHeight;
             }
 
-#endregion
+            #endregion
 
-#region Percentage
+            #region Percentage
 
             else if (mHeightUnit == DimensionUnitType.Percentage)
             {
                 heightToSet = parentHeight * mHeight / 100.0f;
             }
 
-#endregion
+            #endregion
 
-#region PercentageOfSourceFile
+            #region PercentageOfSourceFile
 
             else if (mHeightUnit == DimensionUnitType.PercentageOfSourceFile)
             {
@@ -2839,9 +2839,9 @@ namespace Gum.Wireframe
                 }
             }
 
-#endregion
+            #endregion
 
-#region MaintainFileAspectRatio
+            #region MaintainFileAspectRatio
 
             else if (mHeightUnit == DimensionUnitType.MaintainFileAspectRatio)
             {
@@ -2904,25 +2904,25 @@ namespace Gum.Wireframe
                 }
             }
 
-#endregion
+            #endregion
 
-#region RelativeToContainer (in pixels)
+            #region RelativeToContainer (in pixels)
 
             else if (mHeightUnit == DimensionUnitType.RelativeToContainer)
             {
                 heightToSet = parentHeight + mHeight;
             }
 
-#endregion
+            #endregion
 
-#region PercentageOfOtherDimension
+            #region PercentageOfOtherDimension
 
             else if (mHeightUnit == DimensionUnitType.PercentageOfOtherDimension)
             {
                 heightToSet = mContainedObjectAsIpso.Width * mHeight / 100.0f;
             }
 
-#endregion
+            #endregion
 
             mContainedObjectAsIpso.Height = heightToSet;
         }
@@ -2931,7 +2931,7 @@ namespace Gum.Wireframe
         {
             float widthToSet = mWidth;
 
-#region RelativeToChildren
+            #region RelativeToChildren
 
             if (mWidthUnit == DimensionUnitType.RelativeToChildren)
             {
@@ -3033,18 +3033,18 @@ namespace Gum.Wireframe
 
                 widthToSet = maxWidth + mWidth;
             }
-#endregion
+            #endregion
 
-#region Percentage (of parent)
+            #region Percentage (of parent)
 
             else if (mWidthUnit == DimensionUnitType.Percentage)
             {
                 widthToSet = parentWidth * mWidth / 100.0f;
             }
 
-#endregion
+            #endregion
 
-#region PercentageOfSourceFile
+            #region PercentageOfSourceFile
 
             else if (mWidthUnit == DimensionUnitType.PercentageOfSourceFile)
             {
@@ -3107,9 +3107,9 @@ namespace Gum.Wireframe
                 }
             }
 
-#endregion
+            #endregion
 
-#region MaintainFileAspectRatio
+            #region MaintainFileAspectRatio
 
             else if (mWidthUnit == DimensionUnitType.MaintainFileAspectRatio)
             {
@@ -3162,25 +3162,25 @@ namespace Gum.Wireframe
                 }
             }
 
-#endregion
+            #endregion
 
-#region RelativeToContainer (in pixels)
+            #region RelativeToContainer (in pixels)
 
             else if (mWidthUnit == DimensionUnitType.RelativeToContainer)
             {
                 widthToSet = parentWidth + mWidth;
             }
 
-#endregion
+            #endregion
 
-#region PercentageOfOtherDimension
+            #region PercentageOfOtherDimension
 
             else if (mWidthUnit == DimensionUnitType.PercentageOfOtherDimension)
             {
                 widthToSet = mContainedObjectAsIpso.Height * mWidth / 100.0f;
             }
 
-#endregion
+            #endregion
 
             mContainedObjectAsIpso.Width = widthToSet;
         }
@@ -3805,6 +3805,7 @@ namespace Gum.Wireframe
                 switch (propertyName)
                 {
 #if MONOGAME
+
                     case nameof(Animate):
                         this.Animate = (bool)value;
                         break;
@@ -4200,7 +4201,7 @@ namespace Gum.Wireframe
                 }
             }
 #endif
-        }
+                }
 
 #if MONOGAME
 
@@ -4504,6 +4505,19 @@ namespace Gum.Wireframe
         {
             bool handled = false;
 
+            void ReactToFontValueChange()
+            {
+                UpdateToFontValues();
+                // we want to update if the text's size is based on its "children" (the letters it contains)
+                if (this.WidthUnits == DimensionUnitType.RelativeToChildren ||
+                    // If height is relative to children, it could be in a stack
+                    this.HeightUnits == DimensionUnitType.RelativeToChildren)
+                {
+                    UpdateLayout();
+                }
+                handled = true;
+            }
+
             if (propertyName == "Text")
             {
                 var asText = ((Text)mContainedObjectAsIpso);
@@ -4542,95 +4556,46 @@ namespace Gum.Wireframe
             {
                 this.Font = value as string;
 
-                UpdateToFontValues();
-                // we want to update if the text's size is based on its "children" (the letters it contains)
-                if (this.WidthUnits == DimensionUnitType.RelativeToChildren ||
-                    // If height is relative to children, it could be in a stack
-                    this.HeightUnits == DimensionUnitType.RelativeToChildren)
-                {
-                    UpdateLayout();
-                }
-                handled = true;
+                ReactToFontValueChange();
             }
 #if MONOGAME
             else if (propertyName == nameof(UseCustomFont))
             {
                 this.UseCustomFont = (bool)value;
-                UpdateToFontValues();
-                // we want to update if the text's size is based on its "children" (the letters it contains)
-                if (this.WidthUnits == DimensionUnitType.RelativeToChildren ||
-                    // If height is relative to children, it could be in a stack
-                    this.HeightUnits == DimensionUnitType.RelativeToChildren)
-                {
-                    UpdateLayout();
-                }
-                handled = true;
+                ReactToFontValueChange();
             }
 
             else if (propertyName == nameof(CustomFontFile))
             {
                 CustomFontFile = (string)value;
-                UpdateToFontValues();
-                // we want to update if the text's size is based on its "children" (the letters it contains)
-                if (this.WidthUnits == DimensionUnitType.RelativeToChildren ||
-                    // If height is relative to children, it could be in a stack
-                    this.HeightUnits == DimensionUnitType.RelativeToChildren)
-                {
-                    UpdateLayout();
-                }
-                handled = true;
+                ReactToFontValueChange();
+
             }
 #endif
             else if (propertyName == nameof(FontSize))
             {
                 FontSize = (int)value;
-                UpdateToFontValues();
-                // we want to update if the text's size is based on its "children" (the letters it contains)
-                if (this.WidthUnits == DimensionUnitType.RelativeToChildren ||
-                    // If height is relative to children, it could be in a stack
-                    this.HeightUnits == DimensionUnitType.RelativeToChildren)
-                {
-                    UpdateLayout();
-                }
-                handled = true;
+                ReactToFontValueChange();
             }
             else if (propertyName == nameof(OutlineThickness))
             {
                 OutlineThickness = (int)value;
-                UpdateToFontValues();
-                // we want to update if the text's size is based on its "children" (the letters it contains)
-                if (this.WidthUnits == DimensionUnitType.RelativeToChildren ||
-                    // If height is relative to children, it could be in a stack
-                    this.HeightUnits == DimensionUnitType.RelativeToChildren)
-                {
-                    UpdateLayout();
-                }
-                handled = true;
+                ReactToFontValueChange();
             }
             else if (propertyName == nameof(IsItalic))
             {
                 IsItalic = (bool)value;
-                UpdateToFontValues();
-                // we want to update if the text's size is based on its "children" (the letters it contains)
-                if (this.WidthUnits == DimensionUnitType.RelativeToChildren ||
-                    // If height is relative to children, it could be in a stack
-                    this.HeightUnits == DimensionUnitType.RelativeToChildren)
-                {
-                    UpdateLayout();
-                }
-                handled = true;
+                ReactToFontValueChange();
+            }
+            else if(propertyName == nameof(IsBold))
+            {
+                IsBold = (bool)value;
+                ReactToFontValueChange();
             }
             else if (propertyName == nameof(UseFontSmoothing))
             {
                 useFontSmoothing = (bool)value;
-                UpdateToFontValues();
-                if (this.WidthUnits == DimensionUnitType.RelativeToChildren ||
-                    // If height is relative to children, it could be in a stack
-                    this.HeightUnits == DimensionUnitType.RelativeToChildren)
-                {
-                    UpdateLayout();
-                }
-                handled = true;
+                ReactToFontValueChange();
             }
             else if (propertyName == nameof(Blend))
             {
@@ -4733,8 +4698,15 @@ namespace Gum.Wireframe
         bool isItalic;
         public bool IsItalic
         {
-            get { return isItalic; }
+            get => isItalic; 
             set { isItalic = value; UpdateToFontValues(); }
+        }
+
+        bool isBold;
+        public bool IsBold
+        {
+            get => isBold;
+            set { isBold = value; UpdateToFontValues(); }
         }
 
         // Not sure if we need to make this a public value, but we do need to store it
@@ -4850,7 +4822,8 @@ namespace Gum.Wireframe
                             Font,
                             OutlineThickness,
                             useFontSmoothing,
-                            IsItalic);
+                            IsItalic,
+                            IsBold);
 
                         string fullFileName = ToolsUtilities.FileManager.Standardize(fontName, false, true);
 
@@ -4889,7 +4862,7 @@ namespace Gum.Wireframe
 
 #endif
 
-#region IVisible Implementation
+        #region IVisible Implementation
 
         bool IVisible.AbsoluteVisible
         {
@@ -4910,7 +4883,7 @@ namespace Gum.Wireframe
             get { return this.Parent as IVisible; }
         }
 
-#endregion
+        #endregion
 
         public void ApplyState(string name)
         {
@@ -5131,7 +5104,7 @@ namespace Gum.Wireframe
             numberOfUsedInterpolationLists--;
         }
 
-#region AnimationChain 
+        #region AnimationChain 
 #if MONOGAME
         public bool Animate { get; set; } = true;
         int mCurrentChainIndex;
@@ -5327,7 +5300,7 @@ namespace Gum.Wireframe
             }
         }
 #endif
-#endregion
+        #endregion
 
 
 #if SKIA
@@ -5346,6 +5319,6 @@ namespace Gum.Wireframe
         }
 #endif
 
-#endregion
+        #endregion
     }
 }

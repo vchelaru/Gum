@@ -1996,6 +1996,7 @@ namespace Gum.Wireframe
                 switch (textureAddress)
                 {
                     case TextureAddress.DimensionsBased:
+#if !SKIA
                         int left = mTextureLeft;
                         int top = mTextureTop;
                         int width = (int)(sprite.EffectiveWidth / mTextureWidthScale);
@@ -2007,10 +2008,11 @@ namespace Gum.Wireframe
                             width,
                             height);
                         sprite.Wrap = mWrap;
-
+#endif
                         break;
                 }
             }
+#if !SKIA
             else if (mContainedObjectAsIpso is NineSlice)
             {
                 var nineSlice = mContainedObjectAsIpso as NineSlice;
@@ -2032,7 +2034,7 @@ namespace Gum.Wireframe
                         break;
                 }
             }
-
+#endif
 
         }
 
@@ -2045,17 +2047,20 @@ namespace Gum.Wireframe
                 switch (textureAddress)
                 {
                     case TextureAddress.EntireTexture:
+#if !SKIA
                         sprite.SourceRectangle = null;
                         sprite.Wrap = false;
+#endif
                         break;
                     case TextureAddress.Custom:
+#if !SKIA
                         sprite.SourceRectangle = new Microsoft.Xna.Framework.Rectangle(
                             mTextureLeft,
                             mTextureTop,
                             mTextureWidth,
                             mTextureHeight);
                         sprite.Wrap = mWrap;
-
+#endif
                         break;
                     case TextureAddress.DimensionsBased:
                         // This is done *after* setting dimensions
@@ -2065,6 +2070,7 @@ namespace Gum.Wireframe
             }
             else if (mContainedObjectAsIpso is NineSlice)
             {
+#if !SKIA
                 var nineSlice = mContainedObjectAsIpso as NineSlice;
                 var textureAddress = mTextureAddress;
                 switch (textureAddress)
@@ -2094,6 +2100,7 @@ namespace Gum.Wireframe
 
                         break;
                 }
+#endif
             }
         }
 
@@ -3797,9 +3804,12 @@ namespace Gum.Wireframe
             {
                 switch (propertyName)
                 {
+#if MONOGAME
+
                     case nameof(Animate):
                         this.Animate = (bool)value;
                         break;
+#endif
                     case "Children Layout":
                         this.ChildrenLayout = (ChildrenLayout)value;
                         toReturn = true;
