@@ -105,7 +105,8 @@ namespace GumRuntime
                                 graphicalUiElement.Font,
                                 graphicalUiElement.OutlineThickness,
                                 graphicalUiElement.UseFontSmoothing,
-                                graphicalUiElement.IsItalic);
+                                graphicalUiElement.IsItalic,
+                                graphicalUiElement.IsBold);
 
                             var standardized = ToolsUtilities.FileManager.Standardize(fontName, preserveCase:true, makeAbsolute:true);
 

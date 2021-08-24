@@ -219,8 +219,29 @@ namespace SkiaGum
                 var textBlock = GetTextBlock();
                 
                 //// Gum uses counter clockwise rotation, Skia uses clockwise, so invert:
-                SKMatrix rotationMatrix = SKMatrix.MakeRotationDegrees(-Rotation);
-                SKMatrix translateMatrix = SKMatrix.MakeTranslation(this.GetAbsoluteX(), this.GetAbsoluteY());
+                SKMatrix rotationMatrix = SKMatrix.CreateRotationDegrees(-Rotation);
+                var absoluteX = this.GetAbsoluteX();
+                var absoluteY = this.GetAbsoluteY();
+
+                if(this.VerticalAlignment == VerticalAlignment.Center)
+                {
+                    // compare the bound height with the actual height, and adjust the offset
+                    var textBlockHeight = textBlock.MeasuredHeight;
+                    var boundsHeight = this.Height;
+
+                    absoluteY += (boundsHeight - textBlockHeight)/2.0f;
+                }
+
+                if(this.VerticalAlignment == VerticalAlignment.Bottom)
+                {
+                    // compare the bound height with the actual height, and adjust the offset
+                    var textBlockHeight = textBlock.MeasuredHeight;
+                    var boundsHeight = this.Height;
+
+                    absoluteY += boundsHeight - textBlockHeight;
+                }
+
+                SKMatrix translateMatrix = SKMatrix.CreateTranslation(absoluteX, absoluteY);
                 // Continue to apply the previou matrix in case there is scaling
                 // for device density
                 SKMatrix result = rotationMatrix;

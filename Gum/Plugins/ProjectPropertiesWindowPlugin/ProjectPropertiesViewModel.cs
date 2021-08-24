@@ -25,8 +25,14 @@ namespace Gum.Plugins.PropertiesWindowPlugin
 
         public bool ShowOutlines
         {
-            get { return Get<bool>(); }
-            set { Set(value); }
+            get => Get<bool>(); 
+            set => Set(value); 
+        }
+
+        public Color OutlineColor
+        {
+            get => Get<Color>();
+            set => Set(value);
         }
 
         public bool RestrictToUnitValues
@@ -91,6 +97,11 @@ namespace Gum.Plugins.PropertiesWindowPlugin
 
         public bool IsUpdatingFromModel { get; private set; }
 
+        public ProjectPropertiesViewModel()
+        {
+            OutlineColor = Microsoft.Xna.Framework.Color.White;
+        }
+
         public void BindTo(GeneralSettingsFile generalSettings, GumProjectSave gumProject)
         {
             IsUpdatingFromModel = true;
@@ -108,6 +119,8 @@ namespace Gum.Plugins.PropertiesWindowPlugin
 
             CheckerboardColor1 = new Color(generalSettings.CheckerColor1R, generalSettings.CheckerColor1G, generalSettings.CheckerColor1B);
             CheckerboardColor2 = new Color(generalSettings.CheckerColor2R, generalSettings.CheckerColor2G, generalSettings.CheckerColor2B);
+
+            OutlineColor = new Color(generalSettings.OutlineColorR, generalSettings.OutlineColorG, generalSettings.OutlineColorB);
 
             LocalizationFile = this.gumProject.LocalizationFile;
             LanguageIndex = this.gumProject.CurrentLanguageIndex;
@@ -146,6 +159,11 @@ namespace Gum.Plugins.PropertiesWindowPlugin
             generalSettings.CheckerColor2R = CheckerboardColor2.R;
             generalSettings.CheckerColor2G = CheckerboardColor2.G;
             generalSettings.CheckerColor2B = CheckerboardColor2.B;
+
+            generalSettings.OutlineColorR = OutlineColor.R;
+            generalSettings.OutlineColorG = OutlineColor.G;
+            generalSettings.OutlineColorB = OutlineColor.B;
+
 
             this.gumProject.LocalizationFile = LocalizationFile;
             this.gumProject.CurrentLanguageIndex = LanguageIndex;

@@ -24,10 +24,11 @@ namespace Gum.Managers
             }
         }
 
-        public BitmapFont GetBitmapFontFor(string fontName, int fontSize, int outlineThickness, bool useFontSmoothing, bool isItalic = false)
+        public BitmapFont GetBitmapFontFor(string fontName, int fontSize, int outlineThickness, bool useFontSmoothing, bool isItalic = false, 
+            bool isBold = false)
         {
             string fileName = AbsoluteFontCacheFolder + 
-                FileManager.RemovePath(BmfcSave.GetFontCacheFileNameFor(fontSize, fontName, outlineThickness, useFontSmoothing, isItalic));
+                FileManager.RemovePath(BmfcSave.GetFontCacheFileNameFor(fontSize, fontName, outlineThickness, useFontSmoothing, isItalic, isBold));
 
             if (FileManager.FileExists(fileName))
             {
@@ -136,6 +137,7 @@ namespace Gum.Managers
             // default to true to match how old behavior worked
             bool fontSmoothing = stateSave.GetValueRecursive(prefix + "UseFontSmoothing") as bool? ?? true;
             bool isItalic = stateSave.GetValueRecursive(prefix + "IsItalic") as bool? ?? false;
+            bool isBold = stateSave.GetValueRecursive(prefix + "IsBold") as bool? ?? false;
 
             if (fontValue != null && fontSize != null)
             {
@@ -143,7 +145,7 @@ namespace Gum.Managers
                     fontSize.Value,
                     fontValue,
                     outlineValue,
-                    fontSmoothing, isItalic);
+                    fontSmoothing, isItalic, isBold);
             }
         }
     }

@@ -91,6 +91,11 @@ namespace GumRuntime
                     if(GraphicalUiElement.ShowLineRectangles)
                     {
                         LineRectangle lineRectangle = new LineRectangle(systemManagers);
+                        lineRectangle.Color = new Microsoft.Xna.Framework.Color(
+                            Gum.ToolStates.GumState.Self.ProjectState.GeneralSettings.OutlineColorR,
+                            Gum.ToolStates.GumState.Self.ProjectState.GeneralSettings.OutlineColorG,
+                            Gum.ToolStates.GumState.Self.ProjectState.GeneralSettings.OutlineColorB);
+
                         containedObject = lineRectangle;
                     }
                     else

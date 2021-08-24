@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Gum.DataTypes;
+using Gum.Settings;
 using ToolsUtilities;
 
 namespace Gum.ToolStates
@@ -28,6 +29,7 @@ namespace Gum.ToolStates
         }
 
         public GumProjectSave GumProjectSave => ProjectManager.Self.GumProjectSave;
+        public GeneralSettingsFile GeneralSettings => ProjectManager.Self.GeneralSettingsFile;
 
         public string ProjectDirectory
         {

@@ -58,26 +58,14 @@ namespace RenderingLibrary.Math.Geometry
 
         public float X
         {
-            get
-            {
-                return Position.X;
-            }
-            set
-            {
-                Position.X = value;
-            }
+            get => Position.X;
+            set => Position.X = value;
         }
 
         public float Y
         {
-            get
-            {
-                return Position.Y;
-            }
-            set
-            {
-                Position.Y = value;
-            }
+            get => Position.Y;
+            set => Position.Y = value;
         }
 
         public float Z
@@ -157,14 +145,8 @@ namespace RenderingLibrary.Math.Geometry
         }
         public Color Color
         {
-            get
-            {
-                return mLinePrimitive.Color;
-            }
-            set
-            {
-                mLinePrimitive.Color = value;
-            }
+            get => mLinePrimitive.Color;
+            set => mLinePrimitive.Color = value;
         }
 
         public ObservableCollection<IRenderableIpso> Children

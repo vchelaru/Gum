@@ -11,13 +11,21 @@ namespace Gum.Plugins.AlignmentButtons
 {
     static class CommonControlLogic
     {
+        static bool SelectionInheritsFromText()
+        {
+            if(SelectedState.Self.SelectedInstance != null)
+            {
+                return ObjectFinder.Self.GetRootStandardElementSave(SelectedState.Self.SelectedInstance)?.Name == "Text";
+            }
+            return false;
+        }
         public static void SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment alignment, PositionUnitType xUnits)
         {
             SetAndCallReact("X", 0.0f, "float");
             SetAndCallReact("X Origin", alignment, "HorizontalAlignment");
             SetAndCallReact("X Units", xUnits, typeof(Gum.Managers.PositionUnitType).Name);
 
-            if (SelectedState.Self.SelectedInstance?.BaseType == "Text")
+            if (SelectionInheritsFromText())
             {
                 SetAndCallReact("HorizontalAlignment", alignment, "HorizontalAlignment");
             }
@@ -32,7 +40,7 @@ namespace Gum.Plugins.AlignmentButtons
             SetAndCallReact("Y Origin", alignment, typeof(global::RenderingLibrary.Graphics.VerticalAlignment).Name);
             SetAndCallReact("Y Units", yUnits, typeof(PositionUnitType).Name);
 
-            if (SelectedState.Self.SelectedInstance?.BaseType == "Text")
+            if (SelectionInheritsFromText())
             {
                 SetAndCallReact("VerticalAlignment", alignment, "VerticalAlignment");
             }

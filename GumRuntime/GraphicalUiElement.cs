@@ -4495,6 +4495,19 @@ namespace Gum.Wireframe
         {
             bool handled = false;
 
+            void ReactToFontValueChange()
+            {
+                UpdateToFontValues();
+                // we want to update if the text's size is based on its "children" (the letters it contains)
+                if (this.WidthUnits == DimensionUnitType.RelativeToChildren ||
+                    // If height is relative to children, it could be in a stack
+                    this.HeightUnits == DimensionUnitType.RelativeToChildren)
+                {
+                    UpdateLayout();
+                }
+                handled = true;
+            }
+
             if (propertyName == "Text")
             {
                 var asText = ((Text)mContainedObjectAsIpso);
@@ -4533,95 +4546,46 @@ namespace Gum.Wireframe
             {
                 this.Font = value as string;
 
-                UpdateToFontValues();
-                // we want to update if the text's size is based on its "children" (the letters it contains)
-                if (this.WidthUnits == DimensionUnitType.RelativeToChildren ||
-                    // If height is relative to children, it could be in a stack
-                    this.HeightUnits == DimensionUnitType.RelativeToChildren)
-                {
-                    UpdateLayout();
-                }
-                handled = true;
+                ReactToFontValueChange();
             }
 #if MONOGAME
             else if (propertyName == nameof(UseCustomFont))
             {
                 this.UseCustomFont = (bool)value;
-                UpdateToFontValues();
-                // we want to update if the text's size is based on its "children" (the letters it contains)
-                if (this.WidthUnits == DimensionUnitType.RelativeToChildren ||
-                    // If height is relative to children, it could be in a stack
-                    this.HeightUnits == DimensionUnitType.RelativeToChildren)
-                {
-                    UpdateLayout();
-                }
-                handled = true;
+                ReactToFontValueChange();
             }
 
             else if (propertyName == nameof(CustomFontFile))
             {
                 CustomFontFile = (string)value;
-                UpdateToFontValues();
-                // we want to update if the text's size is based on its "children" (the letters it contains)
-                if (this.WidthUnits == DimensionUnitType.RelativeToChildren ||
-                    // If height is relative to children, it could be in a stack
-                    this.HeightUnits == DimensionUnitType.RelativeToChildren)
-                {
-                    UpdateLayout();
-                }
-                handled = true;
+                ReactToFontValueChange();
+
             }
 #endif
             else if (propertyName == nameof(FontSize))
             {
                 FontSize = (int)value;
-                UpdateToFontValues();
-                // we want to update if the text's size is based on its "children" (the letters it contains)
-                if (this.WidthUnits == DimensionUnitType.RelativeToChildren ||
-                    // If height is relative to children, it could be in a stack
-                    this.HeightUnits == DimensionUnitType.RelativeToChildren)
-                {
-                    UpdateLayout();
-                }
-                handled = true;
+                ReactToFontValueChange();
             }
             else if (propertyName == nameof(OutlineThickness))
             {
                 OutlineThickness = (int)value;
-                UpdateToFontValues();
-                // we want to update if the text's size is based on its "children" (the letters it contains)
-                if (this.WidthUnits == DimensionUnitType.RelativeToChildren ||
-                    // If height is relative to children, it could be in a stack
-                    this.HeightUnits == DimensionUnitType.RelativeToChildren)
-                {
-                    UpdateLayout();
-                }
-                handled = true;
+                ReactToFontValueChange();
             }
             else if (propertyName == nameof(IsItalic))
             {
                 IsItalic = (bool)value;
-                UpdateToFontValues();
-                // we want to update if the text's size is based on its "children" (the letters it contains)
-                if (this.WidthUnits == DimensionUnitType.RelativeToChildren ||
-                    // If height is relative to children, it could be in a stack
-                    this.HeightUnits == DimensionUnitType.RelativeToChildren)
-                {
-                    UpdateLayout();
-                }
-                handled = true;
+                ReactToFontValueChange();
+            }
+            else if(propertyName == nameof(IsBold))
+            {
+                IsBold = (bool)value;
+                ReactToFontValueChange();
             }
             else if (propertyName == nameof(UseFontSmoothing))
             {
                 useFontSmoothing = (bool)value;
-                UpdateToFontValues();
-                if (this.WidthUnits == DimensionUnitType.RelativeToChildren ||
-                    // If height is relative to children, it could be in a stack
-                    this.HeightUnits == DimensionUnitType.RelativeToChildren)
-                {
-                    UpdateLayout();
-                }
-                handled = true;
+                ReactToFontValueChange();
             }
             else if (propertyName == nameof(Blend))
             {
@@ -4724,8 +4688,15 @@ namespace Gum.Wireframe
         bool isItalic;
         public bool IsItalic
         {
-            get { return isItalic; }
+            get => isItalic; 
             set { isItalic = value; UpdateToFontValues(); }
+        }
+
+        bool isBold;
+        public bool IsBold
+        {
+            get => isBold;
+            set { isBold = value; UpdateToFontValues(); }
         }
 
         // Not sure if we need to make this a public value, but we do need to store it
@@ -4841,7 +4812,8 @@ namespace Gum.Wireframe
                             Font,
                             OutlineThickness,
                             useFontSmoothing,
-                            IsItalic);
+                            IsItalic,
+                            IsBold);
 
                         string fullFileName = ToolsUtilities.FileManager.Standardize(fontName, false, true);
 

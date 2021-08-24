@@ -315,7 +315,7 @@ namespace CodeOutputPlugin
                     System.IO.Directory.CreateDirectory(codeDirectory);
                 }
 
-                System.IO.File.WriteAllText(generatedFileName, contents);
+                GumCommands.Self.TryMultipleTimes(() => System.IO.File.WriteAllText(generatedFileName, contents));
 
                 // show a message somewhere?
                 message += $"Generated code to {FileManager.RemovePath(generatedFileName)}";

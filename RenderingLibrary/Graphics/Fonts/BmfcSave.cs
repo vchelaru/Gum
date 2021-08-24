@@ -15,6 +15,7 @@ namespace RenderingLibrary.Graphics.Fonts
         public int OutlineThickness = 0;
         public bool UseSmoothing = true;
         public bool IsItalic = false;
+        public bool IsBold = false;
 
         public void Save(string fileName)
         {
@@ -32,6 +33,7 @@ namespace RenderingLibrary.Graphics.Fonts
             template = template.Replace("OutlineThicknessVariable", OutlineThickness.ToString());
             template = template.Replace("{UseSmoothing}", UseSmoothing ? "1" : "0");
             template = template.Replace("{IsItalic}", IsItalic ? "1" : "0");
+            template = template.Replace("{IsBold}", IsBold ? "1" : "0");
 
             //alphaChnl=alphaChnlValue
             //redChnl=redChnlValue
@@ -60,13 +62,13 @@ namespace RenderingLibrary.Graphics.Fonts
         {
             get
             {
-                return GetFontCacheFileNameFor(FontSize, FontName, OutlineThickness, UseSmoothing, IsItalic);
+                return GetFontCacheFileNameFor(FontSize, FontName, OutlineThickness, UseSmoothing, IsItalic, IsBold);
             }
 
         }
 
         public static string GetFontCacheFileNameFor(int fontSize, string fontName, int outline, bool useFontSmoothing,
-            bool isItalic = false)
+            bool isItalic = false, bool isBold = false)
         {
             string fileName = null;
 
@@ -90,6 +92,11 @@ namespace RenderingLibrary.Graphics.Fonts
                 fileName += "_Italic";
             }
 
+            if(isBold)
+            {
+                fileName += "_Bold";
+            }
+
             fileName += ".fnt";
 
             fileName = System.IO.Path.Combine("FontCache", fileName);
@@ -103,7 +110,7 @@ namespace RenderingLibrary.Graphics.Fonts
         // tool-necessary implementations
 #if !WINDOWS_8 && !UWP
         public static void CreateBitmapFontFilesIfNecessary(int fontSize, string fontName, int outline, bool fontSmoothing,
-            bool isItalic = false)
+            bool isItalic = false, bool isBold = false)
         {
             BmfcSave bmfcSave = new BmfcSave();
             bmfcSave.FontSize = fontSize;
@@ -111,6 +118,7 @@ namespace RenderingLibrary.Graphics.Fonts
             bmfcSave.OutlineThickness = outline;
             bmfcSave.UseSmoothing = fontSmoothing;
             bmfcSave.IsItalic = isItalic;
+            bmfcSave.IsBold = isBold;
 
             bmfcSave.CreateBitmapFontFilesIfNecessary(bmfcSave.FontCacheFileName);
         }

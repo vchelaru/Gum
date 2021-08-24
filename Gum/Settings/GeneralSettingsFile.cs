@@ -103,6 +103,10 @@ namespace Gum.Settings
         public byte CheckerColor2G { get; set; } = 170;
         public byte CheckerColor2B { get; set; } = 170;
 
+        public byte OutlineColorR { get; set; } = 255;
+        public byte OutlineColorG { get; set; } = 255;
+        public byte OutlineColorB { get; set; } = 255;
+
 
         #endregion
 
