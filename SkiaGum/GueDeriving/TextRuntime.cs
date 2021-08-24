@@ -118,6 +118,22 @@ namespace SkiaGum.GueDeriving
             set => ContainedText.MaximumNumberOfLines = value;
         }
 
+        public new bool IsBold
+        {
+            get => mContainedText.BoldWeight > 1;
+            set
+            {
+                if(value)
+                {
+                    mContainedText.BoldWeight = 1.5f;
+                }
+                else
+                {
+                    mContainedText.BoldWeight = 1;
+                }
+            }
+        }
+
         public float BoldWeight
         {
             get => mContainedText.BoldWeight;
