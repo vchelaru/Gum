@@ -131,6 +131,17 @@ namespace Gum.Managers
                 shouldReloadWireframe = currentElementFile == file;
             }
 
+            if(element != null && !shouldReloadWireframe)
+            {
+                // Update - we should also refresh if the element is referenced by any visual object
+                var hasMatchingRepresentation = Wireframe.WireframeObjectManager.Self.AllIpsos
+                    .Any(item => item.Tag is InstanceSave asInstance && asInstance.BaseType == element.Name);
+
+                shouldReloadWireframe = hasMatchingRepresentation;
+            }
+
+
+
             if(shouldReloadWireframe)
             {
                 // reload wireframe

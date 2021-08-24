@@ -342,6 +342,12 @@ namespace Gum.Wireframe
             }
         }
 
+        /// <summary>
+        /// Returns any element that has the argument element as its tag. This will not return
+        /// instances which use this element as their base type.
+        /// </summary>
+        /// <param name="elementSave">The element to search for.</param>
+        /// <returns>The matching representation, or null if one isn't found.</returns>
         public GraphicalUiElement GetRepresentation(ElementSave elementSave)
         {
 #if DEBUG
