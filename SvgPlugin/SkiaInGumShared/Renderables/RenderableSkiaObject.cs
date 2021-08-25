@@ -17,12 +17,15 @@ using System.Threading.Tasks;
 
 namespace SkiaPlugin.Renderables
 {
+    #region Enums
 
     public enum GradientType
     {
         Linear,
         Radial
     }
+
+    #endregion
 
     public abstract class RenderableSkiaObject : IRenderableIpso, IVisible
     {
@@ -126,24 +129,37 @@ namespace SkiaPlugin.Renderables
         }
 
         public object Tag { get; set; }
-
-        public Color Color = Color.White;
-
-        public int Alpha
-        {
-            get => Color.A;
-            set
-            {
-                Color.A = (byte)value;
-                needsUpdate = true;
-            }
-        }
-
         /// <summary>
         /// If this is false, then the DrawToSurface will handle applying the colors (like when creating a RoundedRectangle). If true,
         /// then this will multiply the rendering by the argument color (like when rendering an SVG).
         /// </summary>
         protected virtual bool ShouldApplyColorOnSpriteRender => false;
+        protected bool needsUpdate = true;
+
+        protected bool ForceUseColor
+        {
+            get; set;
+        }
+
+        ColorOperation IRenderableIpso.ColorOperation => ColorOperation.Modulate;
+
+        #endregion
+
+        #region Colors/Stroke
+
+        bool isFilled = true;
+        public bool IsFilled
+        {
+            get => isFilled;
+            set { isFilled = value; needsUpdate = true; }
+        }
+
+        float strokeWidth = 1;
+        public float StrokeWidth
+        { 
+            get => strokeWidth;
+            set { strokeWidth = value; needsUpdate = true; }
+        }
 
         public int Red
         {
@@ -175,14 +191,17 @@ namespace SkiaPlugin.Renderables
             }
         }
 
-        protected bool needsUpdate = true;
+        public Color Color = Color.White;
 
-        protected bool ForceUseColor
+        public int Alpha
         {
-            get; set;
+            get => Color.A;
+            set
+            {
+                Color.A = (byte)value;
+                needsUpdate = true;
+            }
         }
-
-        ColorOperation IRenderableIpso.ColorOperation => ColorOperation.Modulate;
 
         #endregion
 
@@ -852,5 +871,37 @@ namespace SkiaPlugin.Renderables
             }
         }
 
+        protected SKPaint CreatePaint()
+        {
+            var skColor = new SKColor(Color.R, Color.G, Color.B, Color.A);
+
+            var paint = new SKPaint
+            {
+                Color = skColor,
+                Style = IsFilled ? SKPaintStyle.Fill : SKPaintStyle.Stroke,
+                StrokeWidth = StrokeWidth,
+                IsAntialias = true
+            };
+
+            if (UseGradient)
+            {
+                SetGradientOnPaint(paint);
+            }
+
+            if (HasDropshadow)
+            {
+                var dropshadowSkColor = new SKColor(DropshadowColor.R, DropshadowColor.G, DropshadowColor.B, DropshadowColor.A);
+                paint.ImageFilter = SKImageFilter.CreateDropShadow(
+                            DropshadowOffsetX,
+                            // See https://stackoverflow.com/questions/60456526/how-can-i-tell-the-amount-of-space-needed-for-a-skia-dropshadow
+                            DropshadowOffsetY,
+                            DropshadowBlurX / 3.0f,
+                            DropshadowBlurY / 3.0f,
+                            dropshadowSkColor,
+                            SKDropShadowImageFilterShadowMode.DrawShadowAndForeground);
+            }
+
+            return paint;
+        }
     }
 }

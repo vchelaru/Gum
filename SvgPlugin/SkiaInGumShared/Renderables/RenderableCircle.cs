@@ -15,17 +15,12 @@ namespace SkiaPlugin.Renderables
         {
             surface.Canvas.Clear(SKColors.Transparent);
 
-            var skColor = new SKColor(Color.R, Color.G, Color.B, Color.A);
-
-            using (var paint = new SKPaint { Color = skColor, Style = SKPaintStyle.Fill, IsAntialias = true })
+            using (var paint = CreatePaint())
             {
-                if (UseGradient)
-                {
-                    SetGradientOnPaint(paint);
-                }
-
                 var radius = Width / 2;
-                surface.Canvas.DrawCircle(new SKPoint(radius, radius), radius, paint);
+                surface.Canvas.DrawCircle(new SKPoint(radius, radius), 
+                    // subtract 1 on the radius to allow antialiasing to work
+                    radius-1, paint);
             }
         }
     }

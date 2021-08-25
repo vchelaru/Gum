@@ -79,6 +79,8 @@ namespace SkiaPlugin.Managers
 
                 AddGradientVariables(filledCircleState);
 
+                AddStrokeAndFilledVariables(filledCircleState);
+
                 StandardElementsManager.AddColorVariables(filledCircleState);
 
 
