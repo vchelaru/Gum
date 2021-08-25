@@ -10,7 +10,7 @@ namespace SkiaGum.GueDeriving
 {
     public class ColoredCircleRuntime : SkiaShapeRuntime
     {
-        protected override RenderableBase ContainedRenderable => mContainedCircle;
+        protected override RenderableBase ContainedRenderable => ContainedCircle;
 
         Circle mContainedCircle;
         Circle ContainedCircle

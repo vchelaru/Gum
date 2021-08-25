@@ -11,7 +11,7 @@ namespace SkiaGum.GueDeriving
 {
     public class ArcRuntime : SkiaShapeRuntime
     {
-        protected override RenderableBase ContainedRenderable => mContainedArc;
+        protected override RenderableBase ContainedRenderable => ContainedArc;
 
         Arc mContainedArc;
         Arc ContainedArc
