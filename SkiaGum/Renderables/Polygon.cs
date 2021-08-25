@@ -8,17 +8,6 @@ namespace SkiaGum.Renderables
 {
     class Polygon : RenderableBase
     {
-        public SKColor Color
-        {
-            get; set;
-        } = SKColors.Red;
-
-        SKPaint paint => new SKPaint
-        {
-            Color = this.Color,
-            IsAntialias = true
-        };
-
         public List<SKPoint> Points
         {
             get; set;
@@ -63,7 +52,7 @@ namespace SkiaGum.Renderables
             path.LineTo(Points[0]);
 
             path.Close();
-            using (var paintToUse = paint)
+            using (var paintToUse = GetPaint(boundingRect))
             {
                 canvas.DrawPath(path, paintToUse);
             }

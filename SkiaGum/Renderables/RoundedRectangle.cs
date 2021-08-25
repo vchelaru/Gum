@@ -8,101 +8,10 @@ namespace SkiaGum.Renderables
 {
     class RoundedRectangle : RenderableBase
     {
-        public SKColor Color
-        {
-            get; 
-            set;
-        }
-
-        public int Alpha
-        {
-            get => Color.Alpha;
-            set => this.Color = new SKColor(this.Color.Red, this.Color.Green, this.Color.Blue, (byte)value);
-        }
-
-        public int Blue
-        {
-            get => Color.Blue;
-            set
-            {
-                this.Color = new SKColor(this.Color.Red, this.Color.Green, (byte)value, this.Color.Alpha);
-            }
-        }
-
-        public int Green
-        {
-            get => Color.Green;
-            set
-            {
-                this.Color = new SKColor(this.Color.Red, (byte)value, this.Color.Blue, this.Color.Alpha);
-            }
-        }
-
-        public int Red
-        {
-            get => Color.Red;
-            set
-            {
-                this.Color = new SKColor((byte)value, this.Color.Green, this.Color.Blue, this.Color.Alpha);
-            }
-        }
-
-        public SKColor DropshadowColor
-        {
-            get; set;
-        }
-
-        public int DropshadowAlpha
-        {
-            get => DropshadowColor.Alpha;
-            set
-            {
-                this.DropshadowColor = new SKColor(this.DropshadowColor.Red, this.DropshadowColor.Green, this.DropshadowColor.Blue, (byte)value);
-            }
-        }
-
-        public int DropshadowBlue
-        {
-            get => DropshadowColor.Blue;
-            set
-            {
-                this.DropshadowColor = new SKColor(this.DropshadowColor.Red, this.DropshadowColor.Green, (byte)value, this.DropshadowColor.Alpha);
-            }
-        }
-
-        public int DropshadowGreen
-        {
-            get => DropshadowColor.Green;
-            set
-            {
-                this.DropshadowColor = new SKColor(this.DropshadowColor.Red, (byte)value, this.DropshadowColor.Blue, this.DropshadowColor.Alpha);
-            }
-        }
-
-        public int DropshadowRed
-        {
-            get => DropshadowColor.Red;
-            set
-            {
-                this.DropshadowColor = new SKColor((byte)value, this.DropshadowColor.Green, this.DropshadowColor.Blue, this.DropshadowColor.Alpha);
-            }
-        }
-
-        public bool HasDropshadow { get; set; }
-
-        public float DropshadowOffsetX { get; set; }
-        public float DropshadowOffsetY { get; set; }
-
-        public float DropshadowBlurX { get; set; }
-        public float DropshadowBlurY { get; set; }
-
         public float CornerRadius { get; set; }
 
         float XSizeSpillover => HasDropshadow ? DropshadowBlurX + Math.Abs(DropshadowOffsetX) : 0;
         float YSizeSpillover => HasDropshadow ? DropshadowBlurY + Math.Abs(DropshadowOffsetY) : 0;
-
-        public bool IsFilled { get; set; } = true;
-        public float StrokeWidth { get; set; } = 2;
 
         public RoundedRectangle()
         {
@@ -113,7 +22,7 @@ namespace SkiaGum.Renderables
 
         public override void DrawBound(SKRect boundingRect, SKCanvas canvas)
         {
-            using (var paint = CreatePaint(boundingRect))
+            using (var paint = GetPaint(boundingRect))
             {
                 var rotation = this.GetAbsoluteRotation();
 
@@ -155,35 +64,5 @@ namespace SkiaGum.Renderables
             }
         }
 
-        private SKPaint CreatePaint(SKRect boundingRect)
-        {
-            var paint = new SKPaint 
-            { 
-                Color = Color,
-                Style = IsFilled ? SKPaintStyle.Fill : SKPaintStyle.Stroke,
-                StrokeWidth = StrokeWidth,
-                IsAntialias = true 
-            };
-
-            if (HasDropshadow)
-            {
-                paint.ImageFilter = SKImageFilter.CreateDropShadow(
-                            DropshadowOffsetX,
-                            // See https://stackoverflow.com/questions/60456526/how-can-i-tell-the-amount-of-space-needed-for-a-skia-dropshadow
-                            DropshadowOffsetY,
-                            DropshadowBlurX / 3.0f,
-                            DropshadowBlurY / 3.0f,
-                            DropshadowColor,
-                            SKDropShadowImageFilterShadowMode.DrawShadowAndForeground);
-            }
-
-
-            if (UseGradient)
-            {
-                ApplyGradientToPaint(boundingRect, paint);
-            }
-
-            return paint;
-        }
     }
 }

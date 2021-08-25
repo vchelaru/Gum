@@ -9,53 +9,6 @@ namespace SkiaGum.Renderables
 {
     public class Arc : RenderableBase
     {
-        public SKColor Color
-        {
-            get; set;
-        } = SKColors.Red;
-
-        public int Alpha
-        {
-            get => Color.Alpha;
-            set
-            {
-                this.Color = new SKColor(this.Color.Red, this.Color.Green, this.Color.Blue, (byte)value);
-            }
-        }
-
-        public int Blue
-        {
-            get => Color.Blue;
-            set
-            {
-                this.Color = new SKColor(this.Color.Red, this.Color.Green, (byte)value, this.Color.Alpha);
-            }
-        }
-
-        public int Green
-        {
-            get => Color.Green;
-            set
-            {
-                this.Color = new SKColor(this.Color.Red, (byte)value, this.Color.Blue, this.Color.Alpha);
-            }
-        }
-
-        public int Red
-        {
-            get => Color.Red;
-            set
-            {
-                this.Color = new SKColor((byte)value, this.Color.Green, this.Color.Blue, this.Color.Alpha);
-            }
-        }
-
-        public float Thickness
-        {
-            get;
-            set;
-        } = 10;
-
         public float StartAngle
         {
             get;
@@ -68,27 +21,19 @@ namespace SkiaGum.Renderables
             set;
         } = 90;
 
+        public float Thickness
+        {
+            get => base.StrokeWidth;
+            set => base.StrokeWidth = value;
+        }
 
         public bool IsEndRounded { get; set; }
 
-        SKPaint GetPaint(SKRect boundingRect)
+
+        protected override SKPaint GetPaint(SKRect boundingRect)
         {
-            var paint = new SKPaint
-            {
-                Color = this.Color,
-                IsAntialias = true,
-                StrokeWidth = Thickness,
-                Style = SKPaintStyle.Stroke
-            };
-
+            var paint = base.GetPaint(boundingRect);
             paint.StrokeCap = IsEndRounded ? SKStrokeCap.Round : SKStrokeCap.Butt;
-
-
-            if (UseGradient)
-            {
-                ApplyGradientToPaint(boundingRect, paint);
-            }
-
             return paint;
 
 

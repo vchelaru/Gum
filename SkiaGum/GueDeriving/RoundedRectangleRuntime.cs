@@ -8,8 +8,10 @@ using System.Text;
 
 namespace SkiaGum.GueDeriving
 {
-    public class RoundedRectangleRuntime : BindableGraphicalUiElement
+    public class RoundedRectangleRuntime : SkiaShapeRuntime
     {
+        protected override RenderableBase ContainedRenderable => mContainedRoundedRectangle;
+
         RoundedRectangle mContainedRoundedRectangle;
         RoundedRectangle ContainedRoundedRectangle
         {
@@ -22,38 +24,6 @@ namespace SkiaGum.GueDeriving
                 return mContainedRoundedRectangle;
             }
         }
-
-        public int Alpha
-        {
-            get => ContainedRoundedRectangle.Alpha;
-            set => ContainedRoundedRectangle.Alpha = value;
-        }
-
-        public int Blue
-        {
-            get => ContainedRoundedRectangle.Blue;
-            set => ContainedRoundedRectangle.Blue = value;
-        }
-
-        public int Green
-        {
-            get => ContainedRoundedRectangle.Green;
-            set => ContainedRoundedRectangle.Green = value;
-        }
-
-        public int Red
-        {
-            get => ContainedRoundedRectangle.Red;
-            set => ContainedRoundedRectangle.Red = value;
-        }
-
-        public SKColor Color
-        {
-            get => ContainedRoundedRectangle.Color;
-            set => ContainedRoundedRectangle.Color = value;
-        }
-
-
 
         public int DropshadowAlpha
         {
@@ -112,20 +82,6 @@ namespace SkiaGum.GueDeriving
         {
             get => ContainedRoundedRectangle.DropshadowBlurY;
             set => ContainedRoundedRectangle.DropshadowBlurY = value;
-        }
-
-        // Doesn't do anything....yet
-        public bool IsFilled
-        {
-            get => ContainedRoundedRectangle.IsFilled;
-            set => ContainedRoundedRectangle.IsFilled = value;
-        }
-
-        // doesn't do anything yet
-        public float StrokeWidth
-        {
-            get => ContainedRoundedRectangle.StrokeWidth;
-            set => ContainedRoundedRectangle.StrokeWidth = value;
         }
 
         #region Gradient Colors

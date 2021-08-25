@@ -21,6 +21,47 @@ namespace SkiaGum.Renderables
 
     public class RenderableBase : IRenderableIpso, IVisible
     {
+        public SKColor Color
+        {
+            get; set;
+        } = SKColors.Red;
+
+        public int Alpha
+        {
+            get => Color.Alpha;
+            set
+            {
+                this.Color = new SKColor(this.Color.Red, this.Color.Green, this.Color.Blue, (byte)value);
+            }
+        }
+
+        public int Blue
+        {
+            get => Color.Blue;
+            set
+            {
+                this.Color = new SKColor(this.Color.Red, this.Color.Green, (byte)value, this.Color.Alpha);
+            }
+        }
+
+        public int Green
+        {
+            get => Color.Green;
+            set
+            {
+                this.Color = new SKColor(this.Color.Red, (byte)value, this.Color.Blue, this.Color.Alpha);
+            }
+        }
+
+        public int Red
+        {
+            get => Color.Red;
+            set
+            {
+                this.Color = new SKColor((byte)value, this.Color.Green, this.Color.Blue, this.Color.Alpha);
+            }
+        }
+
         Vector2 Position;
         IRenderableIpso mParent;
 
@@ -121,6 +162,66 @@ namespace SkiaGum.Renderables
         public float GradientOuterRadius { get; set; }
         public DimensionUnitType GradientOuterRadiusUnits { get; set; }
 
+        public bool IsDimmed { get; set; }
+
+
+        public bool IsFilled { get; set; } = true;
+        public float StrokeWidth { get; set; } = 2;
+
+        #region Dropshadow
+
+        public SKColor DropshadowColor
+        {
+            get; set;
+        }
+
+        public int DropshadowAlpha
+        {
+            get => DropshadowColor.Alpha;
+            set
+            {
+                this.DropshadowColor = new SKColor(this.DropshadowColor.Red, this.DropshadowColor.Green, this.DropshadowColor.Blue, (byte)value);
+            }
+        }
+
+        public int DropshadowBlue
+        {
+            get => DropshadowColor.Blue;
+            set
+            {
+                this.DropshadowColor = new SKColor(this.DropshadowColor.Red, this.DropshadowColor.Green, (byte)value, this.DropshadowColor.Alpha);
+            }
+        }
+
+        public int DropshadowGreen
+        {
+            get => DropshadowColor.Green;
+            set
+            {
+                this.DropshadowColor = new SKColor(this.DropshadowColor.Red, (byte)value, this.DropshadowColor.Blue, this.DropshadowColor.Alpha);
+            }
+        }
+
+        public int DropshadowRed
+        {
+            get => DropshadowColor.Red;
+            set
+            {
+                this.DropshadowColor = new SKColor((byte)value, this.DropshadowColor.Green, this.DropshadowColor.Blue, this.DropshadowColor.Alpha);
+            }
+        }
+
+        public bool HasDropshadow { get; set; }
+
+        public float DropshadowOffsetX { get; set; }
+        public float DropshadowOffsetY { get; set; }
+
+        public float DropshadowBlurX { get; set; }
+        public float DropshadowBlurY { get; set; }
+
+        #endregion
+
+
         public bool FlipHorizontal
         {
             get;
@@ -154,6 +255,47 @@ namespace SkiaGum.Renderables
 
                 DrawBound(rect, canvas);
             }
+        }
+
+        protected virtual SKPaint GetPaint(SKRect boundingRect)
+        {
+            var effectiveColor = this.Color;
+            if (IsDimmed)
+            {
+                const double dimmingMuliplier = .9;
+
+                effectiveColor = new SKColor(
+                    (byte)(this.Color.Red * dimmingMuliplier),
+                    (byte)(this.Color.Green * dimmingMuliplier),
+                    (byte)(this.Color.Blue * dimmingMuliplier),
+                    this.Color.Alpha);
+            }
+            var paint = new SKPaint
+            {
+                Color = effectiveColor,
+                Style = IsFilled ? SKPaintStyle.Fill : SKPaintStyle.Stroke,
+                StrokeWidth = StrokeWidth,
+                IsAntialias = true
+            };
+
+            if (HasDropshadow)
+            {
+                paint.ImageFilter = SKImageFilter.CreateDropShadow(
+                            DropshadowOffsetX,
+                            // See https://stackoverflow.com/questions/60456526/how-can-i-tell-the-amount-of-space-needed-for-a-skia-dropshadow
+                            DropshadowOffsetY,
+                            DropshadowBlurX / 3.0f,
+                            DropshadowBlurY / 3.0f,
+                            DropshadowColor,
+                            SKDropShadowImageFilterShadowMode.DrawShadowAndForeground);
+            }
+
+            if (UseGradient)
+            {
+                ApplyGradientToPaint(boundingRect, paint);
+            }
+
+            return paint;
         }
 
         public virtual void DrawBound(SKRect boundingRect, SKCanvas canvas)

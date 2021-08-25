@@ -8,8 +8,10 @@ using System.Text;
 
 namespace SkiaGum.GueDeriving
 {
-    public class ColoredCircleRuntime : BindableGraphicalUiElement
+    public class ColoredCircleRuntime : SkiaShapeRuntime
     {
+        protected override RenderableBase ContainedRenderable => mContainedCircle;
+
         Circle mContainedCircle;
         Circle ContainedCircle
         {
@@ -21,36 +23,6 @@ namespace SkiaGum.GueDeriving
                 }
                 return mContainedCircle;
             }
-        }
-
-        public int Alpha
-        {
-            get => ContainedCircle.Alpha;
-            set => ContainedCircle.Alpha = value;
-        }
-
-        public int Blue
-        {
-            get => ContainedCircle.Blue;
-            set => ContainedCircle.Blue = value;
-        }
-
-        public int Green
-        {
-            get => ContainedCircle.Green;
-            set => ContainedCircle.Green = value;
-        }
-
-        public int Red
-        {
-            get => ContainedCircle.Red;
-            set => ContainedCircle.Red = value;
-        }
-
-        public SKColor Color
-        {
-            get => ContainedCircle.Color;
-            set => ContainedCircle.Color = value;
         }
 
         public bool IsDimmed 

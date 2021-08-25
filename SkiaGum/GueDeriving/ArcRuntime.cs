@@ -9,8 +9,10 @@ using System.Text;
 
 namespace SkiaGum.GueDeriving
 {
-    public class ArcRuntime : BindableGraphicalUiElement
+    public class ArcRuntime : SkiaShapeRuntime
     {
+        protected override RenderableBase ContainedRenderable => mContainedArc;
+
         Arc mContainedArc;
         Arc ContainedArc
         {
@@ -23,39 +25,6 @@ namespace SkiaGum.GueDeriving
                 return mContainedArc;
             }
         }
-
-        #region Solid colors
-
-        public int Alpha
-        {
-            get => ContainedArc.Alpha;
-            set => ContainedArc.Alpha = value;
-        }
-
-        public int Blue
-        {
-            get => ContainedArc.Blue;
-            set => ContainedArc.Blue = value;
-        }
-
-        public int Green
-        {
-            get => ContainedArc.Green;
-            set => ContainedArc.Green = value;
-        }
-
-        public int Red
-        {
-            get => ContainedArc.Red;
-            set => ContainedArc.Red = value;
-        }
-
-        public SKColor Color
-        {
-            get => ContainedArc.Color;
-            set => ContainedArc.Color = value;
-        }
-        #endregion
 
         #region Gradient Colors
 
