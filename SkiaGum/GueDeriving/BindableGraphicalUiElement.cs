@@ -64,6 +64,8 @@ namespace SkiaGum.GueDeriving
                     }
                 }
 
+                BindingContextChanged?.Invoke();
+
                 this.EffectiveManagers?.InvalidateSurface();
             }
         }
@@ -96,6 +98,8 @@ namespace SkiaGum.GueDeriving
         #endregion
 
         #region Events
+
+        public event Action BindingContextChanged;
 
         Func<Task> clickedAsync;
         public Func<Task> ClickedAsync
