@@ -412,9 +412,23 @@ namespace Gum.Wireframe
         {
             mContainedObjectAsIpso.Render(canvas);
 
+            if(ClipsChildren)
+            {
+                var absoluteX = this.GetAbsoluteX();
+                var absoluteY = this.GetAbsoluteY();
+                var rect = new SKRect(absoluteX, absoluteY, absoluteX + mContainedObjectAsIpso.Width, absoluteY + mContainedObjectAsIpso.Height);
+
+                canvas.Save();
+                canvas.ClipRect(rect);
+            }
             foreach (var child in this.Children)
             {
                 child.Render(canvas);
+            }
+
+            if(ClipsChildren)
+            {
+                canvas.Restore();
             }
         }
 #endif

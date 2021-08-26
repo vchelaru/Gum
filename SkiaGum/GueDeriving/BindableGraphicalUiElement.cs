@@ -49,11 +49,11 @@ namespace SkiaGum.GueDeriving
                 if (value is INotifyPropertyChanged viewModel)
                 {
                     viewModel.PropertyChanged += HandleViewModelPropertyChanged;
+                }
 
-                    foreach(var vmToUiProp in vmPropsToUiProps)
-                    {
-                        UpdateToVmProperty(vmToUiProp.VmProperty);
-                    }
+                foreach(var vmToUiProp in vmPropsToUiProps)
+                {
+                    UpdateToVmProperty(vmToUiProp.VmProperty);
                 }
 
                 foreach(var child in this.Children)
