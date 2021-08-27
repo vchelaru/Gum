@@ -92,9 +92,14 @@ namespace GumRuntime
                     {
                         LineRectangle lineRectangle = new LineRectangle(systemManagers);
                         lineRectangle.Color = new Microsoft.Xna.Framework.Color(
+#if GUM
                             Gum.ToolStates.GumState.Self.ProjectState.GeneralSettings.OutlineColorR,
                             Gum.ToolStates.GumState.Self.ProjectState.GeneralSettings.OutlineColorG,
-                            Gum.ToolStates.GumState.Self.ProjectState.GeneralSettings.OutlineColorB);
+                            Gum.ToolStates.GumState.Self.ProjectState.GeneralSettings.OutlineColorB
+#else
+                        255,255,255
+#endif
+                            );
 
                         containedObject = lineRectangle;
                     }
@@ -146,7 +151,7 @@ namespace GumRuntime
                     break;
             }
 #endif
-            return handledAsBaseType;
+                        return handledAsBaseType;
         }
 
         private static void SetAlphaAndColorValues(SolidRectangle solidRectangle, RecursiveVariableFinder rvf)
