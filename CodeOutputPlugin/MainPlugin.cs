@@ -237,6 +237,7 @@ namespace CodeOutputPlugin
 
             control.CodeOutputSettingsPropertyChanged += (not, used) => HandleCodeOutputPropertyChanged();
             control.GenerateCodeClicked += (not, used) => HandleGenerateCodeButtonClicked();
+            control.GenerateAllCodeClicked += (not, used) => HandleGenerateAllCodeButtonClicked();
             viewModel.PropertyChanged += (not, used) => RefreshCodeDisplay();
 
             control.DataContext = viewModel;
@@ -267,21 +268,49 @@ namespace CodeOutputPlugin
             }
         }
 
+        private void HandleGenerateAllCodeButtonClicked()
+        {
+            var gumProject = GumState.Self.ProjectState.GumProjectSave;
+            foreach (var screen in gumProject.Screens)
+            {
+                var screenOutputSettings = CodeOutputElementSettingsManager.LoadOrCreateSettingsFor(screen);
+                GenerateCodeForElement(screen, screenOutputSettings, showPopups: false);
+            }
+            foreach(var component in gumProject.Components)
+            {
+                var componentOutputSettings = CodeOutputElementSettingsManager.LoadOrCreateSettingsFor(component);
+                GenerateCodeForElement(component, componentOutputSettings, showPopups: false);
+            }
+
+            GumCommands.Self.GuiCommands.ShowMessage($"Generated code\nScreens: {gumProject.Screens.Count}\nComponents: {gumProject.Components.Count}");
+        }
+
         private void GenerateCodeForSelectedElement(bool showPopups)
         {
             var selectedElement = SelectedState.Self.SelectedElement;
             var settings = control.CodeOutputElementSettings;
+            GenerateCodeForElement(selectedElement, settings, showPopups);
+        }
 
+        private void GenerateCodeForElement(ElementSave selectedElement, Models.CodeOutputElementSettings settings, bool showPopups)
+        {
             string generatedFileName = settings.GeneratedFileName;
 
-            if(string.IsNullOrEmpty(generatedFileName) && !string.IsNullOrEmpty(this.codeOutputProjectSettings.CodeProjectRoot))
+            if (string.IsNullOrEmpty(generatedFileName) && !string.IsNullOrEmpty(this.codeOutputProjectSettings.CodeProjectRoot))
             {
                 string prefix = selectedElement is ScreenSave ? "Screens"
                     : selectedElement is ComponentSave ? "Components"
                     : "Standards";
                 var splitName = (prefix + "/" + selectedElement.Name).Split('/');
                 var nameWithNamespaceArray = splitName.Take(splitName.Length - 1).Append(CodeGenerator.GetClassNameForType(selectedElement.Name, CodeGenerator.GetVisualApiForElement(selectedElement)));
-                generatedFileName = this.codeOutputProjectSettings.CodeProjectRoot + string.Join("\\", nameWithNamespaceArray) + ".Generated.cs";
+
+                var folder = this.codeOutputProjectSettings.CodeProjectRoot;
+                if (FileManager.IsRelative(folder))
+                {
+                    folder = GumState.Self.ProjectState.ProjectDirectory + folder;
+                }
+
+                generatedFileName = folder + string.Join("\\", nameWithNamespaceArray) + ".Generated.cs";
             }
 
             if (!string.IsNullOrEmpty(generatedFileName) && FileManager.IsRelative(generatedFileName))
@@ -292,7 +321,7 @@ namespace CodeOutputPlugin
 
             if (string.IsNullOrEmpty(generatedFileName))
             {
-                if(showPopups)
+                if (showPopups)
                 {
                     GumCommands.Self.GuiCommands.ShowMessage("Generated file name must be set first");
                 }
@@ -306,11 +335,11 @@ namespace CodeOutputPlugin
 
                 string contents = CodeGenerator.GetGeneratedCodeForElement(selectedElement, settings, codeOutputProjectSettings);
                 contents = $"//Code for {selectedElement.ToString()}\n{contents}";
-                
+
                 string message = string.Empty;
 
                 var codeDirectory = FileManager.GetDirectory(generatedFileName);
-                if(!System.IO.Directory.Exists(codeDirectory))
+                if (!System.IO.Directory.Exists(codeDirectory))
                 {
                     System.IO.Directory.CreateDirectory(codeDirectory);
                 }
@@ -320,13 +349,18 @@ namespace CodeOutputPlugin
                 // show a message somewhere?
                 message += $"Generated code to {FileManager.RemovePath(generatedFileName)}";
 
-                if(!string.IsNullOrEmpty(this.codeOutputProjectSettings.CodeProjectRoot))
+                if (!string.IsNullOrEmpty(this.codeOutputProjectSettings.CodeProjectRoot))
                 {
                     var splitFileWithoutGenerated = generatedFileName.Split('.').ToArray();
-                    var customCodeFileName = string.Join("\\", splitFileWithoutGenerated.Take(splitFileWithoutGenerated.Length-2)) + ".cs";
+                    var customCodeFileName = string.Join("\\", splitFileWithoutGenerated.Take(splitFileWithoutGenerated.Length - 2)) + ".cs";
+
+                    if (FileManager.IsRelative(customCodeFileName))
+                    {
+                        customCodeFileName = GumState.Self.ProjectState.ProjectDirectory + customCodeFileName;
+                    }
 
                     // todo - only save this if it doesn't already exist
-                    if(!System.IO.File.Exists(customCodeFileName))
+                    if (!System.IO.File.Exists(customCodeFileName))
                     {
                         var customCodeContents = CustomCodeGenerator.GetCustomCodeForElement(selectedElement, settings, codeOutputProjectSettings);
                         System.IO.File.WriteAllText(customCodeFileName, customCodeContents);
@@ -340,7 +374,7 @@ namespace CodeOutputPlugin
                 }
                 else
                 {
-                    GumCommands.Self.GuiCommands.PrintOutput(message); 
+                    GumCommands.Self.GuiCommands.PrintOutput(message);
                 }
             }
         }

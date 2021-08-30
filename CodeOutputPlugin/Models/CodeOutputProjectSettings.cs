@@ -28,6 +28,9 @@ using SkiaGum.GueDeriving;
 using SkiaGum.Renderables;
 ";
 
+        /// <summary>
+        /// The location of the project root (usually the .csproj folder), stored as a path relative to the .glux
+        /// </summary>
         public string CodeProjectRoot { get; set; }
 
         public string RootNamespace { get; set; }

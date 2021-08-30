@@ -28,6 +28,8 @@ namespace CodeOutputPlugin.Manager
 
     public static class CodeGenerator
     {
+        #region Fields/Properties
+
         public static int CanvasWidth { get; set; } = 480;
         public static int CanvasHeight { get; set; } = 854;
 
@@ -37,6 +39,8 @@ namespace CodeOutputPlugin.Manager
         /// 320 wide and let density scale things up
         /// </summary>
         public static bool AdjustPixelValuesForDensity { get; set; } = false;
+
+        #endregion
 
         public static string GetGeneratedCodeForElement(ElementSave element, CodeOutputElementSettings elementSettings, CodeOutputProjectSettings projectSettings)
         {
@@ -73,7 +77,9 @@ namespace CodeOutputPlugin.Manager
 
             #region Class Header/Opening {
 
-            stringBuilder.AppendLine(ToTabs(tabCount) + $"partial class {GetClassNameForType(element.Name, visualApi)}");
+            const string access = "public";
+
+            stringBuilder.AppendLine(ToTabs(tabCount) + $"{access} partial class {GetClassNameForType(element.Name, visualApi)}");
             stringBuilder.AppendLine(ToTabs(tabCount) + "{");
             tabCount++;
             #endregion
@@ -637,7 +643,7 @@ namespace CodeOutputPlugin.Manager
         private static void FillWithVariableAssignments(ElementSave element, VisualApi visualApi, StringBuilder stringBuilder, int tabCount = 0)
         {
             #region Get variables to consider
-            var defaultState = SelectedState.Self.SelectedElement.DefaultState;
+            var defaultState = element.DefaultState;
 
             var baseElement = ObjectFinder.Self.GetElementSave(element.BaseType);
             RecursiveVariableFinder recursiveVariableFinder = null;
@@ -710,7 +716,7 @@ namespace CodeOutputPlugin.Manager
         {
             #region Get variables to consider
 
-            var variablesToAssignValues = GetVariablesForValueAssignmentCode(instance)
+            var variablesToAssignValues = GetVariablesForValueAssignmentCode(instance, container)
                 // make "Parent" first
                 // .. actually we need to make parent last so that it can properly assign parent on scrollables
                 .OrderBy(item => item.GetRootName() == "Parent")
@@ -1768,7 +1774,7 @@ namespace CodeOutputPlugin.Manager
             }
         }
 
-        private static VariableSave[] GetVariablesForValueAssignmentCode(InstanceSave instance)
+        private static VariableSave[] GetVariablesForValueAssignmentCode(InstanceSave instance, ElementSave currentElement)
         {
             var baseElement = Gum.Managers.ObjectFinder.Self.GetElementSave(instance.BaseType);
             if(baseElement == null)
@@ -1781,7 +1787,7 @@ namespace CodeOutputPlugin.Manager
                 var baseDefaultState = baseElement?.DefaultState;
                 RecursiveVariableFinder baseRecursiveVariableFinder = new RecursiveVariableFinder(baseDefaultState);
 
-                var defaultState = SelectedState.Self.SelectedElement.DefaultState;
+                var defaultState = currentElement.DefaultState;
                 var variablesToConsider = defaultState.Variables
                     .Where(item =>
                     {

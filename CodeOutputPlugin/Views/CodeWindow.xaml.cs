@@ -58,6 +58,7 @@ namespace CodeOutputPlugin.Views
 
         public event EventHandler CodeOutputSettingsPropertyChanged;
         public event EventHandler GenerateCodeClicked;
+        public event EventHandler GenerateAllCodeClicked;
 
         #endregion
 
@@ -156,19 +157,36 @@ namespace CodeOutputPlugin.Views
             {
                 if (CodeOutputProjectSettings != null)
                 {
-                    CodeOutputProjectSettings.CodeProjectRoot = (string)value;
-                    var needsAppendedSlash = !string.IsNullOrEmpty(CodeOutputProjectSettings.CodeProjectRoot) &&
-                        !CodeOutputProjectSettings.CodeProjectRoot.EndsWith("\\") &&
-                        !CodeOutputProjectSettings.CodeProjectRoot.EndsWith("/");
+                    var valueToSet = (string)value;
+                    var needsAppendedSlash = !string.IsNullOrEmpty(valueToSet) &&
+                        !valueToSet.EndsWith("\\") &&
+                        !valueToSet.EndsWith("/");
                     if (needsAppendedSlash)
                     {
-                        CodeOutputProjectSettings.CodeProjectRoot += "\\";
+                        valueToSet += "\\";
                     }
+
+                    if(!string.IsNullOrWhiteSpace(valueToSet) && FileManager.IsRelative(valueToSet) == false)
+                    {
+                        valueToSet = FileManager.MakeRelative(valueToSet, GumState.Self.ProjectState.ProjectDirectory, preserveCase:true);
+                    }
+                    CodeOutputProjectSettings.CodeProjectRoot = valueToSet;
+
                     CodeOutputSettingsPropertyChanged?.Invoke(this, null);
                 }
             };
 
-            member.CustomGetEvent += (owner) => CodeOutputProjectSettings?.CodeProjectRoot;
+            member.CustomGetEvent += (owner) =>
+            {
+                if (CodeOutputProjectSettings?.CodeProjectRoot != null && FileManager.IsRelative(CodeOutputProjectSettings?.CodeProjectRoot))
+                {
+                    return FileManager.RemoveDotDotSlash( GumState.Self.ProjectState.ProjectDirectory + CodeOutputProjectSettings?.CodeProjectRoot);
+                }
+                else
+                {
+                    return CodeOutputProjectSettings?.CodeProjectRoot;
+                }
+            };
             member.CustomGetTypeEvent += (owner) => typeof(string);
             // Don't use a FileSelectionDisplay since it currently only supports
             // selecting files, and we want to select a folder. Maybe at some point 
@@ -322,6 +340,11 @@ namespace CodeOutputPlugin.Views
         private void HandleGenerateCodeClicked(object sender, RoutedEventArgs e)
         {
             GenerateCodeClicked(this, null);
+        }
+
+        private void HandleGenerateAllCodeClicked(object sender, RoutedEventArgs e)
+        {
+            GenerateAllCodeClicked(this, null);
         }
 
         private void CopyButtonClicked(object sender, RoutedEventArgs e)

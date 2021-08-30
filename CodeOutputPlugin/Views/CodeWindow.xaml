@@ -38,6 +38,7 @@
             <StackPanel>
                 <WpfDataUi:DataUiGrid Name="DataGrid"></WpfDataUi:DataUiGrid>
                 <Button Click="HandleGenerateCodeClicked">Generate Code</Button>
+                <Button Click="HandleGenerateAllCodeClicked">Generate All Code</Button>
             </StackPanel>
         </ScrollViewer>
     </Grid>
