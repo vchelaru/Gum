@@ -4071,7 +4071,7 @@ namespace Gum.Wireframe
                 {
                     var asString = value as String;
                     handled = AssignSourceFileOnSprite(asString, sprite);
-                    
+
                 }
                 else if (propertyName == "Alpha")
                 {
@@ -4215,7 +4215,7 @@ namespace Gum.Wireframe
                 }
             }
 #endif
-                }
+        }
 
 #if MONOGAME
 
@@ -4438,7 +4438,7 @@ namespace Gum.Wireframe
 
                 UpdateLayout();
             }
-            else if(value.EndsWith(".achx"))
+            else if (value.EndsWith(".achx"))
             {
                 if (ToolsUtilities.FileManager.IsRelative(value))
                 {
@@ -4451,12 +4451,12 @@ namespace Gum.Wireframe
 
                 AnimationChainList animationChainList = null;
 
-                if(loaderManager.CacheTextures)
+                if (loaderManager.CacheTextures)
                 {
                     animationChainList = loaderManager.GetDisposable(value) as AnimationChainList;
                 }
 
-                if(animationChainList == null)
+                if (animationChainList == null)
                 {
                     var animationChainListSave = Content.AnimationChain.AnimationChainListSave.FromFile(value);
                     animationChainList = animationChainListSave.ToAnimationChainList(null);
@@ -4601,7 +4601,7 @@ namespace Gum.Wireframe
                 IsItalic = (bool)value;
                 ReactToFontValueChange();
             }
-            else if(propertyName == nameof(IsBold))
+            else if (propertyName == nameof(IsBold))
             {
                 IsBold = (bool)value;
                 ReactToFontValueChange();
@@ -4712,7 +4712,7 @@ namespace Gum.Wireframe
         bool isItalic;
         public bool IsItalic
         {
-            get => isItalic; 
+            get => isItalic;
             set { isItalic = value; UpdateToFontValues(); }
         }
 
