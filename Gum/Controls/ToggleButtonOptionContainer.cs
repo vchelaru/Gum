@@ -136,13 +136,13 @@ namespace Gum.Controls
 
             resourceName = relativeDirectory + resourceName;
 
-            BitmapImage centerAlignBitmap = new BitmapImage();
-            centerAlignBitmap.BeginInit();
-            centerAlignBitmap.UriSource = new Uri(resourceName, UriKind.Relative);
-            centerAlignBitmap.EndInit();
+            BitmapImage bitmap = new BitmapImage();
+            bitmap.BeginInit();
+            bitmap.UriSource = new Uri(resourceName, UriKind.Relative);
+            bitmap.EndInit();
             // Accessing the Width property force loads the bitmap.
-            var throwaway = centerAlignBitmap.Width;
-            return centerAlignBitmap;
+            var throwaway = bitmap.Width;
+            return bitmap;
         }
     }
 }

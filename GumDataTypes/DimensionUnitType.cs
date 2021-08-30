@@ -13,14 +13,16 @@ namespace Gum.DataTypes
         PercentageOfSourceFile,
         RelativeToChildren,
         PercentageOfOtherDimension,
-        MaintainFileAspectRatio
+        MaintainFileAspectRatio,
+        Ratio
     }
 
     public enum HierarchyDependencyType
     {
         NoDependency,
         DependsOnParent,
-        DependsOnChildren
+        DependsOnChildren,
+        DependsOnSiblings
     }
 
     public static class DimensionUnitTypeExtensions
@@ -50,8 +52,10 @@ namespace Gum.DataTypes
                     return HierarchyDependencyType.DependsOnParent;
                 case DimensionUnitType.RelativeToChildren:
                     return HierarchyDependencyType.DependsOnChildren;
+                case DimensionUnitType.Ratio:
+                    return HierarchyDependencyType.DependsOnSiblings;
                 default:
-                    throw new NotImplementedException();
+                    throw new NotImplementedException($"Need to handle {unitType}");
             }
         }
     }

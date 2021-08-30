@@ -69,6 +69,9 @@ namespace Gum.Controls
             var percentOfParentBitmap =
                 CreateBitmapFromFile("Content/Icons/HeightUnits/PercentOfParent.png");
 
+            var ratioBitmap =
+                CreateBitmapFromFile("Content/Icons/HeightUnits/Ratio.png");
+
             var relativeToChildrenBitmap =
                 CreateBitmapFromFile("Content/Icons/HeightUnits/RelativeToChildren.png");
 
@@ -101,6 +104,12 @@ namespace Gum.Controls
                         Name = "Percentage of Container",
                         Value = DimensionUnitType.Percentage,
                         Image = percentOfParentBitmap
+                    },
+                    new Option
+                    {
+                        Name = "Ratio of Container",
+                        Value = DimensionUnitType.Ratio,
+                        Image = ratioBitmap
                     },
                     new Option
                     {
