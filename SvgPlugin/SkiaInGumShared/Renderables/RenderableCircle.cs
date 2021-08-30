@@ -18,7 +18,7 @@ namespace SkiaPlugin.Renderables
             using (var paint = CreatePaint())
             {
                 var radius = Width / 2;
-                surface.Canvas.DrawCircle(new SKPoint(radius, radius), 
+                surface.Canvas.DrawCircle(new SKPoint(XSizeSpillover + radius, YSizeSpillover + radius), 
                     // subtract 1 on the radius to allow antialiasing to work
                     radius-1, paint);
             }

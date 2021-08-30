@@ -10,18 +10,10 @@ namespace SkiaPlugin.Renderables
 {
     class RenderableArc : RenderableSkiaObject
     {
-        float thickness = 10;
         public float Thickness
         {
-            get => thickness;
-            set
-            {
-                if(thickness != value)
-                {
-                    thickness = value;
-                    needsUpdate = true;
-                }
-            }
+            get => StrokeWidth;
+            set => StrokeWidth = value;
         }
 
         float startAngle = 0;
@@ -67,24 +59,24 @@ namespace SkiaPlugin.Renderables
             }
         }
 
+        protected override SKPaint CreatePaint()
+        {
+            var paint = base.CreatePaint();
+
+            paint.Style = SKPaintStyle.Stroke;
+            paint.StrokeCap = IsEndRounded ? SKStrokeCap.Round : SKStrokeCap.Butt;
+
+            return paint;
+        }
+
         internal override void DrawToSurface(SKSurface surface)
         {
             surface.Canvas.Clear(SKColors.Transparent);
 
             var skColor = new SKColor(Color.R, Color.G, Color.B, Color.A);
 
-            using (var paint = new SKPaint { Color = skColor, Style = SKPaintStyle.Stroke, StrokeWidth = Thickness, IsAntialias = true })
-            {
-                paint.StrokeCap = IsEndRounded ? SKStrokeCap.Round : SKStrokeCap.Butt;
-                //var radius = Width / 2;
-                //surface.Canvas.DrawCircle(new SKPoint(radius, radius), radius, paint);
-
-                if(UseGradient)
-                {
-                    SetGradientOnPaint(paint);
-                }
-
-
+            using (var paint = CreatePaint())
+            { 
                 var adjustedRect = new SKRect(
                     0 + Thickness / 2,
                     0 + Thickness / 2,

@@ -76,13 +76,14 @@ namespace SkiaPlugin.Managers
                 StandardElementsManager.AddPositioningVariables(filledCircleState);
                 StandardElementsManager.AddDimensionsVariables(filledCircleState, 64, 64, 
                     StandardElementsManager.DimensionVariableAction.ExcludeFileOptions);
+                StandardElementsManager.AddColorVariables(filledCircleState);
 
                 AddGradientVariables(filledCircleState);
 
+                AddDropshadowVariables(filledCircleState);
+
+
                 AddStrokeAndFilledVariables(filledCircleState);
-
-                StandardElementsManager.AddColorVariables(filledCircleState);
-
 
             }
 

@@ -871,7 +871,7 @@ namespace SkiaPlugin.Renderables
             }
         }
 
-        protected SKPaint CreatePaint()
+        protected virtual SKPaint CreatePaint()
         {
             var skColor = new SKColor(Color.R, Color.G, Color.B, Color.A);
 
