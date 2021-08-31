@@ -88,6 +88,18 @@ namespace SkiaGum.Content
 
         public static SKTypeface GetTypeface(TypefaceType type) => typefaceCache[(int)type];
 
+        public static SKTypeface GetTypeface(string typefaceName)
+        {
+            //Do not enclose this stream in a using block: https://stackoverflow.com/questions/48061401/drawtext-in-canvas-skiasharp-text-does-not-display
+            Stream stream = GetManifestResourceStream(
+                typefaceName, ResourceAssembly);
+
+            var typeface = SKTypeface.FromStream(stream);
+            //typefaceCache.Add(type, typeface);
+            // todo - cache it:
+            return typeface;
+        }
+
         //private static void CacheTypeface(int type)
         //{
         //    SKTypeface result = SKTypeface.Default;

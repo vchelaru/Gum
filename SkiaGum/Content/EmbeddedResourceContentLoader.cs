@@ -52,12 +52,9 @@ namespace SkiaGum.Content
 
         private SKTypeface LoadSKTypeface(string contentName)
         {
-            switch (contentName)
-            {
-                case "Roboto Lt":
-                    return SkiaResourceManager.GetTypeface(SkiaResourceManager.TypefaceType.RobotoMedium);
-            }
-            return null;
+            var modifiedContentName = AdjustContentName?.Invoke(contentName) ?? contentName;
+
+            return SkiaResourceManager.GetTypeface(modifiedContentName);
         }
 
         public T TryGetCachedDisposable<T>(string contentName)
