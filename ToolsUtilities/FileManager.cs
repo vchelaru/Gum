@@ -1204,10 +1204,10 @@ namespace ToolsUtilities
             return objectToReturn;
         }
 
+#endif
         public static bool IsUrl(string fileName)
         {
             return fileName.IndexOf("http:") == 0 || fileName.IndexOf("https:") == 0;
         }
-#endif
     }
 }
