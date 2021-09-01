@@ -1,4 +1,5 @@
-﻿using Gum.DataTypes.Variables;
+﻿using Gum;
+using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Plugins;
 using Gum.Plugins.BaseClasses;
@@ -48,7 +49,11 @@ namespace SkiaPlugin
         private void AddMenuItems()
         {
             var item = this.AddMenuItem(new List<string>() { "Plugins", "Add Skia Standard Elements" });
-            item.Click += (not, used) => StandardAdder.AddAllStandards();
+            item.Click += (not, used) =>
+            {
+                StandardAdder.AddAllStandards();
+                GumCommands.Self.GuiCommands.RefreshElementTreeView();
+            };
         }
 
         private void AssignEvents()
