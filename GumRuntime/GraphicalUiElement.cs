@@ -4571,7 +4571,7 @@ namespace Gum.Wireframe
             }
             else
             {
-                if (ToolsUtilities.FileManager.IsRelative(value))
+                if (ToolsUtilities.FileManager.IsRelative(value) && ToolsUtilities.FileManager.IsUrl(value) == false)
                 {
                     value = ToolsUtilities.FileManager.RelativeDirectory + value;
 

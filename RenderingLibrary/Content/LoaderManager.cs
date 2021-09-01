@@ -230,7 +230,7 @@ namespace RenderingLibrary.Content
         {
             string fileNameStandardized = FileManager.Standardize(fileName, false, false);
 
-            if (FileManager.IsRelative(fileNameStandardized))
+            if (FileManager.IsRelative(fileNameStandardized) && FileManager.IsUrl(fileName) == false)
             {
                 fileNameStandardized = FileManager.RelativeDirectory + fileNameStandardized;
 
@@ -250,13 +250,56 @@ namespace RenderingLibrary.Content
                     }
                 }
 
-                toReturn = LoadTextureFromFile(fileName, managers);
+                if(FileManager.IsUrl(fileName))
+                {
+                    toReturn = LoadTextureFromUrl(fileName, managers);
+                }
+                else
+                {
+                    toReturn = LoadTextureFromFile(fileName, managers);
+                }
                 if (CacheTextures)
                 {
                     mCachedDisposables.Add(fileNameStandardized, toReturn);
                 }
             }
             return toReturn;
+        }
+
+        private Texture2D LoadTextureFromUrl(string fileName, SystemManagers managers)
+        {
+
+            Renderer renderer = null;
+            if (managers == null)
+            {
+                renderer = Renderer.Self;
+            }
+            else
+            {
+                renderer = managers.Renderer;
+            }
+            string fileNameStandardized = FileManager.Standardize(fileName, false, false);
+
+            Texture2D texture = null;
+            using (var stream = GetUrlStream(fileName))
+            {
+
+                texture = Texture2D.FromStream(renderer.GraphicsDevice,
+                    stream);
+
+                texture.Name = fileNameStandardized;
+            }
+            return texture;
+        }
+
+        private static Stream GetUrlStream(string url)
+        {
+            byte[] imageData = null;
+
+            using (var wc = new System.Net.WebClient())
+                imageData = wc.DownloadData(url);
+
+            return new MemoryStream(imageData);
         }
 
         /// <summary>
