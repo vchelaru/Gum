@@ -1532,9 +1532,9 @@ namespace CodeOutputPlugin.Manager
 
             #region Children Layout
 
-            else if (rootName == "Children Layout")
+            else if (rootName == "Children Layout" && variable.Value is ChildrenLayout valueAsChildrenLayout)
             {
-                if (instance.BaseType.EndsWith("/StackLayout") && variable.Value is ChildrenLayout valueAsChildrenLayout)
+                if (instance?.BaseType.EndsWith("/StackLayout") == true)
                 {
                     if (valueAsChildrenLayout == ChildrenLayout.LeftToRightStack)
                     {
@@ -1544,6 +1544,15 @@ namespace CodeOutputPlugin.Manager
                     {
                         return $"{instance.Name}.Orientation = StackOrientation.Vertical;";
                     }
+                }
+                else if (valueAsChildrenLayout != ChildrenLayout.Regular)
+                {
+                    return $"Error: The object {instance?.Name ?? container.Name} cannot have a layout of {valueAsChildrenLayout}";
+                }
+                else
+                {
+                    // it's regular, so we just ignore it
+                    return string.Empty;
                 }
             }
 

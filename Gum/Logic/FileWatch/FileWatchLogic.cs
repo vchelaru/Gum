@@ -23,12 +23,12 @@ namespace Gum.Logic.FileWatch
             // When we do this, we're going to clear out the ignored files
             fileWatchManager.ClearIgnoredFiles();
 
-            var directory = GetFileWatchRootDirectory();
+            var directories = GetFileWatchRootDirectories();
 
-            fileWatchManager.EnableWithDirectory(directory);
+            fileWatchManager.EnableWithDirectories(directories);
         }
 
-        private static HashSet<FilePath> GetFileWatchRootDirectory()
+        private static HashSet<FilePath> GetFileWatchRootDirectories()
         {
             HashSet<FilePath> directories = new HashSet<FilePath>();
 
@@ -75,7 +75,15 @@ namespace Gum.Logic.FileWatch
             directories.Add(gumProjectFilePath.GetDirectoryContainingThis() + "Standards/");
             directories.Add(gumProjectFilePath.GetDirectoryContainingThis() + "Behaviors/");
             directories.Add(gumProjectFilePath.GetDirectoryContainingThis() + "FontCache/");
-            
+
+            var gumProject = GumState.Self.ProjectState.GumProjectSave;
+            if (!string.IsNullOrEmpty(gumProject.LocalizationFile))
+            {
+                var localizationDirectory = new FilePath(
+                        GumState.Self.ProjectState.ProjectDirectory + gumProject.LocalizationFile)
+                    .GetDirectoryContainingThis();
+                directories.Add(localizationDirectory);
+            }
 
             return directories;
         }

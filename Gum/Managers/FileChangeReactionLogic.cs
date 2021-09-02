@@ -46,7 +46,26 @@ namespace Gum.Managers
             {
                 ReactToBehaviorChanged(file);
             }
+            else if(extension == "csv")
+            {
+                ReactToCsvChanged(file);
+            }
+        }
 
+        private void ReactToCsvChanged(FilePath file)
+        {
+            var gumProject = GumState.Self.ProjectState.GumProjectSave;
+
+            if(!string.IsNullOrEmpty(gumProject.LocalizationFile))
+            {
+                FilePath localizationFile = GumState.Self.ProjectState.ProjectDirectory + gumProject.LocalizationFile;
+
+                if(localizationFile == file)
+                {
+                    GumCommands.Self.FileCommands.LoadLocalizationFile();
+                    GumCommands.Self.WireframeCommands.Refresh();
+                }
+            }
         }
 
         private void ReactToProjectChanged(FilePath file)

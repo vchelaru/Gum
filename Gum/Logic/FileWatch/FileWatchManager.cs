@@ -52,7 +52,7 @@ namespace Gum.Logic.FileWatch
             fileSystemWatcher.Renamed += HandleRename;
         }
 
-        public void EnableWithDirectory(HashSet<FilePath> directories)
+        public void EnableWithDirectories(HashSet<FilePath> directories)
         {
             filePathsToWatch = directories;
 

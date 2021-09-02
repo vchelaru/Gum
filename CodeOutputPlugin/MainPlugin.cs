@@ -341,7 +341,15 @@ namespace CodeOutputPlugin
                 var codeDirectory = FileManager.GetDirectory(generatedFileName);
                 if (!System.IO.Directory.Exists(codeDirectory))
                 {
-                    System.IO.Directory.CreateDirectory(codeDirectory);
+                    try
+                    {
+                        GumCommands.Self.TryMultipleTimes(() =>
+                            System.IO.Directory.CreateDirectory(codeDirectory));
+                    }
+                    catch(Exception e)
+                    {
+                        GumCommands.Self.GuiCommands.PrintOutput($"Error creating directory {codeDirectory}:\n{e.Message}");
+                    }
                 }
 
                 GumCommands.Self.TryMultipleTimes(() => System.IO.File.WriteAllText(generatedFileName, contents));
@@ -351,13 +359,15 @@ namespace CodeOutputPlugin
 
                 if (!string.IsNullOrEmpty(this.codeOutputProjectSettings.CodeProjectRoot))
                 {
+                    
+                    if (FileManager.IsRelative(generatedFileName))
+                    {
+                        generatedFileName = GumState.Self.ProjectState.ProjectDirectory + generatedFileName;
+                    }
+                    generatedFileName = FileManager.RemoveDotDotSlash(generatedFileName);
                     var splitFileWithoutGenerated = generatedFileName.Split('.').ToArray();
                     var customCodeFileName = string.Join("\\", splitFileWithoutGenerated.Take(splitFileWithoutGenerated.Length - 2)) + ".cs";
 
-                    if (FileManager.IsRelative(customCodeFileName))
-                    {
-                        customCodeFileName = GumState.Self.ProjectState.ProjectDirectory + customCodeFileName;
-                    }
 
                     // todo - only save this if it doesn't already exist
                     if (!System.IO.File.Exists(customCodeFileName))
