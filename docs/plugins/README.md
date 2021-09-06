@@ -1,7 +1,5 @@
 # Plugins
 
-
-
 ## Introduction
 
 This page discusses how to write plugins for Gum. Plugins are a useful way to modify Gum because they allow you to customize Gum without making project-specific, technology-specific, or organization-specific modifications to the core source code. This means that you can customize the Gum experience while still maintaining ties to the core source code.

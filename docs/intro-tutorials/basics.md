@@ -7,8 +7,7 @@ order: 1
 
 ## Introduction
 
-This page walks you through the basics of using the Gum UI tool \(which we'll refer to simply as Gum for this and all other documentation\).  
-
+This page walks you through the basics of using the Gum UI tool \(which we'll refer to simply as Gum for this and all other documentation\).
 
 ![](../.gitbook/assets/GumEmpty.PNG)
 
@@ -55,7 +54,7 @@ Once an instance is a part of a screen or component it can be edited visually in
 
 You can use the resize handles to resize the instance, or you can simply push the mouse button and drag inside the instance to change its position.
 
-When the mouse is positioned over an instance you will see an outline over the instance 
+When the mouse is positioned over an instance you will see an outline over the instance
 
 ![](../.gitbook/assets/GumInstanceOutline.png)
 

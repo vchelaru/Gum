@@ -71,3 +71,9 @@
   * [SelectedState](gum-code-reference/selectedstate.md)
   * [VariableSave](gum-code-reference/variablesave.md)
 
+## SkiaGum
+
+* [Introduction](skiagum/introduction.md)
+* [Setup](skiagum/setup/README.md)
+  * [WPF](skiagum/setup/wpf.md)
+

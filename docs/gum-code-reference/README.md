@@ -1,7 +1,5 @@
 # Gum Code Reference
 
-
-
 ## Introduction
 
 Gum is an open-source tool which enables you to pull code for any other project, or to make modifications so that the tool fits your needs.
@@ -33,6 +31,4 @@ For information on how to write Gum plugins, visit this page: [Plugins](https://
 * [RenderingLibrary.IPositionedSizedObject](ipositionedsizedobject.md)
 * [WpfDataUi.DataUiGrid](datauigrid.md)
 * [WpfDataUi.IDataUi](idataui.md)
-
-
 

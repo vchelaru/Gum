@@ -1,7 +1,5 @@
 # Text
 
-
-
 ## Introduction
 
 The text object can be used to display written information. The text object supports:

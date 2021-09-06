@@ -29,7 +29,7 @@ First we'll define two new states. All components and screens have a "Default" s
 
 ![](../.gitbook/assets/GumEditAddState.png)
 
-The Button component will now have a new state called Highlighted: 
+The Button component will now have a new state called Highlighted:
 
 ![](../.gitbook/assets/GumState.png)
 
