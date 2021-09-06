@@ -330,6 +330,11 @@ namespace CommonFormsAndControls
             try
 #endif
             {
+                if(mSelectedNodes.Count > 0)
+                {
+                    var firstNode = mSelectedNodes[0];
+                    firstNode.EnsureVisible();
+                }
                 base.OnAfterSelect(e);
                 base.SelectedNode = null;
             }
