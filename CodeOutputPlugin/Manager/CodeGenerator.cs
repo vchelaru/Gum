@@ -1014,7 +1014,8 @@ namespace CodeOutputPlugin.Manager
                 stringBuilder.AppendLine(
                     $"{ToTabs(tabCount)}{instance?.Name ?? "this"}.HorizontalOptions = LayoutOptions.Start;");
             }
-            else if(widthUnits == DimensionUnitType.RelativeToContainer)
+            else if(widthUnits == DimensionUnitType.RelativeToContainer || 
+                (widthUnits == DimensionUnitType.Percentage))
             {
                 stringBuilder.AppendLine(
                     $"{ToTabs(tabCount)}{instance?.Name ?? "this"}.HorizontalOptions = LayoutOptions.Fill;");

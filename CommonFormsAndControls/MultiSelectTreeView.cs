@@ -371,7 +371,7 @@ namespace CommonFormsAndControls
                     {
                         return;
                     }
-                    else if (FindAndSelectNode(this.TopNode))
+                    else if (this.TopNode != null && FindAndSelectNode(this.TopNode))
                     {
                         return;
                     }

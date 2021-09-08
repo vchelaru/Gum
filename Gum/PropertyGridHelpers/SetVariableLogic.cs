@@ -387,6 +387,7 @@ namespace Gum.PropertyGridHelpers
         private void ReactIfChangedMemberIsSourceFile(ElementSave parentElement, InstanceSave instance, string changedMember, object oldValue)
         {
             ////////////Early Out /////////////////////////////
+
             string variableFullName;
 
             var instancePrefix = instance != null ? $"{instance.Name}." : "";
@@ -396,11 +397,13 @@ namespace Gum.PropertyGridHelpers
             VariableSave variable = SelectedState.Self.SelectedStateSave?.GetVariableSave(variableFullName);
 
             bool isSourcefile = variable?.GetRootName() == "SourceFile";
-            
-            if(!isSourcefile)
+
+            if (!isSourcefile || string.IsNullOrWhiteSpace( variable.Value as string))
             {
                 return;
             }
+
+            ////////////End Early Out/////////////////////////
 
             string errorMessage = GetWhySourcefileIsInvalid(variable.Value as string);
 

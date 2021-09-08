@@ -23,6 +23,21 @@ namespace Gum.Managers
             {
                 ElementTreeViewManager.Self.OnSelect(ElementTreeViewManager.Self.SelectedNode);
             }
+            TryHandleCTrlF(e);
+        }
+
+        private void TryHandleCTrlF(KeyEventArgs e)
+        {
+            var ctrlDown = (e.Modifiers & Keys.Alt) == Keys.Control;
+
+            if(ctrlDown)
+            {
+                if(e.KeyCode == Keys.F)
+                {
+                    GumCommands.Self.GuiCommands.FocusSearch();
+                    e.Handled = true;
+                }
+            }
         }
 
         private void HandleReorder(KeyEventArgs e)
@@ -98,8 +113,6 @@ namespace Gum.Managers
             // dealing with stack layouts, and that's more complexity than I want to handle
             HandleReorder(e);
 
-            // Handled in ProcessCmdKeyWireframe
-            //HandleNudge(e);
         }
 
         public bool ProcessCmdKeyWireframe(ref Message msg, Keys keyData)
