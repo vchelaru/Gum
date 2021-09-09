@@ -194,8 +194,34 @@ namespace Gum.Wireframe
                 }
             }
             GraphicalUiElement.IsAllLayoutSuspended = false;
+            HashSet<GraphicalUiElement> hashSet = new HashSet<GraphicalUiElement>();
+            var tempSorted = AllIpsos.OrderBy(item =>
+            {
+                hashSet.Clear();
+                return GetDepth(item, hashSet);
+            }).ToArray();
 
-            var tempSorted = AllIpsos.OrderBy(item => GetDepth(item)).ToArray();
+            foreach(var item in AllIpsos)
+            {
+                hashSet.Clear();
+                var isRecursive = IsRecursive(item, hashSet);
+
+                if(isRecursive)
+                {
+                    var message = $"Recursion found in {elementSave}:";
+
+                    foreach(var recursiveItem in hashSet)
+                    {
+                        message += $"\n  {recursiveItem}  child of...";
+                    }
+
+                    message += $"\n back to {item}";
+
+
+                    GumCommands.Self.GuiCommands.ShowMessage(message);
+                }
+            }
+
             AllIpsos.Clear();
             AllIpsos.AddRange(tempSorted);
 
@@ -205,8 +231,32 @@ namespace Gum.Wireframe
             return rootIpso;
         }
 
-        private int GetDepth(GraphicalUiElement item)
+        bool IsRecursive(GraphicalUiElement item, HashSet<GraphicalUiElement> history)
         {
+            if (history.Contains(item))
+            {
+                // recursion found!!!!!!
+                return true;
+            }
+            history.Add(item);
+            var parentGue = item.Parent as GraphicalUiElement;
+            if (parentGue == null)
+            {
+                return false;
+            }
+            else
+            {
+                return IsRecursive(parentGue, history);
+            }
+        }
+
+        private int GetDepth(GraphicalUiElement item, HashSet<GraphicalUiElement> history)
+        {
+            if(history.Contains(item))
+            {
+                return int.MaxValue / 2;
+            }
+            history.Add(item);
             var parentGue = item.Parent as GraphicalUiElement;
             if(parentGue == null)
             {
@@ -214,7 +264,7 @@ namespace Gum.Wireframe
             }
             else
             {
-                return 1 + GetDepth(parentGue);
+                return 1 + GetDepth(parentGue, history);
             }
         }
 
@@ -430,6 +480,8 @@ namespace Gum.Wireframe
         {
             // Now that we have created all instances, we can establish parent relationships
 
+            HashSet<IRenderable> recursiveHashSet = new HashSet<IRenderable>();
+
             foreach (GraphicalUiElement contained in siblings)
             {
                 if (contained.Tag is InstanceSave)
@@ -446,12 +498,29 @@ namespace Gum.Wireframe
                         // This may have bad XML so if it doesn't exist, then let's ignore this:
                         if (newParent != null)
                         {
-
-                            contained.Parent = newParent;
+                            recursiveHashSet.Clear();
+                            GetAllParents(newParent, recursiveHashSet);
+                            if(recursiveHashSet.Contains(contained))
+                            {
+                                // RECURSIVE!!!!
+                            }
+                            else
+                            {
+                                contained.Parent = newParent;
+                            }
 
                         }
                     }
                 }
+            }
+        }
+
+        void GetAllParents(IRenderableIpso ipso, HashSet<IRenderable> toFill)
+        {
+            if(ipso.Parent != null)
+            {
+                toFill.Add(ipso.Parent);
+                GetAllParents(ipso.Parent, toFill);
             }
         }
         
