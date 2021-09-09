@@ -35,7 +35,9 @@ namespace SkiaGum
         float yPushed;
         bool isWithinThreshold = false;
 
-        Func<Task> customClickEventToRaise;
+        Func<Task> customPushEventToRaise;
+        Func<Task> customReleaseEventToRaise;
+
         Func<float, float, Task> customTouchEvent;
 
         BindableGraphicalUiElement elementPushed;
@@ -84,7 +86,7 @@ namespace SkiaGum
 
                     isWithinThreshold = true;
 
-                    if (customClickEventToRaise != null)
+                    if (customPushEventToRaise != null)
                     {
                         var canProceed = await ExclusiveUiInteractionSemaphor.WaitAsync(0);
 
@@ -92,7 +94,7 @@ namespace SkiaGum
                         {
                             try
                             {
-                                await customClickEventToRaise();
+                                await customPushEventToRaise();
                             }
                             finally
                             {
@@ -135,12 +137,7 @@ namespace SkiaGum
                     break;
                 case SKTouchAction.Released:
                     {
-                        var whatToLighten = elementPushed;
-                        if (whatToLighten != null)
-                        {
-                            LightenElement(whatToLighten);
-                        }
-                        if (customTouchEvent != null)
+                        if (customReleaseEventToRaise != null)
                         {
                             var canProceed = await ExclusiveUiInteractionSemaphor.WaitAsync(0);
 
@@ -148,7 +145,7 @@ namespace SkiaGum
                             {
                                 try
                                 {
-                                    await customTouchEvent(touchX, touchY);
+                                    await customReleaseEventToRaise();
                                 }
                                 finally
                                 {
@@ -156,8 +153,32 @@ namespace SkiaGum
                                 }
                             }
                         }
+                        else
+                        {
+                            var whatToLighten = elementPushed;
+                            if (whatToLighten != null)
+                            {
+                                LightenElement(whatToLighten);
+                            }
+                            if (customTouchEvent != null)
+                            {
+                                var canProceed = await ExclusiveUiInteractionSemaphor.WaitAsync(0);
 
-                        await TryClickOnContainedGumObjects(touchX, touchY);
+                                if (canProceed)
+                                {
+                                    try
+                                    {
+                                        await customTouchEvent(touchX, touchY);
+                                    }
+                                    finally
+                                    {
+                                        ExclusiveUiInteractionSemaphor.Release(1);
+                                    }
+                                }
+                            }
+
+                            await TryClickOnContainedGumObjects(touchX, touchY);
+                        }
                     }
 
 
@@ -205,9 +226,15 @@ namespace SkiaGum
             }
         }
 
-        public void SetClickEvent(Func<Task> eventToRaise)
+        public void SetPushEvent(Func<Task> eventToRaise)
         {
-            customClickEventToRaise = eventToRaise;
+            customPushEventToRaise = eventToRaise;
+            EnableTouchEvents = true;
+        }
+
+        public void SetReleaseEvent(Func<Task> eventToRaise)
+        {
+            customReleaseEventToRaise = eventToRaise;
             EnableTouchEvents = true;
         }
 
@@ -219,7 +246,7 @@ namespace SkiaGum
 
         public async Task RaiseClickEvent()
         {
-            if (customClickEventToRaise != null)
+            if (customPushEventToRaise != null || customReleaseEventToRaise != null)
             {
                 var canProceed = await ExclusiveUiInteractionSemaphor.WaitAsync(0);
 
@@ -227,7 +254,14 @@ namespace SkiaGum
                 {
                     try
                     {
-                        await customClickEventToRaise();
+                        if (customPushEventToRaise != null)
+                        {
+                            await customPushEventToRaise();
+                        }
+                        else if (customReleaseEventToRaise != null)
+                        {
+                            await customReleaseEventToRaise();
+                        }
                     }
                     finally
                     {
