@@ -33,6 +33,13 @@ namespace Gum.DataTypes.Variables
             stateSave.Variables.Sort((a, b) => a.Name.CompareTo(b.Name));
         }
 
+        /// <summary>
+        /// Returns the value of the variable name from this state. If not found, will follow inheritance to find 
+        /// the value from the base.
+        /// </summary>
+        /// <param name="stateSave">The state in the current element.</param>
+        /// <param name="variableName">The variable name</param>
+        /// <returns>The value found recursively, where the most-derived value has priority.</returns>
         public static object GetValueRecursive(this StateSave stateSave, string variableName)
         {
             object value = stateSave.GetValue(variableName);
@@ -106,6 +113,7 @@ namespace Gum.DataTypes.Variables
 
             return value;
         }
+
 
         private static object TryToGetValueFromInheritance(string variableName, string baseType)
         {

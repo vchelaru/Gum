@@ -1177,9 +1177,18 @@ namespace Gum.Managers
             List<InstanceSave> expandedInstances = new List<InstanceSave>();
             List<InstanceSave> allInstances = elementSave.Instances;
 
-            if(elementSave is ScreenSave)
+            if(elementSave is ScreenSave || elementSave is ComponentSave)
             {
-                string fullPath = FileLocations.Self.ScreensFolder + FileManager.GetDirectory(elementSave.Name);
+
+                string fullPath = null;
+                if(elementSave is ScreenSave)
+                {
+                    fullPath = FileLocations.Self.ScreensFolder + FileManager.GetDirectory(elementSave.Name);
+                }
+                else
+                {
+                    fullPath = FileLocations.Self.ComponentsFolder + FileManager.GetDirectory(elementSave.Name);
+                }
                 TreeNode desiredNode = GetTreeNodeFor(fullPath);
                 var parentNode = node.Parent;
                 if(parentNode != desiredNode)
@@ -1194,26 +1203,6 @@ namespace Gum.Managers
                     }
                 }
             }
-            else if(elementSave is ComponentSave)
-            {
-                string fullPath = FileLocations.Self.ComponentsFolder + FileManager.GetDirectory(elementSave.Name);
-                TreeNode desiredNode = GetTreeNodeFor(fullPath);
-                var parentNode = node.Parent;
-
-                if (parentNode != desiredNode)
-                {
-                    if (parentNode != null)
-                    {
-                        parentNode.Nodes.Remove(node);
-                    }
-                    if (desiredNode != null)
-                    {
-                        desiredNode.Nodes.Add(node);
-                    }
-                }
-            }
-
-
 
             foreach (InstanceSave instance in allInstances)
             {
@@ -1267,7 +1256,8 @@ namespace Gum.Managers
 
                 var container = instance.ParentContainer;
                 var defaultState = container.DefaultState;
-                var thisParentValue = defaultState.GetValueOrDefault<string>($"{instance.Name}.Parent");
+                //var thisParentValue = defaultState.GetValueOrDefault<string>($"{instance.Name}.Parent");
+                var thisParentValue = defaultState.GetValueRecursive($"{instance.Name}.Parent") as string;
 
                 var desiredParentNode = node;
                 if(!string.IsNullOrEmpty(thisParentValue))
