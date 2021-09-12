@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Gum.Commands;
+using Gum.Controls;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
@@ -75,9 +76,9 @@ namespace Gum
             }
         }
 
-        public void Initialize(MainWindow mainWindow)
+        public void Initialize(MainWindow mainWindow, MainPanelControl mainPanelControl)
         {
-            GuiCommands.Initialize(mainWindow);
+            GuiCommands.Initialize(mainWindow, mainPanelControl);
             FileCommands.Initialize(mainWindow);
         }
         

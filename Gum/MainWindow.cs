@@ -60,24 +60,13 @@ namespace Gum
 #if DEBUG
         // This suppresses annoying, useless output from WPF, as explained here:
         http://weblogs.asp.net/akjoshi/resolving-un-harmful-binding-errors-in-wpf
-            System.Diagnostics.PresentationTraceSources.DataBindingSource.Switch.Level = 
+            System.Diagnostics.PresentationTraceSources.DataBindingSource.Switch.Level =
                 System.Diagnostics.SourceLevels.Critical;
 #endif
 
             InitializeComponent();
 
-
-            var wpfHost = new ElementHost();
-            wpfHost.Dock = DockStyle.Fill;
-            mainPanelControl = new MainPanelControl();
-            wpfHost.Child = mainPanelControl;
-            this.Controls.Add(wpfHost);
-            this.PerformLayout();
-
-
-
-
-
+            CreateMainWpfPanel();
 
             this.KeyPreview = true;
             this.KeyDown += HandleKeyDown;
@@ -88,12 +77,13 @@ namespace Gum
             CreateWireframeEditControl();
             CreateEditorToolbarPanel();
 
+            // Initialize before the StateView is created...
+            GumCommands.Self.Initialize(this, mainPanelControl);
 
             stateView = new StateView();
-            this.AddWinformsControl(stateView, "States", TabLocation.CenterTop);
+            GumCommands.Self.GuiCommands.AddControl(stateView, "States", TabLocation.CenterTop);
 
             ((SelectedState)SelectedState.Self).Initialize(stateView);
-            GumCommands.Self.Initialize(this);
             GumCommands.Self.GuiCommands.AddControl(gumEditorPanel, "Editor", TabLocation.RightTop);
 
             TypeManager.Self.Initialize();
@@ -120,7 +110,7 @@ namespace Gum
 
             StandardElementsManager.Self.Initialize();
 
-            
+
             ToolCommands.GuiCommands.Self.Initialize(wireframeControl1);
 
 
@@ -143,7 +133,15 @@ namespace Gum
 
         }
 
-
+        private void CreateMainWpfPanel()
+        {
+            var wpfHost = new ElementHost();
+            wpfHost.Dock = DockStyle.Fill;
+            mainPanelControl = new MainPanelControl();
+            wpfHost.Child = mainPanelControl;
+            this.Controls.Add(wpfHost);
+            this.PerformLayout();
+        }
 
         private void HandleKeyDown(object sender, KeyEventArgs args)
         {
@@ -392,212 +390,5 @@ namespace Gum
         {
 
         }
-
-
-
-        public PluginTab AddWinformsControl(Control control, string tabTitle, TabLocation tabLocation)
-        {
-            // todo: check if control has already been added. Right now this can't be done trough the Gum commands
-            // so it's only used "internally", so no checking is being done.
-            //var tabControl = GetTabFromLocation(tabLocation);
-            //var tabPage = CreateTabPage(tabTitle);
-            //control.Dock = DockStyle.Fill;
-            //tabControl.Controls.Add(tabPage);
-
-            //tabPage.Controls.Add(control);
-
-            //return new PluginTab
-            //{
-            //    Page = tabPage
-            //};
-
-            var host = new System.Windows.Forms.Integration.WindowsFormsHost();
-
-            host.Child = control;
-
-            return AddWpfControl(host, tabTitle, tabLocation);
-        }
-
-        public PluginTab AddWpfControl(System.Windows.FrameworkElement control, string tabTitle, TabLocation tabLocation = TabLocation.CenterBottom)
-        {
-            string AppTheme = "Light";
-            control.Resources = new System.Windows.ResourceDictionary();
-            control.Resources.Source =
-                new Uri($"/Themes/{AppTheme}.xaml", UriKind.Relative);
-
-
-            //Style style = this.TryFindResource("UserControlStyle") as Style;
-            //if (style != null)
-            //{
-            //    this.Style = style;
-            //}
-
-            //ResourceDictionary = Resources;
-            var tabControl = GetTabFromLocation(tabLocation);
-
-            var page = new System.Windows.Controls.TabItem();
-            page.Header = tabTitle;
-            page.Content = control;
-
-
-            tabControl.Items.Add(page);
-
-            return new PluginTab()
-            {
-                Page = page
-            };
-            //TabPage existingTabPage;
-            //TabControl existingTabControl;
-            //GetContainers(control, out existingTabPage, out existingTabControl);
-
-            //bool alreadyExists = existingTabControl != null;
-
-            //TabPage tabPage = existingTabPage;
-
-            //if (!alreadyExists)
-            //{
-
-            //    System.Windows.Forms.Integration.ElementHost wpfHost;
-            //    wpfHost = new System.Windows.Forms.Integration.ElementHost();
-            //    wpfHost.Dock = DockStyle.Fill;
-            //    wpfHost.Child = control;
-
-            //    tabPage = CreateTabPage(tabTitle);
-
-            //    TabControl tabControl = GetTabFromLocation(tabLocation);
-            //    tabControl.Controls.Add(tabPage);
-
-            //    tabPage.Controls.Add(wpfHost);
-
-            //}
-
-            //return new PluginTab
-            //{
-            //    Page = tabPage
-            //};
-        }
-
-        private static TabPage CreateTabPage(string tabTitle)
-        {
-            System.Windows.Forms.TabPage tabPage = new TabPage();
-            tabPage.Location = new System.Drawing.Point(4, 22);
-            tabPage.Padding = new System.Windows.Forms.Padding(3);
-            tabPage.Size = new System.Drawing.Size(230, 463);
-            tabPage.TabIndex = 1;
-            tabPage.Text = tabTitle;
-            tabPage.UseVisualStyleBackColor = true;
-            return tabPage;
-        }
-
-        private System.Windows.Controls.TabControl GetTabFromLocation(TabLocation tabLocation)
-        {
-            System.Windows.Controls.TabControl tabControl = null;
-
-            switch (tabLocation)
-            {
-                case TabLocation.Center:
-                case TabLocation.CenterBottom:
-                    tabControl = this.mainPanelControl.CenterBottomTabControl;
-                    break;
-                case TabLocation.RightBottom:
-                    tabControl = this.mainPanelControl.RightBottomTabControl;
-
-                    break;
-                case TabLocation.RightTop:
-                    tabControl = this.mainPanelControl.RightTopTabControl;
-                    break;
-                case TabLocation.CenterTop:
-                    tabControl = this.mainPanelControl.CenterTopTabControl;
-                    break;
-                case TabLocation.Left:
-                    tabControl = this.mainPanelControl.LeftTabControl;
-                    break;
-                default:
-                    throw new NotImplementedException($"Tab location {tabLocation} not supported");
-            }
-
-            return tabControl;
-        }
-
-        private void GetContainers(System.Windows.Controls.UserControl control, out System.Windows.Controls.TabItem tabPage, out System.Windows.Controls.TabControl tabControl)
-        {
-            tabPage = null;
-            tabControl = null;
-
-            foreach (var uncastedTabPage in this.mainPanelControl.CenterBottomTabControl.Items)
-            {
-                tabPage = uncastedTabPage as System.Windows.Controls.TabItem;
-
-                if (tabPage != null && DoesTabContainControl(tabPage, control))
-                {
-                    tabControl = this.mainPanelControl.CenterBottomTabControl;
-
-                    break;
-                }
-                else
-                {
-                    tabPage = null;
-                }
-            }
-
-            if (tabControl == null)
-            {
-                foreach (var uncastedTabPage in this.mainPanelControl.RightBottomTabControl.Items)
-                {
-                    tabPage = uncastedTabPage as System.Windows.Controls.TabItem;
-
-                    if (tabPage != null && DoesTabContainControl(tabPage, control))
-                    {
-                        tabControl = this.mainPanelControl.RightBottomTabControl;
-                        break;
-                    }
-                    else
-                    {
-                        tabPage = null;
-                    }
-                }
-            }
-        }
-
-
-        internal void ShowTabForControl(System.Windows.Controls.UserControl control)
-        {
-            //TabControl tabControl = null;
-            //TabPage tabPage = null;
-            //GetContainers(control, out tabPage, out tabControl);
-
-            //var index = tabControl.TabPages.IndexOf(tabPage);
-
-            //tabControl.SelectedIndex = index;
-        }
-
-
-        public void RemoveWpfControl(System.Windows.Controls.UserControl control)
-        {
-            List<Control> controls = new List<Control>();
-
-            System.Windows.Controls.TabControl tabControl = null;
-            System.Windows.Controls.TabItem tabPage = null;
-            GetContainers(control, out tabPage, out tabControl);
-            
-            if(tabControl != null)
-            {
-                var controlInTabPage = tabPage.Content;
-                {
-                    if(controlInTabPage is ElementHost)
-                    {
-                        (controlInTabPage as ElementHost).Child = null;
-                    }
-                }
-                tabPage.Content = null;
-                tabControl.Items.Remove(tabPage);
-            }
-        }
-
-        bool DoesTabContainControl(System.Windows.Controls.TabItem tabPage, System.Windows.FrameworkElement control)
-        {
-            return tabPage.Content == control;
-        }
-
     }
 }

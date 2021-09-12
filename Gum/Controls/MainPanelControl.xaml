@@ -8,11 +8,11 @@
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"></ColumnDefinition>
-            <ColumnDefinition Width="4"></ColumnDefinition>
-            <ColumnDefinition Width="*"></ColumnDefinition>
-            <ColumnDefinition Width="4"></ColumnDefinition>
-            <ColumnDefinition Width="3*"></ColumnDefinition>
+            <ColumnDefinition Width="*" x:Name="LeftColumn"></ColumnDefinition>
+            <ColumnDefinition Width="4" x:Name="LeftSplitter"></ColumnDefinition>
+            <ColumnDefinition Width="*" x:Name="MiddleColumn"></ColumnDefinition>
+            <ColumnDefinition Width="4" x:Name="MiddleSplitter"></ColumnDefinition>
+            <ColumnDefinition Width="3*" x:Name="RightColumn"></ColumnDefinition>
         </Grid.ColumnDefinitions>
 
 
@@ -35,8 +35,8 @@
         <Grid x:Name="RightGrid" Grid.Column="4">
             <Grid.RowDefinitions>
                 <RowDefinition Height="3*"></RowDefinition>
-                <RowDefinition Height="4"></RowDefinition>
-                <RowDefinition Height="1*"></RowDefinition>
+                <RowDefinition Height="4" x:Name="BottomRightSplitter"></RowDefinition>
+                <RowDefinition Height="1*" x:Name="BottomRightPanel"></RowDefinition>
             </Grid.RowDefinitions>
 
             <TabControl x:Name="RightTopTabControl" Grid.Row="0"></TabControl>

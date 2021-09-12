@@ -7,6 +7,7 @@ using System.Text;
 using System.Windows.Forms;
 using Gum.DataTypes;
 using Gum.Plugins;
+using Gum.Controls;
 
 namespace Gum.Commands
 {
@@ -14,12 +15,12 @@ namespace Gum.Commands
     {
         FlowLayoutPanel mFlowLayoutPanel;
 
-        MainWindow mMainWindow;
+        MainPanelControl mainPanelControl;
 
-        internal void Initialize(MainWindow mainWindow)
+        internal void Initialize(MainWindow mainWindow, MainPanelControl mainPanelControl)
         {
+            this.mainPanelControl = mainPanelControl;
             mFlowLayoutPanel = mainWindow.ToolbarPanel;
-            mMainWindow = mainWindow;
         }
 
         internal void RefreshStateTreeView()
@@ -43,18 +44,18 @@ namespace Gum.Commands
         public PluginTab AddControl(System.Windows.Controls.UserControl control, string tabTitle, TabLocation tabLocation = TabLocation.CenterBottom)
         {
             CheckForInitialization();
-            return mMainWindow.AddWpfControl(control, tabTitle, tabLocation);
+            return mainPanelControl.AddWpfControl(control, tabTitle, tabLocation);
         }
 
         public PluginTab AddControl(System.Windows.Forms.Control control, string tabTitle, TabLocation tabLocation )
         {
             CheckForInitialization();
-            return mMainWindow.AddWinformsControl(control, tabTitle, tabLocation);
+            return mainPanelControl.AddWinformsControl(control, tabTitle, tabLocation);
         }
 
         private void CheckForInitialization()
         {
-            if(mMainWindow == null)
+            if(mainPanelControl == null)
             {
                 throw new InvalidOperationException("Need to call Initialize first");
             }
@@ -62,7 +63,7 @@ namespace Gum.Commands
 
         public PluginTab AddWinformsControl(Control control, string tabTitle, TabLocation tabLocation)
         {
-            return mMainWindow.AddWinformsControl(control, tabTitle, tabLocation);
+            return mainPanelControl.AddWinformsControl(control, tabTitle, tabLocation);
         }
         
         public void PositionWindowByCursor(System.Windows.Window window)
@@ -95,7 +96,7 @@ namespace Gum.Commands
 
         public void RemoveControl(System.Windows.Controls.UserControl control)
         {
-            mMainWindow.RemoveWpfControl(control);
+            mainPanelControl.RemoveWpfControl(control);
         }
 
         /// <summary>
@@ -104,7 +105,7 @@ namespace Gum.Commands
         /// <param name="control"></param>
         public void ShowControl(System.Windows.Controls.UserControl control)
         {
-            mMainWindow.ShowTabForControl(control);
+            mainPanelControl.ShowTabForControl(control);
         }
 
         public void PrintOutput(string output)
@@ -134,17 +135,12 @@ namespace Gum.Commands
 
         public void HideTools()
         {
-            //mMainWindow.LeftAndEverythingContainer.Panel1Collapsed = true;
-            //mMainWindow.VariablesAndEverythingElse.Panel1Collapsed = true;
-            //mMainWindow.PreviewSplitContainer.Panel2Collapsed = true;
+            mainPanelControl.HideTools();
         }
 
         public void ShowTools()
         {
-            //mMainWindow.LeftAndEverythingContainer.Panel1Collapsed = false;
-            //mMainWindow.VariablesAndEverythingElse.Panel1Collapsed = false;
-            //mMainWindow.PreviewSplitContainer.Panel2Collapsed = false;
-
+            mainPanelControl.ShowTools();
         }
 
         internal void FocusSearch()
