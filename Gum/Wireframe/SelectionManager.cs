@@ -43,14 +43,13 @@ namespace Gum.Wireframe
         
         static SelectionManager mSelf;
 
-
-
         public WireframeEditor WireframeEditor;
 
         List<GraphicalUiElement> mSelectedIpsos = new List<GraphicalUiElement>();
         IPositionedSizedObject mHighlightedIpso;
 
         GraphicalOutline mGraphicalOutline;
+
         Layer mUiLayer;
 
         HighlightManager highlightManager;
@@ -117,7 +116,6 @@ namespace Gum.Wireframe
                 UpdateEditorsToSelection();
             }
         }
-
 
         public List<GraphicalUiElement> SelectedGues
         {
@@ -602,7 +600,6 @@ namespace Gum.Wireframe
                     }
                     WireframeEditor = new PolygonWireframeEditor(UiLayer);
                 }
-                WireframeEditor.UpdateToSelection(mSelectedIpsos);
             }
             else if(SelectedGues.Count > 0 && SelectedGue?.Tag is ScreenSave == false)
             {
@@ -614,7 +611,6 @@ namespace Gum.Wireframe
                     }
                     WireframeEditor = new StandardWireframeEditor(UiLayer);
                 }
-                WireframeEditor.UpdateToSelection(mSelectedIpsos);
             }
             else if(WireframeEditor != null)
             {
@@ -627,6 +623,7 @@ namespace Gum.Wireframe
 
             if(WireframeEditor != null)
             {
+                WireframeEditor.UpdateToSelection(mSelectedIpsos);
                 WireframeEditor.RestrictToUnitValues = RestrictToUnitValues;
             }
         }

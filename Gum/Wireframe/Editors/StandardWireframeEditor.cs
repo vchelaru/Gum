@@ -17,7 +17,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Gum.Wireframe
+namespace Gum.Wireframe.Editors
 {
     public class StandardWireframeEditor : WireframeEditor
     {
@@ -34,6 +34,9 @@ namespace Gum.Wireframe
         LineCircle rotationHandle;
         bool rotationHighlighted;
         bool rotationGrabbed;
+
+        DimensionDisplay widthDimensionDisplay;
+        DimensionDisplay heightDimensionDisplay;
 
         bool mHasGrabbed = false;
 
@@ -73,6 +76,13 @@ namespace Gum.Wireframe
             rotationHandle.Color = Color.Yellow;
             ShapeManager.Self.Add(rotationHandle, layer);
             rotationHandle.Visible = false;
+
+            widthDimensionDisplay = new DimensionDisplay();
+            widthDimensionDisplay.AddToManagers(SystemManagers.Default);
+
+
+            heightDimensionDisplay = new DimensionDisplay();
+            heightDimensionDisplay.AddToManagers(SystemManagers.Default);
         }
 
         public override void Destroy()
@@ -80,6 +90,9 @@ namespace Gum.Wireframe
             mResizeHandles.Destroy();
 
             ShapeManager.Self.Remove(rotationHandle);
+
+            widthDimensionDisplay.Destroy();
+            heightDimensionDisplay.Destroy();
         }
 
         bool GetIsShiftDown()
@@ -114,6 +127,8 @@ namespace Gum.Wireframe
 
                 RotationHandleGrabbingActivity();
 
+                UpdateDimensionDisplay();
+
                 bool shouldSkip = selectedObjects.Any(item => item.Tag is ScreenSave);
 
                 if (!shouldSkip)
@@ -124,6 +139,37 @@ namespace Gum.Wireframe
 
                     UpdateRotationHandlePosition();
                 }
+            }
+        }
+
+        private void UpdateDimensionDisplay()
+        {
+            var shouldShowHeight =
+                SideOver == ResizeSide.TopLeft ||
+                SideOver == ResizeSide.Top ||
+                SideOver == ResizeSide.TopRight ||
+                SideOver == ResizeSide.BottomLeft ||
+                SideOver == ResizeSide.Bottom ||
+                SideOver == ResizeSide.BottomRight;
+
+            var shouldShowWidth =
+                SideOver == ResizeSide.TopLeft ||
+                SideOver == ResizeSide.Left ||
+                SideOver == ResizeSide.BottomLeft ||
+                SideOver == ResizeSide.TopRight ||
+                SideOver == ResizeSide.Right ||
+                SideOver == ResizeSide.BottomRight;
+
+            widthDimensionDisplay.SetVisible(shouldShowWidth);
+            if(shouldShowWidth)
+            {
+                widthDimensionDisplay.Activity(selectedObjects[0], WidthOrHeight.Width);
+            }
+
+            heightDimensionDisplay.SetVisible(shouldShowHeight);
+            if(shouldShowHeight)
+            {
+                heightDimensionDisplay.Activity(selectedObjects[0], WidthOrHeight.Height);
             }
         }
 

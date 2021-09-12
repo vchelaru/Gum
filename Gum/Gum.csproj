@@ -369,6 +369,7 @@
     <Compile Include="Wireframe\CameraController.cs" />
     <Compile Include="Wireframe\EditingManager.cs" />
     <Compile Include="Wireframe\EditingManager.RightClick.cs" />
+    <Compile Include="Wireframe\Editors\DimensionDisplay.cs" />
     <Compile Include="Wireframe\Editors\PolygonWireframeEditor.cs" />
     <Compile Include="Wireframe\ElementWithState.cs" />
     <Compile Include="Wireframe\GrabbedInitialState.cs" />

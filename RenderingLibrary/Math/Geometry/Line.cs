@@ -159,6 +159,11 @@ namespace RenderingLibrary.Math.Geometry
 
         #endregion
 
+        public Line()
+            : this(null)
+        {
+
+        }
 
         public Line(SystemManagers managers)
         {
