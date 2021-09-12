@@ -115,7 +115,7 @@ namespace Gum.Wireframe.Editors
 
                 if(suffix != null)
                 {
-                    dimensionDisplay.RawText = $"{objectToUpdateTo.Width:0.0} {suffix}\n({absoluteWidth:0.0} px)"; 
+                    dimensionDisplay.RawText = $"{objectToUpdateTo.Width:0.0}{suffix}\n({absoluteWidth:0.0} px)"; 
 
                 }
                 else
@@ -177,7 +177,7 @@ namespace Gum.Wireframe.Editors
 
                 if (suffix != null)
                 {
-                    dimensionDisplay.RawText = $"{objectToUpdateTo.Height:0.0} {suffix}\n({absoluteHeight:0.0} px)";
+                    dimensionDisplay.RawText = $"{objectToUpdateTo.Height:0.0}{suffix}\n({absoluteHeight:0.0} px)";
 
                 }
                 else
