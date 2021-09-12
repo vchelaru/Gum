@@ -55,7 +55,6 @@ namespace Gum.Managers
 
         #endregion
 
-
         #region Drag+drop File (like form windows explorer)
 
         internal void HandleFileDragDrop(object sender, DragEventArgs e)
@@ -227,87 +226,6 @@ namespace Gum.Managers
 
         #endregion
 
-        public void OnItemDrag(object item)
-        {
-            mDraggedItem = item;
-        }
-
-        public void Activity()
-        {
-            if (mDraggedItem != null)
-            {
-                // May 11, 2021
-                // I thought that
-                // we had to manually
-                // set the cursor here
-                // if drag+dropping a tree
-                // node. It turns out that this
-                // is handled by HandleFileDragEnter
-                //if (InputLibrary.Cursor.Self.IsInWindow)
-                //{
-                //    InputLibrary.Cursor.Self.SetWinformsCursor(
-                //        System.Windows.Forms.Cursors.Arrow);
-
-                //}
-
-                if (!Cursor.PrimaryDownIgnoringIsInWindow)
-                {
-                    List<TreeNode> treeNodesToDrop = GetTreeNodesToDrop();
-
-                    foreach (var draggedTreeNode in treeNodesToDrop)
-                    {
-                        object draggedObject = draggedTreeNode.Tag;
-
-                        HandleDroppedItemInWireframe(draggedObject, out bool handled);
-
-                        if(handled)
-                        {
-                            mDraggedItem = null;
-                        }
-                    }
-                }
-            }
-        }
-
-        private List<TreeNode> GetTreeNodesToDrop()
-        {
-            List<TreeNode> treeNodesToDrop = new List<TreeNode>();
-
-            if(mDraggedItem != null && ((TreeNode)mDraggedItem).Tag != null)
-            {
-                treeNodesToDrop.Add((TreeNode)mDraggedItem);
-            }
-
-            // The selected nodes should contain the dragged item, but I don't know for 100% certain.
-            // If not, then we'll just use the dragged item. If it does, then we'll also add all other
-            // selected items:
-            if (SelectedState.Self.SelectedTreeNodes.Contains(mDraggedItem))
-            {
-                var whatToAdd = SelectedState.Self.SelectedTreeNodes.Where(item => item != mDraggedItem && item != null && item.Tag != null);
-                treeNodesToDrop.AddRange(whatToAdd);
-            }
-
-            return treeNodesToDrop;
-        }
-
-        private void HandleDroppedItemOnTreeView(object draggedComponentOrElement, TreeNode treeNodeDroppedOn)
-        {
-            Console.WriteLine($"Dropping{draggedComponentOrElement} on {treeNodeDroppedOn}");
-            if (treeNodeDroppedOn != null)
-            {
-                object targetTag = treeNodeDroppedOn.Tag;
-
-                if (draggedComponentOrElement is ElementSave)
-                {
-                    HandleDroppedElementSave(draggedComponentOrElement, treeNodeDroppedOn, targetTag, treeNodeDroppedOn);
-                }
-                else if (draggedComponentOrElement is InstanceSave)
-                {
-                    HandleDroppedInstance(draggedComponentOrElement, treeNodeDroppedOn, targetTag);
-                }
-            }
-        }
-
         #region Drop Element (like components)
 
         private void HandleDroppedElementSave(object draggedComponentOrElement, TreeNode treeNodeDroppedOn, object targetTag, TreeNode targetTreeNode)
@@ -443,34 +361,45 @@ namespace Gum.Managers
 
         private static void HandleDroppingInstanceOnTarget(object targetObject, InstanceSave dragDroppedInstance, ElementSave targetElementSave, TreeNode targetTreeNode)
         {
-            if (targetObject != dragDroppedInstance)
-            {
+            var instanceDefinedByBase = dragDroppedInstance.DefinedByBase;
 
-            }
-            string parentName;
-            string variableName = dragDroppedInstance.Name + ".Parent";
-            if (targetObject is InstanceSave targetInstance)
+            if(instanceDefinedByBase)
             {
-                // setting the parent:
-                parentName = targetInstance.Name;
+                GumCommands.Self.GuiCommands.ShowMessage($"{dragDroppedInstance.Name} cannot be added as a child of {targetObject} because it is defined in a base element");
             }
             else
             {
-                // drag+drop on the container, so detach:
-                parentName = null;
+                if (targetObject != dragDroppedInstance)
+                {
+
+                }
+                string parentName;
+                string variableName = dragDroppedInstance.Name + ".Parent";
+                if (targetObject is InstanceSave targetInstance)
+                {
+                    // setting the parent:
+                    parentName = targetInstance.Name;
+                }
+                else
+                {
+                    // drag+drop on the container, so detach:
+                    parentName = null;
+                }
+                // Since the Parent property can only be set in the default state, we will
+                // set the Parent variable on that instead of the SelectedState.Self.SelectedStateSave
+                var stateToAssignOn = targetElementSave.DefaultState;
+                Gum.Undo.UndoManager.Self.RecordState();
+                var oldValue = stateToAssignOn.GetValue(variableName) as string;
+                stateToAssignOn.SetValue(variableName, parentName, "string");
+                Gum.Undo.UndoManager.Self.RecordUndo();
+                SetVariableLogic.Self.PropertyValueChanged("Parent", oldValue, dragDroppedInstance);
+                targetTreeNode?.Expand();
             }
-            // Since the Parent property can only be set in the default state, we will
-            // set the Parent variable on that instead of the SelectedState.Self.SelectedStateSave
-            var stateToAssignOn = targetElementSave.DefaultState;
-            Gum.Undo.UndoManager.Self.RecordState();
-            var oldValue = stateToAssignOn.GetValue(variableName) as string;
-            stateToAssignOn.SetValue(variableName, parentName, "string");
-            Gum.Undo.UndoManager.Self.RecordUndo();
-            SetVariableLogic.Self.PropertyValueChanged("Parent", oldValue, dragDroppedInstance);
-            targetTreeNode?.Expand();
         }
 
         #endregion
+
+        #region Drop Event
 
         internal void HandleDragDropEvent(object sender, DragEventArgs e)
         {
@@ -487,6 +416,95 @@ namespace Gum.Managers
                 }
             }
         }
+
+        #endregion
+
+        #region General Functions
+
+        public void OnItemDrag(object item)
+        {
+            mDraggedItem = item;
+        }
+
+        public void Activity()
+        {
+            if (mDraggedItem != null)
+            {
+                // May 11, 2021
+                // I thought that
+                // we had to manually
+                // set the cursor here
+                // if drag+dropping a tree
+                // node. It turns out that this
+                // is handled by HandleFileDragEnter
+                //if (InputLibrary.Cursor.Self.IsInWindow)
+                //{
+                //    InputLibrary.Cursor.Self.SetWinformsCursor(
+                //        System.Windows.Forms.Cursors.Arrow);
+
+                //}
+
+                if (!Cursor.PrimaryDownIgnoringIsInWindow)
+                {
+                    List<TreeNode> treeNodesToDrop = GetTreeNodesToDrop();
+
+                    foreach (var draggedTreeNode in treeNodesToDrop)
+                    {
+                        object draggedObject = draggedTreeNode.Tag;
+
+                        HandleDroppedItemInWireframe(draggedObject, out bool handled);
+
+                        if(handled)
+                        {
+                            mDraggedItem = null;
+                        }
+                    }
+                }
+            }
+        }
+
+        private List<TreeNode> GetTreeNodesToDrop()
+        {
+            List<TreeNode> treeNodesToDrop = new List<TreeNode>();
+
+            if(mDraggedItem != null && ((TreeNode)mDraggedItem).Tag != null)
+            {
+                treeNodesToDrop.Add((TreeNode)mDraggedItem);
+            }
+
+            // The selected nodes should contain the dragged item, but I don't know for 100% certain.
+            // If not, then we'll just use the dragged item. If it does, then we'll also add all other
+            // selected items:
+            if (SelectedState.Self.SelectedTreeNodes.Contains(mDraggedItem))
+            {
+                var whatToAdd = SelectedState.Self.SelectedTreeNodes.Where(item => item != mDraggedItem && item != null && item.Tag != null);
+                treeNodesToDrop.AddRange(whatToAdd);
+            }
+
+            return treeNodesToDrop;
+        }
+
+        private void HandleDroppedItemOnTreeView(object draggedComponentOrElement, TreeNode treeNodeDroppedOn)
+        {
+            Console.WriteLine($"Dropping{draggedComponentOrElement} on {treeNodeDroppedOn}");
+            if (treeNodeDroppedOn != null)
+            {
+                object targetTag = treeNodeDroppedOn.Tag;
+
+                if (draggedComponentOrElement is ElementSave)
+                {
+                    HandleDroppedElementSave(draggedComponentOrElement, treeNodeDroppedOn, targetTag, treeNodeDroppedOn);
+                }
+                else if (draggedComponentOrElement is InstanceSave)
+                {
+                    HandleDroppedInstance(draggedComponentOrElement, treeNodeDroppedOn, targetTag);
+                }
+            }
+        }
+
+
+        #endregion
+
 
         private void HandleDroppedItemInWireframe(object draggedObject, out bool handled)
         {
