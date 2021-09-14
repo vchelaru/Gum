@@ -1269,7 +1269,7 @@ namespace Gum.Managers
                         desiredParentNode = GetTreeNodeFor(instanceParent, node);
                     }
                 }
-                if(desiredParentNode != nodeForInstance.Parent)
+                if(desiredParentNode != nodeForInstance.Parent && desiredParentNode != null)
                 {
                     nodeForInstance.Remove();
                     desiredParentNode.Nodes.Add(nodeForInstance);
