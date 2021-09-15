@@ -103,7 +103,6 @@ namespace Gum.Managers
         public void Initialize()
         {
             RefreshDefaults();
-
         }
 
         public void RefreshDefaults()
@@ -121,10 +120,17 @@ namespace Gum.Managers
                 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                 var stateSave = new StateSave();
                 stateSave.Name = "Default";
+
                 AddPositioningVariables(stateSave, includeBaseline:true);
+
                 AddDimensionsVariables(stateSave, 100, 50, DimensionVariableAction.ExcludeFileOptions);
+
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
+
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "Hello", Name = "Text", Category = "Text" });
+
+                // EVentually - should add here
+                //stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Apply Localization", Category = "Text" });
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "HorizontalAlignment", Value = HorizontalAlignment.Left, Name = "HorizontalAlignment", Category = "Text" });
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "VerticalAlignment", Value = VerticalAlignment.Top, Name = "VerticalAlignment", Category = "Text" });
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int?", Value = null, Name = "MaxLettersToShow", Category = "Text" });
@@ -146,6 +152,7 @@ namespace Gum.Managers
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 1.0f, Name = "Font Scale", Category = "Font" });
 
                 stateSave.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation" });
+
                 AddEventVariables(stateSave);
 
                 AddStateVariable(stateSave);
