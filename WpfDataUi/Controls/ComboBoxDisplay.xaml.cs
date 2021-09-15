@@ -125,7 +125,21 @@ namespace WpfDataUi.Controls
 
         private void HandleIsKeyboardFocusChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
-            if(ComboBox.IsKeyboardFocusWithin == false)
+            // Sept 15, 2021
+            // This is an interesting bug...
+            // If the user right-clicks on a combo 
+            // box to set it to default, the combo box
+            // changes the property on an object which may
+            // result in out put being printed (such as about
+            // code generation). When this happens, the output
+            // window scrolls to the bottom, which takes keyboard
+            // focus from whatever was focused before, which is this
+            // combo box. The combo box probably got focus from the right-click.
+            // For now the fix is easy - just make it only do so if it's editable,
+            // but this may require more fixes to prevent this bug from happening on 
+            // editable combo boxes.
+            //if(ComboBox.IsKeyboardFocusWithin == false)
+            if(ComboBox.IsKeyboardFocusWithin == false && IsEditable)
             {
                 HandleChange();
             }

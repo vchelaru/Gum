@@ -56,9 +56,17 @@ namespace CodeOutputPlugin.Manager
             {
                 inheritance = "SkiaGum.SkiaGumCanvasView";
             }
-            else
+            else if(element.BaseType == "Container")
             {
                 inheritance = "BindableGraphicalUiElement";
+            }
+            else
+            {
+                inheritance = element.BaseType;
+                if(inheritance?.Contains("/") == true)
+                {
+                    inheritance = inheritance.Substring(inheritance.LastIndexOf('/') + 1);
+                }
             }
 
             stringBuilder.AppendLine(ToTabs(tabCount) + $"partial class {CodeGenerator.GetClassNameForType(element.Name, visualApi)} : {inheritance}");

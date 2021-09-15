@@ -238,10 +238,27 @@ namespace CodeOutputPlugin.Manager
                 stringBuilder.AppendLine(ToTabs(tabCount) + "GraphicalUiElement.IsAllLayoutSuspended = true;");
 
                 var elementBaseType = element?.BaseType;
+                var baseElements = ObjectFinder.Self.GetBaseElements(element);
+
                 var isThisAbsoluteLayout = elementBaseType?.EndsWith("/AbsoluteLayout") == true;
+                if(!isThisAbsoluteLayout)
+                {
+                    isThisAbsoluteLayout = baseElements.Any(item => item.BaseType?.EndsWith("/AbsoluteLayout") == true);
+                }
+
+
                 var isStackLayout = elementBaseType?.EndsWith("/StackLayout") == true;
+                if(!isStackLayout)
+                {
+                    isStackLayout = baseElements.Any(item => item.BaseType?.EndsWith("/StackLayout") == true);
+                }
 
                 var isSkiaCanvasView = elementBaseType?.EndsWith("/SkiaGumCanvasView") == true;
+                if(!isSkiaCanvasView)
+                {
+                    // see if this inherits from a skia gum canvas view
+                    isSkiaCanvasView = baseElements.Any(item => item.BaseType?.EndsWith("/SkiaGumCanvasView") == true);
+                }
 
                 if(isThisAbsoluteLayout)
                 {

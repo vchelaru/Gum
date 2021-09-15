@@ -406,6 +406,15 @@ namespace Gum.Managers
             return toReturn;
         }
 
+        public List<ElementSave> GetBaseElements(ElementSave elementSave)
+        {
+            var toReturn = new List<ElementSave>();
+
+            FillListWithBaseElements(elementSave, toReturn);
+
+            return toReturn;
+        }
+
         public IEnumerable<string> GetAllFilesInProject()
         {
             List<string> toReturn = new List<string>();
@@ -464,6 +473,19 @@ namespace Gum.Managers
                 }
             }
 
+        }
+
+        private void FillListWithBaseElements(ElementSave element, List<ElementSave> listToAddTo)
+        {
+            var baseElement = !string.IsNullOrWhiteSpace(element.BaseType) ? GetElementSave(element.BaseType) : null;
+
+            if (baseElement != null)
+            {
+                listToAddTo.Add(baseElement);
+
+                FillListWithBaseElements(baseElement, listToAddTo);
+            }
+            
         }
 
         private void FillListWithReferencedFiles<T>(List<string> files, IList<T> elements) where T : ElementSave
