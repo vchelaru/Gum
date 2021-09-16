@@ -188,8 +188,12 @@ namespace Gum
             {
                 bool wasModified = mGumProjectSave.Initialize();
 
-
                 RecreateMissingStandardElements();
+
+                if(RecreateMissingDefinedByBaseObjects())
+                {
+                    wasModified = true;
+                }
 
                 if(mGumProjectSave.AddNewStandardElementTypes())
                 {
@@ -345,8 +349,6 @@ namespace Gum
                 }
             }
 
-
-
             foreach (var element in missingElements)
             {
                 var result = MessageBox.Show(
@@ -362,6 +364,46 @@ namespace Gum
                     string gumProjectDirectory = FileManager.GetDirectory(mGumProjectSave.FullFileName);
 
                     mGumProjectSave.SaveStandardElements(gumProjectDirectory);
+                }
+            }
+        }
+
+        private bool RecreateMissingDefinedByBaseObjects()
+        {
+            var wasAnythingAdded = false;
+
+            foreach(var component in mGumProjectSave.Components)
+            {
+                List<InstanceSave> necessaryInstances = new List<InstanceSave>();
+                FillWithNecessaryInstances(component, necessaryInstances);
+                foreach(var instanceInBase in necessaryInstances)
+                {
+                    // see if there's a match:
+                    var matching = component.GetInstance(instanceInBase.Name);
+
+                    if(matching == null)
+                    {
+                        var instance = instanceInBase.Clone();
+                        instance.DefinedByBase = true;
+                        component.Instances.Add(instance);
+                        wasAnythingAdded = true;
+                    }
+                }
+            }
+            return wasAnythingAdded;
+        }
+
+        private void FillWithNecessaryInstances(ComponentSave component, List<InstanceSave> necessaryInstances)
+        {
+            if( !string.IsNullOrWhiteSpace( component.BaseType))
+            {
+                var baseComponent = ObjectFinder.Self.GetElementSave(component.BaseType) as ComponentSave;
+
+                if(baseComponent != null)
+                {
+                    necessaryInstances.AddRange(baseComponent.Instances);
+
+                    FillWithNecessaryInstances(baseComponent, necessaryInstances);
                 }
             }
         }

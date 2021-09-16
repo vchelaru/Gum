@@ -70,6 +70,29 @@ namespace Gum.Managers
             }
         }
 
+        void HandleGoToDefinition(KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.F12)
+            {
+                if (SelectedState.Self.SelectedInstance != null)
+                {
+                    var element = ObjectFinder.Self.GetElementSave(SelectedState.Self.SelectedInstance.BaseType);
+                    if (element != null)
+                    {
+                        SelectedState.Self.SelectedElement = element;
+                    }
+                }
+                else if (!string.IsNullOrWhiteSpace(SelectedState.Self.SelectedElement?.BaseType))
+                {
+                    var element = ObjectFinder.Self.GetElementSave(SelectedState.Self.SelectedElement.BaseType);
+                    if (element != null)
+                    {
+                        SelectedState.Self.SelectedElement = element;
+                    }
+                }
+            }
+        }
+
         void HandleCopyCutPaste(KeyEventArgs e)
         {
             if ((e.Modifiers & Keys.Control) == Keys.Control)
@@ -112,6 +135,8 @@ namespace Gum.Managers
             // Update - inverting is not a good idea because it will work differently when
             // dealing with stack layouts, and that's more complexity than I want to handle
             HandleReorder(e);
+
+            HandleGoToDefinition(e);
 
         }
 

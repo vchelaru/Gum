@@ -533,14 +533,14 @@ namespace Gum.Managers
             }
 
             ReorganizeCategories(categories);
-            CustomizeVariables(categories);
+            CustomizeVariables(categories, stateSave, instance);
         }
 
-        private void CustomizeVariables(List<MemberCategory> categories)
+        private void CustomizeVariables(List<MemberCategory> categories, StateSave stateSave, InstanceSave instance)
         {
             // Hack! I would like to have this set by variables, but that's going to require a ton
             // of refatoring. We need to move off of the intermediate PropertyDescriptor class.
-            AdjustTextPreferredDisplayer(categories);
+            AdjustTextPreferredDisplayer(categories, stateSave, instance);
 
             UpdateColorCategory(categories);
 
@@ -622,7 +622,7 @@ namespace Gum.Managers
             }
         }
 
-        private void AdjustTextPreferredDisplayer(List<MemberCategory> categories)
+        private void AdjustTextPreferredDisplayer(List<MemberCategory> categories, StateSave stateSave, InstanceSave instanceSave)
         {
             // This used to only make Text objects multiline, but...maybe we should make all string values multiline?
             foreach(var category in categories)
@@ -632,14 +632,27 @@ namespace Gum.Managers
                     var isStringMember = member.PreferredDisplayer == null &&
                         member.PropertyType == typeof(string) &&
                         member.Name != "Name" && member.Name.EndsWith(".Name") == false;
+
                     if (isStringMember)
                     {
                         var rootVariable = (member as StateReferencingInstanceMember)?.GetRootVariableSave();
 
-                        
+                        var shouldShowLocalizationUi = LocalizationManager.HasDatabase && (member.CustomOptions?.Count > 0) == false &&
+                            ((member as StateReferencingInstanceMember)?.GetRootVariableSave())?.GetRootName() == "Text";
 
-                        if (LocalizationManager.HasDatabase && (member.CustomOptions?.Count > 0) == false &&
-                            ((member as StateReferencingInstanceMember)?.GetRootVariableSave())?.GetRootName() == "Text")
+                        // See StandardElementsManager for Text on explanation why this is commented out.
+                        //if(shouldShowLocalizationUi)
+                        //{
+                        //    var prefix = instanceSave == null ? "" : instanceSave.Name + ".";
+                        //    var valueAsObject = stateSave.GetValueRecursive(prefix + "Apply Localization");
+                        //    if(valueAsObject is bool asBool)
+                        //    {
+                        //        shouldShowLocalizationUi = asBool;
+                        //    }
+                        //}
+
+
+                        if (shouldShowLocalizationUi)
                         {
                             // give it options!
                             member.PreferredDisplayer = typeof(WpfDataUi.Controls.ComboBoxDisplay);

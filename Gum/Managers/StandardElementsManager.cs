@@ -129,7 +129,16 @@ namespace Gum.Managers
 
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "Hello", Name = "Text", Category = "Text" });
 
-                // EVentually - should add here
+                // Okay so here's some info on this value.
+                // It would be nice to be able to select whether 
+                // a Text should or should not be localized in Gum.
+                // The problem is that when we do the localization, we
+                // only have access to the GraphicalUiElement, not the InstanceSave.
+                // Sure, we could get the reference, but what about at runtime in a game?
+                // We ultimately want this value to be saved in the GraphicalUiElement so it
+                // can be applied at runtime too. This is a pain to do, since it would require
+                // changes to SkiaGum and possibly to FRB plugins. It's a bigger project, so until
+                // then, we'll leave this out and put it back in when it's time.
                 //stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Apply Localization", Category = "Text" });
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "HorizontalAlignment", Value = HorizontalAlignment.Left, Name = "HorizontalAlignment", Category = "Text" });
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "VerticalAlignment", Value = VerticalAlignment.Top, Name = "VerticalAlignment", Category = "Text" });

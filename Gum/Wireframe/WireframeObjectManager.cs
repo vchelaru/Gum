@@ -251,14 +251,26 @@ namespace Gum.Wireframe
 
         public void ApplyLocalization(GraphicalUiElement gue, string forcedId = null)
         {
-            var stringId = forcedId;
-            if(string.IsNullOrWhiteSpace(stringId) && gue.RenderableComponent is Text asText)
+            var isLocalized = true;
+            //if(gue.Tag is InstanceSave instance)
+            //{
+            //    var rfv = new RecursiveVariableFinder(GumState.Self.SelectedState.SelectedStateSave);
+
+            //    var value = rfv.GetValue<bool>(instance.Name + ".Apply Localization");
+            //    isLocalized = value;
+            //}
+
+            if(isLocalized)
             {
-                stringId = asText.RawText;
-            }
+                var stringId = forcedId;
+                if(string.IsNullOrWhiteSpace(stringId) && gue.RenderableComponent is Text asText)
+                {
+                    stringId = asText.RawText;
+                }
  
-            // Go through the GraphicalUiElement to kick off a layout adjustment if necessary
-            gue.SetProperty("Text", LocalizationManager.Translate(stringId));
+                // Go through the GraphicalUiElement to kick off a layout adjustment if necessary
+                gue.SetProperty("Text", LocalizationManager.Translate(stringId));
+            }
         }
 
         public IEnumerable<GraphicalUiElement> GetTextsRecurisve(GraphicalUiElement parent)
