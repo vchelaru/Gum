@@ -336,7 +336,22 @@ namespace SkiaGum
             {
                 if (element is BindableGraphicalUiElement bindableGue)
                 {
-                    bindableGue.BindingContext = this.BindingContext;
+                    if (!string.IsNullOrEmpty(element.BindingContextBinding))
+                    {
+                        if (BindingContext != null)
+                        {
+                            var vmProperty = BindingContext.GetType().GetProperty(element.BindingContextBinding);
+                            var value = vmProperty.GetValue(BindingContext);
+
+                            bindableGue.BindingContext = value;
+
+                        }
+
+                    }
+                    else
+                    {
+                        bindableGue.BindingContext = this.BindingContext;
+                    }
                 }
             }
         }

@@ -1,16 +1,21 @@
 ﻿using Gum.Wireframe;
+using RenderingLibrary.Graphics;
 using SkiaGum.Managers;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace SkiaGum.GueDeriving
 {
-
+    public class BindingContextChangedEventArgs : EventArgs
+    {
+        public object OldBindingContext { get; set; }
+    }
     public class BindableGraphicalUiElement : GraphicalUiElement
     {
         #region VmToUiProperty struct
@@ -25,6 +30,8 @@ namespace SkiaGum.GueDeriving
             {
                 return $"VM:{VmProperty} UI{UiProperty}";
             }
+
+            public static VmToUiProperty Unassigned => new VmToUiProperty();
         }
 
         #endregion
@@ -33,42 +40,43 @@ namespace SkiaGum.GueDeriving
 
         List<VmToUiProperty> vmPropsToUiProps = new List<VmToUiProperty>();
 
+        object mInheritedBindingContext;
+        internal object InheritedBindingContext
+        {
+            get => mInheritedBindingContext;
+            set
+            {
+                if (value != mInheritedBindingContext)
+                {
+                    var oldEffectiveBindingContext = EffectiveBindingContext;
+                    mInheritedBindingContext = value;
+                    HandleBindingContextChangedInternal(oldEffectiveBindingContext);
+
+                }
+            }
+        }
+
         object mBindingContext;
         public object BindingContext
         {
-            get => mBindingContext;
+            get => EffectiveBindingContext;
             set
             {
-                var oldBindingContext = mBindingContext;
-                if(oldBindingContext is INotifyPropertyChanged oldViewModel)
+                if (value != EffectiveBindingContext)
                 {
-                    oldViewModel.PropertyChanged -= HandleViewModelPropertyChanged;
-                }
-                mBindingContext = value;
-
-                if (value is INotifyPropertyChanged viewModel)
-                {
-                    viewModel.PropertyChanged += HandleViewModelPropertyChanged;
+                    var oldEffectiveBindingContext = EffectiveBindingContext;
+                    mBindingContext = value;
+                    HandleBindingContextChangedInternal(oldEffectiveBindingContext);
                 }
 
-                foreach(var vmToUiProp in vmPropsToUiProps)
-                {
-                    UpdateToVmProperty(vmToUiProp.VmProperty);
-                }
-
-                foreach(var child in this.Children)
-                {
-                    if(child is BindableGraphicalUiElement bindableElement)
-                    {
-                        bindableElement.BindingContext = BindingContext;
-                    }
-                }
-
-                BindingContextChanged?.Invoke();
-
-                this.EffectiveManagers?.InvalidateSurface();
             }
         }
+
+        public object BindingContextBindingPropertyOwner { get; private set; }
+        public string BindingContextBinding { get; private set; }
+
+
+        object EffectiveBindingContext => mBindingContext ?? InheritedBindingContext;
 
         /// <summary>
         /// Returns this instance's SystemManagers, or climbs up the parent/child relationship
@@ -99,8 +107,6 @@ namespace SkiaGum.GueDeriving
 
         #region Events
 
-        public event Action BindingContextChanged;
-
         Func<Task> clickedAsync;
         public Func<Task> ClickedAsync
         {
@@ -109,13 +115,14 @@ namespace SkiaGum.GueDeriving
             {
                 clickedAsync = value;
 
-                if(this.EffectiveManagers != null && clickedAsync != null)
+                if (this.EffectiveManagers != null && clickedAsync != null)
                 {
                     this.EffectiveManagers.EnableTouchEvents = true;
                 }
             }
         }
 
+        public event Action<object, BindingContextChangedEventArgs> BindingContextChanged;
 
         #endregion
 
@@ -178,7 +185,7 @@ namespace SkiaGum.GueDeriving
         {
             var vmPropertyName = e.PropertyName;
             var updated = UpdateToVmProperty(vmPropertyName);
-            if(updated)
+            if (updated)
             {
                 this.EffectiveManagers?.InvalidateSurface();
             }
@@ -187,26 +194,61 @@ namespace SkiaGum.GueDeriving
         private bool UpdateToVmProperty(string vmPropertyName)
         {
             var updated = false;
-            foreach(var vmToUiProp in vmPropsToUiProps.Where(item => item.VmProperty == vmPropertyName))
+
+            var isBoundToVmProperty = vmPropsToUiProps.Any(item => item.VmProperty == vmPropertyName) ||
+                BindingContextBinding == vmPropertyName;
+
+            var bindingContextObjectToUse = BindingContextBinding == vmPropertyName ?
+                BindingContextBindingPropertyOwner : EffectiveBindingContext;
+            if (isBoundToVmProperty && bindingContextObjectToUse != null)
             {
-                var vmProperty = mBindingContext.GetType().GetProperty(vmPropertyName);
-                if(vmProperty == null)
+
+                var vmProperty = bindingContextObjectToUse.GetType().GetProperty(vmPropertyName);
+                object vmValue = null;
+                bool didSetVmValue = false;
+                string uiPropertyName;
+
+                if (vmPropertyName == BindingContextBinding)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Could not find property {vmPropertyName} in {mBindingContext.GetType()}");
+                    uiPropertyName = nameof(BindingContext);
                 }
                 else
                 {
-                    var vmValue = vmProperty.GetValue(mBindingContext, null);
+                    uiPropertyName = vmPropsToUiProps.First(item => item.VmProperty == vmPropertyName).UiProperty;
+                }
 
-                    var uiProperty = this.GetType().GetProperty(vmToUiProp.UiProperty);
-
-                    if(uiProperty == null)
+                if (vmProperty == null && BindingContextBinding != vmPropertyName)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Could not find property {vmPropertyName} in {bindingContextObjectToUse?.GetType()}");
+                }
+                else
+                {
+                    try
                     {
-                        var exceptionMessage = $"Error binding {this.GetType()}.{vmToUiProp.UiProperty} to view model property {vmToUiProp.VmProperty}";
+                        vmValue = vmProperty.GetValue(bindingContextObjectToUse, null);
+                    }
+                    catch (TargetInvocationException)
+                    {
+                        throw new Exception($"Error getting property {vmPropertyName} in {bindingContextObjectToUse?.GetType()}");
+                    }
+                    didSetVmValue = true;
+                }
+
+                if (!didSetVmValue)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Could not find property {vmPropertyName} in {bindingContextObjectToUse?.GetType()}");
+                }
+                else
+                {
+                    var uiProperty = this.GetType().GetProperty(uiPropertyName);
+
+                    if (uiProperty == null)
+                    {
+                        var exceptionMessage = $"Error binding {this.GetType()}.{uiPropertyName} to view model property {vmPropertyName}";
                         throw new Exception(exceptionMessage);
                     }
 
-                    if(uiProperty.PropertyType == typeof(string))
+                    if (uiProperty.PropertyType == typeof(string))
                     {
                         uiProperty.SetValue(this, vmValue?.ToString(), null);
                     }
@@ -216,43 +258,177 @@ namespace SkiaGum.GueDeriving
                         {
                             uiProperty.SetValue(this, vmValue, null);
                         }
-                        catch(Exception e)
+                        catch (Exception e)
                         {
                             var message = $"Error reacting to view model property {vmPropertyName} with value {vmValue} and " +
-                                $"assigning it to UI prop {vmToUiProp.UiProperty} on element of type {this.GetType()}. See inner exception";
+                                $"assigning it to UI prop {uiPropertyName} on element of type {this.GetType()}. See inner exception";
 
                             throw new Exception(message, e);
                         }
                     }
                     updated = true;
                 }
+
+
             }
+            TryPushBindingContextChangeToChildren(vmPropertyName);
+
+
             return updated;
+        }
+
+        private void TryPushBindingContextChangeToChildren(string vmPropertyName)
+        {
+            if (this.Children != null)
+            {
+                foreach (var child in Children)
+                {
+                    if (child is BindableGraphicalUiElement gue)
+                    {
+                        if (gue.BindingContextBinding == vmPropertyName && gue.BindingContextBindingPropertyOwner == EffectiveBindingContext)
+                        {
+                            gue.UpdateToVmProperty(vmPropertyName);
+                        }
+                        gue.TryPushBindingContextChangeToChildren(vmPropertyName);
+                    }
+                }
+            }
+            else
+            {
+                foreach (BindableGraphicalUiElement gue in ContainedElements)
+                {
+                    if (gue.BindingContextBinding == vmPropertyName && gue.BindingContextBindingPropertyOwner == EffectiveBindingContext)
+                    {
+                        gue.UpdateToVmProperty(vmPropertyName);
+                    }
+                    gue.TryPushBindingContextChangeToChildren(vmPropertyName);
+                }
+            }
         }
 
         public void SetBinding(string uiProperty, string vmProperty)
         {
-
-#if DEBUG
-            var foundUiProperty = this.GetType().GetProperty(uiProperty);
-
-            if (foundUiProperty == null)
+            if (uiProperty == nameof(BindingContext))
             {
-                var exceptionMessage = $"Error binding: {this.GetType()}.{uiProperty} does not exist so it cannot be bound to {vmProperty}";
-
-                throw new Exception(exceptionMessage);
+                BindingContextBinding = vmProperty;
             }
+            else
+            {
+                var existingVm = vmPropsToUiProps.FirstOrDefault(item => item.VmProperty == vmProperty);
+                if (!string.IsNullOrWhiteSpace(existingVm.VmProperty))
+                {
+                    vmPropsToUiProps.Remove(existingVm);
+                }
+                // This prevents single UI properties from being bound to multiple VM properties
+                if (vmPropsToUiProps.Any(item => item.UiProperty == uiProperty))
+                {
+                    var toRemove = vmPropsToUiProps.Where(item => item.UiProperty == uiProperty).ToArray();
 
-#endif
+                    foreach (var kvp in toRemove)
+                    {
+                        vmPropsToUiProps.Remove(kvp);
+                    }
+                }
 
-            var newAssociation = new VmToUiProperty();
-            newAssociation.VmProperty = vmProperty;
-            newAssociation.UiProperty = uiProperty;
-            vmPropsToUiProps.Add(newAssociation);
 
+                vmPropsToUiProps.Add(new VmToUiProperty() { VmProperty = vmProperty, UiProperty = uiProperty });
+
+                if (EffectiveBindingContext != null)
+                {
+                    UpdateToVmProperty(vmProperty);
+                }
+
+            }
             this.EffectiveManagers?.InvalidateSurface();
-
         }
 
+        private void HandleBindingContextChangedInternal(object oldBindingContext)
+        {
+            if (oldBindingContext is INotifyPropertyChanged oldViewModel)
+            {
+                oldViewModel.PropertyChanged -= HandleViewModelPropertyChanged;
+            }
+            if (EffectiveBindingContext is INotifyPropertyChanged viewModel)
+            {
+                viewModel.PropertyChanged += HandleViewModelPropertyChanged;
+
+            }
+            if (EffectiveBindingContext != null)
+            {
+                foreach (var vmProperty in vmPropsToUiProps)
+                {
+                    UpdateToVmProperty(vmProperty.VmProperty);
+                }
+
+
+            }
+
+            var args = new BindingContextChangedEventArgs();
+            args.OldBindingContext = oldBindingContext;
+
+
+            if (this.Children != null)
+            {
+                // do the default first...
+                UpdateChildrenInheritedBindingContext(this.Children, EffectiveBindingContext);
+                // ... then overwrite it
+                foreach (var child in this.Children)
+                {
+                    if (child is BindableGraphicalUiElement gue)
+                    {
+                        if (gue.BindingContextBinding != null)
+                        {
+                            gue.BindingContextBindingPropertyOwner = EffectiveBindingContext;
+
+                            gue.UpdateToVmProperty(gue.BindingContextBinding);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // Do the default functionalty first...
+                UpdateChildrenInheritedBindingContext(this.ContainedElements, EffectiveBindingContext);
+                // ... then overwrite it
+                foreach (var gue in this.ContainedElements)
+                {
+                    if (gue is BindableGraphicalUiElement bgue)
+                    {
+                        if (bgue.BindingContextBinding != null)
+                        {
+                            bgue.BindingContextBindingPropertyOwner = EffectiveBindingContext;
+
+                            bgue.UpdateToVmProperty(bgue.BindingContextBinding);
+                        }
+
+                    }
+                }
+            }
+            BindingContextChanged?.Invoke(this, args);
+        }
+
+
+
+        private static void UpdateChildrenInheritedBindingContext(IEnumerable<IRenderableIpso> children, object effectiveBindingContext)
+        {
+            foreach (var child in children)
+            {
+                if (child is BindableGraphicalUiElement gue)
+                {
+                    if (gue.InheritedBindingContext != effectiveBindingContext)
+                    {
+                        var effectiveBeforeChange = gue.EffectiveBindingContext;
+                        gue.InheritedBindingContext = effectiveBindingContext;
+                        if (effectiveBindingContext != gue.EffectiveBindingContext)
+                        {
+                            // This saves us some processing. If the parent's effective didn't change, then no need
+                            // to notify the children
+                            UpdateChildrenInheritedBindingContext(child.Children, gue.EffectiveBindingContext);
+                        }
+                    }
+                }
+
+            }
+        }
     }
 }
