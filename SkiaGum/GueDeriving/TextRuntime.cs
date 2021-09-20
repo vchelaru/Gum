@@ -94,6 +94,12 @@ namespace SkiaGum.GueDeriving
             set => ContainedText.Red = value;
         }
 
+        public int Alpha
+        {
+            get => ContainedText.Alpha;
+            set => ContainedText.Alpha = value;
+        }
+
         public bool IsItalic
         {
             get => ContainedText.IsItalic;
@@ -111,6 +117,11 @@ namespace SkiaGum.GueDeriving
             get => ContainedText.FontScale;
             set => ContainedText.FontScale = value;
         }
+
+        // This does nothing currently, but we have it here so codegen doesn't cause compile errors
+        public string CustomFontFile { get; set; }
+        // Also added for codegen:
+        public bool UseCustomFont { get; set; }
 
         public int? MaximumNumberOfLines
         {

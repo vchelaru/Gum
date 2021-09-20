@@ -39,7 +39,7 @@ namespace SkiaGum
             get => Color.Blue;
             set
             {
-                this.Color = new SKColor(this.Color.Red, this.Color.Green, (byte)value);
+                this.Color = new SKColor(this.Color.Red, this.Color.Green, (byte)value, this.Color.Alpha);
             }
         }
 
@@ -48,7 +48,7 @@ namespace SkiaGum
             get => Color.Green;
             set
             {
-                this.Color = new SKColor(this.Color.Red, (byte)value, this.Color.Blue);
+                this.Color = new SKColor(this.Color.Red, (byte)value, this.Color.Blue, this.Color.Alpha);
             }
         }
 
@@ -57,7 +57,17 @@ namespace SkiaGum
             get => Color.Red;
             set
             {
-                this.Color = new SKColor((byte)value, this.Color.Green, this.Color.Blue);
+                this.Color = new SKColor((byte)value, this.Color.Green, this.Color.Blue, this.Color.Alpha);
+            }
+        }
+
+        public int Alpha
+        {
+            get => Color.Alpha;
+            set
+            {
+                this.Color = new SKColor(this.Color.Red, this.Color.Green, this.Color.Blue, (byte)value);
+
             }
         }
 
