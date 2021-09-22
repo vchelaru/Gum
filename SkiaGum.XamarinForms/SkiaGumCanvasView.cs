@@ -225,7 +225,7 @@ namespace SkiaGum
                     try
                     {
                         itemPushed = clickableElement;
-                        await clickableElement.PushedAsync();
+                        await clickableElement.PushedAsync(x, y);
                     }
                     finally
                     {

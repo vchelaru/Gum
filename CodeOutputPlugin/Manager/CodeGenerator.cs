@@ -1250,6 +1250,18 @@ namespace CodeOutputPlugin.Manager
             var widthString = width.ToString(CultureInfo.InvariantCulture) + "f";
             var heightString = height.ToString(CultureInfo.InvariantCulture) + "f";
 
+            // When using AbsoluteLayout in XamarinForms, adding a margin will actually shrink the object. Therefore, if using margin to 
+            // position an object relative to its right or bottom edges, the object's width and height should be increased by the offset amount.
+
+            if(xUnits == PositionUnitType.PixelsFromRight && xOrigin == HorizontalAlignment.Right)
+            {
+                widthString = $"({widthString} + {rightMargin})";
+            }
+            if(yUnits == PositionUnitType.PixelsFromBottom && yOrigin == VerticalAlignment.Bottom)
+            {
+                heightString = $"({heightString} + {bottomMargin})";
+            }
+
             if (AdjustPixelValuesForDensity)
             {
                 if (proportionalFlags.Contains(XProportionalFlag) == false)
@@ -1273,7 +1285,7 @@ namespace CodeOutputPlugin.Manager
             var instanceOrThis =
                 instance?.Name ?? "this";
             string boundsText =
-                $"{ToTabs(tabCount)}AbsoluteLayout.SetLayoutBounds({instanceOrThis}, new Rectangle({xString}, {yString}, {widthString}, {heightString}));";
+                $"{ToTabs(tabCount)}AbsoluteLayout.SetLayoutBounds({instanceOrThis}, new Rectangle({xString}, {yString}, {widthString}, {heightString} ));";
             string flagsText = null;
             if (proportionalFlags.Count > 0)
             {

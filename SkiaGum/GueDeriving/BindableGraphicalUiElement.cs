@@ -122,8 +122,8 @@ namespace SkiaGum.GueDeriving
             }
         }
 
-        Func<Task> pushedAsync;
-        public Func<Task> PushedAsync
+        Func<float, float, Task> pushedAsync;
+        public Func<float, float, Task> PushedAsync
         {
             get => pushedAsync;
             set
