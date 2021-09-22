@@ -108,13 +108,15 @@ namespace SkiaGum
 
                         if (canProceed)
                         {
-                            elementPushed = FindClickableElement(touchX, touchY, GumElementsInternal);
+                            elementPushed = FindElement(touchX, touchY, GumElementsInternal, item => item.ClickedAsync != null || item.DragAsync != null);
                             if (elementPushed != null)
                             {
                                 DarkenElement(elementPushed);
                             }
                             ExclusiveUiInteractionSemaphor.Release(1);
                         }
+
+                        await TryPushOnContainedGumObjects(touchX, touchY);
                     }
 
                     args.Handled = true;
@@ -130,6 +132,11 @@ namespace SkiaGum
                             {
                                 LightenElement(whatToLighten);
                             }
+                        }
+
+                        if (isWithinThreshold && elementPushed?.DragAsync != null)
+                        {
+                            await elementPushed.DragAsync();
                         }
                     }
 
@@ -204,9 +211,33 @@ namespace SkiaGum
             }
         }
 
+        BindableGraphicalUiElement itemPushed;
+        private async Task TryPushOnContainedGumObjects(float x, float y)
+        {
+            var clickableElement = FindElement(x, y, GumElementsInternal, item => item.PushedAsync != null);
+
+            if (clickableElement != null)
+            {
+                var canProceed = await ExclusiveUiInteractionSemaphor.WaitAsync(0);
+
+                if (canProceed)
+                {
+                    try
+                    {
+                        itemPushed = clickableElement;
+                        await clickableElement.PushedAsync();
+                    }
+                    finally
+                    {
+                        ExclusiveUiInteractionSemaphor.Release(1);
+                    }
+                }
+            }
+        }
+
         private async Task TryClickOnContainedGumObjects(float x, float y)
         {
-            var clickableElement = FindClickableElement(x, y, GumElementsInternal);
+            var clickableElement = FindElement(x, y, GumElementsInternal, item => item.ClickedAsync != null);
 
             if (clickableElement != null)
             {
@@ -271,7 +302,7 @@ namespace SkiaGum
             }
         }
 
-        private BindableGraphicalUiElement FindClickableElement(float x, float y, IList<BindableGraphicalUiElement> list)
+        private BindableGraphicalUiElement FindElement(float x, float y, IList<BindableGraphicalUiElement> list, Func<BindableGraphicalUiElement, bool> condition)
         {
             for (int i = 0; i < list.Count; i++)
             {
@@ -279,7 +310,7 @@ namespace SkiaGum
 
                 if (gumElement.Visible && gumElement.IsPointInside(x, y))
                 {
-                    if (gumElement.ClickedAsync != null)
+                    if (condition == null || condition(gumElement))
                     {
                         return gumElement;
                     }
@@ -287,7 +318,7 @@ namespace SkiaGum
                     {
                         var children = gumElement.Children.Select(item => item as BindableGraphicalUiElement).Where(item => item != null).ToList();
 
-                        var foundElement = FindClickableElement(x, y, children);
+                        var foundElement = FindElement(x, y, children, condition);
 
                         if (foundElement != null)
                         {

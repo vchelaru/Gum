@@ -122,6 +122,37 @@ namespace SkiaGum.GueDeriving
             }
         }
 
+        Func<Task> pushedAsync;
+        public Func<Task> PushedAsync
+        {
+            get => pushedAsync;
+            set
+            {
+                pushedAsync = value;
+
+                if (this.EffectiveManagers != null && pushedAsync != null)
+                {
+                    this.EffectiveManagers.EnableTouchEvents = true;
+                }
+            }
+        }
+
+
+        Func<Task> dragAsync;
+        public Func<Task> DragAsync
+        {
+            get => dragAsync;
+            set
+            {
+                dragAsync = value;
+
+                if (this.EffectiveManagers != null && dragAsync != null)
+                {
+                    this.EffectiveManagers.EnableTouchEvents = true;
+                }
+            }
+        }
+
         public event Action<object, BindingContextChangedEventArgs> BindingContextChanged;
 
         #endregion
@@ -179,7 +210,6 @@ namespace SkiaGum.GueDeriving
                 }
             }
         }
-
 
         private void HandleViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
@@ -406,8 +436,6 @@ namespace SkiaGum.GueDeriving
             }
             BindingContextChanged?.Invoke(this, args);
         }
-
-
 
         private static void UpdateChildrenInheritedBindingContext(IEnumerable<IRenderableIpso> children, object effectiveBindingContext)
         {
