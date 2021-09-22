@@ -124,7 +124,7 @@ namespace SkiaGum
                 case SKTouchAction.Moved:
                     if (isWithinThreshold)
                     {
-                        if (System.Math.Abs(touchY - yPushed) > threshold)
+                        if (System.Math.Abs(touchY - yPushed) > threshold && elementPushed?.DragAsync == null)
                         {
                             isWithinThreshold = false;
                             var whatToLighten = elementPushed;
@@ -136,7 +136,7 @@ namespace SkiaGum
 
                         if (isWithinThreshold && elementPushed?.DragAsync != null)
                         {
-                            await elementPushed.DragAsync();
+                            await elementPushed.DragAsync(touchX, touchY);
                         }
                     }
 
@@ -357,6 +357,11 @@ namespace SkiaGum
         public void Add(BindableGraphicalUiElement toAdd)
         {
             GumElementsInternal.Add(toAdd);
+
+            if (toAdd.ClickedAsync != null || toAdd.PushedAsync != null || toAdd.DragAsync != null)
+            {
+                this.EnableTouchEvents = true;
+            }
         }
 
         protected override void OnBindingContextChanged()

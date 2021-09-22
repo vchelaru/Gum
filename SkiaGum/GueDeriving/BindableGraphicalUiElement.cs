@@ -138,8 +138,8 @@ namespace SkiaGum.GueDeriving
         }
 
 
-        Func<Task> dragAsync;
-        public Func<Task> DragAsync
+        Func<float, float, Task> dragAsync;
+        public Func<float, float, Task> DragAsync
         {
             get => dragAsync;
             set
