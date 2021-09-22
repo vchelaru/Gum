@@ -1168,7 +1168,10 @@ namespace Gum.Managers
 
             foreach (TreeNode treeNode in node.Nodes)
             {
-                RefreshUi(treeNode);
+                if(treeNode != null)
+                {
+                    RefreshUi(treeNode);
+                }
             }
         }
 
