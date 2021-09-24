@@ -121,7 +121,7 @@ namespace Gum.Wireframe
 
         #region Methods
 
-        public ResizeHandles(Layer layer)
+        public ResizeHandles(Layer layer, Color color)
         {
             for (int i = 0; i < mHandles.Length; i++)
             {
@@ -140,7 +140,7 @@ namespace Gum.Wireframe
             }
 
             originDisplay = new OriginDisplay(layer);
-            
+            originDisplay.SetColor(color);
             Visible = true;
             UpdateToProperties();
         }

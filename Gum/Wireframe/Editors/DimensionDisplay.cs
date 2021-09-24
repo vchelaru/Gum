@@ -1,4 +1,5 @@
-﻿using RenderingLibrary;
+﻿using Microsoft.Xna.Framework;
+using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Math.Geometry;
 using System;
@@ -9,14 +10,20 @@ using System.Threading.Tasks;
 
 namespace Gum.Wireframe.Editors
 {
+    #region Enums
+
     public enum WidthOrHeight
     {
         Width,
         Height
     }
 
+    #endregion
+
     class DimensionDisplay
     {
+        #region Fields/Properties
+
         Line endCap1;
         Line endCap2;
 
@@ -26,6 +33,8 @@ namespace Gum.Wireframe.Editors
         float Zoom => systemManagers.Renderer.Camera.Zoom;
 
         SystemManagers systemManagers;
+
+        #endregion
 
         public void AddToManagers(SystemManagers systemManagers)
         {
@@ -47,6 +56,15 @@ namespace Gum.Wireframe.Editors
 
             endCap2 = new Line(systemManagers);
             AddLineToManagers(endCap2);
+        }
+
+        public void SetColor(Color color)
+        {
+            endCap1.Color = color;
+            endCap2.Color = color;
+
+            middleLine.Color = color;
+            dimensionDisplay.Color = color;
         }
 
         public void SetVisible(bool isVisible)

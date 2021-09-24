@@ -609,7 +609,10 @@ namespace Gum.Wireframe
                     {
                         WireframeEditor.Destroy();
                     }
-                    WireframeEditor = new StandardWireframeEditor(UiLayer);
+                    WireframeEditor = new StandardWireframeEditor(UiLayer, 
+                        new Color(GumState.Self.ProjectState.GeneralSettings.OutlineColorR,
+                        GumState.Self.ProjectState.GeneralSettings.OutlineColorG,
+                        GumState.Self.ProjectState.GeneralSettings.OutlineColorB));
                 }
             }
             else if(WireframeEditor != null)

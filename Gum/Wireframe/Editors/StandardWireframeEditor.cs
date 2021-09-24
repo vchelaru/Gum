@@ -66,9 +66,9 @@ namespace Gum.Wireframe.Editors
 
         #endregion
 
-        public StandardWireframeEditor(Layer layer)
+        public StandardWireframeEditor(Layer layer, Color color)
         {
-            mResizeHandles = new ResizeHandles(layer);
+            mResizeHandles = new ResizeHandles(layer, color);
             mResizeHandles.ShowOrigin = true;
             mResizeHandles.Visible = false;
 
@@ -79,10 +79,11 @@ namespace Gum.Wireframe.Editors
 
             widthDimensionDisplay = new DimensionDisplay();
             widthDimensionDisplay.AddToManagers(SystemManagers.Default);
-
+            widthDimensionDisplay.SetColor(color);
 
             heightDimensionDisplay = new DimensionDisplay();
             heightDimensionDisplay.AddToManagers(SystemManagers.Default);
+            heightDimensionDisplay.SetColor(color);
         }
 
         public override void Destroy()

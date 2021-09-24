@@ -205,7 +205,9 @@ namespace SkiaGum.GueDeriving
                     {
                         var uiValue = uiProperty.GetValue(this, null);
 
-                        vmProperty.SetValue(BindingContext, uiValue, null);
+                        var convertedValue = ConvertValue(uiValue, vmProperty.PropertyType);
+
+                        vmProperty.SetValue(BindingContext, convertedValue, null);
                     }
                 }
             }
@@ -278,23 +280,18 @@ namespace SkiaGum.GueDeriving
                         throw new Exception(exceptionMessage);
                     }
 
-                    if (uiProperty.PropertyType == typeof(string))
+                    var convertedValue = ConvertValue(vmValue, uiProperty.PropertyType);
+                    try
                     {
-                        uiProperty.SetValue(this, vmValue?.ToString(), null);
+                        uiProperty.SetValue(this, convertedValue, null);
                     }
-                    else
+                    catch (Exception e)
                     {
-                        try
-                        {
-                            uiProperty.SetValue(this, vmValue, null);
-                        }
-                        catch (Exception e)
-                        {
-                            var message = $"Error reacting to view model property {vmPropertyName} with value {vmValue} and " +
-                                $"assigning it to UI prop {uiPropertyName} on element of type {this.GetType()}. See inner exception";
+                        var message = $"Error reacting to view model property {vmPropertyName} " +
+                            $"with value {vmValue} ({vmValue?.GetType().ToString()}) and " +
+                            $"assigning it to UI prop {uiPropertyName} ({uiProperty.PropertyType}) on element of type {this.GetType()}.\n\n{e.Message}";
 
-                            throw new Exception(message, e);
-                        }
+                        throw new Exception(message, e);
                     }
                     updated = true;
                 }
@@ -305,6 +302,53 @@ namespace SkiaGum.GueDeriving
 
 
             return updated;
+        }
+
+        private object ConvertValue(object value, Type desiredType)
+        {
+            object convertedValue = value;
+            if (desiredType == typeof(string))
+            {
+                convertedValue = value?.ToString();
+            }
+            else if (desiredType == typeof(int))
+            {
+                if (value is decimal asDecimal)
+                {
+                    // do we round? 
+                    convertedValue = (int)asDecimal;
+                }
+            }
+            else if (desiredType == typeof(double))
+            {
+                if (value is int asInt)
+                {
+                    convertedValue = (double)asInt;
+                }
+                else if (value is decimal asDecimal)
+                {
+                    convertedValue = (double)asDecimal;
+                }
+            }
+            else if (desiredType == typeof(decimal))
+            {
+                if (value is int asInt)
+                {
+                    convertedValue = (decimal)asInt;
+                }
+                else if (value is double asDouble)
+                {
+                    convertedValue = (decimal)asDouble;
+                }
+            }
+            else if (desiredType == typeof(float))
+            {
+                if (value is int asInt)
+                {
+                    convertedValue = (float)asInt;
+                }
+            }
+            return convertedValue;
         }
 
         private void TryPushBindingContextChangeToChildren(string vmPropertyName)

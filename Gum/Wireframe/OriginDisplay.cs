@@ -161,6 +161,14 @@ namespace Gum.Wireframe
             mOriginLine.RelativePoint.Y = selectedObjectY - mOriginLine.Y;
         }
 
+        internal void SetColor(Color color)
+        {
+            mXLine1.Color = color;
+            mXLine2.Color = color;
+
+            mOriginLine.Color = color;
+        }
+
         private static void GetSelectedAbsoluteXAndY(GraphicalUiElement asGue, bool parentFlips, out float selectedObjectX, out float selectedObjectY)
         {
             selectedObjectX = asGue.AbsoluteX;

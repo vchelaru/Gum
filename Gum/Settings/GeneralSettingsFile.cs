@@ -21,7 +21,9 @@ namespace Gum.Settings
         public FilePath FilePath => AbsoluteFileName;
     }
 
-
+    /// <summary>
+    /// Global settings for Glue, not project specific
+    /// </summary>
     public class GeneralSettingsFile
     {
         #region Properties
