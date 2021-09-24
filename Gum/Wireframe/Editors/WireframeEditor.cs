@@ -63,6 +63,18 @@ namespace Gum.Wireframe
             float xToMoveBy = cursor.XChange / Renderer.Self.Camera.Zoom;
             float yToMoveBy = cursor.YChange / Renderer.Self.Camera.Zoom;
 
+            var vector2 = new Vector2(xToMoveBy, yToMoveBy);
+            var selectedObject = WireframeObjectManager.Self.GetSelectedRepresentation();
+            if(selectedObject?.Parent != null)
+            {
+                var parentRotation = MathHelper.ToRadians( selectedObject.Parent.GetAbsoluteRotation() );
+
+                global::RenderingLibrary.Math.MathFunctions.RotateVector(ref vector2, parentRotation);
+
+                xToMoveBy = vector2.X;
+                yToMoveBy = vector2.Y;
+            }
+
             var didMove = EditingManager.Self.MoveSelectedObjectsBy(xToMoveBy, yToMoveBy);
 
             bool isShiftDown = InputLibrary.Keyboard.Self.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift) ||

@@ -179,6 +179,11 @@ namespace RenderingLibrary
 
         }
 
+        /// <summary>
+        /// Returns the absolute rotation in degrees.
+        /// </summary>
+        /// <param name="ipso">The object for which to return rotation.</param>
+        /// <returns>The rotation in degrees.</returns>
         public static float GetAbsoluteRotation(this IRenderableIpso ipso)
         {
             if(ipso.Parent == null)
