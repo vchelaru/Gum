@@ -17,53 +17,54 @@ namespace StateAnimationPlugin.Managers
     public class AnimationCollectionViewModelManager : Singleton<AnimationCollectionViewModelManager>
     {
 
-        public ElementAnimationsViewModel CurrentAnimationCollectionViewModel
+        public ElementAnimationsViewModel GetAnimationCollectionViewModel(ElementSave element)
         {
-        
-            get
+            if(element == null)
             {
+                return null;
+            }
+            else
+            {
+                var model = GetElementAnimationsSave(element);
 
-
-
-                var currentElement = SelectedState.Self.SelectedElement;
-
-                if(currentElement == null)
+                ElementAnimationsViewModel toReturn;
+                if (model != null)
                 {
-                    return null;
+                    toReturn = ElementAnimationsViewModel.FromSave(model, element);
                 }
                 else
                 {
-                    var fileName = GetAbsoluteAnimationFileNameFor(currentElement);
+                    toReturn = new ElementAnimationsViewModel();
 
-                    ElementAnimationsViewModel toReturn = null;
-
-                    if (FileManager.FileExists(fileName))
-                    {
-                        try
-                        {
-                            var save = FileManager.XmlDeserialize<ElementAnimationsSave>(fileName);
-
-                            toReturn = ElementAnimationsViewModel.FromSave(save, currentElement);
-                        }
-                        catch(Exception exception)
-                        {
-                            OutputManager.Self.AddError(exception.ToString());
-                            toReturn = new ElementAnimationsViewModel();
-
-                        }
-                    }
-                    else
-                    {
-                        toReturn = new ElementAnimationsViewModel();
-
-                    }
-
-                    toReturn.Element = currentElement;
-
-                    return toReturn;
                 }
 
+                toReturn.Element = element;
+
+                return toReturn;
             }
+
+        }
+
+        public ElementAnimationsSave GetElementAnimationsSave(ElementSave element)
+        {
+            ElementAnimationsSave model = null;
+            var fileName = GetAbsoluteAnimationFileNameFor(element);
+
+
+            if (FileManager.FileExists(fileName))
+            {
+                try
+                {
+                    model = FileManager.XmlDeserialize<ElementAnimationsSave>(fileName);
+
+                }
+                catch (Exception exception)
+                {
+                    OutputManager.Self.AddError(exception.ToString());
+                }
+            }
+
+            return model;
         }
 
         public void Save(ElementAnimationsViewModel viewModel)
@@ -107,19 +108,6 @@ namespace StateAnimationPlugin.Managers
                 var absoluteFileName = fullPathXmlForElement.RemoveExtension() + "Animations.ganx";
 
                 return absoluteFileName;
-            }
-        }
-
-        public ElementAnimationsSave GetElementAnimationsSave(ElementSave element)
-        {
-            string fileName = GetAbsoluteAnimationFileNameFor(element);
-            if (FileManager.FileExists(fileName))
-            {
-                return FileManager.XmlDeserialize<ElementAnimationsSave>(fileName);
-            }
-            else
-            {
-                return null;
             }
         }
     }

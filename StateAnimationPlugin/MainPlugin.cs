@@ -18,6 +18,8 @@ using Gum.DataTypes;
 using Gum;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using Gum.Responses;
+using StateAnimationPlugin.SaveClasses;
 
 namespace StateAnimationPlugin
 {
@@ -85,6 +87,9 @@ namespace StateAnimationPlugin
             this.CategoryRename += HandleCategoryRename;
             this.ElementRename += HandleElementRename;
             this.ElementDuplicate += HandleElementDuplicate;
+
+            this.GetDeleteStateResponse = HandleGetDeleteStateResponse;
+            this.GetDeleteStateCategoryResponse = HandleGetDeleteStateCategoryResponse;
         }
 
         #endregion
@@ -324,9 +329,11 @@ namespace StateAnimationPlugin
                 currentlyReferencedElement = mCurrentViewModel.Element;
             }
 
-            if (currentlyReferencedElement != SelectedState.Self.SelectedElement)
+            var element = SelectedState.Self.SelectedElement;
+            if (currentlyReferencedElement != element)
             {
-                mCurrentViewModel = AnimationCollectionViewModelManager.Self.CurrentAnimationCollectionViewModel;
+
+                mCurrentViewModel = AnimationCollectionViewModelManager.Self.GetAnimationCollectionViewModel(element);
 
                 if (mCurrentViewModel != null)
                 {
@@ -441,6 +448,110 @@ namespace StateAnimationPlugin
             }
         }
 
+        private DeleteResponse HandleGetDeleteStateResponse(StateSave state, IStateContainer container)
+        {
+            var response = new DeleteResponse();
+            response.ShouldDelete = true;
+
+            List<AnimationSave> animatedStatesReferencingState = GetAnimationsReferencingState(state, container as ElementSave);
+
+            if (animatedStatesReferencingState?.Count > 0)
+            {
+                string message = "Are you sure you want to delete this state? It is used by the following animations. Deleting this state may break the animation:\n\n";
+
+                foreach (var animation in animatedStatesReferencingState)
+                {
+                    message += animation.Name;
+                }
+
+                var result = MessageBox.Show(message, "Delete state?", MessageBoxButton.YesNo);
+
+                if (result != MessageBoxResult.Yes)
+                {
+                    response.ShouldDelete = false;
+                    response.Message = null;
+                    response.ShouldShowMessage = false; // user said 'no', no need to show a message...S
+                }
+            }
+
+            return response;
+        }
+
+        private DeleteResponse HandleGetDeleteStateCategoryResponse(StateSaveCategory category, IStateCategoryListContainer container)
+        {
+            var response = new DeleteResponse();
+            response.ShouldDelete = true;
+
+            var animatedStatesReferencingState = new HashSet<AnimationSave>();
+            
+            foreach(var state in category.States)
+            {
+                foreach(var toAdd in GetAnimationsReferencingState(state, container as ElementSave))
+                {
+                    animatedStatesReferencingState.Add(toAdd);
+                }
+            }
+
+            if (animatedStatesReferencingState?.Count > 0)
+            {
+                string message = "Are you sure you want to delete this category? It is used by the following animations. Deleting this category may break the animation:\n\n";
+
+                foreach (var animation in animatedStatesReferencingState)
+                {
+                    message += animation.Name;
+                }
+
+                var result = MessageBox.Show(message, "Delete category?", MessageBoxButton.YesNo);
+
+                if (result != MessageBoxResult.Yes)
+                {
+                    response.ShouldDelete = false;
+                    response.Message = null;
+                    response.ShouldShowMessage = false; // user said 'no', no need to show a message...S
+                }
+            }
+
+            return response;
+        }
+
+        private List<AnimationSave> GetAnimationsReferencingState(StateSave state, ElementSave element)
+        {
+            List<AnimationSave> animatedStatesReferencingState = null;
+            if (element != null)
+            {
+                SaveClasses.ElementAnimationsSave model;
+                if (element == mCurrentViewModel?.Element)
+                {
+                    model = mCurrentViewModel.BackingData;
+                }
+                else
+                {
+                    model = AnimationCollectionViewModelManager.Self.GetElementAnimationsSave(element);
+                }
+
+                animatedStatesReferencingState = new List<AnimationSave>();
+
+                var category = element.Categories.FirstOrDefault(item => item.States.Contains(state));
+
+                var stateName = category != null
+                    ? $"{category.Name}/{state.Name}"
+                    : state.Name;
+
+                foreach (var animation in model.Animations)
+                {
+                    foreach (var animatedState in animation.States)
+                    {
+                        if (animatedState.StateName == stateName)
+                        {
+                            animatedStatesReferencingState.Add(animation);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            return animatedStatesReferencingState;
+        }
 
 
 

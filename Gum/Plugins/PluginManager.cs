@@ -16,6 +16,7 @@ using Gum.Gui.Windows;
 using ToolsUtilities;
 using Gum.DataTypes.Behaviors;
 using RenderingLibrary.Graphics;
+using Gum.Responses;
 
 namespace Gum.Plugins
 {
@@ -376,8 +377,6 @@ namespace Gum.Plugins
                 }
             }
         }
-
-
 
         private AggregateCatalog CreateCatalog()
         {
@@ -1036,6 +1035,84 @@ namespace Gum.Plugins
                 nameof(CreateRenderableForType));
 
             return toReturn;
+        }
+
+        internal DeleteResponse GetDeleteStateResponse(StateSave stateSave, IStateContainer element)
+        {
+            DeleteResponse response = new DeleteResponse();
+            response.ShouldDelete = true;
+            response.ShouldShowMessage = false;
+
+#if !TEST
+            // let internal plugins handle changes first before external plugins.
+            var sortedPlugins = this.Plugins.OrderBy(item => !(item is InternalPlugin)).ToArray();
+            foreach (var plugin in sortedPlugins)
+            {
+                PluginContainer container = this.PluginContainers[plugin];
+
+                if (container.IsEnabled && plugin.GetDeleteStateResponse != null)
+                {
+                    try
+                    {
+                        var responseInternal = plugin.GetDeleteStateResponse(stateSave, element);
+
+                        if(responseInternal.ShouldDelete == false)
+                        {
+                            response = responseInternal;
+                            break;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+#if DEBUG
+                        MessageBox.Show("Error in plugin " + plugin.FriendlyName + ":\n\n" + e.ToString());
+#endif
+                        container.Fail(e, $"Failed in {nameof(GetDeleteStateResponse)}");
+                    }
+                }
+            }
+
+#endif
+            return response;
+        }
+
+        internal DeleteResponse GetDeleteStateCategoryResponse(StateSaveCategory stateSaveCategory, IStateCategoryListContainer element)
+        {
+            DeleteResponse response = new DeleteResponse();
+            response.ShouldDelete = true;
+            response.ShouldShowMessage = false;
+
+#if !TEST
+            // let internal plugins handle changes first before external plugins.
+            var sortedPlugins = this.Plugins.OrderBy(item => !(item is InternalPlugin)).ToArray();
+            foreach (var plugin in sortedPlugins)
+            {
+                PluginContainer container = this.PluginContainers[plugin];
+
+                if (container.IsEnabled && plugin.GetDeleteStateCategoryResponse != null)
+                {
+                    try
+                    {
+                        var responseInternal = plugin.GetDeleteStateCategoryResponse(stateSaveCategory, element);
+
+                        if (responseInternal.ShouldDelete == false)
+                        {
+                            response = responseInternal;
+                            break;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+#if DEBUG
+                        MessageBox.Show("Error in plugin " + plugin.FriendlyName + ":\n\n" + e.ToString());
+#endif
+                        container.Fail(e, $"Failed in {nameof(GetDeleteStateCategoryResponse)}");
+                    }
+                }
+            }
+
+#endif
+            return response;
         }
 
         #endregion

@@ -36,8 +36,8 @@ namespace StateAnimationPlugin.ViewModels
 
         public string Name 
         { 
-            get { return Get<string>(); }
-            set { Set(value); }
+            get => Get<string>(); 
+            set => Set(value); 
         }
 
         public float Length 
@@ -50,20 +50,12 @@ namespace StateAnimationPlugin.ViewModels
                 }
                 else
                 {
-                    var toReturn = Keyframes.Max(item => item.Time + item.Length);
-
-                    return toReturn;
+                    return Keyframes.Max(item => item.Time + item.Length);
                 }
             }
         }
 
-        public bool Loops
-        {
-            get
-            {
-                return mLoops;
-            }
-        }
+        public bool Loops => mLoops;
 
         public BitmapFrame ButtonBitmapFrame
         {

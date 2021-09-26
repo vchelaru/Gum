@@ -8,6 +8,7 @@ using Gum.DataTypes.Variables;
 using System.Windows.Forms;
 using Gum.DataTypes.Behaviors;
 using RenderingLibrary.Graphics;
+using Gum.Responses;
 
 namespace Gum.Plugins.BaseClasses
 {
@@ -103,6 +104,10 @@ namespace Gum.Plugins.BaseClasses
 
 
         public event Func<string, IRenderableIpso> CreateRenderableForType;
+
+        // Vic says - why did we make these events? It adds lots of overhead, and I dont' think it helps in any way
+        public Func<StateSave, IStateContainer, DeleteResponse> GetDeleteStateResponse;
+        public Func<StateSaveCategory, IStateCategoryListContainer, DeleteResponse> GetDeleteStateCategoryResponse;
 
         #endregion
 

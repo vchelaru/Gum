@@ -4,6 +4,7 @@ using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Plugins;
+using Gum.Responses;
 using Gum.ToolCommands;
 using Gum.ToolStates;
 using StateAnimationPlugin.Views;
@@ -51,10 +52,16 @@ namespace Gum.Commands
 
         public void RemoveState(StateSave stateSave, IStateContainer stateContainer)
         {
+            var deleteResponse = new DeleteResponse();
+            deleteResponse.ShouldDelete = true;
+            deleteResponse.ShouldShowMessage = false;
+
             var behaviorNeedingState = GetBehaviorsNeedingState(stateSave);
 
             if (behaviorNeedingState.Any())
             {
+                deleteResponse.ShouldDelete = false;
+                deleteResponse.ShouldShowMessage = true;
                 string message =
                     "This state cannot be removed because it is needed by the following behavior(s):";
 
@@ -63,13 +70,32 @@ namespace Gum.Commands
                     message += "\n" + behavior.Name;
                 }
 
-                MessageBox.Show(message);
+                deleteResponse.Message = message;
+
             }
-            else if(stateSave.ParentContainer?.DefaultState == stateSave)
+
+            if(deleteResponse.ShouldDelete && stateSave.ParentContainer?.DefaultState == stateSave)
             {
                 string message =
                     "This state cannot be removed because it is the default state.";
-                MessageBox.Show(message);
+
+                deleteResponse.ShouldDelete = false;
+                deleteResponse.Message = message;
+                deleteResponse.ShouldShowMessage = false;
+            }
+
+            if(deleteResponse.ShouldDelete)
+            {
+                deleteResponse = PluginManager.Self.GetDeleteStateResponse(stateSave, stateContainer);
+            }
+
+
+            if(deleteResponse.ShouldDelete == false)
+            {
+                if(deleteResponse.ShouldShowMessage)
+                {
+                    GumCommands.Self.GuiCommands.ShowMessage(deleteResponse.Message);
+                }
             }
             else
             {

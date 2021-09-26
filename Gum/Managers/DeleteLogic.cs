@@ -3,6 +3,7 @@ using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Gui.Windows;
 using Gum.Plugins;
+using Gum.Responses;
 using Gum.ToolCommands;
 using Gum.ToolStates;
 using Gum.Wireframe;
@@ -292,11 +293,18 @@ namespace Gum.Managers
 
         public void RemoveStateCategory(StateSaveCategory category, IStateCategoryListContainer stateCategoryListContainer)
         {
+            var deleteResponse = new DeleteResponse();
+            deleteResponse.ShouldDelete = true;
+            deleteResponse.ShouldShowMessage = false;
+
             // This category can only be removed if no behaviors require it
             var behaviorsNeedingCategory = GetBehaviorsNeedingCategory(category, stateCategoryListContainer as ComponentSave);
 
             if (behaviorsNeedingCategory.Any())
             {
+                deleteResponse.ShouldDelete = false;
+                deleteResponse.ShouldShowMessage = true;
+
                 string message =
                     "This category cannot be removed because it is needed by the following behavior(s):";
 
@@ -305,7 +313,21 @@ namespace Gum.Managers
                     message += "\n" + behavior.Name;
                 }
 
-                MessageBox.Show(message);
+                deleteResponse.Message = message;
+            }
+
+
+            if(deleteResponse.ShouldDelete)
+            {
+                deleteResponse = PluginManager.Self.GetDeleteStateCategoryResponse(category, stateCategoryListContainer);
+            }
+
+            if(deleteResponse.ShouldDelete == false)
+            {
+                if(deleteResponse.ShouldShowMessage)
+                {
+                    GumCommands.Self.GuiCommands.ShowMessage(deleteResponse.Message);
+                }
             }
             else
             {

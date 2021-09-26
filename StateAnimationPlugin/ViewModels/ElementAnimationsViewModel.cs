@@ -148,6 +148,8 @@ namespace StateAnimationPlugin.ViewModels
             set;
         }
 
+        public ElementAnimationsSave BackingData { get; private set; }
+
         #endregion
 
         #region Events
@@ -178,9 +180,12 @@ namespace StateAnimationPlugin.ViewModels
 
         public static ElementAnimationsViewModel FromSave(ElementAnimationsSave save, Gum.DataTypes.ElementSave element)
         {
+            
             ElementAnimationsViewModel toReturn = new ElementAnimationsViewModel();
 
-            foreach(var animation in save.Animations)
+            toReturn.BackingData = save;
+
+            foreach (var animation in save.Animations)
             {
                 var vm = AnimationViewModel.FromSave(animation, element);
                 toReturn.Animations.Add(vm);
