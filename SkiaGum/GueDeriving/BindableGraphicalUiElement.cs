@@ -153,6 +153,21 @@ namespace SkiaGum.GueDeriving
             }
         }
 
+        Func<Task> dragOff;
+        public Func<Task> DragOff
+        {
+            get => dragOff;
+            set
+            {
+                dragOff = value;
+
+                if (this.EffectiveManagers != null && dragOff != null)
+                {
+                    this.EffectiveManagers.EnableTouchEvents = true;
+                }
+            }
+        }
+
         public event Action<object, BindingContextChangedEventArgs> BindingContextChanged;
 
         #endregion

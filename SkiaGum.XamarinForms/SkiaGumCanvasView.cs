@@ -134,9 +134,16 @@ namespace SkiaGum
                             }
                         }
 
-                        if (isWithinThreshold && elementPushed?.DragAsync != null)
+                        if (isWithinThreshold)
                         {
-                            await elementPushed.DragAsync(touchX, touchY);
+                            if (elementPushed?.DragAsync != null)
+                            {
+                                await elementPushed.DragAsync(touchX, touchY);
+                            }
+                            if (elementPushed?.DragOff != null && elementPushed.IsPointInside(touchX, touchY) == false)
+                            {
+                                await elementPushed.DragOff();
+                            }
                         }
                     }
 
