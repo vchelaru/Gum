@@ -17,6 +17,8 @@ using ToolsUtilities;
 using Gum.DataTypes.Behaviors;
 using RenderingLibrary.Graphics;
 using Gum.Responses;
+using System.Runtime.CompilerServices;
+using Gum.Wireframe;
 
 namespace Gum.Plugins
 {
@@ -302,6 +304,8 @@ namespace Gum.Plugins
             #endregion
         }
 
+
+
         private Assembly currentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
         {
             foreach (Assembly item in mExternalAssemblies)
@@ -560,9 +564,12 @@ namespace Gum.Plugins
         #region Methods called by Gum when certain events happen
 
 
-        void CallMethodOnPlugin(Action<PluginBase> methodToCall, string methodName)
+        void CallMethodOnPlugin(Action<PluginBase> methodToCall, [CallerMemberName]string methodName = null)
         {
-
+            if(this.Plugins == null)
+            {
+                throw new InvalidOperationException("Plugins haven't yet been initialized");
+            }
 #if !TEST
             // let internal plugins handle changes first before external plugins.
             var sortedPlugins = this.Plugins.OrderBy(item => !(item is InternalPlugin)).ToArray();
@@ -1009,17 +1016,13 @@ namespace Gum.Plugins
         internal void BehaviorReferencesChanged(ElementSave elementSave)
         {
             CallMethodOnPlugin(
-                (plugin) => plugin.CallBehaviorReferencesChanged(elementSave),
-                nameof(BehaviorReferencesChanged)
-            );
+                (plugin) => plugin.CallBehaviorReferencesChanged(elementSave));
         }
 
         internal void WireframeRefreshed()
         {
             CallMethodOnPlugin(
-                (plugin) => plugin.CallWireframeRefreshed(),
-                nameof(WireframeRefreshed)
-                );
+                (plugin) => plugin.CallWireframeRefreshed());
         }
 
         internal IRenderableIpso CreateRenderableForType(string type)
@@ -1119,6 +1122,27 @@ namespace Gum.Plugins
 
 #endif
             return response;
+        }
+
+        internal void XnaInitialized()
+        {
+            CallMethodOnPlugin(plugin => plugin.CallXnaInitialized());
+        }
+        internal void HandleWireframeResized()
+        {
+            CallMethodOnPlugin(plugin => plugin.CallWireframeResized());
+        }
+
+        internal void WireframeInitialized(WireframeControl wireframeControl1, Panel gumEditorPanel)
+        {
+            CallMethodOnPlugin(plugin => plugin.CallWireframeInitialized(wireframeControl1, gumEditorPanel));
+
+        }
+
+        internal void CameraChanged()
+        {
+            CallMethodOnPlugin(plugin => plugin.CallCameraChanged());
+
         }
 
         #endregion

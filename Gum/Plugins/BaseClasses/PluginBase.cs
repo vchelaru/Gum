@@ -9,6 +9,7 @@ using System.Windows.Forms;
 using Gum.DataTypes.Behaviors;
 using RenderingLibrary.Graphics;
 using Gum.Responses;
+using Gum.Wireframe;
 
 namespace Gum.Plugins.BaseClasses
 {
@@ -115,8 +116,19 @@ namespace Gum.Plugins.BaseClasses
         public event Func<string, IRenderableIpso> CreateRenderableForType;
 
         // Vic says - why did we make these events? It adds lots of overhead, and I dont' think it helps in any way
+        // Oct 6, 2021 - If we have an event, we can have the null check inside the plugin base, which makes
+        // the plugin manager simpler. If we don't have an event with a null check in the plugin, then the check
+        // has to be made in the PluginManager. Glue uses this approach.
+        // Which is better? I don't know yet, so I'm going to keep Gum using the event approach and Glue using the non-event
+        // approach to see if a preference emerges.
         public Func<StateSave, IStateContainer, DeleteResponse> GetDeleteStateResponse;
         public Func<StateSaveCategory, IStateCategoryListContainer, DeleteResponse> GetDeleteStateCategoryResponse;
+
+        public event Action<WireframeControl, Panel> WireframeInitialized;
+        public event Action CameraChanged;
+        public event Action XnaInitialized;
+        public event Action WireframeResized;
+
 
         #endregion
 
@@ -418,6 +430,13 @@ namespace Gum.Plugins.BaseClasses
                 return VariableExcluded(defaultVariable, rvf);
             }
         }
+
+        public void CallWireframeInitialized(WireframeControl wireframeControl1, Panel gumEditorPanel) => 
+            WireframeInitialized?.Invoke(wireframeControl1, gumEditorPanel);
+
+        public void CallCameraChanged() => CameraChanged?.Invoke();
+        public void CallXnaInitialized() => XnaInitialized?.Invoke();
+        public void CallWireframeResized() => WireframeResized?.Invoke();
         
         #endregion
     }

@@ -100,10 +100,17 @@ namespace Gum.Wireframe
                 Math.Min(Math.Max(mHorizontalScrollBar.Minimum, (int)Managers.Renderer.Camera.X), mHorizontalScrollBar.Maximum);
         }
 
-        public void SetDisplayedArea(int width, int height)
+        public void SetDisplayedArea(int? width = null, int? height = null)
         {
-            displayedAreaWidth = width;
-            displayedAreaHeight = height;
+            if(width != null)
+            {
+                displayedAreaWidth = width.Value;
+            }
+
+            if(height != null)
+            {
+                displayedAreaHeight = height.Value;
+            }
 
             UpdateScrollBars();
 

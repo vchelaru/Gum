@@ -46,7 +46,6 @@ namespace Gum
         private System.Windows.Forms.Timer FileWatchTimer;
         private FlatRedBall.AnimationEditorForms.Controls.WireframeEditControl WireframeEditControl;
         private Wireframe.WireframeControl wireframeControl1;
-        ScrollBarControlLogic scrollBarControlLogic;
         public System.Windows.Forms.FlowLayoutPanel ToolbarPanel;
         Panel gumEditorPanel;
         StateView stateView;
@@ -107,6 +106,11 @@ namespace Gum
             MenuStripManager.Self.Initialize(this);
 
             PluginManager.Self.Initialize(this);
+
+            // do this after initializing the plugins. This is separate from where the initialize call is made, but it must
+            // happen after plugins are created:
+            PluginManager.Self.WireframeInitialized(wireframeControl1, gumEditorPanel);
+
 
             StandardElementsManager.Self.Initialize();
 
@@ -221,27 +225,16 @@ namespace Gum
             gumEditorPanel = new Panel();
 
             // place the scrollbars first so they are in front of everything
-            scrollBarControlLogic = new ScrollBarControlLogic(gumEditorPanel, wireframeControl1);
-            scrollBarControlLogic.SetDisplayedArea(800, 600);
+            // Update October 6, 2021
+            // The scrollbars have been moved
+            // to a plugin. So now they are not 
+            // added in the same order. This seems
+            // to be okay...
+
             wireframeControl1.CameraChanged += () =>
             {
-                if (ProjectManager.Self.GumProjectSave != null)
-                {
-
-                    scrollBarControlLogic.SetDisplayedArea(
-                        ProjectManager.Self.GumProjectSave.DefaultCanvasWidth,
-                        ProjectManager.Self.GumProjectSave.DefaultCanvasHeight);
-                }
-                else
-                {
-                    scrollBarControlLogic.SetDisplayedArea(800, 600);
-                }
-
-                scrollBarControlLogic.UpdateScrollBars();
-                scrollBarControlLogic.UpdateScrollBarsToCameraPosition();
-
+                PluginManager.Self.CameraChanged();
             };
-
 
             //... add it here, so it can be done after scroll bars and other controls
             gumEditorPanel.Controls.Add(this.wireframeControl1);
@@ -286,13 +279,13 @@ namespace Gum
         void HandleXnaInitialize()
         {
             this.wireframeControl1.Initialize(WireframeEditControl, gumEditorPanel);
-            scrollBarControlLogic.Managers = global::RenderingLibrary.SystemManagers.Default;
-            scrollBarControlLogic.UpdateScrollBars();
+            PluginManager.Self.XnaInitialized();
+
 
             this.wireframeControl1.Parent.Resize += (not, used) =>
             {
                 UpdateWireframeControlSizes();
-                scrollBarControlLogic.UpdateScrollBars();
+                PluginManager.Self.HandleWireframeResized();
             };
 
             UpdateWireframeControlSizes();

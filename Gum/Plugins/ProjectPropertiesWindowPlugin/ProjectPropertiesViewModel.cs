@@ -95,6 +95,12 @@ namespace Gum.Plugins.PropertiesWindowPlugin
             set => Set(value);
         }
 
+        public bool ShowLocalization
+        {
+            get => Get<bool>();
+            set => Set(value);
+        }
+
         public bool IsUpdatingFromModel { get; private set; }
 
         public ProjectPropertiesViewModel()
@@ -124,6 +130,7 @@ namespace Gum.Plugins.PropertiesWindowPlugin
 
             LocalizationFile = this.gumProject.LocalizationFile;
             LanguageIndex = this.gumProject.CurrentLanguageIndex;
+            ShowLocalization = this.gumProject.ShowLocalizationInGum;
             IsUpdatingFromModel = false;
 
         }
@@ -167,6 +174,7 @@ namespace Gum.Plugins.PropertiesWindowPlugin
 
             this.gumProject.LocalizationFile = LocalizationFile;
             this.gumProject.CurrentLanguageIndex = LanguageIndex;
+            this.gumProject.ShowLocalizationInGum = ShowLocalization;
         }
 
 

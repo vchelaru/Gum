@@ -88,6 +88,10 @@ namespace Gum.Plugins.PropertiesWindowPlugin
                     case nameof(viewModel.LanguageIndex):
                         LocalizationManager.CurrentLanguage = viewModel.LanguageIndex;
                         break;
+                    case nameof(viewModel.ShowLocalization):
+                        shouldSaveAndRefresh = true;
+
+                        break;
                 }
 
                 if(shouldSaveAndRefresh)

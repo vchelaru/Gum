@@ -251,7 +251,7 @@ namespace Gum.Wireframe
 
         public void ApplyLocalization(GraphicalUiElement gue, string forcedId = null)
         {
-            var isLocalized = true;
+            var shouldLocalize = GumState.Self.ProjectState.GumProjectSave.ShowLocalizationInGum;
             //if(gue.Tag is InstanceSave instance)
             //{
             //    var rfv = new RecursiveVariableFinder(GumState.Self.SelectedState.SelectedStateSave);
@@ -260,7 +260,7 @@ namespace Gum.Wireframe
             //    isLocalized = value;
             //}
 
-            if(isLocalized)
+            if(shouldLocalize)
             {
                 var stringId = forcedId;
                 if(string.IsNullOrWhiteSpace(stringId) && gue.RenderableComponent is Text asText)
