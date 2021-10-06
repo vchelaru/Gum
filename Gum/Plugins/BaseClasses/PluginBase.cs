@@ -57,6 +57,13 @@ namespace Gum.Plugins.BaseClasses
 
         public event Action<VariableSave, List<Attribute>> FillVariableAttributes;
         public event Action<string, StateSave> AddAndRemoveVariablesForType;
+        /// <summary>
+        /// Returns whether the argument variable should be excluded from editing in the UI.
+        /// This allows plugins to limit the variables which are displayed in certain contexts. 
+        /// For example, Gum could be used to create UI for a UI system which doesn't support some
+        /// of Gum's properties. These variables could be excluded by a plugin to make the editing experience
+        /// more natural and less error prone.
+        /// </summary>
         public event Func<VariableSave, RecursiveVariableFinder, bool> VariableExcluded;
         public event Action WireframeRefreshed;
 
@@ -80,6 +87,8 @@ namespace Gum.Plugins.BaseClasses
         /// plugins may need to respond to this so it is treated as an event.
         /// </remarks>
         public event Action<ElementSave, string> VariableAdd;
+        public event Action<ElementSave, string> VariableDelete;
+
         public event Action<ElementSave> ElementSelected;
         public event Action<TreeNode> TreeNodeSelected;
         public event Action<TreeNode> StateWindowTreeNodeSelected;
@@ -287,6 +296,9 @@ namespace Gum.Plugins.BaseClasses
 
         public void CallVariableAdd(ElementSave elementSave, string variableName) =>
             VariableAdd?.Invoke(elementSave, variableName);
+
+        public void CallVariableDelete(ElementSave elementSave, string variableName) =>
+            VariableDelete?.Invoke(elementSave, variableName);
 
         public void CallVariableSet(ElementSave parentElement, InstanceSave instance, string changedMember, object oldValue)
         {

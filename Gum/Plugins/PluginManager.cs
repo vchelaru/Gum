@@ -806,6 +806,12 @@ namespace Gum.Plugins
                 nameof(VariableAdd));
         }
 
+        internal void VariableDelete(ElementSave elementSave, string variableName)
+        {
+            CallMethodOnPlugin((plugin) => plugin.CallVariableDelete(elementSave, variableName),
+                nameof(VariableDelete));
+        }
+
         internal void VariableSet(ElementSave parentElement, InstanceSave instance, string changedMember, object oldValue)
         {
             CallMethodOnPlugin((plugin) => plugin.CallVariableSet(parentElement, instance, changedMember, oldValue),

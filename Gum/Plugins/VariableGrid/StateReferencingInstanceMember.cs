@@ -300,7 +300,7 @@ namespace Gum.PropertyGridHelpers
                 }
                 else
                 {
-                    ContextMenuEvents.Add($"Un-expose Variable {VariableSave.ExposedAsName}", HandleUnExposeVariableClick);
+                    ContextMenuEvents.Add($"Un-expose Variable {VariableSave.ExposedAsName}", HandleUnexposeVariableClick);
                 }
             }
             else
@@ -318,18 +318,20 @@ namespace Gum.PropertyGridHelpers
             }
         }
 
-        private void HandleUnExposeVariableClick(object sender, System.Windows.RoutedEventArgs e)
+        private void HandleUnexposeVariableClick(object sender, System.Windows.RoutedEventArgs e)
         {
             // Find this variable in the source instance and make it not exposed
             VariableSave variableSave = this.VariableSave;
-
+            
             if (variableSave != null)
             {
+                var oldExposedName = variableSave.ExposedAsName;
                 variableSave.ExposedAsName = null;
-                GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
-            }
 
-            PropertyGridManager.Self.RefreshUI(force:true);
+                PluginManager.Self.VariableDelete(mElementSave, oldExposedName);
+                GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+                PropertyGridManager.Self.RefreshUI(force: true);
+            }
         }
 
         private void HandleExposeVariableClick(object sender, System.Windows.RoutedEventArgs e)
@@ -443,18 +445,6 @@ namespace Gum.PropertyGridHelpers
             }
         }
 
-        private void HandleUnexposeVariableClick(object sender, System.Windows.RoutedEventArgs e)
-        {
-            // Find this variable in the source instance and make it not exposed
-            VariableSave variableSave = this.VariableSave;
-
-            if (variableSave != null)
-            {
-                variableSave.ExposedAsName = null;
-                GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
-                PropertyGridManager.Self.RefreshUI();
-            }
-        }
 
         private object HandleCustomGet(object instance)
         {
