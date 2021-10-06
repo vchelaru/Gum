@@ -378,44 +378,54 @@ namespace Gum.DataTypes
             }
             return false;
 #else
-            if(variableSave.Value != null && variableSave.Value is int)
+            if(variableSave.Value != null)
             {
+                int valueAsInt = 0;
+                if(variableSave.Value is int asInt)
+                {
+                    valueAsInt = asInt;
+                }
+                else if(variableSave.Value is long asLong)
+                {
+                    valueAsInt = (int)asLong;
+                }
+
                 switch (variableSave.Type)
                 {
                     case "DimensionUnitType":
                     case "Gum.DataTypes.DimensionUnitType":
-                        variableSave.Value = (Gum.DataTypes.DimensionUnitType)variableSave.Value;
+                        variableSave.Value = (Gum.DataTypes.DimensionUnitType)valueAsInt;
                         
                         return true;
                     case "VerticalAlignment":
                     case "RenderingLibrary.Graphics.VerticalAlignment":
 
-                        variableSave.Value = (global::RenderingLibrary.Graphics.VerticalAlignment)variableSave.Value;
+                        variableSave.Value = (global::RenderingLibrary.Graphics.VerticalAlignment)valueAsInt;
                         return true;
                     case "HorizontalAlignment":
                     case "RenderingLibrary.Graphics.HorizontalAlignment":
-                        variableSave.Value = (global::RenderingLibrary.Graphics.HorizontalAlignment)variableSave.Value;
+                        variableSave.Value = (global::RenderingLibrary.Graphics.HorizontalAlignment)valueAsInt;
                         return true;
                     case "PositionUnitType":
                     case "Gum.Managers.PositionUnitType":
-                        variableSave.Value = (Gum.Managers.PositionUnitType)variableSave.Value;
+                        variableSave.Value = (Gum.Managers.PositionUnitType)valueAsInt;
                         return true;
                     case "GeneralUnitType":
                     case "Gum.Converters.GeneralUnitType":
-                        variableSave.Value = (Gum.Converters.GeneralUnitType)variableSave.Value;
+                        variableSave.Value = (Gum.Converters.GeneralUnitType)valueAsInt;
                         return true;
                     case "Gum.RenderingLibrary.Blend":
                     case "Blend":
-                        variableSave.Value = (Gum.RenderingLibrary.Blend)variableSave.Value;
+                        variableSave.Value = (Gum.RenderingLibrary.Blend)valueAsInt;
                         return true;
                     case "Gum.Managers.TextureAddress":
                     case "TextureAddress":
                     
-                        variableSave.Value = (TextureAddress)variableSave.Value;
+                        variableSave.Value = (TextureAddress)valueAsInt;
                         return true;
                     case "Gum.Managers.ChildrenLayout":         
                     case "ChildrenLayout":
-                        variableSave.Value = (ChildrenLayout)variableSave.Value;
+                        variableSave.Value = (ChildrenLayout)valueAsInt;
                         return true;
                     default:
                         return false;
