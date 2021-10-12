@@ -83,15 +83,23 @@ namespace SkiaPlugin.Renderables
 
             if (!string.IsNullOrWhiteSpace(sourceFile))
             {
-                var sourceFileAbsolute =
-                    FileManager.RemoveDotDotSlash(ProjectState.Self.ProjectDirectory + sourceFile);
-                if (System.IO.File.Exists(sourceFileAbsolute))
+                try
                 {
-                    using (var fileStream = System.IO.File.OpenRead(sourceFileAbsolute))
+                    var sourceFileAbsolute =
+                        FileManager.RemoveDotDotSlash(ProjectState.Self.ProjectDirectory + sourceFile);
+                    if (System.IO.File.Exists(sourceFileAbsolute))
                     {
-                        skiaSvg = new SkiaSharp.Extended.Svg.SKSvg();
-                        skiaSvg.Load(fileStream);
+                        using (var fileStream = System.IO.File.OpenRead(sourceFileAbsolute))
+                        {
+                            skiaSvg = new SkiaSharp.Extended.Svg.SKSvg();
+                            skiaSvg.Load(fileStream);
+                        }
                     }
+                }
+                catch
+                {
+                    // do nothing? Report a problem?
+                    skiaSvg = null;
                 }
             }
 

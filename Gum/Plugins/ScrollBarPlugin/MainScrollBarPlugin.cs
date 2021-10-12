@@ -30,6 +30,15 @@ namespace Gum.Plugins.ScrollBarPlugin
 
         private void HandleElementSelected(ElementSave obj)
         {
+
+            //////////////////Early Out////////////////////
+            if(obj == null)
+            {
+                return;
+            }
+
+            ///////////////End Early Out///////////////////
+
             var ipso = GumState.Self.SelectedState.SelectedIpso;
 
             float minX = 0;

@@ -106,7 +106,7 @@ namespace Gum.Managers
             }
             else
             {
-                return stringID + " - UNTRANSLATED";
+                return stringID + "(loc)";
             }
         }
 

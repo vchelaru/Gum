@@ -30,18 +30,18 @@ namespace SkiaGum.Renderables
         public bool IsEndRounded { get; set; }
 
 
-        protected override SKPaint GetPaint(SKRect boundingRect)
+        protected override SKPaint GetPaint(SKRect boundingRect, float absoluteRotation)
         {
-            var paint = base.GetPaint(boundingRect);
+            var paint = base.GetPaint(boundingRect, absoluteRotation);
             paint.StrokeCap = IsEndRounded ? SKStrokeCap.Round : SKStrokeCap.Butt;
             return paint;
 
 
         }
 
-        public override void DrawBound(SKRect boundingRect, SKCanvas canvas)
+        public override void DrawBound(SKRect boundingRect, SKCanvas canvas, float absoluteRotation)
         {
-            using (var paint = GetPaint(boundingRect))
+            using (var paint = GetPaint(boundingRect, absoluteRotation))
             {
                 var adjustedRect = new SKRect(
                     boundingRect.Left + Thickness / 2,

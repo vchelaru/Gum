@@ -85,6 +85,9 @@ namespace SkiaPlugin.Managers
 
                 AddStrokeAndFilledVariables(filledCircleState);
 
+                filledCircleState.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation" });
+
+
             }
 
             return filledCircleState;

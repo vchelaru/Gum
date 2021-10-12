@@ -1,4 +1,5 @@
-﻿using SkiaGum.Renderables;
+﻿using Gum.Converters;
+using SkiaGum.Renderables;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
@@ -6,16 +7,19 @@ using System.Text;
 
 namespace SkiaGum.GueDeriving
 {
-    public class PolygonRuntime : BindableGraphicalUiElement
+    public class PolygonRuntime : SkiaShapeRuntime
     {
         #region Fields/Properties
+
+        protected override RenderableBase ContainedRenderable => ContainedPolygon;
+
 
         Polygon mContainedPolygon;
         Polygon ContainedPolygon
         {
             get
             {
-                if(mContainedPolygon == null)
+                if (mContainedPolygon == null)
                 {
                     mContainedPolygon = this.RenderableComponent as Polygon;
                 }
@@ -23,10 +27,10 @@ namespace SkiaGum.GueDeriving
             }
         }
 
-        public SKColor Color
+        public bool IsClosed
         {
-            get => ContainedPolygon.Color;
-            set => ContainedPolygon.Color = value;
+            get => ContainedPolygon.IsClosed;
+            set => ContainedPolygon.IsClosed = false;
         }
 
         public List<SKPoint> Points
@@ -35,11 +39,23 @@ namespace SkiaGum.GueDeriving
             set => ContainedPolygon.Points = value;
         }
 
+
+        public GeneralUnitType PointXUnits
+        {
+            get => ContainedPolygon.PointXUnits;
+            set => ContainedPolygon.PointXUnits = value;
+        }
+        public GeneralUnitType PointYUnits
+        {
+            get => ContainedPolygon.PointYUnits;
+            set => ContainedPolygon.PointYUnits = value;
+        }
+
         #endregion
 
         public PolygonRuntime(bool fullInstantiation = true)
         {
-            if(fullInstantiation)
+            if (fullInstantiation)
             {
                 SetContainedObject(new Polygon());
                 // If width and height are 0, it won't draw

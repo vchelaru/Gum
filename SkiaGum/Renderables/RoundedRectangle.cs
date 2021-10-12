@@ -20,9 +20,9 @@ namespace SkiaGum.Renderables
         }
 
 
-        public override void DrawBound(SKRect boundingRect, SKCanvas canvas)
+        public override void DrawBound(SKRect boundingRect, SKCanvas canvas, float absoluteRotation)
         {
-            using (var paint = GetPaint(boundingRect))
+            using (var paint = GetPaint(boundingRect, absoluteRotation))
             {
                 var rotation = this.GetAbsoluteRotation();
 

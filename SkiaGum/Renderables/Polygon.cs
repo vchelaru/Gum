@@ -1,4 +1,5 @@
-﻿using RenderingLibrary;
+﻿using Gum.Converters;
+using RenderingLibrary;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
@@ -8,10 +9,15 @@ namespace SkiaGum.Renderables
 {
     class Polygon : RenderableBase
     {
+        public bool IsClosed { get; set; } = true;
+
         public List<SKPoint> Points
         {
             get; set;
         }
+
+        public GeneralUnitType PointXUnits { get; set; } = GeneralUnitType.PixelsFromSmall;
+        public GeneralUnitType PointYUnits { get; set; } = GeneralUnitType.PixelsFromSmall;
 
         public Polygon()
         {
@@ -20,44 +26,69 @@ namespace SkiaGum.Renderables
             Points = new List<SKPoint>();
             Points.Add(new SKPoint(0, -4));
             Points.Add(new SKPoint(16, 0));
-            Points.Add(new SKPoint(0,  4));
+            Points.Add(new SKPoint(0, 4));
 
         }
 
-        public override void DrawBound(SKRect boundingRect, SKCanvas canvas)
+        public override void DrawBound(SKRect boundingRect, SKCanvas canvas, float absoluteRotation)
         {
-
-            SKMatrix scaleMatrix = SKMatrix.MakeScale(1, 1);
-            //// Gum uses counter clockwise rotation, Skia uses clockwise, so invert:
-            SKMatrix rotationMatrix = SKMatrix.MakeRotationDegrees(-Rotation);
-            SKMatrix translateMatrix = SKMatrix.MakeTranslation(this.GetAbsoluteX(), this.GetAbsoluteY());
-            SKMatrix result = SKMatrix.MakeIdentity();
-
-            SKMatrix.Concat(
-                ref result, rotationMatrix, scaleMatrix);
-            SKMatrix.Concat(
-                ref result, translateMatrix, result);
-            canvas.Save();
-            canvas.SetMatrix(result);
-
-
-            SKPath path = new SKPath();
-
-            path.MoveTo(Points[0]);
-
-            for(int i = 0; i < Points.Count; i++)
+            using (var paint = GetPaint(boundingRect, absoluteRotation))
             {
-                path.LineTo(Points[i]);
-            }
-            path.LineTo(Points[0]);
+                SKPath path = new SKPath();
 
-            path.Close();
-            using (var paintToUse = GetPaint(boundingRect))
+                var thisPosition = new SKPoint(boundingRect.Left, boundingRect.Top);
+
+                GetXY(boundingRect, Points[0], out float x, out float y);
+
+                path.MoveTo(new SKPoint(x, y) + thisPosition);
+
+                for (int i = 1; i < Points.Count; i++)
+                {
+                    var point = Points[i];
+                    GetXY(boundingRect, point, out x, out y);
+
+                    path.LineTo(new SKPoint(x, y) + thisPosition);
+                }
+
+                if (IsClosed)
+                {
+                    path.LineTo(Points[0] + thisPosition);
+                    path.Close();
+                }
+
+                canvas.DrawPath(path, paint);
+
+                canvas.Restore();
+            }
+        }
+
+        private void GetXY(SKRect boundingRect, SKPoint point, out float x, out float y)
+        {
+            x = point.X;
+            y = point.Y;
+            switch (PointXUnits)
             {
-                canvas.DrawPath(path, paintToUse);
+                case GeneralUnitType.PixelsFromSmall:
+                    break;
+                case GeneralUnitType.Percentage:
+                    x = x * boundingRect.Width / 100.0f;
+                    break;
+                default:
+                    throw new NotImplementedException($"Need to implement {PointXUnits}");
             }
 
-            canvas.Restore();
+            switch (PointYUnits)
+            {
+                case GeneralUnitType.PixelsFromSmall:
+                    break;
+                case GeneralUnitType.Percentage:
+                    y = y * boundingRect.Height / 100.0f;
+                    break;
+                default:
+                    throw new NotImplementedException($"Need to implement {PointYUnits}");
+
+            }
+
         }
     }
 }

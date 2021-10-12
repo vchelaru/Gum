@@ -9,11 +9,7 @@ namespace ToolsUtilities
     {
         #region Fields
 
-        public string Original
-        {
-            get;
-            private set;
-        }
+        public string Original { get; private set; }
 
         #endregion
 
@@ -45,13 +41,7 @@ namespace ToolsUtilities
 
         #region Properties
 
-        public string Extension
-        {
-            get
-            {
-                return FileManager.GetExtension(Original);
-            }
-        }
+        public string Extension { get; private set; }
 
         public string StandardizedNoPathNoExtension
         {
@@ -77,59 +67,49 @@ namespace ToolsUtilities
             }
         }
 
-        public string FullPath
-        {
-            get
-            {
-                return FileManager.RemoveDotDotSlash(FileManager.Standardize(Original, preserveCase: true, makeAbsolute: true));
-            }
+        public string FullPath { get; private set; }
 
-        }
+        public string Standardized { get; private set; }
 
-        public string Standardized
-        {
-            get
-            {
-                if(string.IsNullOrEmpty(Original))
-                {
-                    return FileManager.RemoveDotDotSlash(FileManager.Standardize("", preserveCase: false, makeAbsolute: true));
-                }
-                else
-                {
-                    return FileManager.RemoveDotDotSlash( FileManager.Standardize(Original, preserveCase: false, makeAbsolute: true));
-                }
-            }
-        }
-
-        public string StandardizedCaseSensitive
-        {
-            get
-            {
-                return FileManager.RemoveDotDotSlash(FileManager.Standardize(Original, preserveCase: true, makeAbsolute: true));
-            }
-        }
+        public string StandardizedCaseSensitive { get; private set; }
 
         #endregion
 
         public FilePath(string path)
         {
-            if(string.IsNullOrEmpty(path))
-            {
-                throw new InvalidOperationException("Cannot create a FilePath with an empty string");
-            }
             Original = path;
+            Standardized = string.IsNullOrEmpty(Original)
+                    ? FileManager.RemoveDotDotSlash(StandardizeInternal("")).ToLowerInvariant()
+                    : FileManager.RemoveDotDotSlash(StandardizeInternal(Original)).ToLowerInvariant();
+
+            StandardizedCaseSensitive =
+                FileManager.RemoveDotDotSlash(StandardizeInternal(Original));
+
+            FullPath = string.IsNullOrEmpty(Original)
+                ? FileManager.RemoveDotDotSlash(StandardizeInternal(""))
+                : FileManager.RemoveDotDotSlash(StandardizeInternal(Original));
+
+            Extension = FileManager.GetExtension(Original);
         }
 
         public override bool Equals(object obj)
         {
-            var path = obj as FilePath;
-            return path != null &&
-                   Standardized == path.Standardized;
-        }
-
-        public bool Exists()
-        {
-            return System.IO.File.Exists(this.StandardizedCaseSensitive);
+            if (obj is FilePath)
+            {
+                var path = obj as FilePath;
+                return path != null &&
+                       Standardized == path.Standardized;
+            }
+            else if (obj is string)
+            {
+                var path = new FilePath(obj as string);
+                return path != null &&
+                       Standardized == path.Standardized;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         public FilePath GetDirectoryContainingThis()
@@ -142,6 +122,11 @@ namespace ToolsUtilities
             var hashCode = 354063820;
             hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Standardized);
             return hashCode;
+        }
+
+        public bool Exists()
+        {
+            return System.IO.File.Exists(this.StandardizedCaseSensitive);
         }
 
         public bool IsRootOf(FilePath otherFilePath)
@@ -159,6 +144,70 @@ namespace ToolsUtilities
         public override string ToString()
         {
             return StandardizedCaseSensitive;
+        }
+
+        static void ReplaceSlashes(ref string stringToReplace)
+        {
+            bool isNetwork = false;
+            if (stringToReplace.StartsWith("\\\\"))
+            {
+                stringToReplace = stringToReplace.Substring(2);
+                isNetwork = true;
+            }
+
+            stringToReplace = stringToReplace.Replace("\\", "/");
+
+            if (isNetwork)
+            {
+                stringToReplace = "\\\\" + stringToReplace;
+            }
+        }
+
+        private string StandardizeInternal(string fileNameToFix)
+        {
+            if (fileNameToFix == null)
+                return null;
+
+            bool isNetwork = fileNameToFix.StartsWith("\\\\");
+
+            ReplaceSlashes(ref fileNameToFix);
+
+            if (!isNetwork)
+            {
+                if (FileManager.IsRelative(fileNameToFix))
+                {
+                    fileNameToFix = (FileManager.RelativeDirectory + fileNameToFix);
+                    ReplaceSlashes(ref fileNameToFix);
+                }
+            }
+
+            fileNameToFix = FileManager.RemoveDotDotSlash(fileNameToFix);
+
+            if (fileNameToFix.StartsWith(".."))
+            {
+                throw new InvalidOperationException("Tried to remove all ../ but ended up with this: " + fileNameToFix);
+            }
+
+            // It's possible that there will be double forward slashes.
+            fileNameToFix = fileNameToFix.Replace("//", "/");
+
+            return fileNameToFix;
+        }
+
+        public int CompareTo(object obj)
+        {
+            if (obj is FilePath otherAsFilePath)
+            {
+                return this.FullPath.CompareTo(otherAsFilePath?.FullPath);
+            }
+            else if (obj is string asString)
+            {
+                return this?.FullPath.CompareTo(asString) ?? 0;
+            }
+            else
+            {
+                return 0;
+            }
         }
 
         public string RelativeTo(FilePath otherFilePath)

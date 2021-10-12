@@ -4,6 +4,7 @@ using Gum.Managers;
 using Microsoft.Xna.Framework;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
+using RenderingLibrary.Math;
 using SkiaGum.GueDeriving;
 using SkiaSharp;
 using System;
@@ -13,14 +14,20 @@ using System.Text;
 
 namespace SkiaGum.Renderables
 {
+    #region Gradient Type
+
     public enum GradientType
     {
         Linear,
         Radial
     }
 
+    #endregion
+
     public class RenderableBase : IRenderableIpso, IVisible
     {
+        #region Fields/Properties
+
         public SKColor Color
         {
             get; set;
@@ -93,8 +100,8 @@ namespace SkiaGum.Renderables
 
         public float X
         {
-            get { return Position.X; }
-            set { Position.X = value; }
+            get => Position.X;
+            set => Position.X = value;
         }
 
         public float Y
@@ -236,6 +243,8 @@ namespace SkiaGum.Renderables
 
         public object Tag { get; set; }
 
+        #endregion
+
         public RenderableBase()
         {
             Width = 32;
@@ -253,11 +262,11 @@ namespace SkiaGum.Renderables
                 var absoluteY = this.GetAbsoluteY();
                 var rect = new SKRect(absoluteX, absoluteY, absoluteX + this.Width, absoluteY + this.Height);
 
-                DrawBound(rect, canvas);
+                DrawBound(rect, canvas, this.GetAbsoluteRotation());
             }
         }
 
-        protected virtual SKPaint GetPaint(SKRect boundingRect)
+        protected virtual SKPaint GetPaint(SKRect boundingRect, float absoluteRotation)
         {
             var effectiveColor = this.Color;
             if (IsDimmed)
@@ -292,13 +301,13 @@ namespace SkiaGum.Renderables
 
             if (UseGradient)
             {
-                ApplyGradientToPaint(boundingRect, paint);
+                ApplyGradientToPaint(boundingRect, paint, absoluteRotation);
             }
 
             return paint;
         }
 
-        public virtual void DrawBound(SKRect boundingRect, SKCanvas canvas)
+        public virtual void DrawBound(SKRect boundingRect, SKCanvas canvas, float absoluteRotation)
         {
 
         }
@@ -341,7 +350,7 @@ namespace SkiaGum.Renderables
 
         #endregion
 
-        protected void ApplyGradientToPaint(SKRect boundingRect, SKPaint paint)
+        protected void ApplyGradientToPaint(SKRect boundingRect, SKPaint paint, float absoluteRotation)
         {
             var firstColor = new SKColor((byte)Red1, (byte)Green1, (byte)Blue1);
             var secondColor = new SKColor((byte)Red2, (byte)Green2, (byte)Blue2);
@@ -402,10 +411,20 @@ namespace SkiaGum.Renderables
                     break;
             }
 
-            effectiveGradientX1 += boundingRect.Left;
-            effectiveGradientY1 += boundingRect.Top;
-            effectiveGradientX2 += boundingRect.Left;
-            effectiveGradientY2 += boundingRect.Top;
+            var rectToUse = boundingRect;
+            if (absoluteRotation != 0)
+            {
+                rectToUse = Unrotate(boundingRect, absoluteRotation);
+            }
+            else
+            {
+                // If we apply rotation, then the camera coordinates are adjusted such that the gradient coordiantes are relative to the object.
+                // Otherwise, they are not so we need to offset:
+                effectiveGradientX1 += rectToUse.Left;
+                effectiveGradientY1 += rectToUse.Top;
+                effectiveGradientX2 += rectToUse.Left;
+                effectiveGradientY2 += rectToUse.Top;
+            }
 
             if (GradientType == GradientType.Linear)
             {
@@ -458,6 +477,24 @@ namespace SkiaGum.Renderables
                     new float[] { innerToOuterRatio, 1 },
                     SKShaderTileMode.Clamp);
             }
+        }
+
+        SKRect Unrotate(SKRect beforeRotation, float angleToUndoDegrees)
+        {
+            var pointBefore = new Vector2(beforeRotation.Left, beforeRotation.Top);
+
+            var middleOffset = new Vector2(beforeRotation.Width / 2.0f, beforeRotation.Height / 2.0f);
+            MathFunctions.RotateVector(ref middleOffset, MathHelper.ToRadians(-angleToUndoDegrees));
+
+            var middle = pointBefore + middleOffset;
+
+            // convert to a "positive-Y-is-up" system:
+            pointBefore.Y *= -1;
+            middle.Y *= -1;
+            MathFunctions.RotatePointAroundPoint(middle, ref pointBefore, MathHelper.ToRadians(-angleToUndoDegrees));
+            pointBefore.Y *= -1;
+
+            return new SKRect(pointBefore.X, pointBefore.Y, pointBefore.X + beforeRotation.Width, pointBefore.Y + beforeRotation.Height);
         }
 
     }

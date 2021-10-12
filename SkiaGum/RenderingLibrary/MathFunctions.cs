@@ -79,6 +79,24 @@ namespace RenderingLibrary.Math
 
         }
 
+        public static void RotatePointAroundPoint(Vector2 basePoint, ref Vector2 pointToRotate, float radiansToChangeBy)
+        {
+            double xDistance = pointToRotate.X - basePoint.X;
+            double yDistance = pointToRotate.Y - basePoint.Y;
+            if (xDistance == 0 && yDistance == 0)
+                return;
+
+            double distance = xDistance * xDistance + yDistance * yDistance;
+            distance = (float)System.Math.Pow(distance, .5);
+
+            double angle = System.Math.Atan2(yDistance, xDistance);
+            angle += radiansToChangeBy;
+
+            pointToRotate.X = (float)(System.Math.Cos(angle) * distance + basePoint.X);
+            pointToRotate.Y = (float)(System.Math.Sin(angle) * distance + basePoint.Y);
+
+        }
+
         public static float RoundFloat(float valueToRound, float multipleOf)
         {
             return ((int)(System.Math.Sign(valueToRound) * .5f + valueToRound / multipleOf)) * multipleOf;

@@ -32,28 +32,35 @@ namespace SkiaGum.Renderables
 
         }
 
-        public void Render(SKCanvas canvas)
+        public override void DrawBound(SKRect boundingRect, SKCanvas canvas, float absoluteRotation)
         {
-            if (AbsoluteVisible)
+            var applyRotation = absoluteRotation != 0;
+
+            if (applyRotation)
             {
-                SKMatrix scaleMatrix = SKMatrix.MakeScale(1, 1);
-                //// Gum uses counter clockwise rotation, Skia uses clockwise, so invert:
-                SKMatrix rotationMatrix = SKMatrix.MakeRotationDegrees(-Rotation);
-                SKMatrix translateMatrix = SKMatrix.MakeTranslation(this.GetAbsoluteX(), this.GetAbsoluteY());
-                SKMatrix result = SKMatrix.MakeIdentity();
+                var oldX = boundingRect.Left;
+                var oldY = boundingRect.Top;
 
-                SKMatrix.Concat(
-                    ref result, rotationMatrix, scaleMatrix);
-                SKMatrix.Concat(
-                    ref result, translateMatrix, result);
                 canvas.Save();
-                canvas.SetMatrix(result);
 
-                var destination = new SKRect(0, 0, Width, Height);
+                boundingRect.Left = 0;
+                boundingRect.Right -= oldX;
+                boundingRect.Top = 0;
+                boundingRect.Bottom -= oldY;
 
-                canvas.DrawBitmap(Texture, destination);
+                canvas.Translate(oldX, oldY);
+                canvas.RotateDegrees(-absoluteRotation);
+            }
+
+
+            canvas.DrawBitmap(Texture, boundingRect);
+
+            if (applyRotation)
+            {
                 canvas.Restore();
             }
         }
+
+
     }
 }
