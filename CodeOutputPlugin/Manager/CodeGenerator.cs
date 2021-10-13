@@ -1006,6 +1006,13 @@ namespace CodeOutputPlugin.Manager
             {
                 rightMargin = -width - x;
             }
+            if(xUnits == PositionUnitType.PixelsFromCenterX && 
+                xOrigin == HorizontalAlignment.Center &&
+                widthUnits == DimensionUnitType.RelativeToContainer)
+            {
+                leftMargin = -width / 2.0f;
+                rightMargin = -width / 2.0f;
+            }
 
             if(yUnits == PositionUnitType.PixelsFromTop)
             {
@@ -1529,27 +1536,62 @@ namespace CodeOutputPlugin.Manager
 
         private static string TryGetFullXamarinFormsLineReplacement(InstanceSave instance, ElementSave container, VariableSave variable, StateSave state)
         {
-            var rootName = variable.GetRootName();
+            var rootVariableName = variable.GetRootName();
 
 
-            if (rootName == "IsXamarinFormsControl" ||
-                rootName == "Name" ||
-                rootName == "X Origin" ||
-                rootName == "XOrigin" ||
-                rootName == "Y Origin" ||
-                rootName == "YOrigin")
+            if (rootVariableName == "IsXamarinFormsControl" ||
+                rootVariableName == "Name" ||
+                rootVariableName == "X Origin" ||
+                rootVariableName == "XOrigin" ||
+                rootVariableName == "Y Origin" ||
+                rootVariableName == "YOrigin")
             {
                 return " "; // Don't do anything with these variables::
             }
-            else if (rootName == "Parent")
+            else if (rootVariableName == "Parent")
             {
                 var parentName = variable.Value as string;
 
                 var parentInstance = container.GetInstance(parentName);
 
-                var hasContent =
-                    parentInstance?.BaseType.EndsWith("/ScrollView") == true ||
-                    parentInstance?.BaseType.EndsWith("/StickyScrollView") == true;
+                // traverse the inheritance chain - we don't want to go to the very base because 
+                // Glue has base types like Container for all components, and that's not what we want.
+                // Actually we should go one above the inheritance:
+
+                var instanceElement = ObjectFinder.Self.GetElementSave(parentInstance?.BaseType);
+
+                var hasContent = false;
+                if(instanceElement != null)
+                {
+                    var baseElements = ObjectFinder.Self.GetBaseElements(instanceElement);
+                    string componentType = null;
+                    if(baseElements.Count > 1)
+                    {
+                        // don't do the "Last" because that will be container, so take all but the last:
+                        var baseBeforeContainer = baseElements.Take(baseElements.Count - 1).LastOrDefault();
+                        componentType = baseBeforeContainer?.Name;
+                    }
+                    else if(baseElements.Count == 1)
+                    {
+                        // this inherits from Container, so just use it's own base type:
+                        componentType = instanceElement.Name;
+                    }
+                    else
+                    {
+                        // All XamForms objects are components, so all must inherit from something. This should never happen...
+                    }
+                    hasContent =
+                        componentType?.EndsWith("/ScrollView") == true ||
+                        componentType?.EndsWith("/StickyScrollView") == true ||
+                        componentType?.EndsWith("/Frame") == true
+                        ;
+
+                }
+
+                // Certain types of views don't support Children.Add - they only have
+                // a single content. In the future we may want to formalize the way we
+                // handle standard XamarinForms controls, but for now we'll hardcode some
+                // checks:
                 if (hasContent)
                 {
                     return $"{parentName}.Content = {instance.Name};";
@@ -1562,7 +1604,7 @@ namespace CodeOutputPlugin.Manager
 
             #region Children Layout
 
-            else if (rootName == "Children Layout" && variable.Value is ChildrenLayout valueAsChildrenLayout)
+            else if (rootVariableName == "Children Layout" && variable.Value is ChildrenLayout valueAsChildrenLayout)
             {
                 if (instance?.BaseType.EndsWith("/StackLayout") == true)
                 {
