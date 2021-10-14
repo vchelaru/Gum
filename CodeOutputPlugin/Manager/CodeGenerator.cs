@@ -574,7 +574,10 @@ namespace CodeOutputPlugin.Manager
 
             if (exposedVariable.IsState(container, out ElementSave stateContainer, out StateSaveCategory category))
             {
-                var stateContainerType = GetClassNameForType(stateContainer.Name, VisualApi.Gum);
+
+                string stateContainerType;
+                VisualApi visualApi = GetVisualApiForElement(stateContainer);
+                stateContainerType = GetClassNameForType(stateContainer.Name, visualApi);
                 type = $"{stateContainerType}.{category.Name}";
             }
 
@@ -584,7 +587,7 @@ namespace CodeOutputPlugin.Manager
                 stringBuilder.AppendLine($"{ToTabs(tabCount)}public static readonly BindableProperty {exposedVariable.ExposedAsName}Property = " +
                     $"BindableProperty.Create(nameof({exposedVariable.ExposedAsName}),typeof({type}),typeof({containerClassName}), defaultBindingMode: BindingMode.TwoWay);");
 
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"public string {exposedVariable.ExposedAsName}");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"public {type} {exposedVariable.ExposedAsName}");
                 stringBuilder.AppendLine(ToTabs(tabCount) + "{");
                 tabCount++;
                 stringBuilder.AppendLine(ToTabs(tabCount) + $"get => ({type})GetValue({exposedVariable.ExposedAsName}Property);");
