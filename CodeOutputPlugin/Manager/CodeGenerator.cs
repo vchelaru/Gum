@@ -781,6 +781,26 @@ namespace CodeOutputPlugin.Manager
 
             #endregion
 
+            // States come before anything, so run those first
+            foreach(var variable in variablesToAssignValues.Where(item => item.IsState(container)))
+            {
+                var codeLine = GetCodeLine(instance, variable, container, visualApi, defaultState);
+
+                // the line of code could be " ", a string with a space. This happens
+                // if we want to skip a variable so we dont return null or empty.
+                // But we also don't want a ton of spaces generated.
+                if (!string.IsNullOrWhiteSpace(codeLine))
+                {
+                    stringBuilder.AppendLine(tabs + codeLine);
+                }
+
+                var suffixCodeLine = GetSuffixCodeLine(instance, variable, visualApi);
+                if (!string.IsNullOrEmpty(suffixCodeLine))
+                {
+                    stringBuilder.AppendLine(tabs + suffixCodeLine);
+                }
+            }
+            variablesToAssignValues.RemoveAll(item => item.IsState(container));
 
             // sometimes variables have to be processed in groups. For example, RGB values
             // have to be assigned all at once in a Color value in XamForms;
@@ -1203,7 +1223,7 @@ namespace CodeOutputPlugin.Manager
                 }
             }
 
-            if (yUnits == PositionUnitType.PixelsFromCenterY && heightUnits == DimensionUnitType.Absolute && yOrigin == VerticalAlignment.Center)
+            if (yUnits == PositionUnitType.PixelsFromCenterY && yOrigin == VerticalAlignment.Center)
             {
                 if (y == 0)
                 {
@@ -1297,6 +1317,13 @@ namespace CodeOutputPlugin.Manager
             string boundsText =
                 $"{ToTabs(tabCount)}AbsoluteLayout.SetLayoutBounds({instanceOrThis}, new Rectangle({xString}, {yString}, {widthString}, {heightString} ));";
             string flagsText = null;
+
+            if(proportionalFlags.Count == 0)
+            {
+                // A default state could set values, we override it but don't use any porportional, we probably still want to adjust here...
+                proportionalFlags.Add("AbsoluteLayoutFlags.None");
+            }
+
             if (proportionalFlags.Count > 0)
             {
                 string flagsArguments = null;
