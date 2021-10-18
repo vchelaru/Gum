@@ -925,7 +925,7 @@ namespace CodeOutputPlugin.Manager
         private static void ProcessPositionAndSize(List<VariableSave> variablesToConsider, StateSave state, InstanceSave instance, ElementSave container, StringBuilder stringBuilder, int tabCount)
         {
             //////////////////Early out/////////////////////
-            if(container is ScreenSave && instance == null)
+            if (container is ScreenSave && instance == null)
             {
                 // screens can't be positioned
                 return;
@@ -933,37 +933,23 @@ namespace CodeOutputPlugin.Manager
             /////////////// End Early Out/////////////
             string prefix = instance?.Name == null ? "" : instance.Name + ".";
 
-            var setsAny =
-                state.Variables.Any(item =>
-                    item.Name == prefix + "X" ||
-                    item.Name == prefix + "Y" ||
-                    item.Name == prefix + "Width" ||
-                    item.Name == prefix + "Height" ||
-
-                    item.Name == prefix + "X Units" ||
-                    item.Name == prefix + "Y Units" ||
-                    item.Name == prefix + "Width Units" ||
-                    item.Name == prefix + "Height Units"||
-                    item.Name == prefix + "X Origin" ||
-                    item.Name == prefix + "Y Origin" 
-                    
-                    );
+            bool setsAny = GetIfStateSetsAnyPositionValues(state, prefix);
 
             InstanceSave parent = null;
-            if(instance != null)
+            if (instance != null)
             {
-                var parentName = state.GetValueRecursive( instance.Name + ".Parent") as string;
-                if(!string.IsNullOrEmpty(parentName))
+                var parentName = state.GetValueRecursive(instance.Name + ".Parent") as string;
+                if (!string.IsNullOrEmpty(parentName))
                 {
                     parent = container.GetInstance(parentName);
                 }
             }
 
-            if(parent == null || parent.BaseType?.EndsWith("/AbsoluteLayout") == true)
+            if (parent == null || parent.BaseType?.EndsWith("/AbsoluteLayout") == true)
             {
                 // If this is part of an absolute layout, we put it in an absolute layout. This is the default
                 // only do this layout if we're either the default state, or the variables are set in the state:
-                if(setsAny || state == container.DefaultState)
+                if (setsAny || state == container.DefaultState)
                 {
                     SetAbsoluteLayoutPosition(variablesToConsider, state, instance, container, stringBuilder, tabCount);
                 }
@@ -975,10 +961,31 @@ namespace CodeOutputPlugin.Manager
 
         }
 
+        private static bool GetIfStateSetsAnyPositionValues(StateSave state, string prefix)
+        {
+            return state.Variables.Any(item =>
+                    item.Name == prefix + "X" ||
+                    item.Name == prefix + "Y" ||
+                    item.Name == prefix + "Width" ||
+                    item.Name == prefix + "Height" ||
+
+                    item.Name == prefix + "X Units" ||
+                    item.Name == prefix + "Y Units" ||
+                    item.Name == prefix + "Width Units" ||
+                    item.Name == prefix + "Height Units" ||
+                    item.Name == prefix + "X Origin" ||
+                    item.Name == prefix + "Y Origin"
+
+                    );
+        }
+
         private static void SetNonAbsoluteLayoutPosition(List<VariableSave> variablesToConsider, StateSave defaultState, InstanceSave instance, 
             StringBuilder stringBuilder, int tabCount, string prefix, string parentBaseType)
         {
             var variableFinder = new RecursiveVariableFinder(defaultState);
+
+            bool setsAny = GetIfStateSetsAnyPositionValues(defaultState, prefix);
+
 
             var x = variableFinder.GetValue<float>(prefix + "X");
             var y = variableFinder.GetValue<float>(prefix + "Y");
@@ -1050,11 +1057,14 @@ namespace CodeOutputPlugin.Manager
                 }
             }
 
-            stringBuilder.AppendLine($"{ToTabs(tabCount)}{instance?.Name}.Margin = new Thickness(" +
-                $"{leftMargin.ToString(CultureInfo.InvariantCulture)}, " +
-                $"{topMargin.ToString(CultureInfo.InvariantCulture)}, " +
-                $"{rightMargin.ToString(CultureInfo.InvariantCulture)}, " +
-                $"{bottomMargin.ToString(CultureInfo.InvariantCulture)});");
+            if(setsAny)
+            {
+                stringBuilder.AppendLine($"{ToTabs(tabCount)}{instance?.Name}.Margin = new Thickness(" +
+                    $"{leftMargin.ToString(CultureInfo.InvariantCulture)}, " +
+                    $"{topMargin.ToString(CultureInfo.InvariantCulture)}, " +
+                    $"{rightMargin.ToString(CultureInfo.InvariantCulture)}, " +
+                    $"{bottomMargin.ToString(CultureInfo.InvariantCulture)});");
+            }
 
             if (widthUnits == DimensionUnitType.Absolute || widthUnits == DimensionUnitType.RelativeToChildren)
             {

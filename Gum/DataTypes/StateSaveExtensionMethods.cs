@@ -42,24 +42,17 @@ namespace Gum.DataTypes.Variables
         /// <returns>The value found recursively, where the most-derived value has priority.</returns>
         public static object GetValueRecursive(this StateSave stateSave, string variableName)
         {
+            // First we check if this state sets the value directly...
             object value = stateSave.GetValue(variableName);
 
             if (value == null)
             {
-                // Is this thing the default?
                 ElementSave parent = stateSave.ParentContainer;
 
-                // I don't know if we need this code
-                // because if we got in here, then the non-default failed to find a value
-                // Update July 12, 2013
-                // Not sure why I commented this code out.  This code lets us check a non-default
-                // state, and if it doesn't contain a value, then we look at the default state in this 
-                // element.  Then if that fails, we can climb up the inheritance tree.
-                // Let's see if we can get something from the non-default first
                 bool wasFound = false;
                 if (parent != null && stateSave != parent.DefaultState)
                 {
-                    // try to get it from the stateSave
+                    // try to get it from the stateSave recursively since it's not set directly on the state...
                     var foundVariable = stateSave.GetVariableRecursive(variableName);
                     if (foundVariable != null && foundVariable.SetsValue)
                     {
@@ -70,6 +63,47 @@ namespace Gum.DataTypes.Variables
                     }
                 }
                 
+                string nameInBase = variableName;
+                if ( StringFunctions.ContainsNoAlloc( variableName, '.'))
+                {
+                    // this variable is set on an instance, but we're going into the
+                    // base type, so we want to get the raw variable and not the variable
+                    // as tied to an instance.
+                    nameInBase = variableName.Substring(nameInBase.IndexOf('.') + 1);
+                }
+                if(!wasFound)
+                {
+                    // it hasn't been found on this state directly or recursively, but maybe there is a variable
+                    // set on the instance which then sets the value, so we need to follow those
+                    var sourceObjectName = VariableSave.GetSourceObject(variableName);
+                    var instance = parent?.Instances.FirstOrDefault(item => item.Name == sourceObjectName);
+                    if(instance != null)
+                    {
+                        var statesSetOnThisInstance = stateSave.Variables.Where(item => item.IsState(parent) && item.SourceObject == sourceObjectName && item.SetsValue)
+                            .ToArray();
+
+                        var instanceType = ObjectFinder.Self.GetElementSave(instance);
+
+                        if(instanceType != null)
+                        {
+                            foreach(var instanceStateVariable in statesSetOnThisInstance)
+                            {
+                                var matchingState = instanceType.AllStates.FirstOrDefault(item => item.Name == (string)instanceStateVariable.Value);
+
+                                if(matchingState != null)
+                                {
+                                    value = matchingState.GetValueRecursive(nameInBase);
+                                    wasFound = value != null;
+                                    if(wasFound)
+                                    {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
                 if (!wasFound && parent != null)
                 {
                     if(!string.IsNullOrEmpty(parent.BaseType))
@@ -84,15 +118,7 @@ namespace Gum.DataTypes.Variables
                     
                         if (baseElement != null)
                         {
-                            string nameInBase = variableName;
 
-                            if ( StringFunctions.ContainsNoAlloc( variableName, '.'))
-                            {
-                                // this variable is set on an instance, but we're going into the
-                                // base type, so we want to get the raw variable and not the variable
-                                // as tied to an instance.
-                                nameInBase = variableName.Substring(nameInBase.IndexOf('.') + 1);
-                            }
 
                             value = baseElement.DefaultState.GetValueRecursive(nameInBase);
                         }

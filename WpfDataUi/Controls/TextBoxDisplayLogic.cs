@@ -359,11 +359,11 @@ namespace WpfDataUi.Controls
             bool isDefault = InstanceMember.IsDefault;
             if (isDefault)
             {
-                mAssociatedTextBox.Foreground = System.Windows.Media.Brushes.Green;
+                mAssociatedTextBox.Background = System.Windows.Media.Brushes.LightGreen;
             }
             else
             {
-                mAssociatedTextBox.Foreground = System.Windows.Media.Brushes.Black;
+                mAssociatedTextBox.Background = System.Windows.Media.Brushes.White;
             }
         }
     }
