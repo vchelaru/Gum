@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using WpfDataUi.DataTypes;
 
 namespace WpfDataUi.Controls
@@ -332,6 +333,9 @@ namespace WpfDataUi.Controls
             }
         }
 
+        public SolidColorBrush DefaultValueBackground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(180, 255, 180));
+        public SolidColorBrush CustomValueBackground = System.Windows.Media.Brushes.White;
+
         public void RefreshDisplay()
         {
             if (mContainer.HasEnoughInformationToWork())
@@ -359,11 +363,11 @@ namespace WpfDataUi.Controls
             bool isDefault = InstanceMember.IsDefault;
             if (isDefault)
             {
-                mAssociatedTextBox.Background = System.Windows.Media.Brushes.LightGreen;
+                mAssociatedTextBox.Background = DefaultValueBackground;
             }
             else
             {
-                mAssociatedTextBox.Background = System.Windows.Media.Brushes.White;
+                mAssociatedTextBox.Background = CustomValueBackground;
             }
         }
     }
