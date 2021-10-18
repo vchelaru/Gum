@@ -886,7 +886,7 @@ namespace CodeOutputPlugin.Manager
         private static void ProcessColorForLabel(List<VariableSave> variablesToConsider, StateSave defaultState, InstanceSave instance, StringBuilder stringBuilder)
         {
             var instancePrefix = instance != null ? instance.Name + "." : string.Empty;
-            var instanceName = instance.Name;
+            var instanceName = instance?.Name;
             var rfv = new RecursiveVariableFinder(defaultState);
 
             var red = rfv.GetValue<int>(instancePrefix + "Red");
