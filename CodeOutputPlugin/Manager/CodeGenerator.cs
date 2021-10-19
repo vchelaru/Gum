@@ -569,7 +569,7 @@ namespace CodeOutputPlugin.Manager
 
             // if both the container and the instance are xamarin forms objects, then we can try to do some bubble-up binding
             var instanceName = exposedVariable.SourceObject;
-            bool usesBinding = GetIfInstanceShouldBind(container, instanceName);
+            var bindingBehavior = GetBindingBehavior(container, instanceName);
             var type = exposedVariable.Type;
 
             if (exposedVariable.IsState(container, out ElementSave stateContainer, out StateSaveCategory category))
@@ -581,7 +581,7 @@ namespace CodeOutputPlugin.Manager
                 type = $"{stateContainerType}.{category.Name}";
             }
 
-            if (usesBinding)
+            if (bindingBehavior == BindingBehavior.BindablePropertyWithBoundInstance)
             {
                 var containerClassName = GetClassNameForType(container.Name, VisualApi.XamarinForms);
                 stringBuilder.AppendLine($"{ToTabs(tabCount)}public static readonly BindableProperty {exposedVariable.ExposedAsName}Property = " +
@@ -592,6 +592,32 @@ namespace CodeOutputPlugin.Manager
                 tabCount++;
                 stringBuilder.AppendLine(ToTabs(tabCount) + $"get => ({type})GetValue({exposedVariable.ExposedAsName}Property);");
                 stringBuilder.AppendLine(ToTabs(tabCount) + $"set => SetValue({exposedVariable.ExposedAsName}Property, value);");
+                tabCount--;
+                stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+            }
+            else if(bindingBehavior == BindingBehavior.BindablePropertyWithEventAssignment)
+            {
+                var rcv = new RecursiveVariableFinder(container.DefaultState);
+                var defaultValue = rcv.GetValue(exposedVariable.Name);
+                var defaultValueAsString = VariableValueToGumCodeValue(exposedVariable, container, forcedValue:defaultValue);
+                var containerClassName = GetClassNameForType(container.Name, VisualApi.XamarinForms);
+                stringBuilder.AppendLine($"{ToTabs(tabCount)}public static readonly BindableProperty {exposedVariable.ExposedAsName}Property = " +
+                    $"BindableProperty.Create(nameof({exposedVariable.ExposedAsName}),typeof({type}),typeof({containerClassName}), defaultBindingMode: BindingMode.TwoWay, propertyChanged:Handle{exposedVariable.ExposedAsName}PropertyChanged, defaultValue:{defaultValueAsString});");
+
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"public {type} {exposedVariable.ExposedAsName}");
+                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+                tabCount++;
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"get => ({type})GetValue({exposedVariable.ExposedAsName}Property);");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"set => SetValue({exposedVariable.ExposedAsName}Property, value);");
+                tabCount--;
+                stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"private static void Handle{exposedVariable.ExposedAsName}PropertyChanged(BindableObject bindable, object oldValue, object newValue)");
+                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+                tabCount++;
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"var casted = bindable as {containerClassName};");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.{exposedVariable.SourceObject}.{exposedVariable.GetRootName()} = ({type})newValue;");
+
                 tabCount--;
                 stringBuilder.AppendLine(ToTabs(tabCount) + "}");
             }
@@ -609,12 +635,30 @@ namespace CodeOutputPlugin.Manager
             }
         }
 
-        private static bool GetIfInstanceShouldBind(ElementSave container, string instanceName)
+        enum BindingBehavior
+        {
+            NoBinding,
+            BindablePropertyWithEventAssignment,
+            BindablePropertyWithBoundInstance
+        }
+
+        private static BindingBehavior GetBindingBehavior(ElementSave container, string instanceName)
         {
             var isContainerXamarinForms = (container.DefaultState.GetValueRecursive("IsXamarinFormsControl") as bool?) ?? false;
             var isInstanceXamarinForms = (container.DefaultState.GetValueRecursive($"{instanceName}.IsXamarinFormsControl") as bool?) ?? false;
-            var usesBinding = isContainerXamarinForms && isInstanceXamarinForms;
-            return usesBinding;
+
+            if(isContainerXamarinForms && isInstanceXamarinForms)
+            {
+                return BindingBehavior.BindablePropertyWithBoundInstance;
+            }
+            else if(isContainerXamarinForms)
+            {
+                return BindingBehavior.BindablePropertyWithEventAssignment;
+            }
+            else
+            {
+                return BindingBehavior.NoBinding;
+            }
         }
 
         public static string GetCodeForInstance(InstanceSave instance, ElementSave element, VisualApi visualApi)
@@ -945,7 +989,20 @@ namespace CodeOutputPlugin.Manager
                 }
             }
 
-            if (parent == null || parent.BaseType?.EndsWith("/AbsoluteLayout") == true)
+            string parentType = parent?.BaseType;
+            if(parent == null)
+            {
+                if(container is ScreenSave)
+                {
+                    parentType = "/AbsoluteLayout";
+                }
+                else
+                {
+                    parentType = container.BaseType;
+                }
+            }
+
+            if (parentType?.EndsWith("/AbsoluteLayout") == true)
             {
                 // If this is part of an absolute layout, we put it in an absolute layout. This is the default
                 // only do this layout if we're either the default state, or the variables are set in the state:
@@ -956,7 +1013,7 @@ namespace CodeOutputPlugin.Manager
             }
             else //if(parent?.BaseType?.EndsWith("/StackLayout") == true)
             {
-                SetNonAbsoluteLayoutPosition(variablesToConsider, state, instance, stringBuilder, tabCount, prefix, parent.BaseType);
+                SetNonAbsoluteLayoutPosition(variablesToConsider, state, instance, stringBuilder, tabCount, prefix, parentType);
             }
 
         }
@@ -1009,16 +1066,18 @@ namespace CodeOutputPlugin.Manager
             variablesToConsider.RemoveAll(item => item.Name == prefix + "Width Units");
             variablesToConsider.RemoveAll(item => item.Name == prefix + "Height Units");
 
+            var instanceOrThis = instance?.Name ?? "this";
+
             if (widthUnits == DimensionUnitType.Absolute)
             {
                 stringBuilder.AppendLine(
-                    $"{ToTabs(tabCount)}{instance?.Name ?? "this"}.WidthRequest = {width.ToString(CultureInfo.InvariantCulture)}f;");
+                    $"{ToTabs(tabCount)}{instanceOrThis}.WidthRequest = {width.ToString(CultureInfo.InvariantCulture)}f;");
             }
 
             if (heightUnits == DimensionUnitType.Absolute)
             {
                 stringBuilder.AppendLine(
-                    $"{ToTabs(tabCount)}{instance?.Name ?? "this"}.HeightRequest = {height.ToString(CultureInfo.InvariantCulture)}f;");
+                    $"{ToTabs(tabCount)}{instanceOrThis}.HeightRequest = {height.ToString(CultureInfo.InvariantCulture)}f;");
             }
 
             float leftMargin = 0;
@@ -1059,7 +1118,7 @@ namespace CodeOutputPlugin.Manager
 
             if(setsAny)
             {
-                stringBuilder.AppendLine($"{ToTabs(tabCount)}{instance?.Name}.Margin = new Thickness(" +
+                stringBuilder.AppendLine($"{ToTabs(tabCount)}{instanceOrThis}.Margin = new Thickness(" +
                     $"{leftMargin.ToString(CultureInfo.InvariantCulture)}, " +
                     $"{topMargin.ToString(CultureInfo.InvariantCulture)}, " +
                     $"{rightMargin.ToString(CultureInfo.InvariantCulture)}, " +
@@ -1069,13 +1128,13 @@ namespace CodeOutputPlugin.Manager
             if (widthUnits == DimensionUnitType.Absolute || widthUnits == DimensionUnitType.RelativeToChildren)
             {
                 stringBuilder.AppendLine(
-                    $"{ToTabs(tabCount)}{instance?.Name ?? "this"}.HorizontalOptions = LayoutOptions.Start;");
+                    $"{ToTabs(tabCount)}{instanceOrThis}.HorizontalOptions = LayoutOptions.Start;");
             }
             else if(widthUnits == DimensionUnitType.RelativeToContainer || 
                 (widthUnits == DimensionUnitType.Percentage))
             {
                 stringBuilder.AppendLine(
-                    $"{ToTabs(tabCount)}{instance?.Name ?? "this"}.HorizontalOptions = LayoutOptions.Fill;");
+                    $"{ToTabs(tabCount)}{instanceOrThis}.HorizontalOptions = LayoutOptions.Fill;");
             }
         }
 
@@ -1295,11 +1354,25 @@ namespace CodeOutputPlugin.Manager
 
             if(xUnits == PositionUnitType.PixelsFromRight && xOrigin == HorizontalAlignment.Right)
             {
-                widthString = $"({widthString} + {rightMargin})";
+                if(widthUnits == DimensionUnitType.RelativeToChildren)
+                {
+                    widthString = $"({widthString})";
+                }
+                else
+                {
+                    widthString = $"({widthString} + {rightMargin})";
+                }
             }
             if(yUnits == PositionUnitType.PixelsFromBottom && yOrigin == VerticalAlignment.Bottom)
             {
-                heightString = $"({heightString} + {bottomMargin})";
+                if(heightUnits == DimensionUnitType.RelativeToChildren)
+                {
+                    widthString = $"({heightString})";
+                }
+                else
+                {
+                    heightString = $"({heightString} + {bottomMargin})";
+                }
             }
 
             if (AdjustPixelValuesForDensity)
@@ -1723,19 +1796,23 @@ namespace CodeOutputPlugin.Manager
             return null;
         }
 
-        private static string VariableValueToGumCodeValue(VariableSave variable, ElementSave container)
+        private static string VariableValueToGumCodeValue(VariableSave variable, ElementSave container, object forcedValue = null)
         {
-            if(variable.Value is float asFloat)
+            var value = forcedValue ?? variable.Value;
+            var rootName = variable.GetRootName();
+            var isState = variable.IsState(container, out ElementSave categoryContainer, out StateSaveCategory category);
+
+            if (value is float asFloat)
             {
                 return asFloat.ToString(CultureInfo.InvariantCulture) + "f";
             }
-            else if(variable.Value is string asString)
+            else if(value is string asString)
             {
-                if(variable.GetRootName() == "Parent")
+                if(rootName == "Parent")
                 {
                     return asString;
                 }
-                else if(variable.IsState(container, out ElementSave categoryContainer, out StateSaveCategory category))
+                else if(isState)
                 {
                     if(categoryContainer != null && category != null)
                     {
@@ -1756,13 +1833,13 @@ namespace CodeOutputPlugin.Manager
                     return "\"" + asString.Replace("\n", "\\n") + "\"";
                 }
             }
-            else if(variable.Value is bool)
+            else if(value is bool)
             {
-                return variable.Value.ToString().ToLowerInvariant();
+                return value.ToString().ToLowerInvariant();
             }
-            else if(variable.Value.GetType().IsEnum)
+            else if(value.GetType().IsEnum)
             {
-                var type = variable.Value.GetType();
+                var type = value.GetType();
                 if(type == typeof(PositionUnitType))
                 {
                     var converted = UnitConverter.ConvertToGeneralUnit(variable.Value);
@@ -1770,12 +1847,12 @@ namespace CodeOutputPlugin.Manager
                 }
                 else
                 {
-                    return variable.Value.GetType().Name + "." + variable.Value.ToString();
+                    return value.GetType().Name + "." + variable.Value.ToString();
                 }
             }
             else
             {
-                return variable.Value?.ToString();
+                return value?.ToString();
             }
         }
 

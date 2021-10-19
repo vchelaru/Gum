@@ -178,9 +178,24 @@ namespace SkiaGum
                 SKMatrix.Concat(
                     ref result, translateMatrix, result);
 
+                // Currently this supports "multiply". Other color operations could be supported...
                 if (Color.Red != 255 || Color.Green != 255 || Color.Blue != 255 || Color.Alpha != 255)
                 {
-                    using (var paint = new SKPaint() { Color = Color })
+                    var paint = new SKPaint() { Color = Color };
+                    var redRatio = Color.Red / 255.0f;
+                    var greenRatio = Color.Green / 255.0f;
+                    var blueRatio = Color.Blue / 255.0f;
+
+                    paint.ColorFilter =
+                        SKColorFilter.CreateColorMatrix(new float[]
+                        {
+                        redRatio   , 0            , 0        , 0, 0,
+                        0,           greenRatio   , 0        , 0, 0,
+                        0,           0            , blueRatio, 0, 0,
+                        0,           0            , 0        , 1, 0
+                        });
+
+                    using (paint)
                     {
                         canvas.DrawPicture(Texture.Picture, ref result, paint);
                     }
