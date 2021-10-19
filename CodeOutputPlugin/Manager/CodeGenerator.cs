@@ -1837,7 +1837,7 @@ namespace CodeOutputPlugin.Manager
             {
                 return value.ToString().ToLowerInvariant();
             }
-            else if(value.GetType().IsEnum)
+            else if(value?.GetType().IsEnum == true)
             {
                 var type = value.GetType();
                 if(type == typeof(PositionUnitType))
