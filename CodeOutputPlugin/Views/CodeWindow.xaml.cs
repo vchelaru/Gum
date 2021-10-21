@@ -247,7 +247,7 @@ namespace CodeOutputPlugin.Views
 
             member.CustomSetEvent += (owner, value) =>
             {
-                if (codeOutputElementSettings != null)
+                if (codeOutputElementSettings != null && value != null)
                 {
                     codeOutputElementSettings.GenerationBehavior = (GenerationBehavior)value;
                     CodeOutputSettingsPropertyChanged?.Invoke(this, null);
