@@ -295,7 +295,7 @@ namespace Gum.Wireframe
                     }
                 }
             }
-            else
+            else if(parent.Children != null)
             {
                 foreach(var child in parent.Children)
                 {
