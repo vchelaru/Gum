@@ -1652,12 +1652,20 @@ namespace CodeOutputPlugin.Manager
             var rootVariableName = variable.GetRootName();
 
 
-            if (rootVariableName == "IsXamarinFormsControl" ||
+            if (
+                rootVariableName == "Clips Children" ||
+                rootVariableName == "ExposeChildrenEvents" ||
+                rootVariableName == "FlipHorizontal" ||
+                rootVariableName == "HasEvents" ||
+                
+                rootVariableName == "IsXamarinFormsControl" ||
                 rootVariableName == "Name" ||
+                rootVariableName == "Wraps Children" ||
                 rootVariableName == "X Origin" ||
                 rootVariableName == "XOrigin" ||
                 rootVariableName == "Y Origin" ||
-                rootVariableName == "YOrigin")
+                rootVariableName == "YOrigin"
+                )
             {
                 return " "; // Don't do anything with these variables::
             }
