@@ -944,7 +944,8 @@ namespace CodeOutputPlugin.Manager
                 string baseType = null;
                 if (instance != null)
                 {
-                    baseType = instance.BaseType;
+                    var standardElement = ObjectFinder.Self.GetRootStandardElementSave(instance);
+                    baseType = standardElement?.Name;
                 }
                 else
                 {
@@ -955,6 +956,7 @@ namespace CodeOutputPlugin.Manager
                     case "Text":
                         ProcessColorForLabel(variablesToConsider, defaultState, instance, stringBuilder);
                         ProcessPositionAndSize(variablesToConsider, defaultState, instance, container, stringBuilder, tabCount);
+                        ProcessXamarinFormsLabelBold(variablesToConsider, defaultState, instance, container, stringBuilder, tabCount);
                         break;
                     default:
                         ProcessPositionAndSize(variablesToConsider, defaultState, instance, container, stringBuilder, tabCount);
@@ -1030,6 +1032,24 @@ namespace CodeOutputPlugin.Manager
             else //if(parent?.BaseType?.EndsWith("/StackLayout") == true)
             {
                 SetNonAbsoluteLayoutPosition(variablesToConsider, state, instance, stringBuilder, tabCount, prefix, parentType);
+            }
+
+        }
+
+        private static void ProcessXamarinFormsLabelBold(List<VariableSave> variablesToConsider, StateSave state, InstanceSave instance, ElementSave container, StringBuilder stringBuilder, int tabCount)
+        {
+            string prefix = instance?.Name == null ? "" : instance.Name + ".";
+
+            var boldName = prefix + "IsBold";
+
+            var isBold = state.GetValueOrDefault<bool>(boldName);
+
+            variablesToConsider.RemoveAll(item => item.Name == boldName);
+
+            if(isBold)
+            {
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"{prefix}FontAttributes = Xamarin.Forms.FontAttributes.Bold;");
+                
             }
 
         }
@@ -1667,6 +1687,7 @@ namespace CodeOutputPlugin.Manager
         {
             var rootVariableName = variable.GetRootName();
 
+            #region Handle all variables that have no direct translation in Xamarin forms
 
             if (
                 rootVariableName == "Clips Children" ||
@@ -1685,6 +1706,9 @@ namespace CodeOutputPlugin.Manager
             {
                 return " "; // Don't do anything with these variables::
             }
+
+            #endregion
+
             else if (rootVariableName == "Parent")
             {
                 var parentName = variable.Value as string;
