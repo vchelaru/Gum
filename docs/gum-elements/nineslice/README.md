@@ -4,19 +4,19 @@
 
 NineSlice is a standard component which can be used to create visual objects which can stretch to any size without creating distortion on the source image. For example, consider the following image:
 
-![](../../.gitbook/assets/metalPanel_blue.png)
+![](<../../.gitbook/assets/metalPanel\_blue (1).png>)
 
 This image could be used to create nine slices of various sizes without any distortion:
 
-![](../../.gitbook/assets/NineSliceScreenShot.png)
+![](<../../.gitbook/assets/NineSliceScreenShot (1).png>)
 
 The NineSlice achieves this effect by splitting the texture into nine pieces, and scales each one differently to prevent distortion. Highlighting a nine slice shows how it is split:
 
-![](../../.gitbook/assets/NineSliceSplit.png)
+![](<../../.gitbook/assets/NineSliceSplit (1).png>)
 
 This is achieved by splitting the texture into 1/3 sections wide and tall. The following image shows how the original image will be split:
 
-![](../../.gitbook/assets/NineSliceImageSplit.png)
+![](<../../.gitbook/assets/NineSliceImageSplit (1).png>)
 
 ## NineSlice Texture
 
@@ -39,4 +39,3 @@ The following suffixes can be added to create nine slice graphics. For example, 
 NineSlice Properties
 
 * [NineSlice.Texture Address](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Elements/NineSlice/NineSlice.Texture%20Address)
-

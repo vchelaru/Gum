@@ -1,8 +1,3 @@
----
-title: 7 - States
-order: 7
----
-
 # 7 - States
 
 ## Introduction
@@ -21,17 +16,17 @@ This tutorial builds upon the previous tutorial where a Button component was cre
 
 First we'll define two new states. All components and screens have a "Default" state automatically. To add a new state:
 
-1. Select Edit-&gt;Add State 
+1. Select Edit->Add State
 2. Enter the name "Highlighted"
-3. Click OK 
+3. Click OK
 
-![](../.gitbook/assets/GumEnterStateName.PNG)
+![](<../.gitbook/assets/GumEnterStateName (1).PNG>)
 
-![](../.gitbook/assets/GumEditAddState.png)
+![](<../.gitbook/assets/GumEditAddState (1).png>)
 
 The Button component will now have a new state called Highlighted:
 
-![](../.gitbook/assets/GumState.png)
+![](<../.gitbook/assets/GumState (1).png>)
 
 ## Setting variables in states
 
@@ -45,7 +40,7 @@ For this example, we will make the button become a lighter blue when highlighted
 
 Notice that the Green and Red values are rendered in black rather than green - indicating that they are values that are explicitly set in the Highlight state.
 
-![](../.gitbook/assets/GumStateValuesSet.png)
+![](<../.gitbook/assets/GumStateValuesSet (1).png>)
 
 ## Switching between states
 
@@ -53,7 +48,6 @@ The values that have just been set apply **only** to the state that was selected
 
 ## States override Default
 
-Newly-created states will not automatically override all values on all objects - only values which are explicitly set on a given state. Therefore, any changes that are made in the Default state \(excluding the Red and Green values on the ColoredRectangleInstance\) will automatically apply to the Highlight state as well.
+Newly-created states will not automatically override all values on all objects - only values which are explicitly set on a given state. Therefore, any changes that are made in the Default state (excluding the Red and Green values on the ColoredRectangleInstance) will automatically apply to the Highlight state as well.
 
 This is reflected through which values are drawn with black vs. green text in the UI.
-

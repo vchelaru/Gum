@@ -1,12 +1,8 @@
----
-title: Use Custom Font
----
-
 # Use Custom Font
 
 ## Introduction
 
-The **Use Custom Font** variable controls whether a Text object uses a premade .fnt file \(if true\) or if it Gum automatically creates font files according to the Text's **Font**, **Font Size**, and **Outline Thickness** variables.
+The **Use Custom Font** variable controls whether a Text object uses a premade .fnt file (if true) or if it Gum automatically creates font files according to the Text's **Font**, **Font Size**, and **Outline Thickness** variables.
 
 **Use Custom Font** is false by default.
 
@@ -14,7 +10,7 @@ The **Use Custom Font** variable controls whether a Text object uses a premade .
 
 If **Use Custom Font** is set to true, then Gum displays the **Custom Font File** variable, which can point to a .fnt file created by Bitmap Font Generator.
 
-![](../../.gitbook/assets/UseCustomFontGum.png)
+![](<../../.gitbook/assets/UseCustomFontGum (1).png>)
 
 If **Use Custom Font** is set to true, then the **Font**, **Font Size**, and **Outline Thickness** variables can no longer be set - as they are part of the font file itself.
 
@@ -26,5 +22,4 @@ To set a custom font
 2. Navigate to the location of the desired .fnt file
 3. Select the file and click **Open**
 
-![](../../.gitbook/assets/CustomFontInGum.png)
-
+![](<../../.gitbook/assets/CustomFontInGum (1).png>)

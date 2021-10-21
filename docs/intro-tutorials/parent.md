@@ -1,8 +1,3 @@
----
-title: 6 - Parent
-order: 6
----
-
 # 6 - Parent
 
 ## Introduction
@@ -23,7 +18,7 @@ To do this:
 
 1. Create a new component called MeasurementDisplay
 2. Drop two Text objects in the newly-created component
-3. Name the first "ValueText" 
+3. Name the first "ValueText"
 4. Name the second "UnitsDisplay"
 
 ## Positioning according to a parent
@@ -32,15 +27,15 @@ Next we'll make the UnitsDisplay use the ValueText as its parent:
 
 1. Select the UnitsDisplay Text object
 2. Change its Parent to ValueText
-3. Change its X Units to "PixelsFromRight".  This will make the text object be positioned according to its parent's right edge
+3. Change its X Units to "PixelsFromRight". This will make the text object be positioned according to its parent's right edge
 4. Change its X to 10 - this means the UnitsDisplay text will be 10 units offset from the right edge of its parent ValueText
 5. Change its Y to 0
 
-![](../.gitbook/assets/GumParentingToRightSide2.PNG)
+![](<../.gitbook/assets/GumParentingToRightSide2 (1).PNG>)
 
-Next we'll want the parent text \(ValueText\) to automatically size according to its contents. To do this, set its Width to 0. Setting Width to 0 on a text instance means that the text's width will be equal to the size needed to display the text.
+Next we'll want the parent text (ValueText) to automatically size according to its contents. To do this, set its Width to 0. Setting Width to 0 on a text instance means that the text's width will be equal to the size needed to display the text.
 
-![](../.gitbook/assets/GumZeroWidthText.PNG)
+![](<../.gitbook/assets/GumZeroWidthText (1).PNG>)
 
 ## Adjusting Colors
 
@@ -55,5 +50,4 @@ Now that we have the texts set up, let's modify the color of the UnitsDisplay:
 
 Now the Text variable in ValueText can be changed, and when doing so the UnitsDisplay will automatically change positions:
 
-![](../.gitbook/assets/GumTextValuesChanged.PNG)
-
+![](<../.gitbook/assets/GumTextValuesChanged (1).PNG>)

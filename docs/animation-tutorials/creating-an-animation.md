@@ -1,8 +1,3 @@
----
-title: 2 - Creating an Animation
-order: 2
----
-
 # 2 - Creating an Animation
 
 ## Introduction
@@ -20,7 +15,7 @@ First we'll create a component which will be animated. To do this:
 5. Select the "Alignment" tab and click the middle button to have the TextInstance fill the TextComponent
 6. Select the Variables tab and change the VerticalAlignment and HorizontalAlignment to Center
 
-![](../.gitbook/assets/CreatingAnimationCreateComponent.gif)
+![](<../.gitbook/assets/CreatingAnimationCreateComponent (1).gif>)
 
 ## Creating the States
 
@@ -36,7 +31,7 @@ Now that we have a component we'll add the states needed for animation. We'll ad
 8. Select "Add State"
 9. Select "Shown"
 
-![](../.gitbook/assets/AddHideShowStates.gif)
+![](<../.gitbook/assets/AddHideShowStates (1).gif>)
 
 ## Setting values in the states
 
@@ -44,18 +39,18 @@ Now that we have the states defined we can set values for the states. In this ca
 
 1. Select TextInstance
 2. Select the "Hidden" state
-3. Set the Font Scale to 0.  This makes the Text so small that it's invisible
+3. Set the Font Scale to 0. This makes the Text so small that it's invisible
 4. Select the "Shown" state
-5. Set the Font Scale to 1.  This effectively makes the Text regular size
+5. Set the Font Scale to 1. This effectively makes the Text regular size
 
-![](../.gitbook/assets/SetFontScale.gif)
+![](<../.gitbook/assets/SetFontScale (1).gif>)
 
 ## Creating the Show animation
 
 The two states we created above will be used as the keyframes for our animation. The animation will begin in the Hidden state then interpolate to the Shown state. To add this animation:
 
 1. Verify that TextComponent or any objects under it are selected
-2. Select "State Animation" -&gt;"View Animations"
+2. Select "State Animation" ->"View Animations"
 3. Click the "Add Animation" button
 4. Name the animation "Show" and click OK
 5. Select the Show animation and click "Add State"
@@ -63,11 +58,11 @@ The two states we created above will be used as the keyframes for our animation.
 7. Click "Add State" again
 8. Select "Shown" and click OK
 
-![](../.gitbook/assets/AddShowAnimation.gif)
+![](<../.gitbook/assets/AddShowAnimation (1).gif>)
 
 The animation can now be played or previewed:
 
-![](../.gitbook/assets/PreviewAnimation1.gif)
+![](<../.gitbook/assets/PreviewAnimation1 (1).gif>)
 
 ## Adjusting Interpolation Type
 
@@ -78,5 +73,4 @@ The "Interpolation Type" value sets how one keyframe blends to another. By defau
 
 Playing the animation will reflect these changes.
 
-![](../.gitbook/assets/ElasticAnimation.gif)
-
+![](<../.gitbook/assets/ElasticAnimation (1).gif>)

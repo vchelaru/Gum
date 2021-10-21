@@ -1,7 +1,3 @@
----
-title: DataUiGrid
----
-
 # DataUiGrid
 
 ## Introduction
@@ -25,13 +21,13 @@ To add a grid to your XAML you'll need to:
 
 Add the following using:
 
-```text
+```
 xmlns:WpfDataUi="clr-namespace:WpfDataUi;assembly=WpfDataUi"
 ```
 
-Add the following inside a layout container \(like a Grid\):
+Add the following inside a layout container (like a Grid):
 
-```text
+```
 <WpfDataUi:DataUiGrid Name="DataGrid"></WpfDataUi:DataUiGrid>
 ```
 
@@ -39,7 +35,7 @@ Add the following inside a layout container \(like a Grid\):
 
 To use the grid in code you simply need to set its Instance member to an instance object you want to view. For example:
 
-```text
+```
 // We'll use a MemoryStream to show that it works,
 // but we could really use anything.
 MemoryStream memoryStream = new MemoryStream();
@@ -49,9 +45,8 @@ this.DataGrid.Instance = memoryStream;
 
 This will produce a grid which looks like this:
 
-![](../.gitbook/assets/WpfDataUiGrid.png)
+![](<../.gitbook/assets/WpfDataUiGrid (1).png>)
 
 ## DataUiGrid Members
 
 * [WpfDataUi.DataUiGrid.Categories](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Code%20Reference/WpfDataUi.DataUiGrid.Categories)
-
