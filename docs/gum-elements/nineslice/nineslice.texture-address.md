@@ -1,12 +1,8 @@
----
-title: Texture Address
----
-
 # Texture Address
 
 ## Introduction
 
-The **Texture Address** variable can be used to define the area that the NineSlice displays. By default the **Texture Address** is set to **Entire Texture** which means the NineSlice will display the entire source file \(split up among the nine pieces.
+The **Texture Address** variable can be used to define the area that the NineSlice displays. By default the **Texture Address** is set to **Entire Texture** which means the NineSlice will display the entire source file (split up among the nine pieces.
 
 ## Custom
 
@@ -20,5 +16,4 @@ The **Custom** value allows specifying a custom set of coordinates for the Nine 
 
 The Sprite next to the NineSlice displays the entire texture.
 
-![](../../.gitbook/assets/NineSliceCustomCoordinates.png)
-
+![](<../../.gitbook/assets/NineSliceCustomCoordinates (1).png>)

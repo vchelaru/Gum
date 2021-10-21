@@ -241,7 +241,7 @@ namespace WpfDataUi.Controls
         {
             this.SuppressSettingProperty = true;
             this.ComboBox.SelectedItem = valueOnInstance;
-            this.ComboBox.Text = valueOnInstance.ToString();
+            this.ComboBox.Text = valueOnInstance?.ToString();
             this.SuppressSettingProperty = false;
 
             if (PropertyChanged != null)

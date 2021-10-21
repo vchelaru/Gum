@@ -109,7 +109,7 @@ namespace WpfDataUi.Controls
 
         public ApplyValueResult TrySetValueOnUi(object valueOnInstance)
         {
-            this.TextBox.Text = valueOnInstance.ToString();
+            this.TextBox.Text = valueOnInstance?.ToString();
             return ApplyValueResult.Success;
         }
 

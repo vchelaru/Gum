@@ -1,7 +1,3 @@
----
-title: X
----
-
 # X
 
 ## Introduction
@@ -12,5 +8,4 @@ The X property controls the horizontal position for an object. The X value repre
 
 By default, an object's top-left corner is positioned relative to its parent's top-left corner.
 
-![](../../.gitbook/assets/XExample.gif)
-
+![](<../../.gitbook/assets/XExample (1).gif>)

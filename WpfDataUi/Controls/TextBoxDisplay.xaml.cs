@@ -111,7 +111,31 @@ namespace WpfDataUi.Controls
         {
             this.TextBox.Text = mTextBoxLogic.ConvertNumberToString(valueOnInstance);
 
+            RefreshPlaceholderText();
+
             return ApplyValueResult.Success;
+        }
+
+        private void RefreshPlaceholderText()
+        {
+            if (this.IsFocused || this.TextBox.IsFocused)
+            {
+                PlaceholderText.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                TryGetValueOnUi(out object valueOnInstance);
+                if (valueOnInstance == null)
+                {
+                    PlaceholderText.Visibility = Visibility.Visible;
+                    PlaceholderText.Text = "<NULL>";
+                }
+                else
+                {
+                    PlaceholderText.Visibility = Visibility.Collapsed;
+                }
+
+            }
         }
 
         public ApplyValueResult TryGetValueOnUi(out object value)
@@ -142,6 +166,7 @@ namespace WpfDataUi.Controls
 
         private void TextBox_LostFocus_1(object sender, RoutedEventArgs e)
         {
+            RefreshPlaceholderText();
 
             lastApplyValueResult = mTextBoxLogic.TryApplyToInstance();
 
@@ -168,6 +193,11 @@ namespace WpfDataUi.Controls
         {
             // So we don't exlicitly set values when losing focus
             this.mTextBoxLogic.HasUserChangedAnything = false;
+        }
+
+        private void TextBox_GotFocus(object sender, RoutedEventArgs e)
+        {
+            RefreshPlaceholderText();
         }
     }
 }

@@ -601,8 +601,16 @@ namespace CodeOutputPlugin.Manager
                 var defaultValue = rcv.GetValue(exposedVariable.Name);
                 var defaultValueAsString = VariableValueToGumCodeValue(exposedVariable, container, forcedValue:defaultValue);
                 var containerClassName = GetClassNameForType(container.Name, VisualApi.XamarinForms);
+
+                string defaultAssignmentWithComma = null;
+
+                if(!string.IsNullOrEmpty(defaultValueAsString))
+                {
+                    defaultAssignmentWithComma = $", defaultValue:{defaultValueAsString}";
+                }
+
                 stringBuilder.AppendLine($"{ToTabs(tabCount)}public static readonly BindableProperty {exposedVariable.ExposedAsName}Property = " +
-                    $"BindableProperty.Create(nameof({exposedVariable.ExposedAsName}),typeof({type}),typeof({containerClassName}), defaultBindingMode: BindingMode.TwoWay, propertyChanged:Handle{exposedVariable.ExposedAsName}PropertyChanged, defaultValue:{defaultValueAsString});");
+                    $"BindableProperty.Create(nameof({exposedVariable.ExposedAsName}),typeof({type}),typeof({containerClassName}), defaultBindingMode: BindingMode.TwoWay, propertyChanged:Handle{exposedVariable.ExposedAsName}PropertyChanged{defaultAssignmentWithComma});");
 
                 stringBuilder.AppendLine(ToTabs(tabCount) + $"public {type} {exposedVariable.ExposedAsName}");
                 stringBuilder.AppendLine(ToTabs(tabCount) + "{");
@@ -616,7 +624,15 @@ namespace CodeOutputPlugin.Manager
                 stringBuilder.AppendLine(ToTabs(tabCount) + "{");
                 tabCount++;
                 stringBuilder.AppendLine(ToTabs(tabCount) + $"var casted = bindable as {containerClassName};");
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.{exposedVariable.SourceObject}.{exposedVariable.GetRootName()} = ({type})newValue;");
+
+                if(!string.IsNullOrWhiteSpace(exposedVariable.SourceObject))
+                {
+                    stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.{exposedVariable.SourceObject}.{exposedVariable.GetRootName()} = ({type})newValue;");
+                }
+                else
+                {
+                    stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.{exposedVariable.Name} = ({type})newValue;");
+                }
 
                 tabCount--;
                 stringBuilder.AppendLine(ToTabs(tabCount) + "}");

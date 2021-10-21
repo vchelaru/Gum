@@ -1,8 +1,3 @@
----
-title: 5 - Exposing Variables
-order: 5
----
-
 # 5 - Exposing Variables
 
 ## Introduction
@@ -24,13 +19,13 @@ By default each instance of our Button cannot access values that are contained i
 To do this:
 
 1. Select TextInstance under Button
-2. Find the "Text" variable in the Variables tab \(Second column, under the "States" panel\)
+2. Find the "Text" variable in the Variables tab (Second column, under the "States" panel)
 3. Right-click on the text box and select "Expose Variable"
 4. Enter the name "Text" for the variable name
 
 You can verify that the Text value is exposed by clicking the "Button" component and seeing the "Text" variable under the "Exposed" category:
 
-![](../.gitbook/assets/GumExposedText.PNG)
+![](<../.gitbook/assets/GumExposedText (1).PNG>)
 
 ## Setting instance variables
 
@@ -41,5 +36,4 @@ Now that the Text variable is an exposed variable, it can be set per-instance. T
 
 Feel free to set different Text values on all of the buttons. Notice that the Text may word-wrap.
 
-![](../.gitbook/assets/GumInstanceVariables.PNG)
-
+![](<../.gitbook/assets/GumInstanceVariables (1).PNG>)
