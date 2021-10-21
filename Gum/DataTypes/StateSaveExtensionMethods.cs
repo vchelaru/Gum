@@ -578,9 +578,17 @@ namespace Gum.DataTypes.Variables
                 {
                     variableSave.Type = "bool";
                 }
+                else if(value is bool?)
+                {
+                    variableSave.Type = "bool?";
+                }
                 else if (value is float)
                 {
                     variableSave.Type = "float";
+                }
+                else if(value is float?)
+                {
+                    variableSave.Type = "float?";
                 }
                 else if (value is int)
                 {

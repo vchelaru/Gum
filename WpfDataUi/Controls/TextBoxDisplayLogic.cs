@@ -162,7 +162,7 @@ namespace WpfDataUi.Controls
 
         public string ConvertNumberToString(object value)
         {
-            string text = value.ToString();
+            string text = value?.ToString();
 
             if(value is float)
             {
@@ -251,10 +251,42 @@ namespace WpfDataUi.Controls
                         // The user may have put in a bad value
                         try
                         {
-                            // This used to convert from invariant string, but we want to use commas if the native 
-                            // computer settings use commas
-                            value = converter.ConvertFromString(usableString);
-                            result = ApplyValueResult.Success;
+                            if(string.IsNullOrEmpty(usableString))
+                            {
+                                if(InstancePropertyType == typeof(float))
+                                {
+                                    value = 0.0f;
+                                    result = ApplyValueResult.Success;
+                                }
+                                else if(InstancePropertyType == typeof(int))
+                                {
+                                    value = 0;
+                                    result = ApplyValueResult.Success;
+                                }
+                                else if(InstancePropertyType == typeof(double))
+                                {
+                                    value = 0.0;
+                                    result = ApplyValueResult.Success;
+                                }
+                                else if(InstancePropertyType == typeof(long))
+                                {
+                                    value = (long)0;
+                                    result = ApplyValueResult.Success;
+                                }
+                                else if(InstancePropertyType == typeof(byte))
+                                {
+                                    value = (byte)0;
+                                    result = ApplyValueResult.Success;
+                                }
+                            }
+
+                            if(result != ApplyValueResult.Success)
+                            {
+                                // This used to convert from invariant string, but we want to use commas if the native 
+                                // computer settings use commas
+                                value = converter.ConvertFromString(usableString);
+                                result = ApplyValueResult.Success;
+                            }
                         }
                         catch (FormatException)
                         {
@@ -349,14 +381,7 @@ namespace WpfDataUi.Controls
             bool successfulGet = mContainer.TryGetValueOnInstance(out valueOnInstance);
             if (successfulGet)
             {
-                if (valueOnInstance != null)
-                {
-                    mContainer.TrySetValueOnUi(valueOnInstance);
-                }
-                else
-                {
-                    mAssociatedTextBox.Text = null;
-                }
+                mContainer.TrySetValueOnUi(valueOnInstance);
             }
 
 

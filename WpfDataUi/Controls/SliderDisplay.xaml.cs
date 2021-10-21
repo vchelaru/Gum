@@ -136,11 +136,17 @@ namespace WpfDataUi.Controls
 
         public ApplyValueResult TrySetValueOnUi(object valueOnInstance)
         {
-            SetTextBoxValue(valueOnInstance);
+            if(valueOnInstance != null)
+            {
+                SetTextBoxValue(valueOnInstance);
 
-            SetSliderValue(valueOnInstance);
-
-            return ApplyValueResult.Success;
+                SetSliderValue(valueOnInstance);
+                return ApplyValueResult.Success;
+            }
+            else
+            {
+                return ApplyValueResult.NotSupported;
+            }
         }
 
         private void SetTextBoxValue(object valueOnInstance)
