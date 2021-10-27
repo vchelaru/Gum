@@ -129,7 +129,8 @@ namespace Gum.Managers
                 return true;
             }
             else if (stringID == "!" || stringID == "+" || stringID == "-" ||
-                stringID == "*" || stringID == "/" || stringID == "#" || stringID == ":")
+                stringID == "*" || stringID == "/" || stringID == "#" || stringID == ":" ||
+                stringID == "<" || stringID == ">")
             {
                 return true;
             }

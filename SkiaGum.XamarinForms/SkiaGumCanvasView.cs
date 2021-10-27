@@ -14,10 +14,13 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Topten.RichTextKit;
+using Microsoft.Xna.Framework;
+
 
 namespace SkiaGum
 {
     public class SkiaGumCanvasView : SKCanvasView, ISystemManagers
+    {
     {
         #region Fields/Properties
 
@@ -430,6 +433,61 @@ namespace SkiaGum
             });
 
             return found;
+        }
+
+        public void ForceGumLayout()
+        {
+            var wasSuspended = GraphicalUiElement.IsAllLayoutSuspended;
+            GraphicalUiElement.IsAllLayoutSuspended = false;
+            foreach (var item in this.GumElementsInternal)
+            {
+                item.UpdateLayout();
+            }
+            GraphicalUiElement.IsAllLayoutSuspended = wasSuspended;
+        }
+
+        public Vector2 GetBottomRightMostElementCorner()
+        {
+            Vector2 bottomRight = Vector2.Zero;
+
+            foreach (var item in this.Children)
+            {
+                GetBottomRightMostRecursive(item, ref bottomRight);
+            }
+            return bottomRight;
+        }
+
+        private void GetBottomRightMostRecursive(BindableGraphicalUiElement gue, ref Vector2 bottomRight)
+        {
+            var right = gue.GetAbsoluteRight();
+            var bottom = gue.GetAbsoluteBottom();
+
+            bottomRight.X = Math.Max(right, bottomRight.X);
+            bottomRight.Y = Math.Max(bottom, bottomRight.Y);
+
+            if (gue.Children == null)
+            {
+                foreach (BindableGraphicalUiElement item in gue.ContainedElements)
+                {
+                    GetBottomRightMostRecursive(item, ref bottomRight);
+                }
+            }
+            else
+            {
+                foreach (BindableGraphicalUiElement item in gue.Children)
+                {
+                    GetBottomRightMostRecursive(item, ref bottomRight);
+                }
+            }
+        }
+
+        // This currently assumes a height request for when it's added to a StackLayout. Maybe at some point in the
+        // future we'd want to do the same thing for canvases added to AbsoluteLayouts?
+        public void SetHeightRequestToContents()
+        {
+            ForceGumLayout();
+            var requiredSize = GetBottomRightMostElementCorner();
+            HeightRequest = requiredSize.Y;
         }
 
     }

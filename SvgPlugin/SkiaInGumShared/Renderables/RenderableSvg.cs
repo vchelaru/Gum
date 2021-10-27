@@ -34,11 +34,17 @@ namespace SkiaPlugin.Renderables
             }
         }
 
-        public bool UseColorTextureAlpha
+        public ColorOperation ColorOperation
         {
-            get => ForceUseColor;
-            set => ForceUseColor = value;
+            get => base.colorOperation;
+            set => base.colorOperation = value;
         }
+
+        //public bool UseColorTextureAlpha
+        //{
+        //    get => ForceUseColor;
+        //    set => ForceUseColor = value;
+        //}
 
         SkiaSharp.Extended.Svg.SKSvg skiaSvg;
 
@@ -63,7 +69,32 @@ namespace SkiaPlugin.Renderables
                 //SKMatrix.Concat(
                 //ref result, rotationMatrix, scaleMatrix);
 
-                surface.Canvas.DrawPicture(skiaSvg.Picture, ref scaleMatrix);
+                //if (Red != 255 || Green != 255 || Blue != 255)
+                //{
+                //    var paint = new SKPaint();
+                //    var redRatio = Red / 255.0f;
+                //    var greenRatio = Green / 255.0f;
+                //    var blueRatio = Blue / 255.0f;
+
+                //    paint.ColorFilter =
+                //        SKColorFilter.CreateColorMatrix(new float[]
+                //        {
+                //        1   , 0            , 0        , 0, 0,
+                //        0,           1   , 0        , 0, 0,
+                //        0,           0            , 1, 0, 0,
+                //        0,           0            , 0        , 1, 0
+                //        });
+
+                //    using (paint)
+                //    {
+                //        surface.Canvas.DrawPicture(skiaSvg.Picture, ref scaleMatrix, paint);
+                //    }
+                //}
+                //else
+                {
+
+                    surface.Canvas.DrawPicture(skiaSvg.Picture, ref scaleMatrix);
+                }
             }
             else
             {

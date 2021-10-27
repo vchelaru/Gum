@@ -1780,7 +1780,14 @@ namespace CodeOutputPlugin.Manager
                 }
                 else if (valueAsChildrenLayout != ChildrenLayout.Regular)
                 {
-                    return $"Error: The object {instance?.Name ?? container.Name} cannot have a layout of {valueAsChildrenLayout}";
+                    var message = $"Error: The object {instance?.Name ?? container.Name} cannot have a layout of {valueAsChildrenLayout}";
+
+                    if(instance != null && instance.BaseType?.EndsWith("/SkiaGumCanvasView") == true)
+                    {
+                        message += $"\nTo stack objects in a Skia canvas, add a Container which has its ChildrenLayout set to {valueAsChildrenLayout}";
+                    }
+
+                    return message;
                 }
                 else
                 {

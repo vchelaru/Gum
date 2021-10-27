@@ -136,12 +136,8 @@ namespace SkiaPlugin.Renderables
         protected virtual bool ShouldApplyColorOnSpriteRender => false;
         protected bool needsUpdate = true;
 
-        protected bool ForceUseColor
-        {
-            get; set;
-        }
-
-        ColorOperation IRenderableIpso.ColorOperation => ColorOperation.Modulate;
+        protected ColorOperation colorOperation = ColorOperation.Modulate;
+        ColorOperation IRenderableIpso.ColorOperation => colorOperation;
 
         #endregion
 
@@ -647,13 +643,7 @@ namespace SkiaPlugin.Renderables
 
                         var skImage = surface.Snapshot();
 
-                        Color? forcedColor = null;
-                        if(ForceUseColor)
-                        {
-                            forcedColor = this.Color;
-                        }
-
-                        texture = RenderImageToTexture2D(skImage, SystemManagers.Default.Renderer.GraphicsDevice, colorType, forcedColor);
+                        texture = RenderImageToTexture2D(skImage, SystemManagers.Default.Renderer.GraphicsDevice, colorType);
                         needsUpdate = false;
                     }
                 }

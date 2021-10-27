@@ -33,6 +33,7 @@ namespace SkiaPlugin.Managers
                 StandardElementsManager.AddPositioningVariables(svgState);
                 StandardElementsManager.AddDimensionsVariables(svgState, 100, 100,
                     Gum.Managers.StandardElementsManager.DimensionVariableAction.AllowFileOptions);
+                StandardElementsManager.AddColorVariables(svgState);
 
                 foreach (var variableSave in svgState.Variables.Where(item => item.Type == typeof(DimensionUnitType).Name))
                 {
@@ -42,9 +43,7 @@ namespace SkiaPlugin.Managers
 
                 }
 
-                StandardElementsManager.AddColorVariables(svgState);
                 svgState.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "SourceFile", IsFile = true });
-                svgState.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "UseColorTextureAlpha" });
 
                 svgState.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation" });
 
