@@ -318,9 +318,12 @@ namespace SkiaGum
             {
                 var gumElement = list[i];
 
-                if (gumElement.Visible && gumElement.IsPointInside(x, y))
+                // Children may sit outside of a container, so we should not restrict children checking on visibility bounds.
+                // Yea this makes it slower but it's important for some clicks
+                //if (gumElement.Visible && gumElement.IsPointInside(x, y))
+                if (gumElement.Visible)
                 {
-                    if (condition == null || condition(gumElement))
+                    if ((condition == null || condition(gumElement)) && gumElement.IsPointInside(x, y))
                     {
                         return gumElement;
                     }

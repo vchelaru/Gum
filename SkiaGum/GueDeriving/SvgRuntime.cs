@@ -22,16 +22,21 @@ namespace SkiaGum.GueDeriving
             }
         }
 
+        string sourceFile;
         public string SourceFile
         {
             // eventually we may want to store this off somehow
-            get => null;
+            get => sourceFile;
             set
             {
-                var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
-                var contentLoader = loaderManager.ContentLoader;
-                SKSvg skiaSvg = contentLoader.LoadContent<SKSvg>(value);
-                Texture = skiaSvg;
+                if (sourceFile != value)
+                {
+                    sourceFile = value;
+                    var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
+                    var contentLoader = loaderManager.ContentLoader;
+                    SKSvg skiaSvg = contentLoader.LoadContent<SKSvg>(value);
+                    Texture = skiaSvg;
+                }
             }
         }
 
