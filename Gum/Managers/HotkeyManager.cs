@@ -23,10 +23,12 @@ namespace Gum.Managers
             {
                 ElementTreeViewManager.Self.OnSelect(ElementTreeViewManager.Self.SelectedNode);
             }
-            TryHandleCTrlF(e);
+            TryHandleCtrlF(e);
+            HandleGoToDefinition(e);
+
         }
 
-        private void TryHandleCTrlF(KeyEventArgs e)
+        private void TryHandleCtrlF(KeyEventArgs e)
         {
             var ctrlDown = (e.Modifiers & Keys.Alt) == Keys.Control;
 
