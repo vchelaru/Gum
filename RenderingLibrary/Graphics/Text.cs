@@ -575,7 +575,7 @@ namespace RenderingLibrary.Graphics
             string stringToUse = null;
             List<string> wordArray = new List<string>();
 
-            if (mRawText != null)
+            if (!string.IsNullOrEmpty(mRawText))
             {
                 // multiline text editing in Gum can add \r's, so get rid of those:
                 stringToUse = mRawText.Replace("\r\n", "\n");

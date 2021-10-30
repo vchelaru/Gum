@@ -7,7 +7,7 @@ using Gum.RenderingLibrary;
 using GumDataTypes.Variables;
 using GumRuntime;
 
-#if MONOGAME
+#if MONOGAME || XNA4
 using RenderingLibrary.Math.Geometry;
 #endif
 
@@ -161,7 +161,7 @@ namespace Gum.Wireframe
             set;
         }
 
-#if MONOGAME
+#if MONOGAME || XNA4
         public SystemManagers Managers
         {
             get
@@ -379,7 +379,7 @@ namespace Gum.Wireframe
         #region IRenderable properties
 
 
-#if MONOGAME
+#if MONOGAME || XNA4
         Microsoft.Xna.Framework.Graphics.BlendState IRenderable.BlendState
         {
             get
@@ -400,7 +400,7 @@ namespace Gum.Wireframe
             get { return mContainedObjectAsIpso.Wrap; }
         }
 
-#if MONOGAME
+#if MONOGAME || XNA4
         void IRenderable.Render(SpriteRenderer spriteRenderer, SystemManagers managers)
         {
             mContainedObjectAsIpso.Render(spriteRenderer, managers);
@@ -1097,7 +1097,7 @@ namespace Gum.Wireframe
 
         #region Constructor
 
-#if MONOGAME
+#if MONOGAME || XNA4
         public GraphicalUiElement()
             : this(null, null)
         {
@@ -1294,7 +1294,7 @@ namespace Gum.Wireframe
 
             if (mContainedObjectAsIpso != null)
             {
-#if MONOGAME
+#if MONOGAME || XNA4
                 if (mContainedObjectAsIpso is LineRectangle)
                 {
                     (mContainedObjectAsIpso as LineRectangle).ClipsChildren = ClipsChildren;
@@ -1321,7 +1321,7 @@ namespace Gum.Wireframe
                 // (like for a tiling background) then this also needs to be set
                 // after UpdateDimensions. 
                 if (mContainedObjectAsIpso is Sprite
-#if MONOGAME
+#if MONOGAME || XNA4
                     || mContainedObjectAsIpso is NineSlice
 #endif
                     )
@@ -1375,7 +1375,7 @@ namespace Gum.Wireframe
                 }
 
                 if (mContainedObjectAsIpso is Sprite
-#if MONOGAME
+#if MONOGAME || XNA4
                     || mContainedObjectAsIpso is NineSlice
 #endif
                     )
@@ -1391,7 +1391,7 @@ namespace Gum.Wireframe
                     if (mContainedObjectAsIpso.Width != widthBeforeLayout ||
                         mContainedObjectAsIpso.Height != heightBeforeLayout)
                     {
-#if MONOGAME
+#if MONOGAME || XNA4
                         asText.SetNeedsRefreshToTrue();
                         asText.UpdatePreRenderDimensions();
 #endif
@@ -1718,7 +1718,7 @@ namespace Gum.Wireframe
                 this.HeightUnits.GetDependencyType() == HierarchyDependencyType.DependsOnChildren);
         }
 
-#if MONOGAME
+#if MONOGAME || XNA4
         void IRenderable.PreRender()
         {
             if (mContainedObjectAsIpso != null)
@@ -1734,7 +1734,7 @@ namespace Gum.Wireframe
 
             foreach (var instance in elementSave.Instances)
             {
-#if MONOGAME
+#if MONOGAME || XNA4
                 var childGue = instance.ToGraphicalUiElement(systemManagers);
 
                 if (childGue != null)
@@ -2713,7 +2713,7 @@ namespace Gum.Wireframe
                 {
                     if (mContainedObjectAsIpso is Text asText)
                     {
-#if MONOGAME
+#if MONOGAME || XNA4
                         maxHeight = asText.WrappedTextHeight;
 #endif
 #if SKIA
@@ -2818,7 +2818,7 @@ namespace Gum.Wireframe
                 {
                     Sprite sprite = mContainedObjectAsIpso as Sprite;
 
-#if MONOGAME
+#if MONOGAME || XNA4
                     if (sprite.AtlasedTexture != null)
                     {
                         var atlasedTexture = sprite.AtlasedTexture;
@@ -3032,7 +3032,7 @@ namespace Gum.Wireframe
                             //        maxWidth = asText.WrappedTextWidth;
                         }
 #endif
-#if MONOGAME
+#if MONOGAME || XNA4
                         // It's possible that the text has itself wrapped, but the dimensions changed.
                         if (asText.WrappedText.Count > 0 &&
                             (asText.Width != 0 && float.IsPositiveInfinity(asText.Width) == false))
@@ -3132,7 +3132,7 @@ namespace Gum.Wireframe
                 if (mContainedObjectAsIpso is Sprite)
                 {
                     Sprite sprite = mContainedObjectAsIpso as Sprite;
-#if MONOGAME
+#if MONOGAME || XNA4
 
                     if (sprite.AtlasedTexture != null)
                     {
@@ -3385,7 +3385,7 @@ namespace Gum.Wireframe
                 mLayer = layer;
                 mManagers = managers;
 
-#if MONOGAME
+#if MONOGAME || XNA4
                 AddContainedRenderableToManagers(managers, layer);
 
                 // Custom should be called before children have their Custom called
@@ -3532,7 +3532,7 @@ namespace Gum.Wireframe
             // This may be a Screen
             if (mContainedObjectAsIpso != null)
             {
-#if MONOGAME
+#if MONOGAME || XNA4
                 if (mContainedObjectAsIpso is Sprite)
                 {
                     managers.SpriteManager.Add(mContainedObjectAsIpso as Sprite, layer);
@@ -3599,7 +3599,7 @@ namespace Gum.Wireframe
             var layerToRemoveFrom = mLayer;
             if (mLayer == null && mManagers != null)
             {
-#if MONOGAME
+#if MONOGAME || XNA4
                 layerToRemoveFrom = mManagers.Renderer.Layers[0];
 #endif
             }
@@ -3607,7 +3607,7 @@ namespace Gum.Wireframe
             var layerToAddTo = layer;
             if (layerToAddTo == null)
             {
-#if MONOGAME
+#if MONOGAME || XNA4
                 layerToAddTo = mManagers.Renderer.Layers[0];
 #endif
             }
@@ -3650,7 +3650,7 @@ namespace Gum.Wireframe
             // if mManagers is null, then it was never added to the managers
             if (mManagers != null)
             {
-#if MONOGAME
+#if MONOGAME || XNA4
                 if (mContainedObjectAsIpso is Sprite)
                 {
                     mManagers.SpriteManager.Remove(mContainedObjectAsIpso as Sprite);
@@ -3914,7 +3914,7 @@ namespace Gum.Wireframe
             {
                 switch (propertyName)
                 {
-#if MONOGAME
+#if MONOGAME || XNA4
 
                     case nameof(Animate):
                         this.Animate = (bool)value;
@@ -3928,7 +3928,7 @@ namespace Gum.Wireframe
                         this.ClipsChildren = (bool)value;
                         toReturn = true;
                         break;
-#if MONOGAME
+#if MONOGAME || XNA4
                     case "CurrentChainName":
                         this.CurrentChainName = (string)value;
                         toReturn = true;
@@ -4100,7 +4100,7 @@ namespace Gum.Wireframe
             {
                 handled = TrySetPropertyOnText(propertyName, value);
             }
-#if MONOGAME
+#if MONOGAME || XNA4
             else if (mContainedObjectAsIpso is LineCircle)
             {
                 handled = TrySetPropertyOnLineCircle(propertyName, value);
@@ -4313,7 +4313,7 @@ namespace Gum.Wireframe
 #endif
         }
 
-#if MONOGAME
+#if MONOGAME || XNA4
 
         private bool TrySetPropertyOnLinePolygon(string propertyName, object value)
         {
@@ -4668,7 +4668,7 @@ namespace Gum.Wireframe
 
                 ReactToFontValueChange();
             }
-#if MONOGAME
+#if MONOGAME || XNA4
             else if (propertyName == nameof(UseCustomFont))
             {
                 this.UseCustomFont = (bool)value;
@@ -4709,7 +4709,7 @@ namespace Gum.Wireframe
             }
             else if (propertyName == nameof(Blend))
             {
-#if MONOGAME
+#if MONOGAME || XNA4
                 var valueAsGumBlend = (RenderingLibrary.Blend)value;
 
                 var valueAsXnaBlend = valueAsGumBlend.ToBlendState();
@@ -4721,7 +4721,7 @@ namespace Gum.Wireframe
             }
             else if (propertyName == "Alpha")
             {
-#if MONOGAME
+#if MONOGAME || XNA4
                 int valueAsInt = (int)value;
                 ((Text)mContainedObjectAsIpso).Alpha = valueAsInt;
                 handled = true;
@@ -4747,7 +4747,7 @@ namespace Gum.Wireframe
             }
             else if (propertyName == "Color")
             {
-#if MONOGAME
+#if MONOGAME || XNA4
                 var valueAsColor = (Color)value;
                 ((Text)mContainedObjectAsIpso).Color = valueAsColor;
                 handled = true;
@@ -4766,7 +4766,7 @@ namespace Gum.Wireframe
             }
             else if (propertyName == "MaxLettersToShow")
             {
-#if MONOGAME
+#if MONOGAME || XNA4
                 ((Text)mContainedObjectAsIpso).MaxLettersToShow = (int)value;
                 handled = true;
 #endif
@@ -4775,7 +4775,7 @@ namespace Gum.Wireframe
             return handled;
         }
 
-#if MONOGAME
+#if MONOGAME || XNA4
         bool useCustomFont;
         public bool UseCustomFont
         {
@@ -4885,7 +4885,7 @@ namespace Gum.Wireframe
         }
 #endif
 
-#if MONOGAME
+#if MONOGAME || XNA4
         public void UpdateToFontValues()
         {
             if (mIsLayoutSuspended || IsAllLayoutSuspended)
@@ -5142,7 +5142,7 @@ namespace Gum.Wireframe
             }
         }
 
-#if MONOGAME
+#if MONOGAME || XNA4
         public void GetUsedTextures(List<Microsoft.Xna.Framework.Graphics.Texture2D> listToFill)
         {
             var renderable = this.mContainedObjectAsIpso;
@@ -5215,7 +5215,7 @@ namespace Gum.Wireframe
         }
 
         #region AnimationChain 
-#if MONOGAME
+#if MONOGAME || XNA4
         public bool Animate { get; set; } = true;
         int mCurrentChainIndex;
         int mCurrentFrameIndex;

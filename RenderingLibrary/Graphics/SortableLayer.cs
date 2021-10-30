@@ -12,7 +12,7 @@ namespace RenderingLibrary.Graphics
             get { return false; }
         }
 
-#if MONOGAME
+#if MONOGAME || XNA4
         public Microsoft.Xna.Framework.Graphics.BlendState BlendState
         {
             get { return Microsoft.Xna.Framework.Graphics.BlendState.NonPremultiplied; }

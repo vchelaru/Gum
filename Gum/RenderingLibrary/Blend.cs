@@ -1,4 +1,4 @@
-﻿#if MONOGAME
+﻿#if MONOGAME || XNA4
 using Microsoft.Xna.Framework.Graphics;
 #endif
 
