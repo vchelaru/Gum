@@ -260,9 +260,43 @@ namespace SkiaGum.Renderables
             {
                 var absoluteX = this.GetAbsoluteX();
                 var absoluteY = this.GetAbsoluteY();
-                var rect = new SKRect(absoluteX, absoluteY, absoluteX + this.Width, absoluteY + this.Height);
+                var boundingRect = new SKRect(absoluteX, absoluteY, absoluteX + this.Width, absoluteY + this.Height);
 
-                DrawBound(rect, canvas, this.GetAbsoluteRotation());
+                var rotation = this.GetAbsoluteRotation();
+                var applyRotation = rotation != 0;
+                if (applyRotation)
+                {
+                    var oldX = boundingRect.Left;
+                    var oldY = boundingRect.Top;
+
+                    canvas.Save();
+
+                    boundingRect.Left = 0;
+                    boundingRect.Right -= oldX;
+                    boundingRect.Top = 0;
+                    boundingRect.Bottom -= oldY;
+
+                    canvas.Translate(oldX, oldY);
+                    canvas.RotateDegrees(-rotation);
+                }
+
+                // If this is stroke-only, then the stroke is centered around the bounds 
+                // we pass in. Therefore, we need to move the bounds "in" by half of the 
+                // stroke width
+                if (IsFilled == false)
+                {
+                    boundingRect.Left += StrokeWidth / 2.0f;
+                    boundingRect.Top += StrokeWidth / 2.0f;
+                    boundingRect.Right -= StrokeWidth / 2.0f;
+                    boundingRect.Bottom -= StrokeWidth / 2.0f;
+                }
+
+                DrawBound(boundingRect, canvas, this.GetAbsoluteRotation());
+
+                if (applyRotation)
+                {
+                    canvas.Restore();
+                }
             }
         }
 
@@ -496,6 +530,5 @@ namespace SkiaGum.Renderables
 
             return new SKRect(pointBefore.X, pointBefore.Y, pointBefore.X + beforeRotation.Width, pointBefore.Y + beforeRotation.Height);
         }
-
     }
 }

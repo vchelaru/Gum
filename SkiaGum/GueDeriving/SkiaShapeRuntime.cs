@@ -43,6 +43,7 @@ namespace SkiaGum.GueDeriving
         }
         #endregion
 
+        #region Filled/Stroke
 
         public bool IsFilled
         {
@@ -55,5 +56,64 @@ namespace SkiaGum.GueDeriving
             get => ContainedRenderable.StrokeWidth;
             set => ContainedRenderable.StrokeWidth = value;
         }
+
+        #endregion
+
+        #region Dropshadow
+
+        public int DropshadowAlpha
+        {
+            get => ContainedRenderable.DropshadowAlpha;
+            set => ContainedRenderable.DropshadowAlpha = value;
+        }
+
+        public int DropshadowBlue
+        {
+            get => ContainedRenderable.DropshadowBlue;
+            set => ContainedRenderable.DropshadowBlue = value;
+        }
+
+        public int DropshadowGreen
+        {
+            get => ContainedRenderable.DropshadowGreen;
+            set => ContainedRenderable.DropshadowGreen = value;
+        }
+
+        public int DropshadowRed
+        {
+            get => ContainedRenderable.DropshadowRed;
+            set => ContainedRenderable.DropshadowRed = value;
+        }
+
+
+        public bool HasDropshadow
+        {
+            get => ContainedRenderable.HasDropshadow;
+            set => ContainedRenderable.HasDropshadow = value;
+        }
+
+        public float DropshadowOffsetX
+        {
+            get => ContainedRenderable.DropshadowOffsetX;
+            set => ContainedRenderable.DropshadowOffsetX = value;
+        }
+        public float DropshadowOffsetY
+        {
+            get => ContainedRenderable.DropshadowOffsetY;
+            set => ContainedRenderable.DropshadowOffsetY = value;
+        }
+
+        public float DropshadowBlurX
+        {
+            get => ContainedRenderable.DropshadowBlurX;
+            set => ContainedRenderable.DropshadowBlurX = value;
+        }
+        public float DropshadowBlurY
+        {
+            get => ContainedRenderable.DropshadowBlurY;
+            set => ContainedRenderable.DropshadowBlurY = value;
+        }
+
+        #endregion
     }
 }

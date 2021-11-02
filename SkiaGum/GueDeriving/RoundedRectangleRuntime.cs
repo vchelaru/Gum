@@ -17,7 +17,7 @@ namespace SkiaGum.GueDeriving
         {
             get
             {
-                if(mContainedRoundedRectangle == null)
+                if (mContainedRoundedRectangle == null)
                 {
                     mContainedRoundedRectangle = this.RenderableComponent as RoundedRectangle;
                 }
@@ -25,63 +25,10 @@ namespace SkiaGum.GueDeriving
             }
         }
 
-        public int DropshadowAlpha
-        {
-            get => ContainedRoundedRectangle.DropshadowAlpha;
-            set => ContainedRoundedRectangle.DropshadowAlpha = value;
-        }
-
-        public int DropshadowBlue
-        {
-            get => ContainedRoundedRectangle.DropshadowBlue;
-            set => ContainedRoundedRectangle.DropshadowBlue = value;
-        }
-
-        public int DropshadowGreen
-        {
-            get => ContainedRoundedRectangle.DropshadowGreen;
-            set => ContainedRoundedRectangle.DropshadowGreen = value;
-        }
-
-        public int DropshadowRed
-        {
-            get => ContainedRoundedRectangle.DropshadowRed;
-            set => ContainedRoundedRectangle.DropshadowRed = value;
-        }
-
-        public float CornerRadius 
+        public float CornerRadius
         {
             get => ContainedRoundedRectangle.CornerRadius;
             set => ContainedRoundedRectangle.CornerRadius = value;
-        }
-
-
-        public bool HasDropshadow
-        {
-            get => ContainedRoundedRectangle.HasDropshadow;
-            set => ContainedRoundedRectangle.HasDropshadow = value;
-        }
-
-        public float DropshadowOffsetX
-        {
-            get => ContainedRoundedRectangle.DropshadowOffsetX;
-            set => ContainedRoundedRectangle.DropshadowOffsetX = value;
-        }
-        public float DropshadowOffsetY
-        {
-            get => ContainedRoundedRectangle.DropshadowOffsetY;
-            set => ContainedRoundedRectangle.DropshadowOffsetY = value;
-        }
-
-        public float DropshadowBlurX
-        {
-            get => ContainedRoundedRectangle.DropshadowBlurX;
-            set => ContainedRoundedRectangle.DropshadowBlurX = value;
-        }
-        public float DropshadowBlurY
-        {
-            get => ContainedRoundedRectangle.DropshadowBlurY;
-            set => ContainedRoundedRectangle.DropshadowBlurY = value;
         }
 
         #region Gradient Colors
@@ -206,7 +153,7 @@ namespace SkiaGum.GueDeriving
 
         public RoundedRectangleRuntime(bool fullInstantiation = true)
         {
-            if(fullInstantiation)
+            if (fullInstantiation)
             {
                 SetContainedObject(new RoundedRectangle());
 

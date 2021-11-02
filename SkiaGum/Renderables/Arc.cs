@@ -9,6 +9,8 @@ namespace SkiaGum.Renderables
 {
     public class Arc : RenderableBase
     {
+        #region Fields/Properties
+
         public float StartAngle
         {
             get;
@@ -29,6 +31,12 @@ namespace SkiaGum.Renderables
 
         public bool IsEndRounded { get; set; }
 
+        #endregion
+
+        public Arc() : base()
+        {
+            IsFilled = false;
+        }
 
         protected override SKPaint GetPaint(SKRect boundingRect, float absoluteRotation)
         {
@@ -43,15 +51,9 @@ namespace SkiaGum.Renderables
         {
             using (var paint = GetPaint(boundingRect, absoluteRotation))
             {
-                var adjustedRect = new SKRect(
-                    boundingRect.Left + Thickness / 2,
-                    boundingRect.Top + Thickness / 2,
-                    boundingRect.Right - Thickness / 2,
-                    boundingRect.Bottom - Thickness / 2);
-
                 using (var path = new SKPath())
                 {
-                    path.AddArc(adjustedRect, -StartAngle, -SweepAngle);
+                    path.AddArc(boundingRect, -StartAngle, -SweepAngle);
                     canvas.DrawPath(path, paint);
                 }
             }
