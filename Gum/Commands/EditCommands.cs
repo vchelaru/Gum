@@ -374,7 +374,7 @@ namespace Gum.Commands
             else if (element is ScreenSave)
             {
                 TextInputWindow tiw = new TextInputWindow();
-                tiw.Message = "Enter new Component name:";
+                tiw.Message = "Enter new Screen name:";
 
                 // todo - handle folders... do we support folders?
 
