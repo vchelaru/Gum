@@ -1163,8 +1163,17 @@ namespace CodeOutputPlugin.Manager
 
             if (widthUnits == DimensionUnitType.Absolute || widthUnits == DimensionUnitType.RelativeToChildren)
             {
-                stringBuilder.AppendLine(
-                    $"{ToTabs(tabCount)}{instanceOrThis}.HorizontalOptions = LayoutOptions.Start;");
+                if(xUnits == PositionUnitType.PixelsFromCenterX && xOrigin == HorizontalAlignment.Center)
+                {
+                    stringBuilder.AppendLine(
+                        $"{ToTabs(tabCount)}{instanceOrThis}.HorizontalOptions = LayoutOptions.Center;");
+                }
+                else
+                {
+                    stringBuilder.AppendLine(
+                        $"{ToTabs(tabCount)}{instanceOrThis}.HorizontalOptions = LayoutOptions.Start;");
+
+                }
             }
             else if(widthUnits == DimensionUnitType.RelativeToContainer || 
                 (widthUnits == DimensionUnitType.Percentage))
