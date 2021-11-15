@@ -590,8 +590,8 @@ namespace CodeOutputPlugin.Manager
                 stringBuilder.AppendLine(ToTabs(tabCount) + $"public {type} {exposedVariable.ExposedAsName}");
                 stringBuilder.AppendLine(ToTabs(tabCount) + "{");
                 tabCount++;
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"get => ({type})GetValue({exposedVariable.ExposedAsName}Property);");
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"set => SetValue({exposedVariable.ExposedAsName}Property, value);");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"get => ({type})GetValue({exposedVariable.ExposedAsName.Replace(" ", "")}Property);");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"set => SetValue({exposedVariable.ExposedAsName.Replace(" ", "")}Property, value);");
                 tabCount--;
                 stringBuilder.AppendLine(ToTabs(tabCount) + "}");
             }
@@ -615,8 +615,8 @@ namespace CodeOutputPlugin.Manager
                 stringBuilder.AppendLine(ToTabs(tabCount) + $"public {type} {exposedVariable.ExposedAsName}");
                 stringBuilder.AppendLine(ToTabs(tabCount) + "{");
                 tabCount++;
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"get => ({type})GetValue({exposedVariable.ExposedAsName}Property);");
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"set => SetValue({exposedVariable.ExposedAsName}Property, value);");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"get => ({type})GetValue({exposedVariable.ExposedAsName.Replace(" ", "")}Property);");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"set => SetValue({exposedVariable.ExposedAsName.Replace(" ", "")}Property, value);");
                 tabCount--;
                 stringBuilder.AppendLine(ToTabs(tabCount) + "}");
 
@@ -631,7 +631,7 @@ namespace CodeOutputPlugin.Manager
                 }
                 else
                 {
-                    stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.{exposedVariable.Name} = ({type})newValue;");
+                    stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.{exposedVariable.Name.Replace(" ", "")} = ({type})newValue;");
                 }
 
                 tabCount--;
@@ -643,8 +643,8 @@ namespace CodeOutputPlugin.Manager
                 stringBuilder.AppendLine(ToTabs(tabCount) + $"public {type} {exposedVariable.ExposedAsName}");
                 stringBuilder.AppendLine(ToTabs(tabCount) + "{");
                 tabCount++;
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"get => {exposedVariable.Name};");
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {exposedVariable.Name} = value;");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"get => {exposedVariable.Name.Replace(" ", "")};");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {exposedVariable.Name.Replace(" ", "")} = value;");
                 tabCount--;
 
                 stringBuilder.AppendLine(ToTabs(tabCount) + "}");
@@ -1670,7 +1670,8 @@ namespace CodeOutputPlugin.Manager
                 }
                 else
                 {
-                    return $"{instancePrefix}{GetGumVariableName(variable, container)} = {VariableValueToGumCodeValue(variable, container)};";
+                    var variableName = GetGumVariableName(variable, container);
+                    return $"{instancePrefix}{variableName} = {VariableValueToGumCodeValue(variable, container)};";
                 }
 
             }
@@ -1844,7 +1845,6 @@ namespace CodeOutputPlugin.Manager
             #endregion
                     // ignored variables:
             else if (rootName == "IsXamarinFormsControl" ||
-                rootName == "ClipsChildren" ||
                 rootName == "ExposeChildrenEvents" ||
                 rootName == "HasEvents")
             {
