@@ -529,6 +529,7 @@ namespace StateAnimationPlugin
                     model = AnimationCollectionViewModelManager.Self.GetElementAnimationsSave(element);
                 }
 
+
                 animatedStatesReferencingState = new List<AnimationSave>();
 
                 var category = element.Categories.FirstOrDefault(item => item.States.Contains(state));
@@ -537,14 +538,17 @@ namespace StateAnimationPlugin
                     ? $"{category.Name}/{state.Name}"
                     : state.Name;
 
-                foreach (var animation in model.Animations)
+                if(model != null)
                 {
-                    foreach (var animatedState in animation.States)
+                    foreach (var animation in model.Animations)
                     {
-                        if (animatedState.StateName == stateName)
+                        foreach (var animatedState in animation.States)
                         {
-                            animatedStatesReferencingState.Add(animation);
-                            break;
+                            if (animatedState.StateName == stateName)
+                            {
+                                animatedStatesReferencingState.Add(animation);
+                                break;
+                            }
                         }
                     }
                 }
