@@ -628,6 +628,7 @@ namespace CodeOutputPlugin.Manager
                 if(!string.IsNullOrWhiteSpace(exposedVariable.SourceObject))
                 {
                     stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.{exposedVariable.SourceObject}.{exposedVariable.GetRootName()} = ({type})newValue;");
+                    stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.{exposedVariable.SourceObject}?.EffectiveManagers?.InvalidateSurface();");
                 }
                 else
                 {
@@ -667,7 +668,7 @@ namespace CodeOutputPlugin.Manager
             {
                 return BindingBehavior.BindablePropertyWithBoundInstance;
             }
-            else if(isContainerXamarinForms)
+            else if(isContainerXamarinForms) // container xamforms, child is SkiaGum
             {
                 return BindingBehavior.BindablePropertyWithEventAssignment;
             }
