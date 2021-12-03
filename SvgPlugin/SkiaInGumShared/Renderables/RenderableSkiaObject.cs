@@ -653,6 +653,21 @@ namespace SkiaPlugin.Renderables
         internal abstract void DrawToSurface(SKSurface surface);
 
         public static bool PremultiplyRenderToTexture { get; set; } = false;
+        /// <summary>
+        /// Renders an SKImage to a Texture2D using the argument graphics device and SKColorType.
+        /// </summary>
+        /// <remarks>
+        /// The SKColorType parameter can have significant performance impacts. MonoGame (In FlatRedBall) 
+        /// uses a default color format of Rgba8888 on Windows. If the skiaColorType is Rgba8888, then the
+        /// bytes can be copied directly from skia to a byte[] to be used on the Texture2D.SetData call. If a
+        /// different format is used, then the data needs to be converted when copied, causing a much slower call.
+        /// Note that using SKImageInfo.PlatformColorType on Windows will return Bgra8888 which requires a (slower) conversion.
+        /// </remarks>
+        /// <param name="image">The SKImage containing the rendered Skia objects.</param>
+        /// <param name="graphicsDevice">The MonoGame Graphics Device</param>
+        /// <param name="skiaColorType">The color type. See remarks for info on this parameter</param>
+        /// <param name="forcedColor">Forced color to assign when rendering rather thant he original color from Skia.</param>
+        /// <returns>The new Texture2D instance.</returns>
         public static Texture2D RenderImageToTexture2D(SKImage image, GraphicsDevice graphicsDevice, SKColorType skiaColorType, Color? forcedColor = null)
         {
             var pixelMap = image.PeekPixels();
@@ -730,6 +745,39 @@ namespace SkiaPlugin.Renderables
 
             }
             return texture;
+        }
+
+        public Texture2D ToTexture2D(GraphicsDevice graphicsDevice, SKColorType? skiaColorType = null)
+        {
+            if(skiaColorType == null)
+            {
+                skiaColorType = SKImageInfo.PlatformColorType;
+            }
+
+            RenderableSkiaObject.PremultiplyRenderToTexture = true;
+            var imageInfo = new SKImageInfo(
+                (int)width,
+                (int)height,
+                skiaColorType.Value,
+                SKAlphaType.Premul);
+
+            Texture2D textureToReturn = null;
+
+            using (var surface = SKSurface.Create(imageInfo))
+            {
+                // It's possible this can fail
+                if (surface != null)
+                {
+                    DrawToSurface(surface);
+
+                    var skImage = surface.Snapshot();
+
+                    textureToReturn = RenderableSkiaObject.RenderImageToTexture2D(skImage, graphicsDevice, skiaColorType.Value);
+
+                }
+            }
+
+            return textureToReturn;
         }
 
         protected void SetGradientOnPaint(SKPaint paint)
