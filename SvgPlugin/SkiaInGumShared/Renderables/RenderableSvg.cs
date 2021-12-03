@@ -91,7 +91,7 @@ namespace SkiaPlugin.Renderables
                 try
                 {
                     var sourceFileAbsolute =
-                        FileManager.RemoveDotDotSlash(ProjectState.Self.ProjectDirectory + sourceFile);
+                        FileManager.RemoveDotDotSlash(Gum.ToolStates.ProjectState.Self.ProjectDirectory + sourceFile);
                     if (System.IO.File.Exists(sourceFileAbsolute))
                     {
                         using (var fileStream = System.IO.File.OpenRead(sourceFileAbsolute))
