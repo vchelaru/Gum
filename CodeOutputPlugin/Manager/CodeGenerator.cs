@@ -86,7 +86,7 @@ namespace CodeOutputPlugin.Manager
 
             FillWithStateEnums(element, stringBuilder, tabCount);
 
-            FillWithCurrentState(element, stringBuilder, tabCount);
+            FillWithStateProperties(element, stringBuilder, tabCount);
 
             foreach (var instance in element.Instances.Where(item => item.DefinedByBase == false))
             {
@@ -402,7 +402,7 @@ namespace CodeOutputPlugin.Manager
             return code;
         }
 
-        private static void FillWithVariablesInState(ElementSave container, StateSave stateSave, StringBuilder stringBuilder, int tabCount)
+        private static void FillWithVariablesInState(ElementSave container, StateSave stateSave, StringBuilder stringBuilder, int tabCount, string additionalPrefix = null)
         {
             VariableSave[] variablesToConsider = stateSave.Variables
                 // make "Parent" first
@@ -470,7 +470,7 @@ namespace CodeOutputPlugin.Manager
                     // Now that they've been processed, we can process the remainder regularly
                     foreach (var variable in variablesForThisInstance)
                     {
-                        var codeLine = GetCodeLine(instance, variable, container, visualApi, stateSave);
+                        var codeLine = GetCodeLine(instance, variable, container, visualApi, stateSave, additionalPrefix);
                         stringBuilder.AppendLine(ToTabs(tabCount) + codeLine);
                         var suffixCodeLine = GetSuffixCodeLine(instance, variable, visualApi);
                         if (!string.IsNullOrEmpty(suffixCodeLine))
@@ -504,51 +504,90 @@ namespace CodeOutputPlugin.Manager
             }
         }
 
-        private static void FillWithCurrentState(ElementSave element, StringBuilder stringBuilder, int tabCount)
+        private static void FillWithStateProperties(ElementSave element, StringBuilder stringBuilder, int tabCount)
         {
+            var isXamarinForms = GetVisualApiForElement(element) == VisualApi.XamarinForms;
+            var containerClassName = GetClassNameForType(element.Name, GetVisualApiForElement(element));
             foreach (var category in element.Categories)
             {
+                // If it's Xamarin Forms we want to have the states be bindable
+
                 stringBuilder.AppendLine();
                 string enumName = category.Name;
 
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"{category.Name} m{category.Name}State;");
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"public {category.Name} {category.Name}State");
-
-                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
-                tabCount++;
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"get => m{category.Name}State;");
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"set");
-
-                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
-                tabCount++;
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"m{category.Name}State = value;");
-
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"switch (value)");
-                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
-                tabCount++;
-
-                foreach(var state in category.States)
+                if(isXamarinForms)
                 {
-                    stringBuilder.AppendLine(ToTabs(tabCount) + $"case {category.Name}.{state.Name}:");
+
+                    stringBuilder.AppendLine($"{ToTabs(tabCount)}public static readonly BindableProperty {category.Name}StateProperty = " +
+                        $"BindableProperty.Create(nameof({category.Name}State),typeof({enumName}),typeof({containerClassName}), defaultBindingMode: BindingMode.TwoWay, propertyChanged:Handle{category.Name}StatePropertyChanged);");
+
+                    stringBuilder.AppendLine(ToTabs(tabCount) + $"public {enumName} {category.Name}State");
+                    stringBuilder.AppendLine(ToTabs(tabCount) + "{");
                     tabCount++;
-
-                    FillWithVariablesInState(element, state, stringBuilder, tabCount);
-
-                    stringBuilder.AppendLine(ToTabs(tabCount) + $"break;");
+                    stringBuilder.AppendLine(ToTabs(tabCount) + $"get => ({enumName})GetValue({category.Name}StateProperty);");
+                    stringBuilder.AppendLine(ToTabs(tabCount) + $"set => SetValue({category.Name}StateProperty, value);");
                     tabCount--;
+                    stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+
+                    stringBuilder.AppendLine(ToTabs(tabCount) + $"private static void Handle{category.Name}StatePropertyChanged(BindableObject bindable, object oldValue, object newValue)");
+                    stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+                    tabCount++;
+                    stringBuilder.AppendLine(ToTabs(tabCount) + $"var casted = bindable as {containerClassName};");
+                    stringBuilder.AppendLine(ToTabs(tabCount) + $"var value = ({enumName})newValue;");
+                    CreateStateVariableAssignmentSwitch(element, stringBuilder, tabCount, category, additionalPrefix:"casted.");
+
+                    tabCount--;
+                    stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+
+                }
+                else
+                {
+                    stringBuilder.AppendLine(ToTabs(tabCount) + $"{category.Name} m{category.Name}State;");
+
+
+                    stringBuilder.AppendLine(ToTabs(tabCount) + $"public {category.Name} {category.Name}State");
+
+                    stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+                    tabCount++;
+                    stringBuilder.AppendLine(ToTabs(tabCount) + $"get => m{category.Name}State;");
+                    stringBuilder.AppendLine(ToTabs(tabCount) + $"set");
+
+                    stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+                    tabCount++;
+                    stringBuilder.AppendLine(ToTabs(tabCount) + $"m{category.Name}State = value;");
+
+                    CreateStateVariableAssignmentSwitch(element, stringBuilder, tabCount, category);
+
+
+                    tabCount--;
+                    stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+
+                    tabCount--;
+                    stringBuilder.AppendLine(ToTabs(tabCount) + "}");
                 }
 
-
-                tabCount--;
-                stringBuilder.AppendLine(ToTabs(tabCount) + "}");
-
-
-                tabCount--;
-                stringBuilder.AppendLine(ToTabs(tabCount) + "}");
-
-                tabCount--;
-                stringBuilder.AppendLine(ToTabs(tabCount) + "}");
             }
+        }
+
+        private static void CreateStateVariableAssignmentSwitch(ElementSave element, StringBuilder stringBuilder, int tabCount, StateSaveCategory category, string additionalPrefix = null)
+        {
+            stringBuilder.AppendLine(ToTabs(tabCount) + $"switch (value)");
+            stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+            tabCount++;
+
+            foreach (var state in category.States)
+            {
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"case {category.Name}.{state.Name}:");
+                tabCount++;
+
+                FillWithVariablesInState(element, state, stringBuilder, tabCount, additionalPrefix);
+
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"break;");
+                tabCount--;
+            }
+
+            tabCount--;
+            stringBuilder.AppendLine(ToTabs(tabCount) + "}");
         }
 
         private static void FillWithExposedVariables(ElementSave element, StringBuilder stringBuilder, VisualApi visualApi, int tabCount)
@@ -1657,9 +1696,11 @@ namespace CodeOutputPlugin.Manager
             return null;
         }
 
-        private static string GetCodeLine(InstanceSave instance, VariableSave variable, ElementSave container, VisualApi visualApi, StateSave state)
+        private static string GetCodeLine(InstanceSave instance, VariableSave variable, ElementSave container, VisualApi visualApi, StateSave state, string additionalPrefix = null)
         {
             string instancePrefix = instance != null ? $"{instance.Name}." : "this.";
+
+            instancePrefix = additionalPrefix + instancePrefix;
 
             if (visualApi == VisualApi.Gum)
             {

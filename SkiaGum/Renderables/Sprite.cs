@@ -34,6 +34,13 @@ namespace SkiaGum.Renderables
 
         public override void DrawBound(SKRect boundingRect, SKCanvas canvas, float absoluteRotation)
         {
+            ////////////Early Out/////////////
+            if (Texture == null)
+            {
+                return;
+            }
+            /////////End Early Out///////////////
+
             var applyRotation = absoluteRotation != 0;
 
             if (applyRotation)

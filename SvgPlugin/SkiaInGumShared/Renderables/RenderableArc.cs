@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Gum.Converters;
-using Gum.Managers;
-using Microsoft.Xna.Framework.Graphics;
-using SkiaSharp;
+﻿using SkiaSharp;
 
 namespace SkiaPlugin.Renderables
 {

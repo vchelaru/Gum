@@ -10,8 +10,6 @@ using Microsoft.Xna.Framework.Graphics;
 using System.Xml;
 using System.Xml.Serialization;
 
-using FlatRedBall;
-
 using AnimationFrame = Gum.Graphics.Animation.AnimationFrame;
 
 using AnimationChainList = Gum.Graphics.Animation.AnimationChainList;

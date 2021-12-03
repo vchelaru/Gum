@@ -652,6 +652,7 @@ namespace SkiaPlugin.Renderables
 
         internal abstract void DrawToSurface(SKSurface surface);
 
+        public static bool PremultiplyRenderToTexture { get; set; } = false;
         public static Texture2D RenderImageToTexture2D(SKImage image, GraphicsDevice graphicsDevice, SKColorType skiaColorType, Color? forcedColor = null)
         {
             var pixelMap = image.PeekPixels();
@@ -670,9 +671,8 @@ namespace SkiaPlugin.Renderables
                 // need a new byte[] to convert from BGRA to ARGB
                 var convertedBytes = new byte[originalPixels.Length];
 
-                var premult = false;
             
-                if(premult)
+                if(PremultiplyRenderToTexture)
                 {
                     for (int i = 0; i < convertedBytes.Length; i += 4)
                     {

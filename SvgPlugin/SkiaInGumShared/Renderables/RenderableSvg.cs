@@ -1,5 +1,4 @@
-﻿using Gum.ToolStates;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
@@ -15,9 +14,10 @@ using ToolsUtilities;
 
 namespace SkiaPlugin.Renderables
 {
+#if INCLUDE_SVG
     public class RenderableSvg : RenderableSkiaObject, IAspectRatio
     {
-        #region Fields/Properties
+#region Fields/Properties
 
         string sourceFile;
         public string SourceFile
@@ -52,7 +52,7 @@ namespace SkiaPlugin.Renderables
 
         protected override bool ShouldApplyColorOnSpriteRender => true;
 
-        #endregion
+#endregion
 
         internal override void DrawToSurface(SKSurface surface)
         {
@@ -64,33 +64,7 @@ namespace SkiaPlugin.Renderables
                 var scaleY = this.Height / skiaSvg.ViewBox.Height;
 
                 SKMatrix scaleMatrix = SKMatrix.MakeScale(scaleX, scaleY);
-                //SKMatrix rotationMatrix = SKMatrix.MakeRotationDegrees(-Rotation);
-                //SKMatrix result = SKMatrix.MakeIdentity();
-                //SKMatrix.Concat(
-                //ref result, rotationMatrix, scaleMatrix);
 
-                //if (Red != 255 || Green != 255 || Blue != 255)
-                //{
-                //    var paint = new SKPaint();
-                //    var redRatio = Red / 255.0f;
-                //    var greenRatio = Green / 255.0f;
-                //    var blueRatio = Blue / 255.0f;
-
-                //    paint.ColorFilter =
-                //        SKColorFilter.CreateColorMatrix(new float[]
-                //        {
-                //        1   , 0            , 0        , 0, 0,
-                //        0,           1   , 0        , 0, 0,
-                //        0,           0            , 1, 0, 0,
-                //        0,           0            , 0        , 1, 0
-                //        });
-
-                //    using (paint)
-                //    {
-                //        surface.Canvas.DrawPicture(skiaSvg.Picture, ref scaleMatrix, paint);
-                //    }
-                //}
-                //else
                 {
 
                     surface.Canvas.DrawPicture(skiaSvg.Picture, ref scaleMatrix);
@@ -137,4 +111,5 @@ namespace SkiaPlugin.Renderables
             return skiaSvg;
         }
     }
+#endif
 }
