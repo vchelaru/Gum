@@ -404,15 +404,12 @@ namespace CodeOutputPlugin.Manager
 
         private static void FillWithVariablesInState(ElementSave container, StateSave stateSave, StringBuilder stringBuilder, int tabCount, string additionalPrefix = null)
         {
-            VariableSave[] variablesToConsider = stateSave.Variables
-                // make "Parent" first
-                .Where(item => item.GetRootName() != "Parent")
-                .ToArray();
+            VariableSave[] variablesToConsider = GetVariablesToAssignOnState(stateSave);
 
             var variableGroups = variablesToConsider.GroupBy(item => item.SourceObject);
 
 
-            foreach(var group in variableGroups)
+            foreach (var group in variableGroups)
             {
                 InstanceSave instance = null;
                 var instanceName = group.Key;
@@ -444,7 +441,7 @@ namespace CodeOutputPlugin.Manager
                 #endregion
 
                 ElementSave baseElement = null;
-                if(instance == null)
+                if (instance == null)
                 {
                     baseElement = Gum.Managers.ObjectFinder.Self.GetElementSave(container.BaseType) ?? container;
                 }
@@ -454,7 +451,7 @@ namespace CodeOutputPlugin.Manager
                 }
 
                 // could be null if the element references an element that doesn't exist.
-                if(baseElement != null)
+                if (baseElement != null)
                 {
                     var baseDefaultState = baseElement?.DefaultState;
                     RecursiveVariableFinder baseRecursiveVariableFinder = new RecursiveVariableFinder(baseDefaultState);
@@ -481,6 +478,15 @@ namespace CodeOutputPlugin.Manager
                 }
 
             }
+        }
+
+        private static VariableSave[] GetVariablesToAssignOnState(StateSave stateSave)
+        {
+            VariableSave[] variablesToConsider = stateSave.Variables
+                // make "Parent" first
+                .Where(item => item.GetRootName() != "Parent")
+                .ToArray();
+            return variablesToConsider;
         }
 
         private static void FillWithStateEnums(ElementSave element, StringBuilder stringBuilder, int tabCount)
@@ -535,6 +541,19 @@ namespace CodeOutputPlugin.Manager
                     stringBuilder.AppendLine(ToTabs(tabCount) + $"var casted = bindable as {containerClassName};");
                     stringBuilder.AppendLine(ToTabs(tabCount) + $"var value = ({enumName})newValue;");
                     CreateStateVariableAssignmentSwitch(element, stringBuilder, tabCount, category, additionalPrefix:"casted.");
+
+                    // We may need to invalidate surfaces here if any objects that have variables assigned are skia canvases
+                    foreach(var item in element.Instances)
+                    {
+                        if(item.BaseType.EndsWith("/SkiaSharpCanvasView"))
+                        {
+                            stringBuilder.AppendLine(ToTabs(tabCount) + $"{item.Name}.InvalidateSurface();");
+                        }
+                    }
+                    if(element.BaseType.EndsWith("/SkiaGumCanvasView"))
+                    {
+                        stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.InvalidateSurface();");
+                    }
 
                     tabCount--;
                     stringBuilder.AppendLine(ToTabs(tabCount) + "}");

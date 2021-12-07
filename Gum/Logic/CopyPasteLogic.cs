@@ -140,17 +140,22 @@ namespace Gum.Logic
             {
                 var element = SelectedState.Self.SelectedElement;
 
+                RecursiveVariableFinder rfv = new RecursiveVariableFinder(SelectedState.Self.SelectedStateSave);
+
                 List<InstanceSave> selected = new List<InstanceSave>();
                 // When copying we want to grab all instances in the order that they are in their container.
                 // That way when they're pasted they are pasted in the right order
-                foreach (var instance in SelectedState.Self.SelectedInstances.OrderBy(item => element.Instances.IndexOf(item)))
-                {
-                    
-                    selected.Add(instance.Clone());
-                }
+                selected.AddRange(SelectedState.Self.SelectedInstances);
 
-                mCopiedInstances =
-                        GetAllInstancesAndChildrenOf(selected, selected.FirstOrDefault()?.ParentContainer);
+                mCopiedInstances = GetAllInstancesAndChildrenOf(selected, selected.FirstOrDefault()?.ParentContainer)
+                    // Sort by index in parent at the end so the children are sorted properly:
+                            .OrderBy(item =>
+                            {
+                                return element.Instances.IndexOf(item);
+                            })
+                            // clone after doing OrderBy
+                            .Select(item => item.Clone())
+                            .ToList();
 
                 mCopiedState = SelectedState.Self.SelectedStateSave?.Clone() ?? SelectedState.Self.SelectedElement.DefaultState.Clone();
 
@@ -247,9 +252,8 @@ namespace Gum.Logic
         {
             Dictionary<string, string> oldNewNameDictionary = new Dictionary<string, string>();
 
-
-
             List<InstanceSave> newInstances = new List<InstanceSave>();
+
             foreach (var sourceInstance in instancesToCopy)
             {
                 ElementSave sourceElement = sourceInstance.ParentContainer;
@@ -374,11 +378,6 @@ namespace Gum.Logic
                     //{
                     //    if (sourceElement.Instances.Contains(sourceInstance))
                     //    {
-                    //        // Not sure why we weren't just using
-                    //        // ElementCommands here - maybe an oversight?
-                    //        // This should improve things like 
-                    //        //sourceElement.Instances.Remove(sourceInstance);
-
                     //        ElementCommands.Self.RemoveInstance(sourceInstance, sourceElement);
                     //        shouldSaveSource = true;
                     //    }
@@ -388,11 +387,6 @@ namespace Gum.Logic
                     // We need to call InstanceAdd before we select the new object - the Undo manager expects it
                     // This includes before other managers refresh
                     PluginManager.Self.InstanceAdd(targetElement, newInstance);
-
-
-
-
-
                 }
             }
 
@@ -413,7 +407,7 @@ namespace Gum.Logic
             {
                 if(listToFill.Any(item => item.Name == instance.Name) == false)
                 {
-                    listToFill.Add(instance.Clone());
+                    listToFill.Add(instance);
 
                     FillWithChildrenOf(instance, listToFill, container);
                 }
@@ -438,7 +432,7 @@ namespace Gum.Logic
 
                         if(foundObject != null && listToFill.Any(item => item.Name == foundObject.Name) == false)
                         {
-                            listToFill.Add(foundObject.Clone());
+                            listToFill.Add(foundObject);
                             FillWithChildrenOf(foundObject, listToFill, container);
                         }
                     }
