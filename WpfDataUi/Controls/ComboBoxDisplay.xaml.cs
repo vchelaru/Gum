@@ -160,6 +160,8 @@ namespace WpfDataUi.Controls
                 Text = "Property Label:"
             };
             TextBlock.TextWrapping = TextWrapping.Wrap;
+            TextBlock.ContextMenu = new ContextMenu();
+
             Grid.Children.Add(TextBlock);
 
             ComboBox = new ComboBox
@@ -218,7 +220,8 @@ namespace WpfDataUi.Controls
             TextBlock.SetForeground(ComboBox, DesiredForegroundBrush);
 
             this.RefreshContextMenu(ComboBox.ContextMenu);
-
+            this.RefreshContextMenu(TextBlock.ContextMenu);
+            
             this.TextBlock.Text = InstanceMember.DisplayName;
 
             RefreshIsEnabled();

@@ -6,7 +6,11 @@
              xmlns:local="clr-namespace:WpfDataUi.Controls"
              mc:Ignorable="d" 
              Height="Auto" d:DesignWidth="300" Margin="0,4,0,4">
-    <Grid>
+    <Grid x:Name="Grid">
+        <Grid.ContextMenu>
+            <ContextMenu>
+            </ContextMenu>
+        </Grid.ContextMenu>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Name="FirstColumn" Width="{Binding FirstGridLength}"></ColumnDefinition>
             <ColumnDefinition Width="*"></ColumnDefinition>

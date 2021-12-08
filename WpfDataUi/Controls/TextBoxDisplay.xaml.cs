@@ -78,6 +78,7 @@ namespace WpfDataUi.Controls
             mTextBoxLogic = new TextBoxDisplayLogic(this, TextBox);
 
             this.RefreshContextMenu(TextBox.ContextMenu);
+            this.RefreshContextMenu(StackPanel.ContextMenu);
             this.ContextMenu = TextBox.ContextMenu;
         }
 

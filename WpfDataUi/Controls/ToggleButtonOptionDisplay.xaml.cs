@@ -85,6 +85,7 @@ namespace WpfDataUi.Controls
 
             ButtonWrapPanel.ContextMenu = new ContextMenu();
             this.RefreshContextMenu(ButtonWrapPanel.ContextMenu);
+            this.RefreshContextMenu(Grid.ContextMenu);
 
         }
 
