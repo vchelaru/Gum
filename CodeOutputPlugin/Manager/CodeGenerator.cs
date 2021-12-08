@@ -462,7 +462,7 @@ namespace CodeOutputPlugin.Manager
                         .ToList();
 
 
-                    ProcessVariableGroups(variablesForThisInstance, stateSave, instance, container, visualApi, stringBuilder, tabCount);
+                    ProcessVariableGroups(variablesForThisInstance, stateSave, instance, container, visualApi, stringBuilder, tabCount, additionalPrefix);
 
                     // Now that they've been processed, we can process the remainder regularly
                     foreach (var variable in variablesForThisInstance)
@@ -996,7 +996,7 @@ namespace CodeOutputPlugin.Manager
             #endregion
         }
 
-        private static void ProcessVariableGroups(List<VariableSave> variablesToConsider, StateSave defaultState, InstanceSave instance, ElementSave container, VisualApi visualApi, StringBuilder stringBuilder, int tabCount)
+        private static void ProcessVariableGroups(List<VariableSave> variablesToConsider, StateSave defaultState, InstanceSave instance, ElementSave container, VisualApi visualApi, StringBuilder stringBuilder, int tabCount, string additionalPrefix = null)
         {
             if(visualApi == VisualApi.XamarinForms)
             {
@@ -1013,20 +1013,20 @@ namespace CodeOutputPlugin.Manager
                 switch(baseType)
                 {
                     case "Text":
-                        ProcessColorForLabel(variablesToConsider, defaultState, instance, stringBuilder);
-                        ProcessPositionAndSize(variablesToConsider, defaultState, instance, container, stringBuilder, tabCount);
-                        ProcessXamarinFormsLabelBold(variablesToConsider, defaultState, instance, container, stringBuilder, tabCount);
+                        ProcessColorForLabel(variablesToConsider, defaultState, instance, stringBuilder, additionalPrefix);
+                        ProcessPositionAndSize(variablesToConsider, defaultState, instance, container, stringBuilder, tabCount, additionalPrefix);
+                        ProcessXamarinFormsLabelBold(variablesToConsider, defaultState, instance, container, stringBuilder, tabCount, additionalPrefix);
                         break;
                     default:
-                        ProcessPositionAndSize(variablesToConsider, defaultState, instance, container, stringBuilder, tabCount);
+                        ProcessPositionAndSize(variablesToConsider, defaultState, instance, container, stringBuilder, tabCount, additionalPrefix);
                         break;
                 }
             }
         }
 
-        private static void ProcessColorForLabel(List<VariableSave> variablesToConsider, StateSave defaultState, InstanceSave instance, StringBuilder stringBuilder)
+        private static void ProcessColorForLabel(List<VariableSave> variablesToConsider, StateSave defaultState, InstanceSave instance, StringBuilder stringBuilder, string additionalPrefix)
         {
-            var instancePrefix = instance != null ? instance.Name + "." : string.Empty;
+            var instancePrefix = additionalPrefix + instance != null ? instance.Name + "." : string.Empty;
             var instanceName = instance?.Name;
             var rfv = new RecursiveVariableFinder(defaultState);
 
@@ -1043,7 +1043,7 @@ namespace CodeOutputPlugin.Manager
             stringBuilder.AppendLine($"{instanceName}.TextColor = Color.FromRgba({red}, {green}, {blue}, {alpha});");
         }
 
-        private static void ProcessPositionAndSize(List<VariableSave> variablesToConsider, StateSave state, InstanceSave instance, ElementSave container, StringBuilder stringBuilder, int tabCount)
+        private static void ProcessPositionAndSize(List<VariableSave> variablesToConsider, StateSave state, InstanceSave instance, ElementSave container, StringBuilder stringBuilder, int tabCount, string additionalPrefix)
         {
             //////////////////Early out/////////////////////
             if (container is ScreenSave && instance == null)
@@ -1052,7 +1052,7 @@ namespace CodeOutputPlugin.Manager
                 return;
             }
             /////////////// End Early Out/////////////
-            string prefix = instance?.Name == null ? "" : instance.Name + ".";
+            string prefix = instance?.Name == null ? additionalPrefix : additionalPrefix + instance.Name + ".";
 
             bool setsAny = GetIfStateSetsAnyPositionValues(state, prefix);
 
@@ -1095,9 +1095,9 @@ namespace CodeOutputPlugin.Manager
 
         }
 
-        private static void ProcessXamarinFormsLabelBold(List<VariableSave> variablesToConsider, StateSave state, InstanceSave instance, ElementSave container, StringBuilder stringBuilder, int tabCount)
+        private static void ProcessXamarinFormsLabelBold(List<VariableSave> variablesToConsider, StateSave state, InstanceSave instance, ElementSave container, StringBuilder stringBuilder, int tabCount, string additionalPrefix)
         {
-            string prefix = instance?.Name == null ? "" : instance.Name + ".";
+            string prefix = additionalPrefix + instance?.Name == null ? "" : instance.Name + ".";
 
             var boldName = prefix + "IsBold";
 
@@ -1138,41 +1138,55 @@ namespace CodeOutputPlugin.Manager
 
             bool setsAny = GetIfStateSetsAnyPositionValues(defaultState, prefix);
 
+            var variablePrefix = instance == null ? "" : instance.Name + ".";
 
-            var x = variableFinder.GetValue<float>(prefix + "X");
-            var y = variableFinder.GetValue<float>(prefix + "Y");
-            var width = variableFinder.GetValue<float>(prefix + "Width");
-            var height = variableFinder.GetValue<float>(prefix + "Height");
+            var x = variableFinder.GetValue<float>(variablePrefix + "X");
+            var y = variableFinder.GetValue<float>(variablePrefix + "Y");
+            var width = variableFinder.GetValue<float>(variablePrefix + "Width");
+            var height = variableFinder.GetValue<float>(variablePrefix + "Height");
 
-            var xUnits = variableFinder.GetValue<PositionUnitType>(prefix + "X Units");
-            var yUnits = variableFinder.GetValue<PositionUnitType>(prefix + "Y Units");
-            var widthUnits = variableFinder.GetValue<DimensionUnitType>(prefix + "Width Units");
-            var heightUnits = variableFinder.GetValue<DimensionUnitType>(prefix + "Height Units");
+            var xUnits = variableFinder.GetValue<PositionUnitType>(variablePrefix + "X Units");
+            var yUnits = variableFinder.GetValue<PositionUnitType>(variablePrefix + "Y Units");
+            var widthUnits = variableFinder.GetValue<DimensionUnitType>(variablePrefix + "Width Units");
+            var heightUnits = variableFinder.GetValue<DimensionUnitType>(variablePrefix + "Height Units");
 
-            var xOrigin = variableFinder.GetValue<HorizontalAlignment>(prefix + "X Origin");
-            var yOrigin = variableFinder.GetValue<VerticalAlignment>(prefix + "Y Origin");
+            var xOrigin = variableFinder.GetValue<HorizontalAlignment>(variablePrefix + "X Origin");
+            var yOrigin = variableFinder.GetValue<VerticalAlignment>(variablePrefix + "Y Origin");
 
-            variablesToConsider.RemoveAll(item => item.Name == prefix + "X");
-            variablesToConsider.RemoveAll(item => item.Name == prefix + "Y");
-            variablesToConsider.RemoveAll(item => item.Name == prefix + "Width");
-            variablesToConsider.RemoveAll(item => item.Name == prefix + "Height");
-            variablesToConsider.RemoveAll(item => item.Name == prefix + "X Units");
-            variablesToConsider.RemoveAll(item => item.Name == prefix + "Y Units");
-            variablesToConsider.RemoveAll(item => item.Name == prefix + "Width Units");
-            variablesToConsider.RemoveAll(item => item.Name == prefix + "Height Units");
+            variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "X");
+            variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Y");
+            variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Width");
+            variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Height");
+            variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "X Units");
+            variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Y Units");
+            variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Width Units");
+            variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Height Units");
 
-            var instanceOrThis = instance?.Name ?? "this";
+            string codePrefix = null;
+            if(prefix != null)
+            {
+                codePrefix = prefix;
+                if(instance != null)
+                {
+                    codePrefix += instance?.Name + ".";
+
+                }
+            }
+            else
+            {
+                codePrefix = instance != null ? instance.Name + "." : "this.";
+            }
 
             if (widthUnits == DimensionUnitType.Absolute)
             {
                 stringBuilder.AppendLine(
-                    $"{ToTabs(tabCount)}{instanceOrThis}.WidthRequest = {width.ToString(CultureInfo.InvariantCulture)}f;");
+                    $"{ToTabs(tabCount)}{codePrefix}WidthRequest = {width.ToString(CultureInfo.InvariantCulture)}f;");
             }
 
             if (heightUnits == DimensionUnitType.Absolute)
             {
                 stringBuilder.AppendLine(
-                    $"{ToTabs(tabCount)}{instanceOrThis}.HeightRequest = {height.ToString(CultureInfo.InvariantCulture)}f;");
+                    $"{ToTabs(tabCount)}{codePrefix}HeightRequest = {height.ToString(CultureInfo.InvariantCulture)}f;");
             }
 
             float leftMargin = 0;
@@ -1213,7 +1227,7 @@ namespace CodeOutputPlugin.Manager
 
             if(setsAny)
             {
-                stringBuilder.AppendLine($"{ToTabs(tabCount)}{instanceOrThis}.Margin = new Thickness(" +
+                stringBuilder.AppendLine($"{ToTabs(tabCount)}{codePrefix}Margin = new Thickness(" +
                     $"{leftMargin.ToString(CultureInfo.InvariantCulture)}, " +
                     $"{topMargin.ToString(CultureInfo.InvariantCulture)}, " +
                     $"{rightMargin.ToString(CultureInfo.InvariantCulture)}, " +
@@ -1225,12 +1239,12 @@ namespace CodeOutputPlugin.Manager
                 if(xUnits == PositionUnitType.PixelsFromCenterX && xOrigin == HorizontalAlignment.Center)
                 {
                     stringBuilder.AppendLine(
-                        $"{ToTabs(tabCount)}{instanceOrThis}.HorizontalOptions = LayoutOptions.Center;");
+                        $"{ToTabs(tabCount)}{codePrefix}HorizontalOptions = LayoutOptions.Center;");
                 }
                 else
                 {
                     stringBuilder.AppendLine(
-                        $"{ToTabs(tabCount)}{instanceOrThis}.HorizontalOptions = LayoutOptions.Start;");
+                        $"{ToTabs(tabCount)}{codePrefix}HorizontalOptions = LayoutOptions.Start;");
 
                 }
             }
@@ -1238,7 +1252,7 @@ namespace CodeOutputPlugin.Manager
                 (widthUnits == DimensionUnitType.Percentage))
             {
                 stringBuilder.AppendLine(
-                    $"{ToTabs(tabCount)}{instanceOrThis}.HorizontalOptions = LayoutOptions.Fill;");
+                    $"{ToTabs(tabCount)}{codePrefix}.HorizontalOptions = LayoutOptions.Fill;");
             }
         }
 
@@ -1717,9 +1731,21 @@ namespace CodeOutputPlugin.Manager
 
         private static string GetCodeLine(InstanceSave instance, VariableSave variable, ElementSave container, VisualApi visualApi, StateSave state, string additionalPrefix = null)
         {
-            string instancePrefix = instance != null ? $"{instance.Name}." : "this.";
+            string instancePrefix;
+            if(additionalPrefix == null)
+            {
+                instancePrefix = instance != null ? $"{instance.Name}." : "this.";
+            }
+            else
+            {
+                instancePrefix = additionalPrefix;
+                
+                if(instance != null)
+                {
+                    instancePrefix += $"{instance.Name}.";
+                }
+            }
 
-            instancePrefix = additionalPrefix + instancePrefix;
 
             if (visualApi == VisualApi.Gum)
             {
