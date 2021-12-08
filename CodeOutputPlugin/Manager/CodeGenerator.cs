@@ -1052,9 +1052,15 @@ namespace CodeOutputPlugin.Manager
                 return;
             }
             /////////////// End Early Out/////////////
-            string prefix = instance?.Name == null ? additionalPrefix : additionalPrefix + instance.Name + ".";
+            string codePrefix = instance?.Name == null ? additionalPrefix : additionalPrefix + instance.Name + ".";
+            if(codePrefix == null && instance == null)
+            {
+                codePrefix = "this.";
+            }
 
-            bool setsAny = GetIfStateSetsAnyPositionValues(state, prefix);
+            string variablePrefix = instance?.Name == null ? "" : "" + instance.Name + ".";
+
+            bool setsAny = GetIfStateSetsAnyPositionValues(state, variablePrefix);
 
             InstanceSave parent = null;
             if (instance != null)
@@ -1085,12 +1091,12 @@ namespace CodeOutputPlugin.Manager
                 // only do this layout if we're either the default state, or the variables are set in the state:
                 if (setsAny || state == container.DefaultState)
                 {
-                    SetAbsoluteLayoutPosition(variablesToConsider, state, instance, container, stringBuilder, tabCount);
+                    SetAbsoluteLayoutPosition(variablesToConsider, state, instance, container, stringBuilder, tabCount, codePrefix);
                 }
             }
             else //if(parent?.BaseType?.EndsWith("/StackLayout") == true)
             {
-                SetNonAbsoluteLayoutPosition(variablesToConsider, state, instance, stringBuilder, tabCount, prefix, parentType);
+                SetNonAbsoluteLayoutPosition(variablesToConsider, state, instance, stringBuilder, tabCount, codePrefix, parentType);
             }
 
         }
@@ -1132,13 +1138,13 @@ namespace CodeOutputPlugin.Manager
         }
 
         private static void SetNonAbsoluteLayoutPosition(List<VariableSave> variablesToConsider, StateSave defaultState, InstanceSave instance, 
-            StringBuilder stringBuilder, int tabCount, string prefix, string parentBaseType)
+            StringBuilder stringBuilder, int tabCount, string codePrefix, string parentBaseType)
         {
             var variableFinder = new RecursiveVariableFinder(defaultState);
 
-            bool setsAny = GetIfStateSetsAnyPositionValues(defaultState, prefix);
-
             var variablePrefix = instance == null ? "" : instance.Name + ".";
+            bool setsAny = GetIfStateSetsAnyPositionValues(defaultState, variablePrefix);
+
 
             var x = variableFinder.GetValue<float>(variablePrefix + "X");
             var y = variableFinder.GetValue<float>(variablePrefix + "Y");
@@ -1162,10 +1168,9 @@ namespace CodeOutputPlugin.Manager
             variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Width Units");
             variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Height Units");
 
-            string codePrefix = null;
-            if(prefix != null)
+            if(codePrefix != null)
             {
-                codePrefix = prefix;
+                codePrefix = codePrefix;
                 if(instance != null)
                 {
                     codePrefix += instance?.Name + ".";
@@ -1252,11 +1257,11 @@ namespace CodeOutputPlugin.Manager
                 (widthUnits == DimensionUnitType.Percentage))
             {
                 stringBuilder.AppendLine(
-                    $"{ToTabs(tabCount)}{codePrefix}.HorizontalOptions = LayoutOptions.Fill;");
+                    $"{ToTabs(tabCount)}{codePrefix}HorizontalOptions = LayoutOptions.Fill;");
             }
         }
 
-        private static void SetAbsoluteLayoutPosition(List<VariableSave> variablesToConsider, StateSave state, InstanceSave instance, ElementSave container, StringBuilder stringBuilder, int tabCount)
+        private static void SetAbsoluteLayoutPosition(List<VariableSave> variablesToConsider, StateSave state, InstanceSave instance, ElementSave container, StringBuilder stringBuilder, int tabCount, string codePrefix)
         {
             string prefix = instance?.Name == null ? "" : instance.Name + ".";
 
@@ -1513,10 +1518,14 @@ namespace CodeOutputPlugin.Manager
                 }
             }
 
-            var instanceOrThis =
-                instance?.Name ?? "this";
+            // this code assumes no period:
+            if(codePrefix?.EndsWith(".") == true)
+            {
+                codePrefix = codePrefix.Substring(0, codePrefix.Length - 1);
+            }
+
             string boundsText =
-                $"{ToTabs(tabCount)}AbsoluteLayout.SetLayoutBounds({instanceOrThis}, new Rectangle({xString}, {yString}, {widthString}, {heightString} ));";
+                $"{ToTabs(tabCount)}AbsoluteLayout.SetLayoutBounds({codePrefix}, new Rectangle({xString}, {yString}, {widthString}, {heightString} ));";
             string flagsText = null;
 
             if(proportionalFlags.Count == 0)
@@ -1538,7 +1547,7 @@ namespace CodeOutputPlugin.Manager
                     flagsArguments += flag;
                     i++;
                 }
-                flagsText = $"{ToTabs(tabCount)}AbsoluteLayout.SetLayoutFlags({instanceOrThis}, {flagsArguments});";
+                flagsText = $"{ToTabs(tabCount)}AbsoluteLayout.SetLayoutFlags({codePrefix}, {flagsArguments});";
             }
             // assume every object has X, which it won't, so we will have to improve this
             if (string.IsNullOrWhiteSpace(flagsText))
@@ -1553,22 +1562,22 @@ namespace CodeOutputPlugin.Manager
             // not sure why these apply even though we're using values on the AbsoluteLayout
             if (!proportionalFlags.Contains(WidthProportionalFlag) && (widthUnits == DimensionUnitType.RelativeToContainer || widthUnits == DimensionUnitType.Absolute))
             {
-                stringBuilder.AppendLine($"{ToTabs(tabCount)}{instanceOrThis}.WidthRequest = {width.ToString(CultureInfo.InvariantCulture)}f;");
+                stringBuilder.AppendLine($"{ToTabs(tabCount)}{codePrefix}.WidthRequest = {width.ToString(CultureInfo.InvariantCulture)}f;");
             }
             if (!proportionalFlags.Contains(HeightProportionalFlag) && heightUnits == DimensionUnitType.RelativeToContainer || heightUnits == DimensionUnitType.Absolute)
             {
-                stringBuilder.AppendLine($"{ToTabs(tabCount)}{instanceOrThis}.HeightRequest = {height.ToString(CultureInfo.InvariantCulture)}f;");
+                stringBuilder.AppendLine($"{ToTabs(tabCount)}{codePrefix}.HeightRequest = {height.ToString(CultureInfo.InvariantCulture)}f;");
             }
 
             //If the object is width proportional, then it must use a .HorizontalOptions = LayoutOptions.Fill; or else the proportional width won't apply
             if (proportionalFlags.Contains(WidthProportionalFlag))
             {
-                stringBuilder.AppendLine($"{ToTabs(tabCount)}{instanceOrThis}.HorizontalOptions = LayoutOptions.Fill;");
+                stringBuilder.AppendLine($"{ToTabs(tabCount)}{codePrefix}.HorizontalOptions = LayoutOptions.Fill;");
             }
 
             if (leftMargin != 0 || rightMargin != 0 || topMargin != 0 || bottomMargin != 0)
             {
-                stringBuilder.AppendLine($"{ToTabs(tabCount)}{instanceOrThis}.Margin = new Thickness({leftMargin}, {topMargin}, {rightMargin}, {bottomMargin});");
+                stringBuilder.AppendLine($"{ToTabs(tabCount)}{codePrefix}.Margin = new Thickness({leftMargin}, {topMargin}, {rightMargin}, {bottomMargin});");
             }
             // should we do the same to vertical? Maybe, but waiting for a natural use case to test it
         }
