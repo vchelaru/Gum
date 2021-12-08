@@ -298,7 +298,8 @@ namespace Gum.Undo
                 GumCommands.Self.FileCommands.TryAutoSaveProject();
                 GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
 
-                ElementTreeViewManager.Self.VerifyComponentsAreInTreeView(ProjectManager.Self.GumProjectSave);
+                // Don't do this anymore due to filtering through search
+                //ElementTreeViewManager.Self.VerifyComponentsAreInTreeView(ProjectManager.Self.GumProjectSave);
             }
         }
 

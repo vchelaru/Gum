@@ -550,7 +550,7 @@ namespace CodeOutputPlugin.Manager
                             stringBuilder.AppendLine(ToTabs(tabCount) + $"{item.Name}.InvalidateSurface();");
                         }
                     }
-                    if(element.BaseType.EndsWith("/SkiaGumCanvasView"))
+                    if(element.BaseType?.EndsWith("/SkiaGumCanvasView") == true)
                     {
                         stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.InvalidateSurface();");
                     }

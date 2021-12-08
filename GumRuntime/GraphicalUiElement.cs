@@ -2473,13 +2473,16 @@ namespace Gum.Wireframe
 
             HorizontalAlignment effectiveXorigin = isParentFlippedHorizontally ? mXOrigin.Flip() : mXOrigin;
 
-            if (effectiveXorigin == HorizontalAlignment.Center)
+            if(!float.IsNaN( mContainedObjectAsIpso.Width))
             {
-                offsetX -= mContainedObjectAsIpso.Width / 2.0f;
-            }
-            else if (effectiveXorigin == HorizontalAlignment.Right)
-            {
-                offsetX -= mContainedObjectAsIpso.Width;
+                if (effectiveXorigin == HorizontalAlignment.Center)
+                {
+                    offsetX -= mContainedObjectAsIpso.Width / 2.0f;
+                }
+                else if (effectiveXorigin == HorizontalAlignment.Right)
+                {
+                    offsetX -= mContainedObjectAsIpso.Width;
+                }
             }
             // no need to handle left
 
