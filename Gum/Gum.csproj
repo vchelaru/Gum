@@ -175,6 +175,7 @@
     <Compile Include="DataTypes\VariableSaveExtensionMethods.cs" />
     <Compile Include="Debug\ProjectVerifier.cs" />
     <Compile Include="Events\GumEvents.cs" />
+    <Compile Include="Extensions\WpfExtensions.cs" />
     <Compile Include="Graphics\Animation\AnimationChain.cs" />
     <Compile Include="Graphics\Animation\AnimationChainList.cs" />
     <Compile Include="Graphics\Animation\AnimationFrame.cs" />

@@ -8,6 +8,7 @@ using System.Windows.Forms;
 using Gum.DataTypes;
 using Gum.Plugins;
 using Gum.Controls;
+using Gum.Extensions;
 
 namespace Gum.Commands
 {
@@ -161,5 +162,43 @@ namespace Gum.Commands
             //    ShowTools();
             //}
         }
+
+        public void MoveToCursor(System.Windows.Window window)
+        {
+            window.WindowStartupLocation = System.Windows.WindowStartupLocation.Manual;
+
+            double width = window.Width;
+            if (double.IsNaN(width))
+            {
+                width = 0;
+            }
+            double height = window.Height;
+            if (double.IsNaN(height))
+            {
+                // Let's just assume some small height so it doesn't appear down below the cursor:
+                //height = 0;
+                height = 64;
+            }
+
+            var scaledX = mFlowLayoutPanel.LogicalToDeviceUnits(System.Windows.Forms.Control.MousePosition.X);
+
+            var source = System.Windows.PresentationSource.FromVisual(mainPanelControl);
+
+
+            double mousePositionX = Control.MousePosition.X;
+            double mousePositionY = Control.MousePosition.Y;
+
+            if (source != null)
+            {
+                mousePositionX /= source.CompositionTarget.TransformToDevice.M11;
+                mousePositionY /= source.CompositionTarget.TransformToDevice.M22;
+            }
+
+            window.Left = mousePositionX - width / 2;
+            window.Top = mousePositionY - height / 2;
+
+            window.ShiftWindowOntoScreen();
+        }
+
     }
 }

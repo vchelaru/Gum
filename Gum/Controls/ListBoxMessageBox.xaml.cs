@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Gum;
+using Gum.Extensions;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -101,6 +103,15 @@ namespace StateAnimationPlugin.Views
             this.ListBox.DataContext = this;
             this.MessageLabel.DataContext = this;
             this.OkButton.DataContext = this;
+
+            this.Loaded += HandleLoaded;
+        }
+
+        private void HandleLoaded(object sender, RoutedEventArgs e)
+        {
+            GumCommands.Self.GuiCommands.MoveToCursor(this);
+
+            ListBox.Focus();
         }
 
         public void HideCancelNoDialog()
@@ -137,6 +148,19 @@ namespace StateAnimationPlugin.Views
             if(SelectedItem != null)
             {
                 OkButton_Click(null, null);
+            }
+        }
+
+        private void ListBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if(e.Key == Key.Enter)
+            {
+                OkButton_Click(this, null);
+                e.Handled = true;
+            }
+            else if(e.Key == Key.Escape)
+            {
+                CancelButton_Click(this, null);
             }
         }
     }
