@@ -1026,7 +1026,16 @@ namespace CodeOutputPlugin.Manager
 
         private static void ProcessColorForLabel(List<VariableSave> variablesToConsider, StateSave defaultState, InstanceSave instance, StringBuilder stringBuilder, string additionalPrefix)
         {
-            var instancePrefix = additionalPrefix + instance != null ? instance.Name + "." : string.Empty;
+
+            string instancePrefix = null;
+            if (instance != null)
+            {
+                instancePrefix = additionalPrefix + instance.Name + ".";
+            }
+            else
+            {
+                instancePrefix = additionalPrefix;
+            }
             var instanceName = instance?.Name;
             var rfv = new RecursiveVariableFinder(defaultState);
 
@@ -1103,7 +1112,15 @@ namespace CodeOutputPlugin.Manager
 
         private static void ProcessXamarinFormsLabelBold(List<VariableSave> variablesToConsider, StateSave state, InstanceSave instance, ElementSave container, StringBuilder stringBuilder, int tabCount, string additionalPrefix)
         {
-            string prefix = additionalPrefix + instance?.Name == null ? "" : instance.Name + ".";
+            string prefix = null;
+            if (instance != null)
+            {
+                prefix = additionalPrefix + instance.Name + ".";
+            }
+            else
+            {
+                prefix = additionalPrefix;
+            }
 
             var boldName = prefix + "IsBold";
 
