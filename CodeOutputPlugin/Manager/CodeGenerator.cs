@@ -344,7 +344,7 @@ namespace CodeOutputPlugin.Manager
                     {
                         if (GetIsShouldBeLocalized(variable))
                         {
-                            string assignment = GetLocaliedLine(instance, variable);
+                            string assignment = GetLocaliedLine(instance, variable, string.Empty);
                             stringBuilder.AppendLine(ToTabs(tabCount) + assignment);
                         }
                         //else if(!string.IsNullOrEmpty(instance.BaseType))
@@ -1758,7 +1758,7 @@ namespace CodeOutputPlugin.Manager
 
             if (visualApi == VisualApi.Gum)
             {
-                var fullLineReplacement = TryGetFullGumLineReplacement(instance, variable);
+                var fullLineReplacement = TryGetFullGumLineReplacement(instance, variable, additionalPrefix);
 
                 if(fullLineReplacement != null)
                 {
@@ -1773,7 +1773,7 @@ namespace CodeOutputPlugin.Manager
             }
             else // xamarin forms
             {
-                var fullLineReplacement = TryGetFullXamarinFormsLineReplacement(instance, container, variable, state);
+                var fullLineReplacement = TryGetFullXamarinFormsLineReplacement(instance, container, variable, state, additionalPrefix);
                 if(fullLineReplacement != null)
                 {
                     return fullLineReplacement;
@@ -1789,7 +1789,7 @@ namespace CodeOutputPlugin.Manager
         public static string StringIdPrefix = "T_";
         public static string FormattedLocalizationCode = "Strings.Get(\"{0}\")";
 
-        private static string TryGetFullXamarinFormsLineReplacement(InstanceSave instance, ElementSave container, VariableSave variable, StateSave state)
+        private static string TryGetFullXamarinFormsLineReplacement(InstanceSave instance, ElementSave container, VariableSave variable, StateSave state, string variablePrefix)
         {
             var rootVariableName = variable.GetRootName();
 
@@ -1905,7 +1905,7 @@ namespace CodeOutputPlugin.Manager
             #endregion
             else if (GetIsShouldBeLocalized(variable))
             {
-                string assignment = GetLocaliedLine(instance, variable);
+                string assignment = GetLocaliedLine(instance, variable, variablePrefix);
 
                 return assignment;
             }
@@ -1913,11 +1913,11 @@ namespace CodeOutputPlugin.Manager
             return null;
         }
 
-        private static string GetLocaliedLine(InstanceSave instance, VariableSave variable)
+        private static string GetLocaliedLine(InstanceSave instance, VariableSave variable, string variablePrefix)
         {
             var valueAsString = variable.Value as string;
             var formattedStringIdAssignment = string.Format(FormattedLocalizationCode, valueAsString);
-            var assignment = $"{instance.Name}.{variable.GetRootName()} = {formattedStringIdAssignment};";
+            var assignment = $"{variablePrefix}{instance.Name}.{variable.GetRootName()} = {formattedStringIdAssignment};";
             return assignment;
         }
 
@@ -1929,7 +1929,7 @@ namespace CodeOutputPlugin.Manager
                 variable.Value is string valueAsString && valueAsString?.StartsWith(StringIdPrefix) == true;
         }
 
-        private static string TryGetFullGumLineReplacement(InstanceSave instance, VariableSave variable)
+        private static string TryGetFullGumLineReplacement(InstanceSave instance, VariableSave variable, string variablePrefix)
         {
             var rootName = variable.GetRootName();
             #region Parent
@@ -1948,7 +1948,7 @@ namespace CodeOutputPlugin.Manager
             }
             else if (GetIsShouldBeLocalized(variable))
             {
-                string assignment = GetLocaliedLine(instance, variable);
+                string assignment = GetLocaliedLine(instance, variable, variablePrefix);
 
                 return assignment;
             }

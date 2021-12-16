@@ -105,8 +105,16 @@ namespace Gum.Commands
 
             if (file.Exists())
             {
-                LocalizationManager.AddDatabase(file.FullPath, ',');
-                LocalizationManager.CurrentLanguage = GumState.Self.ProjectState.GumProjectSave.CurrentLanguageIndex;
+                try
+                {
+                    LocalizationManager.AddDatabase(file.FullPath, ',');
+                    LocalizationManager.CurrentLanguage = GumState.Self.ProjectState.GumProjectSave.CurrentLanguageIndex;
+                }
+                catch(Exception e)
+                {
+                    // This can happen if the CSV has duplicate entries
+                    GumCommands.Self.GuiCommands.ShowMessage($"Error loading CSV {file.FullPath}\n\n{e}");
+                }
             }
         }
 
