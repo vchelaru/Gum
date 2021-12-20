@@ -519,7 +519,9 @@ namespace CodeOutputPlugin.Manager
                 // If it's Xamarin Forms we want to have the states be bindable
 
                 stringBuilder.AppendLine();
-                string enumName = category.Name;
+
+                // Enum types need to be nullable because there could be no category set:
+                string enumName = category.Name + "?";
 
                 if(isXamarinForms)
                 {
