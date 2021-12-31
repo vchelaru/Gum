@@ -16,12 +16,12 @@ namespace Gum.Logic.FileWatch
 
         Dictionary<FilePath, int> changesToIgnore = new Dictionary<FilePath, int>();
 
-        List<FilePath> changedFilesWaitingForFlush = new List<FilePath>();
+        public List<FilePath> ChangedFilesWaitingForFlush { get; private set; } = new List<FilePath>();
         List<FilePath> filesCurrentlyFlushing = new List<FilePath>();
 
         FileSystemWatcher fileSystemWatcher;
 
-        DateTime lastFileChange;
+        DateTime LastFileChange;
 
         object LockObject=new object();
 
@@ -136,9 +136,9 @@ namespace Gum.Logic.FileWatch
 
                 if (!wasIgnored)
                 {
-                    changedFilesWaitingForFlush.Add(fileName);
+                    ChangedFilesWaitingForFlush.Add(fileName);
 
-                    lastFileChange = DateTime.Now;
+                    LastFileChange = DateTime.Now;
                 }
             }
         }
@@ -182,10 +182,12 @@ namespace Gum.Logic.FileWatch
             changesToIgnore.Clear();
         }
 
+        public TimeSpan TimeToNextFlush => (LastFileChange + TimeSpan.FromSeconds(2)) - DateTime.Now;
+
         public void Flush()
         {
             // early out
-            if(IsFlushing || DateTime.Now - lastFileChange < TimeSpan.FromSeconds(2))
+            if(IsFlushing || TimeToNextFlush.TotalSeconds > 0)
             {
                 return;
             }
@@ -194,10 +196,8 @@ namespace Gum.Logic.FileWatch
             {
                 IsFlushing = true;
 
-                filesCurrentlyFlushing.AddRange(changedFilesWaitingForFlush);
-                changedFilesWaitingForFlush.Clear();
-
-                bool anyFlushed = false;
+                filesCurrentlyFlushing.AddRange(ChangedFilesWaitingForFlush);
+                ChangedFilesWaitingForFlush.Clear();
 
                 foreach (var file in filesCurrentlyFlushing)
                 {

@@ -207,6 +207,11 @@
     </Compile>
     <Compile Include="Plugins\Errors\ErrorViewModel.cs" />
     <Compile Include="Plugins\Errors\MainErrorsPlugin.cs" />
+    <Compile Include="Plugins\FileWatchPlugin\FileWatchControl.xaml.cs">
+      <DependentUpon>FileWatchControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Plugins\FileWatchPlugin\FileWatchViewModel.cs" />
+    <Compile Include="Plugins\FileWatchPlugin\MainFileWatchPlugin.cs" />
     <Compile Include="Plugins\Fonts\MainFontPlugin.cs" />
     <Compile Include="Plugins\ImportPlugin\Manager\ImportLogic.cs" />
     <Compile Include="Plugins\ImportPlugin\ViewModel\ImportFileViewModel.cs" />
@@ -672,6 +677,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Plugins\Errors\ErrorListEntry.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Plugins\FileWatchPlugin\FileWatchControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

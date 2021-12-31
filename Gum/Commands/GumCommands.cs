@@ -81,5 +81,6 @@ namespace Gum
             GuiCommands.Initialize(mainWindow, mainPanelControl);
             FileCommands.Initialize(mainWindow);
         }
+
     }
 }

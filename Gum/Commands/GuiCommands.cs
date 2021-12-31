@@ -200,5 +200,11 @@ namespace Gum.Commands
             window.ShiftWindowOntoScreen();
         }
 
+
+        public void DoOnUiThread(Action action)
+        {
+            mainPanelControl.Dispatcher.Invoke(action);
+        }
+
     }
 }
