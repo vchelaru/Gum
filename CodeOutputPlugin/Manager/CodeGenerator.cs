@@ -26,6 +26,42 @@ namespace CodeOutputPlugin.Manager
 
     #endregion
 
+    public class CodeGenerationContext
+    {
+        public string ThisPrefix { get; set; }
+        public InstanceSave Instance { get; set; }
+
+        public string GumVariablePrefix
+        {
+            get
+            {
+                if(Instance == null)
+                {
+                    return String.Empty;
+                }
+                else
+                {
+                    return Instance.Name + ".";
+                }
+            }
+        }
+
+        public string CodePrefix
+        {
+            get
+            {
+                if(string.IsNullOrEmpty(ThisPrefix))
+                {
+                    return "this." + GumVariablePrefix;
+                }
+                else
+                {
+                    return ThisPrefix + "." + GumVariablePrefix;
+                }
+            }
+        }
+    }
+
     public static class CodeGenerator
     {
         #region Fields/Properties
@@ -1107,7 +1143,11 @@ namespace CodeOutputPlugin.Manager
             }
             else //if(parent?.BaseType?.EndsWith("/StackLayout") == true)
             {
-                SetNonAbsoluteLayoutPosition(variablesToConsider, state, instance, stringBuilder, tabCount, codePrefix, parentType);
+                var context = new CodeGenerationContext();
+                context.ThisPrefix = additionalPrefix;
+                context.Instance = instance;
+
+                SetNonAbsoluteLayoutPosition(variablesToConsider, state, context, stringBuilder, tabCount, parentType);
             }
 
         }
@@ -1156,12 +1196,13 @@ namespace CodeOutputPlugin.Manager
                     );
         }
 
-        private static void SetNonAbsoluteLayoutPosition(List<VariableSave> variablesToConsider, StateSave defaultState, InstanceSave instance, 
-            StringBuilder stringBuilder, int tabCount, string codePrefix, string parentBaseType)
+        private static void SetNonAbsoluteLayoutPosition(List<VariableSave> variablesToConsider, StateSave defaultState, CodeGenerationContext context, 
+            StringBuilder stringBuilder, int tabCount, string parentBaseType)
         {
             var variableFinder = new RecursiveVariableFinder(defaultState);
 
-            var variablePrefix = instance == null ? "" : instance.Name + ".";
+            var variablePrefix = context.GumVariablePrefix;
+
             bool setsAny = GetIfStateSetsAnyPositionValues(defaultState, variablePrefix);
 
 
@@ -1187,19 +1228,7 @@ namespace CodeOutputPlugin.Manager
             variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Width Units");
             variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Height Units");
 
-            if(codePrefix != null)
-            {
-                codePrefix = codePrefix;
-                if(instance != null)
-                {
-                    codePrefix += instance?.Name + ".";
-
-                }
-            }
-            else
-            {
-                codePrefix = instance != null ? instance.Name + "." : "this.";
-            }
+            var codePrefix = context.CodePrefix;
 
             if (widthUnits == DimensionUnitType.Absolute)
             {
