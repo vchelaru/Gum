@@ -2705,6 +2705,16 @@ namespace Gum.Wireframe
         {
             float heightToSet = mHeight;
 
+
+            #region AbsoluteMultipliedByFontScale
+
+            if (mHeightUnit == DimensionUnitType.AbsoluteMultipliedByFontScale)
+            {
+                heightToSet *= SystemManagers.GlobalFontScale;
+            }
+
+            #endregion
+
             #region RelativeToChildren
 
             if (mHeightUnit == DimensionUnitType.RelativeToChildren)
@@ -2994,9 +3004,18 @@ namespace Gum.Wireframe
         {
             float widthToSet = mWidth;
 
+            #region AbsoluteMultipliedByFontScale
+
+            if (mWidthUnit == DimensionUnitType.AbsoluteMultipliedByFontScale)
+            {
+                widthToSet *= SystemManagers.GlobalFontScale;
+            }
+
+            #endregion
+
             #region RelativeToChildren
 
-            if (mWidthUnit == DimensionUnitType.RelativeToChildren)
+            else if (mWidthUnit == DimensionUnitType.RelativeToChildren)
             {
                 float maxWidth = 0;
 
@@ -3245,6 +3264,8 @@ namespace Gum.Wireframe
 
             #endregion
 
+            #region Ratio
+
             else if (mWidthUnit == DimensionUnitType.Ratio)
             {
                 var widthToSplit = parentWidth;
@@ -3294,6 +3315,8 @@ namespace Gum.Wireframe
                     widthToSet = widthToSplit;
                 }
             }
+
+            #endregion
 
             mContainedObjectAsIpso.Width = widthToSet;
         }

@@ -412,7 +412,7 @@ namespace Gum.Wireframe
         {
             mContainedObjectAsIpso.Render(canvas);
 
-            if(ClipsChildren)
+            if (ClipsChildren)
             {
                 var absoluteX = this.GetAbsoluteX();
                 var absoluteY = this.GetAbsoluteY();
@@ -426,7 +426,7 @@ namespace Gum.Wireframe
                 child.Render(canvas);
             }
 
-            if(ClipsChildren)
+            if (ClipsChildren)
             {
                 canvas.Restore();
             }
@@ -2473,7 +2473,7 @@ namespace Gum.Wireframe
 
             HorizontalAlignment effectiveXorigin = isParentFlippedHorizontally ? mXOrigin.Flip() : mXOrigin;
 
-            if(!float.IsNaN( mContainedObjectAsIpso.Width))
+            if (!float.IsNaN(mContainedObjectAsIpso.Width))
             {
                 if (effectiveXorigin == HorizontalAlignment.Center)
                 {
@@ -2704,6 +2704,16 @@ namespace Gum.Wireframe
         private void UpdateHeight(float parentHeight, bool considerWrappedStacked)
         {
             float heightToSet = mHeight;
+
+
+            #region AbsoluteMultipliedByFontScale
+
+            if (mHeightUnit == DimensionUnitType.AbsoluteMultipliedByFontScale)
+            {
+                heightToSet *= SystemManagers.GlobalFontScale;
+            }
+
+            #endregion
 
             #region RelativeToChildren
 
@@ -2938,13 +2948,13 @@ namespace Gum.Wireframe
 
             #endregion
 
-            else if(mHeightUnit == DimensionUnitType.Ratio)
+            else if (mHeightUnit == DimensionUnitType.Ratio)
             {
                 var heightToSplit = parentHeight;
 
-                if(mParent != null)
+                if (mParent != null)
                 {
-                    foreach(var child in mParent.Children)
+                    foreach (var child in mParent.Children)
                     {
                         if (child != this && child is GraphicalUiElement gue)
                         {
@@ -2969,15 +2979,15 @@ namespace Gum.Wireframe
                 float totalRatio = 0;
                 if (mParent != null)
                 {
-                    foreach(var child in mParent.Children)
+                    foreach (var child in mParent.Children)
                     {
-                        if(child is GraphicalUiElement gue && gue.HeightUnits == DimensionUnitType.Ratio)
+                        if (child is GraphicalUiElement gue && gue.HeightUnits == DimensionUnitType.Ratio)
                         {
                             totalRatio += gue.Height;
                         }
                     }
                 }
-                if(totalRatio > 0)
+                if (totalRatio > 0)
                 {
                     heightToSet = heightToSplit * (this.Height / totalRatio);
                 }
@@ -2994,9 +3004,18 @@ namespace Gum.Wireframe
         {
             float widthToSet = mWidth;
 
+            #region AbsoluteMultipliedByFontScale
+
+            if (mWidthUnit == DimensionUnitType.AbsoluteMultipliedByFontScale)
+            {
+                widthToSet *= SystemManagers.GlobalFontScale;
+            }
+
+            #endregion
+
             #region RelativeToChildren
 
-            if (mWidthUnit == DimensionUnitType.RelativeToChildren)
+            else if (mWidthUnit == DimensionUnitType.RelativeToChildren)
             {
                 float maxWidth = 0;
 
@@ -3245,26 +3264,28 @@ namespace Gum.Wireframe
 
             #endregion
 
-            else if(mWidthUnit == DimensionUnitType.Ratio)
+            #region Ratio
+
+            else if (mWidthUnit == DimensionUnitType.Ratio)
             {
                 var widthToSplit = parentWidth;
 
-                if(mParent != null)
+                if (mParent != null)
                 {
-                    foreach(var child in mParent.Children)
+                    foreach (var child in mParent.Children)
                     {
-                        if(child != this && child is GraphicalUiElement gue)
+                        if (child != this && child is GraphicalUiElement gue)
                         {
                             if (gue.WidthUnits == DimensionUnitType.Absolute || gue.WidthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
                             {
                                 widthToSplit -= gue.Width;
                             }
-                            else if(gue.WidthUnits == DimensionUnitType.RelativeToContainer)
+                            else if (gue.WidthUnits == DimensionUnitType.RelativeToContainer)
                             {
                                 var childAbsoluteWidth = parentWidth - gue.Width;
                                 widthToSplit -= childAbsoluteWidth;
                             }
-                            else if(gue.WidthUnits == DimensionUnitType.Percentage)
+                            else if (gue.WidthUnits == DimensionUnitType.Percentage)
                             {
                                 var childAbsoluteWidth = parentWidth * gue.Width;
                                 widthToSplit -= childAbsoluteWidth;
@@ -3284,7 +3305,7 @@ namespace Gum.Wireframe
                         }
                     }
                 }
-                if(totalRatio > 0)
+                if (totalRatio > 0)
                 {
                     widthToSet = widthToSplit * (this.Width / totalRatio);
 
@@ -3294,6 +3315,8 @@ namespace Gum.Wireframe
                     widthToSet = widthToSplit;
                 }
             }
+
+            #endregion
 
             mContainedObjectAsIpso.Width = widthToSet;
         }
