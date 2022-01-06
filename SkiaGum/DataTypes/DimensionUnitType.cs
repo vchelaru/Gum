@@ -14,7 +14,8 @@ namespace Gum.DataTypes
         RelativeToChildren,
         PercentageOfOtherDimension,
         MaintainFileAspectRatio,
-        Ratio
+        Ratio,
+        AbsoluteMultipliedByFontScale
     }
 
     public enum HierarchyDependencyType
@@ -34,8 +35,10 @@ namespace Gum.DataTypes
         /// <returns>Whether one unit represents one pixel.</returns>
         public static bool GetIsPixelBased(this DimensionUnitType unitType)
         {
-            return unitType == DimensionUnitType.Absolute || 
-                unitType == DimensionUnitType.RelativeToContainer || unitType == DimensionUnitType.RelativeToChildren;
+            return unitType == DimensionUnitType.Absolute ||
+                unitType == DimensionUnitType.RelativeToContainer ||
+                unitType == DimensionUnitType.RelativeToChildren ||
+                unitType == DimensionUnitType.AbsoluteMultipliedByFontScale;
         }
 
         public static HierarchyDependencyType GetDependencyType(this DimensionUnitType unitType)
@@ -46,6 +49,7 @@ namespace Gum.DataTypes
                 case DimensionUnitType.PercentageOfSourceFile:
                 case DimensionUnitType.PercentageOfOtherDimension:
                 case DimensionUnitType.MaintainFileAspectRatio:
+                case DimensionUnitType.AbsoluteMultipliedByFontScale:
                     return HierarchyDependencyType.NoDependency;
                 case DimensionUnitType.Percentage:
                 case DimensionUnitType.RelativeToContainer:

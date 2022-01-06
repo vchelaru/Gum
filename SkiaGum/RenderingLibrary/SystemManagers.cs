@@ -7,6 +7,11 @@ namespace RenderingLibrary
 {
     public partial class SystemManagers
     {
+        /// <summary>
+        /// The font scale value. This can be used to scale all fonts globally, 
+        /// generally in response to a font scaling value like the Android font scale setting.
+        /// </summary>
+        public static float GlobalFontScale { get; set; } = 1.0f;
 
         public static SystemManagers Default
         {

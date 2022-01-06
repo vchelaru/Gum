@@ -2948,7 +2948,7 @@ namespace Gum.Wireframe
                     {
                         if (child != this && child is GraphicalUiElement gue)
                         {
-                            if (gue.HeightUnits == DimensionUnitType.Absolute)
+                            if (gue.HeightUnits == DimensionUnitType.Absolute || gue.HeightUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
                             {
                                 heightToSplit -= gue.Height;
                             }
@@ -3255,7 +3255,7 @@ namespace Gum.Wireframe
                     {
                         if(child != this && child is GraphicalUiElement gue)
                         {
-                            if (gue.WidthUnits == DimensionUnitType.Absolute)
+                            if (gue.WidthUnits == DimensionUnitType.Absolute || gue.WidthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
                             {
                                 widthToSplit -= gue.Width;
                             }

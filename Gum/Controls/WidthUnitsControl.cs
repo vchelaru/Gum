@@ -97,6 +97,10 @@ namespace Gum.Controls
 
             var maintainFileAspectRatio =
                 CreateBitmapFromFile("Content/Icons/WidthUnits/MaintainFileAspectRatioWidth.png");
+
+            var absoluteMultipliedByFontScale =
+                CreateBitmapFromFile("Content/Icons/WidthUnits/AbsoluteWidthMulitpliedByFontScale.png");
+
             cachedOptions = new Option[]
             {
                     new Option
@@ -147,6 +151,12 @@ namespace Gum.Controls
                         Name = "Maintain File Aspect Ratio Width",
                         Value = DimensionUnitType.MaintainFileAspectRatio,
                         Image = maintainFileAspectRatio
+                    },
+                    new Option
+                    {
+                        Name = "Absolute Multiplied by Font Scale",
+                        Value = DimensionUnitType.AbsoluteMultipliedByFontScale,
+                        Image = absoluteMultipliedByFontScale
                     }
 
             };

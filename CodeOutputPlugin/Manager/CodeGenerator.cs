@@ -1232,14 +1232,26 @@ namespace CodeOutputPlugin.Manager
 
             if (widthUnits == DimensionUnitType.Absolute)
             {
+                var multiple = "1.0f";
+                if(widthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
+                {
+                    multiple = "FIXTHISVIC";
+                }
                 stringBuilder.AppendLine(
-                    $"{ToTabs(tabCount)}{codePrefix}WidthRequest = {width.ToString(CultureInfo.InvariantCulture)}f;");
+                    $"{ToTabs(tabCount)}{codePrefix}WidthRequest = {width.ToString(CultureInfo.InvariantCulture)}f * {multiple};");
             }
 
             if (heightUnits == DimensionUnitType.Absolute)
             {
+                var multiple = "1.0f";
+
+                if(heightUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
+                {
+                    multiple = "FIXTHISVIC";
+                }
+
                 stringBuilder.AppendLine(
-                    $"{ToTabs(tabCount)}{codePrefix}HeightRequest = {height.ToString(CultureInfo.InvariantCulture)}f;");
+                    $"{ToTabs(tabCount)}{codePrefix}HeightRequest = {height.ToString(CultureInfo.InvariantCulture)}f * {multiple};");
             }
 
             float leftMargin = 0;
@@ -1287,7 +1299,7 @@ namespace CodeOutputPlugin.Manager
                     $"{bottomMargin.ToString(CultureInfo.InvariantCulture)});");
             }
 
-            if (widthUnits == DimensionUnitType.Absolute || widthUnits == DimensionUnitType.RelativeToChildren)
+            if (widthUnits == DimensionUnitType.Absolute || widthUnits == DimensionUnitType.RelativeToChildren || widthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
             {
                 if(xUnits == PositionUnitType.PixelsFromCenterX && xOrigin == HorizontalAlignment.Center)
                 {
@@ -1448,7 +1460,7 @@ namespace CodeOutputPlugin.Manager
             }
             else if (xUnits == PositionUnitType.PixelsFromCenterX)
             {
-                if (widthUnits == DimensionUnitType.Absolute)
+                if (widthUnits == DimensionUnitType.Absolute || widthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
                 {
                     x = (CanvasWidth - width) / 2.0f;
                 }
@@ -1491,7 +1503,7 @@ namespace CodeOutputPlugin.Manager
             }
             else if (yUnits == PositionUnitType.PixelsFromCenterY)
             {
-                if (heightUnits == DimensionUnitType.Absolute)
+                if (heightUnits == DimensionUnitType.Absolute || heightUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
                 {
                     y = (CanvasHeight - height) / 2.0f;
                 }
@@ -1519,6 +1531,11 @@ namespace CodeOutputPlugin.Manager
             var yString = y.ToString(CultureInfo.InvariantCulture) + "f";
             var widthString = width.ToString(CultureInfo.InvariantCulture) + "f";
             var heightString = height.ToString(CultureInfo.InvariantCulture) + "f";
+
+            if(heightUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
+            {
+                heightString = $"({heightString} * )";
+            }
 
             // When using AbsoluteLayout in XamarinForms, adding a margin will actually shrink the object. Therefore, if using margin to 
             // position an object relative to its right or bottom edges, the object's width and height should be increased by the offset amount.
@@ -1608,11 +1625,11 @@ namespace CodeOutputPlugin.Manager
             }
 
             // not sure why these apply even though we're using values on the AbsoluteLayout
-            if (!proportionalFlags.Contains(WidthProportionalFlag) && (widthUnits == DimensionUnitType.RelativeToContainer || widthUnits == DimensionUnitType.Absolute))
+            if (!proportionalFlags.Contains(WidthProportionalFlag) && (widthUnits == DimensionUnitType.RelativeToContainer || widthUnits == DimensionUnitType.Absolute || widthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale))
             {
                 stringBuilder.AppendLine($"{ToTabs(tabCount)}{codePrefix}.WidthRequest = {width.ToString(CultureInfo.InvariantCulture)}f;");
             }
-            if (!proportionalFlags.Contains(HeightProportionalFlag) && heightUnits == DimensionUnitType.RelativeToContainer || heightUnits == DimensionUnitType.Absolute)
+            if (!proportionalFlags.Contains(HeightProportionalFlag) && (heightUnits == DimensionUnitType.RelativeToContainer || heightUnits == DimensionUnitType.Absolute || heightUnits == DimensionUnitType.AbsoluteMultipliedByFontScale))
             {
                 stringBuilder.AppendLine($"{ToTabs(tabCount)}{codePrefix}.HeightRequest = {height.ToString(CultureInfo.InvariantCulture)}f;");
             }
@@ -1652,7 +1669,7 @@ namespace CodeOutputPlugin.Manager
             {
                 toReturn = width; // handle this eventually?
             }
-            else if(widthUnits == DimensionUnitType.Absolute)
+            else if(widthUnits == DimensionUnitType.Absolute || widthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
             {
                 toReturn = width;
             }
@@ -1695,7 +1712,7 @@ namespace CodeOutputPlugin.Manager
             {
                 toReturn = height; // handle this eventually?
             }
-            else if (heightUnits == DimensionUnitType.Absolute)
+            else if (heightUnits == DimensionUnitType.Absolute || heightUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
             {
                 toReturn = height;
             }

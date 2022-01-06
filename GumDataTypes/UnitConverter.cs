@@ -342,6 +342,7 @@ namespace Gum.Converters
             {
                 case DimensionUnitType.Absolute:
                 case DimensionUnitType.RelativeToChildren:
+                case DimensionUnitType.AbsoluteMultipliedByFontScale:
                     return GeneralUnitType.PixelsFromSmall;
                 case DimensionUnitType.Percentage:
                     return GeneralUnitType.Percentage;

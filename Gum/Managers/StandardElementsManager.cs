@@ -648,6 +648,10 @@ namespace Gum.Managers
             {
                 throw new Exception("You must first call Initialize on StandardElementsManager before calling this function");
             }
+            if(string.IsNullOrEmpty(type))
+            {
+                return null;
+            }
             if(mDefaults.ContainsKey(type))
             {
                 return mDefaults[type];

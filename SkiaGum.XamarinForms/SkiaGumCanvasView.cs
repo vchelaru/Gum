@@ -21,7 +21,6 @@ namespace SkiaGum
 {
     public class SkiaGumCanvasView : SKCanvasView, ISystemManagers
     {
-    {
         #region Fields/Properties
 
         private ObservableCollection<BindableGraphicalUiElement> GumElementsInternal { get; set; } = new ObservableCollection<BindableGraphicalUiElement>();
@@ -50,6 +49,10 @@ namespace SkiaGum
         /// Leaving this at 1 will make everything draw to-the-pixel regardles of device density.
         /// </summary>
         public static float GlobalScale { get; set; } = 1;
+
+
+
+
 
         #endregion
 
