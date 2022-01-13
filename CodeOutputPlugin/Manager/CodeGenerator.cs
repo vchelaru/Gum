@@ -33,6 +33,7 @@ namespace CodeOutputPlugin.Manager
         /// </summary>
         public string ThisPrefix { get; set; }
         public InstanceSave Instance { get; set; }
+        public ElementSave Element { get; set; }
 
         public string GumVariablePrefix
         {
@@ -339,7 +340,8 @@ namespace CodeOutputPlugin.Manager
 
             CodeGenerationContext context = new CodeGenerationContext();
             context.Instance = null;
-            FillWithVariableAssignments(element, visualApi, stringBuilder, context, tabCount);
+            context.Element = element;
+            FillWithVariableAssignments(visualApi, stringBuilder, context, tabCount);
 
             stringBuilder.AppendLine();
 
@@ -393,6 +395,7 @@ namespace CodeOutputPlugin.Manager
                 stringBuilder.AppendLine(ToTabs(tabCount) + "{");
                 tabCount++;
                 var context = new CodeGenerationContext();
+                context.Element = element;
                 foreach(var variable in element.DefaultState.Variables)
                 {
                     InstanceSave instance = null;
@@ -458,7 +461,10 @@ namespace CodeOutputPlugin.Manager
         {
             var stringBuilder = new StringBuilder();
 
-            FillWithVariablesInState(container, stateSave, stringBuilder, 0, new CodeGenerationContext());
+            var context = new CodeGenerationContext();
+            context.Element = container;
+
+            FillWithVariablesInState(container, stateSave, stringBuilder, 0, context);
 
             var code = stringBuilder.ToString();
             return code;
@@ -529,7 +535,7 @@ namespace CodeOutputPlugin.Manager
                     // Now that they've been processed, we can process the remainder regularly
                     foreach (var variable in variablesForThisInstance)
                     {
-                        var codeLine = GetCodeLine(instance, variable, container, visualApi, stateSave, context);
+                        var codeLine = GetCodeLine(variable, container, visualApi, stateSave, context);
                         stringBuilder.AppendLine(ToTabs(tabCount) + codeLine);
                         var suffixCodeLine = GetSuffixCodeLine(instance, variable, visualApi);
                         if (!string.IsNullOrEmpty(suffixCodeLine))
@@ -605,6 +611,7 @@ namespace CodeOutputPlugin.Manager
                     stringBuilder.AppendLine(ToTabs(tabCount) + $"var casted = bindable as {containerClassName};");
                     stringBuilder.AppendLine(ToTabs(tabCount) + $"var value = ({enumName})newValue;");
                     CodeGenerationContext context = new CodeGenerationContext();
+                    context.Element = element;
                     context.ThisPrefix = "casted";
                     CreateStateVariableAssignmentSwitch(element, stringBuilder, tabCount, category, context);
 
@@ -641,6 +648,7 @@ namespace CodeOutputPlugin.Manager
                     tabCount++;
                     stringBuilder.AppendLine(ToTabs(tabCount) + $"m{category.Name}State = value;");
                     CodeGenerationContext context = new CodeGenerationContext();
+                    context.Element = element;
 
                     CreateStateVariableAssignmentSwitch(element, stringBuilder, tabCount, category, context);
 
@@ -846,8 +854,10 @@ namespace CodeOutputPlugin.Manager
             }
         }
 
-        private static void FillWithVariableAssignments(ElementSave element, VisualApi visualApi, StringBuilder stringBuilder, CodeGenerationContext context, int tabCount = 0)
+        private static void FillWithVariableAssignments(VisualApi visualApi, StringBuilder stringBuilder, CodeGenerationContext context, int tabCount = 0)
         {
+            var element = context.Element;
+
             #region Get variables to consider
             var defaultState = element.DefaultState;
 
@@ -907,7 +917,7 @@ namespace CodeOutputPlugin.Manager
             
             foreach (var variable in variablesToConsider)
             {
-                var codeLine = GetCodeLine(null, variable, element, visualApi, defaultState, context);
+                var codeLine = GetCodeLine(variable, element, visualApi, defaultState, context);
                 stringBuilder.AppendLine(tabs + codeLine);
 
                 var suffixCodeLine = GetSuffixCodeLine(null, variable, visualApi);
@@ -968,11 +978,12 @@ namespace CodeOutputPlugin.Manager
             #endregion
 
             var context = new CodeGenerationContext();
+            context.Element = container;
             context.Instance = instance;
             // States come before anything, so run those first
             foreach(var variable in variablesToAssignValues.Where(item => item.IsState(container)))
             {
-                var codeLine = GetCodeLine(instance, variable, container, visualApi, defaultState, context);
+                var codeLine = GetCodeLine(variable, container, visualApi, defaultState, context);
 
                 // the line of code could be " ", a string with a space. This happens
                 // if we want to skip a variable so we dont return null or empty.
@@ -996,7 +1007,7 @@ namespace CodeOutputPlugin.Manager
 
             foreach (var variable in variablesToAssignValues)
             {
-                var codeLine = GetCodeLine(instance, variable, container, visualApi, defaultState, context);
+                var codeLine = GetCodeLine(variable, container, visualApi, defaultState, context);
 
                 // the line of code could be " ", a string with a space. This happens
                 // if we want to skip a variable so we dont return null or empty.
@@ -1262,7 +1273,16 @@ namespace CodeOutputPlugin.Manager
             float topMargin = 0;
             float bottomMargin = 0;
 
-            var isStackLayout = parentBaseType?.EndsWith("/StackLayout") == true;
+            var isContainedInStackLayout = parentBaseType?.EndsWith("/StackLayout") == true;
+            var isVariableOwnerAbsoluteLayout = false;
+            if (context.Instance != null)
+            {
+                isVariableOwnerAbsoluteLayout = context.Instance.BaseType?.EndsWith("/AbsoluteLayout") == true;
+            }
+            else
+            {
+                isVariableOwnerAbsoluteLayout = context.Element.BaseType?.EndsWith("/AbsoluteLayout") == true;
+            }
 
             if (xUnits == PositionUnitType.PixelsFromLeft)
             {
@@ -1286,14 +1306,19 @@ namespace CodeOutputPlugin.Manager
             }
             if(yUnits == PositionUnitType.PixelsFromTop && heightUnits == DimensionUnitType.RelativeToChildren)
             {
-                if(isStackLayout == false)
+                if(isContainedInStackLayout == false)
                 {
                     // If it's a stack layout, we don't want to subtract from here.
                     bottomMargin = -height - y;
                 }
             }
 
-            if(setsAny)
+            if (isVariableOwnerAbsoluteLayout && heightUnits == DimensionUnitType.RelativeToChildren)
+            {
+                stringBuilder.AppendLine($"Error: The object {context.Instance?.ToString() ?? context.Element?.ToString()} uses a HeightUnits of RelativeToChildren, but it is an AbsoluteLayout which is not supported in Xamarin.Forms");
+            }
+
+            if (setsAny)
             {
                 stringBuilder.AppendLine($"{ToTabs(tabCount)}{codePrefix}.Margin = new Thickness(" +
                     $"{leftMargin.ToString(CultureInfo.InvariantCulture)}, " +
@@ -1820,14 +1845,14 @@ namespace CodeOutputPlugin.Manager
             return null;
         }
 
-        private static string GetCodeLine(InstanceSave instance, VariableSave variable, ElementSave container, VisualApi visualApi, StateSave state, CodeGenerationContext context)
+        private static string GetCodeLine(VariableSave variable, ElementSave container, VisualApi visualApi, StateSave state, CodeGenerationContext context)
         {
             string instancePrefix;
             
 
             if (visualApi == VisualApi.Gum)
             {
-                var fullLineReplacement = TryGetFullGumLineReplacement(instance, variable, context);
+                var fullLineReplacement = TryGetFullGumLineReplacement(context.Instance, variable, context);
 
                 if(fullLineReplacement != null)
                 {
@@ -1839,13 +1864,13 @@ namespace CodeOutputPlugin.Manager
 
                     
 
-                    return $"{context.GumVariablePrefix}{variableName} = {VariableValueToGumCodeValue(variable, container)};";
+                    return $"{context.CodePrefix}.{variableName} = {VariableValueToGumCodeValue(variable, container)};";
                 }
 
             }
             else // xamarin forms
             {
-                var fullLineReplacement = TryGetFullXamarinFormsLineReplacement(instance, container, variable, state, context);
+                var fullLineReplacement = TryGetFullXamarinFormsLineReplacement(context.Instance, container, variable, state, context);
                 if(fullLineReplacement != null)
                 {
                     return fullLineReplacement;

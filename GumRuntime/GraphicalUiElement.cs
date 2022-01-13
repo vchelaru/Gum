@@ -3890,6 +3890,12 @@ namespace Gum.Wireframe
             return null;
         }
 
+        /// <summary>
+        /// Sets a variable on this object (such as "X") to the argument value
+        /// (such as 100.0f);
+        /// </summary>
+        /// <param name="propertyName">The name of the variable on this object.</param>
+        /// <param name="value">The value, casted to the correct type.</param>
         public void SetProperty(string propertyName, object value)
         {
 

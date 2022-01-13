@@ -31,15 +31,15 @@ namespace Gum.Plugins.ScrollBarPlugin
         private void HandleElementSelected(ElementSave obj)
         {
 
+            var ipso = GumState.Self.SelectedState.SelectedIpso;
             //////////////////Early Out////////////////////
-            if(obj == null)
+            if(obj == null || ipso == null)
             {
                 return;
             }
 
             ///////////////End Early Out///////////////////
 
-            var ipso = GumState.Self.SelectedState.SelectedIpso;
 
             float minX = 0;
             float maxX = ProjectManager.Self.GumProjectSave.DefaultCanvasWidth;
