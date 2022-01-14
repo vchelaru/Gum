@@ -9,9 +9,9 @@ namespace Gum.Commands
 {
     public class WireframeCommands
     {
-        public void Refresh()
+        public void Refresh(bool forceLayout = true, bool forceReloadContent = false)
         {
-            WireframeObjectManager.Self.RefreshAll(true);
+            WireframeObjectManager.Self.RefreshAll(forceLayout, forceReloadContent);
         }
     }
 }

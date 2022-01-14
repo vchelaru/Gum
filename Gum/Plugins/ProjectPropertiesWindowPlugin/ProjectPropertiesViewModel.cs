@@ -101,6 +101,12 @@ namespace Gum.Plugins.PropertiesWindowPlugin
             set => Set(value);
         }
 
+        public string FontRanges
+        {
+            get => Get<string>();
+            set => Set(value);
+        }
+
         public bool IsUpdatingFromModel { get; private set; }
 
         public ProjectPropertiesViewModel()
@@ -116,6 +122,7 @@ namespace Gum.Plugins.PropertiesWindowPlugin
 
             AutoSave = this.generalSettings.AutoSave;
             ShowOutlines = this.gumProject.ShowOutlines;
+            FontRanges = this.gumProject.FontRanges;
             RestrictToUnitValues = this.gumProject.RestrictToUnitValues;
             CanvasHeight = this.gumProject.DefaultCanvasHeight;
             CanvasWidth = this.gumProject.DefaultCanvasWidth;
@@ -175,6 +182,7 @@ namespace Gum.Plugins.PropertiesWindowPlugin
             this.gumProject.LocalizationFile = LocalizationFile;
             this.gumProject.CurrentLanguageIndex = LanguageIndex;
             this.gumProject.ShowLocalizationInGum = ShowLocalization;
+            this.gumProject.FontRanges = FontRanges;
         }
 
 

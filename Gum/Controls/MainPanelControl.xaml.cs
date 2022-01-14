@@ -27,6 +27,18 @@ namespace Gum.Controls
 
         GridLength splitterLength;
 
+        IEnumerable<TabControl> AllControls
+        {
+            get
+            {
+                yield return LeftTabControl;
+                yield return CenterTopTabControl;
+                yield return CenterBottomTabControl;
+                yield return RightTopTabControl;
+                yield return RightBottomTabControl;
+            }
+        }
+
         bool isHidden;
         public MainPanelControl()
         {
@@ -228,6 +240,27 @@ namespace Gum.Controls
 
         internal void ShowTabForControl(System.Windows.Controls.UserControl control)
         {
+            var found = false;
+            foreach(var tabControl in AllControls)
+            {
+                for(int i = 0; i < tabControl.Items.Count; i++)
+                {
+                    var tabPage = tabControl.Items[i] as TabItem;
+
+                    if(tabPage != null && DoesTabContainControl(tabPage, control))
+                    {
+                        tabControl.SelectedIndex = i;
+                        found = true;
+                        break;
+                    }
+                }
+
+                if(found)
+                {
+                    break;
+                }
+            }
+
             //TabControl tabControl = null;
             //TabPage tabPage = null;
             //GetContainers(control, out tabPage, out tabControl);

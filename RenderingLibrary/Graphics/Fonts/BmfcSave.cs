@@ -16,6 +16,8 @@ namespace RenderingLibrary.Graphics.Fonts
         public bool UseSmoothing = true;
         public bool IsItalic = false;
         public bool IsBold = false;
+        const string DefaultRanges = "32-126,160-255";
+        public string Ranges = DefaultRanges;
 
         public void Save(string fileName)
         {
@@ -54,8 +56,70 @@ namespace RenderingLibrary.Graphics.Fonts
                 template = template.Replace("blueChnlValue", "0");
             }
 
+            var newRange = Ranges;
+
+            var isValidRange = GetIfIsValidRange(newRange);
+
+            if(!isValidRange)
+            {
+                newRange = DefaultRanges;
+            }
+            template = template.Replace("chars=32-126,160-255", $"chars={newRange}");
+
             FileManager.SaveText(template, fileName);
 #endif        
+        }
+
+        public static bool GetIfIsValidRange(string newRange)
+        {
+            try
+            {
+                var individualRanges = newRange.Split(',');
+
+                if(individualRanges.Length == 0)
+                {
+                    return false;
+                }
+                foreach(var individualRange in individualRanges)
+                {
+                    if(individualRange.Contains("-"))
+                    {
+                        var splitNumbers = individualRange.Split('-');
+
+                        if(splitNumbers.Length != 2)
+                        {
+                            return false;
+                        }
+                        else
+                        {
+                            var firstParsed = int.TryParse(splitNumbers[0], out int result1);
+                            var secondParsed = int.TryParse(splitNumbers[1], out int result2);
+
+                            if(result1 >= result2)
+                            {
+                                return false;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // this should be a regular number:
+                        var didParseCorrectly = int.TryParse(individualRange, out int parseResult);
+
+                        if(!didParseCorrectly)
+                        {
+                            return false;
+                        }
+                    }
+                }
+
+                return true;
+
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         public string FontCacheFileName
@@ -108,9 +172,9 @@ namespace RenderingLibrary.Graphics.Fonts
 
 
         // tool-necessary implementations
-#if !WINDOWS_8 && !UWP
+#if !UWP
         public static void CreateBitmapFontFilesIfNecessary(int fontSize, string fontName, int outline, bool fontSmoothing,
-            bool isItalic = false, bool isBold = false)
+            bool isItalic = false, bool isBold = false, string fontRanges = DefaultRanges)
         {
             BmfcSave bmfcSave = new BmfcSave();
             bmfcSave.FontSize = fontSize;
@@ -119,6 +183,7 @@ namespace RenderingLibrary.Graphics.Fonts
             bmfcSave.UseSmoothing = fontSmoothing;
             bmfcSave.IsItalic = isItalic;
             bmfcSave.IsBold = isBold;
+            bmfcSave.Ranges = fontRanges;
 
             bmfcSave.CreateBitmapFontFilesIfNecessary(bmfcSave.FontCacheFileName);
         }

@@ -145,7 +145,11 @@ namespace Gum.Managers
                     fontSize.Value,
                     fontValue,
                     outlineValue,
-                    fontSmoothing, isItalic, isBold);
+                    fontSmoothing, 
+                    isItalic, 
+                    isBold,
+                    GumState.Self.ProjectState.GumProjectSave?.FontRanges
+                    );
             }
         }
     }

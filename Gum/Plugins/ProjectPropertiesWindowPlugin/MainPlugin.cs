@@ -5,6 +5,7 @@ using Gum.Plugins.BaseClasses;
 using Gum.Plugins.Behaviors;
 using Gum.ToolStates;
 using Gum.Wireframe;
+using RenderingLibrary.Graphics.Fonts;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -66,7 +67,7 @@ namespace Gum.Plugins.PropertiesWindowPlugin
                 viewModel.ApplyToModelObjects();
 
                 var shouldSaveAndRefresh = true;
-
+                var shouldReloadContent = false;
                 switch(e.PropertyName)
                 {
                     case nameof(viewModel.LocalizationFile):
@@ -90,13 +91,32 @@ namespace Gum.Plugins.PropertiesWindowPlugin
                         break;
                     case nameof(viewModel.ShowLocalization):
                         shouldSaveAndRefresh = true;
+                        break;
+                    case nameof(viewModel.FontRanges):
+                        var isValid = BmfcSave.GetIfIsValidRange(viewModel.FontRanges);
+                        if(isValid == false)
+                        {
+                            GumCommands.Self.GuiCommands.ShowMessage("The entered Font Range is not valid.");
+                        }
+                        else
+                        {
+                            if(GumState.Self.ProjectState.GumProjectSave != null)
+                            {
+                                FontManager.Self.DeleteFontCacheFolder();
 
+                                FontManager.Self.CreateAllMissingFontFiles(
+                                    ProjectState.Self.GumProjectSave);
+
+                            }
+                            shouldSaveAndRefresh = true;
+                            shouldReloadContent = true;
+                        }
                         break;
                 }
 
                 if(shouldSaveAndRefresh)
                 {
-                    GumCommands.Self.WireframeCommands.Refresh();
+                    GumCommands.Self.WireframeCommands.Refresh(forceLayout:true, forceReloadContent: shouldReloadContent);
 
                     GumCommands.Self.FileCommands.TryAutoSaveProject();
                 }

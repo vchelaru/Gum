@@ -57,6 +57,7 @@ namespace Gum.DataTypes
         public enum GumxVersions
         {
             InitialVersion = 1,
+
         }
 
         #region Fields
@@ -66,11 +67,14 @@ namespace Gum.DataTypes
         public const string StandardExtension = "gutx";
         public const string ProjectExtension = "gumx";
 
+
         public List<CustomPropertySave> CustomProperties = new List<CustomPropertySave>();
 
         #endregion
 
         #region Properties
+
+        public string FontRanges { get; set; } = "32-126,160-255";
 
         public int Version { get; set; }
 

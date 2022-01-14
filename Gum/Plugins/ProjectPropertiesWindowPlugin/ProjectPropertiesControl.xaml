@@ -12,7 +12,9 @@
             <RowDefinition></RowDefinition>
             <RowDefinition Height="Auto"></RowDefinition>
         </Grid.RowDefinitions>
-        <WpfDataUi:DataUiGrid Name="DataGrid"></WpfDataUi:DataUiGrid>
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <WpfDataUi:DataUiGrid Name="DataGrid"></WpfDataUi:DataUiGrid>
+        </ScrollViewer>
 
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right">
             <Button Margin="10,0,0,0" Click="CancelButtonClicked" >Close</Button>
