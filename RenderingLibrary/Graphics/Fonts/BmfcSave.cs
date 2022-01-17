@@ -74,6 +74,10 @@ namespace RenderingLibrary.Graphics.Fonts
         {
             try
             {
+                if(newRange?.Contains(" ") == true)
+                {
+                    return false; // no spaces allowed, bmfontgenerator doesn't like it
+                }
                 var individualRanges = newRange.Split(',');
 
                 if(individualRanges.Length == 0)
@@ -120,6 +124,16 @@ namespace RenderingLibrary.Graphics.Fonts
             {
                 return false;
             }
+        }
+
+        public static string TryFixRange(string oldRange)
+        {
+            string newRange = string.Empty;
+            if(!string.IsNullOrEmpty(oldRange))
+            {
+                newRange = oldRange.Replace(" ", string.Empty);
+            }
+            return newRange;
         }
 
         public string FontCacheFileName

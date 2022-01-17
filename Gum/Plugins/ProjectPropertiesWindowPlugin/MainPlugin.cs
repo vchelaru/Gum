@@ -94,22 +94,37 @@ namespace Gum.Plugins.PropertiesWindowPlugin
                         break;
                     case nameof(viewModel.FontRanges):
                         var isValid = BmfcSave.GetIfIsValidRange(viewModel.FontRanges);
-                        if(isValid == false)
+                        var didFixChangeThings = false;
+                        if(!isValid)
                         {
-                            GumCommands.Self.GuiCommands.ShowMessage("The entered Font Range is not valid.");
-                        }
-                        else
-                        {
-                            if(GumState.Self.ProjectState.GumProjectSave != null)
+                            var fixedRange = BmfcSave.TryFixRange(viewModel.FontRanges);
+                            if(fixedRange != viewModel.FontRanges)
                             {
-                                FontManager.Self.DeleteFontCacheFolder();
-
-                                FontManager.Self.CreateAllMissingFontFiles(
-                                    ProjectState.Self.GumProjectSave);
-
+                                // this will recursively call this property, so we'll use this bool to leave this method
+                                didFixChangeThings = true;
+                                viewModel.FontRanges = fixedRange;
                             }
-                            shouldSaveAndRefresh = true;
-                            shouldReloadContent = true;
+                        }
+
+                        if(!didFixChangeThings)
+                        {
+                            if(isValid == false)
+                            {
+                                GumCommands.Self.GuiCommands.ShowMessage("The entered Font Range is not valid.");
+                            }
+                            else
+                            {
+                                if(GumState.Self.ProjectState.GumProjectSave != null)
+                                {
+                                    FontManager.Self.DeleteFontCacheFolder();
+
+                                    FontManager.Self.CreateAllMissingFontFiles(
+                                        ProjectState.Self.GumProjectSave);
+
+                                }
+                                shouldSaveAndRefresh = true;
+                                shouldReloadContent = true;
+                            }
                         }
                         break;
                 }
