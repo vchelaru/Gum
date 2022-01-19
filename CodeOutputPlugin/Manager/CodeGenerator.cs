@@ -1505,11 +1505,15 @@ namespace CodeOutputPlugin.Manager
 
             if (yUnits == PositionUnitType.PixelsFromCenterY && yOrigin == VerticalAlignment.Center)
             {
-                if (y == 0)
-                {
-                    y = .5f;
-                    proportionalFlags.Add(YProportionalFlag);
-                }
+                // actually we'll just offset here regardless on the Y
+                //if (y == 0)
+                //{
+                topMargin = MathFunctions.RoundToInt(y);
+                bottomMargin = MathFunctions.RoundToInt(-y);
+                y = .5f;
+                proportionalFlags.Add(YProportionalFlag);
+
+                //}
             }
             else if(yUnits == PositionUnitType.PixelsFromTop)
             {
