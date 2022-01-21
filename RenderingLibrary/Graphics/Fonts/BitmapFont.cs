@@ -409,11 +409,30 @@ namespace RenderingLibrary.Graphics
                         int secondCharacter = StringFunctions.GetIntAfter("second=", fontPattern, index);
                         int kearningAmount = StringFunctions.GetIntAfter("amount=", fontPattern, index);
 
-                        if(mCharacterInfo[ID].SecondLetterKearning.ContainsKey(secondCharacter))
+                        // January 21, 2022
+                        // Not sure why but Vic
+                        // was able to create a font
+                        // file with duplicate kearnings.
+                        // Specifically the contents had:
+                        // kerning first=35  second=54  amount=-1    << First entry of 
+                        // kerning first=47  second=49  amount=2
+                        // kerning first=47  second=51  amount=1
+                        // kerning first=47  second=53  amount=1
+                        // kerning first=47  second=55  amount=1
+                        // kerning first=35  second=52  amount=-1
+                        // kerning first=35  second=54  amount=-1    << Duplicate entry
+                        // This file is created by BitmapFontGenerator,
+                        // which is not controlled by Gum. Therefore, we
+                        // should tolerate duplicates
+                        //if (mCharacterInfo[ID].SecondLetterKearning.ContainsKey(secondCharacter))
+                        //{
+                        //    throw new InvalidOperationException($"Trying to add the character {secondCharacter} to the mCharacterInfo {ID}, but this entry already exists");
+                        //}
+                        //mCharacterInfo[ID].SecondLetterKearning.Add(secondCharacter, kearningAmount);
+                        if (!mCharacterInfo[ID].SecondLetterKearning.ContainsKey(secondCharacter))
                         {
-                            throw new InvalidOperationException($"Trying to add the character {secondCharacter} to the mCharacterInfo {ID}, but this entry already exists");
+                            mCharacterInfo[ID].SecondLetterKearning.Add(secondCharacter, kearningAmount);
                         }
-                        mCharacterInfo[ID].SecondLetterKearning.Add(secondCharacter, kearningAmount);
 
                         index = fontPattern.IndexOf("first=", index + 1);
                     }
