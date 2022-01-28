@@ -316,12 +316,30 @@ namespace WpfDataUi
 
         }
 
+        public void MoveMemberToCategory(string memberName, string categoryName)
+        {
+            var member = Categories.SelectMany(item => item.Members).FirstOrDefault(item => item.Name == memberName);
+            var desiredCategory = Categories.FirstOrDefault(item => item.Name == categoryName);
+
+            if(desiredCategory == null)
+            {
+                desiredCategory = new MemberCategory(categoryName);
+                Categories.Add(desiredCategory);
+            }
+
+            if(member != null && member.Category != desiredCategory)
+            {
+                member.Category.Members.Remove(member);
+                desiredCategory.Members.Add(member);
+            }
+        }
+
         private void TryCreateCategoryAndInstanceFor(MemberInfo memberInfo)
         {
             if (ShouldCreateUiFor(memberInfo.GetMemberType(), memberInfo.Name))
             {
                 
-                string categoryName = GetCategoryFor(memberInfo);
+                string categoryName = GetCategoryAttributeFor(memberInfo);
 
                 MemberCategory memberCategory = GetOrInstantiateAndAddMemberCategory(categoryName);
 
@@ -407,7 +425,7 @@ namespace WpfDataUi
             return true;
         }
         
-        private static string GetCategoryFor(MemberInfo memberInfo)
+        private static string GetCategoryAttributeFor(MemberInfo memberInfo)
         {
             var attributes = memberInfo.GetCustomAttributes(typeof(CategoryAttribute), true);
 
