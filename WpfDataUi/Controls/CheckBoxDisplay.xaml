@@ -4,21 +4,30 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" 
-             Height="24" d:DesignWidth="300">
-    <Grid>
+             d:DesignWidth="300">
+    <StackPanel x:Name="StackPanel">
+            
+        <Grid>
+            <CheckBox x:Name="CheckBox" VerticalAlignment="Center" 
+                      VerticalContentAlignment="Center"
+                      Margin="4,4" 
+                      Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"
 
-        <CheckBox x:Name="CheckBox" VerticalAlignment="Center" 
-                  VerticalContentAlignment="Center"
-                  Margin="4,4" 
-                  Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"
+                      Content="Property Label:"
+                      >
+                <CheckBox.ContextMenu>
+                    <ContextMenu>
+                    </ContextMenu>
+                </CheckBox.ContextMenu>
 
-                  Content="Property Label:"
-                  >
-            <CheckBox.ContextMenu>
-                <ContextMenu>
-                </ContextMenu>
-            </CheckBox.ContextMenu>
-
-        </CheckBox>
-    </Grid>
+            </CheckBox>
+        </Grid>
+        <TextBlock x:Name="HintTextBlock" 
+                    Padding="8,0,0,0" Grid.Row="1" 
+                    TextWrapping="Wrap"
+                    HorizontalAlignment="Stretch"
+                    FontSize="10">
+            This is a property description.
+        </TextBlock>
+    </StackPanel>
 </UserControl>
