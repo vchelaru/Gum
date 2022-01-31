@@ -26,6 +26,8 @@ namespace CodeOutputPlugin.Manager
 
     #endregion
 
+    #region CodeGenerationContext Class
+
     public struct CodeGenerationContext
     {
         /// <summary>
@@ -57,31 +59,39 @@ namespace CodeOutputPlugin.Manager
         {
             get
             {
+                var tabs = ToTabs(TabCount);
                 if(Instance == null)
                 {
                     if (string.IsNullOrEmpty(ThisPrefix))
                     {
-                        return "this";
+                        return tabs + "this";
                     }
                     else
                     {
-                        return ThisPrefix;
+                        return tabs + ThisPrefix;
                     }
                 }
                 else
                 {
                     if (string.IsNullOrEmpty(ThisPrefix))
                     {
-                        return "this." + Instance.Name;
+                        return tabs + "this." + Instance.Name;
                     }
                     else
                     {
-                        return ThisPrefix + "." + Instance.Name;
+                        return tabs + ThisPrefix + "." + Instance.Name;
                     }
                 }
             }
         }
+
+        private static string ToTabs(int tabCount) => new string(' ', tabCount * 4);
+
+
+        public int TabCount { get; internal set; }
     }
+
+    #endregion
 
     public static class CodeGenerator
     {
@@ -224,6 +234,31 @@ namespace CodeOutputPlugin.Manager
             }
 
             return visualApi;
+        }
+
+        static bool IsStackLayout(InstanceSave instance) => IsOfXamarinFormsType(instance, "StackLayout");
+
+        static bool IsOfXamarinFormsType(InstanceSave instance, string xamarinFormsType)
+        {
+            
+            var element = ObjectFinder.Self.GetElementSave(instance);
+
+            bool isRightType = element.Name.EndsWith("/" + xamarinFormsType);
+            if(!isRightType)
+            {
+                var elementBaseType = element?.BaseType;
+
+                isRightType = elementBaseType?.EndsWith("/" + xamarinFormsType) == true;
+            }
+
+            if (!isRightType)
+            {
+                var baseElements = ObjectFinder.Self.GetBaseElements(element);
+                isRightType = baseElements.Any(item => item.BaseType?.EndsWith("/" + xamarinFormsType) == true);
+            }
+
+            return isRightType;
+
         }
 
         private static void AddAbsoluteLayoutIfNecessary(ElementSave element, int tabCount, StringBuilder stringBuilder, CodeOutputProjectSettings projectSettings)
@@ -530,7 +565,7 @@ namespace CodeOutputPlugin.Manager
                         .ToList();
 
 
-                    ProcessVariableGroups(variablesForThisInstance, stateSave, instance, container, visualApi, stringBuilder, tabCount, context);
+                    ProcessVariableGroups(variablesForThisInstance, stateSave, visualApi, stringBuilder, context);
 
                     // Now that they've been processed, we can process the remainder regularly
                     foreach (var variable in variablesForThisInstance)
@@ -913,7 +948,7 @@ namespace CodeOutputPlugin.Manager
 
             var tabs = new String(' ', 4 * tabCount);
 
-            ProcessVariableGroups(variablesToConsider, defaultState, null, element, visualApi, stringBuilder, tabCount, context);
+            ProcessVariableGroups(variablesToConsider, defaultState, visualApi, stringBuilder, context);
             
             foreach (var variable in variablesToConsider)
             {
@@ -1003,7 +1038,8 @@ namespace CodeOutputPlugin.Manager
 
             // sometimes variables have to be processed in groups. For example, RGB values
             // have to be assigned all at once in a Color value in XamForms;
-            ProcessVariableGroups(variablesToAssignValues, container.DefaultState, instance, container, visualApi, stringBuilder, tabCount, context);
+            context.TabCount = tabCount;
+            ProcessVariableGroups(variablesToAssignValues, container.DefaultState, visualApi, stringBuilder, context);
 
             foreach (var variable in variablesToAssignValues)
             {
@@ -1076,30 +1112,53 @@ namespace CodeOutputPlugin.Manager
             #endregion
         }
 
-        private static void ProcessVariableGroups(List<VariableSave> variablesToConsider, StateSave defaultState, InstanceSave instance, ElementSave container, VisualApi visualApi, StringBuilder stringBuilder, int tabCount, CodeGenerationContext context)
+        private static void ProcessVariableGroups(List<VariableSave> variablesToConsider, StateSave defaultState, VisualApi visualApi, StringBuilder stringBuilder, CodeGenerationContext context)
         {
             if(visualApi == VisualApi.XamarinForms)
             {
                 string baseType = null;
-                if (instance != null)
+                if (context.Instance != null)
                 {
-                    var standardElement = ObjectFinder.Self.GetRootStandardElementSave(instance);
+                    var standardElement = ObjectFinder.Self.GetRootStandardElementSave(context.Instance);
                     baseType = standardElement?.Name;
                 }
                 else
                 {
-                    baseType = container.BaseType;
+                    baseType = context.Element.BaseType;
                 }
                 switch(baseType)
                 {
                     case "Text":
-                        ProcessColorForLabel(variablesToConsider, defaultState, instance, stringBuilder, context);
-                        ProcessPositionAndSize(variablesToConsider, defaultState, instance, container, stringBuilder, tabCount, context);
-                        ProcessXamarinFormsLabelBold(variablesToConsider, defaultState, instance, container, stringBuilder, tabCount, context);
+                        ProcessColorForLabel(variablesToConsider, defaultState, context.Instance, stringBuilder, context);
+                        ProcessPositionAndSize(variablesToConsider, defaultState, context.Instance, context.Element, stringBuilder, context);
+                        ProcessXamarinFormsLabelBold(variablesToConsider, defaultState, context.Instance, context.Element, stringBuilder, context);
                         break;
                     default:
-                        ProcessPositionAndSize(variablesToConsider, defaultState, instance, container, stringBuilder, tabCount, context);
+                        ProcessPositionAndSize(variablesToConsider, defaultState, context.Instance, context.Element, stringBuilder, context);
                         break;
+                }
+
+                // January 31, 2022
+                // Does it matter if
+                // we do this on all objects?
+                // Does it cause performance issues?
+                // Update - not all controls support this, so we need to check:
+                if(context.Instance != null)
+                {
+                    var isOfRightType =
+                        IsOfXamarinFormsType(context.Instance, "StackLayout") ||
+                        IsOfXamarinFormsType(context.Instance, "AbsoluteLayout") ||
+                        IsOfXamarinFormsType(context.Instance, "Frame");
+                        ;
+
+                    if(isOfRightType)
+                    {
+                        var rfv = new RecursiveVariableFinder(defaultState);
+
+                        var clips = rfv.GetValue<bool>(context.GumVariablePrefix + "ClipsChildren");
+
+                        stringBuilder.AppendLine($"{context.CodePrefix}.IsClippedToBounds = {clips.ToString().ToLowerInvariant()};");
+                    }
                 }
             }
         }
@@ -1123,7 +1182,7 @@ namespace CodeOutputPlugin.Manager
             stringBuilder.AppendLine($"{context.CodePrefix}.TextColor = Color.FromRgba({red}, {green}, {blue}, {alpha});");
         }
 
-        private static void ProcessPositionAndSize(List<VariableSave> variablesToConsider, StateSave state, InstanceSave instance, ElementSave container, StringBuilder stringBuilder, int tabCount, CodeGenerationContext context)
+        private static void ProcessPositionAndSize(List<VariableSave> variablesToConsider, StateSave state, InstanceSave instance, ElementSave container, StringBuilder stringBuilder, CodeGenerationContext context)
         {
             //////////////////Early out/////////////////////
             if (container is ScreenSave && instance == null)
@@ -1166,17 +1225,17 @@ namespace CodeOutputPlugin.Manager
                 // only do this layout if we're either the default state, or the variables are set in the state:
                 if (setsAny || state == container.DefaultState)
                 {
-                    SetAbsoluteLayoutPosition(variablesToConsider, state, instance, container, stringBuilder, tabCount, context);
+                    SetAbsoluteLayoutPosition(variablesToConsider, state, instance, container, stringBuilder, context.TabCount, context);
                 }
             }
             else //if(parent?.BaseType?.EndsWith("/StackLayout") == true)
             {
-                SetNonAbsoluteLayoutPosition(variablesToConsider, state, context, stringBuilder, tabCount, parentType);
+                SetNonAbsoluteLayoutPosition(variablesToConsider, state, context, stringBuilder, parentType);
             }
 
         }
 
-        private static void ProcessXamarinFormsLabelBold(List<VariableSave> variablesToConsider, StateSave state, InstanceSave instance, ElementSave container, StringBuilder stringBuilder, int tabCount, CodeGenerationContext context)
+        private static void ProcessXamarinFormsLabelBold(List<VariableSave> variablesToConsider, StateSave state, InstanceSave instance, ElementSave container, StringBuilder stringBuilder, CodeGenerationContext context)
         {
             var boldName = context.GumVariablePrefix + "IsBold";
 
@@ -1186,7 +1245,7 @@ namespace CodeOutputPlugin.Manager
 
             if(isBold)
             {
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"{context.CodePrefix}.FontAttributes = Xamarin.Forms.FontAttributes.Bold;");
+                stringBuilder.AppendLine($"{context.CodePrefix}.FontAttributes = Xamarin.Forms.FontAttributes.Bold;");
                 
             }
 
@@ -1211,7 +1270,7 @@ namespace CodeOutputPlugin.Manager
         }
 
         private static void SetNonAbsoluteLayoutPosition(List<VariableSave> variablesToConsider, StateSave defaultState, CodeGenerationContext context, 
-            StringBuilder stringBuilder, int tabCount, string parentBaseType)
+            StringBuilder stringBuilder, string parentBaseType)
         {
             var variableFinder = new RecursiveVariableFinder(defaultState);
 
@@ -1252,7 +1311,7 @@ namespace CodeOutputPlugin.Manager
                     multiple = "RenderingLibrary.SystemManagers.GlobalFontScale";
                 }
                 stringBuilder.AppendLine(
-                    $"{ToTabs(tabCount)}{codePrefix}.WidthRequest = {width.ToString(CultureInfo.InvariantCulture)}f * {multiple};");
+                    $"{codePrefix}.WidthRequest = {width.ToString(CultureInfo.InvariantCulture)}f * {multiple};");
             }
 
             if (heightUnits == DimensionUnitType.Absolute || heightUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
@@ -1265,7 +1324,7 @@ namespace CodeOutputPlugin.Manager
                 }
 
                 stringBuilder.AppendLine(
-                    $"{ToTabs(tabCount)}{codePrefix}.HeightRequest = {height.ToString(CultureInfo.InvariantCulture)}f * {multiple};");
+                    $"{codePrefix}.HeightRequest = {height.ToString(CultureInfo.InvariantCulture)}f * {multiple};");
             }
 
             float leftMargin = 0;
@@ -1320,7 +1379,7 @@ namespace CodeOutputPlugin.Manager
 
             if (setsAny)
             {
-                stringBuilder.AppendLine($"{ToTabs(tabCount)}{codePrefix}.Margin = new Thickness(" +
+                stringBuilder.AppendLine($"{codePrefix}.Margin = new Thickness(" +
                     $"{leftMargin.ToString(CultureInfo.InvariantCulture)}, " +
                     $"{topMargin.ToString(CultureInfo.InvariantCulture)}, " +
                     $"{rightMargin.ToString(CultureInfo.InvariantCulture)}, " +
@@ -1332,12 +1391,12 @@ namespace CodeOutputPlugin.Manager
                 if(xUnits == PositionUnitType.PixelsFromCenterX && xOrigin == HorizontalAlignment.Center)
                 {
                     stringBuilder.AppendLine(
-                        $"{ToTabs(tabCount)}{codePrefix}.HorizontalOptions = LayoutOptions.Center;");
+                        $"{codePrefix}.HorizontalOptions = LayoutOptions.Center;");
                 }
                 else
                 {
                     stringBuilder.AppendLine(
-                        $"{ToTabs(tabCount)}{codePrefix}.HorizontalOptions = LayoutOptions.Start;");
+                        $"{codePrefix}.HorizontalOptions = LayoutOptions.Start;");
 
                 }
             }
@@ -1345,7 +1404,7 @@ namespace CodeOutputPlugin.Manager
                 (widthUnits == DimensionUnitType.Percentage))
             {
                 stringBuilder.AppendLine(
-                    $"{ToTabs(tabCount)}{codePrefix}.HorizontalOptions = LayoutOptions.Fill;");
+                    $"{codePrefix}.HorizontalOptions = LayoutOptions.Fill;");
             }
         }
 
