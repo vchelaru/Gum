@@ -1174,12 +1174,21 @@ namespace CodeOutputPlugin.Manager
             var blue = rfv.GetValue<int>(gumPrefix + "Blue");
             var alpha = rfv.GetValue<int>(gumPrefix + "Alpha");
 
-            variablesToConsider.RemoveAll(item => item.Name == gumPrefix + "Red");
-            variablesToConsider.RemoveAll(item => item.Name == gumPrefix + "Green");
-            variablesToConsider.RemoveAll(item => item.Name == gumPrefix + "Blue");
-            variablesToConsider.RemoveAll(item => item.Name == gumPrefix + "Alpha");
+            var isExplicitlySet = variablesToConsider.Any(item => 
+                item.Name == gumPrefix + "Red" || 
+                item.Name == gumPrefix + "Green" || 
+                item.Name == gumPrefix + "Blue" || 
+                item.Name == gumPrefix + "Alpha");
 
-            stringBuilder.AppendLine($"{context.CodePrefix}.TextColor = Color.FromRgba({red}, {green}, {blue}, {alpha});");
+            if(isExplicitlySet)
+            {
+                variablesToConsider.RemoveAll(item => item.Name == gumPrefix + "Red");
+                variablesToConsider.RemoveAll(item => item.Name == gumPrefix + "Green");
+                variablesToConsider.RemoveAll(item => item.Name == gumPrefix + "Blue");
+                variablesToConsider.RemoveAll(item => item.Name == gumPrefix + "Alpha");
+
+                stringBuilder.AppendLine($"{context.CodePrefix}.TextColor = Color.FromRgba({red}, {green}, {blue}, {alpha});");
+            }
         }
 
         private static void ProcessPositionAndSize(List<VariableSave> variablesToConsider, StateSave state, InstanceSave instance, ElementSave container, StringBuilder stringBuilder, CodeGenerationContext context)
