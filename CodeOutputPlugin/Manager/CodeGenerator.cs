@@ -1401,11 +1401,32 @@ namespace CodeOutputPlugin.Manager
                 }
             }
             else if(widthUnits == DimensionUnitType.RelativeToContainer || 
-                (widthUnits == DimensionUnitType.Percentage))
+                widthUnits == DimensionUnitType.Percentage)
             {
                 stringBuilder.AppendLine(
                     $"{codePrefix}.HorizontalOptions = LayoutOptions.Fill;");
             }
+
+            if(heightUnits == DimensionUnitType.Absolute || heightUnits == DimensionUnitType.RelativeToChildren || heightUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
+            {
+                if(yUnits == PositionUnitType.PixelsFromCenterY && xOrigin == HorizontalAlignment.Center)
+                {
+                    stringBuilder.AppendLine(
+                        $"{codePrefix}.VerticalOptions = LayoutOptions.Center;");
+                }
+                else
+                {
+                    stringBuilder.AppendLine(
+                        $"{codePrefix}.VerticalOptions = LayoutOptions.Start;");
+                }
+            }
+            else if(heightUnits == DimensionUnitType.RelativeToContainer ||
+                heightUnits == DimensionUnitType.Percentage)
+            {
+                stringBuilder.AppendLine(
+                    $"{codePrefix}.VerticalOptions = LayoutOptions.Fill;");
+            }
+
         }
 
         private static void SetAbsoluteLayoutPosition(List<VariableSave> variablesToConsider, StateSave state, InstanceSave instance, ElementSave container, StringBuilder stringBuilder, int tabCount, CodeGenerationContext context)
