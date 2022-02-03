@@ -78,6 +78,7 @@ namespace Gum.DataTypes
                 string name = variable.Name;
 
                 var withoutState = name.Substring(0, name.Length - "State".Length);
+
                 if(variable.Name == "State")
                 {
                     variable.Type = "State";
@@ -85,7 +86,20 @@ namespace Gum.DataTypes
                 }
                 else if(elementSave.Categories.Any(item=>item.Name == withoutState))
                 {
+                    variable.Type = withoutState;
+                    wasModified = true;
+                }
+            }
+            // Feb 2, 2022
+            // State variables no longer have "State" appended. This was inconsistent at best since different systems resulted in variables with different types.
+            // Removing "State" simplifies things. We'll see if this causes problems anywhere...
+            foreach(var variable in state.Variables.Where(item => item.Type?.EndsWith("State") == true))
+            {
+                string name = variable.Name;
 
+                var withoutState = name.Substring(0, name.Length - "State".Length);
+                if (elementSave.Categories.Any(item => item.Name == withoutState))
+                {
                     variable.Type = withoutState;
                     wasModified = true;
                 }

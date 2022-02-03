@@ -140,6 +140,10 @@ namespace Gum.Commands
                     // I don't think we need to save the project when renaming a state:
                     //GumCommands.Self.FileCommands.TryAutoSaveProject();
 
+                    // Renaming the state should refresh the property grid
+                    // because it displays the state name at the top
+                    GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);
+
                     PluginManager.Self.StateRename(stateSave, oldName);
 
                     GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
