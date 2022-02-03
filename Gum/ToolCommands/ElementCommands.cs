@@ -120,13 +120,13 @@ namespace Gum.ToolCommands
             // instances use this variable to determine if a variable
             // should be shown.
             if (objectToAddTo is ElementSave)
-            {
-                string categoryName = category.Name + "State";
+            {              
                 var elementToAddTo = objectToAddTo as ElementSave;
                 elementToAddTo.DefaultState.Variables.Add(new VariableSave()
                 {
-                    Name = categoryName,
-                    Type = categoryName,
+                    Name = category.Name + "State",
+                    // We used to set the type with the word "State" appended but why? Gum seems to not do this everywhere, and this can add confusion, so let's omit the "State" suffix
+                    Type = category.Name,
                     Value = null
 #if GUM
     ,
