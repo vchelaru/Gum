@@ -1228,18 +1228,18 @@ namespace CodeOutputPlugin.Manager
                 }
             }
 
-            if (parentType?.EndsWith("/AbsoluteLayout") == true)
+            // Only run this code if any of the properties are set or if we're in default. Otherwise
+            // categorized states may screw up the positioning of an object.
+            if (setsAny || state == container.DefaultState)
             {
-                // If this is part of an absolute layout, we put it in an absolute layout. This is the default
-                // only do this layout if we're either the default state, or the variables are set in the state:
-                if (setsAny || state == container.DefaultState)
+                if (parentType?.EndsWith("/AbsoluteLayout") == true)
                 {
                     SetAbsoluteLayoutPosition(variablesToConsider, state, instance, container, stringBuilder, context.TabCount, context);
                 }
-            }
-            else //if(parent?.BaseType?.EndsWith("/StackLayout") == true)
-            {
-                SetNonAbsoluteLayoutPosition(variablesToConsider, state, context, stringBuilder, parentType);
+                else //if(parent?.BaseType?.EndsWith("/StackLayout") == true)
+                {
+                    SetNonAbsoluteLayoutPosition(variablesToConsider, state, context, stringBuilder, parentType);
+                }
             }
 
         }
