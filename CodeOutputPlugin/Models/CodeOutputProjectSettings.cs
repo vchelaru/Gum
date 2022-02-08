@@ -44,5 +44,7 @@ using SkiaGum.Renderables;
         public string DefaultScreenBase { get; set; } = "SkiaGum.GueDeriving.ContainerRuntime";
 
         public OutputLibrary OutputLibrary { get; set; }
+
+        public bool AdjustPixelValuesForDensity { get; set; } = false;
     }
 }

@@ -105,12 +105,13 @@ namespace CodeOutputPlugin.Manager
         /// Update: This is now set to false because .... well, it makes it hard to create flexible layouts. It's best to set a resolution of 
         /// 320 wide and let density scale things up
         /// </summary>
-        public static bool AdjustPixelValuesForDensity { get; set; } = false;
+        static bool AdjustPixelValuesForDensity { get; set; } = false;
 
         #endregion
 
         public static string GetGeneratedCodeForElement(ElementSave element, CodeOutputElementSettings elementSettings, CodeOutputProjectSettings projectSettings)
         {
+            AdjustPixelValuesForDensity = projectSettings.AdjustPixelValuesForDensity;
             VisualApi visualApi = GetVisualApiForElement(element);
 
             var stringBuilder = new StringBuilder();

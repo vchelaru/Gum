@@ -97,6 +97,7 @@ namespace CodeOutputPlugin.Views
             projectCategory.Members.Add(CreateCodeProjectRootMember());
             projectCategory.Members.Add(CreateRootNamespaceMember());
             projectCategory.Members.Add(CreateDefaultScreenBaseMember());
+            projectCategory.Members.Add(CreateAdjustPixelValuesForDensityMember());
             DataGrid.Categories.Add(projectCategory);
         }
 
@@ -233,8 +234,25 @@ namespace CodeOutputPlugin.Views
             member.CustomGetTypeEvent += (owner) => typeof(string);
 
             return member;
+        }
 
-            
+        private InstanceMember CreateAdjustPixelValuesForDensityMember()
+        {
+            var member = new InstanceMember("Adjust Pixel Values for Density", this);
+            member.CustomSetEvent += (owner, value) =>
+            {
+                if (CodeOutputProjectSettings != null)
+                {
+                    CodeOutputProjectSettings.AdjustPixelValuesForDensity = (bool)value;
+                    CodeOutputSettingsPropertyChanged?.Invoke(this, null);
+                }
+            };
+
+
+            member.CustomGetEvent += (owner) => CodeOutputProjectSettings?.AdjustPixelValuesForDensity;
+            member.CustomGetTypeEvent += (owner) => typeof(bool);
+
+            return member;
         }
 
         #endregion
