@@ -346,13 +346,16 @@ namespace RenderingLibrary.Graphics
             for(int i = 0; i < count; i++)
             {
                 var renderable = renderables[i];
-                renderable.PreRender();
-
-                // Some Gum objects, like GraphicalUiElements, may not have children if the object hasn't
-                // yet been assigned a visual. Just skip over it...
-                if(renderable.Children != null)
+                if(renderable.Visible)
                 {
-                    PreRender(renderable.Children);
+                    renderable.PreRender();
+
+                    // Some Gum objects, like GraphicalUiElements, may not have children if the object hasn't
+                    // yet been assigned a visual. Just skip over it...
+                    if(renderable.Visible && renderable.Children != null)
+                    {
+                        PreRender(renderable.Children);
+                    }
                 }
             }
         }
@@ -363,22 +366,25 @@ namespace RenderingLibrary.Graphics
             for (int i = 0; i < count; i++)
             {
                 var renderable = whatToRender[i];
-                var oldClip = mRenderStateVariables.ClipRectangle;
-                AdjustRenderStates(mRenderStateVariables, layer, renderable);
-                bool didClipChange = oldClip != mRenderStateVariables.ClipRectangle;
-
-                renderable.Render(spriteRenderer, managers);
-
-
-                if (RenderUsingHierarchy)
+                if(renderable.Visible)
                 {
-                    Render(renderable.Children, managers, layer);
-                }
+                    var oldClip = mRenderStateVariables.ClipRectangle;
+                    AdjustRenderStates(mRenderStateVariables, layer, renderable);
+                    bool didClipChange = oldClip != mRenderStateVariables.ClipRectangle;
 
-                if (didClipChange)
-                {
-                    mRenderStateVariables.ClipRectangle = oldClip;
-                    spriteRenderer.BeginSpriteBatch(mRenderStateVariables, layer, BeginType.Begin, mCamera);
+                    renderable.Render(spriteRenderer, managers);
+
+
+                    if (RenderUsingHierarchy)
+                    {
+                        Render(renderable.Children, managers, layer);
+                    }
+
+                    if (didClipChange)
+                    {
+                        mRenderStateVariables.ClipRectangle = oldClip;
+                        spriteRenderer.BeginSpriteBatch(mRenderStateVariables, layer, BeginType.Begin, mCamera);
+                    }
                 }
             }
         }

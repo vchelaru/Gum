@@ -157,6 +157,29 @@ namespace RenderingLibrary.Math.Geometry
             get { return true; }
         }
 
+        public bool AbsoluteVisible
+        {
+            get
+            {
+                if (((IVisible)this).Parent == null)
+                {
+                    return Visible;
+                }
+                else
+                {
+                    return Visible && ((IVisible)this).Parent.AbsoluteVisible;
+                }
+            }
+        }
+
+        IVisible IVisible.Parent
+        {
+            get
+            {
+                return ((IRenderableIpso)this).Parent as IVisible;
+            }
+        }
+
         #endregion
 
         public Line()

@@ -6,7 +6,7 @@ using System.Text;
 
 namespace RenderingLibrary.Graphics
 {
-    public interface IRenderableIpso : IRenderable, IPositionedSizedObject
+    public interface IRenderableIpso : IRenderable, IPositionedSizedObject, IVisible
     {
         bool ClipsChildren { get;  }
         IRenderableIpso Parent { get; set; }

@@ -229,6 +229,28 @@ namespace RenderingLibrary.Math.Geometry
             set;
         }
 
+        public bool AbsoluteVisible
+        {
+            get
+            {
+                if (((IVisible)this).Parent == null)
+                {
+                    return Visible;
+                }
+                else
+                {
+                    return Visible && ((IVisible)this).Parent.AbsoluteVisible;
+                }
+            }
+        }
+
+        IVisible IVisible.Parent
+        {
+            get
+            {
+                return ((IRenderableIpso)this).Parent as IVisible;
+            }
+        }
 
         #endregion
 
