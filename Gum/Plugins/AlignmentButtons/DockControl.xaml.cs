@@ -2,6 +2,7 @@
 using Gum.Managers;
 using Gum.PropertyGridHelpers;
 using Gum.ToolStates;
+using Gum.Undo;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -32,71 +33,88 @@ namespace Gum.Plugins.AlignmentButtons
 
         private void TopButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            var state = SelectedState.Self.SelectedStateSave;
+            using(UndoManager.Self.RequestLock())
+            {
+                var state = SelectedState.Self.SelectedStateSave;
 
-            SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
-            SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Top, PositionUnitType.PixelsFromTop);
+                SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
+                SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Top, PositionUnitType.PixelsFromTop);
 
-            SetAndCallReact("Width", 0.0f, "float");
-            SetAndCallReact("Width Units", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
+                SetAndCallReact("Width", 0.0f, "float");
+                SetAndCallReact("Width Units", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
 
 
-            RefreshAndSave();
+                RefreshAndSave();
+            }
         }
 
         private void LeftButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            var state = SelectedState.Self.SelectedStateSave;
+            using (UndoManager.Self.RequestLock())
+            {
+                var state = SelectedState.Self.SelectedStateSave;
 
-            SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Left, PositionUnitType.PixelsFromLeft);
-            SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
+                SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Left, PositionUnitType.PixelsFromLeft);
+                SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
 
-            SetAndCallReact("Height", 0.0f, "float");
-            SetAndCallReact("Height Units", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
+                SetAndCallReact("Height", 0.0f, "float");
+                SetAndCallReact("Height Units", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
 
-            RefreshAndSave();
+                RefreshAndSave();
+            }
         }
 
         private void FillButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            var state = SelectedState.Self.SelectedStateSave;
+            using (UndoManager.Self.RequestLock())
+            {
 
-            SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
-            SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
+                var state = SelectedState.Self.SelectedStateSave;
 
-            SetAndCallReact("Width", 0.0f, "float");
-            SetAndCallReact("Width Units", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
+                SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
+                SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
 
-            SetAndCallReact("Height", 0.0f, "float");
-            SetAndCallReact("Height Units", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
+                SetAndCallReact("Width", 0.0f, "float");
+                SetAndCallReact("Width Units", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
 
-            RefreshAndSave();
+                SetAndCallReact("Height", 0.0f, "float");
+                SetAndCallReact("Height Units", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
+
+                RefreshAndSave();
+            }
         }
 
         private void RightButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            var state = SelectedState.Self.SelectedStateSave;
+            using (UndoManager.Self.RequestLock())
+            {
 
-            SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Right, PositionUnitType.PixelsFromRight);
-            SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
+                var state = SelectedState.Self.SelectedStateSave;
 
-            SetAndCallReact("Height", 0.0f, "float");
-            SetAndCallReact("Height Units", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
+                SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Right, PositionUnitType.PixelsFromRight);
+                SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
 
-            RefreshAndSave();
+                SetAndCallReact("Height", 0.0f, "float");
+                SetAndCallReact("Height Units", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
+
+                RefreshAndSave();
+            }
         }
 
         private void BottomButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            var state = SelectedState.Self.SelectedStateSave;
+            using (UndoManager.Self.RequestLock())
+            {
+                var state = SelectedState.Self.SelectedStateSave;
 
-            SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
-            SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Bottom, PositionUnitType.PixelsFromBottom);
+                SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
+                SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Bottom, PositionUnitType.PixelsFromBottom);
 
-            SetAndCallReact("Width", 0.0f, "float");
-            SetAndCallReact("Width Units", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
+                SetAndCallReact("Width", 0.0f, "float");
+                SetAndCallReact("Width Units", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
 
-            RefreshAndSave();
+                RefreshAndSave();
+            }
         }
 
 

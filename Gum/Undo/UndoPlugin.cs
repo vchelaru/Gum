@@ -18,11 +18,17 @@ namespace Gum.Undo
             this.ProjectLoad += HandleProjectLoad;
             this.InstanceAdd += HandleInstanceAdd;
             this.InstanceDelete += HandleInstanceDelete;
+            this.InstancesDelete += HandleInstancesDelete;
 
             this.BehaviorReferencesChanged += HandleBehaviorReferencesChanged;
         }
 
         private void HandleBehaviorReferencesChanged(ElementSave obj)
+        {
+            UndoManager.Self.RecordUndo();
+        }
+
+        void HandleInstancesDelete(ElementSave arg1, InstanceSave[] arg2)
         {
             UndoManager.Self.RecordUndo();
         }

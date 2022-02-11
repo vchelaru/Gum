@@ -979,18 +979,20 @@ namespace Gum.Plugins
 
         internal void InstanceDelete(ElementSave elementSave, InstanceSave instance)
         {
-            CallMethodOnPlugin(
-                (plugin) => plugin.CallInstanceDelete(elementSave, instance),
-                nameof(InstanceDelete)
-            );
+            CallMethodOnPlugin(plugin => plugin.CallInstanceDelete(elementSave, instance));
+        }
+
+        internal void InstancesDelete(ElementSave elementSave, InstanceSave[] instances)
+        {
+            CallMethodOnPlugin(plugin => plugin.CallInstancesDelete(elementSave, instances));
+
         }
 
         internal StateSave GetDefaultStateFor(string type)
         {
             StateSave toReturn = null;
 
-            CallMethodOnPlugin(
-                (plugin) =>
+            CallMethodOnPlugin(plugin =>
                 {
                     var innerToReturn = plugin.CallGetDefaultStateFor(type);
 
@@ -999,8 +1001,7 @@ namespace Gum.Plugins
                         toReturn = innerToReturn;
                     }
 
-                },
-                nameof(GetDefaultStateFor));
+                });
 
             return toReturn;
         }

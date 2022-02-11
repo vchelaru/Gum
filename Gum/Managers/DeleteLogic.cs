@@ -6,6 +6,7 @@ using Gum.Plugins;
 using Gum.Responses;
 using Gum.ToolCommands;
 using Gum.ToolStates;
+using Gum.Undo;
 using Gum.Wireframe;
 using System;
 using System.Collections.Generic;
@@ -30,131 +31,134 @@ namespace Gum.Managers
 
         private void DoDeletingLogic()
         {
-            object objectDeleted = null;
-            DeleteOptionsWindow optionsWindow = null;
-
-            var selectedElement = SelectedState.Self.SelectedElement;
-            var selectedInstance = SelectedState.Self.SelectedInstance;
-
-            if (SelectedState.Self.SelectedInstances.Count() > 1)
+            using (var undoLock = UndoManager.Self.RequestLock())
             {
-                AskToDeleteInstances(SelectedState.Self.SelectedInstances);
-            }
-            else if (selectedInstance != null)
-            {
-                objectDeleted = selectedInstance;
-                //AskToDeleteInstance(SelectedState.Self.SelectedInstance);
+                object objectDeleted = null;
+                DeleteOptionsWindow optionsWindow = null;
 
-                if (selectedInstance.DefinedByBase)
+                var selectedElement = SelectedState.Self.SelectedElement;
+                var selectedInstance = SelectedState.Self.SelectedInstance;
+
+                if (SelectedState.Self.SelectedInstances.Count() > 1)
                 {
-                    MessageBox.Show($"The instance {selectedInstance.Name} cannot be deleted becuase it is defined in a base object.");
+                    AskToDeleteInstances(SelectedState.Self.SelectedInstances);
                 }
-                else
+                else if (selectedInstance != null)
                 {
-                    //DialogResult result =
-                    //    MessageBox.Show("Are you sure you'd like to delete " + instance.Name + "?", "Delete instance?", MessageBoxButtons.YesNo);
-                    var result = ShowDeleteDialog(selectedInstance, out optionsWindow);
+                    objectDeleted = selectedInstance;
+                    //AskToDeleteInstance(SelectedState.Self.SelectedInstance);
 
-
-                    if (result == true)
+                    if (selectedInstance.DefinedByBase)
                     {
-                        var siblings = selectedInstance.GetSiblingsIncludingThis();
-                        var parentInstance = selectedInstance.GetParentInstance();
-
-                        // This will delete all references to this, meaning, all 
-                        // instances attached to the deleted object will be detached, 
-                        // but we don't want that, we want to only do that if the user wants to do it, which 
-                        // will be handled in a plugin
-                        //Gum.ToolCommands.ElementCommands.Self.RemoveInstance(instance, selectedElement);
-                        selectedElement.Instances.Remove(selectedInstance);
-                        var instanceName = selectedInstance.Name;
-
-                        selectedElement.Events.RemoveAll(item => item.GetSourceObject() == instanceName);
-
-                        // March 17, 2019
-                        // Let's also delete
-                        // any variables referencing
-                        // this object
-                        var objectName = selectedInstance.Name;
+                        MessageBox.Show($"The instance {selectedInstance.Name} cannot be deleted becuase it is defined in a base object.");
+                    }
+                    else
+                    {
+                        //DialogResult result =
+                        //    MessageBox.Show("Are you sure you'd like to delete " + instance.Name + "?", "Delete instance?", MessageBoxButtons.YesNo);
+                        var result = ShowDeleteDialog(selectedInstance, out optionsWindow);
 
 
-                        foreach(var state in selectedElement.AllStates)
+                        if (result == true)
                         {
-                            state.Variables.RemoveAll(item => item.SourceObject == instanceName);
-                        }
+                            var siblings = selectedInstance.GetSiblingsIncludingThis();
+                            var parentInstance = selectedInstance.GetParentInstance();
 
-                        
+                            // This will delete all references to this, meaning, all 
+                            // instances attached to the deleted object will be detached, 
+                            // but we don't want that, we want to only do that if the user wants to do it, which 
+                            // will be handled in a plugin
+                            //Gum.ToolCommands.ElementCommands.Self.RemoveInstance(instance, selectedElement);
+                            selectedElement.Instances.Remove(selectedInstance);
+                            var instanceName = selectedInstance.Name;
 
-                        PluginManager.Self.InstanceDelete(selectedElement, selectedInstance);
+                            selectedElement.Events.RemoveAll(item => item.GetSourceObject() == instanceName);
 
-                        var deletedSelection = SelectedState.Self.SelectedInstance == selectedInstance;
+                            // March 17, 2019
+                            // Let's also delete
+                            // any variables referencing
+                            // this object
+                            var objectName = selectedInstance.Name;
 
-                        RefreshAndSaveAfterInstanceRemoval(selectedElement);
 
-                        if (deletedSelection)
-                        {
-                            var index = siblings.IndexOf(selectedInstance);
-                            if(index + 1 < siblings.Count)
+                            foreach (var state in selectedElement.AllStates)
                             {
-                                SelectedState.Self.SelectedInstance = siblings[index + 1];
+                                state.Variables.RemoveAll(item => item.SourceObject == instanceName);
                             }
-                            else if(index > 0)
+
+
+
+                            PluginManager.Self.InstanceDelete(selectedElement, selectedInstance);
+
+                            var deletedSelection = SelectedState.Self.SelectedInstance == selectedInstance;
+
+                            RefreshAndSaveAfterInstanceRemoval(selectedElement);
+
+                            if (deletedSelection)
                             {
-                                SelectedState.Self.SelectedInstance = siblings[index - 1];
-                            }
-                            else
-                            {
-                                // no siblings so select the container or null if none exists:
-                                SelectedState.Self.SelectedInstance = parentInstance;
+                                var index = siblings.IndexOf(selectedInstance);
+                                if (index + 1 < siblings.Count)
+                                {
+                                    SelectedState.Self.SelectedInstance = siblings[index + 1];
+                                }
+                                else if (index > 0)
+                                {
+                                    SelectedState.Self.SelectedInstance = siblings[index - 1];
+                                }
+                                else
+                                {
+                                    // no siblings so select the container or null if none exists:
+                                    SelectedState.Self.SelectedInstance = parentInstance;
+                                }
                             }
                         }
                     }
                 }
-            }
-            else if (SelectedState.Self.SelectedComponent != null)
-            {
-                var result = ShowDeleteDialog(SelectedState.Self.SelectedComponent, out optionsWindow);
-
-                if (result == true)
+                else if (SelectedState.Self.SelectedComponent != null)
                 {
-                    objectDeleted = SelectedState.Self.SelectedComponent;
-                    // We need to remove the reference
-                    EditingManager.Self.RemoveSelectedElement();
-                }
-            }
-            else if (SelectedState.Self.SelectedScreen != null)
-            {
-                var result = ShowDeleteDialog(SelectedState.Self.SelectedScreen, out optionsWindow);
+                    var result = ShowDeleteDialog(SelectedState.Self.SelectedComponent, out optionsWindow);
 
-                if (result == true)
+                    if (result == true)
+                    {
+                        objectDeleted = SelectedState.Self.SelectedComponent;
+                        // We need to remove the reference
+                        EditingManager.Self.RemoveSelectedElement();
+                    }
+                }
+                else if (SelectedState.Self.SelectedScreen != null)
                 {
-                    objectDeleted = SelectedState.Self.SelectedScreen;
-                    // We need to remove the reference
-                    EditingManager.Self.RemoveSelectedElement();
-                }
-            }
-            else if (SelectedState.Self.SelectedBehavior != null)
-            {
-                var result = ShowDeleteDialog(SelectedState.Self.SelectedBehavior, out optionsWindow);
+                    var result = ShowDeleteDialog(SelectedState.Self.SelectedScreen, out optionsWindow);
 
-                if (result == true)
+                    if (result == true)
+                    {
+                        objectDeleted = SelectedState.Self.SelectedScreen;
+                        // We need to remove the reference
+                        EditingManager.Self.RemoveSelectedElement();
+                    }
+                }
+                else if (SelectedState.Self.SelectedBehavior != null)
                 {
-                    objectDeleted = SelectedState.Self.SelectedBehavior;
-                    // We need to remove the reference
-                    EditingManager.Self.RemoveSelectedBehavior();
+                    var result = ShowDeleteDialog(SelectedState.Self.SelectedBehavior, out optionsWindow);
+
+                    if (result == true)
+                    {
+                        objectDeleted = SelectedState.Self.SelectedBehavior;
+                        // We need to remove the reference
+                        EditingManager.Self.RemoveSelectedBehavior();
+                    }
                 }
-            }
 
-            var shouldDelete = objectDeleted != null;
+                var shouldDelete = objectDeleted != null;
 
-            if(shouldDelete && selectedInstance != null)
-            {
-                shouldDelete = selectedInstance.DefinedByBase == false;
-            }
+                if (shouldDelete && selectedInstance != null)
+                {
+                    shouldDelete = selectedInstance.DefinedByBase == false;
+                }
 
-            if (shouldDelete)
-            {
-                PluginManager.Self.DeleteConfirm(optionsWindow, objectDeleted);
+                if (shouldDelete)
+                {
+                    PluginManager.Self.DeleteConfirm(optionsWindow, objectDeleted);
+                }
             }
         }
 
@@ -259,11 +263,8 @@ namespace Gum.Managers
                     // Just in case the argument is a reference to the selected instances:
                     var instancesToRemove = instances.ToList();
 
-                    foreach (var instance in instancesToRemove)
-                    {
-                        Gum.ToolCommands.ElementCommands.Self.RemoveInstance(instance,
-                            selectedElement);
-                    }
+                    Gum.ToolCommands.ElementCommands.Self.RemoveInstances(instancesToRemove,
+                        selectedElement);
 
                     RefreshAndSaveAfterInstanceRemoval(selectedElement);
                 }

@@ -97,6 +97,7 @@ namespace Gum.Plugins.BaseClasses
         public event Action<ElementSave, InstanceSave> InstanceSelected;
         public event Action<ElementSave, InstanceSave> InstanceAdd;
         public event Action<ElementSave, InstanceSave> InstanceDelete;
+        public event Action<ElementSave, InstanceSave[]> InstancesDelete;
         /// <summary>
         /// Event raised whenever an instance is renamed. Third parameter is the old name.
         /// </summary>
@@ -375,6 +376,21 @@ namespace Gum.Plugins.BaseClasses
             if (InstanceDelete != null)
             {
                 InstanceDelete(elementSave, instance);
+            }
+        }
+
+        public void CallInstancesDelete(ElementSave elementSave, InstanceSave[] instances)
+        {
+            if(InstancesDelete != null)
+            {
+                InstancesDelete(elementSave, instances);
+            }
+            else if(InstanceDelete != null)
+            {
+                foreach(var instance in instances)
+                {
+                    InstanceDelete(elementSave, instance);
+                }
             }
         }
 

@@ -10,12 +10,27 @@ using Gum.ToolCommands;
 using Gum.Wireframe;
 using ToolsUtilities;
 using Gum.Logic;
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 
 namespace Gum.Undo
 {
+    #region UndoLock
+    public class UndoLock : IDisposable
+    {
+        public void Dispose()
+        {
+            UndoManager.Self.UndoLocks.Remove(this);
+        }
+    }
+
+    #endregion
+
     public class UndoManager
     {
         #region Fields
+
+        internal ObservableCollection<UndoLock> UndoLocks { get; private set; }
 
         bool isRecordingUndos = true;
 
@@ -47,15 +62,19 @@ namespace Gum.Undo
         #endregion
 
 
-        public static UndoManager Self
+        public static UndoManager Self { get; private set; } = new UndoManager();
+
+        public UndoManager()
         {
-            get
+            UndoLocks = new ObservableCollection<UndoLock>();
+            UndoLocks.CollectionChanged += HandleUndoLockChanged;
+        }
+
+        private void HandleUndoLockChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if(UndoLocks.Count == 0)
             {
-                if (mSelf == null)
-                {
-                    mSelf = new UndoManager();
-                }
-                return mSelf;
+                RecordUndo();
             }
         }
 
@@ -65,7 +84,10 @@ namespace Gum.Undo
         /// </summary>
         public void RecordState()
         {
-
+            if(UndoLocks.Count > 0)
+            {
+                return;
+            }
             recordedSnapshot = null;
             
 
@@ -103,8 +125,15 @@ namespace Gum.Undo
         /// </summary>
         public void RecordUndo()
         {
-            if (recordedSnapshot != null && SelectedState.Self.SelectedElement != null && isRecordingUndos &&
-                SelectedState.Self.SelectedStateSave != null)
+            var canUndo = recordedSnapshot != null && 
+                SelectedState.Self.SelectedElement != null && 
+                isRecordingUndos &&
+                SelectedState.Self.SelectedStateSave != null &&
+                UndoLocks.Count == 0;
+
+
+
+            if (canUndo)
             {
                 StateSave currentStateSave = SelectedState.Self.SelectedStateSave;
                 var currentCategory = SelectedState.Self.SelectedStateCategorySave;
@@ -179,6 +208,15 @@ namespace Gum.Undo
                 //PrintStatus("RecordUndo");
             }
 
+        }
+
+        public UndoLock RequestLock()
+        {
+            var undoLock = new UndoLock();
+
+            UndoLocks.Add(undoLock);
+
+            return undoLock;
         }
 
         public void PerformUndo()

@@ -183,6 +183,23 @@ namespace Gum.ToolCommands
             }
         }
 
+        public void RemoveInstances(List<InstanceSave> instances, ElementSave elementToRemoveFrom)
+        {
+            foreach(var instance in instances)
+            {
+                elementToRemoveFrom.Instances.Remove(instance);
+                RemoveParentReferencesToInstance(instance, elementToRemoveFrom);
+                elementToRemoveFrom.Events.RemoveAll(item => item.GetSourceObject() == instance.Name);
+            }
+
+
+            PluginManager.Self.InstancesDelete(elementToRemoveFrom, instances.ToArray());
+
+            var newSelection = SelectedState.Self.SelectedInstances.ToList()
+                .Except(instances);
+            SelectedState.Self.SelectedInstances = newSelection;
+        }
+
         public void RemoveParentReferencesToInstance(InstanceSave instanceToRemove, ElementSave elementToRemoveFrom)
         {
             foreach (StateSave stateSave in elementToRemoveFrom.AllStates)
