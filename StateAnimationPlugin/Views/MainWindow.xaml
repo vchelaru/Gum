@@ -18,6 +18,7 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"></RowDefinition>
                     <RowDefinition Height="Auto"></RowDefinition>
+                    <RowDefinition Height="24"></RowDefinition>
                 </Grid.RowDefinitions>
           
                 <Grid.ColumnDefinitions>
@@ -43,6 +44,37 @@
                 <TextBox Grid.Column="2" Text="{Binding DisplayedAnimationTime}"></TextBox>
 
                 <TextBlock Grid.Column="3" Text="{Binding OverLengthTime}" VerticalAlignment="Bottom" Margin="0,0,5,0"></TextBlock>
+
+                <Grid Grid.Row="2" Grid.Column="1" Margin="2,0,0,0" HorizontalAlignment="Left">
+                    <Button IsHitTestVisible="False"></Button>
+                    <StackPanel VerticalAlignment="Stretch" Orientation="Horizontal" Margin="3,0,3,0" >
+                        <Button Height="18" Width="18" Click="SpeedDecreaseClicked" Background="Transparent" BorderBrush="Transparent">
+                            <Button.ToolTip>
+                                <ToolTip>
+                                    <StackPanel>
+                                        <TextBlock FontWeight="Bold">Slow Down</TextBlock>
+                                        <TextBlock>Reudces game speed (makes it run in slow-motion)</TextBlock>
+                                    </StackPanel>
+                                </ToolTip>
+                            </Button.ToolTip>
+                            <Image  Source="/StateAnimationPlugin;component/Resources/icon_minus.png"></Image>
+                        </Button>
+                        <Image  Source="/StateAnimationPlugin;component/Resources/SlowMotion.png" Height="16" Margin="0,0,-3,0"></Image>
+                        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" TextAlignment="Center" Text="{Binding CurrentGameSpeed, FallbackValue=100%}" Margin="0,0,2,0" MinWidth="40"></TextBlock>
+                        <Button Height="18" Width="18" Click="SpeedIncreaseClicked" Background="Transparent" BorderBrush="Transparent">
+                            <Button.ToolTip>
+                                <ToolTip>
+                                    <StackPanel>
+                                        <TextBlock FontWeight="Bold">Speed Up</TextBlock>
+                                        <TextBlock>Increases game speed (makes it run in fast-forward)</TextBlock>
+                                    </StackPanel>
+                                </ToolTip>
+                            </Button.ToolTip>
+                            <Image  Source="/StateAnimationPlugin;component/Resources/icon_plus.png"></Image>
+                        </Button>
+                    </StackPanel>
+
+                </Grid>
 
                 <views:TimedStateMarkerDisplay Grid.Row="1" Grid.Column="1" Height="10" 
                                                RangeMaximum="{Binding SelectedAnimation.Length}"

@@ -29,8 +29,6 @@ namespace StateAnimationPlugin.ViewModels
 
         ObservableCollection<AnimationViewModel> mAnimations;
 
-        double timeAnimationStarted;
-
         // 50 isn't smooth enough, we want more fps!
         //const int mTimerFrequencyInMs = 50;
         const int mTimerFrequencyInMs = 20;
@@ -150,6 +148,37 @@ namespace StateAnimationPlugin.ViewModels
 
         public ElementAnimationsSave BackingData { get; private set; }
 
+        public List<string> GameSpeedList { get; set; } =
+            new List<string>
+            {
+                "4000%",
+                "2000%",
+                "1000%",
+                "500%",
+                "200%",
+                "100%",
+                "50%",
+                "25%",
+                "10%",
+                "5%"
+            };
+
+        public string CurrentGameSpeed
+        {
+            get => Get<string>();
+            set
+            {
+                if (Set(value))
+                {
+                    AnimationSpeedMultiplier = 
+                        int.Parse(CurrentGameSpeed.Substring(0, CurrentGameSpeed.Length - 1)) / 100.0;
+
+                }
+            }
+        }
+
+        double AnimationSpeedMultiplier = 1.0;
+
         #endregion
 
         #region Events
@@ -165,6 +194,8 @@ namespace StateAnimationPlugin.ViewModels
 
         public ElementAnimationsViewModel()
         {
+            CurrentGameSpeed = "100%";
+
             Animations = new ObservableCollection<AnimationViewModel>();
 
             this.PropertyChanged += (sender, args) => OnPropertyChanged(args.PropertyName);
@@ -349,7 +380,10 @@ namespace StateAnimationPlugin.ViewModels
         private void HandlePlayTimerTick(object sender, EventArgs e)
         {
             var currentTime = Gum.Wireframe.TimeManager.Self.CurrentTime;
-            var newValue = currentTime - timeAnimationStarted;
+
+            var increaseInValue = AnimationSpeedMultiplier * (mTimerFrequencyInMs /1000.0);
+
+            var newValue = DisplayedAnimationTime + increaseInValue;
 
             if (SelectedAnimation != null)
             {
@@ -358,15 +392,7 @@ namespace StateAnimationPlugin.ViewModels
                 {
                     if (this.SelectedAnimation.Loops)
                     {
-                        if (this.SelectedAnimation.Length == 0)
-                        {
-                            newValue = 0;
-                        }
-                        else
-                        {
-                            newValue = newValue % this.SelectedAnimation.Length;
-                            timeAnimationStarted = Gum.Wireframe.TimeManager.Self.CurrentTime - newValue;
-                        }
+                        newValue = 0;
                     }
                     else
                     {
@@ -385,7 +411,6 @@ namespace StateAnimationPlugin.ViewModels
 
             if(mPlayTimer.IsEnabled)
             {
-                timeAnimationStarted = Gum.Wireframe.TimeManager.Self.CurrentTime;
                 DisplayedAnimationTime = 0;
             }
 
@@ -399,6 +424,24 @@ namespace StateAnimationPlugin.ViewModels
                 mPlayTimer.Stop();
                 NotifyPropertyChanged(nameof(ButtonBitmapFrame));
 
+            }
+        }
+
+        internal void DecreaseGameSpeed()
+        {
+            var index = GameSpeedList.IndexOf(CurrentGameSpeed);
+            if (index < GameSpeedList.Count - 1)
+            {
+                CurrentGameSpeed = GameSpeedList[index + 1];
+            }
+        }
+
+        internal void IncreaseGameSpeed()
+        {
+            var index = GameSpeedList.IndexOf(CurrentGameSpeed);
+            if (index > 0)
+            {
+                CurrentGameSpeed = GameSpeedList[index - 1];
             }
         }
 

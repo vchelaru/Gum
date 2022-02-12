@@ -324,5 +324,15 @@ namespace StateAnimationPlugin.Views
         {
             AnimationColumnsResized?.Invoke();
         }
+
+        private void SpeedDecreaseClicked(object sender, RoutedEventArgs args)
+        {
+            ViewModel.DecreaseGameSpeed();
+        }
+
+        private void SpeedIncreaseClicked(object sender, RoutedEventArgs args)
+        {
+            ViewModel.IncreaseGameSpeed();
+        }
     }
 }

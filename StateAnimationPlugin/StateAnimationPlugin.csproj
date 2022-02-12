@@ -170,6 +170,14 @@
   <ItemGroup>
     <EmbeddedResource Include="Resources\NamedEventIcon.png" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\icon_minus.png" />
+    <Resource Include="Resources\icon_plus.png" />
+    <Resource Include="Resources\SlowMotion.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Content\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>IF NOT EXIST "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)" md "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)"
