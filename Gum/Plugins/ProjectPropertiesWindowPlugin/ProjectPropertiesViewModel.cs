@@ -114,7 +114,7 @@ namespace Gum.Plugins.PropertiesWindowPlugin
             OutlineColor = Microsoft.Xna.Framework.Color.White;
         }
 
-        public void BindTo(GeneralSettingsFile generalSettings, GumProjectSave gumProject)
+        public void SetFrom(GeneralSettingsFile generalSettings, GumProjectSave gumProject)
         {
             IsUpdatingFromModel = true;
             this.generalSettings = generalSettings;

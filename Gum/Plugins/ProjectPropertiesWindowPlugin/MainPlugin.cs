@@ -1,4 +1,5 @@
 ﻿using Gum.Commands;
+using Gum.DataTypes;
 using Gum.Gui.Controls;
 using Gum.Managers;
 using Gum.Plugins.BaseClasses;
@@ -24,9 +25,13 @@ namespace Gum.Plugins.PropertiesWindowPlugin
     [Export(typeof(PluginBase))]
     class MainPlugin : InternalPlugin
     {
+        #region Fields/Properties
+
         ProjectPropertiesControl control;
 
         ProjectPropertiesViewModel viewModel;
+
+        #endregion
 
         public override void StartUp()
         {
@@ -36,6 +41,17 @@ namespace Gum.Plugins.PropertiesWindowPlugin
             viewModel.PropertyChanged += HandlePropertyChanged;
 
             // todo - handle loading new Gum project when this window is shown - re-call BindTo
+            this.ProjectLoad += HandleProjectLoad;
+        }
+
+        private void HandleProjectLoad(GumProjectSave obj)
+        {
+            if(control != null && viewModel != null)
+            {
+                viewModel.SetFrom(ProjectManager.Self.GeneralSettingsFile, ProjectState.Self.GumProjectSave);
+                control.ViewModel = null;
+                control.ViewModel = viewModel;
+            }
         }
 
         private void HandlePropertiesClicked(object sender, EventArgs e)
@@ -48,7 +64,7 @@ namespace Gum.Plugins.PropertiesWindowPlugin
 
                     control.CloseClicked += HandleCloseClicked;
                 }
-                viewModel.BindTo(ProjectManager.Self.GeneralSettingsFile, ProjectState.Self.GumProjectSave);
+                viewModel.SetFrom(ProjectManager.Self.GeneralSettingsFile, ProjectState.Self.GumProjectSave);
 
                 GumCommands.Self.GuiCommands.AddControl(control, "Project Properties");
                 GumCommands.Self.GuiCommands.ShowControl(control);

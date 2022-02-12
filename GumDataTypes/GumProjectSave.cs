@@ -121,7 +121,6 @@ namespace Gum.DataTypes
         /// </summary>
         public string ParentProjectRoot { get; set; }
 
-        // This should be in the GumProjectSave, not the settings, because the settings apply to all projects
         public string LocalizationFile { get; set; }
         public bool ShowLocalizationInGum { get; set; } = true;
         public int CurrentLanguageIndex { get; set; }
