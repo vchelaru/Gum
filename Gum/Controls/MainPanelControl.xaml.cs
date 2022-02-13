@@ -238,7 +238,7 @@ namespace Gum.Controls
             return tabPage.Content == control;
         }
 
-        internal void ShowTabForControl(System.Windows.Controls.UserControl control)
+        internal bool ShowTabForControl(System.Windows.Controls.UserControl control)
         {
             var found = false;
             foreach(var tabControl in AllControls)
@@ -260,6 +260,8 @@ namespace Gum.Controls
                     break;
                 }
             }
+
+            return found;
 
             //TabControl tabControl = null;
             //TabPage tabPage = null;

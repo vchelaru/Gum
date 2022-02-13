@@ -160,7 +160,8 @@ namespace StateAnimationPlugin
 
         private void HandleViewAnimationsClick(object sender, EventArgs e)
         {
-            if(mMainWindow == null || mMainWindow.IsVisible == false)
+            var shouldCreate = mMainWindow == null;
+            if (mMainWindow == null)
             {
                 SettingsManager.Self.LoadOrCreateSettings();
 
@@ -173,13 +174,16 @@ namespace StateAnimationPlugin
                 mMainWindow.AddStateKeyframeClicked += HandleAddStateKeyframe;
                 mMainWindow.AnimationColumnsResized += HandleAnimationColumnsResized;
             }
-                
-            var pluginTab = GumCommands.Self.GuiCommands.AddControl(mMainWindow, "Animations", 
-                TabLocation.RightBottom);
-            GumCommands.Self.GuiCommands.ShowControl(mMainWindow);
-            
-            pluginTab.Focus();
 
+            var wasShown = GumCommands.Self.GuiCommands.ShowControl(mMainWindow);
+
+            if(!wasShown)
+            {
+                var pluginTab = GumCommands.Self.GuiCommands.AddControl(mMainWindow, "Animations", 
+                    TabLocation.RightBottom);
+                GumCommands.Self.GuiCommands.ShowControl(mMainWindow);
+                pluginTab.Focus();
+            }
 
             // forces a refresh:
             mCurrentViewModel = new ElementAnimationsViewModel();

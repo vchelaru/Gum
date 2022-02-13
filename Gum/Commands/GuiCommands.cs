@@ -103,10 +103,11 @@ namespace Gum.Commands
         /// <summary>
         /// Selects the tab which contains the argument control
         /// </summary>
-        /// <param name="control"></param>
-        public void ShowControl(System.Windows.Controls.UserControl control)
+        /// <param name="control">The control to show.</param>
+        /// <returns>Whether the control was shown. If the control is not found, false is returned.</returns>
+        public bool ShowControl(System.Windows.Controls.UserControl control)
         {
-            mainPanelControl.ShowTabForControl(control);
+            return mainPanelControl.ShowTabForControl(control);
         }
 
         public void PrintOutput(string output)
