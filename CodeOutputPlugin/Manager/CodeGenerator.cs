@@ -861,6 +861,8 @@ namespace CodeOutputPlugin.Manager
             return code;
         }
 
+
+
         private static void FillWithInstanceInstantiation(InstanceSave instance, ElementSave element, StringBuilder stringBuilder, int tabCount = 0)
         {
             var strippedType = instance.BaseType;
@@ -870,24 +872,30 @@ namespace CodeOutputPlugin.Manager
             }
             var tabs = new String(' ', 4 * tabCount);
 
-            VisualApi visualApi = VisualApi.Gum;
-
-            var defaultState = element.DefaultState;
-            var isXamForms = (defaultState.GetValueRecursive($"{instance.Name}.IsXamarinFormsControl") as bool?) ?? false;
-            if(isXamForms)
-            {
-                visualApi = VisualApi.XamarinForms;
-            }
+            var visualApi = GetVisualApiForInstance(instance, element);
 
             stringBuilder.AppendLine($"{tabs}{instance.Name} = new {GetClassNameForType(instance.BaseType, visualApi)}();");
 
             var shouldSetBinding =
-                isXamForms && defaultState.Variables.Any(item => !string.IsNullOrEmpty(item.ExposedAsName) && item.SourceObject == instance.Name);
+                visualApi == VisualApi.XamarinForms && element.DefaultState.Variables.Any(item => !string.IsNullOrEmpty(item.ExposedAsName) && item.SourceObject == instance.Name);
             // If it's xamarin forms and we have exposed variables, then let's set up binding to this
             if (shouldSetBinding)
             {
                 stringBuilder.AppendLine($"{tabs}{instance.Name}.BindingContext = this;");
             }
+        }
+
+        public static VisualApi GetVisualApiForInstance(InstanceSave instance, ElementSave element)
+        {
+            var defaultState = element.DefaultState;
+            var isXamForms = (defaultState.GetValueRecursive($"{instance.Name}.IsXamarinFormsControl") as bool?) ?? false;
+            var visualApi = VisualApi.Gum;
+            if (isXamForms)
+            {
+                visualApi = VisualApi.XamarinForms;
+            }
+
+            return visualApi;
         }
 
         private static void FillWithVariableAssignments(VisualApi visualApi, StringBuilder stringBuilder, CodeGenerationContext context, int tabCount = 0)
@@ -1378,7 +1386,13 @@ namespace CodeOutputPlugin.Manager
                 if(isContainedInStackLayout == false)
                 {
                     // If it's a stack layout, we don't want to subtract from here.
-                    bottomMargin = -height - y;
+                    // Update Feb 14, 2022
+                    // Not sure why we subtract the height...
+                    //bottomMargin = -height - y;
+                    // If a Gum object is relative to children with
+                    // a height of 10, that means it should be 10 units
+                    // bigger than its children, so we should add 10
+                    bottomMargin = height - y;
                 }
             }
 
