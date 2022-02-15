@@ -1713,11 +1713,11 @@ namespace CodeOutputPlugin.Manager
                 {
                     yString += "/Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density";
                 }
-                if (proportionalFlags.Contains(WidthProportionalFlag) == false)
+                if (proportionalFlags.Contains(WidthProportionalFlag) == false && widthUnits != DimensionUnitType.RelativeToChildren)
                 {
                     widthString += "/Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density";
                 }
-                if (proportionalFlags.Contains(HeightProportionalFlag) == false)
+                if (proportionalFlags.Contains(HeightProportionalFlag) == false && heightUnits != DimensionUnitType.RelativeToChildren)
                 {
                     heightString += "/Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density";
                 }
