@@ -1417,6 +1417,11 @@ namespace CodeOutputPlugin.Manager
                     stringBuilder.AppendLine(
                         $"{codePrefix}.HorizontalOptions = LayoutOptions.Center;");
                 }
+                else if(xUnits == PositionUnitType.PixelsFromRight && xOrigin == HorizontalAlignment.Right)
+                {
+                    stringBuilder.AppendLine(
+                        $"{codePrefix}.HorizontalOptions = LayoutOptions.End;");
+                }
                 else
                 {
                     stringBuilder.AppendLine(
