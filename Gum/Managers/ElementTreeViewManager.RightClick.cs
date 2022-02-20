@@ -14,6 +14,7 @@ using System.IO;
 using ToolsUtilities;
 using Gum.Wireframe;
 using Gum.Logic;
+using Gum.DataTypes.Behaviors;
 
 namespace Gum.Managers
 {
@@ -170,6 +171,10 @@ namespace Gum.Managers
                 {
                     fullFile = elementSave.GetFullPathXmlFile().FullPath;
                 }
+                else if(treeNode.Tag is BehaviorSave behaviorSave)
+                {
+                    fullFile = behaviorSave.GetFullPathXmlFile().FullPath;
+                }
                 else
                 {
                     fullFile = treeNode.GetFullFilePath().FullPath;
@@ -267,11 +272,15 @@ namespace Gum.Managers
 
             if (SelectedNode != null)
             {
+                #region InstanceSave 
                 // InstanceSave selected
                 if (SelectedState.Self.SelectedInstance != null)
                 {
                     mMenuStrip.Items.Add(mGoToDefinition);
                 }
+                #endregion
+
+                #region Screen or Component
                 // ScreenSave or ComponentSave
                 else if (SelectedState.Self.SelectedScreen != null || SelectedState.Self.SelectedComponent != null)
                 {
@@ -301,15 +310,29 @@ namespace Gum.Managers
                     mMenuStrip.Items.Add(mDeleteObject);
 
                 }
-                else if(SelectedState.Self.SelectedBehavior != null)
+                #endregion
+
+                #region Behavior
+
+                else if (SelectedState.Self.SelectedBehavior != null)
                 {
+                    mMenuStrip.Items.Add("View in explorer", null, HandleViewInExplorer);
+                    mMenuStrip.Items.Add("-");
                     mDeleteObject.Text = "Delete " + SelectedState.Self.SelectedBehavior.ToString();
                     mMenuStrip.Items.Add(mDeleteObject);
                 }
+
+                #endregion
+
+                #region Standard Element
+
                 else if (SelectedState.Self.SelectedStandardElement != null)
                 {
                     mMenuStrip.Items.Add(mSaveObject);
                 }
+
+                #endregion
+
                 else if (SelectedNode.IsTopScreenContainerTreeNode() || SelectedNode.IsScreensFolderTreeNode())
                 {
                     mMenuStrip.Items.Add(mAddScreen);

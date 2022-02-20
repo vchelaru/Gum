@@ -42,7 +42,7 @@ namespace Gum.DataTypes
         }
 
 #if GUM
-        public static string GetFullPathXmlFile(this BehaviorSave behaviorSave)
+        public static FilePath GetFullPathXmlFile(this BehaviorSave behaviorSave)
         {
             return behaviorSave.GetFullPathXmlFile(behaviorSave.Name);
         }

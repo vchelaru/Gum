@@ -91,11 +91,11 @@ namespace Gum.Plugins.Errors
                     {
                         if(behaviorInstance.Behaviors.Count == 1)
                         {
-                            message += " with behavior type";
+                            message += " with behavior type ";
                         }
                         else
                         {
-                            message += " with behavior types";
+                            message += " with behavior types ";
                         }
                         var behaviorsJoined = string.Join(", ", behaviorInstance.Behaviors.Select(item => item.Name).ToArray());
                         message += behaviorsJoined;
