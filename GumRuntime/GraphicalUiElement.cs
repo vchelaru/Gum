@@ -1089,6 +1089,11 @@ namespace Gum.Wireframe
 
         #region Events
 
+        // It's possible that a size change could result in a layout which 
+        // results in a further size change. This recursive call of size changes
+        // could happen indefinitely so we only want to do this one time.
+        // This prevents the size change from happening over and over:
+        bool isInSizeChange;
         public event EventHandler SizeChanged;
         public event EventHandler PositionChanged;
         public event EventHandler ParentChanged;
@@ -1501,7 +1506,12 @@ namespace Gum.Wireframe
                 if (widthBeforeLayout != mContainedObjectAsIpso.Width ||
                     heightBeforeLayout != mContainedObjectAsIpso.Height)
                 {
-                    SizeChanged?.Invoke(this, null);
+                    if(!isInSizeChange)
+                    {
+                        isInSizeChange = true;
+                        SizeChanged?.Invoke(this, null);
+                        isInSizeChange = false;
+                    }
                 }
 
                 if (xBeforeLayout != mContainedObjectAsIpso.X ||
