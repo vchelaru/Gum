@@ -5310,6 +5310,11 @@ namespace Gum.Wireframe
         bool mJustChangedFrame;
         bool mJustCycled;
 
+        /// <summary>
+        /// Performs AnimationChain (.achx) animation on this and all children recurisvely.
+        /// This is typically called on the top-level object (usually Screen) when Gum is running
+        /// in a game.
+        /// </summary>
         public void AnimateSelf()
         {
             var shouldAnimateSelf = true;
