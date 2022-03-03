@@ -106,7 +106,6 @@ namespace Gum.Managers
 
         #region Properties
 
-
         public static ElementTreeViewManager Self
         {
             get 

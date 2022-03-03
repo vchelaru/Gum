@@ -21,6 +21,7 @@ using System.Drawing;
 using Gum.Converters;
 using Gum.Logic;
 using System.Windows.Input;
+using Gum.Plugins.ImportPlugin.Manager;
 
 namespace Gum.Managers
 {
@@ -54,6 +55,35 @@ namespace Gum.Managers
         }
 
         #endregion
+        internal void HandleDragDropEvent(object sender, DragEventArgs e)
+        {
+            List<TreeNode> treeNodesToDrop = GetTreeNodesToDrop();
+            mDraggedItem = null;
+            TreeNode targetTreeNode = ElementTreeViewManager.Self.GetTreeNodeOver();
+            foreach(var draggedTreeNode in treeNodesToDrop )
+            {
+                object draggedObject = draggedTreeNode.Tag;
+
+                if (targetTreeNode != draggedTreeNode)
+                {
+                    HandleDroppedItemOnTreeView(draggedObject, targetTreeNode);
+                }
+            }
+
+            string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+
+            if(files != null)
+            {
+                var isTargetRootScreenTreeNode = targetTreeNode == ElementTreeViewManager.Self.RootScreensTreeNode;
+                foreach(FilePath file in files)
+                {
+                    if(file.Extension == GumProjectSave.ScreenExtension && isTargetRootScreenTreeNode)
+                    {
+                        ImportLogic.ImportScreen(file);
+                    }
+                }
+            }
+        }
 
         #region Drag+drop File (like form windows explorer)
 
@@ -325,9 +355,101 @@ namespace Gum.Managers
             }
         }
 
+        private static InstanceSave HandleDroppedElementInElement(ElementSave draggedAsElementSave, ElementSave target, out bool handled)
+        {
+            InstanceSave newInstance = null;
+
+            string errorMessage = null;
+
+            handled = false;
+
+            errorMessage = GetDropElementErrorMessage(draggedAsElementSave, target, errorMessage);
+
+            if (!string.IsNullOrEmpty(errorMessage))
+            {
+                MessageBox.Show(errorMessage);
+            }
+            else
+            {
+#if DEBUG
+                if (draggedAsElementSave == null)
+                {
+                    throw new Exception("DraggedAsElementSave is null and it shouldn't be.  For vic - try to put this exception earlier to see what's up.");
+                }
+#endif
+
+                string name = GetUniqueNameForNewInstance(draggedAsElementSave, target);
+
+                // First we want to re-select the target so that it is highlighted in the tree view and not
+                // the object we dragged off.  This is so that plugins can properly use the SelectedElement.
+                ElementTreeViewManager.Self.Select(target);
+
+                newInstance = ElementTreeViewManager.Self.AddInstance(name, draggedAsElementSave.Name, target);
+                handled = true;
+            }
+
+            return newInstance;
+        }
+
+        private static string GetDropElementErrorMessage(ElementSave draggedAsElementSave, ElementSave target, string errorMessage)
+        {
+            if (target == null)
+            {
+                errorMessage = "No Screen or Component selected";
+            }
+
+            if (errorMessage == null && target is StandardElementSave)
+            {
+                // do nothing, it's annoying:
+                errorMessage = "Standard types can't contain objects";
+            }
+
+            if (errorMessage == null && draggedAsElementSave is ScreenSave)
+            {
+                errorMessage = "Screens can't be dropped into other Screens or Components";
+            }
+
+            if (errorMessage == null)
+            {
+
+                if (draggedAsElementSave is ComponentSave && target is ComponentSave)
+                {
+                    ComponentSave targetAsComponentSave = target as ComponentSave;
+
+                    if (!targetAsComponentSave.CanContainInstanceOfType(draggedAsElementSave.Name))
+                    {
+                        errorMessage = "Can't add instance of " + draggedAsElementSave.Name + " in " + targetAsComponentSave.Name;
+                    }
+                }
+            }
+
+
+            if (errorMessage == null && target.IsSourceFileMissing)
+            {
+                errorMessage = "The source file for " + target.Name + " is missing, so it cannot be edited";
+            }
+
+            return errorMessage;
+        }
+
+        private static string GetUniqueNameForNewInstance(ElementSave elementSave, ElementSave element)
+        {
+#if DEBUG
+            if (elementSave == null)
+            {
+                throw new ArgumentNullException("elementSave");
+            }
+#endif
+            // remove the path - we dont want folders to be part of the name
+            string name = FileManager.RemovePath( elementSave.Name ) + "Instance";
+            IEnumerable<string> existingNames = element.Instances.Select(i => i.Name);
+
+            return StringFunctions.MakeStringUnique(name, existingNames);
+        }
+
         #endregion
 
-        #region Drop Instance
+        #region Drop Instance on TreeNode
 
         private static void HandleDroppedInstance(object draggedObject, TreeNode targetTreeNode, object targetObject)
         {
@@ -394,26 +516,6 @@ namespace Gum.Managers
                 Gum.Undo.UndoManager.Self.RecordUndo();
                 SetVariableLogic.Self.PropertyValueChanged("Parent", oldValue, dragDroppedInstance);
                 targetTreeNode?.Expand();
-            }
-        }
-
-        #endregion
-
-        #region Drop Event
-
-        internal void HandleDragDropEvent(object sender, DragEventArgs e)
-        {
-            List<TreeNode> treeNodesToDrop = GetTreeNodesToDrop();
-            mDraggedItem = null;
-            TreeNode targetTreeNode = ElementTreeViewManager.Self.GetTreeNodeOver();
-            foreach(var draggedTreeNode in treeNodesToDrop )
-            {
-                object draggedObject = draggedTreeNode.Tag;
-
-                if (targetTreeNode != draggedTreeNode)
-                {
-                    HandleDroppedItemOnTreeView(draggedObject, targetTreeNode);
-                }
             }
         }
 
@@ -502,10 +604,6 @@ namespace Gum.Managers
             }
         }
 
-
-        #endregion
-
-
         private void HandleDroppedItemInWireframe(object draggedObject, out bool handled)
         {
             handled = false;
@@ -536,104 +634,13 @@ namespace Gum.Managers
             }
         }
 
-        private static InstanceSave HandleDroppedElementInElement(ElementSave draggedAsElementSave, ElementSave target, out bool handled)
-        {
-            InstanceSave newInstance = null;
-
-            string errorMessage = null;
-
-            handled = false;
-
-            errorMessage = GetErrorMessage(draggedAsElementSave, target, errorMessage);
-
-            if (!string.IsNullOrEmpty(errorMessage))
-            {
-                MessageBox.Show(errorMessage);
-            }
-            else
-            {
-#if DEBUG
-                if (draggedAsElementSave == null)
-                {
-                    throw new Exception("DraggedAsElementSave is null and it shouldn't be.  For vic - try to put this exception earlier to see what's up.");
-                }
-#endif
-
-                string name = GetUniqueNameForNewInstance(draggedAsElementSave, target);
-
-                // First we want to re-select the target so that it is highlighted in the tree view and not
-                // the object we dragged off.  This is so that plugins can properly use the SelectedElement.
-                ElementTreeViewManager.Self.Select(target);
-
-                newInstance = ElementTreeViewManager.Self.AddInstance(name, draggedAsElementSave.Name, target);
-                handled = true;
-            }
-
-            return newInstance;
-        }
-
-        private static string GetErrorMessage(ElementSave draggedAsElementSave, ElementSave target, string errorMessage)
-        {
-            if (target == null)
-            {
-                errorMessage = "No Screen or Component selected";
-            }
-
-            if (errorMessage == null && target is StandardElementSave)
-            {
-                // do nothing, it's annoying:
-                errorMessage = "Standard types can't contain objects";
-            }
-
-            if (errorMessage == null && draggedAsElementSave is ScreenSave)
-            {
-                errorMessage = "Screens can't be dropped into other Screens or Components";
-            }
-
-            if (errorMessage == null)
-            {
-
-                if (draggedAsElementSave is ComponentSave && target is ComponentSave)
-                {
-                    ComponentSave targetAsComponentSave = target as ComponentSave;
-
-                    if (!targetAsComponentSave.CanContainInstanceOfType(draggedAsElementSave.Name))
-                    {
-                        errorMessage = "Can't add instance of " + draggedAsElementSave.Name + " in " + targetAsComponentSave.Name;
-                    }
-                }
-            }
-
-
-            if (errorMessage == null && target.IsSourceFileMissing)
-            {
-                errorMessage = "The source file for " + target.Name + " is missing, so it cannot be edited";
-            }
-
-            return errorMessage;
-        }
-
-        private static string GetUniqueNameForNewInstance(ElementSave elementSave, ElementSave element)
-        {
-#if DEBUG
-            if (elementSave == null)
-            {
-                throw new ArgumentNullException("elementSave");
-            }
-#endif
-            // remove the path - we dont want folders to be part of the name
-            string name = FileManager.RemovePath( elementSave.Name ) + "Instance";
-            IEnumerable<string> existingNames = element.Instances.Select(i => i.Name);
-
-            return StringFunctions.MakeStringUnique(name, existingNames);
-        }
-
         private bool CanDrop()
         {
             return SelectedState.Self.SelectedStandardElement == null &&    // Don't allow dropping on standard elements
                    SelectedState.Self.SelectedElement != null &&            // An element must be selected
                    SelectedState.Self.SelectedStateSave != null;            // A state must be selected
         }
+        #endregion
 
         internal void HandleFileDragEnter(object sender, DragEventArgs e)
         {

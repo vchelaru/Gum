@@ -31,61 +31,66 @@ namespace Gum.Plugins.ImportPlugin.Manager
             {
                 string fileName = viewModel.SelectedFiles[i];
 
-                string desiredDirectory =
-                    FileManager.GetDirectory(
-                    ProjectManager.Self.GumProjectSave.FullFileName) + "Screens/";
+                ImportScreen(fileName);
 
-                var shouldAdd = true;
+            }
+        }
+
+        public static void ImportScreen(FilePath fileName)
+        {
+            string desiredDirectory =
+                FileManager.GetDirectory(
+                ProjectManager.Self.GumProjectSave.FullFileName) + "Screens/";
+
+            var shouldAdd = true;
 
 
-                if (FileManager.IsRelativeTo(fileName, desiredDirectory) == false)
+            if (FileManager.IsRelativeTo(fileName.FullPath, desiredDirectory) == false)
+            {
+                var copyResult = MessageBox.Show("The file must be in the Gum project's Screens folder.  " +
+                    "Would you like to copy the file?.", "Copy?", MessageBoxButtons.YesNo);
+
+                shouldAdd = copyResult == DialogResult.Yes;
+
+                try
                 {
-                    var copyResult = MessageBox.Show("The file must be in the Gum project's Screens folder.  " +
-                        "Would you like to copy the file?.", "Copy?", MessageBoxButtons.YesNo);
+                    string destination = desiredDirectory + FileManager.RemovePath(fileName.FullPath);
+                    System.IO.File.Copy(fileName.FullPath,
+                        destination);
 
-                    shouldAdd = copyResult == DialogResult.Yes;
-
-                    try
-                    {
-                        string destination = desiredDirectory + FileManager.RemovePath(fileName);
-                        System.IO.File.Copy(fileName,
-                            destination);
-
-                        fileName = destination;
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show("Error copying the file: " + ex.ToString());
-                    }
+                    fileName = destination;
                 }
-
-                if (shouldAdd)
+                catch (Exception ex)
                 {
-                    string strippedName = FileManager.RemovePath(FileManager.RemoveExtension(fileName));
-
-                    ProjectManager.Self.GumProjectSave.ScreenReferences.Add(
-                        new ElementReference { Name = strippedName, ElementType = ElementType.Screen });
-
-                    ProjectManager.Self.GumProjectSave.ScreenReferences.Sort(
-                        (first, second) => first.Name.CompareTo(second.Name));
-
-                    var screenSave = FileManager.XmlDeserialize<ScreenSave>(fileName);
-
-                    ProjectManager.Self.GumProjectSave.Screens.Add(screenSave);
-
-                    ProjectManager.Self.GumProjectSave.Screens.Sort(
-                        (first, second) => first.Name.CompareTo(second.Name));
-
-                    screenSave.Initialize(null);
-
-                    GumCommands.Self.GuiCommands.RefreshElementTreeView();
-
-                    SelectedState.Self.SelectedScreen = screenSave;
-
-                    GumCommands.Self.FileCommands.TryAutoSaveProject();
-                    GumCommands.Self.FileCommands.TryAutoSaveElement(screenSave);
+                    MessageBox.Show("Error copying the file: " + ex.ToString());
                 }
+            }
 
+            if (shouldAdd)
+            {
+                string strippedName = FileManager.RemovePath(FileManager.RemoveExtension(fileName.FullPath));
+
+                ProjectManager.Self.GumProjectSave.ScreenReferences.Add(
+                    new ElementReference { Name = strippedName, ElementType = ElementType.Screen });
+
+                ProjectManager.Self.GumProjectSave.ScreenReferences.Sort(
+                    (first, second) => first.Name.CompareTo(second.Name));
+
+                var screenSave = FileManager.XmlDeserialize<ScreenSave>(fileName.FullPath);
+
+                ProjectManager.Self.GumProjectSave.Screens.Add(screenSave);
+
+                ProjectManager.Self.GumProjectSave.Screens.Sort(
+                    (first, second) => first.Name.CompareTo(second.Name));
+
+                screenSave.Initialize(null);
+
+                GumCommands.Self.GuiCommands.RefreshElementTreeView();
+
+                SelectedState.Self.SelectedScreen = screenSave;
+
+                GumCommands.Self.FileCommands.TryAutoSaveProject();
+                GumCommands.Self.FileCommands.TryAutoSaveElement(screenSave);
             }
         }
 
