@@ -115,6 +115,8 @@ namespace Gum.Managers
             return null;
         }
 
+        public ComponentSave GetComponent(InstanceSave instance) => GetComponent(instance.BaseType);
+
         public ComponentSave GetComponent(string componentName)
         {
             if (cachedDictionary != null)

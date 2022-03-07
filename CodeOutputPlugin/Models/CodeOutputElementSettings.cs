@@ -33,5 +33,7 @@ namespace CodeOutputPlugin.Models
                 }
             }
         }
+
+        public bool LocalizeElement { get; set; }
     }
 }

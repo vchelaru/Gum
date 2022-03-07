@@ -82,6 +82,8 @@ namespace CodeOutputPlugin.Views
             elementCategory.Members.Add(CreateUsingStatementMember());
             elementCategory.Members.Add(CreateNamespaceMember());
             elementCategory.Members.Add(CreateFileLocationMember());
+            elementCategory.Members.Add(CreateGenerateLocalizeMethod());
+
 
             DataGrid.Categories.Add(elementCategory);
 
@@ -347,6 +349,27 @@ namespace CodeOutputPlugin.Views
             member.CustomGetEvent += (owner) => codeOutputElementSettings?.GeneratedFileName;
 
             member.CustomGetTypeEvent += (owner) => typeof(string);
+
+            return member;
+        }
+
+        private InstanceMember CreateGenerateLocalizeMethod()
+        {
+            var member = new InstanceMember("Localize Element", this);
+
+            member.CustomSetEvent += (owner, value) =>
+            {
+                if (codeOutputElementSettings != null)
+                {
+                    codeOutputElementSettings.LocalizeElement = (bool)value;
+
+                    CodeOutputSettingsPropertyChanged?.Invoke(this, null);
+                }
+            };
+
+            member.CustomGetEvent += (owner) => codeOutputElementSettings?.LocalizeElement ?? false;
+
+            member.CustomGetTypeEvent += (owner) => typeof(bool);
 
             return member;
         }

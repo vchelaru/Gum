@@ -326,6 +326,7 @@ namespace CodeOutputPlugin.Manager
 
                 #endregion
 
+                #region XamarinForms-required constructor code
 
                 stringBuilder.AppendLine(ToTabs(tabCount) + "var wasSuspended = GraphicalUiElement.IsAllLayoutSuspended;");
                 stringBuilder.AppendLine(ToTabs(tabCount) + "GraphicalUiElement.IsAllLayoutSuspended = true;");
@@ -371,7 +372,7 @@ namespace CodeOutputPlugin.Manager
                         stringBuilder.AppendLine(ToTabs(tabCount) + "BaseGrid.Children.Add(MainLayout);");
                     }
                 }
-
+                #endregion
             }
 
             CodeGenerationContext context = new CodeGenerationContext();
@@ -386,6 +387,8 @@ namespace CodeOutputPlugin.Manager
                 context.Instance = instance;
 
                 FillWithInstanceInstantiation(instance, element, stringBuilder, tabCount);
+
+
             }
             stringBuilder.AppendLine();
 
@@ -398,6 +401,9 @@ namespace CodeOutputPlugin.Manager
             foreach (var instance in element.Instances)
             {
                 FillWithVariableAssignments(instance, element, stringBuilder, tabCount);
+
+                TryGenerateApplyLocalizationForInstance(tabCount, stringBuilder, instance);
+
                 stringBuilder.AppendLine();
             }
 
@@ -418,6 +424,22 @@ namespace CodeOutputPlugin.Manager
 
             tabCount--;
             stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+        }
+
+        private static void TryGenerateApplyLocalizationForInstance(int tabCount, StringBuilder stringBuilder, InstanceSave instance)
+        {
+            var component = ObjectFinder.Self.GetComponent(instance);
+
+            if (component != null)
+            {
+                var instanceComponentSettings = CodeOutputElementSettingsManager.LoadOrCreateSettingsFor(component);
+
+                if (instanceComponentSettings?.LocalizeElement == true)
+                {
+                    stringBuilder.AppendLine(ToTabs(tabCount) + $"{instance.Name}.ApplyLocalization();");
+
+                }
+            }
         }
 
         private static void GenerateApplyLocalizationMethod(ElementSave element, int tabCount, StringBuilder stringBuilder)
@@ -462,9 +484,19 @@ namespace CodeOutputPlugin.Manager
                         //    }
                         //}
                     }
+
+                    // if a component is a subcomponent which can be localized, call it:
+
+                }
+                // Why don't we call base.ApplyLocalization?
+                //stringBuilder.AppendLine(ToTabs(tabCount) + "base.ApplyLocalization();");
+
+                foreach(var instance in element.Instances)
+                {
+                    TryGenerateApplyLocalizationForInstance(tabCount, stringBuilder, instance);
                 }
 
-                //stringBuilder.AppendLine(ToTabs(tabCount) + "base.ApplyLocalization();");
+
                 tabCount--;
                 stringBuilder.AppendLine(ToTabs(tabCount) + "}");
             }

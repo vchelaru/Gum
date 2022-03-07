@@ -295,9 +295,9 @@ namespace CodeOutputPlugin
             GenerateCodeForElement(selectedElement, settings, showPopups);
         }
 
-        private void GenerateCodeForElement(ElementSave selectedElement, Models.CodeOutputElementSettings settings, bool showPopups)
+        private void GenerateCodeForElement(ElementSave selectedElement, Models.CodeOutputElementSettings elementSettings, bool showPopups)
         {
-            string generatedFileName = settings.GeneratedFileName;
+            string generatedFileName = elementSettings.GeneratedFileName;
 
             if (string.IsNullOrEmpty(generatedFileName) && !string.IsNullOrEmpty(this.codeOutputProjectSettings.CodeProjectRoot))
             {
@@ -336,7 +336,7 @@ namespace CodeOutputPlugin
                 // the code for the whole selected element.
                 //var contents = ViewModel.Code;
 
-                string contents = CodeGenerator.GetGeneratedCodeForElement(selectedElement, settings, codeOutputProjectSettings);
+                string contents = CodeGenerator.GetGeneratedCodeForElement(selectedElement, elementSettings, codeOutputProjectSettings);
                 contents = $"//Code for {selectedElement.ToString()}\n{contents}";
 
                 string message = string.Empty;
@@ -375,7 +375,7 @@ namespace CodeOutputPlugin
                     // todo - only save this if it doesn't already exist
                     if (!System.IO.File.Exists(customCodeFileName))
                     {
-                        var customCodeContents = CustomCodeGenerator.GetCustomCodeForElement(selectedElement, settings, codeOutputProjectSettings);
+                        var customCodeContents = CustomCodeGenerator.GetCustomCodeForElement(selectedElement, elementSettings, codeOutputProjectSettings);
                         System.IO.File.WriteAllText(customCodeFileName, customCodeContents);
                     }
                 }
