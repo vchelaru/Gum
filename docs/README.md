@@ -6,6 +6,10 @@ Gum Application (binaries): [files.flatredball.com/content/Tools/Gum/Gum.zip](ht
 
 Gum Source Code: [http://www.github.com/vchelaru/Gum](http://www.github.com/vchelaru/Gum)
 
+Note that Gum uses XNA so the XNA runtime must be installed here:
+
+[https://www.microsoft.com/en-us/download/details.aspx?id=20914](https://www.microsoft.com/en-us/download/details.aspx?id=20914)
+
 ## Project Description
 
 Gum is a general-purpose UI tool for games, mockups, and websites. Gum saves to an XML format which you can include in your projects, but also supports a plugin system (using MEF) for custom exports.
