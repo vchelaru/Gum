@@ -4810,7 +4810,7 @@ namespace Gum.Wireframe
             else if (propertyName == "MaxLettersToShow")
             {
 #if MONOGAME || XNA4
-                ((Text)mContainedObjectAsIpso).MaxLettersToShow = (int)value;
+                ((Text)mContainedObjectAsIpso).MaxLettersToShow = (int?)value;
                 handled = true;
 #endif
             }

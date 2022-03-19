@@ -499,6 +499,10 @@ namespace RenderingLibrary.Graphics
             {
                 return null;
             }
+            if(numberOfLettersToRender == 0)
+            {
+                return null;
+            }
             ///////////////// End early out //////////////////////
 
             RenderTarget2D renderTarget = null;
@@ -569,6 +573,13 @@ namespace RenderingLibrary.Graphics
             float xOffset = 0, float yOffset = 0, float rotation = 0, float scaleX = 1, float scaleY = 1,
             int? numberOfLettersToRender = null)
         {
+            ///////////Early Out////////////////
+            if(numberOfLettersToRender == 0)
+            {
+                return;
+            }
+            /////////End Early Out//////////////
+            
             var point = new Vector2();
 
             int lineNumber = 0;
