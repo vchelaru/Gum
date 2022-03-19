@@ -70,7 +70,7 @@ namespace Gum.Managers
                 }
             }
 
-            string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+            string[] files = (string[])e.Data?.GetData(DataFormats.FileDrop);
 
             if(files != null)
             {
@@ -456,9 +456,10 @@ namespace Gum.Managers
             InstanceSave draggedAsInstanceSave = draggedObject as InstanceSave;
 
             ElementSave targetElementSave = targetObject as ElementSave;
-            if (targetElementSave == null && targetObject is InstanceSave)
+            InstanceSave targetInstanceSave = targetObject as InstanceSave;
+            if (targetElementSave == null && targetInstanceSave != null)
             {
-                targetElementSave = ((InstanceSave)targetObject).ParentContainer;
+                targetElementSave = targetInstanceSave.ParentContainer;
             }
 
 
@@ -476,7 +477,7 @@ namespace Gum.Managers
                     List<InstanceSave> instances = new List<InstanceSave>() { draggedAsInstanceSave };
                     CopyPasteLogic.PasteInstanceSaves(instances,
                         draggedAsInstanceSave.ParentContainer.DefaultState.Clone(),
-                        targetElementSave);
+                        targetElementSave, targetInstanceSave);
                 }
             }
         }
