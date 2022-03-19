@@ -198,7 +198,7 @@ namespace Gum.Logic
 
         private static void PasteCopiedInstanceSaves()
         {
-            PasteInstanceSaves(mCopiedInstances, mCopiedState, SelectedState.Self.SelectedElement);
+            PasteInstanceSaves(mCopiedInstances, mCopiedState, SelectedState.Self.SelectedElement, SelectedState.Self.SelectedInstance);
         }
 
         private static void PastedCopiedState()
@@ -248,11 +248,13 @@ namespace Gum.Logic
         }
 
 
-        public static void PasteInstanceSaves(List<InstanceSave> instancesToCopy, StateSave copiedState, ElementSave targetElement)
+        public static void PasteInstanceSaves(List<InstanceSave> instancesToCopy, StateSave copiedState, ElementSave targetElement, InstanceSave selectedInstance)
         {
             Dictionary<string, string> oldNewNameDictionary = new Dictionary<string, string>();
 
             List<InstanceSave> newInstances = new List<InstanceSave>();
+
+            #region Create the new instance and add it to the target element
 
             foreach (var sourceInstance in instancesToCopy)
             {
@@ -300,9 +302,21 @@ namespace Gum.Logic
                 }
             }
 
+            #endregion
+
             foreach (var sourceInstance in instancesToCopy)
             {
                 ElementSave sourceElement = sourceInstance.ParentContainer;
+
+                var isPastingInNewElement = sourceElement != targetElement;
+                var isSelectedInstancePartOfCopied = selectedInstance != null && instancesToCopy.Any(item => 
+                    item.Name == selectedInstance.Name &&
+                    item.ParentContainer == selectedInstance.ParentContainer);
+
+                var shouldAssignParent = isPastingInNewElement || !isSelectedInstancePartOfCopied;
+                var newParentName = selectedInstance?.Name;
+
+
                 var newInstance = newInstances.First(item => item.Name == oldNewNameDictionary[sourceInstance.Name]);
 
                 if (targetElement != null)
@@ -368,6 +382,11 @@ namespace Gum.Logic
 
                             targetState.VariableLists.Add(copiedList);
                         }
+                    }
+
+                    if(shouldAssignParent)
+                    {
+                        targetState.SetValue($"{newInstance.Name}.Parent", newParentName, "string");
                     }
 
                     // This used to be done here when we paste, but now we're
