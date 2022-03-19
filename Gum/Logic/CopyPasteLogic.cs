@@ -35,6 +35,16 @@ namespace Gum.Logic
 
         static CopyType mCopyType;
 
+        // If the user copies/pastes, the pasted object
+        // becomes the newly-selected instance. A user may
+        // want to copy/paste multiple times to create multiple
+        // (sibling) instances, but by default this would cause each
+        // new instance to be the child of the previously-pasted instance.
+        // This is not desirable, so we'll special-case pasting. If the user
+        // is pasting on the last pasted object, paste on the parent of the last 
+        // pasted object
+        static InstanceSave LastPastedInstance;
+
         #endregion
 
         public static void OnCopy(CopyType copyType)

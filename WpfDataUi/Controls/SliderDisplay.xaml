@@ -105,8 +105,15 @@
                    Padding="4"
                    >Property Label:</TextBlock>
         
-        <Slider Grid.Column="1" x:Name="Slider" VerticalContentAlignment="Center" ValueChanged="Slider_ValueChanged"
-                 MinWidth="60" Height="20" VerticalAlignment="Center" Style="{StaticResource MyCustomStyleForSlider}"></Slider>
+        <Slider Grid.Column="1" x:Name="Slider" 
+                VerticalContentAlignment="Center" 
+                ValueChanged="Slider_ValueChanged"
+                Thumb.DragCompleted="Slider_DragCompleted"
+                MinWidth="60" 
+                Height="20" 
+                VerticalAlignment="Center" 
+                Style="{StaticResource MyCustomStyleForSlider}"
+                ></Slider>
 
         <TextBox Grid.Column="2" x:Name="TextBox" Margin="1"
                      LostFocus="TextBox_LostFocus_1">

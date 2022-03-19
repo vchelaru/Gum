@@ -108,8 +108,11 @@ namespace WpfDataUi.Controls
             // If the user is editing a value, we don't want to change
             // the value under the cursor
             // If we're default, then go ahead and change the value
+
+            var isFocused = this.TextBox.IsFocused || this.Slider.IsFocused;
+
             bool canRefresh =
-                this.TextBox.IsFocused == false || forceRefreshEvenIfFocused || mTextBoxLogic.InstanceMember.IsDefault;
+                isFocused == false || forceRefreshEvenIfFocused || mTextBoxLogic.InstanceMember.IsDefault;
 
             if (canRefresh)
             {
@@ -168,13 +171,25 @@ namespace WpfDataUi.Controls
             // todo: support int...
         }
 
+        DateTime lastSliderTime = new DateTime();
         private void Slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            if(!SuppressSettingProperty)
+            // This is required to prevent weird flickering on the slider. Putting 100 ms frequency limiter makes everything work just fine.
+            // It's a hack but...not sure what else to do. I also have Slider_DragCompleted so the last value is always pushed.
+            var timeSince = DateTime.Now - lastSliderTime;
+            if(timeSince.TotalMilliseconds > 100)
+            {
+                HandleValueChanged();
+                lastSliderTime = DateTime.Now;
+            }
+        }
+
+        private void HandleValueChanged()
+        {
+            if (!SuppressSettingProperty)
             {
 
                 var value = Slider.Value;
-
                 this.TextBox.Text = value.ToString($"f{DecimalPointsFromSlider}");
 
                 // don't use this method, we want to control the decimals
@@ -191,5 +206,9 @@ namespace WpfDataUi.Controls
             mTextBoxLogic.TryApplyToInstance();
         }
 
+        private void Slider_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
+        {
+            HandleValueChanged();
+        }
     }
 }
