@@ -43,73 +43,16 @@ namespace Gum.Logic
         // This is not desirable, so we'll special-case pasting. If the user
         // is pasting on the last pasted object, paste on the parent of the last 
         // pasted object
-        static InstanceSave LastPastedInstance;
+        static List<InstanceSave> LastPastedInstances = new List<InstanceSave>();
 
         #endregion
 
+        #region Copy
         public static void OnCopy(CopyType copyType)
         {
             StoreCopiedObject(copyType);
         }
 
-        public static void OnCut(CopyType copyType)
-        {
-            StoreCopiedObject(copyType);
-
-            ElementSave sourceElement = SelectedState.Self.SelectedElement;
-
-            if(mCopiedInstances.Any())
-            {
-                foreach(var clone in mCopiedInstances)
-                {
-                    // copied instances is a clone, so need to find by name:
-                    var originalForCopy = sourceElement.Instances.FirstOrDefault(item => item.Name == clone.Name);
-                    if (sourceElement.Instances.Contains(originalForCopy))
-                    {
-                        ElementCommands.Self.RemoveInstance(originalForCopy, sourceElement);
-                    }
-                }
-
-                if (ProjectManager.Self.GeneralSettingsFile.AutoSave)
-                {
-                    ProjectManager.Self.SaveElement(sourceElement);
-                }
-                WireframeObjectManager.Self.RefreshAll(true);
-                PropertyGridManager.Self.RefreshUI();
-                GumCommands.Self.GuiCommands.RefreshElementTreeView();
-            }
-
-            // todo: need to handle cut Element saves, but I don't want to do it yet due to the danger of losing valid data...
-
-
-        }
-
-        public static void OnPaste(CopyType copyType)
-        {
-            // To make sure we didn't copy one type and paste another
-            if (mCopyType == copyType)
-            {
-                if (mCopyType == CopyType.InstanceOrElement)
-                {
-                    if (mCopiedElement != null)
-                    {
-                        PasteCopiedElement();
-
-                    }
-                    // We need to both duplicate the InstanceSave, but we also need to duplicate all of the variables
-                    // that use the copied InstanceSave.
-                    else if (mCopiedInstances.Count != 0)
-                    {
-                        PasteCopiedInstanceSaves();
-                    }
-                }
-                else if (mCopyType == CopyType.State && mCopiedState != null)
-                {
-                    PastedCopiedState();
-                }
-            }
-
-        }
 
         private static void StoreCopiedObject(CopyType copyType)
         {
@@ -204,6 +147,68 @@ namespace Gum.Logic
             }
         }
 
+        #endregion
+
+
+
+        public static void OnCut(CopyType copyType)
+        {
+            StoreCopiedObject(copyType);
+
+            ElementSave sourceElement = SelectedState.Self.SelectedElement;
+
+            if(mCopiedInstances.Any())
+            {
+                foreach(var clone in mCopiedInstances)
+                {
+                    // copied instances is a clone, so need to find by name:
+                    var originalForCopy = sourceElement.Instances.FirstOrDefault(item => item.Name == clone.Name);
+                    if (sourceElement.Instances.Contains(originalForCopy))
+                    {
+                        ElementCommands.Self.RemoveInstance(originalForCopy, sourceElement);
+                    }
+                }
+
+                if (ProjectManager.Self.GeneralSettingsFile.AutoSave)
+                {
+                    ProjectManager.Self.SaveElement(sourceElement);
+                }
+                WireframeObjectManager.Self.RefreshAll(true);
+                PropertyGridManager.Self.RefreshUI();
+                GumCommands.Self.GuiCommands.RefreshElementTreeView();
+            }
+
+            // todo: need to handle cut Element saves, but I don't want to do it yet due to the danger of losing valid data...
+
+
+        }
+
+        public static void OnPaste(CopyType copyType)
+        {
+            // To make sure we didn't copy one type and paste another
+            if (mCopyType == copyType)
+            {
+                if (mCopyType == CopyType.InstanceOrElement)
+                {
+                    if (mCopiedElement != null)
+                    {
+                        PasteCopiedElement();
+
+                    }
+                    // We need to both duplicate the InstanceSave, but we also need to duplicate all of the variables
+                    // that use the copied InstanceSave.
+                    else if (mCopiedInstances.Count != 0)
+                    {
+                        PasteCopiedInstanceSaves();
+                    }
+                }
+                else if (mCopyType == CopyType.State && mCopiedState != null)
+                {
+                    PastedCopiedState();
+                }
+            }
+
+        }
 
 
         private static void PasteCopiedInstanceSaves()
@@ -260,6 +265,10 @@ namespace Gum.Logic
 
         public static void PasteInstanceSaves(List<InstanceSave> instancesToCopy, StateSave copiedState, ElementSave targetElement, InstanceSave selectedInstance)
         {
+            if(LastPastedInstances.Contains(selectedInstance))
+            {
+                selectedInstance = selectedInstance?.GetParentInstance();
+            }
             Dictionary<string, string> oldNewNameDictionary = new Dictionary<string, string>();
 
             List<InstanceSave> newInstances = new List<InstanceSave>();
@@ -294,6 +303,12 @@ namespace Gum.Logic
                         if(original != null)
                         {
                             newIndex = sourceElement.Instances.IndexOf(original);
+                        }
+
+                        // The user is pasting again, so let's use the index of that:
+                        if(LastPastedInstances?.Count > 0 && sourceElement.Instances.ContainsAny(LastPastedInstances))
+                        {
+                            newIndex = LastPastedInstances.Select(item => sourceElement.Instances.IndexOf(item)).Max();
                         }
                         if(newIndex != -1)
                         {
@@ -425,7 +440,8 @@ namespace Gum.Logic
             GumCommands.Self.FileCommands.TryAutoSaveElement(targetElement);
             SelectedState.Self.SelectedInstances = newInstances;
 
-
+            LastPastedInstances.Clear();
+            LastPastedInstances.AddRange(newInstances);
         }
 
         private static List<InstanceSave> GetAllInstancesAndChildrenOf(List<InstanceSave> explicitlySelectedInstances, ElementSave container)
