@@ -1420,6 +1420,10 @@ namespace CodeOutputPlugin.Manager
             variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Width Units");
             variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Height Units");
 
+            // Shouldn't we remove these:
+            variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "X Origin");
+            variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Y Origin");
+
             var codePrefix = context.CodePrefix;
 
             if (widthUnits == DimensionUnitType.Absolute || widthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
@@ -1801,7 +1805,7 @@ namespace CodeOutputPlugin.Manager
             {
                 if(heightUnits == DimensionUnitType.RelativeToChildren)
                 {
-                    widthString = $"({heightString})";
+                    heightString = $"({heightString})";
                 }
                 else
                 {
