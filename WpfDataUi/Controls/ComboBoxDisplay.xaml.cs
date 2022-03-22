@@ -305,6 +305,7 @@ namespace WpfDataUi.Controls
             return ApplyValueResult.Success;
         }
 
+        bool isInSelectionChanged = false;
         private void ComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             // August 17, 2021 - If we check ComboBox.IsKeyboardFocusWithin,
@@ -313,15 +314,33 @@ namespace WpfDataUi.Controls
             // for the user to have to tab out of the textbox...
             //var canBroadcast = ComboBox.IsEditable == false ||
             //    ComboBox.IsKeyboardFocusWithin == false;
-            var canBroadcast = true;
-
-
-
-            if (canBroadcast)
+            // Update - this code was here to prevent recursive calls to this because of 
+            // the text box being changed. Therefore, we should have a value here to prevent recurisve calls
+            if(!isInSelectionChanged)
             {
+                isInSelectionChanged = true;
+
+                var selectedItem = this.ComboBox.SelectedItem as string;
                 // The text hasn't yet been set by default, so we need to force the text value here:
-                ComboBox.Text = this.ComboBox.SelectedItem as string;
+                ComboBox.Text = selectedItem;
+
+                // March 21, 2022
+                // The ComboBoxDisplay
+                // has a very weird bug
+                // as reported here: https://github.com/vchelaru/FlatRedBall/issues/503
+                // This bug happens when
+                // a value is changed on the
+                // combo box. That change is assigned
+                // on the ComboBox.Text, which then calls
+                // ComboBox_SelectionChanged again. For some
+                // reason this recurisve call nulls out the display.
+                // Vic has no idea why, but re-setting the SelectedItem
+                // seems to fix it. So...HACK ALERT:
+                ComboBox.SelectedItem = selectedItem;
+
                 HandleChange();
+
+                isInSelectionChanged = false;
             }
 
         }

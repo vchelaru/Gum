@@ -53,33 +53,40 @@ namespace CodeOutputPlugin.Manager
         }
 
         /// <summary>
-        /// The prefix of the code, with no trailing period
+        /// The prefix of the code, with tabs and no trailing period
         /// </summary>
         public string CodePrefix
         {
             get
             {
-                var tabs = ToTabs(TabCount);
-                if(Instance == null)
+                return ToTabs(TabCount) + CodePrefixNoTabs;
+            }
+        }
+
+        public string CodePrefixNoTabs
+        {
+            get
+            {
+                if (Instance == null)
                 {
                     if (string.IsNullOrEmpty(ThisPrefix))
                     {
-                        return tabs + "this";
+                        return "this";
                     }
                     else
                     {
-                        return tabs + ThisPrefix;
+                        return ThisPrefix;
                     }
                 }
                 else
                 {
                     if (string.IsNullOrEmpty(ThisPrefix))
                     {
-                        return tabs + "this." + Instance.Name;
+                        return "this." + Instance.Name;
                     }
                     else
                     {
-                        return tabs + ThisPrefix + "." + Instance.Name;
+                        return ThisPrefix + "." + Instance.Name;
                     }
                 }
             }
@@ -170,6 +177,10 @@ namespace CodeOutputPlugin.Manager
 
             GenerateConstructor(element, visualApi, tabCount, stringBuilder);
 
+            GenerateApplyDefaultVariables(element, visualApi, tabCount, stringBuilder);
+
+
+
             GenerateApplyLocalizationMethod(element, tabCount, stringBuilder);
 
             stringBuilder.AppendLine(ToTabs(tabCount) + "partial void CustomInitialize();");
@@ -186,6 +197,27 @@ namespace CodeOutputPlugin.Manager
             }
 
             return stringBuilder.ToString();
+        }
+
+        private static void GenerateApplyDefaultVariables(ElementSave element, VisualApi visualApi, int tabCount, StringBuilder stringBuilder)
+        {
+            var line = "private void ApplyDefaultVariables()";
+            stringBuilder.AppendLine(ToTabs(tabCount) + line);
+            stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+            tabCount++;
+
+            foreach (var instance in element.Instances)
+            {
+                FillWithNonParentVariableAssignments(instance, element, stringBuilder, tabCount);
+
+                TryGenerateApplyLocalizationForInstance(tabCount, stringBuilder, instance);
+
+                stringBuilder.AppendLine();
+            }
+
+            tabCount--;
+            stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+
         }
 
         public static string GetElementNamespace(ElementSave element, CodeOutputElementSettings elementSettings, CodeOutputProjectSettings projectSettings)
@@ -319,7 +351,7 @@ namespace CodeOutputPlugin.Manager
             else // xamarin forms
             {
                 #region Constructor Header
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"public {elementName}()");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"public {elementName}(bool fullInstantiation = true)");
 
                 stringBuilder.AppendLine(ToTabs(tabCount) + "{");
                 tabCount++;
@@ -388,9 +420,11 @@ namespace CodeOutputPlugin.Manager
 
                 FillWithInstanceInstantiation(instance, element, stringBuilder, tabCount);
 
-
             }
+
             stringBuilder.AppendLine();
+
+
 
             // fill with variable binding after the instances have been created
             if(visualApi == VisualApi.XamarinForms)
@@ -398,13 +432,16 @@ namespace CodeOutputPlugin.Manager
                 FillWithVariableBinding(element, stringBuilder, tabCount);
             }
 
+            stringBuilder.AppendLine(ToTabs(tabCount) + "if(fullInstantiation)");
+            stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+            tabCount++;
+            stringBuilder.AppendLine(ToTabs(tabCount) + "ApplyDefaultVariables();");
+            tabCount--;
+            stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+
             foreach (var instance in element.Instances)
             {
-                FillWithVariableAssignments(instance, element, stringBuilder, tabCount);
-
-                TryGenerateApplyLocalizationForInstance(tabCount, stringBuilder, instance);
-
-                stringBuilder.AppendLine();
+                FillWithParentAssignments(instance, element, stringBuilder, tabCount);
             }
 
             stringBuilder.AppendLine(ToTabs(tabCount) + "CustomInitialize();");
@@ -887,7 +924,9 @@ namespace CodeOutputPlugin.Manager
 
             FillWithInstanceInstantiation(instance, element, stringBuilder);
 
-            FillWithVariableAssignments(instance, element, stringBuilder);
+            FillWithNonParentVariableAssignments(instance, element, stringBuilder);
+
+            FillWithParentAssignments(instance, element, stringBuilder);
 
             var code = stringBuilder.ToString();
             return code;
@@ -914,6 +953,20 @@ namespace CodeOutputPlugin.Manager
             if (shouldSetBinding)
             {
                 stringBuilder.AppendLine($"{tabs}{instance.Name}.BindingContext = this;");
+            }
+
+            if (visualApi == VisualApi.Gum)
+            {
+                stringBuilder.AppendLine($"{tabs}{instance.Name}.Name = \"{instance.Name}\";");
+            }
+            else
+            {
+                // If defined by base, then the automation ID will already be set there, and 
+                // Xamarin.Forms doesn't like an automation ID being set 2x
+                if (instance.DefinedByBase == false)
+                {
+                    stringBuilder.AppendLine($"{tabs}{instance.Name}.AutomationId = \"{instance.Name}\";");
+                }
             }
         }
 
@@ -1004,60 +1057,127 @@ namespace CodeOutputPlugin.Manager
             }
         }
 
-        private static void FillWithVariableAssignments(InstanceSave instance, ElementSave container, StringBuilder stringBuilder, int tabCount = 0)
+        private static void FillWithParentAssignments(InstanceSave instance, ElementSave container, StringBuilder stringBuilder, int tabCount = 0)
+        {
+            var parentVariables = GetVariablesForValueAssignmentCode(instance, container)
+                // make "Parent" first
+                // .. actually we need to make parent last so that it can properly assign parent on scrollables
+                .Where(item => item.GetRootName() == "Parent")
+                .ToList();
+
+            var defaultState = container.DefaultState;
+            VisualApi visualApi = GetVisualApiForInstance(instance, container);
+
+            var tabs = new String(' ', 4 * tabCount);
+
+            //FillWithVariableAssignments(instance, container, stringBuilder, tabCount, parentVariables);
+            var context = new CodeGenerationContext();
+            context.Element = container;
+            context.Instance = instance;
+
+            foreach (var variable in parentVariables)
+            {
+                var codeLine = GetCodeLine(variable, container, visualApi, defaultState, context);
+
+                // the line of code could be " ", a string with a space. This happens
+                // if we want to skip a variable so we dont return null or empty.
+                // But we also don't want a ton of spaces generated.
+                if (!string.IsNullOrWhiteSpace(codeLine))
+                {
+                    stringBuilder.AppendLine(tabs + codeLine);
+                }
+
+                var suffixCodeLine = GetSuffixCodeLine(instance, variable, visualApi);
+                if (!string.IsNullOrEmpty(suffixCodeLine))
+                {
+                    stringBuilder.AppendLine(tabs + suffixCodeLine);
+                }
+            }
+
+
+            // For scrollable GumContainers we need to have the parent assigned *after* the AbsoluteLayout rectangle:
+            #region Assign Parent
+
+            var hasParent = parentVariables.Any(item => item.GetRootName() == "Parent");
+
+            if (!hasParent && !instance.DefinedByBase)
+            {
+                if (visualApi == VisualApi.Gum)
+                {
+                    // add it to "this"
+                    stringBuilder.AppendLine($"{tabs}this.Children.Add({instance.Name});");
+                }
+                else // forms
+                {
+                    var instanceBaseType = instance.BaseType;
+                    var isContainerStackLayout = container.BaseType?.EndsWith("/StackLayout") == true;
+
+                    if (instanceBaseType.EndsWith("/GumCollectionView"))
+                    {
+                        stringBuilder.AppendLine($"{tabs}var tempFor{instance.Name} = GumScrollBar.CreateScrollableAbsoluteLayout({instance.Name}, ScrollableLayoutParentPlacement.Free);");
+                        stringBuilder.AppendLine($"{tabs}MainLayout.Children.Add(tempFor{instance.Name});");
+                    }
+                    else if (instanceBaseType.EndsWith("/ScrollView"))
+                    {
+                        // assume that stack view will be at the base
+                        //stringBuilder.AppendLine($"{tabs}MainLayout.Children.Add(tempFor{instance.Name});");
+                        // Update Aug 9, 2021
+                        // Why do we assume that 
+                        // the stack view will be
+                        // at the base? Was it because
+                        // earlier versions of the code
+                        // generator didn't properly position
+                        // objects? This has been improving, and
+                        // this assumption causes confusion if a scrollview
+                        // is at the root of the page...
+                        //stringBuilder.AppendLine($"{tabs}this.Content = {instance.Name};");
+                        stringBuilder.AppendLine($"{tabs}MainLayout.Children.Add({instance.Name});");
+                    }
+                    else if (isContainerStackLayout)
+                    {
+                        stringBuilder.AppendLine($"{tabs}this.Children.Add({instance.Name});");
+                    }
+                    else
+                    {
+                        stringBuilder.AppendLine($"{tabs}MainLayout.Children.Add({instance.Name});");
+                    }
+                }
+            }
+
+            #endregion
+        }
+
+        private static void FillWithNonParentVariableAssignments(InstanceSave instance, ElementSave container, StringBuilder stringBuilder, int tabCount = 0)
         {
             #region Get variables to consider
 
             var variablesToAssignValues = GetVariablesForValueAssignmentCode(instance, container)
-                // make "Parent" first
-                // .. actually we need to make parent last so that it can properly assign parent on scrollables
-                .OrderBy(item => item.GetRootName() == "Parent")
+                .Where(item => item.GetRootName() != "Parent")
                 .ToList();
 
             #endregion
 
-            #region Determine visual API (Gum or Forms)
+            FillWithVariableAssignments(instance, container, stringBuilder, tabCount, variablesToAssignValues);
 
-            VisualApi visualApi = VisualApi.Gum;
+        }
 
+        private static void FillWithVariableAssignments(InstanceSave instance, ElementSave container, StringBuilder stringBuilder, int tabCount, List<VariableSave> variablesToAssignValues)
+        {
             var defaultState = container.DefaultState;
-            var isXamForms = defaultState.GetValueRecursive($"{instance.Name}.IsXamarinFormsControl") as bool?;
-            if (isXamForms == true)
-            {
-                visualApi = VisualApi.XamarinForms;
-            }
-
-            #endregion
+            VisualApi visualApi = GetVisualApiForInstance(instance, container);
 
             var tabs = new String(' ', 4 * tabCount);
 
-            #region Name/Automation Id
-
-            if (visualApi == VisualApi.Gum)
+            if (visualApi == VisualApi.XamarinForms && instance.BaseType?.EndsWith("/StackLayout") == true)
             {
-                stringBuilder.AppendLine($"{tabs}{instance.Name}.Name = \"{instance.Name}\";");
+                stringBuilder.AppendLine($"{tabs}{instance.Name}.Spacing = 0;");
             }
-            else
-            {
-                // If defined by base, then the automation ID will already be set there, and 
-                // Xamarin.Forms doesn't like an automation ID being set 2x
-                if(instance.DefinedByBase == false)
-                {
-                    stringBuilder.AppendLine($"{tabs}{instance.Name}.AutomationId = \"{instance.Name}\";");
-                }
-                if(instance.BaseType?.EndsWith("/StackLayout") == true)
-                {
-                    stringBuilder.AppendLine($"{tabs}{instance.Name}.Spacing = 0;");
-                }
-            }
-
-            #endregion
 
             var context = new CodeGenerationContext();
             context.Element = container;
             context.Instance = instance;
             // States come before anything, so run those first
-            foreach(var variable in variablesToAssignValues.Where(item => item.IsState(container)))
+            foreach (var variable in variablesToAssignValues.Where(item => item.IsState(container)))
             {
                 var codeLine = GetCodeLine(variable, container, visualApi, defaultState, context);
 
@@ -1089,7 +1209,7 @@ namespace CodeOutputPlugin.Manager
                 // the line of code could be " ", a string with a space. This happens
                 // if we want to skip a variable so we dont return null or empty.
                 // But we also don't want a ton of spaces generated.
-                if(!string.IsNullOrWhiteSpace(codeLine))
+                if (!string.IsNullOrWhiteSpace(codeLine))
                 {
                     stringBuilder.AppendLine(tabs + codeLine);
                 }
@@ -1100,57 +1220,6 @@ namespace CodeOutputPlugin.Manager
                     stringBuilder.AppendLine(tabs + suffixCodeLine);
                 }
             }
-
-            // For scrollable GumContainers we need to have the parent assigned *after* the AbsoluteLayout rectangle:
-            #region Assign Parent
-
-            var hasParent = variablesToAssignValues.Any(item => item.GetRootName() == "Parent");
-
-            if (!hasParent && !instance.DefinedByBase)
-            {
-                if(visualApi == VisualApi.Gum)
-                {
-                    // add it to "this"
-                    stringBuilder.AppendLine($"{tabs}this.Children.Add({instance.Name});");
-                }
-                else // forms
-                {
-                    var instanceBaseType = instance.BaseType;
-                    var isContainerStackLayout = container.BaseType?.EndsWith("/StackLayout") == true;
-
-                    if(instanceBaseType.EndsWith("/GumCollectionView"))
-                    {
-                        stringBuilder.AppendLine($"{tabs}var tempFor{instance.Name} = GumScrollBar.CreateScrollableAbsoluteLayout({instance.Name}, ScrollableLayoutParentPlacement.Free);");
-                        stringBuilder.AppendLine($"{tabs}MainLayout.Children.Add(tempFor{instance.Name});");
-                    }
-                    else if (instanceBaseType.EndsWith("/ScrollView"))
-                    {
-                        // assume that stack view will be at the base
-                        //stringBuilder.AppendLine($"{tabs}MainLayout.Children.Add(tempFor{instance.Name});");
-                        // Update Aug 9, 2021
-                        // Why do we assume that 
-                        // the stack view will be
-                        // at the base? Was it because
-                        // earlier versions of the code
-                        // generator didn't properly position
-                        // objects? This has been improving, and
-                        // this assumption causes confusion if a scrollview
-                        // is at the root of the page...
-                        //stringBuilder.AppendLine($"{tabs}this.Content = {instance.Name};");
-                        stringBuilder.AppendLine($"{tabs}MainLayout.Children.Add({instance.Name});");
-                    }
-                    else if(isContainerStackLayout)
-                    {
-                        stringBuilder.AppendLine($"{tabs}this.Children.Add({instance.Name});");
-                    }
-                    else
-                    {
-                        stringBuilder.AppendLine($"{tabs}MainLayout.Children.Add({instance.Name});");
-                    }
-                }
-            }
-
-            #endregion
         }
 
         private static void ProcessVariableGroups(List<VariableSave> variablesToConsider, StateSave defaultState, VisualApi visualApi, StringBuilder stringBuilder, CodeGenerationContext context)
@@ -1244,7 +1313,7 @@ namespace CodeOutputPlugin.Manager
 
             string variablePrefix = instance?.Name == null ? "" : "" + instance.Name + ".";
 
-            bool setsAny = GetIfStateSetsAnyPositionValues(state, variablePrefix);
+            bool setsAny = GetIfStateSetsAnyPositionValues(state, variablePrefix, variablesToConsider);
 
             InstanceSave parent = null;
             if (instance != null)
@@ -1301,9 +1370,9 @@ namespace CodeOutputPlugin.Manager
 
         }
 
-        private static bool GetIfStateSetsAnyPositionValues(StateSave state, string prefix)
+        private static bool GetIfStateSetsAnyPositionValues(StateSave state, string prefix, List<VariableSave> variablesToConsider)
         {
-            return state.Variables.Any(item =>
+            return variablesToConsider.Any(item =>
                     item.Name == prefix + "X" ||
                     item.Name == prefix + "Y" ||
                     item.Name == prefix + "Width" ||
@@ -1326,7 +1395,7 @@ namespace CodeOutputPlugin.Manager
 
             var variablePrefix = context.GumVariablePrefix;
 
-            bool setsAny = GetIfStateSetsAnyPositionValues(defaultState, variablePrefix);
+            bool setsAny = GetIfStateSetsAnyPositionValues(defaultState, variablePrefix, variablesToConsider);
 
 
             var x = variableFinder.GetValue<float>(variablePrefix + "X");
@@ -1763,7 +1832,7 @@ namespace CodeOutputPlugin.Manager
 
 
             string boundsText =
-                $"{ToTabs(tabCount)}AbsoluteLayout.SetLayoutBounds({context.CodePrefix}, new Rectangle({xString}, {yString}, {widthString}, {heightString} ));";
+                $"{ToTabs(tabCount)}AbsoluteLayout.SetLayoutBounds({context.CodePrefixNoTabs}, new Rectangle({xString}, {yString}, {widthString}, {heightString} ));";
             string flagsText = null;
 
             if(proportionalFlags.Count == 0)
@@ -1785,7 +1854,7 @@ namespace CodeOutputPlugin.Manager
                     flagsArguments += flag;
                     i++;
                 }
-                flagsText = $"{ToTabs(tabCount)}AbsoluteLayout.SetLayoutFlags({context.CodePrefix}, {flagsArguments});";
+                flagsText = $"{ToTabs(tabCount)}AbsoluteLayout.SetLayoutFlags({context.CodePrefixNoTabs}, {flagsArguments});";
             }
             // assume every object has X, which it won't, so we will have to improve this
             if (string.IsNullOrWhiteSpace(flagsText))
@@ -1802,34 +1871,34 @@ namespace CodeOutputPlugin.Manager
             {
                 if(widthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
                 {
-                    stringBuilder.AppendLine($"{ToTabs(tabCount)}{context.CodePrefix}.WidthRequest = {width.ToString(CultureInfo.InvariantCulture)}f * RenderingLibrary.SystemManagers.GlobalFontScale;");
+                    stringBuilder.AppendLine($"{context.CodePrefix}.WidthRequest = {width.ToString(CultureInfo.InvariantCulture)}f * RenderingLibrary.SystemManagers.GlobalFontScale;");
                 }
                 else
                 {
-                    stringBuilder.AppendLine($"{ToTabs(tabCount)}{context.CodePrefix}.WidthRequest = {width.ToString(CultureInfo.InvariantCulture)}f;");
+                    stringBuilder.AppendLine($"{context.CodePrefix}.WidthRequest = {width.ToString(CultureInfo.InvariantCulture)}f;");
                 }
             }
             if (!proportionalFlags.Contains(HeightProportionalFlag) && (heightUnits == DimensionUnitType.RelativeToContainer || heightUnits == DimensionUnitType.Absolute || heightUnits == DimensionUnitType.AbsoluteMultipliedByFontScale))
             {
                 if(heightUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
                 {
-                    stringBuilder.AppendLine($"{ToTabs(tabCount)}{context.CodePrefix}.HeightRequest = {height.ToString(CultureInfo.InvariantCulture)}f * RenderingLibrary.SystemManagers.GlobalFontScale;");
+                    stringBuilder.AppendLine($"{context.CodePrefix}.HeightRequest = {height.ToString(CultureInfo.InvariantCulture)}f * RenderingLibrary.SystemManagers.GlobalFontScale;");
                 }
                 else
                 {
-                    stringBuilder.AppendLine($"{ToTabs(tabCount)}{context.CodePrefix}.HeightRequest = {height.ToString(CultureInfo.InvariantCulture)}f;");
+                    stringBuilder.AppendLine($"{context.CodePrefix}.HeightRequest = {height.ToString(CultureInfo.InvariantCulture)}f;");
                 }
             }
 
             //If the object is width proportional, then it must use a .HorizontalOptions = LayoutOptions.Fill; or else the proportional width won't apply
             if (proportionalFlags.Contains(WidthProportionalFlag))
             {
-                stringBuilder.AppendLine($"{ToTabs(tabCount)}{context.CodePrefix}.HorizontalOptions = LayoutOptions.Fill;");
+                stringBuilder.AppendLine($"{context.CodePrefix}.HorizontalOptions = LayoutOptions.Fill;");
             }
 
             if (leftMargin != 0 || rightMargin != 0 || topMargin != 0 || bottomMargin != 0)
             {
-                stringBuilder.AppendLine($"{ToTabs(tabCount)}{context.CodePrefix}.Margin = new Thickness({leftMargin}, {topMargin}, {rightMargin}, {bottomMargin});");
+                stringBuilder.AppendLine($"{context.CodePrefix}.Margin = new Thickness({leftMargin}, {topMargin}, {rightMargin}, {bottomMargin});");
             }
             // should we do the same to vertical? Maybe, but waiting for a natural use case to test it
         }

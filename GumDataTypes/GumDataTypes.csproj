@@ -89,9 +89,7 @@
     <Compile Include="Variables\VariableListSave.cs" />
     <Compile Include="Variables\VariableSave.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="ComponentModel\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <ProjectReference Include="..\ToolsUtilities\ToolsUtilitiesStandard.csproj">
       <Project>{cae35f4b-8a10-4a85-b2fb-7f4a8d7c7138}</Project>

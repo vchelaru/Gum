@@ -672,7 +672,7 @@ namespace ToolsUtilities
 
 
 
-        internal static XmlSerializer GetXmlSerializer(Type type)
+        public static XmlSerializer GetXmlSerializer(Type type)
         {
             if (mXmlSerializers.ContainsKey(type))
             {
