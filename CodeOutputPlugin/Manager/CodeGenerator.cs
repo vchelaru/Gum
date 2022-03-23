@@ -1593,6 +1593,8 @@ namespace CodeOutputPlugin.Manager
             variablesToConsider.RemoveAll(item => item.Name == prefix + "Width Units");
             variablesToConsider.RemoveAll(item => item.Name == prefix + "Height Units");
 
+            variablesToConsider.RemoveAll(item => item.Name == prefix + "X Origin");
+            variablesToConsider.RemoveAll(item => item.Name == prefix + "Y Origin");
             #endregion
 
             var proportionalFlags = new HashSet<string>();

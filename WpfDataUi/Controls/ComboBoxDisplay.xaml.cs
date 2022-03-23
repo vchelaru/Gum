@@ -320,9 +320,10 @@ namespace WpfDataUi.Controls
             {
                 isInSelectionChanged = true;
 
-                var selectedItem = this.ComboBox.SelectedItem as string;
+                var selectedItemString = this.ComboBox.SelectedItem?.ToString();
+                var selectedItem = this.ComboBox.SelectedItem;
                 // The text hasn't yet been set by default, so we need to force the text value here:
-                ComboBox.Text = selectedItem;
+                ComboBox.Text = selectedItemString;
 
                 // March 21, 2022
                 // The ComboBoxDisplay
@@ -336,6 +337,7 @@ namespace WpfDataUi.Controls
                 // reason this recurisve call nulls out the display.
                 // Vic has no idea why, but re-setting the SelectedItem
                 // seems to fix it. So...HACK ALERT:
+                // Update March 23, 2022
                 ComboBox.SelectedItem = selectedItem;
 
                 HandleChange();

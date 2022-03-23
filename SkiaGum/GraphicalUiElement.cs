@@ -4898,15 +4898,17 @@ namespace Gum.Wireframe
 
             //}
             //else
+            if (mContainedObjectAsIpso is Text text)
             {
-                if (/*FontSize > 0 &&*/ !string.IsNullOrEmpty(Font))
+                if (!string.IsNullOrEmpty(Font))
                 {
                     //SKTypeface font = contentLoader.LoadContent<SKTypeface>(Font);
-                    if (font != null && mContainedObjectAsIpso is Text text)
+                    if (font != null)
                     {
                         text.FontName = font;
                     }
                 }
+                text.FontSize = this.FontSize;
             }
         }
 #endif
