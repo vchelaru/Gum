@@ -274,6 +274,13 @@ namespace WpfDataUi.DataTypes
             }
         }
 
+        // see TypeMemberDisplayProperties
+        //public bool IsVisible
+        //{
+        //    get;
+        //    set;
+        //} = true;
+
         #endregion
 
         #region Events

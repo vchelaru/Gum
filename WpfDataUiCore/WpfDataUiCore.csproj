@@ -32,6 +32,7 @@
     <Compile Include="..\WpfDataUi\Controls\AngleSelectorDisplay.xaml.cs" Link="Controls\AngleSelectorDisplay.xaml.cs" />
     <Compile Include="..\WpfDataUi\Controls\CheckBoxDisplay.xaml.cs" Link="Controls\CheckBoxDisplay.xaml.cs" />
     <Compile Include="..\WpfDataUi\Controls\ComboBoxDisplay.xaml.cs" Link="Controls\ComboBoxDisplay.xaml.cs" />
+    <Compile Include="..\WpfDataUi\Controls\EditableComboBoxDisplay.cs" Link="Controls\EditableComboBoxDisplay.cs" />
     <Compile Include="..\WpfDataUi\Controls\FileSelectionDisplay.xaml.cs" Link="Controls\FileSelectionDisplay.xaml.cs" />
     <Compile Include="..\WpfDataUi\Controls\MultiLineTextBoxDisplay.cs" Link="Controls\MultiLineTextBoxDisplay.cs" />
     <Compile Include="..\WpfDataUi\Controls\SingleDataUiContainer.xaml.cs" Link="Controls\SingleDataUiContainer.xaml.cs" />
@@ -71,7 +72,6 @@
 
   <ItemGroup>
     <Folder Include="Content\Icons\" />
-    <Folder Include="Controls\" />
     <Folder Include="DataTypes\" />
     <Folder Include="EventArguments\" />
   </ItemGroup>
