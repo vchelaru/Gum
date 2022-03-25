@@ -68,7 +68,7 @@ namespace WpfDataUi.DataTypes
             newImdp.DisplayName = displayName;
         }
 
-        private InstanceMemberDisplayProperties GetOrCreateImdp(string name)
+        public InstanceMemberDisplayProperties GetOrCreateImdp(string name)
         {
             InstanceMemberDisplayProperties newImdp = DisplayProperties.FirstOrDefault(item => item.Name == name);
             if (newImdp == null)
