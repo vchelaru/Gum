@@ -75,10 +75,25 @@ namespace WpfDataUi
         private static void HandlePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var grid = d as DataUiGrid;
+            var oldValue = e.OldValue;
+            if(oldValue is INotifyPropertyChanged oldNotifyPropertyChanged)
+            {
+                oldNotifyPropertyChanged.PropertyChanged -= grid.HandleInstancePropertyChanged;
+            }
 
             grid.mMembersWithOptionalVisibility.Clear();
 
             grid.PopulateCategories();
+
+            if(grid.Instance is INotifyPropertyChanged newNotifyPropertyChanged)
+            {
+                newNotifyPropertyChanged.PropertyChanged += grid.HandleInstancePropertyChanged;
+            }
+        }
+
+        private void HandleInstancePropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            RefreshDelegateBasedElementVisibility();
         }
 
         #endregion
