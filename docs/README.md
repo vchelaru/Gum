@@ -2,9 +2,9 @@
 
 ## Downloading Gum
 
-Gum Application (binaries): [files.flatredball.com/content/Tools/Gum/Gum.zip](http://files.flatredball.com/content/Tools/Gum/Gum.zip)
+Gum Application (binaries): [files.flatredball.com/content/Tools/Gum/Gum.zip](https://files.flatredball.com/content/Tools/Gum/Gum.zip)
 
-Gum Source Code: [http://www.github.com/vchelaru/Gum](http://www.github.com/vchelaru/Gum)
+Gum Source Code: [https://www.github.com/vchelaru/Gum](https://www.github.com/vchelaru/Gum)
 
 Note that Gum uses XNA so the XNA runtime must be installed here:
 
