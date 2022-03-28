@@ -19,18 +19,22 @@ namespace Gum.DataTypes
         {
             bool wasModified = false;
 
-            gumProjectSave.ScreenReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
-            gumProjectSave.ComponentReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
-            gumProjectSave.StandardElementReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
-            gumProjectSave.BehaviorReferences.Sort((first, second) =>
+            gumProjectSave.ScreenReferences?.Sort((first, second) => first.Name.CompareTo(second.Name));
+            gumProjectSave.ComponentReferences?.Sort((first, second) => first.Name.CompareTo(second.Name));
+            gumProjectSave.StandardElementReferences?.Sort((first, second) => first.Name.CompareTo(second.Name));
+            gumProjectSave.BehaviorReferences?.Sort((first, second) =>
             {
-                if (first.Name == null)
+                if (first?.Name == null)
+                {
+                    return 0;
+                }
+                else if(second?.Name == null)
                 {
                     return 0;
                 }
                 else
                 {
-                    return first.Name.CompareTo(second.Name);
+                    return first?.Name.CompareTo(second?.Name) ?? 0;
                 }
             });
 
