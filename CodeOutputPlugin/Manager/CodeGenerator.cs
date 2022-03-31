@@ -1111,35 +1111,28 @@ namespace CodeOutputPlugin.Manager
                 {
                     var instanceBaseType = instance.BaseType;
                     var isContainerStackLayout = container.BaseType?.EndsWith("/StackLayout") == true;
+                    var isContainerScrollView = container.BaseType?.EndsWith("/ScrollView") == true;
+                    var isContainerAbsoluteLayout = container.BaseType?.EndsWith("/AbsoluteLayout") == true;
+
+                    var instanceName = instance.Name;
 
                     if (instanceBaseType.EndsWith("/GumCollectionView"))
                     {
                         stringBuilder.AppendLine($"{tabs}var tempFor{instance.Name} = GumScrollBar.CreateScrollableAbsoluteLayout({instance.Name}, ScrollableLayoutParentPlacement.Free);");
-                        stringBuilder.AppendLine($"{tabs}MainLayout.Children.Add(tempFor{instance.Name});");
+                        instanceName = $"tempFor{instance.Name}";
                     }
-                    else if (instanceBaseType.EndsWith("/ScrollView"))
+                    
+                    if (isContainerStackLayout || isContainerAbsoluteLayout)
                     {
-                        // assume that stack view will be at the base
-                        //stringBuilder.AppendLine($"{tabs}MainLayout.Children.Add(tempFor{instance.Name});");
-                        // Update Aug 9, 2021
-                        // Why do we assume that 
-                        // the stack view will be
-                        // at the base? Was it because
-                        // earlier versions of the code
-                        // generator didn't properly position
-                        // objects? This has been improving, and
-                        // this assumption causes confusion if a scrollview
-                        // is at the root of the page...
-                        //stringBuilder.AppendLine($"{tabs}this.Content = {instance.Name};");
-                        stringBuilder.AppendLine($"{tabs}MainLayout.Children.Add({instance.Name});");
+                        stringBuilder.AppendLine($"{tabs}this.Children.Add({instanceName});");
                     }
-                    else if (isContainerStackLayout)
+                    else if(isContainerScrollView)
                     {
-                        stringBuilder.AppendLine($"{tabs}this.Children.Add({instance.Name});");
+                        stringBuilder.Append($"{tabs}this.Content = {instanceName};");
                     }
                     else
                     {
-                        stringBuilder.AppendLine($"{tabs}MainLayout.Children.Add({instance.Name});");
+                        stringBuilder.AppendLine($"{tabs}MainLayout.Children.Add({instanceName});");
                     }
                 }
             }
