@@ -176,11 +176,15 @@ namespace WpfDataUi.Controls
         {
             // This is required to prevent weird flickering on the slider. Putting 100 ms frequency limiter makes everything work just fine.
             // It's a hack but...not sure what else to do. I also have Slider_DragCompleted so the last value is always pushed.
+            // Update 2 - this causes all kinds of problems if we update in realtime. Let's ju
             var timeSince = DateTime.Now - lastSliderTime;
-            if(timeSince.TotalMilliseconds > 100)
+            if (timeSince.TotalMilliseconds > 100)
             {
-                HandleValueChanged();
-                lastSliderTime = DateTime.Now;
+                //HandleValueChanged();
+                //lastSliderTime = DateTime.Now;
+                // display the value, but don't push it until the drag is complete:
+                var value = Slider.Value;
+                this.TextBox.Text = value.ToString($"f{DecimalPointsFromSlider}");
             }
         }
 
