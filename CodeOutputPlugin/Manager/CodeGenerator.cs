@@ -1492,6 +1492,23 @@ namespace CodeOutputPlugin.Manager
                     // bigger than its children, so we should add 10
                     bottomMargin = height - y;
                 }
+                else
+                {
+                    // in a stack layout, so give the margin according to the y origin:
+                    if(yOrigin == VerticalAlignment.Top)
+                    {
+                        bottomMargin = height;
+                    }
+                    else if(yOrigin == VerticalAlignment.Center)
+                    {
+                        topMargin += height / 2.0f;
+                        bottomMargin = height / 2.0f;
+                    }
+                    else if(yOrigin == VerticalAlignment.Bottom)
+                    {
+                        topMargin += height;
+                    }
+                }
             }
 
             if (isVariableOwnerAbsoluteLayout && heightUnits == DimensionUnitType.RelativeToChildren)
