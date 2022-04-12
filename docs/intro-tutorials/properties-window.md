@@ -6,13 +6,13 @@ The properties window in Gum is used to provide extensive control over instances
 
 The properties window will show properties for the selected instance or element.
 
-![](<../.gitbook/assets/GumSelectedInstanceProperties (1).png>)
+![](<../.gitbook/assets/image (10).png>)
 
 ## Editing Properties
 
-Properties can be edited simply by changing values on the selected property. For example, to change the text so that it is positioned against the top-left of the screen, change its X and Y properties to 0:
+Properties can be edited simply by changing values on the selected property. For example, to move the text to the right, change its X value to a positive number:
 
-![](<../.gitbook/assets/GumTextTopLeft (1).PNG>)
+![](<../.gitbook/assets/image (4).png>)
 
 ## Positioning Instances
 
@@ -22,40 +22,46 @@ By default all objects are positioned by their top-left corner. In the example a
 
 We can change the origin of the Text object by setting its "X Origin" and "Y Origin" values. Notice that if X Origin is set to "Center" then the Text object is positioned by its center:
 
-![](<../.gitbook/assets/GumCenterXOrigin (1).PNG>)
+![](<../.gitbook/assets/image (3).png>)
 
-Notice that I had to pan the view to be able to see the Text object. To pan the view, press and hold the middle mouse button while the cursor is over the preview window. While the middle mouse button is down, move the mouse cursor.
+Notice that I had to pan the view to be able to see the Text object. Gum provides multiple ways to pan the view:
 
-Changing the X Origin value changes the origin of the selected instance; however, it is still positioned relative to the top-left corner of the Text instance's container - which in this case is the entire screen designated by the dotted white outline rectangle.
+* Press and hold the middle mouse button while the cursor is over the preview window. While the middle mouse button is down, move the mouse cursor.
+* Use the scroll bars on the bottom and side of the view
+* Hold down CTRL and press the arrow keys
 
-We can change the origin that the Text is relative to by changing the X Units. By default the X Units property is set to "PixelsFromLeft" for X and "PixelsFromTop" for Y. Changing the X Units to "PixelsFromRight" will cause the Text to be positioned on the right-side of the screen. Notice that changing the units value will automatically update the X or Y values as appropriate. This is why my X value is now showing a value of -800:
+Changing the X Origin value changes the origin of the selected instance; however, it is still positioned relative to the top-left corner of the Text instance's container - which in this case is the entire screen designated by the dotted outline rectangle.
 
-![](<../.gitbook/assets/GumPixelsFromRight (1).PNG>)
+We can change the origin that the Text is relative to by changing the X Units. By default the X Units property is set to **Pixels from Left** for X and **Pixels from Top** for Y.&#x20;
+
+![](<../.gitbook/assets/image (11).png>)
+
+Changing the X Units to **Pixels from Right** will cause the Text to be positioned on the right-side of the screen.
+
+![](<../.gitbook/assets/06\_21 10 59.gif>)
 
 ## Text Alignment
 
-The X,Y values, Origin values, and Units values are all available for every type of element in Gum; however, these values only change the bounds. In the case of a Text object we may be interested in how the text is aligned within the bounds. The Text object offers two properties for aligning its text: VerticalAlignment and HorizontalAlignment. Changing the HorizontalAlignment to Center will center the Text within its bounds:
+The X,Y values, Origin values, and Units values are all available for every type of element in Gum; however, these values only change the bounds. In the case of a Text object we may be interested in how the text is aligned within the bounds. The Text object offers two properties for aligning its text: **Horizontal Alignment** and **Vertical Alignment**. Changing the **Horizontal Alignment** to **Center** centers the Text within its bounds:
 
-![](<../.gitbook/assets/GumTextCenterAlignment (1).PNG>)
+![](<../.gitbook/assets/image (9).png>)
 
 ## Default and overriding values
 
-You may have noticed that some properties in the property grid are green while others are black. For example, in the image above the TextInstance's VerticalAlignment is "Top", but it is green. The reason for this is because instances are not required to define values for every property. Whenever an instance does not define a property, it uses the property that is defined in the Standard Element definition.
+You may have noticed that some properties in the property grid are green while others are black. For example, in the image above the TextInstance's **Vertical Alignment** is green. The reason for this is because instances are not required to define values for every property. Whenever an instance does not define a property, it uses the property that is defined in the Standard Element definition.
 
-To see how this works, select the "Text" item under the "Standard" item. Notice that all values are black. Notice the default values for HorizontalAlignment and VerticalAlignment:
+To see how this works, select the "Text" item under the "Standard" item. Notice that all values are black. Notice the default values for **Horizontal Alignment** and **Vertical Alignment**:
 
-![](<../.gitbook/assets/HorizontalAndVerticalAlignmentDefaults (1).png>)
+![](<../.gitbook/assets/image (8).png>)
 
-If the default HorizontalAlignment and VerticalAlignment values are changed, the changes will immediately be reflected in the preview window for the default Text configuration:
+If the default Horizontal Alignment and Vertical Alignment values are changed, the changes will immediately be reflected in the preview window for the default Text configuration:
 
-![](<../.gitbook/assets/GumBottomRightAlignment (1).png>)
+![](<../.gitbook/assets/image (5).png>)
 
-Now if we select the TextIntance we will see that the VerticalAlignment is visibly using the Bottom value; however the HorizontalAlignment is still using center - this is because a value that is explicitly set on an instance will always override the default value set in the Standard element. Notice that HorizontalAlignment is black (indicating a custom value) and VerticalAlignment is green (indicating a default value).
+Now if we select the TextIntance we will see that the VerticalAlignment is visibly using the Bottom value; however the **Horizontal Alignment** is still using center - this is because a value that is explicitly set on an instance will always override the default value set in the Standard element. Notice that **Horizontal Alignment** is black (indicating a custom value) and **Vertical Alignment** is green (indicating a default value).
 
-![](<../.gitbook/assets/GumInstanceCombiningDefaultAndCustom (1).PNG>)
+![](<../.gitbook/assets/image (6).png>)
 
-Values can be reverted back to their default simply by right-clicking on the variable name in the properties window and selecting "Reset to default"
+Values can be reverted back to their default simply by right-clicking on the variable name in the properties window and selecting **Make Default**
 
-![](<../.gitbook/assets/GumAllDefaults (1).PNG>)
-
-![](<../.gitbook/assets/GumMakeDefaultRightClick (1).png>)
+![](<../.gitbook/assets/image (7).png>)
