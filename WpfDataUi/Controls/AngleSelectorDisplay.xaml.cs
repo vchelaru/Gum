@@ -16,12 +16,15 @@ using WpfDataUi.DataTypes;
 
 namespace WpfDataUi.Controls
 {
+    #region enums
+
     public enum AngleType
     {
         Degrees,
         Radians
     }
 
+    #endregion
 
     /// <summary>
     /// Interaction logic for AngleSelectorDisplay.xaml
@@ -33,7 +36,7 @@ namespace WpfDataUi.Controls
 
         TextBoxDisplayLogic mTextBoxLogic;
 
-        float mAngle;
+        decimal mAngle;
         #endregion
 
         #region Properties
@@ -42,40 +45,43 @@ namespace WpfDataUi.Controls
         {
             get
             {
-                return mAngle;
+                return (float)mAngle;
             }
             set
             {
-                
-                
-                mAngle = value;
-                NotifyPropertyChange("Angle");
-                NotifyPropertyChange("NegativeAngle");
-                
-                UpdateUiToAngle();
 
-                this.TrySetValueOnInstance();
+
+                mAngle = (decimal)value;
+                ReactToAngleSetThroughProperty();
 
             }
+        }
+
+        private void ReactToAngleSetThroughProperty()
+        {
+            NotifyPropertyChange(nameof(Angle));
+            NotifyPropertyChange(nameof(NegativeAngle));
+
+            UpdateUiToAngle();
+
+            this.TrySetValueOnInstance();
         }
 
         public float NegativeAngle
         {
             get
             {
-                return mAngle * -1;
+                return (float)mAngle * -1;
             }
             set
             {
-                mAngle = value * -1;
-                NotifyPropertyChange("Angle");
-                NotifyPropertyChange("NegativeAngle");
-                
-                UpdateUiToAngle();
-                this.TrySetValueOnInstance();
+                mAngle = (decimal)value * -1;
+                ReactToAngleSetThroughProperty();
+
             }
         }
 
+        public decimal? SnappingInterval { get; set; } = 1;
 
         public DataTypes.InstanceMember InstanceMember
         {
@@ -229,12 +235,12 @@ namespace WpfDataUi.Controls
         {
             if (TypeToPushToInstance == AngleType.Radians)
             {
-                result = (float)(System.Math.PI * mAngle / 180.0f);
+                result = (float)(System.Math.PI * (double)mAngle / 180.0f);
 
             }
             else
             {
-                result = mAngle;
+                result = (float)mAngle;
 
             }
             return ApplyValueResult.Success;
@@ -245,14 +251,18 @@ namespace WpfDataUi.Controls
             ApplyValueResult toReturn = ApplyValueResult.NotSupported;
             if (value is float)
             {
-                if (TypeToPushToInstance == AngleType.Radians)
+                var isOver = this.IsMouseOver && Mouse.LeftButton == MouseButtonState.Pressed;
+                if(!isOver)
                 {
-                    this.Angle = 180 * (float)((float)value / Math.PI);
+                    if (TypeToPushToInstance == AngleType.Radians)
+                    {
+                        this.Angle = 180 * (float)((float)value / Math.PI);
 
-                }
-                else
-                {
-                    this.Angle = (float)value;
+                    }
+                    else
+                    {
+                        this.Angle = (float)value;
+                    }
                 }
                 toReturn = ApplyValueResult.Success;
             }
@@ -280,15 +290,32 @@ namespace WpfDataUi.Controls
 
                     var angleToSet = Math.Atan2(point.Y, point.X);
                     angleToSet = 180 * (float)(angleToSet / Math.PI);
-                    int angleAsInt = (int)(angleToSet + .5f);
+                    //int angleAsInt = (int)(angleToSet + .5f);
+
+                    decimal newAngle = (decimal)angleToSet;
+                    if(SnappingInterval != null)
+                    {
+                        newAngle = RoundDecimal((decimal)angleToSet, SnappingInterval.Value);
+                    }
 
                     // We need snapping
+                    if(mAngle != newAngle)
+                    {
+                        // don't set the float property, this causes a cast to float and loses precision, resulting
+                        // in the text box displaying things like 1.00001 instead of 1
+                        //Angle = angleAsInt;
+                        mAngle = newAngle;
+                        ReactToAngleSetThroughProperty();
 
-                    Angle = angleAsInt;
+                    }
                 }
             }
         }
 
+        public static decimal RoundDecimal(decimal valueToRound, decimal multipleOf)
+        {
+            return ((int)(System.Math.Sign(valueToRound) * .5m + valueToRound / multipleOf)) * multipleOf;
+        }
         private void Ellipse_MouseLeftButtonDown_1(object sender, MouseButtonEventArgs e)
         {
             Ellipse_MouseMove_1(null, null);
