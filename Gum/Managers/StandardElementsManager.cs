@@ -662,10 +662,15 @@ namespace Gum.Managers
 
                 StateSave customState = null;
 #if GUM
-                
                 customState = PluginManager.Self.GetDefaultStateFor(type);
+#elif SKIA
+                // In Skia we will assume that any type that comes through has a default state:
+                customState = new StateSave();
+                AddPositioningVariables(customState, addOriginVariables: true);
+                mDefaults[type] = customState;
 #endif
-                if(customState == null && throwExceptionOnMissing)
+
+                if (customState == null && throwExceptionOnMissing)
                 {
                     throw new InvalidOperationException(
                         $"Could not get the default state for type {type} in either the default or through plugins");

@@ -15,7 +15,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Topten.RichTextKit;
 using Microsoft.Xna.Framework;
-
+using Xamarin.Forms;
 
 namespace SkiaGum
 {

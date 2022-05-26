@@ -1471,11 +1471,25 @@ namespace CodeOutputPlugin.Manager
                 rightMargin = -width - x;
             }
             if(xUnits == PositionUnitType.PixelsFromCenterX && 
-                xOrigin == HorizontalAlignment.Center &&
-                widthUnits == DimensionUnitType.RelativeToContainer)
+                xOrigin == HorizontalAlignment.Center)
             {
-                leftMargin = -width / 2.0f;
-                rightMargin = -width / 2.0f;
+                if ( widthUnits == DimensionUnitType.RelativeToContainer)
+                {
+                    leftMargin = x - width / 2.0f;
+                    rightMargin = -x - width / 2.0f;
+                }
+                else if(widthUnits == DimensionUnitType.Absolute || 
+                    widthUnits == DimensionUnitType.RelativeToChildren ||
+                    widthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale ||
+                    widthUnits == DimensionUnitType.MaintainFileAspectRatio ||
+                    widthUnits == DimensionUnitType.PercentageOfOtherDimension ||
+                    widthUnits == DimensionUnitType.PercentageOfSourceFile ||
+                    widthUnits == DimensionUnitType.Ratio
+                    ) 
+                {
+                    // Vic says - not sure why but we have to 2x the margin here...
+                    leftMargin = x * 2;
+                }
             }
 
             if(yUnits == PositionUnitType.PixelsFromTop)
