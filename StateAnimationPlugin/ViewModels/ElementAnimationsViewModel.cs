@@ -186,7 +186,7 @@ namespace StateAnimationPlugin.ViewModels
 
         public event PropertyChangedEventHandler AnyChange;
 
-        public event EventHandler SelectedItemPropertyChanged;
+        //public event EventHandler SelectedItemPropertyChanged;
 
         #endregion
 

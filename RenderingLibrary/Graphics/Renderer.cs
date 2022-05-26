@@ -152,6 +152,11 @@ namespace RenderingLibrary.Graphics
                 //    mSelf = new Renderer();
                 //}
                 //return mSelf;
+                if(SystemManagers.Default == null)
+                {
+                    throw new InvalidOperationException(
+                        "The SystemManagers.Default is null. You must either specify the default SystemManagers, or use a custom SystemsManager if your app has multiple SystemManagers.");
+                }
                 return SystemManagers.Default.Renderer;
 
             }

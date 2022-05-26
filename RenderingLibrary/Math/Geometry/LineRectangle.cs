@@ -212,7 +212,7 @@ namespace RenderingLibrary.Math.Geometry
             mChildren = new ObservableCollection<IRenderableIpso>();
 
             Visible = true;
-            Renderer renderer = null;
+            Renderer renderer;
             if (mManagers != null)
             {
                 renderer = mManagers.Renderer;

@@ -24,8 +24,6 @@ namespace StateAnimationPlugin.Views
     {
         #region Fields
 
-        float mRangeMinimum;
-
         List<Rectangle> mRectangles = new List<Rectangle>();
 
 

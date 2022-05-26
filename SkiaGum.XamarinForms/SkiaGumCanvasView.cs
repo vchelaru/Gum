@@ -32,7 +32,7 @@ namespace SkiaGum
 
         SystemManagers SystemManagers;
 
-        public SemaphoreSlim ExclusiveUiInteractionSemaphor = new SemaphoreSlim(1, 1);
+        public SemaphoreSlim ExclusiveUiInteractionSemaphore = new SemaphoreSlim(1, 1);
 
         float yPushed;
         bool isWithinThreshold = false;
@@ -42,6 +42,10 @@ namespace SkiaGum
 
         Func<float, float, Task> customTouchEvent;
 
+        public bool AutoSizeHeightAccordingToContents { get; set; }
+        bool AutoSizeWidthAccordingToContents;
+
+
         BindableGraphicalUiElement elementPushed;
 
         /// <summary>
@@ -49,10 +53,6 @@ namespace SkiaGum
         /// Leaving this at 1 will make everything draw to-the-pixel regardles of device density.
         /// </summary>
         public static float GlobalScale { get; set; } = 1;
-
-
-
-
 
         #endregion
 
@@ -94,7 +94,7 @@ namespace SkiaGum
 
                     if (customPushEventToRaise != null)
                     {
-                        var canProceed = await ExclusiveUiInteractionSemaphor.WaitAsync(0);
+                        var canProceed = await ExclusiveUiInteractionSemaphore.WaitAsync(0);
 
                         if (canProceed)
                         {
@@ -104,13 +104,13 @@ namespace SkiaGum
                             }
                             finally
                             {
-                                ExclusiveUiInteractionSemaphor.Release(1);
+                                ExclusiveUiInteractionSemaphore.Release(1);
                             }
                         }
                     }
                     else
                     {
-                        var canProceed = await ExclusiveUiInteractionSemaphor.WaitAsync(0);
+                        var canProceed = await ExclusiveUiInteractionSemaphore.WaitAsync(0);
 
                         if (canProceed)
                         {
@@ -119,7 +119,7 @@ namespace SkiaGum
                             {
                                 DarkenElement(elementPushed);
                             }
-                            ExclusiveUiInteractionSemaphor.Release(1);
+                            ExclusiveUiInteractionSemaphore.Release(1);
                         }
 
                         await TryPushOnContainedGumObjects(touchX, touchY);
@@ -159,7 +159,7 @@ namespace SkiaGum
                     {
                         if (customReleaseEventToRaise != null)
                         {
-                            var canProceed = await ExclusiveUiInteractionSemaphor.WaitAsync(0);
+                            var canProceed = await ExclusiveUiInteractionSemaphore.WaitAsync(0);
 
                             if (canProceed)
                             {
@@ -169,7 +169,7 @@ namespace SkiaGum
                                 }
                                 finally
                                 {
-                                    ExclusiveUiInteractionSemaphor.Release(1);
+                                    ExclusiveUiInteractionSemaphore.Release(1);
                                 }
                             }
                         }
@@ -182,7 +182,7 @@ namespace SkiaGum
                             }
                             if (customTouchEvent != null)
                             {
-                                var canProceed = await ExclusiveUiInteractionSemaphor.WaitAsync(0);
+                                var canProceed = await ExclusiveUiInteractionSemaphore.WaitAsync(0);
 
                                 if (canProceed)
                                 {
@@ -192,7 +192,7 @@ namespace SkiaGum
                                     }
                                     finally
                                     {
-                                        ExclusiveUiInteractionSemaphor.Release(1);
+                                        ExclusiveUiInteractionSemaphore.Release(1);
                                     }
                                 }
                             }
@@ -231,7 +231,7 @@ namespace SkiaGum
 
             if (clickableElement != null)
             {
-                var canProceed = await ExclusiveUiInteractionSemaphor.WaitAsync(0);
+                var canProceed = await ExclusiveUiInteractionSemaphore.WaitAsync(0);
 
                 if (canProceed)
                 {
@@ -242,7 +242,7 @@ namespace SkiaGum
                     }
                     finally
                     {
-                        ExclusiveUiInteractionSemaphor.Release(1);
+                        ExclusiveUiInteractionSemaphore.Release(1);
                     }
                 }
             }
@@ -254,7 +254,7 @@ namespace SkiaGum
 
             if (clickableElement != null)
             {
-                var canProceed = await ExclusiveUiInteractionSemaphor.WaitAsync(0);
+                var canProceed = await ExclusiveUiInteractionSemaphore.WaitAsync(0);
 
                 if (canProceed)
                 {
@@ -264,7 +264,7 @@ namespace SkiaGum
                     }
                     finally
                     {
-                        ExclusiveUiInteractionSemaphor.Release(1);
+                        ExclusiveUiInteractionSemaphore.Release(1);
                     }
                 }
             }
@@ -292,7 +292,7 @@ namespace SkiaGum
         {
             if (customPushEventToRaise != null || customReleaseEventToRaise != null)
             {
-                var canProceed = await ExclusiveUiInteractionSemaphor.WaitAsync(0);
+                var canProceed = await ExclusiveUiInteractionSemaphore.WaitAsync(0);
 
                 if (canProceed)
                 {
@@ -309,8 +309,15 @@ namespace SkiaGum
                     }
                     finally
                     {
-                        ExclusiveUiInteractionSemaphor.Release(1);
+                        ExclusiveUiInteractionSemaphore.Release(1);
                     }
+                }
+            }
+            foreach (var recognizer in this.GestureRecognizers)
+            {
+                if (recognizer is TapGestureRecognizer tapGestureRecognizer)
+                {
+                    tapGestureRecognizer.SendTapped(this);
                 }
             }
         }
@@ -422,6 +429,17 @@ namespace SkiaGum
             SystemManagers.Renderer.Draw(this.GumElementsInternal, SystemManagers);
 
             base.OnPaintSurface(args);
+
+            if (AutoSizeHeightAccordingToContents)
+            {
+                var heightRequest = this.HeightRequest;
+                var bottomRight = GetBottomRightMostElementCorner();
+
+                if (heightRequest != bottomRight.Y)
+                {
+                    HeightRequest = bottomRight.Y;
+                }
+            }
         }
 
         public GraphicalUiElement GetViewAt(float x, float y)
@@ -487,14 +505,15 @@ namespace SkiaGum
             }
         }
 
-        // This currently assumes a height request for when it's added to a StackLayout. Maybe at some point in the
-        // future we'd want to do the same thing for canvases added to AbsoluteLayouts?
-        public void SetHeightRequestToContents()
+        public void SetHeightRequestToContents(bool forceUpdate = true)
         {
-            ForceGumLayout();
+            if (forceUpdate)
+            {
+                ForceGumLayout();
+            }
+
             var requiredSize = GetBottomRightMostElementCorner();
             HeightRequest = requiredSize.Y;
         }
-
     }
 }
