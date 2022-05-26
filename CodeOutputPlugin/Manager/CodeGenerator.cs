@@ -1204,7 +1204,7 @@ namespace CodeOutputPlugin.Manager
                 // But we also don't want a ton of spaces generated.
                 if (!string.IsNullOrWhiteSpace(codeLine))
                 {
-                    stringBuilder.AppendLine(tabs + codeLine);
+                    stringBuilder.AppendLine(codeLine);
                 }
 
                 var suffixCodeLine = GetSuffixCodeLine(instance, variable, visualApi);
@@ -1450,13 +1450,16 @@ namespace CodeOutputPlugin.Manager
 
             var isContainedInStackLayout = parentBaseType?.EndsWith("/StackLayout") == true;
             var isVariableOwnerAbsoluteLayout = false;
+            var isVariableOwnerSkiaGumCanvasView = false;
             if (context.Instance != null)
             {
                 isVariableOwnerAbsoluteLayout = context.Instance.BaseType?.EndsWith("/AbsoluteLayout") == true;
+                isVariableOwnerSkiaGumCanvasView = context.Instance.BaseType?.EndsWith("/SkiaGumCanvasView") == true;
             }
             else
             {
                 isVariableOwnerAbsoluteLayout = context.Element.BaseType?.EndsWith("/AbsoluteLayout") == true;
+                isVariableOwnerSkiaGumCanvasView = context.Element.BaseType?.EndsWith("/SkiaGumCanvasView") == true;
             }
 
             if (xUnits == PositionUnitType.PixelsFromLeft)
@@ -1571,6 +1574,19 @@ namespace CodeOutputPlugin.Manager
                     $"{codePrefix}.VerticalOptions = LayoutOptions.Fill;");
             }
 
+            if (isVariableOwnerSkiaGumCanvasView)
+            {
+                if (heightUnits == DimensionUnitType.RelativeToChildren)
+                {
+                    stringBuilder.AppendLine(
+                        $"{codePrefix}.AutoSizeHeightAccordingToContents = true;");
+                }
+                if (widthUnits == DimensionUnitType.RelativeToChildren)
+                {
+                    stringBuilder.AppendLine(
+                        $"{codePrefix}.AutoSizeWidthAccordingToContents = true;");
+                }
+            }
         }
 
         private static void SetAbsoluteLayoutPosition(List<VariableSave> variablesToConsider, StateSave state, InstanceSave instance, ElementSave container, StringBuilder stringBuilder, int tabCount, CodeGenerationContext context)

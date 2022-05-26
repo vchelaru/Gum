@@ -43,7 +43,7 @@ namespace SkiaGum
         Func<float, float, Task> customTouchEvent;
 
         public bool AutoSizeHeightAccordingToContents { get; set; }
-        bool AutoSizeWidthAccordingToContents;
+        public bool AutoSizeWidthAccordingToContents { get; set; }
 
 
         BindableGraphicalUiElement elementPushed;
@@ -430,14 +430,16 @@ namespace SkiaGum
 
             base.OnPaintSurface(args);
 
-            if (AutoSizeHeightAccordingToContents)
+            if (AutoSizeHeightAccordingToContents || AutoSizeWidthAccordingToContents)
             {
-                var heightRequest = this.HeightRequest;
                 var bottomRight = GetBottomRightMostElementCorner();
-
-                if (heightRequest != bottomRight.Y)
+                if (AutoSizeHeightAccordingToContents && this.HeightRequest != bottomRight.Y)
                 {
                     HeightRequest = bottomRight.Y;
+                }
+                if (AutoSizeWidthAccordingToContents && this.WidthRequest != bottomRight.X)
+                {
+                    WidthRequest = bottomRight.X;
                 }
             }
         }
