@@ -33,7 +33,8 @@
                     </ContextMenu>
                 </TextBox.ContextMenu>
             </TextBox>
-            <TextBlock IsHitTestVisible="False" Grid.Column="1" VerticalAlignment="Center" Foreground="Gray" Margin="3,0,3,0" x:Name="PlaceholderText" >Placeholder</TextBlock>
+            <TextBlock IsHitTestVisible="False" Grid.Column="1" 
+                       VerticalAlignment="Center" Foreground="Gray" Margin="3,0,3,0" x:Name="PlaceholderText" >Placeholder</TextBlock>
         </Grid>
         <!--Vic says: If this is really long, it extends the entire control horizontally rather than wrapping. I don't know how to control this.
         In Gum we would just mark this Width as RelativeToParent and be done with it-->

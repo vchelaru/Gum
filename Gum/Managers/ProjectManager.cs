@@ -235,7 +235,10 @@ namespace Gum
             // Now that a new project is loaded, refresh the UI!
             GumCommands.Self.GuiCommands.RefreshElementTreeView();
 
-            GumCommands.Self.FileCommands.LoadLocalizationFile();
+            if(mGumProjectSave != null)
+            {
+                GumCommands.Self.FileCommands.LoadLocalizationFile();
+            }
 
             GeneralSettingsFile.AddToRecentFilesIfNew(fileName);
 

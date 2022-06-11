@@ -48,6 +48,7 @@
     <Compile Include="..\WpfDataUi\DataTypes\MemberCategory.cs" Link="DataTypes\MemberCategory.cs" />
     <Compile Include="..\WpfDataUi\DataTypes\TypeMemberDisplayProperties.cs" Link="DataTypes\TypeMemberDisplayProperties.cs" />
     <Compile Include="..\WpfDataUi\DataUiGrid.xaml.cs" Link="DataUiGrid.xaml.cs" />
+    <Compile Include="..\WpfDataUi\Decorators\NoSizeDecorator.cs" Link="Decorators\NoSizeDecorator.cs" />
     <Compile Include="..\WpfDataUi\EventArguments\BeforePropertyChangedArgs.cs" Link="EventArguments\BeforePropertyChangedArgs.cs" />
     <Compile Include="..\WpfDataUi\EventArguments\PropertyChangedArgs.cs" Link="EventArguments\PropertyChangedArgs.cs" />
     <Compile Include="..\WpfDataUi\IDataUi.cs" Link="IDataUi.cs" />
@@ -74,6 +75,7 @@
     <Folder Include="Content\Icons\" />
     <Folder Include="DataTypes\" />
     <Folder Include="EventArguments\" />
+    <Folder Include="Decorators\" />
   </ItemGroup>
   
 

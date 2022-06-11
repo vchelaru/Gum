@@ -2,7 +2,7 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:decorators="clr-namespace:WpfDataUiCore.Decorators"
              mc:Ignorable="d" 
              >
     <Grid DragOver="Grid_DragOver_1">
@@ -42,11 +42,19 @@
 
         </Canvas>
         <Grid Grid.Column="2">
-            <TextBox x:Name="TextBox" MinWidth="50" Height="24" 
-                     PreviewKeyDown="TextBox_PreviewKeyDown_1" 
-                     LostFocus="TextBox_LostFocus_1"
-                     Margin="0,0,13,0"
-                     />
+            <Grid>
+                <TextBox x:Name="TextBox" MinWidth="50" Height="24" 
+                         PreviewKeyDown="TextBox_PreviewKeyDown_1" 
+                         LostFocus="TextBox_LostFocus_1"
+                         Margin="0,0,13,0"
+                         />
+                <decorators:NoSizeDecorator>
+                    <TextBlock IsHitTestVisible="False"
+                               VerticalAlignment="Center" 
+                               Foreground="Gray" 
+                               Margin="3,0,16,0" x:Name="PlaceholderText" ></TextBlock>
+                </decorators:NoSizeDecorator>
+            </Grid>
             <Label Content="&#186;" Height="32" Width="15" HorizontalAlignment="Right"></Label>
         </Grid>
     </Grid>

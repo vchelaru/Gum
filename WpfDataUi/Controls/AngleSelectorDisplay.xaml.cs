@@ -36,22 +36,35 @@ namespace WpfDataUi.Controls
 
         TextBoxDisplayLogic mTextBoxLogic;
 
-        decimal mAngle;
+        decimal? mAngle;
         #endregion
 
         #region Properties
 
-        public float Angle
+        public float? Angle
         {
             get
             {
-                return (float)mAngle;
+                if(mAngle == null)
+                {
+                    return null;
+                }
+                else
+                {
+                    return (float)mAngle.Value;
+                }
             }
             set
             {
+                if(value == null)
+                {
+                    mAngle = null;
+                }
+                else
+                {
+                    mAngle = (decimal)value;
+                }
 
-
-                mAngle = (decimal)value;
                 ReactToAngleSetThroughProperty();
 
             }
@@ -67,15 +80,29 @@ namespace WpfDataUi.Controls
             this.TrySetValueOnInstance();
         }
 
-        public float NegativeAngle
+        public float? NegativeAngle
         {
             get
             {
-                return (float)mAngle * -1;
+                if(mAngle == null)
+                {
+                    return null;
+                }
+                else
+                {
+                    return (float)mAngle * -1;
+                }
             }
             set
             {
-                mAngle = (decimal)value * -1;
+                if(value == null)
+                {
+                    mAngle = null;
+                }
+                else
+                {
+                    mAngle = (decimal)value * -1;
+                }
                 ReactToAngleSetThroughProperty();
 
             }
@@ -139,6 +166,8 @@ namespace WpfDataUi.Controls
             TypeToPushToInstance = AngleType.Radians;
 
             InitializeComponent();
+            
+            PlaceholderText.Text = "<NULL>";
 
             Line.DataContext = this;
 
@@ -154,9 +183,17 @@ namespace WpfDataUi.Controls
 
         private void UpdateUiToAngle()
         {
-            TextBox.Text = mAngle.ToString();
+            TextBox.Text = mAngle?.ToString();
 
-
+            if (Angle == null)
+            {
+                PlaceholderText.Visibility = Visibility.Visible;
+                PlaceholderText.Text = "<NULL>";
+            }
+            else
+            {
+                PlaceholderText.Visibility = Visibility.Collapsed;
+            }
         }
 
 
@@ -176,7 +213,12 @@ namespace WpfDataUi.Controls
         private void ApplyTextBoxText()
         {
             float value;
-            if (float.TryParse(this.TextBox.Text, out value))
+            var text = this.TextBox.Text;
+            if(string.IsNullOrEmpty(text))
+            {
+                Angle = null;
+            }
+            else if (float.TryParse(this.TextBox.Text, out value))
             {
                 Angle = value;
             }
@@ -235,12 +277,26 @@ namespace WpfDataUi.Controls
         {
             if (TypeToPushToInstance == AngleType.Radians)
             {
-                result = (float)(System.Math.PI * (double)mAngle / 180.0f);
+                if(mAngle != null)
+                {
+                    result = (float)(System.Math.PI * (double)mAngle / 180.0f);
+                }
+                else
+                {
+                    result = null;
+                }
 
             }
             else
             {
-                result = (float)mAngle;
+                if(mAngle != null)
+                {
+                    result = (float)mAngle;
+                }
+                else
+                {
+                    result = null;
+                }
 
             }
             return ApplyValueResult.Success;
@@ -249,23 +305,44 @@ namespace WpfDataUi.Controls
         public ApplyValueResult TrySetValueOnUi(object value)
         {
             ApplyValueResult toReturn = ApplyValueResult.NotSupported;
-            if (value is float)
+            if (value is float asFloat)
             {
                 var isOver = this.IsMouseOver && Mouse.LeftButton == MouseButtonState.Pressed;
                 if(!isOver)
                 {
                     if (TypeToPushToInstance == AngleType.Radians)
                     {
-                        this.Angle = 180 * (float)((float)value / Math.PI);
+                        this.Angle = 180 * (float)(asFloat / Math.PI);
 
                     }
                     else
                     {
-                        this.Angle = (float)value;
+                        this.Angle = asFloat;
                     }
+
+
                 }
+
                 toReturn = ApplyValueResult.Success;
             }
+            else if(value is null)
+            {
+                this.Angle = null;
+
+                TextBox.Text = null;
+                toReturn = ApplyValueResult.Success;
+            }
+
+            if(Angle == null)
+            {
+                PlaceholderText.Visibility = Visibility.Visible;
+                PlaceholderText.Text = "<NULL>";
+            }
+            else
+            {
+                PlaceholderText.Visibility = Visibility.Collapsed;
+            }
+
             return toReturn;
         }
 
