@@ -243,6 +243,8 @@ namespace WpfDataUi.Controls
             // This is required to prevent weird flickering on the slider. Putting 100 ms frequency limiter makes everything work just fine.
             // It's a hack but...not sure what else to do. I also have Slider_DragCompleted so the last value is always pushed.
             // Update 2 - this causes all kinds of problems if we update in realtime. 
+            // Update 3 - we should update in relatime unless the thumb is grabbed
+
             var timeSince = DateTime.Now - lastSliderTime;
             if (timeSince.TotalMilliseconds > 100)
             {
@@ -289,5 +291,9 @@ namespace WpfDataUi.Controls
             mTextBoxLogic.MinValue = (decimal)(this.minValue * DisplayedValueMultiplier);
         }
 
+        private void Slider_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            HandleValueChanged();
+        }
     }
 }

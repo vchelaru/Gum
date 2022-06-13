@@ -108,6 +108,7 @@
         <Slider Grid.Column="1" x:Name="Slider" 
                 VerticalContentAlignment="Center" 
                 ValueChanged="Slider_ValueChanged"
+                PreviewMouseLeftButtonUp="Slider_MouseLeftButtonUp"
                 Thumb.DragCompleted="Slider_DragCompleted"
                 MinWidth="60" 
                 Height="20" 
