@@ -116,7 +116,7 @@
                 Style="{StaticResource MyCustomStyleForSlider}"
                 ></Slider>
 
-        <TextBox Grid.Column="2" x:Name="TextBox" Margin="1"
+        <TextBox Grid.Column="2" x:Name="TextBox" Margin="1" Height="22"
                      LostFocus="TextBox_LostFocus_1">
             <TextBox.ContextMenu>
                 <ContextMenu>
