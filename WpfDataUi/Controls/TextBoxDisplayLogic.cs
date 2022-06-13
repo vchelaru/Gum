@@ -160,7 +160,7 @@ namespace WpfDataUi.Controls
             
         }
 
-        public string ConvertNumberToString(object value)
+        public string ConvertNumberToString(object value, int? numberOfDecimals = null)
         {
             string text = value?.ToString();
 
@@ -186,10 +186,18 @@ namespace WpfDataUi.Controls
                         // truncating decimals:
                         text = (floatValue).ToString("f0");
                     }
+                    else if(numberOfDecimals != null)
+                    {
+                        text = (floatValue).ToString($"f{numberOfDecimals}");
+                    }
                     else
                     {
                         text = (floatValue).ToString("0.################################");
                     }
+                }
+                else if (numberOfDecimals != null)
+                {
+                    text = (floatValue).ToString($"f{numberOfDecimals}");
                 }
             }
             if(value is double)
@@ -203,10 +211,18 @@ namespace WpfDataUi.Controls
                         // truncating decimals:
                         text = (doubleValue).ToString("f0");
                     }
+                    else if (numberOfDecimals != null)
+                    {
+                        text = (doubleValue).ToString($"f{numberOfDecimals}");
+                    }
                     else
                     {
                         text = (doubleValue).ToString("#.################################");
                     }
+                }
+                else if (numberOfDecimals != null)
+                {
+                    text = (doubleValue).ToString($"f{numberOfDecimals}");
                 }
             }
 
