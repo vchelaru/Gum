@@ -36,7 +36,7 @@
             </TextBox>
             <TextBlock IsHitTestVisible="False" Grid.Column="1" 
                        VerticalAlignment="Center" Foreground="Gray" Margin="3,0,3,0" x:Name="PlaceholderText" >Placeholder</TextBlock>
-            <StackPanel x:Name="AfterTextBoxUi" Grid.Column="2" VerticalAlignment="Stretch">
+            <StackPanel x:Name="AfterTextBoxUi" Orientation="Horizontal" Grid.Column="2" VerticalAlignment="Stretch">
             </StackPanel>
         </Grid>
         <!--Vic says: If this is really long, it extends the entire control horizontally rather than wrapping. I don't know how to control this.
