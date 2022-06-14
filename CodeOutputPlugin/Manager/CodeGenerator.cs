@@ -1494,6 +1494,10 @@ namespace CodeOutputPlugin.Manager
             else if(xUnits == PositionUnitType.PixelsFromRight && xOrigin == HorizontalAlignment.Right)
             {
                 rightMargin = -x;
+                if(widthUnits == DimensionUnitType.RelativeToContainer)
+                {
+                    leftMargin = -width;
+                }
             }
 
             if(yUnits == PositionUnitType.PixelsFromTop)
