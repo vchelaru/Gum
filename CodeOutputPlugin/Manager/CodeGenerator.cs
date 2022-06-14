@@ -1491,6 +1491,10 @@ namespace CodeOutputPlugin.Manager
                     leftMargin = x * 2;
                 }
             }
+            else if(xUnits == PositionUnitType.PixelsFromRight && xOrigin == HorizontalAlignment.Right)
+            {
+                rightMargin = -x;
+            }
 
             if(yUnits == PositionUnitType.PixelsFromTop)
             {
