@@ -65,3 +65,5 @@ WpfDataUiCore/obj/
 WpfDataUiCore/bin/
 SkiaGum.Wpf.NetCore3_0/bin/*
 SkiaGum.Wpf.NetCore3_0/obj/*
+SkiaGumMonogame/bin/*
+SkiaGumMonogame/obj/*
