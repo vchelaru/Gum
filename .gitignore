@@ -63,3 +63,5 @@ XnaAndWinforms/bin/
 XnaAndWinforms/obj/
 WpfDataUiCore/obj/
 WpfDataUiCore/bin/
+SkiaGum.Wpf.NetCore3_0/bin/*
+SkiaGum.Wpf.NetCore3_0/obj/*
