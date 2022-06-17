@@ -28,7 +28,7 @@ namespace SkiaGum.Wpf
 
         public bool EnableTouchEvents { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
-        SystemManagers SystemManagers;
+        public SystemManagers SystemManagers { get; private set; }
 
         public static float GlobalScale { get; set; } = 1;
 
@@ -108,9 +108,6 @@ namespace SkiaGum.Wpf
             base.OnPaintSurface(args);
         }
 
-        public void InvalidateSurface()
-        {
-            throw new NotImplementedException();
-        }
+        void ISystemManagers.InvalidateSurface() => base.InvalidateVisual();
     }
 }

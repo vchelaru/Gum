@@ -31,6 +31,10 @@ namespace RenderingLibrary.Graphics
             {
                 managers.Canvas.Scale(Camera.Zoom);
             }
+            if(Camera.X != 0 || Camera.Y != 0)
+            {
+                managers.Canvas.Translate(-Camera.X, -Camera.Y);
+            }
 
             foreach (var element in whatToRender)
             {
