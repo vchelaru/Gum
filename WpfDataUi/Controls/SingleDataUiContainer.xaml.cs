@@ -133,8 +133,15 @@ namespace WpfDataUi
                 propertyInfo?.SetValue(controlToAdd, kvp.Value, null);
             }
 
-            IDataUi display = (IDataUi)controlToAdd;
-            display.InstanceMember = InstanceMember;
+            if(controlToAdd is IDataUi display)
+            {
+                display.InstanceMember = InstanceMember;
+            }
+            else
+            {
+                throw new InvalidOperationException(
+                    $"The object of type {controlToAdd?.GetType()} must implement the IDataUi interface to be used in a DataUiGrid");
+            }
 
             InstanceMember.CallUiCreated(controlToAdd);
 
