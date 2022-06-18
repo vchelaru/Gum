@@ -355,12 +355,24 @@ namespace SkiaGum.GueDeriving
                 {
                     convertedValue = (decimal)asDouble;
                 }
+                else if(value is float asFloat)
+                {
+                    convertedValue = (decimal)asFloat;
+                }
             }
             else if (desiredType == typeof(float))
             {
                 if (value is int asInt)
                 {
                     convertedValue = (float)asInt;
+                }
+                else if(value is double asDouble)
+                {
+                    convertedValue = (float)asDouble;
+                }
+                else if(value is decimal asDecimal)
+                {
+                    convertedValue = (float)asDecimal;
                 }
             }
             return convertedValue;

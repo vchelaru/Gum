@@ -26,7 +26,6 @@ namespace RenderingLibrary.Graphics
         public void Draw(IList<BindableGraphicalUiElement> whatToRender, SystemManagers managers)
         {
             managers.Canvas.Clear();
-
             if (Camera.Zoom != 1)
             {
                 managers.Canvas.Scale(Camera.Zoom);
