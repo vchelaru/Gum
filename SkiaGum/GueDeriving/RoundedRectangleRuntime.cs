@@ -27,8 +27,13 @@ namespace SkiaGum.GueDeriving
 
         public float CornerRadius
         {
-            get => ContainedRoundedRectangle.CornerRadius;
-            set => ContainedRoundedRectangle.CornerRadius = value;
+            get;
+            set;
+        }
+
+        public DimensionUnitType CornerRadiusUnits
+        {
+            get; set;
         }
 
         #region Gradient Colors
@@ -174,6 +179,26 @@ namespace SkiaGum.GueDeriving
 
 
             }
+        }
+
+        public override void PreRender()
+        {
+            if (this.EffectiveManagers != null)
+            {
+                var camera = this.EffectiveManagers.Renderer.Camera;
+                var cornerRadius = CornerRadius;
+                switch (CornerRadiusUnits)
+                {
+                    case DimensionUnitType.Absolute:
+                        // do nothing
+                        break;
+                    case DimensionUnitType.ScreenPixel:
+                        cornerRadius /= camera.Zoom;
+                        break;
+                }
+                ContainedRoundedRectangle.CornerRadius = cornerRadius;
+            }
+            base.PreRender();
         }
 
     }

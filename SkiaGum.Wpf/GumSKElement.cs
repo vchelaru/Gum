@@ -67,6 +67,8 @@ namespace SkiaGum.Wpf
 
                         bindableGue.AddToManagers(this);
                         bindableGue.BindingContext = this.DataContext;
+                        // Currently SkiaGum SystemManagers != base Gum SystemManagers. Maybe we unify that at some point?
+                        (bindableGue as GraphicalUiElement).AddToManagers(SystemManagers, layer:null);
                     }
 
                     break;

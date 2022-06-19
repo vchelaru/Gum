@@ -162,7 +162,6 @@ namespace Gum.Wireframe
             set;
         }
 
-#if MONOGAME || XNA4
         public SystemManagers Managers
         {
             get
@@ -170,6 +169,7 @@ namespace Gum.Wireframe
                 return mManagers;
             }
         }
+
         /// <summary>
         /// Returns this instance's SystemManagers, or climbs up the parent/child relationship
         /// until a non-null SystemsManager is found. Otherwise, returns null.
@@ -184,11 +184,11 @@ namespace Gum.Wireframe
                 }
                 else
                 {
-                    return this.ElementGueContainingThis?.EffectiveManagers;
+                    return this.ElementGueContainingThis?.EffectiveManagers ??
+                        this.EffectiveParentGue?.EffectiveManagers;
                 }
             }
         }
-#endif
 
         public bool Visible
         {

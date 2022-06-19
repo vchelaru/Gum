@@ -92,7 +92,8 @@ namespace SkiaGum.GueDeriving
                 }
                 else
                 {
-                    return (this.ElementGueContainingThis as BindableGraphicalUiElement)?.EffectiveManagers ?? (this.EffectiveParentGue as BindableGraphicalUiElement)?.EffectiveManagers;
+                    return (this.ElementGueContainingThis as BindableGraphicalUiElement)?.EffectiveManagers ?? 
+                        (this.EffectiveParentGue as BindableGraphicalUiElement)?.EffectiveManagers;
                 }
             }
         }
