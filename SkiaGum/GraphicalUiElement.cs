@@ -1718,15 +1718,14 @@ namespace Gum.Wireframe
                 this.HeightUnits.GetDependencyType() == HierarchyDependencyType.DependsOnChildren);
         }
 
-#if MONOGAME || XNA4
-        void IRenderable.PreRender()
+
+        public virtual void PreRender()
         {
             if (mContainedObjectAsIpso != null)
             {
                 mContainedObjectAsIpso.PreRender();
             }
         }
-#endif
 
         public virtual void CreateChildrenRecursively(ElementSave elementSave, SystemManagers systemManagers)
         {

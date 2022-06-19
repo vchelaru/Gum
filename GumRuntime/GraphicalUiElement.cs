@@ -2729,6 +2729,19 @@ namespace Gum.Wireframe
 
             #endregion
 
+            #region ScreenPixel
+
+            else if(mHeightUnit == DimensionUnitType.ScreenPixel)
+            {
+                var effectiveManagers = this.EffectiveManagers;
+                if (effectiveManagers != null)
+                {
+                    heightToSet /= effectiveManagers.Renderer.Camera.Zoom;
+                }
+            }
+
+            #endregion
+
             #region RelativeToChildren
 
             if (mHeightUnit == DimensionUnitType.RelativeToChildren)
@@ -2963,6 +2976,7 @@ namespace Gum.Wireframe
 
             #endregion
 
+            #region Ratio
             else if (mHeightUnit == DimensionUnitType.Ratio)
             {
                 var heightToSplit = parentHeight;
@@ -3013,6 +3027,7 @@ namespace Gum.Wireframe
                     heightToSet = heightToSplit;
                 }
             }
+            #endregion
 
             mContainedObjectAsIpso.Height = heightToSet;
         }
@@ -3026,6 +3041,19 @@ namespace Gum.Wireframe
             if (mWidthUnit == DimensionUnitType.AbsoluteMultipliedByFontScale)
             {
                 widthToSet *= SystemManagers.GlobalFontScale;
+            }
+
+            #endregion
+
+            #region ScreenPixel
+
+            else if (mWidthUnit == DimensionUnitType.ScreenPixel)
+            {
+                var effectiveManagers = this.EffectiveManagers;
+                if (effectiveManagers != null)
+                {
+                    widthToSet /= effectiveManagers.Renderer.Camera.Zoom;
+                }
             }
 
             #endregion

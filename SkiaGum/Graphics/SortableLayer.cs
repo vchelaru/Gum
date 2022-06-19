@@ -26,8 +26,8 @@ namespace RenderingLibrary.Graphics
             }
             managers.Renderer.RenderLayer(managers, this);
         }
-        void IRenderable.PreRender() { }
 #endif
+        void IRenderable.PreRender() { }
         public float Z
         {
             get;

@@ -2,6 +2,7 @@
 using SkiaGum.GueDeriving;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Text;
 
 namespace RenderingLibrary.Graphics
@@ -35,6 +36,8 @@ namespace RenderingLibrary.Graphics
                 managers.Canvas.Translate(-Camera.X, -Camera.Y);
             }
 
+            PreRender(whatToRender);
+
             foreach (var element in whatToRender)
             {
                 if (element.Visible)
@@ -45,6 +48,60 @@ namespace RenderingLibrary.Graphics
             }
 
             managers.Canvas.Restore();
+        }
+
+        private void PreRender(IList<BindableGraphicalUiElement> renderables)
+        {
+#if DEBUG
+            if (renderables == null)
+            {
+                throw new ArgumentNullException("renderables");
+            }
+#endif
+
+            var count = renderables.Count;
+            for (int i = 0; i < count; i++)
+            {
+                var renderable = renderables[i];
+                if (renderable.Visible)
+                {
+                    renderable.PreRender();
+
+                    // Some Gum objects, like GraphicalUiElements, may not have children if the object hasn't
+                    // yet been assigned a visual. Just skip over it...
+                    if (renderable.Visible && renderable.Children != null)
+                    {
+                        PreRender(renderable.Children);
+                    }
+                }
+            }
+        }
+
+        private void PreRender(ObservableCollection<IRenderableIpso> renderables)
+        {
+#if DEBUG
+            if (renderables == null)
+            {
+                throw new ArgumentNullException("renderables");
+            }
+#endif
+
+            var count = renderables.Count;
+            for (int i = 0; i < count; i++)
+            {
+                var renderable = renderables[i];
+                if (renderable.Visible)
+                {
+                    renderable.PreRender();
+
+                    // Some Gum objects, like GraphicalUiElements, may not have children if the object hasn't
+                    // yet been assigned a visual. Just skip over it...
+                    if (renderable.Visible && renderable.Children != null)
+                    {
+                        PreRender(renderable.Children);
+                    }
+                }
+            }
         }
     }
 }

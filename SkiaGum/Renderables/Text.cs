@@ -337,6 +337,8 @@ namespace SkiaGum
             mParent = parent;
         }
 
+        public void PreRender() { }
+
         #region IVisible Implementation
 
         public bool Visible

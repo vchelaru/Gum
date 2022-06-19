@@ -14,5 +14,5 @@ public interface IRenderable
     /// <summary>
     /// Perform logic which needs to occur before a SpriteBatch has been started
     /// </summary>
-    //void PreRender();
+    void PreRender();
 }
