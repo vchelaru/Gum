@@ -414,6 +414,13 @@ namespace Gum.Logic
                                 // this is a parent and it may be attached to a copy, so update the value
                                 var newValue = oldNewNameDictionary[valueAsString];
                                 copiedVariable.Value = newValue;
+
+                            }
+                            if(copiedVariable.GetRootName() == "Parent" && shouldAssignParent && selectedInstance == null)
+                            {
+                                // don't assign it because we're not pasting onto a particular instance and
+                                // the copied instance already has a parent.
+                                shouldAssignParent = false;
                             }
 
                             // We don't want to copy exposed variables.

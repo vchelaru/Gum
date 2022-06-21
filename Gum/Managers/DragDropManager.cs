@@ -22,6 +22,7 @@ using Gum.Converters;
 using Gum.Logic;
 using System.Windows.Input;
 using Gum.Plugins.ImportPlugin.Manager;
+using Gum.DataTypes.Behaviors;
 
 namespace Gum.Managers
 {
@@ -480,6 +481,21 @@ namespace Gum.Managers
                         targetElementSave, targetInstanceSave);
                 }
             }
+            else if(targetObject is BehaviorSave asBehaviorSave)
+            {
+                HandleDroppingInstanceOnBehaviorSave(draggedAsInstanceSave, asBehaviorSave);
+            }
+        }
+
+        private static void HandleDroppingInstanceOnBehaviorSave(InstanceSave draggedAsInstanceSave, BehaviorSave asBehaviorSave)
+        {
+            var behaviorInstanceSave = new BehaviorInstanceSave();
+            behaviorInstanceSave.Name = draggedAsInstanceSave.Name;
+            behaviorInstanceSave.BaseType = draggedAsInstanceSave.BaseType;
+            asBehaviorSave.RequiredInstances.Add(behaviorInstanceSave);
+            GumCommands.Self.GuiCommands.RefreshElementTreeView();
+            GumCommands.Self.FileCommands.TryAutoSaveBehavior(asBehaviorSave);
+
         }
 
         private static void HandleDroppingInstanceOnTarget(object targetObject, InstanceSave dragDroppedInstance, ElementSave targetElementSave, TreeNode targetTreeNode)

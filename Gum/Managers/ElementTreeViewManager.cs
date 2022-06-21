@@ -1156,13 +1156,14 @@ namespace Gum.Managers
                     node.Text = instanceSave.Name;
                 }
             }
-            else if(node.Tag is BehaviorSave)
+            else if(node.Tag is BehaviorSave behaviorSave)
             {
                 var behavior = node.Tag as BehaviorSave;
                 if(behavior.Name != node.Text)
                 {
                     node.Text = behavior.Name;
                 }
+                RefreshBehaviorTreeNode(node, behaviorSave);
             }
 
             foreach (TreeNode treeNode in node.Nodes)
@@ -1171,6 +1172,7 @@ namespace Gum.Managers
                 {
                     RefreshUi(treeNode);
                 }
+
             }
         }
 
@@ -1286,6 +1288,34 @@ namespace Gum.Managers
             }
         }
 
+        private void RefreshBehaviorTreeNode(TreeNode node, BehaviorSave behavior)
+        {
+            var allInstances = behavior.RequiredInstances;
+            var allTreeNodesRecursively = node.GetAllChildrenNodesRecursively();
+            foreach (TreeNode instanceNode in allTreeNodesRecursively)
+            {
+                var instance = instanceNode.Tag as InstanceSave;
+
+                if (!allInstances.Contains(instance))
+                {
+                    instanceNode.Remove();
+                }
+            }
+
+
+            foreach (InstanceSave instance in allInstances)
+            {
+                TreeNode nodeForInstance = GetTreeNodeFor(instance, node);
+
+                if (nodeForInstance == null)
+                {
+                    nodeForInstance = AddTreeNodeForInstance(instance, node);
+                }
+                // screens have to worry about siblings and lists. We don't care about that here because behaviors do not
+                // (currently) require instances to have a particular relationship with one another
+            }
+        }
+
         private TreeNode AddTreeNodeForInstance(InstanceSave instance, TreeNode parentContainerNode, HashSet<InstanceSave> pendingAdditions = null)
         {
             TreeNode treeNode = new TreeNode();
@@ -1331,15 +1361,23 @@ namespace Gum.Managers
 
         private InstanceSave FindParentInstance(InstanceSave instance)
         {
-            ElementSave element = instance.ParentContainer;
-
-            string name = instance.Name + ".Parent";
-            VariableSave variable = element.DefaultState.Variables.FirstOrDefault(v => v.Name == name);
-
-            if (variable != null && variable.SetsValue && variable.Value != null)
+            if(instance is BehaviorInstanceSave)
             {
-                string parentName = (string) variable.Value;
-                return element.GetInstance(parentName);
+                // instances in behaviors cannot (currently) have parents
+                return null;
+            }
+            else
+            {
+                ElementSave element = instance.ParentContainer;
+
+                string name = instance.Name + ".Parent";
+                VariableSave variable = element.DefaultState.Variables.FirstOrDefault(v => v.Name == name);
+
+                if (variable != null && variable.SetsValue && variable.Value != null)
+                {
+                    string parentName = (string) variable.Value;
+                    return element.GetInstance(parentName);
+                }
             }
 
             return null;

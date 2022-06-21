@@ -2160,7 +2160,15 @@ namespace CodeOutputPlugin.Manager
             bool isPublic = true;
             string accessString = isPublic ? "public " : "";
 
-            stringBuilder.AppendLine($"{tabs}{accessString}{className} {instance.Name} {{ get; private set; }}");
+            var isOverride = (defaultState.GetValueRecursive($"{instance.Name}.IsOverrideInCodeGen") as bool?) ?? false;
+            if(isOverride)
+            {
+                accessString += "override ";
+            }
+
+            // If this is private, it cannot override anything. Therefore, we'll mark the setter as protected:
+            //stringBuilder.AppendLine($"{tabs}{accessString}{className} {instance.Name} {{ get; private set; }}");
+            stringBuilder.AppendLine($"{tabs}{accessString}{className} {instance.Name} {{ get; protected set; }}");
         }
 
         public static string GetClassNameForType(string gumType, VisualApi visualApi)
@@ -2266,6 +2274,7 @@ namespace CodeOutputPlugin.Manager
                 rootVariableName == "HasEvents" ||
                 
                 rootVariableName == "IsXamarinFormsControl" ||
+                rootVariableName == "IsOverrideInCodeGen" ||
                 rootVariableName == "Name" ||
                 rootVariableName == "Wraps Children" ||
                 rootVariableName == "X Origin" ||
@@ -2421,6 +2430,7 @@ namespace CodeOutputPlugin.Manager
                     // ignored variables:
             else if (rootName == "IsXamarinFormsControl" ||
                 rootName == "ExposeChildrenEvents" ||
+                rootName == "IsOverrideInCodeGen" ||
                 rootName == "HasEvents")
             {
                 return " "; 

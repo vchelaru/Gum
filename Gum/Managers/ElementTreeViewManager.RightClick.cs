@@ -41,6 +41,8 @@ namespace Gum.Managers
 
         ToolStripMenuItem duplicateElement;
 
+        
+
         #endregion
 
         #region Initialize and event handlers
@@ -277,7 +279,21 @@ namespace Gum.Managers
                 if (SelectedState.Self.SelectedInstance != null)
                 {
                     mMenuStrip.Items.Add(mGoToDefinition);
+
+                    var container = SelectedState.Self.SelectedElement;
+                    if(!string.IsNullOrEmpty(container.BaseType))
+                    {
+                        var containerBase = ObjectFinder.Self.GetElementSave(container.BaseType);
+
+                        if(containerBase is ScreenSave || containerBase is ComponentSave)
+                        {
+                            mMenuStrip.Items.Add($"Add {SelectedState.Self.SelectedInstance.Name} to base {containerBase}", 
+                                null, 
+                                (not, used) => HandleMoveToBase(SelectedState.Self.SelectedInstances, SelectedState.Self.SelectedElement, containerBase));
+                        }
+                    }
                 }
+
                 #endregion
 
                 #region Screen or Component
@@ -379,6 +395,21 @@ namespace Gum.Managers
                     mMenuStrip.Items.Add("Add Behavior", null, HandleAddBehavior);
                 }
             }
+        }
+
+        private void HandleMoveToBase(IEnumerable<InstanceSave> instances, ElementSave derivedElement, ElementSave baseElement)
+        {
+            foreach(var instance in instances)
+            {
+                instance.DefinedByBase = true;
+            }
+
+
+            CopyPasteLogic.PasteInstanceSaves(
+                instances.ToList(),
+                derivedElement.DefaultState.Clone(),
+                baseElement, 
+                null);
         }
 
         private void HandlePaste(object sender, EventArgs e)

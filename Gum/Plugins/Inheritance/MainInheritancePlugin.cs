@@ -31,19 +31,25 @@ namespace Gum.Plugins.Inheritance
 
             foreach(var inheritingElement in elementsInheritingFromContainer)
             {
-                var clone = instance.Clone();
-                clone.DefinedByBase = true;
-                clone.ParentContainer = inheritingElement;
-                inheritingElement.Instances.Add(clone);
+                // This could be done to satisfy a missing dependency? Or perhaps a refactor by moving
+                // a derived instance to base? Therefore, only see if there is not already an instance here
+                var existingInInheriting = inheritingElement.GetInstance(instance.Name);
+                if(existingInInheriting == null)
+                {
+                    var clone = instance.Clone();
+                    clone.DefinedByBase = true;
+                    clone.ParentContainer = inheritingElement;
+                    inheritingElement.Instances.Add(clone);
 
-                // inheritingElement could be a derived of derived, in which case we
-                // need to go just one up the inheritance tree:
-                var directBase = ObjectFinder.Self.GetElementSave(inheritingElement.BaseType);
+                    // inheritingElement could be a derived of derived, in which case we
+                    // need to go just one up the inheritance tree:
+                    var directBase = ObjectFinder.Self.GetElementSave(inheritingElement.BaseType);
 
-                AdjustInstance(directBase, inheritingElement, clone.Name);
+                    AdjustInstance(directBase, inheritingElement, clone.Name);
 
-                GumCommands.Self.FileCommands.TryAutoSaveElement(inheritingElement);
-                GumCommands.Self.GuiCommands.RefreshElementTreeView(inheritingElement);
+                    GumCommands.Self.FileCommands.TryAutoSaveElement(inheritingElement);
+                    GumCommands.Self.GuiCommands.RefreshElementTreeView(inheritingElement);
+                }
             }
         }
 

@@ -962,8 +962,7 @@ namespace Gum.Plugins
                 delegate(PluginBase plugin)
                 {
                     plugin.CallInstanceSelected(elementSave, instance);
-                },
-                "InstanceSelected"
+                }
             );
 
         }
@@ -972,8 +971,7 @@ namespace Gum.Plugins
         {
 
             CallMethodOnPlugin(
-                (plugin) => plugin.CallInstanceAdd(elementSave, instance),
-                "InstanceAdd"
+                (plugin) => plugin.CallInstanceAdd(elementSave, instance)
             );
         }
 

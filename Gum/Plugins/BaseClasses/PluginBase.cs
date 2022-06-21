@@ -352,18 +352,12 @@ namespace Gum.Plugins.BaseClasses
 
         public void CallInstanceSelected(ElementSave elementSave, InstanceSave instance)
         {
-            if (InstanceSelected != null)
-            {
-                InstanceSelected(elementSave, instance);
-            }
+            InstanceSelected?.Invoke(elementSave, instance);
         }
 
         public void CallInstanceAdd(ElementSave elementSave, InstanceSave instance)
         {
-            if (InstanceAdd != null)
-            {
-                InstanceAdd(elementSave, instance);
-            }
+            InstanceAdd?.Invoke(elementSave, instance);
         }
 
         public void CallBehaviorReferencesChanged(ElementSave element)
@@ -373,10 +367,7 @@ namespace Gum.Plugins.BaseClasses
 
         public void CallInstanceDelete(ElementSave elementSave, InstanceSave instance)
         {
-            if (InstanceDelete != null)
-            {
-                InstanceDelete(elementSave, instance);
-            }
+            InstanceDelete?.Invoke(elementSave, instance);
         }
 
         public void CallInstancesDelete(ElementSave elementSave, InstanceSave[] instances)
