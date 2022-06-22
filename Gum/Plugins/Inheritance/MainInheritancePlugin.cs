@@ -147,18 +147,26 @@ namespace Gum.Plugins.Inheritance
                         // This copies the values to this explicitly, which we don't want
                         //FillWithDefaultRecursively(baseElement, stateSave);
 
-
                         foreach (var instance in baseElement.Instances)
                         {
-                            var derivedInstance = instance.Clone();
-                            derivedInstance.DefinedByBase = true;
-                            asElementSave.Instances.Add(derivedInstance);
+                            var instanceName = instance.Name;
+                            var alreadyExists = asElementSave.Instances.FirstOrDefault(item => item.Name == instanceName);
+                            if (alreadyExists != null)
+                            {
+                                alreadyExists.DefinedByBase = true;
+                            }
+                            else
+                            {
+                                var derivedInstance = instance.Clone();
+                                derivedInstance.DefinedByBase = true;
+                                asElementSave.Instances.Add(derivedInstance);
+                            }
                         }
                         asElementSave.Initialize(stateSave);
                     }
-
                 }
             }
+
             const bool fullRefresh = true;
             // since the type might change:
             GumCommands.Self.GuiCommands.RefreshElementTreeView(asElementSave);
