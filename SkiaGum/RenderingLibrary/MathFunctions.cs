@@ -102,6 +102,11 @@ namespace RenderingLibrary.Math
             return ((int)(System.Math.Sign(valueToRound) * .5f + valueToRound / multipleOf)) * multipleOf;
         }
 
+        public static decimal RoundDecimal(decimal valueToRound, decimal multipleOf)
+        {
+            return ((int)(System.Math.Sign(valueToRound) * .5m + valueToRound / multipleOf)) * multipleOf;
+        }
+
         /// <summary>
         /// Rotates (and modifies) the argument vector2 by the argument radians, where a positive value is clockwise.
         /// </summary>
