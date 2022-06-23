@@ -197,7 +197,7 @@ namespace WpfDataUi
 
 
 
-            contextMenu.Items.Clear();
+            contextMenu?.Items.Clear();
 
             AddContextMenuItem("Make Default", makeDefaultHandler, contextMenu);
             if (dataUi.InstanceMember != null)

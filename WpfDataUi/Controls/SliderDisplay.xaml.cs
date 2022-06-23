@@ -120,6 +120,10 @@ namespace WpfDataUi.Controls
             mTextBoxLogic.MaxValue = (decimal)this.MaxValue;
 
             this.RefreshContextMenu(TextBox.ContextMenu);
+            Slider.ContextMenu = Slider.ContextMenu ?? new ContextMenu();
+            this.RefreshContextMenu(Slider.ContextMenu);
+            Label.ContextMenu = Label.ContextMenu ?? new ContextMenu();
+            this.RefreshContextMenu(Label.ContextMenu);
             this.ContextMenu = TextBox.ContextMenu;
         }
 
@@ -144,6 +148,11 @@ namespace WpfDataUi.Controls
                 this.Label.Text = InstanceMember.DisplayName;
 
                 SuppressSettingProperty = false;
+
+
+                this.RefreshContextMenu(TextBox.ContextMenu);
+                this.RefreshContextMenu(Slider.ContextMenu);
+                this.RefreshContextMenu(Label.ContextMenu);
             }
         }
 
