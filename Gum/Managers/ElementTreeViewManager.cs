@@ -82,6 +82,7 @@ namespace Gum.Managers
         public const int ExclamationIndex = 6;
         public const int StateImageIndex = 7;
         public const int BehaviorImageIndex = 8;
+        public const int DerivedInstanceImageIndex = 9;
 
         static ElementTreeViewManager mSelf;
         ContextMenuStrip mMenuStrip;
@@ -1249,6 +1250,10 @@ namespace Gum.Managers
                     nodeForInstance = AddTreeNodeForInstance(instance, node);
                 }
 
+                if(instance.DefinedByBase)
+                {
+                    nodeForInstance.ImageIndex = DerivedInstanceImageIndex;
+                }
 
                 if (expandedInstances.Contains(instance))
                 {
