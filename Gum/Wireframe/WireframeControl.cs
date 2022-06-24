@@ -215,6 +215,13 @@ namespace Gum.Wireframe
                     InputLibrary.Cursor.Self.Activity(TimeManager.Self.CurrentTime);
                     InputLibrary.Keyboard.Self.Activity();
 
+                    // This doesn't work, I think it might be because the Window isn't reading keys unless
+                    // it is focused...
+                    //if(InputLibrary.Keyboard.Self.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Escape))
+                    //{
+
+                    //}
+
                     bool isOver = this.mTopRuler.HandleXnaUpdate(InputLibrary.Cursor.Self.IsInWindow) ||
                         mLeftRuler.HandleXnaUpdate(InputLibrary.Cursor.Self.IsInWindow);
 

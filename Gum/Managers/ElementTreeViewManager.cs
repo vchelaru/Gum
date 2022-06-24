@@ -562,6 +562,7 @@ namespace Gum.Managers
             this.ObjectTreeView.AfterSelect += this.ObjectTreeView_AfterSelect_1;
             this.ObjectTreeView.KeyDown += this.ObjectTreeView_KeyDown;
             this.ObjectTreeView.KeyPress += this.ObjectTreeView_KeyPress;
+            this.ObjectTreeView.PreviewKeyDown += this.ObjectTreeView_PreviewKeyDown;
             this.ObjectTreeView.MouseClick += this.ObjectTreeView_MouseClick;
             this.ObjectTreeView.MouseMove += (sender, e) => HandleMouseOver(e.X, e.Y);
             ObjectTreeView.DragDrop += HandleDragDropEvent;
@@ -569,6 +570,7 @@ namespace Gum.Managers
             ObjectTreeView.ItemDrag += (sender, e) =>
             {
                 DragDropManager.Self.OnItemDrag(e.Item);
+                System.Diagnostics.Debug.WriteLine("ItemDrag");
 
                 ObjectTreeView.DoDragDrop(e.Item, DragDropEffects.Move | DragDropEffects.Copy);
             };
@@ -584,6 +586,7 @@ namespace Gum.Managers
                 e.Effect = DragDropEffects.Move;
             };
 
+
             ObjectTreeView.GiveFeedback += (sender, e) =>
             {
                 // Use custom cursors if the check box is checked.
@@ -595,12 +598,16 @@ namespace Gum.Managers
                     System.Windows.Forms.Cursor.Current = AddCursor;
                 }
 
-
                 //if ((e.Effect & DragDropEffects.Move) == DragDropEffects.Move)
                 //    Cursor.Current = MyNormalCursor;
                 //else
                 //    Cursor.Current = MyNoDropCursor;
             };
+        }
+
+        private void ObjectTreeView_PreviewKeyDown(object sender, PreviewKeyDownEventArgs e)
+        {
+            int m = 3;
         }
 
         private void ObjectTreeView_KeyPress(object sender, KeyPressEventArgs e)
@@ -610,7 +617,11 @@ namespace Gum.Managers
 
         private void HandleDragDropEvent(object sender, DragEventArgs e)
         {
-            DragDropManager.Self.HandleDragDropEvent(sender, e);
+            if(e.Data != null)
+            {
+                DragDropManager.Self.HandleDragDropEvent(sender, e);
+            }
+            DragDropManager.Self.ClearDraggedItem();
         }
 
         private void AddAndRemoveFolderNodes()

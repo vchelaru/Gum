@@ -257,7 +257,7 @@ namespace Gum.Managers
 
         #endregion
 
-        #region Drop Element (like components)
+        #region Drop Element (like components) on TreeView
 
         private void HandleDroppedElementSave(object draggedComponentOrElement, TreeNode treeNodeDroppedOn, object targetTag, TreeNode targetTreeNode)
         {
@@ -536,6 +536,11 @@ namespace Gum.Managers
             }
         }
 
+        internal void ClearDraggedItem()
+        {
+            mDraggedItem = null;
+        }
+
         internal void HandleKeyPress(KeyPressEventArgs e)
         {
             int m = 3;
@@ -568,10 +573,6 @@ namespace Gum.Managers
 
                 //}
 
-                if(InputLibrary.Keyboard.Self.KeyDown(Microsoft.Xna.Framework.Input.Keys.Escape))
-                {
-                    mDraggedItem = null;
-                }
 
                 if (!Cursor.PrimaryDownIgnoringIsInWindow)
                 {
