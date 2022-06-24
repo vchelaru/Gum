@@ -40,7 +40,6 @@ namespace Gum.Plugins.ScrollBarPlugin
 
             ///////////////End Early Out///////////////////
 
-
             float minX = 0;
             float maxX = ProjectManager.Self.GumProjectSave.DefaultCanvasWidth;
 
@@ -53,13 +52,11 @@ namespace Gum.Plugins.ScrollBarPlugin
 
             if(GumState.Self.SelectedState.SelectedScreen != null)
             {
-                toLoop.AddRange(
-                    (ipso as GraphicalUiElement).ContainedElements);
+                toLoop.AddRange(asGue.ContainedElements);
             }
-            else
+            else if(asGue.Children != null)
             {
-                toLoop.AddRange(
-                    (ipso as GraphicalUiElement).Children);
+                toLoop.AddRange(asGue.Children);
             }
 
             foreach(var item in toLoop)
