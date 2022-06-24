@@ -155,7 +155,7 @@ namespace Gum.DataTypes
 
         public override string ToString()
         {
-            if (!string.IsNullOrEmpty(BaseType))
+            if (string.IsNullOrEmpty(BaseType))
             {
                 return Name;
             }

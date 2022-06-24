@@ -402,7 +402,7 @@ namespace Gum.Managers
             if (errorMessage == null && target is StandardElementSave)
             {
                 // do nothing, it's annoying:
-                errorMessage = "Standard types can't contain objects";
+                errorMessage = $"Standard type {target} cannot contain objects instances, so {draggedAsElementSave} cannot be dropped here";
             }
 
             if (errorMessage == null && draggedAsElementSave is ScreenSave)
