@@ -536,6 +536,11 @@ namespace Gum.Managers
             }
         }
 
+        internal void HandleKeyPress(KeyPressEventArgs e)
+        {
+            int m = 3;
+        }
+
         #endregion
 
         #region General Functions
@@ -562,6 +567,11 @@ namespace Gum.Managers
                 //        System.Windows.Forms.Cursors.Arrow);
 
                 //}
+
+                if(InputLibrary.Keyboard.Self.KeyDown(Microsoft.Xna.Framework.Input.Keys.Escape))
+                {
+                    mDraggedItem = null;
+                }
 
                 if (!Cursor.PrimaryDownIgnoringIsInWindow)
                 {
@@ -767,6 +777,14 @@ namespace Gum.Managers
 
             SelectedState.Self.SelectedStateSave.SetValue(instance.Name + ".X", xToSet);
             SelectedState.Self.SelectedStateSave.SetValue(instance.Name + ".Y", yToSet);
+        }
+
+        internal void HandleKeyDown(System.Windows.Forms.KeyEventArgs e)
+        {
+            if(e.KeyCode == Keys.Escape)
+            {
+                mDraggedItem = null;
+            }
         }
     }
 }

@@ -561,6 +561,7 @@ namespace Gum.Managers
             this.ObjectTreeView.AfterClickSelect += this.ObjectTreeView_AfterClickSelect;
             this.ObjectTreeView.AfterSelect += this.ObjectTreeView_AfterSelect_1;
             this.ObjectTreeView.KeyDown += this.ObjectTreeView_KeyDown;
+            this.ObjectTreeView.KeyPress += this.ObjectTreeView_KeyPress;
             this.ObjectTreeView.MouseClick += this.ObjectTreeView_MouseClick;
             this.ObjectTreeView.MouseMove += (sender, e) => HandleMouseOver(e.X, e.Y);
             ObjectTreeView.DragDrop += HandleDragDropEvent;
@@ -600,6 +601,11 @@ namespace Gum.Managers
                 //else
                 //    Cursor.Current = MyNoDropCursor;
             };
+        }
+
+        private void ObjectTreeView_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            DragDropManager.Self.HandleKeyPress(e);
         }
 
         private void HandleDragDropEvent(object sender, DragEventArgs e)
@@ -1466,6 +1472,7 @@ namespace Gum.Managers
         private void ObjectTreeView_KeyDown(object sender, KeyEventArgs e)
         {
             ElementTreeViewManager.Self.HandleKeyDown(e);
+            DragDropManager.Self.HandleKeyDown(e);
         }
 
 
