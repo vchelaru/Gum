@@ -158,7 +158,7 @@ namespace SkiaGum
 
         public void Render(SKCanvas canvas)
         {
-            if (AbsoluteVisible)
+            if (AbsoluteVisible && Texture != null)
             {
                 var textureBox = Texture.ViewBox;
                 var textureWidth = textureBox.Width;
@@ -206,6 +206,8 @@ namespace SkiaGum
                 }
             }
         }
+
+        public void PreRender() { }
 
         void IRenderableIpso.SetParentDirect(IRenderableIpso parent)
         {

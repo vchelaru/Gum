@@ -22,6 +22,7 @@ using Gum.Converters;
 using Gum.Logic;
 using System.Windows.Input;
 using Gum.Plugins.ImportPlugin.Manager;
+using Gum.DataTypes.Behaviors;
 
 namespace Gum.Managers
 {
@@ -480,6 +481,21 @@ namespace Gum.Managers
                         targetElementSave, targetInstanceSave);
                 }
             }
+            else if(targetObject is BehaviorSave asBehaviorSave)
+            {
+                HandleDroppingInstanceOnBehaviorSave(draggedAsInstanceSave, asBehaviorSave);
+            }
+        }
+
+        private static void HandleDroppingInstanceOnBehaviorSave(InstanceSave draggedAsInstanceSave, BehaviorSave asBehaviorSave)
+        {
+            var behaviorInstanceSave = new BehaviorInstanceSave();
+            behaviorInstanceSave.Name = draggedAsInstanceSave.Name;
+            behaviorInstanceSave.BaseType = draggedAsInstanceSave.BaseType;
+            asBehaviorSave.RequiredInstances.Add(behaviorInstanceSave);
+            GumCommands.Self.GuiCommands.RefreshElementTreeView();
+            GumCommands.Self.FileCommands.TryAutoSaveBehavior(asBehaviorSave);
+
         }
 
         private static void HandleDroppingInstanceOnTarget(object targetObject, InstanceSave dragDroppedInstance, ElementSave targetElementSave, TreeNode targetTreeNode)
@@ -520,6 +536,11 @@ namespace Gum.Managers
             }
         }
 
+        internal void HandleKeyPress(KeyPressEventArgs e)
+        {
+            int m = 3;
+        }
+
         #endregion
 
         #region General Functions
@@ -546,6 +567,11 @@ namespace Gum.Managers
                 //        System.Windows.Forms.Cursors.Arrow);
 
                 //}
+
+                if(InputLibrary.Keyboard.Self.KeyDown(Microsoft.Xna.Framework.Input.Keys.Escape))
+                {
+                    mDraggedItem = null;
+                }
 
                 if (!Cursor.PrimaryDownIgnoringIsInWindow)
                 {
@@ -751,6 +777,14 @@ namespace Gum.Managers
 
             SelectedState.Self.SelectedStateSave.SetValue(instance.Name + ".X", xToSet);
             SelectedState.Self.SelectedStateSave.SetValue(instance.Name + ".Y", yToSet);
+        }
+
+        internal void HandleKeyDown(System.Windows.Forms.KeyEventArgs e)
+        {
+            if(e.KeyCode == Keys.Escape)
+            {
+                mDraggedItem = null;
+            }
         }
     }
 }

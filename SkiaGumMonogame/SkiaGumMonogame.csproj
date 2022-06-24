@@ -1,0 +1,51 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>TRACE;SKIA;LINKED_MONOGAME</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DefineConstants>TRACE;SKIA;LINKED_MONOGAME</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\SkiaGum\**\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="..\SkiaGum\Converters\**" />
+    <Compile Remove="..\SkiaGum\DataTypes\**" />
+    <Compile Remove="..\SkiaGum\obj\Debug\netstandard2.0\**" />
+    <Compile Remove="..\SkiaGum\Variables\**" />
+    <Compile Remove="..\SkiaGum\Xna\**" />
+    <Compile Remove="obj\**" />
+    <EmbeddedResource Remove="obj\**" />
+    <None Remove="obj\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="..\SkiaGum\Graphics\HorizontalAlignment.cs" />
+    <Compile Remove="..\SkiaGum\Graphics\VerticalAlignment.cs" />
+    <Compile Remove="..\SkiaGum\Managers\ObjectFinder.cs" />
+    <Compile Remove="..\SkiaGum\Managers\StandardElementsManager.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MonoGame.Framework.DesktopGL.Core" Version="3.8.0.13" />
+    <PackageReference Include="SkiaSharp" Version="2.80.3" />
+    <PackageReference Include="SkiaSharp.Extended" Version="1.60.0" />
+    <PackageReference Include="SkiaSharp.Svg" Version="1.60.0" />
+    <PackageReference Include="Topten.RichTextKit" Version="0.4.145" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GumDataTypes\GumDataTypesStandard.csproj" />
+    <ProjectReference Include="..\GumRuntime\GumRuntime.csproj" />
+    <ProjectReference Include="..\ToolsUtilities\ToolsUtilitiesStandard.csproj" />
+  </ItemGroup>
+
+</Project>

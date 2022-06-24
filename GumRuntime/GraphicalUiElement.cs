@@ -162,7 +162,6 @@ namespace Gum.Wireframe
             set;
         }
 
-#if MONOGAME || XNA4
         public SystemManagers Managers
         {
             get
@@ -170,6 +169,7 @@ namespace Gum.Wireframe
                 return mManagers;
             }
         }
+
         /// <summary>
         /// Returns this instance's SystemManagers, or climbs up the parent/child relationship
         /// until a non-null SystemsManager is found. Otherwise, returns null.
@@ -184,11 +184,11 @@ namespace Gum.Wireframe
                 }
                 else
                 {
-                    return this.ElementGueContainingThis?.EffectiveManagers;
+                    return this.ElementGueContainingThis?.EffectiveManagers ??
+                        this.EffectiveParentGue?.EffectiveManagers;
                 }
             }
         }
-#endif
 
         public bool Visible
         {
@@ -1731,15 +1731,13 @@ namespace Gum.Wireframe
                 this.HeightUnits.GetDependencyType() == HierarchyDependencyType.DependsOnChildren);
         }
 
-#if MONOGAME || XNA4
-        void IRenderable.PreRender()
+        public virtual void PreRender()
         {
             if (mContainedObjectAsIpso != null)
             {
                 mContainedObjectAsIpso.PreRender();
             }
         }
-#endif
 
         public virtual void CreateChildrenRecursively(ElementSave elementSave, SystemManagers systemManagers)
         {
@@ -2729,6 +2727,19 @@ namespace Gum.Wireframe
 
             #endregion
 
+            #region ScreenPixel
+
+            else if(mHeightUnit == DimensionUnitType.ScreenPixel)
+            {
+                var effectiveManagers = this.EffectiveManagers;
+                if (effectiveManagers != null)
+                {
+                    heightToSet /= effectiveManagers.Renderer.Camera.Zoom;
+                }
+            }
+
+            #endregion
+
             #region RelativeToChildren
 
             if (mHeightUnit == DimensionUnitType.RelativeToChildren)
@@ -2963,6 +2974,7 @@ namespace Gum.Wireframe
 
             #endregion
 
+            #region Ratio
             else if (mHeightUnit == DimensionUnitType.Ratio)
             {
                 var heightToSplit = parentHeight;
@@ -3013,6 +3025,7 @@ namespace Gum.Wireframe
                     heightToSet = heightToSplit;
                 }
             }
+            #endregion
 
             mContainedObjectAsIpso.Height = heightToSet;
         }
@@ -3026,6 +3039,19 @@ namespace Gum.Wireframe
             if (mWidthUnit == DimensionUnitType.AbsoluteMultipliedByFontScale)
             {
                 widthToSet *= SystemManagers.GlobalFontScale;
+            }
+
+            #endregion
+
+            #region ScreenPixel
+
+            else if (mWidthUnit == DimensionUnitType.ScreenPixel)
+            {
+                var effectiveManagers = this.EffectiveManagers;
+                if (effectiveManagers != null)
+                {
+                    widthToSet /= effectiveManagers.Renderer.Camera.Zoom;
+                }
             }
 
             #endregion

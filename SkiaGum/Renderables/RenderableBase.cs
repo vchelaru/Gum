@@ -254,6 +254,11 @@ namespace SkiaGum.Renderables
 
         }
 
+        public void PreRender()
+        {
+            int m = 3;
+        }
+
         public void Render(SKCanvas canvas)
         {
             if (AbsoluteVisible && Width > 0 && Height > 0)
@@ -313,6 +318,9 @@ namespace SkiaGum.Renderables
                     (byte)(this.Color.Blue * dimmingMuliplier),
                     this.Color.Alpha);
             }
+
+
+
             var paint = new SKPaint
             {
                 Color = effectiveColor,

@@ -137,6 +137,7 @@
     <Compile Include="DataUiGrid.xaml.cs">
       <DependentUpon>DataUiGrid.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Decorators\NoSizeDecorator.cs" />
     <Compile Include="EventArguments\BeforePropertyChangedArgs.cs" />
     <Compile Include="EventArguments\PropertyChangedArgs.cs" />
     <Compile Include="IDataUi.cs" />

@@ -108,6 +108,7 @@
         <Slider Grid.Column="1" x:Name="Slider" 
                 VerticalContentAlignment="Center" 
                 ValueChanged="Slider_ValueChanged"
+                PreviewMouseLeftButtonUp="Slider_MouseLeftButtonUp"
                 Thumb.DragCompleted="Slider_DragCompleted"
                 MinWidth="60" 
                 Height="20" 
@@ -115,7 +116,7 @@
                 Style="{StaticResource MyCustomStyleForSlider}"
                 ></Slider>
 
-        <TextBox Grid.Column="2" x:Name="TextBox" Margin="1"
+        <TextBox Grid.Column="2" x:Name="TextBox" Margin="1" Height="22"
                      LostFocus="TextBox_LostFocus_1">
             <TextBox.ContextMenu>
                 <ContextMenu>

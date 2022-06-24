@@ -1,5 +1,6 @@
 ﻿using Gum.Wireframe;
 using RenderingLibrary;
+using RenderingLibrary.Graphics;
 using SkiaGum.GueDeriving;
 using SkiaGum.Managers;
 using SkiaSharp;
@@ -28,11 +29,9 @@ namespace SkiaGum.Wpf
 
         public bool EnableTouchEvents { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
-        SystemManagers SystemManagers;
+        public SystemManagers SystemManagers { get; private set; }
 
-        public static float GlobalScale { get; set; } = 1;
-
-
+        Renderer ISystemManagers.Renderer => SystemManagers.Renderer;
         //public SemaphoreSlim ExclusiveUiInteractionSemaphor = new SemaphoreSlim(1, 1);
 
         //float yPushed;
@@ -68,6 +67,8 @@ namespace SkiaGum.Wpf
 
                         bindableGue.AddToManagers(this);
                         bindableGue.BindingContext = this.DataContext;
+                        // Currently SkiaGum SystemManagers != base Gum SystemManagers. Maybe we unify that at some point?
+                        (bindableGue as GraphicalUiElement).AddToManagers(SystemManagers, layer:null);
                     }
 
                     break;
@@ -99,18 +100,18 @@ namespace SkiaGum.Wpf
 
             SystemManagers.Canvas = canvas;
 
-            GraphicalUiElement.CanvasWidth = info.Width / GlobalScale;
-            GraphicalUiElement.CanvasHeight = info.Height / GlobalScale;
-            SystemManagers.Renderer.Camera.Zoom = GlobalScale;
+            // Vic says - Not sure why this was written to have a GlobalScale rather than
+            // use the camera. Using the camera gives more flexibility and standardizes the
+            // syntax across different platforms.
+            GraphicalUiElement.CanvasWidth = info.Width / SystemManagers.Renderer.Camera.Zoom;
+            GraphicalUiElement.CanvasHeight = info.Height / SystemManagers.Renderer.Camera.Zoom;
+            //SystemManagers.Renderer.Camera.Zoom = GlobalScale;
 
             SystemManagers.Renderer.Draw(this.GumElementsInternal, SystemManagers);
 
             base.OnPaintSurface(args);
         }
 
-        public void InvalidateSurface()
-        {
-            throw new NotImplementedException();
-        }
+        void ISystemManagers.InvalidateSurface() => base.InvalidateVisual();
     }
 }

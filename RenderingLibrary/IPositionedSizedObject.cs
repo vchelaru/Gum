@@ -3,6 +3,7 @@ using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace RenderingLibrary
@@ -201,5 +202,12 @@ namespace RenderingLibrary
         //    instance.Parent = newParent;
 
         //}
+
+        public static Vector2 GetPosition(this IPositionedSizedObject ipso) => new Vector2(ipso.X, ipso.Y);
+        public static void SetPosition(this IPositionedSizedObject ipso, Vector2 newPosition)
+        {
+            ipso.X = newPosition.X;
+            ipso.Y = newPosition.Y;
+        }
     }
 }

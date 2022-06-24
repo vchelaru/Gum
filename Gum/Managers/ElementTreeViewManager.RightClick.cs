@@ -41,6 +41,8 @@ namespace Gum.Managers
 
         ToolStripMenuItem duplicateElement;
 
+        
+
         #endregion
 
         #region Initialize and event handlers
@@ -277,7 +279,21 @@ namespace Gum.Managers
                 if (SelectedState.Self.SelectedInstance != null)
                 {
                     mMenuStrip.Items.Add(mGoToDefinition);
+
+                    var container = SelectedState.Self.SelectedElement;
+                    if(!string.IsNullOrEmpty(container.BaseType))
+                    {
+                        var containerBase = ObjectFinder.Self.GetElementSave(container.BaseType);
+
+                        if(containerBase is ScreenSave || containerBase is ComponentSave)
+                        {
+                            mMenuStrip.Items.Add($"Add {SelectedState.Self.SelectedInstance.Name} to base {containerBase}", 
+                                null, 
+                                (not, used) => HandleMoveToBase(SelectedState.Self.SelectedInstances, SelectedState.Self.SelectedElement, containerBase));
+                        }
+                    }
                 }
+
                 #endregion
 
                 #region Screen or Component
@@ -302,6 +318,15 @@ namespace Gum.Managers
                         duplicateElement.Text = $"Duplicate {SelectedState.Self.SelectedComponent.Name}";
                     }
                     mMenuStrip.Items.Add(duplicateElement);
+
+                    if (CopyPasteLogic.CopiedData.CopiedInstancesRecursive.Count > 0)
+                    {
+                        mMenuStrip.Items.Add("Paste", null, HandlePaste);
+                    }
+                    if (CopyPasteLogic.CopiedData.CopiedInstancesSelected.Count > 0)
+                    {
+                        mMenuStrip.Items.Add("Paste Top Level Instances", null, HandlePasteTopLevel);
+                    }
 
                     mMenuStrip.Items.Add("-");
 
@@ -333,6 +358,8 @@ namespace Gum.Managers
 
                 #endregion
 
+                #region Screens Folder (top or contained)
+
                 else if (SelectedNode.IsTopScreenContainerTreeNode() || SelectedNode.IsScreensFolderTreeNode())
                 {
                     mMenuStrip.Items.Add(mAddScreen);
@@ -346,6 +373,9 @@ namespace Gum.Managers
                         mMenuStrip.Items.Add("Rename Folder", null, HandleRenameFolder);
                     }
                 }
+
+                #endregion
+
                 else if (SelectedNode.IsTopComponentContainerTreeNode() || SelectedNode.IsComponentsFolderTreeNode())
                 {
                     mMenuStrip.Items.Add(mAddComponent);
@@ -365,6 +395,31 @@ namespace Gum.Managers
                     mMenuStrip.Items.Add("Add Behavior", null, HandleAddBehavior);
                 }
             }
+        }
+
+        private void HandleMoveToBase(IEnumerable<InstanceSave> instances, ElementSave derivedElement, ElementSave baseElement)
+        {
+            foreach(var instance in instances)
+            {
+                instance.DefinedByBase = true;
+            }
+
+
+            CopyPasteLogic.PasteInstanceSaves(
+                instances.ToList(),
+                derivedElement.DefaultState.Clone(),
+                baseElement, 
+                null);
+        }
+
+        private void HandlePaste(object sender, EventArgs e)
+        {
+            CopyPasteLogic.OnPaste(CopyType.InstanceOrElement, TopOrRecursive.Recursive);
+        }
+
+        private void HandlePasteTopLevel(object sender, EventArgs e)
+        {
+            CopyPasteLogic.OnPaste(CopyType.InstanceOrElement, TopOrRecursive.Top);
         }
 
         private void HandleViewReferences(object sender, EventArgs e)

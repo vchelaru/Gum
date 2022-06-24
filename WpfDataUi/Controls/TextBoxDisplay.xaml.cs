@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO.Packaging;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -9,6 +11,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
@@ -71,10 +74,36 @@ namespace WpfDataUi.Controls
 
         #endregion
 
+        static void LoadViewFromUri(UserControl userControl, string baseUri)
+        {
+            try
+            {
+                var resourceLocater = new Uri(baseUri, UriKind.Relative);
+                var exprCa = (PackagePart)typeof(System.Windows.Application).GetMethod("GetResourceOrContentPart", BindingFlags.NonPublic | BindingFlags.Static).Invoke(null, new object[] { resourceLocater });
+                var stream = exprCa.GetStream();
+                var uri = new Uri((Uri)typeof(BaseUriHelper).GetProperty("PackAppBaseUri", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null, null), resourceLocater);
+                var parserContext = new ParserContext
+                {
+                    BaseUri = uri
+                };
+                typeof(XamlReader).GetMethod("LoadBaml", BindingFlags.NonPublic | BindingFlags.Static).Invoke(null, new object[] { stream, parserContext, userControl, true });
+            }
+            catch (Exception)
+            {
+                //log
+            }
+        }
+
         public TextBoxDisplay()
         {
-            InitializeComponent();
-
+            // from here:
+            // https://stackoverflow.com/questions/7646331/the-component-does-not-have-a-resource-identified-by-the-uri
+            // Inheriting from TextBoxDisplay results in a confusing runtime error. It seems like the problem is that the 
+            // code tries to load the XAML based on the class name. This forces it:
+            var assemblyName = typeof(TextBoxDisplay).Assembly.FullName.Split(',')[0];
+            var xamlLocation = $"/{assemblyName};component/controls/textboxdisplay.xaml";
+            //InitializeComponent();
+            LoadViewFromUri(this, xamlLocation);
             mTextBoxLogic = new TextBoxDisplayLogic(this, TextBox);
 
             this.RefreshContextMenu(TextBox.ContextMenu);
@@ -98,6 +127,7 @@ namespace WpfDataUi.Controls
 
                 this.Label.Text = InstanceMember.DisplayName;
                 this.RefreshContextMenu(TextBox.ContextMenu);
+                this.RefreshContextMenu(StackPanel.ContextMenu);
 
                 HintTextBlock.Visibility = !string.IsNullOrEmpty(InstanceMember?.DetailText) ? Visibility.Visible : Visibility.Collapsed;
                 HintTextBlock.Text = InstanceMember?.DetailText;
@@ -108,7 +138,7 @@ namespace WpfDataUi.Controls
             }
         }
 
-        public ApplyValueResult TrySetValueOnUi(object valueOnInstance)
+        public virtual ApplyValueResult TrySetValueOnUi(object valueOnInstance)
         {
             this.TextBox.Text = mTextBoxLogic.ConvertNumberToString(valueOnInstance);
 
@@ -163,6 +193,11 @@ namespace WpfDataUi.Controls
             this.TextBox.VerticalAlignment = VerticalAlignment.Top;
             this.TextBox.Height = 65;
             this.mTextBoxLogic.HandlesEnter = false;
+        }
+
+        public void AddUiAfterTextBox(UIElement element)
+        {
+            AfterTextBoxUi.Children.Add(element);
         }
 
         private void TextBox_LostFocus_1(object sender, RoutedEventArgs e)

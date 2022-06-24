@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RenderingLibrary;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -8,5 +9,6 @@ namespace SkiaGum.Managers
     {
         void InvalidateSurface();
         bool EnableTouchEvents { get; set; }
+        RenderingLibrary.Graphics.Renderer Renderer { get; }
     }
 }

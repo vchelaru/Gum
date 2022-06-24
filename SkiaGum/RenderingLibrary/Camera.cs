@@ -27,11 +27,8 @@ namespace RenderingLibrary
 
         public float X
         {
-            get { return Position.X; }
-            set
-            {
-                Position.X = value;
-            }
+            get => Position.X; 
+            set => Position.X = value;
         }
 
         public float Y

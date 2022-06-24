@@ -1,4 +1,5 @@
-﻿using SkiaGum.Renderables;
+﻿using Gum.DataTypes;
+using SkiaGum.Renderables;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
@@ -53,8 +54,14 @@ namespace SkiaGum.GueDeriving
 
         public float StrokeWidth
         {
-            get => ContainedRenderable.StrokeWidth;
-            set => ContainedRenderable.StrokeWidth = value;
+            get;
+            set;
+        }
+
+        public DimensionUnitType StrokeWidthUnits
+        {
+            get;
+            set;
         }
 
         #endregion
@@ -115,5 +122,27 @@ namespace SkiaGum.GueDeriving
         }
 
         #endregion
+
+        public override void PreRender()
+        {
+            if(this.EffectiveManagers != null)
+            {
+                var camera = this.EffectiveManagers.Renderer.Camera;
+                var strokeWidth = StrokeWidth;
+
+                switch(StrokeWidthUnits)
+                {
+                    case DimensionUnitType.Absolute:
+                        // do nothing
+                        break;
+                    case DimensionUnitType.ScreenPixel:
+                        strokeWidth /= camera.Zoom;
+                        break;
+                }
+
+                ContainedRenderable.StrokeWidth = strokeWidth;
+            }
+            base.PreRender();
+        }
     }
 }

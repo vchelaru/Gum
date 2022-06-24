@@ -23,23 +23,26 @@ namespace WpfDataUi.Controls
     {
         #region Fields/Properties
 
+        double maxValue;
         public double MaxValue
         {
-            get => Slider.Maximum;
+            get => this.maxValue;
             set
             {
-                Slider.Maximum = value;
-                mTextBoxLogic.MaxValue = (decimal)this.MaxValue;
+                this.maxValue = value;
+                RefreshMinAndMaxValues();
             }
         }
 
+        
+        double minValue;
         public double MinValue
         {
-            get => Slider.Minimum;
+            get => minValue;
             set
             {
-                Slider.Minimum = value;
-                mTextBoxLogic.MinValue = (decimal)this.MinValue;
+                this.minValue = value;
+                RefreshMinAndMaxValues();
             }
         }
 
@@ -80,6 +83,23 @@ namespace WpfDataUi.Controls
 
         public bool SuppressSettingProperty { get; set; }
 
+        /// <summary>
+        /// Can be used to multiply the underlying value to modify how it is displayed. By default this
+        /// value is 1, which means that the displayed value will match the underlying value. A value of 2 would
+        /// make the displayed value be double the underlying value. This value applies to the min and max values too.
+        /// </summary>
+        double displayedValueMultiplier = 1;
+        public double DisplayedValueMultiplier
+        {
+            get => displayedValueMultiplier;
+            set
+            {
+                displayedValueMultiplier = value;
+
+                RefreshMinAndMaxValues();
+            }
+        }
+
         #endregion
 
         private void HandlePropertyChange(object sender, PropertyChangedEventArgs e)
@@ -100,6 +120,10 @@ namespace WpfDataUi.Controls
             mTextBoxLogic.MaxValue = (decimal)this.MaxValue;
 
             this.RefreshContextMenu(TextBox.ContextMenu);
+            Slider.ContextMenu = Slider.ContextMenu ?? new ContextMenu();
+            this.RefreshContextMenu(Slider.ContextMenu);
+            Label.ContextMenu = Label.ContextMenu ?? new ContextMenu();
+            this.RefreshContextMenu(Label.ContextMenu);
             this.ContextMenu = TextBox.ContextMenu;
         }
 
@@ -124,6 +148,11 @@ namespace WpfDataUi.Controls
                 this.Label.Text = InstanceMember.DisplayName;
 
                 SuppressSettingProperty = false;
+
+
+                this.RefreshContextMenu(TextBox.ContextMenu);
+                this.RefreshContextMenu(Slider.ContextMenu);
+                this.RefreshContextMenu(Label.ContextMenu);
             }
         }
 
@@ -134,16 +163,59 @@ namespace WpfDataUi.Controls
 
         public ApplyValueResult TryGetValueOnUi(out object value)
         {
-            return mTextBoxLogic.TryGetValueOnUi(out value);
+            var result = mTextBoxLogic.TryGetValueOnUi(out value);
+
+            if(displayedValueMultiplier != 1 && value != null)
+            {
+                if (value is float asFloat)
+                {
+                    value = (float)(asFloat / displayedValueMultiplier);
+                }
+                else if (value is int asInt)
+                {
+                    value = (int)(asInt / displayedValueMultiplier);
+                }
+                else if (value is double asDouble)
+                {
+                    value = (double)(asDouble / displayedValueMultiplier);
+                }
+                else if (value is decimal asDecimal)
+                {
+                    value = (decimal)(asDecimal / (decimal)displayedValueMultiplier);
+                }
+            }
+
+            return result;
         }
 
         public ApplyValueResult TrySetValueOnUi(object valueOnInstance)
         {
             if(valueOnInstance != null)
             {
-                SetTextBoxValue(valueOnInstance);
+                object multipliedValue = valueOnInstance;
+                if(displayedValueMultiplier != 1)
+                {
+                    if(valueOnInstance is float asFloat)
+                    {
+                        multipliedValue = asFloat * displayedValueMultiplier;
+                    }
+                    else if(valueOnInstance is int asInt)
+                    {
+                        multipliedValue = asInt * displayedValueMultiplier;
+                    }
+                    else if(valueOnInstance is double asDouble)
+                    {
+                        multipliedValue = asDouble * displayedValueMultiplier;
+                    }
+                    else if(valueOnInstance is decimal asDecimal)
+                    {
+                        multipliedValue = asDecimal * (decimal)displayedValueMultiplier;
+                    }
+                }
 
-                SetSliderValue(valueOnInstance);
+                SetTextBoxValue(multipliedValue);
+
+                SetSliderValue(multipliedValue);
                 return ApplyValueResult.Success;
             }
             else
@@ -154,7 +226,7 @@ namespace WpfDataUi.Controls
 
         private void SetTextBoxValue(object valueOnInstance)
         {
-            this.TextBox.Text = mTextBoxLogic.ConvertNumberToString(valueOnInstance);
+            this.TextBox.Text = mTextBoxLogic.ConvertNumberToString(valueOnInstance, DecimalPointsFromSlider);
         }
 
         private void SetSliderValue(object valueOnInstance)
@@ -167,7 +239,10 @@ namespace WpfDataUi.Controls
             {
                 this.Slider.Value = (double)valueOnInstance;
             }
-
+            else if(valueOnInstance is int)
+            {
+                this.Slider.Value = (int)valueOnInstance;
+            }
             // todo: support int...
         }
 
@@ -176,7 +251,9 @@ namespace WpfDataUi.Controls
         {
             // This is required to prevent weird flickering on the slider. Putting 100 ms frequency limiter makes everything work just fine.
             // It's a hack but...not sure what else to do. I also have Slider_DragCompleted so the last value is always pushed.
-            // Update 2 - this causes all kinds of problems if we update in realtime. Let's ju
+            // Update 2 - this causes all kinds of problems if we update in realtime. 
+            // Update 3 - we should update in relatime unless the thumb is grabbed
+
             var timeSince = DateTime.Now - lastSliderTime;
             if (timeSince.TotalMilliseconds > 100)
             {
@@ -211,6 +288,19 @@ namespace WpfDataUi.Controls
         }
 
         private void Slider_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
+        {
+            HandleValueChanged();
+        }
+
+        private void RefreshMinAndMaxValues()
+        {
+            Slider.Maximum = this.maxValue * DisplayedValueMultiplier;
+            mTextBoxLogic.MaxValue = (decimal)(this.maxValue * DisplayedValueMultiplier);
+            Slider.Minimum = this.minValue * DisplayedValueMultiplier;
+            mTextBoxLogic.MinValue = (decimal)(this.minValue * DisplayedValueMultiplier);
+        }
+
+        private void Slider_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
             HandleValueChanged();
         }

@@ -31,19 +31,25 @@ namespace Gum.Plugins.Inheritance
 
             foreach(var inheritingElement in elementsInheritingFromContainer)
             {
-                var clone = instance.Clone();
-                clone.DefinedByBase = true;
-                clone.ParentContainer = inheritingElement;
-                inheritingElement.Instances.Add(clone);
+                // This could be done to satisfy a missing dependency? Or perhaps a refactor by moving
+                // a derived instance to base? Therefore, only see if there is not already an instance here
+                var existingInInheriting = inheritingElement.GetInstance(instance.Name);
+                if(existingInInheriting == null)
+                {
+                    var clone = instance.Clone();
+                    clone.DefinedByBase = true;
+                    clone.ParentContainer = inheritingElement;
+                    inheritingElement.Instances.Add(clone);
 
-                // inheritingElement could be a derived of derived, in which case we
-                // need to go just one up the inheritance tree:
-                var directBase = ObjectFinder.Self.GetElementSave(inheritingElement.BaseType);
+                    // inheritingElement could be a derived of derived, in which case we
+                    // need to go just one up the inheritance tree:
+                    var directBase = ObjectFinder.Self.GetElementSave(inheritingElement.BaseType);
 
-                AdjustInstance(directBase, inheritingElement, clone.Name);
+                    AdjustInstance(directBase, inheritingElement, clone.Name);
 
-                GumCommands.Self.FileCommands.TryAutoSaveElement(inheritingElement);
-                GumCommands.Self.GuiCommands.RefreshElementTreeView(inheritingElement);
+                    GumCommands.Self.FileCommands.TryAutoSaveElement(inheritingElement);
+                    GumCommands.Self.GuiCommands.RefreshElementTreeView(inheritingElement);
+                }
             }
         }
 
@@ -141,18 +147,26 @@ namespace Gum.Plugins.Inheritance
                         // This copies the values to this explicitly, which we don't want
                         //FillWithDefaultRecursively(baseElement, stateSave);
 
-
                         foreach (var instance in baseElement.Instances)
                         {
-                            var derivedInstance = instance.Clone();
-                            derivedInstance.DefinedByBase = true;
-                            asElementSave.Instances.Add(derivedInstance);
+                            var instanceName = instance.Name;
+                            var alreadyExists = asElementSave.Instances.FirstOrDefault(item => item.Name == instanceName);
+                            if (alreadyExists != null)
+                            {
+                                alreadyExists.DefinedByBase = true;
+                            }
+                            else
+                            {
+                                var derivedInstance = instance.Clone();
+                                derivedInstance.DefinedByBase = true;
+                                asElementSave.Instances.Add(derivedInstance);
+                            }
                         }
                         asElementSave.Initialize(stateSave);
                     }
-
                 }
             }
+
             const bool fullRefresh = true;
             // since the type might change:
             GumCommands.Self.GuiCommands.RefreshElementTreeView(asElementSave);

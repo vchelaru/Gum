@@ -12,6 +12,14 @@ namespace CodeOutputPlugin.Models
         GenerateManually,
         GenerateAutomaticallyOnPropertyChange
     }
+
+    public enum VirtualOverride
+    {
+        None,
+        Virtual,
+        Override
+    }
+
     public class CodeOutputElementSettings
     {
         public string Namespace { get; set; }
@@ -19,6 +27,8 @@ namespace CodeOutputPlugin.Models
         public string GeneratedFileName { get; set; }
 
         public GenerationBehavior GenerationBehavior { get; set; }
+
+
 
         // This is here for old projects, but should go away soon. Added June 21, 2021, but since
         // there aren't many projects that use this, this property can go away soon like July 2021
@@ -35,5 +45,6 @@ namespace CodeOutputPlugin.Models
         }
 
         public bool LocalizeElement { get; set; }
-    }
+
+   }
 }

@@ -82,6 +82,7 @@ namespace Gum.Managers
         public const int ExclamationIndex = 6;
         public const int StateImageIndex = 7;
         public const int BehaviorImageIndex = 8;
+        public const int DerivedInstanceImageIndex = 9;
 
         static ElementTreeViewManager mSelf;
         ContextMenuStrip mMenuStrip;
@@ -560,6 +561,7 @@ namespace Gum.Managers
             this.ObjectTreeView.AfterClickSelect += this.ObjectTreeView_AfterClickSelect;
             this.ObjectTreeView.AfterSelect += this.ObjectTreeView_AfterSelect_1;
             this.ObjectTreeView.KeyDown += this.ObjectTreeView_KeyDown;
+            this.ObjectTreeView.KeyPress += this.ObjectTreeView_KeyPress;
             this.ObjectTreeView.MouseClick += this.ObjectTreeView_MouseClick;
             this.ObjectTreeView.MouseMove += (sender, e) => HandleMouseOver(e.X, e.Y);
             ObjectTreeView.DragDrop += HandleDragDropEvent;
@@ -599,6 +601,11 @@ namespace Gum.Managers
                 //else
                 //    Cursor.Current = MyNoDropCursor;
             };
+        }
+
+        private void ObjectTreeView_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            DragDropManager.Self.HandleKeyPress(e);
         }
 
         private void HandleDragDropEvent(object sender, DragEventArgs e)
@@ -1156,13 +1163,14 @@ namespace Gum.Managers
                     node.Text = instanceSave.Name;
                 }
             }
-            else if(node.Tag is BehaviorSave)
+            else if(node.Tag is BehaviorSave behaviorSave)
             {
                 var behavior = node.Tag as BehaviorSave;
                 if(behavior.Name != node.Text)
                 {
                     node.Text = behavior.Name;
                 }
+                RefreshBehaviorTreeNode(node, behaviorSave);
             }
 
             foreach (TreeNode treeNode in node.Nodes)
@@ -1171,6 +1179,7 @@ namespace Gum.Managers
                 {
                     RefreshUi(treeNode);
                 }
+
             }
         }
 
@@ -1247,6 +1256,10 @@ namespace Gum.Managers
                     nodeForInstance = AddTreeNodeForInstance(instance, node);
                 }
 
+                if(instance.DefinedByBase)
+                {
+                    nodeForInstance.ImageIndex = DerivedInstanceImageIndex;
+                }
 
                 if (expandedInstances.Contains(instance))
                 {
@@ -1283,6 +1296,34 @@ namespace Gum.Managers
                     nodeParent.Nodes.Remove(nodeForInstance);
                     nodeParent.Nodes.Insert(desiredIndex, nodeForInstance);
                 }
+            }
+        }
+
+        private void RefreshBehaviorTreeNode(TreeNode node, BehaviorSave behavior)
+        {
+            var allInstances = behavior.RequiredInstances;
+            var allTreeNodesRecursively = node.GetAllChildrenNodesRecursively();
+            foreach (TreeNode instanceNode in allTreeNodesRecursively)
+            {
+                var instance = instanceNode.Tag as InstanceSave;
+
+                if (!allInstances.Contains(instance))
+                {
+                    instanceNode.Remove();
+                }
+            }
+
+
+            foreach (InstanceSave instance in allInstances)
+            {
+                TreeNode nodeForInstance = GetTreeNodeFor(instance, node);
+
+                if (nodeForInstance == null)
+                {
+                    nodeForInstance = AddTreeNodeForInstance(instance, node);
+                }
+                // screens have to worry about siblings and lists. We don't care about that here because behaviors do not
+                // (currently) require instances to have a particular relationship with one another
             }
         }
 
@@ -1331,15 +1372,23 @@ namespace Gum.Managers
 
         private InstanceSave FindParentInstance(InstanceSave instance)
         {
-            ElementSave element = instance.ParentContainer;
-
-            string name = instance.Name + ".Parent";
-            VariableSave variable = element.DefaultState.Variables.FirstOrDefault(v => v.Name == name);
-
-            if (variable != null && variable.SetsValue && variable.Value != null)
+            if(instance is BehaviorInstanceSave)
             {
-                string parentName = (string) variable.Value;
-                return element.GetInstance(parentName);
+                // instances in behaviors cannot (currently) have parents
+                return null;
+            }
+            else
+            {
+                ElementSave element = instance.ParentContainer;
+
+                string name = instance.Name + ".Parent";
+                VariableSave variable = element.DefaultState.Variables.FirstOrDefault(v => v.Name == name);
+
+                if (variable != null && variable.SetsValue && variable.Value != null)
+                {
+                    string parentName = (string) variable.Value;
+                    return element.GetInstance(parentName);
+                }
             }
 
             return null;
@@ -1423,6 +1472,7 @@ namespace Gum.Managers
         private void ObjectTreeView_KeyDown(object sender, KeyEventArgs e)
         {
             ElementTreeViewManager.Self.HandleKeyDown(e);
+            DragDropManager.Self.HandleKeyDown(e);
         }
 
 

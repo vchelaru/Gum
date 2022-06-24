@@ -175,7 +175,8 @@ namespace CodeOutputPlugin
 
         private void HandleAddAndRemoveVariablesForType(string type, StateSave stateSave)
         {
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "IsXamarinFormsControl"});
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Category = "Xamarin Forms", Value = false, Name = "IsXamarinFormsControl"});
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Category = "Xamarin Forms", Value = false, Name = "IsOverrideInCodeGen"});
 
         }
 

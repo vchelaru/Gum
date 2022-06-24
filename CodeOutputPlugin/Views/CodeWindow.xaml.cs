@@ -84,7 +84,6 @@ namespace CodeOutputPlugin.Views
             elementCategory.Members.Add(CreateFileLocationMember());
             elementCategory.Members.Add(CreateGenerateLocalizeMethod());
 
-
             DataGrid.Categories.Add(elementCategory);
 
         }
@@ -373,6 +372,8 @@ namespace CodeOutputPlugin.Views
 
             return member;
         }
+
+
 
         #endregion
 

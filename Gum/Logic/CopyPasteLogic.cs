@@ -23,15 +23,33 @@ namespace Gum.Logic
         State = 2,
     }
 
+    public enum TopOrRecursive
+    {
+        Top,
+        Recursive
+    }
+
+    public class CopiedData
+    {
+        /// <summary>
+        /// The instances which were selected when the user pressed COPY
+        /// </summary>
+        public List<InstanceSave> CopiedInstancesSelected = new List<InstanceSave>();
+        /// <summary>
+        /// The instances which were selected along with all children of the selected instances.
+        /// </summary>
+        public List<InstanceSave> CopiedInstancesRecursive = new List<InstanceSave>();
+        public StateSave CopiedState = new StateSave();
+        public ElementSave CopiedElement = null;
+    }
+
     #endregion
 
     static class CopyPasteLogic
     {
         #region Fields/Properties
 
-        static List<InstanceSave> mCopiedInstances = new List<InstanceSave>();
-        static StateSave mCopiedState = new StateSave();
-        static ElementSave mCopiedElement = null;
+        public static CopiedData CopiedData { get; private set; } = new CopiedData();
 
         static CopyType mCopyType;
 
@@ -57,10 +75,10 @@ namespace Gum.Logic
         private static void StoreCopiedObject(CopyType copyType)
         {
             mCopyType = copyType;
-            mCopiedElement = null;
-            mCopiedInstances.Clear();
-            mCopiedState.Variables.Clear();
-            mCopiedState.VariableLists.Clear();
+            CopiedData.CopiedElement = null;
+            CopiedData.CopiedInstancesRecursive.Clear();
+            CopiedData.CopiedState.Variables.Clear();
+            CopiedData.CopiedState.VariableLists.Clear();
 
             if (copyType == CopyType.InstanceOrElement)
             {
@@ -83,7 +101,7 @@ namespace Gum.Logic
         {
             if (SelectedState.Self.SelectedStateSave != null)
             {
-                mCopiedState = SelectedState.Self.SelectedStateSave.Clone();
+                CopiedData.CopiedState = SelectedState.Self.SelectedStateSave.Clone();
             }
         }
 
@@ -100,7 +118,10 @@ namespace Gum.Logic
                 // That way when they're pasted they are pasted in the right order
                 selected.AddRange(SelectedState.Self.SelectedInstances);
 
-                mCopiedInstances = GetAllInstancesAndChildrenOf(selected, selected.FirstOrDefault()?.ParentContainer)
+                CopiedData.CopiedInstancesSelected.Clear();
+                CopiedData.CopiedInstancesSelected.AddRange(SelectedState.Self.SelectedInstances);
+
+                CopiedData.CopiedInstancesRecursive = GetAllInstancesAndChildrenOf(selected, selected.FirstOrDefault()?.ParentContainer)
                     // Sort by index in parent at the end so the children are sorted properly:
                             .OrderBy(item =>
                             {
@@ -110,23 +131,23 @@ namespace Gum.Logic
                             .Select(item => item.Clone())
                             .ToList();
 
-                mCopiedState = SelectedState.Self.SelectedStateSave?.Clone() ?? SelectedState.Self.SelectedElement.DefaultState.Clone();
+                CopiedData.CopiedState = SelectedState.Self.SelectedStateSave?.Clone() ?? SelectedState.Self.SelectedElement.DefaultState.Clone();
 
                 // Clear out any variables that don't pertain to the selected instance:
-                for (int i = mCopiedState.Variables.Count - 1; i > -1; i--)
+                for (int i = CopiedData.CopiedState.Variables.Count - 1; i > -1; i--)
                 {
-                    if (mCopiedInstances.Any(item => item.Name == mCopiedState.Variables[i].SourceObject) == false)
+                    if (CopiedData.CopiedInstancesRecursive.Any(item => item.Name == CopiedData.CopiedState.Variables[i].SourceObject) == false)
                     {
-                        mCopiedState.Variables.RemoveAt(i);
+                        CopiedData.CopiedState.Variables.RemoveAt(i);
                     }
                 }
 
                 // And also any VariableLists:
-                for (int i = mCopiedState.VariableLists.Count - 1; i > -1; i--)
+                for (int i = CopiedData.CopiedState.VariableLists.Count - 1; i > -1; i--)
                 {
-                    if (mCopiedInstances.Any(item => item.Name == mCopiedState.VariableLists[i].SourceObject) == false)
+                    if (CopiedData.CopiedInstancesRecursive.Any(item => item.Name == CopiedData.CopiedState.VariableLists[i].SourceObject) == false)
                     {
-                        mCopiedState.VariableLists.RemoveAt(i);
+                        CopiedData.CopiedState.VariableLists.RemoveAt(i);
                     }
                 }
             }
@@ -138,11 +159,11 @@ namespace Gum.Logic
             {
                 if (SelectedState.Self.SelectedElement is ScreenSave)
                 {
-                    mCopiedElement = ((ScreenSave)SelectedState.Self.SelectedElement).Clone();
+                    CopiedData.CopiedElement = ((ScreenSave)SelectedState.Self.SelectedElement).Clone();
                 }
                 else if (SelectedState.Self.SelectedElement is ComponentSave)
                 {
-                    mCopiedElement = ((ComponentSave)SelectedState.Self.SelectedElement).Clone();
+                    CopiedData.CopiedElement = ((ComponentSave)SelectedState.Self.SelectedElement).Clone();
                 }
             }
         }
@@ -157,9 +178,9 @@ namespace Gum.Logic
 
             ElementSave sourceElement = SelectedState.Self.SelectedElement;
 
-            if(mCopiedInstances.Any())
+            if(CopiedData.CopiedInstancesRecursive.Any())
             {
-                foreach(var clone in mCopiedInstances)
+                foreach(var clone in CopiedData.CopiedInstancesRecursive)
                 {
                     // copied instances is a clone, so need to find by name:
                     var originalForCopy = sourceElement.Instances.FirstOrDefault(item => item.Name == clone.Name);
@@ -183,26 +204,26 @@ namespace Gum.Logic
 
         }
 
-        public static void OnPaste(CopyType copyType)
+        public static void OnPaste(CopyType copyType, TopOrRecursive topOrRecursive = TopOrRecursive.Recursive)
         {
             // To make sure we didn't copy one type and paste another
             if (mCopyType == copyType)
             {
                 if (mCopyType == CopyType.InstanceOrElement)
                 {
-                    if (mCopiedElement != null)
+                    if (CopiedData.CopiedElement != null)
                     {
                         PasteCopiedElement();
 
                     }
                     // We need to both duplicate the InstanceSave, but we also need to duplicate all of the variables
                     // that use the copied InstanceSave.
-                    else if (mCopiedInstances.Count != 0)
+                    else if (CopiedData.CopiedInstancesRecursive.Count != 0)
                     {
-                        PasteCopiedInstanceSaves();
+                        PasteCopiedInstanceSaves(topOrRecursive);
                     }
                 }
-                else if (mCopyType == CopyType.State && mCopiedState != null)
+                else if (mCopyType == CopyType.State && CopiedData.CopiedState != null)
                 {
                     PastedCopiedState();
                 }
@@ -211,9 +232,16 @@ namespace Gum.Logic
         }
 
 
-        private static void PasteCopiedInstanceSaves()
+        private static void PasteCopiedInstanceSaves(TopOrRecursive topOrRecursive)
         {
-            PasteInstanceSaves(mCopiedInstances, mCopiedState, SelectedState.Self.SelectedElement, SelectedState.Self.SelectedInstance);
+            if(topOrRecursive == TopOrRecursive.Recursive)
+            {
+                PasteInstanceSaves(CopiedData.CopiedInstancesRecursive, CopiedData.CopiedState, SelectedState.Self.SelectedElement, SelectedState.Self.SelectedInstance);
+            }
+            else
+            {
+                PasteInstanceSaves(CopiedData.CopiedInstancesSelected, CopiedData.CopiedState, SelectedState.Self.SelectedElement, SelectedState.Self.SelectedInstance);
+            }
         }
 
         private static void PastedCopiedState()
@@ -228,14 +256,14 @@ namespace Gum.Logic
             }
             //////////////////End Early Out////////////////
 
-            StateSave newStateSave = mCopiedState.Clone();
+            StateSave newStateSave = CopiedData.CopiedState.Clone();
 
             newStateSave.Variables.RemoveAll(item => item.CanOnlyBeSetInDefaultState);
 
 
             newStateSave.ParentContainer = container;
 
-            string name = mCopiedState.Name + "Copy";
+            string name = CopiedData.CopiedState.Name + "Copy";
 
 
             if(targetCategory != null)
@@ -386,6 +414,13 @@ namespace Gum.Logic
                                 // this is a parent and it may be attached to a copy, so update the value
                                 var newValue = oldNewNameDictionary[valueAsString];
                                 copiedVariable.Value = newValue;
+
+                            }
+                            if(copiedVariable.GetRootName() == "Parent" && shouldAssignParent && selectedInstance == null)
+                            {
+                                // don't assign it because we're not pasting onto a particular instance and
+                                // the copied instance already has a parent.
+                                shouldAssignParent = false;
                             }
 
                             // We don't want to copy exposed variables.
@@ -489,14 +524,14 @@ namespace Gum.Logic
         {
             ElementSave toAdd;
 
-            if (mCopiedElement is ScreenSave)
+            if (CopiedData.CopiedElement is ScreenSave)
             {
-                toAdd = ((ScreenSave)mCopiedElement).Clone();
+                toAdd = ((ScreenSave)CopiedData.CopiedElement).Clone();
                 toAdd.Initialize(null);
             }
             else
             {
-                toAdd = ((ComponentSave)mCopiedElement).Clone();
+                toAdd = ((ComponentSave)CopiedData.CopiedElement).Clone();
                 ((ComponentSave)toAdd).InitializeDefaultAndComponentVariables();
             }
 
@@ -525,7 +560,7 @@ namespace Gum.Logic
 
             SelectedState.Self.SelectedElement = toAdd;
 
-            PluginManager.Self.ElementDuplicate(mCopiedElement, toAdd);
+            PluginManager.Self.ElementDuplicate(CopiedData.CopiedElement, toAdd);
 
             GumCommands.Self.FileCommands.TryAutoSaveElement(toAdd);
             GumCommands.Self.FileCommands.TryAutoSaveProject();

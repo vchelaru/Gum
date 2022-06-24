@@ -33,10 +33,7 @@ namespace Gum.Wireframe
 
         #endregion
 
-        public ContextMenuStrip ContextMenuStrip
-        {
-            get { return mContextMenuStrip; }
-        }
+        public ContextMenuStrip ContextMenuStrip => mContextMenuStrip;
 
         private void RightClickInitialize(ContextMenuStrip contextMenuStrip)
         {
@@ -95,6 +92,13 @@ namespace Gum.Wireframe
 
         public void OnRightClick()
         {
+            /////////////Early Out////////////////////
+            if(mContextMenuStrip == null)
+            {
+                return;
+            }
+            ///////////End Early Out//////////////////
+
             // Note:  This
             // code assumes
             // that the object
@@ -105,7 +109,7 @@ namespace Gum.Wireframe
             // a mouse push (even on a right-push).
             // The click will happen *after* so the object
             // should already be selected.
-            if (SelectedState.Self.SelectedInstance != null && mContextMenuStrip != null)
+            if (SelectedState.Self.SelectedInstance != null)
             {
                 mContextMenuStrip.Items.Add(mBringToFront);
                 mContextMenuStrip.Items.Add(mMoveForward);
@@ -114,7 +118,9 @@ namespace Gum.Wireframe
                 mContextMenuStrip.Items.Add(mSendToBack);
 
                 PopulateMoveInFrontOfMenuItem();
+
             }
+
         }
 
         private void PopulateMoveInFrontOfMenuItem()

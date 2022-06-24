@@ -1,4 +1,4 @@
-﻿#if MONOGAME
+﻿#if MONOGAME || LINKED_MONOGAME
 using Microsoft.Xna.Framework.Graphics;
 #endif
 

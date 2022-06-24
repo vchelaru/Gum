@@ -127,6 +127,7 @@ namespace Gum.Wireframe
         IRenderableIpso mParent;
 
         protected bool mIsLayoutSuspended = false;
+        public bool IsLayoutSuspended => mIsLayoutSuspended;
 
         // We need ThreadStatic in case screens are being loaded
         // in the background - we don't want to interrupt the foreground
@@ -161,7 +162,6 @@ namespace Gum.Wireframe
             set;
         }
 
-#if MONOGAME || XNA4
         public SystemManagers Managers
         {
             get
@@ -169,6 +169,7 @@ namespace Gum.Wireframe
                 return mManagers;
             }
         }
+
         /// <summary>
         /// Returns this instance's SystemManagers, or climbs up the parent/child relationship
         /// until a non-null SystemsManager is found. Otherwise, returns null.
@@ -183,11 +184,11 @@ namespace Gum.Wireframe
                 }
                 else
                 {
-                    return this.ElementGueContainingThis?.EffectiveManagers;
+                    return this.ElementGueContainingThis?.EffectiveManagers ??
+                        this.EffectiveParentGue?.EffectiveManagers;
                 }
             }
         }
-#endif
 
         public bool Visible
         {
@@ -421,6 +422,8 @@ namespace Gum.Wireframe
                 canvas.Save();
                 canvas.ClipRect(rect);
             }
+
+            // todo - this may allocate slightly due to foreach. Consider changing to a for loop
             foreach (var child in this.Children)
             {
                 child.Render(canvas);
@@ -1089,6 +1092,11 @@ namespace Gum.Wireframe
 
         #region Events
 
+        // It's possible that a size change could result in a layout which 
+        // results in a further size change. This recursive call of size changes
+        // could happen indefinitely so we only want to do this one time.
+        // This prevents the size change from happening over and over:
+        bool isInSizeChange;
         public event EventHandler SizeChanged;
         public event EventHandler PositionChanged;
         public event EventHandler ParentChanged;
@@ -1444,9 +1452,9 @@ namespace Gum.Wireframe
 
                 if (this.mContainedObjectAsIpso == null)
                 {
-                    foreach (var child in this.mWhatThisContains)
+                    for(int i = 0; i < this.mWhatThisContains.Count; i++)
                     {
-                        canOneDimensionChangeOtherDimension = GetIfOneDimensionCanChangeOtherDimension(child);
+                        canOneDimensionChangeOtherDimension = GetIfOneDimensionCanChangeOtherDimension(mWhatThisContains[i]);
 
                         if (canOneDimensionChangeOtherDimension)
                         {
@@ -1501,7 +1509,12 @@ namespace Gum.Wireframe
                 if (widthBeforeLayout != mContainedObjectAsIpso.Width ||
                     heightBeforeLayout != mContainedObjectAsIpso.Height)
                 {
-                    SizeChanged?.Invoke(this, null);
+                    if(!isInSizeChange)
+                    {
+                        isInSizeChange = true;
+                        SizeChanged?.Invoke(this, null);
+                        isInSizeChange = false;
+                    }
                 }
 
                 if (xBeforeLayout != mContainedObjectAsIpso.X ||
@@ -1718,15 +1731,13 @@ namespace Gum.Wireframe
                 this.HeightUnits.GetDependencyType() == HierarchyDependencyType.DependsOnChildren);
         }
 
-#if MONOGAME || XNA4
-        void IRenderable.PreRender()
+        public virtual void PreRender()
         {
             if (mContainedObjectAsIpso != null)
             {
                 mContainedObjectAsIpso.PreRender();
             }
         }
-#endif
 
         public virtual void CreateChildrenRecursively(ElementSave elementSave, SystemManagers systemManagers)
         {
@@ -1906,8 +1917,9 @@ namespace Gum.Wireframe
             }
             if (this.mContainedObjectAsIpso == null)
             {
-                foreach (var child in this.mWhatThisContains)
+                for(int i = 0; i < mWhatThisContains.Count; i++)
                 {
+                    var child = mWhatThisContains[i];
                     // Victor Chelaru
                     // January 10, 2017
                     // I think we may not want to update any children which
@@ -2715,6 +2727,19 @@ namespace Gum.Wireframe
 
             #endregion
 
+            #region ScreenPixel
+
+            else if(mHeightUnit == DimensionUnitType.ScreenPixel)
+            {
+                var effectiveManagers = this.EffectiveManagers;
+                if (effectiveManagers != null)
+                {
+                    heightToSet /= effectiveManagers.Renderer.Camera.Zoom;
+                }
+            }
+
+            #endregion
+
             #region RelativeToChildren
 
             if (mHeightUnit == DimensionUnitType.RelativeToChildren)
@@ -2742,8 +2767,9 @@ namespace Gum.Wireframe
 #endif
                     }
 
-                    foreach (GraphicalUiElement element in this.Children)
+                    for(int i = 0; i < Children.Count; i++)
                     {
+                        var element = Children[i] as GraphicalUiElement;
                         var childLayout = element.GetChildLayoutType(XOrY.Y, this);
                         var considerChild = childLayout == ChildType.Absolute || (considerWrappedStacked && childLayout == ChildType.StackedWrapped);
                         if (considerChild && element.Visible)
@@ -2763,9 +2789,9 @@ namespace Gum.Wireframe
                 }
                 else
                 {
-
-                    foreach (var element in this.mWhatThisContains)
+                    for(int i = 0; i < mWhatThisContains.Count; i++)
                     {
+                        var element = mWhatThisContains[i];
                         var childLayout = element.GetChildLayoutType(XOrY.Y, this);
                         var considerChild = childLayout == ChildType.Absolute || (considerWrappedStacked && childLayout == ChildType.StackedWrapped);
 
@@ -2948,14 +2974,16 @@ namespace Gum.Wireframe
 
             #endregion
 
+            #region Ratio
             else if (mHeightUnit == DimensionUnitType.Ratio)
             {
                 var heightToSplit = parentHeight;
 
                 if (mParent != null)
                 {
-                    foreach (var child in mParent.Children)
+                    for(int i = 0; i < mParent.Children.Count; i++)
                     {
+                        var child = mParent.Children[i];
                         if (child != this && child is GraphicalUiElement gue)
                         {
                             if (gue.HeightUnits == DimensionUnitType.Absolute || gue.HeightUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
@@ -2979,8 +3007,9 @@ namespace Gum.Wireframe
                 float totalRatio = 0;
                 if (mParent != null)
                 {
-                    foreach (var child in mParent.Children)
+                    for(int i = 0; i < mParent.Children.Count; i++)
                     {
+                        var child = mParent.Children[i];
                         if (child is GraphicalUiElement gue && gue.HeightUnits == DimensionUnitType.Ratio)
                         {
                             totalRatio += gue.Height;
@@ -2996,6 +3025,7 @@ namespace Gum.Wireframe
                     heightToSet = heightToSplit;
                 }
             }
+            #endregion
 
             mContainedObjectAsIpso.Height = heightToSet;
         }
@@ -3009,6 +3039,19 @@ namespace Gum.Wireframe
             if (mWidthUnit == DimensionUnitType.AbsoluteMultipliedByFontScale)
             {
                 widthToSet *= SystemManagers.GlobalFontScale;
+            }
+
+            #endregion
+
+            #region ScreenPixel
+
+            else if (mWidthUnit == DimensionUnitType.ScreenPixel)
+            {
+                var effectiveManagers = this.EffectiveManagers;
+                if (effectiveManagers != null)
+                {
+                    widthToSet /= effectiveManagers.Renderer.Camera.Zoom;
+                }
             }
 
             #endregion
@@ -3070,8 +3113,9 @@ namespace Gum.Wireframe
 #endif
                     }
 
-                    foreach (GraphicalUiElement element in this.Children)
+                    for(int i = 0; i < this.Children.Count; i++)
                     {
+                        var element = this.Children[i] as GraphicalUiElement;
                         var childLayout = element.GetChildLayoutType(XOrY.X, this);
                         var considerChild = childLayout == ChildType.Absolute || (considerWrappedStacked && childLayout == ChildType.StackedWrapped);
 
@@ -3092,8 +3136,9 @@ namespace Gum.Wireframe
                 }
                 else
                 {
-                    foreach (var element in this.mWhatThisContains)
+                    for(int i = 0; i < mWhatThisContains.Count; i++)
                     {
+                        var element = mWhatThisContains[i];
                         var childLayout = element.GetChildLayoutType(XOrY.X, this);
                         var considerChild = childLayout == ChildType.Absolute || (considerWrappedStacked && childLayout == ChildType.StackedWrapped);
 
@@ -3272,8 +3317,9 @@ namespace Gum.Wireframe
 
                 if (mParent != null)
                 {
-                    foreach (var child in mParent.Children)
+                    for(int i = 0; i < mParent.Children.Count; i++)
                     {
+                        var child = mParent.Children[i];
                         if (child != this && child is GraphicalUiElement gue)
                         {
                             if (gue.WidthUnits == DimensionUnitType.Absolute || gue.WidthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
@@ -3297,8 +3343,9 @@ namespace Gum.Wireframe
                 float totalRatio = 0;
                 if (mParent != null)
                 {
-                    foreach (var child in mParent.Children)
+                    for(int i = 0; i < mParent.Children.Count; i++)
                     {
+                        var child = mParent.Children[i];
                         if (child is GraphicalUiElement gue && gue.WidthUnits == DimensionUnitType.Ratio)
                         {
                             totalRatio += gue.Width;
@@ -3857,8 +3904,9 @@ namespace Gum.Wireframe
 
         public IPositionedSizedObject GetChildByName(string name)
         {
-            foreach (IPositionedSizedObject child in Children)
+            for(int i = 0; i < Children.Count; i++)
             {
+                var child = Children[i];
                 if (child.Name == name)
                 {
                     return child;
@@ -3890,6 +3938,12 @@ namespace Gum.Wireframe
             return null;
         }
 
+        /// <summary>
+        /// Sets a variable on this object (such as "X") to the argument value
+        /// (such as 100.0f);
+        /// </summary>
+        /// <param name="propertyName">The name of the variable on this object.</param>
+        /// <param name="value">The value, casted to the correct type.</param>
         public void SetProperty(string propertyName, object value)
         {
 
@@ -4313,7 +4367,6 @@ namespace Gum.Wireframe
                     handled = true;
                 }
             }
-#endif
 
             // If special case didn't work, let's try reflection
             if (!handled)
@@ -4337,6 +4390,7 @@ namespace Gum.Wireframe
                     }
                 }
             }
+#endif
         }
 
 #if MONOGAME || XNA4
@@ -4793,7 +4847,7 @@ namespace Gum.Wireframe
             else if (propertyName == "MaxLettersToShow")
             {
 #if MONOGAME || XNA4
-                ((Text)mContainedObjectAsIpso).MaxLettersToShow = (int)value;
+                ((Text)mContainedObjectAsIpso).MaxLettersToShow = (int?)value;
                 handled = true;
 #endif
             }
@@ -4871,16 +4925,16 @@ namespace Gum.Wireframe
 
             if (this.Children != null)
             {
-                foreach (GraphicalUiElement child in this.Children)
+                for(int i = 0; i < this.Children.Count; i++)
                 {
-                    child.UpdateFontRecursive();
+                    (this.Children[i] as GraphicalUiElement).UpdateFontRecursive();
                 }
             }
             else
             {
-                foreach (GraphicalUiElement child in this.mWhatThisContains)
+                for(int i = 0; i < this.mWhatThisContains.Count; i++)
                 {
-                    child.UpdateFontRecursive();
+                    mWhatThisContains[i].UpdateFontRecursive();
                 }
             }
         }
@@ -4898,17 +4952,15 @@ namespace Gum.Wireframe
 
             //}
             //else
-            if (mContainedObjectAsIpso is Text text)
             {
-                if (!string.IsNullOrEmpty(Font))
+                if (/*FontSize > 0 &&*/ !string.IsNullOrEmpty(Font))
                 {
                     //SKTypeface font = contentLoader.LoadContent<SKTypeface>(Font);
-                    if (font != null)
+                    if (font != null && mContainedObjectAsIpso is Text text)
                     {
                         text.FontName = font;
                     }
                 }
-                text.FontSize = this.FontSize;
             }
         }
 #endif
@@ -5296,6 +5348,11 @@ namespace Gum.Wireframe
         bool mJustChangedFrame;
         bool mJustCycled;
 
+        /// <summary>
+        /// Performs AnimationChain (.achx) animation on this and all children recurisvely.
+        /// This is typically called on the top-level object (usually Screen) when Gum is running
+        /// in a game.
+        /// </summary>
         public void AnimateSelf()
         {
             var shouldAnimateSelf = true;
@@ -5332,8 +5389,9 @@ namespace Gum.Wireframe
             }
             if (Children != null)
             {
-                foreach (var child in this.Children)
+                for(int i = 0; i < this.Children.Count; i++)
                 {
+                    var child = this.Children[i];
                     if (child is GraphicalUiElement childGue)
                     {
                         childGue.AnimateSelf();
@@ -5342,8 +5400,9 @@ namespace Gum.Wireframe
             }
             else
             {
-                foreach (var child in this.mWhatThisContains)
+                for(int i = 0; i < this.mWhatThisContains.Count; i++)
                 {
+                    var child = mWhatThisContains[i];
                     if (child is GraphicalUiElement childGue)
                     {
                         childGue.AnimateSelf();
