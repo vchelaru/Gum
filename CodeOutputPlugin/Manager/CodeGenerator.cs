@@ -2416,7 +2416,15 @@ namespace CodeOutputPlugin.Manager
                 else if (variable.IsState(container, out ElementSave categoryContainer, out StateSaveCategory category))
                 {
                     var containerClassName = GetClassNameForType(categoryContainer.Name, VisualApi.XamarinForms);
-                    return $"{containerClassName}.{category.Name}.{variable.Value}";
+                    if(category == null)
+                    {
+                        return $"{containerClassName}.VariableState.{variable.Value}";
+
+                    }
+                    else
+                    {
+                        return $"{containerClassName}.{category.Name}.{variable.Value}";
+                    }
                 }
                 else
                 {
