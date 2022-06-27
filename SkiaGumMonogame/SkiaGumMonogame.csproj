@@ -44,7 +44,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\GumDataTypes\GumDataTypesStandard.csproj" />
-    <ProjectReference Include="..\GumRuntime\GumRuntime.csproj" />
+    <ProjectReference Include="..\GumRuntimeStandard\GumRuntimeStandard\GumRuntimeStandard.csproj" />
     <ProjectReference Include="..\ToolsUtilities\ToolsUtilitiesStandard.csproj" />
   </ItemGroup>
 

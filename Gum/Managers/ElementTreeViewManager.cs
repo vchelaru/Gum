@@ -1333,6 +1333,10 @@ namespace Gum.Managers
                 {
                     nodeForInstance = AddTreeNodeForInstance(instance, node);
                 }
+                if (instance.DefinedByBase)
+                {
+                    nodeForInstance.ImageIndex = DerivedInstanceImageIndex;
+                }
                 // screens have to worry about siblings and lists. We don't care about that here because behaviors do not
                 // (currently) require instances to have a particular relationship with one another
             }
