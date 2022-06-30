@@ -74,7 +74,7 @@ namespace CodeOutputPlugin
             this.CategoryDelete += (category) => HandleRefreshAndExport();
             this.VariableRemovedFromCategory += (name, category) => HandleRefreshAndExport();
 
-            this.AddAndRemoveVariablesForType += HandleAddAndRemoveVariablesForType;
+            this.AddAndRemoveVariablesForType += CustomVariableManager.HandleAddAndRemoveVariablesForType;
             this.ProjectLoad += HandleProjectLoaded;
         }
 
@@ -82,7 +82,7 @@ namespace CodeOutputPlugin
         private void HandleProjectLoaded(GumProjectSave project)
         {
             codeOutputProjectSettings = CodeOutputProjectSettingsManager.CreateOrLoadSettingsForProject();
-
+            viewModel.IsCodeGenPluginEnabled = codeOutputProjectSettings.IsCodeGenPluginEnabled;
             HandleElementSelected(null);
         }
 
@@ -173,12 +173,6 @@ namespace CodeOutputPlugin
 
         }
 
-        private void HandleAddAndRemoveVariablesForType(string type, StateSave stateSave)
-        {
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Category = "Xamarin Forms", Value = false, Name = "IsXamarinFormsControl"});
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Category = "Xamarin Forms", Value = false, Name = "IsOverrideInCodeGen"});
-
-        }
 
         private void RefreshCodeDisplay()
         {
@@ -242,7 +236,7 @@ namespace CodeOutputPlugin
             control.CodeOutputSettingsPropertyChanged += (not, used) => HandleCodeOutputPropertyChanged();
             control.GenerateCodeClicked += (not, used) => HandleGenerateCodeButtonClicked();
             control.GenerateAllCodeClicked += (not, used) => HandleGenerateAllCodeButtonClicked();
-            viewModel.PropertyChanged += (not, used) => RefreshCodeDisplay();
+            viewModel.PropertyChanged += (sender, args) => HandleMainViewModelPropertyChanged(args.PropertyName);
 
             control.DataContext = viewModel;
 
@@ -250,6 +244,21 @@ namespace CodeOutputPlugin
             // Eventually we want this to be done with a single call but I don't know if there's Gum
             // support for it yet
             GumCommands.Self.GuiCommands.AddControl(control, "Code", TabLocation.RightBottom);
+        }
+
+        private void HandleMainViewModelPropertyChanged(string propertyName)
+        {
+            switch(propertyName)
+            {
+                case nameof(viewModel.IsCodeGenPluginEnabled):
+                    codeOutputProjectSettings.IsCodeGenPluginEnabled = viewModel.IsCodeGenPluginEnabled;
+                    CodeOutputProjectSettingsManager.WriteSettingsForProject(codeOutputProjectSettings);
+
+                    break;
+                default:
+                    RefreshCodeDisplay();
+                    break;
+            }
         }
 
         private void HandleCodeOutputPropertyChanged()

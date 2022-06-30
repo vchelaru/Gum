@@ -320,30 +320,17 @@ namespace Gum.Plugins.BaseClasses
 
         public void CallAddAndRemoveVariablesForType(string type, StateSave standardDefaultStateSave)
         {
-            if (AddAndRemoveVariablesForType != null)
-            {
-                AddAndRemoveVariablesForType(type, standardDefaultStateSave);
-            }
-
+            AddAndRemoveVariablesForType?.Invoke(type, standardDefaultStateSave);
         }
 
         public void CallElementSelected(ElementSave element)
         {
-            if (ElementSelected != null)
-            {
-                ElementSelected(element);
-            }
+            ElementSelected?.Invoke(element);
         }
 
-        public void CallTreeNodeSelected(TreeNode treeNode)
-        {
-            TreeNodeSelected?.Invoke(treeNode);
-        }
+        public void CallTreeNodeSelected(TreeNode treeNode) => TreeNodeSelected?.Invoke(treeNode);
 
-        public void CallStateWindowTreeNodeSelected(TreeNode treeNode)
-        {
-            StateWindowTreeNodeSelected?.Invoke(treeNode);
-        }
+        public void CallStateWindowTreeNodeSelected(TreeNode treeNode) => StateWindowTreeNodeSelected?.Invoke(treeNode);
 
         public void CallBehaviorSelected(BehaviorSave behavior)
         {

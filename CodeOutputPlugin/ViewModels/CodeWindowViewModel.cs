@@ -21,6 +21,12 @@ namespace CodeOutputPlugin.ViewModels
             set => Set(value);
         }
 
+        public bool IsCodeGenPluginEnabled
+        {
+            get => Get<bool>();
+            set => Set(value);
+        }
+
         [DependsOn(nameof(WhatToView))]
         public bool IsSelectedObjectSelected
         {

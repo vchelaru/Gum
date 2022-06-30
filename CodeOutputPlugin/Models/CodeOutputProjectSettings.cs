@@ -35,6 +35,7 @@ using SkiaGum.Renderables;
 
         public string RootNamespace { get; set; }
 
+        public bool IsCodeGenPluginEnabled { get; set; }
 
         /// <summary>
         /// For XamarinForms this would be the base screen type like

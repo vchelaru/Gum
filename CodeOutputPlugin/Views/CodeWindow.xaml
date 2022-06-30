@@ -16,9 +16,13 @@
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"></RowDefinition>
+                <RowDefinition Height="Auto"></RowDefinition>
                 <RowDefinition Height="*"></RowDefinition>
             </Grid.RowDefinitions>
-            <Grid>
+            <CheckBox VerticalContentAlignment="Center" IsChecked="{Binding IsCodeGenPluginEnabled}">
+                Is CodeGen Plugin Enabled
+            </CheckBox>
+            <Grid Grid.Row="1">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"></ColumnDefinition>
                     <ColumnDefinition></ColumnDefinition>
@@ -31,7 +35,7 @@
                     <RadioButton VerticalContentAlignment="Center" IsChecked="{Binding IsSelectedStateSelected}">Selected State</RadioButton>
                 </StackPanel>
             </Grid>
-            <TextBox x:Name="TextBoxInstance" ScrollViewer.VerticalScrollBarVisibility="Auto" Grid.Row="1" Text="{Binding Code}"></TextBox>
+            <TextBox x:Name="TextBoxInstance" ScrollViewer.VerticalScrollBarVisibility="Auto" Grid.Row="2" Text="{Binding Code}"></TextBox>
         </Grid>
         <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" />
         <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">

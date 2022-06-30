@@ -90,13 +90,7 @@ namespace Gum.Managers
             }
         }
 
-        public Dictionary<string, StateSave> DefaultStates
-        {
-            get
-            {
-                return mDefaults;
-            }
-        }
+        public Dictionary<string, StateSave> DefaultStates => mDefaults;
 
         #endregion
 
@@ -121,7 +115,7 @@ namespace Gum.Managers
                 var stateSave = new StateSave();
                 stateSave.Name = "Default";
 
-                AddPositioningVariables(stateSave, includeBaseline:true);
+                AddPositioningVariables(stateSave, includeBaseline: true);
 
                 AddDimensionsVariables(stateSave, 100, 50, DimensionVariableAction.ExcludeFileOptions);
 
@@ -148,7 +142,7 @@ namespace Gum.Managers
                 // font:
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "UseCustomFont", Category = "Font" });
 
-                var fontVariable = new VariableSave { SetsValue = true, Type = "string", Value = "Arial", Name = "Font", IsFont = true, Category = "Font"};
+                var fontVariable = new VariableSave { SetsValue = true, Type = "string", Value = "Arial", Name = "Font", IsFont = true, Category = "Font" };
                 fontVariable.PropertiesToSetOnDisplayer["IsEditable"] = true;
                 stateSave.Variables.Add(fontVariable);
 
@@ -167,10 +161,6 @@ namespace Gum.Managers
                 AddStateVariable(stateSave);
 
                 AddColorVariables(stateSave, includeAlpha: true);
-
-#if GUM
-                PluginManager.Self.ModifyDefaultStandardState("Text", stateSave);
-#endif
 
                 ApplySortValuesFromOrderInState(stateSave);
 
@@ -193,7 +183,7 @@ namespace Gum.Managers
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Category = "Animation", Name = "Animate" });
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = null, Category = "Animation", Name = "CurrentChainName" });
-                
+
 
                 stateSave.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation" });
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Category = "Flip and Rotation", Name = "FlipHorizontal" });
@@ -222,9 +212,7 @@ namespace Gum.Managers
 
                 List<string> list = new List<string>();
                 stateSave.VariableLists.Add(new VariableListSave<string> { Type = "string", Value = list, Category = "Animation", Name = "AnimationFrames" });
-#if GUM
-                PluginManager.Self.ModifyDefaultStandardState("Sprite", stateSave);
-#endif
+
                 ApplySortValuesFromOrderInState(stateSave);
 
 
@@ -244,9 +232,16 @@ namespace Gum.Managers
 
                 AddDimensionsVariables(stateSave, 150, 150, DimensionVariableAction.ExcludeFileOptions);
 
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Category = "Children", Type = "string", Value = null, Name = "Contained Type"
+                stateSave.Variables.Add(new VariableSave
+                {
+                    SetsValue = true,
+                    Category = "Children",
+                    Type = "string",
+                    Value = null,
+                    Name = "Contained Type"
 #if GUM
-                    , CustomTypeConverter = new AvailableContainedTypeConverter()
+                    ,
+                    CustomTypeConverter = new AvailableContainedTypeConverter()
 #endif
                 });
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Category = "Children", Type = "ChildrenLayout", Value = ChildrenLayout.Regular, Name = "Children Layout" });
@@ -261,9 +256,7 @@ namespace Gum.Managers
 
                 AddEventVariables(stateSave, defaultHasEvents: true);
 
-#if GUM
-                PluginManager.Self.ModifyDefaultStandardState("Container", stateSave);
-#endif
+
                 ApplySortValuesFromOrderInState(stateSave);
 
                 mDefaults.Add("Container", stateSave);
@@ -293,9 +286,6 @@ namespace Gum.Managers
 
                 AddStateVariable(stateSave);
 
-#if GUM
-                PluginManager.Self.ModifyDefaultStandardState("ColoredRectangle", stateSave);
-#endif
                 ApplySortValuesFromOrderInState(stateSave);
 
                 mDefaults.Add("ColoredRectangle", stateSave);
@@ -329,9 +319,6 @@ namespace Gum.Managers
 
                 AddStateVariable(stateSave);
 
-#if GUM
-                PluginManager.Self.ModifyDefaultStandardState("Circle", stateSave);
-#endif
                 ApplySortValuesFromOrderInState(stateSave);
 
                 mDefaults.Add("Circle", stateSave);
@@ -359,9 +346,6 @@ namespace Gum.Managers
 
                 AddStateVariable(stateSave);
 
-#if GUM
-                PluginManager.Self.ModifyDefaultStandardState("Rectangle", stateSave);
-#endif
                 ApplySortValuesFromOrderInState(stateSave);
 
                 mDefaults.Add("Rectangle", stateSave);
@@ -376,7 +360,7 @@ namespace Gum.Managers
                 var stateSave = new StateSave();
                 stateSave.Name = "Default";
 
-                AddPositioningVariables(stateSave, addOriginVariables:false);
+                AddPositioningVariables(stateSave, addOriginVariables: false);
 
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
                 AddColorVariables(stateSave, true);
@@ -397,9 +381,6 @@ namespace Gum.Managers
 
                 AddStateVariable(stateSave);
 
-#if GUM
-                PluginManager.Self.ModifyDefaultStandardState("Polygon", stateSave);
-#endif
 
                 ApplySortValuesFromOrderInState(stateSave);
 
@@ -438,10 +419,6 @@ namespace Gum.Managers
                 stateSave.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation" });
 
 
-#if GUM
-
-                PluginManager.Self.ModifyDefaultStandardState("NineSlice", stateSave);
-#endif
                 ApplySortValuesFromOrderInState(stateSave);
 
                 mDefaults.Add("NineSlice", stateSave);
@@ -454,9 +431,7 @@ namespace Gum.Managers
                 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                 var stateSave = new StateSave();
                 stateSave.Name = "Default";
-#if GUM
-                PluginManager.Self.ModifyDefaultStandardState("Component", stateSave);
-#endif
+
 
 #if GUM
                 // Victor Chelaru
@@ -487,9 +462,6 @@ namespace Gum.Managers
                 stateSave.Name = "Default";
 
 
-#if GUM
-                PluginManager.Self.ModifyDefaultStandardState("Screen", stateSave);
-#endif
 
                 ApplySortValuesFromOrderInState(stateSave);
 
@@ -497,6 +469,8 @@ namespace Gum.Managers
                 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             }
 
+            RefreshStateVariablesThroughPlugins();
+            
             // We shouldn't do this because states above may explicitly not want to set values - like the variable for state
             //foreach (var defaultState in mDefaults.Values)
             //{
@@ -505,6 +479,16 @@ namespace Gum.Managers
             //        variable.SetsValue = true;
             //    }
             //}
+        }
+
+        public void RefreshStateVariablesThroughPlugins()
+        {
+#if GUM
+            foreach (var kvp in DefaultStates)
+            {
+                PluginManager.Self.ModifyDefaultStandardState(kvp.Key, kvp.Value);
+            }
+#endif
         }
 
         private void AddEventVariables(StateSave stateSave, bool defaultHasEvents = false)

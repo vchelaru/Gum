@@ -690,14 +690,7 @@ namespace Gum.Plugins
 
         internal void ModifyDefaultStandardState(string type, StateSave stateSave)
         {
-            CallMethodOnPlugin(
-                delegate(PluginBase plugin)
-                {
-                    plugin.CallAddAndRemoveVariablesForType(type, stateSave);
-
-                },
-                "ModifyDefaultStandardState"
-                );
+            CallMethodOnPlugin(plugin => plugin.CallAddAndRemoveVariablesForType(type, stateSave));
         }
 
         /// <summary>
@@ -706,143 +699,61 @@ namespace Gum.Plugins
         /// </summary>
         /// <param name="window">The window to modify.</param>
         /// <param name="objectToDelete">The object that may be deleted, which could be any Gum type.</param>
-        internal void ShowDeleteDialog(DeleteOptionsWindow window, object objectToDelete)
-        {
-            CallMethodOnPlugin(
-                delegate(PluginBase plugin)
-                {
-                    plugin.CallDeleteOptionsWindowShow(window, objectToDelete);
-                    
-                },
-                nameof(ShowDeleteDialog)
-                );
-        }
+        internal void ShowDeleteDialog(DeleteOptionsWindow window, object objectToDelete) =>
+            CallMethodOnPlugin(plugin => plugin.CallDeleteOptionsWindowShow(window, objectToDelete));
 
-        internal void DeleteConfirm(DeleteOptionsWindow window, object objectToDelete)
-        {
-            CallMethodOnPlugin(
-                delegate(PluginBase plugin)
-                {
-                    plugin.CallDeleteConfirm(window, objectToDelete);
-                },
-                "ConfirmDelete"
-                );
-        }
+        internal void DeleteConfirm(DeleteOptionsWindow window, object objectToDelete) => 
+            CallMethodOnPlugin(plugin => plugin.CallDeleteConfirm(window, objectToDelete));
 
-        internal void ElementRename(ElementSave elementSave, string oldName)
-        {
-            CallMethodOnPlugin(
-                (PluginBase plugin) => plugin.CallElementRename(elementSave, oldName), 
-                nameof(ElementRename));
-        }
+        internal void ElementRename(ElementSave elementSave, string oldName) =>
+            CallMethodOnPlugin(plugin => plugin.CallElementRename(elementSave, oldName));
 
-        internal void ElementAdd(ElementSave element)
-        {
-            CallMethodOnPlugin(
-                delegate (PluginBase plugin)
-                {
-                    plugin.CallElementAdd(element);
-                },
-                nameof(ElementAdd)
-                );
-        }
+        internal void ElementAdd(ElementSave element) =>
+            CallMethodOnPlugin(plugin => plugin.CallElementAdd(element));
 
-        internal void ElementDelete(ElementSave element)
-        {
-            CallMethodOnPlugin(
-                (plugin) => plugin.CallElementDelete(element),
-                nameof(ElementDelete)
-                );
-        }
+        internal void ElementDelete(ElementSave element) =>
+            CallMethodOnPlugin(plugin => plugin.CallElementDelete(element));
 
-        internal void ElementDuplicate(ElementSave oldElement, ElementSave newElement)
-        {
-            CallMethodOnPlugin(
-                (plugin) => plugin.CallElementDuplicate(oldElement, newElement),
-                nameof(ElementDuplicate)
-                );
-        }
+        internal void ElementDuplicate(ElementSave oldElement, ElementSave newElement) =>
+            CallMethodOnPlugin(plugin => plugin.CallElementDuplicate(oldElement, newElement));
 
-        internal void StateRename(StateSave stateSave, string oldName)
-        {
-            CallMethodOnPlugin(
-                delegate (PluginBase plugin)
-                {
-                    plugin.CallStateRename(stateSave, oldName);
-                },
-                nameof(StateRename)
-                );
-        }
+        internal void StateRename(StateSave stateSave, string oldName) => 
+            CallMethodOnPlugin(plugin => plugin.CallStateRename(stateSave, oldName));
 
-        internal void StateAdd(StateSave stateSave)
-        {
-            CallMethodOnPlugin((plugin) => plugin.CallStateAdd(stateSave),
-                nameof(StateAdd));
-        }
+        internal void StateAdd(StateSave stateSave) =>
+            CallMethodOnPlugin((plugin) => plugin.CallStateAdd(stateSave));
 
-        internal void StateDelete(StateSave stateSave)
-        {
-            CallMethodOnPlugin((plugin) => plugin.CallStateDelete(stateSave),
-                nameof(StateAdd));
-        }
+        internal void StateDelete(StateSave stateSave) =>
+            CallMethodOnPlugin((plugin) => plugin.CallStateDelete(stateSave));
 
-        internal void CategoryRename(StateSaveCategory category, string oldName)
-        {
-            CallMethodOnPlugin((plugin) => plugin.CallStateCategoryRename(category, oldName),
-                nameof(CategoryRename)
-                );
-        }
+        internal void CategoryRename(StateSaveCategory category, string oldName) =>
+            CallMethodOnPlugin((plugin) => plugin.CallStateCategoryRename(category, oldName));
 
-        internal void CategoryAdd(StateSaveCategory category)
-        {
-            CallMethodOnPlugin((plugin) => plugin.CallStateCategoryAdd(category),
-                nameof(CategoryAdd)
-                );
-        }
+        internal void CategoryAdd(StateSaveCategory category) =>
+            CallMethodOnPlugin((plugin) => plugin.CallStateCategoryAdd(category));
 
-        internal void CategoryDelete(StateSaveCategory category)
-        {
-            CallMethodOnPlugin((plugin) => plugin.CallStateCategoryDelete(category),
-                nameof(CategoryDelete)
-                );
-        }
+        internal void CategoryDelete(StateSaveCategory category) =>
+            CallMethodOnPlugin((plugin) => plugin.CallStateCategoryDelete(category));
 
-        internal void VariableAdd(ElementSave elementSave, string variableName)
-        {
-            CallMethodOnPlugin((plugin) => plugin.CallVariableAdd(elementSave, variableName),
-                nameof(VariableAdd));
-        }
+        internal void VariableAdd(ElementSave elementSave, string variableName) =>
+            CallMethodOnPlugin((plugin) => plugin.CallVariableAdd(elementSave, variableName));
 
-        internal void VariableDelete(ElementSave elementSave, string variableName)
-        {
-            CallMethodOnPlugin((plugin) => plugin.CallVariableDelete(elementSave, variableName),
-                nameof(VariableDelete));
-        }
+        internal void VariableDelete(ElementSave elementSave, string variableName) =>
+            CallMethodOnPlugin(plugin => plugin.CallVariableDelete(elementSave, variableName));
 
-        internal void VariableSet(ElementSave parentElement, InstanceSave instance, string changedMember, object oldValue)
-        {
-            CallMethodOnPlugin((plugin) => plugin.CallVariableSet(parentElement, instance, changedMember, oldValue),
-                nameof(VariableSet)
-            );
+        internal void VariableSet(ElementSave parentElement, InstanceSave instance, string changedMember, object oldValue) =>
+            CallMethodOnPlugin(plugin => plugin.CallVariableSet(parentElement, instance, changedMember, oldValue));
 
-        }
-
-        internal void VariableRemovedFromCategory(string variableName, StateSaveCategory category)
-        {
-            CallMethodOnPlugin((plugin) => plugin.CallVariableRemovedFromCategory(variableName, category),
-                nameof(VariableRemovedFromCategory)
-                );
-        }
+        internal void VariableRemovedFromCategory(string variableName, StateSaveCategory category) =>
+            CallMethodOnPlugin((plugin) => plugin.CallVariableRemovedFromCategory(variableName, category));
 
         internal void InstanceRename(ElementSave element, InstanceSave instanceSave, string oldName)
         {
             CallMethodOnPlugin(
-                delegate (PluginBase plugin)
+                (PluginBase plugin) =>
                 {
                     plugin.CallInstanceRename(element, instanceSave, oldName);
-                },
-                nameof(InstanceRename)
-                );
+                });
 
         }
 
@@ -852,34 +763,12 @@ namespace Gum.Plugins
                 delegate(PluginBase plugin)
                 {
                     plugin.CallGuidesChanged();
-                },
-                nameof(GuidesChanged)
+                }
             );
         }
 
-        internal void ProjectLoad(GumProjectSave newlyLoadedProject)
-        {
-
-            foreach (var plugin in this.Plugins)
-            {
-                PluginContainer container = this.PluginContainers[plugin];
-
-                if (container.IsEnabled)
-                {
-                    try
-                    {
-                        plugin.CallProjectLoad(newlyLoadedProject);
-                    }
-                    catch (Exception e)
-                    {
-#if DEBUG
-                        MessageBox.Show("Error in plugin " + plugin.FriendlyName + ":\n\n" + e.ToString());
-#endif
-                        container.Fail(e, "Failed in ProjectLoad");
-                    }
-                }
-            }
-        }
+        internal void ProjectLoad(GumProjectSave newlyLoadedProject) =>
+            CallMethodOnPlugin(plugin => plugin.CallProjectLoad(newlyLoadedProject));
 
         internal void ProjectSave(GumProjectSave savedProject)
         {
@@ -920,29 +809,14 @@ namespace Gum.Plugins
         }
 
 
-        internal void ElementSelected(ElementSave elementSave)
-        {
-            CallMethodOnPlugin(
-                (plugin) => plugin.CallElementSelected(elementSave),
-                nameof(ElementSelected)
-            );
+        internal void ElementSelected(ElementSave elementSave) =>
+            CallMethodOnPlugin(plugin => plugin.CallElementSelected(elementSave));
 
-        }
+        internal void TreeNodeSelected(TreeNode treeNode) =>
+            CallMethodOnPlugin(plugin => plugin.CallTreeNodeSelected(treeNode));
 
-        internal void TreeNodeSelected(TreeNode treeNode)
-        {
-            CallMethodOnPlugin(
-                (plugin) => plugin.CallTreeNodeSelected(treeNode),
-                nameof(TreeNodeSelected)
-                );
-        }
-
-        internal void StateWindowTreeNodeSelected(TreeNode treeNode)
-        {
-            CallMethodOnPlugin(
-                (plugin) => plugin.CallStateWindowTreeNodeSelected(treeNode),
-                nameof(StateWindowTreeNodeSelected));
-        }
+        internal void StateWindowTreeNodeSelected(TreeNode treeNode) =>
+            CallMethodOnPlugin(plugin => plugin.CallStateWindowTreeNodeSelected(treeNode));
 
         internal void BehaviorSelected(BehaviorSave behaviorSave)
         {

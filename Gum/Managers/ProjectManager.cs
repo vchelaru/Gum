@@ -217,6 +217,8 @@ namespace Gum
 
                 PluginManager.Self.ProjectLoad(mGumProjectSave);
 
+                StandardElementsManager.Self.RefreshStateVariablesThroughPlugins();
+
                 if (wasModified)
                 {
                     ProjectManager.Self.SaveProject(forceSaveContainedElements:true);
