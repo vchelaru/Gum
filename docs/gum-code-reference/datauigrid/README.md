@@ -47,6 +47,3 @@ This will produce a grid which looks like this:
 
 ![](<../../.gitbook/assets/WpfDataUiGrid (1).png>)
 
-## DataUiGrid Members
-
-* [WpfDataUi.DataUiGrid.Categories](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Code%20Reference/WpfDataUi.DataUiGrid.Categories)
