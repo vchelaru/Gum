@@ -265,7 +265,7 @@ namespace ToolsUtilities
                         return "";
                     }
 
-                    if (i < fileName.Length + 1 && (fileName[i + 1] == '/' || fileName[i + 1] == '\\'))
+                    if (i < fileName.Length - 1 && (fileName[i + 1] == '/' || fileName[i + 1] == '\\'))
                     {
                         hasDotSlash = true;
                     }
