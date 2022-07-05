@@ -59,8 +59,8 @@
 * [Gum Code Reference](gum-code-reference/README.md)
   * [Running from Source](gum-code-reference/running-from-source.md)
   * [Gum Class Overview](gum-code-reference/gum-class-overview.md)
-  * [Categories](gum-code-reference/categories.md)
-  * [DataUiGrid](gum-code-reference/datauigrid.md)
+  * [DataUiGrid](gum-code-reference/datauigrid/README.md)
+    * [Categories](gum-code-reference/datauigrid/categories.md)
   * [GetAbsoluteX](gum-code-reference/getabsolutex.md)
   * [GetAbsoluteY](gum-code-reference/getabsolutey.md)
   * [GraphicalUiElement](gum-code-reference/graphicaluielement.md)
@@ -76,4 +76,3 @@
 * [Introduction](skiagum/introduction.md)
 * [Setup](skiagum/setup/README.md)
   * [WPF](skiagum/setup/wpf.md)
-
