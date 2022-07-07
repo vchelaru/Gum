@@ -1435,6 +1435,10 @@ namespace CodeOutputPlugin.Manager
                 {
                     multiple = "RenderingLibrary.SystemManagers.GlobalFontScale";
                 }
+                if (AdjustPixelValuesForDensity)
+                {
+                    multiple += "/Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density";
+                }
                 stringBuilder.AppendLine(
                     $"{codePrefix}.WidthRequest = {width.ToString(CultureInfo.InvariantCulture)}f * {multiple};");
             }
@@ -1450,6 +1454,10 @@ namespace CodeOutputPlugin.Manager
                 if(heightUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
                 {
                     multiple = "RenderingLibrary.SystemManagers.GlobalFontScale";
+                }
+                if(AdjustPixelValuesForDensity)
+                {
+                    multiple += "/Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density";
                 }
 
                 stringBuilder.AppendLine(

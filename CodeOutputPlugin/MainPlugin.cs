@@ -90,7 +90,7 @@ namespace CodeOutputPlugin
         {
             if (control != null)
             {
-                LoadCodeSettingsFile();
+                LoadCodeSettingsFile(GumState.Self.SelectedState.SelectedElement);
 
                 RefreshCodeDisplay();
             }
@@ -100,7 +100,7 @@ namespace CodeOutputPlugin
         {
             if(control != null)
             {
-                LoadCodeSettingsFile();
+                LoadCodeSettingsFile(GumState.Self.SelectedState.SelectedElement);
 
                 RefreshCodeDisplay();
             }
@@ -110,15 +110,14 @@ namespace CodeOutputPlugin
         {
             if (control != null)
             {
-                LoadCodeSettingsFile();
+                LoadCodeSettingsFile(element);
 
                 RefreshCodeDisplay();
             }
         }
 
-        private void LoadCodeSettingsFile()
+        private void LoadCodeSettingsFile(ElementSave element)
         {
-            var element = SelectedState.Self.SelectedElement;
             if(element != null)
             {
                 control.CodeOutputElementSettings = CodeOutputElementSettingsManager.LoadOrCreateSettingsFor(element);
@@ -167,7 +166,7 @@ namespace CodeOutputPlugin
         {
             //GumCommands.Self.GuiCommands.ShowControl(control);
 
-            LoadCodeSettingsFile();
+            LoadCodeSettingsFile(GumState.Self.SelectedState.SelectedElement);
 
             RefreshCodeDisplay();
 
@@ -378,13 +377,21 @@ namespace CodeOutputPlugin
                         generatedFileName = GumState.Self.ProjectState.ProjectDirectory + generatedFileName;
                     }
                     generatedFileName = FileManager.RemoveDotDotSlash(generatedFileName);
-                    var splitFileWithoutGenerated = generatedFileName.Split('.').ToArray();
-                    var customCodeFileName = string.Join("\\", splitFileWithoutGenerated.Take(splitFileWithoutGenerated.Length - 2)) + ".cs";
 
+                    // nope! This strips out periods in folders. We don't want to do that:
+                    //var splitFileWithoutGenerated = generatedFileName.Split('.').ToArray();
+                    //var customCodeFileName = string.Join("\\", splitFileWithoutGenerated.Take(splitFileWithoutGenerated.Length - 2)) + ".cs";
+                    // Instead, just strip it off the end:
+                    var customCodeFileName = generatedFileName.Substring(0, generatedFileName.Length - ".Generated.cs".Length) + ".cs";
 
                     // todo - only save this if it doesn't already exist
                     if (!System.IO.File.Exists(customCodeFileName))
                     {
+                        var directory = FileManager.GetDirectory(customCodeFileName);
+                        if(!System.IO.Directory.Exists(directory))
+                        {
+                            System.IO.Directory.CreateDirectory(directory);
+                        }
                         var customCodeContents = CustomCodeGenerator.GetCustomCodeForElement(selectedElement, elementSettings, codeOutputProjectSettings);
                         System.IO.File.WriteAllText(customCodeFileName, customCodeContents);
                     }

@@ -135,6 +135,8 @@ namespace SkiaGum.Renderables
 
         public bool Wrap => false;
 
+        protected bool CanRenderAt0Dimension { get; set; } = false;
+        protected bool IsOffsetAppliedForStroke { get; set; } = true;
 
         public ColorOperation ColorOperation { get; set; } = ColorOperation.Modulate;
 
@@ -261,7 +263,10 @@ namespace SkiaGum.Renderables
 
         public void Render(SKCanvas canvas)
         {
-            if (AbsoluteVisible && Width > 0 && Height > 0)
+            var canRender =
+                AbsoluteVisible &&
+                    ((Width > 0 && Height > 0) || CanRenderAt0Dimension);
+            if (canRender)
             {
                 var absoluteX = this.GetAbsoluteX();
                 var absoluteY = this.GetAbsoluteY();
@@ -288,7 +293,7 @@ namespace SkiaGum.Renderables
                 // If this is stroke-only, then the stroke is centered around the bounds 
                 // we pass in. Therefore, we need to move the bounds "in" by half of the 
                 // stroke width
-                if (IsFilled == false)
+                if (IsFilled == false && IsOffsetAppliedForStroke)
                 {
                     boundingRect.Left += StrokeWidth / 2.0f;
                     boundingRect.Top += StrokeWidth / 2.0f;

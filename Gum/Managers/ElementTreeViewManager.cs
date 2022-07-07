@@ -856,9 +856,11 @@ namespace Gum.Managers
 
             #region Update the nodes
 
-            foreach (TreeNode treeNode in mScreensTreeNode.Nodes)
+            System.Collections.IList list = mScreensTreeNode.Nodes;
+            for (int i = 0; i < list.Count; i++)
             {
-                RefreshUi(treeNode);
+                object treeNode = list[i];
+                RefreshUi(treeNode as TreeNode);
             }
 
             foreach (TreeNode treeNode in mComponentsTreeNode.Nodes)
