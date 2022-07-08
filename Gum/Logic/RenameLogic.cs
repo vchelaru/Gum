@@ -124,6 +124,13 @@ namespace Gum.Logic
                 foreach (var screen in ProjectState.Self.GumProjectSave.Screens)
                 {
                     bool shouldSave = false;
+
+                    if (screen.BaseType == oldName)
+                    {
+                        screen.BaseType = elementSave.Name;
+                        shouldSave = true;
+                    }
+
                     foreach (var instanceInScreen in screen.Instances)
                     {
                         if (instanceInScreen.BaseType == oldName)
