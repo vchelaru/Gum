@@ -107,11 +107,25 @@ namespace SkiaGum.Wpf
             GraphicalUiElement.CanvasHeight = info.Height / SystemManagers.Renderer.Camera.Zoom;
             //SystemManagers.Renderer.Camera.Zoom = GlobalScale;
 
+            ForceGumLayout();
+
             SystemManagers.Renderer.Draw(this.GumElementsInternal, SystemManagers);
 
             base.OnPaintSurface(args);
         }
 
         void ISystemManagers.InvalidateSurface() => base.InvalidateVisual();
+
+        public void ForceGumLayout()
+        {
+            var wasSuspended = GraphicalUiElement.IsAllLayoutSuspended;
+            GraphicalUiElement.IsAllLayoutSuspended = false;
+            foreach (var item in this.GumElementsInternal)
+            {
+                item.UpdateLayout();
+            }
+            GraphicalUiElement.IsAllLayoutSuspended = wasSuspended;
+        }
+
     }
 }

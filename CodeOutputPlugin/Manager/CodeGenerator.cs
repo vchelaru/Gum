@@ -1559,6 +1559,16 @@ namespace CodeOutputPlugin.Manager
                     }
                 }
             }
+            if(yUnits == PositionUnitType.PixelsFromCenterY &&
+                yOrigin == VerticalAlignment.Center)
+            {
+                if(heightUnits == DimensionUnitType.RelativeToContainer)
+                {
+                    topMargin = y - height / 2.0f;
+                    bottomMargin = -y - height / 2.0f;
+                }
+                // else - should we copy the code above for width units?
+            }
 
             #endregion
 

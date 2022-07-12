@@ -33,6 +33,7 @@ namespace SkiaGum
         SystemManagers SystemManagers;
 
         public SemaphoreSlim ExclusiveUiInteractionSemaphore = new SemaphoreSlim(1, 1);
+        public string SemaphoreTag = "GumSemaphore";
 
         float yPushed;
         bool isWithinThreshold = false;
@@ -66,6 +67,15 @@ namespace SkiaGum
             base.Touch += HandleTouch;
         }
 
+        public async Task<bool> CanProceed()
+        {
+            var canProceed = await ExclusiveUiInteractionSemaphore.WaitAsync(0);
+            var tag = SemaphoreTag;
+            return canProceed;
+        }
+
+        int ReleaseSemaphore(int count = 1) => ExclusiveUiInteractionSemaphore.Release(count);
+
         #region Touch-related Logic
 
         protected virtual async void HandleTouch(object sender, SKTouchEventArgs args)
@@ -94,9 +104,7 @@ namespace SkiaGum
 
                     if (customPushEventToRaise != null)
                     {
-                        var canProceed = await ExclusiveUiInteractionSemaphore.WaitAsync(0);
-
-                        if (canProceed)
+                        if (await CanProceed())
                         {
                             try
                             {
@@ -104,22 +112,20 @@ namespace SkiaGum
                             }
                             finally
                             {
-                                ExclusiveUiInteractionSemaphore.Release(1);
+                                ReleaseSemaphore();
                             }
                         }
                     }
                     else
                     {
-                        var canProceed = await ExclusiveUiInteractionSemaphore.WaitAsync(0);
-
-                        if (canProceed)
+                        if (await CanProceed())
                         {
                             elementPushed = FindElement(touchX, touchY, GumElementsInternal, item => item.ClickedAsync != null || item.DragAsync != null);
                             if (elementPushed != null)
                             {
                                 DarkenElement(elementPushed);
                             }
-                            ExclusiveUiInteractionSemaphore.Release(1);
+                            ReleaseSemaphore();
                         }
 
                         await TryPushOnContainedGumObjects(touchX, touchY);
@@ -159,9 +165,7 @@ namespace SkiaGum
                     {
                         if (customReleaseEventToRaise != null)
                         {
-                            var canProceed = await ExclusiveUiInteractionSemaphore.WaitAsync(0);
-
-                            if (canProceed)
+                            if (await CanProceed())
                             {
                                 try
                                 {
@@ -169,7 +173,7 @@ namespace SkiaGum
                                 }
                                 finally
                                 {
-                                    ExclusiveUiInteractionSemaphore.Release(1);
+                                    ReleaseSemaphore();
                                 }
                             }
                         }
@@ -182,9 +186,7 @@ namespace SkiaGum
                             }
                             if (customTouchEvent != null)
                             {
-                                var canProceed = await ExclusiveUiInteractionSemaphore.WaitAsync(0);
-
-                                if (canProceed)
+                                if (await CanProceed())
                                 {
                                     try
                                     {
@@ -192,10 +194,24 @@ namespace SkiaGum
                                     }
                                     finally
                                     {
-                                        ExclusiveUiInteractionSemaphore.Release(1);
+                                        ReleaseSemaphore();
                                     }
                                 }
                             }
+
+
+                            if (elementPushed?.ReleasedIfPushed != null && await CanProceed())
+                            {
+                                try
+                                {
+                                    await elementPushed?.ReleasedIfPushed();
+                                }
+                                finally
+                                {
+                                    ReleaseSemaphore();
+                                }
+                            }
+
 
                             await TryClickOnContainedGumObjects(touchX, touchY);
                         }
@@ -231,9 +247,7 @@ namespace SkiaGum
 
             if (clickableElement != null)
             {
-                var canProceed = await ExclusiveUiInteractionSemaphore.WaitAsync(0);
-
-                if (canProceed)
+                if (await CanProceed())
                 {
                     try
                     {
@@ -242,7 +256,7 @@ namespace SkiaGum
                     }
                     finally
                     {
-                        ExclusiveUiInteractionSemaphore.Release(1);
+                        ReleaseSemaphore();
                     }
                 }
             }
@@ -254,9 +268,7 @@ namespace SkiaGum
 
             if (clickableElement != null)
             {
-                var canProceed = await ExclusiveUiInteractionSemaphore.WaitAsync(0);
-
-                if (canProceed)
+                if (await CanProceed())
                 {
                     try
                     {
@@ -264,7 +276,7 @@ namespace SkiaGum
                     }
                     finally
                     {
-                        ExclusiveUiInteractionSemaphore.Release(1);
+                        ReleaseSemaphore();
                     }
                 }
             }
@@ -292,9 +304,7 @@ namespace SkiaGum
         {
             if (customPushEventToRaise != null || customReleaseEventToRaise != null)
             {
-                var canProceed = await ExclusiveUiInteractionSemaphore.WaitAsync(0);
-
-                if (canProceed)
+                if (await CanProceed())
                 {
                     try
                     {
@@ -309,7 +319,7 @@ namespace SkiaGum
                     }
                     finally
                     {
-                        ExclusiveUiInteractionSemaphore.Release(1);
+                        ReleaseSemaphore();
                     }
                 }
             }
@@ -425,6 +435,8 @@ namespace SkiaGum
             GraphicalUiElement.CanvasWidth = info.Width / GlobalScale;
             GraphicalUiElement.CanvasHeight = info.Height / GlobalScale;
             SystemManagers.Renderer.Camera.Zoom = GlobalScale;
+
+            ForceGumLayout();
 
             SystemManagers.Renderer.Draw(this.GumElementsInternal, SystemManagers);
 

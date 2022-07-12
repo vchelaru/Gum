@@ -42,7 +42,6 @@ namespace RenderingLibrary.Graphics
             {
                 if (element.Visible)
                 {
-                    element.UpdateLayout();
                     ((IRenderable)element).Render(managers.Canvas);
                 }
             }

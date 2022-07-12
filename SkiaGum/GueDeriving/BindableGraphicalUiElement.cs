@@ -109,6 +109,9 @@ namespace SkiaGum.GueDeriving
         #region Events
 
         Func<Task> clickedAsync;
+        /// <summary>
+        /// Occurs when the user releases the cursor on this, whether this was initially the pushed element or not.
+        /// </summary>
         public Func<Task> ClickedAsync
         {
             get => clickedAsync;
@@ -169,9 +172,25 @@ namespace SkiaGum.GueDeriving
             }
         }
 
+        Func<Task> releasedIfPushed;
+        public Func<Task> ReleasedIfPushed
+        {
+            get => releasedIfPushed;
+            set
+            {
+                releasedIfPushed = value;
+
+                if (this.EffectiveManagers != null && releasedIfPushed != null)
+                {
+                    this.EffectiveManagers.EnableTouchEvents = true;
+                }
+            }
+        }
+
         public event Action<object, BindingContextChangedEventArgs> BindingContextChanged;
 
         #endregion
+
 
         public virtual void AddToManagers(ISystemManagers managers/*, Layer layer*/)
         {
