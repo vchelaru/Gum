@@ -35,6 +35,18 @@ namespace Gum.Plugins.PropertiesWindowPlugin
             set => Set(value);
         }
 
+        public Color GuideLineColor
+        {
+            get => Get<Color>();
+            set => Set(value);
+        }
+
+        public Color GuideTextColor
+        {
+            get => Get<Color>();
+            set => Set(value);
+        }
+
         public bool RestrictToUnitValues
         {
             get => Get<bool>();
@@ -134,6 +146,10 @@ namespace Gum.Plugins.PropertiesWindowPlugin
             CheckerboardColor2 = new Color(generalSettings.CheckerColor2R, generalSettings.CheckerColor2G, generalSettings.CheckerColor2B);
 
             OutlineColor = new Color(generalSettings.OutlineColorR, generalSettings.OutlineColorG, generalSettings.OutlineColorB);
+            GuideLineColor = new Color(
+                generalSettings.GuideLineColorR, generalSettings.GuideLineColorG, generalSettings.GuideLineColorB);
+            GuideTextColor = new Color(
+                generalSettings.GuideTextColorR, generalSettings.GuideTextColorG, generalSettings.GuideTextColorB);
 
             LocalizationFile = this.gumProject.LocalizationFile;
             LanguageIndex = this.gumProject.CurrentLanguageIndex;
@@ -178,6 +194,13 @@ namespace Gum.Plugins.PropertiesWindowPlugin
             generalSettings.OutlineColorG = OutlineColor.G;
             generalSettings.OutlineColorB = OutlineColor.B;
 
+            generalSettings.GuideLineColorR = GuideLineColor.R;
+            generalSettings.GuideLineColorG = GuideLineColor.G;
+            generalSettings.GuideLineColorB = GuideLineColor.B;
+
+            generalSettings.GuideTextColorR = GuideTextColor.R;
+            generalSettings.GuideTextColorG = GuideTextColor.G;
+            generalSettings.GuideTextColorB = GuideTextColor.B;
 
             this.gumProject.LocalizationFile = LocalizationFile;
             this.gumProject.CurrentLanguageIndex = LanguageIndex;

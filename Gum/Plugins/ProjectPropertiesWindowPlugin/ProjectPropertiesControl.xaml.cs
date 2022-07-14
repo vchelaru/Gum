@@ -16,6 +16,7 @@ using System.Windows.Shapes;
 using Gum.Plugins.PropertiesWindowPlugin;
 using ToolsUtilities;
 using WpfDataUi.Controls;
+using WpfDataUi.DataTypes;
 
 namespace Gum.Gui.Controls
 {
@@ -43,22 +44,42 @@ namespace Gum.Gui.Controls
             }
         }
 
+        public ProjectPropertiesControl()
+        {
+            InitializeComponent();
+        }
+
+        private void CancelButtonClicked(object sender, RoutedEventArgs e)
+        {
+            CloseClicked?.Invoke(this, null);
+        }
+
         private void UpdateToInstance()
         {
+            // Move all colors into their own category:
+            var allMembers = DataGrid.Categories.SelectMany(item => item.Members).ToArray();
+
+            var colorCategory = new MemberCategory("Colors");
+
+            foreach(var member in allMembers)
+            {
+                if(IsColor(member))
+                {
+                    DataGrid.MoveMemberToCategory(member.Name, colorCategory.Name);
+                }
+            }
+
+
             foreach (var category in DataGrid.Categories)
             {
-                category.HideHeader = true;
                 foreach (var member in category.Members)
                 {
                     member.DisplayName =
                             ToolsUtilities.StringFunctions.InsertSpacesInCamelCaseString(member.DisplayName);
 
-                    switch(member.PropertyType.Name)
-                    {
-                        case "Microsoft.Xna.Framework.Color":
-                        case "Color":
-                            member.PreferredDisplayer = typeof(Gum.Controls.DataUi.ColorDisplay);
-                            break;
+                    if(IsColor(member))
+                    { 
+                        member.PreferredDisplayer = typeof(Gum.Controls.DataUi.ColorDisplay);
                     }
 
                     if(member.Name == nameof(ViewModel.LocalizationFile))
@@ -73,16 +94,8 @@ namespace Gum.Gui.Controls
                     category.Members.Remove(isUpdatingMember);
                 }
             }
-        }
 
-        public ProjectPropertiesControl()
-        {
-            InitializeComponent();
-        }
-
-        private void CancelButtonClicked(object sender, RoutedEventArgs e)
-        {
-            CloseClicked?.Invoke(this, null);
+            bool IsColor(InstanceMember member) => member.PropertyType.Name == "Microsoft.Xna.Framework.Color" || member.PropertyType.Name == "Color";
         }
 
         

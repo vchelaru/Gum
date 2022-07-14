@@ -109,6 +109,15 @@ namespace Gum.Settings
         public byte OutlineColorG { get; set; } = 255;
         public byte OutlineColorB { get; set; } = 255;
 
+        public byte GuideLineColorR { get; set; } = 255;
+        public byte GuideLineColorG { get; set; } = 255;
+        public byte GuideLineColorB { get; set; } = 255;
+
+        public byte GuideTextColorR { get; set; } = 255;
+        public byte GuideTextColorG { get; set; } = 255;
+        public byte GuideTextColorB { get; set; } = 255;
+
+
 
         #endregion
 

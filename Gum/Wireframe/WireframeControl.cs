@@ -302,5 +302,13 @@ namespace Gum.Wireframe
                 Renderer.Self.Draw(null);
             }
         }
+
+        public void RefreshGuides()
+        {
+            // setting GuideValues forces a refresh
+            mTopRuler.GuideValues = mTopRuler.GuideValues.ToArray();
+
+            mLeftRuler.GuideValues = mLeftRuler.GuideValues.ToArray();
+        }
     }
 }

@@ -116,6 +116,852 @@ namespace CodeOutputPlugin.Manager
 
         #endregion
 
+        #region Position / Size
+
+        private static void ProcessPositionAndSize(List<VariableSave> variablesToConsider, StateSave state, InstanceSave instance, ElementSave container, StringBuilder stringBuilder, CodeGenerationContext context)
+        {
+            //////////////////Early out/////////////////////
+            if (container is ScreenSave && instance == null)
+            {
+                // screens can't be positioned
+                return;
+            }
+            /////////////// End Early Out/////////////
+
+            string variablePrefix = instance?.Name == null ? "" : "" + instance.Name + ".";
+
+            bool setsAny = GetIfStateSetsAnyPositionValues(state, variablePrefix, variablesToConsider);
+
+            InstanceSave parent = null;
+            if (instance != null)
+            {
+                var parentName = state.GetValueRecursive(instance.Name + ".Parent") as string;
+                if (!string.IsNullOrEmpty(parentName))
+                {
+                    parent = container.GetInstance(parentName);
+                }
+            }
+
+            string parentType = parent?.BaseType;
+            if(parent == null)
+            {
+                if(container is ScreenSave)
+                {
+                    parentType = "/AbsoluteLayout";
+                }
+                else
+                {
+                    parentType = container.BaseType;
+                }
+            }
+
+            // Only run this code if any of the properties are set or if we're in default. Otherwise
+            // categorized states may screw up the positioning of an object.
+            if (setsAny || state == container.DefaultState)
+            {
+                if (parentType?.EndsWith("/AbsoluteLayout") == true)
+                {
+                    SetAbsoluteLayoutPosition(variablesToConsider, state, context, stringBuilder);
+                }
+                else //if(parent?.BaseType?.EndsWith("/StackLayout") == true)
+                {
+                    SetNonAbsoluteLayoutPosition(variablesToConsider, state, context, stringBuilder, parentType);
+                }
+            }
+
+        }
+
+
+        private static void SetNonAbsoluteLayoutPosition(List<VariableSave> variablesToConsider, StateSave defaultState, CodeGenerationContext context, 
+            StringBuilder stringBuilder, string parentBaseType)
+        {
+            var variableFinder = new RecursiveVariableFinder(defaultState);
+
+            var variablePrefix = context.GumVariablePrefix;
+
+            bool setsAny = GetIfStateSetsAnyPositionValues(defaultState, variablePrefix, variablesToConsider);
+
+            #region Get recursive values for position and size
+            var x = variableFinder.GetValue<float>(variablePrefix + "X");
+            var y = variableFinder.GetValue<float>(variablePrefix + "Y");
+            var width = variableFinder.GetValue<float>(variablePrefix + "Width");
+            var height = variableFinder.GetValue<float>(variablePrefix + "Height");
+
+            var xUnits = variableFinder.GetValue<PositionUnitType>(variablePrefix + "X Units");
+            var yUnits = variableFinder.GetValue<PositionUnitType>(variablePrefix + "Y Units");
+            var widthUnits = variableFinder.GetValue<DimensionUnitType>(variablePrefix + "Width Units");
+            var heightUnits = variableFinder.GetValue<DimensionUnitType>(variablePrefix + "Height Units");
+
+            var xOrigin = variableFinder.GetValue<HorizontalAlignment>(variablePrefix + "X Origin");
+            var yOrigin = variableFinder.GetValue<VerticalAlignment>(variablePrefix + "Y Origin");
+
+            variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "X");
+            variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Y");
+            variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Width");
+            variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Height");
+            variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "X Units");
+            variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Y Units");
+            variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Width Units");
+            variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Height Units");
+
+            variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "X Origin");
+            variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Y Origin");
+
+            #endregion
+
+            var codePrefix = context.CodePrefix;
+
+            float leftMargin = 0;
+            float rightMargin = 0;
+            float topMargin = 0;
+            float bottomMargin = 0;
+
+            #region Apply WidthUnits
+
+            if (widthUnits == DimensionUnitType.Absolute || widthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
+            {
+                var multiple = "1.0f";
+                if(widthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
+                {
+                    multiple = "RenderingLibrary.SystemManagers.GlobalFontScale";
+                }
+                if (AdjustPixelValuesForDensity)
+                {
+                    multiple += "/Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density";
+                }
+                stringBuilder.AppendLine(
+                    $"{codePrefix}.WidthRequest = {width.ToString(CultureInfo.InvariantCulture)}f * {multiple};");
+            }
+
+            #endregion
+
+            #region Apply HeightUnits
+
+            if (heightUnits == DimensionUnitType.Absolute || heightUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
+            {
+                var multiple = "1.0f";
+
+                if(heightUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
+                {
+                    multiple = "RenderingLibrary.SystemManagers.GlobalFontScale";
+                }
+                if(AdjustPixelValuesForDensity)
+                {
+                    multiple += "/Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density";
+                }
+
+                stringBuilder.AppendLine(
+                    $"{codePrefix}.HeightRequest = {height.ToString(CultureInfo.InvariantCulture)}f * {multiple};");
+            }
+
+            #endregion
+
+            var isContainedInStackLayout = parentBaseType?.EndsWith("/StackLayout") == true;
+            var isVariableOwnerAbsoluteLayout = false;
+            var isVariableOwnerSkiaGumCanvasView = false;
+            if (context.Instance != null)
+            {
+                isVariableOwnerAbsoluteLayout = context.Instance.BaseType?.EndsWith("/AbsoluteLayout") == true;
+                isVariableOwnerSkiaGumCanvasView = context.Instance.BaseType?.EndsWith("/SkiaGumCanvasView") == true;
+            }
+            else
+            {
+                isVariableOwnerAbsoluteLayout = context.Element.BaseType?.EndsWith("/AbsoluteLayout") == true;
+                isVariableOwnerSkiaGumCanvasView = context.Element.BaseType?.EndsWith("/SkiaGumCanvasView") == true;
+            }
+
+            #region Apply XUnits
+
+            if (xUnits == PositionUnitType.PixelsFromLeft)
+            {
+                leftMargin = x;
+            }
+            if(xUnits == PositionUnitType.PixelsFromLeft && widthUnits == DimensionUnitType.RelativeToContainer)
+            {
+                rightMargin = -width - x;
+            }
+            if(xUnits == PositionUnitType.PixelsFromCenterX && 
+                xOrigin == HorizontalAlignment.Center)
+            {
+                if ( widthUnits == DimensionUnitType.RelativeToContainer)
+                {
+                    leftMargin = x - width / 2.0f;
+                    rightMargin = -x - width / 2.0f;
+                }
+                else if(widthUnits == DimensionUnitType.Absolute || 
+                    widthUnits == DimensionUnitType.RelativeToChildren ||
+                    widthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale ||
+                    widthUnits == DimensionUnitType.MaintainFileAspectRatio ||
+                    widthUnits == DimensionUnitType.PercentageOfOtherDimension ||
+                    widthUnits == DimensionUnitType.PercentageOfSourceFile ||
+                    widthUnits == DimensionUnitType.Ratio
+                    ) 
+                {
+                    // Vic says - not sure why but we have to 2x the margin here...
+                    leftMargin = x * 2;
+                }
+            }
+            else if(xUnits == PositionUnitType.PixelsFromRight && xOrigin == HorizontalAlignment.Right)
+            {
+                rightMargin = -x;
+                if(widthUnits == DimensionUnitType.RelativeToContainer)
+                {
+                    leftMargin = -width;
+                }
+            }
+
+            #endregion
+
+            #region Apply YUnits
+
+            if (yUnits == PositionUnitType.PixelsFromTop)
+            {
+                topMargin = y;
+            }
+            if(yUnits == PositionUnitType.PixelsFromTop && heightUnits == DimensionUnitType.RelativeToChildren)
+            {
+                if(isContainedInStackLayout == false)
+                {
+                    // If it's a stack layout, we don't want to subtract from here.
+                    // Update Feb 14, 2022
+                    // Not sure why we subtract the height...
+                    //bottomMargin = -height - y;
+                    // If a Gum object is relative to children with
+                    // a height of 10, that means it should be 10 units
+                    // bigger than its children, so we should add 10
+                    bottomMargin = height - y;
+                }
+                else
+                {
+                    // in a stack layout, so give the margin according to the y origin:
+                    if(yOrigin == VerticalAlignment.Top)
+                    {
+                        bottomMargin = height;
+                    }
+                    else if(yOrigin == VerticalAlignment.Center)
+                    {
+                        topMargin += height / 2.0f;
+                        bottomMargin = height / 2.0f;
+                    }
+                    else if(yOrigin == VerticalAlignment.Bottom)
+                    {
+                        topMargin += height;
+                    }
+                }
+            }
+            if(yUnits == PositionUnitType.PixelsFromCenterY &&
+                yOrigin == VerticalAlignment.Center)
+            {
+                if(heightUnits == DimensionUnitType.RelativeToContainer)
+                {
+                    topMargin = y - height / 2.0f;
+                    bottomMargin = -y - height / 2.0f;
+                }
+                // else - should we copy the code above for width units?
+            }
+
+            #endregion
+
+            if (isVariableOwnerAbsoluteLayout && heightUnits == DimensionUnitType.RelativeToChildren)
+            {
+                stringBuilder.AppendLine($"Error: The object {context.Instance?.ToString() ?? context.Element?.ToString()} uses a HeightUnits of RelativeToChildren, but it is an AbsoluteLayout which is not supported in Xamarin.Forms");
+            }
+
+            if (setsAny)
+            {
+                stringBuilder.AppendLine($"{codePrefix}.Margin = new Thickness(" +
+                    $"{leftMargin.ToString(CultureInfo.InvariantCulture)}, " +
+                    $"{topMargin.ToString(CultureInfo.InvariantCulture)}, " +
+                    $"{rightMargin.ToString(CultureInfo.InvariantCulture)}, " +
+                    $"{bottomMargin.ToString(CultureInfo.InvariantCulture)});");
+            }
+
+            #region Write HorizontalOptions
+            if (widthUnits == DimensionUnitType.Absolute || widthUnits == DimensionUnitType.RelativeToChildren || widthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
+            {
+                if(xUnits == PositionUnitType.PixelsFromCenterX && xOrigin == HorizontalAlignment.Center)
+                {
+                    stringBuilder.AppendLine(
+                        $"{codePrefix}.HorizontalOptions = LayoutOptions.Center;");
+                }
+                else if(xUnits == PositionUnitType.PixelsFromRight && xOrigin == HorizontalAlignment.Right)
+                {
+                    stringBuilder.AppendLine(
+                        $"{codePrefix}.HorizontalOptions = LayoutOptions.End;");
+                }
+                else
+                {
+                    stringBuilder.AppendLine(
+                        $"{codePrefix}.HorizontalOptions = LayoutOptions.Start;");
+
+                }
+            }
+            else if(widthUnits == DimensionUnitType.RelativeToContainer || 
+                widthUnits == DimensionUnitType.Percentage)
+            {
+                stringBuilder.AppendLine(
+                    $"{codePrefix}.HorizontalOptions = LayoutOptions.Fill;");
+            }
+
+            #endregion
+
+            #region Write Vertical Options
+
+            if (heightUnits == DimensionUnitType.Absolute || heightUnits == DimensionUnitType.RelativeToChildren || heightUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
+            {
+                if(yUnits == PositionUnitType.PixelsFromCenterY && xOrigin == HorizontalAlignment.Center)
+                {
+                    stringBuilder.AppendLine(
+                        $"{codePrefix}.VerticalOptions = LayoutOptions.Center;");
+                }
+                else
+                {
+                    stringBuilder.AppendLine(
+                        $"{codePrefix}.VerticalOptions = LayoutOptions.Start;");
+                }
+            }
+            else if(heightUnits == DimensionUnitType.RelativeToContainer ||
+                heightUnits == DimensionUnitType.Percentage)
+            {
+                stringBuilder.AppendLine(
+                    $"{codePrefix}.VerticalOptions = LayoutOptions.Fill;");
+            }
+
+            #endregion
+
+            if (isVariableOwnerSkiaGumCanvasView)
+            {
+                if (heightUnits == DimensionUnitType.RelativeToChildren)
+                {
+                    stringBuilder.AppendLine(
+                        $"{codePrefix}.AutoSizeHeightAccordingToContents = true;");
+                }
+                if (widthUnits == DimensionUnitType.RelativeToChildren)
+                {
+                    stringBuilder.AppendLine(
+                        $"{codePrefix}.AutoSizeWidthAccordingToContents = true;");
+                }
+            }
+        }
+
+        private static void SetAbsoluteLayoutPosition(List<VariableSave> variablesToConsider, StateSave state, CodeGenerationContext context, StringBuilder stringBuilder)
+        {
+            #region Const values
+            const string WidthProportionalFlag = "AbsoluteLayoutFlags.WidthProportional";
+            const string HeightProportionalFlag = "AbsoluteLayoutFlags.HeightProportional";
+            const string XProportionalFlag = "AbsoluteLayoutFlags.XProportional";
+            const string YProportionalFlag = "AbsoluteLayoutFlags.YProportional";
+            #endregion
+
+            var variableFinder = new RecursiveVariableFinder(state);
+
+            var variablePrefix = context.GumVariablePrefix;
+
+            bool setsAny = GetIfStateSetsAnyPositionValues(state, variablePrefix, variablesToConsider);
+
+            #region Get recursive values for position and size
+
+            var x = variableFinder.GetValue<float>(variablePrefix + "X");
+            var y = variableFinder.GetValue<float>(variablePrefix + "Y");
+            var width = variableFinder.GetValue<float>(variablePrefix + "Width");
+            var height = variableFinder.GetValue<float>(variablePrefix + "Height");
+
+            var xUnits = variableFinder.GetValue<PositionUnitType>(variablePrefix + "X Units");
+            var yUnits = variableFinder.GetValue<PositionUnitType>(variablePrefix + "Y Units");
+            var widthUnits = variableFinder.GetValue<DimensionUnitType>(variablePrefix + "Width Units");
+            var heightUnits = variableFinder.GetValue<DimensionUnitType>(variablePrefix + "Height Units");
+
+            var xOrigin = variableFinder.GetValue<HorizontalAlignment>(variablePrefix + "X Origin");
+            var yOrigin = variableFinder.GetValue<VerticalAlignment>(variablePrefix + "Y Origin");
+
+            variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "X");
+            variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Y");
+            variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Width");
+            variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Height");
+            variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "X Units");
+            variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Y Units");
+            variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Width Units");
+            variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Height Units");
+
+            variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "X Origin");
+            variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Y Origin");
+            #endregion
+
+            var codePrefix = context.CodePrefix;
+
+            var proportionalFlags = new HashSet<string>();
+
+            int leftMargin = 0;
+            int topMargin = 0;
+            int rightMargin = 0;
+            int bottomMargin = 0;
+
+            #region Apply Width Units
+
+            if (widthUnits == DimensionUnitType.Percentage)
+            {
+                width /= 100.0f;
+                proportionalFlags.Add(WidthProportionalFlag);
+            }
+            else if (widthUnits == DimensionUnitType.RelativeToContainer)
+            {
+                if(xOrigin == HorizontalAlignment.Center)
+                {
+                    // we'll achieve margins with offsets
+                    leftMargin = MathFunctions.RoundToInt(x - width/2);
+                    rightMargin = MathFunctions.RoundToInt(-x - width/2);
+                }
+                else
+                {
+                    // we'll achieve margins with offsets
+                    rightMargin = MathFunctions.RoundToInt(-x - width);
+                }
+                width = 1;
+                proportionalFlags.Add(WidthProportionalFlag);
+            }
+            else if (widthUnits == DimensionUnitType.RelativeToChildren)
+            {
+                // in this case we want to auto-size, which is what -1 indicates
+                width = -1;
+            }
+
+            #endregion
+
+            #region Apply Height Units
+
+            if (heightUnits == DimensionUnitType.Percentage)
+            {
+                height /= 100.0f;
+                proportionalFlags.Add(HeightProportionalFlag);
+            }
+            else if (heightUnits == DimensionUnitType.RelativeToContainer)
+            {
+                // just like width units, achieve this with margins:
+                if(yOrigin == VerticalAlignment.Center)
+                {
+                    topMargin = MathFunctions.RoundToInt(y - height / 2);
+                    bottomMargin = MathFunctions.RoundToInt(-y - height / 2);
+                }
+                else
+                {
+                    bottomMargin = MathFunctions.RoundToInt(-y - height);
+                }
+                height = 1;
+                proportionalFlags.Add(HeightProportionalFlag);
+            }
+            else if (heightUnits == DimensionUnitType.RelativeToChildren)
+            {
+                // see above on width relative to container for information
+                height = -1;
+            }
+
+            #endregion
+
+            #region Apply XUnits
+
+            // special case
+            // If we're using the center with x=0 we'll pretend it's the same as 50% 
+            if (xUnits == PositionUnitType.PixelsFromCenterX &&
+                // why does the width unit even matter? Should be the same regardless of width unit...
+                //widthUnits == DimensionUnitType.Absolute && 
+                xOrigin == HorizontalAlignment.Center)
+            {
+                if (x == 0)
+                {
+                    // treat it like it's 50%:
+                    x = .5f;
+                    proportionalFlags.Add(XProportionalFlag);
+                }
+            }
+            // Xamarin forms uses a weird anchoring system to combine both position and anchor into one value. Gum splits those into two values
+            // We need to convert from the gum units to xamforms units:
+            // for now assume it's all %'s:
+
+            else if (xUnits == PositionUnitType.PercentageWidth)
+            {
+                x /= 100.0f;
+
+                if(widthUnits == DimensionUnitType.Percentage)
+                {
+                    var adjustedCanvasWidth = 1 - width;
+                    if (adjustedCanvasWidth > 0)
+                    {
+                        x /= adjustedCanvasWidth;
+                    }
+                }
+                proportionalFlags.Add(XProportionalFlag);
+            }
+            else if (xUnits == PositionUnitType.PixelsFromLeft)
+            {
+                if(widthUnits == DimensionUnitType.RelativeToContainer)
+                {
+                    leftMargin = MathFunctions.RoundToInt(x);
+                    x = 0;
+                }
+            }
+            else if (xUnits == PositionUnitType.PixelsFromCenterX)
+            {
+                if (widthUnits == DimensionUnitType.Absolute || widthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
+                {
+                    x = (CanvasWidth - width) / 2.0f;
+                }
+            }
+            else if (xUnits == PositionUnitType.PixelsFromRight)
+            {
+                if (xOrigin == HorizontalAlignment.Right)
+                {
+                    rightMargin = MathFunctions.RoundToInt(-x);
+                    x = 1;
+                    proportionalFlags.Add(XProportionalFlag);
+                }
+            }
+
+            #endregion
+
+            #region Apply YUnits
+
+            if (yUnits == PositionUnitType.PixelsFromCenterY)
+            {
+                if (yOrigin == VerticalAlignment.Center)
+                {
+                    // If relative to container, it's already handled up above
+                    if(heightUnits != DimensionUnitType.RelativeToContainer)
+                    {
+                        topMargin = MathFunctions.RoundToInt(y);
+                        bottomMargin = MathFunctions.RoundToInt(-y);
+                    }
+                    y = .5f;
+                    proportionalFlags.Add(YProportionalFlag);
+                }
+                else if(yOrigin == VerticalAlignment.Top)
+                {
+                    // the margin should be the height of this / 2
+                    topMargin = MathFunctions.RoundToInt(y + height / 2.0f);
+                    bottomMargin = -topMargin;
+                    y = .5f;
+                    proportionalFlags.Add(YProportionalFlag);
+                }
+                else if (yOrigin == VerticalAlignment.Top)
+                {
+                    // the margin should be the height of this / 2
+                    topMargin = MathFunctions.RoundToInt(y - height / 2.0f);
+                    y = .5f;
+                    proportionalFlags.Add(YProportionalFlag);
+                }
+            }
+            else if(yUnits == PositionUnitType.PixelsFromTop)
+            {
+                if(heightUnits == DimensionUnitType.RelativeToContainer)
+                {
+                    topMargin = MathFunctions.RoundToInt(y);
+                    y = 0;
+                }
+            }
+            else if (yUnits == PositionUnitType.PercentageHeight)
+            {
+                y /= 100.0f;
+                var adjustedCanvasHeight = 1 - height;
+                if (adjustedCanvasHeight > 0)
+                {
+                    y /= adjustedCanvasHeight;
+                }
+                proportionalFlags.Add(YProportionalFlag);
+            }
+            else if (yUnits == PositionUnitType.PixelsFromBottom)
+            {
+                if (yOrigin == VerticalAlignment.Bottom)
+                {
+                    bottomMargin = MathFunctions.RoundToInt(-y);
+                    y = 1;
+                    proportionalFlags.Add(YProportionalFlag);
+                }
+                else
+                {
+                    // We could be smarter about this but we'll add this
+                    // when it's needed.
+                    y += CanvasHeight;
+                }
+            }
+
+
+            #endregion
+
+            #region Write HorizontalOptions
+
+            //If the object is width proportional, then it must use a .HorizontalOptions = LayoutOptions.Fill; or else the proportional width won't apply
+            if (proportionalFlags.Contains(WidthProportionalFlag))
+            {
+                stringBuilder.AppendLine($"{context.CodePrefix}.HorizontalOptions = LayoutOptions.Fill;");
+            }
+            else if (widthUnits == DimensionUnitType.Absolute || widthUnits == DimensionUnitType.RelativeToChildren || widthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
+            {
+                if (xUnits == PositionUnitType.PixelsFromCenterX && xOrigin == HorizontalAlignment.Center)
+                {
+                    stringBuilder.AppendLine(
+                        $"{codePrefix}.HorizontalOptions = LayoutOptions.Center;");
+                }
+                else if (xUnits == PositionUnitType.PixelsFromRight && xOrigin == HorizontalAlignment.Right)
+                {
+                    stringBuilder.AppendLine(
+                        $"{codePrefix}.HorizontalOptions = LayoutOptions.End;");
+                }
+                else
+                {
+                    stringBuilder.AppendLine(
+                        $"{codePrefix}.HorizontalOptions = LayoutOptions.Start;");
+
+                }
+            }
+            else if (widthUnits == DimensionUnitType.RelativeToContainer ||
+                widthUnits == DimensionUnitType.Percentage)
+            {
+                stringBuilder.AppendLine(
+                    $"{codePrefix}.HorizontalOptions = LayoutOptions.Fill;");
+            }
+
+            #endregion
+
+            #region Write Vertical Options
+
+            if (heightUnits == DimensionUnitType.Absolute || heightUnits == DimensionUnitType.RelativeToChildren || heightUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
+            {
+                if (yUnits == PositionUnitType.PixelsFromCenterY && xOrigin == HorizontalAlignment.Center)
+                {
+                    stringBuilder.AppendLine(
+                        $"{codePrefix}.VerticalOptions = LayoutOptions.Center;");
+                }
+                else
+                {
+                    stringBuilder.AppendLine(
+                        $"{codePrefix}.VerticalOptions = LayoutOptions.Start;");
+                }
+            }
+            else if (heightUnits == DimensionUnitType.RelativeToContainer ||
+                heightUnits == DimensionUnitType.Percentage)
+            {
+                stringBuilder.AppendLine(
+                    $"{codePrefix}.VerticalOptions = LayoutOptions.Fill;");
+            }
+
+            #endregion
+
+            var xString = x.ToString(CultureInfo.InvariantCulture) + "f";
+            var yString = y.ToString(CultureInfo.InvariantCulture) + "f";
+            var widthString = width.ToString(CultureInfo.InvariantCulture) + "f";
+            var heightString = height.ToString(CultureInfo.InvariantCulture) + "f";
+
+            if(heightUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
+            {
+                heightString = $"({heightString} * RenderingLibrary.SystemManagers.GlobalFontScale)";
+            }
+            if(widthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
+            {
+                widthString = $"({widthString} * RenderingLibrary.SystemManagers.GlobalFontScale)";
+            }
+
+            // When using AbsoluteLayout in XamarinForms, adding a margin will actually shrink the object. Therefore, if using margin to 
+            // position an object relative to its right or bottom edges, the object's width and height should be increased by the offset amount.
+
+            if(xUnits == PositionUnitType.PixelsFromRight && xOrigin == HorizontalAlignment.Right)
+            {
+                if(widthUnits == DimensionUnitType.RelativeToChildren)
+                {
+                    widthString = $"({widthString})";
+                }
+                else
+                {
+                    widthString = $"({widthString} + {rightMargin})";
+                }
+            }
+            if(yUnits == PositionUnitType.PixelsFromBottom && yOrigin == VerticalAlignment.Bottom)
+            {
+                if(heightUnits == DimensionUnitType.RelativeToChildren)
+                {
+                    heightString = $"({heightString})";
+                }
+                else
+                {
+                    heightString = $"({heightString} + {bottomMargin})";
+                }
+            }
+
+            if (AdjustPixelValuesForDensity)
+            {
+                if (proportionalFlags.Contains(XProportionalFlag) == false)
+                {
+                    xString += "/Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density";
+                }
+                if (proportionalFlags.Contains(YProportionalFlag) == false)
+                {
+                    yString += "/Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density";
+                }
+                if (proportionalFlags.Contains(WidthProportionalFlag) == false && widthUnits != DimensionUnitType.RelativeToChildren)
+                {
+                    widthString += "/Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density";
+                }
+                if (proportionalFlags.Contains(HeightProportionalFlag) == false && heightUnits != DimensionUnitType.RelativeToChildren)
+                {
+                    heightString += "/Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density";
+                }
+            }
+
+
+
+            string boundsText =
+                $"{ToTabs(context.TabCount)}AbsoluteLayout.SetLayoutBounds({context.CodePrefixNoTabs}, new Rectangle({xString}, {yString}, {widthString}, {heightString} ));";
+            string flagsText = null;
+
+            if(proportionalFlags.Count == 0)
+            {
+                // A default state could set values, we override it but don't use any porportional, we probably still want to adjust here...
+                proportionalFlags.Add("AbsoluteLayoutFlags.None");
+            }
+
+            if (proportionalFlags.Count > 0)
+            {
+                string flagsArguments = null;
+                int i = 0;
+                foreach (var flag in proportionalFlags)
+                {
+                    if (i > 0)
+                    {
+                        flagsArguments += " | ";
+                    }
+                    flagsArguments += flag;
+                    i++;
+                }
+                flagsText = $"{ToTabs(context.TabCount)}AbsoluteLayout.SetLayoutFlags({context.CodePrefixNoTabs}, {flagsArguments});";
+            }
+            // assume every object has X, which it won't, so we will have to improve this
+            if (string.IsNullOrWhiteSpace(flagsText))
+            {
+                stringBuilder.AppendLine(boundsText);
+            }
+            else
+            {
+                stringBuilder.AppendLine($"{boundsText}\n{flagsText}");
+            }
+
+            // not sure why these apply even though we're using values on the AbsoluteLayout
+            if (!proportionalFlags.Contains(WidthProportionalFlag) && (widthUnits == DimensionUnitType.RelativeToContainer || widthUnits == DimensionUnitType.Absolute || widthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale))
+            {
+                if(widthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
+                {
+                    stringBuilder.AppendLine($"{context.CodePrefix}.WidthRequest = {width.ToString(CultureInfo.InvariantCulture)}f * RenderingLibrary.SystemManagers.GlobalFontScale;");
+                }
+                else
+                {
+                    stringBuilder.AppendLine($"{context.CodePrefix}.WidthRequest = {width.ToString(CultureInfo.InvariantCulture)}f;");
+                }
+            }
+            if (!proportionalFlags.Contains(HeightProportionalFlag) && (heightUnits == DimensionUnitType.RelativeToContainer || heightUnits == DimensionUnitType.Absolute || heightUnits == DimensionUnitType.AbsoluteMultipliedByFontScale))
+            {
+                if(heightUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
+                {
+                    stringBuilder.AppendLine($"{context.CodePrefix}.HeightRequest = {height.ToString(CultureInfo.InvariantCulture)}f * RenderingLibrary.SystemManagers.GlobalFontScale;");
+                }
+                else
+                {
+                    stringBuilder.AppendLine($"{context.CodePrefix}.HeightRequest = {height.ToString(CultureInfo.InvariantCulture)}f;");
+                }
+            }
+
+
+            if (leftMargin != 0 || rightMargin != 0 || topMargin != 0 || bottomMargin != 0)
+            {
+                stringBuilder.AppendLine($"{context.CodePrefix}.Margin = new Thickness({leftMargin}, {topMargin}, {rightMargin}, {bottomMargin});");
+            }
+            // should we do the same to vertical? Maybe, but waiting for a natural use case to test it
+        }
+
+        private static float CalculateAbsoluteWidth(InstanceSave instance, ElementSave container, RecursiveVariableFinder variableFinder)
+        {
+            string prefix = instance?.Name == null ? "" : instance.Name + ".";
+
+
+            var x = variableFinder.GetValue<float>(prefix + "X");
+            var width = variableFinder.GetValue<float>(prefix + "Width");
+
+            var xUnits = variableFinder.GetValue<PositionUnitType>(prefix + "X Units");
+            var widthUnits = variableFinder.GetValue<DimensionUnitType>(prefix + "Width Units");
+
+            var xOrigin = variableFinder.GetValue<HorizontalAlignment>(prefix + "X Origin");
+
+            var parentName = variableFinder.GetValue<string>(prefix + "Parent");
+
+            var parent = container.GetInstance(parentName);
+
+            float toReturn = 0;
+            if (instance == null)
+            {
+                toReturn = width; // handle this eventually?
+            }
+            else if(widthUnits == DimensionUnitType.Absolute || widthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
+            {
+                toReturn = width;
+            }
+            else if(widthUnits == DimensionUnitType.RelativeToContainer)
+            {
+                if(parent == null)
+                {
+                    toReturn = width + GumState.Self.ProjectState.GumProjectSave.DefaultCanvasWidth;
+                }
+                else
+                {
+                    var parentWidth = CalculateAbsoluteWidth(parent, container, variableFinder);
+
+                    toReturn = parentWidth + width;
+                }
+            }
+
+            return toReturn;
+        }
+
+        private static float CalculateAbsoluteHeight(InstanceSave instance, ElementSave container, RecursiveVariableFinder variableFinder)
+        {
+            string prefix = instance?.Name == null ? "" : instance.Name + ".";
+
+
+            var y = variableFinder.GetValue<float>(prefix + "Y");
+            var height = variableFinder.GetValue<float>(prefix + "Height");
+
+            var yUnits = variableFinder.GetValue<PositionUnitType>(prefix + "Y Units");
+            var heightUnits = variableFinder.GetValue<DimensionUnitType>(prefix + "Height Units");
+
+            var yOrigin = variableFinder.GetValue<HorizontalAlignment>(prefix + "Y Origin");
+
+            var parentName = variableFinder.GetValue<string>(prefix + "Parent");
+
+            var parent = container.GetInstance(parentName);
+
+            float toReturn = 0;
+            if (instance == null)
+            {
+                toReturn = height; // handle this eventually?
+            }
+            else if (heightUnits == DimensionUnitType.Absolute || heightUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
+            {
+                toReturn = height;
+            }
+            else if (heightUnits == DimensionUnitType.RelativeToContainer)
+            {
+                if (parent == null)
+                {
+                    toReturn = height + GumState.Self.ProjectState.GumProjectSave.DefaultCanvasHeight;
+                }
+                else
+                {
+                    var parentWidth = CalculateAbsoluteHeight(parent, container, variableFinder);
+
+                    toReturn = parentWidth + height;
+                }
+            }
+
+            return toReturn;
+        }
+
+        #endregion
+
         public static string GetGeneratedCodeForElement(ElementSave element, CodeOutputElementSettings elementSettings, CodeOutputProjectSettings projectSettings)
         {
             AdjustPixelValuesForDensity = projectSettings.AdjustPixelValuesForDensity;
@@ -1295,58 +2141,6 @@ namespace CodeOutputPlugin.Manager
             }
         }
 
-        private static void ProcessPositionAndSize(List<VariableSave> variablesToConsider, StateSave state, InstanceSave instance, ElementSave container, StringBuilder stringBuilder, CodeGenerationContext context)
-        {
-            //////////////////Early out/////////////////////
-            if (container is ScreenSave && instance == null)
-            {
-                // screens can't be positioned
-                return;
-            }
-            /////////////// End Early Out/////////////
-
-            string variablePrefix = instance?.Name == null ? "" : "" + instance.Name + ".";
-
-            bool setsAny = GetIfStateSetsAnyPositionValues(state, variablePrefix, variablesToConsider);
-
-            InstanceSave parent = null;
-            if (instance != null)
-            {
-                var parentName = state.GetValueRecursive(instance.Name + ".Parent") as string;
-                if (!string.IsNullOrEmpty(parentName))
-                {
-                    parent = container.GetInstance(parentName);
-                }
-            }
-
-            string parentType = parent?.BaseType;
-            if(parent == null)
-            {
-                if(container is ScreenSave)
-                {
-                    parentType = "/AbsoluteLayout";
-                }
-                else
-                {
-                    parentType = container.BaseType;
-                }
-            }
-
-            // Only run this code if any of the properties are set or if we're in default. Otherwise
-            // categorized states may screw up the positioning of an object.
-            if (setsAny || state == container.DefaultState)
-            {
-                if (parentType?.EndsWith("/AbsoluteLayout") == true)
-                {
-                    SetAbsoluteLayoutPosition(variablesToConsider, state, context, stringBuilder);
-                }
-                else //if(parent?.BaseType?.EndsWith("/StackLayout") == true)
-                {
-                    SetNonAbsoluteLayoutPosition(variablesToConsider, state, context, stringBuilder, parentType);
-                }
-            }
-
-        }
 
         private static void ProcessXamarinFormsLabelBold(List<VariableSave> variablesToConsider, StateSave state, InstanceSave instance, ElementSave container, StringBuilder stringBuilder, CodeGenerationContext context)
         {
@@ -1381,785 +2175,6 @@ namespace CodeOutputPlugin.Manager
 
                     );
         }
-
-        private static void SetNonAbsoluteLayoutPosition(List<VariableSave> variablesToConsider, StateSave defaultState, CodeGenerationContext context, 
-            StringBuilder stringBuilder, string parentBaseType)
-        {
-            var variableFinder = new RecursiveVariableFinder(defaultState);
-
-            var variablePrefix = context.GumVariablePrefix;
-
-            bool setsAny = GetIfStateSetsAnyPositionValues(defaultState, variablePrefix, variablesToConsider);
-
-            #region Get recursive values for position and size
-            var x = variableFinder.GetValue<float>(variablePrefix + "X");
-            var y = variableFinder.GetValue<float>(variablePrefix + "Y");
-            var width = variableFinder.GetValue<float>(variablePrefix + "Width");
-            var height = variableFinder.GetValue<float>(variablePrefix + "Height");
-
-            var xUnits = variableFinder.GetValue<PositionUnitType>(variablePrefix + "X Units");
-            var yUnits = variableFinder.GetValue<PositionUnitType>(variablePrefix + "Y Units");
-            var widthUnits = variableFinder.GetValue<DimensionUnitType>(variablePrefix + "Width Units");
-            var heightUnits = variableFinder.GetValue<DimensionUnitType>(variablePrefix + "Height Units");
-
-            var xOrigin = variableFinder.GetValue<HorizontalAlignment>(variablePrefix + "X Origin");
-            var yOrigin = variableFinder.GetValue<VerticalAlignment>(variablePrefix + "Y Origin");
-
-            variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "X");
-            variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Y");
-            variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Width");
-            variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Height");
-            variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "X Units");
-            variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Y Units");
-            variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Width Units");
-            variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Height Units");
-
-            variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "X Origin");
-            variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Y Origin");
-
-            #endregion
-
-            var codePrefix = context.CodePrefix;
-
-            float leftMargin = 0;
-            float rightMargin = 0;
-            float topMargin = 0;
-            float bottomMargin = 0;
-
-            #region Apply WidthUnits
-
-            if (widthUnits == DimensionUnitType.Absolute || widthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
-            {
-                var multiple = "1.0f";
-                if(widthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
-                {
-                    multiple = "RenderingLibrary.SystemManagers.GlobalFontScale";
-                }
-                if (AdjustPixelValuesForDensity)
-                {
-                    multiple += "/Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density";
-                }
-                stringBuilder.AppendLine(
-                    $"{codePrefix}.WidthRequest = {width.ToString(CultureInfo.InvariantCulture)}f * {multiple};");
-            }
-
-            #endregion
-
-            #region Apply HeightUnits
-
-            if (heightUnits == DimensionUnitType.Absolute || heightUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
-            {
-                var multiple = "1.0f";
-
-                if(heightUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
-                {
-                    multiple = "RenderingLibrary.SystemManagers.GlobalFontScale";
-                }
-                if(AdjustPixelValuesForDensity)
-                {
-                    multiple += "/Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density";
-                }
-
-                stringBuilder.AppendLine(
-                    $"{codePrefix}.HeightRequest = {height.ToString(CultureInfo.InvariantCulture)}f * {multiple};");
-            }
-
-            #endregion
-
-            var isContainedInStackLayout = parentBaseType?.EndsWith("/StackLayout") == true;
-            var isVariableOwnerAbsoluteLayout = false;
-            var isVariableOwnerSkiaGumCanvasView = false;
-            if (context.Instance != null)
-            {
-                isVariableOwnerAbsoluteLayout = context.Instance.BaseType?.EndsWith("/AbsoluteLayout") == true;
-                isVariableOwnerSkiaGumCanvasView = context.Instance.BaseType?.EndsWith("/SkiaGumCanvasView") == true;
-            }
-            else
-            {
-                isVariableOwnerAbsoluteLayout = context.Element.BaseType?.EndsWith("/AbsoluteLayout") == true;
-                isVariableOwnerSkiaGumCanvasView = context.Element.BaseType?.EndsWith("/SkiaGumCanvasView") == true;
-            }
-
-            #region Apply XUnits
-
-            if (xUnits == PositionUnitType.PixelsFromLeft)
-            {
-                leftMargin = x;
-            }
-            if(xUnits == PositionUnitType.PixelsFromLeft && widthUnits == DimensionUnitType.RelativeToContainer)
-            {
-                rightMargin = -width - x;
-            }
-            if(xUnits == PositionUnitType.PixelsFromCenterX && 
-                xOrigin == HorizontalAlignment.Center)
-            {
-                if ( widthUnits == DimensionUnitType.RelativeToContainer)
-                {
-                    leftMargin = x - width / 2.0f;
-                    rightMargin = -x - width / 2.0f;
-                }
-                else if(widthUnits == DimensionUnitType.Absolute || 
-                    widthUnits == DimensionUnitType.RelativeToChildren ||
-                    widthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale ||
-                    widthUnits == DimensionUnitType.MaintainFileAspectRatio ||
-                    widthUnits == DimensionUnitType.PercentageOfOtherDimension ||
-                    widthUnits == DimensionUnitType.PercentageOfSourceFile ||
-                    widthUnits == DimensionUnitType.Ratio
-                    ) 
-                {
-                    // Vic says - not sure why but we have to 2x the margin here...
-                    leftMargin = x * 2;
-                }
-            }
-            else if(xUnits == PositionUnitType.PixelsFromRight && xOrigin == HorizontalAlignment.Right)
-            {
-                rightMargin = -x;
-                if(widthUnits == DimensionUnitType.RelativeToContainer)
-                {
-                    leftMargin = -width;
-                }
-            }
-
-            #endregion
-
-            #region Apply YUnits
-
-            if (yUnits == PositionUnitType.PixelsFromTop)
-            {
-                topMargin = y;
-            }
-            if(yUnits == PositionUnitType.PixelsFromTop && heightUnits == DimensionUnitType.RelativeToChildren)
-            {
-                if(isContainedInStackLayout == false)
-                {
-                    // If it's a stack layout, we don't want to subtract from here.
-                    // Update Feb 14, 2022
-                    // Not sure why we subtract the height...
-                    //bottomMargin = -height - y;
-                    // If a Gum object is relative to children with
-                    // a height of 10, that means it should be 10 units
-                    // bigger than its children, so we should add 10
-                    bottomMargin = height - y;
-                }
-                else
-                {
-                    // in a stack layout, so give the margin according to the y origin:
-                    if(yOrigin == VerticalAlignment.Top)
-                    {
-                        bottomMargin = height;
-                    }
-                    else if(yOrigin == VerticalAlignment.Center)
-                    {
-                        topMargin += height / 2.0f;
-                        bottomMargin = height / 2.0f;
-                    }
-                    else if(yOrigin == VerticalAlignment.Bottom)
-                    {
-                        topMargin += height;
-                    }
-                }
-            }
-            if(yUnits == PositionUnitType.PixelsFromCenterY &&
-                yOrigin == VerticalAlignment.Center)
-            {
-                if(heightUnits == DimensionUnitType.RelativeToContainer)
-                {
-                    topMargin = y - height / 2.0f;
-                    bottomMargin = -y - height / 2.0f;
-                }
-                // else - should we copy the code above for width units?
-            }
-
-            #endregion
-
-            if (isVariableOwnerAbsoluteLayout && heightUnits == DimensionUnitType.RelativeToChildren)
-            {
-                stringBuilder.AppendLine($"Error: The object {context.Instance?.ToString() ?? context.Element?.ToString()} uses a HeightUnits of RelativeToChildren, but it is an AbsoluteLayout which is not supported in Xamarin.Forms");
-            }
-
-            if (setsAny)
-            {
-                stringBuilder.AppendLine($"{codePrefix}.Margin = new Thickness(" +
-                    $"{leftMargin.ToString(CultureInfo.InvariantCulture)}, " +
-                    $"{topMargin.ToString(CultureInfo.InvariantCulture)}, " +
-                    $"{rightMargin.ToString(CultureInfo.InvariantCulture)}, " +
-                    $"{bottomMargin.ToString(CultureInfo.InvariantCulture)});");
-            }
-
-            #region Write HorizontalOptions
-            if (widthUnits == DimensionUnitType.Absolute || widthUnits == DimensionUnitType.RelativeToChildren || widthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
-            {
-                if(xUnits == PositionUnitType.PixelsFromCenterX && xOrigin == HorizontalAlignment.Center)
-                {
-                    stringBuilder.AppendLine(
-                        $"{codePrefix}.HorizontalOptions = LayoutOptions.Center;");
-                }
-                else if(xUnits == PositionUnitType.PixelsFromRight && xOrigin == HorizontalAlignment.Right)
-                {
-                    stringBuilder.AppendLine(
-                        $"{codePrefix}.HorizontalOptions = LayoutOptions.End;");
-                }
-                else
-                {
-                    stringBuilder.AppendLine(
-                        $"{codePrefix}.HorizontalOptions = LayoutOptions.Start;");
-
-                }
-            }
-            else if(widthUnits == DimensionUnitType.RelativeToContainer || 
-                widthUnits == DimensionUnitType.Percentage)
-            {
-                stringBuilder.AppendLine(
-                    $"{codePrefix}.HorizontalOptions = LayoutOptions.Fill;");
-            }
-
-            #endregion
-
-            #region Write Vertical Options
-
-            if (heightUnits == DimensionUnitType.Absolute || heightUnits == DimensionUnitType.RelativeToChildren || heightUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
-            {
-                if(yUnits == PositionUnitType.PixelsFromCenterY && xOrigin == HorizontalAlignment.Center)
-                {
-                    stringBuilder.AppendLine(
-                        $"{codePrefix}.VerticalOptions = LayoutOptions.Center;");
-                }
-                else
-                {
-                    stringBuilder.AppendLine(
-                        $"{codePrefix}.VerticalOptions = LayoutOptions.Start;");
-                }
-            }
-            else if(heightUnits == DimensionUnitType.RelativeToContainer ||
-                heightUnits == DimensionUnitType.Percentage)
-            {
-                stringBuilder.AppendLine(
-                    $"{codePrefix}.VerticalOptions = LayoutOptions.Fill;");
-            }
-
-            #endregion
-
-            if (isVariableOwnerSkiaGumCanvasView)
-            {
-                if (heightUnits == DimensionUnitType.RelativeToChildren)
-                {
-                    stringBuilder.AppendLine(
-                        $"{codePrefix}.AutoSizeHeightAccordingToContents = true;");
-                }
-                if (widthUnits == DimensionUnitType.RelativeToChildren)
-                {
-                    stringBuilder.AppendLine(
-                        $"{codePrefix}.AutoSizeWidthAccordingToContents = true;");
-                }
-            }
-        }
-
-        private static void SetAbsoluteLayoutPosition(List<VariableSave> variablesToConsider, StateSave state, CodeGenerationContext context, StringBuilder stringBuilder)
-        {
-            #region Const values
-            const string WidthProportionalFlag = "AbsoluteLayoutFlags.WidthProportional";
-            const string HeightProportionalFlag = "AbsoluteLayoutFlags.HeightProportional";
-            const string XProportionalFlag = "AbsoluteLayoutFlags.XProportional";
-            const string YProportionalFlag = "AbsoluteLayoutFlags.YProportional";
-            #endregion
-
-            var variableFinder = new RecursiveVariableFinder(state);
-
-            var variablePrefix = context.GumVariablePrefix;
-
-            bool setsAny = GetIfStateSetsAnyPositionValues(state, variablePrefix, variablesToConsider);
-
-            #region Get recursive values for position and size
-
-            var x = variableFinder.GetValue<float>(variablePrefix + "X");
-            var y = variableFinder.GetValue<float>(variablePrefix + "Y");
-            var width = variableFinder.GetValue<float>(variablePrefix + "Width");
-            var height = variableFinder.GetValue<float>(variablePrefix + "Height");
-
-            var xUnits = variableFinder.GetValue<PositionUnitType>(variablePrefix + "X Units");
-            var yUnits = variableFinder.GetValue<PositionUnitType>(variablePrefix + "Y Units");
-            var widthUnits = variableFinder.GetValue<DimensionUnitType>(variablePrefix + "Width Units");
-            var heightUnits = variableFinder.GetValue<DimensionUnitType>(variablePrefix + "Height Units");
-
-            var xOrigin = variableFinder.GetValue<HorizontalAlignment>(variablePrefix + "X Origin");
-            var yOrigin = variableFinder.GetValue<VerticalAlignment>(variablePrefix + "Y Origin");
-
-            variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "X");
-            variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Y");
-            variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Width");
-            variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Height");
-            variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "X Units");
-            variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Y Units");
-            variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Width Units");
-            variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Height Units");
-
-            variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "X Origin");
-            variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Y Origin");
-            #endregion
-
-            var codePrefix = context.CodePrefix;
-
-            var proportionalFlags = new HashSet<string>();
-
-            int leftMargin = 0;
-            int topMargin = 0;
-            int rightMargin = 0;
-            int bottomMargin = 0;
-
-            #region Apply Width Units
-
-            if (widthUnits == DimensionUnitType.Percentage)
-            {
-                width /= 100.0f;
-                proportionalFlags.Add(WidthProportionalFlag);
-            }
-            else if (widthUnits == DimensionUnitType.RelativeToContainer)
-            {
-                if(xOrigin == HorizontalAlignment.Center)
-                {
-                    // we'll achieve margins with offsets
-                    leftMargin = MathFunctions.RoundToInt(x - width/2);
-                    rightMargin = MathFunctions.RoundToInt(-x - width/2);
-                }
-                else
-                {
-                    // we'll achieve margins with offsets
-                    rightMargin = MathFunctions.RoundToInt(-x - width);
-                }
-                width = 1;
-                proportionalFlags.Add(WidthProportionalFlag);
-            }
-            else if (widthUnits == DimensionUnitType.RelativeToChildren)
-            {
-                // in this case we want to auto-size, which is what -1 indicates
-                width = -1;
-            }
-
-            #endregion
-
-            #region Apply Height Units
-
-            if (heightUnits == DimensionUnitType.Percentage)
-            {
-                height /= 100.0f;
-                proportionalFlags.Add(HeightProportionalFlag);
-            }
-            else if (heightUnits == DimensionUnitType.RelativeToContainer)
-            {
-                // just like width units, achieve this with margins:
-                if(yOrigin == VerticalAlignment.Center)
-                {
-                    topMargin = MathFunctions.RoundToInt(y - height / 2);
-                    bottomMargin = MathFunctions.RoundToInt(-y - height / 2);
-                }
-                else
-                {
-                    bottomMargin = MathFunctions.RoundToInt(-y - height);
-                }
-                height = 1;
-                proportionalFlags.Add(HeightProportionalFlag);
-            }
-            else if (heightUnits == DimensionUnitType.RelativeToChildren)
-            {
-                // see above on width relative to container for information
-                height = -1;
-            }
-
-            #endregion
-
-            #region Apply XUnits
-
-            // special case
-            // If we're using the center with x=0 we'll pretend it's the same as 50% 
-            if (xUnits == PositionUnitType.PixelsFromCenterX &&
-                // why does the width unit even matter? Should be the same regardless of width unit...
-                //widthUnits == DimensionUnitType.Absolute && 
-                xOrigin == HorizontalAlignment.Center)
-            {
-                if (x == 0)
-                {
-                    // treat it like it's 50%:
-                    x = .5f;
-                    proportionalFlags.Add(XProportionalFlag);
-                }
-            }
-            // Xamarin forms uses a weird anchoring system to combine both position and anchor into one value. Gum splits those into two values
-            // We need to convert from the gum units to xamforms units:
-            // for now assume it's all %'s:
-
-            else if (xUnits == PositionUnitType.PercentageWidth)
-            {
-                x /= 100.0f;
-
-                if(widthUnits == DimensionUnitType.Percentage)
-                {
-                    var adjustedCanvasWidth = 1 - width;
-                    if (adjustedCanvasWidth > 0)
-                    {
-                        x /= adjustedCanvasWidth;
-                    }
-                }
-                proportionalFlags.Add(XProportionalFlag);
-            }
-            else if (xUnits == PositionUnitType.PixelsFromLeft)
-            {
-                if(widthUnits == DimensionUnitType.RelativeToContainer)
-                {
-                    leftMargin = MathFunctions.RoundToInt(x);
-                    x = 0;
-                }
-            }
-            else if (xUnits == PositionUnitType.PixelsFromCenterX)
-            {
-                if (widthUnits == DimensionUnitType.Absolute || widthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
-                {
-                    x = (CanvasWidth - width) / 2.0f;
-                }
-            }
-            else if (xUnits == PositionUnitType.PixelsFromRight)
-            {
-                if (xOrigin == HorizontalAlignment.Right)
-                {
-                    rightMargin = MathFunctions.RoundToInt(-x);
-                    x = 1;
-                    proportionalFlags.Add(XProportionalFlag);
-                }
-            }
-
-            #endregion
-
-            #region Apply YUnits
-
-            if (yUnits == PositionUnitType.PixelsFromCenterY && yOrigin == VerticalAlignment.Center)
-            {
-                // If relative to container, it's already handled up above
-                if(heightUnits != DimensionUnitType.RelativeToContainer)
-                {
-                    topMargin = MathFunctions.RoundToInt(y);
-                    bottomMargin = MathFunctions.RoundToInt(-y);
-                }
-                y = .5f;
-                proportionalFlags.Add(YProportionalFlag);
-
-            }
-            else if(yUnits == PositionUnitType.PixelsFromTop)
-            {
-                if(heightUnits == DimensionUnitType.RelativeToContainer)
-                {
-                    topMargin = MathFunctions.RoundToInt(y);
-                    y = 0;
-                }
-            }
-            else if (yUnits == PositionUnitType.PercentageHeight)
-            {
-                y /= 100.0f;
-                var adjustedCanvasHeight = 1 - height;
-                if (adjustedCanvasHeight > 0)
-                {
-                    y /= adjustedCanvasHeight;
-                }
-                proportionalFlags.Add(YProportionalFlag);
-            }
-            else if (yUnits == PositionUnitType.PixelsFromCenterY)
-            {
-                if (heightUnits == DimensionUnitType.Absolute || heightUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
-                {
-                    y = (CanvasHeight - height) / 2.0f;
-                }
-            }
-            else if (yUnits == PositionUnitType.PixelsFromBottom)
-            {
-                if (yOrigin == VerticalAlignment.Bottom)
-                {
-                    bottomMargin = MathFunctions.RoundToInt(-y);
-                    y = 1;
-                    proportionalFlags.Add(YProportionalFlag);
-                }
-                else
-                {
-                    // We could be smarter about this but we'll add this
-                    // when it's needed.
-                    y += CanvasHeight;
-                }
-            }
-
-
-            #endregion
-
-            #region Write HorizontalOptions
-
-            //If the object is width proportional, then it must use a .HorizontalOptions = LayoutOptions.Fill; or else the proportional width won't apply
-            if (proportionalFlags.Contains(WidthProportionalFlag))
-            {
-                stringBuilder.AppendLine($"{context.CodePrefix}.HorizontalOptions = LayoutOptions.Fill;");
-            }
-            else if (widthUnits == DimensionUnitType.Absolute || widthUnits == DimensionUnitType.RelativeToChildren || widthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
-            {
-                if (xUnits == PositionUnitType.PixelsFromCenterX && xOrigin == HorizontalAlignment.Center)
-                {
-                    stringBuilder.AppendLine(
-                        $"{codePrefix}.HorizontalOptions = LayoutOptions.Center;");
-                }
-                else if (xUnits == PositionUnitType.PixelsFromRight && xOrigin == HorizontalAlignment.Right)
-                {
-                    stringBuilder.AppendLine(
-                        $"{codePrefix}.HorizontalOptions = LayoutOptions.End;");
-                }
-                else
-                {
-                    stringBuilder.AppendLine(
-                        $"{codePrefix}.HorizontalOptions = LayoutOptions.Start;");
-
-                }
-            }
-            else if (widthUnits == DimensionUnitType.RelativeToContainer ||
-                widthUnits == DimensionUnitType.Percentage)
-            {
-                stringBuilder.AppendLine(
-                    $"{codePrefix}.HorizontalOptions = LayoutOptions.Fill;");
-            }
-
-            #endregion
-
-            #region Write Vertical Options
-
-            if (heightUnits == DimensionUnitType.Absolute || heightUnits == DimensionUnitType.RelativeToChildren || heightUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
-            {
-                if (yUnits == PositionUnitType.PixelsFromCenterY && xOrigin == HorizontalAlignment.Center)
-                {
-                    stringBuilder.AppendLine(
-                        $"{codePrefix}.VerticalOptions = LayoutOptions.Center;");
-                }
-                else
-                {
-                    stringBuilder.AppendLine(
-                        $"{codePrefix}.VerticalOptions = LayoutOptions.Start;");
-                }
-            }
-            else if (heightUnits == DimensionUnitType.RelativeToContainer ||
-                heightUnits == DimensionUnitType.Percentage)
-            {
-                stringBuilder.AppendLine(
-                    $"{codePrefix}.VerticalOptions = LayoutOptions.Fill;");
-            }
-
-            #endregion
-
-            var xString = x.ToString(CultureInfo.InvariantCulture) + "f";
-            var yString = y.ToString(CultureInfo.InvariantCulture) + "f";
-            var widthString = width.ToString(CultureInfo.InvariantCulture) + "f";
-            var heightString = height.ToString(CultureInfo.InvariantCulture) + "f";
-
-            if(heightUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
-            {
-                heightString = $"({heightString} * RenderingLibrary.SystemManagers.GlobalFontScale)";
-            }
-            if(widthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
-            {
-                widthString = $"({widthString} * RenderingLibrary.SystemManagers.GlobalFontScale)";
-            }
-
-            // When using AbsoluteLayout in XamarinForms, adding a margin will actually shrink the object. Therefore, if using margin to 
-            // position an object relative to its right or bottom edges, the object's width and height should be increased by the offset amount.
-
-            if(xUnits == PositionUnitType.PixelsFromRight && xOrigin == HorizontalAlignment.Right)
-            {
-                if(widthUnits == DimensionUnitType.RelativeToChildren)
-                {
-                    widthString = $"({widthString})";
-                }
-                else
-                {
-                    widthString = $"({widthString} + {rightMargin})";
-                }
-            }
-            if(yUnits == PositionUnitType.PixelsFromBottom && yOrigin == VerticalAlignment.Bottom)
-            {
-                if(heightUnits == DimensionUnitType.RelativeToChildren)
-                {
-                    heightString = $"({heightString})";
-                }
-                else
-                {
-                    heightString = $"({heightString} + {bottomMargin})";
-                }
-            }
-
-            if (AdjustPixelValuesForDensity)
-            {
-                if (proportionalFlags.Contains(XProportionalFlag) == false)
-                {
-                    xString += "/Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density";
-                }
-                if (proportionalFlags.Contains(YProportionalFlag) == false)
-                {
-                    yString += "/Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density";
-                }
-                if (proportionalFlags.Contains(WidthProportionalFlag) == false && widthUnits != DimensionUnitType.RelativeToChildren)
-                {
-                    widthString += "/Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density";
-                }
-                if (proportionalFlags.Contains(HeightProportionalFlag) == false && heightUnits != DimensionUnitType.RelativeToChildren)
-                {
-                    heightString += "/Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density";
-                }
-            }
-
-
-
-            string boundsText =
-                $"{ToTabs(context.TabCount)}AbsoluteLayout.SetLayoutBounds({context.CodePrefixNoTabs}, new Rectangle({xString}, {yString}, {widthString}, {heightString} ));";
-            string flagsText = null;
-
-            if(proportionalFlags.Count == 0)
-            {
-                // A default state could set values, we override it but don't use any porportional, we probably still want to adjust here...
-                proportionalFlags.Add("AbsoluteLayoutFlags.None");
-            }
-
-            if (proportionalFlags.Count > 0)
-            {
-                string flagsArguments = null;
-                int i = 0;
-                foreach (var flag in proportionalFlags)
-                {
-                    if (i > 0)
-                    {
-                        flagsArguments += " | ";
-                    }
-                    flagsArguments += flag;
-                    i++;
-                }
-                flagsText = $"{ToTabs(context.TabCount)}AbsoluteLayout.SetLayoutFlags({context.CodePrefixNoTabs}, {flagsArguments});";
-            }
-            // assume every object has X, which it won't, so we will have to improve this
-            if (string.IsNullOrWhiteSpace(flagsText))
-            {
-                stringBuilder.AppendLine(boundsText);
-            }
-            else
-            {
-                stringBuilder.AppendLine($"{boundsText}\n{flagsText}");
-            }
-
-            // not sure why these apply even though we're using values on the AbsoluteLayout
-            if (!proportionalFlags.Contains(WidthProportionalFlag) && (widthUnits == DimensionUnitType.RelativeToContainer || widthUnits == DimensionUnitType.Absolute || widthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale))
-            {
-                if(widthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
-                {
-                    stringBuilder.AppendLine($"{context.CodePrefix}.WidthRequest = {width.ToString(CultureInfo.InvariantCulture)}f * RenderingLibrary.SystemManagers.GlobalFontScale;");
-                }
-                else
-                {
-                    stringBuilder.AppendLine($"{context.CodePrefix}.WidthRequest = {width.ToString(CultureInfo.InvariantCulture)}f;");
-                }
-            }
-            if (!proportionalFlags.Contains(HeightProportionalFlag) && (heightUnits == DimensionUnitType.RelativeToContainer || heightUnits == DimensionUnitType.Absolute || heightUnits == DimensionUnitType.AbsoluteMultipliedByFontScale))
-            {
-                if(heightUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
-                {
-                    stringBuilder.AppendLine($"{context.CodePrefix}.HeightRequest = {height.ToString(CultureInfo.InvariantCulture)}f * RenderingLibrary.SystemManagers.GlobalFontScale;");
-                }
-                else
-                {
-                    stringBuilder.AppendLine($"{context.CodePrefix}.HeightRequest = {height.ToString(CultureInfo.InvariantCulture)}f;");
-                }
-            }
-
-
-            if (leftMargin != 0 || rightMargin != 0 || topMargin != 0 || bottomMargin != 0)
-            {
-                stringBuilder.AppendLine($"{context.CodePrefix}.Margin = new Thickness({leftMargin}, {topMargin}, {rightMargin}, {bottomMargin});");
-            }
-            // should we do the same to vertical? Maybe, but waiting for a natural use case to test it
-        }
-
-        private static float CalculateAbsoluteWidth(InstanceSave instance, ElementSave container, RecursiveVariableFinder variableFinder)
-        {
-            string prefix = instance?.Name == null ? "" : instance.Name + ".";
-
-
-            var x = variableFinder.GetValue<float>(prefix + "X");
-            var width = variableFinder.GetValue<float>(prefix + "Width");
-
-            var xUnits = variableFinder.GetValue<PositionUnitType>(prefix + "X Units");
-            var widthUnits = variableFinder.GetValue<DimensionUnitType>(prefix + "Width Units");
-
-            var xOrigin = variableFinder.GetValue<HorizontalAlignment>(prefix + "X Origin");
-
-            var parentName = variableFinder.GetValue<string>(prefix + "Parent");
-
-            var parent = container.GetInstance(parentName);
-
-            float toReturn = 0;
-            if (instance == null)
-            {
-                toReturn = width; // handle this eventually?
-            }
-            else if(widthUnits == DimensionUnitType.Absolute || widthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
-            {
-                toReturn = width;
-            }
-            else if(widthUnits == DimensionUnitType.RelativeToContainer)
-            {
-                if(parent == null)
-                {
-                    toReturn = width + GumState.Self.ProjectState.GumProjectSave.DefaultCanvasWidth;
-                }
-                else
-                {
-                    var parentWidth = CalculateAbsoluteWidth(parent, container, variableFinder);
-
-                    toReturn = parentWidth + width;
-                }
-            }
-
-            return toReturn;
-        }
-
-        private static float CalculateAbsoluteHeight(InstanceSave instance, ElementSave container, RecursiveVariableFinder variableFinder)
-        {
-            string prefix = instance?.Name == null ? "" : instance.Name + ".";
-
-
-            var y = variableFinder.GetValue<float>(prefix + "Y");
-            var height = variableFinder.GetValue<float>(prefix + "Height");
-
-            var yUnits = variableFinder.GetValue<PositionUnitType>(prefix + "Y Units");
-            var heightUnits = variableFinder.GetValue<DimensionUnitType>(prefix + "Height Units");
-
-            var yOrigin = variableFinder.GetValue<HorizontalAlignment>(prefix + "Y Origin");
-
-            var parentName = variableFinder.GetValue<string>(prefix + "Parent");
-
-            var parent = container.GetInstance(parentName);
-
-            float toReturn = 0;
-            if (instance == null)
-            {
-                toReturn = height; // handle this eventually?
-            }
-            else if (heightUnits == DimensionUnitType.Absolute || heightUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
-            {
-                toReturn = height;
-            }
-            else if (heightUnits == DimensionUnitType.RelativeToContainer)
-            {
-                if (parent == null)
-                {
-                    toReturn = height + GumState.Self.ProjectState.GumProjectSave.DefaultCanvasHeight;
-                }
-                else
-                {
-                    var parentWidth = CalculateAbsoluteHeight(parent, container, variableFinder);
-
-                    toReturn = parentWidth + height;
-                }
-            }
-
-            return toReturn;
-        }
-
         private static void FillWithInstanceDeclaration(InstanceSave instance, ElementSave container, StringBuilder stringBuilder, int tabCount = 0)
         {
             VisualApi visualApi = VisualApi.Gum;

@@ -46,7 +46,7 @@ namespace Gum.Plugins.PropertiesWindowPlugin
 
         private void HandleProjectLoad(GumProjectSave obj)
         {
-            if(control != null && viewModel != null)
+            if (control != null && viewModel != null)
             {
                 viewModel.SetFrom(ProjectManager.Self.GeneralSettingsFile, ProjectState.Self.GumProjectSave);
                 control.ViewModel = null;
@@ -58,7 +58,7 @@ namespace Gum.Plugins.PropertiesWindowPlugin
         {
             try
             {
-                if(control == null)
+                if (control == null)
                 {
                     control = new ProjectPropertiesControl();
 
@@ -70,7 +70,7 @@ namespace Gum.Plugins.PropertiesWindowPlugin
                 GumCommands.Self.GuiCommands.ShowControl(control);
                 control.ViewModel = viewModel;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 GumCommands.Self.GuiCommands.PrintOutput($"Error showing project properties:\n{ex.ToString()}");
             }
@@ -78,79 +78,85 @@ namespace Gum.Plugins.PropertiesWindowPlugin
 
         private void HandlePropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if(!viewModel.IsUpdatingFromModel)
+            ////////////////////Early Out//////////////////
+            if (viewModel.IsUpdatingFromModel)
             {
-                viewModel.ApplyToModelObjects();
+                return;
+            }
+            ///////////////////End early Out////////////////
+            viewModel.ApplyToModelObjects();
 
-                var shouldSaveAndRefresh = true;
-                var shouldReloadContent = false;
-                switch(e.PropertyName)
-                {
-                    case nameof(viewModel.LocalizationFile):
+            var shouldSaveAndRefresh = true;
+            var shouldReloadContent = false;
+            switch (e.PropertyName)
+            {
+                case nameof(viewModel.LocalizationFile):
 
 
-                        if (!string.IsNullOrEmpty(viewModel.LocalizationFile) && FileManager.IsRelative(viewModel.LocalizationFile) == false)
+                    if (!string.IsNullOrEmpty(viewModel.LocalizationFile) && FileManager.IsRelative(viewModel.LocalizationFile) == false)
+                    {
+                        viewModel.LocalizationFile = FileManager.MakeRelative(viewModel.LocalizationFile,
+                            GumState.Self.ProjectState.ProjectDirectory);
+                        shouldSaveAndRefresh = false;
+                    }
+                    else
+                    {
+                        GumCommands.Self.FileCommands.LoadLocalizationFile();
+
+                        WireframeObjectManager.Self.RefreshAll(forceLayout: true, forceReloadTextures: false);
+                    }
+                    break;
+                case nameof(viewModel.LanguageIndex):
+                    LocalizationManager.CurrentLanguage = viewModel.LanguageIndex;
+                    break;
+                case nameof(viewModel.ShowLocalization):
+                    shouldSaveAndRefresh = true;
+                    break;
+                case nameof(viewModel.FontRanges):
+                    var isValid = BmfcSave.GetIfIsValidRange(viewModel.FontRanges);
+                    var didFixChangeThings = false;
+                    if (!isValid)
+                    {
+                        var fixedRange = BmfcSave.TryFixRange(viewModel.FontRanges);
+                        if (fixedRange != viewModel.FontRanges)
                         {
-                            viewModel.LocalizationFile = FileManager.MakeRelative(viewModel.LocalizationFile, 
-                                GumState.Self.ProjectState.ProjectDirectory);
-                            shouldSaveAndRefresh = false;
+                            // this will recursively call this property, so we'll use this bool to leave this method
+                            didFixChangeThings = true;
+                            viewModel.FontRanges = fixedRange;
+                        }
+                    }
+
+                    if (!didFixChangeThings)
+                    {
+                        if (isValid == false)
+                        {
+                            GumCommands.Self.GuiCommands.ShowMessage("The entered Font Range is not valid.");
                         }
                         else
                         {
-                            GumCommands.Self.FileCommands.LoadLocalizationFile();
-
-                            WireframeObjectManager.Self.RefreshAll(forceLayout: true, forceReloadTextures: false);
-                        }
-                        break;
-                    case nameof(viewModel.LanguageIndex):
-                        LocalizationManager.CurrentLanguage = viewModel.LanguageIndex;
-                        break;
-                    case nameof(viewModel.ShowLocalization):
-                        shouldSaveAndRefresh = true;
-                        break;
-                    case nameof(viewModel.FontRanges):
-                        var isValid = BmfcSave.GetIfIsValidRange(viewModel.FontRanges);
-                        var didFixChangeThings = false;
-                        if(!isValid)
-                        {
-                            var fixedRange = BmfcSave.TryFixRange(viewModel.FontRanges);
-                            if(fixedRange != viewModel.FontRanges)
+                            if (GumState.Self.ProjectState.GumProjectSave != null)
                             {
-                                // this will recursively call this property, so we'll use this bool to leave this method
-                                didFixChangeThings = true;
-                                viewModel.FontRanges = fixedRange;
+                                FontManager.Self.DeleteFontCacheFolder();
+
+                                FontManager.Self.CreateAllMissingFontFiles(
+                                    ProjectState.Self.GumProjectSave);
+
                             }
+                            shouldSaveAndRefresh = true;
+                            shouldReloadContent = true;
                         }
+                    }
+                    break;
+                case nameof(viewModel.GuideLineColor):
+                    GumCommands.Self.WireframeCommands.RefreshGuides();
+                    break;
+            }
 
-                        if(!didFixChangeThings)
-                        {
-                            if(isValid == false)
-                            {
-                                GumCommands.Self.GuiCommands.ShowMessage("The entered Font Range is not valid.");
-                            }
-                            else
-                            {
-                                if(GumState.Self.ProjectState.GumProjectSave != null)
-                                {
-                                    FontManager.Self.DeleteFontCacheFolder();
+            if (shouldSaveAndRefresh)
+            {
+                GumCommands.Self.WireframeCommands.Refresh(forceLayout: true, forceReloadContent: shouldReloadContent);
 
-                                    FontManager.Self.CreateAllMissingFontFiles(
-                                        ProjectState.Self.GumProjectSave);
-
-                                }
-                                shouldSaveAndRefresh = true;
-                                shouldReloadContent = true;
-                            }
-                        }
-                        break;
-                }
-
-                if(shouldSaveAndRefresh)
-                {
-                    GumCommands.Self.WireframeCommands.Refresh(forceLayout:true, forceReloadContent: shouldReloadContent);
-
-                    GumCommands.Self.FileCommands.TryAutoSaveProject();
-                }
+                GumCommands.Self.FileCommands.TryAutoSaveProject();
             }
         }
 

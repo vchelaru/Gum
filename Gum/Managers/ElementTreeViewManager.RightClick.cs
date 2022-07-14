@@ -292,6 +292,8 @@ namespace Gum.Managers
                                 (not, used) => HandleMoveToBase(SelectedState.Self.SelectedInstances, SelectedState.Self.SelectedElement, containerBase));
                         }
                     }
+
+                    AddPasteMenuItems();
                 }
 
                 #endregion
@@ -319,14 +321,7 @@ namespace Gum.Managers
                     }
                     mMenuStrip.Items.Add(duplicateElement);
 
-                    if (CopyPasteLogic.CopiedData.CopiedInstancesRecursive.Count > 0)
-                    {
-                        mMenuStrip.Items.Add("Paste", null, HandlePaste);
-                    }
-                    if (CopyPasteLogic.CopiedData.CopiedInstancesSelected.Count > 0)
-                    {
-                        mMenuStrip.Items.Add("Paste Top Level Instances", null, HandlePasteTopLevel);
-                    }
+                    AddPasteMenuItems();
 
                     mMenuStrip.Items.Add("-");
 
@@ -394,6 +389,24 @@ namespace Gum.Managers
                 {
                     mMenuStrip.Items.Add("Add Behavior", null, HandleAddBehavior);
                 }
+            }
+        }
+
+        private void AddPasteMenuItems()
+        {
+            if (CopyPasteLogic.CopiedData.CopiedInstancesRecursive.Count > 0)
+            {
+                mMenuStrip.Items.Add("Paste", null, HandlePaste);
+            }
+            if (CopyPasteLogic.CopiedData.CopiedInstancesSelected.Count > 0)
+            {
+                string text;
+                if (CopyPasteLogic.CopiedData.CopiedInstancesSelected.Count == 0)
+                    text = "Paste Top Level Instance";
+                else
+                    text = "Paste Top Level Instances";
+
+                mMenuStrip.Items.Add(text, null, HandlePasteTopLevel);
             }
         }
 

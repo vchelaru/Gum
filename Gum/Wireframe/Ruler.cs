@@ -14,6 +14,7 @@ using WinCursor = System.Windows.Forms.Cursor;
 using Sprite = RenderingLibrary.Graphics.Sprite;
 using Camera = RenderingLibrary.Camera;
 using RenderingLibrary.Math;
+using Gum.ToolStates;
 
 namespace Gum.Wireframe
 {
@@ -113,7 +114,7 @@ namespace Gum.Wireframe
                 this.DestroyGuideLines();
                 foreach (float position in value)
                 {
-                    AddGuide(position);
+                    AddGuide(position, GuideLineColor);
                 }
             }
         }
@@ -171,7 +172,54 @@ namespace Gum.Wireframe
 
         #endregion
 
-
+        Color GuideLineColor
+        {
+            get
+            {
+                if (GumState.Self.ProjectState.GeneralSettings != null)
+                {
+                    return new Color(
+                        GumState.Self.ProjectState.GeneralSettings.GuideLineColorR,
+                        GumState.Self.ProjectState.GeneralSettings.GuideLineColorG,
+                        GumState.Self.ProjectState.GeneralSettings.GuideLineColorB,
+                        127
+                        );
+                }
+                else
+                {
+                    return new Color(
+                        255,
+                        255,
+                        255,
+                        127
+                        );
+                }
+            }
+        }
+        Color GuideTextColor
+        {
+            get
+            {
+                if (GumState.Self.ProjectState.GeneralSettings != null)
+                {
+                    return new Color(
+                        GumState.Self.ProjectState.GeneralSettings.GuideTextColorR,
+                        GumState.Self.ProjectState.GeneralSettings.GuideTextColorG,
+                        GumState.Self.ProjectState.GeneralSettings.GuideTextColorB,
+                        255
+                        );
+                }
+                else
+                {
+                    return new Color(
+                        255,
+                        255,
+                        255,
+                        127
+                        );
+                }
+            }
+        }
         public Ruler(GraphicsDeviceControl control, SystemManagers managers, Cursor cursor, InputLibrary.Keyboard keyboard )
         {
             try
@@ -399,7 +447,7 @@ namespace Gum.Wireframe
                 }
             }
 
-            UpdateGrabbedGuideText(guideSpacePosition);
+            UpdateGrabbedGuideText(guideSpacePosition, GuideTextColor);
 
             if (!mCursor.PrimaryDown)
             {
@@ -424,7 +472,7 @@ namespace Gum.Wireframe
             return value;
         }
 
-        private void UpdateGrabbedGuideText(float guideSpaceY)
+        private void UpdateGrabbedGuideText(float guideSpaceY, Color guideTextColor)
         {
             // need to make it bigger to support scrollbars
             //const float distanceFromEdge = 10;
@@ -433,7 +481,7 @@ namespace Gum.Wireframe
             if (mCursor.PrimaryDown && mGrabbedGuide != null)
             {
                 mGrabbedGuideText.Visible = true;
-
+                mGrabbedGuideText.Color = guideTextColor;
                 if (this.RulerSide == Wireframe.RulerSide.Left)
                 {
                     mGrabbedGuideText.Y = mGrabbedGuide.Y - 21;
@@ -463,7 +511,7 @@ namespace Gum.Wireframe
                 if (x > mRectangle.X && x < mRectangle.X + mRectangle.Width &&
                     y > mRectangle.Y && y < mRectangle.Y + mRectangle.Height)
                 {
-                    AddGuide(x, y);
+                    AddGuide(x, y, GuideLineColor);
                     toReturn = true;
                 }
             }
@@ -507,7 +555,7 @@ namespace Gum.Wireframe
             }
         }
 
-        private void AddGuide(float x, float y)
+        private void AddGuide(float x, float y, Color guideColor)
         {
             float relevantValue;
             if (this.RulerSide == Wireframe.RulerSide.Left)
@@ -518,10 +566,10 @@ namespace Gum.Wireframe
             {
                 relevantValue = x - mOffsetSprite.X;
             }
-            AddGuide(relevantValue);
+            AddGuide(relevantValue, guideColor);
         }
 
-        private void AddGuide(float relevantValue)
+        private void AddGuide(float relevantValue, Color guideColor)
         {
 
             Line line = new Line(mManagers);
@@ -538,7 +586,7 @@ namespace Gum.Wireframe
                 line.X = relevantValue;
                 line.RelativePoint = new Microsoft.Xna.Framework.Vector2(0, 6000);
             }
-            line.Color = new Color(1, 1, 1, .5f);
+            line.Color = guideColor;
             line.Z = 2;
 
             line.Parent = mOffsetSprite;

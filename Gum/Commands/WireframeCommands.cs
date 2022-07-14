@@ -13,5 +13,10 @@ namespace Gum.Commands
         {
             WireframeObjectManager.Self.RefreshAll(forceLayout, forceReloadContent);
         }
+
+        public void RefreshGuides()
+        {
+            WireframeObjectManager.Self.RefreshGuides();
+        }
     }
 }

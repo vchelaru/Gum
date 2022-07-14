@@ -199,6 +199,11 @@ namespace Gum.Wireframe
             PluginManager.Self.WireframeRefreshed();
         }
 
+        public void RefreshGuides()
+        {
+            mWireframeControl.RefreshGuides();
+        }
+
         private void RefreshAll(bool forceLayout, bool forceReloadTextures, ElementSave elementSave)
         {
             bool shouldRecreateIpso = forceLayout || elementSave != ElementShowing;
