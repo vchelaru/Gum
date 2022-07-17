@@ -49,6 +49,20 @@ namespace WpfDataUi.DataTypes
             private set;
         }
 
+        double? width;
+        public double? Width
+        {
+            get => width;
+            set
+            {
+                if(width != value)
+                {
+                    width = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Width)));
+                }
+            }
+        }
+
         #endregion
 
         #region Events

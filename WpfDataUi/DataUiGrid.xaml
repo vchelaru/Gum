@@ -8,37 +8,39 @@
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300"
              >
-<!--Vic sasks - why is this wrapped in a stack panel? Shouldn't an ItemsControl expand the same as the stack panel? Having it in a stack panel screws with horizontal layouts...-->
+    <!--Vic sasks - why is this wrapped in a stack panel? Shouldn't an ItemsControl expand the same as the stack panel? Having it in a stack panel screws with horizontal layouts...-->
     <!--<StackPanel Background="Purple">-->
-        <ItemsControl Name="InternalControl" ItemsSource="{Binding Categories}">
+    <ItemsControl Name="InternalControl" ItemsSource="{Binding Categories}">
 
-            <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <StackPanel Orientation="{Binding CategoriesOrientation}"/>
-                </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+                <StackPanel Orientation="{Binding CategoriesOrientation}"/>
+            </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
 
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                    <!--  Each Expander is one MemberCategory -->
-                    <!--VerticalAlignment is set to Stretch if this control is in horizontal mode. If it's in vertical, then that's not used-->
-                    <Expander 
-                            Header="{Binding Name}" Visibility="{Binding Visibility}" 
-                              FontSize="{Binding FontSize}"
-                              VerticalAlignment="Stretch"  
-                              IsExpanded="True" Margin="1"
-                              local:DataGridAttachedProperties.HideExpanderArrow="{Binding HideHeader}"
+        <ItemsControl.ItemTemplate>
+            <DataTemplate>
+                <!--  Each Expander is one MemberCategory -->
+                <!--VerticalAlignment is set to Stretch if this control is in horizontal mode. If it's in vertical, then that's not used-->
+                <Expander 
+                        Header="{Binding Name}" 
+                        Visibility="{Binding Visibility}" 
+                        FontSize="{Binding FontSize}"
+                        Width="{Binding Width}"
+                        VerticalAlignment="Stretch"  
+                        IsExpanded="True" Margin="1"
+                        local:DataGridAttachedProperties.HideExpanderArrow="{Binding HideHeader}"
                               >
-                        <ItemsControl x:Name="ItemsControlInstance" ItemsSource="{Binding Members}" Focusable="False">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <DataUi:SingleDataUiContainer FontSize="12" Margin="3,0,3,0" Background="{Binding BackgroundColor}"/>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </Expander>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
+                    <ItemsControl x:Name="ItemsControlInstance" ItemsSource="{Binding Members}" Focusable="False">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <DataUi:SingleDataUiContainer FontSize="12" Margin="3,0,3,0" Background="{Binding BackgroundColor}"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Expander>
+            </DataTemplate>
+        </ItemsControl.ItemTemplate>
+    </ItemsControl>
     <!--</StackPanel>-->
 </UserControl>

@@ -44,7 +44,16 @@ namespace WpfDataUi.Controls
             }
             set
             {
+                bool instanceMemberChanged = mInstanceMember != value;
+                if (mInstanceMember != null && instanceMemberChanged)
+                {
+                    mInstanceMember.PropertyChanged -= HandlePropertyChange;
+                }
                 mInstanceMember = value;
+                if (mInstanceMember != null && instanceMemberChanged)
+                {
+                    mInstanceMember.PropertyChanged += HandlePropertyChange;
+                }
                 Refresh();
             }
         }
@@ -260,6 +269,14 @@ namespace WpfDataUi.Controls
             this.SuppressSettingProperty = true;
             this.ComboBox.Items.Clear();
             
+            // July 17, 2022
+            // Should this be 
+            // a "smart refresh"
+            // which only adds and
+            // removes individual items
+            // which should be changed, rather
+            // than a full refresh?
+
             // We want to check the CustomOptions first
             // because we may have an enum that has been
             // reduced by the converter.  In that case we 
@@ -345,6 +362,15 @@ namespace WpfDataUi.Controls
                 isInSelectionChanged = false;
             }
 
+        }
+
+        private void HandlePropertyChange(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(InstanceMember.Value))
+            {
+                this.Refresh();
+
+            }
         }
 
         private void HandleChange()

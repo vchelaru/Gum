@@ -496,8 +496,10 @@ namespace WpfDataUi
                 foreach (var instanceMember in memberCategory.Members)
                 {
                     instanceMember.SimulateValueChanged();
+
                 }
             }
+
         }
 
         public void InsertSpacesInCamelCaseMemberNames()
