@@ -8,28 +8,37 @@
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300"
              >
-
-    <StackPanel>
+<!--Vic sasks - why is this wrapped in a stack panel? Shouldn't an ItemsControl expand the same as the stack panel? Having it in a stack panel screws with horizontal layouts...-->
+    <!--<StackPanel Background="Purple">-->
         <ItemsControl Name="InternalControl" ItemsSource="{Binding Categories}">
+
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Orientation="{Binding CategoriesOrientation}"/>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
                     <!--  Each Expander is one MemberCategory -->
-                    <Expander Header="{Binding Name}" Visibility="{Binding Visibility}" 
-                              FontSize="{Binding FontSize}" 
+                    <!--VerticalAlignment is set to Stretch if this control is in horizontal mode. If it's in vertical, then that's not used-->
+                    <Expander 
+                            Header="{Binding Name}" Visibility="{Binding Visibility}" 
+                              FontSize="{Binding FontSize}"
+                              VerticalAlignment="Stretch"  
                               IsExpanded="True" Margin="1"
-                              
                               local:DataGridAttachedProperties.HideExpanderArrow="{Binding HideHeader}"
                               >
                         <ItemsControl x:Name="ItemsControlInstance" ItemsSource="{Binding Members}" Focusable="False">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <DataUi:SingleDataUiContainer FontSize="12" Margin="3,0,3,0" Background="{Binding BackgroundColor}"/>
-                                </DataTemplate>    
+                                </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
                     </Expander>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
-    </StackPanel>
+    <!--</StackPanel>-->
 </UserControl>

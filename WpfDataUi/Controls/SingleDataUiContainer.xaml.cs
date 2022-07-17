@@ -61,9 +61,14 @@ namespace WpfDataUi
         static SingleDataUiContainer()
         {
             mTypeDisplayerAssociation.Add(new KeyValuePair<Func<Type, bool>, Type>(
-             (item) => item == typeof(bool),
-             typeof(CheckBoxDisplay))
-             );
+                (item) => item == typeof(bool),
+                typeof(CheckBoxDisplay))
+                );
+
+            mTypeDisplayerAssociation.Add(new KeyValuePair<Func<Type, bool>, Type>(
+                (item) => item == typeof(bool?),
+                typeof(NullableBoolDisplay))
+                );
 
 
             mTypeDisplayerAssociation.Add(new KeyValuePair<Func<Type, bool>, Type>(

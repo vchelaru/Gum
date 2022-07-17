@@ -34,11 +34,12 @@ namespace WpfDataUi
     /// <summary>
     /// Interaction logic for DataUiGrid.xaml
     /// </summary>
-    public partial class DataUiGrid : UserControl
+    public partial class DataUiGrid : UserControl, INotifyPropertyChanged
     {
         #region Fields
 
         //object mInstance;
+        StackPanel templateStackPanel;
 
         List<IDataUi> mDataUi = new List<IDataUi>();
 
@@ -142,11 +143,34 @@ namespace WpfDataUi
             set => InternalControl.IsEnabled = value;
         }
 
+        Orientation mCategoriesOrientation = Orientation.Vertical;
+        public Orientation CategoriesOrientation
+        {
+            get => mCategoriesOrientation;
+            set
+            {
+                if(value != mCategoriesOrientation)
+                {
+                    mCategoriesOrientation = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CategoriesOrientation)));
+                }
+            }
+        }
+
         #endregion
 
         #region Events
         public event Action<string, BeforePropertyChangedArgs> BeforePropertyChange;
+        /// <summary>
+        /// Raised whenever an instance member is set by the UI, such as the user typing a value in a text box.
+        /// </summary>
         public event Action<string, PropertyChangedArgs> PropertyChange;
+
+        /// <summary>
+        /// Implementation of INotifyPropertyChanged for this object to enable it to self-bind. This should not
+        /// be accessed outside of the class.
+        /// </summary>
+        public event PropertyChangedEventHandler PropertyChanged;
         #endregion
 
         #region Constructor
@@ -297,6 +321,15 @@ namespace WpfDataUi
                 }
             }
             return member != null;
+        }
+
+        public InstanceMember GetInstanceMember(string memberName)
+        {
+            if(TryGetInstanceMember(memberName, out InstanceMember member, out MemberCategory _))
+            {
+                return member;
+            }
+            return null;
         }
 
         private void HandleMembersToIgnoreChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)

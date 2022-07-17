@@ -116,6 +116,55 @@ namespace CodeOutputPlugin.Manager
 
         #endregion
 
+        #region Initialize
+
+        static bool DoesElementInheritFromCodeGeneratedElement(ElementSave element)
+        {
+            var foundBase = ObjectFinder.Self.GetElementSave(element.BaseType);
+            var isDerived = foundBase != null && (foundBase is StandardElementSave) == false;
+
+            return isDerived;
+        }
+
+        private static void GenerateInitializeInstancesMethod(ElementSave element, VisualApi visualApi, int tabCount, StringBuilder stringBuilder)
+        {
+            var isDerived = DoesElementInheritFromCodeGeneratedElement(element);
+
+            var virtualOrOverride = isDerived
+                ? "override"
+                : "virtual";
+
+            var line = $"protected {virtualOrOverride} void InitializeInstances()";
+            stringBuilder.AppendLine(ToTabs(tabCount) + line);
+            stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+            tabCount++;
+
+            CodeGenerationContext context = new CodeGenerationContext();
+            context.Instance = null;
+            context.Element = element;
+            context.TabCount = tabCount;
+
+            if(isDerived)
+            {
+                stringBuilder.AppendLine(ToTabs(tabCount) + "base.InitializeInstances();");
+            }
+
+            foreach (var instance in element.Instances)
+            {
+                if(!instance.DefinedByBase)
+                {
+                    context.Instance = instance;
+
+                    FillWithInstanceInstantiation(instance, element, stringBuilder, tabCount);
+                }
+            }
+
+            tabCount--;
+            stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+        }
+
+        #endregion
+
         #region Position / Size
 
         private static void ProcessPositionAndSize(List<VariableSave> variablesToConsider, StateSave state, InstanceSave instance, ElementSave container, StringBuilder stringBuilder, CodeGenerationContext context)
@@ -962,6 +1011,135 @@ namespace CodeOutputPlugin.Manager
 
         #endregion
 
+        #region Parent
+
+        private static void FillWithParentAssignments(InstanceSave instance, ElementSave container, StringBuilder stringBuilder, int tabCount = 0)
+        {
+            // Some history on this:
+            // Initially parent assignment
+            // was mixed in with normal variable
+            // assignment. This was separated out
+            // into its own method on July 14 so that
+            // a derived element can assign parent and
+            // children elements all at once. To do this, 
+            // we'll get the recursive parent value instead
+            // of relying on top-level variables:
+
+            var defaultState = container.DefaultState;
+
+            var rfv = new RecursiveVariableFinder(defaultState);
+
+            var parentVariable = rfv.GetVariable($"{instance.Name}.Parent");
+
+            //var parentVariables = GetVariablesForValueAssignmentCode(instance, container)
+            //    // make "Parent" first
+            //    // .. actually we need to make parent last so that it can properly assign parent on scrollables
+            //    .Where(item => item.GetRootName() == "Parent")
+            //    .ToList();
+
+            VisualApi visualApi = GetVisualApiForInstance(instance, container);
+
+            var tabs = new String(' ', 4 * tabCount);
+
+            //FillWithVariableAssignments(instance, container, stringBuilder, tabCount, parentVariables);
+            var context = new CodeGenerationContext();
+            context.Element = container;
+            context.Instance = instance;
+
+            if(parentVariable != null)
+            {
+                var codeLine = GetCodeLine(parentVariable, container, visualApi, defaultState, context);
+
+
+                // the line of code could be " ", a string with a space. This happens
+                // if we want to skip a variable so we dont return null or empty.
+                // But we also don't want a ton of spaces generated.
+                if (!string.IsNullOrWhiteSpace(codeLine))
+                {
+                    stringBuilder.AppendLine(tabs + codeLine);
+                }
+
+                var suffixCodeLine = GetSuffixCodeLine(instance, parentVariable, visualApi);
+                if (!string.IsNullOrEmpty(suffixCodeLine))
+                {
+                    stringBuilder.AppendLine(tabs + suffixCodeLine);
+                }
+            }
+
+            // For scrollable GumContainers we need to have the parent assigned *after* the AbsoluteLayout rectangle:
+            #region Assign Parent
+
+            var hasParent = parentVariable != null;
+
+            if (!hasParent)
+            {
+                if (visualApi == VisualApi.Gum)
+                {
+                    // add it to "this"
+                    stringBuilder.AppendLine($"{tabs}this.Children.Add({instance.Name});");
+                }
+                else // forms
+                {
+                    var instanceBaseType = instance.BaseType;
+                    var isContainerStackLayout = container.BaseType?.EndsWith("/StackLayout") == true;
+                    var isContainerScrollView = container.BaseType?.EndsWith("/ScrollView") == true;
+                    var isContainerAbsoluteLayout = container.BaseType?.EndsWith("/AbsoluteLayout") == true;
+
+                    var instanceName = instance.Name;
+
+                    if (instanceBaseType.EndsWith("/GumCollectionView"))
+                    {
+                        stringBuilder.AppendLine($"{tabs}var tempFor{instance.Name} = GumScrollBar.CreateScrollableAbsoluteLayout({instance.Name}, ScrollableLayoutParentPlacement.Free);");
+                        instanceName = $"tempFor{instance.Name}";
+                    }
+                    
+                    if (isContainerStackLayout || isContainerAbsoluteLayout)
+                    {
+                        stringBuilder.AppendLine($"{tabs}this.Children.Add({instanceName});");
+                    }
+                    else if(isContainerScrollView)
+                    {
+                        stringBuilder.Append($"{tabs}this.Content = {instanceName};");
+                    }
+                    else
+                    {
+                        stringBuilder.AppendLine($"{tabs}MainLayout.Children.Add({instanceName});");
+                    }
+                }
+            }
+
+            #endregion
+        }
+
+        private static void GenerateAddToParentsMethod(ElementSave element, VisualApi visualApi, int tabCount, StringBuilder stringBuilder)
+        {
+            var isDerived = DoesElementInheritFromCodeGeneratedElement(element);
+
+            var virtualOrOverride = isDerived
+                ? "override"
+                : "virtual";
+
+            var line = $"protected {virtualOrOverride} void AssignParents()";
+            stringBuilder.AppendLine(ToTabs(tabCount) + line);
+            stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+            tabCount++;
+
+            if(isDerived)
+            {
+                stringBuilder.AppendLine(ToTabs(tabCount) + "// Intentionally do not call base.AssignParents so that this class can determine the addition of order");
+            }
+
+            foreach (var instance in element.Instances)
+            {
+                FillWithParentAssignments(instance, element, stringBuilder, tabCount);
+            }
+
+            tabCount--;
+            stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+        }
+
+        #endregion
+
         public static string GetGeneratedCodeForElement(ElementSave element, CodeOutputElementSettings elementSettings, CodeOutputProjectSettings projectSettings)
         {
             AdjustPixelValuesForDensity = projectSettings.AdjustPixelValuesForDensity;
@@ -1023,6 +1201,10 @@ namespace CodeOutputPlugin.Manager
 
             GenerateConstructor(element, visualApi, tabCount, stringBuilder);
 
+            GenerateInitializeInstancesMethod(element, visualApi, tabCount, stringBuilder);
+
+            GenerateAddToParentsMethod(element, visualApi, tabCount, stringBuilder);
+
             GenerateApplyDefaultVariables(element, visualApi, tabCount, stringBuilder);
 
 
@@ -1044,6 +1226,149 @@ namespace CodeOutputPlugin.Manager
 
             return stringBuilder.ToString();
         }
+
+        #region Constructor
+
+        private static void GenerateConstructor(ElementSave element, VisualApi visualApi, int tabCount, StringBuilder stringBuilder)
+        {
+            var elementName = GetClassNameForType(element.Name, visualApi);
+
+            if(visualApi == VisualApi.Gum)
+            {
+                #region Constructor Header
+
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"public {elementName}(bool fullInstantiation = true)");
+
+                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+                tabCount++;
+
+                #endregion
+
+                #region Gum-required constructor code
+
+                stringBuilder.AppendLine(ToTabs(tabCount) + "if(fullInstantiation)");
+                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+                tabCount++;
+
+                if(element.BaseType == "Container")
+                {
+                    stringBuilder.AppendLine(ToTabs(tabCount) + "this.SetContainedObject(new InvisibleRenderable());");
+                }
+
+                stringBuilder.AppendLine();
+                #endregion
+            }
+            else // xamarin forms
+            {
+                #region Constructor Header
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"public {elementName}(bool fullInstantiation = true)");
+
+                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+                tabCount++;
+
+                #endregion
+
+                #region XamarinForms-required constructor code
+
+                stringBuilder.AppendLine(ToTabs(tabCount) + "var wasSuspended = GraphicalUiElement.IsAllLayoutSuspended;");
+                stringBuilder.AppendLine(ToTabs(tabCount) + "GraphicalUiElement.IsAllLayoutSuspended = true;");
+
+                var elementBaseType = element?.BaseType;
+                var baseElements = ObjectFinder.Self.GetBaseElements(element);
+
+                var isThisAbsoluteLayout = elementBaseType?.EndsWith("/AbsoluteLayout") == true;
+                if(!isThisAbsoluteLayout)
+                {
+                    isThisAbsoluteLayout = baseElements.Any(item => item.BaseType?.EndsWith("/AbsoluteLayout") == true);
+                }
+
+
+                var isStackLayout = elementBaseType?.EndsWith("/StackLayout") == true;
+                if(!isStackLayout)
+                {
+                    isStackLayout = baseElements.Any(item => item.BaseType?.EndsWith("/StackLayout") == true);
+                }
+
+                var isSkiaCanvasView = elementBaseType?.EndsWith("/SkiaGumCanvasView") == true;
+                if(!isSkiaCanvasView)
+                {
+                    // see if this inherits from a skia gum canvas view
+                    isSkiaCanvasView = baseElements.Any(item => item.BaseType?.EndsWith("/SkiaGumCanvasView") == true);
+                }
+
+                if(isThisAbsoluteLayout)
+                {
+                    stringBuilder.AppendLine(ToTabs(tabCount) + "var MainLayout = this;");
+                }
+                else if(!isSkiaCanvasView && !isStackLayout)
+                {
+                    var shouldAddMainLayout = true;
+                    if(element is ScreenSave && !string.IsNullOrEmpty(element.BaseType))
+                    {
+                        shouldAddMainLayout = false;
+                    }
+
+                    if(shouldAddMainLayout)
+                    {
+                        stringBuilder.AppendLine(ToTabs(tabCount) + "MainLayout = new AbsoluteLayout();");
+                        stringBuilder.AppendLine(ToTabs(tabCount) + "BaseGrid.Children.Add(MainLayout);");
+                    }
+                }
+                #endregion
+            }
+
+            CodeGenerationContext context = new CodeGenerationContext();
+            context.Instance = null;
+            context.Element = element;
+            context.TabCount = tabCount;
+            FillWithVariableAssignments(visualApi, stringBuilder, context);
+
+            stringBuilder.AppendLine();
+
+            if(!DoesElementInheritFromCodeGeneratedElement(element))
+            {
+                stringBuilder.AppendLine(ToTabs(tabCount) + "InitializeInstances();");
+            }
+
+            stringBuilder.AppendLine();
+
+
+
+            // fill with variable binding after the instances have been created
+            if(visualApi == VisualApi.XamarinForms)
+            {
+                FillWithVariableBinding(element, stringBuilder, tabCount);
+            }
+
+            stringBuilder.AppendLine(ToTabs(tabCount) + "if(fullInstantiation)");
+            stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+            tabCount++;
+            stringBuilder.AppendLine(ToTabs(tabCount) + "ApplyDefaultVariables();");
+            tabCount--;
+            stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+
+            stringBuilder.AppendLine(ToTabs(tabCount) + "AssignParents();");
+
+            stringBuilder.AppendLine(ToTabs(tabCount) + "CustomInitialize();");
+
+            if(visualApi == VisualApi.Gum)
+            {
+                // close the if check
+                tabCount--;
+                stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+            }
+            else
+            {
+                stringBuilder.AppendLine(ToTabs(tabCount) + "GraphicalUiElement.IsAllLayoutSuspended = wasSuspended;");
+
+            }
+
+
+            tabCount--;
+            stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+        }
+
+        #endregion
 
         private static void GenerateApplyDefaultVariables(ElementSave element, VisualApi visualApi, int tabCount, StringBuilder stringBuilder)
         {
@@ -1165,150 +1490,6 @@ namespace CodeOutputPlugin.Manager
             }
         }
 
-        private static void GenerateConstructor(ElementSave element, VisualApi visualApi, int tabCount, StringBuilder stringBuilder)
-        {
-            var elementName = GetClassNameForType(element.Name, visualApi);
-
-            if(visualApi == VisualApi.Gum)
-            {
-                #region Constructor Header
-
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"public {elementName}(bool fullInstantiation = true)");
-
-                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
-                tabCount++;
-
-                #endregion
-
-                #region Gum-required constructor code
-
-                stringBuilder.AppendLine(ToTabs(tabCount) + "if(fullInstantiation)");
-                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
-                tabCount++;
-
-                if(element.BaseType == "Container")
-                {
-                    stringBuilder.AppendLine(ToTabs(tabCount) + "this.SetContainedObject(new InvisibleRenderable());");
-                }
-
-                stringBuilder.AppendLine();
-                #endregion
-            }
-            else // xamarin forms
-            {
-                #region Constructor Header
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"public {elementName}(bool fullInstantiation = true)");
-
-                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
-                tabCount++;
-
-                #endregion
-
-                #region XamarinForms-required constructor code
-
-                stringBuilder.AppendLine(ToTabs(tabCount) + "var wasSuspended = GraphicalUiElement.IsAllLayoutSuspended;");
-                stringBuilder.AppendLine(ToTabs(tabCount) + "GraphicalUiElement.IsAllLayoutSuspended = true;");
-
-                var elementBaseType = element?.BaseType;
-                var baseElements = ObjectFinder.Self.GetBaseElements(element);
-
-                var isThisAbsoluteLayout = elementBaseType?.EndsWith("/AbsoluteLayout") == true;
-                if(!isThisAbsoluteLayout)
-                {
-                    isThisAbsoluteLayout = baseElements.Any(item => item.BaseType?.EndsWith("/AbsoluteLayout") == true);
-                }
-
-
-                var isStackLayout = elementBaseType?.EndsWith("/StackLayout") == true;
-                if(!isStackLayout)
-                {
-                    isStackLayout = baseElements.Any(item => item.BaseType?.EndsWith("/StackLayout") == true);
-                }
-
-                var isSkiaCanvasView = elementBaseType?.EndsWith("/SkiaGumCanvasView") == true;
-                if(!isSkiaCanvasView)
-                {
-                    // see if this inherits from a skia gum canvas view
-                    isSkiaCanvasView = baseElements.Any(item => item.BaseType?.EndsWith("/SkiaGumCanvasView") == true);
-                }
-
-                if(isThisAbsoluteLayout)
-                {
-                    stringBuilder.AppendLine(ToTabs(tabCount) + "var MainLayout = this;");
-                }
-                else if(!isSkiaCanvasView && !isStackLayout)
-                {
-                    var shouldAddMainLayout = true;
-                    if(element is ScreenSave && !string.IsNullOrEmpty(element.BaseType))
-                    {
-                        shouldAddMainLayout = false;
-                    }
-
-                    if(shouldAddMainLayout)
-                    {
-                        stringBuilder.AppendLine(ToTabs(tabCount) + "MainLayout = new AbsoluteLayout();");
-                        stringBuilder.AppendLine(ToTabs(tabCount) + "BaseGrid.Children.Add(MainLayout);");
-                    }
-                }
-                #endregion
-            }
-
-            CodeGenerationContext context = new CodeGenerationContext();
-            context.Instance = null;
-            context.Element = element;
-            context.TabCount = tabCount;
-            FillWithVariableAssignments(visualApi, stringBuilder, context);
-
-            stringBuilder.AppendLine();
-
-            foreach (var instance in element.Instances.Where(item => item.DefinedByBase == false))
-            {
-                context.Instance = instance;
-
-                FillWithInstanceInstantiation(instance, element, stringBuilder, tabCount);
-
-            }
-
-            stringBuilder.AppendLine();
-
-
-
-            // fill with variable binding after the instances have been created
-            if(visualApi == VisualApi.XamarinForms)
-            {
-                FillWithVariableBinding(element, stringBuilder, tabCount);
-            }
-
-            stringBuilder.AppendLine(ToTabs(tabCount) + "if(fullInstantiation)");
-            stringBuilder.AppendLine(ToTabs(tabCount) + "{");
-            tabCount++;
-            stringBuilder.AppendLine(ToTabs(tabCount) + "ApplyDefaultVariables();");
-            tabCount--;
-            stringBuilder.AppendLine(ToTabs(tabCount) + "}");
-
-            foreach (var instance in element.Instances)
-            {
-                FillWithParentAssignments(instance, element, stringBuilder, tabCount);
-            }
-
-            stringBuilder.AppendLine(ToTabs(tabCount) + "CustomInitialize();");
-
-            if(visualApi == VisualApi.Gum)
-            {
-                // close the if check
-                tabCount--;
-                stringBuilder.AppendLine(ToTabs(tabCount) + "}");
-            }
-            else
-            {
-                stringBuilder.AppendLine(ToTabs(tabCount) + "GraphicalUiElement.IsAllLayoutSuspended = wasSuspended;");
-
-            }
-
-
-            tabCount--;
-            stringBuilder.AppendLine(ToTabs(tabCount) + "}");
-        }
 
         private static void TryGenerateApplyLocalizationForInstance(int tabCount, StringBuilder stringBuilder, InstanceSave instance)
         {
@@ -1904,88 +2085,6 @@ namespace CodeOutputPlugin.Manager
             }
         }
 
-        private static void FillWithParentAssignments(InstanceSave instance, ElementSave container, StringBuilder stringBuilder, int tabCount = 0)
-        {
-            var parentVariables = GetVariablesForValueAssignmentCode(instance, container)
-                // make "Parent" first
-                // .. actually we need to make parent last so that it can properly assign parent on scrollables
-                .Where(item => item.GetRootName() == "Parent")
-                .ToList();
-
-            var defaultState = container.DefaultState;
-            VisualApi visualApi = GetVisualApiForInstance(instance, container);
-
-            var tabs = new String(' ', 4 * tabCount);
-
-            //FillWithVariableAssignments(instance, container, stringBuilder, tabCount, parentVariables);
-            var context = new CodeGenerationContext();
-            context.Element = container;
-            context.Instance = instance;
-
-            foreach (var variable in parentVariables)
-            {
-                var codeLine = GetCodeLine(variable, container, visualApi, defaultState, context);
-
-                // the line of code could be " ", a string with a space. This happens
-                // if we want to skip a variable so we dont return null or empty.
-                // But we also don't want a ton of spaces generated.
-                if (!string.IsNullOrWhiteSpace(codeLine))
-                {
-                    stringBuilder.AppendLine(tabs + codeLine);
-                }
-
-                var suffixCodeLine = GetSuffixCodeLine(instance, variable, visualApi);
-                if (!string.IsNullOrEmpty(suffixCodeLine))
-                {
-                    stringBuilder.AppendLine(tabs + suffixCodeLine);
-                }
-            }
-
-
-            // For scrollable GumContainers we need to have the parent assigned *after* the AbsoluteLayout rectangle:
-            #region Assign Parent
-
-            var hasParent = parentVariables.Any(item => item.GetRootName() == "Parent");
-
-            if (!hasParent && !instance.DefinedByBase)
-            {
-                if (visualApi == VisualApi.Gum)
-                {
-                    // add it to "this"
-                    stringBuilder.AppendLine($"{tabs}this.Children.Add({instance.Name});");
-                }
-                else // forms
-                {
-                    var instanceBaseType = instance.BaseType;
-                    var isContainerStackLayout = container.BaseType?.EndsWith("/StackLayout") == true;
-                    var isContainerScrollView = container.BaseType?.EndsWith("/ScrollView") == true;
-                    var isContainerAbsoluteLayout = container.BaseType?.EndsWith("/AbsoluteLayout") == true;
-
-                    var instanceName = instance.Name;
-
-                    if (instanceBaseType.EndsWith("/GumCollectionView"))
-                    {
-                        stringBuilder.AppendLine($"{tabs}var tempFor{instance.Name} = GumScrollBar.CreateScrollableAbsoluteLayout({instance.Name}, ScrollableLayoutParentPlacement.Free);");
-                        instanceName = $"tempFor{instance.Name}";
-                    }
-                    
-                    if (isContainerStackLayout || isContainerAbsoluteLayout)
-                    {
-                        stringBuilder.AppendLine($"{tabs}this.Children.Add({instanceName});");
-                    }
-                    else if(isContainerScrollView)
-                    {
-                        stringBuilder.Append($"{tabs}this.Content = {instanceName};");
-                    }
-                    else
-                    {
-                        stringBuilder.AppendLine($"{tabs}MainLayout.Children.Add({instanceName});");
-                    }
-                }
-            }
-
-            #endregion
-        }
 
         private static void FillWithNonParentVariableAssignments(InstanceSave instance, ElementSave container, StringBuilder stringBuilder, int tabCount = 0)
         {
@@ -2457,7 +2556,10 @@ namespace CodeOutputPlugin.Manager
 
             if (rootName == "Parent")
             {
-                return $"{variable.Value}.Children.Add({instance.Name});";
+                var owner = string.IsNullOrEmpty(variable.Value as string)
+                    ? "this"
+                    : variable.Value;
+                return $"{owner}.Children.Add({instance.Name});";
             }
             #endregion
                     // ignored variables:

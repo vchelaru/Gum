@@ -662,7 +662,9 @@ namespace Gum.Managers
             List<InstanceSave> toReturn = new List<InstanceSave>();
 
             var defaultState = container.DefaultState;
-            var thisParentValue = defaultState.GetValueOrDefault<string>($"{thisInstance.Name}.Parent");
+            var rfv = new RecursiveVariableFinder(defaultState);
+
+            var thisParentValue = rfv.GetValue($"{thisInstance.Name}.Parent") as string;
 
             // Need to only consider the parent if it actually exists (also done below)
             if(container.GetInstance(thisParentValue) == null)
@@ -673,8 +675,8 @@ namespace Gum.Managers
             foreach (var instance in container.Instances)
             {
                 var parentVariableName = $"{instance.Name}.Parent";
-                var instanceParentVariable = defaultState.GetValueOrDefault<string>(parentVariableName);
-
+                //var instanceParentVariable = defaultState.GetValueOrDefault<string>(parentVariableName);
+                var instanceParentVariable = rfv.GetValue(parentVariableName) as string;
                 if(container.GetInstance(instanceParentVariable) == null)
                 {
                     instanceParentVariable = null;
