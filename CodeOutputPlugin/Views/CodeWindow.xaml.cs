@@ -99,6 +99,7 @@ namespace CodeOutputPlugin.Views
             projectCategory.Members.Add(CreateRootNamespaceMember());
             projectCategory.Members.Add(CreateDefaultScreenBaseMember());
             projectCategory.Members.Add(CreateAdjustPixelValuesForDensityMember());
+            projectCategory.Members.Add(CreateBaseTypesNotCodeGenerated());
             DataGrid.Categories.Add(projectCategory);
         }
 
@@ -254,6 +255,26 @@ namespace CodeOutputPlugin.Views
             member.CustomGetTypeEvent += (owner) => typeof(bool);
 
             return member;
+        }
+
+        private InstanceMember CreateBaseTypesNotCodeGenerated()
+        {
+            var member = new InstanceMember("Base types ignored in code generation", this);
+            member.CustomSetEvent += (owner, value) =>
+            {
+                if (CodeOutputProjectSettings != null)
+                {
+                    CodeOutputProjectSettings.BaseTypesNotCodeGenerated = (string)value;
+                    CodeOutputSettingsPropertyChanged?.Invoke(this, null);
+                }
+            };
+
+            member.PreferredDisplayer = typeof(MultiLineTextBoxDisplay);
+            member.CustomGetEvent += (owner) => CodeOutputProjectSettings?.BaseTypesNotCodeGenerated;
+            member.CustomGetTypeEvent += (owner) => typeof(string);
+
+            return member;
+
         }
 
         #endregion

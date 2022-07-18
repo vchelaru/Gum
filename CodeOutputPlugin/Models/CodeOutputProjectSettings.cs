@@ -47,5 +47,7 @@ using SkiaGum.Renderables;
         public OutputLibrary OutputLibrary { get; set; }
 
         public bool AdjustPixelValuesForDensity { get; set; } = false;
+
+        public string BaseTypesNotCodeGenerated { get; set; }
     }
 }

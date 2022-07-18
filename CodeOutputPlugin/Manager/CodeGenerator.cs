@@ -118,17 +118,28 @@ namespace CodeOutputPlugin.Manager
 
         #region Initialize
 
-        static bool DoesElementInheritFromCodeGeneratedElement(ElementSave element)
+        static bool DoesElementInheritFromCodeGeneratedElement(ElementSave element, CodeOutputProjectSettings projectSettings)
         {
             var foundBase = ObjectFinder.Self.GetElementSave(element.BaseType);
             var isDerived = foundBase != null && (foundBase is StandardElementSave) == false;
 
+            if(isDerived && projectSettings?.BaseTypesNotCodeGenerated != null)
+            {
+                // check the settings:
+                var split = projectSettings?.BaseTypesNotCodeGenerated.Split('\n').Select(item => item.Trim()).ToArray();
+
+                if(split.Contains(element.BaseType))
+                {
+                    isDerived = false;
+                }
+            }
+
             return isDerived;
         }
 
-        private static void GenerateInitializeInstancesMethod(ElementSave element, VisualApi visualApi, int tabCount, StringBuilder stringBuilder)
+        private static void GenerateInitializeInstancesMethod(ElementSave element, VisualApi visualApi, int tabCount, StringBuilder stringBuilder, CodeOutputProjectSettings settings)
         {
-            var isDerived = DoesElementInheritFromCodeGeneratedElement(element);
+            var isDerived = DoesElementInheritFromCodeGeneratedElement(element, settings);
 
             var virtualOrOverride = isDerived
                 ? "override"
@@ -1111,9 +1122,9 @@ namespace CodeOutputPlugin.Manager
             #endregion
         }
 
-        private static void GenerateAddToParentsMethod(ElementSave element, VisualApi visualApi, int tabCount, StringBuilder stringBuilder)
+        private static void GenerateAddToParentsMethod(ElementSave element, VisualApi visualApi, int tabCount, StringBuilder stringBuilder, CodeOutputProjectSettings projectSettings)
         {
-            var isDerived = DoesElementInheritFromCodeGeneratedElement(element);
+            var isDerived = DoesElementInheritFromCodeGeneratedElement(element, projectSettings);
 
             var virtualOrOverride = isDerived
                 ? "override"
@@ -1199,11 +1210,11 @@ namespace CodeOutputPlugin.Manager
             FillWithExposedVariables(element, stringBuilder, visualApi, tabCount);
             // -- no need for AppendLine here since FillWithExposedVariables does it after every variable --
 
-            GenerateConstructor(element, visualApi, tabCount, stringBuilder);
+            GenerateConstructor(element, visualApi, tabCount, stringBuilder, projectSettings);
 
-            GenerateInitializeInstancesMethod(element, visualApi, tabCount, stringBuilder);
+            GenerateInitializeInstancesMethod(element, visualApi, tabCount, stringBuilder, projectSettings);
 
-            GenerateAddToParentsMethod(element, visualApi, tabCount, stringBuilder);
+            GenerateAddToParentsMethod(element, visualApi, tabCount, stringBuilder, projectSettings);
 
             GenerateApplyDefaultVariables(element, visualApi, tabCount, stringBuilder);
 
@@ -1229,7 +1240,7 @@ namespace CodeOutputPlugin.Manager
 
         #region Constructor
 
-        private static void GenerateConstructor(ElementSave element, VisualApi visualApi, int tabCount, StringBuilder stringBuilder)
+        private static void GenerateConstructor(ElementSave element, VisualApi visualApi, int tabCount, StringBuilder stringBuilder, CodeOutputProjectSettings projectSettings)
         {
             var elementName = GetClassNameForType(element.Name, visualApi);
 
@@ -1325,7 +1336,7 @@ namespace CodeOutputPlugin.Manager
 
             stringBuilder.AppendLine();
 
-            if(!DoesElementInheritFromCodeGeneratedElement(element))
+            if(!DoesElementInheritFromCodeGeneratedElement(element, projectSettings))
             {
                 stringBuilder.AppendLine(ToTabs(tabCount) + "InitializeInstances();");
             }
@@ -2424,40 +2435,49 @@ namespace CodeOutputPlugin.Manager
             {
                 var parentName = variable.Value as string;
 
+                var hasContent = false;
                 var parentInstance = container.GetInstance(parentName);
 
-                // traverse the inheritance chain - we don't want to go to the very base because 
-                // Glue has base types like Container for all components, and that's not what we want.
-                // Actually we should go one above the inheritance:
-
-                var instanceElement = ObjectFinder.Self.GetElementSave(parentInstance?.BaseType);
-
-                var hasContent = false;
-                if(instanceElement != null)
+                if(parentInstance != null)
                 {
-                    var baseElements = ObjectFinder.Self.GetBaseElements(instanceElement);
-                    string componentType = null;
-                    if(baseElements.Count > 1)
-                    {
-                        // don't do the "Last" because that will be container, so take all but the last:
-                        var baseBeforeContainer = baseElements.Take(baseElements.Count - 1).LastOrDefault();
-                        componentType = baseBeforeContainer?.Name;
-                    }
-                    else if(baseElements.Count == 1)
-                    {
-                        // this inherits from Container, so just use it's own base type:
-                        componentType = instanceElement.Name;
-                    }
-                    else
-                    {
-                        // All XamForms objects are components, so all must inherit from something. This should never happen...
-                    }
-                    hasContent =
-                        componentType?.EndsWith("/ScrollView") == true ||
-                        componentType?.EndsWith("/StickyScrollView") == true ||
-                        componentType?.EndsWith("/Frame") == true
-                        ;
+                    // traverse the inheritance chain - we don't want to go to the very base because 
+                    // Glue has base types like Container for all components, and that's not what we want.
+                    // Actually we should go one above the inheritance:
 
+                    var instanceElement = ObjectFinder.Self.GetElementSave(parentInstance?.BaseType);
+
+                    if(instanceElement != null)
+                    {
+                        var baseElements = ObjectFinder.Self.GetBaseElements(instanceElement);
+                        string componentType = null;
+                        if(baseElements.Count > 1)
+                        {
+                            // don't do the "Last" because that will be container, so take all but the last:
+                            var baseBeforeContainer = baseElements.Take(baseElements.Count - 1).LastOrDefault();
+                            componentType = baseBeforeContainer?.Name;
+                        }
+                        else if(baseElements.Count == 1)
+                        {
+                            // this inherits from Container, so just use it's own base type:
+                            componentType = instanceElement.Name;
+                        }
+                        else
+                        {
+                            // All XamForms objects are components, so all must inherit from something. This should never happen...
+                        }
+                        hasContent =
+                            componentType?.EndsWith("/ScrollView") == true ||
+                            componentType?.EndsWith("/StickyScrollView") == true ||
+                            componentType?.EndsWith("/Frame") == true
+                            ;
+
+                    }
+
+                }
+                // parent instance is null, so attach to "this" top level object
+                else
+                {
+                    // not sure what to do here...
                 }
 
                 // Certain types of views don't support Children.Add - they only have
