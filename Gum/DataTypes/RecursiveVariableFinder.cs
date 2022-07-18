@@ -75,6 +75,16 @@ namespace Gum.DataTypes
             ElementStack = elementStack;
         }
 
+        public RecursiveVariableFinder(List<ElementWithState> elementStack)
+        {
+            ContainerType = VariableContainerType.StateSave;
+
+
+            var last = elementStack.Last();
+            mStateSave = last.StateSave;
+            ElementStack = elementStack;
+        }
+
         public RecursiveVariableFinder(StateSave stateSave)
         {
 #if DEBUG

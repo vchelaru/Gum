@@ -83,7 +83,12 @@ namespace Gum.Wireframe
                     // We used to not add the IPSO for the root element to the list of graphical elements
                     // and this prevented selection.  I'm not sure if this was intentionally left out or not
                     // but I think it should be here
-                    AllIpsos.Add(rootIpso);
+                    // July 18, 2022
+                    // This is a duplicate
+                    // add. It's also added
+                    // above. Which should it
+                    // be?
+                    //AllIpsos.Add(rootIpso);
 
                     rootIpso.CreateGraphicalComponent(elementSave, null);
 
@@ -130,6 +135,12 @@ namespace Gum.Wireframe
                     }
                 }
 
+                var baseElements = ObjectFinder.Self.GetBaseElements(elementSave);
+                baseElements.Reverse();
+                foreach (var baseElement in baseElements)
+                {
+                    elementStack.Add(baseElement);
+                }
                 elementStack.Add(elementWithState);
 
                 // parallel screws up the ordering of objects, so we'll do it on the primary thread for now
@@ -154,7 +165,7 @@ namespace Gum.Wireframe
                     }
                 }
 
-                SetUpParentRelationship(newlyAdded, elementStack, elementSave.Instances);
+                SetUpParentRelationship(newlyAdded, elementStack);
 
                 elementStack.Remove(elementStack.FirstOrDefault(item => item.Element == elementSave));
 
@@ -468,7 +479,7 @@ namespace Gum.Wireframe
                     }
                 }
 
-                SetUpParentRelationship(rootIpso.ContainedElements, elementStack, baseComponentSave.Instances);
+                SetUpParentRelationship(rootIpso.ContainedElements, elementStack);
 
                 elementStack.Remove(elementStack.FirstOrDefault(item => item.Element == baseComponentSave));
             }
@@ -476,24 +487,23 @@ namespace Gum.Wireframe
             return rootIpso;
         }
 
-        private void SetUpParentRelationship(IEnumerable<GraphicalUiElement> siblings, List<ElementWithState> elementStack, IEnumerable<InstanceSave> childrenInstances)
+        private void SetUpParentRelationship(IEnumerable<GraphicalUiElement> elements, List<ElementWithState> elementStack)
         {
             // Now that we have created all instances, we can establish parent relationships
 
             HashSet<IRenderable> recursiveHashSet = new HashSet<IRenderable>();
 
-            foreach (GraphicalUiElement contained in siblings)
+            foreach (GraphicalUiElement contained in elements)
             {
-                if (contained.Tag is InstanceSave)
+                if (contained.Tag is InstanceSave childInstanceSave)
                 {
-                    InstanceSave childInstanceSave = contained.Tag as InstanceSave;
-                    RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(childInstanceSave, elementStack);
+                    RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(elementStack);
 
-                    string parentName = rvf.GetValue<string>("Parent");
+                    string parentName = rvf.GetValue<string>($"{childInstanceSave.Name}.Parent");
 
                     if (!string.IsNullOrEmpty(parentName) && parentName != AvailableInstancesConverter.ScreenBoundsName)
                     {
-                        IRenderableIpso newParent = siblings.FirstOrDefault(item => item.Name == parentName);
+                        IRenderableIpso newParent = elements.FirstOrDefault(item => item.Name == parentName);
 
                         // This may have bad XML so if it doesn't exist, then let's ignore this:
                         if (newParent != null)
@@ -511,6 +521,14 @@ namespace Gum.Wireframe
 
                         }
                     }
+
+                    //var innerChildren = contained.Children.Select(item => item as GraphicalUiElement).ToArray();
+                    //if(innerChildren.Length > 0)
+                    //{
+                    //    SetUpParentRelationship(innerChildren, elementStack);
+                    //}
+
+
                 }
             }
         }

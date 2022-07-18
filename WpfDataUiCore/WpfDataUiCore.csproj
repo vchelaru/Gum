@@ -35,6 +35,7 @@
     <Compile Include="..\WpfDataUi\Controls\EditableComboBoxDisplay.cs" Link="Controls\EditableComboBoxDisplay.cs" />
     <Compile Include="..\WpfDataUi\Controls\FileSelectionDisplay.xaml.cs" Link="Controls\FileSelectionDisplay.xaml.cs" />
     <Compile Include="..\WpfDataUi\Controls\MultiLineTextBoxDisplay.cs" Link="Controls\MultiLineTextBoxDisplay.cs" />
+    <Compile Include="..\WpfDataUi\Controls\NullableBoolDisplay.xaml.cs" Link="Controls\NullableBoolDisplay.xaml.cs" />
     <Compile Include="..\WpfDataUi\Controls\SingleDataUiContainer.xaml.cs" Link="Controls\SingleDataUiContainer.xaml.cs" />
     <Compile Include="..\WpfDataUi\Controls\SliderDisplay.xaml.cs" Link="Controls\SliderDisplay.xaml.cs" />
     <Compile Include="..\WpfDataUi\Controls\TextBoxDisplay.xaml.cs" Link="Controls\TextBoxDisplay.xaml.cs" />
@@ -87,6 +88,9 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="..\WpfDataUi\Controls\FileSelectionDisplay.xaml" Link="Controls\FileSelectionDisplay.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="..\WpfDataUi\Controls\NullableBoolDisplay.xaml" Link="Controls\NullableBoolDisplay.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="..\WpfDataUi\Controls\SingleDataUiContainer.xaml" Link="Controls\SingleDataUiContainer.xaml">

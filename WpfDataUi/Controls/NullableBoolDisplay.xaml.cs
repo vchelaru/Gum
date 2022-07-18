@@ -80,7 +80,7 @@ namespace WpfDataUi.Controls
 
             GroupBox.Header = InstanceMember?.DisplayName ?? InstanceMember?.Name;
 
-            SuppressSettingProperty = true;
+            SuppressSettingProperty = false;
 
         }
 
@@ -119,6 +119,30 @@ namespace WpfDataUi.Controls
                 value = null;
             }
             return ApplyValueResult.Success;
+        }
+
+        private void TrueRadioButton_Checked(object sender, RoutedEventArgs e)
+        {
+            if (!SuppressSettingProperty)
+            {
+                this.TrySetValueOnInstance();
+            }
+        }
+
+        private void FalseRadioButton_Checked(object sender, RoutedEventArgs e)
+        {
+            if (!SuppressSettingProperty)
+            {
+                this.TrySetValueOnInstance();
+            }
+        }
+
+        private void NullRadioButton_Checked(object sender, RoutedEventArgs e)
+        {
+            if (!SuppressSettingProperty)
+            {
+                this.TrySetValueOnInstance();
+            }
         }
     }
 }

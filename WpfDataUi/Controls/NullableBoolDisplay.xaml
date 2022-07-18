@@ -8,9 +8,9 @@
              d:DesignWidth="200">
     <GroupBox x:Name="GroupBox">
         <StackPanel>
-            <RadioButton x:Name="TrueRadioButton">True</RadioButton>
-            <RadioButton x:Name="FalseRadioButton">False</RadioButton>
-            <RadioButton x:Name="NullRadioButton">None</RadioButton>
+            <RadioButton x:Name="TrueRadioButton" Checked="TrueRadioButton_Checked">True</RadioButton>
+            <RadioButton x:Name="FalseRadioButton" Checked="FalseRadioButton_Checked">False</RadioButton>
+            <RadioButton x:Name="NullRadioButton" Checked="NullRadioButton_Checked">None</RadioButton>
         </StackPanel>
     </GroupBox>
 </UserControl>

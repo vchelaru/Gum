@@ -408,6 +408,11 @@ namespace Gum.Managers
             return toReturn;
         }
 
+        /// <summary>
+        /// Returns a list of ElementSaves inheriting from the argument elementSave, with the most derived first in the list, and the most base last in the list
+        /// </summary>
+        /// <param name="elementSave">The element for which to get the inheritance list.</param>
+        /// <returns>The list, with the most derived (direct inheritance) first.</returns>
         public List<ElementSave> GetBaseElements(ElementSave elementSave)
         {
             var toReturn = new List<ElementSave>();

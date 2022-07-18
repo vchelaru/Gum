@@ -161,7 +161,7 @@ namespace Gum.DataTypes
             }
             else
             {
-                return BaseType + " " + Name;
+                return $"{Name} ({BaseType})";
             }
         }
     }
