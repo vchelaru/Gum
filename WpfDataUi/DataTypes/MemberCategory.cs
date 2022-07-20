@@ -43,6 +43,21 @@ namespace WpfDataUi.DataTypes
             set;
         }
 
+        double categoryBorderThickness = 1;
+        public double CategoryBorderThickness
+        {
+            get => categoryBorderThickness;
+            set
+            {
+                if (categoryBorderThickness != value)
+                {
+                    categoryBorderThickness = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CategoryBorderThickness)));
+
+                }
+            }
+        } 
+
         public ObservableCollection<InstanceMember> Members
         {
             get;

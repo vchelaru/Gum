@@ -72,6 +72,30 @@ namespace WpfDataUi.Controls
 
         public bool SuppressSettingProperty { get; set; }
 
+        bool isAboveBelowLayout;
+        public bool IsAboveBelowLayout
+        {
+            get => isAboveBelowLayout;
+            set
+            {
+                if(isAboveBelowLayout != value)
+                {
+                    isAboveBelowLayout = value;
+                    if(isAboveBelowLayout)
+                    {
+                        // move these to the 2nd row:
+                        this.TextBox.SetValue(Grid.RowProperty, 1);
+                        this.TextBox.SetValue(Grid.ColumnProperty, 0);
+                        this.TextBox.SetValue(Grid.ColumnSpanProperty, 3);
+
+                        this.PlaceholderText.SetValue(Grid.RowProperty, 1);
+                        this.PlaceholderText.SetValue(Grid.ColumnProperty, 0);
+                        this.PlaceholderText.SetValue(Grid.ColumnSpanProperty, 3);
+                    }
+                }
+            }
+        }
+
         #endregion
 
         static void LoadViewFromUri(UserControl userControl, string baseUri)
@@ -192,6 +216,7 @@ namespace WpfDataUi.Controls
             this.TextBox.VerticalContentAlignment = VerticalAlignment.Top;
             this.TextBox.VerticalAlignment = VerticalAlignment.Top;
             this.TextBox.Height = 65;
+            this.TextBox.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
             this.mTextBoxLogic.HandlesEnter = false;
         }
 
@@ -235,5 +260,6 @@ namespace WpfDataUi.Controls
         {
             RefreshPlaceholderText();
         }
+
     }
 }
