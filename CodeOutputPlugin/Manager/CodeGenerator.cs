@@ -1057,7 +1057,9 @@ namespace CodeOutputPlugin.Manager
             context.Element = container;
             context.Instance = instance;
 
-            if(parentVariable != null)
+            var hasParent = parentVariable?.Value != null;
+
+            if(hasParent)
             {
                 var codeLine = GetCodeLine(parentVariable, container, visualApi, defaultState, context);
 
@@ -1080,7 +1082,6 @@ namespace CodeOutputPlugin.Manager
             // For scrollable GumContainers we need to have the parent assigned *after* the AbsoluteLayout rectangle:
             #region Assign Parent
 
-            var hasParent = parentVariable != null;
 
             if (!hasParent)
             {
