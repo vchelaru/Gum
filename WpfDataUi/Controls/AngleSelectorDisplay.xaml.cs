@@ -222,7 +222,18 @@ namespace WpfDataUi.Controls
             {
                 Angle = value;
             }
-
+            else
+            {
+                // couldn't parse it, so let's try to math operation it?
+                try
+                {
+                    Angle = TextBoxDisplayLogic.TryHandleMathOperation(text, InstanceMember.PropertyType) as float?;
+                }
+                catch
+                {
+                    // do nothing...
+                }
+            }
             // This also applies to instance, but it stores
             // the value in the text box logic so ESC works properly
             mTextBoxLogic.TryApplyToInstance();

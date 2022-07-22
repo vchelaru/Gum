@@ -314,15 +314,8 @@ namespace WpfDataUi.Controls
                             if(e.InnerException is FormatException)
                             {
                                 var computedValue = TryHandleMathOperation(usableString, InstancePropertyType);
-                                if(computedValue != null)
-                                {
-                                    wasMathOperation = true;
-                                    value = converter.ConvertFrom(computedValue.ToString());
-                                }
-                                else
-                                {
-                                    wasMathOperation = false;
-                                }
+                                wasMathOperation = computedValue != null;
+                                value = computedValue;
                             }
                             if(wasMathOperation)
                             {
@@ -348,27 +341,25 @@ namespace WpfDataUi.Controls
             return result;
         }
 
-        private object TryHandleMathOperation(string usableString, Type instancePropertyType)
+        public static object TryHandleMathOperation(string usableString, Type instancePropertyType)
         {
-            if(instancePropertyType == typeof(float))
+            if(instancePropertyType == typeof(float) || 
+                instancePropertyType == typeof(float?) || 
+                instancePropertyType == typeof(int?) ||
+                instancePropertyType == typeof(int) ||
+                instancePropertyType == typeof(double) ||
+                instancePropertyType == typeof(double?) ||
+                instancePropertyType == typeof(decimal) ||
+                instancePropertyType == typeof(decimal?)
+                )
             {
                 var result = new DataTable().Compute(usableString, null);
             
                 if(result is float || result is int || result is decimal || result is double)
                 {
-                    return result;
-                }
-                else
-                {
-                    return null;
-                }
-            }
-            else if(instancePropertyType == typeof(int))
-            {
-                var result = new DataTable().Compute(usableString, null);
-                if (result is float || result is int || result is decimal || result is double)
-                {
-                    return result;
+                    var converter = TypeDescriptor.GetConverter(instancePropertyType);
+
+                    return converter.ConvertFrom(result.ToString());
                 }
                 else
                 {
