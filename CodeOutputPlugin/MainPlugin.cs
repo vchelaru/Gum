@@ -247,6 +247,13 @@ namespace CodeOutputPlugin
 
         private void HandleMainViewModelPropertyChanged(string propertyName)
         {
+            /////////////////Early Out////////////////////
+            if(GumState.Self.ProjectState.GumProjectSave == null)
+            {
+                return;
+            }
+            /////////////End Early Out////////////////////
+            
             switch(propertyName)
             {
                 case nameof(viewModel.IsCodeGenPluginEnabled):

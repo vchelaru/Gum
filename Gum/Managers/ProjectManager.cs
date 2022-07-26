@@ -14,6 +14,8 @@ using System.Diagnostics;
 using Gum.ToolStates;
 using Gum.Logic.FileWatch;
 using Gum.CommandLine;
+using Gum.DataTypes.Variables;
+using System.Linq;
 
 namespace Gum
 {
@@ -203,6 +205,10 @@ namespace Gum
                 {
                     wasModified = true;
                 }
+                if(RemoveDuplicateVariables(mGumProjectSave))
+                {
+                    wasModified = true;
+                }
 
                 mGumProjectSave.FixStandardVariables();
 
@@ -337,6 +343,55 @@ namespace Gum
             }
 
             return toReturn;
+        }
+
+        private bool RemoveDuplicateVariables(GumProjectSave gumProjectSave)
+        {
+            var didChange = false;
+            foreach(var screen in gumProjectSave.Screens)
+            {
+                didChange = RemoveDuplicateVariables(screen) || didChange;
+            }
+            foreach(var component in gumProjectSave.Components)
+            {
+                didChange = RemoveDuplicateVariables(component) || didChange;
+            }
+            foreach (var standard in gumProjectSave.StandardElements)
+            {
+                didChange = RemoveDuplicateVariables(standard) || didChange;
+            }
+            return didChange;
+        }
+
+        private bool RemoveDuplicateVariables(ElementSave element)
+        {
+            var didChange = false;
+            foreach(var state in element.AllStates)
+            {
+                didChange = RemoveDuplicateVariables(state) || didChange;
+            }
+            return didChange;
+        }
+
+        private bool RemoveDuplicateVariables(StateSave state)
+        {
+            var variableNames = state.Variables.Select(item => item.Name).ToHashSet();
+
+            var didChange = false;
+            if (variableNames.Count != state.Variables.Count)
+            { 
+                var newVariables = new List<VariableSave>();
+                foreach(var variableName in variableNames)
+                {
+                    var matchingVariable = state.Variables.FirstOrDefault(item => item.Name == variableName);
+                    newVariables.Add(matchingVariable);
+                }
+
+                state.Variables.Clear();
+                state.Variables.AddRange(newVariables);
+                didChange = true;
+            }
+            return didChange;
         }
 
         private void RecreateMissingStandardElements()
