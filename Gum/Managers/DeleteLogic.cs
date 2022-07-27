@@ -359,7 +359,9 @@ namespace Gum.Managers
                     {
                         var variable = state.Variables[i];
 
-                        if(variable.Type == category.Name + "State")
+                        // Modern Gum now has the type match the state
+                        //if(variable.Type == category.Name + "State")
+                        if(variable.Type == category.Name)
                         {
                             state.Variables.RemoveAt(i);
                         }

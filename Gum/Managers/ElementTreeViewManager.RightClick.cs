@@ -348,6 +348,10 @@ namespace Gum.Managers
 
                 else if (SelectedState.Self.SelectedStandardElement != null)
                 {
+                    mMenuStrip.Items.Add("View in explorer", null, HandleViewInExplorer);
+                    
+                    mMenuStrip.Items.Add("-");
+
                     mMenuStrip.Items.Add(mSaveObject);
                 }
 
