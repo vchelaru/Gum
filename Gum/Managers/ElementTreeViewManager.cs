@@ -700,7 +700,7 @@ namespace Gum.Managers
         bool ShouldShow(StandardElementSave standardElementSave) => string.IsNullOrEmpty(filterText) || standardElementSave.Name.ToLower().Contains(filterText.ToLower());
         bool ShouldShow(BehaviorSave behavior) => string.IsNullOrEmpty(filterText) || behavior.Name?.ToLower().Contains(filterText.ToLower()) == true;
 
-        private void AddAndRemoveScreensComponentsAndStandards(TreeNode folderTreeNode)
+        private void AddAndRemoveScreensComponentsStandardsAndBehaviors(TreeNode folderTreeNode)
         {
             /////////////Early Out////////////////
             if (ProjectManager.Self.GumProjectSave == null)
@@ -1123,7 +1123,7 @@ namespace Gum.Managers
 
                 AddAndRemoveFolderNodes();
 
-                AddAndRemoveScreensComponentsAndStandards(null);
+                AddAndRemoveScreensComponentsStandardsAndBehaviors(null);
                 ObjectTreeView.ResumeLayout(performLayout:true);
 
             }
@@ -1266,7 +1266,7 @@ namespace Gum.Managers
 
                 if (nodeForInstance == null)
                 {
-                    nodeForInstance = AddTreeNodeForInstance(instance, node);
+                    nodeForInstance = AddTreeNodeForInstance(instance, node, tolerateMissingTypes:false);
                 }
 
                 if(instance.DefinedByBase)
@@ -1333,7 +1333,7 @@ namespace Gum.Managers
 
                 if (nodeForInstance == null)
                 {
-                    nodeForInstance = AddTreeNodeForInstance(instance, node);
+                    nodeForInstance = AddTreeNodeForInstance(instance, node, tolerateMissingTypes:true);
                 }
                 if (instance.DefinedByBase)
                 {
@@ -1344,13 +1344,13 @@ namespace Gum.Managers
             }
         }
 
-        private TreeNode AddTreeNodeForInstance(InstanceSave instance, TreeNode parentContainerNode, HashSet<InstanceSave> pendingAdditions = null)
+        private TreeNode AddTreeNodeForInstance(InstanceSave instance, TreeNode parentContainerNode, bool tolerateMissingTypes, HashSet<InstanceSave> pendingAdditions = null)
         {
             TreeNode treeNode = new TreeNode();
 
             bool validBaseType = ObjectFinder.Self.GetElementSave(instance.BaseType) != null;
 
-            if (validBaseType)
+            if (validBaseType || tolerateMissingTypes)
                 treeNode.ImageIndex = InstanceImageIndex;
             else
                 treeNode.ImageIndex = ExclamationIndex;
@@ -1373,7 +1373,7 @@ namespace Gum.Managers
                     }
 
                     pendingAdditions.Add(parentInstance);
-                    parentInstanceNode = AddTreeNodeForInstance(parentInstance, parentContainerNode, pendingAdditions);
+                    parentInstanceNode = AddTreeNodeForInstance(parentInstance, parentContainerNode, tolerateMissingTypes, pendingAdditions);
                 }
 
                 if (parentInstanceNode != null)
