@@ -5209,7 +5209,9 @@ namespace Gum.Wireframe
         public void AddCategory(DataTypes.Variables.StateSaveCategory category)
         {
             //mCategories[category.Name] = category;
-            mCategories.Add(category.Name, category);
+            // Why call "Add"? This makes Gum crash if there are duplicate catgories...
+            //mCategories.Add(category.Name, category);
+            mCategories[category.Name] = category;
         }
 
         public void AddStates(List<DataTypes.Variables.StateSave> list)

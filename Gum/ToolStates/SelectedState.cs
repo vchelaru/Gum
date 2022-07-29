@@ -49,28 +49,32 @@ namespace Gum.ToolStates
             }
         }
 
+        TreeNode GetComponentTreeNodeRoot(TreeNode treeNode)
+        {
+            while (treeNode != null)
+            {
+                if (treeNode.Tag is ElementSave)
+                {
+                    return treeNode;
+                }
+                else if (!treeNode.IsTopElementContainerTreeNode())
+                {
+                    treeNode = treeNode.Parent;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            return null;
+        }
+
         public ScreenSave SelectedScreen
         {
             get
             {
-                TreeNode treeNode = ElementTreeViewManager.Self.SelectedNode;
-
-                while (treeNode != null)
-                {
-                    if (treeNode.IsScreenTreeNode())
-                    {
-                        return treeNode.Tag as ScreenSave;
-                    }
-                    else if (!treeNode.IsTopElementContainerTreeNode())
-                    {
-                        treeNode = treeNode.Parent;
-                    }
-                    else
-                    {
-                        return null;
-                    }
-                }
-                return null;
+                return GetComponentTreeNodeRoot(ElementTreeViewManager.Self.SelectedNode)
+                    ?.Tag as ScreenSave;
             }
             set
             {
@@ -86,24 +90,8 @@ namespace Gum.ToolStates
         {
             get
             {
-                TreeNode treeNode = ElementTreeViewManager.Self.SelectedNode;
-
-                while (treeNode != null)
-                {
-                    if (treeNode.IsComponentTreeNode())
-                    {
-                        return treeNode.Tag as ComponentSave;
-                    }
-                    else if (!treeNode.IsTopElementContainerTreeNode())
-                    {
-                        treeNode = treeNode.Parent;
-                    }
-                    else
-                    {
-                        return null;
-                    }
-                }
-                return null;
+                return GetComponentTreeNodeRoot(ElementTreeViewManager.Self.SelectedNode)
+                    ?.Tag as ComponentSave;
             }
             set
             {
@@ -174,24 +162,8 @@ namespace Gum.ToolStates
         {
             get
             {
-                TreeNode treeNode = ElementTreeViewManager.Self.SelectedNode;
-
-                while (treeNode != null)
-                {
-                    if (treeNode.IsStandardElementTreeNode())
-                    {
-                        return treeNode.Tag as StandardElementSave;
-                    }
-                    else if (!treeNode.IsTopElementContainerTreeNode())
-                    {
-                        treeNode = treeNode.Parent;
-                    }
-                    else
-                    {
-                        return null;
-                    }
-                }
-                return null;
+                return GetComponentTreeNodeRoot(ElementTreeViewManager.Self.SelectedNode)
+                    ?.Tag as StandardElementSave;
             }
             set
             {
@@ -206,22 +178,9 @@ namespace Gum.ToolStates
         {
             get
             {
-                if (SelectedScreen != null)
-                {
-                    return SelectedScreen;
-                }
-                else if (SelectedComponent != null)
-                {
-                    return SelectedComponent;
-                }
-                else if (SelectedStandardElement != null)
-                {
-                    return SelectedStandardElement;
-                }
-                else
-                {
-                    return null;
-                }
+                return (ElementSave)SelectedScreen ??
+                    (ElementSave)SelectedComponent ??
+                    (ElementSave)SelectedStandardElement;
             }
             set
             {
@@ -250,6 +209,26 @@ namespace Gum.ToolStates
                         throw new InvalidOperationException();
                     }
                 }
+            }
+        }
+
+        public List<ElementSave> SelectedElements
+        {
+            get
+            {
+                var hashSet = new HashSet<ElementSave>();
+
+                foreach (TreeNode node in ElementTreeViewManager.Self.SelectedNodes)
+                {
+                    var item = GetComponentTreeNodeRoot(node)
+                        ?.Tag as ElementSave;
+                    if(item != null)
+                    {
+                        hashSet.Add(item);
+                    }
+                }
+
+                return hashSet.ToList();
             }
         }
 

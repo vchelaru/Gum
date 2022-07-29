@@ -158,6 +158,7 @@ namespace CommonFormsAndControls
                 base.SelectedNode = null;
 
                 TreeNode previousSelectedNode = mSelectedNode;
+                var previousCount = SelectedNodes.Count;
 
                 TreeNode node = this.GetNodeAt(e.Location);
                 if (node != null)
@@ -195,6 +196,16 @@ namespace CommonFormsAndControls
                 base.OnMouseDown(e);
 
                 mSelectedNodeChanged = previousSelectedNode != mSelectedNode;
+
+                if(!mSelectedNodeChanged)
+                {
+                    // If multiples are selected but no keys are held down, then we're going to deselect
+                    // back down to 1.
+                    if(mSelectedNodes.Count > 1 && ModifierKeys == Keys.None)
+                    {
+                        mSelectedNodeChanged = true;
+                    }
+                }
             }
 #if !DEBUG
             catch (Exception ex)
