@@ -45,6 +45,8 @@ namespace Gum.DataTypes.Behaviors
         // that required also bringing over interpolation so I didn't.
         public List<string> RequiredAnimations { get; set; } = new List<string>();
 
+        public string DefaultImplementation { get; set; }
+
         public override string ToString()
         {
             return Name;

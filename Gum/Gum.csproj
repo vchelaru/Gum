@@ -263,6 +263,7 @@
     <Compile Include="Plugins\RenameLogicPlugin\MainRenameLogic.cs" />
     <Compile Include="Plugins\ScrollBarPlugin\MainScrollBarPlugin.cs" />
     <Compile Include="Plugins\StatePlugin\MainStatePlugin.cs" />
+    <Compile Include="Plugins\VariableGrid\BehaviorShowingLogic.cs" />
     <Compile Include="Plugins\VariableGrid\DeletingVariablesInCategoriesMessageBox.xaml.cs">
       <DependentUpon>DeletingVariablesInCategoriesMessageBox.xaml</DependentUpon>
     </Compile>

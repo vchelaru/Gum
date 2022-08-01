@@ -51,6 +51,7 @@ namespace Gum.Managers
         InstanceSave mLastInstance;
         StateSave mLastState;
         StateSaveCategory mLastCategory;
+        BehaviorSave mLastBehaviorSave;
 
         MainControlViewModel variableViewModel;
 
@@ -208,10 +209,12 @@ namespace Gum.Managers
             BehaviorSave behaviorSave, bool force = false)
         {
 
-            bool hasChangedObjectShowing = element != mLastElement || 
+            bool hasChangedObjectShowing = 
+                element != mLastElement || 
                 instance != mLastInstance || 
                 state != mLastState ||
                 category != mLastCategory ||
+                behaviorSave != mLastBehaviorSave ||
                 force;
 
             var hasCustomState = SelectedState.Self.CustomCurrentStateSave != null;
@@ -223,7 +226,9 @@ namespace Gum.Managers
 
             mVariablesDataGrid.IsInnerGridEnabled = !hasCustomState;
 
-            var categories = GetMemberCategories(element, state, category, instance);
+            List<MemberCategory> categories = GetMemberCategories(element, state, category, instance);
+
+            mLastBehaviorSave = behaviorSave;
 
             if (hasChangedObjectShowing)
             {
@@ -239,7 +244,7 @@ namespace Gum.Managers
                     }
                     records.Add("in");
 
-                    mVariablesDataGrid.Instance = SelectedState.Self.SelectedStateSave;
+                    mVariablesDataGrid.Instance = (object)behaviorSave ?? SelectedState.Self.SelectedStateSave;
 
                     mVariablesDataGrid.Categories.Clear();
 
@@ -340,6 +345,19 @@ namespace Gum.Managers
 
             this.variableViewModel.ShowBehaviorUi = behaviorSave != null ?
                 System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
+
+            if(behaviorSave != null)
+            {
+                mainControl.BehaviorDataGrid.Instance = behaviorSave;
+                mainControl.BehaviorDataGrid.Categories.Clear();
+                mainControl.BehaviorDataGrid.Categories.AddRange(BehaviorShowingLogic.GetCategoriesFor(behaviorSave));
+                mainControl.BehaviorDataGrid.InsertSpacesInCamelCaseMemberNames();
+            }
+            else
+            {
+                mainControl.BehaviorDataGrid.Categories.Clear();
+            }
+
         }
 
         private void RefreshErrors(ElementSave element)

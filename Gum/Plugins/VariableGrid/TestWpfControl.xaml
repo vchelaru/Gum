@@ -22,10 +22,13 @@
             </ScrollViewer>
             <Grid Visibility="{Binding ShowBehaviorUi}">
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"></RowDefinition>
                     <RowDefinition></RowDefinition>
                     <RowDefinition Height="Auto"></RowDefinition>
                 </Grid.RowDefinitions>
-                <ListBox ItemsSource="{Binding BehaviorVariables}" SelectionChanged="ListBox_SelectionChanged" 
+                <WpfDataUi:DataUiGrid Grid.Row="0" Name="BehaviorDataGrid"/>
+
+                <ListBox Grid.Row="1" ItemsSource="{Binding BehaviorVariables}" SelectionChanged="ListBox_SelectionChanged" 
                          SelectedItem="{Binding SelectedBehaviorVariable}"></ListBox>
                 <Button Grid.Row="2" Click="HandleAddVariableClicked">Add Variable</Button>
             </Grid>

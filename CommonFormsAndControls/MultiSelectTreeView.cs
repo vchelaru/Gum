@@ -341,10 +341,15 @@ namespace CommonFormsAndControls
             try
 #endif
             {
-                if(mSelectedNodes.Count > 0)
+                //if(mSelectedNodes.Count > 0)
+                //{
+                //    var firstNode = mSelectedNodes[0];
+                //    firstNode.EnsureVisible();
+                //}
+                // should we ensure all?
+                foreach(var node in mSelectedNodes)
                 {
-                    var firstNode = mSelectedNodes[0];
-                    firstNode.EnsureVisible();
+                    node.EnsureVisible();
                 }
                 base.OnAfterSelect(e);
                 base.SelectedNode = null;

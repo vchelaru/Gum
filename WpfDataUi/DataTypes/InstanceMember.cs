@@ -234,6 +234,22 @@ namespace WpfDataUi.DataTypes
             set
             {
                 // do nothing?
+                // Update August 1, 2022
+                // Why not set the value to
+                // null?
+                var propertyType = PropertyType;
+                if(propertyType != null)
+                {
+                    if (propertyType.IsValueType)
+                    {
+                        Value = Activator.CreateInstance(propertyType);
+                    }
+                    else
+                    {
+                        Value = null;
+                    }
+                }
+
             }
         }
 
