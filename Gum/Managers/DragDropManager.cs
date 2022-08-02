@@ -269,7 +269,7 @@ namespace Gum.Managers
 
             if (targetTag is ElementSave)
             {
-                HandleDroppedElementInElement(draggedAsElementSave, targetTag as ElementSave, out handled);
+                HandleDroppedElementInElement(draggedAsElementSave, targetTag as ElementSave, null, out handled);
             }
             else if (targetTag is InstanceSave)
             {
@@ -278,8 +278,10 @@ namespace Gum.Managers
 
                 InstanceSave targetInstance = targetTag as InstanceSave;
 
+                // When a parent is set, we normally raise an event for that. This is a tricky situation because
+                // we need to set the parent before adding the object, because the object is 
 
-                var newInstance = HandleDroppedElementInElement(draggedAsElementSave, targetInstance.ParentContainer, out handled);
+                var newInstance = HandleDroppedElementInElement(draggedAsElementSave, targetInstance.ParentContainer, targetInstance, out handled);
 
                 if(newInstance != null)
                 {
@@ -356,7 +358,7 @@ namespace Gum.Managers
             }
         }
 
-        private static InstanceSave HandleDroppedElementInElement(ElementSave draggedAsElementSave, ElementSave target, out bool handled)
+        private static InstanceSave HandleDroppedElementInElement(ElementSave draggedAsElementSave, ElementSave target, InstanceSave parentInstance, out bool handled)
         {
             InstanceSave newInstance = null;
 
@@ -385,7 +387,7 @@ namespace Gum.Managers
                 // the object we dragged off.  This is so that plugins can properly use the SelectedElement.
                 ElementTreeViewManager.Self.Select(target);
 
-                newInstance = ElementTreeViewManager.Self.AddInstance(name, draggedAsElementSave.Name, target);
+                newInstance = ElementTreeViewManager.Self.AddInstance(name, draggedAsElementSave.Name, target, parentInstance?.Name);
                 handled = true;
             }
 
@@ -508,10 +510,6 @@ namespace Gum.Managers
             }
             else
             {
-                if (targetObject != dragDroppedInstance)
-                {
-
-                }
                 string parentName;
                 string variableName = dragDroppedInstance.Name + ".Parent";
                 if (targetObject is InstanceSave targetInstance)
@@ -645,7 +643,7 @@ namespace Gum.Managers
                 // an element, so let's protect against that with this null check.
                 if (draggedAsElementSave != null)
                 {
-                    var newInstance = HandleDroppedElementInElement(draggedAsElementSave, target, out handled);
+                    var newInstance = HandleDroppedElementInElement(draggedAsElementSave, target, null, out handled);
 
                     float worldX, worldY;
                     Renderer.Self.Camera.ScreenToWorld(Cursor.X, Cursor.Y,

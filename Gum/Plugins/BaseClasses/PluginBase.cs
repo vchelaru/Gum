@@ -70,17 +70,17 @@ namespace Gum.Plugins.BaseClasses
 
         /// <summary>
         /// Event raised when an ElementSave's variable is set.
-        /// ElementSave - current ElementSave (like the Screen)
-        /// InstanceSave - current InstanceSave (like a sprite in a Screen). This may be null
-        /// string - name of the variable set
-        /// object - OLD value of the variable.  New value must be obtained through the InstanceSave
+        /// [ElementSave] - current ElementSave (like the Screen) 
+        /// [InstanceSave] - current InstanceSave (like a sprite in a Screen). This may be null 
+        /// [string] - name of the variable set 
+        /// [object] - OLD value of the variable.  New value must be obtained through the InstanceSave
         /// </summary>
         public event Action<ElementSave, InstanceSave, string, object> VariableSet;
         /// <summary>
         /// Event raised when a new variable is added. At the time of this writing
         /// this will only occur when a new exposed variable is added.
-        /// ElementSave - the element which contains the variable
-        /// string - the name of the variable added, which may be an exposed name
+        /// [ElementSave] - the element which contains the variable 
+        /// [string] - the name of the variable added, which may be an exposed name
         /// </summary>
         /// <remarks>
         /// Technically this
@@ -95,9 +95,15 @@ namespace Gum.Plugins.BaseClasses
         public event Action<TreeNode> StateWindowTreeNodeSelected;
         public event Action<BehaviorSave> BehaviorSelected;
         public event Action<ElementSave, InstanceSave> InstanceSelected;
+
+        /// <summary>
+        /// Event raised whenever a new instance is added. Note that this can be called after the parent is set on the new instance.
+        /// </summary>
         public event Action<ElementSave, InstanceSave> InstanceAdd;
         public event Action<ElementSave, InstanceSave> InstanceDelete;
         public event Action<ElementSave, InstanceSave[]> InstancesDelete;
+
+
         /// <summary>
         /// Event raised whenever an instance is renamed. Third parameter is the old name.
         /// </summary>
@@ -330,30 +336,15 @@ namespace Gum.Plugins.BaseClasses
 
         public void CallStateWindowTreeNodeSelected(TreeNode treeNode) => StateWindowTreeNodeSelected?.Invoke(treeNode);
 
-        public void CallBehaviorSelected(BehaviorSave behavior)
-        {
-            BehaviorSelected?.Invoke(behavior);
-        }
+        public void CallBehaviorSelected(BehaviorSave behavior) => BehaviorSelected?.Invoke(behavior);
 
-        public void CallInstanceSelected(ElementSave elementSave, InstanceSave instance)
-        {
-            InstanceSelected?.Invoke(elementSave, instance);
-        }
+        public void CallInstanceSelected(ElementSave elementSave, InstanceSave instance) => InstanceSelected?.Invoke(elementSave, instance);
 
-        public void CallInstanceAdd(ElementSave elementSave, InstanceSave instance)
-        {
-            InstanceAdd?.Invoke(elementSave, instance);
-        }
+        public void CallInstanceAdd(ElementSave elementSave, InstanceSave instance) => InstanceAdd?.Invoke(elementSave, instance);
 
-        public void CallBehaviorReferencesChanged(ElementSave element)
-        {
-            BehaviorReferencesChanged?.Invoke(element);
-        }
+        public void CallBehaviorReferencesChanged(ElementSave element) => BehaviorReferencesChanged?.Invoke(element);
 
-        public void CallInstanceDelete(ElementSave elementSave, InstanceSave instance)
-        {
-            InstanceDelete?.Invoke(elementSave, instance);
-        }
+        public void CallInstanceDelete(ElementSave elementSave, InstanceSave instance) => InstanceDelete?.Invoke(elementSave, instance);
 
         public void CallInstancesDelete(ElementSave elementSave, InstanceSave[] instances)
         {
@@ -370,17 +361,12 @@ namespace Gum.Plugins.BaseClasses
             }
         }
 
-        public void CallInstanceReordered(InstanceSave instance)
-        {
-            InstanceReordered?.Invoke(instance);
-        }
+        public void CallInstanceReordered(InstanceSave instance) => InstanceReordered?.Invoke(instance);
 
         public void CallBeforeElementSave(ElementSave elementSave)
         {
-            if (BeforeElementSave != null)
-            {
-                BeforeElementSave(elementSave);
-            }
+            BeforeElementSave?.Invoke(elementSave);
+
         }
 
         public void CallAfterElementSave(ElementSave elementSave)

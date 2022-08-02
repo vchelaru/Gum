@@ -128,7 +128,12 @@ namespace CodeOutputPlugin
             }
         }
 
-        private void HandleVariableSet(ElementSave element, InstanceSave instance, string arg3, object arg4) => HandleRefreshAndExport();
+        private void HandleVariableSet(ElementSave element, InstanceSave instance, string variableName, object oldValue)
+        {
+            ParentSetLogic.HandleVariableSet(element, instance, variableName, oldValue);
+
+            HandleRefreshAndExport();
+        }
         private void HandleVariableAdd(ElementSave elementSave, string variableName) => HandleRefreshAndExport();
         //private void /*/*HandleVariableRemoved*/*/(ElementSave elementSave, string variableName) => HandleRefreshAndExport();
         private void HandleVariableDelete(ElementSave arg1, string arg2) => HandleRefreshAndExport();
@@ -138,7 +143,12 @@ namespace CodeOutputPlugin
         private void HandleStateDelete(StateSave obj) => HandleRefreshAndExport();
 
         private void HandleInstanceDeleted(ElementSave arg1, InstanceSave arg2) => HandleRefreshAndExport();
-        private void HandleInstanceAdd(ElementSave arg1, InstanceSave arg2) => HandleRefreshAndExport();
+        private void HandleInstanceAdd(ElementSave element, InstanceSave instance)
+        {
+            ParentSetLogic.HandleNewCreatedInstance(element, instance);
+
+            HandleRefreshAndExport();
+        }
         private void HandleInstanceReordered(InstanceSave obj) => HandleRefreshAndExport();
 
 
@@ -308,7 +318,10 @@ namespace CodeOutputPlugin
         {
             var selectedElement = SelectedState.Self.SelectedElement;
             var settings = control.CodeOutputElementSettings;
-            GenerateCodeForElement(selectedElement, settings, showPopups);
+            if(selectedElement != null)
+            {
+                GenerateCodeForElement(selectedElement, settings, showPopups);
+            }
         }
 
         private void GenerateCodeForElement(ElementSave selectedElement, Models.CodeOutputElementSettings elementSettings, bool showPopups)

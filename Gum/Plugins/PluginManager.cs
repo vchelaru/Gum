@@ -824,30 +824,21 @@ namespace Gum.Plugins
                 delegate (PluginBase plugin)
                 {
                     plugin.CallBehaviorSelected(behaviorSave);
-                },
-                nameof(BehaviorSelected)
+                }
             );
 
         }
 
         internal void InstanceSelected(ElementSave elementSave, InstanceSave instance)
         {
-            CallMethodOnPlugin(
-                delegate(PluginBase plugin)
-                {
-                    plugin.CallInstanceSelected(elementSave, instance);
-                }
-            );
-
+            CallMethodOnPlugin(plugin => plugin.CallInstanceSelected(elementSave, instance));
         }
 
         internal void InstanceAdd(ElementSave elementSave, InstanceSave instance)
         {
-
-            CallMethodOnPlugin(
-                (plugin) => plugin.CallInstanceAdd(elementSave, instance)
-            );
+            CallMethodOnPlugin(plugin => plugin.CallInstanceAdd(elementSave, instance));
         }
+
 
         internal void InstanceDelete(ElementSave elementSave, InstanceSave instance)
         {

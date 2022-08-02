@@ -131,6 +131,15 @@ namespace Gum.DataTypes
             Categories = new List<StateSaveCategory>();
         }
 
+        /// <summary>
+        /// Returns the instance by name owned by this element.
+        /// </summary>
+        /// <remarks>
+        /// This only searches the top-level for instances, but inheritance will result in DefinedByBase being set to true, so
+        /// a true recursive search isn't needed.
+        /// </remarks>
+        /// <param name="name">The case-sensitive name of the instance.</param>
+        /// <returns>The found instance, or null if no matches are found.</returns>
         public InstanceSave GetInstance(string name)
         {
             for(int i = Instances.Count-1; i > -1; i--)

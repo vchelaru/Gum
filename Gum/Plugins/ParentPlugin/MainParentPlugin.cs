@@ -21,48 +21,50 @@ namespace Gum.Plugins.ParentPlugin
 
         private void HandleVariableSet(ElementSave container, InstanceSave instance, string variableName, object oldValue)
         {
-            if (variableName == "Parent" && instance != null)
+            ///////////////////////Early Out//////////////////
+            if (variableName != "Parent" || instance == null)
             {
-                var currentState = SelectedState.Self.SelectedStateSave;
+                return;
+            }
+            /////////////////////End Early Out////////////////
 
-                var newParentName = currentState.GetValueOrDefault<string>($"{instance.Name}.Parent");
+            var currentState = SelectedState.Self.SelectedStateSave;
+            var newParentName = currentState.GetValueOrDefault<string>($"{instance.Name}.Parent");
+            InstanceSave newParent = null;
+            if (!string.IsNullOrEmpty(newParentName))
+            {
+                newParent = container.GetInstance(newParentName);
+            }
 
-                InstanceSave newParent = null;
-                if (!string.IsNullOrEmpty(newParentName))
+            if (newParent != null)
+            {
+                var typeRestriction = currentState.GetValueOrDefault<string>($"{newParent.Name}.Contained Type");
+
+                if (!string.IsNullOrEmpty(typeRestriction))
                 {
-                    newParent = container.GetInstance(newParentName);
-                }
-
-                if (newParent != null)
-                {
-                    var typeRestriction = currentState.GetValueOrDefault<string>($"{newParent.Name}.Contained Type");
-
-                    if (!string.IsNullOrEmpty(typeRestriction))
+                    // this is allowed only if the child inherits from this type
+                    var doTypesMatchExactly = typeRestriction == instance.BaseType;
+                    var doTypesMatchConsideringInheritance = false;
+                    if (!doTypesMatchExactly)
                     {
-                        // this is allowed only if the child inherits from this type
-                        var doTypesMatchExactly = typeRestriction == instance.BaseType;
-                        var doTypesMatchConsideringInheritance = false;
-                        if (!doTypesMatchExactly)
+                        var element = ObjectFinder.Self.GetElementSave(typeRestriction);
+                        if (element != null)
                         {
-                            var element = ObjectFinder.Self.GetElementSave(typeRestriction);
-                            if (element != null)
-                            {
-                                var typesInheritingFromRestriction = ObjectFinder.Self.GetElementsInheritingFrom(element);
+                            var typesInheritingFromRestriction = ObjectFinder.Self.GetElementsInheritingFrom(element);
 
-                                doTypesMatchConsideringInheritance = typesInheritingFromRestriction.Any(item => item.Name == typeRestriction);
-                            }
+                            doTypesMatchConsideringInheritance = typesInheritingFromRestriction.Any(item => item.Name == typeRestriction);
                         }
+                    }
 
-                        var shouldRevert = doTypesMatchExactly == false && doTypesMatchConsideringInheritance == false;
+                    var shouldRevert = doTypesMatchExactly == false && doTypesMatchConsideringInheritance == false;
 
-                        if(shouldRevert)
-                        {
-                            // This container can't support this value
-                            currentState.SetValue($"{instance.Name}.Parent", oldValue, "string");
+                    if(shouldRevert)
+                    {
+                        // This container can't support this value
+                        currentState.SetValue($"{instance.Name}.Parent", oldValue, "string");
 
-                            GumCommands.Self.GuiCommands.PrintOutput(
-                                $"The instance {newParent.Name} has a type restriction of {typeRestriction} so {instance.Name} cannot be added as a child.");
-                        }
+                        GumCommands.Self.GuiCommands.PrintOutput(
+                            $"The instance {newParent.Name} has a type restriction of {typeRestriction} so {instance.Name} cannot be added as a child.");
                     }
                 }
             }
