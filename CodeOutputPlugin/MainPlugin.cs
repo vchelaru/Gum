@@ -62,7 +62,7 @@ namespace CodeOutputPlugin
             this.VariableAdd += HandleVariableAdd;
             this.VariableSet += HandleVariableSet;
             this.VariableDelete += HandleVariableDelete;
-
+            this.VariableExcluded += HandleVariableExcluded;
 
             this.StateWindowTreeNodeSelected += HandleStateSelected;
             this.StateRename += HandleStateRename;
@@ -78,6 +78,7 @@ namespace CodeOutputPlugin
             this.ProjectLoad += HandleProjectLoaded;
         }
 
+        private bool HandleVariableExcluded(VariableSave variable, RecursiveVariableFinder rvf) => VariableExclusionLogic.GetIfVariableIsExcluded(variable, rvf);
 
         private void HandleProjectLoaded(GumProjectSave project)
         {

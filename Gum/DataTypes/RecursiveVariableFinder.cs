@@ -31,6 +31,7 @@ namespace Gum.DataTypes
         #region Fields
 
         InstanceSave mInstanceSave;
+        public InstanceSave InstanceSave => mInstanceSave;
         public List<ElementWithState> ElementStack { get; private set; }
         StateSave mStateSave;
 
