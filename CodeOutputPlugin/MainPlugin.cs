@@ -60,6 +60,7 @@ namespace CodeOutputPlugin
 
             this.ElementSelected += HandleElementSelected;
             this.ElementRename += (element, oldName) => RenameManager.HandleRename(element, oldName, codeOutputProjectSettings);
+            this.ElementAdd += HandleElementAdd;
 
             this.VariableAdd += HandleVariableAdd;
             this.VariableSet += HandleVariableSet;
@@ -79,6 +80,7 @@ namespace CodeOutputPlugin
 
             this.ProjectLoad += HandleProjectLoaded;
         }
+
 
         private bool HandleVariableExcluded(VariableSave variable, RecursiveVariableFinder rvf) => VariableExclusionLogic.GetIfVariableIsExcluded(variable, rvf);
 
@@ -119,6 +121,13 @@ namespace CodeOutputPlugin
             }
         }
 
+
+        private void HandleElementAdd(ElementSave element)
+        {
+            HandleRefreshAndExport();
+            GenerateCodeForElement(showPopups: false, element);
+        }
+
         private void LoadCodeSettingsFile(ElementSave element)
         {
             if(element != null)
@@ -133,7 +142,7 @@ namespace CodeOutputPlugin
 
         private void HandleVariableSet(ElementSave element, InstanceSave instance, string variableName, object oldValue)
         {
-            ParentSetLogic.HandleVariableSet(element, instance, variableName, oldValue);
+            ParentSetLogic.HandleVariableSet(element, instance, variableName, oldValue, codeOutputProjectSettings);
 
             RenameManager.HandleVariableSet(element, instance, variableName, oldValue, codeOutputProjectSettings);
 
@@ -150,7 +159,7 @@ namespace CodeOutputPlugin
         private void HandleInstanceDeleted(ElementSave arg1, InstanceSave arg2) => HandleRefreshAndExport();
         private void HandleInstanceAdd(ElementSave element, InstanceSave instance)
         {
-            ParentSetLogic.HandleNewCreatedInstance(element, instance);
+            ParentSetLogic.HandleNewCreatedInstance(element, instance, codeOutputProjectSettings);
 
             HandleRefreshAndExport();
         }
@@ -322,12 +331,16 @@ namespace CodeOutputPlugin
         private void GenerateCodeForSelectedElement(bool showPopups)
         {
             var selectedElement = SelectedState.Self.SelectedElement;
-            var settings = control.CodeOutputElementSettings;
-            if(selectedElement != null)
-            {
-                CodeGenerator.GenerateCodeForElement(selectedElement, settings, codeOutputProjectSettings, showPopups);
-            }
+            GenerateCodeForElement(showPopups, selectedElement);
         }
 
+        private void GenerateCodeForElement(bool showPopups, ElementSave element)
+        {
+            var settings = control.CodeOutputElementSettings;
+            if (element != null)
+            {
+                CodeGenerator.GenerateCodeForElement(element, settings, codeOutputProjectSettings, showPopups);
+            }
+        }
     }
 }

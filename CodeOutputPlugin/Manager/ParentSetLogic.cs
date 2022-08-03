@@ -1,4 +1,5 @@
-﻿using Gum;
+﻿using CodeOutputPlugin.Models;
+using Gum;
 using Gum.DataTypes;
 using Gum.ToolStates;
 using System;
@@ -12,10 +13,10 @@ namespace CodeOutputPlugin.Manager
 {
     public static class ParentSetLogic
     {
-        public static void HandleVariableSet(ElementSave element, InstanceSave instance, string variableName, object oldValue)
+        public static void HandleVariableSet(ElementSave element, InstanceSave instance, string variableName, object oldValue, CodeOutputProjectSettings codeOutputProjectSettings)
         {
             ///////////////////////Early Out//////////////////
-            if(variableName != "Parent" || instance == null)
+            if(variableName != "Parent" || instance == null || codeOutputProjectSettings.IsCodeGenPluginEnabled == false)
             {
                 return;
             }
@@ -41,6 +42,35 @@ namespace CodeOutputPlugin.Manager
                 // Maybe an output message is not obvious enough?
                 //GumCommands.Self.GuiCommands.PrintOutput(childResponse.Message);
                 GumCommands.Self.GuiCommands.ShowMessage(response.Message);
+            }
+        }
+
+        internal static void HandleNewCreatedInstance(ElementSave element, InstanceSave instance,  CodeOutputProjectSettings codeOutputProjectSettings)
+        {
+            ///////////////////////Early Out//////////////////
+            if (codeOutputProjectSettings.IsCodeGenPluginEnabled == false)
+            {
+                return;
+            }
+            /////////////////////End Early Out////////////////
+            
+            var rfv = new RecursiveVariableFinder(element.DefaultState);
+            var newParentName = rfv.GetValue<string>($"{instance.Name}.Parent");
+
+            InstanceSave newParent = null;
+            if (!string.IsNullOrEmpty(newParentName))
+            {
+                newParent = element.GetInstance(newParentName);
+            }
+
+            var childResponse = CanInstanceRemainAsAChildOf(instance, newParent, element);
+
+            if(!childResponse.Succeeded)
+            {
+                element.Instances.Remove(instance);
+
+                GumCommands.Self.GuiCommands.ShowMessage(childResponse.Message);
+
             }
         }
 
@@ -144,26 +174,5 @@ namespace CodeOutputPlugin.Manager
             }
         }
 
-        internal static void HandleNewCreatedInstance(ElementSave element, InstanceSave instance)
-        {
-            var rfv = new RecursiveVariableFinder(element.DefaultState);
-            var newParentName = rfv.GetValue<string>($"{instance.Name}.Parent");
-
-            InstanceSave newParent = null;
-            if (!string.IsNullOrEmpty(newParentName))
-            {
-                newParent = element.GetInstance(newParentName);
-            }
-
-            var childResponse = CanInstanceRemainAsAChildOf(instance, newParent, element);
-
-            if(!childResponse.Succeeded)
-            {
-                element.Instances.Remove(instance);
-
-                GumCommands.Self.GuiCommands.ShowMessage(childResponse.Message);
-
-            }
-        }
     }
 }

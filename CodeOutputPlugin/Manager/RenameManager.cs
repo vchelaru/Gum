@@ -14,6 +14,13 @@ namespace CodeOutputPlugin.Manager
     {
         internal static void HandleRename(ElementSave element, string oldName, CodeOutputProjectSettings codeOutputProjectSettings)
         {
+            /////////////////Early Out//////////////////////
+            if(!codeOutputProjectSettings.IsCodeGenPluginEnabled)
+            {
+                return;
+            }
+            ///////////////End Early Out///////////////////////
+
             var elementSettings = CodeOutputElementSettingsManager.LoadOrCreateSettingsFor(element);
 
             var oldGeneratedFileName = CodeGenerator.GetGeneratedFileName(element, elementSettings, codeOutputProjectSettings, oldName);
@@ -64,13 +71,7 @@ namespace CodeOutputPlugin.Manager
             {
                 string fileContents = FileManager.FromFileText(newCustomFileName.FullPath);
 
-                var visualApi = CodeGenerator.GetVisualApiForElement(element);
-
-                var oldClassName = CodeGenerator.GetClassNameForType(oldName, oldVisualApi ?? visualApi);
-                var newClassName = CodeGenerator.GetClassNameForType(element.Name, visualApi);
-
-                RenameClassInCode(
-                    element, codeOutputProjectSettings, ref fileContents);
+                RenameClassInCode(element, codeOutputProjectSettings, ref fileContents);
 
                 FileManager.SaveText(fileContents, newCustomFileName.FullPath);
             }
@@ -93,7 +94,7 @@ namespace CodeOutputPlugin.Manager
         internal static void HandleVariableSet(ElementSave element, InstanceSave instance, string variableName, object oldValue, CodeOutputProjectSettings codeOutputProjectSettings)
         {
             /////////////////////////Early Out////////////////////
-            if(variableName != "Base Type" || instance != null)
+            if(variableName != "Base Type" || instance != null || !codeOutputProjectSettings.IsCodeGenPluginEnabled)
             {
                 return;
             }
@@ -126,6 +127,15 @@ namespace CodeOutputPlugin.Manager
             if (newCustomFileName != oldCustomFileName)
             {
                 RegenerateAndMoveCode(element, element.Name, codeOutputProjectSettings, oldGeneratedFileName, oldCustomFileName, newCustomFileName, oldVisualApi);
+            }
+            else
+            {
+                // same file, which means we only changed the types:
+                string fileContents = FileManager.FromFileText(newCustomFileName.FullPath);
+
+                RenameClassInCode(element, codeOutputProjectSettings, ref fileContents);
+
+                FileManager.SaveText(fileContents, newCustomFileName.FullPath);
             }
 
         }
