@@ -38,8 +38,8 @@ namespace Gum.Plugins.BaseClasses
         /// Event raised when the element is renamed.
         /// </summary>
         /// <remarks>
-        /// ElementSave is the element that was renamed
-        /// string is the old name
+        /// [ElementSave] is the element that was renamed
+        /// [string] is the old name
         /// </remarks>
         public event Action<ElementSave, string> ElementRename;
         /// <summary>

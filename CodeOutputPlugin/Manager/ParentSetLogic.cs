@@ -57,7 +57,7 @@ namespace CodeOutputPlugin.Manager
             }
 
             var parentType = newParent?.BaseType ?? element.BaseType;
-            var isParentSkiaCanvas = parentType.EndsWith("/SkiaGumCanvasView");
+            var isParentSkiaCanvas = parentType?.EndsWith("/SkiaGumCanvasView") == true;
 
             var childName = instance.Name;
             var parentName = newParent?.Name ?? element.Name;

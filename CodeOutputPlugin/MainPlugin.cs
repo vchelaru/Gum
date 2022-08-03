@@ -1,4 +1,5 @@
 ﻿using CodeOutputPlugin.Manager;
+using CodeOutputPlugin.Models;
 using Gum;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
@@ -58,11 +59,13 @@ namespace CodeOutputPlugin
             this.InstanceReordered += HandleInstanceReordered;
 
             this.ElementSelected += HandleElementSelected;
+            this.ElementRename += (element, oldName) => RenameManager.HandleRename(element, oldName, codeOutputProjectSettings);
 
             this.VariableAdd += HandleVariableAdd;
             this.VariableSet += HandleVariableSet;
             this.VariableDelete += HandleVariableDelete;
             this.VariableExcluded += HandleVariableExcluded;
+            this.AddAndRemoveVariablesForType += CustomVariableManager.HandleAddAndRemoveVariablesForType;
 
             this.StateWindowTreeNodeSelected += HandleStateSelected;
             this.StateRename += HandleStateRename;
@@ -74,7 +77,6 @@ namespace CodeOutputPlugin
             this.CategoryDelete += (category) => HandleRefreshAndExport();
             this.VariableRemovedFromCategory += (name, category) => HandleRefreshAndExport();
 
-            this.AddAndRemoveVariablesForType += CustomVariableManager.HandleAddAndRemoveVariablesForType;
             this.ProjectLoad += HandleProjectLoaded;
         }
 
@@ -132,6 +134,8 @@ namespace CodeOutputPlugin
         private void HandleVariableSet(ElementSave element, InstanceSave instance, string variableName, object oldValue)
         {
             ParentSetLogic.HandleVariableSet(element, instance, variableName, oldValue);
+
+            RenameManager.HandleVariableSet(element, instance, variableName, oldValue, codeOutputProjectSettings);
 
             HandleRefreshAndExport();
         }
@@ -304,12 +308,12 @@ namespace CodeOutputPlugin
             foreach (var screen in gumProject.Screens)
             {
                 var screenOutputSettings = CodeOutputElementSettingsManager.LoadOrCreateSettingsFor(screen);
-                GenerateCodeForElement(screen, screenOutputSettings, showPopups: false);
+                CodeGenerator.GenerateCodeForElement(screen, screenOutputSettings, codeOutputProjectSettings, showPopups: false);
             }
             foreach(var component in gumProject.Components)
             {
                 var componentOutputSettings = CodeOutputElementSettingsManager.LoadOrCreateSettingsFor(component);
-                GenerateCodeForElement(component, componentOutputSettings, showPopups: false);
+                CodeGenerator.GenerateCodeForElement(component, componentOutputSettings, codeOutputProjectSettings, showPopups: false);
             }
 
             GumCommands.Self.GuiCommands.ShowMessage($"Generated code\nScreens: {gumProject.Screens.Count}\nComponents: {gumProject.Components.Count}");
@@ -321,113 +325,9 @@ namespace CodeOutputPlugin
             var settings = control.CodeOutputElementSettings;
             if(selectedElement != null)
             {
-                GenerateCodeForElement(selectedElement, settings, showPopups);
+                CodeGenerator.GenerateCodeForElement(selectedElement, settings, codeOutputProjectSettings, showPopups);
             }
         }
 
-        private void GenerateCodeForElement(ElementSave selectedElement, Models.CodeOutputElementSettings elementSettings, bool showPopups)
-        {
-            string generatedFileName = elementSettings.GeneratedFileName;
-
-            if (string.IsNullOrEmpty(generatedFileName) && !string.IsNullOrEmpty(this.codeOutputProjectSettings.CodeProjectRoot))
-            {
-                string prefix = selectedElement is ScreenSave ? "Screens"
-                    : selectedElement is ComponentSave ? "Components"
-                    : "Standards";
-                var splitName = (prefix + "/" + selectedElement.Name).Split('/');
-                var nameWithNamespaceArray = splitName.Take(splitName.Length - 1).Append(CodeGenerator.GetClassNameForType(selectedElement.Name, CodeGenerator.GetVisualApiForElement(selectedElement)));
-
-                var folder = this.codeOutputProjectSettings.CodeProjectRoot;
-                if (FileManager.IsRelative(folder))
-                {
-                    folder = GumState.Self.ProjectState.ProjectDirectory + folder;
-                }
-
-                generatedFileName = folder + string.Join("\\", nameWithNamespaceArray) + ".Generated.cs";
-            }
-
-            if (!string.IsNullOrEmpty(generatedFileName) && FileManager.IsRelative(generatedFileName))
-            {
-                generatedFileName = ProjectState.Self.ProjectDirectory + generatedFileName;
-            }
-
-
-            if (string.IsNullOrEmpty(generatedFileName))
-            {
-                if (showPopups)
-                {
-                    GumCommands.Self.GuiCommands.ShowMessage("Generated file name must be set first");
-                }
-            }
-            else
-            {
-                // We used to use the view model code, but the viewmodel may have
-                // an instance within the element selected. Instead, we want to output
-                // the code for the whole selected element.
-                //var contents = ViewModel.Code;
-
-                string contents = CodeGenerator.GetGeneratedCodeForElement(selectedElement, elementSettings, codeOutputProjectSettings);
-                contents = $"//Code for {selectedElement.ToString()}\n{contents}";
-
-                string message = string.Empty;
-
-                var codeDirectory = FileManager.GetDirectory(generatedFileName);
-                if (!System.IO.Directory.Exists(codeDirectory))
-                {
-                    try
-                    {
-                        GumCommands.Self.TryMultipleTimes(() =>
-                            System.IO.Directory.CreateDirectory(codeDirectory));
-                    }
-                    catch(Exception e)
-                    {
-                        GumCommands.Self.GuiCommands.PrintOutput($"Error creating directory {codeDirectory}:\n{e.Message}");
-                    }
-                }
-
-                GumCommands.Self.TryMultipleTimes(() => System.IO.File.WriteAllText(generatedFileName, contents));
-
-                // show a message somewhere?
-                message += $"Generated code to {FileManager.RemovePath(generatedFileName)}";
-
-                if (!string.IsNullOrEmpty(this.codeOutputProjectSettings.CodeProjectRoot))
-                {
-                    
-                    if (FileManager.IsRelative(generatedFileName))
-                    {
-                        generatedFileName = GumState.Self.ProjectState.ProjectDirectory + generatedFileName;
-                    }
-                    generatedFileName = FileManager.RemoveDotDotSlash(generatedFileName);
-
-                    // nope! This strips out periods in folders. We don't want to do that:
-                    //var splitFileWithoutGenerated = generatedFileName.Split('.').ToArray();
-                    //var customCodeFileName = string.Join("\\", splitFileWithoutGenerated.Take(splitFileWithoutGenerated.Length - 2)) + ".cs";
-                    // Instead, just strip it off the end:
-                    var customCodeFileName = generatedFileName.Substring(0, generatedFileName.Length - ".Generated.cs".Length) + ".cs";
-
-                    // todo - only save this if it doesn't already exist
-                    if (!System.IO.File.Exists(customCodeFileName))
-                    {
-                        var directory = FileManager.GetDirectory(customCodeFileName);
-                        if(!System.IO.Directory.Exists(directory))
-                        {
-                            System.IO.Directory.CreateDirectory(directory);
-                        }
-                        var customCodeContents = CustomCodeGenerator.GetCustomCodeForElement(selectedElement, elementSettings, codeOutputProjectSettings);
-                        System.IO.File.WriteAllText(customCodeFileName, customCodeContents);
-                    }
-                }
-
-
-                if (showPopups)
-                {
-                    GumCommands.Self.GuiCommands.ShowMessage(message);
-                }
-                else
-                {
-                    GumCommands.Self.GuiCommands.PrintOutput(message);
-                }
-            }
-        }
     }
 }
