@@ -31,23 +31,71 @@ namespace CodeOutputPlugin.Manager
                 newParent = element.GetInstance(newParentName);
             }
 
-            var childResponse = CanInstanceBeChildOf(instance, newParent, element);
+            var response = CanInstanceRemainAsAChildOf(instance, newParent, element);
 
-            if(!childResponse.Succeeded)
+
+            if (!response.Succeeded)
             {
                 currentState.SetValue($"{instance.Name}.Parent", oldValue, "string");
 
                 // Maybe an output message is not obvious enough?
                 //GumCommands.Self.GuiCommands.PrintOutput(childResponse.Message);
-                GumCommands.Self.GuiCommands.ShowMessage(childResponse.Message);
+                GumCommands.Self.GuiCommands.ShowMessage(response.Message);
             }
         }
 
-        private static GeneralResponse CanInstanceBeChildOf(InstanceSave instance, InstanceSave newParent, ElementSave element)
+        static int CountInstancesWithParent(ElementSave element, string name)
+        {
+            int count = 0;
+            var defaultVariables = element.DefaultState.Variables;
+
+            foreach(var variable in defaultVariables)
+            {
+                var isParent = variable.GetRootName() == "Parent";
+
+                if(isParent && variable.SourceObject != null && (variable.Value as string) == name)
+                {
+                    count++;
+                }
+            }
+            return count;
+        }
+
+        private static GeneralResponse CanInstanceRemainAsAChildOf(InstanceSave instance, InstanceSave newParent, ElementSave element)
+        {
+            var toReturn = CanInstanceBeChildBasedOnXamarinFormsSkiaRestrictions(instance, newParent, element);
+
+            if(toReturn.Succeeded)
+            {
+                // even if it's okay, it could be that the parent only supports Contents and doesn't have .Children.
+                // In that case, we should only allow 1 child:
+                var parentType = newParent?.BaseType ?? element.BaseType;
+
+                var hasContent = CodeGenerator.DoesTypeHaveContent(parentType);
+
+                if (hasContent)
+                {
+                    var childrenCount = 
+                        CountInstancesWithParent(element, newParent?.Name);
+
+                    if (childrenCount > 1)
+                    {
+                        var parentName = newParent?.Name ?? element.Name;
+                        var message =
+                            $"{instance.Name} cannot be added as a child to {parentName} because {parentName} is a Xamarin Forms object which has Content, so it can only have 1 child";
+                        toReturn = GeneralResponse.UnsuccessfulWith(message);
+                    }
+                }
+            }
+
+            return toReturn;
+        }
+
+        private static GeneralResponse CanInstanceBeChildBasedOnXamarinFormsSkiaRestrictions(InstanceSave instance, InstanceSave newParent, ElementSave element)
         {
             VisualApi parentVisualApi;
             VisualApi childVisualApi = CodeGenerator.GetVisualApiForInstance(instance, element);
-            if(newParent != null)
+            if (newParent != null)
             {
                 parentVisualApi = CodeGenerator.GetVisualApiForInstance(newParent, element);
             }
@@ -64,7 +112,7 @@ namespace CodeOutputPlugin.Manager
 
             if (parentVisualApi == childVisualApi)
             {
-                if(isParentSkiaCanvas && childVisualApi == VisualApi.XamarinForms)
+                if (isParentSkiaCanvas && childVisualApi == VisualApi.XamarinForms)
                 {
                     return GeneralResponse.UnsuccessfulWith(
                         $"Can't add {childName} to parent {parentName} because the parent is a a SkiaGumCanvasView which can only contain non-XamarinForms objects");
@@ -79,7 +127,7 @@ namespace CodeOutputPlugin.Manager
             {
 
                 // they don't match, but we can have a special case where children can be added to a parent that is a SkiaGumCanvasView
-                if(childVisualApi == VisualApi.Gum && isParentSkiaCanvas)
+                if (childVisualApi == VisualApi.Gum && isParentSkiaCanvas)
                 {
                     // Gum child added to parent skia canvas, so that's okay:
                     return GeneralResponse.SuccessfulResponse;
@@ -107,7 +155,7 @@ namespace CodeOutputPlugin.Manager
                 newParent = element.GetInstance(newParentName);
             }
 
-            var childResponse = CanInstanceBeChildOf(instance, newParent, element);
+            var childResponse = CanInstanceRemainAsAChildOf(instance, newParent, element);
 
             if(!childResponse.Succeeded)
             {

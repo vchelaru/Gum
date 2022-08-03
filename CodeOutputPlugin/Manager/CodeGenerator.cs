@@ -1113,7 +1113,7 @@ namespace CodeOutputPlugin.Manager
                     {
                         stringBuilder.AppendLine($"{tabs}this.Children.Add({instanceName});");
                     }
-                    else if(isContainerScrollView)
+                    else if(DoesTypeHaveContent(container.BaseType))
                     {
                         stringBuilder.Append($"{tabs}this.Content = {instanceName};");
                     }
@@ -2595,12 +2595,7 @@ namespace CodeOutputPlugin.Manager
                         {
                             // All XamForms objects are components, so all must inherit from something. This should never happen...
                         }
-                        hasContent =
-                            componentType?.EndsWith("/ScrollView") == true ||
-                            componentType?.EndsWith("/StickyScrollView") == true ||
-                            componentType?.EndsWith("/Frame") == true
-                            ;
-
+                        hasContent = DoesTypeHaveContent(componentType);
                     }
 
                     // Certain types of views don't support Children.Add - they only have
@@ -2682,6 +2677,13 @@ namespace CodeOutputPlugin.Manager
             }
 
             return null;
+        }
+
+        public static bool DoesTypeHaveContent(string type)
+        {
+            return type?.EndsWith("/ScrollView") == true ||
+                            type?.EndsWith("/StickyScrollView") == true ||
+                            type?.EndsWith("/Frame") == true;
         }
 
         private static string GetLocaliedLine(InstanceSave instance, VariableSave variable, CodeGenerationContext context)
