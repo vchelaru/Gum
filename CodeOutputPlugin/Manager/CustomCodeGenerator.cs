@@ -12,7 +12,6 @@ namespace CodeOutputPlugin.Manager
     {
         public static string GetCustomCodeForElement(ElementSave element, CodeOutputElementSettings elementSettings, CodeOutputProjectSettings projectSettings)
         {
-            var visualApi = CodeGenerator.GetVisualApiForElement(element);
 
             var stringBuilder = new StringBuilder();
             int tabCount = 0;
@@ -47,29 +46,9 @@ namespace CodeOutputPlugin.Manager
 
             // todo - this needs work! It's just placeholder so I can finish the rest of this method to get something with the right # of brackets
 
-            string inheritance = null;
-            if(element is ScreenSave)
-            {
-                inheritance = element.BaseType ?? projectSettings.DefaultScreenBase;
-            }
-            else if(element.BaseType == "XamarinForms/SkiaGumCanvasView")
-            {
-                inheritance = "SkiaGum.SkiaGumCanvasView";
-            }
-            else if(element.BaseType == "Container")
-            {
-                inheritance = "BindableGraphicalUiElement";
-            }
-            else
-            {
-                inheritance = element.BaseType;
-                if(inheritance?.Contains("/") == true)
-                {
-                    inheritance = inheritance.Substring(inheritance.LastIndexOf('/') + 1);
-                }
-            }
+            string classHeader = GetClassHeader(element, projectSettings);
 
-            stringBuilder.AppendLine(ToTabs(tabCount) + $"partial class {CodeGenerator.GetClassNameForType(element.Name, visualApi)} : {inheritance}");
+            stringBuilder.AppendLine(ToTabs(tabCount) + classHeader);
             stringBuilder.AppendLine(ToTabs(tabCount) + "{");
             tabCount++;
             #endregion
@@ -91,6 +70,35 @@ namespace CodeOutputPlugin.Manager
             }
 
             return stringBuilder.ToString();
+        }
+
+        public static string GetClassHeader(ElementSave element, CodeOutputProjectSettings projectSettings)
+        {
+            var visualApi = CodeGenerator.GetVisualApiForElement(element);
+            string inheritance = null;
+            if (element is ScreenSave)
+            {
+                inheritance = element.BaseType ?? projectSettings.DefaultScreenBase;
+            }
+            else if (element.BaseType == "XamarinForms/SkiaGumCanvasView")
+            {
+                inheritance = "SkiaGum.SkiaGumCanvasView";
+            }
+            else if (element.BaseType == "Container")
+            {
+                inheritance = "BindableGraphicalUiElement";
+            }
+            else
+            {
+                inheritance = element.BaseType;
+                if (inheritance?.Contains("/") == true)
+                {
+                    inheritance = inheritance.Substring(inheritance.LastIndexOf('/') + 1);
+                }
+            }
+
+            var classHeader = $"partial class {CodeGenerator.GetClassNameForType(element.Name, visualApi)} : {inheritance}";
+            return classHeader;
         }
 
         private static string ToTabs(int tabCount) => new string(' ', tabCount * 4);

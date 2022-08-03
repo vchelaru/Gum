@@ -70,9 +70,7 @@ namespace CodeOutputPlugin.Manager
                 var newClassName = CodeGenerator.GetClassNameForType(element.Name, visualApi);
 
                 RenameClassInCode(
-                    oldClassName,
-                    newClassName,
-                    ref fileContents);
+                    element, codeOutputProjectSettings, ref fileContents);
 
                 FileManager.SaveText(fileContents, newCustomFileName.FullPath);
             }
@@ -132,10 +130,27 @@ namespace CodeOutputPlugin.Manager
 
         }
 
-        static void RenameClassInCode(string oldClassName, string newClassName, ref string contents)
+        static void RenameClassInCode(ElementSave element, CodeOutputProjectSettings codeOutputProjectSettings, ref string contents)
         {
-            contents = contents.Replace("partial class " + oldClassName,
-                "partial class " + newClassName);
+            var startOfLine = contents.IndexOf("partial class ");
+            ////////////////Early Out/////////////////
+            if(startOfLine <= -1)
+            {
+                return;
+            }
+            //////////////End Early Out///////////////
+            ///
+            var endOfLine = contents.IndexOf("\n", startOfLine + 1);
+
+            contents = contents.Remove(startOfLine, endOfLine - startOfLine);
+
+            var newHeader = CustomCodeGenerator.GetClassHeader(element, codeOutputProjectSettings)
+                // don't append \n - it's already there from what was removed earlier
+                //+ "\n"
+                ;
+            contents = contents.Insert(startOfLine, newHeader);
+
         }
+
     }
 }

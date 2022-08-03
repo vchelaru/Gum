@@ -1059,7 +1059,9 @@ namespace CodeOutputPlugin.Manager
             context.Element = container;
             context.Instance = instance;
 
-            var hasParent = parentVariable?.Value != null;
+            var parentValue = parentVariable?.Value as string;
+            var hasParent = parentValue != null &&
+                container.GetInstance(parentValue) != null;
 
             if(hasParent)
             {
@@ -2601,25 +2603,26 @@ namespace CodeOutputPlugin.Manager
 
                     }
 
+                    // Certain types of views don't support Children.Add - they only have
+                    // a single content. In the future we may want to formalize the way we
+                    // handle standard XamarinForms controls, but for now we'll hardcode some
+                    // checks:
+                    if (hasContent)
+                    {
+                        return $"{parentName}.Content = {context.Instance.Name};";
+                    }
+                    else
+                    {
+                        return $"{parentName}.Children.Add({context.Instance.Name});";
+                    }
                 }
                 // parent instance is null, so attach to "this" top level object
                 else
                 {
-                    // not sure what to do here...
+                    // Couldn't find anything, so don't return anything
+
                 }
 
-                // Certain types of views don't support Children.Add - they only have
-                // a single content. In the future we may want to formalize the way we
-                // handle standard XamarinForms controls, but for now we'll hardcode some
-                // checks:
-                if (hasContent)
-                {
-                    return $"{parentName}.Content = {context.Instance.Name};";
-                }
-                else
-                {
-                    return $"{parentName}.Children.Add({context.Instance.Name});";
-                }
             }
 
             #region Children Layout

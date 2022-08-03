@@ -39,6 +39,10 @@ namespace CodeOutputPlugin.Manager
             else
             {
                 toReturn = new Models.CodeOutputElementSettings();
+                // As of August 3, 2022 we now have basic refactoring support
+                // in place (rename, change base type) so we can probably handle
+                // regen on change:
+                toReturn.AutoGenerateOnChange = true;
             }
             return toReturn;
         }
