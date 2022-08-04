@@ -764,6 +764,9 @@ namespace Gum.Managers
             }
 
             var differenceX = worldX - containerLeft;
+
+
+
             var instanceXUnits = (PositionUnitType)SelectedState.Self.SelectedStateSave.GetValueRecursive($"{instance.Name}.X Units");
             var asGeneralXUnitType = UnitConverter.ConvertToGeneralUnit(instanceXUnits);
             xToSet = UnitConverter.Self.ConvertXPosition(differenceX, GeneralUnitType.PixelsFromSmall, asGeneralXUnitType, containerWidth);

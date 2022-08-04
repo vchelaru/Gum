@@ -1442,13 +1442,9 @@ namespace CodeOutputPlugin.Manager
                 }
                 else if(!isSkiaCanvasView && !isStackLayout)
                 {
-                    var shouldAddMainLayout = true;
-                    if(element is ScreenSave && !string.IsNullOrEmpty(element.BaseType))
-                    {
-                        shouldAddMainLayout = false;
-                    }
+                    bool shouldAddMainLayout = GetIfShouldAddMainLayout(element, projectSettings);
 
-                    if(shouldAddMainLayout)
+                    if (shouldAddMainLayout)
                     {
                         stringBuilder.AppendLine(ToTabs(tabCount) + "MainLayout = new AbsoluteLayout();");
                         stringBuilder.AppendLine(ToTabs(tabCount) + "BaseGrid.Children.Add(MainLayout);");
@@ -1506,6 +1502,17 @@ namespace CodeOutputPlugin.Manager
 
             tabCount--;
             stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+        }
+
+        private static bool GetIfShouldAddMainLayout(ElementSave element, CodeOutputProjectSettings projectSettings)
+        {
+            var shouldAddMainLayout = true;
+            if (element is ScreenSave && !string.IsNullOrEmpty(element.BaseType) && !projectSettings.BaseTypesNotCodeGenerated.Contains(element.BaseType))
+            {
+                shouldAddMainLayout = false;
+            }
+
+            return shouldAddMainLayout;
         }
 
         #endregion
@@ -1566,19 +1573,27 @@ namespace CodeOutputPlugin.Manager
         public static VisualApi GetVisualApiForElement(ElementSave element)
         {
             VisualApi visualApi;
-            var defaultState = element.DefaultState;
-            var rvf = new RecursiveVariableFinder(defaultState);
-            var isXamForms = rvf.GetValue<bool>("IsXamarinFormsControl");
-            if (isXamForms == true)
+            if(element is ScreenSave)
             {
+                // screens are always XamarinForms
                 visualApi = VisualApi.XamarinForms;
             }
             else
             {
-                visualApi = VisualApi.Gum;
+                var defaultState = element.DefaultState;
+                var rvf = new RecursiveVariableFinder(defaultState);
+                var isXamForms = rvf.GetValue<bool>("IsXamarinFormsControl");
+                if (isXamForms == true)
+                {
+                    visualApi = VisualApi.XamarinForms;
+                }
+                else
+                {
+                    visualApi = VisualApi.Gum;
+                }
             }
-
             return visualApi;
+
         }
 
         static bool IsStackLayout(InstanceSave instance) => IsOfXamarinFormsType(instance, "StackLayout");
@@ -1618,11 +1633,9 @@ namespace CodeOutputPlugin.Manager
 
             if (!isThisAbsoluteLayout && !isSkiaCanvasView && !isContainer && !isThisStackLayout && projectSettings.OutputLibrary == OutputLibrary.XamarinForms)
             {
-                var shouldAddMainLayout = true;
-                if (element is ScreenSave && !string.IsNullOrEmpty(element.BaseType))
-                {
-                    shouldAddMainLayout = false;
-                }
+                var shouldAddMainLayout =
+                    GetIfShouldAddMainLayout(element, projectSettings);
+
 
                 if (shouldAddMainLayout)
                 {
