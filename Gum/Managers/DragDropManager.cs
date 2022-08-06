@@ -287,6 +287,14 @@ namespace Gum.Managers
                 {
                     // Since the user dropped on another instance, let's try to parent it:
                     HandleDroppingInstanceOnTarget(targetInstance, newInstance, targetInstance.ParentContainer, targetTreeNode);
+
+                    // HandleDroppingInstanceOnTarget internally calls 
+                    // WireframeObjectManager.Self.RefreshAll, but since
+                    // the Parent is set in HandleDroppedElementInElement,
+                    // then HandleDroppingInstanceOnTarget does not report the
+                    // parent as having changed. We need to still force a refresh
+                    // to make the parenting apply in the wireframe display.
+                    WireframeObjectManager.Self.RefreshAll(true, forceReloadTextures: false);
                 }
 
             }
