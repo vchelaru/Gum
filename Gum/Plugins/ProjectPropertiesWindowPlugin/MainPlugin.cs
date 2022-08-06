@@ -6,6 +6,8 @@ using Gum.Plugins.BaseClasses;
 using Gum.Plugins.Behaviors;
 using Gum.ToolStates;
 using Gum.Wireframe;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary.Graphics.Fonts;
 using System;
 using System.Collections.Generic;
@@ -150,6 +152,26 @@ namespace Gum.Plugins.PropertiesWindowPlugin
                 case nameof(viewModel.GuideLineColor):
                     GumCommands.Self.WireframeCommands.RefreshGuides();
                     break;
+                case nameof(viewModel.SinglePixelTextureFile):
+                case nameof(viewModel.SinglePixelTextureTop):
+                case nameof(viewModel.SinglePixelTextureLeft):
+                case nameof(viewModel.SinglePixelTextureRight):
+                case nameof(viewModel.SinglePixelTextureBottom):
+
+                    if(!string.IsNullOrEmpty(viewModel.SinglePixelTextureFile) && FileManager.IsRelative(viewModel.SinglePixelTextureFile) == false)
+                    {
+                        // This will loop:
+                        viewModel.SinglePixelTextureFile = FileManager.MakeRelative(viewModel.SinglePixelTextureFile,
+                            GumState.Self.ProjectState.ProjectDirectory);
+                        shouldSaveAndRefresh = false;
+                    }
+                    else
+                    {
+                        RefreshSinglePixelTexture();
+                        WireframeObjectManager.Self.RefreshAll(forceLayout: true, forceReloadTextures: true);
+                    }
+
+                    break;
             }
 
             if (shouldSaveAndRefresh)
@@ -157,6 +179,42 @@ namespace Gum.Plugins.PropertiesWindowPlugin
                 GumCommands.Self.WireframeCommands.Refresh(forceLayout: true, forceReloadContent: shouldReloadContent);
 
                 GumCommands.Self.FileCommands.TryAutoSaveProject();
+            }
+        }
+
+        private void RefreshSinglePixelTexture()
+        {
+            var hasCustomSinglePixelTexture =
+                viewModel.SinglePixelTextureFile != null &&
+                viewModel.SinglePixelTextureTop != null &&
+                viewModel.SinglePixelTextureLeft != null &&
+                viewModel.SinglePixelTextureRight != null &&
+                viewModel.SinglePixelTextureBottom != null;
+
+            var renderer = global::RenderingLibrary.Graphics.Renderer.Self;
+
+            if(hasCustomSinglePixelTexture)
+            {
+                var loaderManager =
+                    global::RenderingLibrary.Content.LoaderManager.Self;
+
+                renderer.SinglePixelTexture = loaderManager.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(viewModel.SinglePixelTextureFile);
+
+                renderer.SinglePixelSourceRectangle = new Microsoft.Xna.Framework.Rectangle(
+                    viewModel.SinglePixelTextureLeft.Value,
+                    viewModel.SinglePixelTextureTop.Value,
+                    width: viewModel.SinglePixelTextureRight.Value - viewModel.SinglePixelTextureLeft.Value,
+                    height: viewModel.SinglePixelTextureBottom.Value - viewModel.SinglePixelTextureTop.Value);
+            }
+            else
+            {
+                var texture = new Texture2D(renderer.GraphicsDevice, 1, 1, false, SurfaceFormat.Color);
+                Color[] pixels = new Color[1];
+                pixels[0] = Color.White;
+                texture.SetData<Color>(pixels);
+
+                renderer.SinglePixelTexture = texture;
+                renderer.SinglePixelSourceRectangle = null;
             }
         }
 

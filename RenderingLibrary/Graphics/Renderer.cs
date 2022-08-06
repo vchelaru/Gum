@@ -90,6 +90,10 @@ namespace RenderingLibrary.Graphics
             }
         }
 
+        /// <summary>
+        /// The texture used to render solid objects. If SinglePixelSourceRectangle is null, the entire texture is used. Otherwise
+        /// the portion of SinglePixelTexture is applied.
+        /// </summary>
         public Texture2D SinglePixelTexture
         {
             get
@@ -225,8 +229,8 @@ namespace RenderingLibrary.Graphics
             mSinglePixelTexture = new Texture2D(mGraphicsDevice, 1, 1, false, SurfaceFormat.Color);
             Color[] pixels = new Color[1];
             pixels[0] = Color.White;
-            mSinglePixelTexture.Name = "Rendering Library Single Pixel Texture";
             mSinglePixelTexture.SetData<Color>(pixels);
+            mSinglePixelTexture.Name = "Rendering Library Single Pixel Texture";
 
             mDottedLineTexture = new Texture2D(mGraphicsDevice, 2, 1, false, SurfaceFormat.Color);
             pixels = new Color[2];

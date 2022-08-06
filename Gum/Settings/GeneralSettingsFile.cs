@@ -117,8 +117,6 @@ namespace Gum.Settings
         public byte GuideTextColorG { get; set; } = 255;
         public byte GuideTextColorB { get; set; } = 255;
 
-
-
         #endregion
 
         #region Methods

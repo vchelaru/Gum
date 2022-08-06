@@ -69,6 +69,13 @@ namespace Gum.Gui.Controls
                 }
             }
 
+            DataGrid.MoveMemberToCategory(nameof(ViewModel.SinglePixelTextureFile), "Single Pixel Texture");
+
+            DataGrid.MoveMemberToCategory(nameof(ViewModel.SinglePixelTextureLeft), "Single Pixel Texture");
+            DataGrid.MoveMemberToCategory(nameof(ViewModel.SinglePixelTextureTop), "Single Pixel Texture");
+            DataGrid.MoveMemberToCategory(nameof(ViewModel.SinglePixelTextureRight), "Single Pixel Texture");
+            DataGrid.MoveMemberToCategory(nameof(ViewModel.SinglePixelTextureBottom), "Single Pixel Texture");
+
 
             foreach (var category in DataGrid.Categories)
             {
@@ -83,6 +90,10 @@ namespace Gum.Gui.Controls
                     }
 
                     if(member.Name == nameof(ViewModel.LocalizationFile))
+                    {
+                        member.PreferredDisplayer = typeof(FileSelectionDisplay);
+                    }
+                    else if(member.Name == nameof(ViewModel.SinglePixelTextureFile))
                     {
                         member.PreferredDisplayer = typeof(FileSelectionDisplay);
                     }

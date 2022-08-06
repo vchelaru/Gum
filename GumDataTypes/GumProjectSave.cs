@@ -196,6 +196,14 @@ namespace Gum.DataTypes
             set;
         }
 
+        public string SinglePixelTextureFile { get; set; }
+
+        public int? SinglePixelTextureTop { get; set; }
+        public int? SinglePixelTextureLeft { get; set; }
+        public int? SinglePixelTextureRight { get; set; }
+        public int? SinglePixelTextureBottom { get; set; }
+
+
         #endregion
 
         #region Methods

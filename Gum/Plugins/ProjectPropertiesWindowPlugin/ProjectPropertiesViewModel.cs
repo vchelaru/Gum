@@ -19,8 +19,8 @@ namespace Gum.Plugins.PropertiesWindowPlugin
 
         public bool AutoSave
         {
-            get { return Get<bool>(); }
-            set { Set(value); }
+            get => Get<bool>(); 
+            set => Set(value); 
         }
 
         public bool ShowOutlines
@@ -73,14 +73,14 @@ namespace Gum.Plugins.PropertiesWindowPlugin
 
         public bool RestrictFileNamesForAndroid
         {
-            get { return Get<bool>(); }
-            set { Set(value); }
+            get => Get<bool>(); 
+            set => Set(value); 
         }
 
         public bool RenderTextCharacterByCharacter
         {
-            get { return Get<bool>(); }
-            set { Set(value); }
+            get => Get<bool>(); 
+            set => Set(value); 
         }
 
         public Color CheckerboardColor1
@@ -119,6 +119,36 @@ namespace Gum.Plugins.PropertiesWindowPlugin
             set => Set(value);
         }
 
+        public string SinglePixelTextureFile
+        {
+            get => Get<string>();
+            set => Set(value);
+        }
+
+        public int? SinglePixelTextureTop
+        {
+            get => Get<int?>();
+            set => Set(value);
+        }
+
+        public int? SinglePixelTextureLeft
+        {
+            get => Get<int?>();
+            set => Set(value);
+        }
+
+        public int? SinglePixelTextureRight
+        {
+            get => Get<int?>();
+            set => Set(value);
+        }
+
+        public int? SinglePixelTextureBottom
+        {
+            get => Get<int?>();
+            set => Set(value);
+        }
+
         public bool IsUpdatingFromModel { get; private set; }
 
         public ProjectPropertiesViewModel()
@@ -129,31 +159,41 @@ namespace Gum.Plugins.PropertiesWindowPlugin
         public void SetFrom(GeneralSettingsFile generalSettings, GumProjectSave gumProject)
         {
             IsUpdatingFromModel = true;
-            this.generalSettings = generalSettings;
-            this.gumProject = gumProject;
 
-            AutoSave = this.generalSettings.AutoSave;
-            ShowOutlines = this.gumProject.ShowOutlines;
-            FontRanges = this.gumProject.FontRanges;
-            RestrictToUnitValues = this.gumProject.RestrictToUnitValues;
-            CanvasHeight = this.gumProject.DefaultCanvasHeight;
-            CanvasWidth = this.gumProject.DefaultCanvasWidth;
-            RestrictFileNamesForAndroid = this.gumProject.RestrictFileNamesForAndroid;
-            RenderTextCharacterByCharacter = global::RenderingLibrary.Graphics.Text.TextRenderingMode ==
-                global::RenderingLibrary.Graphics.TextRenderingMode.CharacterByCharacter;
+            {
+                this.generalSettings = generalSettings;
+                this.gumProject = gumProject;
 
-            CheckerboardColor1 = new Color(generalSettings.CheckerColor1R, generalSettings.CheckerColor1G, generalSettings.CheckerColor1B);
-            CheckerboardColor2 = new Color(generalSettings.CheckerColor2R, generalSettings.CheckerColor2G, generalSettings.CheckerColor2B);
+                AutoSave = this.generalSettings.AutoSave;
+                ShowOutlines = this.gumProject.ShowOutlines;
+                FontRanges = this.gumProject.FontRanges;
+                RestrictToUnitValues = this.gumProject.RestrictToUnitValues;
+                CanvasHeight = this.gumProject.DefaultCanvasHeight;
+                CanvasWidth = this.gumProject.DefaultCanvasWidth;
+                RestrictFileNamesForAndroid = this.gumProject.RestrictFileNamesForAndroid;
+                RenderTextCharacterByCharacter = global::RenderingLibrary.Graphics.Text.TextRenderingMode ==
+                    global::RenderingLibrary.Graphics.TextRenderingMode.CharacterByCharacter;
 
-            OutlineColor = new Color(generalSettings.OutlineColorR, generalSettings.OutlineColorG, generalSettings.OutlineColorB);
-            GuideLineColor = new Color(
-                generalSettings.GuideLineColorR, generalSettings.GuideLineColorG, generalSettings.GuideLineColorB);
-            GuideTextColor = new Color(
-                generalSettings.GuideTextColorR, generalSettings.GuideTextColorG, generalSettings.GuideTextColorB);
+                CheckerboardColor1 = new Color(generalSettings.CheckerColor1R, generalSettings.CheckerColor1G, generalSettings.CheckerColor1B);
+                CheckerboardColor2 = new Color(generalSettings.CheckerColor2R, generalSettings.CheckerColor2G, generalSettings.CheckerColor2B);
 
-            LocalizationFile = this.gumProject.LocalizationFile;
-            LanguageIndex = this.gumProject.CurrentLanguageIndex;
-            ShowLocalization = this.gumProject.ShowLocalizationInGum;
+                OutlineColor = new Color(generalSettings.OutlineColorR, generalSettings.OutlineColorG, generalSettings.OutlineColorB);
+                GuideLineColor = new Color(
+                    generalSettings.GuideLineColorR, generalSettings.GuideLineColorG, generalSettings.GuideLineColorB);
+                GuideTextColor = new Color(
+                    generalSettings.GuideTextColorR, generalSettings.GuideTextColorG, generalSettings.GuideTextColorB);
+
+                LocalizationFile = this.gumProject.LocalizationFile;
+                LanguageIndex = this.gumProject.CurrentLanguageIndex;
+                ShowLocalization = this.gumProject.ShowLocalizationInGum;
+
+                SinglePixelTextureFile = gumProject.SinglePixelTextureFile;
+                SinglePixelTextureLeft = gumProject.SinglePixelTextureLeft;
+                SinglePixelTextureRight = gumProject.SinglePixelTextureRight;
+                SinglePixelTextureTop = gumProject.SinglePixelTextureTop;
+                SinglePixelTextureBottom = gumProject.SinglePixelTextureBottom;
+            }
+
             IsUpdatingFromModel = false;
 
         }
@@ -206,6 +246,12 @@ namespace Gum.Plugins.PropertiesWindowPlugin
             this.gumProject.CurrentLanguageIndex = LanguageIndex;
             this.gumProject.ShowLocalizationInGum = ShowLocalization;
             this.gumProject.FontRanges = FontRanges;
+
+            this.gumProject.SinglePixelTextureFile = SinglePixelTextureFile;
+            this.gumProject.SinglePixelTextureTop = SinglePixelTextureTop;
+            this.gumProject.SinglePixelTextureBottom = SinglePixelTextureBottom;
+            this.gumProject.SinglePixelTextureLeft = SinglePixelTextureLeft;
+            this.gumProject.SinglePixelTextureRight = SinglePixelTextureRight;
         }
 
 
