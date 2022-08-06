@@ -246,7 +246,7 @@ namespace Gum.Wireframe.Editors
                 rotationHandle.Visible = true;
 
                 // right side
-                const float minimumOffset = 24;
+                float minimumOffset = 24 / Renderer.Self.Camera.Zoom;
 
 
                 float xOffset = 0;
