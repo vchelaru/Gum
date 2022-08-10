@@ -96,6 +96,8 @@ namespace Gum.DataTypes
             set;
         }
 
+        public bool ShowCanvasOutline { get; set; }
+
         public bool ConvertVariablesOnUnitTypeChange
         {
             get; set;
@@ -211,6 +213,7 @@ namespace Gum.DataTypes
         public GumProjectSave()
         {
             ShowOutlines = true;
+            ShowCanvasOutline = true;
             // I think people want this on by default:
             RestrictToUnitValues = true;
 

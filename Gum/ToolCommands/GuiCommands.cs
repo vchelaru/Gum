@@ -25,7 +25,7 @@ namespace Gum.ToolCommands
 
         public void UpdateWireframeToProject()
         {
-            mWireframeControl.UpdateToProject();
+            mWireframeControl.UpdateCanvasBoundsToProject();
         }
 
         public void RefreshWireframe()

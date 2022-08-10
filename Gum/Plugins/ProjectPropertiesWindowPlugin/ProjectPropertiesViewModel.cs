@@ -29,6 +29,12 @@ namespace Gum.Plugins.PropertiesWindowPlugin
             set => Set(value); 
         }
 
+        public bool ShowCanvasOutline
+        {
+            get => Get<bool>();
+            set => Set(value);
+        }
+
         public Color OutlineColor
         {
             get => Get<Color>();
@@ -166,6 +172,7 @@ namespace Gum.Plugins.PropertiesWindowPlugin
 
                 AutoSave = this.generalSettings.AutoSave;
                 ShowOutlines = this.gumProject.ShowOutlines;
+                ShowCanvasOutline = this.gumProject.ShowCanvasOutline;
                 FontRanges = this.gumProject.FontRanges;
                 RestrictToUnitValues = this.gumProject.RestrictToUnitValues;
                 CanvasHeight = this.gumProject.DefaultCanvasHeight;
@@ -202,9 +209,11 @@ namespace Gum.Plugins.PropertiesWindowPlugin
         {
             this.generalSettings.AutoSave = AutoSave;
             this.gumProject.ShowOutlines = ShowOutlines;
+            this.gumProject.ShowCanvasOutline = ShowCanvasOutline;
             GraphicalUiElement.ShowLineRectangles = ShowOutlines;
             GraphicalUiElement.CanvasWidth = CanvasWidth;
             GraphicalUiElement.CanvasHeight = CanvasHeight;
+
 
 
             this.gumProject.RestrictToUnitValues = RestrictToUnitValues;

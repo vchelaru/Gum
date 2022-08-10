@@ -49,7 +49,7 @@ namespace Gum.Wireframe
 
         WireframeEditControl mWireframeEditControl;
 
-        LineRectangle mScreenBounds;
+        LineRectangle mCanvasBounds;
 
         public Color ScreenBoundsColor = Color.LightBlue;
 
@@ -69,7 +69,7 @@ namespace Gum.Wireframe
 
         public LineRectangle ScreenBounds
         {
-            get { return mScreenBounds; }
+            get { return mCanvasBounds; }
         }
 
         new InputLibrary.Cursor Cursor
@@ -139,12 +139,12 @@ namespace Gum.Wireframe
                 InputLibrary.Cursor.Self.Initialize(this);
                 InputLibrary.Keyboard.Self.Initialize(this);
 
-                mScreenBounds = new LineRectangle();
-                mScreenBounds.Name = "Gum Screen Bounds";
-                mScreenBounds.Width = 800;
-                mScreenBounds.Height = 600;
-                mScreenBounds.Color = ScreenBoundsColor;
-                ShapeManager.Self.Add(mScreenBounds, SelectionManager.Self.UiLayer);              
+                mCanvasBounds = new LineRectangle();
+                mCanvasBounds.Name = "Gum Screen Bounds";
+                mCanvasBounds.Width = 800;
+                mCanvasBounds.Height = 600;
+                mCanvasBounds.Color = ScreenBoundsColor;
+                ShapeManager.Self.Add(mCanvasBounds, SelectionManager.Self.UiLayer);              
 
                 this.KeyDown += OnKeyDown;
                 this.MouseDown += CameraController.Self.HandleMouseDown;
@@ -172,7 +172,7 @@ namespace Gum.Wireframe
                     AfterXnaInitialize(this, null);
                 }
 
-                UpdateToProject();
+                UpdateCanvasBoundsToProject();
 
                 mHasInitialized = true;
 
@@ -263,12 +263,14 @@ namespace Gum.Wireframe
         /// <summary>
         /// Updates the wireframe to match the project settings - specifically the canvas width/height
         /// </summary>
-        public void UpdateToProject()
+        public void UpdateCanvasBoundsToProject()
         {
-            if (mScreenBounds != null && ProjectManager.Self.GumProjectSave != null)
+            if (mCanvasBounds != null && ProjectManager.Self.GumProjectSave != null)
             {
-                mScreenBounds.Width = ProjectManager.Self.GumProjectSave.DefaultCanvasWidth;
-                mScreenBounds.Height = ProjectManager.Self.GumProjectSave.DefaultCanvasHeight;
+                mCanvasBounds.Width = ProjectManager.Self.GumProjectSave.DefaultCanvasWidth;
+                mCanvasBounds.Height = ProjectManager.Self.GumProjectSave.DefaultCanvasHeight;
+
+                mCanvasBounds.Visible = ProjectManager.Self.GumProjectSave.ShowCanvasOutline;
             }
         }
 

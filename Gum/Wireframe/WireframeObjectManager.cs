@@ -201,7 +201,7 @@ namespace Gum.Wireframe
 
             SelectionManager.Self.Refresh();
 
-            mWireframeControl.UpdateToProject();
+            mWireframeControl.UpdateCanvasBoundsToProject();
 
             PluginManager.Self.WireframeRefreshed();
         }
@@ -533,41 +533,5 @@ namespace Gum.Wireframe
 
             return null;
         }
-
-              
-        private static bool TryAddToElementStack(InstanceSave instanceSave, List<ElementWithState> elementStack, out ElementSave selectedElement)
-        {
-            bool toReturn = false;
-            if (instanceSave == null)
-            {
-                selectedElement = elementStack.Last().Element;
-            }
-            else
-            {
-                selectedElement = ObjectFinder.Self.GetElementSave(instanceSave.BaseType);
-
-                if (elementStack.Count == 0 || elementStack.Last().Element != selectedElement)
-                {
-                    ElementWithState elementWithState = new ElementWithState(selectedElement);
-                    var state = new DataTypes.RecursiveVariableFinder(instanceSave, elementStack).GetValue("State") as string;
-                    elementWithState.StateName = state;
-                    elementStack.Add(elementWithState);
-                    toReturn = true;
-                }
-            }
-            return toReturn;
-        }
-
-        private void GetRequiredDimensionsFromContents(IRenderableIpso parentIpso, out float requiredWidth, out float requiredHeight)
-        {
-            requiredWidth = 0;
-            requiredHeight = 0;
-            foreach (var child in parentIpso.Children)
-            {
-                requiredWidth = System.Math.Max(requiredWidth, child.X + child.Width);
-                requiredHeight = System.Math.Max(requiredHeight, child.Y + child.Height);
-            }
-        }
-
     }
 }

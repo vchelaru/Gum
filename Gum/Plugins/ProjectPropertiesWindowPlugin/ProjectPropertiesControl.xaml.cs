@@ -59,18 +59,16 @@ namespace Gum.Gui.Controls
             // Move all colors into their own category:
             var allMembers = DataGrid.Categories.SelectMany(item => item.Members).ToArray();
 
-            var colorCategory = new MemberCategory("Colors");
+            DataGrid.MoveMemberToCategory(nameof(ViewModel.OutlineColor), "Guides and Colors");
+            DataGrid.MoveMemberToCategory(nameof(ViewModel.GuideLineColor), "Guides and Colors");
+            DataGrid.MoveMemberToCategory(nameof(ViewModel.GuideTextColor), "Guides and Colors");
+            DataGrid.MoveMemberToCategory(nameof(ViewModel.CheckerboardColor1), "Guides and Colors");
+            DataGrid.MoveMemberToCategory(nameof(ViewModel.CheckerboardColor2), "Guides and Colors");
+            DataGrid.MoveMemberToCategory(nameof(ViewModel.ShowOutlines), "Guides and Colors");
+            DataGrid.MoveMemberToCategory(nameof(ViewModel.ShowCanvasOutline), "Guides and Colors");
 
-            foreach(var member in allMembers)
-            {
-                if(IsColor(member))
-                {
-                    DataGrid.MoveMemberToCategory(member.Name, colorCategory.Name);
-                }
-            }
 
             DataGrid.MoveMemberToCategory(nameof(ViewModel.SinglePixelTextureFile), "Single Pixel Texture");
-
             DataGrid.MoveMemberToCategory(nameof(ViewModel.SinglePixelTextureLeft), "Single Pixel Texture");
             DataGrid.MoveMemberToCategory(nameof(ViewModel.SinglePixelTextureTop), "Single Pixel Texture");
             DataGrid.MoveMemberToCategory(nameof(ViewModel.SinglePixelTextureRight), "Single Pixel Texture");
