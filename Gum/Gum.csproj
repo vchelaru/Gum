@@ -195,35 +195,36 @@
     <Compile Include="Managers\GraphicalUiElementManager.cs" />
     <Compile Include="Managers\HotkeyManager.cs" />
     <Compile Include="Managers\LocalizationManager.cs" />
-    <Compile Include="Plugins\AlignmentButtons\CommonControlLogic.cs" />
-    <Compile Include="Plugins\CirclePlugin\MainCirclePlugin.cs" />
-    <Compile Include="Plugins\Errors\AllErrorsViewModel.cs" />
-    <Compile Include="Plugins\Errors\ErrorChecker.cs" />
-    <Compile Include="Plugins\Errors\ErrorDisplay.xaml.cs">
+    <Compile Include="Plugins\InternalPlugins\AlignmentButtons\CommonControlLogic.cs" />
+    <Compile Include="Plugins\InternalPlugins\CirclePlugin\MainCirclePlugin.cs" />
+    <Compile Include="Plugins\InternalPlugins\Errors\AllErrorsViewModel.cs" />
+    <Compile Include="Plugins\InternalPlugins\Errors\ErrorChecker.cs" />
+    <Compile Include="Plugins\InternalPlugins\Errors\ErrorDisplay.xaml.cs">
       <DependentUpon>ErrorDisplay.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Plugins\Errors\ErrorListEntry.xaml.cs">
+    <Compile Include="Plugins\InternalPlugins\Errors\ErrorListEntry.xaml.cs">
       <DependentUpon>ErrorListEntry.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Plugins\Errors\ErrorViewModel.cs" />
-    <Compile Include="Plugins\Errors\MainErrorsPlugin.cs" />
-    <Compile Include="Plugins\FileWatchPlugin\FileWatchControl.xaml.cs">
+    <Compile Include="Plugins\InternalPlugins\Errors\ErrorViewModel.cs" />
+    <Compile Include="Plugins\InternalPlugins\Errors\MainErrorsPlugin.cs" />
+    <Compile Include="Plugins\InternalPlugins\FileWatchPlugin\FileWatchControl.xaml.cs">
       <DependentUpon>FileWatchControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Plugins\FileWatchPlugin\FileWatchViewModel.cs" />
-    <Compile Include="Plugins\FileWatchPlugin\MainFileWatchPlugin.cs" />
+    <Compile Include="Plugins\InternalPlugins\FileWatchPlugin\FileWatchViewModel.cs" />
+    <Compile Include="Plugins\InternalPlugins\FileWatchPlugin\MainFileWatchPlugin.cs" />
     <Compile Include="Plugins\Fonts\MainFontPlugin.cs" />
     <Compile Include="Plugins\ImportPlugin\Manager\ImportLogic.cs" />
     <Compile Include="Plugins\ImportPlugin\ViewModel\ImportFileViewModel.cs" />
     <Compile Include="Plugins\ImportPlugin\Views\ImportFileView.xaml.cs">
       <DependentUpon>ImportFileView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Plugins\Inheritance\MainInheritancePlugin.cs" />
-    <Compile Include="Plugins\Output\MainOutputPlugin.cs" />
-    <Compile Include="Plugins\ParentPlugin\MainParentPlugin.cs" />
+    <Compile Include="Plugins\InternalPlugins\Inheritance\MainInheritancePlugin.cs" />
+    <Compile Include="Plugins\InternalPlugins\Output\MainOutputPlugin.cs" />
+    <Compile Include="Plugins\InternalPlugins\ParentPlugin\MainParentPlugin.cs" />
+    <Compile Include="Plugins\InternalPlugins\ScreenshotPlugin\MainScreenshotPlugin.cs" />
     <Compile Include="Plugins\PluginTab.cs" />
-    <Compile Include="Plugins\ProjectPropertiesWindowPlugin\MainPlugin.cs" />
-    <Compile Include="Plugins\ProjectPropertiesWindowPlugin\ProjectPropertiesControl.xaml.cs">
+    <Compile Include="Plugins\InternalPlugins\ProjectPropertiesWindowPlugin\MainPlugin.cs" />
+    <Compile Include="Plugins\InternalPlugins\ProjectPropertiesWindowPlugin\ProjectPropertiesControl.xaml.cs">
       <DependentUpon>ProjectPropertiesControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Gui\Forms\UndoList.cs">
@@ -250,7 +251,7 @@
     <Compile Include="Gui\Forms\PluginsWindow.designer.cs">
       <DependentUpon>PluginsWindow.cs</DependentUpon>
     </Compile>
-    <Compile Include="Plugins\Delete\DeleteObjectPlugin.cs" />
+    <Compile Include="Plugins\InternalPlugins\Delete\DeleteObjectPlugin.cs" />
     <Compile Include="Gui\Plugins\MainWindowPlugin.cs" />
     <Compile Include="Commands\GumCommands.cs" />
     <Compile Include="CommandLine\CommandLineManager.cs" />
@@ -260,45 +261,45 @@
     <Compile Include="Managers\NameVerifier.cs" />
     <Compile Include="Managers\ObjectRemover.cs" />
     <Compile Include="Managers\OutputManager.cs" />
-    <Compile Include="Plugins\RenameLogicPlugin\MainRenameLogic.cs" />
-    <Compile Include="Plugins\ScrollBarPlugin\MainScrollBarPlugin.cs" />
-    <Compile Include="Plugins\StatePlugin\MainStatePlugin.cs" />
-    <Compile Include="Plugins\VariableGrid\BehaviorShowingLogic.cs" />
-    <Compile Include="Plugins\VariableGrid\DeletingVariablesInCategoriesMessageBox.xaml.cs">
+    <Compile Include="Plugins\InternalPlugins\RenameLogicPlugin\MainRenameLogic.cs" />
+    <Compile Include="Plugins\InternalPlugins\ScrollBarPlugin\MainScrollBarPlugin.cs" />
+    <Compile Include="Plugins\InternalPlugins\StatePlugin\MainStatePlugin.cs" />
+    <Compile Include="Plugins\InternalPlugins\VariableGrid\BehaviorShowingLogic.cs" />
+    <Compile Include="Plugins\InternalPlugins\VariableGrid\DeletingVariablesInCategoriesMessageBox.xaml.cs">
       <DependentUpon>DeletingVariablesInCategoriesMessageBox.xaml</DependentUpon>
     </Compile>
     <Compile Include="Logic\RenameLogic.cs" />
     <Compile Include="Managers\Singleton.cs" />
     <Compile Include="Mvvm\ObservableCollectionExtensions.cs" />
     <Compile Include="Mvvm\ViewModel.cs" />
-    <Compile Include="Plugins\AlignmentButtons\AlignmentPluginControl.xaml.cs">
+    <Compile Include="Plugins\InternalPlugins\AlignmentButtons\AlignmentPluginControl.xaml.cs">
       <DependentUpon>AlignmentPluginControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Plugins\AlignmentButtons\AnchorControl.xaml.cs">
+    <Compile Include="Plugins\InternalPlugins\AlignmentButtons\AnchorControl.xaml.cs">
       <DependentUpon>AnchorControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Plugins\AlignmentButtons\DockControl.xaml.cs">
+    <Compile Include="Plugins\InternalPlugins\AlignmentButtons\DockControl.xaml.cs">
       <DependentUpon>DockControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Plugins\AlignmentButtons\AlignmentMainPlugin.cs" />
+    <Compile Include="Plugins\InternalPlugins\AlignmentButtons\AlignmentMainPlugin.cs" />
     <Compile Include="Plugins\BaseClasses\InternalPlugin.cs" />
-    <Compile Include="Plugins\Behaviors\BehaviorsControl.xaml.cs">
+    <Compile Include="Plugins\InternalPlugins\Behaviors\BehaviorsControl.xaml.cs">
       <DependentUpon>BehaviorsControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Plugins\Behaviors\BehaviorsViewModel.cs" />
-    <Compile Include="Plugins\Behaviors\CheckListBehaviorItem.cs" />
-    <Compile Include="Plugins\Behaviors\MainPlugin.cs" />
-    <Compile Include="Plugins\ProjectPropertiesWindowPlugin\ProjectPropertiesViewModel.cs" />
-    <Compile Include="Plugins\Undos\MainPlugin.cs" />
-    <Compile Include="Plugins\Undos\UndoDisplay.xaml.cs">
+    <Compile Include="Plugins\InternalPlugins\Behaviors\BehaviorsViewModel.cs" />
+    <Compile Include="Plugins\InternalPlugins\Behaviors\CheckListBehaviorItem.cs" />
+    <Compile Include="Plugins\InternalPlugins\Behaviors\MainPlugin.cs" />
+    <Compile Include="Plugins\InternalPlugins\ProjectPropertiesWindowPlugin\ProjectPropertiesViewModel.cs" />
+    <Compile Include="Plugins\InternalPlugins\Undos\MainPlugin.cs" />
+    <Compile Include="Plugins\InternalPlugins\Undos\UndoDisplay.xaml.cs">
       <DependentUpon>UndoDisplay.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Plugins\Undos\UndosViewModel.cs" />
-    <Compile Include="Plugins\VariableGrid\AddVariableWindow.xaml.cs">
+    <Compile Include="Plugins\InternalPlugins\Undos\UndosViewModel.cs" />
+    <Compile Include="Plugins\InternalPlugins\VariableGrid\AddVariableWindow.xaml.cs">
       <DependentUpon>AddVariableWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Plugins\VariableGrid\MainControlViewModel.cs" />
-    <Compile Include="Plugins\VariableGrid\VariableRemoveButton.xaml.cs">
+    <Compile Include="Plugins\InternalPlugins\VariableGrid\MainControlViewModel.cs" />
+    <Compile Include="Plugins\InternalPlugins\VariableGrid\VariableRemoveButton.xaml.cs">
       <DependentUpon>VariableRemoveButton.xaml</DependentUpon>
     </Compile>
     <Compile Include="PropertyGridHelpers\Converters\AvailableContainedTypeConverter.cs" />
@@ -309,16 +310,16 @@
     <Compile Include="Managers\ElementTreeViewManager.RightClick.cs" />
     <Compile Include="Managers\MenuStripManager.cs" />
     <Compile Include="Managers\ObjectFinder.cs" />
-    <Compile Include="Plugins\VariableGrid\PropertyGridManager.cs" />
+    <Compile Include="Plugins\InternalPlugins\VariableGrid\PropertyGridManager.cs" />
     <Compile Include="Managers\StandardElementsManager.cs" />
-    <Compile Include="Plugins\StatePlugin\StateTreeViewManager.cs" />
+    <Compile Include="Plugins\InternalPlugins\StatePlugin\StateTreeViewManager.cs" />
     <Compile Include="MainWindow.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="MainWindow.Designer.cs">
       <DependentUpon>MainWindow.cs</DependentUpon>
     </Compile>
-    <Compile Include="Plugins\StatePlugin\StateTreeViewManager.RightClick.cs" />
+    <Compile Include="Plugins\InternalPlugins\StatePlugin\StateTreeViewManager.RightClick.cs" />
     <Compile Include="Plugins\BaseClasses\PluginBase.cs" />
     <Compile Include="Plugins\IPlugin.cs" />
     <Compile Include="Plugins\PluginContainer.cs" />
@@ -339,7 +340,7 @@
     <Compile Include="PropertyGridHelpers\Converters\RestrictiveEnumConverter.cs" />
     <Compile Include="PropertyGridHelpers\Converters\StringOptionsTypeConverter.cs" />
     <Compile Include="PropertyGridHelpers\Converters\VariableListConverter.cs" />
-    <Compile Include="Plugins\VariableGrid\ElementSaveDisplayer.cs" />
+    <Compile Include="Plugins\InternalPlugins\VariableGrid\ElementSaveDisplayer.cs" />
     <Compile Include="PropertyGridHelpers\EventInstanceMember.cs" />
     <Compile Include="PropertyGridHelpers\Excluders\SpritePropertyGridVariableExcluder.cs" />
     <Compile Include="PropertyGridHelpers\Excluders\TextPropertyGridVariableExcluder.cs" />
@@ -351,7 +352,7 @@
     <Compile Include="PropertyGridHelpers\ReflectingParameterDescriptor.cs" />
     <Compile Include="PropertyGridHelpers\ReflectingPropertyDescriptorHelper.cs" />
     <Compile Include="PropertyGridHelpers\SetVariableLogic.cs" />
-    <Compile Include="Plugins\VariableGrid\StateReferencingInstanceMember.cs" />
+    <Compile Include="Plugins\InternalPlugins\VariableGrid\StateReferencingInstanceMember.cs" />
     <Compile Include="PropertyGridHelpers\UiTypeConverters\ModalTypeConverter.cs" />
     <Compile Include="PropertyGridHelpers\VariableInCategoryPropagationLogic.cs" />
     <Compile Include="Reflection\LateBinder.cs" />
@@ -360,7 +361,7 @@
     <Compile Include="RenderingLibrary\IPositionedSizedObjectExtensionMethods.cs" />
     <Compile Include="Responses\DeleteResponse.cs" />
     <Compile Include="Settings\GeneralSettingsFile.cs" />
-    <Compile Include="Plugins\VariableGrid\TestWpfControl.xaml.cs">
+    <Compile Include="Plugins\InternalPlugins\VariableGrid\TestWpfControl.xaml.cs">
       <DependentUpon>TestWpfControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="ToolCommands\ElementCommands.cs" />
@@ -434,7 +435,7 @@
     <None Include="Content\TestFont.fnt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <Compile Include="Plugins\VariableGrid\PropertyGridManager.RightClick.cs" />
+    <Compile Include="Plugins\InternalPlugins\VariableGrid\PropertyGridManager.RightClick.cs" />
     <None Include="Launcher.au3" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -679,15 +680,15 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Plugins\Errors\ErrorDisplay.xaml">
+    <Page Include="Plugins\InternalPlugins\Errors\ErrorDisplay.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Plugins\Errors\ErrorListEntry.xaml">
+    <Page Include="Plugins\InternalPlugins\Errors\ErrorListEntry.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Plugins\FileWatchPlugin\FileWatchControl.xaml">
+    <Page Include="Plugins\InternalPlugins\FileWatchPlugin\FileWatchControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -695,43 +696,43 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Plugins\ProjectPropertiesWindowPlugin\ProjectPropertiesControl.xaml">
+    <Page Include="Plugins\InternalPlugins\ProjectPropertiesWindowPlugin\ProjectPropertiesControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Plugins\AlignmentButtons\AlignmentPluginControl.xaml">
+    <Page Include="Plugins\InternalPlugins\AlignmentButtons\AlignmentPluginControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Plugins\AlignmentButtons\AnchorControl.xaml">
+    <Page Include="Plugins\InternalPlugins\AlignmentButtons\AnchorControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Plugins\AlignmentButtons\DockControl.xaml">
+    <Page Include="Plugins\InternalPlugins\AlignmentButtons\DockControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Plugins\Behaviors\BehaviorsControl.xaml">
+    <Page Include="Plugins\InternalPlugins\Behaviors\BehaviorsControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Plugins\Undos\UndoDisplay.xaml">
+    <Page Include="Plugins\InternalPlugins\Undos\UndoDisplay.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Plugins\VariableGrid\AddVariableWindow.xaml">
+    <Page Include="Plugins\InternalPlugins\VariableGrid\AddVariableWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Plugins\VariableGrid\DeletingVariablesInCategoriesMessageBox.xaml">
+    <Page Include="Plugins\InternalPlugins\VariableGrid\DeletingVariablesInCategoriesMessageBox.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Plugins\VariableGrid\VariableRemoveButton.xaml">
+    <Page Include="Plugins\InternalPlugins\VariableGrid\VariableRemoveButton.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Plugins\VariableGrid\TestWpfControl.xaml">
+    <Page Include="Plugins\InternalPlugins\VariableGrid\TestWpfControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
