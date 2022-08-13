@@ -136,6 +136,8 @@ namespace Gum.Plugins.BaseClasses
         public event Action XnaInitialized;
         public event Action WireframeResized;
 
+        public event Action BeforeRender;
+        public event Action AfterRender;
 
         #endregion
 
@@ -327,10 +329,7 @@ namespace Gum.Plugins.BaseClasses
             AddAndRemoveVariablesForType?.Invoke(type, standardDefaultStateSave);
         }
 
-        public void CallElementSelected(ElementSave element)
-        {
-            ElementSelected?.Invoke(element);
-        }
+        public void CallElementSelected(ElementSave element) => ElementSelected?.Invoke(element);
 
         public void CallTreeNodeSelected(TreeNode treeNode) => TreeNodeSelected?.Invoke(treeNode);
 
@@ -363,51 +362,20 @@ namespace Gum.Plugins.BaseClasses
 
         public void CallInstanceReordered(InstanceSave instance) => InstanceReordered?.Invoke(instance);
 
-        public void CallBeforeElementSave(ElementSave elementSave)
-        {
-            BeforeElementSave?.Invoke(elementSave);
+        public void CallBeforeElementSave(ElementSave elementSave) => BeforeElementSave?.Invoke(elementSave);
 
-        }
+        public void CallAfterElementSave(ElementSave elementSave) => AfterElementSave?.Invoke(elementSave);
 
-        public void CallAfterElementSave(ElementSave elementSave)
-        {
-            if (AfterElementSave != null)
-            {
-                AfterElementSave(elementSave);
-            }
-        }
+        public void CallBeforeProjectSave(GumProjectSave savedProject) => BeforeProjectSave?.Invoke(savedProject);
 
-        public void CallBeforeProjectSave(GumProjectSave savedProject)
-        {
-            BeforeProjectSave?.Invoke(savedProject);
-        }
+        public void CallWireframeRefreshed() => WireframeRefreshed?.Invoke();
 
-        public void CallWireframeRefreshed()
-        {
-            WireframeRefreshed?.Invoke();
-        }
+        public StateSave CallGetDefaultStateFor(string type) => GetDefaultStateForType?.Invoke(type);
 
-        public StateSave CallGetDefaultStateFor(string type)
-        {
-            return GetDefaultStateForType?.Invoke(type);
-        }
+        public IRenderableIpso CallCreateRenderableForType(string type) => CreateRenderableForType?.Invoke(type);
 
-        public IRenderableIpso CallCreateRenderableForType(string type)
-        {
-            return CreateRenderableForType?.Invoke(type);
-        }
-
-        internal bool GetIfVariableIsExcluded(VariableSave defaultVariable, RecursiveVariableFinder rvf)
-        {
-            if (VariableExcluded == null)
-            {
-                return false;
-            }
-            else
-            {
-                return VariableExcluded(defaultVariable, rvf);
-            }
-        }
+        internal bool GetIfVariableIsExcluded(VariableSave defaultVariable, RecursiveVariableFinder rvf) =>
+            VariableExcluded?.Invoke(defaultVariable, rvf) ?? false;
 
         public void CallWireframeInitialized(WireframeControl wireframeControl1, Panel gumEditorPanel) => 
             WireframeInitialized?.Invoke(wireframeControl1, gumEditorPanel);
@@ -415,7 +383,10 @@ namespace Gum.Plugins.BaseClasses
         public void CallCameraChanged() => CameraChanged?.Invoke();
         public void CallXnaInitialized() => XnaInitialized?.Invoke();
         public void CallWireframeResized() => WireframeResized?.Invoke();
-        
+
+        public void CallBeforeRender() => BeforeRender?.Invoke();
+        public void CallAfterRender() => AfterRender?.Invoke();
+
         #endregion
     }
 }

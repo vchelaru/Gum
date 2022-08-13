@@ -183,6 +183,14 @@ namespace Gum.Wireframe
                 }
             }
         }
+
+        public bool AreHighlightsVisible
+        {
+            get => highlightManager.AreHighlightsVisible;
+            set => highlightManager.AreHighlightsVisible = value;
+        }
+
+
         #endregion
 
         #region Methods

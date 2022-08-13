@@ -98,6 +98,10 @@ namespace Gum.DataTypes
 
         public bool ShowCanvasOutline { get; set; }
 
+        public bool ShowRuler { get; set; }
+
+        public bool ShowCheckerBackground { get; set; }
+
         public bool ConvertVariablesOnUnitTypeChange
         {
             get; set;
@@ -214,6 +218,9 @@ namespace Gum.DataTypes
         {
             ShowOutlines = true;
             ShowCanvasOutline = true;
+            ShowRuler = true;
+            ShowCheckerBackground = true;
+
             // I think people want this on by default:
             RestrictToUnitValues = true;
 

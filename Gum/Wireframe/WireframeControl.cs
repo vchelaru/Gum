@@ -21,6 +21,7 @@ using Gum.Debug;
 using Microsoft.Xna.Framework.Graphics;
 
 using WinCursor = System.Windows.Forms.Cursor;
+using Gum.Plugins;
 
 namespace Gum.Wireframe
 {
@@ -62,6 +63,22 @@ namespace Gum.Wireframe
 
         bool mouseHasEntered = false;
 
+
+        public bool CanvasBoundsVisible
+        {
+            get => mCanvasBounds.Visible;
+            set => mCanvasBounds.Visible = value;
+        }
+
+        public bool RulersVisible
+        {
+            get => mLeftRuler.Visible;
+            set
+            {
+                mLeftRuler.Visible = value;
+                mTopRuler.Visible = value;
+            }
+        }
 
         #endregion
 
@@ -265,12 +282,14 @@ namespace Gum.Wireframe
         /// </summary>
         public void UpdateCanvasBoundsToProject()
         {
-            if (mCanvasBounds != null && ProjectManager.Self.GumProjectSave != null)
+            var gumProject = ProjectManager.Self.GumProjectSave;
+            if (mCanvasBounds != null && gumProject != null)
             {
-                mCanvasBounds.Width = ProjectManager.Self.GumProjectSave.DefaultCanvasWidth;
-                mCanvasBounds.Height = ProjectManager.Self.GumProjectSave.DefaultCanvasHeight;
+                mCanvasBounds.Width = gumProject.DefaultCanvasWidth;
+                mCanvasBounds.Height = gumProject.DefaultCanvasHeight;
 
-                mCanvasBounds.Visible = ProjectManager.Self.GumProjectSave.ShowCanvasOutline;
+                CanvasBoundsVisible = gumProject.ShowCanvasOutline;
+                RulersVisible = gumProject.ShowRuler;
             }
         }
 
@@ -301,7 +320,12 @@ namespace Gum.Wireframe
                 }
                 GraphicsDevice.Clear(backgroundColor);
 
+                PluginManager.Self.BeforeRender();
+
                 Renderer.Self.Draw(null);
+
+                PluginManager.Self.AfterRender();
+
             }
         }
 

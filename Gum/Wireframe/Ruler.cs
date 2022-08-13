@@ -18,6 +18,7 @@ using Gum.ToolStates;
 
 namespace Gum.Wireframe
 {
+    #region Enums
 
     public enum RulerSide
     {
@@ -25,9 +26,11 @@ namespace Gum.Wireframe
         Top
     }
 
+    #endregion
+
     public class Ruler
     {
-        #region Fields
+        #region Fields / properties
 
         XnaAndWinforms.GraphicsDeviceControl mControl;
         SystemManagers mManagers;
@@ -50,9 +53,6 @@ namespace Gum.Wireframe
 
         RulerSide mRulerSide;
 
-        #endregion
-
-        #region Properties
 
         public RulerSide RulerSide
         {
@@ -170,8 +170,6 @@ namespace Gum.Wireframe
             private set;
         }
 
-        #endregion
-
         Color GuideLineColor
         {
             get
@@ -220,6 +218,34 @@ namespace Gum.Wireframe
                 }
             }
         }
+
+        bool visible = true;
+        public bool Visible
+        {
+            get => visible;
+            set
+            {
+                visible = value;
+                mRectangle.Visible = value;
+                foreach(var line in mRulerLines)
+                {
+                    line.Visible = value;
+                }
+                foreach(var line in mGuides)
+                {
+                    line.Visible = value;
+                }
+                if(mGrabbedGuideText != null)
+                {
+                    mGrabbedGuideText.Visible = value;
+                }
+            }
+        }
+
+        #endregion
+
+
+
         public Ruler(GraphicsDeviceControl control, SystemManagers managers, Cursor cursor, InputLibrary.Keyboard keyboard )
         {
             try

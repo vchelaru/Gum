@@ -41,9 +41,9 @@ namespace Gum.Wireframe
         static WireframeObjectManager mSelf;
 
         WireframeEditControl mEditControl;
-        WireframeControl mWireframeControl;
+        public WireframeControl WireframeControl { get; private set; }
 
-        Sprite mBackgroundSprite;
+        public Sprite BackgroundSprite { get; private set; }
 
         const int left = -4096;
         const int width = 8192;
@@ -91,10 +91,10 @@ namespace Gum.Wireframe
         {
             AddCursor = addCursor;
 
-            mWireframeControl = wireframeControl;
-            mWireframeControl.AfterXnaInitialize += HandleAfterXnaIntiailize;
+            WireframeControl = wireframeControl;
+            WireframeControl.AfterXnaInitialize += HandleAfterXnaIntiailize;
 
-            mWireframeControl.KeyDown += HandleKeyPress;
+            WireframeControl.KeyDown += HandleKeyPress;
 
             mEditControl = editControl;
             mEditControl.ZoomChanged += HandleControlZoomChange;
@@ -112,9 +112,9 @@ namespace Gum.Wireframe
 
             if(ProjectManager.Self.GeneralSettingsFile != null)
             {
-                mBackgroundSprite.Color.R = ProjectManager.Self.GeneralSettingsFile.CheckerColor2R;
-                mBackgroundSprite.Color.G = ProjectManager.Self.GeneralSettingsFile.CheckerColor2G;
-                mBackgroundSprite.Color.B = ProjectManager.Self.GeneralSettingsFile.CheckerColor2B;
+                BackgroundSprite.Color.R = ProjectManager.Self.GeneralSettingsFile.CheckerColor2R;
+                BackgroundSprite.Color.G = ProjectManager.Self.GeneralSettingsFile.CheckerColor2G;
+                BackgroundSprite.Color.B = ProjectManager.Self.GeneralSettingsFile.CheckerColor2B;
 
             }
         }
@@ -152,20 +152,20 @@ namespace Gum.Wireframe
             }
 
             Texture2D texture = imageData.ToTexture2D(false);
-            mBackgroundSprite = new Sprite(texture);
-            mBackgroundSprite.Name = "Background checkerboard Sprite";
-            mBackgroundSprite.Wrap = true;
-            mBackgroundSprite.X = -4096;
-            mBackgroundSprite.Y = -4096;
-            mBackgroundSprite.Width = 8192;
-            mBackgroundSprite.Height = 8192;
-            mBackgroundSprite.Color = new Color(150, 150, 150);
+            BackgroundSprite = new Sprite(texture);
+            BackgroundSprite.Name = "Background checkerboard Sprite";
+            BackgroundSprite.Wrap = true;
+            BackgroundSprite.X = -4096;
+            BackgroundSprite.Y = -4096;
+            BackgroundSprite.Width = 8192;
+            BackgroundSprite.Height = 8192;
+            BackgroundSprite.Color = new Color(150, 150, 150);
 
-            mBackgroundSprite.Wrap = true;
+            BackgroundSprite.Wrap = true;
             int timesToRepeat = 256;
-            mBackgroundSprite.SourceRectangle = new Rectangle(0, 0, timesToRepeat * texture.Width, timesToRepeat * texture.Height);
+            BackgroundSprite.SourceRectangle = new Rectangle(0, 0, timesToRepeat * texture.Width, timesToRepeat * texture.Height);
 
-            SpriteManager.Self.Add(mBackgroundSprite);
+            SpriteManager.Self.Add(BackgroundSprite);
         }
 
 
@@ -201,14 +201,14 @@ namespace Gum.Wireframe
 
             SelectionManager.Self.Refresh();
 
-            mWireframeControl.UpdateCanvasBoundsToProject();
+            WireframeControl.UpdateCanvasBoundsToProject();
 
             PluginManager.Self.WireframeRefreshed();
         }
 
         public void RefreshGuides()
         {
-            mWireframeControl.RefreshGuides();
+            WireframeControl.RefreshGuides();
         }
 
         private void RefreshAll(bool forceLayout, bool forceReloadTextures, ElementSave elementSave)

@@ -18,5 +18,29 @@ namespace Gum.Commands
         {
             WireframeObjectManager.Self.RefreshGuides();
         }
+
+        public bool AreRulersVisible
+        {
+            get => WireframeObjectManager.Self.WireframeControl.RulersVisible;
+            set => WireframeObjectManager.Self.WireframeControl.RulersVisible = value;
+        }
+
+        public bool AreCanvasBoundsVisible
+        {
+            get => WireframeObjectManager.Self.WireframeControl.CanvasBoundsVisible;
+            set => WireframeObjectManager.Self.WireframeControl.CanvasBoundsVisible = value;
+        }
+
+        public bool IsBackgroundGridVisible
+        {
+            get => WireframeObjectManager.Self.BackgroundSprite.Visible;
+            set => WireframeObjectManager.Self.BackgroundSprite.Visible = value;
+        }
+
+        public bool AreHighlightsVisible
+        {
+            get => SelectionManager.Self.AreHighlightsVisible;
+            set => SelectionManager.Self.AreHighlightsVisible = value;
+        }
     }
 }

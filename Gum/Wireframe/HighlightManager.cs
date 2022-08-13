@@ -55,6 +55,26 @@ namespace Gum.Wireframe
             }
         }
 
+        bool areHighlightsVisible;
+        public bool AreHighlightsVisible
+        {
+            get => areHighlightsVisible;
+            set
+            {
+                areHighlightsVisible = value;
+
+                if(value == false)
+                {
+                    UnhighlightIpso(HighlightedIpso as GraphicalUiElement);
+                }
+                else
+                {
+                    UpdateHighlightObjects();
+
+                }
+            }
+        }
+
         public HighlightManager(Layer layer)
         {
 
@@ -89,19 +109,19 @@ namespace Gum.Wireframe
 
         public void UnhighlightIpso(GraphicalUiElement highlightedIpso)
         {
-            if (highlightedIpso.Component is Sprite)
+            if (highlightedIpso?.Component is Sprite)
             {
                 mOverlaySprite.Visible = false;
             }
-            else if (highlightedIpso.Component is NineSlice)
+            else if (highlightedIpso?.Component is NineSlice)
             {
                 mOverlayNineSlice.Visible = false;
             }
-            else if (highlightedIpso.Component is LineRectangle)
+            else if (highlightedIpso?.Component is LineRectangle)
             {
                 mOverlaySolidRectangle.Visible = false;
             }
-            else if(highlightedIpso.Component is LinePolygon)
+            else if(highlightedIpso?.Component is LinePolygon)
             {
                 mOverlayLinePolygon.Visible = false;
             }
@@ -114,7 +134,7 @@ namespace Gum.Wireframe
         /// </summary>
         public void UpdateHighlightObjects()
         {
-            if (HighlightedSprite != null)
+            if (HighlightedSprite != null && AreHighlightsVisible)
             {
                 mOverlaySprite.Visible = true;
                 mOverlaySprite.X = HighlightedSprite.GetAbsoluteX();
@@ -134,11 +154,11 @@ namespace Gum.Wireframe
 
                 mOverlaySprite.Rotation = HighlightedSprite.Rotation;
             }
-            else if (HighlightedNineSlice != null)
+            else if (HighlightedNineSlice != null && AreHighlightsVisible)
             {
                 SetNineSliceOverlay();
             }
-            else if (HighlightedLineRectangle != null)
+            else if (HighlightedLineRectangle != null && AreHighlightsVisible)
             {
                 SolidRectangle overlay = mOverlaySolidRectangle;
 
@@ -151,7 +171,7 @@ namespace Gum.Wireframe
 
                 overlay.Rotation = HighlightedLineRectangle.Rotation;
             }
-            else if(HighlightedLinePolygon != null)
+            else if(HighlightedLinePolygon != null && AreHighlightsVisible)
             {
                 // todo - finish here
                 var overlay = mOverlayLinePolygon;

@@ -757,54 +757,19 @@ namespace Gum.Plugins
 
         }
 
-        internal void GuidesChanged()
-        {
-            CallMethodOnPlugin(
-                delegate(PluginBase plugin)
-                {
-                    plugin.CallGuidesChanged();
-                }
-            );
-        }
+        internal void GuidesChanged() => 
+            CallMethodOnPlugin(plugin => plugin.CallGuidesChanged());
 
         internal void ProjectLoad(GumProjectSave newlyLoadedProject) =>
             CallMethodOnPlugin(plugin => plugin.CallProjectLoad(newlyLoadedProject));
 
-        internal void ProjectSave(GumProjectSave savedProject)
-        {
-            foreach (var plugin in this.Plugins)
-            {
-                PluginContainer container = this.PluginContainers[plugin];
-
-                if (container.IsEnabled)
-                {
-                    try
-                    {
-                        plugin.CallProjectSave(savedProject);
-                    }
-                    catch (Exception e)
-                    {
-#if DEBUG
-                        MessageBox.Show("Error in plugin " + plugin.FriendlyName + ":\n\n" + e.ToString());
-#endif
-                        container.Fail(e, "Failed in ProjectSave");
-                    }
-                }
-            }
-        }
+        internal void ProjectSave(GumProjectSave savedProject) =>
+            CallMethodOnPlugin(plugin => plugin.CallProjectSave(savedProject));
 
         internal List<Attribute> GetAttributesFor(VariableSave variableSave)
         {
-            List<Attribute> listToFill = new List<Attribute>();
-
-            CallMethodOnPlugin(
-                delegate(PluginBase plugin)
-                {
-                    plugin.CallFillVariableAttributes(variableSave, listToFill);
-                },
-                "GetAttributesFor"
-            );
-
+            var listToFill = new List<Attribute>();
+            CallMethodOnPlugin(plugin => plugin.CallFillVariableAttributes(variableSave, listToFill));
             return listToFill;
         }
 
@@ -818,38 +783,21 @@ namespace Gum.Plugins
         internal void StateWindowTreeNodeSelected(TreeNode treeNode) =>
             CallMethodOnPlugin(plugin => plugin.CallStateWindowTreeNodeSelected(treeNode));
 
-        internal void BehaviorSelected(BehaviorSave behaviorSave)
-        {
-            CallMethodOnPlugin(
-                delegate (PluginBase plugin)
-                {
-                    plugin.CallBehaviorSelected(behaviorSave);
-                }
-            );
+        internal void BehaviorSelected(BehaviorSave behaviorSave) =>
+            CallMethodOnPlugin(plugin => plugin.CallBehaviorSelected(behaviorSave));
 
-        }
-
-        internal void InstanceSelected(ElementSave elementSave, InstanceSave instance)
-        {
+        internal void InstanceSelected(ElementSave elementSave, InstanceSave instance) =>
             CallMethodOnPlugin(plugin => plugin.CallInstanceSelected(elementSave, instance));
-        }
 
-        internal void InstanceAdd(ElementSave elementSave, InstanceSave instance)
-        {
+        internal void InstanceAdd(ElementSave elementSave, InstanceSave instance) =>
             CallMethodOnPlugin(plugin => plugin.CallInstanceAdd(elementSave, instance));
-        }
 
 
-        internal void InstanceDelete(ElementSave elementSave, InstanceSave instance)
-        {
+        internal void InstanceDelete(ElementSave elementSave, InstanceSave instance) =>
             CallMethodOnPlugin(plugin => plugin.CallInstanceDelete(elementSave, instance));
-        }
 
-        internal void InstancesDelete(ElementSave elementSave, InstanceSave[] instances)
-        {
+        internal void InstancesDelete(ElementSave elementSave, InstanceSave[] instances) =>
             CallMethodOnPlugin(plugin => plugin.CallInstancesDelete(elementSave, instances));
-
-        }
 
         internal StateSave GetDefaultStateFor(string type)
         {
@@ -988,26 +936,23 @@ namespace Gum.Plugins
             return response;
         }
 
-        internal void XnaInitialized()
-        {
+        internal void XnaInitialized() =>
             CallMethodOnPlugin(plugin => plugin.CallXnaInitialized());
-        }
-        internal void HandleWireframeResized()
-        {
-            CallMethodOnPlugin(plugin => plugin.CallWireframeResized());
-        }
 
-        internal void WireframeInitialized(WireframeControl wireframeControl1, Panel gumEditorPanel)
-        {
+        internal void HandleWireframeResized() =>
+            CallMethodOnPlugin(plugin => plugin.CallWireframeResized());
+
+        internal void WireframeInitialized(WireframeControl wireframeControl1, Panel gumEditorPanel) =>
             CallMethodOnPlugin(plugin => plugin.CallWireframeInitialized(wireframeControl1, gumEditorPanel));
 
-        }
-
-        internal void CameraChanged()
-        {
+        internal void CameraChanged() =>
             CallMethodOnPlugin(plugin => plugin.CallCameraChanged());
 
-        }
+        internal void BeforeRender() =>
+            CallMethodOnPlugin(plugin => plugin.CallBeforeRender());
+
+        internal void AfterRender() =>
+            CallMethodOnPlugin(plugin => plugin.CallAfterRender());
 
         #endregion
 
