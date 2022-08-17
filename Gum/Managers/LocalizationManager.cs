@@ -25,6 +25,7 @@ namespace Gum.Managers
 
         public static bool HasDatabase
         {
+            
             get;
             private set;
         }
