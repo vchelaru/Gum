@@ -283,7 +283,7 @@ namespace CodeOutputPlugin.Manager
             if (widthUnits == DimensionUnitType.Absolute || widthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
             {
                 var multiple = "1.0f";
-                if(widthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
+                if (widthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
                 {
                     multiple = "RenderingLibrary.SystemManagers.GlobalFontScale";
                 }
@@ -303,11 +303,11 @@ namespace CodeOutputPlugin.Manager
             {
                 var multiple = "1.0f";
 
-                if(heightUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
+                if (heightUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
                 {
                     multiple = "RenderingLibrary.SystemManagers.GlobalFontScale";
                 }
-                if(AdjustPixelValuesForDensity)
+                if (AdjustPixelValuesForDensity)
                 {
                     multiple += "/Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density";
                 }
@@ -320,16 +320,13 @@ namespace CodeOutputPlugin.Manager
 
             var isContainedInStackLayout = parentBaseType?.EndsWith("/StackLayout") == true;
             var isVariableOwnerAbsoluteLayout = false;
-            var isVariableOwnerSkiaGumCanvasView = false;
             if (context.Instance != null)
             {
                 isVariableOwnerAbsoluteLayout = context.Instance.BaseType?.EndsWith("/AbsoluteLayout") == true;
-                isVariableOwnerSkiaGumCanvasView = context.Instance.BaseType?.EndsWith("/SkiaGumCanvasView") == true;
             }
             else
             {
                 isVariableOwnerAbsoluteLayout = context.Element.BaseType?.EndsWith("/AbsoluteLayout") == true;
-                isVariableOwnerSkiaGumCanvasView = context.Element.BaseType?.EndsWith("/SkiaGumCanvasView") == true;
             }
 
             #region Apply XUnits
@@ -338,35 +335,35 @@ namespace CodeOutputPlugin.Manager
             {
                 leftMargin = x;
             }
-            if(xUnits == PositionUnitType.PixelsFromLeft && widthUnits == DimensionUnitType.RelativeToContainer)
+            if (xUnits == PositionUnitType.PixelsFromLeft && widthUnits == DimensionUnitType.RelativeToContainer)
             {
                 rightMargin = -width - x;
             }
-            if(xUnits == PositionUnitType.PixelsFromCenterX && 
+            if (xUnits == PositionUnitType.PixelsFromCenterX &&
                 xOrigin == HorizontalAlignment.Center)
             {
-                if ( widthUnits == DimensionUnitType.RelativeToContainer)
+                if (widthUnits == DimensionUnitType.RelativeToContainer)
                 {
                     leftMargin = x - width / 2.0f;
                     rightMargin = -x - width / 2.0f;
                 }
-                else if(widthUnits == DimensionUnitType.Absolute || 
+                else if (widthUnits == DimensionUnitType.Absolute ||
                     widthUnits == DimensionUnitType.RelativeToChildren ||
                     widthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale ||
                     widthUnits == DimensionUnitType.MaintainFileAspectRatio ||
                     widthUnits == DimensionUnitType.PercentageOfOtherDimension ||
                     widthUnits == DimensionUnitType.PercentageOfSourceFile ||
                     widthUnits == DimensionUnitType.Ratio
-                    ) 
+                    )
                 {
                     // Vic says - not sure why but we have to 2x the margin here...
                     leftMargin = x * 2;
                 }
             }
-            else if(xUnits == PositionUnitType.PixelsFromRight && xOrigin == HorizontalAlignment.Right)
+            else if (xUnits == PositionUnitType.PixelsFromRight && xOrigin == HorizontalAlignment.Right)
             {
                 rightMargin = -x;
-                if(widthUnits == DimensionUnitType.RelativeToContainer)
+                if (widthUnits == DimensionUnitType.RelativeToContainer)
                 {
                     leftMargin = -width;
                 }
@@ -380,9 +377,9 @@ namespace CodeOutputPlugin.Manager
             {
                 topMargin = y;
             }
-            if(yUnits == PositionUnitType.PixelsFromTop && heightUnits == DimensionUnitType.RelativeToChildren)
+            if (yUnits == PositionUnitType.PixelsFromTop && heightUnits == DimensionUnitType.RelativeToChildren)
             {
-                if(isContainedInStackLayout == false)
+                if (isContainedInStackLayout == false)
                 {
                     // If it's a stack layout, we don't want to subtract from here.
                     // Update Feb 14, 2022
@@ -396,25 +393,25 @@ namespace CodeOutputPlugin.Manager
                 else
                 {
                     // in a stack layout, so give the margin according to the y origin:
-                    if(yOrigin == VerticalAlignment.Top)
+                    if (yOrigin == VerticalAlignment.Top)
                     {
                         bottomMargin = height;
                     }
-                    else if(yOrigin == VerticalAlignment.Center)
+                    else if (yOrigin == VerticalAlignment.Center)
                     {
                         topMargin += height / 2.0f;
                         bottomMargin = height / 2.0f;
                     }
-                    else if(yOrigin == VerticalAlignment.Bottom)
+                    else if (yOrigin == VerticalAlignment.Bottom)
                     {
                         topMargin += height;
                     }
                 }
             }
-            if(yUnits == PositionUnitType.PixelsFromCenterY &&
+            if (yUnits == PositionUnitType.PixelsFromCenterY &&
                 yOrigin == VerticalAlignment.Center)
             {
-                if(heightUnits == DimensionUnitType.RelativeToContainer)
+                if (heightUnits == DimensionUnitType.RelativeToContainer)
                 {
                     topMargin = y - height / 2.0f;
                     bottomMargin = -y - height / 2.0f;
@@ -441,12 +438,12 @@ namespace CodeOutputPlugin.Manager
             #region Write HorizontalOptions
             if (widthUnits == DimensionUnitType.Absolute || widthUnits == DimensionUnitType.RelativeToChildren || widthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
             {
-                if(xUnits == PositionUnitType.PixelsFromCenterX && xOrigin == HorizontalAlignment.Center)
+                if (xUnits == PositionUnitType.PixelsFromCenterX && xOrigin == HorizontalAlignment.Center)
                 {
                     stringBuilder.AppendLine(
                         $"{codePrefix}.HorizontalOptions = LayoutOptions.Center;");
                 }
-                else if(xUnits == PositionUnitType.PixelsFromRight && xOrigin == HorizontalAlignment.Right)
+                else if (xUnits == PositionUnitType.PixelsFromRight && xOrigin == HorizontalAlignment.Right)
                 {
                     stringBuilder.AppendLine(
                         $"{codePrefix}.HorizontalOptions = LayoutOptions.End;");
@@ -458,7 +455,7 @@ namespace CodeOutputPlugin.Manager
 
                 }
             }
-            else if(widthUnits == DimensionUnitType.RelativeToContainer || 
+            else if (widthUnits == DimensionUnitType.RelativeToContainer ||
                 widthUnits == DimensionUnitType.Percentage)
             {
                 stringBuilder.AppendLine(
@@ -471,7 +468,7 @@ namespace CodeOutputPlugin.Manager
 
             if (heightUnits == DimensionUnitType.Absolute || heightUnits == DimensionUnitType.RelativeToChildren || heightUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
             {
-                if(yUnits == PositionUnitType.PixelsFromCenterY && xOrigin == HorizontalAlignment.Center)
+                if (yUnits == PositionUnitType.PixelsFromCenterY && xOrigin == HorizontalAlignment.Center)
                 {
                     stringBuilder.AppendLine(
                         $"{codePrefix}.VerticalOptions = LayoutOptions.Center;");
@@ -482,7 +479,7 @@ namespace CodeOutputPlugin.Manager
                         $"{codePrefix}.VerticalOptions = LayoutOptions.Start;");
                 }
             }
-            else if(heightUnits == DimensionUnitType.RelativeToContainer ||
+            else if (heightUnits == DimensionUnitType.RelativeToContainer ||
                 heightUnits == DimensionUnitType.Percentage)
             {
                 stringBuilder.AppendLine(
@@ -490,6 +487,8 @@ namespace CodeOutputPlugin.Manager
             }
 
             #endregion
+
+            bool isVariableOwnerSkiaGumCanvasView = IsVariableOwnerSkiaGumCanvasView(ref context);
 
             if (isVariableOwnerSkiaGumCanvasView)
             {
@@ -504,6 +503,41 @@ namespace CodeOutputPlugin.Manager
                         $"{codePrefix}.AutoSizeWidthAccordingToContents = true;");
                 }
             }
+        }
+
+        private static bool IsVariableOwnerSkiaGumCanvasView(ref CodeGenerationContext context)
+        {
+            var isVariableOwnerSkiaGumCanvasView = false;
+            if (context.Instance != null)
+            {
+                isVariableOwnerSkiaGumCanvasView = context.Instance.BaseType?.EndsWith("/SkiaGumCanvasView") == true;
+
+                if(!isVariableOwnerSkiaGumCanvasView)
+                {
+                    var element = ObjectFinder.Self.GetElementSave(context.Instance.BaseType);
+                    return IsElementSkiaGumCanvasView(element);
+                }
+            }
+            else
+            {
+                isVariableOwnerSkiaGumCanvasView = IsElementSkiaGumCanvasView(context.Element);
+            }
+
+            return isVariableOwnerSkiaGumCanvasView;
+        }
+
+        private static bool IsElementSkiaGumCanvasView(ElementSave element)
+        {
+            if(element.BaseType?.EndsWith("/SkiaGumCanvasView") == true)
+            {
+                return true;
+            }
+            else
+            {
+                return ObjectFinder.Self.GetBaseElements(element)
+                    .Any(item => item.BaseType?.EndsWith("/SkiaGumCanvasView") == true);
+            }
+
         }
 
         private static void SetAbsoluteLayoutPosition(List<VariableSave> variablesToConsider, StateSave state, CodeGenerationContext context, StringBuilder stringBuilder)
@@ -934,6 +968,22 @@ namespace CodeOutputPlugin.Manager
                 stringBuilder.AppendLine($"{context.CodePrefix}.Margin = new Thickness({leftMargin}, {topMargin}, {rightMargin}, {bottomMargin});");
             }
             // should we do the same to vertical? Maybe, but waiting for a natural use case to test it
+
+            bool isVariableOwnerSkiaGumCanvasView = IsVariableOwnerSkiaGumCanvasView(ref context);
+
+            if (isVariableOwnerSkiaGumCanvasView)
+            {
+                if (heightUnits == DimensionUnitType.RelativeToChildren)
+                {
+                    stringBuilder.AppendLine(
+                        $"{codePrefix}.AutoSizeHeightAccordingToContents = true;");
+                }
+                if (widthUnits == DimensionUnitType.RelativeToChildren)
+                {
+                    stringBuilder.AppendLine(
+                        $"{codePrefix}.AutoSizeWidthAccordingToContents = true;");
+                }
+            }
         }
 
         private static float CalculateAbsoluteWidth(InstanceSave instance, ElementSave container, RecursiveVariableFinder variableFinder)

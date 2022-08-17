@@ -1,6 +1,7 @@
 ﻿using CodeOutputPlugin.Models;
 using Gum;
 using Gum.DataTypes;
+using Gum.Managers;
 using Gum.ToolStates;
 using System;
 using System.Collections.Generic;
@@ -135,7 +136,16 @@ namespace CodeOutputPlugin.Manager
             }
 
             var parentType = newParent?.BaseType ?? element.BaseType;
-            var isParentSkiaCanvas = parentType?.EndsWith("/SkiaGumCanvasView") == true;
+            var isParentSkiaCanvas = false;
+            //parentType?.EndsWith("/SkiaGumCanvasView") == true;
+            if(newParent != null)
+            {
+                isParentSkiaCanvas = IsSkiaCanvasRecursively(newParent);
+            }
+            else
+            {
+                isParentSkiaCanvas = IsSkiaCanvasRecursively(element);
+            }
 
             var childName = instance.Name;
             var parentName = newParent?.Name ?? element.Name;
@@ -171,6 +181,34 @@ namespace CodeOutputPlugin.Manager
                         : $"Can't add {childName} to parent {parentName} because the parent is in a Skia canvas and the child is a Xamarin Forms object.";
                     return GeneralResponse.UnsuccessfulWith(message);
                 }
+            }
+        }
+
+        private static bool IsSkiaCanvasRecursively(InstanceSave instance)
+        {
+            if(instance.BaseType?.EndsWith("/SkiaGumCanvasView") == true)
+            {
+                return true;
+            }
+            else
+            {
+                var element = ObjectFinder.Self.GetElementSave(instance.BaseType);
+
+                return IsSkiaCanvasRecursively(element);
+            }
+        }
+
+        private static bool IsSkiaCanvasRecursively(ElementSave element)
+        {
+            if(element.BaseType?.EndsWith("/SkiaGumCanvasView") == true)
+            {
+                return true;
+            }
+            else
+            {
+                var baseElements = ObjectFinder.Self.GetBaseElements(element);
+
+                return baseElements.Any(item => item.BaseType?.EndsWith("/SkiaGumCanvasView") == true);
             }
         }
 
