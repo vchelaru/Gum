@@ -1,0 +1,63 @@
+﻿using SkiaSharp;
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace SkiaGum.Renderables {
+    public class LineGrid: RenderableBase {
+        public ushort CellWidth { get; set; }
+        public ushort CellHeight { get; set; }
+
+        public LineGrid()
+        {
+            CellWidth = 10;
+            CellHeight = 10;
+            Color = SKColor.Parse("#77FFFFFF");
+        }
+
+        public override void DrawBound(SKRect boundingRect, SKCanvas canvas, float absoluteRotation)
+        {
+            using(var paint = GetPaint(boundingRect, absoluteRotation))
+            {
+                float CellHeight = this.CellHeight;
+                int cellcount = (int)(Height / CellHeight);
+                for(int i = 1; i < cellcount; i++)
+                {
+                    float thisY = i * CellHeight;
+                    canvas.DrawLine(X, thisY, Width, thisY, paint);
+                }
+
+                float CellWidth = this.CellWidth;
+                cellcount = (int)(Width / CellWidth);
+                for(int i = 1; i < cellcount; i++)
+                {
+                    float thisX = i * CellWidth;
+                    canvas.DrawLine(thisX, Y, thisX, Height, paint);
+                }
+            }
+        }
+
+        public void LineGridCell(double pX, double pY, out int colX, out int colY)
+        {
+            colX = (int)Math.Ceiling(pX / CellWidth);
+            colY = (int)Math.Ceiling(pY / CellHeight);
+        }
+
+        public bool GetCellPosition(int colX, int colY, out float left, out float top, out float right, out float bottom)
+        {
+            left = -1;
+            top = -1;
+            right = -1;
+            bottom = -1;
+            var numcellsX = Width / CellWidth;
+            var numcellsY = Height / CellHeight;
+            if((colX < 0) || (colX > numcellsX) || (colY < 0) || (colY > numcellsY)) return false;
+
+            left = (colX - 1) * CellWidth;
+            right = CellWidth;
+            top = (colY - 1) * CellHeight;
+            bottom = CellHeight;
+            return true;
+        }
+    }
+}
