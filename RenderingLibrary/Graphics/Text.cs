@@ -107,6 +107,8 @@ namespace RenderingLibrary.Graphics
 
         public static TextRenderingPositionMode TextRenderingPositionMode = TextRenderingPositionMode.SnapToPixel;
 
+        public TextRenderingPositionMode? OverrideTextRenderingPositionMode = null;
+
         #endregion
 
         #region Properties
@@ -852,7 +854,7 @@ namespace RenderingLibrary.Graphics
                     requiredWidth, widths, spriteRenderer, Color,
                     absoluteLeft,
                     absoluteTop, 
-                    this.GetAbsoluteRotation(), FontScale, FontScale, MaxLettersToShow);
+                    this.GetAbsoluteRotation(), FontScale, FontScale, MaxLettersToShow, OverrideTextRenderingPositionMode);
             }
         }
 

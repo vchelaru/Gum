@@ -571,7 +571,7 @@ namespace RenderingLibrary.Graphics
             SpriteRenderer spriteRenderer, 
             Color color,
             float xOffset = 0, float yOffset = 0, float rotation = 0, float scaleX = 1, float scaleY = 1,
-            int? numberOfLettersToRender = null)
+            int? numberOfLettersToRender = null, TextRenderingPositionMode? overrideTextRenderingPositionMode = null)
         {
             ///////////Early Out////////////////
             if(numberOfLettersToRender == 0)
@@ -641,7 +641,10 @@ namespace RenderingLibrary.Graphics
                     finalPosition.X += xOffset;
                     finalPosition.Y += yOffset;
 
-                    if(Text.TextRenderingPositionMode == TextRenderingPositionMode.FreeFloating ||
+                    var effectiveTextRenderingMode = overrideTextRenderingPositionMode ??
+                        Text.TextRenderingPositionMode;
+
+                    if (effectiveTextRenderingMode == TextRenderingPositionMode.FreeFloating ||
                         // If rotated, need free floating positions since sprite positions will likely not line up with pixels
                         rotation != 0 || 
                         // If scaled up/down, don't use free floating
