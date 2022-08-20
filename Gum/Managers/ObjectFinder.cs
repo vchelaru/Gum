@@ -10,13 +10,11 @@ namespace Gum.Managers
 {
     public class ObjectFinder
     {
-        #region Fields
+        #region Fields/Properties
 
         static ObjectFinder mObjectFinder;
 
         Dictionary<string, ElementSave> cachedDictionary;
-
-        #endregion
 
         public static ObjectFinder Self
         {
@@ -29,6 +27,15 @@ namespace Gum.Managers
                 return mObjectFinder;
             }
         }
+
+        public GumProjectSave GumProjectSave
+        {
+            get;
+            set;
+        }
+
+        #endregion
+
 
         public void EnableCache()
         {
@@ -72,11 +79,7 @@ namespace Gum.Managers
             cachedDictionary = null;
         }
 
-        public GumProjectSave GumProjectSave
-        {
-            get;
-            set;
-        }
+        #region Get Element (Screen/Component/StandardElement)
 
         /// <summary>
         /// Returns the ScreenSave with matching name in the current glue project. Case is ignored when making name comparisons
@@ -232,6 +235,8 @@ namespace Gum.Managers
             return null;
 
         }
+
+        #endregion
 
         public StandardElementSave GetRootStandardElementSave(ElementSave elementSave)
         {
@@ -630,7 +635,63 @@ namespace Gum.Managers
             return null;
         }
 
+        public bool IsVariableOrphaned(VariableSave variable, StateSave defaultState)
+        {
+            var container = GetContainerOf(defaultState);
 
+            if(!string.IsNullOrEmpty(variable.SourceObject))
+            {
+                var instance = container.GetInstance(variable.SourceObject);
+                if(instance == null)
+                {
+                    return true;
+                }
+                else
+                {
+                    var instanceElement = ObjectFinder.Self.GetElementSave(instance);
+                    variable = instanceElement?.DefaultState.GetVariableSave(variable.GetRootName());
+
+                    if(variable == null)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        return IsVariableOrphaned(variable, instanceElement.DefaultState);
+                    }
+                }
+            }
+
+            if(container is StandardElementSave)
+            {
+                // If it's a standard element, then check if the default state contains this variable name
+                var standardelementDefault = StandardElementsManager.Self.GetDefaultStateFor(container.Name);
+                return standardelementDefault.Variables.Any(item => item.Name == variable.Name) == false;
+            }
+            else
+            {
+                // See if this is an exposed variable that is not DefindByBase
+                var exposedVariable = defaultState.Variables.FirstOrDefault(item =>
+                    item.ExposedAsName == variable.Name);
+
+                if(exposedVariable != null)
+                {
+                    return IsVariableOrphaned(exposedVariable, defaultState);
+                }
+                else
+                {
+                    var baseElement = ObjectFinder.Self.GetElementSave(container.BaseType);
+                    if(baseElement == null)
+                    {
+                        return false;
+                    }
+                    else
+                    {
+                        return IsVariableOrphaned(variable, baseElement.DefaultState);
+                    }
+                }
+            }
+        }
     }
 
 

@@ -1734,7 +1734,7 @@ namespace CodeOutputPlugin.Manager
                     context.Instance = instance;
                     if(instance != null)
                     {
-                        if (GetIsShouldBeLocalized(variable))
+                        if (GetIsShouldBeLocalized(variable, context.Element.DefaultState))
                         {
                             string assignment = GetLocaliedLine(instance, variable, context);
                             stringBuilder.AppendLine(ToTabs(tabCount) + assignment);
@@ -2732,7 +2732,7 @@ namespace CodeOutputPlugin.Manager
             }
 
             #endregion
-            else if (GetIsShouldBeLocalized(variable))
+            else if (GetIsShouldBeLocalized(variable, context.Element.DefaultState))
             {
                 string assignment = GetLocaliedLine(instance, variable, context);
 
@@ -2757,12 +2757,17 @@ namespace CodeOutputPlugin.Manager
             return assignment;
         }
 
-        private static bool GetIsShouldBeLocalized(VariableSave variable)
+        private static bool GetIsShouldBeLocalized(VariableSave variable, StateSave defaultState)
         {
-            return LocalizationManager.HasDatabase && 
+            var toReturn = LocalizationManager.HasDatabase && 
                 // This could be exposed of exposed, so the name wouldn't be "Text"
                 //variable.GetRootName() == "Text" && 
-                variable.Value is string valueAsString && valueAsString?.StartsWith(StringIdPrefix) == true;
+                variable.Value is string valueAsString && 
+                valueAsString?.StartsWith(StringIdPrefix) == true &&
+                // This could be a leftover variable
+                ObjectFinder.Self.IsVariableOrphaned(variable, defaultState) == false;
+
+            return toReturn;
         }
 
         private static string TryGetFullGumLineReplacement(InstanceSave instance, VariableSave variable, CodeGenerationContext context)
@@ -2786,7 +2791,7 @@ namespace CodeOutputPlugin.Manager
             {
                 return " "; 
             }
-            else if (GetIsShouldBeLocalized(variable))
+            else if (GetIsShouldBeLocalized(variable, context.Element.DefaultState))
             {
                 string assignment = GetLocaliedLine(instance, variable, context);
 
