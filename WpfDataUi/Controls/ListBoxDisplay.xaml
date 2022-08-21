@@ -30,7 +30,7 @@
                 <ColumnDefinition Width="Auto"></ColumnDefinition>
                 <ColumnDefinition Width="Auto"></ColumnDefinition>
             </Grid.ColumnDefinitions>
-            <TextBox x:Name="NewTextBox">
+            <TextBox x:Name="NewTextBox" KeyDown="NewTextBox_KeyDown">
                 
             </TextBox>
             <Button Grid.Column="1" Width="30" Click="OkButton_Click">OK</Button>

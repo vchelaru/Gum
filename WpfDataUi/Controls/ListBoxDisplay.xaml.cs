@@ -128,6 +128,11 @@ namespace WpfDataUi.Controls
 
         private void OkButton_Click(object sender, RoutedEventArgs e)
         {
+            HandleAddTextItem();
+        }
+
+        private void HandleAddTextItem()
+        {
             ListBox.Items.Add(NewTextBox.Text);
             NewTextBox.Text = null;
             NewEntryListBox.Visibility = Visibility.Collapsed;
@@ -136,8 +141,28 @@ namespace WpfDataUi.Controls
 
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
+            HandleCancelItem();
+        }
+
+        private void HandleCancelItem()
+        {
             NewTextBox.Text = null;
             NewEntryListBox.Visibility = Visibility.Collapsed;
+        }
+
+        private void NewTextBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if(e.Key == Key.Enter)
+            {
+                e.Handled = true;
+                HandleAddTextItem();
+
+            }
+            else if(e.Key == Key.Escape)
+            {
+                e.Handled = true;
+                HandleCancelItem();
+            }
         }
     }
 }
