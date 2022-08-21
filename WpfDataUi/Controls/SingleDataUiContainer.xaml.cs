@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -76,6 +77,10 @@ namespace WpfDataUi
                 typeof(ComboBoxDisplay))
                 );
 
+            mTypeDisplayerAssociation.Add(new KeyValuePair<Func<Type, bool>, Type>(
+                (item) => item != null && typeof(IEnumerable).IsAssignableFrom(item),
+                typeof(ListBoxDisplay))
+                );
         }
         public SingleDataUiContainer()
         {

@@ -72,6 +72,9 @@
     <Compile Include="Controls\FileSelectionDisplay.xaml.cs">
       <DependentUpon>FileSelectionDisplay.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\ListBoxDisplay.xaml.cs">
+      <DependentUpon>ListBoxDisplay.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\MultiLineTextBoxDisplay.cs" />
     <Compile Include="Controls\NullableBoolDisplay.xaml.cs">
       <DependentUpon>NullableBoolDisplay.xaml</DependentUpon>
@@ -88,6 +91,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Controls\FileSelectionDisplay.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\ListBoxDisplay.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

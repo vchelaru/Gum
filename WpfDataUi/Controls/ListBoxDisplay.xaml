@@ -1,0 +1,40 @@
+﻿<UserControl x:Class="WpfDataUi.Controls.ListBoxDisplay"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:WpfDataUi.Controls"
+             mc:Ignorable="d" 
+             Height="200" d:DesignWidth="200">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"></RowDefinition>
+            <RowDefinition></RowDefinition>
+            <RowDefinition Height="Auto"></RowDefinition>
+        </Grid.RowDefinitions>
+        <TextBlock x:Name="Label" MinWidth="100" TextWrapping="Wrap"  VerticalAlignment="Center"
+                       Padding="4,4,4,0"
+                       >Property Label:</TextBlock>
+        <ListBox Grid.Row="1" x:Name="ListBox" KeyDown="ListBox_KeyDown">
+            <ListBox.ContextMenu>
+                <ContextMenu>
+                </ContextMenu>
+            </ListBox.ContextMenu>
+        </ListBox>
+        <StackPanel Orientation="Horizontal" Grid.Row="2">
+            <Button Height="24" Width="24" Click="AddButtonClicked">+</Button>
+        </StackPanel>
+        <Grid Grid.Row="3" x:Name="NewEntryListBox" Visibility="Collapsed">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition></ColumnDefinition>
+                <ColumnDefinition Width="Auto"></ColumnDefinition>
+                <ColumnDefinition Width="Auto"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            <TextBox x:Name="NewTextBox">
+                
+            </TextBox>
+            <Button Grid.Column="1" Width="30" Click="OkButton_Click">OK</Button>
+            <Button Grid.Column="2" Width="40" Click="CancelButton_Click">Cancel</Button>
+        </Grid>
+    </Grid>
+</UserControl>

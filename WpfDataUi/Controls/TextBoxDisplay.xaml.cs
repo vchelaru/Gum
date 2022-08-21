@@ -39,10 +39,7 @@ namespace WpfDataUi.Controls
 
         public InstanceMember InstanceMember
         {
-            get
-            {
-                return mInstanceMember;
-            }
+            get => mInstanceMember;
             set
             {
                 mTextBoxLogic.InstanceMember = value;
