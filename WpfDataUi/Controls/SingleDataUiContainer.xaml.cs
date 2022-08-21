@@ -78,7 +78,7 @@ namespace WpfDataUi
                 );
 
             mTypeDisplayerAssociation.Add(new KeyValuePair<Func<Type, bool>, Type>(
-                (item) => item != null && typeof(IEnumerable).IsAssignableFrom(item),
+                (item) => item != null && typeof(IEnumerable).IsAssignableFrom(item) && item != typeof(string),
                 typeof(ListBoxDisplay))
                 );
         }
@@ -111,6 +111,13 @@ namespace WpfDataUi
                 controlToAdd = (UserControl)Activator.CreateInstance(InstanceMember.PreferredDisplayer);
             }
 
+            // give preference to CustomOptions...:
+            if(controlToAdd == null && InstanceMember.CustomOptions != null && InstanceMember.CustomOptions.Count != 0)
+            {
+                controlToAdd = new ComboBoxDisplay();
+            }
+
+            // ... then fall back if that isn't found:
             if (controlToAdd == null)
             {
                 var type = InstanceMember.PropertyType;
@@ -122,11 +129,6 @@ namespace WpfDataUi
                         controlToAdd = (UserControl)Activator.CreateInstance(kvp.Value);
                     }
                 }
-            }
-
-            if(controlToAdd == null && InstanceMember.CustomOptions != null && InstanceMember.CustomOptions.Count != 0)
-            {
-                controlToAdd = new ComboBoxDisplay();
             }
 
             if (controlToAdd == null)
