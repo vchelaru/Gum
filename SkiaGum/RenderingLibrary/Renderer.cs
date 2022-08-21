@@ -12,6 +12,7 @@ namespace RenderingLibrary.Graphics
         public static bool UseBasicEffectRendering { get; set; } = true;
 
         public Camera Camera { get; private set; }
+        public bool ClearsCanvas { get; set; } = true;
 
         public void Initialize(SystemManagers managers)
         {
@@ -26,7 +27,11 @@ namespace RenderingLibrary.Graphics
         // This syntax is a little different than standard Gum, but we're moving in that direction incrementally:
         public void Draw(IList<BindableGraphicalUiElement> whatToRender, SystemManagers managers)
         {
-            managers.Canvas.Clear();
+            if (ClearsCanvas)
+            {
+                managers.Canvas.Clear();
+            }
+            
             if (Camera.Zoom != 1)
             {
                 managers.Canvas.Scale(Camera.Zoom);

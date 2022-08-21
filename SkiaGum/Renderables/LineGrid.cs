@@ -20,19 +20,19 @@ namespace SkiaGum.Renderables {
             using(var paint = GetPaint(boundingRect, absoluteRotation))
             {
                 float CellHeight = this.CellHeight;
-                int cellcount = (int)(Height / CellHeight);
+                int cellcount = (int)(boundingRect.Height / CellHeight);
                 for(int i = 1; i < cellcount; i++)
                 {
-                    float thisY = i * CellHeight;
-                    canvas.DrawLine(X, thisY, Width, thisY, paint);
+                    float thisY = i * CellHeight + boundingRect.Top;
+                    canvas.DrawLine(boundingRect.Left, thisY, boundingRect.Right, thisY, paint);
                 }
 
                 float CellWidth = this.CellWidth;
-                cellcount = (int)(Width / CellWidth);
+                cellcount = (int)(boundingRect.Width / CellWidth);
                 for(int i = 1; i < cellcount; i++)
                 {
-                    float thisX = i * CellWidth;
-                    canvas.DrawLine(thisX, Y, thisX, Height, paint);
+                    float thisX = i * CellWidth + boundingRect.Left;
+                    canvas.DrawLine(thisX, boundingRect.Top, thisX, boundingRect.Bottom, paint);
                 }
             }
         }
