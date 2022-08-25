@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -31,15 +32,13 @@ namespace WpfDataUi.Controls
                 bool instanceMemberChanged = mInstanceMember != value;
                 if (mInstanceMember != null && instanceMemberChanged)
                 {
-                    //mInstanceMember.PropertyChanged -= HandlePropertyChange;
+                    mInstanceMember.PropertyChanged -= HandlePropertyChange;
                 }
                 mInstanceMember = value;
-
                 if (mInstanceMember != null && instanceMemberChanged)
                 {
-                    //mInstanceMember.PropertyChanged += HandlePropertyChange;
+                    mInstanceMember.PropertyChanged += HandlePropertyChange;
                 }
-
                 Refresh();
 
             }
@@ -69,7 +68,7 @@ namespace WpfDataUi.Controls
 
                 //HintTextBlock.Visibility = !string.IsNullOrEmpty(InstanceMember?.DetailText) ? Visibility.Visible : Visibility.Collapsed;
                 //HintTextBlock.Text = InstanceMember?.DetailText;
-
+                TrySetValueOnUi(InstanceMember?.Value);
                 //RefreshIsEnabled();
 
                 SuppressSettingProperty = false;
@@ -120,7 +119,9 @@ namespace WpfDataUi.Controls
 
                 if(selectedItem > -1)
                 {
-                    ListBox.Items.RemoveAt(ListBox.SelectedIndex);
+                    var listToRemoveFrom = ListBox.ItemsSource as IList;
+
+                    listToRemoveFrom.RemoveAt(ListBox.SelectedIndex);
                 }
                 this.TrySetValueOnInstance();
             }
@@ -133,7 +134,11 @@ namespace WpfDataUi.Controls
 
         private void HandleAddTextItem()
         {
-            ListBox.Items.Add(NewTextBox.Text);
+            var listToAddTo = ListBox.ItemsSource as IList;
+            if(listToAddTo != null)
+            {
+                listToAddTo.Add(NewTextBox.Text);
+            }
             NewTextBox.Text = null;
             NewEntryListBox.Visibility = Visibility.Collapsed;
             this.TrySetValueOnInstance();
@@ -162,6 +167,15 @@ namespace WpfDataUi.Controls
             {
                 e.Handled = true;
                 HandleCancelItem();
+            }
+        }
+
+        private void HandlePropertyChange(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(InstanceMember.Value))
+            {
+                this.Refresh();
+
             }
         }
     }

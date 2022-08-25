@@ -278,6 +278,11 @@ namespace CodeOutputPlugin.Manager
             float topMargin = 0;
             float bottomMargin = 0;
 
+            float leftPadding = 0;
+            float rightPadding = 0;
+            float topPadding = 0;
+            float bottomPadding = 0;
+
             #region Apply WidthUnits
 
             if (widthUnits == DimensionUnitType.Absolute || widthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
@@ -395,15 +400,20 @@ namespace CodeOutputPlugin.Manager
                     // in a stack layout, so give the margin according to the y origin:
                     if (yOrigin == VerticalAlignment.Top)
                     {
-                        bottomMargin = height;
+                        // Adding a margin will move the next item after this, but it doesn't make "this" bigger...
+                        //bottomMargin = height;
+                        //... so instead, we use padding
+                        bottomPadding = height;
                     }
                     else if (yOrigin == VerticalAlignment.Center)
                     {
+                        // does this need padding...?
                         topMargin += height / 2.0f;
                         bottomMargin = height / 2.0f;
                     }
                     else if (yOrigin == VerticalAlignment.Bottom)
                     {
+                        //... or this?
                         topMargin += height;
                     }
                 }
@@ -433,6 +443,16 @@ namespace CodeOutputPlugin.Manager
                     $"{topMargin.ToString(CultureInfo.InvariantCulture)}, " +
                     $"{rightMargin.ToString(CultureInfo.InvariantCulture)}, " +
                     $"{bottomMargin.ToString(CultureInfo.InvariantCulture)});");
+            }
+
+            var hasPadding = topPadding != 0 || leftPadding != 0 || rightPadding != 0 || bottomPadding != 0;
+            if (hasPadding)
+            {
+                stringBuilder.AppendLine($"{codePrefix}.Padding = new Thickness(" +
+                    $"{leftPadding.ToString(CultureInfo.InvariantCulture)}, " +
+                    $"{topPadding.ToString(CultureInfo.InvariantCulture)}, " +
+                    $"{rightPadding.ToString(CultureInfo.InvariantCulture)}, " +
+                    $"{bottomPadding.ToString(CultureInfo.InvariantCulture)});");
             }
 
             #region Write HorizontalOptions
@@ -1623,12 +1643,19 @@ namespace CodeOutputPlugin.Manager
         public static VisualApi GetVisualApiForElement(ElementSave element)
         {
             VisualApi visualApi;
-            if(element is ScreenSave)
-            {
+            //if(element is ScreenSave)
+            //{
                 // screens are always XamarinForms
-                visualApi = VisualApi.XamarinForms;
-            }
-            else
+                //visualApi = VisualApi.XamarinForms;
+                // Update August 23, 2022
+                // No, the code gen may be 
+                // be used for entirely Skia
+                // pages such as PDF generation.
+                // Therefore, we should always look
+                // to the IsXamarinFormsControl value:
+                //visualApi = VisualApi.XamarinForms;
+            //}
+            //else
             {
                 var defaultState = element.DefaultState;
                 var rvf = new RecursiveVariableFinder(defaultState);
