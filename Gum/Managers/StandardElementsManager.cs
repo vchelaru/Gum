@@ -495,10 +495,16 @@ namespace Gum.Managers
         {
             stateSave.Variables.Add(
                 new VariableSave
-                { SetsValue = true, Type = "bool", Value = defaultHasEvents, Name = "HasEvents", Category = "Behavior", CanOnlyBeSetInDefaultState = true , ExcludeFromInstances = true});
+                { SetsValue = true, Type = "bool", Value = defaultHasEvents, Name = "HasEvents", Category = "Behavior", CanOnlyBeSetInDefaultState = true,
+                    // We used to exclude them from instances, but there are plenty of situations where we want to hide events on an instance. It's similar to InputTransparent in XamForms
+                    //ExcludeFromInstances = true
+                });
             stateSave.Variables.Add(
                 new VariableSave
-                { SetsValue = true, Type = "bool", Value = defaultHasEvents, Name = "ExposeChildrenEvents", Category = "Behavior", CanOnlyBeSetInDefaultState = true, ExcludeFromInstances = true });
+                { SetsValue = true, Type = "bool", Value = defaultHasEvents, Name = "ExposeChildrenEvents", Category = "Behavior", CanOnlyBeSetInDefaultState = true, 
+                    // We used to exclude them from instances, but there are plenty of situations where we want to hide events on an instance. It's similar to InputTransparent in XamForms
+                    //ExcludeFromInstances = true 
+                });
         }
 
         private static void AddStateVariable(StateSave stateSave)
