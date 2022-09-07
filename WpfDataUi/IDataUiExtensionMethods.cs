@@ -45,9 +45,17 @@ namespace WpfDataUi
 
                 if (result == ApplyValueResult.Success)
                 {
-                    dataUi.InstanceMember.Value = valueOnUi;
-                    result = ApplyValueResult.Success;
-                    dataUi.InstanceMember.CallAfterSetByUi();
+                    // Why not protect against spammed same-value assignments?
+                    if(dataUi.InstanceMember.Value != valueOnUi)
+                    {
+                        dataUi.InstanceMember.Value = valueOnUi;
+                        result = ApplyValueResult.Success;
+                        dataUi.InstanceMember.CallAfterSetByUi();
+                    }
+                    else
+                    {
+                        result = ApplyValueResult.Skipped;
+                    }
                 }
             }
 
