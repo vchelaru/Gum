@@ -19,9 +19,9 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\..\FlatRedBall\Engines\FlatRedBallXNA\FlatRedBallDesktopGLNet5\FlatRedBallDesktopGLNet6.csproj" />
-    <ProjectReference Include="..\..\..\..\..\FlatRedBall\Engines\Forms\FlatRedBall.Forms\StateInterpolation\StateInterpolation.DesktopGlNet6\StateInterpolation.DesktopNet6\StateInterpolation.DesktopNet6.csproj" />
+    <ProjectReference Include="..\..\..\..\FlatRedBall\Engines\FlatRedBallXNA\FlatRedBallDesktopGLNet6\FlatRedBallDesktopGLNet6.csproj" />
+    <ProjectReference Include="..\..\..\..\FlatRedBall\Engines\Forms\FlatRedBall.Forms\StateInterpolation\StateInterpolation.DesktopGlNet6\StateInterpolation.DesktopNet6.csproj" />
   </ItemGroup>
-  <Import Project="..\..\..\..\GumCoreShared.projitems" Label="Shared" />
-  <Import Project="..\..\..\..\..\FlatRedBall\FRBDK\Glue\GumPlugin\GumPlugin\GumCoreShared.FlatRedBall.projitems" Label="Shared" />
+  <Import Project="..\..\..\GumCoreShared.projitems" Label="Shared" />
+  <Import Project="..\..\..\..\FlatRedBall\FRBDK\Glue\GumPlugin\GumPlugin\GumCoreShared.FlatRedBall.projitems" Label="Shared" />
 </Project>
