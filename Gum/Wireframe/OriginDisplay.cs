@@ -118,14 +118,14 @@ namespace Gum.Wireframe
                     {
                         for (int i = 0; i < asGue.StackedRowOrColumnIndex; i++)
                         {
-                            parentAbsoluteY += parent.StackedRowOrColumnDimensions[i];
+                            parentAbsoluteY += parent.StackedRowOrColumnDimensions[i] + parent.StackSpacing;
                         }
                     }
                     if (parent.ChildrenLayout == Managers.ChildrenLayout.TopToBottomStack)
                     {
                         for (int i = 0; i < asGue.StackedRowOrColumnIndex; i++)
                         {
-                            parentAbsoluteX += parent.StackedRowOrColumnDimensions[i];
+                            parentAbsoluteX += parent.StackedRowOrColumnDimensions[i] + parent.StackSpacing;
                         }
                     }
                 }
