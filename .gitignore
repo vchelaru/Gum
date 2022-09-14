@@ -69,3 +69,5 @@ SkiaGumMonogame/bin/*
 SkiaGumMonogame/obj/*
 GumRuntimeStandard/GumRuntimeStandard/bin/*
 GumRuntimeStandard/GumRuntimeStandard/obj/*
+GumCore/GumCoreXnaPc/GumCore.DesktopGlNet6/obj/*
+GumCore/GumCoreXnaPc/GumCore.DesktopGlNet6/bin/*
