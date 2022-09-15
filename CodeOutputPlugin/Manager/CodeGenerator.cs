@@ -2900,11 +2900,11 @@ namespace CodeOutputPlugin.Manager
                 }
                 else if(rootName == "CornerRadius")
                 {
-                    return $"(int)({asFloat.ToString(CultureInfo.InvariantCulture)} / DeviceDisplay.MainDisplayInfo.Density)";
+                    return $"(int)({asFloat.ToString(CultureInfo.InvariantCulture)} / Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density)";
                 }
                 else
                 {
-                    return $"{asFloat.ToString(CultureInfo.InvariantCulture)} / DeviceDisplay.MainDisplayInfo.Density";
+                    return $"{asFloat.ToString(CultureInfo.InvariantCulture)} / Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density";
                 }
             }
             else if (variable.Value is string asString)
@@ -3007,6 +3007,7 @@ namespace CodeOutputPlugin.Manager
                 case "Visible": return "IsVisible";
                 case "HorizontalAlignment": return "HorizontalTextAlignment";
                 case "VerticalAlignment": return "VerticalTextAlignment";
+                case "StackSpacing": return "Spacing";
 
                 default: return rootName;
             }
