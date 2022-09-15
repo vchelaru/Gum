@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.32510.428
+# Visual Studio Version 17
+VisualStudioVersion = 17.2.32519.379
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SkiaGum", "SkiaGum\SkiaGum.csproj", "{39603AE7-D2BC-4CF8-AC54-7286BA4E03C3}"
 EndProject
@@ -16,8 +16,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GumDataTypesStandard", "GumDataTypes\GumDataTypesStandard.csproj", "{3F822630-B874-4533-A7E3-95C74176C14C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SkiaGumMonogame", "SkiaGumMonogame\SkiaGumMonogame.csproj", "{C858AE8C-E711-4697-ABF8-6DBED912403B}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GumRuntime", "GumRuntime\GumRuntime.csproj", "{0256CC51-4DC5-498B-8C39-36D05B523ED3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -81,14 +79,6 @@ Global
 		{C858AE8C-E711-4697-ABF8-6DBED912403B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C858AE8C-E711-4697-ABF8-6DBED912403B}.Release|x86.ActiveCfg = Release|Any CPU
 		{C858AE8C-E711-4697-ABF8-6DBED912403B}.Release|x86.Build.0 = Release|Any CPU
-		{0256CC51-4DC5-498B-8C39-36D05B523ED3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0256CC51-4DC5-498B-8C39-36D05B523ED3}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0256CC51-4DC5-498B-8C39-36D05B523ED3}.Debug|x86.ActiveCfg = Debug|x86
-		{0256CC51-4DC5-498B-8C39-36D05B523ED3}.Debug|x86.Build.0 = Debug|x86
-		{0256CC51-4DC5-498B-8C39-36D05B523ED3}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0256CC51-4DC5-498B-8C39-36D05B523ED3}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0256CC51-4DC5-498B-8C39-36D05B523ED3}.Release|x86.ActiveCfg = Release|x86
-		{0256CC51-4DC5-498B-8C39-36D05B523ED3}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

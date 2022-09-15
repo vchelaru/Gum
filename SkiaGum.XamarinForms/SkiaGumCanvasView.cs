@@ -31,6 +31,7 @@ namespace SkiaGum
         public ObservableCollection<BindableGraphicalUiElement> Children => GumElementsInternal;
 
         SystemManagers SystemManagers;
+        public Renderer Renderer => SystemManagers.Renderer;
 
         public SemaphoreSlim ExclusiveUiInteractionSemaphore = new SemaphoreSlim(1, 1);
         public string SemaphoreTag = "GumSemaphore";
@@ -54,6 +55,7 @@ namespace SkiaGum
         /// Leaving this at 1 will make everything draw to-the-pixel regardles of device density.
         /// </summary>
         public static float GlobalScale { get; set; } = 1;
+
 
         #endregion
 
