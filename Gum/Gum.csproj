@@ -752,7 +752,7 @@
       <Version>13.0.1</Version>
     </PackageReference>
     <PackageReference Include="SkiaSharp">
-      <Version>1.60.0</Version>
+      <Version>1.68.3</Version>
     </PackageReference>
     <PackageReference Include="SkiaSharp.Svg">
       <Version>1.60.0</Version>
