@@ -18,6 +18,7 @@ namespace SkiaPlugin.Managers
             AddStandard("ColoredCircle");
             AddStandard("RoundedRectangle");
             AddStandard("Arc");
+            AddStandard("LottieAnimation");
         }
 
         private static void AddStandard(string standardName)

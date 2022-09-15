@@ -139,6 +139,9 @@ namespace Gum.Plugins.BaseClasses
         public event Action BeforeRender;
         public event Action AfterRender;
 
+        // Parameters are: extension, parentElement, instance, changedMember
+        public event Func<string, ElementSave, InstanceSave, string, bool> IsExtensionValid;
+
         #endregion
 
         public string UniqueId
@@ -386,6 +389,9 @@ namespace Gum.Plugins.BaseClasses
 
         public void CallBeforeRender() => BeforeRender?.Invoke();
         public void CallAfterRender() => AfterRender?.Invoke();
+
+        public bool CallIsExtensionValid(string extension, ElementSave parentElement, InstanceSave instance, string changedMember) =>
+            IsExtensionValid?.Invoke(extension, parentElement, instance, changedMember) ?? false;
 
         #endregion
     }

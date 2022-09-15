@@ -17,7 +17,7 @@ namespace SkiaPlugin.Renderables
 #if INCLUDE_SVG
     public class RenderableSvg : RenderableSkiaObject, IAspectRatio
     {
-#region Fields/Properties
+        #region Fields/Properties
 
         string sourceFile;
         public string SourceFile
@@ -52,7 +52,7 @@ namespace SkiaPlugin.Renderables
 
         protected override bool ShouldApplyColorOnSpriteRender => true;
 
-#endregion
+        #endregion
 
         internal override void DrawToSurface(SKSurface surface)
         {

@@ -617,7 +617,7 @@ namespace SkiaPlugin.Renderables
             mParent = parent;
         }
 
-        public void PreRender()
+        public virtual void PreRender()
         {
             if (needsUpdate && Width > 0 && Height > 0 && AbsoluteVisible)
             {

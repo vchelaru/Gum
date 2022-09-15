@@ -1,4 +1,5 @@
 ﻿using Gum;
+using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Plugins;
@@ -62,6 +63,13 @@ namespace SkiaPlugin
             CreateRenderableForType += HandleCreateRenderbleFor;
             VariableExcluded += DefaultStateManager.GetIfVariableIsExcluded;
             VariableSet += DefaultStateManager.HandleVariableSet;
+            IsExtensionValid += HandleIsExtensionValid;
+        }
+
+        private bool HandleIsExtensionValid(string arg1, ElementSave arg2, InstanceSave arg3, string arg4)
+        {
+            // for now blindly support .svg and .json
+            return arg1 == "svg" || arg1 == "json";
         }
 
         private IRenderableIpso HandleCreateRenderbleFor(string type)
@@ -72,6 +80,7 @@ namespace SkiaPlugin
                 case "ColoredCircle": return new RenderableCircle();
                 case "RoundedRectangle": return new RenderableRoundedRectangle();
                 case "Arc": return new RenderableArc();
+                case "LottieAnimation": return new RenderableLottieAnimation();
             }
 
             return null;
@@ -85,6 +94,7 @@ namespace SkiaPlugin
                 case "ColoredCircle": return DefaultStateManager.GetColoredCircleState();
                 case "RoundedRectangle": return DefaultStateManager.GetRoundedRectangleState();
                 case "Arc": return DefaultStateManager.GetArcState();
+                case "LottieAnimation": return DefaultStateManager.GetLottieAnimationState();
             }
             return null;
         }

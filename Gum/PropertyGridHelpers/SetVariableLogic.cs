@@ -409,7 +409,7 @@ namespace Gum.PropertyGridHelpers
 
             ////////////End Early Out/////////////////////////
 
-            string errorMessage = GetWhySourcefileIsInvalid(variable.Value as string);
+            string errorMessage = GetWhySourcefileIsInvalid(variable.Value as string, parentElement, instance, changedMember);
 
             if(!string.IsNullOrEmpty(errorMessage))
             {
@@ -461,7 +461,7 @@ namespace Gum.PropertyGridHelpers
             }
         }
 
-        private string GetWhySourcefileIsInvalid(string value)
+        private string GetWhySourcefileIsInvalid(string value, ElementSave parentElement, InstanceSave instance, string changedMember)
         {
             string whyInvalid = null;
 
@@ -470,8 +470,17 @@ namespace Gum.PropertyGridHelpers
             bool isValidExtension = extension == "gif" ||
                 extension == "jpg" ||
                 extension == "png" ||
-                extension == "svg" || // todo - this should be plugin controlled
                 extension == "achx";
+
+            if(!isValidExtension)
+            {
+                var fromPluginManager = PluginManager.Self.GetIfExtensionIsValid(extension, parentElement, instance, changedMember);
+                if(fromPluginManager == true)
+                {
+                    isValidExtension = true;
+                }
+            }
+
             if(!isValidExtension)
             {
                 whyInvalid = "The extension " + extension + " is not supported for textures";

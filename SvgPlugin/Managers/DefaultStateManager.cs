@@ -20,6 +20,7 @@ namespace SkiaPlugin.Managers
         static StateSave filledCircleState;
         static StateSave roundedRectangleState;
         static StateSave arcState;
+        static StateSave lottieAnimationState;
 
         #endregion
 
@@ -51,17 +52,24 @@ namespace SkiaPlugin.Managers
             return svgState;
         }
 
-        internal static void HandleVariableSet(ElementSave owner, InstanceSave instance, string variableName, object oldValue)
+        public static StateSave GetLottieAnimationState()
         {
-            var rootName = VariableSave.GetRootName(variableName);
-
-            var shouldRefresh = rootName == "UseGradient" ||
-                rootName == "GradientType";
-
-            if(shouldRefresh)
+            if(lottieAnimationState == null)
             {
-                GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);
+                lottieAnimationState = new StateSave();
+                lottieAnimationState.Name = "Default";
+                AddVisibleVariable(lottieAnimationState);
+                StandardElementsManager.AddPositioningVariables(lottieAnimationState);
+                StandardElementsManager.AddDimensionsVariables(lottieAnimationState, 100, 100,
+                    Gum.Managers.StandardElementsManager.DimensionVariableAction.AllowFileOptions);
+
+                // Do we support colors?
+                //StandardElementsManager.AddColorVariables(lottieAnimationState);
+
+                lottieAnimationState.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "SourceFile", IsFile = true });
+
             }
+            return lottieAnimationState;
         }
 
         public static StateSave GetColoredCircleState()
@@ -142,6 +150,18 @@ namespace SkiaPlugin.Managers
             return arcState;
         }
 
+        internal static void HandleVariableSet(ElementSave owner, InstanceSave instance, string variableName, object oldValue)
+        {
+            var rootName = VariableSave.GetRootName(variableName);
+
+            var shouldRefresh = rootName == "UseGradient" ||
+                rootName == "GradientType";
+
+            if(shouldRefresh)
+            {
+                GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);
+            }
+        }
 
 
         private static void AddGradientVariables(StateSave state)

@@ -642,6 +642,8 @@ namespace Gum.Plugins
             }
         }
 
+
+
         internal void BeforeProjectSave(GumProjectSave savedProject)
         {
             foreach (var plugin in this.Plugins)
@@ -819,17 +821,26 @@ namespace Gum.Plugins
 
         internal void InstanceReordered(InstanceSave instance)
         {
-            CallMethodOnPlugin(
-                (plugin) => plugin.CallInstanceReordered(instance),
-                nameof(InstanceDelete)
-            );
+            CallMethodOnPlugin(plugin => plugin.CallInstanceReordered(instance));
         }
 
-        internal void BehaviorReferencesChanged(ElementSave elementSave)
+        internal bool GetIfExtensionIsValid(string extension, ElementSave parentElement, InstanceSave instance, string changedMember)
         {
-            CallMethodOnPlugin(
-                (plugin) => plugin.CallBehaviorReferencesChanged(elementSave));
+            bool toReturn = false;
+            CallMethodOnPlugin(plugin =>
+            {
+                var result = plugin.CallIsExtensionValid(extension, parentElement, instance, changedMember);
+                if(result)
+                {
+                    toReturn = true;
+                }
+            });
+
+            return toReturn;
         }
+
+        internal void BehaviorReferencesChanged(ElementSave elementSave) => 
+            CallMethodOnPlugin(plugin => plugin.CallBehaviorReferencesChanged(elementSave));
 
         internal void WireframeRefreshed()
         {
