@@ -515,10 +515,34 @@ namespace Gum.Wireframe
             }
         }
 
+        ChildrenLayout childrenLayout;
         public ChildrenLayout ChildrenLayout
         {
-            get;
-            set;
+            get => childrenLayout;
+            set
+            {
+                if (value != childrenLayout)
+                {
+                    childrenLayout = value; UpdateLayout();
+                }
+            }
+        }
+
+        float stackSpacing;
+        public float StackSpacing
+        {
+            get => stackSpacing;
+            set
+            {
+                if (stackSpacing != value)
+                {
+                    stackSpacing = value;
+                    if (ChildrenLayout != ChildrenLayout.Regular)
+                    {
+                        UpdateLayout();
+                    }
+                }
+            }
         }
 
         public float Rotation
@@ -1055,6 +1079,9 @@ namespace Gum.Wireframe
             }
         }
 
+        /// <summary>
+        /// Whether the texture address should wrap.
+        /// </summary>
         public bool Wrap
         {
             get
@@ -1452,7 +1479,7 @@ namespace Gum.Wireframe
 
                 if (this.mContainedObjectAsIpso == null)
                 {
-                    for(int i = 0; i < this.mWhatThisContains.Count; i++)
+                    for (int i = 0; i < this.mWhatThisContains.Count; i++)
                     {
                         canOneDimensionChangeOtherDimension = GetIfOneDimensionCanChangeOtherDimension(mWhatThisContains[i]);
 
@@ -1509,7 +1536,7 @@ namespace Gum.Wireframe
                 if (widthBeforeLayout != mContainedObjectAsIpso.Width ||
                     heightBeforeLayout != mContainedObjectAsIpso.Height)
                 {
-                    if(!isInSizeChange)
+                    if (!isInSizeChange)
                     {
                         isInSizeChange = true;
                         SizeChanged?.Invoke(this, null);
@@ -1917,7 +1944,7 @@ namespace Gum.Wireframe
             }
             if (this.mContainedObjectAsIpso == null)
             {
-                for(int i = 0; i < mWhatThisContains.Count; i++)
+                for (int i = 0; i < mWhatThisContains.Count; i++)
                 {
                     var child = mWhatThisContains[i];
                     // Victor Chelaru
@@ -2136,7 +2163,7 @@ namespace Gum.Wireframe
             // First get the position of the object without considering if this object should be wrapped.
             // This call may result in the object being placed outside of its parent's bounds. In which case
             // it will be wrapped....later
-            UpdatePosition(parentWidth, parentHeight, isParentFlippedHorizontally, wrap: false, xOrY: xOrY, parentRotation: parentAbsoluteRotation);
+            UpdatePosition(parentWidth, parentHeight, isParentFlippedHorizontally, shouldWrap: false, xOrY: xOrY, parentRotation: parentAbsoluteRotation);
 
             var effectiveParent = EffectiveParentGue;
 
@@ -2155,11 +2182,11 @@ namespace Gum.Wireframe
 
             if (shouldWrap)
             {
-                UpdatePosition(parentWidth, parentHeight, isParentFlippedHorizontally, wrap: true, xOrY: xOrY, parentRotation: parentAbsoluteRotation);
+                UpdatePosition(parentWidth, parentHeight, isParentFlippedHorizontally, shouldWrap, xOrY: xOrY, parentRotation: parentAbsoluteRotation);
             }
         }
 
-        private void UpdatePosition(float parentWidth, float parentHeight, bool isParentFlippedHorizontally, bool wrap, XOrY? xOrY, float parentRotation)
+        private void UpdatePosition(float parentWidth, float parentHeight, bool isParentFlippedHorizontally, bool shouldWrap, XOrY? xOrY, float parentRotation)
         {
 #if DEBUG
             if (float.IsPositiveInfinity(parentHeight) || float.IsNegativeInfinity(parentHeight))
@@ -2180,7 +2207,7 @@ namespace Gum.Wireframe
 
             bool canWrap = EffectiveParentGue != null && EffectiveParentGue.WrapsChildren;
 
-            GetParentOffsets(canWrap, wrap, parentWidth, parentHeight, isParentFlippedHorizontally,
+            GetParentOffsets(canWrap, shouldWrap, parentWidth, parentHeight, isParentFlippedHorizontally,
                 out parentOriginOffsetX, out parentOriginOffsetY,
                 out wasHandledX, out wasHandledY);
 
@@ -2253,13 +2280,12 @@ namespace Gum.Wireframe
             bool throwaway1;
             bool throwaway2;
 
-            bool wrap = false;
-            bool shouldWrap = false;
+            bool canWrap = false;
             var effectiveParent = EffectiveParentGue;
             bool isParentFlippedHorizontally = false;
             if (effectiveParent != null)
             {
-                wrap = effectiveParent.Wrap;
+                canWrap = effectiveParent.WrapsChildren;
                 isParentFlippedHorizontally = effectiveParent.GetAbsoluteFlipHorizontal();
             }
 
@@ -2269,7 +2295,7 @@ namespace Gum.Wireframe
             var oldIndex = StackedRowOrColumnIndex;
 
 
-            GetParentOffsets(wrap, false, parentWidth, parentHeight, isParentFlippedHorizontally, out parentOriginOffsetX, out parentOriginOffsetY,
+            GetParentOffsets(canWrap, false, parentWidth, parentHeight, isParentFlippedHorizontally, out parentOriginOffsetX, out parentOriginOffsetY,
                 out throwaway1, out throwaway2);
 
             StackedRowOrColumnIndex = oldIndex;
@@ -2304,7 +2330,7 @@ namespace Gum.Wireframe
                 float whatToStackAfterX;
                 float whatToStackAfterY;
 
-                IPositionedSizedObject whatToStackAfter = GetWhatToStackAfter(canWrap, shouldWrap, out whatToStackAfterX, out whatToStackAfterY);
+                var whatToStackAfter = GetWhatToStackAfter(canWrap, shouldWrap, out whatToStackAfterX, out whatToStackAfterY);
 
 
 
@@ -2313,7 +2339,8 @@ namespace Gum.Wireframe
 
                 if (whatToStackAfter != null)
                 {
-                    switch (this.EffectiveParentGue.ChildrenLayout)
+                    var effectiveParent = this.EffectiveParentGue;
+                    switch (effectiveParent.ChildrenLayout)
                     {
                         case Gum.Managers.ChildrenLayout.TopToBottomStack:
 
@@ -2329,6 +2356,7 @@ namespace Gum.Wireframe
 
                             break;
                         case Gum.Managers.ChildrenLayout.LeftToRightStack:
+
                             xRelativeTo = whatToStackAfterX;
                             wasHandledX = true;
 
@@ -2353,7 +2381,7 @@ namespace Gum.Wireframe
             return this.EffectiveParentGue != null && this.EffectiveParentGue.ChildrenLayout != Gum.Managers.ChildrenLayout.Regular;
         }
 
-        private IPositionedSizedObject GetWhatToStackAfter(bool canWrap, bool shouldWrap, out float whatToStackAfterX, out float whatToStackAfterY)
+        private GraphicalUiElement GetWhatToStackAfter(bool canWrap, bool shouldWrap, out float whatToStackAfterX, out float whatToStackAfterY)
         {
             var parentGue = this.EffectiveParentGue;
 
@@ -2393,7 +2421,7 @@ namespace Gum.Wireframe
                 {
                     if ((siblings[index] as IVisible).Visible)
                     {
-                        whatToStackAfter = siblings[index] as IPositionedSizedObject;
+                        whatToStackAfter = siblings[index] as GraphicalUiElement;
                         break;
                     }
                     index--;
@@ -2419,7 +2447,7 @@ namespace Gum.Wireframe
                         whatToStackAfterY = 0;
                         for (int i = 0; i < thisRowOrColumnIndex; i++)
                         {
-                            whatToStackAfterY += parentGue.StackedRowOrColumnDimensions[i];
+                            whatToStackAfterY += parentGue.StackedRowOrColumnDimensions[i] + parentGue.StackSpacing;
                         }
                     }
                     else // top to bottom stack
@@ -2428,7 +2456,7 @@ namespace Gum.Wireframe
                         whatToStackAfterX = 0;
                         for (int i = 0; i < thisRowOrColumnIndex; i++)
                         {
-                            whatToStackAfterX += parentGue.StackedRowOrColumnDimensions[i];
+                            whatToStackAfterX += parentGue.StackedRowOrColumnDimensions[i] + parentGue.StackSpacing;
                         }
                     }
 
@@ -2439,24 +2467,25 @@ namespace Gum.Wireframe
                     if (whatToStackAfter != null)
                     {
                         thisRowOrColumnIndex = (whatToStackAfter as GraphicalUiElement).StackedRowOrColumnIndex;
+
                         this.StackedRowOrColumnIndex = (whatToStackAfter as GraphicalUiElement).StackedRowOrColumnIndex;
                         if (parentGue.ChildrenLayout == Gum.Managers.ChildrenLayout.LeftToRightStack)
                         {
-                            whatToStackAfterX = whatToStackAfter.X + whatToStackAfter.Width;
+                            whatToStackAfterX = whatToStackAfter.X + whatToStackAfter.Width + parentGue.StackSpacing;
 
                             whatToStackAfterY = 0;
                             for (int i = 0; i < thisRowOrColumnIndex; i++)
                             {
-                                whatToStackAfterY += parentGue.StackedRowOrColumnDimensions[i];
+                                whatToStackAfterY += parentGue.StackedRowOrColumnDimensions[i] + parentGue.StackSpacing;
                             }
                         }
                         else
                         {
-                            whatToStackAfterY = whatToStackAfter.Y + whatToStackAfter.Height;
+                            whatToStackAfterY = whatToStackAfter.Y + whatToStackAfter.Height + parentGue.StackSpacing;
                             whatToStackAfterX = 0;
                             for (int i = 0; i < thisRowOrColumnIndex; i++)
                             {
-                                whatToStackAfterX += parentGue.StackedRowOrColumnDimensions[i];
+                                whatToStackAfterX += parentGue.StackedRowOrColumnDimensions[i] + parentGue.StackSpacing;
                             }
                         }
 
@@ -2469,7 +2498,7 @@ namespace Gum.Wireframe
                 StackedRowOrColumnIndex = 0;
             }
 
-            return whatToStackAfter;
+            return whatToStackAfter as GraphicalUiElement;
         }
 
         private void AdjustOffsetsByOrigin(bool isParentFlippedHorizontally, ref float unitOffsetX, ref float unitOffsetY)
@@ -2729,7 +2758,7 @@ namespace Gum.Wireframe
 
             #region ScreenPixel
 
-            else if(mHeightUnit == DimensionUnitType.ScreenPixel)
+            else if (mHeightUnit == DimensionUnitType.ScreenPixel)
             {
                 var effectiveManagers = this.EffectiveManagers;
                 if (effectiveManagers != null)
@@ -2767,7 +2796,7 @@ namespace Gum.Wireframe
 #endif
                     }
 
-                    for(int i = 0; i < Children.Count; i++)
+                    for (int i = 0; i < Children.Count; i++)
                     {
                         var element = Children[i] as GraphicalUiElement;
                         var childLayout = element.GetChildLayoutType(XOrY.Y, this);
@@ -2789,7 +2818,7 @@ namespace Gum.Wireframe
                 }
                 else
                 {
-                    for(int i = 0; i < mWhatThisContains.Count; i++)
+                    for (int i = 0; i < mWhatThisContains.Count; i++)
                     {
                         var element = mWhatThisContains[i];
                         var childLayout = element.GetChildLayoutType(XOrY.Y, this);
@@ -2981,7 +3010,7 @@ namespace Gum.Wireframe
 
                 if (mParent != null)
                 {
-                    for(int i = 0; i < mParent.Children.Count; i++)
+                    for (int i = 0; i < mParent.Children.Count; i++)
                     {
                         var child = mParent.Children[i];
                         if (child != this && child is GraphicalUiElement gue)
@@ -3007,7 +3036,7 @@ namespace Gum.Wireframe
                 float totalRatio = 0;
                 if (mParent != null)
                 {
-                    for(int i = 0; i < mParent.Children.Count; i++)
+                    for (int i = 0; i < mParent.Children.Count; i++)
                     {
                         var child = mParent.Children[i];
                         if (child is GraphicalUiElement gue && gue.HeightUnits == DimensionUnitType.Ratio)
@@ -3113,7 +3142,7 @@ namespace Gum.Wireframe
 #endif
                     }
 
-                    for(int i = 0; i < this.Children.Count; i++)
+                    for (int i = 0; i < this.Children.Count; i++)
                     {
                         var element = this.Children[i] as GraphicalUiElement;
                         var childLayout = element.GetChildLayoutType(XOrY.X, this);
@@ -3136,7 +3165,7 @@ namespace Gum.Wireframe
                 }
                 else
                 {
-                    for(int i = 0; i < mWhatThisContains.Count; i++)
+                    for (int i = 0; i < mWhatThisContains.Count; i++)
                     {
                         var element = mWhatThisContains[i];
                         var childLayout = element.GetChildLayoutType(XOrY.X, this);
@@ -3317,7 +3346,7 @@ namespace Gum.Wireframe
 
                 if (mParent != null)
                 {
-                    for(int i = 0; i < mParent.Children.Count; i++)
+                    for (int i = 0; i < mParent.Children.Count; i++)
                     {
                         var child = mParent.Children[i];
                         if (child != this && child is GraphicalUiElement gue)
@@ -3343,7 +3372,7 @@ namespace Gum.Wireframe
                 float totalRatio = 0;
                 if (mParent != null)
                 {
-                    for(int i = 0; i < mParent.Children.Count; i++)
+                    for (int i = 0; i < mParent.Children.Count; i++)
                     {
                         var child = mParent.Children[i];
                         if (child is GraphicalUiElement gue && gue.WidthUnits == DimensionUnitType.Ratio)
@@ -3904,7 +3933,7 @@ namespace Gum.Wireframe
 
         public IPositionedSizedObject GetChildByName(string name)
         {
-            for(int i = 0; i < Children.Count; i++)
+            for (int i = 0; i < Children.Count; i++)
             {
                 var child = Children[i];
                 if (child.Name == name)
@@ -4045,12 +4074,8 @@ namespace Gum.Wireframe
                         this.Rotation = (float)value;
                         toReturn = true;
                         break;
-                    case "Width":
-                        this.Width = (float)value;
-                        toReturn = true;
-                        break;
-                    case "Width Units":
-                        this.WidthUnits = (DimensionUnitType)value;
+                    case "StackSpacing":
+                        this.StackSpacing = (float)value;
                         toReturn = true;
                         break;
                     case "Texture Left":
@@ -4085,6 +4110,14 @@ namespace Gum.Wireframe
                         break;
                     case "Visible":
                         this.Visible = (bool)value;
+                        toReturn = true;
+                        break;
+                    case "Width":
+                        this.Width = (float)value;
+                        toReturn = true;
+                        break;
+                    case "Width Units":
+                        this.WidthUnits = (DimensionUnitType)value;
                         toReturn = true;
                         break;
                     case "X":
@@ -4925,14 +4958,14 @@ namespace Gum.Wireframe
 
             if (this.Children != null)
             {
-                for(int i = 0; i < this.Children.Count; i++)
+                for (int i = 0; i < this.Children.Count; i++)
                 {
                     (this.Children[i] as GraphicalUiElement).UpdateFontRecursive();
                 }
             }
             else
             {
-                for(int i = 0; i < this.mWhatThisContains.Count; i++)
+                for (int i = 0; i < this.mWhatThisContains.Count; i++)
                 {
                     mWhatThisContains[i].UpdateFontRecursive();
                 }
@@ -5209,7 +5242,9 @@ namespace Gum.Wireframe
         public void AddCategory(DataTypes.Variables.StateSaveCategory category)
         {
             //mCategories[category.Name] = category;
-            mCategories.Add(category.Name, category);
+            // Why call "Add"? This makes Gum crash if there are duplicate catgories...
+            //mCategories.Add(category.Name, category);
+            mCategories[category.Name] = category;
         }
 
         public void AddStates(List<DataTypes.Variables.StateSave> list)
