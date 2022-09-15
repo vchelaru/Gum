@@ -256,10 +256,7 @@ namespace SkiaGum.Renderables
 
         }
 
-        public void PreRender()
-        {
-            int m = 3;
-        }
+        public void PreRender() {}
 
         public void Render(SKCanvas canvas)
         {

@@ -2807,6 +2807,11 @@ namespace Gum.Wireframe
 
                             if (this.ChildrenLayout == ChildrenLayout.TopToBottomStack)
                             {
+                                // The first item in the stack doesn't consider the stack spacing, but all subsequent ones do:
+                                if(i != 0)
+                                {
+                                    maxHeight += StackSpacing;
+                                }
                                 maxHeight += elementHeight;
                             }
                             else
@@ -2829,6 +2834,11 @@ namespace Gum.Wireframe
                             var elementHeight = element.GetRequiredParentHeight();
                             if (this.ChildrenLayout == ChildrenLayout.TopToBottomStack)
                             {
+                                // The first item in the stack doesn't consider the stack spacing, but all subsequent ones do:
+                                if (i != 0)
+                                {
+                                    maxHeight += StackSpacing;
+                                }
                                 maxHeight += elementHeight;
                             }
                             else
@@ -3154,6 +3164,11 @@ namespace Gum.Wireframe
 
                             if (this.ChildrenLayout == ChildrenLayout.LeftToRightStack)
                             {
+                                // The first item in the stack doesn't consider the stack spacing, but all subsequent ones do:
+                                if (i != 0)
+                                {
+                                    maxWidth += StackSpacing;
+                                }
                                 maxWidth += elementWidth;
                             }
                             else
@@ -3177,6 +3192,11 @@ namespace Gum.Wireframe
 
                             if (this.ChildrenLayout == ChildrenLayout.LeftToRightStack)
                             {
+                                // The first item in the stack doesn't consider the stack spacing, but all subsequent ones do:
+                                if (i != 0)
+                                {
+                                    maxWidth += StackSpacing;
+                                }
                                 maxWidth += elementWidth;
                             }
                             else
