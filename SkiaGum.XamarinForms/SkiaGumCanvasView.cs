@@ -57,6 +57,10 @@ namespace SkiaGum
         public static float GlobalScale { get; set; } = 1;
 
 
+        public static event Action<BindableGraphicalUiElement> ElementClicked;
+        public static event Action<BindableGraphicalUiElement> ElementPushed;
+
+
         #endregion
 
         public SkiaGumCanvasView()
@@ -255,6 +259,9 @@ namespace SkiaGum
                     {
                         itemPushed = clickableElement;
                         await clickableElement.PushedAsync(x, y);
+
+
+                        ElementPushed?.Invoke(clickableElement);
                     }
                     finally
                     {
@@ -275,6 +282,8 @@ namespace SkiaGum
                     try
                     {
                         await clickableElement.ClickedAsync();
+
+                        ElementClicked?.Invoke(clickableElement);
                     }
                     finally
                     {

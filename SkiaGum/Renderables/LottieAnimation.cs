@@ -3,32 +3,30 @@ using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using SkiaGum.GueDeriving;
 using SkiaSharp;
-using SkiaSharp.Extended.Svg;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Text;
-using SKSvg = SkiaSharp.Extended.Svg.SKSvg;
 
-namespace SkiaGum
+namespace SkiaGum.Renderables
 {
-    public class VectorSprite : IRenderableIpso, IVisible
+    internal class LottieAnimation : IRenderableIpso, IVisible
     {
-        #region Fields/Properties
-
-        public SKColor Color
-        {
-            get; set;
-        } = SKColors.White;
-
-        Vector2 Position;
-        IRenderableIpso mParent;
-
-        public SKSvg Texture
+        public SkiaSharp.Skottie.Animation Animation
         {
             get; set;
         }
 
+        public object Tag { get; set; }
+
+
+        ObservableCollection<IRenderableIpso> mChildren;
+        public ObservableCollection<IRenderableIpso> Children
+        {
+            get { return mChildren; }
+        }
+
+        IRenderableIpso mParent;
         public IRenderableIpso Parent
         {
             get { return mParent; }
@@ -49,14 +47,7 @@ namespace SkiaGum
             }
         }
 
-        public object Tag { get; set; }
-
-
-        ObservableCollection<IRenderableIpso> mChildren;
-        public ObservableCollection<IRenderableIpso> Children
-        {
-            get { return mChildren; }
-        }
+        Vector2 Position;
 
         public float X
         {
@@ -95,41 +86,6 @@ namespace SkiaGum
 
         public bool Wrap => false;
 
-        public int Alpha
-        {
-            get => Color.Alpha;
-            set
-            {
-                this.Color = new SKColor(this.Color.Red, this.Color.Green, this.Color.Blue, (byte)value);
-            }
-        }
-
-        public int Blue
-        {
-            get => Color.Blue;
-            set
-            {
-                this.Color = new SKColor(this.Color.Red, this.Color.Green, (byte)value, this.Color.Alpha);
-            }
-        }
-
-        public int Green
-        {
-            get => Color.Green;
-            set
-            {
-                this.Color = new SKColor(this.Color.Red, (byte)value, this.Color.Blue, this.Color.Alpha);
-            }
-        }
-
-        public int Red
-        {
-            get => Color.Red;
-            set
-            {
-                this.Color = new SKColor((byte)value, this.Color.Green, this.Color.Blue, this.Color.Alpha);
-            }
-        }
 
         public ColorOperation ColorOperation { get; set; } = ColorOperation.Modulate;
 
@@ -145,22 +101,20 @@ namespace SkiaGum
             set;
         }
 
-        #endregion
+        void IRenderableIpso.SetParentDirect(IRenderableIpso parent) => mParent = parent;
 
-        public VectorSprite()
+        public LottieAnimation()
         {
-            Width = 32;
-            Height = 32;
-            this.Visible = true;
             mChildren = new ObservableCollection<IRenderableIpso>();
-
         }
+
+        public void PreRender() { }
 
         public void Render(SKCanvas canvas)
         {
-            if (AbsoluteVisible && Texture != null)
+            if(AbsoluteVisible && Animation != null)
             {
-                var textureBox = Texture.ViewBox;
+                var textureBox = Animation.Size;
                 var textureWidth = textureBox.Width;
                 var textureHeight = textureBox.Height;
 
@@ -178,38 +132,9 @@ namespace SkiaGum
                 SKMatrix.Concat(
                     ref result, translateMatrix, result);
 
-                // Currently this supports "multiply". Other color operations could be supported...
-                if (Color.Red != 255 || Color.Green != 255 || Color.Blue != 255 || Color.Alpha != 255)
-                {
-                    var paint = new SKPaint() { Color = Color };
-                    var redRatio = Color.Red / 255.0f;
-                    var greenRatio = Color.Green / 255.0f;
-                    var blueRatio = Color.Blue / 255.0f;
-
-                    paint.ColorFilter =
-                        SKColorFilter.CreateColorMatrix(new float[]
-                        {
-                        redRatio   , 0            , 0        , 0, 0,
-                        0,           greenRatio   , 0        , 0, 0,
-                        0,           0            , blueRatio, 0, 0,
-                        0,           0            , 0        , 1, 0
-                        });
-
-                    using (paint)
-                    {
-                        canvas.DrawPicture(Texture.Picture, ref result, paint);
-                    }
-                }
-                else
-                {
-                    canvas.DrawPicture(Texture.Picture, ref result);
-                }
+                Animation.Render(canvas, new SKRect(0, 0, 1, 1));
             }
         }
-
-        public void PreRender() { }
-
-        void IRenderableIpso.SetParentDirect(IRenderableIpso parent) => mParent = parent;
 
         #region IVisible Implementation
 
