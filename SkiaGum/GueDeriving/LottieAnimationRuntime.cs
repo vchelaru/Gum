@@ -47,11 +47,19 @@ namespace SkiaGum.GueDeriving
             set => ContainedLottieAnimation.Animation = value;
         }
 
+        public bool Loops
+        {
+            get => ContainedLottieAnimation.Loops;
+            set => ContainedLottieAnimation.Loops = value;
+        }
+
         //public bool IsDimmed
         //{
         //    get => ContainedCircle.IsDimmed;
         //    set => ContainedCircle.IsDimmed = value;
         //}
+
+        public void Restart() => ContainedLottieAnimation.TimeAnimationStarted = DateTime.Now;
 
         public LottieAnimationRuntime(bool fullInstantiation = true)
         {
@@ -59,6 +67,7 @@ namespace SkiaGum.GueDeriving
             {
                 SetContainedObject(new LottieAnimation());
                 //this.Color = SKColors.White;
+                this.Visible = true;
                 Width = 100;
                 Height = 100;
             }

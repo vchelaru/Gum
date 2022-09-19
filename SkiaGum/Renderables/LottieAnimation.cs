@@ -86,6 +86,15 @@ namespace SkiaGum.Renderables
 
         public bool Wrap => false;
 
+        public DateTime TimeAnimationStarted
+        {
+            get;
+            set;
+        }
+        public bool Loops
+        {
+            get; set;
+        }
 
         public ColorOperation ColorOperation { get; set; } = ColorOperation.Modulate;
 
@@ -106,33 +115,53 @@ namespace SkiaGum.Renderables
         public LottieAnimation()
         {
             mChildren = new ObservableCollection<IRenderableIpso>();
+            Loops = true;
+            TimeAnimationStarted = DateTime.Now;
         }
 
         public void PreRender() { }
 
         public void Render(SKCanvas canvas)
         {
-            if(AbsoluteVisible && Animation != null)
+            if (AbsoluteVisible && Animation != null)
             {
-                var textureBox = Animation.Size;
-                var textureWidth = textureBox.Width;
-                var textureHeight = textureBox.Height;
+                //var textureBox = Animation.Size;
+                //var textureWidth = textureBox.Width;
+                //var textureHeight = textureBox.Height;
 
-                var scaleX = this.Width / textureWidth;
-                var scaleY = this.Height / textureHeight;
+                //var scaleX = this.Width / textureWidth;
+                //var scaleY = this.Height / textureHeight;
 
-                SKMatrix scaleMatrix = SKMatrix.MakeScale(scaleX, scaleY);
-                // Gum uses counter clockwise rotation, Skia uses clockwise, so invert:
-                SKMatrix rotationMatrix = SKMatrix.MakeRotationDegrees(-Rotation);
-                SKMatrix translateMatrix = SKMatrix.MakeTranslation(this.GetAbsoluteX(), this.GetAbsoluteY());
-                SKMatrix result = SKMatrix.MakeIdentity();
+                //SKMatrix scaleMatrix = SKMatrix.MakeScale(scaleX, scaleY);
+                //// Gum uses counter clockwise rotation, Skia uses clockwise, so invert:
+                //SKMatrix rotationMatrix = SKMatrix.MakeRotationDegrees(-Rotation);
+                //SKMatrix translateMatrix = SKMatrix.MakeTranslation(this.GetAbsoluteX(), this.GetAbsoluteY());
+                //SKMatrix result = SKMatrix.MakeIdentity();
 
-                SKMatrix.Concat(
-                    ref result, rotationMatrix, scaleMatrix);
-                SKMatrix.Concat(
-                    ref result, translateMatrix, result);
+                //SKMatrix.Concat(
+                //    ref result, rotationMatrix, scaleMatrix);
+                //SKMatrix.Concat(
+                //    ref result, translateMatrix, result);
 
-                Animation.Render(canvas, new SKRect(0, 0, 1, 1));
+                var secondsSinceStarted = (DateTime.Now - TimeAnimationStarted).TotalSeconds;
+
+                if (Loops)
+                {
+                    secondsSinceStarted = secondsSinceStarted % Animation.Duration.TotalSeconds;
+                }
+                else
+                {
+                    secondsSinceStarted = Math.Min(secondsSinceStarted, Animation.Duration.TotalSeconds);
+                }
+
+                Animation.SeekFrameTime(secondsSinceStarted);
+
+
+                var absoluteX = this.GetAbsoluteX();
+                var absoluteY = this.GetAbsoluteY();
+                var boundingRect = new SKRect(absoluteX, absoluteY, absoluteX + this.Width, absoluteY + this.Height);
+
+                Animation.Render(canvas, boundingRect);
             }
         }
 
