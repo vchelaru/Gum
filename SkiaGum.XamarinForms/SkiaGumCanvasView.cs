@@ -253,42 +253,49 @@ namespace SkiaGum
 
             if (clickableElement != null)
             {
-                if (await CanProceed())
+                await TryPushElement(x, y, clickableElement);
+            }
+        }
+
+        public async Task TryPushElement(float x, float y, BindableGraphicalUiElement clickableElement)
+        {
+            if (await CanProceed())
+            {
+                try
                 {
-                    try
-                    {
-                        itemPushed = clickableElement;
-                        await clickableElement.PushedAsync(x, y);
-
-
-                        ElementPushed?.Invoke(clickableElement);
-                    }
-                    finally
-                    {
-                        ReleaseSemaphore();
-                    }
+                    itemPushed = clickableElement;
+                    await clickableElement.PushedAsync(x, y);
+                    ElementPushed?.Invoke(clickableElement);
+                }
+                finally
+                {
+                    ReleaseSemaphore();
                 }
             }
         }
 
-        private async Task TryClickOnContainedGumObjects(float x, float y)
+        public async Task TryClickOnContainedGumObjects(float x, float y)
         {
             var clickableElement = FindElement(x, y, GumElementsInternal, item => item.ClickedAsync != null);
 
             if (clickableElement != null)
             {
-                if (await CanProceed())
-                {
-                    try
-                    {
-                        await clickableElement.ClickedAsync();
+                await TryClickElement(clickableElement);
+            }
+        }
 
-                        ElementClicked?.Invoke(clickableElement);
-                    }
-                    finally
-                    {
-                        ReleaseSemaphore();
-                    }
+        public async Task TryClickElement(BindableGraphicalUiElement clickableElement)
+        {
+            if (await CanProceed())
+            {
+                try
+                {
+                    await clickableElement.ClickedAsync();
+                    ElementClicked?.Invoke(clickableElement);
+                }
+                finally
+                {
+                    ReleaseSemaphore();
                 }
             }
         }
