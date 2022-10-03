@@ -53,7 +53,7 @@ namespace RenderingLibrary
         }
 
         /// <summary>
-        /// Returns the top-left world X coordinate of the argument RenderableIpso.
+        /// Returns the top-left world X coordinate of the argument RenderableIpso in screen space.
         /// </summary>
         /// <param name="ipso">The RenderableIpso to return the value for.</param>
         /// <returns>The world X coordinate.</returns>
@@ -82,7 +82,7 @@ namespace RenderingLibrary
         }
 
         /// <summary>
-        /// Returns the world Y coordinate of the argument RenderableIpso.
+        /// Returns the world Y coordinate of the argument RenderableIpso in screen space.
         /// </summary>
         /// <param name="ipso">The RenderableIpso to return the value for.</param>
         /// <returns>The world Y coordinate.</returns>

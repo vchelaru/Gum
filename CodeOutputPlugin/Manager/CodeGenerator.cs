@@ -627,6 +627,11 @@ namespace CodeOutputPlugin.Manager
                     leftMargin = MathFunctions.RoundToInt(x - width/2);
                     rightMargin = MathFunctions.RoundToInt(-x - width/2);
                 }
+                else if(xOrigin == HorizontalAlignment.Right)
+                {
+                    rightMargin = MathFunctions.RoundToInt(-x - width);
+                    leftMargin = MathFunctions.RoundToInt(x - width);
+                }
                 else
                 {
                     // we'll achieve margins with offsets
@@ -677,16 +682,31 @@ namespace CodeOutputPlugin.Manager
 
             // special case
             // If we're using the center with x=0 we'll pretend it's the same as 50% 
-            if (xUnits == PositionUnitType.PixelsFromCenterX &&
+            if (xUnits == PositionUnitType.PixelsFromCenterX
                 // why does the width unit even matter? Should be the same regardless of width unit...
                 //widthUnits == DimensionUnitType.Absolute && 
-                xOrigin == HorizontalAlignment.Center)
+                )
             {
-                if (x == 0)
+                // Always do this (instead of only when X==0), because the margins will offset from center
+                //if (x == 0)
+                // treat it like it's 50%:
+                x = .5f;
+                proportionalFlags.Add(XProportionalFlag);
+                if(xOrigin == HorizontalAlignment.Left)
                 {
-                    // treat it like it's 50%:
-                    x = .5f;
-                    proportionalFlags.Add(XProportionalFlag);
+                    if(widthUnits == DimensionUnitType.Absolute)
+                    {
+                        leftMargin += (int)(width/2.0f);
+                        rightMargin -= (int)(width/2.0f);
+                    }
+                }
+                else if(xOrigin == HorizontalAlignment.Right)
+                {
+                    if(widthUnits == DimensionUnitType.Absolute)
+                    {
+                        leftMargin -= (int)(width / 2.0f);
+                        rightMargin += (int)(width/2.0f);
+                    }
                 }
             }
             // Xamarin forms uses a weird anchoring system to combine both position and anchor into one value. Gum splits those into two values
@@ -713,6 +733,23 @@ namespace CodeOutputPlugin.Manager
                 {
                     leftMargin = MathFunctions.RoundToInt(x);
                     x = 0;
+                }
+
+                if (xOrigin == HorizontalAlignment.Center)
+                {
+                    if (widthUnits == DimensionUnitType.Absolute)
+                    {
+                        leftMargin -= (int)(width / 2.0f);
+                        rightMargin += (int)(width / 2.0f);
+                    }
+                }
+                else if (xOrigin == HorizontalAlignment.Right)
+                {
+                    if (widthUnits == DimensionUnitType.Absolute)
+                    {
+                        leftMargin -= (int)(width);
+                        rightMargin += (int)(width);
+                    }
                 }
             }
             else if (xUnits == PositionUnitType.PixelsFromCenterX)
@@ -884,7 +921,9 @@ namespace CodeOutputPlugin.Manager
                 {
                     widthString = $"({widthString})";
                 }
-                else
+                // Vic asks - do we still want to do this? Isn't this handled by the margins above:
+                //else
+                else if(widthUnits != DimensionUnitType.RelativeToContainer)
                 {
                     widthString = $"({widthString} + {rightMargin})";
                 }
