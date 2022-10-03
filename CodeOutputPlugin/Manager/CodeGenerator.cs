@@ -690,8 +690,6 @@ namespace CodeOutputPlugin.Manager
                 // Always do this (instead of only when X==0), because the margins will offset from center
                 //if (x == 0)
                 // treat it like it's 50%:
-                x = .5f;
-                proportionalFlags.Add(XProportionalFlag);
                 if(xOrigin == HorizontalAlignment.Left)
                 {
                     if(widthUnits == DimensionUnitType.Absolute)
@@ -708,6 +706,15 @@ namespace CodeOutputPlugin.Manager
                         rightMargin += (int)(width/2.0f);
                     }
                 }
+
+                // we know the x units so just add:
+                leftMargin += (int)x;
+                rightMargin -= (int)x;
+
+                // add X before setting X to .5
+
+                x = .5f;
+                proportionalFlags.Add(XProportionalFlag);
             }
             // Xamarin forms uses a weird anchoring system to combine both position and anchor into one value. Gum splits those into two values
             // We need to convert from the gum units to xamforms units:
@@ -752,21 +759,30 @@ namespace CodeOutputPlugin.Manager
                     }
                 }
             }
-            else if (xUnits == PositionUnitType.PixelsFromCenterX)
-            {
-                if (widthUnits == DimensionUnitType.Absolute || widthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
-                {
-                    x = (CanvasWidth - width) / 2.0f;
-                }
-            }
             else if (xUnits == PositionUnitType.PixelsFromRight)
             {
                 if (xOrigin == HorizontalAlignment.Right)
                 {
                     rightMargin = MathFunctions.RoundToInt(-x);
-                    x = 1;
-                    proportionalFlags.Add(XProportionalFlag);
                 }
+                else if(xOrigin == HorizontalAlignment.Center)
+                {
+                    if (widthUnits == DimensionUnitType.Absolute)
+                    {
+                        rightMargin = MathFunctions.RoundToInt(-x - width/2);
+                        leftMargin = MathFunctions.RoundToInt(x + width/2);
+                    }
+                }
+                else if(xOrigin == HorizontalAlignment.Left)
+                {
+                    if (widthUnits == DimensionUnitType.Absolute)
+                    {
+                        rightMargin = MathFunctions.RoundToInt(-x - width);
+                        leftMargin = MathFunctions.RoundToInt(x + width);
+                    }
+                }
+                x = 1;
+                proportionalFlags.Add(XProportionalFlag);
             }
 
             #endregion
