@@ -177,7 +177,27 @@ namespace SkiaGum.GueDeriving
                 DropshadowBlurX = 0;
                 DropshadowBlurY = 3;
 
+                GradientType = GradientType.Linear;
 
+                GradientX1 = 0;
+                GradientX1Units = GeneralUnitType.PixelsFromSmall;
+
+                GradientY1 = 0;
+                GradientY1Units = GeneralUnitType.PixelsFromSmall;
+
+                Red1 = 255;
+                Green1 = 255;
+                Blue1 = 255;
+
+                GradientX2 = 100;
+                GradientX2Units = GeneralUnitType.PixelsFromSmall;
+
+                GradientY2 = 100;
+                GradientY2Units = GeneralUnitType.PixelsFromSmall;
+
+                Red2 = 255;
+                Green2 = 255;
+                Blue2 = 0;
             }
         }
 
