@@ -2393,10 +2393,11 @@ namespace CodeOutputPlugin.Manager
 
             var tabs = new String(' ', 4 * tabCount);
 
-            if (visualApi == VisualApi.XamarinForms && instance.BaseType?.EndsWith("/StackLayout") == true)
-            {
-                stringBuilder.AppendLine($"{tabs}{instance.Name}.Spacing = 0;");
-            }
+            // We used to do this, but now spacing is supported in FRB:
+            //if (visualApi == VisualApi.XamarinForms && instance.BaseType?.EndsWith("/StackLayout") == true)
+            //{
+            //    stringBuilder.AppendLine($"{tabs}{instance.Name}.Spacing = 0;");
+            //}
 
             var context = new CodeGenerationContext();
             context.Element = container;

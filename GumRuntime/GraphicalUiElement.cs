@@ -4420,6 +4420,7 @@ namespace Gum.Wireframe
                     handled = true;
                 }
             }
+#endif
 
             // If special case didn't work, let's try reflection
             if (!handled)
@@ -4443,7 +4444,6 @@ namespace Gum.Wireframe
                     }
                 }
             }
-#endif
         }
 
 #if MONOGAME || XNA4

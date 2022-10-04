@@ -159,6 +159,11 @@ namespace SkiaGum.GueDeriving
                 this.Color = SKColors.White;
                 Width = 100;
                 Height = 100;
+
+                // Dropshadow is false, but let's keep the alpha at 255 so if the user sets it to true, it "just works"
+                DropshadowAlpha = 255;
+                DropshadowOffsetY = 3;
+                DropshadowBlurY = 3;
             }
         }
     }
