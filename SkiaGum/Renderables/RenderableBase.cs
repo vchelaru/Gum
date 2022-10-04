@@ -413,7 +413,7 @@ namespace SkiaGum.Renderables
                     break;
             }
 
-            var effectiveGradientX2 = GradientX1;
+            var effectiveGradientX2 = GradientX2;
             switch (this.GradientX2Units)
             {
                 case GeneralUnitType.PixelsFromMiddle:

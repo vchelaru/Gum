@@ -805,7 +805,7 @@ namespace SkiaPlugin.Renderables
                     break;
             }
 
-            var effectiveGradientX2 = gradientX1;
+            var effectiveGradientX2 = gradientX2;
             switch (this.GradientX2Units)
             {
                 case PositionUnitType.PixelsFromLeft:
