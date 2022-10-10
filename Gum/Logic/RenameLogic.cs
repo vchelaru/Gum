@@ -45,10 +45,7 @@ namespace Gum.Logic
                     // Even though this gets called from the PropertyGrid methods which eventually
                     // save this object, we want to force a save here to make sure it worked.  If it
                     // does, then we're safe to delete the old files.
-                    if (ProjectManager.Self.GeneralSettingsFile.AutoSave)
-                    {
-                        ProjectManager.Self.SaveElement(elementSave);
-                    }
+                    GumCommands.Self.FileCommands.TryAutoSaveElement(elementSave);
 
                     if (isRenamingXmlFile)
                     {

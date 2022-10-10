@@ -190,10 +190,7 @@ namespace Gum.Logic
                     }
                 }
 
-                if (ProjectManager.Self.GeneralSettingsFile.AutoSave)
-                {
-                    ProjectManager.Self.SaveElement(sourceElement);
-                }
+                GumCommands.Self.FileCommands.TryAutoSaveElement(sourceElement);
                 WireframeObjectManager.Self.RefreshAll(true);
                 PropertyGridManager.Self.RefreshUI();
                 GumCommands.Self.GuiCommands.RefreshElementTreeView();

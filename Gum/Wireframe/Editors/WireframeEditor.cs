@@ -143,11 +143,7 @@ namespace Gum.Wireframe
         {
             var selectedElement = SelectedState.Self.SelectedElement;
 
-            if (ProjectManager.Self.GeneralSettingsFile.AutoSave)
-            {
-                ProjectManager.Self.SaveElement(selectedElement);
-            }
-
+            GumCommands.Self.FileCommands.TryAutoSaveElement(selectedElement);
 
             var stateSave = SelectedState.Self.SelectedStateSave;
 

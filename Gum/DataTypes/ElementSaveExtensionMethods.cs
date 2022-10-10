@@ -95,7 +95,7 @@ namespace Gum.DataTypes
             // Removing "State" simplifies things. We'll see if this causes problems anywhere...
             foreach(var variable in state.Variables.Where(item => item.Type?.EndsWith("State") == true))
             {
-                string name = variable.Name;
+                string name = variable.Type;
 
                 var withoutState = name.Substring(0, name.Length - "State".Length);
                 if (elementSave.Categories.Any(item => item.Name == withoutState))

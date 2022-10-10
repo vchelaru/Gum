@@ -107,11 +107,7 @@ namespace Gum.Logic
                 element.Instances.Insert(whereToInsert, whatToInsert);
 
                 RefreshInResponseToReorder(whatToMoveInFrontOf);
-
-                if (ProjectManager.Self.GeneralSettingsFile.AutoSave)
-                {
-                    ProjectManager.Self.SaveElement(element);
-                }
+                GumCommands.Self.FileCommands.TryAutoSaveElement(element);
             }
         }
         private void RefreshInResponseToReorder(InstanceSave instance)

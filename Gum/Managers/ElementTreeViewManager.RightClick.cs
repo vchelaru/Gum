@@ -122,7 +122,7 @@ namespace Gum.Managers
 
         void ForceSaveObjectClick(object sender, EventArgs e)
         {
-            ProjectManager.Self.SaveElement(SelectedState.Self.SelectedElement);
+            GumCommands.Self.FileCommands.ForceSaveElement(SelectedState.Self.SelectedElement);
         }
 
         void AddFolderClick(object sender, EventArgs e)
@@ -731,10 +731,8 @@ namespace Gum.Managers
                 Select(instanceSave, elementToAddTo);
             }
 
-            if (ProjectManager.Self.GeneralSettingsFile.AutoSave)
-            {
-                ProjectManager.Self.SaveElement(elementToAddTo);
-            }
+            GumCommands.Self.FileCommands.TryAutoSaveElement(elementToAddTo);
+
             return instanceSave;
         }
 

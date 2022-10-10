@@ -273,10 +273,8 @@ namespace Gum.Managers
 
         private static void RefreshAndSaveAfterInstanceRemoval(ElementSave selectedElement)
         {
-            if (ProjectManager.Self.GeneralSettingsFile.AutoSave)
-            {
-                ProjectManager.Self.SaveElement(selectedElement);
-            }
+            GumCommands.Self.FileCommands.TryAutoSaveElement(selectedElement);
+
             ElementSave elementToReselect = selectedElement;
             // Deselect before selecting the new
             // selected element and before refreshing everything

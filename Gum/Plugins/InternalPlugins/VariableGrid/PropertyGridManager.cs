@@ -1001,10 +1001,7 @@ namespace Gum.Managers
                         GumCommands.Self.GuiCommands.RefreshElementTreeView(SelectedState.Self.SelectedElement);
                     }
 
-                    if (ProjectManager.Self.GeneralSettingsFile.AutoSave)
-                    {
-                        ProjectManager.Self.SaveElement(SelectedState.Self.SelectedElement);
-                    }
+                    GumCommands.Self.FileCommands.TryAutoSaveElement(SelectedState.Self.SelectedElement);
                 }
             }
             else

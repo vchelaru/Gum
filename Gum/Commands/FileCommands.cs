@@ -45,7 +45,7 @@ namespace Gum.Commands
         {
             if (ProjectManager.Self.GeneralSettingsFile.AutoSave && elementSave != null)
             {
-                ProjectManager.Self.SaveElement(elementSave);
+                SaveElement(elementSave);
             }
         }
 
@@ -77,6 +77,90 @@ namespace Gum.Commands
             else
             {
                 MessageBox.Show("Cannot save project because of earlier errors");
+            }
+        }
+
+        internal void ForceSaveElement(ElementSave element)
+        {
+            SaveElement(element);
+        }
+
+        private void SaveElement(ElementSave elementSave)
+        {
+            if (elementSave.IsSourceFileMissing)
+            {
+                MessageBox.Show("Cannot save " + elementSave + " because its source file is missing");
+            }
+            else
+            {
+                bool succeeded = true;
+
+                UndoManager.Self.RecordUndo();
+
+                bool doesProjectNeedToSave = false;
+                bool shouldSave = ProjectManager.Self.AskUserForProjectNameIfNecessary(out doesProjectNeedToSave);
+
+                if (doesProjectNeedToSave)
+                {
+                    ProjectManager.Self.SaveProject();
+                }
+
+                if (shouldSave)
+                {
+                    PluginManager.Self.BeforeElementSave(elementSave);
+
+                    var fileName = elementSave.GetFullPathXmlFile();
+
+
+                    // if it's readonly, let's warn the user
+                    bool isReadOnly = ProjectManager.IsFileReadOnly(fileName.FullPath);
+
+                    if (isReadOnly)
+                    {
+                        ProjectManager.ShowReadOnlyDialog(fileName.FullPath);
+                    }
+                    else
+                    {
+                        FileWatchLogic.Self.IgnoreNextChangeOn(fileName.FullPath);
+
+                        const int maxNumberOfTries = 5;
+                        const int msBetweenSaves = 100;
+                        int numberOfTimesTried = 0;
+
+                        succeeded = false;
+                        Exception exception = null;
+
+                        while (numberOfTimesTried < maxNumberOfTries)
+                        {
+                            try
+                            {
+                                elementSave.Save(fileName.FullPath);
+                                succeeded = true;
+                                break;
+                            }
+                            catch (Exception e)
+                            {
+                                exception = e;
+                                System.Threading.Thread.Sleep(msBetweenSaves);
+                                numberOfTimesTried++;
+                            }
+                        }
+
+
+                        if (succeeded == false)
+                        {
+                            MessageBox.Show("Unknown error trying to save the file\n\n" + fileName + "\n\n" + exception.ToString());
+                            succeeded = false;
+                        }
+                    }
+                    if (succeeded)
+                    {
+                        OutputManager.Self.AddOutput("Saved " + elementSave + " to " + fileName);
+                        PluginManager.Self.AfterElementSave(elementSave);
+                    }
+                }
+
+                PluginManager.Self.Export(elementSave);
             }
         }
 
