@@ -3912,12 +3912,20 @@ namespace Gum.Wireframe
             }
             else
             {
-                for (int i = mWhatThisContains.Count - 1; i > -1; i--)
+                if (this.Children?.Count > 0 && mWhatThisContains.Count == 0)
                 {
-                    var item = mWhatThisContains[i];
-                    if (item.name == name)
+                    // This is a regular item that hasn't had its mWhatThisContains populated
+                    return this.GetChildByNameRecursively(name) as GraphicalUiElement;
+                }
+                else
+                {
+                    for (int i = mWhatThisContains.Count - 1; i > -1; i--)
                     {
-                        return item;
+                        var item = mWhatThisContains[i];
+                        if (item.name == name)
+                        {
+                            return item;
+                        }
                     }
                 }
             }

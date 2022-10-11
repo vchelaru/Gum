@@ -5,6 +5,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.ToolStates;
+using Newtonsoft.Json.Linq;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Math;
 using System;
@@ -96,6 +97,7 @@ namespace CodeOutputPlugin.Manager
 
         private static string ToTabs(int tabCount) => new string(' ', tabCount * 4);
 
+        public string Tabs => new string(' ', TabCount * 4);
 
         public int TabCount { get; internal set; }
     }
@@ -1883,13 +1885,13 @@ namespace CodeOutputPlugin.Manager
             var context = new CodeGenerationContext();
             context.Element = container;
 
-            FillWithVariablesInState(container, stateSave, stringBuilder, 0, context);
+            FillWithVariablesInState(stateSave, stringBuilder, 0, context);
 
             var code = stringBuilder.ToString();
             return code;
         }
 
-        private static void FillWithVariablesInState(ElementSave container, StateSave stateSave, StringBuilder stringBuilder, int tabCount, CodeGenerationContext context)
+        private static void FillWithVariablesInState(StateSave stateSave, StringBuilder stringBuilder, int tabCount, CodeGenerationContext context)
         {
             VariableSave[] variablesToConsider = GetVariablesToAssignOnState(stateSave);
 
@@ -1902,7 +1904,7 @@ namespace CodeOutputPlugin.Manager
 
                 if (instanceName != null)
                 {
-                    instance = container.GetInstance(instanceName);
+                    instance = context.Element.GetInstance(instanceName);
                 }
                 context.Instance = instance;
 
@@ -1910,7 +1912,7 @@ namespace CodeOutputPlugin.Manager
 
                 VisualApi visualApi = VisualApi.Gum;
 
-                var defaultState = container.DefaultState;
+                var defaultState = context.Element.DefaultState;
                 bool? isXamForms = false;
                 if (instance == null)
                 {
@@ -1930,7 +1932,7 @@ namespace CodeOutputPlugin.Manager
                 ElementSave baseElement = null;
                 if (instance == null)
                 {
-                    baseElement = Gum.Managers.ObjectFinder.Self.GetElementSave(container.BaseType) ?? container;
+                    baseElement = Gum.Managers.ObjectFinder.Self.GetElementSave(context.Element.BaseType) ?? context.Element;
                 }
                 else
                 {
@@ -1954,7 +1956,7 @@ namespace CodeOutputPlugin.Manager
                     // Now that they've been processed, we can process the remainder regularly
                     foreach (var variable in variablesForThisInstance)
                     {
-                        var codeLine = GetCodeLine(variable, container, visualApi, stateSave, context);
+                        var codeLine = GetCodeLine(variable, context.Element, visualApi, stateSave, context);
                         stringBuilder.AppendLine(ToTabs(tabCount) + codeLine);
                         var suffixCodeLine = GetSuffixCodeLine(instance, variable, visualApi);
                         if (!string.IsNullOrEmpty(suffixCodeLine))
@@ -1976,6 +1978,8 @@ namespace CodeOutputPlugin.Manager
             return variablesToConsider;
         }
 
+        #region States
+
         private static void FillWithStateEnums(ElementSave element, StringBuilder stringBuilder, int tabCount)
         {
             // for now we'll just do categories. We may need to get uncategorized at some point...
@@ -1992,8 +1996,8 @@ namespace CodeOutputPlugin.Manager
                     stringBuilder.AppendLine(ToTabs(tabCount) + $"{state.Name},");
                 }
 
-                stringBuilder.AppendLine(ToTabs(tabCount) + "}");
                 tabCount--;
+                stringBuilder.AppendLine(ToTabs(tabCount) + "}");
             }
         }
 
@@ -2032,7 +2036,9 @@ namespace CodeOutputPlugin.Manager
                     CodeGenerationContext context = new CodeGenerationContext();
                     context.Element = element;
                     context.ThisPrefix = "casted";
-                    CreateStateVariableAssignmentSwitch(element, stringBuilder, tabCount, category, context);
+                    context.TabCount = tabCount;
+
+                    CreateStateVariableAssignmentSwitch(stringBuilder, category, context);
 
                     // We may need to invalidate surfaces here if any objects that have variables assigned are skia canvases
                     foreach(var item in element.Instances)
@@ -2068,39 +2074,71 @@ namespace CodeOutputPlugin.Manager
                     stringBuilder.AppendLine(ToTabs(tabCount) + $"m{category.Name}State = value;");
                     CodeGenerationContext context = new CodeGenerationContext();
                     context.Element = element;
+                    context.TabCount = tabCount;
 
-                    CreateStateVariableAssignmentSwitch(element, stringBuilder, tabCount, category, context);
+                    AddAssignFromElement(context, stringBuilder);
+
+                    stringBuilder.AppendLine(context.Tabs + "if(!appliedDynamically)");
+                    stringBuilder.AppendLine(context.Tabs + "{");
+                    context.TabCount++;
+
+                    CreateStateVariableAssignmentSwitch(stringBuilder, category, context);
+
+                    context.TabCount--;
+                    stringBuilder.AppendLine(context.Tabs + "}");
 
 
-                    tabCount--;
-                    stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+                    context.TabCount--;
+                    stringBuilder.AppendLine(ToTabs(context.TabCount) + "}");
 
-                    tabCount--;
-                    stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+                    context.TabCount--;
+                    stringBuilder.AppendLine(ToTabs(context.TabCount) + "}");
                 }
 
             }
         }
 
-        private static void CreateStateVariableAssignmentSwitch(ElementSave element, StringBuilder stringBuilder, int tabCount, StateSaveCategory category, CodeGenerationContext context)
+        private static void AddAssignFromElement(CodeGenerationContext context, StringBuilder stringBuilder)
         {
-            stringBuilder.AppendLine(ToTabs(tabCount) + $"switch (value)");
-            stringBuilder.AppendLine(ToTabs(tabCount) + "{");
-            tabCount++;
+
+            stringBuilder.AppendLine(context.Tabs + "var appliedDynamically = false;");
+
+            stringBuilder.AppendLine(context.Tabs + "if (ShouldApplyDynamicStates)");
+            stringBuilder.AppendLine(context.Tabs + "{");
+            context.TabCount++;
+            stringBuilder.AppendLine(context.Tabs + "var foundState = ElementSave?.GetStateSaveRecursively(value.ToString());");
+            stringBuilder.AppendLine(context.Tabs + "if (foundState != null)");
+            stringBuilder.AppendLine(context.Tabs + "{");
+            context.TabCount++;
+            stringBuilder.AppendLine(context.Tabs + "this.ApplyState(foundState);");
+            stringBuilder.AppendLine(context.Tabs + "appliedDynamically = true;");
+            context.TabCount--;
+            stringBuilder.AppendLine(context.Tabs + "}");
+            context.TabCount--;
+            stringBuilder.AppendLine(context.Tabs + "}");
+        }
+
+        #endregion
+
+        private static void CreateStateVariableAssignmentSwitch(StringBuilder stringBuilder, StateSaveCategory category, CodeGenerationContext context)
+        {
+            stringBuilder.AppendLine(ToTabs(context.TabCount) + $"switch (value)");
+            stringBuilder.AppendLine(ToTabs(context.TabCount) + "{");
+            context.TabCount++;
 
             foreach (var state in category.States)
             {
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"case {category.Name}.{state.Name}:");
-                tabCount++;
+                stringBuilder.AppendLine(ToTabs(context.TabCount) + $"case {category.Name}.{state.Name}:");
+                context.TabCount++;
 
-                FillWithVariablesInState(element, state, stringBuilder, tabCount, context);
+                FillWithVariablesInState(state, stringBuilder, context.TabCount, context);
 
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"break;");
-                tabCount--;
+                stringBuilder.AppendLine(ToTabs(context.TabCount) + $"break;");
+                context.TabCount--;
             }
 
-            tabCount--;
-            stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+            context.TabCount--;
+            stringBuilder.AppendLine(ToTabs(context.TabCount) + "}");
         }
 
         private static void FillWithExposedVariables(ElementSave element, StringBuilder stringBuilder, VisualApi visualApi, int tabCount)

@@ -104,6 +104,9 @@ namespace SkiaGum.GueDeriving
             protected set;
         }
 
+        public static bool ShouldApplyDynamicStates;
+
+
         #endregion
 
         #region Events
