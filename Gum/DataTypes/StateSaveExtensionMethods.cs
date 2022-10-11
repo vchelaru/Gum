@@ -61,40 +61,50 @@ namespace Gum.DataTypes.Variables
                         value = foundVariable.Value;
                         wasFound = true;
                     }
+
+                    if (!wasFound)
+                    {
+                        var foundVariableList = stateSave.GetVariableListRecursive(variableName);
+                        if (foundVariableList?.ValueAsIList != null)
+                        {
+                            value = foundVariableList.ValueAsIList;
+                            wasFound = true;
+                        }
+                    }
                 }
-                
+
                 string nameInBase = variableName;
-                if ( StringFunctions.ContainsNoAlloc( variableName, '.'))
+                if (StringFunctions.ContainsNoAlloc(variableName, '.'))
                 {
                     // this variable is set on an instance, but we're going into the
                     // base type, so we want to get the raw variable and not the variable
                     // as tied to an instance.
                     nameInBase = variableName.Substring(nameInBase.IndexOf('.') + 1);
                 }
-                if(!wasFound)
+                if (!wasFound)
                 {
                     // it hasn't been found on this state directly or recursively, but maybe there is a variable
                     // set on the instance which then sets the value, so we need to follow those
                     var sourceObjectName = VariableSave.GetSourceObject(variableName);
                     var instance = parent?.Instances.FirstOrDefault(item => item.Name == sourceObjectName);
-                    if(instance != null)
+                    if (instance != null)
                     {
                         var statesSetOnThisInstance = stateSave.Variables.Where(item => item.IsState(parent) && item.SourceObject == sourceObjectName && item.SetsValue)
                             .ToArray();
 
                         var instanceType = ObjectFinder.Self.GetElementSave(instance);
 
-                        if(instanceType != null)
+                        if (instanceType != null)
                         {
-                            foreach(var instanceStateVariable in statesSetOnThisInstance)
+                            foreach (var instanceStateVariable in statesSetOnThisInstance)
                             {
                                 var matchingState = instanceType.AllStates.FirstOrDefault(item => item.Name == (string)instanceStateVariable.Value);
 
-                                if(matchingState != null)
+                                if (matchingState != null)
                                 {
                                     value = matchingState.GetValueRecursive(nameInBase);
                                     wasFound = value != null;
-                                    if(wasFound)
+                                    if (wasFound)
                                     {
                                         break;
                                     }
@@ -106,16 +116,16 @@ namespace Gum.DataTypes.Variables
 
                 if (!wasFound && parent != null)
                 {
-                    if(!string.IsNullOrEmpty(parent.BaseType))
+                    if (!string.IsNullOrEmpty(parent.BaseType))
                     {
                         // eventually pass the state, but for now use default
                         value = TryToGetValueFromInheritance(variableName, parent.BaseType);
                     }
 
-                    if(value == null)
+                    if (value == null)
                     {
                         ElementSave baseElement = GetBaseElementFromVariable(variableName, parent);
-                    
+
                         if (baseElement != null)
                         {
 
@@ -147,7 +157,7 @@ namespace Gum.DataTypes.Variables
 
             var baseElement = ObjectFinder.Self.GetElementSave(baseType);
 
-            if(baseElement?.DefaultState != null)
+            if (baseElement?.DefaultState != null)
             {
                 var variable = baseElement.DefaultState.GetVariableSave(variableName);
 
@@ -157,7 +167,7 @@ namespace Gum.DataTypes.Variables
                 }
             }
 
-            if(foundValue == null && !string.IsNullOrEmpty(baseElement?.BaseType))
+            if (foundValue == null && !string.IsNullOrEmpty(baseElement?.BaseType))
             {
                 foundValue = TryToGetValueFromInheritance(variableName, baseElement.BaseType);
             }
@@ -213,7 +223,7 @@ namespace Gum.DataTypes.Variables
                 // Is this thing the default?
                 ElementSave elementContainingState = stateSave.ParentContainer;
 
-                if(elementContainingState != null)
+                if (elementContainingState != null)
                 {
                     if (elementContainingState != null && stateSave != elementContainingState.DefaultState)
                     {
@@ -237,7 +247,7 @@ namespace Gum.DataTypes.Variables
                             isVariableDefinedOnThisInheritanceLevel = true;
                         }
                     }
-                    else if(!hasBaseType)
+                    else if (!hasBaseType)
                     {
                         isVariableDefinedOnThisInheritanceLevel = true;
                     }
@@ -250,16 +260,16 @@ namespace Gum.DataTypes.Variables
                         shouldGoToBaseType = canGoToBase;
                     }
 
-                    if(!shouldGoToDefaultState && !shouldGoToBaseType)
+                    if (!shouldGoToDefaultState && !shouldGoToBaseType)
                     {
                         shouldGoToInstanceComponent = isVariableOnInstance;
                     }
 
 
-                    if(shouldGoToDefaultState)
+                    if (shouldGoToDefaultState)
                     {
                         variableSave = elementContainingState.DefaultState.GetVariableSave(variableName);
-                        if(variableSave == null)
+                        if (variableSave == null)
                         {
                             shouldGoToBaseType = canGoToBase;
                         }
@@ -274,7 +284,7 @@ namespace Gum.DataTypes.Variables
                             variableSave = baseElement.DefaultState.GetVariableRecursive(variableName);
                         }
                     }
-                    else if(shouldGoToInstanceComponent)
+                    else if (shouldGoToInstanceComponent)
                     {
                         ElementSave instanceElement = null;
                         if (instance != null)
@@ -282,7 +292,7 @@ namespace Gum.DataTypes.Variables
                             instanceElement = ObjectFinder.Self.GetElementSave(instance);
                         }
 
-                        if(instanceElement != null)
+                        if (instanceElement != null)
                         {
                             variableSave = instanceElement.DefaultState.GetVariableRecursive(VariableSave.GetRootName(variableName));
                         }
@@ -300,39 +310,97 @@ namespace Gum.DataTypes.Variables
 
             if (variableListSave == null)
             {
+                // 1. Go to the default state if it's not a default
+                bool shouldGoToDefaultState = false;
+                // 2. Go to the base type if the variable is on the container itself, or if the instance is DefinedByBase
+                bool shouldGoToBaseType = false;
+                // 3. Go to the instance if it's on an instance and we're not going to the default state or base type
+                bool shouldGoToInstanceComponent = false;
+
+
                 // Is this thing the default?
-                ElementSave parent = stateSave.ParentContainer;
+                ElementSave elementContainingState = stateSave.ParentContainer;
 
-                if (parent != null && stateSave != parent.DefaultState)
+                if (elementContainingState != null)
                 {
-                    throw new NotImplementedException();
-                }
-                else if (parent != null)
-                {
-                    ElementSave baseElement = GetBaseElementFromVariable(variableName, parent);
-
-                    if (baseElement != null)
+                    if (elementContainingState != null && stateSave != elementContainingState.DefaultState)
                     {
-                        string nameInBase = variableName;
+                        shouldGoToDefaultState = true;
+                    }
 
-                        if ( StringFunctions.ContainsNoAlloc( variableName, '.'))
+                    var isVariableOnInstance = variableName.Contains('.');
+                    InstanceSave instance = null;
+                    bool canGoToBase = false;
+
+
+                    var hasBaseType = !string.IsNullOrEmpty(elementContainingState.BaseType);
+                    var isVariableDefinedOnThisInheritanceLevel = false;
+
+                    var instanceName = VariableSave.GetSourceObject(variableName);
+                    instance = elementContainingState.Instances.FirstOrDefault(item => item.Name == instanceName);
+
+                    if (isVariableOnInstance && hasBaseType)
+                    {
+                        if (instance != null && instance.DefinedByBase == false)
                         {
-                            // this variable is set on an instance, but we're going into the
-                            // base type, so we want to get the raw variable and not the variable
-                            // as tied to an instance.
-                            nameInBase = variableName.Substring(nameInBase.IndexOf('.') + 1);
+                            isVariableDefinedOnThisInheritanceLevel = true;
+                        }
+                    }
+                    else if (!hasBaseType)
+                    {
+                        isVariableDefinedOnThisInheritanceLevel = true;
+                    }
+
+                    canGoToBase = isVariableOnInstance == false ||
+                        isVariableDefinedOnThisInheritanceLevel == false;
+
+                    if (!shouldGoToDefaultState)
+                    {
+                        shouldGoToBaseType = canGoToBase;
+                    }
+
+                    if (!shouldGoToDefaultState && !shouldGoToBaseType)
+                    {
+                        shouldGoToInstanceComponent = isVariableOnInstance;
+                    }
+
+
+
+                    if (shouldGoToDefaultState)
+                    {
+                        variableListSave = elementContainingState.DefaultState.GetVariableListSave(variableName);
+                        if (variableListSave == null)
+                        {
+                            shouldGoToBaseType = canGoToBase;
+                        }
+                    }
+
+
+                    if (shouldGoToBaseType)
+                    {
+                        var baseElement = ObjectFinder.Self.GetElementSave(elementContainingState.BaseType);
+
+                        if (baseElement != null)
+                        {
+                            variableListSave = baseElement.DefaultState.GetVariableListRecursive(variableName);
+                        }
+                    }
+                    else if (shouldGoToInstanceComponent)
+                    {
+                        ElementSave instanceElement = null;
+                        if (instance != null)
+                        {
+                            instanceElement = ObjectFinder.Self.GetElementSave(instance);
                         }
 
-                        return baseElement.DefaultState.GetVariableListRecursive(nameInBase);
+                        if (instanceElement != null)
+                        {
+                            variableListSave = instanceElement.DefaultState.GetVariableListRecursive(VariableSave.GetRootName(variableName));
+                        }
                     }
                 }
-
-                return null;
             }
-            else
-            {
-                return variableListSave;
-            }
+            return variableListSave;
         }
 
 
@@ -340,12 +408,12 @@ namespace Gum.DataTypes.Variables
         {
             foreach (VariableSave variable in stateSave.Variables)
             {
-                if(variable.SourceObject == oldName)
+                if (variable.SourceObject == oldName)
                 {
-                    variable.Name = newName + "." +  variable.Name.Substring((oldName + ".").Length);
+                    variable.Name = newName + "." + variable.Name.Substring((oldName + ".").Length);
                 }
 
-                if (variable.GetRootName() == "Parent" && variable.SetsValue && variable.Value is string && 
+                if (variable.GetRootName() == "Parent" && variable.SetsValue && variable.Value is string &&
                     (string)(variable.Value) == oldName)
                 {
                     variable.Value = newName;
@@ -370,7 +438,7 @@ namespace Gum.DataTypes.Variables
         }
 
 
-        public static void SetValue(this StateSave stateSave, string variableName, object value, 
+        public static void SetValue(this StateSave stateSave, string variableName, object value,
             InstanceSave instanceSave = null, string variableType = null)
         {
             bool isReservedName = TrySetReservedValues(stateSave, variableName, value, instanceSave);
@@ -379,7 +447,7 @@ namespace Gum.DataTypes.Variables
             var coreVariableDefinition = stateSave.GetVariableRecursive(variableName);
 
             string exposedVariableSourceName = null;
-            if(!string.IsNullOrEmpty(coreVariableDefinition?.ExposedAsName) && instanceSave == null)
+            if (!string.IsNullOrEmpty(coreVariableDefinition?.ExposedAsName) && instanceSave == null)
             {
                 exposedVariableSourceName = coreVariableDefinition.Name;
             }
@@ -414,7 +482,7 @@ namespace Gum.DataTypes.Variables
                 else
                 {
                     VariableSave temp = variableSave;
-                    if(variableSave == null)
+                    if (variableSave == null)
                     {
                         temp = new VariableSave();
                         temp.Name = variableName;
@@ -558,7 +626,7 @@ namespace Gum.DataTypes.Variables
         /// <param name="value">The value to assign to the variable.</param>
         /// <param name="instanceSave">The instance that owns this variable.  This may be null.</param>
         /// <param name="variableType">The type of the variable.  This is only needed if the value is null.</param>
-        private static VariableSave AssignVariableSave(this StateSave stateSave, string variableName, object value, 
+        private static VariableSave AssignVariableSave(this StateSave stateSave, string variableName, object value,
             InstanceSave instanceSave, string variableType = null, bool isFile = false)
         {
             // Not a reserved variable, so use the State's variables
@@ -567,9 +635,9 @@ namespace Gum.DataTypes.Variables
             if (variableSave == null)
             {
                 variableSave = new VariableSave();
-                
+
                 // If the variableType is not null, give it priority
-                if(!string.IsNullOrEmpty(variableType))
+                if (!string.IsNullOrEmpty(variableType))
                 {
                     variableSave.Type = variableType;
                 }
@@ -578,7 +646,7 @@ namespace Gum.DataTypes.Variables
                 {
                     variableSave.Type = "bool";
                 }
-                else if(value is bool?)
+                else if (value is bool?)
                 {
                     variableSave.Type = "bool?";
                 }
@@ -586,7 +654,7 @@ namespace Gum.DataTypes.Variables
                 {
                     variableSave.Type = "float";
                 }
-                else if(value is float?)
+                else if (value is float?)
                 {
                     variableSave.Type = "float?";
                 }
@@ -664,10 +732,10 @@ namespace Gum.DataTypes.Variables
                     var instanceBase = ObjectFinder.Self.GetElementSave(instanceSave);
                     bool found = false;
 
-                    if(instanceBase != null)
+                    if (instanceBase != null)
                     {
                         VariableSave baseVariableSave = instanceBase.DefaultState.Variables.FirstOrDefault(item => item.ExposedAsName == rootName || item.Name == rootName);
-                        if(baseVariableSave != null)
+                        if (baseVariableSave != null)
                         {
                             variableSave.IsFile = baseVariableSave.IsFile;
                             found = true;
@@ -682,7 +750,7 @@ namespace Gum.DataTypes.Variables
                             variableSave.IsFile = baseVariableSave.IsFile;
                         }
                     }
-                    
+
                 }
             }
 
@@ -857,7 +925,7 @@ namespace Gum.DataTypes.Variables
                     firstValue = firstVariable.Value;
                 }
 
-                if(setsValue)
+                if (setsValue)
                 {
                     object interpolated = GetValueConsideringInterpolation(firstValue, secondValue, otherRatio);
 
@@ -878,7 +946,7 @@ namespace Gum.DataTypes.Variables
         public static void MergeIntoThis(this StateSave thisState, StateSave other, float otherRatio = 1)
         {
 #if DEBUG
-            if(other == null)
+            if (other == null)
             {
                 throw new ArgumentNullException("other Statesave is null and it shouldn't be");
             }
@@ -903,7 +971,7 @@ namespace Gum.DataTypes.Variables
                     if (needsValueFromBase)
                     {
                         var variableOnThis = thisState.GetVariableSave(variableSave.Name);
-                        if(variableOnThis != null)
+                        if (variableOnThis != null)
                         {
                             setsValue |= variableOnThis.SetsValue;
                         }
@@ -929,7 +997,7 @@ namespace Gum.DataTypes.Variables
                 // The first will use its default if one doesn't exist
                 VariableSave whatToSet = thisState.GetVariableSave(variableSave.Name);
 
-                if(whatToSet != null && (whatToSet.SetsValue || variableSave.SetsValue))
+                if (whatToSet != null && (whatToSet.SetsValue || variableSave.SetsValue))
                 {
                     whatToSet.SetsValue = true;
                     whatToSet.Value = AddValue(whatToSet, variableSave);

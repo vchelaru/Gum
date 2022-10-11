@@ -467,6 +467,16 @@ namespace Gum.Managers
                         commonMembers.Add(variable.Name);
                     }
                 }
+
+                foreach(var variableList in firstState.VariableLists)
+                {
+                    bool canAdd = true;
+
+                    if(canAdd)
+                    {
+                        commonMembers.Add(variableList.Name);
+                    }
+                }
             }
 
             if(commonMembers.Any())

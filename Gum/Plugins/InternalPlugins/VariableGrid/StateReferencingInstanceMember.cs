@@ -578,8 +578,17 @@ namespace Gum.PropertyGridHelpers
 
         public Type TryGetTypeFromVariableListSave()
         {
-            var typeName = mInstanceSave?.GetVariableListFromThisOrBase(
-                mInstanceSave.ParentContainer, RootVariableName)?.Type;
+            string typeName = null;
+            
+            if(mInstanceSave != null)
+            {
+                typeName = mInstanceSave?.GetVariableListFromThisOrBase(
+                    mInstanceSave.ParentContainer, RootVariableName)?.Type;
+            }
+            else
+            {
+                typeName = mElementSave.GetVariableListFromThisOrBase(RootVariableName)?.Type;
+            }
 
             if(!string.IsNullOrEmpty(typeName))
             {

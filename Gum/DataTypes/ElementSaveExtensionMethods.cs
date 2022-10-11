@@ -333,6 +333,21 @@ namespace Gum.DataTypes
             return stateToPullFrom.GetVariableRecursive(variable);
         }
 
+        public static VariableListSave GetVariableListFromThisOrBase(this ElementSave element, string variable, bool forceDefault = false)
+        {
+            var stateToPullFrom = element.DefaultState;
+
+#if GUM
+            if (element == SelectedState.Self.SelectedElement &&
+                SelectedState.Self.SelectedStateSave != null &&
+                !forceDefault)
+            {
+                stateToPullFrom = SelectedState.Self.SelectedStateSave;
+            }
+#endif
+            return stateToPullFrom.GetVariableListRecursive(variable);
+        }
+
         public static object GetValueFromThisOrBase(this ElementSave element, string variable, bool forceDefault = false)
         {
             StateSave stateToPullFrom = element.DefaultState;

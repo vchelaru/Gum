@@ -9,9 +9,9 @@ using RenderingLibrary.Graphics;
 using Microsoft.Xna.Framework;
 using Gum.Wireframe;
 using Gum.RenderingLibrary;
-using System.Windows.Documents;
 
 #if GUM
+using System.Windows.Documents;
 using Gum.Plugins;
 using Gum.PropertyGridHelpers.Converters;
 #endif
@@ -459,6 +459,8 @@ namespace Gum.Managers
 #endif
 
                 ApplySortValuesFromOrderInState(stateSave);
+
+                AddStateVariable(stateSave);
 
                 // Not sure if component needs this - does it get values from container?
                 //AddEventVariables(stateSave);

@@ -187,7 +187,14 @@ namespace Gum.DataTypes.ComponentModel
             {
                 variableType = existingVariable.Type;
             }
-
+            else
+            {
+                var listVariableType = elementSave.GetVariableListFromThisOrBase(name)?.Type;
+                if(!string.IsNullOrEmpty(listVariableType))
+                {
+                    variableType = $"List<{listVariableType}>";
+                }
+            }
             
             stateSave.SetValue(name, value, instanceSave, variableType);
         }

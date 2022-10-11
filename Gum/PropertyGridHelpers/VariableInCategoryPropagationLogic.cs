@@ -30,6 +30,11 @@ namespace Gum.PropertyGridHelpers
             {
                 defaultVariable = defaultState.GetVariableRecursive(memberName);
             }
+            var defaultVariableList = defaultState.GetVariableListSave(memberName);
+            if(defaultVariableList == null && defaultVariable == null)
+            {
+                defaultVariableList = defaultState.GetVariableListRecursive(memberName);
+            }
 
             // If the user is setting a variable that is a categorized state, the
             // default may be null. If so, then we need to select the first value
@@ -72,31 +77,56 @@ namespace Gum.PropertyGridHelpers
 
                 }
             }
+            // variable lists cannot be states, so no need to do anything here:
+            if(defaultVariableList != null && defaultVariableList.ValueAsIList == null)
+            {
+                // do nothing...
+            }
 
-            var defaultValue = defaultVariable?.Value;
+            var defaultValue = defaultVariable?.Value ?? defaultVariableList?.ValueAsIList;
 
             foreach (var state in currentCategory.States)
             {
-                var existingVariable = state.GetVariableSave(memberName);
 
-                if (existingVariable == null)
+                if(defaultVariable != null)
                 {
-                    if(defaultVariable != null)
+                    var existingVariable = state.GetVariableSave(memberName);
+                    if (existingVariable == null)
                     {
-                        VariableSave newVariable = defaultVariable.Clone();
-                        newVariable.Value = defaultValue;
-                        newVariable.SetsValue = true;
-                        newVariable.Name = memberName;
+                        if(defaultVariable != null)
+                        {
+                            VariableSave newVariable = defaultVariable.Clone();
+                            newVariable.Value = defaultValue;
+                            newVariable.SetsValue = true;
+                            newVariable.Name = memberName;
 
-                        state.Variables.Add(newVariable);
+                            state.Variables.Add(newVariable);
 
-                        GumCommands.Self.GuiCommands.PrintOutput(
-                            $"Adding {memberName} to {currentCategory.Name}/{state.Name}");
+                            GumCommands.Self.GuiCommands.PrintOutput(
+                                $"Adding {memberName} to {currentCategory.Name}/{state.Name}");
+                        }
+                    }
+                    else if (existingVariable.SetsValue == false)
+                    {
+                        existingVariable.SetsValue = true;
                     }
                 }
-                else if (existingVariable.SetsValue == false)
+                else if(defaultVariableList != null)
                 {
-                    existingVariable.SetsValue = true;
+                    var existingVariableList = state.GetVariableListSave(memberName);
+                    if(existingVariableList == null)
+                    {
+                        if(defaultVariableList != null)
+                        {
+                            var newVariableList = defaultVariableList.Clone();
+                            // handled by clone:
+                            //newVariableList.ValueAsIList = defaultVariableList.ValueAsIList;
+                            newVariableList.Name = memberName;
+                            state.VariableLists.Add(newVariableList);
+                            GumCommands.Self.GuiCommands.PrintOutput(
+                                $"Adding {memberName} to {currentCategory.Name}/{state.Name}");
+                        }
+                    }
                 }
             }
         }
@@ -123,6 +153,15 @@ namespace Gum.PropertyGridHelpers
                     if (foundVariable != null)
                     {
                         state.Variables.Remove(foundVariable);
+                    }
+                    else
+                    {
+                        // it's probably a list:
+                        var foundVariableList = state.VariableLists.FirstOrDefault(item => item.Name == variableName);
+                        if(foundVariableList != null)
+                        {
+                            state.VariableLists.Remove(foundVariableList);
+                        }
                     }
                 }
 

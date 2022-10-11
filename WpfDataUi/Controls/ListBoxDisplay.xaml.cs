@@ -53,6 +53,8 @@ namespace WpfDataUi.Controls
 
         public bool SuppressSettingProperty { get; set; }
 
+       static SolidColorBrush DefaultValueBackground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(180, 255, 180));
+       static SolidColorBrush CustomValueBackground = System.Windows.Media.Brushes.White;
 
         public void Refresh(bool forceRefreshEvenIfFocused = false)
         {
@@ -67,6 +69,8 @@ namespace WpfDataUi.Controls
                 this.Label.Text = InstanceMember.DisplayName;
                 this.RefreshContextMenu(ListBox.ContextMenu);
                 //this.RefreshContextMenu(StackPanel.ContextMenu);
+
+                this.ListBox.Background = InstanceMember.IsDefault ? DefaultValueBackground : CustomValueBackground;
 
                 //HintTextBlock.Visibility = !string.IsNullOrEmpty(InstanceMember?.DetailText) ? Visibility.Visible : Visibility.Collapsed;
                 //HintTextBlock.Text = InstanceMember?.DetailText;
@@ -103,7 +107,17 @@ namespace WpfDataUi.Controls
 
         public ApplyValueResult TrySetValueOnUi(object value)
         {
-            ListBox.ItemsSource = value as IEnumerable;
+            if(value is List<string> valueAsList)
+            {
+                var newList = new List<string>();
+                newList.AddRange(valueAsList);
+                ListBox.ItemsSource = newList;
+            }
+            else
+            {
+                // todo - we may want to clone the list here too to prevent unintentional editing of the underlying list
+                ListBox.ItemsSource = value as IEnumerable;
+            }
             return ApplyValueResult.Success;
         }
 
@@ -115,7 +129,10 @@ namespace WpfDataUi.Controls
 
         private void ListBox_KeyDown(object sender, KeyEventArgs e)
         {
-            if(e.Key == Key.Delete)
+            var isCtrlDown =
+                (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl));
+
+            if (e.Key == Key.Delete)
             {
                 var selectedItem = ListBox.SelectedIndex;
 
@@ -132,19 +149,37 @@ namespace WpfDataUi.Controls
 
                 TryDoManualRefresh();
             }
+            else if(e.Key == Key.C && isCtrlDown)
+            {
+                var selectedItem = ListBox.SelectedItem as string;
+
+                if(!string.IsNullOrEmpty(selectedItem))
+                {
+                    Clipboard.SetText(selectedItem);
+                }
+            }
+            else if(e.Key == Key.V && isCtrlDown)
+            {
+                var text = Clipboard.GetText();
+
+                if(!string.IsNullOrEmpty(text))
+                {
+                    HandleAddTextItem(text);
+                }
+            }
         }
 
         private void OkButton_Click(object sender, RoutedEventArgs e)
         {
-            HandleAddTextItem();
+            HandleAddTextItem(NewTextBox.Text);
         }
 
-        private void HandleAddTextItem()
+        private void HandleAddTextItem(string text)
         {
             var listToAddTo = ListBox.ItemsSource as IList;
             if (listToAddTo != null)
             {
-                listToAddTo.Add(NewTextBox.Text);
+                listToAddTo.Add(text);
             }
             NewTextBox.Text = null;
             NewEntryListBox.Visibility = Visibility.Collapsed;
@@ -181,7 +216,7 @@ namespace WpfDataUi.Controls
             if(e.Key == Key.Enter)
             {
                 e.Handled = true;
-                HandleAddTextItem();
+                HandleAddTextItem(NewTextBox.Text);
 
             }
             else if(e.Key == Key.Escape)

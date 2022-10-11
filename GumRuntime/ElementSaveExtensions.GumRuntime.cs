@@ -9,8 +9,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Reflection;
-using System.Management.Instrumentation;
-using Xceed.Wpf.Toolkit.Converters;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 
@@ -341,7 +339,7 @@ namespace GumRuntime
             else
             {
                 var isQualified = right.Contains('.');
-                if (!isQualified)
+                if (!isQualified && instanceSave != null)
                 {
                     right = instanceSave.Name + "." + right;
                 }

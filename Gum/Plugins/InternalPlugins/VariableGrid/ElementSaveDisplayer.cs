@@ -330,8 +330,9 @@ namespace Gum.PropertyGridHelpers
 
 
             var existingVariableNames = stateToAddTo.Variables.Select(item => item.Name);
+            var existingVariableListNames = stateToAddTo.VariableLists.Select(item => item.Name);
 
-            if(elementSave is StandardElementSave)
+            if (elementSave is StandardElementSave)
             {
                 var defaultStates = StandardElementsManager.Self.GetDefaultStateFor(elementSave.Name);
                 var variablesToAdd = defaultStates.Variables
@@ -340,6 +341,11 @@ namespace Gum.PropertyGridHelpers
 
                 stateToAddTo.Variables.AddRange(variablesToAdd);
 
+                var variableListsToAdd = defaultStates.VariableLists
+                    .Select(item => item.Clone())
+                    .Where(item => existingVariableListNames.Contains(item.Name) == false);
+
+                stateToAddTo.VariableLists.AddRange(variableListsToAdd);
             }
             else
             {
@@ -348,6 +354,12 @@ namespace Gum.PropertyGridHelpers
                     .Where(item => existingVariableNames.Contains(item.Name) == false);
 
                 stateToAddTo.Variables.AddRange(variablesToAdd);
+
+                var variableListsToAdd = elementSave.DefaultState.VariableLists
+                    .Select(item => item.Clone())
+                    .Where(item => existingVariableListNames.Contains(item.Name) == false);
+
+                stateToAddTo.VariableLists.AddRange(variableListsToAdd);
             }
 
 
