@@ -9,6 +9,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Reflection;
+using System.Management.Instrumentation;
+using Xceed.Wpf.Toolkit.Converters;
+using Gum.DataTypes.Variables;
+using Gum.Managers;
 
 namespace GumRuntime
 {
@@ -242,8 +246,108 @@ namespace GumRuntime
             }
 
             graphicalElement.ApplyState(stateSave);
+
+            ApplyVariableReferences(graphicalElement, stateSave);
         }
 
+        public static void ApplyVariableReferences(this GraphicalUiElement graphicalElement, StateSave stateSave)
+        {
+            foreach (var variableList in stateSave.VariableLists)
+            {
+                if (variableList.GetRootName() == "VariableReferences" && variableList.ValueAsIList.Count > 0)
+                {
+                    if (variableList.SourceObject == null)
+                    {
+                        foreach (string referenceString in variableList.ValueAsIList)
+                        {
+                            ApplyVariableReference(graphicalElement, referenceString, stateSave);
+                        }
+                    }
+                    else
+                    {
+                        GraphicalUiElement instance = null;
+                        
+                        if(graphicalElement.Tag is InstanceSave asInstanceSave && asInstanceSave.Name == variableList.SourceObject)
+                        {
+                            instance = graphicalElement;
+                        }
+                        else
+                        {
+                            instance = graphicalElement.GetGraphicalUiElementByName(variableList.SourceObject);
+                        }
+
+                        if(instance != null)
+                        {
+                            foreach (string referenceString in variableList.ValueAsIList)
+                            {
+                                ApplyVariableReference(instance, referenceString, stateSave);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        static char[] equalsArray = new char[] { '=' };
+        private static void ApplyVariableReference(GraphicalUiElement referenceOwner, string referenceString, StateSave stateSave)
+        {
+            var split = referenceString
+                .Split(equalsArray, StringSplitOptions.RemoveEmptyEntries)
+                .Select(item => item.Trim()).ToArray();
+            var left = split[0];
+            var right = split[1];
+            GetRightSideAndState(referenceOwner.Tag as InstanceSave, ref right, ref stateSave);
+
+            var recursiveVariableFinder = new RecursiveVariableFinder(stateSave);
+
+            var value = recursiveVariableFinder.GetValue(right);
+
+            if (value != null)
+            {
+                referenceOwner.SetProperty(left, value);
+            }
+        }
+
+        private static void GetRightSideAndState(InstanceSave instanceSave, ref string right, ref StateSave stateSave)
+        {
+            var isExternalElement = right.Contains("/");
+
+            if(isExternalElement)
+            {
+                var lastDot = right.LastIndexOf('.');
+                var firstDot = right.IndexOf('.');
+
+                var elementNameToFind = right.Substring(0, firstDot).Replace("/", ".");
+
+                if(elementNameToFind.StartsWith("Components."))
+                {
+                    var stripped = elementNameToFind.Substring("Components.".Length);
+
+                    var component = ObjectFinder.Self.GetComponent(stripped);
+
+                    stateSave = component.DefaultState;
+
+                    right = right.Substring(firstDot + 1);
+
+                    if(right.Contains("."))
+                    {
+                        var dotAfterInstance = right.IndexOf(".");
+                        var instanceName = right.Substring(0, dotAfterInstance);
+                        var instance = component.GetInstance(instanceName);
+                        GetRightSideAndState(instance, ref right, ref stateSave);
+                    }
+                }
+            }
+            else
+            {
+                var isQualified = right.Contains('.');
+                if (!isQualified)
+                {
+                    right = instanceSave.Name + "." + right;
+                }
+            }
+
+        }
 
         public static void SetGraphicalUiElement(this ElementSave elementSave, GraphicalUiElement toReturn, SystemManagers systemManagers)
         {

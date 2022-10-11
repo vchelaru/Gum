@@ -18,6 +18,9 @@ namespace Gum.DataTypes.Variables
     [XmlInclude(typeof(VariableListSave<Vector2>))]
     public abstract class VariableListSave
     {
+        /// <summary>
+        ///  The type of each individual item in the list
+        /// </summary>
         public string Type
         {
             get;

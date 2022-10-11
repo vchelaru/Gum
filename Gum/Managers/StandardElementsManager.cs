@@ -9,6 +9,7 @@ using RenderingLibrary.Graphics;
 using Microsoft.Xna.Framework;
 using Gum.Wireframe;
 using Gum.RenderingLibrary;
+using System.Windows.Documents;
 
 #if GUM
 using Gum.Plugins;
@@ -160,6 +161,8 @@ namespace Gum.Managers
 
                 AddStateVariable(stateSave);
 
+                AddVariableReferenceList(stateSave);
+
                 AddColorVariables(stateSave, includeAlpha: true);
 
                 ApplySortValuesFromOrderInState(stateSave);
@@ -209,6 +212,7 @@ namespace Gum.Managers
 
                 AddStateVariable(stateSave);
 
+                AddVariableReferenceList(stateSave);
 
                 List<string> list = new List<string>();
                 stateSave.VariableLists.Add(new VariableListSave<string> { Type = "string", Value = list, Category = "Animation", Name = "AnimationFrames" });
@@ -254,6 +258,7 @@ namespace Gum.Managers
                 stateSave.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation" });
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Category = "Flip and Rotation", Name = "FlipHorizontal" });
 
+                AddVariableReferenceList(stateSave);
 
                 AddEventVariables(stateSave, defaultHasEvents: true);
 
@@ -288,6 +293,8 @@ namespace Gum.Managers
                 AddStateVariable(stateSave);
 
                 ApplySortValuesFromOrderInState(stateSave);
+                
+                AddVariableReferenceList(stateSave);
 
                 mDefaults.Add("ColoredRectangle", stateSave);
                 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -322,6 +329,8 @@ namespace Gum.Managers
 
                 ApplySortValuesFromOrderInState(stateSave);
 
+                AddVariableReferenceList(stateSave);
+
                 mDefaults.Add("Circle", stateSave);
                 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             }
@@ -348,6 +357,8 @@ namespace Gum.Managers
                 AddStateVariable(stateSave);
 
                 ApplySortValuesFromOrderInState(stateSave);
+
+                AddVariableReferenceList(stateSave);
 
                 mDefaults.Add("Rectangle", stateSave);
                 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -382,6 +393,7 @@ namespace Gum.Managers
 
                 AddStateVariable(stateSave);
 
+                AddVariableReferenceList(stateSave);
 
                 ApplySortValuesFromOrderInState(stateSave);
 
@@ -411,6 +423,7 @@ namespace Gum.Managers
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "Texture Height", Category = "Source" });
 
 
+                AddVariableReferenceList(stateSave);
 
 
                 AddEventVariables(stateSave);
@@ -480,6 +493,11 @@ namespace Gum.Managers
             //        variable.SetsValue = true;
             //    }
             //}
+        }
+
+        private void AddVariableReferenceList(StateSave stateSave)
+        {
+            stateSave.VariableLists.Add(new VariableListSave<string> { Type = "string", Value = new List<string>(), Category = "References", Name = "VariableReferences" });
         }
 
         public void RefreshStateVariablesThroughPlugins()

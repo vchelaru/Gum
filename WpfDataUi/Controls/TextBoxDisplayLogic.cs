@@ -132,7 +132,7 @@ namespace WpfDataUi.Controls
                     {
                         InstanceMember.SetValueError(mAssociatedTextBox.Text);
                     }
-
+                    return result;
                 }
             }
             return ApplyValueResult.Success;
@@ -313,9 +313,16 @@ namespace WpfDataUi.Controls
                             var wasMathOperation = false;
                             if(e.InnerException is FormatException)
                             {
-                                var computedValue = TryHandleMathOperation(usableString, InstancePropertyType);
-                                wasMathOperation = computedValue != null;
-                                value = computedValue;
+                                try
+                                {
+                                    var computedValue = TryHandleMathOperation(usableString, InstancePropertyType);
+                                    wasMathOperation = computedValue != null;
+                                    value = computedValue;
+                                }
+                                catch
+                                {
+                                    result = ApplyValueResult.InvalidSyntax;
+                                }
                             }
                             if(wasMathOperation)
                             {

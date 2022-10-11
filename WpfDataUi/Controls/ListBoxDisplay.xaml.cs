@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
@@ -121,9 +123,14 @@ namespace WpfDataUi.Controls
                 {
                     var listToRemoveFrom = ListBox.ItemsSource as IList;
 
-                    listToRemoveFrom.RemoveAt(ListBox.SelectedIndex);
+                    if(ListBox.SelectedIndex < listToRemoveFrom.Count)
+                    {
+                        listToRemoveFrom.RemoveAt(ListBox.SelectedIndex);
+                    }
                 }
                 this.TrySetValueOnInstance();
+
+                TryDoManualRefresh();
             }
         }
 
@@ -135,13 +142,27 @@ namespace WpfDataUi.Controls
         private void HandleAddTextItem()
         {
             var listToAddTo = ListBox.ItemsSource as IList;
-            if(listToAddTo != null)
+            if (listToAddTo != null)
             {
                 listToAddTo.Add(NewTextBox.Text);
             }
             NewTextBox.Text = null;
             NewEntryListBox.Visibility = Visibility.Collapsed;
             this.TrySetValueOnInstance();
+
+            TryDoManualRefresh();
+        }
+
+        private void TryDoManualRefresh()
+        {
+            var itemSourceList = ListBox.ItemsSource as IList;
+
+            var needsManualRefresh = !(itemSourceList is INotifyCollectionChanged);
+            if (needsManualRefresh)
+            {
+                ListBox.ItemsSource = null;
+                TrySetValueOnUi(InstanceMember?.Value);
+            }
         }
 
         private void CancelButton_Click(object sender, RoutedEventArgs e)

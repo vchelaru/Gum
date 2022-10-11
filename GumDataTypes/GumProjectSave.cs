@@ -446,7 +446,7 @@ namespace Gum.DataTypes
             }
         }
 
-#if !WINDOWS_8 && !UWP
+#if  !UWP
         public void Save(string fileName, bool saveElements)
         {
             FileManager.XmlSerialize(this, fileName);

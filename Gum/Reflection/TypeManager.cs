@@ -77,6 +77,7 @@ namespace Gum.Reflection
                 if (typeAsString == "int?") return typeof(int?);
                 if (typeAsString == "double") return typeof(double);
                 if (typeAsString == "string") return typeof(string);
+                if (typeAsString == "List<string>") return typeof(List<string>);
                 if (typeAsString == "long") return typeof(long);
                 if (typeAsString == "char") return typeof(char);
 

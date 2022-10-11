@@ -19,6 +19,7 @@ using ToolsUtilities;
 using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary.Graphics;
 using Gum.Logic;
+using GumRuntime;
 
 namespace Gum.PropertyGridHelpers
 {
@@ -188,6 +189,9 @@ namespace Gum.PropertyGridHelpers
                             if (gue != null)
                             {
                                 gue.SetProperty(unqualifiedMember, value);
+
+                                gue.ApplyVariableReferences(SelectedState.Self.SelectedStateSave);
+
                                 handledByDirectSet = true;
                             }
                             if(unqualifiedMember == "Text" && LocalizationManager.HasDatabase)

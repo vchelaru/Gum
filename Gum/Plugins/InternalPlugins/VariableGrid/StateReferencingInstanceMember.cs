@@ -208,7 +208,7 @@ namespace Gum.PropertyGridHelpers
             mPropertyDescriptor = ispd;
             mElementSave = elementSave;
 
-            if(ispd.IsReadOnly)
+            if(ispd?.IsReadOnly == true)
             {
                 // don't assign it (can't null it)
                 //this.CustomSetEvent = null;
@@ -552,7 +552,9 @@ namespace Gum.PropertyGridHelpers
             }
             else
             {
-                return typeof(string);
+                var variableType = TryGetTypeFromVariableListSave();
+                return variableType ?? 
+                    typeof(string);
             }
         }
 
@@ -572,6 +574,21 @@ namespace Gum.PropertyGridHelpers
             }
 
             return variableSave;
+        }
+
+        public Type TryGetTypeFromVariableListSave()
+        {
+            var typeName = mInstanceSave?.GetVariableListFromThisOrBase(
+                mInstanceSave.ParentContainer, RootVariableName)?.Type;
+
+            if(!string.IsNullOrEmpty(typeName))
+            {
+                return TypeManager.Self.GetTypeFromString($"List<{typeName}>");
+            }
+            else
+            {
+                return null;
+            }
         }
 #endif
 
