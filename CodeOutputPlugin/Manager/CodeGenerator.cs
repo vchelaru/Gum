@@ -1332,86 +1332,6 @@ namespace CodeOutputPlugin.Manager
 
         #endregion
 
-        public static void GenerateCodeForElement(ElementSave selectedElement, Models.CodeOutputElementSettings elementSettings, CodeOutputProjectSettings codeOutputProjectSettings, bool showPopups)
-        {
-            var generatedFileName = CodeGenerator.GetGeneratedFileName(selectedElement, elementSettings, codeOutputProjectSettings);
-
-            ////////////////////////////////////////Early Out/////////////////////////////
-            if (generatedFileName == null)
-            {
-                if (showPopups)
-                {
-                    GumCommands.Self.GuiCommands.ShowMessage("Generated file name must be set first");
-                }
-                return;
-            }
-            //////////////////////////////////////End Early Out//////////////////////////
-
-            // We used to use the view model code, but the viewmodel may have
-            // an instance within the element selected. Instead, we want to output
-            // the code for the whole selected element.
-            //var contents = ViewModel.Code;
-
-            string contents = CodeGenerator.GetGeneratedCodeForElement(selectedElement, elementSettings, codeOutputProjectSettings);
-            contents = $"//Code for {selectedElement.ToString()}\n{contents}";
-
-            string message = string.Empty;
-
-            var codeDirectory = generatedFileName.GetDirectoryContainingThis();
-            if (!System.IO.Directory.Exists(codeDirectory.FullPath))
-            {
-                try
-                {
-                    GumCommands.Self.TryMultipleTimes(() =>
-                        System.IO.Directory.CreateDirectory(codeDirectory.FullPath));
-                }
-                catch (Exception e)
-                {
-                    GumCommands.Self.GuiCommands.PrintOutput($"Error creating directory {codeDirectory}:\n{e.Message}");
-                }
-            }
-
-            GumCommands.Self.TryMultipleTimes(() => System.IO.File.WriteAllText(generatedFileName.FullPath, contents));
-
-            // show a message somewhere?
-            message += $"Generated code to {FileManager.RemovePath(generatedFileName.FullPath)}";
-
-            if (!string.IsNullOrEmpty(codeOutputProjectSettings.CodeProjectRoot))
-            {
-
-                // nope! This strips out periods in folders. We don't want to do that:
-                //var splitFileWithoutGenerated = generatedFileName.Split('.').ToArray();
-                //var customCodeFileName = string.Join("\\", splitFileWithoutGenerated.Take(splitFileWithoutGenerated.Length - 2)) + ".cs";
-                // Instead, just strip it off the end:
-                var fullPath = generatedFileName.FullPath;
-                var customCodeFileName = fullPath.Substring(0, fullPath.Length - ".Generated.cs".Length) + ".cs";
-
-                // todo - only save this if it doesn't already exist
-                if (!System.IO.File.Exists(customCodeFileName))
-                {
-                    var directory = FileManager.GetDirectory(customCodeFileName);
-                    if (!System.IO.Directory.Exists(directory))
-                    {
-                        System.IO.Directory.CreateDirectory(directory);
-                    }
-                    var customCodeContents = CustomCodeGenerator.GetCustomCodeForElement(selectedElement, elementSettings, codeOutputProjectSettings);
-                    System.IO.File.WriteAllText(customCodeFileName, customCodeContents);
-                }
-            }
-
-
-            if (showPopups)
-            {
-                GumCommands.Self.GuiCommands.ShowMessage(message);
-            }
-            else
-            {
-                GumCommands.Self.GuiCommands.PrintOutput(message);
-            }
-
-        }
-
-
         public static string GetGeneratedCodeForElement(ElementSave element, CodeOutputElementSettings elementSettings, CodeOutputProjectSettings projectSettings)
         {
             #region Initial Values
@@ -1491,7 +1411,7 @@ namespace CodeOutputPlugin.Manager
 
             GenerateApplyDefaultVariables(element, visualApi, tabCount, stringBuilder);
 
-
+            GenerateAssignGumReferences(element, visualApi, tabCount, stringBuilder);
 
             GenerateApplyLocalizationMethod(element, tabCount, stringBuilder);
 
@@ -1509,6 +1429,85 @@ namespace CodeOutputPlugin.Manager
             }
 
             return stringBuilder.ToString();
+        }
+
+        public static void GenerateCodeForElement(ElementSave selectedElement, Models.CodeOutputElementSettings elementSettings, CodeOutputProjectSettings codeOutputProjectSettings, bool showPopups)
+        {
+            var generatedFileName = CodeGenerator.GetGeneratedFileName(selectedElement, elementSettings, codeOutputProjectSettings);
+
+            ////////////////////////////////////////Early Out/////////////////////////////
+            if (generatedFileName == null)
+            {
+                if (showPopups)
+                {
+                    GumCommands.Self.GuiCommands.ShowMessage("Generated file name must be set first");
+                }
+                return;
+            }
+            //////////////////////////////////////End Early Out//////////////////////////
+
+            // We used to use the view model code, but the viewmodel may have
+            // an instance within the element selected. Instead, we want to output
+            // the code for the whole selected element.
+            //var contents = ViewModel.Code;
+
+            string contents = CodeGenerator.GetGeneratedCodeForElement(selectedElement, elementSettings, codeOutputProjectSettings);
+            contents = $"//Code for {selectedElement.ToString()}\n{contents}";
+
+            string message = string.Empty;
+
+            var codeDirectory = generatedFileName.GetDirectoryContainingThis();
+            if (!System.IO.Directory.Exists(codeDirectory.FullPath))
+            {
+                try
+                {
+                    GumCommands.Self.TryMultipleTimes(() =>
+                        System.IO.Directory.CreateDirectory(codeDirectory.FullPath));
+                }
+                catch (Exception e)
+                {
+                    GumCommands.Self.GuiCommands.PrintOutput($"Error creating directory {codeDirectory}:\n{e.Message}");
+                }
+            }
+
+            GumCommands.Self.TryMultipleTimes(() => System.IO.File.WriteAllText(generatedFileName.FullPath, contents));
+
+            // show a message somewhere?
+            message += $"Generated code to {FileManager.RemovePath(generatedFileName.FullPath)}";
+
+            if (!string.IsNullOrEmpty(codeOutputProjectSettings.CodeProjectRoot))
+            {
+
+                // nope! This strips out periods in folders. We don't want to do that:
+                //var splitFileWithoutGenerated = generatedFileName.Split('.').ToArray();
+                //var customCodeFileName = string.Join("\\", splitFileWithoutGenerated.Take(splitFileWithoutGenerated.Length - 2)) + ".cs";
+                // Instead, just strip it off the end:
+                var fullPath = generatedFileName.FullPath;
+                var customCodeFileName = fullPath.Substring(0, fullPath.Length - ".Generated.cs".Length) + ".cs";
+
+                // todo - only save this if it doesn't already exist
+                if (!System.IO.File.Exists(customCodeFileName))
+                {
+                    var directory = FileManager.GetDirectory(customCodeFileName);
+                    if (!System.IO.Directory.Exists(directory))
+                    {
+                        System.IO.Directory.CreateDirectory(directory);
+                    }
+                    var customCodeContents = CustomCodeGenerator.GetCustomCodeForElement(selectedElement, elementSettings, codeOutputProjectSettings);
+                    System.IO.File.WriteAllText(customCodeFileName, customCodeContents);
+                }
+            }
+
+
+            if (showPopups)
+            {
+                GumCommands.Self.GuiCommands.ShowMessage(message);
+            }
+            else
+            {
+                GumCommands.Self.GuiCommands.PrintOutput(message);
+            }
+
         }
 
         #region Constructor
@@ -1608,6 +1607,8 @@ namespace CodeOutputPlugin.Manager
             if (!DoesElementInheritFromCodeGeneratedElement(element, projectSettings))
             {
                 stringBuilder.AppendLine(ToTabs(tabCount) + "InitializeInstances();");
+                stringBuilder.AppendLine(ToTabs(tabCount) + "AssignGumReferences();");
+                
             }
 
             stringBuilder.AppendLine();
@@ -1686,6 +1687,46 @@ namespace CodeOutputPlugin.Manager
             tabCount--;
             stringBuilder.AppendLine(ToTabs(tabCount) + "}");
 
+        }
+
+        private static void GenerateAssignGumReferences(ElementSave element, VisualApi visualApi, int tabCount, StringBuilder stringBuilder)
+        {
+            var line = "private void AssignGumReferences()";
+
+            stringBuilder.AppendLine(ToTabs(tabCount) + line);
+            stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+            tabCount++;
+
+            stringBuilder.AppendLine(ToTabs(tabCount) + "var gumProjectSave = ObjectFinder.Self.GumProjectSave;");
+
+            stringBuilder.AppendLine(ToTabs(tabCount) + "//////////////Early Out/////////////");
+            stringBuilder.AppendLine(ToTabs(tabCount) + "if (gumProjectSave == null) return;");
+            stringBuilder.AppendLine(ToTabs(tabCount) + "////////////End Early Out///////////");
+
+            string screenOrComponent = "UNKNOWN";
+            if(element is ScreenSave)
+            {
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"var screen = gumProjectSave.Screens.Find(item => item.Name == \"{element.Name}\");");
+                screenOrComponent = "screen";
+            }
+            else if(element is ComponentSave)
+            {
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"var component = gumProjectSave.Components.Find(item => item.Name == \"{element.Name}\");");
+                screenOrComponent = "component";
+            }
+
+            foreach(var instance in element.Instances)
+            {
+                var instanceVisualApi = GetVisualApiForInstance(instance, element);
+                if(instanceVisualApi == VisualApi.Gum)
+                {
+                    // todo - will need Forms too, but we'll do this for now:
+                    stringBuilder.AppendLine(ToTabs(tabCount) + $"{instance.Name}.Tag = {screenOrComponent}.Instances.Find(item => item.Name == nameof({instance.Name}));");
+                }
+            }
+
+            tabCount--;
+            stringBuilder.AppendLine(ToTabs(tabCount) + "}");
         }
 
         public static string GetElementNamespace(ElementSave element, CodeOutputElementSettings elementSettings, CodeOutputProjectSettings projectSettings)
