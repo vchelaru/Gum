@@ -24,6 +24,7 @@ namespace SkiaPlugin.Managers
 
         #endregion
 
+        #region Svg State
         public static StateSave GetSvgState()
         {
             if(svgState == null)
@@ -48,10 +49,13 @@ namespace SkiaPlugin.Managers
 
                 svgState.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation" });
 
+                AddVariableReferenceList(svgState);
             }
             return svgState;
         }
+        #endregion
 
+        #region Lottie Animation State
         public static StateSave GetLottieAnimationState()
         {
             if(lottieAnimationState == null)
@@ -68,10 +72,14 @@ namespace SkiaPlugin.Managers
 
                 lottieAnimationState.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "SourceFile", IsFile = true });
 
+                AddVariableReferenceList(lottieAnimationState);
+
             }
             return lottieAnimationState;
         }
+        #endregion
 
+        #region Colored Circle State
         public static StateSave GetColoredCircleState()
         {
             if(filledCircleState == null)
@@ -94,11 +102,13 @@ namespace SkiaPlugin.Managers
 
                 filledCircleState.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation" });
 
+                AddVariableReferenceList(filledCircleState);
 
             }
 
             return filledCircleState;
         }
+        #endregion
 
         public static StateSave GetRoundedRectangleState()
         {
@@ -121,6 +131,8 @@ namespace SkiaPlugin.Managers
                 AddDropshadowVariables(roundedRectangleState);
 
                 AddStrokeAndFilledVariables(roundedRectangleState);
+
+                AddVariableReferenceList(roundedRectangleState);
             }
 
             return roundedRectangleState;
@@ -145,6 +157,7 @@ namespace SkiaPlugin.Managers
                 StandardElementsManager.AddColorVariables(arcState);
 
                 AddGradientVariables(arcState);
+                AddVariableReferenceList(arcState);
             }
 
             return arcState;
@@ -219,6 +232,11 @@ namespace SkiaPlugin.Managers
         private static void AddVisibleVariable(StateSave state)
         {
             state.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
+        }
+
+        private static void AddVariableReferenceList(StateSave stateSave)
+        {
+            stateSave.VariableLists.Add(new VariableListSave<string> { Type = "string", Value = new List<string>(), Category = "References", Name = "VariableReferences" });
         }
 
         static void AddDropshadowVariables(StateSave stateSave)

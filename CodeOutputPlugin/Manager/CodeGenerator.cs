@@ -10,12 +10,15 @@ using RenderingLibrary.Graphics;
 using RenderingLibrary.Math;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using ToolsUtilities;
+using static System.Windows.Forms.AxHost;
 
 namespace CodeOutputPlugin.Manager
 {
@@ -44,7 +47,7 @@ namespace CodeOutputPlugin.Manager
         {
             get
             {
-                if(Instance == null)
+                if (Instance == null)
                 {
                     return String.Empty;
                 }
@@ -127,12 +130,12 @@ namespace CodeOutputPlugin.Manager
             var foundBase = ObjectFinder.Self.GetElementSave(element.BaseType);
             var isDerived = foundBase != null && (foundBase is StandardElementSave) == false;
 
-            if(isDerived && projectSettings?.BaseTypesNotCodeGenerated != null)
+            if (isDerived && projectSettings?.BaseTypesNotCodeGenerated != null)
             {
                 // check the settings:
                 var split = projectSettings?.BaseTypesNotCodeGenerated.Split('\n').Select(item => item.Trim()).ToArray();
 
-                if(split.Contains(element.BaseType))
+                if (split.Contains(element.BaseType))
                 {
                     isDerived = false;
                 }
@@ -159,14 +162,14 @@ namespace CodeOutputPlugin.Manager
             context.Element = element;
             context.TabCount = tabCount;
 
-            if(isDerived)
+            if (isDerived)
             {
                 stringBuilder.AppendLine(ToTabs(tabCount) + "base.InitializeInstances();");
             }
 
             foreach (var instance in element.Instances)
             {
-                if(!instance.DefinedByBase)
+                if (!instance.DefinedByBase)
                 {
                     context.Instance = instance;
 
@@ -207,9 +210,9 @@ namespace CodeOutputPlugin.Manager
             }
 
             string parentType = parent?.BaseType;
-            if(parent == null)
+            if (parent == null)
             {
-                if(container is ScreenSave)
+                if (container is ScreenSave)
                 {
                     parentType = "/AbsoluteLayout";
                 }
@@ -236,7 +239,7 @@ namespace CodeOutputPlugin.Manager
         }
 
 
-        private static void SetNonAbsoluteLayoutPosition(List<VariableSave> variablesToConsider, StateSave defaultState, CodeGenerationContext context, 
+        private static void SetNonAbsoluteLayoutPosition(List<VariableSave> variablesToConsider, StateSave defaultState, CodeGenerationContext context,
             StringBuilder stringBuilder, string parentBaseType)
         {
             var variableFinder = new RecursiveVariableFinder(defaultState);
@@ -534,7 +537,7 @@ namespace CodeOutputPlugin.Manager
             {
                 isVariableOwnerSkiaGumCanvasView = context.Instance.BaseType?.EndsWith("/SkiaGumCanvasView") == true;
 
-                if(!isVariableOwnerSkiaGumCanvasView)
+                if (!isVariableOwnerSkiaGumCanvasView)
                 {
                     var element = ObjectFinder.Self.GetElementSave(context.Instance.BaseType);
                     return IsElementSkiaGumCanvasView(element);
@@ -550,7 +553,7 @@ namespace CodeOutputPlugin.Manager
 
         private static bool IsElementSkiaGumCanvasView(ElementSave element)
         {
-            if(element.BaseType?.EndsWith("/SkiaGumCanvasView") == true)
+            if (element.BaseType?.EndsWith("/SkiaGumCanvasView") == true)
             {
                 return true;
             }
@@ -623,13 +626,13 @@ namespace CodeOutputPlugin.Manager
             }
             else if (widthUnits == DimensionUnitType.RelativeToContainer)
             {
-                if(xOrigin == HorizontalAlignment.Center)
+                if (xOrigin == HorizontalAlignment.Center)
                 {
                     // we'll achieve margins with offsets
-                    leftMargin = MathFunctions.RoundToInt(x - width/2);
-                    rightMargin = MathFunctions.RoundToInt(-x - width/2);
+                    leftMargin = MathFunctions.RoundToInt(x - width / 2);
+                    rightMargin = MathFunctions.RoundToInt(-x - width / 2);
                 }
-                else if(xOrigin == HorizontalAlignment.Right)
+                else if (xOrigin == HorizontalAlignment.Right)
                 {
                     rightMargin = MathFunctions.RoundToInt(-x - width);
                     leftMargin = MathFunctions.RoundToInt(x - width);
@@ -660,7 +663,7 @@ namespace CodeOutputPlugin.Manager
             else if (heightUnits == DimensionUnitType.RelativeToContainer)
             {
                 // just like width units, achieve this with margins:
-                if(yOrigin == VerticalAlignment.Center)
+                if (yOrigin == VerticalAlignment.Center)
                 {
                     topMargin = MathFunctions.RoundToInt(y - height / 2);
                     bottomMargin = MathFunctions.RoundToInt(-y - height / 2);
@@ -692,20 +695,20 @@ namespace CodeOutputPlugin.Manager
                 // Always do this (instead of only when X==0), because the margins will offset from center
                 //if (x == 0)
                 // treat it like it's 50%:
-                if(xOrigin == HorizontalAlignment.Left)
+                if (xOrigin == HorizontalAlignment.Left)
                 {
-                    if(widthUnits == DimensionUnitType.Absolute)
+                    if (widthUnits == DimensionUnitType.Absolute)
                     {
-                        leftMargin += (int)(width/2.0f);
-                        rightMargin -= (int)(width/2.0f);
+                        leftMargin += (int)(width / 2.0f);
+                        rightMargin -= (int)(width / 2.0f);
                     }
                 }
-                else if(xOrigin == HorizontalAlignment.Right)
+                else if (xOrigin == HorizontalAlignment.Right)
                 {
-                    if(widthUnits == DimensionUnitType.Absolute)
+                    if (widthUnits == DimensionUnitType.Absolute)
                     {
                         leftMargin -= (int)(width / 2.0f);
-                        rightMargin += (int)(width/2.0f);
+                        rightMargin += (int)(width / 2.0f);
                     }
                 }
 
@@ -726,7 +729,7 @@ namespace CodeOutputPlugin.Manager
             {
                 x /= 100.0f;
 
-                if(widthUnits == DimensionUnitType.Percentage)
+                if (widthUnits == DimensionUnitType.Percentage)
                 {
                     var adjustedCanvasWidth = 1 - width;
                     if (adjustedCanvasWidth > 0)
@@ -738,7 +741,7 @@ namespace CodeOutputPlugin.Manager
             }
             else if (xUnits == PositionUnitType.PixelsFromLeft)
             {
-                if(widthUnits == DimensionUnitType.RelativeToContainer)
+                if (widthUnits == DimensionUnitType.RelativeToContainer)
                 {
                     leftMargin = MathFunctions.RoundToInt(x);
                     x = 0;
@@ -767,15 +770,15 @@ namespace CodeOutputPlugin.Manager
                 {
                     rightMargin = MathFunctions.RoundToInt(-x);
                 }
-                else if(xOrigin == HorizontalAlignment.Center)
+                else if (xOrigin == HorizontalAlignment.Center)
                 {
                     if (widthUnits == DimensionUnitType.Absolute)
                     {
-                        rightMargin = MathFunctions.RoundToInt(-x - width/2);
-                        leftMargin = MathFunctions.RoundToInt(x + width/2);
+                        rightMargin = MathFunctions.RoundToInt(-x - width / 2);
+                        leftMargin = MathFunctions.RoundToInt(x + width / 2);
                     }
                 }
-                else if(xOrigin == HorizontalAlignment.Left)
+                else if (xOrigin == HorizontalAlignment.Left)
                 {
                     if (widthUnits == DimensionUnitType.Absolute)
                     {
@@ -796,7 +799,7 @@ namespace CodeOutputPlugin.Manager
                 if (yOrigin == VerticalAlignment.Center)
                 {
                     // If relative to container, it's already handled up above
-                    if(heightUnits != DimensionUnitType.RelativeToContainer)
+                    if (heightUnits != DimensionUnitType.RelativeToContainer)
                     {
                         topMargin = MathFunctions.RoundToInt(y);
                         bottomMargin = MathFunctions.RoundToInt(-y);
@@ -804,7 +807,7 @@ namespace CodeOutputPlugin.Manager
                     y = .5f;
                     proportionalFlags.Add(YProportionalFlag);
                 }
-                else if(yOrigin == VerticalAlignment.Top)
+                else if (yOrigin == VerticalAlignment.Top)
                 {
                     // the margin should be the height of this / 2
                     topMargin = MathFunctions.RoundToInt(y + height / 2.0f);
@@ -820,9 +823,9 @@ namespace CodeOutputPlugin.Manager
                     proportionalFlags.Add(YProportionalFlag);
                 }
             }
-            else if(yUnits == PositionUnitType.PixelsFromTop)
+            else if (yUnits == PositionUnitType.PixelsFromTop)
             {
-                if(heightUnits == DimensionUnitType.RelativeToContainer)
+                if (heightUnits == DimensionUnitType.RelativeToContainer)
                 {
                     topMargin = MathFunctions.RoundToInt(y);
                     y = 0;
@@ -921,11 +924,11 @@ namespace CodeOutputPlugin.Manager
             var widthString = width.ToString(CultureInfo.InvariantCulture) + "f";
             var heightString = height.ToString(CultureInfo.InvariantCulture) + "f";
 
-            if(heightUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
+            if (heightUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
             {
                 heightString = $"({heightString} * RenderingLibrary.SystemManagers.GlobalFontScale)";
             }
-            if(widthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
+            if (widthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
             {
                 widthString = $"({widthString} * RenderingLibrary.SystemManagers.GlobalFontScale)";
             }
@@ -933,22 +936,22 @@ namespace CodeOutputPlugin.Manager
             // When using AbsoluteLayout in XamarinForms, adding a margin will actually shrink the object. Therefore, if using margin to 
             // position an object relative to its right or bottom edges, the object's width and height should be increased by the offset amount.
 
-            if(xUnits == PositionUnitType.PixelsFromRight && xOrigin == HorizontalAlignment.Right)
+            if (xUnits == PositionUnitType.PixelsFromRight && xOrigin == HorizontalAlignment.Right)
             {
-                if(widthUnits == DimensionUnitType.RelativeToChildren)
+                if (widthUnits == DimensionUnitType.RelativeToChildren)
                 {
                     widthString = $"({widthString})";
                 }
                 // Vic asks - do we still want to do this? Isn't this handled by the margins above:
                 //else
-                else if(widthUnits != DimensionUnitType.RelativeToContainer)
+                else if (widthUnits != DimensionUnitType.RelativeToContainer)
                 {
                     widthString = $"({widthString} + {rightMargin})";
                 }
             }
-            if(yUnits == PositionUnitType.PixelsFromBottom && yOrigin == VerticalAlignment.Bottom)
+            if (yUnits == PositionUnitType.PixelsFromBottom && yOrigin == VerticalAlignment.Bottom)
             {
-                if(heightUnits == DimensionUnitType.RelativeToChildren)
+                if (heightUnits == DimensionUnitType.RelativeToChildren)
                 {
                     heightString = $"({heightString})";
                 }
@@ -984,7 +987,7 @@ namespace CodeOutputPlugin.Manager
                 $"{ToTabs(context.TabCount)}AbsoluteLayout.SetLayoutBounds({context.CodePrefixNoTabs}, new Rectangle({xString}, {yString}, {widthString}, {heightString} ));";
             string flagsText = null;
 
-            if(proportionalFlags.Count == 0)
+            if (proportionalFlags.Count == 0)
             {
                 // A default state could set values, we override it but don't use any porportional, we probably still want to adjust here...
                 proportionalFlags.Add("AbsoluteLayoutFlags.None");
@@ -1018,7 +1021,7 @@ namespace CodeOutputPlugin.Manager
             // not sure why these apply even though we're using values on the AbsoluteLayout
             if (!proportionalFlags.Contains(WidthProportionalFlag) && (widthUnits == DimensionUnitType.RelativeToContainer || widthUnits == DimensionUnitType.Absolute || widthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale))
             {
-                if(widthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
+                if (widthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
                 {
                     stringBuilder.AppendLine($"{context.CodePrefix}.WidthRequest = {width.ToString(CultureInfo.InvariantCulture)}f * RenderingLibrary.SystemManagers.GlobalFontScale;");
                 }
@@ -1029,7 +1032,7 @@ namespace CodeOutputPlugin.Manager
             }
             if (!proportionalFlags.Contains(HeightProportionalFlag) && (heightUnits == DimensionUnitType.RelativeToContainer || heightUnits == DimensionUnitType.Absolute || heightUnits == DimensionUnitType.AbsoluteMultipliedByFontScale))
             {
-                if(heightUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
+                if (heightUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
                 {
                     stringBuilder.AppendLine($"{context.CodePrefix}.HeightRequest = {height.ToString(CultureInfo.InvariantCulture)}f * RenderingLibrary.SystemManagers.GlobalFontScale;");
                 }
@@ -1085,13 +1088,13 @@ namespace CodeOutputPlugin.Manager
             {
                 toReturn = width; // handle this eventually?
             }
-            else if(widthUnits == DimensionUnitType.Absolute || widthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
+            else if (widthUnits == DimensionUnitType.Absolute || widthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
             {
                 toReturn = width;
             }
-            else if(widthUnits == DimensionUnitType.RelativeToContainer)
+            else if (widthUnits == DimensionUnitType.RelativeToContainer)
             {
-                if(parent == null)
+                if (parent == null)
                 {
                     toReturn = width + GumState.Self.ProjectState.GumProjectSave.DefaultCanvasWidth;
                 }
@@ -1190,7 +1193,7 @@ namespace CodeOutputPlugin.Manager
             var hasParent = parentValue != null &&
                 container.GetInstance(parentValue) != null;
 
-            if(hasParent)
+            if (hasParent)
             {
                 var codeLine = GetCodeLine(parentVariable, container, visualApi, defaultState, context);
 
@@ -1235,12 +1238,12 @@ namespace CodeOutputPlugin.Manager
                         stringBuilder.AppendLine($"{tabs}var tempFor{instance.Name} = GumScrollBar.CreateScrollableAbsoluteLayout({instance.Name}, ScrollableLayoutParentPlacement.Free);");
                         instanceName = $"tempFor{instance.Name}";
                     }
-                    
+
                     if (isContainerStackLayout || isContainerAbsoluteLayout)
                     {
                         stringBuilder.AppendLine($"{tabs}this.Children.Add({instanceName});");
                     }
-                    else if(DoesTypeHaveContent(container.BaseType))
+                    else if (DoesTypeHaveContent(container.BaseType))
                     {
                         stringBuilder.Append($"{tabs}this.Content = {instanceName};");
                     }
@@ -1267,7 +1270,7 @@ namespace CodeOutputPlugin.Manager
             stringBuilder.AppendLine(ToTabs(tabCount) + "{");
             tabCount++;
 
-            if(isDerived)
+            if (isDerived)
             {
                 stringBuilder.AppendLine(ToTabs(tabCount) + "// Intentionally do not call base.AssignParents so that this class can determine the addition of order");
             }
@@ -1333,87 +1336,93 @@ namespace CodeOutputPlugin.Manager
         {
             var generatedFileName = CodeGenerator.GetGeneratedFileName(selectedElement, elementSettings, codeOutputProjectSettings);
 
+            ////////////////////////////////////////Early Out/////////////////////////////
             if (generatedFileName == null)
             {
                 if (showPopups)
                 {
                     GumCommands.Self.GuiCommands.ShowMessage("Generated file name must be set first");
                 }
+                return;
+            }
+            //////////////////////////////////////End Early Out//////////////////////////
+
+            // We used to use the view model code, but the viewmodel may have
+            // an instance within the element selected. Instead, we want to output
+            // the code for the whole selected element.
+            //var contents = ViewModel.Code;
+
+            string contents = CodeGenerator.GetGeneratedCodeForElement(selectedElement, elementSettings, codeOutputProjectSettings);
+            contents = $"//Code for {selectedElement.ToString()}\n{contents}";
+
+            string message = string.Empty;
+
+            var codeDirectory = generatedFileName.GetDirectoryContainingThis();
+            if (!System.IO.Directory.Exists(codeDirectory.FullPath))
+            {
+                try
+                {
+                    GumCommands.Self.TryMultipleTimes(() =>
+                        System.IO.Directory.CreateDirectory(codeDirectory.FullPath));
+                }
+                catch (Exception e)
+                {
+                    GumCommands.Self.GuiCommands.PrintOutput($"Error creating directory {codeDirectory}:\n{e.Message}");
+                }
+            }
+
+            GumCommands.Self.TryMultipleTimes(() => System.IO.File.WriteAllText(generatedFileName.FullPath, contents));
+
+            // show a message somewhere?
+            message += $"Generated code to {FileManager.RemovePath(generatedFileName.FullPath)}";
+
+            if (!string.IsNullOrEmpty(codeOutputProjectSettings.CodeProjectRoot))
+            {
+
+                // nope! This strips out periods in folders. We don't want to do that:
+                //var splitFileWithoutGenerated = generatedFileName.Split('.').ToArray();
+                //var customCodeFileName = string.Join("\\", splitFileWithoutGenerated.Take(splitFileWithoutGenerated.Length - 2)) + ".cs";
+                // Instead, just strip it off the end:
+                var fullPath = generatedFileName.FullPath;
+                var customCodeFileName = fullPath.Substring(0, fullPath.Length - ".Generated.cs".Length) + ".cs";
+
+                // todo - only save this if it doesn't already exist
+                if (!System.IO.File.Exists(customCodeFileName))
+                {
+                    var directory = FileManager.GetDirectory(customCodeFileName);
+                    if (!System.IO.Directory.Exists(directory))
+                    {
+                        System.IO.Directory.CreateDirectory(directory);
+                    }
+                    var customCodeContents = CustomCodeGenerator.GetCustomCodeForElement(selectedElement, elementSettings, codeOutputProjectSettings);
+                    System.IO.File.WriteAllText(customCodeFileName, customCodeContents);
+                }
+            }
+
+
+            if (showPopups)
+            {
+                GumCommands.Self.GuiCommands.ShowMessage(message);
             }
             else
             {
-                // We used to use the view model code, but the viewmodel may have
-                // an instance within the element selected. Instead, we want to output
-                // the code for the whole selected element.
-                //var contents = ViewModel.Code;
-
-                string contents = CodeGenerator.GetGeneratedCodeForElement(selectedElement, elementSettings, codeOutputProjectSettings);
-                contents = $"//Code for {selectedElement.ToString()}\n{contents}";
-
-                string message = string.Empty;
-
-                var codeDirectory = generatedFileName.GetDirectoryContainingThis();
-                if (!System.IO.Directory.Exists(codeDirectory.FullPath))
-                {
-                    try
-                    {
-                        GumCommands.Self.TryMultipleTimes(() =>
-                            System.IO.Directory.CreateDirectory(codeDirectory.FullPath));
-                    }
-                    catch (Exception e)
-                    {
-                        GumCommands.Self.GuiCommands.PrintOutput($"Error creating directory {codeDirectory}:\n{e.Message}");
-                    }
-                }
-
-                GumCommands.Self.TryMultipleTimes(() => System.IO.File.WriteAllText(generatedFileName.FullPath, contents));
-
-                // show a message somewhere?
-                message += $"Generated code to {FileManager.RemovePath(generatedFileName.FullPath)}";
-
-                if (!string.IsNullOrEmpty(codeOutputProjectSettings.CodeProjectRoot))
-                {
-
-                    // nope! This strips out periods in folders. We don't want to do that:
-                    //var splitFileWithoutGenerated = generatedFileName.Split('.').ToArray();
-                    //var customCodeFileName = string.Join("\\", splitFileWithoutGenerated.Take(splitFileWithoutGenerated.Length - 2)) + ".cs";
-                    // Instead, just strip it off the end:
-                    var fullPath = generatedFileName.FullPath;
-                    var customCodeFileName = fullPath.Substring(0, fullPath.Length - ".Generated.cs".Length) + ".cs";
-
-                    // todo - only save this if it doesn't already exist
-                    if (!System.IO.File.Exists(customCodeFileName))
-                    {
-                        var directory = FileManager.GetDirectory(customCodeFileName);
-                        if (!System.IO.Directory.Exists(directory))
-                        {
-                            System.IO.Directory.CreateDirectory(directory);
-                        }
-                        var customCodeContents = CustomCodeGenerator.GetCustomCodeForElement(selectedElement, elementSettings, codeOutputProjectSettings);
-                        System.IO.File.WriteAllText(customCodeFileName, customCodeContents);
-                    }
-                }
-
-
-                if (showPopups)
-                {
-                    GumCommands.Self.GuiCommands.ShowMessage(message);
-                }
-                else
-                {
-                    GumCommands.Self.GuiCommands.PrintOutput(message);
-                }
+                GumCommands.Self.GuiCommands.PrintOutput(message);
             }
+
         }
 
 
         public static string GetGeneratedCodeForElement(ElementSave element, CodeOutputElementSettings elementSettings, CodeOutputProjectSettings projectSettings)
         {
+            #region Initial Values
+
             AdjustPixelValuesForDensity = projectSettings.AdjustPixelValuesForDensity;
             VisualApi visualApi = GetVisualApiForElement(element);
 
             var stringBuilder = new StringBuilder();
             int tabCount = 0;
+
+            #endregion
 
             #region Using Statements
 
@@ -1450,9 +1459,15 @@ namespace CodeOutputPlugin.Manager
             tabCount++;
             #endregion
 
+            #region States
+
             FillWithStateEnums(element, stringBuilder, tabCount);
 
             FillWithStateProperties(element, stringBuilder, tabCount);
+
+            #endregion
+
+            #region Instances
 
             foreach (var instance in element.Instances.Where(item => item.DefinedByBase == false))
             {
@@ -1460,6 +1475,8 @@ namespace CodeOutputPlugin.Manager
             }
 
             AddAbsoluteLayoutIfNecessary(element, tabCount, stringBuilder, projectSettings);
+
+            #endregion
 
             stringBuilder.AppendLine();
 
@@ -1500,7 +1517,7 @@ namespace CodeOutputPlugin.Manager
         {
             var elementName = GetClassNameForType(element.Name, visualApi);
 
-            if(visualApi == VisualApi.Gum)
+            if (visualApi == VisualApi.Gum)
             {
                 #region Constructor Header
 
@@ -1517,7 +1534,7 @@ namespace CodeOutputPlugin.Manager
                 stringBuilder.AppendLine(ToTabs(tabCount) + "{");
                 tabCount++;
 
-                if(element.BaseType == "Container")
+                if (element.BaseType == "Container")
                 {
                     stringBuilder.AppendLine(ToTabs(tabCount) + "this.SetContainedObject(new InvisibleRenderable());");
                 }
@@ -1544,30 +1561,30 @@ namespace CodeOutputPlugin.Manager
                 var baseElements = ObjectFinder.Self.GetBaseElements(element);
 
                 var isThisAbsoluteLayout = elementBaseType?.EndsWith("/AbsoluteLayout") == true;
-                if(!isThisAbsoluteLayout)
+                if (!isThisAbsoluteLayout)
                 {
                     isThisAbsoluteLayout = baseElements.Any(item => item.BaseType?.EndsWith("/AbsoluteLayout") == true);
                 }
 
 
                 var isStackLayout = elementBaseType?.EndsWith("/StackLayout") == true;
-                if(!isStackLayout)
+                if (!isStackLayout)
                 {
                     isStackLayout = baseElements.Any(item => item.BaseType?.EndsWith("/StackLayout") == true);
                 }
 
                 var isSkiaCanvasView = elementBaseType?.EndsWith("/SkiaGumCanvasView") == true;
-                if(!isSkiaCanvasView)
+                if (!isSkiaCanvasView)
                 {
                     // see if this inherits from a skia gum canvas view
                     isSkiaCanvasView = baseElements.Any(item => item.BaseType?.EndsWith("/SkiaGumCanvasView") == true);
                 }
 
-                if(isThisAbsoluteLayout)
+                if (isThisAbsoluteLayout)
                 {
                     stringBuilder.AppendLine(ToTabs(tabCount) + "var MainLayout = this;");
                 }
-                else if(!isSkiaCanvasView && !isStackLayout)
+                else if (!isSkiaCanvasView && !isStackLayout)
                 {
                     bool shouldAddMainLayout = GetIfShouldAddMainLayout(element, projectSettings);
 
@@ -1588,7 +1605,7 @@ namespace CodeOutputPlugin.Manager
 
             stringBuilder.AppendLine();
 
-            if(!DoesElementInheritFromCodeGeneratedElement(element, projectSettings))
+            if (!DoesElementInheritFromCodeGeneratedElement(element, projectSettings))
             {
                 stringBuilder.AppendLine(ToTabs(tabCount) + "InitializeInstances();");
             }
@@ -1598,7 +1615,7 @@ namespace CodeOutputPlugin.Manager
 
 
             // fill with variable binding after the instances have been created
-            if(visualApi == VisualApi.XamarinForms)
+            if (visualApi == VisualApi.XamarinForms)
             {
                 FillWithVariableBinding(element, stringBuilder, tabCount);
             }
@@ -1614,7 +1631,7 @@ namespace CodeOutputPlugin.Manager
 
             stringBuilder.AppendLine(ToTabs(tabCount) + "CustomInitialize();");
 
-            if(visualApi == VisualApi.Gum)
+            if (visualApi == VisualApi.Gum)
             {
                 // close the if check
                 tabCount--;
@@ -1651,9 +1668,15 @@ namespace CodeOutputPlugin.Manager
             stringBuilder.AppendLine(ToTabs(tabCount) + "{");
             tabCount++;
 
+            CodeGenerationContext context = new CodeGenerationContext();
+            context.Element = element;
+            context.TabCount = tabCount;
+
             foreach (var instance in element.Instances)
             {
-                FillWithNonParentVariableAssignments(instance, element, stringBuilder, tabCount);
+                context.Instance = instance;
+
+                FillWithNonParentVariableAssignments(context, stringBuilder);
 
                 TryGenerateApplyLocalizationForInstance(tabCount, stringBuilder, instance);
 
@@ -1702,15 +1725,15 @@ namespace CodeOutputPlugin.Manager
             VisualApi visualApi;
             //if(element is ScreenSave)
             //{
-                // screens are always XamarinForms
-                //visualApi = VisualApi.XamarinForms;
-                // Update August 23, 2022
-                // No, the code gen may be 
-                // be used for entirely Skia
-                // pages such as PDF generation.
-                // Therefore, we should always look
-                // to the IsXamarinFormsControl value:
-                //visualApi = VisualApi.XamarinForms;
+            // screens are always XamarinForms
+            //visualApi = VisualApi.XamarinForms;
+            // Update August 23, 2022
+            // No, the code gen may be 
+            // be used for entirely Skia
+            // pages such as PDF generation.
+            // Therefore, we should always look
+            // to the IsXamarinFormsControl value:
+            //visualApi = VisualApi.XamarinForms;
             //}
             //else
             {
@@ -1734,11 +1757,11 @@ namespace CodeOutputPlugin.Manager
 
         static bool IsOfXamarinFormsType(InstanceSave instance, string xamarinFormsType)
         {
-            
+
             var element = ObjectFinder.Self.GetElementSave(instance);
 
             bool isRightType = element.Name.EndsWith("/" + xamarinFormsType);
-            if(!isRightType)
+            if (!isRightType)
             {
                 var elementBaseType = element?.BaseType;
 
@@ -1797,7 +1820,7 @@ namespace CodeOutputPlugin.Manager
 
         private static void GenerateApplyLocalizationMethod(ElementSave element, int tabCount, StringBuilder stringBuilder)
         {
-            if(LocalizationManager.HasDatabase)
+            if (LocalizationManager.HasDatabase)
             {
                 // Vic says - we may want this to be recursive eventually, but that introduces
                 // some complexity. How do we know which views have a call available? 
@@ -1807,16 +1830,16 @@ namespace CodeOutputPlugin.Manager
                 tabCount++;
                 var context = new CodeGenerationContext();
                 context.Element = element;
-                foreach(var variable in element.DefaultState.Variables)
+                foreach (var variable in element.DefaultState.Variables)
                 {
                     InstanceSave instance = null;
-                    if(!string.IsNullOrEmpty(variable.SourceObject))
+                    if (!string.IsNullOrEmpty(variable.SourceObject))
                     {
                         instance = element.GetInstance(variable.SourceObject);
                     }
 
                     context.Instance = instance;
-                    if(instance != null)
+                    if (instance != null)
                     {
                         if (GetIsShouldBeLocalized(variable, context.Element.DefaultState))
                         {
@@ -1844,7 +1867,7 @@ namespace CodeOutputPlugin.Manager
                 // Why don't we call base.ApplyLocalization?
                 //stringBuilder.AppendLine(ToTabs(tabCount) + "base.ApplyLocalization();");
 
-                foreach(var instance in element.Instances)
+                foreach (var instance in element.Instances)
                 {
                     TryGenerateApplyLocalizationForInstance(tabCount, stringBuilder, instance);
                 }
@@ -1867,14 +1890,14 @@ namespace CodeOutputPlugin.Manager
                     // make sure this instance is a XamForms object otherwise we don't need to set the binding
                     var isXamForms = (element.DefaultState.GetValueRecursive($"{instanceName}.IsXamarinFormsControl") as bool?) ?? false;
 
-                    if(isXamForms)
+                    if (isXamForms)
                     {
                         var instance = element.GetInstance(instanceName);
-                        var instanceType = GetClassNameForType(instance.BaseType, VisualApi.XamarinForms); 
+                        var instanceType = GetClassNameForType(instance.BaseType, VisualApi.XamarinForms);
                         stringBuilder.AppendLine(ToTabs(tabCount) + $"{instanceName}.SetBinding({instanceType}.{variable.GetRootName()}Property, nameof({variable.ExposedAsName}));");
                     }
                 }
-            
+
             }
         }
 
@@ -1983,7 +2006,7 @@ namespace CodeOutputPlugin.Manager
         private static void FillWithStateEnums(ElementSave element, StringBuilder stringBuilder, int tabCount)
         {
             // for now we'll just do categories. We may need to get uncategorized at some point...
-            foreach(var category in element.Categories)
+            foreach (var category in element.Categories)
             {
                 string enumName = category.Name;
 
@@ -1991,7 +2014,7 @@ namespace CodeOutputPlugin.Manager
                 stringBuilder.AppendLine(ToTabs(tabCount) + "{");
                 tabCount++;
 
-                foreach(var state in category.States)
+                foreach (var state in category.States)
                 {
                     stringBuilder.AppendLine(ToTabs(tabCount) + $"{state.Name},");
                 }
@@ -2014,7 +2037,7 @@ namespace CodeOutputPlugin.Manager
                 // Enum types need to be nullable because there could be no category set:
                 string enumName = category.Name + "?";
 
-                if(isXamarinForms)
+                if (isXamarinForms)
                 {
 
                     stringBuilder.AppendLine($"{ToTabs(tabCount)}public static readonly BindableProperty {category.Name}StateProperty = " +
@@ -2041,14 +2064,14 @@ namespace CodeOutputPlugin.Manager
                     CreateStateVariableAssignmentSwitch(stringBuilder, category, context);
 
                     // We may need to invalidate surfaces here if any objects that have variables assigned are skia canvases
-                    foreach(var item in element.Instances)
+                    foreach (var item in element.Instances)
                     {
-                        if(item.BaseType.EndsWith("/SkiaSharpCanvasView"))
+                        if (item.BaseType.EndsWith("/SkiaSharpCanvasView"))
                         {
                             stringBuilder.AppendLine(ToTabs(tabCount) + $"{item.Name}.InvalidateSurface();");
                         }
                     }
-                    if(element.BaseType?.EndsWith("/SkiaGumCanvasView") == true)
+                    if (element.BaseType?.EndsWith("/SkiaGumCanvasView") == true)
                     {
                         stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.InvalidateSurface();");
                     }
@@ -2147,7 +2170,7 @@ namespace CodeOutputPlugin.Manager
                 .Where(item => !string.IsNullOrEmpty(item.ExposedAsName))
                 .ToArray();
 
-            foreach(var exposedVariable in exposedVariables)
+            foreach (var exposedVariable in exposedVariables)
             {
                 FillWithExposedVariable(exposedVariable, element, stringBuilder, tabCount);
                 stringBuilder.AppendLine();
@@ -2185,16 +2208,16 @@ namespace CodeOutputPlugin.Manager
                 tabCount--;
                 stringBuilder.AppendLine(ToTabs(tabCount) + "}");
             }
-            else if(bindingBehavior == BindingBehavior.BindablePropertyWithEventAssignment)
+            else if (bindingBehavior == BindingBehavior.BindablePropertyWithEventAssignment)
             {
                 var rcv = new RecursiveVariableFinder(container.DefaultState);
                 var defaultValue = rcv.GetValue(exposedVariable.Name);
-                var defaultValueAsString = VariableValueToGumCodeValue(exposedVariable, container, forcedValue:defaultValue);
+                var defaultValueAsString = VariableValueToGumCodeValue(exposedVariable, container, forcedValue: defaultValue);
                 var containerClassName = GetClassNameForType(container.Name, VisualApi.XamarinForms);
 
                 string defaultAssignmentWithComma = null;
 
-                if(!string.IsNullOrEmpty(defaultValueAsString))
+                if (!string.IsNullOrEmpty(defaultValueAsString))
                 {
                     defaultAssignmentWithComma = $", defaultValue:{defaultValueAsString}";
                 }
@@ -2215,7 +2238,7 @@ namespace CodeOutputPlugin.Manager
                 tabCount++;
                 stringBuilder.AppendLine(ToTabs(tabCount) + $"var casted = bindable as {containerClassName};");
 
-                if(!string.IsNullOrWhiteSpace(exposedVariable.SourceObject))
+                if (!string.IsNullOrWhiteSpace(exposedVariable.SourceObject))
                 {
                     stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.{exposedVariable.SourceObject}.{exposedVariable.GetRootName()} = ({type})newValue;");
                     stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.{exposedVariable.SourceObject}?.EffectiveManagers?.InvalidateSurface();");
@@ -2254,11 +2277,11 @@ namespace CodeOutputPlugin.Manager
             var isContainerXamarinForms = (container.DefaultState.GetValueRecursive("IsXamarinFormsControl") as bool?) ?? false;
             var isInstanceXamarinForms = (container.DefaultState.GetValueRecursive($"{instanceName}.IsXamarinFormsControl") as bool?) ?? false;
 
-            if(isContainerXamarinForms && isInstanceXamarinForms)
+            if (isContainerXamarinForms && isInstanceXamarinForms)
             {
                 return BindingBehavior.BindablePropertyWithBoundInstance;
             }
-            else if(isContainerXamarinForms) // container xamforms, child is SkiaGum
+            else if (isContainerXamarinForms) // container xamforms, child is SkiaGum
             {
                 return BindingBehavior.BindablePropertyWithEventAssignment;
             }
@@ -2276,7 +2299,11 @@ namespace CodeOutputPlugin.Manager
 
             FillWithInstanceInstantiation(instance, element, stringBuilder);
 
-            FillWithNonParentVariableAssignments(instance, element, stringBuilder);
+            var context = new CodeGenerationContext();
+            context.Instance = instance;
+            context.Element = element;
+
+            FillWithNonParentVariableAssignments(context, stringBuilder);
 
             FillWithParentAssignments(instance, element, stringBuilder);
 
@@ -2346,7 +2373,7 @@ namespace CodeOutputPlugin.Manager
             RecursiveVariableFinder recursiveVariableFinder = null;
 
             // This is null if it's a screen, or there's some bad reference
-            if(baseElement != null)
+            if (baseElement != null)
             {
                 recursiveVariableFinder = new RecursiveVariableFinder(baseElement.DefaultState);
             }
@@ -2354,14 +2381,14 @@ namespace CodeOutputPlugin.Manager
             var variablesToConsider = defaultState.Variables
                 .Where(item =>
                 {
-                    var shouldInclude = 
+                    var shouldInclude =
                         item.Value != null &&
                         item.SetsValue &&
                         string.IsNullOrEmpty(item.SourceObject);
 
-                    if(shouldInclude)
+                    if (shouldInclude)
                     {
-                        if(recursiveVariableFinder != null)
+                        if (recursiveVariableFinder != null)
                         {
                             // We want to make sure that the variable is defined in the base object. If it isn't, then
                             // it could be a leftover variable caused by having this object be of one type, using a variable
@@ -2372,12 +2399,12 @@ namespace CodeOutputPlugin.Manager
                         }
                         else
                         {
-                            if(item.Name.EndsWith("State"))
+                            if (item.Name.EndsWith("State"))
                             {
                                 var type = item.Type.Substring(item.Type.Length - 5);
                                 var hasCategory = element.GetStateSaveCategoryRecursively(type) != null;
 
-                                if(!hasCategory)
+                                if (!hasCategory)
                                 {
                                     shouldInclude = false;
                                 }
@@ -2395,7 +2422,7 @@ namespace CodeOutputPlugin.Manager
             var tabs = new String(' ', 4 * context.TabCount);
 
             ProcessVariableGroups(variablesToConsider, defaultState, visualApi, stringBuilder, context);
-            
+
             foreach (var variable in variablesToConsider)
             {
                 var codeLine = GetCodeLine(variable, element, visualApi, defaultState, context);
@@ -2410,18 +2437,41 @@ namespace CodeOutputPlugin.Manager
         }
 
 
-        private static void FillWithNonParentVariableAssignments(InstanceSave instance, ElementSave container, StringBuilder stringBuilder, int tabCount = 0)
+        private static void FillWithNonParentVariableAssignments(CodeGenerationContext context, StringBuilder stringBuilder)
         {
             #region Get variables to consider
 
-            var variablesToAssignValues = GetVariablesForValueAssignmentCode(instance, container)
+            var variablesToAssignValues = GetVariablesForValueAssignmentCode(context.Instance, context.Element)
                 .Where(item => item.GetRootName() != "Parent")
                 .ToList();
 
             #endregion
 
-            FillWithVariableAssignments(instance, container, stringBuilder, tabCount, variablesToAssignValues);
+            FillWithVariableAssignments(context.Instance, context.Element, stringBuilder, context.TabCount, variablesToAssignValues);
 
+            var variableListsToAssign = context.Element.DefaultState.VariableLists.Where(item => item.SourceObject == context.Instance.Name)
+                .ToArray();
+
+            FillWithVariableListAssignments(context, stringBuilder, variableListsToAssign);
+        }
+
+        private static void FillWithVariableListAssignments(CodeGenerationContext context, StringBuilder stringBuilder, VariableListSave[] variableListsToAssign)
+        {
+            VisualApi visualApi = GetVisualApiForInstance(context.Instance, context.Element);
+
+            foreach (var variableList in variableListsToAssign)
+            {
+                var codeLine = GetCodeLine(variableList, context, visualApi);
+
+
+                // the line of code could be " ", a string with a space. This happens
+                // if we want to skip a variable so we dont return null or empty.
+                // But we also don't want a ton of spaces generated.
+                if (!string.IsNullOrWhiteSpace(codeLine))
+                {
+                    stringBuilder.AppendLine(codeLine);
+                }
+            }
         }
 
         private static void FillWithVariableAssignments(InstanceSave instance, ElementSave container, StringBuilder stringBuilder, int tabCount, List<VariableSave> variablesToAssignValues)
@@ -2488,7 +2538,7 @@ namespace CodeOutputPlugin.Manager
 
         private static void ProcessVariableGroups(List<VariableSave> variablesToConsider, StateSave defaultState, VisualApi visualApi, StringBuilder stringBuilder, CodeGenerationContext context)
         {
-            if(visualApi == VisualApi.XamarinForms)
+            if (visualApi == VisualApi.XamarinForms)
             {
                 string baseType = null;
                 if (context.Instance != null)
@@ -2500,7 +2550,7 @@ namespace CodeOutputPlugin.Manager
                 {
                     baseType = context.Element.BaseType;
                 }
-                switch(baseType)
+                switch (baseType)
                 {
                     case "Text":
                         ProcessColorForLabel(variablesToConsider, defaultState, context.Instance, stringBuilder, context);
@@ -2517,15 +2567,15 @@ namespace CodeOutputPlugin.Manager
                 // we do this on all objects?
                 // Does it cause performance issues?
                 // Update - not all controls support this, so we need to check:
-                if(context.Instance != null)
+                if (context.Instance != null)
                 {
                     var isOfRightType =
                         IsOfXamarinFormsType(context.Instance, "StackLayout") ||
                         IsOfXamarinFormsType(context.Instance, "AbsoluteLayout") ||
                         IsOfXamarinFormsType(context.Instance, "Frame");
-                        ;
+                    ;
 
-                    if(isOfRightType)
+                    if (isOfRightType)
                     {
                         var rfv = new RecursiveVariableFinder(defaultState);
 
@@ -2548,13 +2598,13 @@ namespace CodeOutputPlugin.Manager
             var blue = rfv.GetValue<int>(gumPrefix + "Blue");
             var alpha = rfv.GetValue<int>(gumPrefix + "Alpha");
 
-            var isExplicitlySet = variablesToConsider.Any(item => 
-                item.Name == gumPrefix + "Red" || 
-                item.Name == gumPrefix + "Green" || 
-                item.Name == gumPrefix + "Blue" || 
+            var isExplicitlySet = variablesToConsider.Any(item =>
+                item.Name == gumPrefix + "Red" ||
+                item.Name == gumPrefix + "Green" ||
+                item.Name == gumPrefix + "Blue" ||
                 item.Name == gumPrefix + "Alpha");
 
-            if(isExplicitlySet)
+            if (isExplicitlySet)
             {
                 variablesToConsider.RemoveAll(item => item.Name == gumPrefix + "Red");
                 variablesToConsider.RemoveAll(item => item.Name == gumPrefix + "Green");
@@ -2574,10 +2624,10 @@ namespace CodeOutputPlugin.Manager
 
             variablesToConsider.RemoveAll(item => item.Name == boldName);
 
-            if(isBold)
+            if (isBold)
             {
                 stringBuilder.AppendLine($"{context.CodePrefix}.FontAttributes = Xamarin.Forms.FontAttributes.Bold;");
-                
+
             }
 
         }
@@ -2618,7 +2668,7 @@ namespace CodeOutputPlugin.Manager
             string accessString = isPublic ? "public " : "";
 
             var isOverride = (defaultState.GetValueRecursive($"{instance.Name}.IsOverrideInCodeGen") as bool?) ?? false;
-            if(isOverride)
+            if (isOverride)
             {
                 accessString += "override ";
             }
@@ -2633,9 +2683,9 @@ namespace CodeOutputPlugin.Manager
             string className = null;
             var specialHandledCase = false;
 
-            if(visualApi == VisualApi.XamarinForms)
+            if (visualApi == VisualApi.XamarinForms)
             {
-                switch(gumType)
+                switch (gumType)
                 {
                     case "Text":
                         className = "Label";
@@ -2644,7 +2694,7 @@ namespace CodeOutputPlugin.Manager
                 }
             }
 
-            if(!specialHandledCase)
+            if (!specialHandledCase)
             {
 
                 var strippedType = gumType;
@@ -2662,15 +2712,15 @@ namespace CodeOutputPlugin.Manager
 
         private static string GetSuffixCodeLine(InstanceSave instance, VariableSave variable, VisualApi visualApi)
         {
-            if(visualApi == VisualApi.XamarinForms)
+            if (visualApi == VisualApi.XamarinForms)
             {
                 var rootName = variable.GetRootName();
 
                 //switch(rootName)
                 //{
-                    // We don't do this anymore now that we are stuffing forms objects in absolute layouts
-                    //case "Width": return $"{instance.Name}.HorizontalOptions = LayoutOptions.Start;";
-                    //case "Height": return $"{instance.Name}.VerticalOptions = LayoutOptions.Start;";
+                // We don't do this anymore now that we are stuffing forms objects in absolute layouts
+                //case "Width": return $"{instance.Name}.HorizontalOptions = LayoutOptions.Start;";
+                //case "Height": return $"{instance.Name}.VerticalOptions = LayoutOptions.Start;";
                 //}
             }
 
@@ -2679,14 +2729,11 @@ namespace CodeOutputPlugin.Manager
 
         private static string GetCodeLine(VariableSave variable, ElementSave container, VisualApi visualApi, StateSave state, CodeGenerationContext context)
         {
-            string instancePrefix;
-            
-
             if (visualApi == VisualApi.Gum)
             {
                 var fullLineReplacement = TryGetFullGumLineReplacement(context.Instance, variable, context);
 
-                if(fullLineReplacement != null)
+                if (fullLineReplacement != null)
                 {
                     return fullLineReplacement;
                 }
@@ -2694,7 +2741,7 @@ namespace CodeOutputPlugin.Manager
                 {
                     var variableName = GetGumVariableName(variable, container);
 
-                    
+
 
                     return $"{context.CodePrefix}.{variableName} = {VariableValueToGumCodeValue(variable, container)};";
                 }
@@ -2703,13 +2750,54 @@ namespace CodeOutputPlugin.Manager
             else // xamarin forms
             {
                 var fullLineReplacement = TryGetFullXamarinFormsLineReplacement(context.Instance, container, variable, state, context);
-                if(fullLineReplacement != null)
+                if (fullLineReplacement != null)
                 {
                     return fullLineReplacement;
                 }
                 else
                 {
                     return $"{context.CodePrefix}.{GetXamarinFormsVariableName(variable)} = {VariableValueToXamarinFormsCodeValue(variable, container)};";
+                }
+
+            }
+        }
+
+        private static string GetCodeLine(VariableListSave variable, CodeGenerationContext context, VisualApi visualApi)
+        {
+            // for now we actually don't do anything with this - I used to think we would, but the variable lists are part of the Gum save objects, not rutnime.
+
+            return "";
+            if (visualApi == VisualApi.Gum)
+            {
+                //var fullLineReplacement = TryGetFullGumLineReplacement(context.Instance, variable, context);
+
+                //if (fullLineReplacement != null)
+                //{
+                //    return fullLineReplacement;
+                //}
+                //else
+                {
+                    //var variableName = GetGumVariableName(variable, container);
+                    var variableName = variable.GetRootName();
+
+
+                    return $"{context.CodePrefix}.{variableName} = {VariableValueToGumCodeValue(variable, context.Element)};";
+                }
+
+            }
+            else // xamarin forms
+            {
+                //var fullLineReplacement = TryGetFullXamarinFormsLineReplacement(context.Instance, container, variable, state, context);
+                //if (fullLineReplacement != null)
+                //{
+                //    return fullLineReplacement;
+                //}
+                //else
+                {
+                    //var variableName = GetXamarinFormsVariableName(variable);
+                    var variableName = variable.Name;
+
+                    return $"{context.CodePrefix}.{variableName} = {VariableValueToXamarinFormsCodeValue(variable, context.Element)};";
                 }
 
             }
@@ -2729,7 +2817,7 @@ namespace CodeOutputPlugin.Manager
                 rootVariableName == "ExposeChildrenEvents" ||
                 rootVariableName == "FlipHorizontal" ||
                 rootVariableName == "HasEvents" ||
-                
+
                 rootVariableName == "IsXamarinFormsControl" ||
                 rootVariableName == "IsOverrideInCodeGen" ||
                 rootVariableName == "Name" ||
@@ -2752,7 +2840,7 @@ namespace CodeOutputPlugin.Manager
                 var hasContent = false;
                 var parentInstance = container.GetInstance(parentName);
 
-                if(parentInstance != null)
+                if (parentInstance != null)
                 {
                     // traverse the inheritance chain - we don't want to go to the very base because 
                     // Glue has base types like Container for all components, and that's not what we want.
@@ -2760,17 +2848,17 @@ namespace CodeOutputPlugin.Manager
 
                     var instanceElement = ObjectFinder.Self.GetElementSave(parentInstance?.BaseType);
 
-                    if(instanceElement != null)
+                    if (instanceElement != null)
                     {
                         var baseElements = ObjectFinder.Self.GetBaseElements(instanceElement);
                         string componentType = null;
-                        if(baseElements.Count > 1)
+                        if (baseElements.Count > 1)
                         {
                             // don't do the "Last" because that will be container, so take all but the last:
                             var baseBeforeContainer = baseElements.Take(baseElements.Count - 1).LastOrDefault();
                             componentType = baseBeforeContainer?.Name;
                         }
-                        else if(baseElements.Count == 1)
+                        else if (baseElements.Count == 1)
                         {
                             // this inherits from Container, so just use it's own base type:
                             componentType = instanceElement.Name;
@@ -2819,7 +2907,7 @@ namespace CodeOutputPlugin.Manager
                         return $"{context.CodePrefix}.Orientation = StackOrientation.Vertical;";
                     }
                 }
-                else if(instance == null && container.BaseType.EndsWith("/StackLayout"))
+                else if (instance == null && container.BaseType.EndsWith("/StackLayout"))
                 {
                     if (valueAsChildrenLayout == ChildrenLayout.LeftToRightStack)
                     {
@@ -2834,7 +2922,7 @@ namespace CodeOutputPlugin.Manager
                 {
                     var message = $"Error: The object {instance?.Name ?? container.Name} cannot have a layout of {valueAsChildrenLayout}.";
 
-                    if(instance != null && instance.BaseType?.EndsWith("/SkiaGumCanvasView") == true)
+                    if (instance != null && instance.BaseType?.EndsWith("/SkiaGumCanvasView") == true)
                     {
                         message += $"\nTo stack objects in a Skia canvas, add a Container which has its ChildrenLayout set to {valueAsChildrenLayout}";
                     }
@@ -2880,10 +2968,10 @@ namespace CodeOutputPlugin.Manager
 
         private static bool GetIsShouldBeLocalized(VariableSave variable, StateSave defaultState)
         {
-            var toReturn = LocalizationManager.HasDatabase && 
+            var toReturn = LocalizationManager.HasDatabase &&
                 // This could be exposed of exposed, so the name wouldn't be "Text"
                 //variable.GetRootName() == "Text" && 
-                variable.Value is string valueAsString && 
+                variable.Value is string valueAsString &&
                 valueAsString?.StartsWith(StringIdPrefix) == true &&
                 // This could be a leftover variable
                 ObjectFinder.Self.IsVariableOrphaned(variable, defaultState) == false;
@@ -2904,13 +2992,13 @@ namespace CodeOutputPlugin.Manager
                 return $"{owner}.Children.Add({instance.Name});";
             }
             #endregion
-                    // ignored variables:
+            // ignored variables:
             else if (rootName == "IsXamarinFormsControl" ||
                 rootName == "ExposeChildrenEvents" ||
                 rootName == "IsOverrideInCodeGen" ||
                 rootName == "HasEvents")
             {
-                return " "; 
+                return " ";
             }
             else if (GetIsShouldBeLocalized(variable, context.Element.DefaultState))
             {
@@ -2928,19 +3016,33 @@ namespace CodeOutputPlugin.Manager
             var rootName = variable.GetRootName();
             var isState = variable.IsState(container, out ElementSave categoryContainer, out StateSaveCategory category);
 
+            return VariableValueToGumCode(value, rootName, isState, categoryContainer, category);
+        }
+
+        private static string VariableValueToGumCodeValue(VariableListSave variable, ElementSave container, object forcedValue = null)
+        {
+            var value = forcedValue ?? variable.ValueAsIList;
+            var rootName = variable.GetRootName();
+            var isState = false;
+
+            return VariableValueToGumCode(value, rootName, isState, null, null);
+        }
+
+        private static string VariableValueToGumCode(object value, string rootName, bool isState, ElementSave categoryContainer, StateSaveCategory category)
+        {
             if (value is float asFloat)
             {
                 return asFloat.ToString(CultureInfo.InvariantCulture) + "f";
             }
-            else if(value is string asString)
+            else if (value is string asString)
             {
-                if(rootName == "Parent")
+                if (rootName == "Parent")
                 {
                     return asString;
                 }
-                else if(isState)
+                else if (isState)
                 {
-                    if(categoryContainer != null && category != null)
+                    if (categoryContainer != null && category != null)
                     {
                         string containerClassName = "VariableState";
                         if (categoryContainer != null)
@@ -2959,21 +3061,21 @@ namespace CodeOutputPlugin.Manager
                     return "\"" + asString.Replace("\n", "\\n") + "\"";
                 }
             }
-            else if(value is bool)
+            else if (value is bool)
             {
                 return value.ToString().ToLowerInvariant();
             }
-            else if(value?.GetType().IsEnum == true)
+            else if (value?.GetType().IsEnum == true)
             {
                 var type = value.GetType();
-                if(type == typeof(PositionUnitType))
+                if (type == typeof(PositionUnitType))
                 {
-                    var converted = UnitConverter.ConvertToGeneralUnit(variable.Value);
+                    var converted = UnitConverter.ConvertToGeneralUnit(value);
                     return $"GeneralUnitType.{converted}";
                 }
                 else
                 {
-                    return value.GetType().Name + "." + variable.Value.ToString();
+                    return value.GetType().Name + "." + value.ToString();
                 }
             }
             else
@@ -2984,15 +3086,30 @@ namespace CodeOutputPlugin.Manager
 
         private static string VariableValueToXamarinFormsCodeValue(VariableSave variable, ElementSave container)
         {
-            if (variable.Value is float asFloat)
+            var value = variable.Value;
+            var rootName = variable.GetRootName();
+            var isState = variable.IsState(container, out ElementSave categoryContainer, out StateSaveCategory category);
+            return VariableValueToXamarinFormsCodeValue(value, rootName, isState, categoryContainer, category);
+        }
+
+        private static string VariableValueToXamarinFormsCodeValue(VariableListSave variable, ElementSave container)
+        {
+            var value = variable.ValueAsIList;
+            var rootName = variable.GetRootName();
+            var isState = false;
+            return VariableValueToXamarinFormsCodeValue(value, rootName, isState, null, null);
+        }
+
+        private static string VariableValueToXamarinFormsCodeValue(object value, string rootName, bool isState, ElementSave categoryContainer, StateSaveCategory category)
+        {
+            if (value is float asFloat)
             {
-                var rootName = variable.GetRootName();
                 // X and Y go to PixelX and PixelY
-                if(rootName == "X" || rootName == "Y")
+                if (rootName == "X" || rootName == "Y")
                 {
                     return asFloat.ToString(CultureInfo.InvariantCulture) + "f";
                 }
-                else if(rootName == "CornerRadius")
+                else if (rootName == "CornerRadius")
                 {
                     return $"(int)({asFloat.ToString(CultureInfo.InvariantCulture)} / Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density)";
                 }
@@ -3001,23 +3118,23 @@ namespace CodeOutputPlugin.Manager
                     return $"{asFloat.ToString(CultureInfo.InvariantCulture)} / Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density";
                 }
             }
-            else if (variable.Value is string asString)
+            else if (value is string asString)
             {
-                if (variable.GetRootName() == "Parent")
+                if (rootName == "Parent")
                 {
-                    return variable.Value.ToString();
+                    return value.ToString();
                 }
-                else if (variable.IsState(container, out ElementSave categoryContainer, out StateSaveCategory category))
+                else if (isState)
                 {
                     var containerClassName = GetClassNameForType(categoryContainer.Name, VisualApi.XamarinForms);
-                    if(category == null)
+                    if (category == null)
                     {
-                        return $"{containerClassName}.VariableState.{variable.Value}";
+                        return $"{containerClassName}.VariableState.{value}";
 
                     }
                     else
                     {
-                        return $"{containerClassName}.{category.Name}.{variable.Value}";
+                        return $"{containerClassName}.{category.Name}.{value}";
                     }
                 }
                 else
@@ -3025,21 +3142,21 @@ namespace CodeOutputPlugin.Manager
                     return "\"" + asString.Replace("\n", "\\n") + "\"";
                 }
             }
-            else if(variable.Value is bool)
+            else if (value is bool)
             {
-                return variable.Value.ToString().ToLowerInvariant();
+                return value.ToString().ToLowerInvariant();
             }
-            else if (variable.Value.GetType().IsEnum)
+            else if (value.GetType().IsEnum)
             {
-                var type = variable.Value.GetType();
+                var type = value.GetType();
                 if (type == typeof(PositionUnitType))
                 {
-                    var converted = UnitConverter.ConvertToGeneralUnit(variable.Value);
+                    var converted = UnitConverter.ConvertToGeneralUnit(value);
                     return $"GeneralUnitType.{converted}";
                 }
-                else if(type == typeof(HorizontalAlignment))
+                else if (type == typeof(HorizontalAlignment))
                 {
-                    switch((HorizontalAlignment)variable.Value)
+                    switch ((HorizontalAlignment)value)
                     {
                         case HorizontalAlignment.Left:
                             return "Xamarin.Forms.TextAlignment.Start";
@@ -3051,9 +3168,9 @@ namespace CodeOutputPlugin.Manager
                             return "";
                     }
                 }
-                else if(type == typeof(VerticalAlignment))
+                else if (type == typeof(VerticalAlignment))
                 {
-                    switch((VerticalAlignment)variable.Value)
+                    switch ((VerticalAlignment)value)
                     {
                         case VerticalAlignment.Top:
                             return "Xamarin.Forms.TextAlignment.Start";
@@ -3067,18 +3184,18 @@ namespace CodeOutputPlugin.Manager
                 }
                 else
                 {
-                    return variable.Value.GetType().Name + "." + variable.Value.ToString();
+                    return value.GetType().Name + "." + value.ToString();
                 }
             }
             else
             {
-                return variable.Value?.ToString();
+                return value?.ToString();
             }
         }
 
         private static object GetGumVariableName(VariableSave variable, ElementSave container)
         {
-            if(variable.IsState(container))
+            if (variable.IsState(container))
             {
                 return variable.GetRootName().Replace(" ", "");
             }
@@ -3092,7 +3209,7 @@ namespace CodeOutputPlugin.Manager
         {
             var rootName = variable.GetRootName();
 
-            switch(rootName)
+            switch (rootName)
             {
                 case "Height": return "HeightRequest";
                 case "Width": return "WidthRequest";
@@ -3110,7 +3227,7 @@ namespace CodeOutputPlugin.Manager
         private static VariableSave[] GetVariablesForValueAssignmentCode(InstanceSave instance, ElementSave currentElement)
         {
             var baseElement = Gum.Managers.ObjectFinder.Self.GetElementSave(instance.BaseType);
-            if(baseElement == null)
+            if (baseElement == null)
             {
                 // this could happen if the project references an object that has a missing type. Tolerate it, return an empty l ist
                 return new VariableSave[0];
