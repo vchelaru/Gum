@@ -16,6 +16,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Media.Animation;
 using System.Xml.Linq;
 using ToolsUtilities;
 using static System.Windows.Forms.AxHost;
@@ -1396,9 +1397,11 @@ namespace CodeOutputPlugin.Manager
 
             AddAbsoluteLayoutIfNecessary(element, tabCount, stringBuilder, projectSettings);
 
+            stringBuilder.AppendLine();
+
             #endregion
 
-            stringBuilder.AppendLine();
+            GenerateGumSaveObjects(element, stringBuilder, tabCount);
 
             FillWithExposedVariables(element, stringBuilder, visualApi, tabCount);
             // -- no need for AppendLine here since FillWithExposedVariables does it after every variable --
@@ -1681,6 +1684,15 @@ namespace CodeOutputPlugin.Manager
 
                 TryGenerateApplyLocalizationForInstance(tabCount, stringBuilder, instance);
 
+                var instanceApi = GetVisualApiForInstance(instance, element);
+                var screenOrComponent = element is ScreenSave
+                    ? "ScreenSave"
+                    : "component";
+                if(instanceApi == VisualApi.Gum)
+                {
+                    stringBuilder.AppendLine(ToTabs(tabCount) + $"GumRuntime.ElementSaveExtensions.ApplyVariableReferences({instance.Name}, ScreenSave.DefaultState);");
+                }
+
                 stringBuilder.AppendLine();
             }
 
@@ -1706,8 +1718,8 @@ namespace CodeOutputPlugin.Manager
             string screenOrComponent = "UNKNOWN";
             if(element is ScreenSave)
             {
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"var screen = gumProjectSave.Screens.Find(item => item.Name == \"{element.Name}\");");
-                screenOrComponent = "screen";
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"ScreenSave = gumProjectSave.Screens.Find(item => item.Name == \"{element.Name}\");");
+                screenOrComponent = "ScreenSave";
             }
             else if(element is ComponentSave)
             {
@@ -2183,6 +2195,14 @@ namespace CodeOutputPlugin.Manager
         }
 
         #endregion
+
+        private static void GenerateGumSaveObjects(ElementSave element, StringBuilder stringBuilder, int tabCount)
+        {
+            if(element is ScreenSave)
+            {
+                stringBuilder.AppendLine(ToTabs(tabCount) + "Gum.DataTypes.ScreenSave ScreenSave { get; set; }");
+            }
+        }
 
         private static void CreateStateVariableAssignmentSwitch(StringBuilder stringBuilder, StateSaveCategory category, CodeGenerationContext context)
         {
