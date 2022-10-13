@@ -287,6 +287,7 @@ namespace Gum.Wireframe
 
                 float newValue = currentValue + modificationAmount;
                 SelectedState.Self.SelectedStateSave.SetValue(nameWithInstance, newValue, instanceSave, "float");
+                ElementSaveExtensions.ApplyVariableReferences(SelectedState.Self.SelectedElement, SelectedState.Self.SelectedStateSave);
 
                 graphicalUiElement.SetProperty(baseVariableName, newValue);
 

@@ -5,6 +5,7 @@ using System.Text;
 using System.ComponentModel;
 using Gum.DataTypes.Variables;
 using Gum.ToolStates;
+using GumRuntime;
 
 namespace Gum.DataTypes.ComponentModel
 {
@@ -197,6 +198,13 @@ namespace Gum.DataTypes.ComponentModel
             }
             
             stateSave.SetValue(name, value, instanceSave, variableType);
+
+            // Oct 13, 2022
+            // This should set 
+            // values on all contained objects for this particular state
+            // Maybe this could be slow? not sure, but this covers all cases so if
+            // there are performance issues, will investigate later.
+            ElementSaveExtensions.ApplyVariableReferences(elementSave, stateSave);
         }
 
         public void ResetValue(object component)

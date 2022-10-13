@@ -248,6 +248,34 @@ namespace GumRuntime
             ApplyVariableReferences(graphicalElement, stateSave);
         }
 
+        public static void ApplyVariableReferences(this ElementSave element, StateSave stateSave)
+        {
+            foreach (var variableList in stateSave.VariableLists)
+            {
+                if (variableList.GetRootName() == "VariableReferences" && variableList.ValueAsIList.Count > 0)
+                {
+                    if (variableList.SourceObject == null)
+                    {
+                        foreach (string referenceString in variableList.ValueAsIList)
+                        {
+                            //ApplyVariableReferencesOnSpecificOwner(graphicalElement, referenceString, stateSave);
+                        }
+                    }
+                    else
+                    {
+                        InstanceSave instance = element.GetInstance(variableList.SourceObject);
+                        if(instance != null)
+                        {
+                            foreach(string referenceString in variableList.ValueAsIList)
+                            {
+                                ApplyVariableReferencesOnSpecificOwner(instance, referenceString, stateSave);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         public static void ApplyVariableReferences(this GraphicalUiElement graphicalElement, StateSave stateSave)
         {
             foreach (var variableList in stateSave.VariableLists)
@@ -307,6 +335,27 @@ namespace GumRuntime
                 referenceOwner.SetProperty(left, value);
             }
         }
+
+        private static void ApplyVariableReferencesOnSpecificOwner(InstanceSave instance, string referenceString, StateSave stateSave)
+        {
+            var split = referenceString
+                .Split(equalsArray, StringSplitOptions.RemoveEmptyEntries)
+                .Select(item => item.Trim()).ToArray();
+            var left = split[0];
+            var right = split[1];
+            GetRightSideAndState(instance, ref right, ref stateSave);
+
+            var recursiveVariableFinder = new RecursiveVariableFinder(stateSave);
+
+            var value = recursiveVariableFinder.GetValue(right);
+
+            if(value != null)
+            {
+                stateSave.SetValue($"{instance.Name}.{left}", value);
+            }
+        }
+
+
 
         private static void GetRightSideAndState(InstanceSave instanceSave, ref string right, ref StateSave stateSave)
         {
