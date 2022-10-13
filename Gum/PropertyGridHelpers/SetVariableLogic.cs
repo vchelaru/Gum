@@ -190,7 +190,8 @@ namespace Gum.PropertyGridHelpers
                             {
                                 gue.SetProperty(unqualifiedMember, value);
 
-                                gue.ApplyVariableReferences(SelectedState.Self.SelectedStateSave);
+                                WireframeObjectManager.Self.RootGue?.ApplyVariableReferences(SelectedState.Self.SelectedStateSave);
+                                //gue.ApplyVariableReferences(SelectedState.Self.SelectedStateSave);
 
                                 handledByDirectSet = true;
                             }

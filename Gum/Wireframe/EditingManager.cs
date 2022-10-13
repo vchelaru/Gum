@@ -290,8 +290,7 @@ namespace Gum.Wireframe
 
                 graphicalUiElement.SetProperty(baseVariableName, newValue);
 
-
-                graphicalUiElement.ApplyVariableReferences(SelectedState.Self.SelectedStateSave);
+                WireframeObjectManager.Self.RootGue?.ApplyVariableReferences(SelectedState.Self.SelectedStateSave);
 
                 VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(nameWithInstance);
 
