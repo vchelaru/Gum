@@ -18,6 +18,7 @@ using RenderingLibrary.Math;
 using Microsoft.Xna.Framework;
 using Gum.PropertyGridHelpers;
 using Gum.Plugins;
+using GumRuntime;
 
 namespace Gum.Wireframe
 {
@@ -287,8 +288,10 @@ namespace Gum.Wireframe
                 float newValue = currentValue + modificationAmount;
                 SelectedState.Self.SelectedStateSave.SetValue(nameWithInstance, newValue, instanceSave, "float");
 
-
                 graphicalUiElement.SetProperty(baseVariableName, newValue);
+
+
+                graphicalUiElement.ApplyVariableReferences(SelectedState.Self.SelectedStateSave);
 
                 VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(nameWithInstance);
 

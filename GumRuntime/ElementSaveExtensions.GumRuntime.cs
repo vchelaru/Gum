@@ -29,7 +29,7 @@ namespace GumRuntime
             GraphicalUiElement toReturn = null;
 
             var elementName = elementSave.Name;
-            if(!string.IsNullOrEmpty(genericType))
+            if (!string.IsNullOrEmpty(genericType))
             {
                 elementName = elementName + "<T>";
             }
@@ -40,14 +40,14 @@ namespace GumRuntime
                 // strongly-typed Gum objects.
                 var type = mElementToGueTypes[elementName];
 
-                if(!string.IsNullOrEmpty(genericType))
+                if (!string.IsNullOrEmpty(genericType))
                 {
                     type = type.MakeGenericType(mElementToGueTypes[genericType]);
                 }
-                var constructor = type.GetConstructor(new Type[] { typeof(bool), typeof(bool)});
+                var constructor = type.GetConstructor(new Type[] { typeof(bool), typeof(bool) });
 
 
-                toReturn = constructor.Invoke(new object[] { fullInstantiation, true}) as GraphicalUiElement;
+                toReturn = constructor.Invoke(new object[] { fullInstantiation, true }) as GraphicalUiElement;
             }
             else
             {
@@ -94,7 +94,7 @@ namespace GumRuntime
                 {
                     if (graphicalUiElement.UseCustomFont)
                     {
-                        var fontName = ToolsUtilities.FileManager.Standardize(graphicalUiElement.CustomFontFile, preserveCase:true, makeAbsolute:true);
+                        var fontName = ToolsUtilities.FileManager.Standardize(graphicalUiElement.CustomFontFile, preserveCase: true, makeAbsolute: true);
 
                         throw new System.IO.FileNotFoundException($"Missing:{fontName}");
                     }
@@ -110,7 +110,7 @@ namespace GumRuntime
                                 graphicalUiElement.IsItalic,
                                 graphicalUiElement.IsBold);
 
-                            var standardized = ToolsUtilities.FileManager.Standardize(fontName, preserveCase:true, makeAbsolute:true);
+                            var standardized = ToolsUtilities.FileManager.Standardize(fontName, preserveCase: true, makeAbsolute: true);
 
                             throw new System.IO.FileNotFoundException($"Missing:{standardized}");
                         }
@@ -127,7 +127,7 @@ namespace GumRuntime
             }
         }
 
-        public static GraphicalUiElement ToGraphicalUiElement(this ElementSave elementSave, SystemManagers systemManagers, 
+        public static GraphicalUiElement ToGraphicalUiElement(this ElementSave elementSave, SystemManagers systemManagers,
             bool addToManagers)
         {
             GraphicalUiElement toReturn = CreateGueForElement(elementSave);
@@ -145,14 +145,14 @@ namespace GumRuntime
 
         public static void SetStatesAndCategoriesRecursively(this GraphicalUiElement graphicalElement, ElementSave elementSave)
         {
-            if(graphicalElement == null)
+            if (graphicalElement == null)
             {
                 throw new ArgumentNullException(nameof(graphicalElement));
             }
-            if(!string.IsNullOrEmpty(elementSave.BaseType))
+            if (!string.IsNullOrEmpty(elementSave.BaseType))
             {
                 var baseElementSave = Gum.Managers.ObjectFinder.Self.GetElementSave(elementSave.BaseType);
-                if(baseElementSave != null)
+                if (baseElementSave != null)
                 {
                     graphicalElement.SetStatesAndCategoriesRecursively(baseElementSave);
                 }
@@ -174,7 +174,7 @@ namespace GumRuntime
             bool handled = InstanceSaveExtensionMethods.TryHandleAsBaseType(elementSave.Name, systemManagers, out containedObject);
 
 #if GUM
-            if(!handled)
+            if (!handled)
             {
                 string type = elementSave.BaseType;
 
@@ -230,7 +230,7 @@ namespace GumRuntime
         //{
         //    graphicalElement.SetVariablesRecursively(elementSave, elementSave.DefaultState);
         //}
-        
+
         public static void SetVariablesRecursively(this GraphicalUiElement graphicalElement, ElementSave elementSave, Gum.DataTypes.Variables.StateSave stateSave)
         {
             if (!string.IsNullOrEmpty(elementSave.BaseType))
@@ -258,27 +258,29 @@ namespace GumRuntime
                     {
                         foreach (string referenceString in variableList.ValueAsIList)
                         {
-                            ApplyVariableReference(graphicalElement, referenceString, stateSave);
+                            ApplyVariableReferencesOnSpecificOwner(graphicalElement, referenceString, stateSave);
                         }
                     }
                     else
                     {
                         GraphicalUiElement instance = null;
-                        
-                        if(graphicalElement.Tag is InstanceSave asInstanceSave && asInstanceSave.Name == variableList.SourceObject)
+
+                        if (graphicalElement.Tag is InstanceSave asInstanceSave && asInstanceSave.Name == variableList.SourceObject)
                         {
                             instance = graphicalElement;
                         }
                         else
                         {
+                            // Give preferential treatment to the children of graphicalElement. If none are found, then go to the managers
+                            // 
                             instance = graphicalElement.GetGraphicalUiElementByName(variableList.SourceObject);
                         }
 
-                        if(instance != null)
+                        if (instance != null)
                         {
                             foreach (string referenceString in variableList.ValueAsIList)
                             {
-                                ApplyVariableReference(instance, referenceString, stateSave);
+                                ApplyVariableReferencesOnSpecificOwner(instance, referenceString, stateSave);
                             }
                         }
                     }
@@ -287,7 +289,7 @@ namespace GumRuntime
         }
 
         static char[] equalsArray = new char[] { '=' };
-        private static void ApplyVariableReference(GraphicalUiElement referenceOwner, string referenceString, StateSave stateSave)
+        public static void ApplyVariableReferencesOnSpecificOwner(GraphicalUiElement referenceOwner, string referenceString, StateSave stateSave)
         {
             var split = referenceString
                 .Split(equalsArray, StringSplitOptions.RemoveEmptyEntries)
@@ -310,14 +312,14 @@ namespace GumRuntime
         {
             var isExternalElement = right.Contains("/");
 
-            if(isExternalElement)
+            if (isExternalElement)
             {
                 var lastDot = right.LastIndexOf('.');
                 var firstDot = right.IndexOf('.');
 
                 var elementNameToFind = right.Substring(0, firstDot).Replace("/", ".");
 
-                if(elementNameToFind.StartsWith("Components."))
+                if (elementNameToFind.StartsWith("Components."))
                 {
                     var stripped = elementNameToFind.Substring("Components.".Length);
 
@@ -327,7 +329,7 @@ namespace GumRuntime
 
                     right = right.Substring(firstDot + 1);
 
-                    if(right.Contains("."))
+                    if (right.Contains("."))
                     {
                         var dotAfterInstance = right.IndexOf(".");
                         var instanceName = right.Substring(0, dotAfterInstance);
@@ -365,5 +367,5 @@ namespace GumRuntime
 #endif
 
 
-        }
+    }
 }
