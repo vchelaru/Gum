@@ -1687,10 +1687,10 @@ namespace CodeOutputPlugin.Manager
                 var instanceApi = GetVisualApiForInstance(instance, element);
                 var screenOrComponent = element is ScreenSave
                     ? "ScreenSave"
-                    : "component";
+                    : "ComponentSave";
                 if(instanceApi == VisualApi.Gum)
                 {
-                    stringBuilder.AppendLine(ToTabs(tabCount) + $"GumRuntime.ElementSaveExtensions.ApplyVariableReferences({instance.Name}, ScreenSave.DefaultState);");
+                    stringBuilder.AppendLine(ToTabs(tabCount) + $"GumRuntime.ElementSaveExtensions.ApplyVariableReferences({instance.Name}, {screenOrComponent}.DefaultState);");
                 }
 
                 stringBuilder.AppendLine();
@@ -1723,8 +1723,8 @@ namespace CodeOutputPlugin.Manager
             }
             else if(element is ComponentSave)
             {
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"var component = gumProjectSave.Components.Find(item => item.Name == \"{element.Name}\");");
-                screenOrComponent = "component";
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"ComponentSave = gumProjectSave.Components.Find(item => item.Name == \"{element.Name}\");");
+                screenOrComponent = "ComponentSave";
             }
 
             foreach(var instance in element.Instances)
@@ -2201,6 +2201,10 @@ namespace CodeOutputPlugin.Manager
             if(element is ScreenSave)
             {
                 stringBuilder.AppendLine(ToTabs(tabCount) + "Gum.DataTypes.ScreenSave ScreenSave { get; set; }");
+            }
+            else if(element is ComponentSave)
+            {
+                stringBuilder.AppendLine(ToTabs(tabCount) + "Gum.DataTypes.ComponentSave ComponentSave { get; set; }");
             }
         }
 
