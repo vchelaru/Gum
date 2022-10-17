@@ -271,7 +271,7 @@ namespace Gum.DataTypes
         {
             ElementSave instanceBase = ObjectFinder.Self.GetElementSave(instance.BaseType);
 
-            VariableListSave variableListSave = parentContainer.DefaultState.GetVariableListSave(instance.Name + "." + variable);
+            VariableListSave variableListSave = parentContainer.DefaultState.GetVariableListRecursive(instance.Name + "." + variable);
             if (variableListSave == null)
             {
                 variableListSave = instanceBase.DefaultState.GetVariableListSave(variable);
@@ -280,7 +280,7 @@ namespace Gum.DataTypes
             if (variableListSave != null && variableListSave.ValueAsIList == null)
             {
                 // This can happen if there is a tunneled variable that is null
-                VariableListSave possibleVariable = instanceBase.DefaultState.GetVariableListSave(variable);
+                VariableListSave possibleVariable = instanceBase.DefaultState.GetVariableListRecursive(variable);
                 if (possibleVariable != null && possibleVariable.ValueAsIList != null)
                 {
                     variableListSave = possibleVariable;

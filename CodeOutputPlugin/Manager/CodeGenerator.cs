@@ -2233,6 +2233,7 @@ namespace CodeOutputPlugin.Manager
 
             foreach (var exposedVariable in exposedVariables)
             {
+                // 
                 FillWithExposedVariable(exposedVariable, element, stringBuilder, tabCount);
                 stringBuilder.AppendLine();
             }
@@ -2243,6 +2244,14 @@ namespace CodeOutputPlugin.Manager
 
             // if both the container and the instance are xamarin forms objects, then we can try to do some bubble-up binding
             var instanceName = exposedVariable.SourceObject;
+            var foundInstance = container.GetInstance(instanceName);
+            ///////////////Early Out//////////////////////
+            if(foundInstance == null)
+            {
+                return;
+            }
+            //////////////End Early Out///////////////////
+            
             var bindingBehavior = GetBindingBehavior(container, instanceName);
             var type = exposedVariable.Type;
 
