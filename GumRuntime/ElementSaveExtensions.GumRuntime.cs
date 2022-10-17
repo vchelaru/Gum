@@ -351,7 +351,7 @@ namespace GumRuntime
 
             if(value != null)
             {
-                stateSave.SetValue($"{instance.Name}.{left}", value);
+                stateSave.SetValue($"{instance.Name}.{left}", value, instance);
             }
         }
 

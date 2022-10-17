@@ -454,10 +454,9 @@ namespace Gum.DataTypes.Variables
             string rootName = variableName;
             if (StringFunctions.ContainsNoAlloc(variableName, '.'))
             {
-                rootName = variableName.Substring(variableName.IndexOf('.') + 1);
+                var indexOfDot = variableName.IndexOf('.');
+                rootName = variableName.Substring(indexOfDot + 1);
             }
-
-
 
             if (!isReservedName)
             {
