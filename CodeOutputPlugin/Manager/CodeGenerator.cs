@@ -104,6 +104,9 @@ namespace CodeOutputPlugin.Manager
         public string Tabs => new string(' ', TabCount * 4);
 
         public int TabCount { get; internal set; }
+
+        public VisualApi VisualApi => CodeGenerator.GetVisualApiForElement(Element);
+
     }
 
     #endregion
@@ -464,21 +467,24 @@ namespace CodeOutputPlugin.Manager
             #region Write HorizontalOptions
             if (widthUnits == DimensionUnitType.Absolute || widthUnits == DimensionUnitType.RelativeToChildren || widthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
             {
-                if (xUnits == PositionUnitType.PixelsFromCenterX && xOrigin == HorizontalAlignment.Center)
+                if(setsAny)
                 {
-                    stringBuilder.AppendLine(
-                        $"{codePrefix}.HorizontalOptions = LayoutOptions.Center;");
-                }
-                else if (xUnits == PositionUnitType.PixelsFromRight && xOrigin == HorizontalAlignment.Right)
-                {
-                    stringBuilder.AppendLine(
-                        $"{codePrefix}.HorizontalOptions = LayoutOptions.End;");
-                }
-                else
-                {
-                    stringBuilder.AppendLine(
-                        $"{codePrefix}.HorizontalOptions = LayoutOptions.Start;");
+                    if (xUnits == PositionUnitType.PixelsFromCenterX && xOrigin == HorizontalAlignment.Center)
+                    {
+                        stringBuilder.AppendLine(
+                            $"{codePrefix}.HorizontalOptions = LayoutOptions.Center;");
+                    }
+                    else if (xUnits == PositionUnitType.PixelsFromRight && xOrigin == HorizontalAlignment.Right)
+                    {
+                        stringBuilder.AppendLine(
+                            $"{codePrefix}.HorizontalOptions = LayoutOptions.End;");
+                    }
+                    else
+                    {
+                        stringBuilder.AppendLine(
+                            $"{codePrefix}.HorizontalOptions = LayoutOptions.Start;");
 
+                    }
                 }
             }
             else if (widthUnits == DimensionUnitType.RelativeToContainer ||
@@ -579,6 +585,16 @@ namespace CodeOutputPlugin.Manager
 
             var variablePrefix = context.GumVariablePrefix;
 
+            // October 18, 2022
+            // If an instance has
+            // its position controlled
+            // by a state, then the state
+            // is responsible for doing the
+            // layout. However, if we always
+            // append the bounds text, then we
+            // will overwrite the state setting.
+            // Therefore, we should only do it if
+            // a position-related value is set:
             bool setsAny = GetIfStateSetsAnyPositionValues(state, variablePrefix, variablesToConsider);
 
             #region Get recursive values for position and size
@@ -870,21 +886,25 @@ namespace CodeOutputPlugin.Manager
             }
             else if (widthUnits == DimensionUnitType.Absolute || widthUnits == DimensionUnitType.RelativeToChildren || widthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
             {
-                if (xUnits == PositionUnitType.PixelsFromCenterX && xOrigin == HorizontalAlignment.Center)
+                // See setsAny variable definition for discussion about this check
+                if(setsAny)
                 {
-                    stringBuilder.AppendLine(
-                        $"{codePrefix}.HorizontalOptions = LayoutOptions.Center;");
-                }
-                else if (xUnits == PositionUnitType.PixelsFromRight && xOrigin == HorizontalAlignment.Right)
-                {
-                    stringBuilder.AppendLine(
-                        $"{codePrefix}.HorizontalOptions = LayoutOptions.End;");
-                }
-                else
-                {
-                    stringBuilder.AppendLine(
-                        $"{codePrefix}.HorizontalOptions = LayoutOptions.Start;");
+                    if (xUnits == PositionUnitType.PixelsFromCenterX && xOrigin == HorizontalAlignment.Center)
+                    {
+                        stringBuilder.AppendLine(
+                            $"{codePrefix}.HorizontalOptions = LayoutOptions.Center;");
+                    }
+                    else if (xUnits == PositionUnitType.PixelsFromRight && xOrigin == HorizontalAlignment.Right)
+                    {
+                        stringBuilder.AppendLine(
+                            $"{codePrefix}.HorizontalOptions = LayoutOptions.End;");
+                    }
+                    else
+                    {
+                        stringBuilder.AppendLine(
+                            $"{codePrefix}.HorizontalOptions = LayoutOptions.Start;");
 
+                    }
                 }
             }
             else if (widthUnits == DimensionUnitType.RelativeToContainer ||
@@ -1009,14 +1029,18 @@ namespace CodeOutputPlugin.Manager
                 }
                 flagsText = $"{ToTabs(context.TabCount)}AbsoluteLayout.SetLayoutFlags({context.CodePrefixNoTabs}, {flagsArguments});";
             }
-            // assume every object has X, which it won't, so we will have to improve this
-            if (string.IsNullOrWhiteSpace(flagsText))
+
+            // See variable definition for discussion:
+            if(setsAny)
             {
-                stringBuilder.AppendLine(boundsText);
-            }
-            else
-            {
-                stringBuilder.AppendLine($"{boundsText}\n{flagsText}");
+                if (string.IsNullOrWhiteSpace(flagsText))
+                {
+                    stringBuilder.AppendLine(boundsText);
+                }
+                else
+                {
+                    stringBuilder.AppendLine($"{boundsText}\n{flagsText}");
+                }
             }
 
             // not sure why these apply even though we're using values on the AbsoluteLayout
@@ -1686,8 +1710,8 @@ namespace CodeOutputPlugin.Manager
 
                 var instanceApi = GetVisualApiForInstance(instance, element);
                 var screenOrComponent = element is ScreenSave
-                    ? "ScreenSave"
-                    : "ComponentSave";
+                    ? "casted.ScreenSave"
+                    : "casted.ComponentSave";
                 if(instanceApi == VisualApi.Gum)
                 {
                     stringBuilder.AppendLine(ToTabs(tabCount) + $"GumRuntime.ElementSaveExtensions.ApplyVariableReferences({instance.Name}, {screenOrComponent}.DefaultState);");
@@ -2114,7 +2138,16 @@ namespace CodeOutputPlugin.Manager
                     context.ThisPrefix = "casted";
                     context.TabCount = tabCount;
 
+                    AddAssignFromElement(context, stringBuilder);
+
+                    stringBuilder.AppendLine(context.Tabs + "if(!appliedDynamically)");
+                    stringBuilder.AppendLine(context.Tabs + "{");
+                    context.TabCount++;
+
                     CreateStateVariableAssignmentSwitch(stringBuilder, category, context);
+
+                    context.TabCount--;
+                    stringBuilder.AppendLine(context.Tabs + "}");
 
                     // We may need to invalidate surfaces here if any objects that have variables assigned are skia canvases
                     foreach (var item in element.Instances)
@@ -2179,14 +2212,32 @@ namespace CodeOutputPlugin.Manager
 
             stringBuilder.AppendLine(context.Tabs + "var appliedDynamically = false;");
 
-            stringBuilder.AppendLine(context.Tabs + "if (ShouldApplyDynamicStates)");
+            stringBuilder.AppendLine(context.Tabs + "if (BindableGraphicalUiElement.ShouldApplyDynamicStates)");
             stringBuilder.AppendLine(context.Tabs + "{");
             context.TabCount++;
-            stringBuilder.AppendLine(context.Tabs + "var foundState = ElementSave?.GetStateSaveRecursively(value.ToString());");
+
+            var elementPropertyName = "ElementSave";
+            if(context.VisualApi == VisualApi.XamarinForms)
+            {
+                elementPropertyName =
+                    context.Element is ScreenSave ? "casted.ScreenSave"
+                    : context.Element is ComponentSave ? "casted.ComponentSave"
+                    : null;
+            }
+
+
+            stringBuilder.AppendLine(context.Tabs + $"var foundState = {elementPropertyName}?.GetStateSaveRecursively(value.ToString());");
             stringBuilder.AppendLine(context.Tabs + "if (foundState != null)");
             stringBuilder.AppendLine(context.Tabs + "{");
             context.TabCount++;
-            stringBuilder.AppendLine(context.Tabs + "this.ApplyState(foundState);");
+            if(context.VisualApi == VisualApi.XamarinForms)
+            {
+                stringBuilder.AppendLine(context.Tabs + "// Need to apply the variables in the state");
+            }
+            else
+            {
+                stringBuilder.AppendLine(context.Tabs + "this.ApplyState(foundState);");
+            }
             stringBuilder.AppendLine(context.Tabs + "appliedDynamically = true;");
             context.TabCount--;
             stringBuilder.AppendLine(context.Tabs + "}");
