@@ -324,9 +324,12 @@ namespace GumRuntime
                 .Select(item => item.Trim()).ToArray();
             var left = split[0];
             var right = split[1];
-            GetRightSideAndState(referenceOwner.Tag as InstanceSave, ref right, ref stateSave);
 
-            var recursiveVariableFinder = new RecursiveVariableFinder(stateSave);
+            var ownerOfRightSideVariable = stateSave;
+
+            GetRightSideAndState(referenceOwner.Tag as InstanceSave, ref right, ref ownerOfRightSideVariable);
+
+            var recursiveVariableFinder = new RecursiveVariableFinder(ownerOfRightSideVariable);
 
             var value = recursiveVariableFinder.GetValue(right);
 
@@ -343,13 +346,16 @@ namespace GumRuntime
                 .Select(item => item.Trim()).ToArray();
             var left = split[0];
             var right = split[1];
-            GetRightSideAndState(instance, ref right, ref stateSave);
 
-            var recursiveVariableFinder = new RecursiveVariableFinder(stateSave);
+            var ownerOfRightSideVariable = stateSave;
+
+            GetRightSideAndState(instance, ref right, ref ownerOfRightSideVariable);
+
+            var recursiveVariableFinder = new RecursiveVariableFinder(ownerOfRightSideVariable);
 
             var value = recursiveVariableFinder.GetValue(right);
 
-            if(value != null)
+            if (value != null)
             {
                 stateSave.SetValue($"{instance.Name}.{left}", value, instance);
             }
