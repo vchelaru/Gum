@@ -110,8 +110,13 @@ namespace Gum.Wireframe
                     .DefaultState
                     .Variables
                     .Where(item => 
-                        !string.IsNullOrEmpty(item.ExposedAsName) &&
-                        string.IsNullOrEmpty(item.SourceObject))
+                        !string.IsNullOrEmpty(item.ExposedAsName) 
+                        // October 18, 2022
+                        // Why do we only consider variables that
+                        // have no SourceObject? This should consider
+                        // all exposed variables:
+                        //&& string.IsNullOrEmpty(item.SourceObject)
+                        )
                     .ToArray();
 
                 foreach (var exposedVariable in exposedVariables)

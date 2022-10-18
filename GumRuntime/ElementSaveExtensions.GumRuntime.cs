@@ -258,7 +258,7 @@ namespace GumRuntime
                     {
                         foreach (string referenceString in variableList.ValueAsIList)
                         {
-                            //ApplyVariableReferencesOnSpecificOwner(graphicalElement, referenceString, stateSave);
+                            ApplyVariableReferencesOnSpecificOwner((InstanceSave)null, referenceString, stateSave);
                         }
                     }
                     else
@@ -357,7 +357,14 @@ namespace GumRuntime
 
             if (value != null)
             {
-                stateSave.SetValue($"{instance.Name}.{left}", value, instance);
+                if(instance == null)
+                {
+                    stateSave.SetValue(left, value, instance);
+                }
+                else
+                {
+                    stateSave.SetValue($"{instance.Name}.{left}", value, instance);
+                }
             }
         }
 
