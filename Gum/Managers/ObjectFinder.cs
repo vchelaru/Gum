@@ -1,13 +1,49 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
+using System.Windows.Forms;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
+using Gum.ToolStates;
 using ToolsUtilities;
 
 namespace Gum.Managers
 {
+    public enum ReferenceType
+    {
+        InstanceOfType,
+        ElementOfType,
+        ContainedTypeInList,
+        VariableReference
+    }
+    public class TypedElementReference
+    {
+        public ElementSave OwnerOfReferencingObject { get; set; }
+        public StateSave StateSave { get; set; }
+        public object ReferencingObject { get; set; }
+        public ReferenceType ReferenceType { get; set; }
+
+        public TypedElementReference(object referencingObject, ReferenceType referenceType)
+        {
+            ReferencingObject = referencingObject;
+            ReferenceType = referenceType;
+        }
+
+        public override string ToString()
+        {
+            if(OwnerOfReferencingObject == null)
+            {
+                return $"{ReferenceType} {ReferencingObject}";
+            }
+            else
+            {
+                return $"{ReferenceType} {ReferencingObject} in {OwnerOfReferencingObject}";
+            }
+        }
+    }
+
     public class ObjectFinder
     {
         #region Fields/Properties
@@ -602,6 +638,100 @@ namespace Gum.Managers
             }
 
             return null;
+        }
+
+        public List<TypedElementReference> GetElementReferences(ElementSave element)
+        {
+            var elementName = element.Name;
+            var prefix =
+                element is ScreenSave ? "Screens/" :
+                element is ComponentSave ? "Components/" :
+                "Standards/";
+
+            var elementQualifiedName = prefix + elementName;
+
+            List<TypedElementReference> references = new List<TypedElementReference>();
+            foreach (var screen in ProjectState.Self.GumProjectSave.Screens)
+            {
+                foreach (var instanceInScreen in screen.Instances)
+                {
+                    if (instanceInScreen.BaseType == elementName)
+                    {
+                        references.Add(new TypedElementReference(instanceInScreen, ReferenceType.VariableReference));
+                    }
+                }
+
+                foreach (var variable in screen.DefaultState.Variables.Where(item => item.GetRootName() == "Contained Type"))
+                {
+                    if (variable.Value as string == elementName)
+                    {
+                        references.Add(new TypedElementReference(variable, ReferenceType.ContainedTypeInList));
+                    }
+                }
+
+                AddVariableReferences(screen);
+            }
+
+            foreach (var component in ProjectState.Self.GumProjectSave.Components)
+            {
+                if (component.BaseType == elementName)
+                {
+                    references.Add(new TypedElementReference(component, ReferenceType.ElementOfType));
+                }
+
+                foreach (var instanceInScreen in component.Instances)
+                {
+                    if (instanceInScreen.BaseType == elementName)
+                    {
+                        references.Add(new TypedElementReference(instanceInScreen, ReferenceType.InstanceOfType));
+                    }
+                }
+
+                foreach (var variable in component.DefaultState.Variables.Where(item => item.GetRootName() == "Contained Type"))
+                {
+                    if (variable.Value as string == elementName)
+                    {
+                        references.Add(new TypedElementReference(variable, ReferenceType.ContainedTypeInList));
+                    }
+                }
+
+                AddVariableReferences(component);
+            }
+
+            foreach(var standard in ProjectState.Self.GumProjectSave.StandardElements)
+            {
+                AddVariableReferences(standard);
+            }
+
+            void AddVariableReferences(ElementSave ownerElement)
+            {
+                foreach (var state in ownerElement.AllStates)
+                {
+                    foreach (var variableList in state.VariableLists)
+                    {
+                        if (variableList.GetRootName() == "VariableReferences")
+                        {
+                            foreach (string reference in variableList.ValueAsIList)
+                            {
+                                if (reference?.Contains("=") == true)
+                                {
+                                    var indexOfEquals = reference.IndexOf("=");
+                                    var rightSide = reference.Substring(indexOfEquals + 1).Trim();
+                                    if (rightSide.StartsWith(elementQualifiedName))
+                                    {
+                                        var newReference = new TypedElementReference(variableList, ReferenceType.VariableReference);
+                                        newReference.OwnerOfReferencingObject = ownerElement;
+                                        newReference.StateSave = state;
+                                        references.Add(newReference);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return references;
         }
 
 

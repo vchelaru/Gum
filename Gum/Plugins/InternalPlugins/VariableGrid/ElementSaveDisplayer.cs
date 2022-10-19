@@ -17,6 +17,7 @@ using WpfDataUi.DataTypes;
 using Gum.Wireframe;
 using Newtonsoft.Json.Linq;
 using WpfDataUi.Controls;
+using static System.Resources.ResXFileRef;
 
 namespace Gum.PropertyGridHelpers
 {
@@ -411,7 +412,8 @@ namespace Gum.PropertyGridHelpers
         private static void DisplayCurrentElement(List<InstanceSavePropertyDescriptor> pdc, ElementSave elementSave, 
             InstanceSave instanceSave, StateSave defaultState, string prependedVariable, AmountToDisplay amountToDisplay = AmountToDisplay.AllVariables)
         {
-            bool isDefault = SelectedState.Self.SelectedStateSave == SelectedState.Self.SelectedElement.DefaultState;
+            var currentState = SelectedState.Self.SelectedStateSave;
+            bool isDefault = currentState == SelectedState.Self.SelectedElement.DefaultState;
             if(instanceSave?.DefinedByBase == true)
             {
                 isDefault = false;
@@ -435,13 +437,14 @@ namespace Gum.PropertyGridHelpers
             // if component
             if (instanceSave == null && elementSave as ComponentSave != null)
             {
-                var variables = StandardElementsManager.Self.GetDefaultStateFor("Component").Variables;
+                var defaultElementState = StandardElementsManager.Self.GetDefaultStateFor("Component");
+                var variables = defaultElementState.Variables;
                 foreach (var item in variables)
                 {
                     // Don't add states here, because they're handled below from this object's Default:
                     if(item.IsState(elementSave) == false)
                     {
-                        TryDisplayVariableSave(pdc, elementSave, instanceSave, amountToDisplay, item);
+                        TryDisplayVariableSave(pdc, elementSave, instanceSave, amountToDisplay, item, defaultElementState);
                     }
                 }
             }
@@ -452,7 +455,7 @@ namespace Gum.PropertyGridHelpers
                 foreach (var item in screenDefaultState.Variables)
                 {
 
-                    TryDisplayVariableSave(pdc, elementSave, instanceSave, amountToDisplay, item);
+                    TryDisplayVariableSave(pdc, elementSave, instanceSave, amountToDisplay, item, screenDefaultState);
                 }
             }
 
@@ -468,7 +471,7 @@ namespace Gum.PropertyGridHelpers
             {
                 VariableSave defaultVariable = defaultState.Variables[i];
 
-                TryDisplayVariableSave(pdc, elementSave, instanceSave, amountToDisplay, defaultVariable);
+                TryDisplayVariableSave(pdc, elementSave, instanceSave, amountToDisplay, defaultVariable, defaultState);
             }
 
             #endregion
@@ -477,7 +480,7 @@ namespace Gum.PropertyGridHelpers
         }
 
         private static void TryDisplayVariableSave(List<InstanceSavePropertyDescriptor> pdc, ElementSave elementSave, InstanceSave instanceSave, 
-            AmountToDisplay amountToDisplay, VariableSave defaultVariable)
+            AmountToDisplay amountToDisplay, VariableSave defaultVariable, StateSave stateOwner)
         {
             ElementSave container = elementSave;
             if (instanceSave != null)
@@ -526,16 +529,11 @@ namespace Gum.PropertyGridHelpers
                 // if it already contains, do nothing
                 var alreadyContains = pdc.Any(item => item.Name == name);
 
-                var property = mHelper.AddProperty(pdc,
-                    name,
-                    type,
-                    typeConverter,
-                    //,
-                    customAttributes
-                    );
+                InstanceSavePropertyDescriptor property = new InstanceSavePropertyDescriptor(name, type, customAttributes);
+                property.TypeConverter = typeConverter;
                 property.Category = category;
 
-
+                pdc.Add(property);
             }
         }
 

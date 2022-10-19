@@ -6,6 +6,7 @@ using System.ComponentModel;
 using Gum.DataTypes.Variables;
 using Gum.ToolStates;
 using GumRuntime;
+using Gum.Managers;
 
 namespace Gum.DataTypes.ComponentModel
 {
@@ -17,7 +18,6 @@ namespace Gum.DataTypes.ComponentModel
     #endregion
 
     public class InstanceSavePropertyDescriptor
-        //: PropertyDescriptor
     {
         public Attribute[] Attributes { get; }
         #region Fields
@@ -70,8 +70,6 @@ namespace Gum.DataTypes.ComponentModel
 
         #endregion
 
-        // Eventually we're going to move off of using the base 
-        // PropertyDescriptor
         public bool IsReadOnly
         {
             get;
@@ -199,12 +197,34 @@ namespace Gum.DataTypes.ComponentModel
             
             stateSave.SetValue(name, value, instanceSave, variableType);
 
+            // apply references on this element first, then apply the values to the other references:
+            ElementSaveExtensions.ApplyVariableReferences(elementSave, stateSave);
+
             // Oct 13, 2022
             // This should set 
             // values on all contained objects for this particular state
             // Maybe this could be slow? not sure, but this covers all cases so if
             // there are performance issues, will investigate later.
-            ElementSaveExtensions.ApplyVariableReferences(elementSave, stateSave);
+            var references = ObjectFinder.Self.GetElementReferences(elementSave);
+            var filteredReferences = references
+                .Where(item => item.ReferenceType == ReferenceType.VariableReference);
+
+            HashSet<StateSave> statesAlreadyApplied = new HashSet<StateSave>();
+            HashSet<ElementSave> elementsToSave = new HashSet<ElementSave>();
+            foreach(var reference in filteredReferences)
+            {
+                if(statesAlreadyApplied.Contains(reference.StateSave) == false)
+                {
+                    ElementSaveExtensions.ApplyVariableReferences(reference.OwnerOfReferencingObject, reference.StateSave);
+                    statesAlreadyApplied.Add(reference.StateSave);
+                    elementsToSave.Add(reference.OwnerOfReferencingObject);
+                }
+            }
+            foreach(var elementToSave in elementsToSave)
+            {
+                GumCommands.Self.FileCommands.TryAutoSaveElement(elementToSave);
+            }
+
         }
 
         public void ResetValue(object component)

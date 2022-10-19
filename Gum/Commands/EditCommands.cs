@@ -463,52 +463,12 @@ namespace Gum.Commands
 
         }
 
+
+
         public void DisplayReferencesTo(ElementSave element)
         {
-            var elementName = element.Name;
-            List<object> references = new List<object>();
-            foreach (var screen in ProjectState.Self.GumProjectSave.Screens)
-            {
-                foreach (var instanceInScreen in screen.Instances)
-                {
-                    if (instanceInScreen.BaseType == elementName)
-                    {
-                        references.Add(instanceInScreen);
-                    }
-                }
-
-                foreach (var variable in screen.DefaultState.Variables.Where(item => item.GetRootName() == "Contained Type"))
-                {
-                    if (variable.Value as string == elementName)
-                    {
-                        references.Add(variable);
-                    }
-                }
-            }
-
-            foreach (var component in ProjectState.Self.GumProjectSave.Components)
-            {
-                if (component.BaseType == elementName)
-                {
-                    references.Add(component);
-                }
-
-                foreach (var instanceInScreen in component.Instances)
-                {
-                    if (instanceInScreen.BaseType == elementName)
-                    {
-                        references.Add(instanceInScreen);
-                    }
-                }
-
-                foreach (var variable in component.DefaultState.Variables.Where(item => item.GetRootName() == "Contained Type"))
-                {
-                    if (variable.Value as string == elementName)
-                    {
-                        references.Add(variable);
-                    }
-                }
-            }
+            
+            var references = ObjectFinder.Self.GetElementReferences(element);
 
             if(references.Count > 0)
             {
@@ -526,7 +486,9 @@ namespace Gum.Commands
                 lbmb.Message = $"The following objects reference {element}";
                 lbmb.ItemSelected += (not, used) =>
                 {
-                    var selectedItem = lbmb.SelectedItem;
+                    var reference = lbmb.SelectedItem as TypedElementReference;
+
+                    var selectedItem = reference.ReferencingObject;
 
                     if(selectedItem is InstanceSave instance)
                     {
@@ -553,6 +515,27 @@ namespace Gum.Commands
                             if(instanceWithVariable != null)
                             {
                                 SelectedState.Self.SelectedInstance = instanceWithVariable;
+                            }
+                        }
+                    }
+                    else if(selectedItem is VariableListSave variableListSave)
+                    {
+                        var foundElement = reference.OwnerOfReferencingObject;
+
+                        if(foundElement != null)
+                        {
+                            if(string.IsNullOrEmpty(variableListSave.SourceObject))
+                            {
+                                SelectedState.Self.SelectedElement = foundElement;
+                            }
+                            else
+                            {
+                                var instanceWithVariable = foundElement.GetInstance(variableListSave.SourceObject);
+
+                                if (instanceWithVariable != null)
+                                {
+                                    SelectedState.Self.SelectedInstance = instanceWithVariable;
+                                }
                             }
                         }
                     }

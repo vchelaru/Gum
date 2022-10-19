@@ -1710,8 +1710,8 @@ namespace CodeOutputPlugin.Manager
 
                 var instanceApi = GetVisualApiForInstance(instance, element);
                 var screenOrComponent = element is ScreenSave
-                    ? "casted.ScreenSave"
-                    : "casted.ComponentSave";
+                    ? "ScreenSave"
+                    : "ComponentSave";
                 if(instanceApi == VisualApi.Gum)
                 {
                     stringBuilder.AppendLine(ToTabs(tabCount) + $"GumRuntime.ElementSaveExtensions.ApplyVariableReferences({instance.Name}, {screenOrComponent}.DefaultState);");
