@@ -657,7 +657,7 @@ namespace Gum.Managers
                 {
                     if (instanceInScreen.BaseType == elementName)
                     {
-                        references.Add(new TypedElementReference(instanceInScreen, ReferenceType.VariableReference));
+                        references.Add(new TypedElementReference(instanceInScreen, ReferenceType.ElementOfType));
                     }
                 }
 
