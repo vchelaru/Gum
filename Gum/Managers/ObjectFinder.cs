@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
-using System.Windows.Forms;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
-using Gum.ToolStates;
 using ToolsUtilities;
 
 namespace Gum.Managers
@@ -651,7 +649,7 @@ namespace Gum.Managers
             var elementQualifiedName = prefix + elementName;
 
             List<TypedElementReference> references = new List<TypedElementReference>();
-            foreach (var screen in ProjectState.Self.GumProjectSave.Screens)
+            foreach (var screen in GumProjectSave.Screens)
             {
                 foreach (var instanceInScreen in screen.Instances)
                 {
@@ -672,7 +670,7 @@ namespace Gum.Managers
                 AddVariableReferences(screen);
             }
 
-            foreach (var component in ProjectState.Self.GumProjectSave.Components)
+            foreach (var component in GumProjectSave.Components)
             {
                 if (component.BaseType == elementName)
                 {
@@ -698,7 +696,7 @@ namespace Gum.Managers
                 AddVariableReferences(component);
             }
 
-            foreach(var standard in ProjectState.Self.GumProjectSave.StandardElements)
+            foreach(var standard in GumProjectSave.StandardElements)
             {
                 AddVariableReferences(standard);
             }
