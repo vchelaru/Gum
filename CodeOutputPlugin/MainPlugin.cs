@@ -68,6 +68,8 @@ namespace CodeOutputPlugin
             this.VariableExcluded += HandleVariableExcluded;
             this.AddAndRemoveVariablesForType += CustomVariableManager.HandleAddAndRemoveVariablesForType;
 
+            this.AfterUndo += () => HandleRefreshAndExport();
+
             this.StateWindowTreeNodeSelected += HandleStateSelected;
             this.StateRename += HandleStateRename;
             this.StateAdd += HandleStateAdd;

@@ -311,6 +311,8 @@ namespace Gum.Undo
 
                 UndosChanged?.Invoke(this, null);
 
+                Plugins.PluginManager.Self.AfterUndo();
+
                 GumCommands.Self.GuiCommands.RefreshElementTreeView();
                 SelectedState.Self.UpdateToSelectedStateSave();
 

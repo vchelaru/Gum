@@ -747,17 +747,13 @@ namespace Gum.Plugins
             CallMethodOnPlugin(plugin => plugin.CallVariableSet(parentElement, instance, changedMember, oldValue));
 
         internal void VariableRemovedFromCategory(string variableName, StateSaveCategory category) =>
-            CallMethodOnPlugin((plugin) => plugin.CallVariableRemovedFromCategory(variableName, category));
+            CallMethodOnPlugin(plugin => plugin.CallVariableRemovedFromCategory(variableName, category));
 
-        internal void InstanceRename(ElementSave element, InstanceSave instanceSave, string oldName)
-        {
-            CallMethodOnPlugin(
-                (PluginBase plugin) =>
-                {
-                    plugin.CallInstanceRename(element, instanceSave, oldName);
-                });
-
-        }
+        internal void InstanceRename(ElementSave element, InstanceSave instanceSave, string oldName) =>
+            CallMethodOnPlugin(plugin => plugin.CallInstanceRename(element, instanceSave, oldName));
+                
+        internal void AfterUndo() =>
+            CallMethodOnPlugin(plugin => plugin.CallAfterUndo());
 
         internal void GuidesChanged() => 
             CallMethodOnPlugin(plugin => plugin.CallGuidesChanged());

@@ -49,6 +49,7 @@ namespace Gum.Plugins.BaseClasses
         public event Action<StateSave> StateAdd;
         public event Action<StateSave> StateDelete;
 
+        public event Action AfterUndo;
 
 
         public event Action<StateSaveCategory, string> CategoryRename;
@@ -222,18 +223,12 @@ namespace Gum.Plugins.BaseClasses
 
         public void CallGuidesChanged()
         {
-            if (GuidesChanged != null)
-            {
-                GuidesChanged();
-            }
+            GuidesChanged?.Invoke();
         }
 
         public void CallExport(ElementSave elementSave)
         {
-            if (Export != null)
-            {
-                Export(elementSave);
-            }
+            Export?.Invoke(elementSave);
         }
 
         public void CallDeleteOptionsWindowShow(DeleteOptionsWindow optionsWindow, object objectToDelete)
@@ -246,10 +241,7 @@ namespace Gum.Plugins.BaseClasses
 
         public void CallDeleteConfirm(DeleteOptionsWindow optionsWindow, object deletedObject)
         {
-            if (DeleteConfirm != null)
-            {
-                DeleteConfirm(optionsWindow, deletedObject);
-            }
+            DeleteConfirm?.Invoke(optionsWindow, deletedObject);
         }
 
         public void CallElementAdd(ElementSave element)
@@ -269,54 +261,30 @@ namespace Gum.Plugins.BaseClasses
 
         public void CallElementRename(ElementSave elementSave, string oldName)
         {
-            if (ElementRename != null)
-            {
-                ElementRename(elementSave, oldName);
-            }
+            ElementRename?.Invoke(elementSave, oldName);
         }
 
-        public void CallStateRename(StateSave stateSave, string oldName)
-        {
+        public void CallStateRename(StateSave stateSave, string oldName) => StateRename?.Invoke(stateSave, oldName);
+        
 
-            if (StateRename != null)
-            {
-                StateRename(stateSave, oldName);
-            }
-        }
+        public void CallStateAdd(StateSave stateSave) => StateAdd?.Invoke(stateSave);
 
-        public void CallStateAdd(StateSave stateSave)
-        {
-            StateAdd?.Invoke(stateSave);
-        }
+        public void CallAfterUndo() => AfterUndo?.Invoke();
 
-        public void CallStateDelete(StateSave stateSave)
-        {
-            StateDelete?.Invoke(stateSave);
-        }
+        public void CallStateDelete(StateSave stateSave) => StateDelete?.Invoke(stateSave);
 
-        public void CallStateCategoryRename(StateSaveCategory category, string oldName)
-        {
-            CategoryRename?.Invoke(category, oldName);
-        }
+        public void CallStateCategoryRename(StateSaveCategory category, string oldName) => CategoryRename?.Invoke(category, oldName);
 
         public void CallStateCategoryAdd(StateSaveCategory category) => CategoryAdd?.Invoke(category);
         public void CallStateCategoryDelete(StateSaveCategory category) => CategoryDelete?.Invoke(category);
         public void CallVariableRemovedFromCategory(string variableName, StateSaveCategory category) => VariableRemovedFromCategory?.Invoke(variableName, category);
 
 
-        public void CallInstanceRename(ElementSave parentElement, InstanceSave instanceSave, string oldName)
-        {
+        public void CallInstanceRename(ElementSave parentElement, InstanceSave instanceSave, string oldName) => 
             InstanceRename?.Invoke(parentElement, instanceSave, oldName);
-        }
 
-        public void CallFillVariableAttributes(VariableSave variableSave, List<Attribute> listToFill)
-        {
-            if (FillVariableAttributes != null)
-            {
-                FillVariableAttributes(variableSave, listToFill);
-
-            }
-        }
+        public void CallFillVariableAttributes(VariableSave variableSave, List<Attribute> listToFill) =>
+            FillVariableAttributes?.Invoke(variableSave, listToFill);
 
         public void CallVariableAdd(ElementSave elementSave, string variableName) =>
             VariableAdd?.Invoke(elementSave, variableName);
@@ -327,10 +295,8 @@ namespace Gum.Plugins.BaseClasses
         public void CallVariableSet(ElementSave parentElement, InstanceSave instance, string changedMember, object oldValue) =>
             VariableSet?.Invoke(parentElement, instance, changedMember, oldValue);
 
-        public void CallAddAndRemoveVariablesForType(string type, StateSave standardDefaultStateSave)
-        {
+        public void CallAddAndRemoveVariablesForType(string type, StateSave standardDefaultStateSave) =>
             AddAndRemoveVariablesForType?.Invoke(type, standardDefaultStateSave);
-        }
 
         public void CallElementSelected(ElementSave element) => ElementSelected?.Invoke(element);
 

@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
+using System.Net.Mime;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -43,6 +44,8 @@ namespace CodeOutputPlugin.Manager
         public string ThisPrefix { get; set; }
         public InstanceSave Instance { get; set; }
         public ElementSave Element { get; set; }
+
+        public CodeOutputProjectSettings CodeOutputProjectSettings { get; set; }
 
         public string GumVariablePrefix
         {
@@ -216,7 +219,13 @@ namespace CodeOutputPlugin.Manager
             string parentType = parent?.BaseType;
             if (parent == null)
             {
-                if (container is ScreenSave)
+                if(instance == null && context.VisualApi == VisualApi.XamarinForms)
+                {
+                    // The most common layout is in a XamForms absolute layout so let's use that. This may also
+                    // contain values whcih are okay for stacklayout
+                    parentType = "/AbsoluteLayout";
+                }
+                else if (container is ScreenSave)
                 {
                     parentType = "/AbsoluteLayout";
                 }
@@ -241,7 +250,6 @@ namespace CodeOutputPlugin.Manager
             }
 
         }
-
 
         private static void SetNonAbsoluteLayoutPosition(List<VariableSave> variablesToConsider, StateSave defaultState, CodeGenerationContext context,
             StringBuilder stringBuilder, string parentBaseType)
@@ -1408,7 +1416,12 @@ namespace CodeOutputPlugin.Manager
 
             FillWithStateEnums(element, stringBuilder, tabCount);
 
-            FillWithStateProperties(element, stringBuilder, tabCount);
+            var context = new CodeGenerationContext();
+            context.Element = element;
+            context.TabCount = tabCount;
+            context.CodeOutputProjectSettings = projectSettings;
+
+            FillWithStateProperties(element, stringBuilder, tabCount, projectSettings);
 
             #endregion
 
@@ -1425,7 +1438,10 @@ namespace CodeOutputPlugin.Manager
 
             #endregion
 
-            GenerateGumSaveObjects(element, stringBuilder, tabCount);
+            if(projectSettings.GenerateGumDataTypes)
+            {
+                GenerateGumSaveObjects(element, stringBuilder, tabCount);
+            }
 
             FillWithExposedVariables(element, stringBuilder, visualApi, tabCount);
             // -- no need for AppendLine here since FillWithExposedVariables does it after every variable --
@@ -1436,9 +1452,12 @@ namespace CodeOutputPlugin.Manager
 
             GenerateAddToParentsMethod(element, visualApi, tabCount, stringBuilder, projectSettings);
 
-            GenerateApplyDefaultVariables(element, visualApi, tabCount, stringBuilder);
+            GenerateApplyDefaultVariables(context, stringBuilder);
 
-            GenerateAssignGumReferences(element, visualApi, tabCount, stringBuilder);
+            if (projectSettings.GenerateGumDataTypes)
+            {
+                GenerateAssignGumReferences(element, visualApi, tabCount, stringBuilder);
+            }
 
             GenerateApplyLocalizationMethod(element, tabCount, stringBuilder);
 
@@ -1627,6 +1646,7 @@ namespace CodeOutputPlugin.Manager
             context.Instance = null;
             context.Element = element;
             context.TabCount = tabCount;
+            context.CodeOutputProjectSettings = projectSettings;
             FillWithVariableAssignments(visualApi, stringBuilder, context);
 
             stringBuilder.AppendLine();
@@ -1634,8 +1654,11 @@ namespace CodeOutputPlugin.Manager
             if (!DoesElementInheritFromCodeGeneratedElement(element, projectSettings))
             {
                 stringBuilder.AppendLine(ToTabs(tabCount) + "InitializeInstances();");
-                stringBuilder.AppendLine(ToTabs(tabCount) + "AssignGumReferences();");
-                
+
+                if(context.CodeOutputProjectSettings.GenerateGumDataTypes)
+                {
+                    stringBuilder.AppendLine(ToTabs(tabCount) + "AssignGumReferences();");
+                }
             }
 
             stringBuilder.AppendLine();
@@ -1689,18 +1712,16 @@ namespace CodeOutputPlugin.Manager
 
         #endregion
 
-        private static void GenerateApplyDefaultVariables(ElementSave element, VisualApi visualApi, int tabCount, StringBuilder stringBuilder)
+        private static void GenerateApplyDefaultVariables(CodeGenerationContext context, StringBuilder stringBuilder)
         {
+            var tabCount = context.TabCount;
+
             var line = "private void ApplyDefaultVariables()";
             stringBuilder.AppendLine(ToTabs(tabCount) + line);
             stringBuilder.AppendLine(ToTabs(tabCount) + "{");
             tabCount++;
 
-            CodeGenerationContext context = new CodeGenerationContext();
-            context.Element = element;
-            context.TabCount = tabCount;
-
-            foreach (var instance in element.Instances)
+            foreach (var instance in context.Element.Instances)
             {
                 context.Instance = instance;
 
@@ -1708,11 +1729,11 @@ namespace CodeOutputPlugin.Manager
 
                 TryGenerateApplyLocalizationForInstance(tabCount, stringBuilder, instance);
 
-                var instanceApi = GetVisualApiForInstance(instance, element);
-                var screenOrComponent = element is ScreenSave
+                var instanceApi = GetVisualApiForInstance(instance, context.Element);
+                var screenOrComponent = context.Element is ScreenSave
                     ? "ScreenSave"
                     : "ComponentSave";
-                if(instanceApi == VisualApi.Gum)
+                if(instanceApi == VisualApi.Gum && context.CodeOutputProjectSettings.GenerateGumDataTypes)
                 {
                     stringBuilder.AppendLine(ToTabs(tabCount) + $"GumRuntime.ElementSaveExtensions.ApplyVariableReferences({instance.Name}, {screenOrComponent}.DefaultState);");
                 }
@@ -2101,7 +2122,7 @@ namespace CodeOutputPlugin.Manager
             }
         }
 
-        private static void FillWithStateProperties(ElementSave element, StringBuilder stringBuilder, int tabCount)
+        private static void FillWithStateProperties(ElementSave element, StringBuilder stringBuilder, int tabCount, CodeOutputProjectSettings codeProjectSettings)
         {
             var isXamarinForms = GetVisualApiForElement(element) == VisualApi.XamarinForms;
             var containerClassName = GetClassNameForType(element.Name, GetVisualApiForElement(element));
@@ -2137,6 +2158,7 @@ namespace CodeOutputPlugin.Manager
                     context.Element = element;
                     context.ThisPrefix = "casted";
                     context.TabCount = tabCount;
+                    context.CodeOutputProjectSettings = codeProjectSettings;
 
                     AddAssignFromElement(context, stringBuilder);
 
@@ -2184,6 +2206,7 @@ namespace CodeOutputPlugin.Manager
                     CodeGenerationContext context = new CodeGenerationContext();
                     context.Element = element;
                     context.TabCount = tabCount;
+                    context.CodeOutputProjectSettings = codeProjectSettings;
 
                     AddAssignFromElement(context, stringBuilder);
 
@@ -2212,37 +2235,40 @@ namespace CodeOutputPlugin.Manager
 
             stringBuilder.AppendLine(context.Tabs + "var appliedDynamically = false;");
 
-            stringBuilder.AppendLine(context.Tabs + "if (BindableGraphicalUiElement.ShouldApplyDynamicStates)");
-            stringBuilder.AppendLine(context.Tabs + "{");
-            context.TabCount++;
-
-            var elementPropertyName = "ElementSave";
-            if(context.VisualApi == VisualApi.XamarinForms)
+            if(context.CodeOutputProjectSettings.GenerateGumDataTypes)
             {
-                elementPropertyName =
-                    context.Element is ScreenSave ? "casted.ScreenSave"
-                    : context.Element is ComponentSave ? "casted.ComponentSave"
-                    : null;
-            }
+                stringBuilder.AppendLine(context.Tabs + "if (BindableGraphicalUiElement.ShouldApplyDynamicStates)");
+                stringBuilder.AppendLine(context.Tabs + "{");
+                context.TabCount++;
+
+                var elementPropertyName = "ElementSave";
+                if(context.VisualApi == VisualApi.XamarinForms)
+                {
+                    elementPropertyName =
+                        context.Element is ScreenSave ? "casted.ScreenSave"
+                        : context.Element is ComponentSave ? "casted.ComponentSave"
+                        : null;
+                }
 
 
-            stringBuilder.AppendLine(context.Tabs + $"var foundState = {elementPropertyName}?.GetStateSaveRecursively(value.ToString());");
-            stringBuilder.AppendLine(context.Tabs + "if (foundState != null)");
-            stringBuilder.AppendLine(context.Tabs + "{");
-            context.TabCount++;
-            if(context.VisualApi == VisualApi.XamarinForms)
-            {
-                stringBuilder.AppendLine(context.Tabs + "// Need to apply the variables in the state");
+                stringBuilder.AppendLine(context.Tabs + $"var foundState = {elementPropertyName}?.GetStateSaveRecursively(value.ToString());");
+                stringBuilder.AppendLine(context.Tabs + "if (foundState != null)");
+                stringBuilder.AppendLine(context.Tabs + "{");
+                context.TabCount++;
+                if(context.VisualApi == VisualApi.XamarinForms)
+                {
+                    stringBuilder.AppendLine(context.Tabs + "// Need to apply the variables in the state");
+                }
+                else
+                {
+                    stringBuilder.AppendLine(context.Tabs + "this.ApplyState(foundState);");
+                }
+                stringBuilder.AppendLine(context.Tabs + "appliedDynamically = true;");
+                context.TabCount--;
+                stringBuilder.AppendLine(context.Tabs + "}");
+                context.TabCount--;
+                stringBuilder.AppendLine(context.Tabs + "}");
             }
-            else
-            {
-                stringBuilder.AppendLine(context.Tabs + "this.ApplyState(foundState);");
-            }
-            stringBuilder.AppendLine(context.Tabs + "appliedDynamically = true;");
-            context.TabCount--;
-            stringBuilder.AppendLine(context.Tabs + "}");
-            context.TabCount--;
-            stringBuilder.AppendLine(context.Tabs + "}");
         }
 
         #endregion

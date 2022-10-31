@@ -5,6 +5,7 @@ using Gum.ToolStates;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Authentication.ExtendedProtection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -100,6 +101,7 @@ namespace CodeOutputPlugin.Views
             projectCategory.Members.Add(CreateDefaultScreenBaseMember());
             projectCategory.Members.Add(CreateAdjustPixelValuesForDensityMember());
             projectCategory.Members.Add(CreateBaseTypesNotCodeGenerated());
+            projectCategory.Members.Add(CreateGenerateGumDataTypesCode());
             DataGrid.Categories.Add(projectCategory);
         }
 
@@ -275,6 +277,25 @@ namespace CodeOutputPlugin.Views
 
             return member;
 
+        }
+
+        private InstanceMember CreateGenerateGumDataTypesCode()
+        {
+            var member = new InstanceMember("Generate Gum DataTypes Code", this);
+            member.CustomSetEvent += (owner, value) =>
+            {
+                if(CodeOutputProjectSettings != null)
+                {
+                    CodeOutputProjectSettings.GenerateGumDataTypes = (bool)value;
+                    CodeOutputSettingsPropertyChanged?.Invoke(this, null);
+                }
+            };
+
+            member.PreferredDisplayer = typeof(CheckBoxDisplay);
+            member.CustomGetEvent += (owner) => CodeOutputProjectSettings?.GenerateGumDataTypes ?? false;
+            member.CustomGetTypeEvent += (owner) => typeof(string);
+
+            return member;
         }
 
         #endregion
