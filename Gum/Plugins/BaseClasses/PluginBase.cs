@@ -10,6 +10,7 @@ using Gum.DataTypes.Behaviors;
 using RenderingLibrary.Graphics;
 using Gum.Responses;
 using Gum.Wireframe;
+using ToolsUtilities;
 
 namespace Gum.Plugins.BaseClasses
 {
@@ -139,6 +140,8 @@ namespace Gum.Plugins.BaseClasses
 
         public event Action BeforeRender;
         public event Action AfterRender;
+
+        public event Action<FilePath> ReactToFileChanged;
 
         // Parameters are: extension, parentElement, instance, changedMember
         public event Func<string, ElementSave, InstanceSave, string, bool> IsExtensionValid;
@@ -355,6 +358,8 @@ namespace Gum.Plugins.BaseClasses
 
         public void CallBeforeRender() => BeforeRender?.Invoke();
         public void CallAfterRender() => AfterRender?.Invoke();
+
+        public void CallReactToFileChanged(FilePath filePath) => ReactToFileChanged?.Invoke(filePath);
 
         public bool CallIsExtensionValid(string extension, ElementSave parentElement, InstanceSave instance, string changedMember) =>
             IsExtensionValid?.Invoke(extension, parentElement, instance, changedMember) ?? false;

@@ -5,6 +5,7 @@ using Gum.Managers;
 using Gum.Plugins;
 using Gum.Plugins.BaseClasses;
 using Gum.Reflection;
+using Gum.ToolStates;
 using RenderingLibrary.Graphics;
 using SkiaPlugin.Managers;
 using SkiaPlugin.Renderables;
@@ -14,6 +15,7 @@ using System.ComponentModel.Composition;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ToolsUtilities;
 
 namespace SkiaPlugin
 {
@@ -63,7 +65,32 @@ namespace SkiaPlugin
             CreateRenderableForType += HandleCreateRenderbleFor;
             VariableExcluded += DefaultStateManager.GetIfVariableIsExcluded;
             VariableSet += DefaultStateManager.HandleVariableSet;
+            ReactToFileChanged += HandleFileChanged;
             IsExtensionValid += HandleIsExtensionValid;
+        }
+
+        private void HandleFileChanged(FilePath filePath)
+        {
+            var isSvg = filePath.Extension == "svg";
+            var currentElement = SelectedState.Self.SelectedElement;
+
+            ///////////////////Early Out///////////////////////
+            if(!isSvg || currentElement == null)
+            {
+                return;
+            }
+
+            /////////////////End Early Out/////////////////////
+
+            var referencedFiles = ObjectFinder.Self
+                .GetFilesReferencedBy(currentElement)
+                .Select(item => new FilePath(item))
+                .ToList();
+
+            if (referencedFiles.Contains(filePath))
+            {
+                GumCommands.Self.WireframeCommands.Refresh(true, true);
+            }
         }
 
         private bool HandleIsExtensionValid(string arg1, ElementSave arg2, InstanceSave arg3, string arg4)

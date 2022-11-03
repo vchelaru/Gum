@@ -126,7 +126,8 @@ namespace Gum.Logic.FileWatch
 
                 if(!wasIgnored)
                 {
-                    var isFolderConsidered = filePathsToWatch.Contains(fileName.GetDirectoryContainingThis());
+                    var directoryContainingThis = fileName.GetDirectoryContainingThis();
+                    var isFolderConsidered = filePathsToWatch.Contains(directoryContainingThis);
 
                     if(!isFolderConsidered)
                     {

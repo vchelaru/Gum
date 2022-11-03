@@ -1,5 +1,6 @@
 ﻿using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
+using Gum.Plugins;
 using Gum.ToolStates;
 using System;
 using System.Collections.Generic;
@@ -50,6 +51,8 @@ namespace Gum.Managers
             {
                 ReactToCsvChanged(file);
             }
+
+            PluginManager.Self.ReactToFileChanged(file);
         }
 
         private void ReactToCsvChanged(FilePath file)

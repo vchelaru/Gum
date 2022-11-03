@@ -19,6 +19,7 @@ using RenderingLibrary.Graphics;
 using Gum.Responses;
 using System.Runtime.CompilerServices;
 using Gum.Wireframe;
+using System.Linq.Expressions;
 
 namespace Gum.Plugins
 {
@@ -598,102 +599,28 @@ namespace Gum.Plugins
 
         internal void BeforeElementSave(ElementSave savedElement)
         {
-            foreach (PluginBase plugin in this.Plugins)
-            {
-                PluginContainer container = this.mPluginContainers[plugin];
-
-                if (container.IsEnabled)
-                {
-                    try
-                    {
-                        plugin.CallBeforeElementSave(savedElement);
-                    }
-                    catch (Exception e)
-                    {
-#if DEBUG
-                        MessageBox.Show("Error in plugin " + plugin.FriendlyName + ":\r\n" + e.ToString());
-#endif
-                        container.Fail(e, "Failed in BeforeElementSave");
-                    }
-                }
-            }
+            CallMethodOnPlugin(plugin => plugin.CallBeforeElementSave(savedElement));
         }
 
         internal void AfterElementSave(ElementSave savedElement)
         {
-            foreach (PluginBase plugin in this.Plugins)
-            {
-                PluginContainer container = this.mPluginContainers[plugin];
-
-                if (container.IsEnabled)
-                {
-                    try
-                    {
-                        plugin.CallAfterElementSave(savedElement);
-                    }
-                    catch (Exception e)
-                    {
-#if DEBUG
-                        MessageBox.Show("Error in plugin " + plugin.FriendlyName + ":\r\n" + e.ToString());
-#endif
-                        container.Fail(e, "Failed in ElementSave");
-                    }
-                }
-            }
+            CallMethodOnPlugin(plugin => plugin.CallAfterElementSave(savedElement));
         }
 
 
 
         internal void BeforeProjectSave(GumProjectSave savedProject)
         {
-            foreach (var plugin in this.Plugins)
-            {
-                PluginContainer container = this.PluginContainers[plugin];
-
-                if (container.IsEnabled)
-                {
-                    try
-                    {
-                        plugin.CallBeforeProjectSave(savedProject);
-                    }
-                    catch (Exception e)
-                    {
-#if DEBUG
-                        MessageBox.Show("Error in plugin " + plugin.FriendlyName + ":\n\n" + e.ToString());
-#endif
-                        container.Fail(e, "Failed in BeforeProjectSave");
-                    }
-                }
-            }
+            CallMethodOnPlugin(plugin => plugin.CallBeforeProjectSave(savedProject));
         }
 
         internal void Export(ElementSave elementToExport)
         {
-            foreach (PluginBase plugin in this.Plugins)
-            {
-                PluginContainer container = this.mPluginContainers[plugin];
-
-                if (container.IsEnabled)
-                {
-                    try
-                    {
-                        plugin.CallExport(elementToExport);
-                    }
-                    catch (Exception e)
-                    {
-#if DEBUG
-                        MessageBox.Show("Error in plugin " + plugin.FriendlyName + ":\n\n" + e.ToString());
-#endif
-                        container.Fail(e, "Failed in ReactToRightClick");
-                    }
-                }
-            }
+            CallMethodOnPlugin(plugin => plugin.CallExport(elementToExport));
         }
 
-        internal void ModifyDefaultStandardState(string type, StateSave stateSave)
-        {
+        internal void ModifyDefaultStandardState(string type, StateSave stateSave) =>
             CallMethodOnPlugin(plugin => plugin.CallAddAndRemoveVariablesForType(type, stateSave));
-        }
 
         /// <summary>
         /// Allows all plugins to adjust the DeleteOptionsWindow whenever any object is deleted, including
@@ -815,10 +742,9 @@ namespace Gum.Plugins
             return toReturn;
         }
 
-        internal void InstanceReordered(InstanceSave instance)
-        {
+        internal void InstanceReordered(InstanceSave instance) =>
             CallMethodOnPlugin(plugin => plugin.CallInstanceReordered(instance));
-        }
+        
 
         internal bool GetIfExtensionIsValid(string extension, ElementSave parentElement, InstanceSave instance, string changedMember)
         {
@@ -841,7 +767,7 @@ namespace Gum.Plugins
         internal void WireframeRefreshed()
         {
             CallMethodOnPlugin(
-                (plugin) => plugin.CallWireframeRefreshed());
+                plugin => plugin.CallWireframeRefreshed());
         }
 
         internal IRenderableIpso CreateRenderableForType(string type)
@@ -850,7 +776,7 @@ namespace Gum.Plugins
 
 
             CallMethodOnPlugin(
-                (plugin) =>
+                plugin =>
                 {
                     var innerToReturn = plugin.CallCreateRenderableForType(type);
 
@@ -960,6 +886,9 @@ namespace Gum.Plugins
 
         internal void AfterRender() =>
             CallMethodOnPlugin(plugin => plugin.CallAfterRender());
+
+        internal void ReactToFileChanged(FilePath filePath) =>
+            CallMethodOnPlugin(plugin => plugin.CallReactToFileChanged(filePath));
 
         #endregion
 
