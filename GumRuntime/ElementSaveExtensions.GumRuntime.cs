@@ -387,16 +387,19 @@ namespace GumRuntime
 
                     var component = ObjectFinder.Self.GetComponent(stripped);
 
-                    stateSave = component.DefaultState;
-
-                    right = right.Substring(firstDot + 1);
-
-                    if (right.Contains("."))
+                    if(component != null)
                     {
-                        var dotAfterInstance = right.IndexOf(".");
-                        var instanceName = right.Substring(0, dotAfterInstance);
-                        var instance = component.GetInstance(instanceName);
-                        GetRightSideAndState(instance, ref right, ref stateSave);
+                        stateSave = component.DefaultState;
+
+                        right = right.Substring(firstDot + 1);
+
+                        if (right.Contains("."))
+                        {
+                            var dotAfterInstance = right.IndexOf(".");
+                            var instanceName = right.Substring(0, dotAfterInstance);
+                            var instance = component.GetInstance(instanceName);
+                            GetRightSideAndState(instance, ref right, ref stateSave);
+                        }
                     }
                 }
             }
