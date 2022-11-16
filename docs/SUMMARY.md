@@ -27,6 +27,7 @@
     * [Relative Layout Unit Type](gum-elements/general-properties/relative-layout-unit-type.md)
     * [Rotation](gum-elements/general-properties/rotation.md)
     * [Visible](gum-elements/general-properties/visible.md)
+    * [Variable References](gum-elements/general-properties/variable-references.md)
     * [Width Units](gum-elements/general-properties/width-units.md)
     * [Wraps Children](gum-elements/general-properties/wraps-children.md)
     * [X](gum-elements/general-properties/x.md)
