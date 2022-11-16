@@ -36,7 +36,7 @@ To create your own font file:
 4. After changing the settings, click **OK**
 5.  Select which characters you would like included in your font. Adding characters can increase the font size, but may be required depending on which characters you intend to use.
 
-    ![](<../../.gitbook/assets/image (2) (1).png>)
+    <img src="../../.gitbook/assets/image (2) (1).png" alt="" data-size="original">
 6. Select **Options**->**Export Options**
 7. Select a Bit depth of 32 (or else transparencies won’t come through).
 8. Select the texture width and height. For best performance, select a size which will contain all of the characters you have selected. Also, many game engines prefer textures which are _power of two_ such as 256, 512, 1024, or 2048. Sizes larger than 2048 may not render properly on some hardware.
