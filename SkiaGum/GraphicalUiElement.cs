@@ -5012,6 +5012,7 @@ namespace Gum.Wireframe
                     if (font != null && mContainedObjectAsIpso is Text text)
                     {
                         text.FontName = font;
+                        text.FontSize = fontSize;
                     }
                 }
             }

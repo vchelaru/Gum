@@ -1472,15 +1472,15 @@ namespace CodeOutputPlugin.Manager
             tabCount++;
             #endregion
 
-            #region States
-
-            FillWithStateEnums(element, stringBuilder, tabCount);
 
             var context = new CodeGenerationContext();
             context.Element = element;
             context.TabCount = tabCount;
             context.CodeOutputProjectSettings = projectSettings;
 
+            #region States
+
+            FillWithStateEnums(element, stringBuilder, tabCount);
             FillWithStateProperties(element, stringBuilder, tabCount, projectSettings);
 
             #endregion
@@ -1500,7 +1500,7 @@ namespace CodeOutputPlugin.Manager
 
             if(projectSettings.GenerateGumDataTypes)
             {
-                GenerateGumSaveObjects(element, stringBuilder, tabCount);
+                GenerateGumSaveObjects(context, stringBuilder);
             }
 
             FillWithExposedVariables(element, stringBuilder, visualApi, tabCount);
@@ -2311,7 +2311,18 @@ namespace CodeOutputPlugin.Manager
                 }
 
 
-                stringBuilder.AppendLine(context.Tabs + $"var foundState = {elementPropertyName}?.GetStateSaveRecursively(value.ToString());");
+                stringBuilder.AppendLine(context.Tabs + "var qualifiedValueName = value.ToString();");
+                stringBuilder.AppendLine(context.Tabs + "var name = qualifiedValueName;");
+                stringBuilder.AppendLine(context.Tabs + "if (qualifiedValueName.Contains(\".\"))");
+                stringBuilder.AppendLine(context.Tabs + "{");
+                context.TabCount++;
+                stringBuilder.AppendLine(context.Tabs + "var lastIndex = qualifiedValueName.LastIndexOf('.');");
+                stringBuilder.AppendLine(context.Tabs + "name = qualifiedValueName.Substring(lastIndex + 1);");
+                context.TabCount--;
+                stringBuilder.AppendLine(context.Tabs + "}");
+                stringBuilder.AppendLine(context.Tabs + "var foundState = ElementSave?.GetStateSaveRecursively(name);");
+
+                //stringBuilder.AppendLine(context.Tabs + $"var foundState = {elementPropertyName}?.GetStateSaveRecursively(value.ToString());");
                 stringBuilder.AppendLine(context.Tabs + "if (foundState != null)");
                 stringBuilder.AppendLine(context.Tabs + "{");
                 context.TabCount++;
@@ -2333,15 +2344,29 @@ namespace CodeOutputPlugin.Manager
 
         #endregion
 
-        private static void GenerateGumSaveObjects(ElementSave element, StringBuilder stringBuilder, int tabCount)
+        private static void GenerateGumSaveObjects(CodeGenerationContext context, StringBuilder stringBuilder)
         {
+            var element = context.Element;
             if(element is ScreenSave)
             {
-                stringBuilder.AppendLine(ToTabs(tabCount) + "Gum.DataTypes.ScreenSave ScreenSave { get; set; }");
+                stringBuilder.AppendLine(context.Tabs + "Gum.DataTypes.ScreenSave ScreenSave { get; set; }");
             }
             else if(element is ComponentSave)
             {
-                stringBuilder.AppendLine(ToTabs(tabCount) + "Gum.DataTypes.ComponentSave ComponentSave { get; set; }");
+                if(context.VisualApi == VisualApi.XamarinForms)
+                {
+                    stringBuilder.AppendLine(context.Tabs + "Gum.DataTypes.ComponentSave ComponentSave { get; set; }");
+                }
+                else
+                {
+                    stringBuilder.AppendLine(context.Tabs + "Gum.DataTypes.ComponentSave ComponentSave");
+                    stringBuilder.AppendLine(context.Tabs + "{");
+                    context.TabCount++;
+                    stringBuilder.AppendLine(context.Tabs + "get => ElementSave as Gum.DataTypes.ComponentSave;");
+                    stringBuilder.AppendLine(context.Tabs + "set => ElementSave = value;");
+                    context.TabCount--;
+                    stringBuilder.AppendLine(context.Tabs + "}");
+                }
             }
         }
 
