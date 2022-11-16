@@ -22,13 +22,13 @@ The following shows how to use the ChildrenLayout property to stack objects. It 
 
 When children in a container are stacked, their position values can be used to separate the objects. For example, on a TopToBottomStack, the Y value of each child can be used to separate it from the previous child.
 
-![](<../../.gitbook/assets/GapInStack (1).png>)
+![](../../.gitbook/assets/GapInStack.png)
 
 ## Reordering Children
 
 Children of a container which uses the **TopToBottomStack** or **LeftToWriteStack** will be ordered according to their order in the tree view on the left. By default this is the order in which the children are added to a parent container.
 
-![](<../../.gitbook/assets/GumOrdering1 (1).png>)
+![](../../.gitbook/assets/GumOrdering1.png)
 
 Children can be reordered using the right-click menu on an instance.
 
@@ -52,6 +52,6 @@ In the image shown above, the red rectangle is positioned directly to the right 
 
 If the red rectangle's [X Origin](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Elements/General%20Properties/X%20Origin/README.md) is changed to **Right**, then its right side will align with the right side of the blue rectangle, resulting in the red overlapping the blue completely. In this case the stacking is essentially cancelled out by the [X Origin](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Elements/General%20Properties/X%20Origin/README.md).
 
-![](<../../.gitbook/assets/LeftToRightCompleteOverlap (1).png>)
+![](../../.gitbook/assets/LeftToRightCompleteOverlap.png)
 
 This overlapping may not be desirable, so keep this in mind when changing a stacked child's origin.

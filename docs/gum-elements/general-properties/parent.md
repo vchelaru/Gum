@@ -15,4 +15,4 @@ To set a parent/child relationship:
 
 The Parent can also be changed through a dropdown:
 
-![](<../../.gitbook/assets/ParentDropdownGum (1).png>)
+![](../../.gitbook/assets/ParentDropdownGum.png)

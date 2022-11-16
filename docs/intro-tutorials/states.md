@@ -20,13 +20,13 @@ First we'll define two new states. All components and screens have a "Default" s
 2. Enter the name "Highlighted"
 3. Click OK
 
-![](<../.gitbook/assets/GumEnterStateName (1).PNG>)
+![](../.gitbook/assets/GumEnterStateName.PNG)
 
-![](<../.gitbook/assets/GumEditAddState (1).png>)
+![](../.gitbook/assets/GumEditAddState.png)
 
 The Button component will now have a new state called Highlighted:
 
-![](<../.gitbook/assets/GumState (1).png>)
+![](../.gitbook/assets/GumState.png)
 
 ## Setting variables in states
 

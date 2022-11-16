@@ -17,11 +17,11 @@ Normally, when a new state is created, all variables are explicitly unset. The v
 
 For example, the following image shows a component with a state called **State1** with no variables explicitly assigned. Notice all values are green:
 
-![](<../../.gitbook/assets/unassignedvalues (1).png>)
+![](../../.gitbook/assets/unassignedvalues.png)
 
 We can see the same behavior on a categorized state. The following image shows the categorized **LeftSide** state with all inherited values:
 
-![](<../../.gitbook/assets/unassignedcategorized (1).png>)
+![](../../.gitbook/assets/unassignedcategorized.png)
 
 As mentioned in the introduction, if a varible is explicitly set on one state in a category, then all other states in that category will that same variable set to its default.
 
@@ -31,7 +31,7 @@ For example, if we set the **X** variable in the **LeftSide** state, the **X** v
 
 Once the **X** variable is set on one state in a category, all other states in the same category will automatically have this value set - even new states:
 
-![](<../../.gitbook/assets/newcategorizedstate (1).gif>)
+![](../../.gitbook/assets/newcategorizedstate.gif)
 
 ## Removing Variables from Categories
 
@@ -41,6 +41,6 @@ Variables can be removed from states, but this removal must be done at the categ
 2. Click the "X" button next to the variable
 3. Confirm that you would like to remove the variable. Warning: this will remove the variable from all contained states.
 
-![](<../../.gitbook/assets/removevariablefromcategory (1).png>)
+![](../../.gitbook/assets/removevariablefromcategory.png)
 
 This will remove the assignment of the variable from all states in the category.

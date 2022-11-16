@@ -6,13 +6,13 @@ The properties window in Gum is used to provide extensive control over instances
 
 The properties window will show properties for the selected instance or element.
 
-![](<../.gitbook/assets/image (10).png>)
+![](../.gitbook/assets/image.png)
 
 ## Editing Properties
 
 Properties can be edited simply by changing values on the selected property. For example, to move the text to the right, change its X value to a positive number:
 
-![](<../.gitbook/assets/image (4).png>)
+![](<../.gitbook/assets/image (6).png>)
 
 ## Positioning Instances
 
@@ -22,7 +22,7 @@ By default all objects are positioned by their top-left corner. In the example a
 
 We can change the origin of the Text object by setting its "X Origin" and "Y Origin" values. Notice that if X Origin is set to "Center" then the Text object is positioned by its center:
 
-![](<../.gitbook/assets/image (3).png>)
+![](<../.gitbook/assets/image (4).png>)
 
 Notice that I had to pan the view to be able to see the Text object. Gum provides multiple ways to pan the view:
 
@@ -34,7 +34,7 @@ Changing the X Origin value changes the origin of the selected instance; however
 
 We can change the origin that the Text is relative to by changing the X Units. By default the X Units property is set to **Pixels from Left** for X and **Pixels from Top** for Y.&#x20;
 
-![](<../.gitbook/assets/image (11).png>)
+![](<../.gitbook/assets/image (13).png>)
 
 Changing the X Units to **Pixels from Right** will cause the Text to be positioned on the right-side of the screen.
 
@@ -44,7 +44,7 @@ Changing the X Units to **Pixels from Right** will cause the Text to be position
 
 The X,Y values, Origin values, and Units values are all available for every type of element in Gum; however, these values only change the bounds. In the case of a Text object we may be interested in how the text is aligned within the bounds. The Text object offers two properties for aligning its text: **Horizontal Alignment** and **Vertical Alignment**. Changing the **Horizontal Alignment** to **Center** centers the Text within its bounds:
 
-![](<../.gitbook/assets/image (9).png>)
+![](<../.gitbook/assets/image (11).png>)
 
 ## Default and overriding values
 
@@ -56,12 +56,12 @@ To see how this works, select the "Text" item under the "Standard" item. Notice 
 
 If the default Horizontal Alignment and Vertical Alignment values are changed, the changes will immediately be reflected in the preview window for the default Text configuration:
 
-![](<../.gitbook/assets/image (5).png>)
+![](<../.gitbook/assets/image (1).png>)
 
 Now if we select the TextIntance we will see that the VerticalAlignment is visibly using the Bottom value; however the **Horizontal Alignment** is still using center - this is because a value that is explicitly set on an instance will always override the default value set in the Standard element. Notice that **Horizontal Alignment** is black (indicating a custom value) and **Vertical Alignment** is green (indicating a default value).
 
-![](<../.gitbook/assets/image (6).png>)
+![](<../.gitbook/assets/image (9).png>)
 
 Values can be reverted back to their default simply by right-clicking on the variable name in the properties window and selecting **Make Default**
 
-![](<../.gitbook/assets/image (7).png>)
+![](<../.gitbook/assets/image (5).png>)

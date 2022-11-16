@@ -14,4 +14,4 @@ Toggling the Visible property changes whether an object is drawn.
 
 Toggling the visibility of a parent will make all children invisible, even if a child's Visible property is true.
 
-![](<../../.gitbook/assets/VisibleChildParent (1).gif>)
+![](../../.gitbook/assets/VisibleChildParent.gif)

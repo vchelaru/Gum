@@ -12,7 +12,7 @@ The followingshows a child [ColoredRectangle](https://github.com/vchelaru/Gum/tr
 
 The followingshows a child [ColoredRectangle](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Elements/General%20Properties/ColoredRectangle/README.md) positioned 50 **PixelsFromCenterY** relative to its parent:
 
-![](<../../.gitbook/assets/PixelsFromCenterYGum (1).png>)
+![](../../.gitbook/assets/PixelsFromCenterYGum.png)
 
 ## PixelsFromCenterYInverted
 

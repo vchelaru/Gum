@@ -14,7 +14,7 @@ The following shows a child [ColoredRectangle](https://github.com/vchelaru/Gum/t
 
 The following shows a child [ColoredRectangle](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/Gum/coloredrectangle/ColoredRectangle.html) with 100 **Percentage** Width, which means it will have 100% of the width of its parent. Note that 100 **Percentage** is the same as 0 **RelativeToContainer**:
 
-![](<../../.gitbook/assets/100PercentageWidth (1).png>)
+![](../../.gitbook/assets/100PercentageWidth.png)
 
 If an object uses **Percentage** Width, but has no parent, it will size itself as a percentage of the entire screen's width.
 
@@ -22,7 +22,7 @@ If an object uses **Percentage** Width, but has no parent, it will size itself a
 
 The following image shows a child [ColoredRectangle](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/Gum/coloredrectangle/ColoredRectangle.html) with -10 **RelativeToContainer** Width, which means it will always be 10 pixels less wide than its parent.
 
-![](<../../.gitbook/assets/Negative10RelativeToContainer (1).png>)
+![](../../.gitbook/assets/Negative10RelativeToContainer.png)
 
 If an object uses **RelativeToContainer** Width, but has no parent, it will size itself relative to the entire screen's width.
 
@@ -30,15 +30,15 @@ If an object uses **RelativeToContainer** Width, but has no parent, it will size
 
 The following image shows a child [ColoredRectangle](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/Gum/coloredrectangle/ColoredRectangle.html) with 50 **RelativeToChildren** Width, which means that it will always be 50 pixels wider than is necessary to contain its children. Since the rectangle has no children, this is the same as having 50 **Absolute** Width:
 
-![](<../../.gitbook/assets/RelativeToChildren1 (1).png>)
+![](../../.gitbook/assets/RelativeToChildren1.png)
 
 **RelativeToChildren** can be used to size an object based on the position and sizes of a container's children. The following image shows a container with 0 **RelativeToChildren** Width, which mans that its width is set just large enough to contain its children. Since the rectangle on the right is the furthest-right rectangle, the width of the container is set to be wide enough to contain the right-edge of the furthest-right blue rectangle.
 
-![](<../../.gitbook/assets/RelativeToChildren3 (1).png>)
+![](../../.gitbook/assets/RelativeToChildren3.png)
 
 A non-zero **Width** when using **RelativeToChildren** can be used to add additional padding to a parent container. The following image shows a container with 20 pixels of padding width:
 
-![](<../../.gitbook/assets/RelativeToChildren4 (1).png>)
+![](../../.gitbook/assets/RelativeToChildren4.png)
 
 **RelativeToChildren** will dynamically adjust to changes in properties on the children. In the following animation the container has a **Children Layout** of **LeftToRightStack**. Adding additional children expands the container automatically:
 

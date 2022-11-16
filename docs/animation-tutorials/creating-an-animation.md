@@ -15,7 +15,7 @@ First we'll create a component which will be animated. To do this:
 5. Select the "Alignment" tab and click the middle button to have the TextInstance fill the TextComponent
 6. Select the Variables tab and change the VerticalAlignment and HorizontalAlignment to Center
 
-![](<../.gitbook/assets/CreatingAnimationCreateComponent (1).gif>)
+![](../.gitbook/assets/CreatingAnimationCreateComponent.gif)
 
 ## Creating the States
 
@@ -73,4 +73,4 @@ The "Interpolation Type" value sets how one keyframe blends to another. By defau
 
 Playing the animation will reflect these changes.
 
-![](<../.gitbook/assets/ElasticAnimation (1).gif>)
+![](../.gitbook/assets/ElasticAnimation.gif)

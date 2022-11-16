@@ -17,7 +17,7 @@ To understand how components work, we'll create a simple Button component. To do
 3. Drag+drop a "ColoredRectangle" standard element into the Button component
 4. Drag+drop a "Text" standard element into the Button component
 
-![](<../.gitbook/assets/GumButton1 (1).PNG>)
+![](../.gitbook/assets/GumButton1.PNG)
 
 Since both the ColoredRectangleInstance and TextInstance are using white text you may not be able to see the Text. Let's change the ColoredRectangleInstance's color:
 
@@ -28,7 +28,7 @@ Since both the ColoredRectangleInstance and TextInstance are using white text yo
 
 Now you should be able to see the Text on top of the rectangle:
 
-![](<../.gitbook/assets/GumWhiteTextBlueRect (1).PNG>)
+![](../.gitbook/assets/GumWhiteTextBlueRect.PNG)
 
 ## Sizing the colored rectangle
 
@@ -44,7 +44,7 @@ To do this:
 
 Now the ColoredRectangleInstance will automatically match the Button's Width and Height:
 
-![](<../.gitbook/assets/GumRelativeToContainerWidthHeight (1).PNG>)
+![](../.gitbook/assets/GumRelativeToContainerWidthHeight.PNG)
 
 ## Positioning the Text
 
@@ -76,7 +76,7 @@ Finally, let's make the width of the text match the width of the button. For the
 2. Change the Width Units to "RelativeToContainer"
 3. Change Width to -40. This means that the width of the Text will be 40 pixels less than the width of its container. Since the button is centered this means a 20 pixel border on the left and 20 on the right (20+20=40).
 
-![](<../.gitbook/assets/GumBorderedText (1).PNG>)
+![](../.gitbook/assets/GumBorderedText.PNG)
 
 ## Setting the Button default values
 

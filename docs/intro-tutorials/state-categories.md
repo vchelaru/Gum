@@ -26,9 +26,9 @@ For this tutorial we'll create a new component. This component will have state c
 4. Enter the name "Size" for the new category and click OK
 5. Repeat the above steps to create a "Color" category
 
-![](<../.gitbook/assets/GumAddCategoryCalledSize (1).PNG>)
+![](../.gitbook/assets/GumAddCategoryCalledSize.PNG)
 
-![](<../.gitbook/assets/GumAddCategory (1).png>)
+![](../.gitbook/assets/GumAddCategory.png)
 
 Now we can add states to the categories. To do this:
 
@@ -41,7 +41,7 @@ Now we can add states to the categories. To do this:
 7. Right-click on the "Color" category again and select "Add State
 8. Add a state called "Blue"
 
-![](<../.gitbook/assets/GumStatesInCategories (1).PNG>)
+![](../.gitbook/assets/GumStatesInCategories.PNG)
 
 ## Adding visuals
 
@@ -62,9 +62,9 @@ First we'll set the Size states. To do this:
 3. Select the "Small" state
 4. Resize the colored rectangle so it is smaller than the default
 
-![](<../.gitbook/assets/GumSmallState (1).PNG>)
+![](../.gitbook/assets/GumSmallState.PNG)
 
-![](<../.gitbook/assets/GumBigState (1).PNG>)
+![](../.gitbook/assets/GumBigState.PNG)
 
 Next we'll set the Color states. To do this:
 
@@ -75,7 +75,7 @@ Next we'll set the Color states. To do this:
 
 ![](<../.gitbook/assets/GumBlueState (1).PNG>)
 
-![](<../.gitbook/assets/GumRedState (1).PNG>)
+![](../.gitbook/assets/GumRedState.PNG)
 
 ## Viewing multiple states on an instance
 
@@ -87,6 +87,6 @@ Now that we have our CategoryDemo component set up with multiple categories, we 
 4. Scroll down in the Variables list and notice that the instance has drop-downs for each category.
 5. You can set each state independently and the states will combine
 
-![](<../.gitbook/assets/GumCombinedStates (1).PNG>)
+![](../.gitbook/assets/GumCombinedStates.PNG)
 
-![](<../.gitbook/assets/GumLookCategoriesOnInstance (1).PNG>)
+![](../.gitbook/assets/GumLookCategoriesOnInstance.PNG)

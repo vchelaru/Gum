@@ -12,7 +12,7 @@ Gum separates its elements into three categories: Screens, Components, and Stand
 
 Standard elements represent the building-blocks for screens and components, and all projects use the same set of standard elements. To see the list of elements, expand the Standard tree item. Clicking on any element will display it in the preview window.
 
-![](<../.gitbook/assets/SelectedSprite (1).PNG>)
+![](../.gitbook/assets/SelectedSprite.PNG)
 
 In the image above, the Sprite element is selected. Notice that since a "SourceFile" is not set, the Sprite renders as a red X.
 
@@ -41,7 +41,7 @@ Instances of standard and component elements can be added to screens and compone
 3. Drag the Text item onto the preview window
 4. Release the mouse button. A new text instance will appear in your screen
 
-![](<../.gitbook/assets/GumTextInstance (1).png>)
+![](../.gitbook/assets/GumTextInstance.png)
 
 ## Editing in the preview window
 
@@ -51,4 +51,4 @@ You can use the resize handles to resize the instance, or you can simply push th
 
 When the mouse is positioned over an instance you will see an outline over the instance
 
-![](<../.gitbook/assets/GumInstanceOutline (1).png>)
+![](../.gitbook/assets/GumInstanceOutline.png)

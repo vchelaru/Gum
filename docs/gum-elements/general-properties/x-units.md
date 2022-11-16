@@ -24,4 +24,4 @@ The following shows a child [ColoredRectangle](https://github.com/vchelaru/Gum/t
 
 The following shows a child [ColoredRectangle](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Elements/General%20Properties/ColoredRectangle/README.md) positioned 50 **PercentageWidth** relative to its Parent. In other words, it will be positioned halfway between the left and right edges of the Parent:
 
-![](<../../.gitbook/assets/PercentageWidthGum (1).png>)
+![](../../.gitbook/assets/PercentageWidthGum.png)

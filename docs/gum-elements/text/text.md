@@ -8,7 +8,7 @@ Text objects have a Text property which controls the displayed text. By default 
 
 The Text property can be changed in the multi-line edit window.
 
-![](<../../.gitbook/assets/GumIsAwesome (1).png>)
+![](../../.gitbook/assets/GumIsAwesome.png)
 
 Text will wrap according to the Text object's Width.
 

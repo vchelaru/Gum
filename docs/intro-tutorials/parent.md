@@ -35,7 +35,7 @@ Next we'll make the UnitsDisplay use the ValueText as its parent:
 
 Next we'll want the parent text (ValueText) to automatically size according to its contents. To do this, set its Width to 0. Setting Width to 0 on a text instance means that the text's width will be equal to the size needed to display the text.
 
-![](<../.gitbook/assets/GumZeroWidthText (1).PNG>)
+![](../.gitbook/assets/GumZeroWidthText.PNG)
 
 ## Adjusting Colors
 
