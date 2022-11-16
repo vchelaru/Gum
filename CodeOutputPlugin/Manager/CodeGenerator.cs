@@ -241,7 +241,7 @@ namespace CodeOutputPlugin.Manager
             {
                 if (parentType?.EndsWith("/AbsoluteLayout") == true)
                 {
-                    SetAbsoluteLayoutPosition(variablesToConsider, state, context, stringBuilder);
+                    SetAbsoluteLayoutPosition(variablesToConsider, state, context, stringBuilder, parentType);
                 }
                 else //if(parent?.BaseType?.EndsWith("/StackLayout") == true)
                 {
@@ -398,40 +398,52 @@ namespace CodeOutputPlugin.Manager
             if (yUnits == PositionUnitType.PixelsFromTop)
             {
                 topMargin = y;
-            }
-            if (yUnits == PositionUnitType.PixelsFromTop && heightUnits == DimensionUnitType.RelativeToChildren)
-            {
-                if (isContainedInStackLayout == false)
+                if (heightUnits == DimensionUnitType.RelativeToChildren)
                 {
-                    // If it's a stack layout, we don't want to subtract from here.
-                    // Update Feb 14, 2022
-                    // Not sure why we subtract the height...
-                    //bottomMargin = -height - y;
-                    // If a Gum object is relative to children with
-                    // a height of 10, that means it should be 10 units
-                    // bigger than its children, so we should add 10
-                    bottomMargin = height - y;
-                }
-                else
-                {
-                    // in a stack layout, so give the margin according to the y origin:
-                    if (yOrigin == VerticalAlignment.Top)
+                    if (isContainedInStackLayout == false)
                     {
-                        // Adding a margin will move the next item after this, but it doesn't make "this" bigger...
-                        //bottomMargin = height;
-                        //... so instead, we use padding
-                        bottomPadding = height;
+                        // If it's a stack layout, we don't want to subtract from here.
+                        // Update Feb 14, 2022
+                        // Not sure why we subtract the height...
+                        //bottomMargin = -height - y;
+                        // If a Gum object is relative to children with
+                        // a height of 10, that means it should be 10 units
+                        // bigger than its children, so we should add 10
+                        // Update November 16, 2022
+                        // Why do we subtract the Y value? Shouldn't it just be
+                        // whatever the extra height? Not sure if it should be in all situations
+                        // or only when YOrigin is top, so let's be safe and check to only change the
+                        // one case:
+                        if (yOrigin == VerticalAlignment.Top)
+                        {
+                            bottomMargin = height;
+                        }
+                        else
+                        {
+                            bottomMargin = height - y;
+                        }
                     }
-                    else if (yOrigin == VerticalAlignment.Center)
+                    else
                     {
-                        // does this need padding...?
-                        topMargin += height / 2.0f;
-                        bottomMargin = height / 2.0f;
-                    }
-                    else if (yOrigin == VerticalAlignment.Bottom)
-                    {
-                        //... or this?
-                        topMargin += height;
+                        // in a stack layout, so give the margin according to the y origin:
+                        if (yOrigin == VerticalAlignment.Top)
+                        {
+                            // Adding a margin will move the next item after this, but it doesn't make "this" bigger...
+                            //bottomMargin = height;
+                            //... so instead, we use padding
+                            bottomPadding = height;
+                        }
+                        else if (yOrigin == VerticalAlignment.Center)
+                        {
+                            // does this need padding...?
+                            topMargin += height / 2.0f;
+                            bottomMargin = height / 2.0f;
+                        }
+                        else if (yOrigin == VerticalAlignment.Bottom)
+                        {
+                            //... or this?
+                            topMargin += height;
+                        }
                     }
                 }
             }
@@ -462,6 +474,7 @@ namespace CodeOutputPlugin.Manager
                     $"{bottomMargin.ToString(CultureInfo.InvariantCulture)});");
             }
 
+            #region Write Padding
             var hasPadding = topPadding != 0 || leftPadding != 0 || rightPadding != 0 || bottomPadding != 0;
             if (hasPadding)
             {
@@ -471,6 +484,7 @@ namespace CodeOutputPlugin.Manager
                     $"{rightPadding.ToString(CultureInfo.InvariantCulture)}, " +
                     $"{bottomPadding.ToString(CultureInfo.InvariantCulture)});");
             }
+            #endregion
 
             #region Write HorizontalOptions
             if (widthUnits == DimensionUnitType.Absolute || widthUnits == DimensionUnitType.RelativeToChildren || widthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
@@ -580,7 +594,7 @@ namespace CodeOutputPlugin.Manager
 
         }
 
-        private static void SetAbsoluteLayoutPosition(List<VariableSave> variablesToConsider, StateSave state, CodeGenerationContext context, StringBuilder stringBuilder)
+        private static void SetAbsoluteLayoutPosition(List<VariableSave> variablesToConsider, StateSave state, CodeGenerationContext context, StringBuilder stringBuilder, string parentBaseType)
         {
             #region Const values
             const string WidthProportionalFlag = "AbsoluteLayoutFlags.WidthProportional";
@@ -611,6 +625,7 @@ namespace CodeOutputPlugin.Manager
             var y = variableFinder.GetValue<float>(variablePrefix + "Y");
             var width = variableFinder.GetValue<float>(variablePrefix + "Width");
             var height = variableFinder.GetValue<float>(variablePrefix + "Height");
+            var originalHeight = height;
 
             var xUnits = variableFinder.GetValue<PositionUnitType>(variablePrefix + "X Units");
             var yUnits = variableFinder.GetValue<PositionUnitType>(variablePrefix + "Y Units");
@@ -641,6 +656,11 @@ namespace CodeOutputPlugin.Manager
             int topMargin = 0;
             int rightMargin = 0;
             int bottomMargin = 0;
+
+            float leftPadding = 0;
+            float rightPadding = 0;
+            float topPadding = 0;
+            float bottomPadding = 0;
 
             #region Apply Width Units
 
@@ -707,6 +727,17 @@ namespace CodeOutputPlugin.Manager
             }
 
             #endregion
+
+            var isContainedInStackLayout = parentBaseType?.EndsWith("/StackLayout") == true;
+            var isVariableOwnerAbsoluteLayout = false;
+            if (context.Instance != null)
+            {
+                isVariableOwnerAbsoluteLayout = context.Instance.BaseType?.EndsWith("/AbsoluteLayout") == true;
+            }
+            else
+            {
+                isVariableOwnerAbsoluteLayout = context.Element.BaseType?.EndsWith("/AbsoluteLayout") == true;
+            }
 
             #region Apply XUnits
 
@@ -819,7 +850,29 @@ namespace CodeOutputPlugin.Manager
 
             #region Apply YUnits
 
-            if (yUnits == PositionUnitType.PixelsFromCenterY)
+            if (yUnits == PositionUnitType.PixelsFromTop)
+            {
+                if (heightUnits == DimensionUnitType.RelativeToContainer)
+                {
+                    topMargin = MathFunctions.RoundToInt(y);
+                    y = 0;
+
+                    if (yOrigin == VerticalAlignment.Top)
+                    {
+                        bottomPadding = originalHeight;
+                    }
+
+                }
+                else if(heightUnits == DimensionUnitType.RelativeToChildren)
+                {
+                    if (yOrigin == VerticalAlignment.Top)
+                    {
+                        bottomPadding = originalHeight;
+                    }
+
+                }
+            }
+            else if (yUnits == PositionUnitType.PixelsFromCenterY)
             {
                 if (yOrigin == VerticalAlignment.Center)
                 {
@@ -848,14 +901,7 @@ namespace CodeOutputPlugin.Manager
                     proportionalFlags.Add(YProportionalFlag);
                 }
             }
-            else if (yUnits == PositionUnitType.PixelsFromTop)
-            {
-                if (heightUnits == DimensionUnitType.RelativeToContainer)
-                {
-                    topMargin = MathFunctions.RoundToInt(y);
-                    y = 0;
-                }
-            }
+
             else if (yUnits == PositionUnitType.PercentageHeight)
             {
                 y /= 100.0f;
@@ -882,6 +928,20 @@ namespace CodeOutputPlugin.Manager
                 }
             }
 
+
+            #endregion
+
+            #region Write Padding
+
+            var hasPadding = topPadding != 0 || leftPadding != 0 || rightPadding != 0 || bottomPadding != 0;
+            if (hasPadding)
+            {
+                stringBuilder.AppendLine($"{codePrefix}.Padding = new Thickness(" +
+                    $"{leftPadding.ToString(CultureInfo.InvariantCulture)}, " +
+                    $"{topPadding.ToString(CultureInfo.InvariantCulture)}, " +
+                    $"{rightPadding.ToString(CultureInfo.InvariantCulture)}, " +
+                    $"{bottomPadding.ToString(CultureInfo.InvariantCulture)});");
+            }
 
             #endregion
 
