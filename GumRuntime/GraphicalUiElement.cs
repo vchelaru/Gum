@@ -4661,7 +4661,7 @@ namespace Gum.Wireframe
             return handled;
         }
 
-        private bool AssignSourceFileOnSprite(string value, Sprite sprite)
+        public bool AssignSourceFileOnSprite(string value, Sprite sprite)
         {
             bool handled;
 

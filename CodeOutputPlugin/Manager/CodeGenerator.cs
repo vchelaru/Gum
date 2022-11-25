@@ -857,7 +857,9 @@ namespace CodeOutputPlugin.Manager
                     topMargin = MathFunctions.RoundToInt(y);
                     y = 0;
 
-                    if (yOrigin == VerticalAlignment.Top)
+                    // originalHeight greater than 0 means we are going to make this bigger, but not have the 
+                    // inner controls be abel to use that space
+                    if (yOrigin == VerticalAlignment.Top && originalHeight > 0)
                     {
                         bottomPadding = originalHeight;
                     }
@@ -865,7 +867,7 @@ namespace CodeOutputPlugin.Manager
                 }
                 else if(heightUnits == DimensionUnitType.RelativeToChildren)
                 {
-                    if (yOrigin == VerticalAlignment.Top)
+                    if (yOrigin == VerticalAlignment.Top && originalHeight > 0)
                     {
                         bottomPadding = originalHeight;
                     }

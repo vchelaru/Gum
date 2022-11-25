@@ -226,7 +226,9 @@ namespace Gum.Managers
 
             mVariablesDataGrid.IsInnerGridEnabled = !hasCustomState;
 
-            List<MemberCategory> categories = GetMemberCategories(element, state, category, instance);
+            List<MemberCategory> categories = element == null
+                ? new List<MemberCategory>()
+                : GetMemberCategories(element, state, category, instance);
 
             mLastBehaviorSave = behaviorSave;
 

@@ -90,7 +90,7 @@ namespace StateAnimationPlugin.Managers
 
         public void HandleRename(StateSave stateSave, string oldName, ElementAnimationsViewModel viewModel)
         {
-            var parentCategory = SelectedState.Self.SelectedElement?.Categories.First(item => item.States.Contains(stateSave));
+            var parentCategory = SelectedState.Self.SelectedElement?.Categories.FirstOrDefault(item => item.States.Contains(stateSave));
 
             string prefix = "";
             if(parentCategory != null)
