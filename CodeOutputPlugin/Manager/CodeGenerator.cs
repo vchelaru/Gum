@@ -2234,11 +2234,20 @@ namespace CodeOutputPlugin.Manager
                     stringBuilder.AppendLine(context.Tabs + "}");
 
                     // We may need to invalidate surfaces here if any objects that have variables assigned are skia canvases
+                    // Update November 29, 2022
+                    // Currently we brute-force it by calling InvalidateSurface on all objects and their EffectiveManagers.
+                    // Could this be expensive? I think that this just flips a flag, and it will happen so fast that actual
+                    // redraws only occur 1 time. But if it's slow, we could hashset which manages have been invalidated and
+                    // make sure each one is only invalidated one time.
                     foreach (var item in element.Instances)
                     {
                         if (item.BaseType.EndsWith("/SkiaSharpCanvasView"))
                         {
-                            stringBuilder.AppendLine(ToTabs(tabCount) + $"{item.Name}.InvalidateSurface();");
+                            stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.{item.Name}.InvalidateSurface();");
+                        }
+                        else if(GetVisualApiForInstance(item, element) == VisualApi.Gum)
+                        {
+                            stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.{item.Name}.EffectiveManagers?.InvalidateSurface();");
                         }
                     }
                     if (element.BaseType?.EndsWith("/SkiaGumCanvasView") == true)
