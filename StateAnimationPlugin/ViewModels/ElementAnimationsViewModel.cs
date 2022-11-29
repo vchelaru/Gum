@@ -20,6 +20,7 @@ using Gum.Managers;
 using ToolsUtilities;
 using System.Globalization;
 using Gum.Mvvm;
+using Gum.Wireframe;
 
 namespace StateAnimationPlugin.ViewModels
 {
@@ -103,7 +104,10 @@ namespace StateAnimationPlugin.ViewModels
                     valueToSet = Math.Min(value, SelectedAnimation.Length);
                 }
 
+
+
                 Set(valueToSet);
+
             }
         }
 
@@ -376,12 +380,20 @@ namespace StateAnimationPlugin.ViewModels
 
         }
 
-
+        double? lastPlayTimerTickTime;
         private void HandlePlayTimerTick(object sender, EventArgs e)
         {
             var currentTime = Gum.Wireframe.TimeManager.Self.CurrentTime;
 
+
             var increaseInValue = AnimationSpeedMultiplier * (mTimerFrequencyInMs /1000.0);
+
+            if(lastPlayTimerTickTime != null)
+            {
+                increaseInValue = AnimationSpeedMultiplier * (currentTime - lastPlayTimerTickTime.Value);
+            }
+
+            lastPlayTimerTickTime = currentTime;
 
             var newValue = DisplayedAnimationTime + increaseInValue;
 
@@ -400,6 +412,7 @@ namespace StateAnimationPlugin.ViewModels
                     }
                 }
             }
+
             DisplayedAnimationTime = newValue;
         }
 
@@ -407,6 +420,7 @@ namespace StateAnimationPlugin.ViewModels
 
         internal void TogglePlayStop()
         {
+            lastPlayTimerTickTime = null;
             mPlayTimer.IsEnabled = !mPlayTimer.IsEnabled;
 
             if(mPlayTimer.IsEnabled)
@@ -421,6 +435,8 @@ namespace StateAnimationPlugin.ViewModels
         {
             if (mPlayTimer.IsEnabled)
             {
+                lastPlayTimerTickTime = null;
+
                 mPlayTimer.Stop();
                 NotifyPropertyChanged(nameof(ButtonBitmapFrame));
 
