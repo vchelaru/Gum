@@ -41,7 +41,7 @@ namespace Gum.PropertyGridHelpers
             "Height",
             "Height Units",
             "HorizontalAlignment",
-
+            nameof(GraphicalUiElement.IgnoredByParentSize),
             "MaxLettersToShow",
             "Red",
             "Rotation",

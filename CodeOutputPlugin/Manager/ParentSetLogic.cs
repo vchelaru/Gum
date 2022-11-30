@@ -177,8 +177,8 @@ namespace CodeOutputPlugin.Manager
 
                     // they don't match, and it's not a Gum object in skia canvas:
                     var message = childVisualApi == VisualApi.Gum
-                        ? $"Can't add {childName} to parent {parentName} because the parent needs to either be a SkiaGumCanvasView, or contained in a SkiaGumCanvasView"
-                        : $"Can't add {childName} to parent {parentName} because the parent is in a Skia canvas and the child is a Xamarin Forms object.";
+                        ? $"Can't add {childName} to parent {parentName} because the {parentName} needs to either be a SkiaGumCanvasView, or contained in a SkiaGumCanvasView"
+                        : $"Can't add {childName} to parent {parentName} because the {parentName} is in a Skia canvas and the {childName} is a Xamarin Forms object.";
                     return GeneralResponse.UnsuccessfulWith(message);
                 }
             }

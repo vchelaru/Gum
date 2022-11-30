@@ -139,7 +139,6 @@ namespace Gum.Managers
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "VerticalAlignment", Value = VerticalAlignment.Top, Name = "VerticalAlignment", Category = "Text" });
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int?", Value = null, Name = "MaxLettersToShow", Category = "Text" });
 
-
                 // font:
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "UseCustomFont", Category = "Font" });
 
@@ -282,8 +281,8 @@ namespace Gum.Managers
 
                 stateSave.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation" });
 
-
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
+
                 AddColorVariables(stateSave, true);
 
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "Blend", Value = Blend.Normal, Name = "Blend", Category = "Rendering" });
@@ -422,9 +421,7 @@ namespace Gum.Managers
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "Texture Width", Category = "Source" });
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "Texture Height", Category = "Source" });
 
-
                 AddVariableReferenceList(stateSave);
-
 
                 AddEventVariables(stateSave);
 
@@ -445,7 +442,6 @@ namespace Gum.Managers
                 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                 var stateSave = new StateSave();
                 stateSave.Name = "Default";
-
 
 #if GUM
                 // Victor Chelaru
@@ -638,18 +634,21 @@ namespace Gum.Managers
         }
 
 #if GUM
-        private static void AddParentVariables(StateSave variables)
+        private static void AddParentVariables(StateSave stateSave)
         {
             VariableSave variableSave = new VariableSave();
             variableSave.SetsValue = true;
             variableSave.Type = "string";
             variableSave.Name = "Parent";
+            variableSave.Category = "Parent";
             variableSave.CanOnlyBeSetInDefaultState = true;
             variableSave.CustomTypeConverter = new AvailableInstancesConverter() { IncludeScreenBounds = true };
 
             variableSave.PropertiesToSetOnDisplayer["IsEditable"] = true;
 
-            variables.Variables.Add(variableSave);
+            stateSave.Variables.Add(variableSave);
+
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = nameof(GraphicalUiElement.IgnoredByParentSize), Category = "Parent" });
         }
 #endif
 

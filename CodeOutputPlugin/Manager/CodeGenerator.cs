@@ -2306,7 +2306,9 @@ namespace CodeOutputPlugin.Manager
 
             stringBuilder.AppendLine(context.Tabs + "var appliedDynamically = false;");
 
-            if(context.CodeOutputProjectSettings.GenerateGumDataTypes)
+            if(context.CodeOutputProjectSettings.GenerateGumDataTypes && 
+                // todo - do we care about this? Maybe eventually?
+                context.VisualApi == VisualApi.Gum)
             {
                 stringBuilder.AppendLine(context.Tabs + "if (BindableGraphicalUiElement.ShouldApplyDynamicStates)");
                 stringBuilder.AppendLine(context.Tabs + "{");

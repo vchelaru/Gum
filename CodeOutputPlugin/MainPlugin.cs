@@ -90,6 +90,7 @@ namespace CodeOutputPlugin
         {
             codeOutputProjectSettings = CodeOutputProjectSettingsManager.CreateOrLoadSettingsForProject();
             viewModel.IsCodeGenPluginEnabled = codeOutputProjectSettings.IsCodeGenPluginEnabled;
+            CustomVariableManager.ViewModel = viewModel;
             HandleElementSelected(null);
         }
 

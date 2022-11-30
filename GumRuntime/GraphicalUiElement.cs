@@ -515,6 +515,22 @@ namespace Gum.Wireframe
             }
         }
 
+
+        bool ignoredByParentSize;
+        public bool IgnoredByParentSize
+        {
+            get => ignoredByParentSize;
+            set
+            {
+                if(ignoredByParentSize != value)
+                {
+                    ignoredByParentSize = value;
+                    // todo - could be smarter here?
+                    UpdateLayout();
+                }
+            }
+        }
+
         ChildrenLayout childrenLayout;
         public ChildrenLayout ChildrenLayout
         {
@@ -602,6 +618,7 @@ namespace Gum.Wireframe
 #endif
                     mX = value;
 
+                    var parentGue = Parent as GraphicalUiElement;
                     // special case:
                     if (Parent as GraphicalUiElement == null && XUnits == GeneralUnitType.PixelsFromSmall && XOrigin == HorizontalAlignment.Left)
                     {
@@ -609,7 +626,8 @@ namespace Gum.Wireframe
                     }
                     else
                     {
-                        UpdateLayout(true, 0);
+                        var refreshParent = IgnoredByParentSize == false;
+                        UpdateLayout(refreshParent, 0);
                     }
                 }
             }
@@ -640,7 +658,8 @@ namespace Gum.Wireframe
                     }
                     else
                     {
-                        UpdateLayout(true, 0);
+                        var refreshParent = IgnoredByParentSize == false;
+                        UpdateLayout(refreshParent, 0);
                     }
                 }
             }
@@ -1115,6 +1134,8 @@ namespace Gum.Wireframe
             get;
             set;
         }
+
+
         #endregion
 
         #region Events
@@ -1390,9 +1411,9 @@ namespace Gum.Wireframe
                     }
                 }
 
-                if (hasChildDependency)
+                if (hasChildDependency && childrenUpdateDepth > 0)
                 {
-                    UpdateChildren(childrenUpdateDepth, ChildType.Absolute);
+                    UpdateChildren(childrenUpdateDepth, ChildType.Absolute, skipIgnoreByParentSize:true);
                 }
 
                 // This will update according to all absolute children
@@ -1401,7 +1422,7 @@ namespace Gum.Wireframe
                 if (this.WrapsChildren && (this.ChildrenLayout == ChildrenLayout.LeftToRightStack || this.ChildrenLayout == ChildrenLayout.TopToBottomStack))
                 {
                     // Now we can update all children that are wrapped:
-                    UpdateChildren(childrenUpdateDepth, ChildType.StackedWrapped);
+                    UpdateChildren(childrenUpdateDepth, ChildType.StackedWrapped, skipIgnoreByParentSize: false);
                     if (this.WidthUnits.GetDependencyType() == HierarchyDependencyType.DependsOnChildren ||
                         this.HeightUnits.GetDependencyType() == HierarchyDependencyType.DependsOnChildren)
                     {
@@ -1470,7 +1491,7 @@ namespace Gum.Wireframe
 
             if (childrenUpdateDepth > 0)
             {
-                UpdateChildren(childrenUpdateDepth, ChildType.All);
+                UpdateChildren(childrenUpdateDepth, ChildType.All, skipIgnoreByParentSize:false);
 
                 var sizeDependsOnChildren = this.WidthUnits == DimensionUnitType.RelativeToChildren ||
                     this.HeightUnits == DimensionUnitType.RelativeToChildren;
@@ -1518,7 +1539,7 @@ namespace Gum.Wireframe
                     if (widthBeforeSecondLayout != mContainedObjectAsIpso.Width ||
                         heightBeforeSecondLayout != mContainedObjectAsIpso.Height)
                     {
-                        UpdateChildren(childrenUpdateDepth, ChildType.BothAbsoluteAndRelative);
+                        UpdateChildren(childrenUpdateDepth, ChildType.BothAbsoluteAndRelative, skipIgnoreByParentSize:true);
                     }
 
                 }
@@ -1931,10 +1952,15 @@ namespace Gum.Wireframe
 
         }
 
-        private void UpdateChildren(int childrenUpdateDepth, ChildType childrenUpdateType)
+        private void UpdateChildren(int childrenUpdateDepth, ChildType childrenUpdateType, bool skipIgnoreByParentSize)
         {
-            bool CanDoFullUpdate(ChildType thisChildUpdateType)
+            bool CanDoFullUpdate(ChildType thisChildUpdateType, GraphicalUiElement childGue)
             {
+
+                if(skipIgnoreByParentSize && childGue.IgnoredByParentSize)
+                {
+                    return false;
+                }
 
                 return
                     childrenUpdateType == ChildType.All ||
@@ -1954,7 +1980,7 @@ namespace Gum.Wireframe
                     // parents...
                     if (child.Parent == null || child.Parent == this)
                     {
-                        if (CanDoFullUpdate(child.GetChildLayoutType(this)))
+                        if (CanDoFullUpdate(child.GetChildLayoutType(this), child))
                         {
                             child.UpdateLayout(false, childrenUpdateDepth - 1);
                         }
@@ -1962,11 +1988,11 @@ namespace Gum.Wireframe
                         {
                             // only update absolute layout, and the child has some relative values, but let's see if 
                             // we can do only one axis:
-                            if (CanDoFullUpdate(child.GetChildLayoutType(XOrY.X, this)))
+                            if (CanDoFullUpdate(child.GetChildLayoutType(XOrY.X, this), child))
                             {
                                 child.UpdateLayout(false, childrenUpdateDepth - 1, XOrY.X);
                             }
-                            else if (CanDoFullUpdate(child.GetChildLayoutType(XOrY.Y, this)))
+                            else if (CanDoFullUpdate(child.GetChildLayoutType(XOrY.Y, this), child))
                             {
                                 child.UpdateLayout(false, childrenUpdateDepth - 1, XOrY.Y);
                             }
@@ -1980,10 +2006,9 @@ namespace Gum.Wireframe
                 {
                     var ipsoChild = this.Children[i];
 
-                    if (ipsoChild is GraphicalUiElement)
+                    if (ipsoChild is GraphicalUiElement child)
                     {
-                        var child = ipsoChild as GraphicalUiElement;
-                        if (CanDoFullUpdate(child.GetChildLayoutType(this)))
+                        if (CanDoFullUpdate(child.GetChildLayoutType(this), child))
                         {
                             child.UpdateLayout(false, childrenUpdateDepth - 1);
                         }
@@ -1991,11 +2016,11 @@ namespace Gum.Wireframe
                         {
                             // only update absolute layout, and the child has some relative values, but let's see if 
                             // we can do only one axis:
-                            if (CanDoFullUpdate(child.GetChildLayoutType(XOrY.X, this)))
+                            if (CanDoFullUpdate(child.GetChildLayoutType(XOrY.X, this), child))
                             {
                                 child.UpdateLayout(false, childrenUpdateDepth - 1, XOrY.X);
                             }
-                            else if (CanDoFullUpdate(child.GetChildLayoutType(XOrY.Y, this)))
+                            else if (CanDoFullUpdate(child.GetChildLayoutType(XOrY.Y, this), child))
                             {
                                 child.UpdateLayout(false, childrenUpdateDepth - 1, XOrY.Y);
                             }
@@ -2800,7 +2825,7 @@ namespace Gum.Wireframe
                     {
                         var element = Children[i] as GraphicalUiElement;
                         var childLayout = element.GetChildLayoutType(XOrY.Y, this);
-                        var considerChild = childLayout == ChildType.Absolute || (considerWrappedStacked && childLayout == ChildType.StackedWrapped);
+                        var considerChild = (childLayout == ChildType.Absolute || (considerWrappedStacked && childLayout == ChildType.StackedWrapped)) && element.IgnoredByParentSize == false;
                         if (considerChild && element.Visible)
                         {
                             var elementHeight = element.GetRequiredParentHeight();
@@ -2827,7 +2852,7 @@ namespace Gum.Wireframe
                     {
                         var element = mWhatThisContains[i];
                         var childLayout = element.GetChildLayoutType(XOrY.Y, this);
-                        var considerChild = childLayout == ChildType.Absolute || (considerWrappedStacked && childLayout == ChildType.StackedWrapped);
+                        var considerChild = (childLayout == ChildType.Absolute || (considerWrappedStacked && childLayout == ChildType.StackedWrapped)) && element.IgnoredByParentSize == false;
 
                         if (considerChild && element.Visible)
                         {
@@ -3156,7 +3181,7 @@ namespace Gum.Wireframe
                     {
                         var element = this.Children[i] as GraphicalUiElement;
                         var childLayout = element.GetChildLayoutType(XOrY.X, this);
-                        var considerChild = childLayout == ChildType.Absolute || (considerWrappedStacked && childLayout == ChildType.StackedWrapped);
+                        var considerChild = (childLayout == ChildType.Absolute || (considerWrappedStacked && childLayout == ChildType.StackedWrapped)) && element.IgnoredByParentSize == false;
 
                         if (considerChild && element.Visible)
                         {
@@ -3184,7 +3209,7 @@ namespace Gum.Wireframe
                     {
                         var element = mWhatThisContains[i];
                         var childLayout = element.GetChildLayoutType(XOrY.X, this);
-                        var considerChild = childLayout == ChildType.Absolute || (considerWrappedStacked && childLayout == ChildType.StackedWrapped);
+                        var considerChild = (childLayout == ChildType.Absolute || (considerWrappedStacked && childLayout == ChildType.StackedWrapped)) && element.IgnoredByParentSize == false;
 
                         if (considerChild && element.Visible)
                         {
@@ -4081,6 +4106,10 @@ namespace Gum.Wireframe
                         break;
                     case "Height Units":
                         this.HeightUnits = (DimensionUnitType)value;
+                        toReturn = true;
+                        break;
+                    case nameof(IgnoredByParentSize):
+                        this.IgnoredByParentSize = (bool)value;
                         toReturn = true;
                         break;
                     case "Parent":
