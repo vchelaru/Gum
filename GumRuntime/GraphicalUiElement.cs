@@ -29,6 +29,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
+using System.Diagnostics.CodeAnalysis;
 #if UWP
 using System.Reflection;
 #endif
@@ -68,6 +69,14 @@ namespace Gum.Wireframe
             public bool UpdateParent;
             public int ChildrenUpdateDepth;
             public XOrY? XOrY;
+        }
+
+        public enum ParentUpdateType
+        {
+            None = 0,
+            IfParentStacks = 1,
+            All = 2
+
         }
 
         #endregion
@@ -213,7 +222,7 @@ namespace Gum.Wireframe
                     // See if this has a parent that stacks children. If so, update its layout:
                     if (GetIfParentStacks())
                     {
-                        this.UpdateLayout();
+                        this.UpdateLayout(ParentUpdateType.IfParentStacks, 0, null);
                     }
                 }
             }
@@ -1252,8 +1261,27 @@ namespace Gum.Wireframe
             UpdateLayout(updateParent, value);
         }
 
+        string ParentQualifiedName => Parent as GraphicalUiElement == null ? this.Name : (Parent as GraphicalUiElement).ParentQualifiedName + "." + this.Name;
+
         public void UpdateLayout(bool updateParent, int childrenUpdateDepth, XOrY? xOrY = null)
         {
+            if (updateParent)
+            {
+                UpdateLayout(ParentUpdateType.All, childrenUpdateDepth, xOrY);
+            }
+            else
+            {
+                UpdateLayout(ParentUpdateType.None, childrenUpdateDepth, xOrY);
+            }
+
+        }
+
+        public void UpdateLayout(ParentUpdateType parentUpdateType, int childrenUpdateDepth, XOrY? xOrY = null)
+        {
+            var updateParent =
+                parentUpdateType == ParentUpdateType.All ||
+                parentUpdateType == ParentUpdateType.IfParentStacks && GetIfParentStacks();
+
             #region Early Out - Suspended
 
             var isSuspended = mIsLayoutSuspended || IsAllLayoutSuspended;
@@ -1298,7 +1326,7 @@ namespace Gum.Wireframe
             {
                 var asGue = this.Parent as GraphicalUiElement;
                 // Just climb up one and update from there
-                asGue.UpdateLayout(true, childrenUpdateDepth + 1);
+                asGue.UpdateLayout(parentUpdateType, childrenUpdateDepth + 1);
                 ChildrenUpdatingParentLayoutCalls++;
                 return;
             }
