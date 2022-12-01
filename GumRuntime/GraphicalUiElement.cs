@@ -75,7 +75,8 @@ namespace Gum.Wireframe
         {
             None = 0,
             IfParentStacks = 1,
-            All = 2
+            IfParentWidthHeightDependOnChildren = 2,
+            All = 4
 
         }
 
@@ -1280,7 +1281,8 @@ namespace Gum.Wireframe
         {
             var updateParent =
                 parentUpdateType == ParentUpdateType.All ||
-                parentUpdateType == ParentUpdateType.IfParentStacks && GetIfParentStacks();
+                parentUpdateType == ParentUpdateType.IfParentStacks && GetIfParentStacks() ||
+                parentUpdateType == ParentUpdateType.IfParentWidthHeightDependOnChildren && (Parent as GraphicalUiElement)?.GetIfDimensionsDependOnChildren() == true;
 
             #region Early Out - Suspended
 
