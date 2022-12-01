@@ -1,0 +1,63 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>TRACE;MONOGAME;LINKED_MONOGAME</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DefineConstants>TRACE;MONOGAME;LINKED_MONOGAME</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\SkiaGum\**\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="..\SkiaGum\Converters\**" />
+    <Compile Remove="..\SkiaGum\DataTypes\**" />
+    <Compile Remove="..\SkiaGum\obj\Debug\netstandard2.0\**" />
+    <Compile Remove="..\SkiaGum\Variables\**" />
+    <Compile Remove="..\SkiaGum\Xna\**" />
+    <Compile Remove="obj\**" />
+    <EmbeddedResource Remove="obj\**" />
+    <None Remove="obj\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="..\SkiaGum\GraphicalUiElement.cs" />
+    <Compile Remove="..\SkiaGum\Graphics\HorizontalAlignment.cs" />
+    <Compile Remove="..\SkiaGum\Graphics\SortableLayer.cs" />
+    <Compile Remove="..\SkiaGum\Graphics\VerticalAlignment.cs" />
+    <Compile Remove="..\SkiaGum\IPositionedSizedObject.cs" />
+    <Compile Remove="..\SkiaGum\IRenderable.cs" />
+    <Compile Remove="..\SkiaGum\IRenderableIpso.cs" />
+    <Compile Remove="..\SkiaGum\IVisible.cs" />
+    <Compile Remove="..\SkiaGum\Managers\ObjectFinder.cs" />
+    <Compile Remove="..\SkiaGum\Managers\StandardElementsManager.cs" />
+    <Compile Remove="..\SkiaGum\Renderables\InvisibleRenderable.cs" />
+    <Compile Remove="..\SkiaGum\RenderingLibrary\Blend.cs" />
+    <Compile Remove="..\SkiaGum\RenderingLibrary\Camera.cs" />
+    <Compile Remove="..\SkiaGum\RenderingLibrary\IPositionedSizedObjectExtensionMethods.cs" />
+    <Compile Remove="..\SkiaGum\RenderingLibrary\Renderer.cs" />
+    <Compile Remove="..\SkiaGum\RenderingLibrary\SystemManagers.cs" />
+    <Compile Remove="..\SkiaGum\Wireframe\ElementSaveExtensions.GumRuntime.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.1.303" />
+    <PackageReference Include="SkiaSharp" Version="2.88.2" />
+    <PackageReference Include="SkiaSharp.Extended" Version="1.60.0" />
+    <PackageReference Include="SkiaSharp.Skottie" Version="2.88.2" />
+    <PackageReference Include="SkiaSharp.Svg" Version="1.60.0" />
+    <PackageReference Include="Topten.RichTextKit" Version="0.4.145" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GumCore\GumCoreXnaPc\GumCore.DesktopGlNet6\GumCore.DesktopGlNet6.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -222,6 +222,7 @@ namespace SkiaGum
             mChildren = new ObservableCollection<IRenderableIpso>();
         }
 
+#if SKIA
         public void Render(SKCanvas canvas)
         {
             if (AbsoluteVisible)
@@ -276,7 +277,22 @@ namespace SkiaGum
                 canvas.Restore();
             }
         }
+#else
+        public bool ClipsChildren { get; set; }
 
+        public Microsoft.Xna.Framework.Graphics.BlendState BlendState
+        {
+            get
+            {
+                return Microsoft.Xna.Framework.Graphics.BlendState.AlphaBlend; //?
+            }
+
+        }
+        public void Render(SpriteRenderer spriteRenderer, SystemManagers managers)
+        {
+
+        }
+#endif
         public TextBlock GetTextBlock(float? forcedWidth = null)
         {
             var textBlock = new TextBlock();
@@ -339,7 +355,7 @@ namespace SkiaGum
 
         public void PreRender() { }
 
-        #region IVisible Implementation
+#region IVisible Implementation
 
         public bool Visible
         {
@@ -370,6 +386,6 @@ namespace SkiaGum
             }
         }
 
-        #endregion
+#endregion
     }
 }

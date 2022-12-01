@@ -156,6 +156,7 @@ namespace SkiaGum
 
         }
 
+#if SKIA
         public void Render(SKCanvas canvas)
         {
             if (AbsoluteVisible && Texture != null)
@@ -206,6 +207,23 @@ namespace SkiaGum
                 }
             }
         }
+#else
+        public bool ClipsChildren { get; set; }
+
+        public Microsoft.Xna.Framework.Graphics.BlendState BlendState
+        {
+            get
+            {
+                return Microsoft.Xna.Framework.Graphics.BlendState.AlphaBlend; //?
+            }
+
+
+        }
+        public void Render(SpriteRenderer spriteRenderer, SystemManagers managers)
+        {
+
+        }
+#endif
 
         public void PreRender() { }
 

@@ -7,6 +7,7 @@ using System.Text;
 
 namespace SkiaGum.GueDeriving
 {
+#if !MONOGAME
     public enum ColorOperation
     {
         //Texture,
@@ -21,7 +22,7 @@ namespace SkiaGum.GueDeriving
         //InterpolateColor
 
     }
-
+#endif
     public class SpriteRuntime : BindableGraphicalUiElement
     {
         Sprite mContainedSprite;

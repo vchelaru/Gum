@@ -121,6 +121,7 @@ namespace SkiaGum.Renderables
 
         public void PreRender() { }
 
+#if SKIA
         public void Render(SKCanvas canvas)
         {
             if (AbsoluteVisible && Animation != null)
@@ -164,6 +165,25 @@ namespace SkiaGum.Renderables
                 Animation.Render(canvas, boundingRect);
             }
         }
+#else
+        public bool ClipsChildren { get; set; }
+        public Microsoft.Xna.Framework.Graphics.BlendState BlendState
+        {
+            get
+            {
+                return Microsoft.Xna.Framework.Graphics.BlendState.AlphaBlend; //?
+
+            }
+
+        }
+        public void Render(SpriteRenderer spriteRenderer, SystemManagers managers)
+        {
+            // todo
+        }
+
+
+#endif
+
 
         #region IVisible Implementation
 
@@ -196,6 +216,6 @@ namespace SkiaGum.Renderables
             }
         }
 
-        #endregion
+#endregion
     }
 }

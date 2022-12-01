@@ -258,6 +258,7 @@ namespace SkiaGum.Renderables
 
         public void PreRender() {}
 
+#if SKIA
         public void Render(SKCanvas canvas)
         {
             var canRender =
@@ -306,7 +307,23 @@ namespace SkiaGum.Renderables
                 }
             }
         }
+#else
+        public bool ClipsChildren { get; set; }
 
+        public Microsoft.Xna.Framework.Graphics.BlendState BlendState
+        {
+            get
+            {
+                return Microsoft.Xna.Framework.Graphics.BlendState.AlphaBlend; //?
+
+            }
+
+        }
+        public void Render(SpriteRenderer spriteRenderer, SystemManagers managers)
+        {
+
+        }
+#endif
         protected virtual SKPaint GetPaint(SKRect boundingRect, float absoluteRotation)
         {
             var effectiveColor = this.Color;
@@ -361,7 +378,7 @@ namespace SkiaGum.Renderables
             mParent = parent;
         }
 
-        #region IVisible Implementation
+#region IVisible Implementation
 
         public bool Visible
         {
@@ -392,7 +409,7 @@ namespace SkiaGum.Renderables
             }
         }
 
-        #endregion
+#endregion
 
         protected void ApplyGradientToPaint(SKRect boundingRect, SKPaint paint, float absoluteRotation)
         {

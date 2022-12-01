@@ -71,3 +71,5 @@ GumRuntimeStandard/GumRuntimeStandard/bin/*
 GumRuntimeStandard/GumRuntimeStandard/obj/*
 GumCore/GumCoreXnaPc/GumCore.DesktopGlNet6/obj/*
 GumCore/GumCoreXnaPc/GumCore.DesktopGlNet6/bin/*
+SkiaGumMonoGameNet6/obj/*
+SkiaGumMonoGameNet6/bin/*
