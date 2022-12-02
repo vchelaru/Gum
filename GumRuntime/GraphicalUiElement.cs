@@ -1314,8 +1314,8 @@ namespace Gum.Wireframe
         {
             var updateParent =
                 (parentUpdateType & ParentUpdateType.All) == ParentUpdateType.All ||
-                parentUpdateType == ParentUpdateType.IfParentStacks && GetIfParentStacks() ||
-                parentUpdateType == ParentUpdateType.IfParentWidthHeightDependOnChildren && (Parent as GraphicalUiElement)?.GetIfDimensionsDependOnChildren() == true;
+                (parentUpdateType & ParentUpdateType.IfParentStacks) == ParentUpdateType.IfParentStacks && GetIfParentStacks() ||
+                (parentUpdateType & ParentUpdateType.IfParentWidthHeightDependOnChildren) == ParentUpdateType.IfParentWidthHeightDependOnChildren && (Parent as GraphicalUiElement)?.GetIfDimensionsDependOnChildren() == true;
 
             #region Early Out - Suspended
 
