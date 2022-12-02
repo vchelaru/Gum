@@ -66,7 +66,7 @@ namespace Gum.Wireframe
 
         class DirtyState
         {
-            public bool UpdateParent;
+            public ParentUpdateType ParentUpdateType;
             public int ChildrenUpdateDepth;
             public XOrY? XOrY;
         }
@@ -240,7 +240,7 @@ namespace Gum.Wireframe
                             }
                             if (currentDirtyState != null)
                             {
-                                UpdateLayout(currentDirtyState.UpdateParent,
+                                UpdateLayout(currentDirtyState.ParentUpdateType,
                                     currentDirtyState.ChildrenUpdateDepth,
                                     currentDirtyState.XOrY);
                             }
@@ -1313,7 +1313,7 @@ namespace Gum.Wireframe
         public void UpdateLayout(ParentUpdateType parentUpdateType, int childrenUpdateDepth, XOrY? xOrY = null)
         {
             var updateParent =
-                parentUpdateType == ParentUpdateType.All ||
+                (parentUpdateType & ParentUpdateType.All) == ParentUpdateType.All ||
                 parentUpdateType == ParentUpdateType.IfParentStacks && GetIfParentStacks() ||
                 parentUpdateType == ParentUpdateType.IfParentWidthHeightDependOnChildren && (Parent as GraphicalUiElement)?.GetIfDimensionsDependOnChildren() == true;
 
@@ -1321,11 +1321,15 @@ namespace Gum.Wireframe
 
             var asIVisible = this as IVisible;
 
-            var isSuspended = mIsLayoutSuspended || IsAllLayoutSuspended || asIVisible.AbsoluteVisible == false;
+            var isSuspended = mIsLayoutSuspended || IsAllLayoutSuspended;
+            if (!isSuspended)
+            {
+                isSuspended = mContainedObjectAsIVisible != null && asIVisible.AbsoluteVisible == false;
+            }
 
             if (isSuspended)
             {
-                MakeDirty(updateParent, childrenUpdateDepth, xOrY);
+                MakeDirty(parentUpdateType, childrenUpdateDepth, xOrY);
                 return;
             }
 
@@ -1930,7 +1934,7 @@ namespace Gum.Wireframe
         }
 
         // Records the type of update needed when layout resumes
-        private void MakeDirty(bool updateParent, int childrenUpdateDepth, XOrY? xOrY)
+        private void MakeDirty(ParentUpdateType parentUpdateType, int childrenUpdateDepth, XOrY? xOrY)
         {
             if (currentDirtyState == null)
             {
@@ -1939,7 +1943,7 @@ namespace Gum.Wireframe
                 currentDirtyState.XOrY = xOrY;
             }
 
-            currentDirtyState.UpdateParent = currentDirtyState.UpdateParent || updateParent;
+            currentDirtyState.ParentUpdateType = currentDirtyState.ParentUpdateType | parentUpdateType;
             currentDirtyState.ChildrenUpdateDepth = Math.Max(
                 currentDirtyState.ChildrenUpdateDepth, childrenUpdateDepth);
 
@@ -3948,7 +3952,7 @@ namespace Gum.Wireframe
                 }
                 if (currentDirtyState != null)
                 {
-                    UpdateLayout(currentDirtyState.UpdateParent,
+                    UpdateLayout(currentDirtyState.ParentUpdateType,
                         currentDirtyState.ChildrenUpdateDepth,
                         currentDirtyState.XOrY);
                 }
@@ -3963,9 +3967,9 @@ namespace Gum.Wireframe
 
             if (currentDirtyState != null)
             {
-                UpdateLayout(currentDirtyState.UpdateParent,
-                currentDirtyState.ChildrenUpdateDepth,
-                currentDirtyState.XOrY);
+                UpdateLayout(currentDirtyState.ParentUpdateType,
+                    currentDirtyState.ChildrenUpdateDepth,
+                    currentDirtyState.XOrY);
             }
 
             int count = mWhatThisContains.Count;
