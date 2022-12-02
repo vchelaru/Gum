@@ -222,16 +222,41 @@ namespace Gum.Wireframe
 
                     var absoluteVisible = ((IVisible)this).AbsoluteVisible;
                     // See if this has a parent that stacks children. If so, update its layout:
-                    if (GetIfParentStacks() || absoluteVisible)
+
+                    if(absoluteVisible)
                     {
-                        if(absoluteVisible)
+                        if(!mIsLayoutSuspended && !GraphicalUiElement.IsAllLayoutSuspended)
                         {
-                            this.UpdateLayout(ParentUpdateType.IfParentStacks, int.MaxValue/2, null);
+                            // resume layout:
+                            //ResumeLayoutUpdateIfDirtyRecursive();
+
+                            if (isFontDirty)
+                            {
+                                if (!IsAllLayoutSuspended)
+                                {
+                                    this.UpdateToFontValues();
+                                    isFontDirty = false;
+                                }
+                            }
+                            if (currentDirtyState != null)
+                            {
+                                UpdateLayout(currentDirtyState.UpdateParent,
+                                    currentDirtyState.ChildrenUpdateDepth,
+                                    currentDirtyState.XOrY);
+                            }
                         }
-                        else
-                        {
-                            this.UpdateLayout(ParentUpdateType.IfParentStacks, 0, null);
-                        }
+                    }
+                    else
+                    {
+                        // This will make this dirty:
+                        this.UpdateLayout(ParentUpdateType.IfParentStacks, int.MaxValue/2, null);
+                    }
+
+                    if(!absoluteVisible && GetIfParentStacks())
+                    {
+                        // This updates the parent right away:
+                        (Parent as GraphicalUiElement)?.UpdateLayout(ParentUpdateType.IfParentStacks, int.MaxValue / 2, null);
+
                     }
                 }
             }
@@ -1294,7 +1319,9 @@ namespace Gum.Wireframe
 
             #region Early Out - Suspended
 
-            var isSuspended = mIsLayoutSuspended || IsAllLayoutSuspended;
+            var asIVisible = this as IVisible;
+
+            var isSuspended = mIsLayoutSuspended || IsAllLayoutSuspended || asIVisible.AbsoluteVisible == false;
 
             if (isSuspended)
             {
