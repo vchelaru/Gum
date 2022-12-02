@@ -249,7 +249,11 @@ namespace Gum.Wireframe
                     else
                     {
                         // This will make this dirty:
-                        this.UpdateLayout(ParentUpdateType.IfParentStacks, int.MaxValue/2, null);
+                        this.UpdateLayout(ParentUpdateType.IfParentStacks, 
+                            // If something is made visible, that shouldn't update the children, right?
+                            //int.MaxValue/2, 
+                            0,
+                            null);
                     }
 
                     if(!absoluteVisible && GetIfParentStacks())
