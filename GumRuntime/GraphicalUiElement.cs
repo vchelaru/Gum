@@ -221,7 +221,7 @@ namespace Gum.Wireframe
                     mContainedObjectAsIVisible.Visible = value;
 
                     // See if this has a parent that stacks children. If so, update its layout:
-                    if (GetIfParentStacks())
+                    if (GetIfParentStacks() && ((IVisible)this.Parent).AbsoluteVisible)
                     {
                         this.UpdateLayout(ParentUpdateType.IfParentStacks, 0, null);
                     }
@@ -1291,6 +1291,12 @@ namespace Gum.Wireframe
             if (isSuspended)
             {
                 MakeDirty(updateParent, childrenUpdateDepth, xOrY);
+                return;
+            }
+
+            var parentAsIVisible = Parent as IVisible;
+            if (Visible == false && parentAsIVisible?.AbsoluteVisible == false )
+            {
                 return;
             }
 
