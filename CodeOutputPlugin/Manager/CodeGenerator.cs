@@ -2362,20 +2362,20 @@ namespace CodeOutputPlugin.Manager
             var element = context.Element;
             if(element is ScreenSave)
             {
-                stringBuilder.AppendLine(context.Tabs + "Gum.DataTypes.ScreenSave ScreenSave { get; set; }");
+                stringBuilder.AppendLine(context.Tabs + "global::Gum.DataTypes.ScreenSaveGum.DataTypes.ScreenSave ScreenSave { get; set; }");
             }
             else if(element is ComponentSave)
             {
                 if(context.VisualApi == VisualApi.XamarinForms)
                 {
-                    stringBuilder.AppendLine(context.Tabs + "Gum.DataTypes.ComponentSave ComponentSave { get; set; }");
+                    stringBuilder.AppendLine(context.Tabs + "global::Gum.DataTypes.ScreenSaveGum.DataTypes.ComponentSave ComponentSave { get; set; }");
                 }
                 else
                 {
-                    stringBuilder.AppendLine(context.Tabs + "Gum.DataTypes.ComponentSave ComponentSave");
+                    stringBuilder.AppendLine(context.Tabs + "global::Gum.DataTypes.ScreenSaveGum.DataTypes.ComponentSave ComponentSave");
                     stringBuilder.AppendLine(context.Tabs + "{");
                     context.TabCount++;
-                    stringBuilder.AppendLine(context.Tabs + "get => ElementSave as Gum.DataTypes.ComponentSave;");
+                    stringBuilder.AppendLine(context.Tabs + "get => ElementSave as global::Gum.DataTypes.ScreenSaveGum.DataTypes.ComponentSave;");
                     stringBuilder.AppendLine(context.Tabs + "set => ElementSave = value;");
                     context.TabCount--;
                     stringBuilder.AppendLine(context.Tabs + "}");
