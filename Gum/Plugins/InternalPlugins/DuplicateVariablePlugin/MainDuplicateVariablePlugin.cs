@@ -21,6 +21,13 @@ namespace Gum.Plugins.InternalPlugins.DuplicateVariablePlugin
 
         private void HandleElementSelected(ElementSave element)
         {
+            //////////////Early Out/////////////////////
+            if(element == null)
+            {
+                return; 
+            }
+            ///////////End Early Out///////////////////
+            
             StringBuilder stringBuilder= new StringBuilder();
 
             HashSet<string> AddStateDuplicatesToStringBuilder(StateSave state)
