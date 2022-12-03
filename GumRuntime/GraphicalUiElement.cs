@@ -223,30 +223,36 @@ namespace Gum.Wireframe
                     var absoluteVisible = ((IVisible)this).AbsoluteVisible;
                     // See if this has a parent that stacks children. If so, update its layout:
 
+                    var didUpdate = false;
                     if(absoluteVisible)
                     {
                         if(!mIsLayoutSuspended && !GraphicalUiElement.IsAllLayoutSuspended)
                         {
                             // resume layout:
-                            //ResumeLayoutUpdateIfDirtyRecursive();
+                            // This does need to be recursive because contained objects may have been 
+                            // updated while the parent was invisible, becoming dirty, and waiting for
+                            // the resume
+                            ResumeLayoutUpdateIfDirtyRecursive();
 
-                            if (isFontDirty)
-                            {
-                                if (!IsAllLayoutSuspended)
-                                {
-                                    this.UpdateToFontValues();
-                                    isFontDirty = false;
-                                }
-                            }
-                            if (currentDirtyState != null)
-                            {
-                                UpdateLayout(currentDirtyState.ParentUpdateType,
-                                    currentDirtyState.ChildrenUpdateDepth,
-                                    currentDirtyState.XOrY);
-                            }
+                            //if (isFontDirty)
+                            //{
+                            //    if (!IsAllLayoutSuspended)
+                            //    {
+                            //        this.UpdateToFontValues();
+                            //        isFontDirty = false;
+                            //    }
+                            //}
+                            //if (currentDirtyState != null)
+                            //{
+                            //    UpdateLayout(currentDirtyState.ParentUpdateType,
+                            //        currentDirtyState.ChildrenUpdateDepth,
+                            //        currentDirtyState.XOrY);
+                            //}
+                            didUpdate = true;
                         }
                     }
-                    else
+                    
+                    if(!didUpdate)
                     {
                         // This will make this dirty:
                         this.UpdateLayout(ParentUpdateType.IfParentStacks, 
@@ -1299,7 +1305,9 @@ namespace Gum.Wireframe
             UpdateLayout(updateParent, value);
         }
 
-        string ParentQualifiedName => Parent as GraphicalUiElement == null ? this.Name : (Parent as GraphicalUiElement).ParentQualifiedName + "." + this.Name;
+        string NameOrType => !string.IsNullOrEmpty(Name) ? Name : $"<{GetType().Name}>";
+        
+        string ParentQualifiedName => Parent as GraphicalUiElement == null ? NameOrType : (Parent as GraphicalUiElement).ParentQualifiedName + "." + NameOrType;
 
         public void UpdateLayout(bool updateParent, int childrenUpdateDepth, XOrY? xOrY = null)
         {
@@ -1349,7 +1357,6 @@ namespace Gum.Wireframe
 
             currentDirtyState = null;
 
-            UpdateLayoutCallCount++;
 
             // May 15, 2014
             // Parent needs to be
@@ -1381,6 +1388,8 @@ namespace Gum.Wireframe
                 ChildrenUpdatingParentLayoutCalls++;
                 return;
             }
+            // This should be *after* the return when updating the parent otherwise we double-count layouts
+            UpdateLayoutCallCount++;
 
             #endregion
 
@@ -1520,7 +1529,15 @@ namespace Gum.Wireframe
 
                 // If the update is "deep" then we want to refresh the text texture.
                 // Otherwise it may have been something shallow like a reposition.
-                if (mContainedObjectAsIpso is Text asText && childrenUpdateDepth > 0)
+                // -----------------------------------------------------------------------------
+                // Update December 3, 2022 - This if-check causes lots of performance issues
+                // If a text object is updating itself and its parent needs to update, then if
+                // children depth > 0, then the parent update will cause all other children to update
+                // which is very expensive. We now do enough checks at the property level to prevent the
+                // text from updating unnecessarily, so let's change this to prevent parents from updating
+                // all of their children:
+                //if (mContainedObjectAsIpso is Text asText && childrenUpdateDepth > 0)
+                if (mContainedObjectAsIpso is Text asText)
                 {
                     // Only if the width or height have changed:
                     if (mContainedObjectAsIpso.Width != widthBeforeLayout ||
@@ -2061,7 +2078,7 @@ namespace Gum.Wireframe
                     {
                         if (CanDoFullUpdate(child.GetChildLayoutType(this), child))
                         {
-                            child.UpdateLayout(false, childrenUpdateDepth - 1);
+                            child.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1);
                         }
                         else
                         {
@@ -2069,11 +2086,11 @@ namespace Gum.Wireframe
                             // we can do only one axis:
                             if (CanDoFullUpdate(child.GetChildLayoutType(XOrY.X, this), child))
                             {
-                                child.UpdateLayout(false, childrenUpdateDepth - 1, XOrY.X);
+                                child.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1, XOrY.X);
                             }
                             else if (CanDoFullUpdate(child.GetChildLayoutType(XOrY.Y, this), child))
                             {
-                                child.UpdateLayout(false, childrenUpdateDepth - 1, XOrY.Y);
+                                child.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1, XOrY.Y);
                             }
                         }
                     }
@@ -2089,7 +2106,7 @@ namespace Gum.Wireframe
                     {
                         if (CanDoFullUpdate(child.GetChildLayoutType(this), child))
                         {
-                            child.UpdateLayout(false, childrenUpdateDepth - 1);
+                            child.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1);
                         }
                         else
                         {
@@ -2097,11 +2114,11 @@ namespace Gum.Wireframe
                             // we can do only one axis:
                             if (CanDoFullUpdate(child.GetChildLayoutType(XOrY.X, this), child))
                             {
-                                child.UpdateLayout(false, childrenUpdateDepth - 1, XOrY.X);
+                                child.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1, XOrY.X);
                             }
                             else if (CanDoFullUpdate(child.GetChildLayoutType(XOrY.Y, this), child))
                             {
-                                child.UpdateLayout(false, childrenUpdateDepth - 1, XOrY.Y);
+                                child.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1, XOrY.Y);
                             }
                         }
                     }
