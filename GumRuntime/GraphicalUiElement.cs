@@ -598,6 +598,10 @@ namespace Gum.Wireframe
         }
 
         float stackSpacing;
+        /// <summary>
+        /// The number of pixels spacing between each child if this is has a ChildrenLayout of 
+        /// TopToBottomStack or LeftToRightStack.
+        /// </summary>
         public float StackSpacing
         {
             get => stackSpacing;
@@ -614,6 +618,9 @@ namespace Gum.Wireframe
             }
         }
 
+        /// <summary>
+        /// Rotation in degrees. Positive value rotates counterclockwise.
+        /// </summary>
         public float Rotation
         {
             get
