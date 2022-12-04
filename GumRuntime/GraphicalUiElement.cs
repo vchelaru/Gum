@@ -5633,11 +5633,22 @@ namespace Gum.Wireframe
 
         public void UpdateToCurrentAnimationFrame()
         {
-            if (mAnimationChains != null && mAnimationChains.Count > mCurrentChainIndex && mCurrentChainIndex != -1 &&
+            if (mAnimationChains != null && 
+                mAnimationChains.Count > mCurrentChainIndex && 
+                mCurrentChainIndex != -1 &&
                 mCurrentFrameIndex > -1 &&
-                mCurrentFrameIndex < mAnimationChains[mCurrentChainIndex].Count)
+                mAnimationChains[mCurrentChainIndex].Count > 0
+                // If we switch animations, we still want it to apply right away
+                // so do a frame check:
+                //mCurrentFrameIndex < mAnimationChains[mCurrentChainIndex].Count
+                )
             {
-                var frame = mAnimationChains[mCurrentChainIndex][mCurrentFrameIndex];
+                var index = mCurrentFrameIndex;
+                if(index >= mAnimationChains[mCurrentChainIndex].Count)
+                {
+                    index = 0;
+                }
+                var frame = mAnimationChains[mCurrentChainIndex][index];
                 // Set the property so that any necessary values change:
                 //				mTexture = mAnimationChains[mCurrentChainIndex][mCurrentFrameIndex].Texture;
                 //this.Vertices[0].TextureCoordinate.X = frame.LeftCoordinate;
