@@ -56,6 +56,8 @@ namespace SkiaGum
         /// </summary>
         public static float GlobalScale { get; set; } = 1;
 
+        // Device density which is used to divide the height and width request 
+        public static float DeviceDensity { get; set; } = 1;
 
         public static event Action<BindableGraphicalUiElement> ElementClicked;
         public static event Action<BindableGraphicalUiElement> ElementPushed;
@@ -463,13 +465,19 @@ namespace SkiaGum
             if (AutoSizeHeightAccordingToContents || AutoSizeWidthAccordingToContents)
             {
                 var bottomRight = GetBottomRightMostElementCorner();
-                if (AutoSizeHeightAccordingToContents && this.HeightRequest != bottomRight.Y)
+
+                var desiredHeightRequest = bottomRight.Y / DeviceDensity;
+
+                if (AutoSizeHeightAccordingToContents && this.HeightRequest != desiredHeightRequest)
                 {
-                    HeightRequest = bottomRight.Y;
+                    HeightRequest = desiredHeightRequest;
                 }
-                if (AutoSizeWidthAccordingToContents && this.WidthRequest != bottomRight.X)
+
+                var desiredWidthRequest = bottomRight.X / DeviceDensity;
+
+                if (AutoSizeWidthAccordingToContents && this.WidthRequest != desiredWidthRequest)
                 {
-                    WidthRequest = bottomRight.X;
+                    WidthRequest = desiredWidthRequest;
                 }
             }
         }
