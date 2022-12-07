@@ -20,7 +20,7 @@
                     <RowDefinition Height="Auto"></RowDefinition>
                     <RowDefinition Height="24"></RowDefinition>
                 </Grid.RowDefinitions>
-          
+
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="40"></ColumnDefinition>
                     <ColumnDefinition></ColumnDefinition>
@@ -38,7 +38,7 @@
                         TickFrequency="1"
                 
                         >
-            
+
                 </Slider>
 
                 <TextBox Grid.Column="2" Text="{Binding DisplayedAnimationTime}"></TextBox>
@@ -86,7 +86,7 @@
         </ScrollViewer>
 
         <GridSplitter Grid.Row="1" Height="5" HorizontalAlignment="Stretch" ResizeBehavior="PreviousAndNext" ></GridSplitter>
-        
+
         <Grid Grid.Row="2" x:Name="BottomGrid">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"></ColumnDefinition>
@@ -94,7 +94,7 @@
                 <ColumnDefinition Width="*"></ColumnDefinition>
                 <ColumnDefinition Width="Auto"></ColumnDefinition>
             </Grid.ColumnDefinitions>
-            
+
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition></RowDefinition>
@@ -108,57 +108,62 @@
                             ItemsSource="{Binding AnimationRightClickItems}"
                             x:Name="AnimationContextMenu"></ContextMenu>
                     </ListBox.ContextMenu>
-                  <ListBox.ItemTemplate>
-                    <DataTemplate>
-                      <StackPanel Orientation="Horizontal">
-                        <Button Click="LoopToggleClick">
-                          <Image Source="{Binding ButtonBitmapFrame}"></Image>
-                        </Button>
-                        <Label Content="{Binding Name}"/>
-                      </StackPanel>
-                    </DataTemplate>
-                  </ListBox.ItemTemplate>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <Button Click="LoopToggleClick">
+                                    <Image Source="{Binding ButtonBitmapFrame}"></Image>
+                                </Button>
+                                <Label Content="{Binding Name}"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
                 </ListBox>
                 <Button x:Name="AddAnimationButton" Grid.Row="1" VerticalAlignment="Bottom" Click="AddAnimationButton_Click">Add Animation</Button>
             </Grid>
 
             <GridSplitter DragCompleted="GridSplitter_DragCompleted" Grid.Column="1" Width="5" HorizontalAlignment="Stretch" />
-            
+
             <Grid Grid.Column="2">
-              <Grid.RowDefinitions>
+                <Grid.RowDefinitions>
                     <RowDefinition></RowDefinition>
                     <RowDefinition Height="Auto"></RowDefinition>
-              </Grid.RowDefinitions>
+                </Grid.RowDefinitions>
 
-              <!--State List Box-->
-              <ListBox ItemsSource="{Binding SelectedAnimation.Keyframes}" 
+                <!--State List Box-->
+                <ListBox ItemsSource="{Binding SelectedAnimation.Keyframes}" 
                        SelectedItem="{Binding SelectedAnimation.SelectedKeyframe}" 
                        KeyDown="HandleDeleteAnimatedStatePressed">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                          <StackPanel Orientation="Horizontal">
-                            <Image Source="{Binding IconBitmapFrame}"/>
-                            <Label Foreground="{Binding LabelBrush}" Content="{Binding DisplayString}" VerticalAlignment="Center">
-                            </Label>
-                          </StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <Image Source="{Binding IconBitmapFrame}"/>
+                                <Image Source="{Binding ExclamationIcon}" Visibility="{Binding UncategorizedIconVisibility}">
+                                    <Image.ToolTip>
+                                        <TextBlock>This state is uncategorized which can cause unexpected results due to only some variables being assigned. Consider usingonly categorized states.</TextBlock>
+                                    </Image.ToolTip>
+                                </Image>
+                                <Label Foreground="{Binding LabelBrush}" Content="{Binding DisplayString}" VerticalAlignment="Center">
+                                </Label>
+                            </StackPanel>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
-                    
-              </ListBox>
-              <StackPanel Grid.Row="1">
-                <Button x:Name="AddStateButton" Click="AddStateKeyframeButton_Click">Add State</Button>
+
+                </ListBox>
+                <StackPanel Grid.Row="1">
+                    <Button x:Name="AddStateButton" Click="AddStateKeyframeButton_Click">Add State</Button>
                     <Button x:Name="AddSubAnimationButton" Click="AddSubAnimationButton_Click" Grid.Column="1">Add Sub-animation</Button>
                     <Button x:Name="AddNamedEvent" Click="AddNamedEventButton_Click" Grid.Column="1">Add Named Event</Button>
-              </StackPanel>
+                </StackPanel>
             </Grid>
-            
+
             <views:StateView 
                 Grid.Column="3" 
                 DataContext="{Binding SelectedAnimation.SelectedKeyframe}"
                 Width="210" 
                 HorizontalAlignment="Left"
                 Margin="0,0,5,0"
-                > </views:StateView>
+                ></views:StateView>
 
         </Grid>
 

@@ -1,4 +1,5 @@
 ﻿using FlatRedBall.Glue.StateInterpolation;
+using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Mvvm;
 using StateAnimationPlugin.Managers;
@@ -99,6 +100,8 @@ namespace StateAnimationPlugin.ViewModels
         public Visibility DisplayNameLabelVisibility =>
             string.IsNullOrEmpty(StateName) ? Visibility.Visible : Visibility.Collapsed;
 
+        bool isUncategorized;
+        public Visibility UncategorizedIconVisibility => isUncategorized.ToVisibility();
 
         [DependsOn(nameof(StateName))]
         [DependsOn(nameof(AnimationName))]
@@ -230,6 +233,10 @@ namespace StateAnimationPlugin.ViewModels
             }
         }
 
+
+        static BitmapFrame mExclamationIcon;
+        public BitmapFrame ExclamationIcon => mExclamationIcon;
+
         #endregion
 
         #region Methods
@@ -239,10 +246,11 @@ namespace StateAnimationPlugin.ViewModels
             mStateBitmap = BitmapLoader.Self.LoadImage("StateAnimationIcon.png");
             mAnimationBitmap = BitmapLoader.Self.LoadImage("ReferencedAnimationIcon.png");
             mEventBitmap = BitmapLoader.Self.LoadImage("NamedEventIcon.png");
+            mExclamationIcon = BitmapLoader.Self.LoadImage("redExclamation.png");
 
         }
 
-        public static AnimatedKeyframeViewModel FromSave(AnimatedStateSave save)
+        public static AnimatedKeyframeViewModel FromSave(AnimatedStateSave save, ElementSave elementSave)
         {
             AnimatedKeyframeViewModel toReturn = new AnimatedKeyframeViewModel();
 
@@ -251,10 +259,12 @@ namespace StateAnimationPlugin.ViewModels
             toReturn.InterpolationType = save.InterpolationType;
             toReturn.Easing = save.Easing;
 
+            toReturn.isUncategorized = elementSave.States.Any(item => item.Name == save.StateName);
+
             return toReturn;
         }
 
-        public static AnimatedKeyframeViewModel FromSave(AnimationReferenceSave save)
+        public static AnimatedKeyframeViewModel FromSave(AnimationReferenceSave save, ElementSave elementSave)
         {
             AnimatedKeyframeViewModel toReturn = new AnimatedKeyframeViewModel();
 
@@ -265,7 +275,7 @@ namespace StateAnimationPlugin.ViewModels
             return toReturn;
         }
 
-        public static AnimatedKeyframeViewModel FromSave(NamedEventSave save)
+        public static AnimatedKeyframeViewModel FromSave(NamedEventSave save, ElementSave elementSave)
         {
             AnimatedKeyframeViewModel toReturn = new AnimatedKeyframeViewModel();
             toReturn.EventName = save.Name;

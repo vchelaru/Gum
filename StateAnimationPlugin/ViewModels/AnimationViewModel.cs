@@ -143,7 +143,7 @@ namespace StateAnimationPlugin.ViewModels
 
             foreach(var eventSave in save.Events)
             {
-                var newViewModel = AnimatedKeyframeViewModel.FromSave(eventSave);
+                var newViewModel = AnimatedKeyframeViewModel.FromSave(eventSave, element);
 
                 toReturn.Keyframes.Add(newViewModel);
             }
@@ -152,7 +152,7 @@ namespace StateAnimationPlugin.ViewModels
             {
                 var foundState = GetStateFromCategorizedName(stateSave.StateName, element);
 
-                var newAnimatedStateViewModel = AnimatedKeyframeViewModel.FromSave(stateSave);
+                var newAnimatedStateViewModel = AnimatedKeyframeViewModel.FromSave(stateSave, element);
 
                 newAnimatedStateViewModel.HasValidState = foundState != null;
 
@@ -195,7 +195,7 @@ namespace StateAnimationPlugin.ViewModels
                         }
                     }
                 }
-                var newVm = AnimatedKeyframeViewModel.FromSave(animationReference);
+                var newVm = AnimatedKeyframeViewModel.FromSave(animationReference, element);
 
                 if(animationSave != null)
                 {
