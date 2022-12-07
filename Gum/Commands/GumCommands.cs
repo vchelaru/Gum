@@ -36,12 +36,15 @@ namespace Gum
             private set;
         }
 
+        public ToolCommands.ProjectCommands ProjectCommands { get; private set; }
+
         public GumCommands()
         {
             GuiCommands = new GuiCommands();
             FileCommands = new FileCommands();
             Edit = new EditCommands();
             WireframeCommands = new WireframeCommands();
+            ProjectCommands = Gum.ToolCommands.ProjectCommands.Self;
         }
 
         /// <summary>

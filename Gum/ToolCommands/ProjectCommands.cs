@@ -37,7 +37,7 @@ namespace Gum.ToolCommands
 
         #endregion
 
-        #region Methods
+        #region Screens
 
         public ScreenSave AddScreen(string screenName)
         {
@@ -56,25 +56,13 @@ namespace Gum.ToolCommands
             ProjectManager.Self.GumProjectSave.ScreenReferences.Add(new ElementReference { Name = screenSave.Name, ElementType = ElementType.Screen });
             ProjectManager.Self.GumProjectSave.ScreenReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
             ProjectManager.Self.GumProjectSave.Screens.Add(screenSave);
+            ProjectManager.Self.GumProjectSave.Screens.Sort((first, second) => first.Name.CompareTo(second.Name));
+
 
             GumCommands.Self.FileCommands.TryAutoSaveProject();
             GumCommands.Self.FileCommands.TryAutoSaveElement(screenSave);
 
             Plugins.PluginManager.Self.ElementAdd(screenSave);
-        }
-
-        #endregion
-
-        internal void RemoveElement(ElementSave element)
-        {
-            if (element is ScreenSave)
-            {
-                RemoveScreen(element as ScreenSave);
-            }
-            else if (element is ComponentSave)
-            {
-                RemoveComponent(element as ComponentSave);
-            }
         }
 
         internal void RemoveScreen(ScreenSave asScreenSave)
@@ -91,6 +79,20 @@ namespace Gum.ToolCommands
             Plugins.PluginManager.Self.ElementDelete(asScreenSave);
         }
 
+        #endregion
+
+        internal void RemoveElement(ElementSave element)
+        {
+            if (element is ScreenSave)
+            {
+                RemoveScreen(element as ScreenSave);
+            }
+            else if (element is ComponentSave)
+            {
+                RemoveComponent(element as ComponentSave);
+            }
+        }
+
         internal void RemoveBehavior(BehaviorSave behavior)
         {
             GumProjectSave gps = ProjectManager.Self.GumProjectSave;
@@ -103,19 +105,6 @@ namespace Gum.ToolCommands
         }
 
 
-        internal void RemoveComponent(ComponentSave asComponentSave)
-        {
-            GumProjectSave gps = ProjectManager.Self.GumProjectSave;
-
-            string name = asComponentSave.Name;
-            List<ElementReference> references = gps.ComponentReferences;
-
-            RemoveElementReferencesFromList(name, references);
-
-            gps.Components.Remove(asComponentSave);
-
-            Plugins.PluginManager.Self.ElementDelete(asComponentSave);
-        }
 
 
         private static void RemoveElementReferencesFromList(string name, List<ElementReference> references)
@@ -195,6 +184,7 @@ namespace Gum.ToolCommands
             gumProject.ComponentReferences.Add(new ElementReference { Name = componentSave.Name, ElementType = ElementType.Component });
             gumProject.ComponentReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
             gumProject.Components.Add(componentSave);
+            gumProject.Components.Sort((first, second) => first.Name.CompareTo(second.Name));
 
             GumCommands.Self.GuiCommands.RefreshElementTreeView();
 
@@ -238,6 +228,19 @@ namespace Gum.ToolCommands
             }
         }
 
+        internal void RemoveComponent(ComponentSave asComponentSave)
+        {
+            GumProjectSave gps = ProjectManager.Self.GumProjectSave;
+
+            string name = asComponentSave.Name;
+            List<ElementReference> references = gps.ComponentReferences;
+
+            RemoveElementReferencesFromList(name, references);
+
+            gps.Components.Remove(asComponentSave);
+
+            Plugins.PluginManager.Self.ElementDelete(asComponentSave);
+        }
         #endregion
     }
 }

@@ -583,7 +583,7 @@ namespace Gum.Managers
                         string relativeToScreens = FileManager.MakeRelative(path,
                             FileLocations.Self.ScreensFolder);
 
-                        ScreenSave screenSave = ProjectCommands.Self.AddScreen(relativeToScreens + name);
+                        ScreenSave screenSave = GumCommands.Self.ProjectCommands.AddScreen(relativeToScreens + name);
 
 
                         GumCommands.Self.GuiCommands.RefreshElementTreeView();
