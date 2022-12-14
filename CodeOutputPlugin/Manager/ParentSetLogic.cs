@@ -44,6 +44,11 @@ namespace CodeOutputPlugin.Manager
                 //GumCommands.Self.GuiCommands.PrintOutput(childResponse.Message);
                 GumCommands.Self.GuiCommands.ShowMessage(response.Message);
             }
+            else if(!string.IsNullOrEmpty(response.Message))
+            {
+                // useful for warnings:
+                GumCommands.Self.GuiCommands.ShowMessage(response.Message);
+            }
         }
 
         internal static void HandleNewCreatedInstance(ElementSave element, InstanceSave instance,  CodeOutputProjectSettings codeOutputProjectSettings)
@@ -63,7 +68,6 @@ namespace CodeOutputPlugin.Manager
             {
                 newParent = element.GetInstance(newParentName);
             }
-
             var childResponse = CanInstanceRemainAsAChildOf(instance, newParent, element);
 
             if(!childResponse.Succeeded)
@@ -72,6 +76,11 @@ namespace CodeOutputPlugin.Manager
 
                 GumCommands.Self.GuiCommands.ShowMessage(childResponse.Message);
 
+            }
+            else if (!string.IsNullOrEmpty(childResponse.Message))
+            {
+                // useful for warnings:
+                GumCommands.Self.GuiCommands.ShowMessage(childResponse.Message);
             }
         }
 
@@ -113,8 +122,9 @@ namespace CodeOutputPlugin.Manager
                     {
                         var parentName = newParent?.Name ?? element.Name;
                         var message =
-                            $"{instance.Name} cannot be added as a child to {parentName} because {parentName} is a Xamarin Forms object which has Content, so it can only have 1 child";
-                        toReturn = GeneralResponse.UnsuccessfulWith(message);
+                            $"Warning: {instance.Name} is being added as a child of {parentName}, but this will cause errors because {parentName} is a Xamarin Forms object which has Content. Be sure to fix this!";
+                        toReturn.Succeeded = true;
+                        toReturn.Message = message;
                     }
                 }
             }

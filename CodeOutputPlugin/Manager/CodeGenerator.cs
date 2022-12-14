@@ -1427,6 +1427,162 @@ namespace CodeOutputPlugin.Manager
 
         #endregion
 
+        #region Constructor
+
+        private static void GenerateConstructor(ElementSave element, VisualApi visualApi, int tabCount, StringBuilder stringBuilder, CodeOutputProjectSettings projectSettings)
+        {
+            var elementName = GetClassNameForType(element.Name, visualApi);
+
+            if (visualApi == VisualApi.Gum)
+            {
+                #region Constructor Header
+
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"public {elementName}(bool fullInstantiation = true)");
+
+                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+                tabCount++;
+
+                #endregion
+
+                #region Gum-required constructor code
+
+                stringBuilder.AppendLine(ToTabs(tabCount) + "if(fullInstantiation)");
+                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+                tabCount++;
+
+                if (element.BaseType == "Container")
+                {
+                    stringBuilder.AppendLine(ToTabs(tabCount) + "this.SetContainedObject(new InvisibleRenderable());");
+                }
+
+                stringBuilder.AppendLine();
+                #endregion
+            }
+            else // xamarin forms
+            {
+                #region Constructor Header
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"public {elementName}(bool fullInstantiation = true)");
+
+                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+                tabCount++;
+
+                #endregion
+
+                #region XamarinForms-required constructor code
+
+                stringBuilder.AppendLine(ToTabs(tabCount) + "var wasSuspended = GraphicalUiElement.IsAllLayoutSuspended;");
+                stringBuilder.AppendLine(ToTabs(tabCount) + "GraphicalUiElement.IsAllLayoutSuspended = true;");
+
+                var elementBaseType = element?.BaseType;
+                var baseElements = ObjectFinder.Self.GetBaseElements(element);
+
+                var isThisAbsoluteLayout = elementBaseType?.EndsWith("/AbsoluteLayout") == true;
+                if (!isThisAbsoluteLayout)
+                {
+                    isThisAbsoluteLayout = baseElements.Any(item => item.BaseType?.EndsWith("/AbsoluteLayout") == true);
+                }
+
+
+                var isStackLayout = elementBaseType?.EndsWith("/StackLayout") == true;
+                if (!isStackLayout)
+                {
+                    isStackLayout = baseElements.Any(item => item.BaseType?.EndsWith("/StackLayout") == true);
+                }
+
+                var isSkiaCanvasView = elementBaseType?.EndsWith("/SkiaGumCanvasView") == true;
+                if (!isSkiaCanvasView)
+                {
+                    // see if this inherits from a skia gum canvas view
+                    isSkiaCanvasView = baseElements.Any(item => item.BaseType?.EndsWith("/SkiaGumCanvasView") == true);
+                }
+
+                if (isThisAbsoluteLayout)
+                {
+                    stringBuilder.AppendLine(ToTabs(tabCount) + "var MainLayout = this;");
+                }
+                else if (!isSkiaCanvasView && !isStackLayout)
+                {
+                    bool shouldAddMainLayout = GetIfShouldAddMainLayout(element, projectSettings);
+
+                    if (shouldAddMainLayout)
+                    {
+                        stringBuilder.AppendLine(ToTabs(tabCount) + "MainLayout = new AbsoluteLayout();");
+                        stringBuilder.AppendLine(ToTabs(tabCount) + "BaseGrid.Children.Add(MainLayout);");
+                    }
+                }
+                #endregion
+            }
+
+            CodeGenerationContext context = new CodeGenerationContext();
+            context.Instance = null;
+            context.Element = element;
+            context.TabCount = tabCount;
+            context.CodeOutputProjectSettings = projectSettings;
+            FillWithVariableAssignments(visualApi, stringBuilder, context);
+
+            stringBuilder.AppendLine();
+
+            if (!DoesElementInheritFromCodeGeneratedElement(element, projectSettings))
+            {
+                stringBuilder.AppendLine(ToTabs(tabCount) + "InitializeInstances();");
+
+                if(context.CodeOutputProjectSettings.GenerateGumDataTypes)
+                {
+                    stringBuilder.AppendLine(ToTabs(tabCount) + "AssignGumReferences();");
+                }
+            }
+
+            stringBuilder.AppendLine();
+
+
+
+            // fill with variable binding after the instances have been created
+            if (visualApi == VisualApi.XamarinForms)
+            {
+                FillWithVariableBinding(element, stringBuilder, tabCount);
+            }
+
+            stringBuilder.AppendLine(ToTabs(tabCount) + "if(fullInstantiation)");
+            stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+            tabCount++;
+            stringBuilder.AppendLine(ToTabs(tabCount) + "ApplyDefaultVariables();");
+            tabCount--;
+            stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+
+            stringBuilder.AppendLine(ToTabs(tabCount) + "AssignParents();");
+
+            stringBuilder.AppendLine(ToTabs(tabCount) + "CustomInitialize();");
+
+            if (visualApi == VisualApi.Gum)
+            {
+                // close the if check
+                tabCount--;
+                stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+            }
+            else
+            {
+                stringBuilder.AppendLine(ToTabs(tabCount) + "GraphicalUiElement.IsAllLayoutSuspended = wasSuspended;");
+
+            }
+
+
+            tabCount--;
+            stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+        }
+
+        private static bool GetIfShouldAddMainLayout(ElementSave element, CodeOutputProjectSettings projectSettings)
+        {
+            var shouldAddMainLayout = true;
+            if (element is ScreenSave && !string.IsNullOrEmpty(element.BaseType) && !projectSettings.BaseTypesNotCodeGenerated.Contains(element.BaseType))
+            {
+                shouldAddMainLayout = false;
+            }
+
+            return shouldAddMainLayout;
+        }
+
+        #endregion
+
         public static string GetGeneratedCodeForElement(ElementSave element, CodeOutputElementSettings elementSettings, CodeOutputProjectSettings projectSettings)
         {
             #region Initial Values
@@ -1617,162 +1773,6 @@ namespace CodeOutputPlugin.Manager
             }
 
         }
-
-        #region Constructor
-
-        private static void GenerateConstructor(ElementSave element, VisualApi visualApi, int tabCount, StringBuilder stringBuilder, CodeOutputProjectSettings projectSettings)
-        {
-            var elementName = GetClassNameForType(element.Name, visualApi);
-
-            if (visualApi == VisualApi.Gum)
-            {
-                #region Constructor Header
-
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"public {elementName}(bool fullInstantiation = true)");
-
-                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
-                tabCount++;
-
-                #endregion
-
-                #region Gum-required constructor code
-
-                stringBuilder.AppendLine(ToTabs(tabCount) + "if(fullInstantiation)");
-                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
-                tabCount++;
-
-                if (element.BaseType == "Container")
-                {
-                    stringBuilder.AppendLine(ToTabs(tabCount) + "this.SetContainedObject(new InvisibleRenderable());");
-                }
-
-                stringBuilder.AppendLine();
-                #endregion
-            }
-            else // xamarin forms
-            {
-                #region Constructor Header
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"public {elementName}(bool fullInstantiation = true)");
-
-                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
-                tabCount++;
-
-                #endregion
-
-                #region XamarinForms-required constructor code
-
-                stringBuilder.AppendLine(ToTabs(tabCount) + "var wasSuspended = GraphicalUiElement.IsAllLayoutSuspended;");
-                stringBuilder.AppendLine(ToTabs(tabCount) + "GraphicalUiElement.IsAllLayoutSuspended = true;");
-
-                var elementBaseType = element?.BaseType;
-                var baseElements = ObjectFinder.Self.GetBaseElements(element);
-
-                var isThisAbsoluteLayout = elementBaseType?.EndsWith("/AbsoluteLayout") == true;
-                if (!isThisAbsoluteLayout)
-                {
-                    isThisAbsoluteLayout = baseElements.Any(item => item.BaseType?.EndsWith("/AbsoluteLayout") == true);
-                }
-
-
-                var isStackLayout = elementBaseType?.EndsWith("/StackLayout") == true;
-                if (!isStackLayout)
-                {
-                    isStackLayout = baseElements.Any(item => item.BaseType?.EndsWith("/StackLayout") == true);
-                }
-
-                var isSkiaCanvasView = elementBaseType?.EndsWith("/SkiaGumCanvasView") == true;
-                if (!isSkiaCanvasView)
-                {
-                    // see if this inherits from a skia gum canvas view
-                    isSkiaCanvasView = baseElements.Any(item => item.BaseType?.EndsWith("/SkiaGumCanvasView") == true);
-                }
-
-                if (isThisAbsoluteLayout)
-                {
-                    stringBuilder.AppendLine(ToTabs(tabCount) + "var MainLayout = this;");
-                }
-                else if (!isSkiaCanvasView && !isStackLayout)
-                {
-                    bool shouldAddMainLayout = GetIfShouldAddMainLayout(element, projectSettings);
-
-                    if (shouldAddMainLayout)
-                    {
-                        stringBuilder.AppendLine(ToTabs(tabCount) + "MainLayout = new AbsoluteLayout();");
-                        stringBuilder.AppendLine(ToTabs(tabCount) + "BaseGrid.Children.Add(MainLayout);");
-                    }
-                }
-                #endregion
-            }
-
-            CodeGenerationContext context = new CodeGenerationContext();
-            context.Instance = null;
-            context.Element = element;
-            context.TabCount = tabCount;
-            context.CodeOutputProjectSettings = projectSettings;
-            FillWithVariableAssignments(visualApi, stringBuilder, context);
-
-            stringBuilder.AppendLine();
-
-            if (!DoesElementInheritFromCodeGeneratedElement(element, projectSettings))
-            {
-                stringBuilder.AppendLine(ToTabs(tabCount) + "InitializeInstances();");
-
-                if(context.CodeOutputProjectSettings.GenerateGumDataTypes)
-                {
-                    stringBuilder.AppendLine(ToTabs(tabCount) + "AssignGumReferences();");
-                }
-            }
-
-            stringBuilder.AppendLine();
-
-
-
-            // fill with variable binding after the instances have been created
-            if (visualApi == VisualApi.XamarinForms)
-            {
-                FillWithVariableBinding(element, stringBuilder, tabCount);
-            }
-
-            stringBuilder.AppendLine(ToTabs(tabCount) + "if(fullInstantiation)");
-            stringBuilder.AppendLine(ToTabs(tabCount) + "{");
-            tabCount++;
-            stringBuilder.AppendLine(ToTabs(tabCount) + "ApplyDefaultVariables();");
-            tabCount--;
-            stringBuilder.AppendLine(ToTabs(tabCount) + "}");
-
-            stringBuilder.AppendLine(ToTabs(tabCount) + "AssignParents();");
-
-            stringBuilder.AppendLine(ToTabs(tabCount) + "CustomInitialize();");
-
-            if (visualApi == VisualApi.Gum)
-            {
-                // close the if check
-                tabCount--;
-                stringBuilder.AppendLine(ToTabs(tabCount) + "}");
-            }
-            else
-            {
-                stringBuilder.AppendLine(ToTabs(tabCount) + "GraphicalUiElement.IsAllLayoutSuspended = wasSuspended;");
-
-            }
-
-
-            tabCount--;
-            stringBuilder.AppendLine(ToTabs(tabCount) + "}");
-        }
-
-        private static bool GetIfShouldAddMainLayout(ElementSave element, CodeOutputProjectSettings projectSettings)
-        {
-            var shouldAddMainLayout = true;
-            if (element is ScreenSave && !string.IsNullOrEmpty(element.BaseType) && !projectSettings.BaseTypesNotCodeGenerated.Contains(element.BaseType))
-            {
-                shouldAddMainLayout = false;
-            }
-
-            return shouldAddMainLayout;
-        }
-
-        #endregion
 
         private static void GenerateApplyDefaultVariables(CodeGenerationContext context, StringBuilder stringBuilder)
         {
@@ -2362,20 +2362,20 @@ namespace CodeOutputPlugin.Manager
             var element = context.Element;
             if(element is ScreenSave)
             {
-                stringBuilder.AppendLine(context.Tabs + "global::Gum.DataTypes.ScreenSaveGum.DataTypes.ScreenSave ScreenSave { get; set; }");
+                stringBuilder.AppendLine(context.Tabs + "global::Gum.DataTypes.ScreenSave ScreenSave { get; set; }");
             }
             else if(element is ComponentSave)
             {
                 if(context.VisualApi == VisualApi.XamarinForms)
                 {
-                    stringBuilder.AppendLine(context.Tabs + "global::Gum.DataTypes.ScreenSaveGum.DataTypes.ComponentSave ComponentSave { get; set; }");
+                    stringBuilder.AppendLine(context.Tabs + "global::Gum.DataTypes.ComponentSave ComponentSave { get; set; }");
                 }
                 else
                 {
-                    stringBuilder.AppendLine(context.Tabs + "global::Gum.DataTypes.ScreenSaveGum.DataTypes.ComponentSave ComponentSave");
+                    stringBuilder.AppendLine(context.Tabs + "global::Gum.DataTypes.ComponentSave ComponentSave");
                     stringBuilder.AppendLine(context.Tabs + "{");
                     context.TabCount++;
-                    stringBuilder.AppendLine(context.Tabs + "get => ElementSave as global::Gum.DataTypes.ScreenSaveGum.DataTypes.ComponentSave;");
+                    stringBuilder.AppendLine(context.Tabs + "get => ElementSave as global::Gum.DataTypes.ComponentSave;");
                     stringBuilder.AppendLine(context.Tabs + "set => ElementSave = value;");
                     context.TabCount--;
                     stringBuilder.AppendLine(context.Tabs + "}");
