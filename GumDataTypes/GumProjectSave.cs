@@ -258,6 +258,12 @@ namespace Gum.DataTypes
                 fileName = FileManager.MakeAbsolute(fileName);
             }
 
+            if(!System.IO.File.Exists(fileName))
+            {
+                result.ErrorMessage = $"Could not find main project file {fileName}";
+                return null;
+            }
+
             GumProjectSave gps = null;
 
 #if ANDROID || IOS || WINDOWS_8
