@@ -260,6 +260,16 @@ namespace CodeOutputPlugin.Manager
 
             bool setsAny = GetIfStateSetsAnyPositionValues(defaultState, variablePrefix, variablesToConsider);
 
+            var isVariableOwnerAbsoluteLayout = false;
+            if (context.Instance != null)
+            {
+                isVariableOwnerAbsoluteLayout = context.Instance.BaseType?.EndsWith("/AbsoluteLayout") == true;
+            }
+            else
+            {
+                isVariableOwnerAbsoluteLayout = context.Element.BaseType?.EndsWith("/AbsoluteLayout") == true;
+            }
+
             #region Get recursive values for position and size
             var x = variableFinder.GetValue<float>(variablePrefix + "X");
             var y = variableFinder.GetValue<float>(variablePrefix + "Y");
@@ -337,19 +347,17 @@ namespace CodeOutputPlugin.Manager
                 stringBuilder.AppendLine(
                     $"{codePrefix}.HeightRequest = {height.ToString(CultureInfo.InvariantCulture)}f * {multiple};");
             }
-
+            else if(heightUnits == DimensionUnitType.RelativeToChildren)
+            {
+                if(isVariableOwnerAbsoluteLayout)
+                {
+                    stringBuilder.AppendLine(context.Tabs + $"Intentional error: The object {context.Instance?.Name ?? "this"} height depends on its children, but it is an absolute layout. Use a StackLayout instead!");
+                }
+            }
             #endregion
 
             var isContainedInStackLayout = parentBaseType?.EndsWith("/StackLayout") == true;
-            var isVariableOwnerAbsoluteLayout = false;
-            if (context.Instance != null)
-            {
-                isVariableOwnerAbsoluteLayout = context.Instance.BaseType?.EndsWith("/AbsoluteLayout") == true;
-            }
-            else
-            {
-                isVariableOwnerAbsoluteLayout = context.Element.BaseType?.EndsWith("/AbsoluteLayout") == true;
-            }
+
 
             #region Apply XUnits
 
@@ -559,50 +567,15 @@ namespace CodeOutputPlugin.Manager
             }
         }
 
-        private static bool IsVariableOwnerSkiaGumCanvasView(ref CodeGenerationContext context)
-        {
-            var isVariableOwnerSkiaGumCanvasView = false;
-            if (context.Instance != null)
-            {
-                isVariableOwnerSkiaGumCanvasView = context.Instance.BaseType?.EndsWith("/SkiaGumCanvasView") == true;
-
-                if (!isVariableOwnerSkiaGumCanvasView)
-                {
-                    var element = ObjectFinder.Self.GetElementSave(context.Instance.BaseType);
-                    return IsElementSkiaGumCanvasView(element);
-                }
-            }
-            else
-            {
-                isVariableOwnerSkiaGumCanvasView = IsElementSkiaGumCanvasView(context.Element);
-            }
-
-            return isVariableOwnerSkiaGumCanvasView;
-        }
-
-        private static bool IsElementSkiaGumCanvasView(ElementSave element)
-        {
-            if (element.BaseType?.EndsWith("/SkiaGumCanvasView") == true)
-            {
-                return true;
-            }
-            else
-            {
-                return ObjectFinder.Self.GetBaseElements(element)
-                    .Any(item => item.BaseType?.EndsWith("/SkiaGumCanvasView") == true);
-            }
-
-        }
+        #region Const values
+        const string WidthProportionalFlag = "AbsoluteLayoutFlags.WidthProportional";
+        const string HeightProportionalFlag = "AbsoluteLayoutFlags.HeightProportional";
+        const string XProportionalFlag = "AbsoluteLayoutFlags.XProportional";
+        const string YProportionalFlag = "AbsoluteLayoutFlags.YProportional";
+        #endregion
 
         private static void SetAbsoluteLayoutPosition(List<VariableSave> variablesToConsider, StateSave state, CodeGenerationContext context, StringBuilder stringBuilder, string parentBaseType)
         {
-            #region Const values
-            const string WidthProportionalFlag = "AbsoluteLayoutFlags.WidthProportional";
-            const string HeightProportionalFlag = "AbsoluteLayoutFlags.HeightProportional";
-            const string XProportionalFlag = "AbsoluteLayoutFlags.XProportional";
-            const string YProportionalFlag = "AbsoluteLayoutFlags.YProportional";
-            #endregion
-
             var variableFinder = new RecursiveVariableFinder(state);
 
             var variablePrefix = context.GumVariablePrefix;
@@ -618,6 +591,16 @@ namespace CodeOutputPlugin.Manager
             // Therefore, we should only do it if
             // a position-related value is set:
             bool setsAny = GetIfStateSetsAnyPositionValues(state, variablePrefix, variablesToConsider);
+
+            var isVariableOwnerAbsoluteLayout = false;
+            if (context.Instance != null)
+            {
+                isVariableOwnerAbsoluteLayout = context.Instance.BaseType?.EndsWith("/AbsoluteLayout") == true;
+            }
+            else
+            {
+                isVariableOwnerAbsoluteLayout = context.Element.BaseType?.EndsWith("/AbsoluteLayout") == true;
+            }
 
             #region Get recursive values for position and size
 
@@ -722,6 +705,10 @@ namespace CodeOutputPlugin.Manager
             }
             else if (heightUnits == DimensionUnitType.RelativeToChildren)
             {
+                if (isVariableOwnerAbsoluteLayout)
+                {
+                    stringBuilder.AppendLine(context.Tabs + $"Intentional error: The object {context.Instance?.Name ?? "this"} height depends on its children, but it is an absolute layout. Use a StackLayout instead!");
+                }
                 // see above on width relative to container for information
                 height = -1;
             }
@@ -729,15 +716,7 @@ namespace CodeOutputPlugin.Manager
             #endregion
 
             var isContainedInStackLayout = parentBaseType?.EndsWith("/StackLayout") == true;
-            var isVariableOwnerAbsoluteLayout = false;
-            if (context.Instance != null)
-            {
-                isVariableOwnerAbsoluteLayout = context.Instance.BaseType?.EndsWith("/AbsoluteLayout") == true;
-            }
-            else
-            {
-                isVariableOwnerAbsoluteLayout = context.Element.BaseType?.EndsWith("/AbsoluteLayout") == true;
-            }
+
 
             #region Apply XUnits
 
@@ -1159,6 +1138,41 @@ namespace CodeOutputPlugin.Manager
                         $"{codePrefix}.AutoSizeWidthAccordingToContents = true;");
                 }
             }
+        }
+
+        private static bool IsVariableOwnerSkiaGumCanvasView(ref CodeGenerationContext context)
+        {
+            var isVariableOwnerSkiaGumCanvasView = false;
+            if (context.Instance != null)
+            {
+                isVariableOwnerSkiaGumCanvasView = context.Instance.BaseType?.EndsWith("/SkiaGumCanvasView") == true;
+
+                if (!isVariableOwnerSkiaGumCanvasView)
+                {
+                    var element = ObjectFinder.Self.GetElementSave(context.Instance.BaseType);
+                    return IsElementSkiaGumCanvasView(element);
+                }
+            }
+            else
+            {
+                isVariableOwnerSkiaGumCanvasView = IsElementSkiaGumCanvasView(context.Element);
+            }
+
+            return isVariableOwnerSkiaGumCanvasView;
+        }
+
+        private static bool IsElementSkiaGumCanvasView(ElementSave element)
+        {
+            if (element.BaseType?.EndsWith("/SkiaGumCanvasView") == true)
+            {
+                return true;
+            }
+            else
+            {
+                return ObjectFinder.Self.GetBaseElements(element)
+                    .Any(item => item.BaseType?.EndsWith("/SkiaGumCanvasView") == true);
+            }
+
         }
 
         private static float CalculateAbsoluteWidth(InstanceSave instance, ElementSave container, RecursiveVariableFinder variableFinder)
@@ -1776,12 +1790,10 @@ namespace CodeOutputPlugin.Manager
 
         private static void GenerateApplyDefaultVariables(CodeGenerationContext context, StringBuilder stringBuilder)
         {
-            var tabCount = context.TabCount;
-
             var line = "private void ApplyDefaultVariables()";
-            stringBuilder.AppendLine(ToTabs(tabCount) + line);
-            stringBuilder.AppendLine(ToTabs(tabCount) + "{");
-            tabCount++;
+            stringBuilder.AppendLine(context.Tabs + line);
+            stringBuilder.AppendLine(context.Tabs + "{");
+            context.TabCount++;
 
             foreach (var instance in context.Element.Instances)
             {
@@ -1789,7 +1801,7 @@ namespace CodeOutputPlugin.Manager
 
                 FillWithNonParentVariableAssignments(context, stringBuilder);
 
-                TryGenerateApplyLocalizationForInstance(tabCount, stringBuilder, instance);
+                TryGenerateApplyLocalizationForInstance(context, stringBuilder, instance);
 
                 var instanceApi = GetVisualApiForInstance(instance, context.Element);
                 var screenOrComponent = context.Element is ScreenSave
@@ -1797,14 +1809,14 @@ namespace CodeOutputPlugin.Manager
                     : "ComponentSave";
                 if(instanceApi == VisualApi.Gum && context.CodeOutputProjectSettings.GenerateGumDataTypes)
                 {
-                    stringBuilder.AppendLine(ToTabs(tabCount) + $"GumRuntime.ElementSaveExtensions.ApplyVariableReferences({instance.Name}, {screenOrComponent}.DefaultState);");
+                    stringBuilder.AppendLine(context.Tabs + $"GumRuntime.ElementSaveExtensions.ApplyVariableReferences({instance.Name}, {screenOrComponent}.DefaultState);");
                 }
 
                 stringBuilder.AppendLine();
             }
 
-            tabCount--;
-            stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+            context.TabCount--;
+            stringBuilder.AppendLine(context.Tabs + "}");
 
         }
 
@@ -1962,7 +1974,7 @@ namespace CodeOutputPlugin.Manager
         }
 
 
-        private static void TryGenerateApplyLocalizationForInstance(int tabCount, StringBuilder stringBuilder, InstanceSave instance)
+        private static void TryGenerateApplyLocalizationForInstance(CodeGenerationContext context, StringBuilder stringBuilder, InstanceSave instance)
         {
             var component = ObjectFinder.Self.GetComponent(instance);
 
@@ -1972,7 +1984,7 @@ namespace CodeOutputPlugin.Manager
 
                 if (instanceComponentSettings?.LocalizeElement == true)
                 {
-                    stringBuilder.AppendLine(ToTabs(tabCount) + $"{instance.Name}.ApplyLocalization();");
+                    stringBuilder.AppendLine(context.Tabs + $"{instance.Name}.ApplyLocalization();");
 
                 }
             }
@@ -1989,6 +2001,7 @@ namespace CodeOutputPlugin.Manager
                 stringBuilder.AppendLine(ToTabs(tabCount) + "{");
                 tabCount++;
                 var context = new CodeGenerationContext();
+                context.TabCount = tabCount;
                 context.Element = element;
                 foreach (var variable in element.DefaultState.Variables)
                 {
@@ -2029,7 +2042,9 @@ namespace CodeOutputPlugin.Manager
 
                 foreach (var instance in element.Instances)
                 {
-                    TryGenerateApplyLocalizationForInstance(tabCount, stringBuilder, instance);
+                    context.Instance = instance;
+
+                    TryGenerateApplyLocalizationForInstance(context, stringBuilder, instance);
                 }
 
 
