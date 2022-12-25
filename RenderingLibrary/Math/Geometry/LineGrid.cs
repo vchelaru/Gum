@@ -22,6 +22,8 @@ namespace RenderingLibrary.Math.Geometry
         int mRowCount = 8;
         int mColumnCount = 8;
 
+        public string Name { get; set; }
+
         #endregion
 
         #region Properties
@@ -315,6 +317,7 @@ namespace RenderingLibrary.Math.Geometry
         {
             throw new NotImplementedException();
         }
-        
+
+        public override string ToString() => $"LineGrid {Name}";
     }
 }
