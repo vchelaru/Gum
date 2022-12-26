@@ -16,6 +16,7 @@
   * [3 - Playing Animations inside other Animations](animation-tutorials/playing-animations-inside-other-animations.md)
 * [Examples](examples/README.md)
   * [Custom NineSlice](examples/custom-nineslice.md)
+  * [Health Bar](examples/health-bar.md)
 * [Menu](menu/README.md)
   * [Project Properties](menu/project-properties.md)
 * [Gum Elements](gum-elements/README.md)
