@@ -32,7 +32,7 @@ To create your own font file:
 2. Select **Options** -> **Font Settings**
 3.  Use the dropdown to select the font you would like to use. All .ttf files installed on the current machine should appear in the dropdown. If you would like to install a new .ttf, restart Bitmap Font Generator after installing the font.
 
-    ![](<../../.gitbook/assets/image (7).png>)
+    ![](<../../.gitbook/assets/image (7) (1).png>)
 4. After changing the settings, click **OK**
 5.  Select which characters you would like included in your font. Adding characters can increase the font size, but may be required depending on which characters you intend to use.
 

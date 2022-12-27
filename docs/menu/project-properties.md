@@ -6,7 +6,7 @@ The project properties window allows you to modify properties that apply across 
 
 To open the Project Properties tab, select Edit -> Properties.
 
-![](<../.gitbook/assets/image (10).png>)
+![](<../.gitbook/assets/image (10) (1).png>)
 
 ## Canvas Width/Height
 

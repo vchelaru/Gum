@@ -12,7 +12,7 @@ The properties window will show properties for the selected instance or element.
 
 Properties can be edited simply by changing values on the selected property. For example, to move the text to the right, change its X value to a positive number:
 
-![](<../.gitbook/assets/image (6).png>)
+![](<../.gitbook/assets/image (6) (1).png>)
 
 ## Positioning Instances
 
@@ -44,7 +44,7 @@ Changing the X Units to **Pixels from Right** will cause the Text to be position
 
 The X,Y values, Origin values, and Units values are all available for every type of element in Gum; however, these values only change the bounds. In the case of a Text object we may be interested in how the text is aligned within the bounds. The Text object offers two properties for aligning its text: **Horizontal Alignment** and **Vertical Alignment**. Changing the **Horizontal Alignment** to **Center** centers the Text within its bounds:
 
-![](<../.gitbook/assets/image (11).png>)
+![](<../.gitbook/assets/image (11) (1).png>)
 
 ## Default and overriding values
 
@@ -52,7 +52,7 @@ You may have noticed that some properties in the property grid are green while o
 
 To see how this works, select the "Text" item under the "Standard" item. Notice that all values are black. Notice the default values for **Horizontal Alignment** and **Vertical Alignment**:
 
-![](<../.gitbook/assets/image (8).png>)
+![](<../.gitbook/assets/image (8) (1).png>)
 
 If the default Horizontal Alignment and Vertical Alignment values are changed, the changes will immediately be reflected in the preview window for the default Text configuration:
 
@@ -60,8 +60,8 @@ If the default Horizontal Alignment and Vertical Alignment values are changed, t
 
 Now if we select the TextIntance we will see that the VerticalAlignment is visibly using the Bottom value; however the **Horizontal Alignment** is still using center - this is because a value that is explicitly set on an instance will always override the default value set in the Standard element. Notice that **Horizontal Alignment** is black (indicating a custom value) and **Vertical Alignment** is green (indicating a default value).
 
-![](<../.gitbook/assets/image (9).png>)
+![](<../.gitbook/assets/image (9) (1).png>)
 
 Values can be reverted back to their default simply by right-clicking on the variable name in the properties window and selecting **Make Default**
 
-![](<../.gitbook/assets/image (5).png>)
+![](<../.gitbook/assets/image (5) (1).png>)
