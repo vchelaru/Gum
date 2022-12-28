@@ -56,6 +56,7 @@ namespace Gum.Managers
         }
 
         #endregion
+
         internal void HandleDragDropEvent(object sender, DragEventArgs e)
         {
             List<TreeNode> treeNodesToDrop = GetTreeNodesToDrop();
@@ -86,7 +87,7 @@ namespace Gum.Managers
             }
         }
 
-        #region Drag+drop File (like form windows explorer)
+        #region Drag+drop File (from windows explorer)
 
         internal void HandleFileDragDrop(object sender, DragEventArgs e)
         {
@@ -108,7 +109,7 @@ namespace Gum.Managers
             // If only one file was dropped, see if we're over an instance that can take a file
             if (files.Length == 1)
             {
-                if (!ValidExtension(files[0]))
+                if (!IsValidExtensionForFileDrop(files[0]))
                 {
                     handled = true;
                 }
@@ -129,7 +130,7 @@ namespace Gum.Managers
             {
                 foreach (string file in files)
                 {
-                    if (!ValidExtension(file))
+                    if (!IsValidExtensionForFileDrop(file))
                         continue;
 
                     string fileName = FileManager.MakeRelative(file, FileLocations.Self.ProjectFolder);
@@ -254,6 +255,11 @@ namespace Gum.Managers
             return null;
         }
 
+        private bool IsValidExtensionForFileDrop(string file)
+        {
+            string extension = FileManager.GetExtension(file);
+            return LoaderManager.Self.ValidTextureExtensions.Contains(extension);
+        }
 
         #endregion
 
@@ -460,10 +466,45 @@ namespace Gum.Managers
 
         #endregion
 
+        #region Drop BehaviorSave
+
+        private void HandleDroppedBehavior(BehaviorSave behavior, TreeNode treeNodeDroppedOn)
+        {
+            var targetTag = treeNodeDroppedOn.Tag;
+
+            var targetComponent = targetTag as ComponentSave;
+
+            //////////////////Early Out///////////////
+            if(targetComponent == null)
+            {
+                return;
+            }
+            var alreadyHasBehavior = targetComponent.Behaviors.Any(item => item.BehaviorName == behavior.Name);
+
+            if(alreadyHasBehavior)
+            {
+                return;
+            }
+            ///////////////End Early Out//////////////
+
+            var behaviorReference = new ElementBehaviorReference();
+
+            behaviorReference.BehaviorName = behavior.Name;
+            targetComponent.Behaviors.Add(behaviorReference);
+
+            GumCommands.Self.GuiCommands.PrintOutput($"Added behavior {behavior} to {targetComponent}");
+
+            GumCommands.Self.FileCommands.TryAutoSaveElement(targetComponent);
+        }
+
+        #endregion
+
         #region Drop Instance on TreeNode
 
-        private static void HandleDroppedInstance(object draggedObject, TreeNode targetTreeNode, object targetObject)
+        private static void HandleDroppedInstance(object draggedObject, TreeNode targetTreeNode)
         {
+            object targetObject = targetTreeNode.Tag;
+
             InstanceSave draggedAsInstanceSave = draggedObject as InstanceSave;
 
             ElementSave targetElementSave = targetObject as ElementSave;
@@ -620,20 +661,24 @@ namespace Gum.Managers
             return treeNodesToDrop;
         }
 
-        private void HandleDroppedItemOnTreeView(object draggedComponentOrElement, TreeNode treeNodeDroppedOn)
+        private void HandleDroppedItemOnTreeView(object draggedObject, TreeNode treeNodeDroppedOn)
         {
-            Console.WriteLine($"Dropping{draggedComponentOrElement} on {treeNodeDroppedOn}");
+            Console.WriteLine($"Dropping{draggedObject} on {treeNodeDroppedOn}");
             if (treeNodeDroppedOn != null)
             {
                 object targetTag = treeNodeDroppedOn.Tag;
 
-                if (draggedComponentOrElement is ElementSave)
+                if (draggedObject is ElementSave)
                 {
-                    HandleDroppedElementSave(draggedComponentOrElement, treeNodeDroppedOn, targetTag, treeNodeDroppedOn);
+                    HandleDroppedElementSave(draggedObject, treeNodeDroppedOn, targetTag, treeNodeDroppedOn);
                 }
-                else if (draggedComponentOrElement is InstanceSave)
+                else if (draggedObject is InstanceSave)
                 {
-                    HandleDroppedInstance(draggedComponentOrElement, treeNodeDroppedOn, targetTag);
+                    HandleDroppedInstance(draggedObject, treeNodeDroppedOn);
+                }
+                else if(draggedObject is BehaviorSave behaviorSave)
+                {
+                    HandleDroppedBehavior(behaviorSave, treeNodeDroppedOn);
                 }
             }
         }
@@ -674,7 +719,6 @@ namespace Gum.Managers
                    SelectedState.Self.SelectedElement != null &&            // An element must be selected
                    SelectedState.Self.SelectedStateSave != null;            // A state must be selected
         }
-        #endregion
 
         internal void HandleFileDragEnter(object sender, DragEventArgs e)
         {
@@ -701,14 +745,6 @@ namespace Gum.Managers
             }
         }
 
-
-        private bool ValidExtension(string file)
-        {
-            string extension = FileManager.GetExtension(file);
-            return LoaderManager.Self.ValidTextureExtensions.Contains(extension);
-        }
-
-
         private static void SaveAndRefresh()
         {
             GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
@@ -717,6 +753,17 @@ namespace Gum.Managers
 
             WireframeObjectManager.Self.RefreshAll(true);
         }
+
+        internal void HandleKeyDown(System.Windows.Forms.KeyEventArgs e)
+        {
+            if(e.KeyCode == Keys.Escape)
+            {
+                mDraggedItem = null;
+            }
+        }
+
+        #endregion
+
 
         private static void AddNewInstanceForDrop(string fileName, float worldX, float worldY)
         {
@@ -787,14 +834,6 @@ namespace Gum.Managers
 
             SelectedState.Self.SelectedStateSave.SetValue(instance.Name + ".X", xToSet);
             SelectedState.Self.SelectedStateSave.SetValue(instance.Name + ".Y", yToSet);
-        }
-
-        internal void HandleKeyDown(System.Windows.Forms.KeyEventArgs e)
-        {
-            if(e.KeyCode == Keys.Escape)
-            {
-                mDraggedItem = null;
-            }
         }
     }
 }
