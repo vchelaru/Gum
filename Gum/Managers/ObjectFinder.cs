@@ -655,7 +655,10 @@ namespace Gum.Managers
                 {
                     if (instanceInScreen.BaseType == elementName)
                     {
-                        references.Add(new TypedElementReference(instanceInScreen, ReferenceType.ElementOfType));
+                        references.Add(new TypedElementReference(instanceInScreen, ReferenceType.InstanceOfType)
+                        {
+                            OwnerOfReferencingObject = screen
+                        });
                     }
                 }
 
@@ -663,7 +666,10 @@ namespace Gum.Managers
                 {
                     if (variable.Value as string == elementName)
                     {
-                        references.Add(new TypedElementReference(variable, ReferenceType.ContainedTypeInList));
+                        references.Add(new TypedElementReference(variable, ReferenceType.ContainedTypeInList)
+                        {
+                            OwnerOfReferencingObject = screen
+                        });
                     }
                 }
 
@@ -681,7 +687,10 @@ namespace Gum.Managers
                 {
                     if (instanceInScreen.BaseType == elementName)
                     {
-                        references.Add(new TypedElementReference(instanceInScreen, ReferenceType.InstanceOfType));
+                        references.Add(new TypedElementReference(instanceInScreen, ReferenceType.InstanceOfType)
+                        {
+                            OwnerOfReferencingObject = component
+                        });
                     }
                 }
 
@@ -689,7 +698,10 @@ namespace Gum.Managers
                 {
                     if (variable.Value as string == elementName)
                     {
-                        references.Add(new TypedElementReference(variable, ReferenceType.ContainedTypeInList));
+                        references.Add(new TypedElementReference(variable, ReferenceType.ContainedTypeInList)
+                        {
+                            OwnerOfReferencingObject = component
+                        });
                     }
                 }
 

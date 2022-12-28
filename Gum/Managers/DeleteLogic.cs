@@ -365,6 +365,36 @@ namespace Gum.Managers
                         }
                     }
                 }
+
+                var elementReferences = ObjectFinder.Self.GetElementReferences(element);
+
+                foreach(var reference in elementReferences)
+                {
+                    if (reference.ReferenceType == ReferenceType.InstanceOfType)
+                    {
+                        var shouldSave = false;
+
+                        var ownerOfInstance = reference.OwnerOfReferencingObject;
+                        var instance = reference.ReferencingObject as InstanceSave;
+
+                        var variableToRemove = $"{instance.Name}.{category.Name}State";
+
+                        foreach (var state in ownerOfInstance.AllStates)
+                        {
+                            var numberRemoved = state.Variables.RemoveAll(item => item.Name == variableToRemove);
+
+                            if (numberRemoved > 0)
+                            {
+                                shouldSave = true;
+                            }
+                        }
+
+                        if (shouldSave)
+                        {
+                            GumCommands.Self.FileCommands.TryAutoSaveElement(ownerOfInstance);
+                        }
+                    }
+                }
             }
 
             GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
