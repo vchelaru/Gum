@@ -9,6 +9,7 @@ using Gum.ToolStates;
 using ToolsUtilities;
 using CommonFormsAndControls;
 using System.Windows.Forms;
+using Gum.DataTypes.Variables;
 
 namespace Gum.ToolCommands
 {
@@ -22,6 +23,8 @@ namespace Gum.ToolCommands
 
         #region Properties
 
+        public ElementCommands ElementCommands => ElementCommands.Self;
+
         public static ProjectCommands Self
         {
             get
@@ -33,7 +36,6 @@ namespace Gum.ToolCommands
                 return mSelf;
             }
         }
-
 
         #endregion
 
@@ -81,6 +83,8 @@ namespace Gum.ToolCommands
 
         #endregion
 
+        #region Element (Screen/Component/Standard)
+
         internal void RemoveElement(ElementSave element)
         {
             if (element is ScreenSave)
@@ -93,6 +97,9 @@ namespace Gum.ToolCommands
             }
         }
 
+        #endregion
+
+        #region Behaviors
         internal void RemoveBehavior(BehaviorSave behavior)
         {
             GumProjectSave gps = ProjectManager.Self.GumProjectSave;
@@ -104,6 +111,7 @@ namespace Gum.ToolCommands
             gps.Behaviors.Remove(behavior);
         }
 
+        #endregion
 
 
 

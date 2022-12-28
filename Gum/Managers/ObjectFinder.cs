@@ -4,11 +4,13 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using ToolsUtilities;
 
 namespace Gum.Managers
 {
+    #region ReferenceType Enum
     public enum ReferenceType
     {
         InstanceOfType,
@@ -16,6 +18,8 @@ namespace Gum.Managers
         ContainedTypeInList,
         VariableReference
     }
+    #endregion
+
     public class TypedElementReference
     {
         public ElementSave OwnerOfReferencingObject { get; set; }
@@ -272,6 +276,8 @@ namespace Gum.Managers
 
         #endregion
 
+        #region Get Elements by inheritance
+
         public StandardElementSave GetRootStandardElementSave(ElementSave elementSave)
         {
             if (elementSave == null)
@@ -297,6 +303,8 @@ namespace Gum.Managers
         {
             return GetRootStandardElementSave(instanceSave.GetBaseElementSave());
         }
+
+        #endregion
 
         /// <summary>
         /// Returns a list of Elements that include InstanceSaves that use the argument
@@ -445,6 +453,20 @@ namespace Gum.Managers
             }
 
             return toReturn;
+        }
+
+        public List<ComponentSave> GetComponentsReferencing(BehaviorSave behavior)
+        {
+            List<ComponentSave> referencingComponents = new List<ComponentSave>();
+            foreach(var component in GumProjectSave.Components)
+            {
+                if(component.Behaviors.Any(item => item.BehaviorName == behavior.Name))
+                {
+                    referencingComponents.Add(component);
+                }
+            }
+            
+            return referencingComponents;
         }
 
         /// <summary>

@@ -59,16 +59,14 @@ namespace Gum.Plugins.Behaviors
                     var project = ProjectManager.Self.GumProjectSave;
                     var behaviorSave = project.Behaviors.FirstOrDefault(item => item.Name == behaviorName);
 
-                    AddCategoriesFromBehavior(behaviorSave, component);
+                    GumCommands.Self.ProjectCommands.ElementCommands.AddCategoriesFromBehavior(behaviorSave, component);
                 }
 
                 component.Behaviors.Clear();
                 foreach (var behavior in viewModel.AllBehaviors.Where(item => item.IsChecked))
                 {
-                    var newBehavior = new ElementBehaviorReference();
-                    newBehavior.BehaviorName = behavior.Name;
-                    // for now, no multiple projects supported
-                    component.Behaviors.Add(newBehavior);
+
+                    GumCommands.Self.ProjectCommands.ElementCommands.AddBehaviorTo(behavior.Name, component, performSave:false);
                 }
 
                 GumCommands.Self.GuiCommands.RefreshStateTreeView();
@@ -83,37 +81,6 @@ namespace Gum.Plugins.Behaviors
             }
         }
 
-        private void AddCategoriesFromBehavior(BehaviorSave behaviorSave, ComponentSave component)
-        {
-            foreach(var behaviorCategory in behaviorSave.Categories)
-            {
-                StateSaveCategory matchingComponentCategory = 
-                    component.Categories.FirstOrDefault(item => item.Name == behaviorCategory.Name);
-
-                if(matchingComponentCategory == null)
-                {
-                    //category doesn't exist, so let's add a clone of it:
-                    matchingComponentCategory = new StateSaveCategory();
-                    matchingComponentCategory.Name = behaviorCategory.Name;
-                    component.Categories.Add(matchingComponentCategory);
-                }
-
-                foreach(var behaviorState in behaviorCategory.States)
-                {
-                    var matchingComponentState = 
-                        matchingComponentCategory.States.FirstOrDefault(item => item.Name == behaviorState.Name);
-
-                    if(matchingComponentState == null)
-                    {
-                        // state doesn't exist, so add it:
-                        var newState = new StateSave();
-                        newState.Name = behaviorState.Name;
-                        newState.ParentContainer = component;
-                        matchingComponentCategory.States.Add(newState);
-                    }
-                }
-            }
-        }
 
         bool hasBeenAdded = false;
         private void HandleElementSelected(ElementSave element)

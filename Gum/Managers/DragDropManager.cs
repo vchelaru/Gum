@@ -487,14 +487,7 @@ namespace Gum.Managers
             }
             ///////////////End Early Out//////////////
 
-            var behaviorReference = new ElementBehaviorReference();
-
-            behaviorReference.BehaviorName = behavior.Name;
-            targetComponent.Behaviors.Add(behaviorReference);
-
-            GumCommands.Self.GuiCommands.PrintOutput($"Added behavior {behavior} to {targetComponent}");
-
-            GumCommands.Self.FileCommands.TryAutoSaveElement(targetComponent);
+            GumCommands.Self.ProjectCommands.ElementCommands.AddBehaviorTo(behavior, targetComponent);
         }
 
         #endregion
