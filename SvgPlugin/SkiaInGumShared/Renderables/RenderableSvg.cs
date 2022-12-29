@@ -14,7 +14,6 @@ using ToolsUtilities;
 
 namespace SkiaPlugin.Renderables
 {
-#if INCLUDE_SVG
     public class RenderableSvg : RenderableSkiaObject, IAspectRatio
     {
         #region Fields/Properties
@@ -28,7 +27,9 @@ namespace SkiaPlugin.Renderables
                 if (sourceFile != value)
                 {
                     sourceFile = value;
+#if INCLUDE_SVG
                     skiaSvg = GetSkSvg();
+#endif
                     needsUpdate = true;
                 }
             }
@@ -46,16 +47,23 @@ namespace SkiaPlugin.Renderables
         //    set => ForceUseColor = value;
         //}
 
-        SkiaSharp.Extended.Svg.SKSvg skiaSvg;
 
+#if INCLUDE_SVG
+        global::SkiaSharp.Extended.Svg.SKSvg skiaSvg;
         public float AspectRatio => skiaSvg == null ? 1 : skiaSvg.ViewBox.Width / (float)skiaSvg.ViewBox.Height;
+#else
+        public float AspectRatio => 1;
+#endif
+
 
         protected override bool ShouldApplyColorOnSpriteRender => true;
 
-        #endregion
+#endregion
 
         internal override void DrawToSurface(SKSurface surface)
         {
+#if INCLUDE_SVG
+
             if (skiaSvg != null)
             {
                 surface.Canvas.Clear(SKColors.Transparent);
@@ -80,8 +88,10 @@ namespace SkiaPlugin.Renderables
                     surface.Canvas.DrawCircle(new SKPoint(radius, radius), radius, whitePaint);
                 }
             }
+#endif
         }
 
+#if INCLUDE_SVG
         private SkiaSharp.Extended.Svg.SKSvg GetSkSvg()
         {
             SkiaSharp.Extended.Svg.SKSvg skiaSvg = null;
@@ -110,6 +120,6 @@ namespace SkiaPlugin.Renderables
 
             return skiaSvg;
         }
-    }
 #endif
+    }
 }

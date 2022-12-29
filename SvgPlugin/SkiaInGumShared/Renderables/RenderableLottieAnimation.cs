@@ -25,6 +25,13 @@ namespace SkiaPlugin.Renderables
 
         public bool IsAnimating { get; set; } = true;
 
+        // This alias exists to match the other interfaces, but should not be used in code:
+        public bool Animate
+        {
+            get => IsAnimating;
+            set => IsAnimating = value;
+        }
+
         DateTime lastUpdate;
 
         const double SecondsBetweenUpdates = .1;

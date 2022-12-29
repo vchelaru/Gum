@@ -19,6 +19,7 @@ namespace GumRuntime
 {
     public static class InstanceSaveExtensionMethods
     {
+        public static Func<string, IRenderable> CustomObjectCreation;
 
 #if !NO_XNA
         public static GraphicalUiElement ToGraphicalUiElement(this InstanceSave instanceSave, SystemManagers systemManagers)
@@ -146,12 +147,15 @@ namespace GumRuntime
                         containedObject = text;
                     }
                     break;
+
+
                 default:
-                    handledAsBaseType = false;
+                    containedObject = CustomObjectCreation?.Invoke(baseType);
+                    handledAsBaseType = containedObject != null;
                     break;
             }
 #endif
-                        return handledAsBaseType;
+                    return handledAsBaseType;
         }
 
         private static void SetAlphaAndColorValues(SolidRectangle solidRectangle, RecursiveVariableFinder rvf)

@@ -93,6 +93,7 @@ namespace SkiaPlugin.Renderables
         public float Rotation { get; set; }
 
         public bool FlipHorizontal { get; set; }
+        public bool FlipVertical { get; set; }
 
         float width;
         public float Width
