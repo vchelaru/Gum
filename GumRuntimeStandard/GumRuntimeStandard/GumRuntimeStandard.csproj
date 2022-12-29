@@ -25,6 +25,7 @@
     <Compile Include="..\..\Gum\Managers\StandardElementsManager.cs" Link="StandardElementsManager.cs" />
     <Compile Include="..\..\Gum\RenderingLibrary\Blend.cs" Link="Blend.cs" />
     <Compile Include="..\..\Gum\Wireframe\ElementWithState.cs" Link="ElementWithState.cs" />
+    <Compile Include="..\..\RenderingLibrary\Graphics\GradientType.cs" Link="GradientType.cs" />
     <Compile Include="..\..\RenderingLibrary\Graphics\HorizontalAlignment.cs" Link="HorizontalAlignment.cs" />
     <Compile Include="..\..\RenderingLibrary\Graphics\NineSliceExtensions.cs" Link="NineSliceExtensions.cs" />
     <Compile Include="..\..\RenderingLibrary\Graphics\VerticalAlignment.cs" Link="VerticalAlignment.cs" />

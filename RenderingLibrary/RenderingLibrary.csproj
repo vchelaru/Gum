@@ -98,6 +98,7 @@
     <Compile Include="Graphics\BitmapCharacterInfo.cs" />
     <Compile Include="Graphics\Fonts\BitmapFont.cs" />
     <Compile Include="Graphics\Fonts\BmfcSave.cs" />
+    <Compile Include="Graphics\GradientType.cs" />
     <Compile Include="Graphics\HorizontalAlignment.cs" />
     <Compile Include="Graphics\IAnimation.cs" />
     <Compile Include="Graphics\IAspectRatio.cs" />

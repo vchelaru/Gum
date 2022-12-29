@@ -17,16 +17,6 @@ using System.Threading.Tasks;
 
 namespace SkiaPlugin.Renderables
 {
-    #region Enums
-
-    public enum GradientType
-    {
-        Linear,
-        Radial
-    }
-
-    #endregion
-
     public abstract class RenderableSkiaObject : IRenderableIpso, IVisible
     {
         #region General Fields/Properties

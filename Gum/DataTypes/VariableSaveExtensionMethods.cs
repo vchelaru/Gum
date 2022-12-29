@@ -433,7 +433,8 @@ namespace Gum.DataTypes
                         variableSave.Value = (ChildrenLayout)valueAsInt;
                         return true;
                     case "GradientType":
-                        return false;
+                        variableSave.Value = (global::RenderingLibrary.Graphics.GradientType)valueAsInt;
+                        return true;
                     default:
                         return false;
                 }
