@@ -19,9 +19,9 @@ namespace GumRuntime
 {
     public static class InstanceSaveExtensionMethods
     {
-        public static Func<string, IRenderable> CustomObjectCreation;
 
 #if !NO_XNA
+        public static Func<string, IRenderable> CustomObjectCreation;
         public static GraphicalUiElement ToGraphicalUiElement(this InstanceSave instanceSave, SystemManagers systemManagers)
         {
 #if DEBUG

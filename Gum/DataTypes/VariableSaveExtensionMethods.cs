@@ -432,6 +432,8 @@ namespace Gum.DataTypes
                     case "ChildrenLayout":
                         variableSave.Value = (ChildrenLayout)valueAsInt;
                         return true;
+                    case "GradientType":
+                        return false;
                     default:
                         return false;
                 }
