@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace SkiaPlugin.Renderables
 {
-    class RenderableRoundedRectangle : RenderableSkiaObject
+    public class RenderableRoundedRectangle : RenderableSkiaObject
     {
         public float CornerRadius { get; set; } = 5;
 

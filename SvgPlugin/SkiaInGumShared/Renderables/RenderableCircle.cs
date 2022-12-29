@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace SkiaPlugin.Renderables
 {
-    class RenderableCircle : RenderableSkiaObject
+    public class RenderableCircle : RenderableSkiaObject
     {
 
         internal override void DrawToSurface(SKSurface surface)

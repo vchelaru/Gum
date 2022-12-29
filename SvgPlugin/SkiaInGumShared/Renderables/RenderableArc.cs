@@ -2,7 +2,7 @@
 
 namespace SkiaPlugin.Renderables
 {
-    class RenderableArc : RenderableSkiaObject
+    public class RenderableArc : RenderableSkiaObject
     {
         public float Thickness
         {
