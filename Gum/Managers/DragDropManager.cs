@@ -317,6 +317,10 @@ namespace Gum.Managers
             {
                 HandleDroppedElementOnFolder(draggedAsElementSave, treeNodeDroppedOn, out handled);
             }
+            else if(draggedAsElementSave is ScreenSave == false && targetTag is BehaviorSave targetBehavior)
+            {
+                HandleDroppedElementOnBehavior(draggedAsElementSave, targetBehavior);
+            }
             else
             {
                 MessageBox.Show("You must drop " + draggedAsElementSave.Name + " on either a Screen or an Component");
@@ -372,6 +376,42 @@ namespace Gum.Managers
             }
         }
 
+        private InstanceSave HandleDroppedElementOnBehavior(ElementSave draggedElement, BehaviorSave behavior)
+        {
+            InstanceSave newInstance = null;
+
+            string errorMessage = null;
+
+            //handled = false;
+
+            //errorMessage = GetDropElementErrorMessage(draggedAsElementSave, target, errorMessage);
+
+            if (!string.IsNullOrEmpty(errorMessage))
+            {
+                MessageBox.Show(errorMessage);
+            }
+            else
+            {
+#if DEBUG
+                if (draggedElement == null)
+                {
+                    throw new Exception("draggedElement is null and it shouldn't be.  For vic - try to put this exception earlier to see what's up.");
+                }
+#endif
+
+                string name = GetUniqueNameForNewInstance(draggedElement, behavior);
+
+                // First we want to re-select the target so that it is highlighted in the tree view and not
+                // the object we dragged off.  This is so that plugins can properly use the SelectedElement.
+                ElementTreeViewManager.Self.Select(behavior);
+
+                newInstance = GumCommands.Self.ProjectCommands.ElementCommands.AddInstance(behavior, name, draggedElement.Name);
+                //handled = true;
+            }
+
+            return newInstance;
+        }
+
         private static InstanceSave HandleDroppedElementInElement(ElementSave draggedAsElementSave, ElementSave target, InstanceSave parentInstance, out bool handled)
         {
             InstanceSave newInstance = null;
@@ -401,7 +441,7 @@ namespace Gum.Managers
                 // the object we dragged off.  This is so that plugins can properly use the SelectedElement.
                 ElementTreeViewManager.Self.Select(target);
 
-                newInstance = ElementTreeViewManager.Self.AddInstance(name, draggedAsElementSave.Name, target, parentInstance?.Name);
+                newInstance = GumCommands.Self.ProjectCommands.ElementCommands.AddInstance(target, name, draggedAsElementSave.Name, parentInstance?.Name);
                 handled = true;
             }
 
@@ -449,17 +489,33 @@ namespace Gum.Managers
             return errorMessage;
         }
 
-        private static string GetUniqueNameForNewInstance(ElementSave elementSave, ElementSave element)
+        private static string GetUniqueNameForNewInstance(ElementSave elementSaveForNewInstance, ElementSave element)
         {
 #if DEBUG
-            if (elementSave == null)
+            if (elementSaveForNewInstance == null)
             {
                 throw new ArgumentNullException("elementSave");
             }
 #endif
             // remove the path - we dont want folders to be part of the name
-            string name = FileManager.RemovePath( elementSave.Name ) + "Instance";
+            string name = FileManager.RemovePath( elementSaveForNewInstance.Name ) + "Instance";
             IEnumerable<string> existingNames = element.Instances.Select(i => i.Name);
+
+            return StringFunctions.MakeStringUnique(name, existingNames);
+        }
+
+
+        private static string GetUniqueNameForNewInstance(ElementSave elementSaveForNewInstance, BehaviorSave container)
+        {
+#if DEBUG
+            if (elementSaveForNewInstance == null)
+            {
+                throw new ArgumentNullException(nameof(elementSaveForNewInstance));
+            }
+#endif
+            // remove the path - we dont want folders to be part of the name
+            string name = FileManager.RemovePath(elementSaveForNewInstance.Name) + "Instance";
+            IEnumerable<string> existingNames = container.RequiredInstances.Select(i => i.Name);
 
             return StringFunctions.MakeStringUnique(name, existingNames);
         }

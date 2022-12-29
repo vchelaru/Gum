@@ -689,52 +689,11 @@ namespace Gum.Managers
                 }
                 else
                 {
-                    AddInstance(name, StandardElementsManager.Self.DefaultType, SelectedState.Self.SelectedElement);
+                    GumCommands.Self.ProjectCommands.ElementCommands.AddInstance(SelectedState.Self.SelectedElement, name, StandardElementsManager.Self.DefaultType);
                 }
             }
         }
 
-        public InstanceSave AddInstance(string name, string type, ElementSave elementToAddTo, string parentName = null)
-        {
-            InstanceSave instanceSave = ElementCommands.Self.AddInstance(elementToAddTo, name);
-            instanceSave.BaseType = type;
-
-            TreeNode treeNodeForElement = GetTreeNodeFor(elementToAddTo);
-            RefreshUi(treeNodeForElement);
-
-            Wireframe.WireframeObjectManager.Self.RefreshAll(true);
-            //SelectedState.Self.SelectedInstance = instanceSave;
-
-            // Set the parent before adding the instance in case plugins want to reject the creation of the object...
-            if(!string.IsNullOrEmpty(parentName))
-            {
-                elementToAddTo.DefaultState.SetValue($"{instanceSave.Name}.Parent", parentName, "string");
-            }
-
-            // We need to call InstanceAdd before we select the new object - the Undo manager expects it
-            PluginManager.Self.InstanceAdd(elementToAddTo, instanceSave);
-
-            // a plugin may have removed this instance. If so, we need to refresh the tree node again:
-            if(elementToAddTo.Instances.Contains(instanceSave) == false)
-            {
-                RefreshUi(treeNodeForElement);
-                Wireframe.WireframeObjectManager.Self.RefreshAll(true);
-
-                // August 2, 2022 - this is currently returned even if a plugin
-                // removes the new instance. Should it be? Will it causes NullReferenceExceptions
-                // on systems which always expect this to be non-null? Unsure....
-                // August 4, 2022 - nope, this already is causing problems, we should return null
-                instanceSave = null;
-            }
-            else
-            {
-                Select(instanceSave, elementToAddTo);
-            }
-
-            GumCommands.Self.FileCommands.TryAutoSaveElement(elementToAddTo);
-
-            return instanceSave;
-        }
 
     }
 }

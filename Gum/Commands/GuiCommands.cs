@@ -9,6 +9,7 @@ using Gum.DataTypes;
 using Gum.Plugins;
 using Gum.Controls;
 using Gum.Extensions;
+using Gum.DataTypes.Behaviors;
 
 namespace Gum.Commands
 {
@@ -120,10 +121,9 @@ namespace Gum.Commands
             ElementTreeViewManager.Self.RefreshUi();
         }
 
-        public void RefreshElementTreeView(ElementSave element)
-        {
-            ElementTreeViewManager.Self.RefreshUi(element);
-        }
+        public void RefreshElementTreeView(ElementSave element) => ElementTreeViewManager.Self.RefreshUi(element);
+        public void RefreshElementTreeView(BehaviorSave behavior) => ElementTreeViewManager.Self.RefreshUi(behavior);
+        
 
         public void ShowMessage(string message)
         {

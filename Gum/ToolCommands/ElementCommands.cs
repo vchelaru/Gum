@@ -38,18 +38,52 @@ namespace Gum.ToolCommands
 
         #region Instance
 
-        public InstanceSave AddInstance(ElementSave elementToAddTo, string name)
+        public InstanceSave AddInstance(ElementSave elementToAddTo, string name, string type = null, string parentName = null)
         {
             if (elementToAddTo == null)
             {
                 throw new Exception("Could not add instance named " + name + " because no element is selected");
             }
 
+
             InstanceSave instanceSave = new InstanceSave();
             instanceSave.Name = name;
             instanceSave.ParentContainer = elementToAddTo;
-            instanceSave.BaseType = StandardElementsManager.Self.DefaultType;
+            instanceSave.BaseType = type ?? StandardElementsManager.Self.DefaultType;
             elementToAddTo.Instances.Add(instanceSave);
+
+            GumCommands.Self.GuiCommands.RefreshElementTreeView(elementToAddTo);
+
+            Wireframe.WireframeObjectManager.Self.RefreshAll(true);
+            //SelectedState.Self.SelectedInstance = instanceSave;
+
+            // Set the parent before adding the instance in case plugins want to reject the creation of the object...
+            if(!string.IsNullOrEmpty(parentName))
+            {
+                elementToAddTo.DefaultState.SetValue($"{instanceSave.Name}.Parent", parentName, "string");
+            }
+
+            // We need to call InstanceAdd before we select the new object - the Undo manager expects it
+            PluginManager.Self.InstanceAdd(elementToAddTo, instanceSave);
+
+            // a plugin may have removed this instance. If so, we need to refresh the tree node again:
+            if(elementToAddTo.Instances.Contains(instanceSave) == false)
+            {
+                GumCommands.Self.GuiCommands.RefreshElementTreeView(elementToAddTo);
+                Wireframe.WireframeObjectManager.Self.RefreshAll(true);
+
+                // August 2, 2022 - this is currently returned even if a plugin
+                // removes the new instance. Should it be? Will it causes NullReferenceExceptions
+                // on systems which always expect this to be non-null? Unsure....
+                // August 4, 2022 - nope, this already is causing problems, we should return null.
+                instanceSave = null;
+            }
+            else
+            {
+                SelectedState.Self.SelectedInstance = instanceSave;
+            }
+
+            GumCommands.Self.FileCommands.TryAutoSaveElement(elementToAddTo);
 
             return instanceSave;
         }
@@ -222,6 +256,56 @@ namespace Gum.ToolCommands
         #endregion
 
         #region Behavior
+
+        public BehaviorInstanceSave AddInstance(BehaviorSave behaviorToAddTo, string name, string type = null, string parentName = null)
+        {
+            if (behaviorToAddTo == null)
+            {
+                throw new Exception("Could not add instance named " + name + " because no element is selected");
+            }
+
+
+            var instanceSave = new BehaviorInstanceSave();
+            instanceSave.Name = name;
+            //instanceSave.ParentContainer = elementToAddTo;
+            instanceSave.BaseType = type ?? StandardElementsManager.Self.DefaultType;
+            behaviorToAddTo.RequiredInstances.Add(instanceSave);
+
+            GumCommands.Self.GuiCommands.RefreshElementTreeView(behaviorToAddTo);
+
+            Wireframe.WireframeObjectManager.Self.RefreshAll(true);
+            //SelectedState.Self.SelectedInstance = instanceSave;
+
+            // Set the parent before adding the instance in case plugins want to reject the creation of the object...
+            //if (!string.IsNullOrEmpty(parentName))
+            //{
+            //    elementToAddTo.DefaultState.SetValue($"{instanceSave.Name}.Parent", parentName, "string");
+            //}
+
+            // We need to call InstanceAdd before we select the new object - the Undo manager expects it
+            //PluginManager.Self.InstanceAdd(elementToAddTo, instanceSave);
+
+            // a plugin may have removed this instance. If so, we need to refresh the tree node again:
+            //if (elementToAddTo.Instances.Contains(instanceSave) == false)
+            //{
+            //    GumCommands.Self.GuiCommands.RefreshElementTreeView(elementToAddTo);
+            //    Wireframe.WireframeObjectManager.Self.RefreshAll(true);
+
+            //    // August 2, 2022 - this is currently returned even if a plugin
+            //    // removes the new instance. Should it be? Will it causes NullReferenceExceptions
+            //    // on systems which always expect this to be non-null? Unsure....
+            //    // August 4, 2022 - nope, this already is causing problems, we should return null.
+            //    instanceSave = null;
+            //}
+            //else
+            {
+                SelectedState.Self.SelectedInstance = instanceSave;
+            }
+
+            GumCommands.Self.FileCommands.TryAutoSaveBehavior(behaviorToAddTo);
+
+            return instanceSave;
+        }
 
         public void AddBehaviorTo(BehaviorSave behavior, ComponentSave componentSave, bool performSave = true)
         {
