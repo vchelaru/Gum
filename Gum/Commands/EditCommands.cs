@@ -23,7 +23,7 @@ namespace Gum.Commands
 
         public void AddState()
         {
-            if(SelectedState.Self.SelectedStateCategorySave == null && SelectedState.Self.SelectedElement == null )
+            if (SelectedState.Self.SelectedStateCategorySave == null && SelectedState.Self.SelectedElement == null)
             {
                 MessageBox.Show("You must first select an element or a behavior category to add a state");
             }
@@ -74,7 +74,7 @@ namespace Gum.Commands
 
             }
 
-            if(deleteResponse.ShouldDelete && stateSave.ParentContainer?.DefaultState == stateSave)
+            if (deleteResponse.ShouldDelete && stateSave.ParentContainer?.DefaultState == stateSave)
             {
                 string message =
                     "This state cannot be removed because it is the default state.";
@@ -84,15 +84,15 @@ namespace Gum.Commands
                 deleteResponse.ShouldShowMessage = false;
             }
 
-            if(deleteResponse.ShouldDelete)
+            if (deleteResponse.ShouldDelete)
             {
                 deleteResponse = PluginManager.Self.GetDeleteStateResponse(stateSave, stateContainer);
             }
 
 
-            if(deleteResponse.ShouldDelete == false)
+            if (deleteResponse.ShouldDelete == false)
             {
-                if(deleteResponse.ShouldShowMessage)
+                if (deleteResponse.ShouldShowMessage)
                 {
                     GumCommands.Self.GuiCommands.ShowMessage(deleteResponse.Message);
                 }
@@ -154,7 +154,7 @@ namespace Gum.Commands
 
         #region Category
 
-        public void RemoveStateCategory( StateSaveCategory category, IStateCategoryListContainer stateCategoryListContainer)
+        public void RemoveStateCategory(StateSaveCategory category, IStateCategoryListContainer stateCategoryListContainer)
         {
             DeleteLogic.Self.RemoveStateCategory(category, stateCategoryListContainer);
         }
@@ -176,7 +176,7 @@ namespace Gum.Commands
 
                 var result = tiw.ShowDialog();
 
-                if(result != DialogResult.OK)
+                if (result != DialogResult.OK)
                 {
                     canAdd = false;
                 }
@@ -201,8 +201,8 @@ namespace Gum.Commands
                 }
 
 
-                if(canAdd)
-                { 
+                if (canAdd)
+                {
                     StateSaveCategory category = ElementCommands.Self.AddCategory(
                         target, name);
 
@@ -249,7 +249,7 @@ namespace Gum.Commands
                     string oldName = category.Name;
 
                     category.Name = tiw.Result;
-                    
+
                     GumCommands.Self.GuiCommands.RefreshStateTreeView();
                     // I don't think we need to save the project when renaming a state:
                     //GumCommands.Self.FileCommands.TryAutoSaveProject();
@@ -270,7 +270,7 @@ namespace Gum.Commands
             List<BehaviorSave> toReturn = new List<BehaviorSave>();
             // Try to get the parent container from the state...
             var element = stateSave.ParentContainer;
-            if(element == null)
+            if (element == null)
             {
                 // ... if we can't find it for some reason, assume it's the current element (is this bad?)
                 element = SelectedState.Self.SelectedElement;
@@ -278,7 +278,7 @@ namespace Gum.Commands
 
             var componentSave = element as ComponentSave;
 
-            if(element != null)
+            if (element != null)
             {
                 // uncategorized states can't come from behaviors:
                 bool isUncategorized = element.States.Contains(stateSave);
@@ -293,13 +293,13 @@ namespace Gum.Commands
                 {
                     var allBehaviorsNeedingCategory = DeleteLogic.Self.GetBehaviorsNeedingCategory(elementCategory, componentSave);
 
-                    foreach(var behavior in allBehaviorsNeedingCategory)
+                    foreach (var behavior in allBehaviorsNeedingCategory)
                     {
                         var behaviorCategory = behavior.Categories.First(item => item.Name == elementCategory.Name);
 
                         bool isStateReferencedInCategory = behaviorCategory.States.Any(item => item.Name == stateSave.Name);
 
-                        if(isStateReferencedInCategory)
+                        if (isStateReferencedInCategory)
                         {
                             toReturn.Add(behavior);
                         }
@@ -318,46 +318,48 @@ namespace Gum.Commands
         }
 
         public void AddBehavior()
+        {
+            if (ObjectFinder.Self.GumProjectSave == null || string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave.FullFileName))
             {
-                if (ObjectFinder.Self.GumProjectSave == null || string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave.FullFileName))
-                {
-                    MessageBox.Show("You must first save the project before adding a new component");
-                }
-                else
-                {
-                    TextInputWindow tiw = new TextInputWindow();
-                    tiw.Message = "Enter new behavior name:";
+                MessageBox.Show("You must first save the project before adding a new component");
+            }
+            else
+            {
+                TextInputWindow tiw = new TextInputWindow();
+                tiw.Message = "Enter new behavior name:";
 
-                    if (tiw.ShowDialog() == DialogResult.OK)
+                if (tiw.ShowDialog() == DialogResult.OK)
+                {
+                    string name = tiw.Result;
+
+                    string whyNotValid;
+
+                    NameVerifier.Self.IsBehaviorNameValid(name, null, out whyNotValid);
+
+                    if (!string.IsNullOrEmpty(whyNotValid))
                     {
-                        string name = tiw.Result;
+                        MessageBox.Show(whyNotValid);
+                    }
+                    else
+                    {
+                        var behavior = new BehaviorSave();
+                        behavior.Name = name;
 
-                        string whyNotValid;
+                        ProjectManager.Self.GumProjectSave.BehaviorReferences.Add(new BehaviorReference { Name = name });
+                        ProjectManager.Self.GumProjectSave.BehaviorReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
+                        ProjectManager.Self.GumProjectSave.Behaviors.Add(behavior);
+                        ProjectManager.Self.GumProjectSave.Behaviors.Sort((first, second) => first.Name.CompareTo(second.Name));
 
-                        NameVerifier.Self.IsBehaviorNameValid(name, null, out whyNotValid);
 
-                        if (!string.IsNullOrEmpty(whyNotValid))
-                        {
-                            MessageBox.Show(whyNotValid);
-                        }
-                        else
-                        {
-                            var behavior = new BehaviorSave();
-                            behavior.Name = name;
+                        GumCommands.Self.GuiCommands.RefreshElementTreeView();
+                        SelectedState.Self.SelectedBehavior = behavior;
 
-                            ProjectManager.Self.GumProjectSave.BehaviorReferences.Add(new BehaviorReference { Name = name });
-                            ProjectManager.Self.GumProjectSave.BehaviorReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
-                            ProjectManager.Self.GumProjectSave.Behaviors.Add(behavior);
-
-                            GumCommands.Self.GuiCommands.RefreshElementTreeView();
-                            SelectedState.Self.SelectedBehavior = behavior;
-
-                            GumCommands.Self.FileCommands.TryAutoSaveProject();
-                            GumCommands.Self.FileCommands.TryAutoSaveBehavior(behavior);
-                        }
+                        GumCommands.Self.FileCommands.TryAutoSaveProject();
+                        GumCommands.Self.FileCommands.TryAutoSaveBehavior(behavior);
                     }
                 }
             }
+        }
 
         #endregion
 
@@ -392,7 +394,7 @@ namespace Gum.Commands
 
                     string strippedName = tiw.Result;
                     string prefix = null;
-                    if(tiw.Result.Contains("/"))
+                    if (tiw.Result.Contains("/"))
                     {
                         var indexOfSlash = tiw.Result.LastIndexOf("/");
                         strippedName = tiw.Result.Substring(indexOfSlash + 1);
@@ -426,7 +428,7 @@ namespace Gum.Commands
                 var nameWithoutPath = filePath.FileNameNoPath;
 
                 string folder = null;
-                if(element.Name.Contains("/"))
+                if (element.Name.Contains("/"))
                 {
                     folder = element.Name.Substring(0, element.Name.LastIndexOf('/'));
                 }
@@ -443,7 +445,7 @@ namespace Gum.Commands
                     if (string.IsNullOrEmpty(whyNotValid))
                     {
                         var newComponent = (element as ComponentSave).Clone();
-                        if(!string.IsNullOrEmpty(folder))
+                        if (!string.IsNullOrEmpty(folder))
                         {
                             folder += "/";
                         }
@@ -467,10 +469,10 @@ namespace Gum.Commands
 
         public void DisplayReferencesTo(ElementSave element)
         {
-            
+
             var references = ObjectFinder.Self.GetElementReferences(element);
 
-            if(references.Count > 0)
+            if (references.Count > 0)
             {
                 //var stringBuilder = new StringBuilder();
                 //stringBuilder.AppendLine($"The following objects reference {element}");
@@ -490,41 +492,41 @@ namespace Gum.Commands
 
                     var selectedItem = reference.ReferencingObject;
 
-                    if(selectedItem is InstanceSave instance)
+                    if (selectedItem is InstanceSave instance)
                     {
                         SelectedState.Self.SelectedInstance = instance;
                     }
-                    else if(selectedItem is ElementSave selectedElement)
+                    else if (selectedItem is ElementSave selectedElement)
                     {
                         SelectedState.Self.SelectedElement = selectedElement;
                     }
-                    else if(selectedItem is VariableSave variable)
+                    else if (selectedItem is VariableSave variable)
                     {
                         ElementSave foundElement = ObjectFinder.Self.GumProjectSave.Screens
                             .FirstOrDefault(item => item.DefaultState.Variables.Contains(variable));
-                        if(foundElement == null)
+                        if (foundElement == null)
                         {
                             foundElement = ObjectFinder.Self.GumProjectSave.Components
                                 .FirstOrDefault(item => item.DefaultState.Variables.Contains(variable));
                         }
-                        if(foundElement != null)
+                        if (foundElement != null)
                         {
                             // what's the instance?
                             var instanceWithVariable = foundElement.GetInstance(variable.SourceObject);
 
-                            if(instanceWithVariable != null)
+                            if (instanceWithVariable != null)
                             {
                                 SelectedState.Self.SelectedInstance = instanceWithVariable;
                             }
                         }
                     }
-                    else if(selectedItem is VariableListSave variableListSave)
+                    else if (selectedItem is VariableListSave variableListSave)
                     {
                         var foundElement = reference.OwnerOfReferencingObject;
 
-                        if(foundElement != null)
+                        if (foundElement != null)
                         {
-                            if(string.IsNullOrEmpty(variableListSave.SourceObject))
+                            if (string.IsNullOrEmpty(variableListSave.SourceObject))
                             {
                                 SelectedState.Self.SelectedElement = foundElement;
                             }

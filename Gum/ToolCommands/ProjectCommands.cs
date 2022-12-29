@@ -100,6 +100,7 @@ namespace Gum.ToolCommands
         #endregion
 
         #region Behaviors
+
         internal void RemoveBehavior(BehaviorSave behavior)
         {
             GumProjectSave gps = ProjectManager.Self.GumProjectSave;
