@@ -3638,6 +3638,8 @@ namespace Gum.Wireframe
 #if MONOGAME || XNA4
                 AddContainedRenderableToManagers(managers, layer);
 
+                RecursivelyAddIManagedChildren(this);
+
                 // Custom should be called before children have their Custom called
                 CustomAddToManagers();
 
@@ -3651,6 +3653,37 @@ namespace Gum.Wireframe
                     CustomAddChildren();
                 }
 #endif
+            }
+        }
+
+        private static void RecursivelyAddIManagedChildren(GraphicalUiElement gue)
+        {
+            if (gue.ElementSave != null && gue.ElementSave is ScreenSave)
+            {
+
+                //Recursively add children to the managers
+                foreach (var child in gue.mWhatThisContains)
+                {
+                    if(child is IManagedObject managedObject)
+                    {
+                        managedObject.AddToManagers();
+                    }
+                    RecursivelyAddIManagedChildren(child);
+                }
+            }
+            else if (gue.Children != null)
+            {
+                foreach (var child in gue.Children)
+                {
+                    if (child is IManagedObject managedObject)
+                    {
+                        managedObject.AddToManagers();
+                    }
+                    if(child is GraphicalUiElement childGue)
+                    {
+                        RecursivelyAddIManagedChildren(childGue);
+                    }
+                }
             }
         }
 
@@ -3938,6 +3971,12 @@ namespace Gum.Wireframe
                     // This could be a custom visual object, so don't do anything:
                     //throw new NotImplementedException();
                     mManagers.Renderer.RemoveRenderable(mContainedObjectAsIpso);
+                }
+
+
+                if (mContainedObjectAsIpso is IManagedObject asManagedObject)
+                {
+                    asManagedObject.RemoveFromManagers();
                 }
 #endif
 
@@ -5724,5 +5763,12 @@ namespace Gum.Wireframe
 #endif
 
         #endregion
+    }
+
+    // additional interfaces, added here to make it easier to manage multiple projects.
+    public interface IManagedObject
+    {
+        void AddToManagers();
+        void RemoveFromManagers();
     }
 }

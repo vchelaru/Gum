@@ -4,9 +4,10 @@
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-  </PropertyGroup>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+	<DefineConstants>FAST_GL_SKIA_RENDERING;</DefineConstants>
 
-  <Import Project="SkiaInGumShared.projitems" Label="Shared" />
+  </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.1.303" />
@@ -17,6 +18,10 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\FlatRedBall\Engines\FlatRedBallXNA\FlatRedBallDesktopGLNet6\FlatRedBallDesktopGLNet6.csproj" />
     <ProjectReference Include="..\..\GumCore\GumCoreXnaPc\GumCore.DesktopGlNet6\GumCore.DesktopGlNet6.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Rendering\" />
   </ItemGroup>
 
 </Project>

@@ -1,6 +1,7 @@
 ﻿using Gum.Converters;
 using Gum.DataTypes;
 using Gum.Managers;
+using Gum.Wireframe;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary;
@@ -15,9 +16,16 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
+#if FAST_GL_SKIA_RENDERING
+using SkiaMonoGameRendering;
+#endif
+
 namespace SkiaPlugin.Renderables
 {
-    public abstract class RenderableSkiaObject : IRenderableIpso, IVisible
+    public abstract class RenderableSkiaObject : IRenderableIpso, IVisible, IManagedObject
+#if FAST_GL_SKIA_RENDERING
+        ,ISkiaRenderable
+#endif
     {
         #region General Fields/Properties
 
@@ -91,7 +99,7 @@ namespace SkiaPlugin.Renderables
             get => width;
             set
             {
-                if(value != width)
+                if (value != width)
                 {
                     width = value;
                     needsUpdate = true;
@@ -105,7 +113,7 @@ namespace SkiaPlugin.Renderables
             get => height;
             set
             {
-                if(value != height)
+                if (value != height)
                 {
                     height = value;
                     needsUpdate = true;
@@ -143,7 +151,7 @@ namespace SkiaPlugin.Renderables
 
         float strokeWidth = 1;
         public float StrokeWidth
-        { 
+        {
             get => strokeWidth;
             set { strokeWidth = value; needsUpdate = true; }
         }
@@ -355,7 +363,7 @@ namespace SkiaPlugin.Renderables
             get => gradientX1Units;
             set
             {
-                if(value != gradientX1Units)
+                if (value != gradientX1Units)
                 {
                     gradientX1Units = value;
                     needsUpdate = true;
@@ -454,7 +462,7 @@ namespace SkiaPlugin.Renderables
             get => gradientInnerRadiusUnits;
             set
             {
-                if(value != gradientInnerRadiusUnits)
+                if (value != gradientInnerRadiusUnits)
                 {
                     gradientInnerRadiusUnits = value;
                     needsUpdate = true;
@@ -571,6 +579,48 @@ namespace SkiaPlugin.Renderables
 
         #endregion
 
+        #region ISkiaRenderable Implementation
+
+
+#if FAST_GL_SKIA_RENDERING
+        int ISkiaRenderable.TargetWidth => (int) Math.Min(2048, Width + XSizeSpillover * 2);
+        int ISkiaRenderable.TargetHeight => (int) Math.Min(2048, Height + YSizeSpillover * 2);
+        SKColorType ISkiaRenderable.TargetColorFormat { get => SKColorType.Rgba8888; }
+        bool ISkiaRenderable.ShouldRender => needsUpdate && Width > 0 && Height > 0 && AbsoluteVisible;
+
+        void ISkiaRenderable.NotifyDrawnTexture(Texture2D texture)
+        {
+            this.texture = texture;
+            needsUpdate = false;
+        }
+
+        void ISkiaRenderable.DrawToSurface(SKSurface surface) => DrawToSurface(surface);
+
+        
+#endif
+
+        #endregion
+
+        #region IManagedObject Implementation
+
+        public void AddToManagers()
+        {
+#if FAST_GL_SKIA_RENDERING
+            SkiaRenderer.AddRenderable(this);
+#endif
+        }
+
+        public void RemoveFromManagers()
+        {
+#if FAST_GL_SKIA_RENDERING
+            SkiaRenderer.RemoveRenderable(this);
+
+#endif
+        }
+
+
+        #endregion
+
         public RenderableSkiaObject()
         {
             this.Visible = true;
@@ -579,7 +629,7 @@ namespace SkiaPlugin.Renderables
 
         public void Render(SpriteRenderer spriteRenderer, SystemManagers managers)
         {
-            if(AbsoluteVisible)
+            if (AbsoluteVisible)
             {
                 var oldX = this.X;
                 var oldY = this.Y;
@@ -610,6 +660,7 @@ namespace SkiaPlugin.Renderables
 
         public virtual void PreRender()
         {
+#if !FAST_GL_SKIA_RENDERING
             if (needsUpdate && Width > 0 && Height > 0 && AbsoluteVisible)
             {
                 if (texture != null)
@@ -628,7 +679,7 @@ namespace SkiaPlugin.Renderables
                 using (var surface = SKSurface.Create(imageInfo))
                 {
                     // It's possible this can fail
-                    if(surface != null)
+                    if (surface != null)
                     {
                         DrawToSurface(surface);
 
@@ -639,6 +690,7 @@ namespace SkiaPlugin.Renderables
                     }
                 }
             }
+#endif
         }
 
         internal abstract void DrawToSurface(SKSurface surface);
@@ -677,8 +729,8 @@ namespace SkiaPlugin.Renderables
                 // need a new byte[] to convert from BGRA to ARGB
                 var convertedBytes = new byte[originalPixels.Length];
 
-            
-                if(PremultiplyRenderToTexture)
+
+                if (PremultiplyRenderToTexture)
                 {
                     for (int i = 0; i < convertedBytes.Length; i += 4)
                     {
@@ -717,7 +769,7 @@ namespace SkiaPlugin.Renderables
                         var a = originalPixels[i + 3];
                         var ratio = a / 255.0f;
 
-                        if(forcedColor != null)
+                        if (forcedColor != null)
                         {
                             r = forcedColor.Value.R;
                             g = forcedColor.Value.G;
@@ -740,7 +792,7 @@ namespace SkiaPlugin.Renderables
 
         public Texture2D ToTexture2D(GraphicsDevice graphicsDevice, SKColorType? skiaColorType = null)
         {
-            if(skiaColorType == null)
+            if (skiaColorType == null)
             {
                 skiaColorType = SKImageInfo.PlatformColorType;
             }
@@ -776,8 +828,8 @@ namespace SkiaPlugin.Renderables
             var firstColor = new SKColor((byte)red1, (byte)green1, (byte)blue1);
             var secondColor = new SKColor((byte)red2, (byte)green2, (byte)blue2);
 
-            var effectiveWidth = Width + XSizeSpillover*2;
-            var effectiveHeight = Height + YSizeSpillover*2;
+            var effectiveWidth = Width + XSizeSpillover * 2;
+            var effectiveHeight = Height + YSizeSpillover * 2;
 
             var effectiveGradientX1 = gradientX1;
             switch (this.GradientX1Units)
@@ -826,7 +878,7 @@ namespace SkiaPlugin.Renderables
                     effectiveGradientY1 += effectiveHeight;
                     break;
                 case PositionUnitType.PercentageHeight:
-                    effectiveGradientY1 = effectiveHeight * gradientY1/100;
+                    effectiveGradientY1 = effectiveHeight * gradientY1 / 100;
                     break;
             }
 
@@ -868,7 +920,7 @@ namespace SkiaPlugin.Renderables
                         effectiveOuterRadius = effectiveWidth * gradientOuterRadius / 100;
                         break;
                     case Gum.DataTypes.DimensionUnitType.RelativeToContainer:
-                        effectiveOuterRadius = effectiveWidth  / 2 + gradientOuterRadius;
+                        effectiveOuterRadius = effectiveWidth / 2 + gradientOuterRadius;
                         break;
                 }
 
