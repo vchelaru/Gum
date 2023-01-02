@@ -28,10 +28,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="..\SkiaGum\GraphicalUiElement.cs" />
     <Compile Remove="..\SkiaGum\Graphics\HorizontalAlignment.cs" />
     <Compile Remove="..\SkiaGum\Graphics\VerticalAlignment.cs" />
     <Compile Remove="..\SkiaGum\Managers\ObjectFinder.cs" />
     <Compile Remove="..\SkiaGum\Managers\StandardElementsManager.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\GumRuntime\GraphicalUiElement.cs" Link="GraphicalUiElement.cs" />
   </ItemGroup>
 
   <ItemGroup>
