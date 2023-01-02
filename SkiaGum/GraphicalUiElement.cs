@@ -29,6 +29,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
+using System.Diagnostics.CodeAnalysis;
 #if UWP
 using System.Reflection;
 #endif
@@ -65,9 +66,18 @@ namespace Gum.Wireframe
 
         class DirtyState
         {
-            public bool UpdateParent;
+            public ParentUpdateType ParentUpdateType;
             public int ChildrenUpdateDepth;
             public XOrY? XOrY;
+        }
+
+        public enum ParentUpdateType
+        {
+            None = 0,
+            IfParentStacks = 1,
+            IfParentWidthHeightDependOnChildren = 2,
+            All = 4
+
         }
 
         #endregion
@@ -210,10 +220,53 @@ namespace Gum.Wireframe
                 {
                     mContainedObjectAsIVisible.Visible = value;
 
+                    var absoluteVisible = ((IVisible)this).AbsoluteVisible;
                     // See if this has a parent that stacks children. If so, update its layout:
-                    if (GetIfParentStacks())
+
+                    var didUpdate = false;
+                    if(absoluteVisible)
                     {
-                        this.UpdateLayout();
+                        if(!mIsLayoutSuspended && !GraphicalUiElement.IsAllLayoutSuspended)
+                        {
+                            // resume layout:
+                            // This does need to be recursive because contained objects may have been 
+                            // updated while the parent was invisible, becoming dirty, and waiting for
+                            // the resume
+                            ResumeLayoutUpdateIfDirtyRecursive();
+
+                            //if (isFontDirty)
+                            //{
+                            //    if (!IsAllLayoutSuspended)
+                            //    {
+                            //        this.UpdateToFontValues();
+                            //        isFontDirty = false;
+                            //    }
+                            //}
+                            //if (currentDirtyState != null)
+                            //{
+                            //    UpdateLayout(currentDirtyState.ParentUpdateType,
+                            //        currentDirtyState.ChildrenUpdateDepth,
+                            //        currentDirtyState.XOrY);
+                            //}
+                            didUpdate = true;
+                        }
+                    }
+                    
+                    if(!didUpdate)
+                    {
+                        // This will make this dirty:
+                        this.UpdateLayout(ParentUpdateType.IfParentStacks, 
+                            // If something is made visible, that shouldn't update the children, right?
+                            //int.MaxValue/2, 
+                            0,
+                            null);
+                    }
+
+                    if(!absoluteVisible && GetIfParentStacks())
+                    {
+                        // This updates the parent right away:
+                        (Parent as GraphicalUiElement)?.UpdateLayout(ParentUpdateType.IfParentStacks, int.MaxValue / 2, null);
+
                     }
                 }
             }
@@ -515,13 +568,29 @@ namespace Gum.Wireframe
             }
         }
 
+
+        bool ignoredByParentSize;
+        public bool IgnoredByParentSize
+        {
+            get => ignoredByParentSize;
+            set
+            {
+                if(ignoredByParentSize != value)
+                {
+                    ignoredByParentSize = value;
+                    // todo - could be smarter here?
+                    UpdateLayout();
+                }
+            }
+        }
+
         ChildrenLayout childrenLayout;
         public ChildrenLayout ChildrenLayout
         {
             get => childrenLayout;
             set
             {
-                if (value != childrenLayout)
+                if(value != childrenLayout)
                 {
                     childrenLayout = value; UpdateLayout();
                 }
@@ -529,15 +598,19 @@ namespace Gum.Wireframe
         }
 
         float stackSpacing;
+        /// <summary>
+        /// The number of pixels spacing between each child if this is has a ChildrenLayout of 
+        /// TopToBottomStack or LeftToRightStack.
+        /// </summary>
         public float StackSpacing
         {
             get => stackSpacing;
             set
             {
-                if (stackSpacing != value)
+                if(stackSpacing != value)
                 {
-                    stackSpacing = value;
-                    if (ChildrenLayout != ChildrenLayout.Regular)
+                    stackSpacing = value; 
+                    if(ChildrenLayout != ChildrenLayout.Regular)
                     {
                         UpdateLayout();
                     }
@@ -545,6 +618,9 @@ namespace Gum.Wireframe
             }
         }
 
+        /// <summary>
+        /// Rotation in degrees. Positive value rotates counterclockwise.
+        /// </summary>
         public float Rotation
         {
             get
@@ -602,6 +678,7 @@ namespace Gum.Wireframe
 #endif
                     mX = value;
 
+                    var parentGue = Parent as GraphicalUiElement;
                     // special case:
                     if (Parent as GraphicalUiElement == null && XUnits == GeneralUnitType.PixelsFromSmall && XOrigin == HorizontalAlignment.Left)
                     {
@@ -609,7 +686,8 @@ namespace Gum.Wireframe
                     }
                     else
                     {
-                        UpdateLayout(true, 0);
+                        var refreshParent = IgnoredByParentSize == false;
+                        UpdateLayout(refreshParent, 0);
                     }
                 }
             }
@@ -640,7 +718,8 @@ namespace Gum.Wireframe
                     }
                     else
                     {
-                        UpdateLayout(true, 0);
+                        var refreshParent = IgnoredByParentSize == false;
+                        UpdateLayout(refreshParent, 0);
                     }
                 }
             }
@@ -1115,6 +1194,8 @@ namespace Gum.Wireframe
             get;
             set;
         }
+
+
         #endregion
 
         #region Events
@@ -1231,15 +1312,49 @@ namespace Gum.Wireframe
             UpdateLayout(updateParent, value);
         }
 
+        string NameOrType => !string.IsNullOrEmpty(Name) ? Name : $"<{GetType().Name}>";
+        
+        string ParentQualifiedName => Parent as GraphicalUiElement == null ? NameOrType : (Parent as GraphicalUiElement).ParentQualifiedName + "." + NameOrType;
+
         public void UpdateLayout(bool updateParent, int childrenUpdateDepth, XOrY? xOrY = null)
         {
+            if (updateParent)
+            {
+                UpdateLayout(ParentUpdateType.All, childrenUpdateDepth, xOrY);
+            }
+            else
+            {
+                UpdateLayout(ParentUpdateType.None, childrenUpdateDepth, xOrY);
+            }
+
+        }
+
+        public void UpdateLayout(ParentUpdateType parentUpdateType, int childrenUpdateDepth, XOrY? xOrY = null)
+        {
+            var updateParent =
+                (parentUpdateType & ParentUpdateType.All) == ParentUpdateType.All ||
+                (parentUpdateType & ParentUpdateType.IfParentStacks) == ParentUpdateType.IfParentStacks && GetIfParentStacks() ||
+                (parentUpdateType & ParentUpdateType.IfParentWidthHeightDependOnChildren) == ParentUpdateType.IfParentWidthHeightDependOnChildren && (Parent as GraphicalUiElement)?.GetIfDimensionsDependOnChildren() == true;
+
             #region Early Out - Suspended
 
+            var asIVisible = this as IVisible;
+
             var isSuspended = mIsLayoutSuspended || IsAllLayoutSuspended;
+            if (!isSuspended)
+            {
+                isSuspended = mContainedObjectAsIVisible != null && asIVisible.AbsoluteVisible == false;
+            }
 
             if (isSuspended)
             {
-                MakeDirty(updateParent, childrenUpdateDepth, xOrY);
+                MakeDirty(parentUpdateType, childrenUpdateDepth, xOrY);
+                return;
+            }
+
+            var parentAsIVisible = Parent as IVisible;
+            if (Visible == false && parentAsIVisible?.AbsoluteVisible == false )
+            {
                 return;
             }
 
@@ -1249,7 +1364,6 @@ namespace Gum.Wireframe
 
             currentDirtyState = null;
 
-            UpdateLayoutCallCount++;
 
             // May 15, 2014
             // Parent needs to be
@@ -1277,10 +1391,12 @@ namespace Gum.Wireframe
             {
                 var asGue = this.Parent as GraphicalUiElement;
                 // Just climb up one and update from there
-                asGue.UpdateLayout(true, childrenUpdateDepth + 1);
+                asGue.UpdateLayout(parentUpdateType, childrenUpdateDepth + 1);
                 ChildrenUpdatingParentLayoutCalls++;
                 return;
             }
+            // This should be *after* the return when updating the parent otherwise we double-count layouts
+            UpdateLayoutCallCount++;
 
             #endregion
 
@@ -1390,9 +1506,9 @@ namespace Gum.Wireframe
                     }
                 }
 
-                if (hasChildDependency)
+                if (hasChildDependency && childrenUpdateDepth > 0)
                 {
-                    UpdateChildren(childrenUpdateDepth, ChildType.Absolute);
+                    UpdateChildren(childrenUpdateDepth, ChildType.Absolute, skipIgnoreByParentSize:true);
                 }
 
                 // This will update according to all absolute children
@@ -1401,7 +1517,7 @@ namespace Gum.Wireframe
                 if (this.WrapsChildren && (this.ChildrenLayout == ChildrenLayout.LeftToRightStack || this.ChildrenLayout == ChildrenLayout.TopToBottomStack))
                 {
                     // Now we can update all children that are wrapped:
-                    UpdateChildren(childrenUpdateDepth, ChildType.StackedWrapped);
+                    UpdateChildren(childrenUpdateDepth, ChildType.StackedWrapped, skipIgnoreByParentSize: false);
                     if (this.WidthUnits.GetDependencyType() == HierarchyDependencyType.DependsOnChildren ||
                         this.HeightUnits.GetDependencyType() == HierarchyDependencyType.DependsOnChildren)
                     {
@@ -1420,7 +1536,15 @@ namespace Gum.Wireframe
 
                 // If the update is "deep" then we want to refresh the text texture.
                 // Otherwise it may have been something shallow like a reposition.
-                if (mContainedObjectAsIpso is Text asText && childrenUpdateDepth > 0)
+                // -----------------------------------------------------------------------------
+                // Update December 3, 2022 - This if-check causes lots of performance issues
+                // If a text object is updating itself and its parent needs to update, then if
+                // children depth > 0, then the parent update will cause all other children to update
+                // which is very expensive. We now do enough checks at the property level to prevent the
+                // text from updating unnecessarily, so let's change this to prevent parents from updating
+                // all of their children:
+                //if (mContainedObjectAsIpso is Text asText && childrenUpdateDepth > 0)
+                if (mContainedObjectAsIpso is Text asText)
                 {
                     // Only if the width or height have changed:
                     if (mContainedObjectAsIpso.Width != widthBeforeLayout ||
@@ -1470,7 +1594,7 @@ namespace Gum.Wireframe
 
             if (childrenUpdateDepth > 0)
             {
-                UpdateChildren(childrenUpdateDepth, ChildType.All);
+                UpdateChildren(childrenUpdateDepth, ChildType.All, skipIgnoreByParentSize:false);
 
                 var sizeDependsOnChildren = this.WidthUnits == DimensionUnitType.RelativeToChildren ||
                     this.HeightUnits == DimensionUnitType.RelativeToChildren;
@@ -1479,7 +1603,7 @@ namespace Gum.Wireframe
 
                 if (this.mContainedObjectAsIpso == null)
                 {
-                    for (int i = 0; i < this.mWhatThisContains.Count; i++)
+                    for(int i = 0; i < this.mWhatThisContains.Count; i++)
                     {
                         canOneDimensionChangeOtherDimension = GetIfOneDimensionCanChangeOtherDimension(mWhatThisContains[i]);
 
@@ -1518,7 +1642,7 @@ namespace Gum.Wireframe
                     if (widthBeforeSecondLayout != mContainedObjectAsIpso.Width ||
                         heightBeforeSecondLayout != mContainedObjectAsIpso.Height)
                     {
-                        UpdateChildren(childrenUpdateDepth, ChildType.BothAbsoluteAndRelative);
+                        UpdateChildren(childrenUpdateDepth, ChildType.BothAbsoluteAndRelative, skipIgnoreByParentSize:true);
                     }
 
                 }
@@ -1536,7 +1660,7 @@ namespace Gum.Wireframe
                 if (widthBeforeLayout != mContainedObjectAsIpso.Width ||
                     heightBeforeLayout != mContainedObjectAsIpso.Height)
                 {
-                    if (!isInSizeChange)
+                    if(!isInSizeChange)
                     {
                         isInSizeChange = true;
                         SizeChanged?.Invoke(this, null);
@@ -1838,7 +1962,7 @@ namespace Gum.Wireframe
         }
 
         // Records the type of update needed when layout resumes
-        private void MakeDirty(bool updateParent, int childrenUpdateDepth, XOrY? xOrY)
+        private void MakeDirty(ParentUpdateType parentUpdateType, int childrenUpdateDepth, XOrY? xOrY)
         {
             if (currentDirtyState == null)
             {
@@ -1847,7 +1971,7 @@ namespace Gum.Wireframe
                 currentDirtyState.XOrY = xOrY;
             }
 
-            currentDirtyState.UpdateParent = currentDirtyState.UpdateParent || updateParent;
+            currentDirtyState.ParentUpdateType = currentDirtyState.ParentUpdateType | parentUpdateType;
             currentDirtyState.ChildrenUpdateDepth = Math.Max(
                 currentDirtyState.ChildrenUpdateDepth, childrenUpdateDepth);
 
@@ -1931,10 +2055,15 @@ namespace Gum.Wireframe
 
         }
 
-        private void UpdateChildren(int childrenUpdateDepth, ChildType childrenUpdateType)
+        private void UpdateChildren(int childrenUpdateDepth, ChildType childrenUpdateType, bool skipIgnoreByParentSize)
         {
-            bool CanDoFullUpdate(ChildType thisChildUpdateType)
+            bool CanDoFullUpdate(ChildType thisChildUpdateType, GraphicalUiElement childGue)
             {
+
+                if(skipIgnoreByParentSize && childGue.IgnoredByParentSize)
+                {
+                    return false;
+                }
 
                 return
                     childrenUpdateType == ChildType.All ||
@@ -1944,7 +2073,7 @@ namespace Gum.Wireframe
             }
             if (this.mContainedObjectAsIpso == null)
             {
-                for (int i = 0; i < mWhatThisContains.Count; i++)
+                for(int i = 0; i < mWhatThisContains.Count; i++)
                 {
                     var child = mWhatThisContains[i];
                     // Victor Chelaru
@@ -1954,21 +2083,21 @@ namespace Gum.Wireframe
                     // parents...
                     if (child.Parent == null || child.Parent == this)
                     {
-                        if (CanDoFullUpdate(child.GetChildLayoutType(this)))
+                        if (CanDoFullUpdate(child.GetChildLayoutType(this), child))
                         {
-                            child.UpdateLayout(false, childrenUpdateDepth - 1);
+                            child.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1);
                         }
                         else
                         {
                             // only update absolute layout, and the child has some relative values, but let's see if 
                             // we can do only one axis:
-                            if (CanDoFullUpdate(child.GetChildLayoutType(XOrY.X, this)))
+                            if (CanDoFullUpdate(child.GetChildLayoutType(XOrY.X, this), child))
                             {
-                                child.UpdateLayout(false, childrenUpdateDepth - 1, XOrY.X);
+                                child.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1, XOrY.X);
                             }
-                            else if (CanDoFullUpdate(child.GetChildLayoutType(XOrY.Y, this)))
+                            else if (CanDoFullUpdate(child.GetChildLayoutType(XOrY.Y, this), child))
                             {
-                                child.UpdateLayout(false, childrenUpdateDepth - 1, XOrY.Y);
+                                child.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1, XOrY.Y);
                             }
                         }
                     }
@@ -1980,24 +2109,23 @@ namespace Gum.Wireframe
                 {
                     var ipsoChild = this.Children[i];
 
-                    if (ipsoChild is GraphicalUiElement)
+                    if (ipsoChild is GraphicalUiElement child)
                     {
-                        var child = ipsoChild as GraphicalUiElement;
-                        if (CanDoFullUpdate(child.GetChildLayoutType(this)))
+                        if (CanDoFullUpdate(child.GetChildLayoutType(this), child))
                         {
-                            child.UpdateLayout(false, childrenUpdateDepth - 1);
+                            child.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1);
                         }
                         else
                         {
                             // only update absolute layout, and the child has some relative values, but let's see if 
                             // we can do only one axis:
-                            if (CanDoFullUpdate(child.GetChildLayoutType(XOrY.X, this)))
+                            if (CanDoFullUpdate(child.GetChildLayoutType(XOrY.X, this), child))
                             {
-                                child.UpdateLayout(false, childrenUpdateDepth - 1, XOrY.X);
+                                child.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1, XOrY.X);
                             }
-                            else if (CanDoFullUpdate(child.GetChildLayoutType(XOrY.Y, this)))
+                            else if (CanDoFullUpdate(child.GetChildLayoutType(XOrY.Y, this), child))
                             {
-                                child.UpdateLayout(false, childrenUpdateDepth - 1, XOrY.Y);
+                                child.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1, XOrY.Y);
                             }
                         }
                     }
@@ -2758,7 +2886,7 @@ namespace Gum.Wireframe
 
             #region ScreenPixel
 
-            else if (mHeightUnit == DimensionUnitType.ScreenPixel)
+            else if(mHeightUnit == DimensionUnitType.ScreenPixel)
             {
                 var effectiveManagers = this.EffectiveManagers;
                 if (effectiveManagers != null)
@@ -2796,11 +2924,11 @@ namespace Gum.Wireframe
 #endif
                     }
 
-                    for (int i = 0; i < Children.Count; i++)
+                    for(int i = 0; i < Children.Count; i++)
                     {
                         var element = Children[i] as GraphicalUiElement;
                         var childLayout = element.GetChildLayoutType(XOrY.Y, this);
-                        var considerChild = childLayout == ChildType.Absolute || (considerWrappedStacked && childLayout == ChildType.StackedWrapped);
+                        var considerChild = (childLayout == ChildType.Absolute || (considerWrappedStacked && childLayout == ChildType.StackedWrapped)) && element.IgnoredByParentSize == false;
                         if (considerChild && element.Visible)
                         {
                             var elementHeight = element.GetRequiredParentHeight();
@@ -2808,7 +2936,7 @@ namespace Gum.Wireframe
                             if (this.ChildrenLayout == ChildrenLayout.TopToBottomStack)
                             {
                                 // The first item in the stack doesn't consider the stack spacing, but all subsequent ones do:
-                                if (i != 0)
+                                if(i != 0)
                                 {
                                     maxHeight += StackSpacing;
                                 }
@@ -2823,11 +2951,11 @@ namespace Gum.Wireframe
                 }
                 else
                 {
-                    for (int i = 0; i < mWhatThisContains.Count; i++)
+                    for(int i = 0; i < mWhatThisContains.Count; i++)
                     {
                         var element = mWhatThisContains[i];
                         var childLayout = element.GetChildLayoutType(XOrY.Y, this);
-                        var considerChild = childLayout == ChildType.Absolute || (considerWrappedStacked && childLayout == ChildType.StackedWrapped);
+                        var considerChild = (childLayout == ChildType.Absolute || (considerWrappedStacked && childLayout == ChildType.StackedWrapped)) && element.IgnoredByParentSize == false;
 
                         if (considerChild && element.Visible)
                         {
@@ -3020,7 +3148,7 @@ namespace Gum.Wireframe
 
                 if (mParent != null)
                 {
-                    for (int i = 0; i < mParent.Children.Count; i++)
+                    for(int i = 0; i < mParent.Children.Count; i++)
                     {
                         var child = mParent.Children[i];
                         if (child != this && child is GraphicalUiElement gue)
@@ -3046,7 +3174,7 @@ namespace Gum.Wireframe
                 float totalRatio = 0;
                 if (mParent != null)
                 {
-                    for (int i = 0; i < mParent.Children.Count; i++)
+                    for(int i = 0; i < mParent.Children.Count; i++)
                     {
                         var child = mParent.Children[i];
                         if (child is GraphicalUiElement gue && gue.HeightUnits == DimensionUnitType.Ratio)
@@ -3152,11 +3280,11 @@ namespace Gum.Wireframe
 #endif
                     }
 
-                    for (int i = 0; i < this.Children.Count; i++)
+                    for(int i = 0; i < this.Children.Count; i++)
                     {
                         var element = this.Children[i] as GraphicalUiElement;
                         var childLayout = element.GetChildLayoutType(XOrY.X, this);
-                        var considerChild = childLayout == ChildType.Absolute || (considerWrappedStacked && childLayout == ChildType.StackedWrapped);
+                        var considerChild = (childLayout == ChildType.Absolute || (considerWrappedStacked && childLayout == ChildType.StackedWrapped)) && element.IgnoredByParentSize == false;
 
                         if (considerChild && element.Visible)
                         {
@@ -3180,11 +3308,11 @@ namespace Gum.Wireframe
                 }
                 else
                 {
-                    for (int i = 0; i < mWhatThisContains.Count; i++)
+                    for(int i = 0; i < mWhatThisContains.Count; i++)
                     {
                         var element = mWhatThisContains[i];
                         var childLayout = element.GetChildLayoutType(XOrY.X, this);
-                        var considerChild = childLayout == ChildType.Absolute || (considerWrappedStacked && childLayout == ChildType.StackedWrapped);
+                        var considerChild = (childLayout == ChildType.Absolute || (considerWrappedStacked && childLayout == ChildType.StackedWrapped)) && element.IgnoredByParentSize == false;
 
                         if (considerChild && element.Visible)
                         {
@@ -3366,7 +3494,7 @@ namespace Gum.Wireframe
 
                 if (mParent != null)
                 {
-                    for (int i = 0; i < mParent.Children.Count; i++)
+                    for(int i = 0; i < mParent.Children.Count; i++)
                     {
                         var child = mParent.Children[i];
                         if (child != this && child is GraphicalUiElement gue)
@@ -3392,7 +3520,7 @@ namespace Gum.Wireframe
                 float totalRatio = 0;
                 if (mParent != null)
                 {
-                    for (int i = 0; i < mParent.Children.Count; i++)
+                    for(int i = 0; i < mParent.Children.Count; i++)
                     {
                         var child = mParent.Children[i];
                         if (child is GraphicalUiElement gue && gue.WidthUnits == DimensionUnitType.Ratio)
@@ -3510,6 +3638,8 @@ namespace Gum.Wireframe
 #if MONOGAME || XNA4
                 AddContainedRenderableToManagers(managers, layer);
 
+                RecursivelyAddIManagedChildren(this);
+
                 // Custom should be called before children have their Custom called
                 CustomAddToManagers();
 
@@ -3523,6 +3653,37 @@ namespace Gum.Wireframe
                     CustomAddChildren();
                 }
 #endif
+            }
+        }
+
+        private static void RecursivelyAddIManagedChildren(GraphicalUiElement gue)
+        {
+            if (gue.ElementSave != null && gue.ElementSave is ScreenSave)
+            {
+
+                //Recursively add children to the managers
+                foreach (var child in gue.mWhatThisContains)
+                {
+                    if(child is IManagedObject managedObject)
+                    {
+                        managedObject.AddToManagers();
+                    }
+                    RecursivelyAddIManagedChildren(child);
+                }
+            }
+            else if (gue.Children != null)
+            {
+                foreach (var child in gue.Children)
+                {
+                    if (child is IManagedObject managedObject)
+                    {
+                        managedObject.AddToManagers();
+                    }
+                    if(child is GraphicalUiElement childGue)
+                    {
+                        RecursivelyAddIManagedChildren(childGue);
+                    }
+                }
             }
         }
 
@@ -3811,6 +3972,12 @@ namespace Gum.Wireframe
                     //throw new NotImplementedException();
                     mManagers.Renderer.RemoveRenderable(mContainedObjectAsIpso);
                 }
+
+
+                if (mContainedObjectAsIpso is IManagedObject asManagedObject)
+                {
+                    asManagedObject.RemoveFromManagers();
+                }
 #endif
 
                 CustomRemoveFromManagers();
@@ -3852,7 +4019,7 @@ namespace Gum.Wireframe
                 }
                 if (currentDirtyState != null)
                 {
-                    UpdateLayout(currentDirtyState.UpdateParent,
+                    UpdateLayout(currentDirtyState.ParentUpdateType,
                         currentDirtyState.ChildrenUpdateDepth,
                         currentDirtyState.XOrY);
                 }
@@ -3867,9 +4034,9 @@ namespace Gum.Wireframe
 
             if (currentDirtyState != null)
             {
-                UpdateLayout(currentDirtyState.UpdateParent,
-                currentDirtyState.ChildrenUpdateDepth,
-                currentDirtyState.XOrY);
+                UpdateLayout(currentDirtyState.ParentUpdateType,
+                    currentDirtyState.ChildrenUpdateDepth,
+                    currentDirtyState.XOrY);
             }
 
             int count = mWhatThisContains.Count;
@@ -3912,12 +4079,20 @@ namespace Gum.Wireframe
             }
             else
             {
-                for (int i = mWhatThisContains.Count - 1; i > -1; i--)
+                if (this.Children?.Count > 0 && mWhatThisContains.Count == 0)
                 {
-                    var item = mWhatThisContains[i];
-                    if (item.name == name)
+                    // This is a regular item that hasn't had its mWhatThisContains populated
+                    return this.GetChildByNameRecursively(name) as GraphicalUiElement;
+                }
+                else
+                {
+                    for (int i = mWhatThisContains.Count - 1; i > -1; i--)
                     {
-                        return item;
+                        var item = mWhatThisContains[i];
+                        if (item.name == name)
+                        {
+                            return item;
+                        }
                     }
                 }
             }
@@ -3953,7 +4128,7 @@ namespace Gum.Wireframe
 
         public IPositionedSizedObject GetChildByName(string name)
         {
-            for (int i = 0; i < Children.Count; i++)
+            for(int i = 0; i < Children.Count; i++)
             {
                 var child = Children[i];
                 if (child.Name == name)
@@ -4073,6 +4248,10 @@ namespace Gum.Wireframe
                         break;
                     case "Height Units":
                         this.HeightUnits = (DimensionUnitType)value;
+                        toReturn = true;
+                        break;
+                    case nameof(IgnoredByParentSize):
+                        this.IgnoredByParentSize = (bool)value;
                         toReturn = true;
                         break;
                     case "Parent":
@@ -4420,6 +4599,7 @@ namespace Gum.Wireframe
                     handled = true;
                 }
             }
+#endif
 
             // If special case didn't work, let's try reflection
             if (!handled)
@@ -4443,7 +4623,6 @@ namespace Gum.Wireframe
                     }
                 }
             }
-#endif
         }
 
 #if MONOGAME || XNA4
@@ -4653,7 +4832,7 @@ namespace Gum.Wireframe
             return handled;
         }
 
-        private bool AssignSourceFileOnSprite(string value, Sprite sprite)
+        public bool AssignSourceFileOnSprite(string value, Sprite sprite)
         {
             bool handled;
 
@@ -4978,14 +5157,14 @@ namespace Gum.Wireframe
 
             if (this.Children != null)
             {
-                for (int i = 0; i < this.Children.Count; i++)
+                for(int i = 0; i < this.Children.Count; i++)
                 {
                     (this.Children[i] as GraphicalUiElement).UpdateFontRecursive();
                 }
             }
             else
             {
-                for (int i = 0; i < this.mWhatThisContains.Count; i++)
+                for(int i = 0; i < this.mWhatThisContains.Count; i++)
                 {
                     mWhatThisContains[i].UpdateFontRecursive();
                 }
@@ -5500,11 +5679,22 @@ namespace Gum.Wireframe
 
         public void UpdateToCurrentAnimationFrame()
         {
-            if (mAnimationChains != null && mAnimationChains.Count > mCurrentChainIndex && mCurrentChainIndex != -1 &&
+            if (mAnimationChains != null && 
+                mAnimationChains.Count > mCurrentChainIndex && 
+                mCurrentChainIndex != -1 &&
                 mCurrentFrameIndex > -1 &&
-                mCurrentFrameIndex < mAnimationChains[mCurrentChainIndex].Count)
+                mAnimationChains[mCurrentChainIndex].Count > 0
+                // If we switch animations, we still want it to apply right away
+                // so do a frame check:
+                //mCurrentFrameIndex < mAnimationChains[mCurrentChainIndex].Count
+                )
             {
-                var frame = mAnimationChains[mCurrentChainIndex][mCurrentFrameIndex];
+                var index = mCurrentFrameIndex;
+                if(index >= mAnimationChains[mCurrentChainIndex].Count)
+                {
+                    index = 0;
+                }
+                var frame = mAnimationChains[mCurrentChainIndex][index];
                 // Set the property so that any necessary values change:
                 //				mTexture = mAnimationChains[mCurrentChainIndex][mCurrentFrameIndex].Texture;
                 //this.Vertices[0].TextureCoordinate.X = frame.LeftCoordinate;
@@ -5573,5 +5763,12 @@ namespace Gum.Wireframe
 #endif
 
         #endregion
+    }
+
+    // additional interfaces, added here to make it easier to manage multiple projects.
+    public interface IManagedObject
+    {
+        void AddToManagers();
+        void RemoveFromManagers();
     }
 }
