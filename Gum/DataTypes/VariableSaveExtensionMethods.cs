@@ -100,6 +100,12 @@ namespace Gum.DataTypes
                 case "float?":
                     foundType = typeof(float?);
                     break;
+                case "decimal":
+                    foundType = typeof(decimal);
+                    break;
+                case "decimal?":
+                    foundType = typeof(decimal?);
+                    break;
                 case "bool":
                     foundType = typeof(bool);
                     break;

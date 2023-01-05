@@ -657,6 +657,14 @@ namespace Gum.DataTypes.Variables
                 {
                     variableSave.Type = "float?";
                 }
+                else if (value is decimal)
+                {
+                    variableSave.Type = "decimal";
+                }
+                else if (value is decimal?)
+                {
+                    variableSave.Type = "decimal?";
+                }
                 else if (value is int)
                 {
                     variableSave.Type = "int";
