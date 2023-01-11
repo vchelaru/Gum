@@ -597,27 +597,19 @@ namespace Gum.Plugins
 #endif
         }
 
-        internal void BeforeElementSave(ElementSave savedElement)
-        {
+        internal void BeforeElementSave(ElementSave savedElement) => 
             CallMethodOnPlugin(plugin => plugin.CallBeforeElementSave(savedElement));
-        }
 
-        internal void AfterElementSave(ElementSave savedElement)
-        {
+        internal void AfterElementSave(ElementSave savedElement) =>
             CallMethodOnPlugin(plugin => plugin.CallAfterElementSave(savedElement));
-        }
 
 
 
-        internal void BeforeProjectSave(GumProjectSave savedProject)
-        {
+        internal void BeforeProjectSave(GumProjectSave savedProject) =>
             CallMethodOnPlugin(plugin => plugin.CallBeforeProjectSave(savedProject));
-        }
 
-        internal void Export(ElementSave elementToExport)
-        {
+        internal void Export(ElementSave elementToExport) =>
             CallMethodOnPlugin(plugin => plugin.CallExport(elementToExport));
-        }
 
         internal void ModifyDefaultStandardState(string type, StateSave stateSave) =>
             CallMethodOnPlugin(plugin => plugin.CallAddAndRemoveVariablesForType(type, stateSave));
@@ -727,18 +719,7 @@ namespace Gum.Plugins
         internal StateSave GetDefaultStateFor(string type)
         {
             StateSave toReturn = null;
-
-            CallMethodOnPlugin(plugin =>
-                {
-                    var innerToReturn = plugin.CallGetDefaultStateFor(type);
-
-                    if (innerToReturn != null)
-                    {
-                        toReturn = innerToReturn;
-                    }
-
-                });
-
+            CallMethodOnPlugin(plugin => toReturn = plugin.CallGetDefaultStateFor(type) ?? toReturn);
             return toReturn;
         }
 
