@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows;
@@ -78,6 +79,8 @@ namespace WpfDataUi.Controls
 
         public static string FolderRelativeTo { get; set; }
 
+        public bool IsFolderDialog { get; set; }
+
         #endregion
 
         #region Methods
@@ -142,17 +145,32 @@ namespace WpfDataUi.Controls
 
         private void Button_Click_1(object sender, RoutedEventArgs e)
         {
-            OpenFileDialog fileDialog = new OpenFileDialog();
-
-            fileDialog.Filter = Filter;
-
-            var shouldOpen = fileDialog.ShowDialog();
-
-            if (shouldOpen.HasValue && shouldOpen.Value)
+            if(IsFolderDialog)
             {
-                string file = fileDialog.FileName;
-                this.TextBox.Text = file;
-                mTextBoxLogic.TryApplyToInstance();
+                var fbd = new System.Windows.Forms.FolderBrowserDialog();
+                var result = fbd.ShowDialog();
+
+                if (result == System.Windows.Forms.DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath))
+                {
+                    this.TextBox.Text = fbd.SelectedPath;
+                    mTextBoxLogic.TryApplyToInstance();
+                }
+            }
+            else
+            {
+                OpenFileDialog fileDialog = new OpenFileDialog();
+
+                fileDialog.Filter = Filter;
+
+                var shouldOpen = fileDialog.ShowDialog();
+
+                if (shouldOpen.HasValue && shouldOpen.Value)
+                {
+                    string file = fileDialog.FileName;
+                    this.TextBox.Text = file;
+                    mTextBoxLogic.TryApplyToInstance();
+                }
+
             }
         }
 
