@@ -4039,10 +4039,22 @@ namespace Gum.Wireframe
                     currentDirtyState.XOrY);
             }
 
-            int count = mWhatThisContains.Count;
-            for (int i = 0; i < count; i++)
+            if(this?.Children.Count > 0)
             {
-                mWhatThisContains[i].ResumeLayoutUpdateIfDirtyRecursive();
+                var count = Children.Count;
+                for (int i = 0; i < count; i++)
+                {
+                    var asGraphicalUiElement = Children[i] as GraphicalUiElement;
+                    asGraphicalUiElement.ResumeLayoutUpdateIfDirtyRecursive();
+                }
+            }
+            else
+            {
+                int count = mWhatThisContains.Count;
+                for (int i = 0; i < count; i++)
+                {
+                    mWhatThisContains[i].ResumeLayoutUpdateIfDirtyRecursive();
+                }
             }
         }
 
@@ -5718,6 +5730,10 @@ namespace Gum.Wireframe
 
                 this.FlipHorizontal = frame.FlipHorizontal;
 
+                if(this.TextureAddress == TextureAddress.EntireTexture)
+                {
+                    this.TextureAddress = TextureAddress.Custom; // If it's not custom, then the animation chain won't apply. I think we should force this.
+                }
                 //frame.FlipVertical
 
                 //if (mIgnoreAnimationChainTextureFlip == false)
