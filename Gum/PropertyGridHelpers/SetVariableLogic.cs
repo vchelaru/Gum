@@ -49,6 +49,8 @@ namespace Gum.PropertyGridHelpers
             "Text",
             "Texture Address",
             "VerticalAlignment",
+
+            "Visible",
             "Width",
             "Width Units",
             "X",

@@ -1329,6 +1329,8 @@ namespace Gum.Wireframe
 
         }
 
+        public static bool AreUpdatesAppliedWhenInvisible { get; set; } = false;
+
         public void UpdateLayout(ParentUpdateType parentUpdateType, int childrenUpdateDepth, XOrY? xOrY = null)
         {
             var updateParent =
@@ -1343,7 +1345,7 @@ namespace Gum.Wireframe
             var isSuspended = mIsLayoutSuspended || IsAllLayoutSuspended;
             if (!isSuspended)
             {
-                isSuspended = mContainedObjectAsIVisible != null && asIVisible.AbsoluteVisible == false;
+                isSuspended = !AreUpdatesAppliedWhenInvisible && mContainedObjectAsIVisible != null && asIVisible.AbsoluteVisible == false;
             }
 
             if (isSuspended)
@@ -1352,10 +1354,13 @@ namespace Gum.Wireframe
                 return;
             }
 
-            var parentAsIVisible = Parent as IVisible;
-            if (Visible == false && parentAsIVisible?.AbsoluteVisible == false )
+            if(!AreUpdatesAppliedWhenInvisible)
             {
-                return;
+                var parentAsIVisible = Parent as IVisible;
+                if (Visible == false && parentAsIVisible?.AbsoluteVisible == false )
+                {
+                    return;
+                }
             }
 
             #endregion

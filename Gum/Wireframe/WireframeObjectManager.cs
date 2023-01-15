@@ -100,6 +100,7 @@ namespace Gum.Wireframe
             mEditControl.ZoomChanged += HandleControlZoomChange;
 
             gueManager = new GraphicalUiElementManager();
+            GraphicalUiElement.AreUpdatesAppliedWhenInvisible= true;
         }
 
         #endregion
