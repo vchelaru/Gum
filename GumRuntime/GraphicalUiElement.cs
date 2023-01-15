@@ -3997,9 +3997,22 @@ namespace Gum.Wireframe
 
             if (recursive)
             {
-                for (int i = mWhatThisContains.Count - 1; i > -1; i--)
+                if (this.Children.Count > 0)
                 {
-                    mWhatThisContains[i].SuspendLayout(true);
+                    var count = Children.Count;
+                    for (int i = 0; i < count; i++)
+                    {
+                        var asGraphicalUiElement = Children[i] as GraphicalUiElement;
+                        asGraphicalUiElement.ResumeLayoutUpdateIfDirtyRecursive();
+                    }
+                }
+                else
+                {
+                    for (int i = mWhatThisContains.Count - 1; i > -1; i--)
+                    {
+                        mWhatThisContains[i].SuspendLayout(true);
+                    }
+
                 }
             }
         }
@@ -4044,7 +4057,7 @@ namespace Gum.Wireframe
                     currentDirtyState.XOrY);
             }
 
-            if(this?.Children.Count > 0)
+            if(this.Children.Count > 0)
             {
                 var count = Children.Count;
                 for (int i = 0; i < count; i++)
