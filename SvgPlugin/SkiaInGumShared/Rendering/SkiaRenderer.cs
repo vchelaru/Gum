@@ -1,5 +1,7 @@
 ﻿using Microsoft.Xna.Framework.Graphics;
 using SkiaSharp;
+using System.Collections.Generic;
+using System;
 using static SkiaMonoGameRendering.GlConstants;
 using MgGl = SkiaMonoGameRendering.GlWrapper.MgGlFunctions;
 using SkGl = SkiaMonoGameRendering.GlWrapper.SkGlFunctions;
@@ -11,11 +13,6 @@ namespace SkiaMonoGameRendering
     /// </summary>
     public static class SkiaRenderer
     {
-        static readonly List<ISkiaRenderable> _renderables = new();
-        static readonly List<ISkiaRenderable> _renderablesToRemove = new();
-        static readonly Dictionary<ISkiaRenderable, SkiaRenderableInfo> _renderableInfos = new();
-        static readonly List<SkiaRenderableInfo> _renderableInfosToClear = new();
-
         public static int TextureCount
         {
             get
@@ -31,6 +28,13 @@ namespace SkiaMonoGameRendering
                 return count;
             }
         }
+
+        public static int RenderableCount { get { return _renderables.Count - _renderablesToRemove.Count; } }
+
+        static readonly List<ISkiaRenderable> _renderables = new();
+        static readonly List<ISkiaRenderable> _renderablesToRemove = new();
+        static readonly Dictionary<ISkiaRenderable, SkiaRenderableInfo> _renderableInfos = new();
+        static readonly List<SkiaRenderableInfo> _renderableInfosToClear = new();
 
         /// <summary>
         /// Checks if a renderable is being managed by this renderer.
@@ -211,7 +215,7 @@ namespace SkiaMonoGameRendering
                 }
 
                 if (!isRenderTargetSet) // Bind the framebuffer if it wasn't already
-                    SkGl.BindFramebuffer(FramebufferTarget.Framebuffer, info.RenderbufferId);
+                    SkGl.BindFramebuffer(FramebufferTarget.Framebuffer, info.FramebufferId);
 
                 surface.Canvas.Clear(); // Clear the canvas
                 renderable.DrawToSurface(surface); // Perform all the drawing
