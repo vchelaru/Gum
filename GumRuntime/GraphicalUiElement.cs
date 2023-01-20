@@ -3997,7 +3997,7 @@ namespace Gum.Wireframe
 
             if (recursive)
             {
-                if (this.Children.Count > 0)
+                if (this.Children?.Count > 0)
                 {
                     var count = Children.Count;
                     for (int i = 0; i < count; i++)
@@ -4057,7 +4057,7 @@ namespace Gum.Wireframe
                     currentDirtyState.XOrY);
             }
 
-            if(this.Children.Count > 0)
+            if(this.Children?.Count > 0)
             {
                 var count = Children.Count;
                 for (int i = 0; i < count; i++)
