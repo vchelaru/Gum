@@ -192,7 +192,7 @@ namespace CodeOutputPlugin.Manager
 
         #region Position / Size
 
-        private static void ProcessPositionAndSize(List<VariableSave> variablesToConsider, StateSave state, InstanceSave instance, ElementSave container, StringBuilder stringBuilder, CodeGenerationContext context)
+        private static void ProcessXamarinFormsPositionAndSize(List<VariableSave> variablesToConsider, StateSave state, InstanceSave instance, ElementSave container, StringBuilder stringBuilder, CodeGenerationContext context)
         {
             //////////////////Early out/////////////////////
             if (container is ScreenSave && instance == null)
@@ -269,6 +269,7 @@ namespace CodeOutputPlugin.Manager
             {
                 isVariableOwnerAbsoluteLayout = context.Element.BaseType?.EndsWith("/AbsoluteLayout") == true;
             }
+            var isContainedInStackLayout = parentBaseType?.EndsWith("/StackLayout") == true;
 
             #region Get recursive values for position and size
             var x = variableFinder.GetValue<float>(variablePrefix + "X");
@@ -354,9 +355,15 @@ namespace CodeOutputPlugin.Manager
                     stringBuilder.AppendLine(context.Tabs + $"Intentional error: The object {context.Instance?.Name ?? "this"} height depends on its children, but it is an absolute layout. Use a StackLayout instead!");
                 }
             }
+
+            // If it's in a stack layout and it uses a height request of RelativeToParent, generate a compile error. This is not allowed!
+            if(heightUnits == DimensionUnitType.RelativeToContainer)
+            {
+                stringBuilder.AppendLine(context.Tabs + 
+                    $"Intentional compile error - the object {context.Instance?.Name ?? context.Element.Name} has a parent which is not an absolute layout, but its height is RelativeToContainer. This is not allowed in Xamarin Forms. The parent should be an Absolute layout in this case.");
+            }
             #endregion
 
-            var isContainedInStackLayout = parentBaseType?.EndsWith("/StackLayout") == true;
 
 
             #region Apply XUnits
@@ -2818,11 +2825,11 @@ namespace CodeOutputPlugin.Manager
                 {
                     case "Text":
                         ProcessColorForLabel(variablesToConsider, defaultState, context.Instance, stringBuilder, context);
-                        ProcessPositionAndSize(variablesToConsider, defaultState, context.Instance, context.Element, stringBuilder, context);
+                        ProcessXamarinFormsPositionAndSize(variablesToConsider, defaultState, context.Instance, context.Element, stringBuilder, context);
                         ProcessXamarinFormsLabelBold(variablesToConsider, defaultState, context.Instance, context.Element, stringBuilder, context);
                         break;
                     default:
-                        ProcessPositionAndSize(variablesToConsider, defaultState, context.Instance, context.Element, stringBuilder, context);
+                        ProcessXamarinFormsPositionAndSize(variablesToConsider, defaultState, context.Instance, context.Element, stringBuilder, context);
                         break;
                 }
 
