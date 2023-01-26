@@ -357,7 +357,7 @@ namespace CodeOutputPlugin.Manager
             }
 
             // If it's in a stack layout and it uses a height request of RelativeToParent, generate a compile error. This is not allowed!
-            if(heightUnits == DimensionUnitType.RelativeToContainer)
+            if(heightUnits == DimensionUnitType.RelativeToContainer && isContainedInStackLayout)
             {
                 stringBuilder.AppendLine(context.Tabs + 
                     $"Intentional compile error - the object {context.Instance?.Name ?? context.Element.Name} has a parent which is not an absolute layout, but its height is RelativeToContainer. This is not allowed in Xamarin Forms. The parent should be an Absolute layout in this case.");
