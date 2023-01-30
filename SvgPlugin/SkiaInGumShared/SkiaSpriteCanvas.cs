@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SkiaInGum
+namespace SkiaGum
 {
     public class SkiaSpriteCanvas : FlatRedBall.Sprite
         , ISkiaRenderable
