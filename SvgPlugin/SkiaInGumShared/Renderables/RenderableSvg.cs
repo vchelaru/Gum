@@ -12,7 +12,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ToolsUtilities;
 
-namespace SkiaPlugin.Renderables
+namespace SkiaGum.Renderables
 {
     public class RenderableSvg : RenderableSkiaObject, IAspectRatio
     {
@@ -58,9 +58,9 @@ namespace SkiaPlugin.Renderables
 
         protected override bool ShouldApplyColorOnSpriteRender => true;
 
-#endregion
+        #endregion
 
-        internal override void DrawToSurface(SKSurface surface)
+        public override void DrawToSurface(SKSurface surface)
         {
 #if INCLUDE_SVG
 

@@ -6,12 +6,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SkiaPlugin.Renderables
+namespace SkiaGum.Renderables
 {
     public class RenderableCircle : RenderableSkiaObject
     {
 
-        internal override void DrawToSurface(SKSurface surface)
+        public override void DrawToSurface(SKSurface surface)
         {
             surface.Canvas.Clear(SKColors.Transparent);
 

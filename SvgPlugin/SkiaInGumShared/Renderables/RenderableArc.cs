@@ -1,6 +1,6 @@
 ﻿using SkiaSharp;
 
-namespace SkiaPlugin.Renderables
+namespace SkiaGum.Renderables
 {
     public class RenderableArc : RenderableSkiaObject
     {
@@ -63,7 +63,7 @@ namespace SkiaPlugin.Renderables
             return paint;
         }
 
-        internal override void DrawToSurface(SKSurface surface)
+        public override void DrawToSurface(SKSurface surface)
         {
             surface.Canvas.Clear(SKColors.Transparent);
 

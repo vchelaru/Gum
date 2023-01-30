@@ -20,8 +20,11 @@ using System.Threading.Tasks;
 using SkiaMonoGameRendering;
 #endif
 
-namespace SkiaPlugin.Renderables
+namespace SkiaGum.Renderables
 {
+
+
+
     public abstract class RenderableSkiaObject : IRenderableIpso, IVisible, IManagedObject
 #if FAST_GL_SKIA_RENDERING
         ,ISkiaRenderable
@@ -693,7 +696,7 @@ namespace SkiaPlugin.Renderables
 #endif
         }
 
-        internal abstract void DrawToSurface(SKSurface surface);
+        public abstract void DrawToSurface(SKSurface surface);
 
         public static bool PremultiplyRenderToTexture { get; set; } = false;
         /// <summary>

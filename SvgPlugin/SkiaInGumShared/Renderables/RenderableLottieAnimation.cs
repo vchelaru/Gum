@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using ToolsUtilities;
 
-namespace SkiaPlugin.Renderables
+namespace SkiaGum.Renderables
 {
     public class RenderableLottieAnimation : RenderableSkiaObject
     {
@@ -38,7 +38,7 @@ namespace SkiaPlugin.Renderables
 
         SkiaSharp.Skottie.Animation animation;
 
-        internal override void DrawToSurface(SKSurface surface)
+        public override void DrawToSurface(SKSurface surface)
         {
             if(animation != null)
             {

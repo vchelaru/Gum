@@ -6,13 +6,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SkiaPlugin.Renderables
+namespace SkiaGum.Renderables
 {
     public class RenderableRoundedRectangle : RenderableSkiaObject
     {
         public float CornerRadius { get; set; } = 5;
 
-        internal override void DrawToSurface(SKSurface surface)
+        public override void DrawToSurface(SKSurface surface)
         {
             if(surface == null)
             {
