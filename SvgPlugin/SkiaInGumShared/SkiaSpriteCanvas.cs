@@ -18,9 +18,12 @@ namespace SkiaGum
 
         public void InvalidateSurface() => needsUpdate = true;
 
-        int ISkiaRenderable.TargetWidth => (int)Width;
+        int ISkiaRenderable.TargetWidth => ForcedCanvasWidth ?? (int)Width;
 
-        int ISkiaRenderable.TargetHeight => (int)Height;
+        int ISkiaRenderable.TargetHeight => ForcedCanvasHeight ?? (int)Height;
+
+        public int? ForcedCanvasHeight { get; set; }
+        public int? ForcedCanvasWidth { get; set; }
 
         SKColorType ISkiaRenderable.TargetColorFormat { get => SKColorType.Rgba8888; }
 

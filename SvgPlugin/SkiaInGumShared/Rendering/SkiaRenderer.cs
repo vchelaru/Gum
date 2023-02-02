@@ -121,7 +121,7 @@ namespace SkiaMonoGameRendering
             {
                 var renderable = _renderables[i];
 
-                if (renderable.ShouldRender)
+                if (renderable.ShouldRender && renderable.TargetWidth > 0 && renderable.TargetHeight > 0)
                 {
                     if (_renderableInfos.TryGetValue(renderable, out SkiaRenderableInfo info))
                     {
