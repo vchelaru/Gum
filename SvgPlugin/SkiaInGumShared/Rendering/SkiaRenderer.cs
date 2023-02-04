@@ -116,6 +116,7 @@ namespace SkiaMonoGameRendering
         /// </summary>
         public static void Draw()
         {
+            var doAnyNeedToRender = false;
             // Create textures in MonoGame and cache them along with their IDs
             for (int i = 0; i < _renderables.Count; i++)
             {
@@ -136,7 +137,17 @@ namespace SkiaMonoGameRendering
                         _renderableInfos.Add(renderable, CreateNewTextureAndInfo(renderable, null));
                     }
                 }
+                doAnyNeedToRender = doAnyNeedToRender || renderable.ShouldRender;
             }
+
+
+            /////////////////////////Early Out///////////////////////////
+            if(!doAnyNeedToRender)
+            {
+                return;
+            }
+            //////////////////////End Early Out//////////////////////////
+
 
             // Make the Skia OpenGL context current
             SkiaGlManager.SetSkiaContextAsCurrent();
