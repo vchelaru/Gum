@@ -9,6 +9,7 @@ using System.IO;
 using System.Collections.ObjectModel;
 using RenderingLibrary.Math;
 using RenderingLibrary;
+using FlatRedBall.Graphics;
 
 namespace RenderingLibrary.Graphics
 {
@@ -294,7 +295,7 @@ namespace RenderingLibrary.Graphics
             }
         }
 
-        public void Draw(SystemManagers managers, IEnumerable<Layer> layers)
+        public void Draw(SystemManagers managers, List<Layer> layers)
         {
             // So that 2 controls don't render at the same time.
             lock (LockObject)
@@ -305,13 +306,14 @@ namespace RenderingLibrary.Graphics
                 mRenderStateVariables.BlendState = Renderer.NormalBlendState;
                 mRenderStateVariables.Wrap = false;
 
-                foreach (Layer layer in layers)
+                for (int i = 0; i < layers.Count; i++)
                 {
-                    PreRender(layer.Renderables);
+                    PreRender(layers[i].Renderables);
                 }
 
-                foreach (Layer layer in layers)
+                for (int i = 0; i < layers.Count; i++)
                 {
+                    Layer layer = layers[i];
                     RenderLayer(managers, layer, prerender:false);
                 }
             }

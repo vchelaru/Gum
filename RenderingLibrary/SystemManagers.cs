@@ -97,11 +97,10 @@ namespace RenderingLibrary
             Renderer.Draw(this, layer);
         }
 
-        public void Draw(IEnumerable<Layer> layers)
+        public void Draw(List<Layer> layers)
         {
             Renderer.Draw(this, layers);
         }
-
 
         public void Initialize(GraphicsDevice graphicsDevice)
         {

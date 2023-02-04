@@ -799,8 +799,9 @@ namespace RenderingLibrary.Graphics
             requiredWidth = 0;
             requiredHeight = 0;
 
-            foreach (string line in lines)
+            for (int i = 0; i < lines.Count; i++)
             {
+                string line = lines[i];
                 requiredHeight += LineHeightInPixels;
                 int lineWidth = 0;
 
