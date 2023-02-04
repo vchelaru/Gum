@@ -165,9 +165,13 @@ namespace SkiaMonoGameRendering
             return (int)_sdl_GL_SetAttributeMethod.Invoke(_sdl_GL_SetAttributeValue, new object[] { attribute, value });
         }
 
+        // This allocates a little, we can make it a little quieter by reusing this object array:
+        static object[] makeCurrentArray = new object[2];
         internal static int MakeCurrent(IntPtr window, IntPtr context)
         {
-            return (int)_makeCurrentMethod.Invoke(_makeCurrentValue, new object[] { window, context });
+            makeCurrentArray[0] = window;
+            makeCurrentArray[1] = context;
+            return (int)_makeCurrentMethod.Invoke(_makeCurrentValue, makeCurrentArray);
         }
 
         internal static T LoadFunction<T>(string nativeMethodName)
