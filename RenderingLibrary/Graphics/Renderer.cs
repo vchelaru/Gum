@@ -9,7 +9,6 @@ using System.IO;
 using System.Collections.ObjectModel;
 using RenderingLibrary.Math;
 using RenderingLibrary;
-using FlatRedBall.Graphics;
 
 namespace RenderingLibrary.Graphics
 {

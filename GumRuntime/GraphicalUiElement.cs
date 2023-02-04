@@ -3176,6 +3176,13 @@ namespace Gum.Wireframe
                     }
                 }
 
+                if(mParent is GraphicalUiElement parentGue && parentGue.ChildrenLayout == ChildrenLayout.TopToBottomStack && parentGue.StackSpacing != 0)
+                {
+                    var numberOfSpaces = mParent.Children.Count - 1;
+
+                    heightToSplit -= numberOfSpaces * parentGue.StackSpacing;
+                }
+
                 float totalRatio = 0;
                 if (mParent != null)
                 {
@@ -3520,6 +3527,13 @@ namespace Gum.Wireframe
                             }
                         }
                     }
+                }
+
+                if (mParent is GraphicalUiElement parentGue && parentGue.ChildrenLayout == ChildrenLayout.LeftToRightStack && parentGue.StackSpacing != 0)
+                {
+                    var numberOfSpaces = mParent.Children.Count - 1;
+
+                    widthToSplit -= numberOfSpaces * parentGue.StackSpacing;
                 }
 
                 float totalRatio = 0;
