@@ -140,7 +140,7 @@
                                 <Image Source="{Binding IconBitmapFrame}"/>
                                 <Image Source="{Binding ExclamationIcon}" Visibility="{Binding UncategorizedIconVisibility}">
                                     <Image.ToolTip>
-                                        <TextBlock>This state is uncategorized which can cause unexpected results due to only some variables being assigned. Consider usingonly categorized states.</TextBlock>
+                                        <TextBlock>This state is uncategorized which can cause unexpected results due to only some variables being assigned. Consider using only categorized states.</TextBlock>
                                     </Image.ToolTip>
                                 </Image>
                                 <Label Foreground="{Binding LabelBrush}" Content="{Binding DisplayString}" VerticalAlignment="Center">
