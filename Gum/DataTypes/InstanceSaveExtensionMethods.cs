@@ -269,12 +269,14 @@ namespace Gum.DataTypes
 
         public static VariableListSave GetVariableListFromThisOrBase(this InstanceSave instance, ElementSave parentContainer, string variable)
         {
+            // instanceBase can be null here because the instance could reference a type that has been deleted
             ElementSave instanceBase = ObjectFinder.Self.GetElementSave(instance.BaseType);
 
             VariableListSave variableListSave = parentContainer.DefaultState.GetVariableListRecursive(instance.Name + "." + variable);
             if (variableListSave == null)
             {
-                variableListSave = instanceBase.DefaultState.GetVariableListSave(variable);
+
+                variableListSave = instanceBase?.DefaultState.GetVariableListSave(variable);
             }
 
             if (variableListSave != null && variableListSave.ValueAsIList == null)

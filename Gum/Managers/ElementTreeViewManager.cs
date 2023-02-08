@@ -1309,6 +1309,17 @@ namespace Gum.Managers
                     nodeParent.Nodes.Remove(nodeForInstance);
                     nodeParent.Nodes.Insert(desiredIndex, nodeForInstance);
                 }
+
+                var element = ObjectFinder.Self.GetElementSave(instance.BaseType);
+
+                int desiredImageIndex = InstanceImageIndex;
+                if (element == null || element.IsSourceFileMissing)
+                    desiredImageIndex = ExclamationIndex;
+
+                if(nodeForInstance.ImageIndex != desiredImageIndex)
+                {
+                    nodeForInstance.ImageIndex = desiredImageIndex;
+                }
             }
         }
 
