@@ -61,6 +61,7 @@ namespace CodeOutputPlugin
             this.ElementSelected += HandleElementSelected;
             this.ElementRename += (element, oldName) => RenameManager.HandleRename(element, oldName, codeOutputProjectSettings);
             this.ElementAdd += HandleElementAdd;
+            this.ElementDelete += HandleElementDeleted;
 
             this.VariableAdd += HandleVariableAdd;
             this.VariableSet += HandleVariableSet;
@@ -83,6 +84,34 @@ namespace CodeOutputPlugin
             this.ProjectLoad += HandleProjectLoaded;
         }
 
+        private void HandleElementDeleted(ElementSave element)
+        {
+            var elementSettings = CodeOutputElementSettingsManager.LoadOrCreateSettingsFor(element);
+
+            // If it's deleted, ask the user if they also want to delete generated code files
+            var generatedFile = CodeGenerator.GetGeneratedFileName(element, elementSettings, codeOutputProjectSettings);
+            var customCodeFile = CodeGenerator.GetCustomCodeFileName(element, elementSettings, codeOutputProjectSettings);
+
+            if(generatedFile.Exists() || customCodeFile.Exists())
+            {
+                var message = $"Would you like to delete the generated and custom code files for {element}?";
+
+                var result = System.Windows.MessageBox.Show(message, "Delete Code?", System.Windows.MessageBoxButton.YesNo);
+
+                if(result == System.Windows.MessageBoxResult.Yes)
+                {
+                    if(generatedFile.Exists())
+                    {
+                        System.IO.File.Delete(generatedFile.FullPath);
+                    }
+
+                    if(customCodeFile.Exists())
+                    {
+                        System.IO.File.Delete(customCodeFile.FullPath);
+                    }
+                }
+            }
+        }
 
         private bool HandleVariableExcluded(VariableSave variable, RecursiveVariableFinder rvf) => VariableExclusionLogic.GetIfVariableIsExcluded(variable, rvf);
 
