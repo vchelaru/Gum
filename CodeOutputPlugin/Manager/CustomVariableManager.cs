@@ -21,7 +21,17 @@ namespace CodeOutputPlugin.Manager
                 {
                     stateSave.Variables.Add(new VariableSave 
                     { 
-                        SetsValue = true, Type = "bool", Category = "Xamarin Forms", Value = false, Name = "IsXamarinFormsControl" 
+                        SetsValue = true, Type = "bool", Category = "Xamarin Forms", 
+                            // If we set the value
+                            // explicitly, then new
+                            // pages will have a hard
+                            // `false` value set. This
+                            // is problematic because pages
+                            // often inherit from base pages,
+                            // so a hard value will override the
+                            // default derived value.
+                            //Value = false, 
+                            Name = "IsXamarinFormsControl" 
                     });
                 }
                 if(!Has("IsOverrideInCodeGen"))

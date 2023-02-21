@@ -1123,8 +1123,8 @@ namespace CodeOutputPlugin.Manager
                 }
             }
 
-
-            if (leftMargin != 0 || rightMargin != 0 || topMargin != 0 || bottomMargin != 0)
+            // If there are no margins, we should still explicitly set them. Otherwise, states that modify margins will not properly be set back
+            //if (leftMargin != 0 || rightMargin != 0 || topMargin != 0 || bottomMargin != 0)
             {
                 stringBuilder.AppendLine($"{context.CodePrefix}.Margin = new Thickness({leftMargin}, {topMargin}, {rightMargin}, {bottomMargin});");
             }

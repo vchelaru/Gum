@@ -1,6 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
+
+	<PropertyGroup>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <Platforms>AnyCPU;x86</Platforms>
   </PropertyGroup>
