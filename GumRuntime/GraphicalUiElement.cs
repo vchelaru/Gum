@@ -248,6 +248,17 @@ namespace Gum.Wireframe
                             //        currentDirtyState.ChildrenUpdateDepth,
                             //        currentDirtyState.XOrY);
                             //}
+
+                            if(this.WidthUnits == DimensionUnitType.Ratio || this.HeightUnits == DimensionUnitType.Ratio)
+                            {
+                                // If this is a width or height ratio and we're made visible, then the parent needs to update if it stacks:
+                                this.UpdateLayout(ParentUpdateType.IfParentStacks,
+                                    // If something is made visible, that shouldn't update the children, right?
+                                    //int.MaxValue/2, 
+                                    0,
+                                    null);
+                            }
+
                             didUpdate = true;
                         }
                     }
@@ -3151,6 +3162,8 @@ namespace Gum.Wireframe
             {
                 var heightToSplit = parentHeight;
 
+                var numberOfVisibleChildren = 0;
+
                 if (mParent != null)
                 {
                     for(int i = 0; i < mParent.Children.Count; i++)
@@ -3172,14 +3185,17 @@ namespace Gum.Wireframe
                                 var childAbsoluteWidth = parentHeight * gue.Height;
                                 heightToSplit -= childAbsoluteWidth;
                             }
+                            if (child.Visible)
+                            {
+                                numberOfVisibleChildren++;
+                            }
                         }
                     }
                 }
 
                 if(mParent is GraphicalUiElement parentGue && parentGue.ChildrenLayout == ChildrenLayout.TopToBottomStack && parentGue.StackSpacing != 0)
                 {
-                    var numberOfSpaces = mParent.Children.Count - 1;
-
+                    var numberOfSpaces = numberOfVisibleChildren;
                     heightToSplit -= numberOfSpaces * parentGue.StackSpacing;
                 }
 
@@ -3189,7 +3205,7 @@ namespace Gum.Wireframe
                     for(int i = 0; i < mParent.Children.Count; i++)
                     {
                         var child = mParent.Children[i];
-                        if (child is GraphicalUiElement gue && gue.HeightUnits == DimensionUnitType.Ratio)
+                        if (child is GraphicalUiElement gue && gue.HeightUnits == DimensionUnitType.Ratio && gue.Visible)
                         {
                             totalRatio += gue.Height;
                         }
@@ -3504,6 +3520,8 @@ namespace Gum.Wireframe
             {
                 var widthToSplit = parentWidth;
 
+                var numberOfVisibleChildren = 0;
+
                 if (mParent != null)
                 {
                     for(int i = 0; i < mParent.Children.Count; i++)
@@ -3525,13 +3543,18 @@ namespace Gum.Wireframe
                                 var childAbsoluteWidth = parentWidth * gue.Width;
                                 widthToSplit -= childAbsoluteWidth;
                             }
+
+                            if(child.Visible)
+                            {
+                                numberOfVisibleChildren++;
+                            }
                         }
                     }
                 }
 
                 if (mParent is GraphicalUiElement parentGue && parentGue.ChildrenLayout == ChildrenLayout.LeftToRightStack && parentGue.StackSpacing != 0)
                 {
-                    var numberOfSpaces = mParent.Children.Count - 1;
+                    var numberOfSpaces = numberOfVisibleChildren;
 
                     widthToSplit -= numberOfSpaces * parentGue.StackSpacing;
                 }
@@ -3542,7 +3565,7 @@ namespace Gum.Wireframe
                     for(int i = 0; i < mParent.Children.Count; i++)
                     {
                         var child = mParent.Children[i];
-                        if (child is GraphicalUiElement gue && gue.WidthUnits == DimensionUnitType.Ratio)
+                        if (child is GraphicalUiElement gue && gue.WidthUnits == DimensionUnitType.Ratio && gue.Visible)
                         {
                             totalRatio += gue.Width;
                         }
