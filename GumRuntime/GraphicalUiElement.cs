@@ -801,6 +801,12 @@ namespace Gum.Wireframe
                     {
                         mParent.Children.Add(this);
                     }
+                    
+                    // If layout is suppressed, the parent may not get set
+                    // and it's possible to have a floating visible=true object
+                    // that gets rendered without a parent:
+                    mContainedObjectAsIpso?.SetParentDirect(value);
+
                     UpdateLayout();
 
                     ParentChanged?.Invoke(this, null);
@@ -1278,6 +1284,7 @@ namespace Gum.Wireframe
             }
 
             mContainedObjectAsIpso = containedObject as IRenderableIpso;
+
             mContainedObjectAsIVisible = containedObject as IVisible;
 
             if (mContainedObjectAsIpso != null)
@@ -3185,7 +3192,7 @@ namespace Gum.Wireframe
                                 var childAbsoluteWidth = parentHeight * gue.Height;
                                 heightToSplit -= childAbsoluteWidth;
                             }
-                            if (child.Visible)
+                            if (gue.Visible)
                             {
                                 numberOfVisibleChildren++;
                             }
@@ -3544,7 +3551,7 @@ namespace Gum.Wireframe
                                 widthToSplit -= childAbsoluteWidth;
                             }
 
-                            if(child.Visible)
+                            if(gue.Visible)
                             {
                                 numberOfVisibleChildren++;
                             }
