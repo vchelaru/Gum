@@ -354,7 +354,9 @@ namespace SkiaGum
 
         private BindableGraphicalUiElement FindElement(float x, float y, IList<BindableGraphicalUiElement> list, Func<BindableGraphicalUiElement, bool> condition)
         {
-            for (int i = 0; i < list.Count; i++)
+            //for (int i = 0; i < list.Count; i++)
+            // Items later in the list appear on top, so we need to test back-to-front
+            for (int i = list.Count - 1; i >= 0; i--)
             {
                 var gumElement = list[i];
 
