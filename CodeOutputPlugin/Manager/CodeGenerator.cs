@@ -2745,6 +2745,258 @@ namespace CodeOutputPlugin.Manager
             }
         }
 
+        #region Variable Assignments
+
+
+        private static string GetCodeLine(VariableSave variable, ElementSave container, VisualApi visualApi, StateSave state, CodeGenerationContext context)
+        {
+            if (visualApi == VisualApi.Gum)
+            {
+                var fullLineReplacement = TryGetFullGumLineReplacement(context.Instance, variable, context);
+
+                if (fullLineReplacement != null)
+                {
+                    return fullLineReplacement;
+                }
+                else
+                {
+                    var variableName = GetGumVariableName(variable, container);
+
+
+
+                    return $"{context.CodePrefix}.{variableName} = {VariableValueToGumCodeValue(variable, container)};";
+                }
+
+            }
+            else // xamarin forms
+            {
+                var fullLineReplacement = TryGetFullXamarinFormsLineReplacement(context.Instance, container, variable, state, context);
+                if (fullLineReplacement != null)
+                {
+                    return fullLineReplacement;
+                }
+                else
+                {
+                    return $"{context.CodePrefix}.{GetXamarinFormsVariableName(variable)} = {VariableValueToXamarinFormsCodeValue(variable, container)};";
+                }
+
+            }
+        }
+
+        private static string GetCodeLine(VariableListSave variable, CodeGenerationContext context, VisualApi visualApi)
+        {
+            // for now we actually don't do anything with this - I used to think we would, but the variable lists are part of the Gum save objects, not rutnime.
+
+            return "";
+            if (visualApi == VisualApi.Gum)
+            {
+                //var fullLineReplacement = TryGetFullGumLineReplacement(context.Instance, variable, context);
+
+                //if (fullLineReplacement != null)
+                //{
+                //    return fullLineReplacement;
+                //}
+                //else
+                {
+                    //var variableName = GetGumVariableName(variable, container);
+                    var variableName = variable.GetRootName();
+
+
+                    return $"{context.CodePrefix}.{variableName} = {VariableValueToGumCodeValue(variable, context.Element)};";
+                }
+
+            }
+            else // xamarin forms
+            {
+                //var fullLineReplacement = TryGetFullXamarinFormsLineReplacement(context.Instance, container, variable, state, context);
+                //if (fullLineReplacement != null)
+                //{
+                //    return fullLineReplacement;
+                //}
+                //else
+                {
+                    //var variableName = GetXamarinFormsVariableName(variable);
+                    var variableName = variable.Name;
+
+                    return $"{context.CodePrefix}.{variableName} = {VariableValueToXamarinFormsCodeValue(variable, context.Element)};";
+                }
+
+            }
+        }
+
+        private static string VariableValueToGumCodeValue(VariableSave variable, ElementSave container, object forcedValue = null)
+        {
+            var value = forcedValue ?? variable.Value;
+            var rootName = variable.GetRootName();
+            var isState = variable.IsState(container, out ElementSave categoryContainer, out StateSaveCategory category);
+
+            return VariableValueToGumCode(value, rootName, isState, categoryContainer, category);
+        }
+
+        private static string VariableValueToGumCodeValue(VariableListSave variable, ElementSave container, object forcedValue = null)
+        {
+            var value = forcedValue ?? variable.ValueAsIList;
+            var rootName = variable.GetRootName();
+            var isState = false;
+
+            return VariableValueToGumCode(value, rootName, isState, null, null);
+        }
+
+        private static string VariableValueToGumCode(object value, string rootName, bool isState, ElementSave categoryContainer, StateSaveCategory category)
+        {
+            if (value is float asFloat)
+            {
+                return asFloat.ToString(CultureInfo.InvariantCulture) + "f";
+            }
+            else if (value is string asString)
+            {
+                if (rootName == "Parent")
+                {
+                    return asString;
+                }
+                else if (isState)
+                {
+                    if (categoryContainer != null && category != null)
+                    {
+                        string containerClassName = "VariableState";
+                        if (categoryContainer != null)
+                        {
+                            containerClassName = GetClassNameForType(categoryContainer.Name, VisualApi.Gum);
+                        }
+                        return $"{containerClassName}.{category.Name}.{asString}";
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                }
+                else
+                {
+                    return "\"" + asString.Replace("\n", "\\n") + "\"";
+                }
+            }
+            else if (value is bool)
+            {
+                return value.ToString().ToLowerInvariant();
+            }
+            else if (value?.GetType().IsEnum == true)
+            {
+                var type = value.GetType();
+                if (type == typeof(PositionUnitType))
+                {
+                    var converted = UnitConverter.ConvertToGeneralUnit(value);
+                    return $"GeneralUnitType.{converted}";
+                }
+                else
+                {
+                    return value.GetType().Name + "." + value.ToString();
+                }
+            }
+            else
+            {
+                return value?.ToString();
+            }
+        }
+
+        private static string VariableValueToXamarinFormsCodeValue(object value, string rootName, bool isState, ElementSave categoryContainer, StateSaveCategory category)
+        {
+            if (value is float asFloat)
+            {
+                // X and Y go to PixelX and PixelY
+                if (rootName == "X" || rootName == "Y")
+                {
+                    return asFloat.ToString(CultureInfo.InvariantCulture) + "f";
+                }
+                else if (rootName == "CornerRadius")
+                {
+                    return $"(int)({asFloat.ToString(CultureInfo.InvariantCulture)} / Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density)";
+                }
+                else
+                {
+                    return $"{asFloat.ToString(CultureInfo.InvariantCulture)} / Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density";
+                }
+            }
+            else if (value is int asInt)
+            {
+                if (rootName == "FontSize")
+                {
+                    return $"{asInt} / Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density";
+                }
+            }
+            else if (value is string asString)
+            {
+                if (rootName == "Parent")
+                {
+                    return value.ToString();
+                }
+                else if (isState)
+                {
+                    var containerClassName = GetClassNameForType(categoryContainer.Name, VisualApi.XamarinForms);
+                    if (category == null)
+                    {
+                        return $"{containerClassName}.VariableState.{value}";
+
+                    }
+                    else
+                    {
+                        return $"{containerClassName}.{category.Name}.{value}";
+                    }
+                }
+                else
+                {
+                    return "\"" + asString.Replace("\n", "\\n") + "\"";
+                }
+            }
+            else if (value is bool)
+            {
+                return value.ToString().ToLowerInvariant();
+            }
+            else if (value.GetType().IsEnum)
+            {
+                var type = value.GetType();
+                if (type == typeof(PositionUnitType))
+                {
+                    var converted = UnitConverter.ConvertToGeneralUnit(value);
+                    return $"GeneralUnitType.{converted}";
+                }
+                else if (type == typeof(HorizontalAlignment))
+                {
+                    switch ((HorizontalAlignment)value)
+                    {
+                        case HorizontalAlignment.Left:
+                            return "Xamarin.Forms.TextAlignment.Start";
+                        case HorizontalAlignment.Center:
+                            return "Xamarin.Forms.TextAlignment.Center";
+                        case HorizontalAlignment.Right:
+                            return "Xamarin.Forms.TextAlignment.End";
+                        default:
+                            return "";
+                    }
+                }
+                else if (type == typeof(VerticalAlignment))
+                {
+                    switch ((VerticalAlignment)value)
+                    {
+                        case VerticalAlignment.Top:
+                            return "Xamarin.Forms.TextAlignment.Start";
+                        case VerticalAlignment.Center:
+                            return "Xamarin.Forms.TextAlignment.Center";
+                        case VerticalAlignment.Bottom:
+                            return "Xamarin.Forms.TextAlignment.End";
+                        default:
+                            return "";
+                    }
+                }
+                else
+                {
+                    return value.GetType().Name + "." + value.ToString();
+                }
+            }
+
+            return value?.ToString();
+        }
+
+
         private static void FillWithVariableAssignments(InstanceSave instance, ElementSave container, StringBuilder stringBuilder, int tabCount, List<VariableSave> variablesToAssignValues)
         {
             var defaultState = container.DefaultState;
@@ -2806,6 +3058,8 @@ namespace CodeOutputPlugin.Manager
                 }
             }
         }
+
+        #endregion
 
         private static void ProcessVariableGroups(List<VariableSave> variablesToConsider, StateSave defaultState, VisualApi visualApi, StringBuilder stringBuilder, CodeGenerationContext context)
         {
@@ -2996,82 +3250,6 @@ namespace CodeOutputPlugin.Manager
             }
 
             return null;
-        }
-
-        private static string GetCodeLine(VariableSave variable, ElementSave container, VisualApi visualApi, StateSave state, CodeGenerationContext context)
-        {
-            if (visualApi == VisualApi.Gum)
-            {
-                var fullLineReplacement = TryGetFullGumLineReplacement(context.Instance, variable, context);
-
-                if (fullLineReplacement != null)
-                {
-                    return fullLineReplacement;
-                }
-                else
-                {
-                    var variableName = GetGumVariableName(variable, container);
-
-
-
-                    return $"{context.CodePrefix}.{variableName} = {VariableValueToGumCodeValue(variable, container)};";
-                }
-
-            }
-            else // xamarin forms
-            {
-                var fullLineReplacement = TryGetFullXamarinFormsLineReplacement(context.Instance, container, variable, state, context);
-                if (fullLineReplacement != null)
-                {
-                    return fullLineReplacement;
-                }
-                else
-                {
-                    return $"{context.CodePrefix}.{GetXamarinFormsVariableName(variable)} = {VariableValueToXamarinFormsCodeValue(variable, container)};";
-                }
-
-            }
-        }
-
-        private static string GetCodeLine(VariableListSave variable, CodeGenerationContext context, VisualApi visualApi)
-        {
-            // for now we actually don't do anything with this - I used to think we would, but the variable lists are part of the Gum save objects, not rutnime.
-
-            return "";
-            if (visualApi == VisualApi.Gum)
-            {
-                //var fullLineReplacement = TryGetFullGumLineReplacement(context.Instance, variable, context);
-
-                //if (fullLineReplacement != null)
-                //{
-                //    return fullLineReplacement;
-                //}
-                //else
-                {
-                    //var variableName = GetGumVariableName(variable, container);
-                    var variableName = variable.GetRootName();
-
-
-                    return $"{context.CodePrefix}.{variableName} = {VariableValueToGumCodeValue(variable, context.Element)};";
-                }
-
-            }
-            else // xamarin forms
-            {
-                //var fullLineReplacement = TryGetFullXamarinFormsLineReplacement(context.Instance, container, variable, state, context);
-                //if (fullLineReplacement != null)
-                //{
-                //    return fullLineReplacement;
-                //}
-                //else
-                {
-                    //var variableName = GetXamarinFormsVariableName(variable);
-                    var variableName = variable.Name;
-
-                    return $"{context.CodePrefix}.{variableName} = {VariableValueToXamarinFormsCodeValue(variable, context.Element)};";
-                }
-
-            }
         }
 
         public static string StringIdPrefix = "T_";
@@ -3281,79 +3459,7 @@ namespace CodeOutputPlugin.Manager
             return null;
         }
 
-        private static string VariableValueToGumCodeValue(VariableSave variable, ElementSave container, object forcedValue = null)
-        {
-            var value = forcedValue ?? variable.Value;
-            var rootName = variable.GetRootName();
-            var isState = variable.IsState(container, out ElementSave categoryContainer, out StateSaveCategory category);
 
-            return VariableValueToGumCode(value, rootName, isState, categoryContainer, category);
-        }
-
-        private static string VariableValueToGumCodeValue(VariableListSave variable, ElementSave container, object forcedValue = null)
-        {
-            var value = forcedValue ?? variable.ValueAsIList;
-            var rootName = variable.GetRootName();
-            var isState = false;
-
-            return VariableValueToGumCode(value, rootName, isState, null, null);
-        }
-
-        private static string VariableValueToGumCode(object value, string rootName, bool isState, ElementSave categoryContainer, StateSaveCategory category)
-        {
-            if (value is float asFloat)
-            {
-                return asFloat.ToString(CultureInfo.InvariantCulture) + "f";
-            }
-            else if (value is string asString)
-            {
-                if (rootName == "Parent")
-                {
-                    return asString;
-                }
-                else if (isState)
-                {
-                    if (categoryContainer != null && category != null)
-                    {
-                        string containerClassName = "VariableState";
-                        if (categoryContainer != null)
-                        {
-                            containerClassName = GetClassNameForType(categoryContainer.Name, VisualApi.Gum);
-                        }
-                        return $"{containerClassName}.{category.Name}.{asString}";
-                    }
-                    else
-                    {
-                        return null;
-                    }
-                }
-                else
-                {
-                    return "\"" + asString.Replace("\n", "\\n") + "\"";
-                }
-            }
-            else if (value is bool)
-            {
-                return value.ToString().ToLowerInvariant();
-            }
-            else if (value?.GetType().IsEnum == true)
-            {
-                var type = value.GetType();
-                if (type == typeof(PositionUnitType))
-                {
-                    var converted = UnitConverter.ConvertToGeneralUnit(value);
-                    return $"GeneralUnitType.{converted}";
-                }
-                else
-                {
-                    return value.GetType().Name + "." + value.ToString();
-                }
-            }
-            else
-            {
-                return value?.ToString();
-            }
-        }
 
         private static string VariableValueToXamarinFormsCodeValue(VariableSave variable, ElementSave container)
         {
@@ -3371,98 +3477,6 @@ namespace CodeOutputPlugin.Manager
             return VariableValueToXamarinFormsCodeValue(value, rootName, isState, null, null);
         }
 
-        private static string VariableValueToXamarinFormsCodeValue(object value, string rootName, bool isState, ElementSave categoryContainer, StateSaveCategory category)
-        {
-            if (value is float asFloat)
-            {
-                // X and Y go to PixelX and PixelY
-                if (rootName == "X" || rootName == "Y")
-                {
-                    return asFloat.ToString(CultureInfo.InvariantCulture) + "f";
-                }
-                else if (rootName == "CornerRadius")
-                {
-                    return $"(int)({asFloat.ToString(CultureInfo.InvariantCulture)} / Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density)";
-                }
-                else
-                {
-                    return $"{asFloat.ToString(CultureInfo.InvariantCulture)} / Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density";
-                }
-            }
-            else if (value is string asString)
-            {
-                if (rootName == "Parent")
-                {
-                    return value.ToString();
-                }
-                else if (isState)
-                {
-                    var containerClassName = GetClassNameForType(categoryContainer.Name, VisualApi.XamarinForms);
-                    if (category == null)
-                    {
-                        return $"{containerClassName}.VariableState.{value}";
-
-                    }
-                    else
-                    {
-                        return $"{containerClassName}.{category.Name}.{value}";
-                    }
-                }
-                else
-                {
-                    return "\"" + asString.Replace("\n", "\\n") + "\"";
-                }
-            }
-            else if (value is bool)
-            {
-                return value.ToString().ToLowerInvariant();
-            }
-            else if (value.GetType().IsEnum)
-            {
-                var type = value.GetType();
-                if (type == typeof(PositionUnitType))
-                {
-                    var converted = UnitConverter.ConvertToGeneralUnit(value);
-                    return $"GeneralUnitType.{converted}";
-                }
-                else if (type == typeof(HorizontalAlignment))
-                {
-                    switch ((HorizontalAlignment)value)
-                    {
-                        case HorizontalAlignment.Left:
-                            return "Xamarin.Forms.TextAlignment.Start";
-                        case HorizontalAlignment.Center:
-                            return "Xamarin.Forms.TextAlignment.Center";
-                        case HorizontalAlignment.Right:
-                            return "Xamarin.Forms.TextAlignment.End";
-                        default:
-                            return "";
-                    }
-                }
-                else if (type == typeof(VerticalAlignment))
-                {
-                    switch ((VerticalAlignment)value)
-                    {
-                        case VerticalAlignment.Top:
-                            return "Xamarin.Forms.TextAlignment.Start";
-                        case VerticalAlignment.Center:
-                            return "Xamarin.Forms.TextAlignment.Center";
-                        case VerticalAlignment.Bottom:
-                            return "Xamarin.Forms.TextAlignment.End";
-                        default:
-                            return "";
-                    }
-                }
-                else
-                {
-                    return value.GetType().Name + "." + value.ToString();
-                }
-            }
-            else
-            {
-                return value?.ToString();
-            }
-        }
 
         private static object GetGumVariableName(VariableSave variable, ElementSave container)
         {
@@ -3535,6 +3549,11 @@ namespace CodeOutputPlugin.Manager
             return shouldInclude;
         }
 
+        #region Utilities
+
         private static string ToTabs(int tabCount) => new string(' ', tabCount * 4);
+
+        #endregion
+
     }
 }

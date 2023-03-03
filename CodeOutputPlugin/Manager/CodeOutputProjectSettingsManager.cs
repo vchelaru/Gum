@@ -15,8 +15,11 @@ namespace CodeOutputPlugin.Manager
         public static void WriteSettingsForProject(CodeOutputProjectSettings settings)
         {
             var fileName = GetProjectCodeSettingsFile();
-            var serialized = JsonConvert.SerializeObject(settings);
-            System.IO.File.WriteAllText(fileName.FullPath, serialized);
+            if(fileName != null)
+            {
+                var serialized = JsonConvert.SerializeObject(settings);
+                System.IO.File.WriteAllText(fileName.FullPath, serialized);
+            }
         }
 
         private static FilePath GetProjectCodeSettingsFile()

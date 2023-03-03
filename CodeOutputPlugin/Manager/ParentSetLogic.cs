@@ -74,8 +74,15 @@ namespace CodeOutputPlugin.Manager
             {
                 element.Instances.Remove(instance);
 
+                // Since this can't be here, remove all leftover variables too
+                foreach(var state in element.AllStates)
+                {
+                    state.Variables.RemoveAll(item => item.SourceObject == instance.Name);
+                }
+
                 GumCommands.Self.GuiCommands.ShowMessage(childResponse.Message);
 
+                GumCommands.Self.FileCommands.TryAutoSaveElement(element);
             }
             else if (!string.IsNullOrEmpty(childResponse.Message))
             {
