@@ -2,9 +2,9 @@
 
 ## Introduction
 
-The properties window in Gum is used to provide extensive control over instances. While the visual editor is very handy for quick edits such as positioning and resizing instances, the properties window exposes all properties. It is also useful for making fine changes to instances, such as by moving an instance by a single pixel.
+The properties window in Gum displays all available variables when editing an instance. While the visual editor is very handy for quick edits such as positioning and resizing instances, the properties window exposes all properties. It is also useful for making fine changes to instances, such as by moving an instance by a single pixel.
 
-The properties window will show properties for the selected instance or element.
+The properties window shows properties for the selected instance or element.
 
 ![](<../.gitbook/assets/image (1).png>)
 
@@ -12,13 +12,15 @@ The properties window will show properties for the selected instance or element.
 
 Properties can be edited simply by changing values on the selected property. For example, to move the text to the right, change its X value to a positive number:
 
-![](<../.gitbook/assets/image (6) (1).png>)
+<figure><img src="../.gitbook/assets/02_21 00 09.gif" alt=""><figcaption></figcaption></figure>
 
 ## Positioning Instances
 
 Instances have an advanced positioning system. The position of an element is a result of a number of variables. We'll go over a few here.
 
-By default all objects are positioned by their top-left corner. In the example above we set the Text object's X and Y to 0, which aligned its top-left position to the top-left of the screen (which is identified by a dotted line.
+By default all objects are positioned by their top-left corner. For example, setting the Text instance's X and Y to 0 aligned its top-left position to the top-left of the screen (which is identified by a dotted line.
+
+<figure><img src="../.gitbook/assets/02_21 01 30.gif" alt=""><figcaption></figcaption></figure>
 
 We can change the origin of the Text object by setting its "X Origin" and "Y Origin" values. Notice that if X Origin is set to "Center" then the Text object is positioned by its center:
 
