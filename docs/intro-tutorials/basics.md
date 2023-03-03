@@ -8,11 +8,13 @@ This page walks you through the basics of using the Gum UI tool (which we'll ref
 
 ## Gum Elements
 
-Gum separates its elements into three categories: Screens, Components, and Standard: <img src="../.gitbook/assets/image (3).png" alt="" data-size="original">
+Gum separates its elements into three categories: Screens, Components, and Standard:&#x20;
+
+<figure><img src="../.gitbook/assets/image (15).png" alt=""><figcaption></figcaption></figure>
 
 Standard elements represent the building-blocks for screens and components, and all projects use the same set of standard elements. To see the list of elements, expand the Standard tree item. Clicking on any element will display it in the preview window.
 
-<figure><img src="../.gitbook/assets/image (1).png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../.gitbook/assets/image (5).png" alt=""><figcaption></figcaption></figure>
 
 Sprite element is selected in the image above. Notice that since a **SourceFile** is not set, the Sprite renders as a red X.
 
@@ -28,11 +30,11 @@ To create a screen:
 
 1.  Right-click on the Screens tree item and select **Add Screen**
 
-    <figure><img src="../.gitbook/assets/image (2).png" alt=""><figcaption></figcaption></figure>
+    <figure><img src="../.gitbook/assets/image (9).png" alt=""><figcaption></figcaption></figure>
 2. Enter the name of the new screen - such as **MainMenu**
 3.  The newly-created screen will be created and selected
 
-    <figure><img src="../.gitbook/assets/image (4).png" alt=""><figcaption></figcaption></figure>
+    <figure><img src="../.gitbook/assets/image.png" alt=""><figcaption></figcaption></figure>
 
 ## Adding instances
 

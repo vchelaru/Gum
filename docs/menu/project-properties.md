@@ -6,7 +6,7 @@ The project properties window allows you to modify properties that apply across 
 
 To open the Project Properties tab, select Edit -> Properties.
 
-![](<../.gitbook/assets/image (10) (1) (1).png>)
+![](<../.gitbook/assets/image (10) (1).png>)
 
 ## Canvas Width/Height
 
@@ -22,7 +22,7 @@ The Font Ranges setting controls which characters are included in default fonts.
 
 The default Font Ranges value is `32-126,160-255` which maps to the first page of the Bitmap font generator character set, labeled as **Latin + Latin Supplement**.
 
-![](<../.gitbook/assets/image (2) (1).png>)
+![](<../.gitbook/assets/image (2).png>)
 
 Various websites provide a list of unicode character sets such as [https://unicode-table.com/en/blocks/](https://unicode-table.com/en/blocks/)
 
