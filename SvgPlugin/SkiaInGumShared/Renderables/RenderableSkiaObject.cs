@@ -13,6 +13,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
+using System.Security.Policy;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -219,6 +220,20 @@ namespace SkiaGum.Renderables
             }
         }
 
+        int alpha1 = 255;
+        public int Alpha1
+        {
+            get => alpha1;
+            set
+            {
+                if(alpha1 != value)
+                {
+                    alpha1 = value;
+                    needsUpdate = true;
+                }
+            }
+        }
+
         int red1;
         public int Red1
         {
@@ -256,6 +271,21 @@ namespace SkiaGum.Renderables
                 if (blue1 != value)
                 {
                     blue1 = value;
+                    needsUpdate = true;
+                }
+            }
+        }
+
+
+        int alpha2 = 255;
+        public int Alpha2
+        {
+            get => alpha2;
+            set
+            {
+                if (alpha2 != value)
+                {
+                    alpha2 = value;
                     needsUpdate = true;
                 }
             }
@@ -828,8 +858,8 @@ namespace SkiaGum.Renderables
 
         protected void SetGradientOnPaint(SKPaint paint)
         {
-            var firstColor = new SKColor((byte)red1, (byte)green1, (byte)blue1);
-            var secondColor = new SKColor((byte)red2, (byte)green2, (byte)blue2);
+            var firstColor = new SKColor((byte)red1, (byte)green1, (byte)blue1, (byte)alpha1);
+            var secondColor = new SKColor((byte)red2, (byte)green2, (byte)blue2, (byte)alpha2);
 
             var effectiveWidth = Width + XSizeSpillover * 2;
             var effectiveHeight = Height + YSizeSpillover * 2;

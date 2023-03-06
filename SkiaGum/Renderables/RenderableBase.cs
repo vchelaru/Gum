@@ -145,10 +145,12 @@ namespace SkiaGum.Renderables
 
         public GradientType GradientType { get; set; }
 
+        public int Alpha1 { get; set; }
         public int Red1 { get; set; }
         public int Green1 { get; set; }
         public int Blue1 { get; set; }
 
+        public int Alpha2 { get; set; }
         public int Red2 { get; set; }
         public int Green2 { get; set; }
         public int Blue2 { get; set; }
@@ -250,7 +252,10 @@ namespace SkiaGum.Renderables
         public RenderableBase()
         {
             Width = 32;
-            Height = 32;
+            Height = 32; 
+            Alpha = 255;
+            Alpha1 = 255;
+            Alpha2 = 255;
             this.Visible = true;
             mChildren = new ObservableCollection<IRenderableIpso>();
 
@@ -378,7 +383,7 @@ namespace SkiaGum.Renderables
             mParent = parent;
         }
 
-#region IVisible Implementation
+        #region IVisible Implementation
 
         public bool Visible
         {
@@ -413,8 +418,8 @@ namespace SkiaGum.Renderables
 
         protected void ApplyGradientToPaint(SKRect boundingRect, SKPaint paint, float absoluteRotation)
         {
-            var firstColor = new SKColor((byte)Red1, (byte)Green1, (byte)Blue1);
-            var secondColor = new SKColor((byte)Red2, (byte)Green2, (byte)Blue2);
+            var firstColor = new SKColor((byte)Red1, (byte)Green1, (byte)Blue1, (byte)Alpha1);
+            var secondColor = new SKColor((byte)Red2, (byte)Green2, (byte)Blue2, (byte)Alpha2);
 
             var effectiveGradientX1 = GradientX1;
             switch (this.GradientX1Units)

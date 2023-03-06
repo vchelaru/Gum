@@ -207,6 +207,7 @@ namespace SkiaPlugin.Managers
             state.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0, Category = "Rendering", Name = "GradientY1" });
             state.Variables.Add(new VariableSave { SetsValue = true, Type = typeof(PositionUnitType).Name, Value = PositionUnitType.PixelsFromTop, Name = "GradientY1Units", Category = "Rendering", ExcludedValuesForEnum = yUnitsExclusions });
 
+            state.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "Alpha1", Category = "Rendering" });
             state.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "Red1", Category = "Rendering" });
             state.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "Green1", Category = "Rendering" });
             state.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "Blue1", Category = "Rendering" });
@@ -224,6 +225,7 @@ namespace SkiaPlugin.Managers
             state.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 100, Category = "Rendering", Name = "GradientOuterRadius" });
             state.Variables.Add(new VariableSave { SetsValue = true, Type = typeof(DimensionUnitType).Name, Value = DimensionUnitType.Absolute, Name = "GradientOuterRadiusUnits", Category = "Rendering" });
 
+            state.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "Alpha2", Category = "Rendering" });
             state.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "Red2", Category = "Rendering" });
             state.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "Green2", Category = "Rendering" });
             state.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "Blue2", Category = "Rendering" });
@@ -278,10 +280,10 @@ namespace SkiaPlugin.Managers
                 }
 
             }
-            else if (rootName == "Red1" || rootName == "Green1" || rootName == "Blue1" || 
+            else if (rootName == "Red1" || rootName == "Green1" || rootName == "Blue1" || rootName == "Alpha1" ||
                 rootName == "GradientX1" || rootName == "GradientY1" ||
                 rootName == "GradientX1Units" || rootName == "GradientY1Units" ||
-                rootName == "Red2" || rootName == "Green2" || rootName == "Blue2" ||
+                rootName == "Red2" || rootName == "Green2" || rootName == "Blue2" || rootName == "Alpha2" ||
                 rootName == "GradientType")
             {
                 var usesGradients = recursiveVariableFinder.GetValue(prefix + "UseGradient");

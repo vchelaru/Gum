@@ -38,6 +38,12 @@ namespace SkiaGum.GueDeriving
 
         #region Gradient Colors
 
+        public int Alpha1
+        {
+            get => ContainedRoundedRectangle.Alpha1;
+            set => ContainedRoundedRectangle.Alpha1 = value;
+        }
+
         public int Blue1
         {
             get => ContainedRoundedRectangle.Blue1;
@@ -56,6 +62,11 @@ namespace SkiaGum.GueDeriving
             set => ContainedRoundedRectangle.Red1 = value;
         }
 
+        public int Alpha2
+        {
+            get => ContainedRoundedRectangle.Alpha2;
+            set => ContainedRoundedRectangle.Alpha2 = value;
+        }
 
         public int Blue2
         {
