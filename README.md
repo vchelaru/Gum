@@ -1,3 +1,6 @@
+[![Join the chat](https://img.shields.io/discord/586997072373481494)](https://discord.gg/tG5RBgw)
+[![Twitter](https://img.shields.io/twitter/url?style=social&url=https%3A%2F%2Ftwitter.com%2FFlatRedBall)](https://twitter.com/FlatRedBall)
+
 # Introduction 
 
 Gum is a general purpose UI layout tool built on object-oriented principles. Specifically it supports:
