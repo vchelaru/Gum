@@ -1125,6 +1125,11 @@ namespace CodeOutputPlugin.Manager
 
             // If there are no margins, we should still explicitly set them. Otherwise, states that modify margins will not properly be set back
             //if (leftMargin != 0 || rightMargin != 0 || topMargin != 0 || bottomMargin != 0)
+            if(AdjustPixelValuesForDensity)
+            {
+                stringBuilder.AppendLine($"{context.CodePrefix}.Margin = new Thickness({leftMargin}/Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density, {topMargin}/Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density, {rightMargin}/Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density, {bottomMargin}/Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density);");
+            }
+            else
             {
                 stringBuilder.AppendLine($"{context.CodePrefix}.Margin = new Thickness({leftMargin}, {topMargin}, {rightMargin}, {bottomMargin});");
             }
