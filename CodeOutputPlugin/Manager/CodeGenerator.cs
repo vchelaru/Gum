@@ -2925,7 +2925,7 @@ namespace CodeOutputPlugin.Manager
             {
                 if (rootName == "FontSize")
                 {
-                    return $"{asInt} / Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density";
+                    return $"(int)({asInt} / Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density)";
                 }
             }
             else if (value is string asString)
@@ -3046,7 +3046,8 @@ namespace CodeOutputPlugin.Manager
 
             foreach (var variable in variablesToAssignValues)
             {
-                var codeLine = GetCodeLine(variable, container, visualApi, defaultState, context);
+                var innerVisualApi = GetVisualApiForVariable(variable, instance, container) ?? visualApi;
+                var codeLine = GetCodeLine(variable, container, innerVisualApi, defaultState, context);
 
                 // the line of code could be " ", a string with a space. This happens
                 // if we want to skip a variable so we dont return null or empty.
@@ -3062,6 +3063,28 @@ namespace CodeOutputPlugin.Manager
                     stringBuilder.AppendLine(tabs + suffixCodeLine);
                 }
             }
+        }
+
+        private static VisualApi? GetVisualApiForVariable(VariableSave variable, InstanceSave instance, ElementSave container)
+        {
+            if(instance != null)
+            {
+                var instanceElement = ObjectFinder.Self.GetElementSave(instance);
+
+                var variableRoot = variable.GetRootName();
+
+                var matchingExposed = instanceElement?.DefaultState.Variables.FirstOrDefault(item => item.ExposedAsName == variableRoot);
+                if (matchingExposed != null)
+                {
+                    var instanceInInstanceElement = instanceElement.GetInstance(matchingExposed.SourceObject);
+
+                    if(instanceInInstanceElement != null)
+                    {
+                        return GetVisualApiForInstance(instanceInInstanceElement, instanceElement);
+                    }
+                }
+            }
+            return null;
         }
 
         #endregion

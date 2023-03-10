@@ -130,19 +130,12 @@ namespace Gum.DataTypes.Variables
         /// <returns>The value found, or null</returns>
         public object GetValue(string variableName)
         {
-            ////////////////////Early Out////////////////
-            if (ParentContainer == null)
-            {
-                return null;
-            }
-            //////////////////End Early Out//////////////
-
             // Check for reserved stuff
-            if (variableName == "Name")
+            if (variableName == "Name" && ParentContainer != null)
             {
                 return ParentContainer.Name;
             }
-            else if (variableName == "Base Type")
+            else if (variableName == "Base Type" && ParentContainer != null)
             {
                 if (string.IsNullOrEmpty(ParentContainer.BaseType))
                 {
@@ -164,7 +157,7 @@ namespace Gum.DataTypes.Variables
                 }
             }
 
-            if (ToolsUtilities.StringFunctions.ContainsNoAlloc(variableName, '.'))
+            if (ToolsUtilities.StringFunctions.ContainsNoAlloc(variableName, '.') && ParentContainer != null)
             {
                 string instanceName = variableName.Substring(0, variableName.IndexOf('.'));
 

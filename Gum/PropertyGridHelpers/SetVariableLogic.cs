@@ -224,7 +224,16 @@ namespace Gum.PropertyGridHelpers
             // Handled in a plugin
             //ReactIfChangedMemberIsBaseType(parentElement, changedMember, oldValue);
 
-            ReactIfChangedMemberIsFont(parentElement, instance, changedMember, oldValue);
+            // todo - should this use current state?
+            var changedMemberWithPrefix = changedMember;
+            if(instance != null)
+            {
+                changedMemberWithPrefix = instance.Name + "." + changedMember;
+            }
+            var rfv = new RecursiveVariableFinder(parentElement.DefaultState);
+            var value = rfv.GetValue(changedMemberWithPrefix);
+
+            ReactIfChangedMemberIsFont(parentElement, instance, changedMember, oldValue, value);
 
             ReactIfChangedMemberIsCustomFont(parentElement, changedMember, oldValue);
 
@@ -249,12 +258,33 @@ namespace Gum.PropertyGridHelpers
             }
         }
 
-        private void ReactIfChangedMemberIsFont(ElementSave parentElement, InstanceSave instance, string changedMember, object oldValue)
+        private void ReactIfChangedMemberIsFont(ElementSave parentElement, InstanceSave instance, string changedMember, object oldValue, object newValue)
         {
-            if (changedMember == "Font" || changedMember == "FontSize" || changedMember == "OutlineThickness" || changedMember == "UseFontSmoothing")
+            var handledByInner = false;
+            var instanceElement = instance != null ? ObjectFinder.Self.GetElementSave(instance) : null;
+            if(instanceElement != null)
             {
-                FontManager.Self.ReactToFontValueSet(instance);
+                var variable = instanceElement.DefaultState.Variables.FirstOrDefault(item => item.ExposedAsName == changedMember);
+
+                if(variable != null)
+                {
+                    var innerInstance = instanceElement.GetInstance(variable.SourceObject);
+                    ReactIfChangedMemberIsFont(instanceElement, innerInstance, variable.GetRootName(), oldValue, newValue);
+                    handledByInner = true;
+                }
             }
+
+            if(!handledByInner)
+            {
+                if (changedMember == "Font" || changedMember == "FontSize" || changedMember == "OutlineThickness" || changedMember == "UseFontSmoothing")
+                {
+                    var forcedValues = new StateSave();
+                    forcedValues.SetValue(changedMember, newValue);
+
+                    FontManager.Self.ReactToFontValueSet(instance, forcedValues);
+                }
+            }
+
         }
 
         private void ReactIfChangedMemberIsCustomFont(ElementSave parentElement, string changedMember, object oldValue)

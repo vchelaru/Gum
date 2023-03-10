@@ -104,7 +104,7 @@ namespace Gum.Managers
             }
         }
 
-        internal void ReactToFontValueSet(InstanceSave instance)
+        internal void ReactToFontValueSet(InstanceSave instance, StateSave forcedValues = null)
         {
             StateSave stateSave = SelectedState.Self.SelectedStateSave;
 
@@ -119,10 +119,10 @@ namespace Gum.Managers
                 throw new InvalidOperationException($"{nameof(stateSave)} is null");
             }
 
-            TryCreateFontFileFor(instance, stateSave);
+            TryCreateFontFileFor(instance, stateSave, forcedValues);
         }
 
-        public void TryCreateFontFileFor(InstanceSave instance, StateSave stateSave)
+        public void TryCreateFontFileFor(InstanceSave instance, StateSave stateSave, StateSave forcedValues = null)
         {
             string prefix = "";
             if (instance != null)
@@ -138,6 +138,13 @@ namespace Gum.Managers
             bool fontSmoothing = stateSave.GetValueRecursive(prefix + "UseFontSmoothing") as bool? ?? true;
             bool isItalic = stateSave.GetValueRecursive(prefix + "IsItalic") as bool? ?? false;
             bool isBold = stateSave.GetValueRecursive(prefix + "IsBold") as bool? ?? false;
+
+            if(forcedValues?.GetVariableSave("FontSize") != null)
+            {
+                fontSize = forcedValues.GetValue("FontSize") as int?;
+            }
+            // 3/10/2023
+            // todo - add others here? I'm in a hurry so I'm only doing FontSize
 
             if (fontValue != null && fontSize != null)
             {

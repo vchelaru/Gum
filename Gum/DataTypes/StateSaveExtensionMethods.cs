@@ -486,7 +486,10 @@ namespace Gum.DataTypes.Variables
                         temp = new VariableSave();
                         temp.Name = variableName;
                     }
-                    isFile = temp.GetIsFileFromRoot(stateSave.ParentContainer);
+                    if(stateSave.ParentContainer != null)
+                    {
+                        isFile = temp.GetIsFileFromRoot(stateSave.ParentContainer);
+                    }
                 }
 
 
