@@ -1575,7 +1575,13 @@ namespace CodeOutputPlugin.Manager
             tabCount--;
             stringBuilder.AppendLine(ToTabs(tabCount) + "}");
 
-            stringBuilder.AppendLine(ToTabs(tabCount) + "AssignParents();");
+            if (!DoesElementInheritFromCodeGeneratedElement(element, projectSettings))
+            {
+                // AssignParents doesn't call base so that the derived can control the ultimate order.
+                // However, it overrides and the base calls AssignParents. Therefore, no need for us to
+                // call it here, I don't think...
+                stringBuilder.AppendLine(ToTabs(tabCount) + "AssignParents();");
+            }
 
             stringBuilder.AppendLine(ToTabs(tabCount) + "CustomInitialize();");
 
