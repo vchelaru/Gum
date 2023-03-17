@@ -482,11 +482,23 @@ namespace CodeOutputPlugin.Manager
 
             if (setsAny)
             {
-                stringBuilder.AppendLine($"{codePrefix}.Margin = new Thickness(" +
-                    $"{leftMargin.ToString(CultureInfo.InvariantCulture)}, " +
-                    $"{topMargin.ToString(CultureInfo.InvariantCulture)}, " +
-                    $"{rightMargin.ToString(CultureInfo.InvariantCulture)}, " +
-                    $"{bottomMargin.ToString(CultureInfo.InvariantCulture)});");
+                if (AdjustPixelValuesForDensity)
+                {
+                    stringBuilder.AppendLine($"{codePrefix}.Margin = new Thickness(" +
+                        $"{leftMargin.ToString(CultureInfo.InvariantCulture)}/Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density, " +
+                        $"{topMargin.ToString(CultureInfo.InvariantCulture)}/Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density, " +
+                        $"{rightMargin.ToString(CultureInfo.InvariantCulture)}/Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density, " +
+                        $"{bottomMargin.ToString(CultureInfo.InvariantCulture)}/Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density);");
+
+                }
+                else
+                {
+                    stringBuilder.AppendLine($"{codePrefix}.Margin = new Thickness(" +
+                        $"{leftMargin.ToString(CultureInfo.InvariantCulture)}, " +
+                        $"{topMargin.ToString(CultureInfo.InvariantCulture)}, " +
+                        $"{rightMargin.ToString(CultureInfo.InvariantCulture)}, " +
+                        $"{bottomMargin.ToString(CultureInfo.InvariantCulture)});");
+                }
             }
 
             #region Write Padding
