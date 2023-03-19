@@ -26,6 +26,8 @@ namespace SkiaGum.GueDeriving
             public string VmProperty;
             public string UiProperty;
 
+            public string ToStringFormat;
+
             public override string ToString()
             {
                 return $"VM:{VmProperty} UI{UiProperty}";
@@ -243,7 +245,7 @@ namespace SkiaGum.GueDeriving
                     {
                         var uiValue = uiProperty.GetValue(this, null);
 
-                        var convertedValue = ConvertValue(uiValue, vmProperty.PropertyType);
+                        var convertedValue = ConvertValue(uiValue, vmProperty.PropertyType, null);
 
                         vmProperty.SetValue(BindingContext, convertedValue, null);
                     }
@@ -278,13 +280,17 @@ namespace SkiaGum.GueDeriving
                 bool didSetVmValue = false;
                 string uiPropertyName;
 
+                string toStringFormat = null;
+
                 if (vmPropertyName == BindingContextBinding)
                 {
                     uiPropertyName = nameof(BindingContext);
                 }
                 else
                 {
-                    uiPropertyName = vmPropsToUiProps.First(item => item.VmProperty == vmPropertyName).UiProperty;
+                    var vmToUiProp = vmPropsToUiProps.First(item => item.VmProperty == vmPropertyName);
+                    uiPropertyName = vmToUiProp.UiProperty;
+                    toStringFormat = vmToUiProp.ToStringFormat;
                 }
 
                 if (vmProperty == null && BindingContextBinding != vmPropertyName)
@@ -318,7 +324,7 @@ namespace SkiaGum.GueDeriving
                         throw new Exception(exceptionMessage);
                     }
 
-                    var convertedValue = ConvertValue(vmValue, uiProperty.PropertyType);
+                    var convertedValue = ConvertValue(vmValue, uiProperty.PropertyType, toStringFormat);
                     try
                     {
                         uiProperty.SetValue(this, convertedValue, null);
@@ -342,12 +348,23 @@ namespace SkiaGum.GueDeriving
             return updated;
         }
 
-        private object ConvertValue(object value, Type desiredType)
+        private object ConvertValue(object value, Type desiredType, string format)
         {
             object convertedValue = value;
             if (desiredType == typeof(string))
             {
-                convertedValue = value?.ToString();
+                if(!string.IsNullOrEmpty(format))
+                {
+                    if (value is int asInt) convertedValue = asInt.ToString(format);
+                    else if(value is double asDouble) convertedValue = asDouble.ToString(format);
+                    else if(value is decimal asDecimal) convertedValue = asDecimal.ToString(format);
+                    else if(value is float asFloat) convertedValue = asFloat.ToString(format);
+                    else if(value is long asLong) convertedValue = asLong.ToString(format);
+                }
+                else
+                {
+                    convertedValue = value?.ToString();
+                }
             }
             else if (desiredType == typeof(int))
             {
@@ -366,6 +383,10 @@ namespace SkiaGum.GueDeriving
                 else if (value is decimal asDecimal)
                 {
                     convertedValue = (double)asDecimal;
+                }
+                else if(value is float asFloat)
+                {
+                    convertedValue = (double)asFloat;
                 }
             }
             else if (desiredType == typeof(decimal))
@@ -430,7 +451,7 @@ namespace SkiaGum.GueDeriving
             }
         }
 
-        public void SetBinding(string uiProperty, string vmProperty)
+        public void SetBinding(string uiProperty, string vmProperty, string toStringFormat = null)
         {
             if (uiProperty == nameof(BindingContext))
             {
@@ -454,8 +475,15 @@ namespace SkiaGum.GueDeriving
                     }
                 }
 
+                var vmToUiProperty = new VmToUiProperty() 
+                { 
+                    VmProperty = vmProperty, 
+                    UiProperty = uiProperty 
+                };
 
-                vmPropsToUiProps.Add(new VmToUiProperty() { VmProperty = vmProperty, UiProperty = uiProperty });
+                vmToUiProperty.ToStringFormat = toStringFormat;
+
+                vmPropsToUiProps.Add(vmToUiProperty);
 
                 if (EffectiveBindingContext != null)
                 {
