@@ -193,7 +193,8 @@ namespace Gum.Wireframe
                     rootIpso.ApplyState(state);
                 }
 
-                if(elementSave is StandardElementSave && elementSave.Name == "Text" && SelectedState.Self.SelectedStateSave != null)
+                var rootElementSave = ObjectFinder.Self.GetRootStandardElementSave(elementSave);
+                if(rootElementSave?.Name == "Text" && SelectedState.Self.SelectedStateSave != null)
                 {
                     // We created a new Text object, so let's try generating fonts for it:
                     FontManager.Self.ReactToFontValueSet(null);

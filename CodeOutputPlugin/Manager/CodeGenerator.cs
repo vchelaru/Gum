@@ -2943,7 +2943,14 @@ namespace CodeOutputPlugin.Manager
             {
                 if (rootName == "FontSize")
                 {
-                    return $"(int)({asInt} / Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density)";
+                    if(AdjustPixelValuesForDensity)
+                    {
+                        return $"(int)({asInt} / Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density)";
+                    }
+                    else
+                    {
+                        return asInt.ToString();
+                    }
                 }
             }
             else if (value is string asString)
