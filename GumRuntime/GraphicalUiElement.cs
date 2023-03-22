@@ -232,7 +232,7 @@ namespace Gum.Wireframe
                             // This does need to be recursive because contained objects may have been 
                             // updated while the parent was invisible, becoming dirty, and waiting for
                             // the resume
-                            ResumeLayoutUpdateIfDirtyRecursive();
+                            didUpdate = ResumeLayoutUpdateIfDirtyRecursive();
 
                             //if (isFontDirty)
                             //{
@@ -257,9 +257,8 @@ namespace Gum.Wireframe
                                     //int.MaxValue/2, 
                                     0,
                                     null);
+                                didUpdate = true;
                             }
-
-                            didUpdate = true;
                         }
                     }
                     
@@ -4088,14 +4087,17 @@ namespace Gum.Wireframe
             }
         }
 
-        private void ResumeLayoutUpdateIfDirtyRecursive()
+        private bool ResumeLayoutUpdateIfDirtyRecursive()
         {
 
             mIsLayoutSuspended = false;
             UpdateFontRecursive();
 
+            var didCallUpdateLayout = false;
+
             if (currentDirtyState != null)
             {
+                didCallUpdateLayout = true;
                 UpdateLayout(currentDirtyState.ParentUpdateType,
                     currentDirtyState.ChildrenUpdateDepth,
                     currentDirtyState.XOrY);
@@ -4118,6 +4120,8 @@ namespace Gum.Wireframe
                     mWhatThisContains[i].ResumeLayoutUpdateIfDirtyRecursive();
                 }
             }
+
+            return didCallUpdateLayout;
         }
 
         /// <summary>
