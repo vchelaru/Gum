@@ -250,7 +250,7 @@ namespace CodeOutputPlugin
 
                         if (instance != null)
                         {
-                            string code = CodeGenerator.GetCodeForInstance(instance, selectedElement, CodeGenerator.GetVisualApiForInstance(instance, selectedElement) );
+                            string code = CodeGenerator.GetCodeForInstance(instance, selectedElement, codeOutputProjectSettings );
                             viewModel.Code = code;
                         }
                         else if(selectedElement != null)

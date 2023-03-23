@@ -322,16 +322,23 @@ namespace GumRuntime
             var split = referenceString
                 .Split(equalsArray, StringSplitOptions.RemoveEmptyEntries)
                 .Select(item => item.Trim()).ToArray();
-            var left = split[0];
-            var right = split[1];
+            object value = null;
+            string left = "";
 
-            var ownerOfRightSideVariable = stateSave;
+            if(split.Length > 1)
+            {
+                left = split[0];
+                var right = split[1];
 
-            GetRightSideAndState(referenceOwner.Tag as InstanceSave, ref right, ref ownerOfRightSideVariable);
+                var ownerOfRightSideVariable = stateSave;
 
-            var recursiveVariableFinder = new RecursiveVariableFinder(ownerOfRightSideVariable);
+                GetRightSideAndState(referenceOwner.Tag as InstanceSave, ref right, ref ownerOfRightSideVariable);
 
-            var value = recursiveVariableFinder.GetValue(right);
+                var recursiveVariableFinder = new RecursiveVariableFinder(ownerOfRightSideVariable);
+
+                value = recursiveVariableFinder.GetValue(right);
+            }
+
 
             if (value != null)
             {

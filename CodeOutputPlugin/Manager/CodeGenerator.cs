@@ -2585,7 +2585,7 @@ namespace CodeOutputPlugin.Manager
             }
         }
 
-        public static string GetCodeForInstance(InstanceSave instance, ElementSave element, VisualApi visualApi)
+        public static string GetCodeForInstance(InstanceSave instance, ElementSave element, CodeOutputProjectSettings codeOutputProjectSettings)
         {
             var stringBuilder = new StringBuilder();
 
@@ -2596,6 +2596,7 @@ namespace CodeOutputPlugin.Manager
             var context = new CodeGenerationContext();
             context.Instance = instance;
             context.Element = element;
+            context.CodeOutputProjectSettings = codeOutputProjectSettings;
 
             FillWithNonParentVariableAssignments(context, stringBuilder);
 
@@ -2741,7 +2742,7 @@ namespace CodeOutputPlugin.Manager
 
             #endregion
 
-            FillWithVariableAssignments(context.Instance, context.Element, stringBuilder, context.TabCount, variablesToAssignValues);
+            FillWithVariableAssignments(context, stringBuilder, variablesToAssignValues);
 
             var variableListsToAssign = context.Element.DefaultState.VariableLists.Where(item => item.SourceObject == context.Instance.Name)
                 .ToArray();
@@ -2787,7 +2788,7 @@ namespace CodeOutputPlugin.Manager
 
 
 
-                    return $"{context.CodePrefix}.{variableName} = {VariableValueToGumCodeValue(variable, container)};";
+                    return $"{context.CodePrefixNoTabs}.{variableName} = {VariableValueToGumCodeValue(variable, container)};";
                 }
 
             }
@@ -2800,7 +2801,7 @@ namespace CodeOutputPlugin.Manager
                 }
                 else
                 {
-                    return $"{context.CodePrefix}.{GetXamarinFormsVariableName(variable)} = {VariableValueToXamarinFormsCodeValue(variable, container)};";
+                    return $"{context.CodePrefixNoTabs}.{GetXamarinFormsVariableName(variable)} = {VariableValueToXamarinFormsCodeValue(variable, container)};";
                 }
 
             }
@@ -2932,11 +2933,25 @@ namespace CodeOutputPlugin.Manager
                 }
                 else if (rootName == "CornerRadius")
                 {
-                    return $"(int)({asFloat.ToString(CultureInfo.InvariantCulture)} / Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density)";
+                    if (AdjustPixelValuesForDensity)
+                    {
+                        return $"(int)({asFloat.ToString(CultureInfo.InvariantCulture)} / Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density)";
+                    }
+                    else
+                    {
+                        return $"(int){asFloat.ToString(CultureInfo.InvariantCulture)}";
+                    }
                 }
                 else
                 {
-                    return $"{asFloat.ToString(CultureInfo.InvariantCulture)} / Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density";
+                    if (AdjustPixelValuesForDensity)
+                    {
+                        return $"{asFloat.ToString(CultureInfo.InvariantCulture)} / Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density";
+                    }
+                    else
+                    {
+                        return asFloat.ToString(CultureInfo.InvariantCulture);
+                    }
                 }
             }
             else if (value is int asInt)
@@ -2958,6 +2973,10 @@ namespace CodeOutputPlugin.Manager
                 if (rootName == "Parent")
                 {
                     return value.ToString();
+                }
+                else if(rootName == "Font")
+                {
+                    return $"CustomFont.{value.ToString()?.Replace(" ", "_")}";
                 }
                 else if (isState)
                 {
@@ -3027,12 +3046,15 @@ namespace CodeOutputPlugin.Manager
         }
 
 
-        private static void FillWithVariableAssignments(InstanceSave instance, ElementSave container, StringBuilder stringBuilder, int tabCount, List<VariableSave> variablesToAssignValues)
+        private static void FillWithVariableAssignments(CodeGenerationContext context, StringBuilder stringBuilder, List<VariableSave> variablesToAssignValues)
         {
-            var defaultState = container.DefaultState;
-            VisualApi visualApi = GetVisualApiForInstance(instance, container);
+            var defaultState = context.Element.DefaultState;
+            VisualApi visualApi = GetVisualApiForInstance(context.Instance, context.Element);
 
-            var tabs = new String(' ', 4 * tabCount);
+            var tabs = new String(' ', 4 * context.TabCount);
+
+            var container = context.Element;
+            var instance = context.Instance;
 
             // We used to do this, but now spacing is supported in FRB:
             //if (visualApi == VisualApi.XamarinForms && instance.BaseType?.EndsWith("/StackLayout") == true)
@@ -3040,9 +3062,6 @@ namespace CodeOutputPlugin.Manager
             //    stringBuilder.AppendLine($"{tabs}{instance.Name}.Spacing = 0;");
             //}
 
-            var context = new CodeGenerationContext();
-            context.Element = container;
-            context.Instance = instance;
             // States come before anything, so run those first
             foreach (var variable in variablesToAssignValues.Where(item => item.IsState(container)))
             {
@@ -3053,25 +3072,24 @@ namespace CodeOutputPlugin.Manager
                 // But we also don't want a ton of spaces generated.
                 if (!string.IsNullOrWhiteSpace(codeLine))
                 {
-                    stringBuilder.AppendLine(tabs + codeLine);
+                    stringBuilder.AppendLine(codeLine);
                 }
 
                 var suffixCodeLine = GetSuffixCodeLine(instance, variable, visualApi);
                 if (!string.IsNullOrEmpty(suffixCodeLine))
                 {
-                    stringBuilder.AppendLine(tabs + suffixCodeLine);
+                    stringBuilder.AppendLine(suffixCodeLine);
                 }
             }
             variablesToAssignValues.RemoveAll(item => item.IsState(container));
 
             // sometimes variables have to be processed in groups. For example, RGB values
             // have to be assigned all at once in a Color value in XamForms;
-            context.TabCount = tabCount;
             ProcessVariableGroups(variablesToAssignValues, container.DefaultState, visualApi, stringBuilder, context);
 
             foreach (var variable in variablesToAssignValues)
             {
-                var innerVisualApi = GetVisualApiForVariable(variable, instance, container) ?? visualApi;
+                var innerVisualApi = GetVisualApiForVariable(variable, context) ?? visualApi;
                 var codeLine = GetCodeLine(variable, container, innerVisualApi, defaultState, context);
 
                 // the line of code could be " ", a string with a space. This happens
@@ -3090,22 +3108,29 @@ namespace CodeOutputPlugin.Manager
             }
         }
 
-        private static VisualApi? GetVisualApiForVariable(VariableSave variable, InstanceSave instance, ElementSave container)
+        private static VisualApi? GetVisualApiForVariable(VariableSave variable, CodeGenerationContext context)
         {
-            if(instance != null)
+            if(context.Instance != null)
             {
-                var instanceElement = ObjectFinder.Self.GetElementSave(instance);
+                // If this element is ignored in codegen, then we don't go inside to find the variable:
+                var isIgnoredInCodeGen = context.CodeOutputProjectSettings.BaseTypesNotCodeGenerated.Contains(context.Instance.BaseType);
 
-                var variableRoot = variable.GetRootName();
-
-                var matchingExposed = instanceElement?.DefaultState.Variables.FirstOrDefault(item => item.ExposedAsName == variableRoot);
-                if (matchingExposed != null)
+                if(!isIgnoredInCodeGen)
                 {
-                    var instanceInInstanceElement = instanceElement.GetInstance(matchingExposed.SourceObject);
+                    var instanceElement = ObjectFinder.Self.GetElementSave(context.Instance);
 
-                    if(instanceInInstanceElement != null)
+
+                    var variableRoot = variable.GetRootName();
+
+                    var matchingExposed = instanceElement?.DefaultState.Variables.FirstOrDefault(item => item.ExposedAsName == variableRoot);
+                    if (matchingExposed != null)
                     {
-                        return GetVisualApiForInstance(instanceInInstanceElement, instanceElement);
+                        var instanceInInstanceElement = instanceElement.GetInstance(matchingExposed.SourceObject);
+
+                        if(instanceInInstanceElement != null)
+                        {
+                            return GetVisualApiForInstance(instanceInInstanceElement, instanceElement);
+                        }
                     }
                 }
             }
@@ -3335,6 +3360,8 @@ namespace CodeOutputPlugin.Manager
 
             #endregion
 
+            #region Parent
+
             else if (rootVariableName == "Parent")
             {
                 var parentName = variable.Value as string;
@@ -3393,6 +3420,18 @@ namespace CodeOutputPlugin.Manager
                 }
 
             }
+
+            #endregion
+
+            #region Font
+
+            else if(rootVariableName == "Font")
+            {
+                return $"{context.CodePrefixNoTabs}.SetFont(CustomFont.{variable.Value?.ToString()?.Replace(" ", "_")});";
+            }
+
+            #endregion
+
 
             #region Children Layout
 
