@@ -3113,7 +3113,7 @@ namespace CodeOutputPlugin.Manager
             if(context.Instance != null)
             {
                 // If this element is ignored in codegen, then we don't go inside to find the variable:
-                var isIgnoredInCodeGen = context.CodeOutputProjectSettings.BaseTypesNotCodeGenerated.Contains(context.Instance.BaseType);
+                var isIgnoredInCodeGen = context.CodeOutputProjectSettings?.BaseTypesNotCodeGenerated?.Contains(context.Instance.BaseType) == true;
 
                 if(!isIgnoredInCodeGen)
                 {
