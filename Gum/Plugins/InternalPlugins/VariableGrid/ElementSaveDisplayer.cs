@@ -18,6 +18,7 @@ using Gum.Wireframe;
 using Newtonsoft.Json.Linq;
 using WpfDataUi.Controls;
 using static System.Resources.ResXFileRef;
+using GumRuntime;
 
 namespace Gum.PropertyGridHelpers
 {
@@ -292,6 +293,9 @@ namespace Gum.PropertyGridHelpers
                         wasChangeMade = true;
                     }
                 }
+
+                ElementSaveExtensions.ApplyVariableReferences(selectedElement, SelectedState);
+
 
                 if (wasChangeMade)
                 {
