@@ -245,6 +245,8 @@ namespace Gum.PropertyGridHelpers
 
             TryAddExposeVariableMenuOptions(instanceSave);
 
+            TryAddCopyVariableReferenceMenuOptions();
+
             // This could be slow since we have to check it for every variable in an object.
             // Maybe we'll want to pass this in to the function?
             StandardElementSave standardElement = null;
@@ -285,6 +287,41 @@ namespace Gum.PropertyGridHelpers
                 this.SortValue = standardVariable.DesiredOrder;
             }
 
+        }
+
+        private void TryAddCopyVariableReferenceMenuOptions()
+        {
+            if(this.mVariableName != null)
+            {
+                ContextMenuEvents.Add("Copy Qualified Variable Name", (sender, e) =>
+                {
+                    string qualifiedName;
+
+                    if (mElementSave is ScreenSave)
+                    {
+                        qualifiedName = $"Screens/{mElementSave.Name}";
+                    }
+                    else if(mElementSave is ComponentSave)
+                    {
+                        qualifiedName = $"Components/{mElementSave.Name}";
+                    }
+                    else
+                    {
+                        qualifiedName = $"Standards/{mElementSave.Name}";
+                    }
+
+                    // no need to append instance, the variable name contains the instance name if there is an instance
+                    //if(mInstanceSave != null)
+                    //{
+                    //    qualifiedName += "." + mInstanceSave.Name;
+                    //}
+
+                    qualifiedName += "." + mVariableName;
+
+                    Clipboard.SetText(qualifiedName);
+
+                });
+            }
         }
 
         private void TryAddExposeVariableMenuOptions(InstanceSave instance)
