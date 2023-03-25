@@ -200,6 +200,11 @@ namespace Gum.DataTypes.ComponentModel
             // apply references on this element first, then apply the values to the other references:
             ElementSaveExtensions.ApplyVariableReferences(elementSave, stateSave);
 
+            if(Name == "VariableReferences")
+            {
+                GumCommands.Self.GuiCommands.RefreshPropertyGridValues();
+            }
+
             // Oct 13, 2022
             // This should set 
             // values on all contained objects for this particular state
@@ -224,6 +229,8 @@ namespace Gum.DataTypes.ComponentModel
             {
                 GumCommands.Self.FileCommands.TryAutoSaveElement(elementToSave);
             }
+
+
 
         }
 

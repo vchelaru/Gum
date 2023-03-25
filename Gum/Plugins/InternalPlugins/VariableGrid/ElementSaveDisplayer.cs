@@ -294,7 +294,7 @@ namespace Gum.PropertyGridHelpers
                     }
                 }
 
-                ElementSaveExtensions.ApplyVariableReferences(selectedElement, SelectedState);
+                ElementSaveExtensions.ApplyVariableReferences(selectedElement, state);
 
 
                 if (wasChangeMade)
