@@ -835,7 +835,7 @@ namespace Gum.Managers
 
             SelectedState.Self.SelectedStateSave.SetValue(variableName, fileName, instance);
 
-            SetVariableLogic.Self.ReactToPropertyValueChanged("SourceFile", oldValue, element, instance, refresh:false);
+            SetVariableLogic.Self.ReactToPropertyValueChanged("SourceFile", oldValue, element, instance, SelectedState.Self.SelectedStateSave, refresh:false);
 
         }
 

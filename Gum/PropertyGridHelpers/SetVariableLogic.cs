@@ -89,7 +89,7 @@ namespace Gum.PropertyGridHelpers
                     SelectedState.Self.SelectedVariableSave = SelectedState.Self.SelectedStateSave.GetVariableSave(unqualifiedMemberName);
                 }
             }
-            ReactToPropertyValueChanged(unqualifiedMemberName, oldValue, parentElement, instance, refresh);
+            ReactToPropertyValueChanged(unqualifiedMemberName, oldValue, parentElement, instance, selectedStateSave, refresh);
         }
 
         /// <summary>
@@ -100,12 +100,12 @@ namespace Gum.PropertyGridHelpers
         /// <param name="parentElement"></param>
         /// <param name="instance"></param>
         /// <param name="refresh"></param>
-        public void ReactToPropertyValueChanged(string unqualifiedMember, object oldValue, ElementSave parentElement, InstanceSave instance, bool refresh)
+        public void ReactToPropertyValueChanged(string unqualifiedMember, object oldValue, ElementSave parentElement, InstanceSave instance, StateSave stateSave, bool refresh)
         {
             if (parentElement != null)
             {
 
-                ReactToChangedMember(unqualifiedMember, oldValue, parentElement, instance);
+                ReactToChangedMember(unqualifiedMember, oldValue, parentElement, instance, stateSave);
 
                 string qualifiedName = unqualifiedMember;
                 if(instance != null)
@@ -217,7 +217,7 @@ namespace Gum.PropertyGridHelpers
 
 
 
-        private void ReactToChangedMember(string changedMember, object oldValue, ElementSave parentElement, InstanceSave instance)
+        private void ReactToChangedMember(string changedMember, object oldValue, ElementSave parentElement, InstanceSave instance, StateSave stateSave)
         {
             ReactIfChangedMemberIsName(parentElement, instance, changedMember, oldValue);
 
@@ -230,7 +230,7 @@ namespace Gum.PropertyGridHelpers
             {
                 changedMemberWithPrefix = instance.Name + "." + changedMember;
             }
-            var rfv = new RecursiveVariableFinder(parentElement.DefaultState);
+            var rfv = new RecursiveVariableFinder(stateSave);
             var value = rfv.GetValue(changedMemberWithPrefix);
 
             ReactIfChangedMemberIsFont(parentElement, instance, changedMember, oldValue, value);

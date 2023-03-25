@@ -68,7 +68,7 @@ namespace Gum.Plugins.AlignmentButtons
 
             // do this so the SetVariableLogic doesn't attempt to hold the object in-place which causes all kinds of weirdness
             RecordSetVariablePersistPositions();
-            SetVariableLogic.Self.ReactToPropertyValueChanged(unqualified, oldValue, SelectedState.Self.SelectedElement, instance, refresh: false);
+            SetVariableLogic.Self.ReactToPropertyValueChanged(unqualified, oldValue, SelectedState.Self.SelectedElement, instance, SelectedState.Self.SelectedStateSave, refresh: false);
             ResumeSetVariablePersistOptions();
         }
 

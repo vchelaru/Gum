@@ -295,18 +295,19 @@ namespace TextureCoordinateSelectionPlugin.Logic
         {
             var element = SelectedState.Self.SelectedElement;
             var instance = SelectedState.Self.SelectedInstance;
+            var state = SelectedState.Self.SelectedStateSave;
 
             shouldRefreshAccordingToVariableSets = false;
             {
                 // This could be really heavy if we notify everyone of the changes. We should only do it when the editing stops...
                 SetVariableLogic.Self.ReactToPropertyValueChanged("Texture Left", oldTextureLeftValue,
-                    element, instance, refresh: false);
+                    element, instance, state, refresh: false);
                 SetVariableLogic.Self.ReactToPropertyValueChanged("Texture Top", oldTextureTopValue,
-                    element, instance, refresh: false);
+                    element, instance, state, refresh: false);
                 SetVariableLogic.Self.ReactToPropertyValueChanged("Texture Width", oldTextureWidthValue,
-                    element, instance, refresh: false);
+                    element, instance, state, refresh: false);
                 SetVariableLogic.Self.ReactToPropertyValueChanged("Texture Height", oldTextureHeightValue,
-                    element, instance, refresh: false);
+                    element, instance, state, refresh: false);
             }
             shouldRefreshAccordingToVariableSets = true;
 
