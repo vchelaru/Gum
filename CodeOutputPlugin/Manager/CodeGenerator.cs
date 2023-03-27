@@ -993,6 +993,11 @@ namespace CodeOutputPlugin.Manager
                     stringBuilder.AppendLine(
                         $"{codePrefix}.VerticalOptions = LayoutOptions.Center;");
                 }
+                else if(yUnits == PositionUnitType.PixelsFromBottom && yOrigin == VerticalAlignment.Bottom)
+                {
+                    stringBuilder.AppendLine(
+                        $"{codePrefix}.VerticalOptions = LayoutOptions.End;");
+                }
                 else
                 {
                     stringBuilder.AppendLine(
