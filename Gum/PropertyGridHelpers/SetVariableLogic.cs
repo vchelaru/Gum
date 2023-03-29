@@ -217,35 +217,37 @@ namespace Gum.PropertyGridHelpers
 
 
 
-        private void ReactToChangedMember(string changedMember, object oldValue, ElementSave parentElement, InstanceSave instance, StateSave stateSave)
+        private void ReactToChangedMember(string rootVariableName, object oldValue, ElementSave parentElement, InstanceSave instance, StateSave stateSave)
         {
-            ReactIfChangedMemberIsName(parentElement, instance, changedMember, oldValue);
+            ReactIfChangedMemberIsName(parentElement, instance, rootVariableName, oldValue);
 
             // Handled in a plugin
             //ReactIfChangedMemberIsBaseType(parentElement, changedMember, oldValue);
 
             // todo - should this use current state?
-            var changedMemberWithPrefix = changedMember;
+            var changedMemberWithPrefix = rootVariableName;
             if(instance != null)
             {
-                changedMemberWithPrefix = instance.Name + "." + changedMember;
+                changedMemberWithPrefix = instance.Name + "." + rootVariableName;
             }
             var rfv = new RecursiveVariableFinder(stateSave);
             var value = rfv.GetValue(changedMemberWithPrefix);
 
-            ReactIfChangedMemberIsFont(parentElement, instance, changedMember, oldValue, value);
+            ReactIfChangedMemberIsFont(parentElement, instance, rootVariableName, oldValue, value);
 
-            ReactIfChangedMemberIsCustomFont(parentElement, changedMember, oldValue);
+            ReactIfChangedMemberIsCustomFont(parentElement, rootVariableName, oldValue);
 
-            ReactIfChangedMemberIsUnitType(parentElement, changedMember, oldValue);
+            ReactIfChangedMemberIsUnitType(parentElement, rootVariableName, oldValue);
 
-            ReactIfChangedMemberIsSourceFile(parentElement, instance, changedMember, oldValue);
+            ReactIfChangedMemberIsSourceFile(parentElement, instance, rootVariableName, oldValue);
 
-            ReactIfChangedMemberIsTextureAddress(parentElement, changedMember, oldValue);
+            ReactIfChangedMemberIsTextureAddress(parentElement, rootVariableName, oldValue);
 
-            ReactIfChangedMemberIsParent(parentElement, instance, changedMember, oldValue);
+            ReactIfChangedMemberIsParent(parentElement, instance, rootVariableName, oldValue);
 
-            PluginManager.Self.VariableSet(parentElement, instance, changedMember, oldValue);
+            ReactIfChangedMemberIsVariableReference(parentElement, instance, stateSave, rootVariableName, oldValue);
+
+            PluginManager.Self.VariableSet(parentElement, instance, rootVariableName, oldValue);
         }
 
 
@@ -649,6 +651,74 @@ namespace Gum.PropertyGridHelpers
                     GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);
                 }
             }
+        }
+
+        static char[] equalsArray = new char[] { '=' };
+
+        private void ReactIfChangedMemberIsVariableReference(ElementSave parentElement, InstanceSave instance, StateSave stateSave, string changedMember, object oldValue)
+        {
+            ///////////////////// Early Out/////////////////////////////////////
+            if (changedMember != "VariableReferences") return;
+
+            var changedMemberWithPrefix = changedMember;
+            if (instance != null)
+            {
+                changedMemberWithPrefix = instance.Name + "." + changedMember;
+            }
+
+            var asList = stateSave.GetVariableListSave(changedMemberWithPrefix)?.ValueAsIList as List<string>;
+
+            if(asList == null) return;
+            ///////////////////End Early Out/////////////////////////////////////
+
+            for (int i = asList.Count - 1; i >= 0; i--)
+            {
+                var item = asList[i];
+
+                var split = item
+                    .Split(equalsArray, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(stringItem => stringItem.Trim()).ToArray();
+
+                if(split.Length == 0)
+                {
+                    continue;
+                }
+
+                if(split.Length == 1)
+                {
+                    // need to prepend the equality here
+
+                    var rightSide = split[0]; // there is no left side, just right side
+                    var afterDot = rightSide.Substring(rightSide.LastIndexOf('.') + 1);
+
+                    var withoutVariable = rightSide.Substring(0, rightSide.LastIndexOf('.'));
+
+                    asList[i] = $"{afterDot} = {rightSide}";
+
+                    split = asList[i]
+                        .Split(equalsArray, StringSplitOptions.RemoveEmptyEntries)
+                        .Select(stringItem => stringItem.Trim()).ToArray();
+                }
+
+                if(split.Length == 2)
+                {
+                    var leftSide = split[0];
+                    var rightSide = split[1];
+                    if(leftSide == "Color" && rightSide.EndsWith(".Color"))
+                    {
+                        // does this thing have a color value?
+                        // let's assume "no" for now, eventually may need to fix this up....
+                        var withoutVariable = rightSide.Substring(0, rightSide.Length - ".Color".Length);
+
+                        asList.RemoveAt(i);
+
+                        asList.Add($"Red = {withoutVariable}.Red");
+                        asList.Add($"Green = {withoutVariable}.Green");
+                        asList.Add($"Blue = {withoutVariable}.Blue");
+
+                    }
+                }
+            }   
         }
 
         private List<InstanceSave> GetRecursiveChildrenOf(ElementSave parent, InstanceSave instance)

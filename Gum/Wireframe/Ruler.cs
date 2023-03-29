@@ -15,6 +15,7 @@ using Sprite = RenderingLibrary.Graphics.Sprite;
 using Camera = RenderingLibrary.Camera;
 using RenderingLibrary.Math;
 using Gum.ToolStates;
+using Gum.Input;
 
 namespace Gum.Wireframe
 {
@@ -34,7 +35,8 @@ namespace Gum.Wireframe
 
         XnaAndWinforms.GraphicsDeviceControl mControl;
         SystemManagers mManagers;
-        Layer mLayer;
+        Layer mRulerLayer;
+        Layer mScreenSpaceLayer;
         Cursor mCursor;
         Keyboard mKeyboard;
 
@@ -44,6 +46,10 @@ namespace Gum.Wireframe
 
         Line mGrabbedGuide;
         Text mGrabbedGuideText;
+
+        DistanceArrows DistanceArrow1;
+        DistanceArrows DistanceArrow2;
+
         float mZoomValue = 1;
 
         Sprite mOffsetSprite;
@@ -255,7 +261,10 @@ namespace Gum.Wireframe
                 mManagers = managers;
                 mCursor = cursor;
 
+                // do this before creating the arrows
                 CreateLayer();
+
+                CreateArrows(managers, mScreenSpaceLayer);
 
                 CreateVisualRepresentation();
 
@@ -264,10 +273,24 @@ namespace Gum.Wireframe
 
                 RulerSide = Wireframe.RulerSide.Top;
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 throw e;
             }
+        }
+
+        private void CreateArrows(SystemManagers managers, Layer layer)
+        {
+            DistanceArrow1 = new DistanceArrows(managers ?? SystemManagers.Default, layer);
+            DistanceArrow1.AddToManagers();
+            DistanceArrow2 = new DistanceArrows(managers ?? SystemManagers.Default, layer);
+            DistanceArrow2.AddToManagers();
+
+            DistanceArrow1.IsStartArrowTipVisible = false;
+            DistanceArrow1.TextHorizontalAlignment = HorizontalAlignment.Center;
+            DistanceArrow2.IsStartArrowTipVisible = false;
+            DistanceArrow2.TextHorizontalAlignment = HorizontalAlignment.Center;
+
         }
 
         public bool HandleXnaUpdate(bool isCursorInWindow)
@@ -291,7 +314,7 @@ namespace Gum.Wireframe
             mGrabbedGuideText = new Text(mManagers, "");
             mGrabbedGuideText.RenderBoundary = false;
             mGrabbedGuideText.Parent = mOffsetSprite;
-            TextManager.Add(mGrabbedGuideText, mLayer);
+            TextManager.Add(mGrabbedGuideText, mRulerLayer);
         }
 
         private void CreateVisualRepresentation()
@@ -301,7 +324,7 @@ namespace Gum.Wireframe
 
             mRectangle = new SolidRectangle();
             mRectangle.Color = Color.Yellow;
-            ShapeManager.Add(mRectangle, mLayer);
+            ShapeManager.Add(mRectangle, mRulerLayer);
 
             ReactToRulerSides();
 
@@ -379,16 +402,21 @@ namespace Gum.Wireframe
 
             line.Parent = mOffsetSprite;
             mRulerLines.Add(line);
-            ShapeManager.Add(line, mLayer);
+            ShapeManager.Add(line, mRulerLayer);
         }
 
 
         private void CreateLayer()
         {
-            mLayer = Renderer.AddLayer();
-            mLayer.LayerCameraSettings = new LayerCameraSettings();
-            mLayer.LayerCameraSettings.IsInScreenSpace = true;
-            mLayer.Name = "Ruler Layer";
+            mRulerLayer = Renderer.AddLayer();
+            mRulerLayer.LayerCameraSettings = new LayerCameraSettings();
+            mRulerLayer.LayerCameraSettings.IsInScreenSpace = true;
+            mRulerLayer.Name = "Ruler Layer";
+
+            mScreenSpaceLayer = Renderer.AddLayer();
+
+            mScreenSpaceLayer.Name = "ScreenSpace Ruler Layer";
+
         }
 
         private bool PerformGuidesActivity(bool isCursorInWindow)
@@ -473,7 +501,11 @@ namespace Gum.Wireframe
                 }
             }
 
-            UpdateGrabbedGuideText(guideSpacePosition, GuideTextColor);
+            UpdateGrabbedGuideText(GuideTextColor);
+
+            //mScreenSpaceLayer.LayerCameraSettings.Zoom = mManagers.Renderer.Camera.Zoom;
+
+            UpdateDistanceArrows(GuideTextColor);
 
             if (!mCursor.PrimaryDown)
             {
@@ -490,6 +522,99 @@ namespace Gum.Wireframe
             return guideOver != null || mGrabbedGuide != null;
         }
 
+        private void UpdateDistanceArrows(Color guideTextColor)
+        {
+            DistanceArrow1.Visible = false;
+            DistanceArrow2.Visible = false;
+            DistanceArrow1.Zoom = mZoomValue;
+            DistanceArrow2.Zoom = mZoomValue;
+
+
+            if (mCursor.PrimaryDown && mGrabbedGuide != null)
+            {
+                //mDistanceArrow.Color = guideTextColor;
+                if (this.RulerSide == Wireframe.RulerSide.Left)
+                {
+                    var guideAbove = mGuides.OrderBy(item => item.Y).Where(item => item.RelativePoint.Y == 0 && item.Y < mGrabbedGuide.Y).LastOrDefault();
+                    var guideBelow = mGuides.OrderBy(item => item.Y).Where(item => item.RelativePoint.Y == 0 && item.Y > mGrabbedGuide.Y).FirstOrDefault();
+
+                    var yAbove = guideAbove?.Y / mZoomValue;
+                    if (yAbove == null && mGrabbedGuide.Y/mZoomValue > GraphicalUiElement.CanvasHeight)
+                    {
+                        yAbove = GraphicalUiElement.CanvasHeight;
+                    }
+                    if (yAbove == null && mGrabbedGuide.Y > 0)
+                    {
+                        yAbove = 0;
+                    }
+
+                    var yBelow = guideBelow?.Y/ mZoomValue;
+                    if (yBelow == null && mGrabbedGuide.Y < 0)
+                    {
+                        yBelow = 0;
+                    }
+                    if (yBelow == null && mGrabbedGuide.Y / mZoomValue < GraphicalUiElement.CanvasHeight)
+                    {
+                        yBelow = GraphicalUiElement.CanvasHeight;
+                    }
+
+                    var x = mCursor.GetWorldX();
+
+                    if(yAbove != null)
+                    {
+                        DistanceArrow1.Visible = true;
+                        DistanceArrow1.SetFrom(new Vector2(x, mGrabbedGuide.Y / mZoomValue), new Vector2(x, yAbove.Value));
+                    }
+
+                    if(yBelow != null)
+                    {
+                        DistanceArrow2.Visible = true;
+                        DistanceArrow2.SetFrom(new Vector2(x, mGrabbedGuide.Y/ mZoomValue), new Vector2(x, yBelow.Value));
+                    }
+                }
+                else // ruler is the top ruller, so do this on the X
+                {
+                    var guideLeft = mGuides.OrderBy(item => item.X).Where(item => item.RelativePoint.X == 0 && item.X < mGrabbedGuide.X).LastOrDefault();
+                    var guideRight = mGuides.OrderBy(item => item.X).Where(item => item.RelativePoint.X == 0 && item.X > mGrabbedGuide.X).FirstOrDefault();
+
+                    var xLeft = guideLeft?.X / mZoomValue;
+                    if(xLeft == null && mGrabbedGuide.X / mZoomValue > GraphicalUiElement.CanvasWidth)
+                    {
+                        xLeft = GraphicalUiElement.CanvasWidth;
+                    }
+                    if(xLeft == null && mGrabbedGuide.X / mZoomValue > 0)
+                    {
+                        xLeft = 0;
+                    }
+
+                    var xRight = guideRight?.X / mZoomValue;
+                    if(xRight == null && mGrabbedGuide.X / mZoomValue < 0)
+                    {
+                        xRight = 0;
+                    }
+                    if(xRight == null && mGrabbedGuide.X / mZoomValue < GraphicalUiElement.CanvasWidth)
+                    {
+                        xRight = GraphicalUiElement.CanvasWidth;
+                    }
+
+                    var y = mCursor.GetWorldY();
+
+                    if(xLeft != null)
+                    {
+                        DistanceArrow1.Visible = true;
+                        DistanceArrow1.SetFrom(new Vector2(mGrabbedGuide.X / mZoomValue, y), new Vector2(xLeft.Value, y));
+                    }
+                    if(xRight != null)
+                    {
+                        DistanceArrow2.Visible = true;
+                        DistanceArrow2.SetFrom(new Vector2(mGrabbedGuide.X / mZoomValue, y), new Vector2(xRight.Value, y));
+                    }
+                }
+            }
+
+
+        }
+
         public float ConvertToPixelBasedCoordinate(float value)
         {
             value *= this.mZoomValue;
@@ -498,7 +623,7 @@ namespace Gum.Wireframe
             return value;
         }
 
-        private void UpdateGrabbedGuideText(float guideSpaceY, Color guideTextColor)
+        private void UpdateGrabbedGuideText(Color guideTextColor)
         {
             // need to make it bigger to support scrollbars
             //const float distanceFromEdge = 10;
@@ -617,7 +742,7 @@ namespace Gum.Wireframe
 
             line.Parent = mOffsetSprite;
             mGuides.Add(line);
-            ShapeManager.Add(line, mLayer);
+            ShapeManager.Add(line, mRulerLayer);
         }
 
         private void ReactToRulerSides()

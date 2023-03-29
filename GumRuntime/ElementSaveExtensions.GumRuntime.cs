@@ -351,6 +351,12 @@ namespace GumRuntime
             var split = referenceString
                 .Split(equalsArray, StringSplitOptions.RemoveEmptyEntries)
                 .Select(item => item.Trim()).ToArray();
+
+            if(split.Length != 2)
+            {
+                return;
+            }
+
             var left = split[0];
             var right = split[1];
 

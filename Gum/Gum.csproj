@@ -378,6 +378,7 @@
     <Compile Include="Undo\UndoPlugin.cs" />
     <Compile Include="Undo\UndoSnapshot.cs" />
     <Compile Include="Wireframe\CameraController.cs" />
+    <Compile Include="Wireframe\DistanceArrows.cs" />
     <Compile Include="Wireframe\EditingManager.cs" />
     <Compile Include="Wireframe\EditingManager.RightClick.cs" />
     <Compile Include="Wireframe\Editors\DimensionDisplay.cs" />
