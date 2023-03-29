@@ -398,21 +398,22 @@ namespace GumRuntime
                 {
                     var stripped = elementNameToFind.Substring("Components.".Length);
 
-                    var component = ObjectFinder.Self.GetComponent(stripped);
+                    var element = ObjectFinder.Self.GetComponent(stripped);
 
-                    if(component != null)
+                    if(element != null)
                     {
-                        stateSave = component.DefaultState;
+                        stateSave = GetRightSide(ref right, firstDot, element);
+                    }
+                }
+                else if(elementNameToFind.StartsWith("Screens."))
+                {
+                    var stripped = elementNameToFind.Substring("Screens.".Length);
 
-                        right = right.Substring(firstDot + 1);
+                    var element = ObjectFinder.Self.GetScreen(stripped);
 
-                        if (right.Contains("."))
-                        {
-                            var dotAfterInstance = right.IndexOf(".");
-                            var instanceName = right.Substring(0, dotAfterInstance);
-                            var instance = component.GetInstance(instanceName);
-                            GetRightSideAndState(instance, ref right, ref stateSave);
-                        }
+                    if(element != null)
+                    { 
+                        stateSave = GetRightSide(ref right, firstDot, element);
                     }
                 }
             }
@@ -425,6 +426,22 @@ namespace GumRuntime
                 }
             }
 
+        }
+
+        private static StateSave GetRightSide(ref string right, int firstDot, ElementSave element)
+        {
+            StateSave stateSave = element.DefaultState;
+            right = right.Substring(firstDot + 1);
+
+            if (right.Contains("."))
+            {
+                var dotAfterInstance = right.IndexOf(".");
+                var instanceName = right.Substring(0, dotAfterInstance);
+                var instance = element.GetInstance(instanceName);
+                GetRightSideAndState(instance, ref right, ref stateSave);
+            }
+
+            return stateSave;
         }
 
         public static void SetGraphicalUiElement(this ElementSave elementSave, GraphicalUiElement toReturn, SystemManagers systemManagers)
