@@ -363,7 +363,7 @@ namespace Gum.Logic
                     item.Name == selectedInstance.Name &&
                     item.ParentContainer == selectedInstance.ParentContainer);
 
-                var shouldAssignParent = isPastingInNewElement || !isSelectedInstancePartOfCopied;
+                var shouldAttachToSelectedInstance = isPastingInNewElement || !isSelectedInstancePartOfCopied;
                 var newParentName = selectedInstance?.Name;
 
 
@@ -411,14 +411,16 @@ namespace Gum.Logic
                                 // this is a parent and it may be attached to a copy, so update the value
                                 var newValue = oldNewNameDictionary[valueAsString];
                                 copiedVariable.Value = newValue;
+                                shouldAttachToSelectedInstance = false;
 
                             }
-                            if(copiedVariable.GetRootName() == "Parent" && shouldAssignParent && selectedInstance == null)
-                            {
-                                // don't assign it because we're not pasting onto a particular instance and
-                                // the copied instance already has a parent.
-                                shouldAssignParent = false;
-                            }
+                            // Not sure why we are doing this. If the old contains the key, then attach to that every time (see above)
+                            //if(copiedVariable.GetRootName() == "Parent" && shouldAttachToSelectedInstance && selectedInstance == null)
+                            //{
+                            //    // don't assign it because we're not pasting onto a particular instance and
+                            //    // the copied instance already has a parent.
+                            //    shouldAttachToSelectedInstance = false;
+                            //}
 
                             // We don't want to copy exposed variables.
                             // If we did, the user would have 2 variables exposed with the same.
@@ -441,7 +443,7 @@ namespace Gum.Logic
                         }
                     }
 
-                    if(shouldAssignParent)
+                    if(shouldAttachToSelectedInstance)
                     {
                         targetState.SetValue($"{newInstance.Name}.Parent", newParentName, "string");
                     }
