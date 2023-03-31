@@ -608,6 +608,10 @@ namespace Gum.Managers
                     {
                         member.PreferredDisplayer = typeof(ChildrenLayoutControl);
                     }
+                    else if(propertyType == typeof(List<string>))
+                    {
+                        member.PreferredDisplayer = typeof(WpfDataUi.Controls.StringListTextBoxDisplay);
+                    }
 
                 }
             }

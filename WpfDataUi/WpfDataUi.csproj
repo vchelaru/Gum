@@ -106,6 +106,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Controls\StringListTextBoxDisplay.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Controls\TextBoxDisplay.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -133,6 +137,9 @@
     </Compile>
     <Compile Include="Controls\SliderDisplay.xaml.cs">
       <DependentUpon>SliderDisplay.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\StringListTextBoxDisplay.xaml.cs">
+      <DependentUpon>StringListTextBoxDisplay.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\TextBoxDisplay.xaml.cs">
       <DependentUpon>TextBoxDisplay.xaml</DependentUpon>

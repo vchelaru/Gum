@@ -10,31 +10,38 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"></RowDefinition>
             <RowDefinition></RowDefinition>
-            <RowDefinition Height="Auto"></RowDefinition>
         </Grid.RowDefinitions>
         <TextBlock x:Name="Label" MinWidth="100" TextWrapping="Wrap"  VerticalAlignment="Center"
-                       Padding="4,4,4,0"
-                       >Property Label:</TextBlock>
-        <ListBox Grid.Row="1" x:Name="ListBox" KeyDown="ListBox_KeyDown">
-            <ListBox.ContextMenu>
-                <ContextMenu>
-                </ContextMenu>
-            </ListBox.ContextMenu>
-        </ListBox>
-        <StackPanel Orientation="Horizontal" Grid.Row="2">
-            <Button Height="24" Width="24" Click="AddButtonClicked">+</Button>
-        </StackPanel>
-        <Grid Grid.Row="3" x:Name="NewEntryListBox" Visibility="Collapsed">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition></ColumnDefinition>
-                <ColumnDefinition Width="Auto"></ColumnDefinition>
-                <ColumnDefinition Width="Auto"></ColumnDefinition>
-            </Grid.ColumnDefinitions>
-            <TextBox x:Name="NewTextBox" KeyDown="NewTextBox_KeyDown">
-                
-            </TextBox>
-            <Button Grid.Column="1" Width="30" Click="OkButton_Click">OK</Button>
-            <Button Grid.Column="2" Width="40" Click="CancelButton_Click">Cancel</Button>
+                        Padding="4,4,4,0"
+                        >Property Label:</TextBlock>
+        <Grid x:Name="ListViewGrid" Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition></RowDefinition>
+                <RowDefinition Height="Auto"></RowDefinition>
+            </Grid.RowDefinitions>
+            <ListBox Grid.Row="0" x:Name="ListBox" KeyDown="ListBox_KeyDown">
+                <ListBox.ContextMenu>
+                    <ContextMenu>
+                    </ContextMenu>
+                </ListBox.ContextMenu>
+            </ListBox>
+            <Grid Grid.Row="1">
+                <StackPanel x:Name="NotEditingEntryStackPanel" HorizontalAlignment="Stretch" Orientation="Horizontal">
+                    <Button Height="24" Width="24" Click="AddButtonClicked">+</Button>
+                </StackPanel>
+            </Grid>
+            <Grid Grid.Row="1" x:Name="NewEntryGrid" Visibility="Collapsed">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition></ColumnDefinition>
+                    <ColumnDefinition Width="Auto"></ColumnDefinition>
+                    <ColumnDefinition Width="Auto"></ColumnDefinition>
+                </Grid.ColumnDefinitions>
+                <TextBox x:Name="NewTextBox" KeyDown="NewTextBox_KeyDown">
+
+                </TextBox>
+                <Button Grid.Column="1" Width="30" Click="OkButton_Click">OK</Button>
+                <Button Grid.Column="2" Width="40" Click="CancelButton_Click">Cancel</Button>
+            </Grid>
         </Grid>
     </Grid>
 </UserControl>

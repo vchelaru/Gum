@@ -53,8 +53,8 @@ namespace WpfDataUi.Controls
 
         public bool SuppressSettingProperty { get; set; }
 
-       static SolidColorBrush DefaultValueBackground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(180, 255, 180));
-       static SolidColorBrush CustomValueBackground = System.Windows.Media.Brushes.White;
+        static SolidColorBrush DefaultValueBackground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(180, 255, 180));
+        static SolidColorBrush CustomValueBackground = System.Windows.Media.Brushes.White;
 
         public void Refresh(bool forceRefreshEvenIfFocused = false)
         {
@@ -123,7 +123,7 @@ namespace WpfDataUi.Controls
 
         private void AddButtonClicked(object sender, RoutedEventArgs e)
         {
-            NewEntryListBox.Visibility = Visibility.Visible;
+            NewEntryGrid.Visibility = Visibility.Visible;
             NewTextBox.Focus();
         }
 
@@ -182,7 +182,7 @@ namespace WpfDataUi.Controls
                 listToAddTo.Add(text);
             }
             NewTextBox.Text = null;
-            NewEntryListBox.Visibility = Visibility.Collapsed;
+            NewEntryGrid.Visibility = Visibility.Collapsed;
             this.TrySetValueOnInstance();
 
             TryDoManualRefresh();
@@ -208,7 +208,7 @@ namespace WpfDataUi.Controls
         private void HandleCancelItem()
         {
             NewTextBox.Text = null;
-            NewEntryListBox.Visibility = Visibility.Collapsed;
+            NewEntryGrid.Visibility = Visibility.Collapsed;
         }
 
         private void NewTextBox_KeyDown(object sender, KeyEventArgs e)
@@ -234,5 +234,6 @@ namespace WpfDataUi.Controls
 
             }
         }
+
     }
 }

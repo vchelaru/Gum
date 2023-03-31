@@ -495,7 +495,14 @@ namespace Gum.Managers
 
         private void AddVariableReferenceList(StateSave stateSave)
         {
-            stateSave.VariableLists.Add(new VariableListSave<string> { Type = "string", Value = new List<string>(), Category = "References", Name = "VariableReferences" });
+            var variableListSave = new VariableListSave<string>
+            {
+                Type = "string",
+                Value = new List<string>(),
+                Category = "References",
+                Name = "VariableReferences"
+            };
+            stateSave.VariableLists.Add(variableListSave);
         }
 
         public void RefreshStateVariablesThroughPlugins()
