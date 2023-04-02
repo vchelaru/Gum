@@ -14,7 +14,7 @@ Any component can serve as a centralized location for styling, but we use the na
 
 The Styles component can contain as many objects as are needed to style your project. Additional objects can be added to help indicate how things are used visually. For example, we include a Text object to indicate the red color is the **Primary Color**.
 
-![](../../.gitbook/assets/StylesComponent.png)
+![](StylesComponent.png)
 
 The color value can be referenced by any other object including objects in different screens or components.
 
@@ -26,12 +26,12 @@ To add a varaible reference:
 
 For example, the MainMenu screen contains a Background ColoredRectangle which references the PrimaryColor values.
 
-![](../../.gitbook/assets/BackgroundWithStyle.png)
+![](BackgroundWithStyle.png)
 
 The types of the objects that contain the **Variable References** or which are being referenced do not matter. For example, a Text object could have its color values depend on the color values defined by a ColoredRectangle in the Styles component.
 
-![](../../.gitbook/assets/TextWithStyle.png)
+![](TextWithStyle.png)
 
 Once Variable References are set, the referenced instances (instances in Styles) can be changed and the changes will immediately propagate throughout the entire project.
 
-![](../../.gitbook/assets/StyleUpdate.gif)
+![](StyleUpdate.gif)

@@ -10,7 +10,7 @@ The **Use Custom Font** variable controls whether a Text object uses a premade .
 
 If **Use Custom Font** is set to true, then Gum displays the **Custom Font File** variable, which can point to a .fnt file created by Bitmap Font Generator.
 
-![](../../.gitbook/assets/UseCustomFontGum.png)
+![](<../../.gitbook/assets/UseCustomFontGum (1).png>)
 
 If **Use Custom Font** is set to true, then the **Font**, **Font Size**, and **Outline Thickness** variables can no longer be set - as they are part of the font file itself.
 
@@ -22,7 +22,7 @@ To set a custom font
 2. Navigate to the location of the desired .fnt file
 3. Select the file and click **Open**
 
-![](<../../.gitbook/assets/CustomFontInGum (1).png>)
+![](../../.gitbook/assets/CustomFontInGum.png)
 
 Custom font files are .fnt files created by BitmapFontGenerator. Gum automatically creates .fnt files whenever a font value changes when UseCustomFonts is unchecked.&#x20;
 
@@ -43,7 +43,7 @@ To create your own font file:
 9. Change the **Textures** option to **png – Portable Network Graphics**
 10. Press **OK** to apply the changes
 
-    ![](<../../.gitbook/assets/image (3).png>)
+    ![](<../../.gitbook/assets/image (3) (1).png>)
 
 You can verify that the settings will produce a proper PNG by selecting **Options** -> **Visualize**. If you see “No Output!” then you need to select characters to export. See the above step for more information.
 

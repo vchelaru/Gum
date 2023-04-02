@@ -11,8 +11,8 @@ To set a parent/child relationship:
 1. Select the child
 2. Change the Parent property to the desired parent:
 
-![](<../../.gitbook/assets/GumParentChild (1).gif>)
+![](../../.gitbook/assets/GumParentChild.gif)
 
 The Parent can also be changed through a dropdown:
 
-![](../../.gitbook/assets/ParentDropdownGum.png)
+![](<../../.gitbook/assets/ParentDropdownGum (1).png>)

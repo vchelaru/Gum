@@ -15,7 +15,7 @@ First we'll create a component which will be animated. To do this:
 5. Select the "Alignment" tab and click the middle button to have the TextInstance fill the TextComponent
 6. Select the Variables tab and change the VerticalAlignment and HorizontalAlignment to Center
 
-![](../.gitbook/assets/CreatingAnimationCreateComponent.gif)
+![](<../.gitbook/assets/CreatingAnimationCreateComponent (1).gif>)
 
 ## Creating the States
 
@@ -31,7 +31,7 @@ Now that we have a component we'll add the states needed for animation. We'll ad
 8. Select "Add State"
 9. Select "Shown"
 
-![](<../.gitbook/assets/AddHideShowStates (1).gif>)
+![](../.gitbook/assets/AddHideShowStates.gif)
 
 ## Setting values in the states
 
@@ -43,7 +43,7 @@ Now that we have the states defined we can set values for the states. In this ca
 4. Select the "Shown" state
 5. Set the Font Scale to 1. This effectively makes the Text regular size
 
-![](<../.gitbook/assets/SetFontScale (1).gif>)
+![](../.gitbook/assets/SetFontScale.gif)
 
 ## Creating the Show animation
 
@@ -58,11 +58,11 @@ The two states we created above will be used as the keyframes for our animation.
 7. Click "Add State" again
 8. Select "Shown" and click OK
 
-![](<../.gitbook/assets/AddShowAnimation (1).gif>)
+![](../.gitbook/assets/AddShowAnimation.gif)
 
 The animation can now be played or previewed:
 
-![](<../.gitbook/assets/PreviewAnimation1 (1).gif>)
+![](../.gitbook/assets/PreviewAnimation1.gif)
 
 ## Adjusting Interpolation Type
 
@@ -73,4 +73,4 @@ The "Interpolation Type" value sets how one keyframe blends to another. By defau
 
 Playing the animation will reflect these changes.
 
-![](../.gitbook/assets/ElasticAnimation.gif)
+![](<../.gitbook/assets/ElasticAnimation (1).gif>)
