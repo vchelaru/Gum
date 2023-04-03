@@ -10,24 +10,24 @@ The following images show the color values as applied to a multi-color sprite.
 
 Red: 255 Green: 255 Blue: 255
 
-![](../../.gitbook/assets/WhiteColorGum.png)
+![](<../../.gitbook/assets/WhiteColorGum (1).png>)
 
 Red: 255 Green: 0 Blue: 0
 
-![](../../.gitbook/assets/RedColorGum.png)
+![](<../../.gitbook/assets/RedColorGum (1).png>)
 
 Red: 0 Green: 255 Blue: 0
 
-![](../../.gitbook/assets/GreenColorGum.png)
+![](<../../.gitbook/assets/GreenColorGum (1).png>)
 
 Red: 0 Green: 0 Blue: 255
 
-![](../../.gitbook/assets/BlueColorGum.png)
+![](<../../.gitbook/assets/BlueColorGum (1).png>)
 
 Red: 128 Green: 128 Blue: 128
 
-![](../../.gitbook/assets/DarkColorGum.png)
+![](<../../.gitbook/assets/DarkColorGum (1).png>)
 
 Red: 0 Green: 0 Blue: 0
 
-![](../../.gitbook/assets/BlackColorGum.png)
+![](<../../.gitbook/assets/BlackColorGum (1).png>)

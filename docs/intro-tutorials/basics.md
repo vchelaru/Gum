@@ -30,7 +30,7 @@ To create a screen:
 
 1.  Right-click on the Screens tree item and select **Add Screen**
 
-    <figure><img src="../.gitbook/assets/image (9).png" alt=""><figcaption></figcaption></figure>
+    <figure><img src="../.gitbook/assets/image (14).png" alt=""><figcaption></figcaption></figure>
 2. Enter the name of the new screen - such as **MainMenu**
 3.  The newly-created screen will be created and selected
 

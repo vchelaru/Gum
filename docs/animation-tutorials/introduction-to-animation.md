@@ -25,4 +25,4 @@ Animations are stored separate from the screen or component on the file system. 
 
 Once an animation has been made it can be played back in editor. The following shows how an animation is played back, both in real time and also by dragging the slider.
 
-![](<../.gitbook/assets/PlayAnimationsGum (1).gif>)
+![](../.gitbook/assets/PlayAnimationsGum.gif)

@@ -15,7 +15,7 @@ Therefore, all variables values that define the InstanceSave are stored in state
 
 In this pic the Screen1 ScreenSave has 3 InstanceSaves: 1. TextInstance 1. ColoredRectangleInstance 1. ColoredRectangleInstance1
 
-![](../.gitbook/assets/GumSamplePic1.png)
+![](<../.gitbook/assets/GumSamplePic1 (1).png>)
 
 ## Simple variable access
 

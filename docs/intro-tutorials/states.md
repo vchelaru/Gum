@@ -8,6 +8,10 @@ States allow you to set multiple variables at one time. Examples of states might
 * A game logo in Large and Small modes
 * A game where multiple options can be selected
 
+## Categorized vs Uncategorized States
+
+Note that this section shows how to create an uncategorized state. This functionality exists for historical purposes and for simplicity when learning states. Full projects should categorize all states as this makes variable assignment behavior more predictable and easier to maintain.
+
 ## Prerequisites
 
 This tutorial builds upon the previous tutorial where a Button component was created. To follow along you will need to have a Button component created as defined in the earlier tutorials.
@@ -20,13 +24,13 @@ First we'll define two new states. All components and screens have a "Default" s
 2. Enter the name "Highlighted"
 3. Click OK
 
-![](../.gitbook/assets/GumEnterStateName.PNG)
+![](<../.gitbook/assets/GumEnterStateName (1).PNG>)
 
-![](../.gitbook/assets/GumEditAddState.png)
+![](<../.gitbook/assets/GumEditAddState (1).png>)
 
 The Button component will now have a new state called Highlighted:
 
-![](../.gitbook/assets/GumState.png)
+![](<../.gitbook/assets/GumState (1).png>)
 
 ## Setting variables in states
 
@@ -40,7 +44,7 @@ For this example, we will make the button become a lighter blue when highlighted
 
 Notice that the Green and Red values are rendered in black rather than green - indicating that they are values that are explicitly set in the Highlight state.
 
-![](<../.gitbook/assets/GumStateValuesSet (1).png>)
+![](../.gitbook/assets/GumStateValuesSet.png)
 
 ## Switching between states
 
