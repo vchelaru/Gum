@@ -39,7 +39,7 @@ namespace Gum.Logic
         /// The instances which were selected along with all children of the selected instances.
         /// </summary>
         public List<InstanceSave> CopiedInstancesRecursive = new List<InstanceSave>();
-        public StateSave CopiedState = new StateSave();
+        public List<StateSave> CopiedStates = new List<StateSave>();
         public ElementSave CopiedElement = null;
     }
 
@@ -77,8 +77,7 @@ namespace Gum.Logic
             mCopyType = copyType;
             CopiedData.CopiedElement = null;
             CopiedData.CopiedInstancesRecursive.Clear();
-            CopiedData.CopiedState.Variables.Clear();
-            CopiedData.CopiedState.VariableLists.Clear();
+            CopiedData.CopiedStates.Clear();
 
             if (copyType == CopyType.InstanceOrElement)
             {
@@ -101,7 +100,8 @@ namespace Gum.Logic
         {
             if (SelectedState.Self.SelectedStateSave != null)
             {
-                CopiedData.CopiedState = SelectedState.Self.SelectedStateSave.Clone();
+                CopiedData.CopiedStates.Clear();
+                CopiedData.CopiedStates.Add(SelectedState.Self.SelectedStateSave.Clone());
             }
         }
 
@@ -111,7 +111,23 @@ namespace Gum.Logic
             {
                 var element = SelectedState.Self.SelectedElement;
 
-                RecursiveVariableFinder rfv = new RecursiveVariableFinder(SelectedState.Self.SelectedStateSave);
+                var state = SelectedState.Self.SelectedStateSave;
+
+                // a state may not be selected if the user selected a category.
+                if(state == null)
+                {
+                    state = element.DefaultState;
+                }
+                CopiedData.CopiedStates.Clear();
+                CopiedData.CopiedStates.Add(state.Clone());
+
+                if(SelectedState.Self.SelectedStateCategorySave != null && SelectedState.Self.SelectedStateSave != null)
+                {
+                    // it's categorized, so add the default:
+                    CopiedData.CopiedStates.Add(element.DefaultState.Clone());
+                }
+
+                RecursiveVariableFinder rfv = new RecursiveVariableFinder(state);
 
                 List<InstanceSave> selected = new List<InstanceSave>();
                 // When copying we want to grab all instances in the order that they are in their container.
@@ -131,24 +147,27 @@ namespace Gum.Logic
                             .Select(item => item.Clone())
                             .ToList();
 
-                CopiedData.CopiedState = SelectedState.Self.SelectedStateSave?.Clone() ?? SelectedState.Self.SelectedElement.DefaultState.Clone();
 
                 // Clear out any variables that don't pertain to the selected instance:
-                for (int i = CopiedData.CopiedState.Variables.Count - 1; i > -1; i--)
+                foreach(var copiedState in CopiedData.CopiedStates)
                 {
-                    if (CopiedData.CopiedInstancesRecursive.Any(item => item.Name == CopiedData.CopiedState.Variables[i].SourceObject) == false)
+                    for (int i = copiedState.Variables.Count - 1; i > -1; i--)
                     {
-                        CopiedData.CopiedState.Variables.RemoveAt(i);
+                        if (CopiedData.CopiedInstancesRecursive.Any(item => item.Name == copiedState.Variables[i].SourceObject) == false)
+                        {
+                            copiedState.Variables.RemoveAt(i);
+                        }
                     }
-                }
 
-                // And also any VariableLists:
-                for (int i = CopiedData.CopiedState.VariableLists.Count - 1; i > -1; i--)
-                {
-                    if (CopiedData.CopiedInstancesRecursive.Any(item => item.Name == CopiedData.CopiedState.VariableLists[i].SourceObject) == false)
+                    // And also any VariableLists:
+                    for (int i = copiedState.VariableLists.Count - 1; i > -1; i--)
                     {
-                        CopiedData.CopiedState.VariableLists.RemoveAt(i);
+                        if (CopiedData.CopiedInstancesRecursive.Any(item => item.Name == copiedState.VariableLists[i].SourceObject) == false)
+                        {
+                            copiedState.VariableLists.RemoveAt(i);
+                        }
                     }
+
                 }
             }
         }
@@ -220,7 +239,7 @@ namespace Gum.Logic
                         PasteCopiedInstanceSaves(topOrRecursive);
                     }
                 }
-                else if (mCopyType == CopyType.State && CopiedData.CopiedState != null)
+                else if (mCopyType == CopyType.State && CopiedData.CopiedStates?.Count > 0)
                 {
                     PastedCopiedState();
                 }
@@ -233,11 +252,11 @@ namespace Gum.Logic
         {
             if(topOrRecursive == TopOrRecursive.Recursive)
             {
-                PasteInstanceSaves(CopiedData.CopiedInstancesRecursive, CopiedData.CopiedState, SelectedState.Self.SelectedElement, SelectedState.Self.SelectedInstance);
+                PasteInstanceSaves(CopiedData.CopiedInstancesRecursive, CopiedData.CopiedStates, SelectedState.Self.SelectedElement, SelectedState.Self.SelectedInstance);
             }
             else
             {
-                PasteInstanceSaves(CopiedData.CopiedInstancesSelected, CopiedData.CopiedState, SelectedState.Self.SelectedElement, SelectedState.Self.SelectedInstance);
+                PasteInstanceSaves(CopiedData.CopiedInstancesSelected, CopiedData.CopiedStates, SelectedState.Self.SelectedElement, SelectedState.Self.SelectedInstance);
             }
         }
 
@@ -253,14 +272,14 @@ namespace Gum.Logic
             }
             //////////////////End Early Out////////////////
 
-            StateSave newStateSave = CopiedData.CopiedState.Clone();
+            StateSave newStateSave = CopiedData.CopiedStates.First().Clone();
 
             newStateSave.Variables.RemoveAll(item => item.CanOnlyBeSetInDefaultState);
 
 
             newStateSave.ParentContainer = container;
 
-            string name = CopiedData.CopiedState.Name + "Copy";
+            string name = CopiedData.CopiedStates.First().Name + "Copy";
 
 
             if(targetCategory != null)
@@ -288,7 +307,7 @@ namespace Gum.Logic
         }
 
 
-        public static void PasteInstanceSaves(List<InstanceSave> instancesToCopy, StateSave copiedState, ElementSave targetElement, InstanceSave selectedInstance)
+        public static void PasteInstanceSaves(List<InstanceSave> instancesToCopy, List<StateSave> copiedStates, ElementSave targetElement, InstanceSave selectedInstance)
         {
             if(LastPastedInstances.Contains(selectedInstance))
             {
@@ -371,81 +390,89 @@ namespace Gum.Logic
 
                 if (targetElement != null)
                 { 
-                    StateSave stateSave = copiedState;
-                    StateSave targetState;
-                    // We now have to copy over the states
-                    if (targetElement != sourceElement)
+                    foreach(var stateSave in copiedStates)
                     {
-                        if (sourceElement.States.Count != 1)
+
+                        StateSave targetState;
+                        // We now have to copy over the states
+                        if (targetElement != sourceElement)
                         {
-                            MessageBox.Show("Only the default state variables will be copied since the source and target elements differ.");
-                        }
-
-                        targetState = targetElement.DefaultState;
-                    }
-                    else
-                    {
-                        targetState = SelectedState.Self.SelectedStateSave ?? SelectedState.Self.SelectedElement.DefaultState;
-                    }
-
-                    // why reverse loop?
-                    for (int i = stateSave.Variables.Count - 1; i > -1; i--)
-                    {
-                        // We may have copied over a group of instances.  If so
-                        // the copied state may have variables for multiple instances.
-                        // We only want to apply the variables that work for the selected
-                        // object.
-                        VariableSave sourceVariable = stateSave.Variables[i];
-                        if (sourceVariable.SourceObject == sourceInstance.Name)
-                        {
-
-                            VariableSave copiedVariable = sourceVariable.Clone();
-                            copiedVariable.Name = newInstance.Name + "." + copiedVariable.GetRootName();
-
-                            var valueAsString = copiedVariable.Value as string;
-
-                            if (copiedVariable.GetRootName() == "Parent" && 
-                                string.IsNullOrWhiteSpace(valueAsString) == false &&
-                                oldNewNameDictionary.ContainsKey(valueAsString))
+                            if (sourceElement.States.Count != 1)
                             {
-                                // this is a parent and it may be attached to a copy, so update the value
-                                var newValue = oldNewNameDictionary[valueAsString];
-                                copiedVariable.Value = newValue;
-                                shouldAttachToSelectedInstance = false;
-
+                                MessageBox.Show("Only the default state variables will be copied since the source and target elements differ.");
                             }
-                            // Not sure why we are doing this. If the old contains the key, then attach to that every time (see above)
-                            //if(copiedVariable.GetRootName() == "Parent" && shouldAttachToSelectedInstance && selectedInstance == null)
-                            //{
-                            //    // don't assign it because we're not pasting onto a particular instance and
-                            //    // the copied instance already has a parent.
-                            //    shouldAttachToSelectedInstance = false;
-                            //}
 
-                            // We don't want to copy exposed variables.
-                            // If we did, the user would have 2 variables exposed with the same.
-                            copiedVariable.ExposedAsName = null;
-
-                            targetState.Variables.Add(copiedVariable);
+                            targetState = targetElement.DefaultState;
                         }
-                    }
-                    // Copy over the VariableLists too
-                    for (int i = stateSave.VariableLists.Count - 1; i > -1; i--)
-                    {
-
-                        VariableListSave sourceVariableList = stateSave.VariableLists[i];
-                        if (sourceVariableList.SourceObject == sourceInstance.Name)
+                        else
                         {
-                            VariableListSave copiedList = sourceVariableList.Clone();
-                            copiedList.Name = newInstance.Name + "." + copiedList.GetRootName();
+                            var selectedElement = SelectedState.Self.SelectedElement;
 
-                            targetState.VariableLists.Add(copiedList);
+                            targetState = selectedElement.AllStates.FirstOrDefault(item => item.Name == stateSave.Name) ?? 
+                                SelectedState.Self.SelectedElement.DefaultState;
+                                //SelectedState.Self.SelectedStateSave ?? SelectedState.Self.SelectedElement.DefaultState;
+
                         }
-                    }
 
-                    if(shouldAttachToSelectedInstance)
-                    {
-                        targetState.SetValue($"{newInstance.Name}.Parent", newParentName, "string");
+                        // why reverse loop?
+                        for (int i = stateSave.Variables.Count - 1; i > -1; i--)
+                        {
+                            // We may have copied over a group of instances.  If so
+                            // the copied state may have variables for multiple instances.
+                            // We only want to apply the variables that work for the selected
+                            // object.
+                            VariableSave sourceVariable = stateSave.Variables[i];
+                            if (sourceVariable.SourceObject == sourceInstance.Name)
+                            {
+
+                                VariableSave copiedVariable = sourceVariable.Clone();
+                                copiedVariable.Name = newInstance.Name + "." + copiedVariable.GetRootName();
+
+                                var valueAsString = copiedVariable.Value as string;
+
+                                if (copiedVariable.GetRootName() == "Parent" && 
+                                    string.IsNullOrWhiteSpace(valueAsString) == false &&
+                                    oldNewNameDictionary.ContainsKey(valueAsString))
+                                {
+                                    // this is a parent and it may be attached to a copy, so update the value
+                                    var newValue = oldNewNameDictionary[valueAsString];
+                                    copiedVariable.Value = newValue;
+                                    shouldAttachToSelectedInstance = false;
+
+                                }
+                                // Not sure why we are doing this. If the old contains the key, then attach to that every time (see above)
+                                //if(copiedVariable.GetRootName() == "Parent" && shouldAttachToSelectedInstance && selectedInstance == null)
+                                //{
+                                //    // don't assign it because we're not pasting onto a particular instance and
+                                //    // the copied instance already has a parent.
+                                //    shouldAttachToSelectedInstance = false;
+                                //}
+
+                                // We don't want to copy exposed variables.
+                                // If we did, the user would have 2 variables exposed with the same.
+                                copiedVariable.ExposedAsName = null;
+
+                                targetState.Variables.Add(copiedVariable);
+                            }
+                        }
+                        // Copy over the VariableLists too
+                        for (int i = stateSave.VariableLists.Count - 1; i > -1; i--)
+                        {
+
+                            VariableListSave sourceVariableList = stateSave.VariableLists[i];
+                            if (sourceVariableList.SourceObject == sourceInstance.Name)
+                            {
+                                VariableListSave copiedList = sourceVariableList.Clone();
+                                copiedList.Name = newInstance.Name + "." + copiedList.GetRootName();
+
+                                targetState.VariableLists.Add(copiedList);
+                            }
+                        }
+
+                        if(shouldAttachToSelectedInstance)
+                        {
+                            targetState.SetValue($"{newInstance.Name}.Parent", newParentName, "string");
+                        }
                     }
 
                     // This used to be done here when we paste, but now we're

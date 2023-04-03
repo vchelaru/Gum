@@ -424,7 +424,7 @@ namespace Gum.Managers
 
             CopyPasteLogic.PasteInstanceSaves(
                 instances.ToList(),
-                derivedElement.DefaultState.Clone(),
+                new List<DataTypes.Variables.StateSave> { derivedElement.DefaultState.Clone() },
                 baseElement, 
                 null);
         }
