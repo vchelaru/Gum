@@ -127,9 +127,26 @@ namespace WpfDataUi.Controls
             }
         }
 
+
+        public bool HasUserChangedAnything { get; set; }
+
         private void TextBox_LostFocus(object sender, RoutedEventArgs e)
         {
-            this.TrySetValueOnInstance();
+            if (HasUserChangedAnything)
+            {
+                this.TrySetValueOnInstance();
+            }
+        }
+
+        private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            HasUserChangedAnything = true;
+        }
+
+        private void TextBox_GotFocus(object sender, RoutedEventArgs e)
+        {
+            
+            HasUserChangedAnything = false;
         }
     }
 }

@@ -18,7 +18,9 @@
                      x:Name="TextBox" 
                      VerticalContentAlignment="Top"
                      AcceptsReturn="True"
+                 GotFocus="TextBox_GotFocus"
                      LostFocus="TextBox_LostFocus"
+                 TextChanged="TextBox_TextChanged"
                      TextWrapping="NoWrap"
                      VerticalScrollBarVisibility="Auto"
                      MinWidth="60">

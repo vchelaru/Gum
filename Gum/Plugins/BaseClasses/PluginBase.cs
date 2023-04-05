@@ -295,8 +295,14 @@ namespace Gum.Plugins.BaseClasses
         public void CallVariableDelete(ElementSave elementSave, string variableName) =>
             VariableDelete?.Invoke(elementSave, variableName);
 
-        public void CallVariableSet(ElementSave parentElement, InstanceSave instance, string changedMember, object oldValue) =>
-            VariableSet?.Invoke(parentElement, instance, changedMember, oldValue);
+        public void CallVariableSet(ElementSave parentElement, InstanceSave instance, string changedMember, object oldValue)
+        {
+            if(VariableSet != null)
+            {
+                VariableSet(parentElement, instance, changedMember, oldValue);
+            }
+
+        }
 
         public void CallAddAndRemoveVariablesForType(string type, StateSave standardDefaultStateSave) =>
             AddAndRemoveVariablesForType?.Invoke(type, standardDefaultStateSave);
