@@ -1939,7 +1939,41 @@ namespace Gum.Wireframe
 
             if (asGue != null)
             {
-                return asGue.GetIfDimensionsDependOnChildren() || asGue.ChildrenLayout != Gum.Managers.ChildrenLayout.Regular;
+                var shouldUpdateParent =  
+                    // parent needs to be resized based on this position or size
+                    asGue.GetIfDimensionsDependOnChildren() || 
+                    // parent stacks its children, so siblings need to adjust their position based on this
+                    asGue.ChildrenLayout != Gum.Managers.ChildrenLayout.Regular;
+
+                if(!shouldUpdateParent)
+                {
+                    // if any siblings are ratio-based, then we need to
+                    if (this.Parent == null)
+                    {
+                        for (int i = 0; i < this.ElementGueContainingThis.mWhatThisContains.Count; i++)
+                        {
+                            var sibling = this.ElementGueContainingThis.mWhatThisContains[i];
+                            if(sibling.WidthUnits == DimensionUnitType.Ratio || sibling.HeightUnits == DimensionUnitType.Ratio)
+                            {
+                                return true;
+                            }
+                        }
+                    }
+                    else if (this.Parent is GraphicalUiElement)
+                    {
+                        var siblingsAsIpsos = ((GraphicalUiElement)Parent).Children;
+                        for (int i = 0; i < siblingsAsIpsos.Count; i++)
+                        {
+                            var siblingAsGraphicalUiElement = siblingsAsIpsos[i] as GraphicalUiElement;
+                            if(siblingAsGraphicalUiElement.WidthUnits == DimensionUnitType.Ratio || siblingAsGraphicalUiElement.HeightUnits == DimensionUnitType.Ratio)
+                            {
+                                return true;
+                            }
+                        }
+                    }
+
+                }
+                return shouldUpdateParent;
             }
             else
             {
