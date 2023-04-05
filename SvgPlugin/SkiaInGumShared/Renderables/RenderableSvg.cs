@@ -103,7 +103,7 @@ namespace SkiaGum.Renderables
                 try
                 {
                     var sourceFileAbsolute =
-                        FileManager.RemoveDotDotSlash(Gum.ToolStates.ProjectState.Self.ProjectDirectory + sourceFile);
+                        FileManager.MakeAbsolute(sourceFile);
                     if (System.IO.File.Exists(sourceFileAbsolute))
                     {
                         using (var fileStream = System.IO.File.OpenRead(sourceFileAbsolute))
