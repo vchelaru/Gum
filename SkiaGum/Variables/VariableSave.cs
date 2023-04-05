@@ -17,6 +17,7 @@ namespace Gum.DataTypes.Variables
         public string Name;
     }
 
+    [System.Diagnostics.DebuggerDisplay("{Name} = {Value}")]
     public class VariableSave
     {
         object mValue;

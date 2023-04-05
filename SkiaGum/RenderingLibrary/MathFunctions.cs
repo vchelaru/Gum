@@ -36,6 +36,12 @@ namespace RenderingLibrary.Math
 
         }
 
+        public static int RoundToInt(decimal decimalToRound)
+        {
+            // see the other RoundToInt for information on why we add .5
+            return (int)(System.Math.Round(decimalToRound) + (System.Math.Sign(decimalToRound) * .5m));
+        }
+
         /// <summary>
         /// Rotates a Point around another Point by a given number of radians.
         /// </summary>

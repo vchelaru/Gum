@@ -16,6 +16,8 @@ namespace SkiaGum.GueDeriving
     {
         public object OldBindingContext { get; set; }
     }
+
+    [DebuggerDisplay("{DebugDetails}")]
     public class BindableGraphicalUiElement : GraphicalUiElement
     {
         #region VmToUiProperty struct
@@ -580,5 +582,6 @@ namespace SkiaGum.GueDeriving
 
             }
         }
+        public string DebugDetails => $"{Name} {GetType().Name}";
     }
 }

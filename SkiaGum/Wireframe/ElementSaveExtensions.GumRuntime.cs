@@ -94,7 +94,7 @@ namespace GumRuntime
                 {
                     if (graphicalUiElement.UseCustomFont)
                     {
-                        var fontName = ToolsUtilities.FileManager.Standardize(graphicalUiElement.CustomFontFile, preserveCase:true, makeAbsolute:true);
+                        var fontName = ToolsUtilities.FileManager.Standardize(graphicalUiElement.CustomFontFile, preserveCase: true, makeAbsolute: true);
 
                         throw new System.IO.FileNotFoundException($"Missing:{fontName}");
                     }
@@ -110,7 +110,7 @@ namespace GumRuntime
                                 graphicalUiElement.IsItalic,
                                 graphicalUiElement.IsBold);
 
-                            var standardized = ToolsUtilities.FileManager.Standardize(fontName, preserveCase:true, makeAbsolute:true);
+                            var standardized = ToolsUtilities.FileManager.Standardize(fontName, preserveCase: true, makeAbsolute: true);
 
                             throw new System.IO.FileNotFoundException($"Missing:{standardized}");
                         }
@@ -174,7 +174,7 @@ namespace GumRuntime
             bool handled = InstanceSaveExtensionMethods.TryHandleAsBaseType(elementSave.Name, systemManagers, out containedObject);
 
 #if GUM
-            if(!handled)
+            if (!handled)
             {
                 string type = elementSave.BaseType;
 
@@ -248,6 +248,34 @@ namespace GumRuntime
             ApplyVariableReferences(graphicalElement, stateSave);
         }
 
+        public static void ApplyVariableReferences(this ElementSave element, StateSave stateSave)
+        {
+            foreach (var variableList in stateSave.VariableLists)
+            {
+                if (variableList.GetRootName() == "VariableReferences" && variableList.ValueAsIList.Count > 0)
+                {
+                    if (variableList.SourceObject == null)
+                    {
+                        foreach (string referenceString in variableList.ValueAsIList)
+                        {
+                            ApplyVariableReferencesOnSpecificOwner((InstanceSave)null, referenceString, stateSave);
+                        }
+                    }
+                    else
+                    {
+                        InstanceSave instance = element.GetInstance(variableList.SourceObject);
+                        if(instance != null)
+                        {
+                            foreach(string referenceString in variableList.ValueAsIList)
+                            {
+                                ApplyVariableReferencesOnSpecificOwner(instance, referenceString, stateSave);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         public static void ApplyVariableReferences(this GraphicalUiElement graphicalElement, StateSave stateSave)
         {
             foreach (var variableList in stateSave.VariableLists)
@@ -258,7 +286,7 @@ namespace GumRuntime
                     {
                         foreach (string referenceString in variableList.ValueAsIList)
                         {
-                            ApplyVariableReference(graphicalElement, referenceString, stateSave);
+                            ApplyVariableReferencesOnSpecificOwner(graphicalElement, referenceString, stateSave);
                         }
                     }
                     else
@@ -271,6 +299,8 @@ namespace GumRuntime
                         }
                         else
                         {
+                            // Give preferential treatment to the children of graphicalElement. If none are found, then go to the managers
+                            // 
                             instance = graphicalElement.GetGraphicalUiElementByName(variableList.SourceObject);
                         }
 
@@ -278,7 +308,7 @@ namespace GumRuntime
                         {
                             foreach (string referenceString in variableList.ValueAsIList)
                             {
-                                ApplyVariableReference(instance, referenceString, stateSave);
+                                ApplyVariableReferencesOnSpecificOwner(instance, referenceString, stateSave);
                             }
                         }
                     }
@@ -287,24 +317,71 @@ namespace GumRuntime
         }
 
         static char[] equalsArray = new char[] { '=' };
-        private static void ApplyVariableReference(GraphicalUiElement referenceOwner, string referenceString, StateSave stateSave)
+        public static void ApplyVariableReferencesOnSpecificOwner(GraphicalUiElement referenceOwner, string referenceString, StateSave stateSave)
         {
             var split = referenceString
                 .Split(equalsArray, StringSplitOptions.RemoveEmptyEntries)
                 .Select(item => item.Trim()).ToArray();
-            var left = split[0];
-            var right = split[1];
-            GetRightSideAndState(referenceOwner.Tag as InstanceSave, ref right, ref stateSave);
+            object value = null;
+            string left = "";
 
-            var recursiveVariableFinder = new RecursiveVariableFinder(stateSave);
+            if(split.Length > 1)
+            {
+                left = split[0];
+                var right = split[1];
 
-            var value = recursiveVariableFinder.GetValue(right);
+                var ownerOfRightSideVariable = stateSave;
+
+                GetRightSideAndState(referenceOwner.Tag as InstanceSave, ref right, ref ownerOfRightSideVariable);
+
+                var recursiveVariableFinder = new RecursiveVariableFinder(ownerOfRightSideVariable);
+
+                value = recursiveVariableFinder.GetValue(right);
+            }
+
 
             if (value != null)
             {
                 referenceOwner.SetProperty(left, value);
             }
         }
+
+        private static void ApplyVariableReferencesOnSpecificOwner(InstanceSave instance, string referenceString, StateSave stateSave)
+        {
+            var split = referenceString
+                .Split(equalsArray, StringSplitOptions.RemoveEmptyEntries)
+                .Select(item => item.Trim()).ToArray();
+
+            if(split.Length != 2)
+            {
+                return;
+            }
+
+            var left = split[0];
+            var right = split[1];
+
+            var ownerOfRightSideVariable = stateSave;
+
+            GetRightSideAndState(instance, ref right, ref ownerOfRightSideVariable);
+
+            var recursiveVariableFinder = new RecursiveVariableFinder(ownerOfRightSideVariable);
+
+            var value = recursiveVariableFinder.GetValue(right);
+
+            if (value != null)
+            {
+                if(instance == null)
+                {
+                    stateSave.SetValue(left, value, instance);
+                }
+                else
+                {
+                    stateSave.SetValue($"{instance.Name}.{left}", value, instance);
+                }
+            }
+        }
+
+
 
         private static void GetRightSideAndState(InstanceSave instanceSave, ref string right, ref StateSave stateSave)
         {
@@ -321,18 +398,22 @@ namespace GumRuntime
                 {
                     var stripped = elementNameToFind.Substring("Components.".Length);
 
-                    var component = ObjectFinder.Self.GetComponent(stripped);
+                    var element = ObjectFinder.Self.GetComponent(stripped);
 
-                    stateSave = component.DefaultState;
-
-                    right = right.Substring(firstDot + 1);
-
-                    if (right.Contains("."))
+                    if(element != null)
                     {
-                        var dotAfterInstance = right.IndexOf(".");
-                        var instanceName = right.Substring(0, dotAfterInstance);
-                        var instance = component.GetInstance(instanceName);
-                        GetRightSideAndState(instance, ref right, ref stateSave);
+                        stateSave = GetRightSide(ref right, firstDot, element);
+                    }
+                }
+                else if(elementNameToFind.StartsWith("Screens."))
+                {
+                    var stripped = elementNameToFind.Substring("Screens.".Length);
+
+                    var element = ObjectFinder.Self.GetScreen(stripped);
+
+                    if(element != null)
+                    { 
+                        stateSave = GetRightSide(ref right, firstDot, element);
                     }
                 }
             }
@@ -345,6 +426,22 @@ namespace GumRuntime
                 }
             }
 
+        }
+
+        private static StateSave GetRightSide(ref string right, int firstDot, ElementSave element)
+        {
+            StateSave stateSave = element.DefaultState;
+            right = right.Substring(firstDot + 1);
+
+            if (right.Contains("."))
+            {
+                var dotAfterInstance = right.IndexOf(".");
+                var instanceName = right.Substring(0, dotAfterInstance);
+                var instance = element.GetInstance(instanceName);
+                GetRightSideAndState(instance, ref right, ref stateSave);
+            }
+
+            return stateSave;
         }
 
         public static void SetGraphicalUiElement(this ElementSave elementSave, GraphicalUiElement toReturn, SystemManagers systemManagers)
