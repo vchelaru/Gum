@@ -1844,7 +1844,11 @@ namespace CodeOutputPlugin.Manager
                     : "ComponentSave";
                 if(instanceApi == VisualApi.Gum && context.CodeOutputProjectSettings.GenerateGumDataTypes)
                 {
+                    stringBuilder.AppendLine(context.Tabs + $"if({screenOrComponent}?.DefaultState != null);");
+                    context.TabCount++;
                     stringBuilder.AppendLine(context.Tabs + $"GumRuntime.ElementSaveExtensions.ApplyVariableReferences({instance.Name}, {screenOrComponent}.DefaultState);");
+                    context.TabCount--;
+
                 }
 
                 stringBuilder.AppendLine();
