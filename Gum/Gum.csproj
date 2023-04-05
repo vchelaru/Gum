@@ -762,8 +762,8 @@
     <PackageReference Include="SkiaSharp.Skottie">
       <Version>2.88.2</Version>
     </PackageReference>
-    <PackageReference Include="SkiaSharp.Svg">
-      <Version>1.60.0</Version>
+    <PackageReference Include="Svg.Skia">
+      <Version>0.5.18</Version>
     </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

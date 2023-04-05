@@ -49,8 +49,10 @@ namespace SkiaGum.Renderables
 
 
 #if INCLUDE_SVG
-        global::SkiaSharp.Extended.Svg.SKSvg skiaSvg;
-        public float AspectRatio => skiaSvg == null ? 1 : skiaSvg.ViewBox.Width / (float)skiaSvg.ViewBox.Height;
+        Svg.Skia.SKSvg skiaSvg;
+        // old implementation:
+        //public float AspectRatio => skiaSvg == null ? 1 : skiaSvg.ViewBox.Width / (float)skiaSvg.ViewBox.Height;
+        public float AspectRatio => skiaSvg == null ? 1 : skiaSvg.Picture.CullRect.Width / (float)skiaSvg.Picture.CullRect.Height;
 #else
         public float AspectRatio => 1;
 #endif
@@ -68,8 +70,8 @@ namespace SkiaGum.Renderables
             {
                 surface.Canvas.Clear(SKColors.Transparent);
 
-                var scaleX = this.Width / skiaSvg.ViewBox.Width;
-                var scaleY = this.Height / skiaSvg.ViewBox.Height;
+                var scaleX = this.Width / skiaSvg.Picture.CullRect.Width;
+                var scaleY = this.Height / skiaSvg.Picture.CullRect.Height;
 
                 SKMatrix scaleMatrix = SKMatrix.MakeScale(scaleX, scaleY);
 
@@ -92,9 +94,9 @@ namespace SkiaGum.Renderables
         }
 
 #if INCLUDE_SVG
-        private SkiaSharp.Extended.Svg.SKSvg GetSkSvg()
+        private Svg.Skia.SKSvg GetSkSvg()
         {
-            SkiaSharp.Extended.Svg.SKSvg skiaSvg = null;
+            Svg.Skia.SKSvg skiaSvg = null;
 
             if (!string.IsNullOrWhiteSpace(sourceFile))
             {
@@ -106,7 +108,7 @@ namespace SkiaGum.Renderables
                     {
                         using (var fileStream = System.IO.File.OpenRead(sourceFileAbsolute))
                         {
-                            skiaSvg = new SkiaSharp.Extended.Svg.SKSvg();
+                            skiaSvg = new Svg.Skia.SKSvg();
                             skiaSvg.Load(fileStream);
                         }
                     }
