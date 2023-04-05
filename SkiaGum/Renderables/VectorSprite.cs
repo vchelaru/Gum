@@ -3,12 +3,11 @@ using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using SkiaGum.GueDeriving;
 using SkiaSharp;
-using SkiaSharp.Extended.Svg;
+using Svg.Skia;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Text;
-using SKSvg = SkiaSharp.Extended.Svg.SKSvg;
 
 namespace SkiaGum
 {
@@ -161,7 +160,7 @@ namespace SkiaGum
         {
             if (AbsoluteVisible && Texture != null)
             {
-                var textureBox = Texture.ViewBox;
+                var textureBox = Texture.Picture.CullRect;
                 var textureWidth = textureBox.Width;
                 var textureHeight = textureBox.Height;
 

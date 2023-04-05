@@ -3,7 +3,7 @@ using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using SKSvg = SkiaSharp.Extended.Svg.SKSvg;
+using SKSvg = Svg.Skia.SKSvg;
 
 namespace SkiaGum.Content
 {

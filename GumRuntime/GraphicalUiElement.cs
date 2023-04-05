@@ -3024,7 +3024,7 @@ namespace Gum.Wireframe
                 {
                     if (vectorSprite.Texture != null)
                     {
-                        heightToSet = vectorSprite.Texture.ViewBox.Height * mHeight / 100.0f;
+                        heightToSet = vectorSprite.Texture.Picture.CullRect.Height * mHeight / 100.0f;
                         wasSet = true;
                     }
 
@@ -3097,8 +3097,8 @@ namespace Gum.Wireframe
                     //else 
                     if (vectorSprite.Texture != null)
                     {
-                        var scale = GetAbsoluteWidth() / vectorSprite.Texture.ViewBox.Width;
-                        heightToSet = vectorSprite.Texture.ViewBox.Height * scale * mHeight / 100.0f;
+                        var scale = GetAbsoluteWidth() / vectorSprite.Texture.Picture.CullRect.Width;
+                        heightToSet = vectorSprite.Texture.Picture.CullRect.Height * scale * mHeight / 100.0f;
                         wasSet = true;
                     }
 
@@ -3393,7 +3393,7 @@ namespace Gum.Wireframe
                 {
                     if (vectorSprite.Texture != null)
                     {
-                        widthToSet = vectorSprite.Texture.ViewBox.Width * mWidth / 100.0f;
+                        widthToSet = vectorSprite.Texture.Picture.CullRect.Width * mWidth / 100.0f;
                     }
                     if (wasSet)
                     {
@@ -3463,8 +3463,8 @@ namespace Gum.Wireframe
                     //else 
                     if (vectorSprite.Texture != null)
                     {
-                        var scale = GetAbsoluteHeight() / vectorSprite.Texture.ViewBox.Height;
-                        widthToSet = vectorSprite.Texture.ViewBox.Width * scale * mWidth / 100.0f;
+                        var scale = GetAbsoluteHeight() / vectorSprite.Texture.Picture.CullRect.Height;
+                        widthToSet = vectorSprite.Texture.Picture.CullRect.Width * scale * mWidth / 100.0f;
                         wasSet = true;
                     }
 
