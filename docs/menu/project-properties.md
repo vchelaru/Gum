@@ -26,7 +26,7 @@ The default Font Ranges value is `32-126,160-255` which maps to the first page o
 
 Various websites provide a list of unicode character sets such as [https://unicode-table.com/en/blocks/](https://unicode-table.com/en/blocks/)
 
-Additional characters can be added by modifying the Font Ranges character set. Individual characters can be added or entire ranges. For example, to add the **Latin Extended** A **** set, the Font Ranges value can be changed to `32-126,160-255,256-383`. Note that the last range of 256-383 could be merged with the previous to produce the following range: `32-126:160-383`. Note that the ranges are inclusive on both ends, so a range of 160-383 will include the characters 160 and 383 along with all values in between.
+Additional characters can be added by modifying the Font Ranges character set. Individual characters can be added or entire ranges. For example, to add the **Latin Extended** A set, the Font Ranges value can be changed to `32-126,160-255,256-383`. Note that the last range of 256-383 could be merged with the previous to produce the following range: `32-126:160-383`. Note that the ranges are inclusive on both ends, so a range of 160-383 will include the characters 160 and 383 along with all values in between.
 
 Changing the font ranges immediately refreshes the page. Note that all fonts are re-created so this operation can take some time.
 
