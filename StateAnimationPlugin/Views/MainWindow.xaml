@@ -3,34 +3,33 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:views="clr-namespace:StateAnimationPlugin.Views"
+             xmlns:views="clr-namespace:StateAnimationPlugin.Views" xmlns:skia="clr-namespace:SkiaSharp.Views.WPF;assembly=SkiaSharp.Views.WPF"
              mc:Ignorable="d" 
              d:DesignWidth="400" d:DesignHeight="580">
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"></RowDefinition>
+            <RowDefinition Height="90"></RowDefinition>
             <RowDefinition Height="Auto"></RowDefinition>
             <RowDefinition Height="*"></RowDefinition>
         </Grid.RowDefinitions>
 
-        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Hidden">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"></RowDefinition>
-                    <RowDefinition Height="Auto"></RowDefinition>
-                    <RowDefinition Height="24"></RowDefinition>
-                </Grid.RowDefinitions>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"></RowDefinition>
+                <RowDefinition Height="*"></RowDefinition>
+                <RowDefinition Height="24"></RowDefinition>
+            </Grid.RowDefinitions>
 
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="40"></ColumnDefinition>
-                    <ColumnDefinition></ColumnDefinition>
-                    <ColumnDefinition Width="50"></ColumnDefinition>
-                    <ColumnDefinition MinWidth="40" Width="Auto"></ColumnDefinition>
-                </Grid.ColumnDefinitions>
-                <Button x:Name="PlayStopButton" Width="25" Height="25" Click="HandlePlayStopClicked">
-                    <Image x:Name="ButtonImage" Source="{Binding ButtonBitmapFrame}"></Image>
-                </Button>
-                <Slider Grid.Column="1"
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="40"></ColumnDefinition>
+                <ColumnDefinition></ColumnDefinition>
+                <ColumnDefinition Width="50"></ColumnDefinition>
+                <ColumnDefinition MinWidth="40" Width="Auto"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            <Button x:Name="PlayStopButton" Width="25" Height="25" Click="HandlePlayStopClicked">
+                <Image x:Name="ButtonImage" Source="{Binding ButtonBitmapFrame}"></Image>
+            </Button>
+            <Slider Grid.Column="1"
                         Value="{Binding DisplayedAnimationTime}"
                         Minimum="0"
                         Maximum="{Binding SelectedAnimation.Length}"
@@ -39,51 +38,52 @@
                 
                         >
 
-                </Slider>
+            </Slider>
 
-                <TextBox Grid.Column="2" Text="{Binding DisplayedAnimationTime}"></TextBox>
+            <TextBox Grid.Column="2" Text="{Binding DisplayedAnimationTime}"></TextBox>
 
-                <TextBlock Grid.Column="3" Text="{Binding OverLengthTime}" VerticalAlignment="Bottom" Margin="0,0,5,0"></TextBlock>
-
-                <Grid Grid.Row="2" Grid.Column="1" Margin="2,0,0,0" HorizontalAlignment="Left">
-                    <Button IsHitTestVisible="False"></Button>
-                    <StackPanel VerticalAlignment="Stretch" Orientation="Horizontal" Margin="3,0,3,0" >
-                        <Button Height="18" Width="18" Click="SpeedDecreaseClicked" Background="Transparent" BorderBrush="Transparent">
-                            <Button.ToolTip>
-                                <ToolTip>
-                                    <StackPanel>
-                                        <TextBlock FontWeight="Bold">Slow Down</TextBlock>
-                                        <TextBlock>Reudces game speed (makes it run in slow-motion)</TextBlock>
-                                    </StackPanel>
-                                </ToolTip>
-                            </Button.ToolTip>
-                            <Image  Source="/StateAnimationPlugin;component/Resources/icon_minus.png"></Image>
-                        </Button>
-                        <Image  Source="/StateAnimationPlugin;component/Resources/SlowMotion.png" Height="16" Margin="0,0,-3,0"></Image>
-                        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" TextAlignment="Center" Text="{Binding CurrentGameSpeed, FallbackValue=100%}" Margin="0,0,2,0" MinWidth="40"></TextBlock>
-                        <Button Height="18" Width="18" Click="SpeedIncreaseClicked" Background="Transparent" BorderBrush="Transparent">
-                            <Button.ToolTip>
-                                <ToolTip>
-                                    <StackPanel>
-                                        <TextBlock FontWeight="Bold">Speed Up</TextBlock>
-                                        <TextBlock>Increases game speed (makes it run in fast-forward)</TextBlock>
-                                    </StackPanel>
-                                </ToolTip>
-                            </Button.ToolTip>
-                            <Image  Source="/StateAnimationPlugin;component/Resources/icon_plus.png"></Image>
-                        </Button>
-                    </StackPanel>
-
-                </Grid>
-
-                <views:TimedStateMarkerDisplay Grid.Row="1" Grid.Column="1" Height="10" 
+            <TextBlock Grid.Column="3" Text="{Binding OverLengthTime}" VerticalAlignment="Bottom" Margin="0,0,5,0"></TextBlock>
+            <!--<views:TimedStateMarkerDisplay Grid.Column="1"
                                                RangeMaximum="{Binding SelectedAnimation.Length}"
                                                MarkerItemSource="{Binding SelectedAnimation.Keyframes}"
-                                               SelectedKeyframe="{Binding SelectedAnimation.SelectedKeyframe}"
-                                               >
-                </views:TimedStateMarkerDisplay>
+                                               SelectedKeyframe="{Binding SelectedAnimation.SelectedKeyframe}" Grid.Row="1"/>-->
+            <skia:SKElement x:Name="SkiaElement" Grid.Column="1" PaintSurface="SKElement_PaintSurface" Grid.Row="1" VerticalAlignment="Stretch"
+                            MouseLeftButtonDown="SkiaElement_MouseLeftButtonDown" MouseMove="SkiaElement_MouseMove">
+
+            </skia:SKElement>
+            <Grid Grid.Row="2" Grid.Column="1" Margin="2,0,0,0" HorizontalAlignment="Left">
+                <Button IsHitTestVisible="False"></Button>
+                <StackPanel VerticalAlignment="Stretch" Orientation="Horizontal" Margin="3,0,3,0" >
+                    <Button Height="18" Width="18" Click="SpeedDecreaseClicked" Background="Transparent" BorderBrush="Transparent">
+                        <Button.ToolTip>
+                            <ToolTip>
+                                <StackPanel>
+                                    <TextBlock FontWeight="Bold">Slow Down</TextBlock>
+                                    <TextBlock>Reudces game speed (makes it run in slow-motion)</TextBlock>
+                                </StackPanel>
+                            </ToolTip>
+                        </Button.ToolTip>
+                        <Image  Source="/StateAnimationPlugin;component/Resources/icon_minus.png"></Image>
+                    </Button>
+                    <Image  Source="/StateAnimationPlugin;component/Resources/SlowMotion.png" Height="16" Margin="0,0,-3,0"></Image>
+                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" TextAlignment="Center" Text="{Binding CurrentGameSpeed, FallbackValue=100%}" Margin="0,0,2,0" MinWidth="40"></TextBlock>
+                    <Button Height="18" Width="18" Click="SpeedIncreaseClicked" Background="Transparent" BorderBrush="Transparent">
+                        <Button.ToolTip>
+                            <ToolTip>
+                                <StackPanel>
+                                    <TextBlock FontWeight="Bold">Speed Up</TextBlock>
+                                    <TextBlock>Increases game speed (makes it run in fast-forward)</TextBlock>
+                                </StackPanel>
+                            </ToolTip>
+                        </Button.ToolTip>
+                        <Image  Source="/StateAnimationPlugin;component/Resources/icon_plus.png"></Image>
+                    </Button>
+                </StackPanel>
+
             </Grid>
-        </ScrollViewer>
+
+
+        </Grid>
 
         <GridSplitter Grid.Row="1" Height="5" HorizontalAlignment="Stretch" ResizeBehavior="PreviousAndNext" ></GridSplitter>
 

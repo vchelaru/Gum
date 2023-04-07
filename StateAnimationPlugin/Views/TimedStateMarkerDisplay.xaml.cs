@@ -1,4 +1,5 @@
-﻿using StateAnimationPlugin.ViewModels;
+﻿using SkiaSharp;
+using StateAnimationPlugin.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -281,6 +282,16 @@ namespace StateAnimationPlugin.Views
             }
         }
 
+        private void SKElement_PaintSurface(object sender, SkiaSharp.Views.Desktop.SKPaintSurfaceEventArgs e)
+        {
+            var canvas = e.Surface.Canvas;
+
+            var paint = new SKPaint();
+            paint.IsAntialias = true;
+            paint.Color = SKColors.Pink;
+
+            canvas.DrawCircle(30, 30, 30, paint);
+        }
         #endregion
 
     }

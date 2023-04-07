@@ -50,8 +50,8 @@ namespace StateAnimationPlugin.ViewModels
 
         public string EventName
         {
-            get { return Get<string>(); }
-            set { Set(value); }
+            get => Get<string>(); 
+            set => Set(value); 
         }
 
         public AnimationViewModel SubAnimationViewModel

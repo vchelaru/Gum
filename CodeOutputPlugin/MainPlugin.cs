@@ -92,7 +92,7 @@ namespace CodeOutputPlugin
             var generatedFile = CodeGenerator.GetGeneratedFileName(element, elementSettings, codeOutputProjectSettings);
             var customCodeFile = CodeGenerator.GetCustomCodeFileName(element, elementSettings, codeOutputProjectSettings);
 
-            if(generatedFile.Exists() || customCodeFile.Exists())
+            if(generatedFile?.Exists() == true || customCodeFile?.Exists() == true)
             {
                 var message = $"Would you like to delete the generated and custom code files for {element}?";
 
@@ -100,12 +100,12 @@ namespace CodeOutputPlugin
 
                 if(result == System.Windows.MessageBoxResult.Yes)
                 {
-                    if(generatedFile.Exists())
+                    if(generatedFile?.Exists() == true)
                     {
                         System.IO.File.Delete(generatedFile.FullPath);
                     }
 
-                    if(customCodeFile.Exists())
+                    if(customCodeFile?.Exists() == true)
                     {
                         System.IO.File.Delete(customCodeFile.FullPath);
                     }

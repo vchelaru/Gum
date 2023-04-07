@@ -22,6 +22,9 @@ using StateAnimationPlugin.Validation;
 using Gum.Managers;
 using StateAnimationPlugin.Managers;
 using Gum;
+using SkiaSharp;
+using System.ComponentModel;
+using SkiaSharp.Views.WPF;
 
 namespace StateAnimationPlugin.Views
 {
@@ -46,6 +49,7 @@ namespace StateAnimationPlugin.Views
             set => BottomGrid.ColumnDefinitions[2].Width = value;
         }
 
+
         #endregion
 
         public event EventHandler AddStateKeyframeClicked;
@@ -57,6 +61,59 @@ namespace StateAnimationPlugin.Views
             InitializeComponent();
 
             InitializeTimer();
+
+            DataContextChanged += HandleDataContext;            
+        }
+
+        private void HandleDataContext(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            if(e.OldValue is ElementAnimationsViewModel oldViewModel)
+            {
+                oldViewModel.PropertyChanged -= HandleViewModelPropertyChanged;
+            }
+            if(e.NewValue is ElementAnimationsViewModel newViewModel)
+            {
+                newViewModel.PropertyChanged += HandleViewModelPropertyChanged;
+
+            }
+        }
+
+        AnimationViewModel animationViewModel;
+
+        private void HandleViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            switch(e.PropertyName)
+            {
+                case nameof(ViewModel.SelectedAnimation):
+
+                    if(animationViewModel != null)
+                    {
+                        animationViewModel.PropertyChanged -= HandleAnimationViewModelPropertyChanged;
+                    }
+
+                    animationViewModel = ViewModel.SelectedAnimation;
+
+                    if (animationViewModel != null)
+                    {
+                        animationViewModel.PropertyChanged += HandleAnimationViewModelPropertyChanged;
+                    }
+
+                    SkiaElement.InvalidateVisual();
+                    break;
+                case nameof(ViewModel.DisplayedAnimationTime):
+                    SkiaElement.InvalidateVisual();
+                    break;
+            }
+        }
+
+        private void HandleAnimationViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            switch(e.PropertyName)
+            {
+                case nameof(AnimationViewModel.SelectedKeyframe):
+                    SkiaElement.InvalidateVisual();
+                    break;
+            }
         }
 
         private void InitializeTimer()
@@ -333,6 +390,37 @@ namespace StateAnimationPlugin.Views
         private void SpeedIncreaseClicked(object sender, RoutedEventArgs args)
         {
             ViewModel.IncreaseGameSpeed();
+        }
+
+        private void SKElement_PaintSurface(object sender, SkiaSharp.Views.Desktop.SKPaintSurfaceEventArgs e)
+        {
+            TimelineRenderer.DrawSurface(ViewModel, e.Surface, e.Info);
+        }
+
+        private void SkiaElement_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            /////////////Early Out/////////////////
+            if (ViewModel.SelectedAnimation == null || e.LeftButton != MouseButtonState.Pressed) return;
+            /////////////End Early Out///////////////////
+
+            UpdateTimeToMousePosition(sender, e);
+        }
+
+        private void SkiaElement_MouseMove(object sender, MouseEventArgs e)
+        {
+            /////////////Early Out/////////////////
+            if (ViewModel.SelectedAnimation == null || e.LeftButton != MouseButtonState.Pressed) return;
+            /////////////End Early Out///////////////////
+            UpdateTimeToMousePosition(sender, e);
+        }
+
+        private void UpdateTimeToMousePosition(object sender, MouseEventArgs e)
+        {
+            var element = sender as SKElement;
+            Point mousePos = e.GetPosition(element);
+            //SKPoint skMousePos = new SKPoint((float)(mousePos.X * dpiScale), (float)(mousePos.Y * dpiScale));
+            var time = TimelineRenderer.XToTime((float)mousePos.X, ViewModel.SelectedAnimation.Length);
+            ViewModel.DisplayedAnimationTime = time;
         }
     }
 }

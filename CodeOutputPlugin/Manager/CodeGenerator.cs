@@ -1463,9 +1463,16 @@ namespace CodeOutputPlugin.Manager
             CodeOutputProjectSettings codeOutputProjectSettings, string forcedElementName = null, VisualApi? visualApi = null)
         {
             var generatedFileName = GetGeneratedFileName(selectedElement, elementSettings, codeOutputProjectSettings, forcedElementName, visualApi);
-            var fullPath = generatedFileName.FullPath;
-            var customCodeFileName = fullPath.Substring(0, fullPath.Length - ".Generated.cs".Length) + ".cs";
-            return customCodeFileName;
+            if(generatedFileName == null)
+            {
+                return null;
+            }
+            else
+            {
+                var fullPath = generatedFileName.FullPath;
+                var customCodeFileName = fullPath.Substring(0, fullPath.Length - ".Generated.cs".Length) + ".cs";
+                return customCodeFileName;
+            }
         }
 
         #endregion
