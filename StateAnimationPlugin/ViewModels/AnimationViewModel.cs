@@ -247,20 +247,20 @@ namespace StateAnimationPlugin.ViewModels
                 {
                     var asAnimatedState = newAdd as AnimatedKeyframeViewModel;
 
-                    asAnimatedState.PropertyChanged += HandleAnimatedStatePropertyChange;
+                    asAnimatedState.PropertyChanged += HandleAnimatedKeyframePropertyChange;
                 }
             }
 
             NotifyPropertyChanged(nameof(Length));
 
-            NotifyPropertyChanged("States");
+            NotifyPropertyChanged(nameof(Keyframes));
             
         }
 
-        private void HandleAnimatedStatePropertyChange(object sender, PropertyChangedEventArgs e)
+        private void HandleAnimatedKeyframePropertyChange(object sender, PropertyChangedEventArgs e)
         {
 
-            if (e.PropertyName == "Time")
+            if (e.PropertyName == nameof(AnimatedKeyframeViewModel.Time))
             {
                 SortList();
 

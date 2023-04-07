@@ -264,7 +264,7 @@ namespace Gum.DataTypes
 #if GUM
         public static FilePath GetFullPathXmlFile(this ElementSave elementSave)
         {
-            return elementSave.GetFullPathXmlFile(elementSave.Name);
+            return elementSave?.GetFullPathXmlFile(elementSave.Name);
         }
 
 

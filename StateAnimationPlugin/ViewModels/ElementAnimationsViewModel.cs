@@ -69,6 +69,11 @@ namespace StateAnimationPlugin.ViewModels
             private set;
         } = new ObservableCollection<MenuItem>();
 
+
+        [DependsOn(nameof(SelectedAnimation))]
+        public Visibility PlayButtonVisibility => 
+            (SelectedAnimation != null).ToVisibility();
+
         public AnimationViewModel SelectedAnimation
         {
             get => Get<AnimationViewModel>();
@@ -79,6 +84,10 @@ namespace StateAnimationPlugin.ViewModels
                     if (SelectedAnimation != null)
                     {
                         var selectedElement = SelectedState.Self.SelectedElement;
+                        if(selectedElement == null)
+                        {
+                            return;
+                        }
                         SelectedAnimation.RefreshCombinedStates(selectedElement);
 
                         if(SelectedAnimation.SelectedKeyframe != null)

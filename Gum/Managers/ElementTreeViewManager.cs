@@ -1072,7 +1072,11 @@ namespace Gum.Managers
             {
                 if (ObjectTreeView.SelectedNode != null && ObjectTreeView.SelectedNode.Tag != null && ObjectTreeView.SelectedNode.Tag is ElementSave)
                 {
-                    ObjectTreeView.SelectedNode = null;
+                    // why do we explicitly set this here rather than calling Select? If we set it to null without calling that, we don't get the benefit of the 
+                    // plugins being notified of a null selection:
+                    //ObjectTreeView.SelectedNode = null;
+                    Select((TreeNode)null);
+
                 }
             }
             else

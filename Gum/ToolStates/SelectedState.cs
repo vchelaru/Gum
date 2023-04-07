@@ -195,14 +195,28 @@ namespace Gum.ToolStates
                     else if (value is ScreenSave)
                     {
                         SelectedScreen = value as ScreenSave;
+
+                        if(SelectedTreeNode == null && SelectedScreen != null)
+                        {
+                            // we tried to select something (like through a re-select) that no longer exists:
+                            SelectedScreen = null;
+                        }
                     }
                     else if (value is ComponentSave)
                     {
                         SelectedComponent = value as ComponentSave;
+                        if(SelectedTreeNode == null && SelectedComponent != null)
+                        {
+                            SelectedComponent = null;
+                        }
                     }
                     else if (value is StandardElementSave)
                     {
                         SelectedStandardElement = value as StandardElementSave;
+                        if(SelectedTreeNode == null && SelectedStandardElement != null)
+                        {
+                            SelectedStandardElement = null;
+                        }
                     }
                     else
                     {

@@ -355,6 +355,11 @@ namespace StateAnimationPlugin
                     }
                 }
             }
+
+            if(mCurrentViewModel == null)
+            {
+                mCurrentViewModel = new ElementAnimationsViewModel();
+            }
         }
 
         private void HandleAnimatedKeyframePropertyChanged(object sender, PropertyChangedEventArgs e)

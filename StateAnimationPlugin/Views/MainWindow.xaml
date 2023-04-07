@@ -15,21 +15,22 @@
 
         <Grid>
             <Grid.RowDefinitions>
+                <RowDefinition Height="24"></RowDefinition>
                 <RowDefinition Height="Auto"></RowDefinition>
                 <RowDefinition Height="*"></RowDefinition>
-                <RowDefinition Height="24"></RowDefinition>
             </Grid.RowDefinitions>
 
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="40"></ColumnDefinition>
+                <ColumnDefinition Width="80"></ColumnDefinition>
                 <ColumnDefinition></ColumnDefinition>
                 <ColumnDefinition Width="50"></ColumnDefinition>
                 <ColumnDefinition MinWidth="40" Width="Auto"></ColumnDefinition>
             </Grid.ColumnDefinitions>
-            <Button x:Name="PlayStopButton" Width="25" Height="25" Click="HandlePlayStopClicked">
+            <Button x:Name="PlayStopButton" Width="25" Height="25" Click="HandlePlayStopClicked" HorizontalAlignment="Right" Visibility="{Binding PlayButtonVisibility}">
                 <Image x:Name="ButtonImage" Source="{Binding ButtonBitmapFrame}"></Image>
             </Button>
             <Slider Grid.Column="1"
+                    Grid.Row="1"
                         Value="{Binding DisplayedAnimationTime}"
                         Minimum="0"
                         Maximum="{Binding SelectedAnimation.Length}"
@@ -40,18 +41,23 @@
 
             </Slider>
 
-            <TextBox Grid.Column="2" Text="{Binding DisplayedAnimationTime}"></TextBox>
+            <TextBox Grid.Row="1" Grid.Column="2" Text="{Binding DisplayedAnimationTime}"></TextBox>
 
-            <TextBlock Grid.Column="3" Text="{Binding OverLengthTime}" VerticalAlignment="Bottom" Margin="0,0,5,0"></TextBlock>
+            <TextBlock Grid.Row="1" Grid.Column="3" Text="{Binding OverLengthTime}" VerticalAlignment="Bottom" Margin="0,0,5,0"></TextBlock>
             <!--<views:TimedStateMarkerDisplay Grid.Column="1"
                                                RangeMaximum="{Binding SelectedAnimation.Length}"
                                                MarkerItemSource="{Binding SelectedAnimation.Keyframes}"
                                                SelectedKeyframe="{Binding SelectedAnimation.SelectedKeyframe}" Grid.Row="1"/>-->
-            <skia:SKElement x:Name="SkiaElement" Grid.Column="1" PaintSurface="SKElement_PaintSurface" Grid.Row="1" VerticalAlignment="Stretch"
+            <skia:SKElement x:Name="LeftSkiaElement" Grid.Column="0" PaintSurface="LeftSkiaElement_PaintSurface" 
+                            Grid.Row="2" 
+                            VerticalAlignment="Stretch">
+            </skia:SKElement>
+
+            <skia:SKElement x:Name="SkiaElement" Grid.Column="1" PaintSurface="SKElement_PaintSurface" Grid.Row="2" VerticalAlignment="Stretch"
                             MouseLeftButtonDown="SkiaElement_MouseLeftButtonDown" MouseMove="SkiaElement_MouseMove">
 
             </skia:SKElement>
-            <Grid Grid.Row="2" Grid.Column="1" Margin="2,0,0,0" HorizontalAlignment="Left">
+            <Grid Grid.Row="0" Grid.Column="1" Margin="2,0,0,0" HorizontalAlignment="Left">
                 <Button IsHitTestVisible="False"></Button>
                 <StackPanel VerticalAlignment="Stretch" Orientation="Horizontal" Margin="3,0,3,0" >
                     <Button Height="18" Width="18" Click="SpeedDecreaseClicked" Background="Transparent" BorderBrush="Transparent">

@@ -76,6 +76,9 @@ namespace StateAnimationPlugin.Views
                 newViewModel.PropertyChanged += HandleViewModelPropertyChanged;
 
             }
+
+            SkiaElement.InvalidateVisual();
+            LeftSkiaElement.InvalidateVisual();
         }
 
         AnimationViewModel animationViewModel;
@@ -99,9 +102,14 @@ namespace StateAnimationPlugin.Views
                     }
 
                     SkiaElement.InvalidateVisual();
+                    LeftSkiaElement.InvalidateVisual();
                     break;
                 case nameof(ViewModel.DisplayedAnimationTime):
                     SkiaElement.InvalidateVisual();
+                    break;
+                case nameof(ViewModel.Animations):
+                    SkiaElement.InvalidateVisual();
+                    LeftSkiaElement.InvalidateVisual();
                     break;
             }
         }
@@ -112,6 +120,13 @@ namespace StateAnimationPlugin.Views
             {
                 case nameof(AnimationViewModel.SelectedKeyframe):
                     SkiaElement.InvalidateVisual();
+                    break;
+                case nameof(AnimationViewModel.Length):
+                    SkiaElement.InvalidateVisual();
+                    break;
+                case nameof(AnimationViewModel.Keyframes):
+                    SkiaElement.InvalidateVisual();
+                    LeftSkiaElement.InvalidateVisual();
                     break;
             }
         }
@@ -394,7 +409,7 @@ namespace StateAnimationPlugin.Views
 
         private void SKElement_PaintSurface(object sender, SkiaSharp.Views.Desktop.SKPaintSurfaceEventArgs e)
         {
-            TimelineRenderer.DrawSurface(ViewModel, e.Surface, e.Info);
+            TimelineRenderer.DrawTimeline(ViewModel, e.Surface, e.Info);
         }
 
         private void SkiaElement_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -421,6 +436,11 @@ namespace StateAnimationPlugin.Views
             //SKPoint skMousePos = new SKPoint((float)(mousePos.X * dpiScale), (float)(mousePos.Y * dpiScale));
             var time = TimelineRenderer.XToTime((float)mousePos.X, ViewModel.SelectedAnimation.Length);
             ViewModel.DisplayedAnimationTime = time;
+        }
+
+        private void LeftSkiaElement_PaintSurface(object sender, SkiaSharp.Views.Desktop.SKPaintSurfaceEventArgs e)
+        {
+            TimelineRenderer.DrawLeftSide(ViewModel, e.Surface, e.Info);
         }
     }
 }

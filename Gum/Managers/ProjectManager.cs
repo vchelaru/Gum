@@ -240,8 +240,11 @@ namespace Gum
                 PluginManager.Self.ProjectLoad(mGumProjectSave);
             }
 
+            // Deselect everything
+            SelectedState.Self.SelectedElement = null;
             // Now that a new project is loaded, refresh the UI!
             GumCommands.Self.GuiCommands.RefreshElementTreeView();
+
 
             if(mGumProjectSave != null)
             {

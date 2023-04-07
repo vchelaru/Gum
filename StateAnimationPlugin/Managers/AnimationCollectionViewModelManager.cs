@@ -73,10 +73,13 @@ namespace StateAnimationPlugin.Managers
 
             var fileName = GetAbsoluteAnimationFileNameFor(currentElement);
 
-            var save = viewModel.ToSave();
+            if(fileName != null)
+            {
+                var save = viewModel.ToSave();
 
-            FileWatchLogic.Self.IgnoreNextChangeOn(fileName);
-            FileManager.XmlSerialize(save, fileName);
+                FileWatchLogic.Self.IgnoreNextChangeOn(fileName);
+                FileManager.XmlSerialize(save, fileName);
+            }
         }
 
         public string GetAbsoluteAnimationFileNameFor(string elementName)

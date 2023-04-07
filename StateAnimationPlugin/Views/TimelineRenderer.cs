@@ -1,4 +1,5 @@
 ﻿using Gum.Mvvm;
+using RenderingLibrary.Graphics;
 using SkiaSharp;
 using StateAnimationPlugin.ViewModels;
 using System;
@@ -20,21 +21,60 @@ namespace StateAnimationPlugin.Views
         static SKCanvas Canvas;
 
         static SKPaint separatorPaint;
+        static SKPaint fontPaint;
         static TimelineRenderer()
         {
             separatorPaint = new SKPaint();
             separatorPaint.Color = new SKColor(190, 190, 190);
             separatorPaint.StrokeWidth = 1f;
+
+            fontPaint = new SKPaint();
+            fontPaint.Color = SKColors.Black;
         }
 
-        public static void DrawSurface(ElementAnimationsViewModel viewModel, SKSurface surface, SKImageInfo info)
+        public static void DrawLeftSide(ElementAnimationsViewModel viewModel, SKSurface surface, SKImageInfo info)
         {
-            CanvasWidth = info.Width;
-            CanvasHeight = info.Height;
-            Canvas = surface.Canvas;
+            AssignSharedValues(viewModel, surface, info);
+
+            surface.Canvas.Clear();
+            /////////////////early out///////////////////////
+
+            if (ViewModel?.SelectedAnimation == null)
+            {
+                return;
+            }
+
+            //////////////end early out/////////////////////
+
+            var animation = ViewModel.SelectedAnimation;
+            List<AnimatedKeyframeViewModel> keyframesWithSubanimations = new List<AnimatedKeyframeViewModel>();
+            int rows = GetSubanimationRowCount(animation, keyframesWithSubanimations);
+            DrawHorizontalSeparatorsFullWidth(rows);
+
+            var rowIndex = 1;
+
+            float FrameIndexToY(int index) => (float)(spacingPerRow * (index + .5) + 3);
+
+            var x = 0;
+            Canvas.DrawText("Keyframes", x, FrameIndexToY(0), fontPaint);
+
+
+            foreach (var frame in keyframesWithSubanimations)
+            {
+                var y = FrameIndexToY(rowIndex);
+
+                Canvas.DrawText(frame.AnimationName, x, y, fontPaint);
+                rowIndex++;
+            }
+
+        }
+
+        public static void DrawTimeline(ElementAnimationsViewModel viewModel, SKSurface surface, SKImageInfo info)
+        {
+            AssignSharedValues(viewModel, surface, info);
+
             surface.Canvas.Clear();
             skiaDrawRow = 0;
-            ViewModel = viewModel;
             /////////////////early out///////////////////////
 
             if (ViewModel?.SelectedAnimation == null)
@@ -47,19 +87,11 @@ namespace StateAnimationPlugin.Views
             // Ironically can't use SkiaGum here because of the confusion in libraries.
             var animation = ViewModel.SelectedAnimation;
 
-            var rows = 0;
-            foreach(var frame in animation.Keyframes)
-            {
-                var isSubanimation = !string.IsNullOrEmpty(frame.AnimationName);
-                if(isSubanimation)
-                {
-                    rows++;
-                }
-            }
+            int rows = GetSubanimationRowCount(animation);
 
             DrawBackground(rows);
 
-            DrawHorizontalSeparators(rows);
+            DrawHorizontalTimeSeparators(rows);
             DrawVertialSeparators(rows);
             foreach (var frame in animation.Keyframes)
             {
@@ -69,6 +101,30 @@ namespace StateAnimationPlugin.Views
 
             DrawCurrentTimeLine();
 
+        }
+
+        private static int GetSubanimationRowCount(AnimationViewModel animation, List<AnimatedKeyframeViewModel> keyframesWithSubanimations = null)
+        {
+            var rows = 0;
+            foreach (var frame in animation.Keyframes)
+            {
+                var isSubanimation = !string.IsNullOrEmpty(frame.AnimationName);
+                if (isSubanimation)
+                {
+                    keyframesWithSubanimations?.Add(frame);
+                    rows++;
+                }
+            }
+
+            return rows;
+        }
+
+        private static void AssignSharedValues(ElementAnimationsViewModel viewModel, SKSurface surface, SKImageInfo info)
+        {
+            CanvasWidth = info.Width;
+            CanvasHeight = info.Height;
+            Canvas = surface.Canvas;
+            ViewModel = viewModel;
         }
 
         private static void DrawBackground(int rows)
@@ -83,7 +139,7 @@ namespace StateAnimationPlugin.Views
         }
 
 
-        private static void DrawHorizontalSeparators(int rows)
+        private static void DrawHorizontalTimeSeparators(int rows)
         {
 
             var startX = TimeToX(0);
@@ -92,6 +148,18 @@ namespace StateAnimationPlugin.Views
             {
                 var y = i * spacingPerRow;
                 Canvas.DrawLine(startX, y, endX, y, separatorPaint);
+            }
+        }
+
+        private static void DrawHorizontalSeparatorsFullWidth(int rows)
+        {
+
+            var startX = 0;
+            var endX = CanvasWidth;
+            for (int i = 0; i < rows + 2; i++)
+            {
+                var y = i * spacingPerRow;
+                Canvas.DrawLine(startX, y, (float)endX, y, separatorPaint);
             }
         }
 
