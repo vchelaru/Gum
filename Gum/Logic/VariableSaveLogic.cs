@@ -22,6 +22,25 @@ namespace Gum.Logic
                 shouldInclude = GetShouldIncludeBasedOnAttachments(defaultVariable, container, currentInstance);
             }
 
+            if(shouldInclude && defaultVariable.Name == "State" && currentInstance != null)
+            {
+                // include this if either:
+                // 1. It has a non-null value
+                // 2. It has a null value but the instance's element has uncategorized states:
+
+                shouldInclude = defaultVariable.Value != null;
+
+                if(!shouldInclude)
+                {
+                    var instanceElement = ObjectFinder.Self.GetElementSave(currentInstance);
+                    // check states (uncateogrized) to see if anything besides default exists:
+                    if (instanceElement != null && instanceElement.States.Count > 1)
+                    {
+                        shouldInclude = true;
+                    }
+                }
+            }
+
             if (shouldInclude)
             {
                 StandardElementSave rootElementSave = null;
