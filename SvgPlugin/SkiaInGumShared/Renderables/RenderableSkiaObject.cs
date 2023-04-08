@@ -33,6 +33,11 @@ namespace SkiaGum.Renderables
     {
         #region General Fields/Properties
 
+#if FAST_GL_SKIA_RENDERING
+
+        public bool ClearCanvasOnRender { get; set; } = true;
+#endif
+
         protected Microsoft.Xna.Framework.Vector2 Position;
 
         IRenderableIpso mParent;

@@ -9,6 +9,7 @@ namespace SkiaMonoGameRendering
         int TargetHeight { get; }
         SKColorType TargetColorFormat { get; }
         bool ShouldRender { get; }
+        bool ClearCanvasOnRender { get; }
         void DrawToSurface(SKSurface surface);
         void NotifyDrawnTexture(Texture2D texture);
     }

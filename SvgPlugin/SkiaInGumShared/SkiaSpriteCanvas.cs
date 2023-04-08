@@ -15,6 +15,7 @@ namespace SkiaGum
 
     {
         bool needsUpdate = true;
+        public bool ClearCanvasOnRender { get; set; } = true;
 
         public void InvalidateSurface() => needsUpdate = true;
 
