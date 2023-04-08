@@ -59,7 +59,7 @@ namespace Gum.PropertyGridHelpers
             {
                 StateSave defaultState = GetRecursiveStateFor(elementSave);
 
-                DisplayCurrentElement(pdc, elementSave, null, defaultState, null);
+                DisplayCurrentElement(pdc, elementSave, null, defaultState);
 
 
             }
@@ -378,7 +378,7 @@ namespace Gum.PropertyGridHelpers
             StateSave defaultState;
             GetDefaultState(instanceSave, out elementSave, out defaultState);
 
-            DisplayCurrentElement(pdc, elementSave, instanceSave, defaultState, instanceSave.Name, AmountToDisplay.ElementAndExposedOnly);
+            DisplayCurrentElement(pdc, elementSave, instanceSave, defaultState, AmountToDisplay.ElementAndExposedOnly);
 
         }
 
@@ -414,17 +414,13 @@ namespace Gum.PropertyGridHelpers
         }
 
         private static void DisplayCurrentElement(List<InstanceSavePropertyDescriptor> pdc, ElementSave elementSave, 
-            InstanceSave instanceSave, StateSave defaultState, string prependedVariable, AmountToDisplay amountToDisplay = AmountToDisplay.AllVariables)
+            InstanceSave instanceSave, StateSave defaultState, AmountToDisplay amountToDisplay = AmountToDisplay.AllVariables)
         {
             var currentState = SelectedState.Self.SelectedStateSave;
             bool isDefault = currentState == SelectedState.Self.SelectedElement.DefaultState;
             if(instanceSave?.DefinedByBase == true)
             {
                 isDefault = false;
-            }
-            if (!string.IsNullOrEmpty(prependedVariable))
-            {
-                prependedVariable += ".";
             }
 
             bool isCustomType = (elementSave is StandardElementSave) == false;

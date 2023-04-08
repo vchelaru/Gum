@@ -55,6 +55,14 @@ namespace Gum.Managers
 
         MainControlViewModel variableViewModel;
 
+        /// <summary>
+        /// This is a list of objects which callers can add themselves to. By doing so, property grid
+        /// refreshes are suppressed. The reason for this is because the property grid refreshes when
+        /// certain calls are made, but this can cause double-refreshes. We can improve performance by
+        /// suppressing and then explicitly refreshing.
+        /// </summary>
+        public List<object> ObjectsSuppressingRefresh { get; private set; } = new List<object>();
+
         #endregion
 
         #region Properties
@@ -152,7 +160,7 @@ namespace Gum.Managers
         /// is false, the refresh will only happen if a new element, state, or instance has been selected.</param>
         public void RefreshUI(bool force = false)
         {
-            if (isInRefresh)
+            if (isInRefresh || ObjectsSuppressingRefresh.Count > 0)
                 return;
 
 

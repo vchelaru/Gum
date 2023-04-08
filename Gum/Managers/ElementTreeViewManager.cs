@@ -1437,27 +1437,38 @@ namespace Gum.Managers
                 selectedObject = treeNode.Tag;
             }
 
-            if (selectedObject == null)
+            // Refreshes happen whenever a user selects a node in this tree view, but also
+            // whenever selecting a new state. Selecting a node here also selects a state,
+            // so we don't want double-selections. Suppressing and explicitly calling 
+            // RefreshUi
+            PropertyGridManager.Self.ObjectsSuppressingRefresh.Add(this);
             {
-                SelectedState.Self.UpdateToSelectedElement();
-                // do nothing
-            }
-            else if(selectedObject is ElementSave)
-            {
-                SelectedState.Self.UpdateToSelectedElement();
-            }
-            else if (selectedObject is InstanceSave)
-            {
-                SelectedState.Self.UpdateToSelectedInstanceSave();
+                if (selectedObject == null)
+                {
+                    SelectedState.Self.UpdateToSelectedElement();
+                    // do nothing
+                }
+                else if(selectedObject is ElementSave)
+                {
+                    SelectedState.Self.UpdateToSelectedElement();
+                }
+                else if (selectedObject is InstanceSave)
+                {
+                    SelectedState.Self.UpdateToSelectedInstanceSave();
 
-                GumEvents.Self.CallInstanceSelected();
-            }
-            else if(selectedObject is BehaviorSave)
-            {
-                SelectedState.Self.UpdateToSelectedBehavior();
-            }
+                    GumEvents.Self.CallInstanceSelected();
+                }
+                else if(selectedObject is BehaviorSave)
+                {
+                    SelectedState.Self.UpdateToSelectedBehavior();
+                }
 
-            PluginManager.Self.TreeNodeSelected(selectedTreeNode);
+                PluginManager.Self.TreeNodeSelected(selectedTreeNode);
+
+            }
+            PropertyGridManager.Self.ObjectsSuppressingRefresh.Remove(this);
+
+            PropertyGridManager.Self.RefreshUI();
         }
 
         public void VerifyComponentsAreInTreeView(GumProjectSave gumProject)
