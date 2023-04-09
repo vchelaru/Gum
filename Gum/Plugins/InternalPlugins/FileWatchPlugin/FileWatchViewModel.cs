@@ -9,6 +9,12 @@ namespace Gum.Plugins.FileWatchPlugin
 {
     public class FileWatchViewModel : ViewModel
     {
+        public string WatchFolderInformation
+        {
+            get => Get<string>();
+            set => Set(value);
+        }
+
         public string NumberOfFilesToFlush
         {
             get => Get<string>();

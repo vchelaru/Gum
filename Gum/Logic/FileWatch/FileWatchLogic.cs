@@ -36,7 +36,15 @@ namespace Gum.Logic.FileWatch
             {
                 foreach(var directory in directoriesToAdd)
                 {
-                    directories.Add(directory);
+                    // check if the root of this directory is already here:
+                    var isAlreadyHandled = directories
+                        .Any(item => item.IsRootOf(directory));
+
+                    if(!isAlreadyHandled)
+                    {
+                        directories.Add(directory);
+                    }
+
                 }
             }
 
@@ -45,7 +53,9 @@ namespace Gum.Logic.FileWatch
             foreach (var screen in ProjectState.Self.GumProjectSave.Screens)
             {
                 var screenPaths = ObjectFinder.Self.GetFilesReferencedBy(screen)
-                    .Select(item => ((FilePath)item).GetDirectoryContainingThis());
+                    .Select(item => ((FilePath)item).GetDirectoryContainingThis())
+                    // to make it easier to debug:
+                    .ToHashSet();
 
                 AddRange(screenPaths);
 
@@ -53,14 +63,16 @@ namespace Gum.Logic.FileWatch
             foreach (var component in ProjectState.Self.GumProjectSave.Components)
             {
                 var componentPaths = ObjectFinder.Self.GetFilesReferencedBy(component)
-                    .Select(item => ((FilePath)item).GetDirectoryContainingThis());
+                    .Select(item => ((FilePath)item).GetDirectoryContainingThis())
+                    .ToHashSet();
 
                 AddRange(componentPaths);
             }
             foreach (var standardElement in ProjectState.Self.GumProjectSave.StandardElements)
             {
                 var standardElementPaths = ObjectFinder.Self.GetFilesReferencedBy(standardElement)
-                    .Select(item => ((FilePath)item).GetDirectoryContainingThis());
+                    .Select(item => ((FilePath)item).GetDirectoryContainingThis())
+                    .ToHashSet();
 
                 AddRange(standardElementPaths);
             }
@@ -70,11 +82,13 @@ namespace Gum.Logic.FileWatch
             char gumProjectDrive = gumProjectFilePath.Standardized[0];
 
             directories.Add(gumProjectFilePath.GetDirectoryContainingThis());
-            directories.Add(gumProjectFilePath.GetDirectoryContainingThis() + "Screens/");
-            directories.Add(gumProjectFilePath.GetDirectoryContainingThis() + "Components/");
-            directories.Add(gumProjectFilePath.GetDirectoryContainingThis() + "Standards/");
-            directories.Add(gumProjectFilePath.GetDirectoryContainingThis() + "Behaviors/");
-            directories.Add(gumProjectFilePath.GetDirectoryContainingThis() + "FontCache/");
+            // why are we adding the deep ones, isn't it enough to add the roots?
+
+            //directories.Add(gumProjectFilePath.GetDirectoryContainingThis() + "Screens/");
+            //directories.Add(gumProjectFilePath.GetDirectoryContainingThis() + "Components/");
+            //directories.Add(gumProjectFilePath.GetDirectoryContainingThis() + "Standards/");
+            //directories.Add(gumProjectFilePath.GetDirectoryContainingThis() + "Behaviors/");
+            //directories.Add(gumProjectFilePath.GetDirectoryContainingThis() + "FontCache/");
 
             var gumProject = GumState.Self.ProjectState.GumProjectSave;
             if (!string.IsNullOrEmpty(gumProject.LocalizationFile))

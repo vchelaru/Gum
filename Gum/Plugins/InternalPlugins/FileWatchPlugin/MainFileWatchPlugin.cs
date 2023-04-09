@@ -39,6 +39,13 @@ namespace Gum.Plugins.FileWatchPlugin
                 // stuff stuff
                 var fileWatchManager = FileWatchManager.Self;
 
+                var filePathsWatchingText = $"File paths watching ({fileWatchManager.CurrentFilePathsWatching.Count}):";
+                foreach(var item in fileWatchManager.CurrentFilePathsWatching)
+                {
+                    filePathsWatchingText += $"\n\t{item}";
+                }
+                viewModel.WatchFolderInformation = filePathsWatchingText;
+
                 viewModel.NumberOfFilesToFlush = fileWatchManager.ChangedFilesWaitingForFlush.Count.ToString();
 
                 if (fileWatchManager.TimeToNextFlush.TotalSeconds <= 0)

@@ -29,6 +29,8 @@ namespace Gum.Logic.FileWatch
 
         HashSet<FilePath> filePathsToWatch;
 
+        public IReadOnlyCollection<FilePath> CurrentFilePathsWatching => filePathsToWatch;
+
         #endregion
 
         public FileWatchManager()
@@ -48,7 +50,7 @@ namespace Gum.Logic.FileWatch
             fileSystemWatcher.Deleted += new FileSystemEventHandler(HandleFileSystemDelete);
             fileSystemWatcher.Changed += new FileSystemEventHandler(HandleFileSystemChange);
             // Gum files get deleted and then created, rather than changed
-            fileSystemWatcher.Created += new FileSystemEventHandler(HandleFileSystemChange);
+            fileSystemWatcher.Created += HandleFileSystemChange;
             fileSystemWatcher.Renamed += HandleRename;
         }
 
@@ -127,7 +129,7 @@ namespace Gum.Logic.FileWatch
                 if(!wasIgnored)
                 {
                     var directoryContainingThis = fileName.GetDirectoryContainingThis();
-                    var isFolderConsidered = filePathsToWatch.Contains(directoryContainingThis);
+                    var isFolderConsidered = filePathsToWatch.Any(item => item == directoryContainingThis || item.IsRootOf(fileName));
 
                     if(!isFolderConsidered)
                     {
