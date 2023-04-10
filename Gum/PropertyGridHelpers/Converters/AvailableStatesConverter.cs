@@ -16,7 +16,7 @@ namespace Gum.PropertyGridHelpers.Converters
 
         bool mUsesOverrides;
 
-        string mCategory;
+        public string CategoryName { get; private set; }
 
         public InstanceSave InstanceSave 
         { 
@@ -61,7 +61,7 @@ namespace Gum.PropertyGridHelpers.Converters
 
         public AvailableStatesConverter(string category)
         {
-            mCategory = category;
+            CategoryName = category;
 
         }
 
@@ -81,11 +81,11 @@ namespace Gum.PropertyGridHelpers.Converters
             List<string> availableStates = new List<string>();
             if (InstanceSave != null)
             {
-                availableStates = GetAvailableStates(InstanceSave, mCategory);
+                availableStates = GetAvailableStates(InstanceSave, CategoryName);
             }
             else
             {
-                availableStates = GetAvailableStates(ElementSave, mCategory);
+                availableStates = GetAvailableStates(ElementSave, CategoryName);
             }
 
             return new StandardValuesCollection(availableStates);

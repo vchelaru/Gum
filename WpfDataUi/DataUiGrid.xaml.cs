@@ -550,8 +550,12 @@ namespace WpfDataUi
                         if(alreadyAddedMembers.Contains(member.DisplayName) == false)
                         {
                             alreadyAddedMembers.Add(member.DisplayName);
-                            var multiSelectInstanceMember = CreateMultiGroup(listOfCategoryLists, member);
-                            newCategory.Members.Add(multiSelectInstanceMember);
+
+                            var multiSelectInstanceMember = TryCreateMultiGroup(listOfCategoryLists, member);
+                            if(multiSelectInstanceMember != null)
+                            {
+                                newCategory.Members.Add(multiSelectInstanceMember);
+                            }
                         }
                     }
                 }
@@ -566,7 +570,7 @@ namespace WpfDataUi
             }
         }
 
-        private MultiSelectInstanceMember CreateMultiGroup(List<List<MemberCategory>> source, InstanceMember templateMember)
+        private MultiSelectInstanceMember TryCreateMultiGroup(List<List<MemberCategory>> source, InstanceMember templateMember)
         {
             List<InstanceMember> membersToAdd = new List<InstanceMember>();
             foreach(var categoryList in source)
@@ -577,14 +581,77 @@ namespace WpfDataUi
                 }
             }
 
-            var multiSelectInstanceMember = new MultiSelectInstanceMember();
-            multiSelectInstanceMember.Name = templateMember.Name;
-            multiSelectInstanceMember.DisplayName = templateMember.DisplayName;
-            multiSelectInstanceMember.PreferredDisplayer = templateMember.PreferredDisplayer;
-            multiSelectInstanceMember.InstanceMembers = membersToAdd;
+            var shouldExclude = GetIfShouldExclude(membersToAdd);
+
+            if(!shouldExclude)
+            {
+                var multiSelectInstanceMember = new MultiSelectInstanceMember();
+                multiSelectInstanceMember.Name = templateMember.Name;
+                multiSelectInstanceMember.DisplayName = templateMember.DisplayName;
+                multiSelectInstanceMember.PreferredDisplayer = templateMember.PreferredDisplayer;
+                multiSelectInstanceMember.InstanceMembers = membersToAdd;
+                return multiSelectInstanceMember;
+            }
+            else
+            {
+                return null;
+            }
 
 
-            return multiSelectInstanceMember;
+        }
+
+        private bool GetIfShouldExclude(List<InstanceMember> membersToAdd)
+        {
+            var shouldExcludeFromCustomOptions = false;
+            // They're all null
+            if(membersToAdd.All(item => item.CustomOptions == null))
+            {
+                shouldExcludeFromCustomOptions = false;
+            }
+            // They all have 
+            else if (membersToAdd.All(item => item.CustomOptions.Count == 0))
+            {
+                shouldExcludeFromCustomOptions = false;
+            }
+            else if(membersToAdd.Any(item => item.CustomOptions == null || item.CustomOptions.Count == 0))
+            {
+                shouldExcludeFromCustomOptions = true;
+            }
+            else
+            {
+                // none are null or have 0 items, 
+                var firstCustomOptions = membersToAdd.First().CustomOptions;
+                foreach(var item in membersToAdd.Skip(1))
+                {
+                    if(Differ(firstCustomOptions, item.CustomOptions))
+                    {
+                        shouldExcludeFromCustomOptions = true;
+                        break;
+                    }
+                }
+            }
+
+            return shouldExcludeFromCustomOptions;
+
+        }
+
+
+        private bool Differ(IList<object> first, IList<object> second)
+        {
+            if(first.Count != second.Count)
+            {
+                return true;
+            }
+            {
+                for(int i = 0; i < first.Count; i++)
+                {
+                    if (!object.Equals(first[i], second[i]))
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
 
         #endregion

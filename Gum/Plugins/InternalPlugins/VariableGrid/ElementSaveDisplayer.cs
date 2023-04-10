@@ -40,15 +40,10 @@ namespace Gum.PropertyGridHelpers
 
         #endregion
 
-        private List<InstanceSavePropertyDescriptor> GetProperties()
+        private List<InstanceSavePropertyDescriptor> GetProperties(ElementSave elementSave, InstanceSave instanceSave, StateSave stateSave)
         {
             // search terms: display properties, display variables, show variables, variable display, variable displayer
             List<InstanceSavePropertyDescriptor> popertyList = new List<InstanceSavePropertyDescriptor>();
-
-
-            StateSave stateSave = SelectedState.Self.SelectedStateSave;
-            ElementSave elementSave = SelectedState.Self.SelectedElement;
-            InstanceSave instanceSave = SelectedState.Self.SelectedInstance;
 
             if (instanceSave != null && stateSave != null)
             {
@@ -69,7 +64,7 @@ namespace Gum.PropertyGridHelpers
 
         public void GetCategories(ElementSave element, InstanceSave instance, List<MemberCategory> categories, StateSave stateSave, StateSaveCategory stateSaveCategory)
         {
-            var properties = GetProperties();
+            var properties = GetProperties(element, instance, stateSave);
 
             StateSave defaultState;
             if(instance == null)
@@ -530,6 +525,19 @@ namespace Gum.PropertyGridHelpers
                 var alreadyContains = pdc.Any(item => item.Name == name);
 
                 InstanceSavePropertyDescriptor property = new InstanceSavePropertyDescriptor(name, type, customAttributes);
+
+                if(typeConverter is AvailableStatesConverter asAvailableStatesConverter)
+                {
+                    // This type converter is the standard one for this element type/category, but it's not instance-specific.
+                    // We need it to be otherwise it pulls from CurrentInstance which is no good:
+                    var copy = new AvailableStatesConverter(asAvailableStatesConverter.CategoryName);
+                    if(instanceSave != null)
+                    {
+                        copy.InstanceSave = instanceSave;
+                    }
+                    typeConverter = copy;
+                }
+
                 property.TypeConverter = typeConverter;
                 property.Category = category;
 
