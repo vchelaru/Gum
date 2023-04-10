@@ -302,10 +302,19 @@ namespace Gum.Managers
 
                     mVariablesDataGrid.Categories.Clear();
 
-                    // There's a bug here where drag+dropping a new instance will create 
-                    // duplicate UI members.  I am going to deal with it now because it is
 
-                    if(listOfCategories.Count == 1)
+                    // April 10, 2023
+                    // I am adding multi-select
+                    // editing support. To do this, 
+                    // we call SetMultipleCategoryLists
+                    // which creates wrappers for multi-select
+                    // editing. Currently I do this only if more 
+                    // than one object is selected, in case there
+                    // are bugs in multi-select editing which would
+                    // cause problems. We may consider having even single
+                    // edits use the same code path in the future, but I don't
+                    // feel confident in doing that just yet.                   
+                    if (listOfCategories.Count == 1)
                     {
                         foreach (var memberCategory in listOfCategories[0])
                         {
@@ -326,6 +335,46 @@ namespace Gum.Managers
                     else
                     {
                         mVariablesDataGrid.SetMultipleCategoryLists(listOfCategories);
+
+                        // remove the individual calls for setting variables, move it to the 
+                        // multi-select object:
+                        foreach(var categoryList in listOfCategories)
+                        {
+                            foreach(var innerCategory in categoryList)
+                            {
+                                foreach(var member in innerCategory.Members)
+                                {
+                                    if(member is StateReferencingInstanceMember srim)
+                                    {
+                                        srim.IsCallingRefresh = false;
+                                    }
+                                }
+                            }
+                        }
+
+                        foreach(var gridCategory in mVariablesDataGrid.Categories)
+                        {
+                            foreach(MultiSelectInstanceMember member in gridCategory.Members)
+                            {
+                                member.CustomSetEvent += (owner, value) =>
+                                {
+                                    //do just one undo:
+                                    Undo.UndoManager.Self.RecordUndo();
+
+                                    // and loop through all instances and refrehs:
+                                    foreach(var item in member.InstanceMembers)
+                                    {
+                                        if(item is StateReferencingInstanceMember srim)
+                                        {
+                                            srim.NotifyVariableLogic((object)srim.InstanceSave ?? srim.ElementSave, forceRefresh:true);
+
+                                        }
+                                        //RefreshInResponseToVariableChange()
+                                    }
+                                    //StateReferencingInstanceMember.NotifyVariableLogic(owner, )
+                                };
+                            }
+                        }
                     }
 
                 }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace WpfDataUi.DataTypes
 {
-    internal class MultiSelectInstanceMember : InstanceMember
+    public class MultiSelectInstanceMember : InstanceMember
     {
         public override bool IsDefault 
         { 

@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Windows.Forms;
 using WpfDataUi.DataTypes;
@@ -24,8 +25,10 @@ namespace Gum.PropertyGridHelpers
 
         StateSave mStateSave;
         string mVariableName;
-        InstanceSave mInstanceSave;
-        ElementSave mElementSave;
+        public InstanceSave InstanceSave { get; private set; }
+        public ElementSave ElementSave { get; private set; }
+
+        public object LastOldValue { get; private set; }
 
         InstanceSavePropertyDescriptor mPropertyDescriptor;
         #endregion
@@ -76,7 +79,7 @@ namespace Gum.PropertyGridHelpers
         {
             get
             {
-                return mPropertyDescriptor.GetValue(mInstanceSave) == null;
+                return mPropertyDescriptor.GetValue(InstanceSave) == null;
             }
             set
             {
@@ -190,6 +193,11 @@ namespace Gum.PropertyGridHelpers
             set;
         }
 
+        // Prior to April 10 2023 this was always true. Now that we have multi-select, we don't want to
+        // call it here if editing multiple objects. Instead, we want to have the multi-select call it and pass
+        // the list of variables so that a single undo can be performed.
+        public bool IsCallingRefresh { get; set; } = true;
+
         #endregion
 
         public event Action<string> SetToDefault;
@@ -202,11 +210,11 @@ namespace Gum.PropertyGridHelpers
             base(variableName, stateSave)
         {
             StateSaveCategory = stateSaveCategory;
-            mInstanceSave = instanceSave;
+            InstanceSave = instanceSave;
             mStateSave = stateSave;
             mVariableName = variableName;
             mPropertyDescriptor = ispd;
-            mElementSave = elementSave;
+            ElementSave = elementSave;
 
             if(ispd?.IsReadOnly == true)
             {
@@ -297,17 +305,17 @@ namespace Gum.PropertyGridHelpers
                 {
                     string qualifiedName;
 
-                    if (mElementSave is ScreenSave)
+                    if (ElementSave is ScreenSave)
                     {
-                        qualifiedName = $"Screens/{mElementSave.Name}";
+                        qualifiedName = $"Screens/{ElementSave.Name}";
                     }
-                    else if(mElementSave is ComponentSave)
+                    else if(ElementSave is ComponentSave)
                     {
-                        qualifiedName = $"Components/{mElementSave.Name}";
+                        qualifiedName = $"Components/{ElementSave.Name}";
                     }
                     else
                     {
-                        qualifiedName = $"Standards/{mElementSave.Name}";
+                        qualifiedName = $"Standards/{ElementSave.Name}";
                     }
 
                     // no need to append instance, the variable name contains the instance name if there is an instance
@@ -365,7 +373,7 @@ namespace Gum.PropertyGridHelpers
                 var oldExposedName = variableSave.ExposedAsName;
                 variableSave.ExposedAsName = null;
 
-                PluginManager.Self.VariableDelete(mElementSave, oldExposedName);
+                PluginManager.Self.VariableDelete(ElementSave, oldExposedName);
                 GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
                 PropertyGridManager.Self.RefreshUI(force: true);
             }
@@ -502,52 +510,63 @@ namespace Gum.PropertyGridHelpers
             }
         }
 
-        private void HandleCustomSet(object instance, object value)
+        private void HandleCustomSet(object gumElementOrInstanceSaveAsObject, object newValue)
         {
             if (mPropertyDescriptor != null)
             {
                 object oldValue = base.Value;
+                LastOldValue = oldValue;
+                mPropertyDescriptor.SetValue(gumElementOrInstanceSaveAsObject, newValue);
 
-                mPropertyDescriptor.SetValue(instance, value);
-
-                string name = RootVariableName;
-
-                bool handledByExposedVariable = false;
-
-                // This might be a tunneled variable, and we want to react to the 
-                // change using the underlying variable if so:
-                if(instance is ElementSave)
-                {
-                    var elementSave = instance as ElementSave;
-                    var variable = elementSave.DefaultState.Variables
-                        .FirstOrDefault(item => item.ExposedAsName == RootVariableName);
-                    if(variable != null)
-                    {
-                        var sourceObjectName = variable.SourceObject;
-
-                        name = variable.Name;
-                        var instanceInElement = elementSave.Instances
-                            .FirstOrDefault(item => item.Name == sourceObjectName);
-
-                        if(instanceInElement != null)
-                        {
-                            handledByExposedVariable = true;
-                            SetVariableLogic.Self.ReactToPropertyValueChanged(variable.GetRootName(), oldValue, elementSave, instanceInElement, this.StateSave, true);
-                        }
-                        
-                    }
-                }
-
-                if(!handledByExposedVariable)
-                {
-                    SetVariableLogic.Self.PropertyValueChanged(name, oldValue, instance as InstanceSave);
-                }
+                
+                NotifyVariableLogic(gumElementOrInstanceSaveAsObject);
             }
             else
             {
-                mStateSave.SetValue(mVariableName, value);
+                mStateSave.SetValue(mVariableName, newValue);
             }
             // set the value
+        }
+
+        public void NotifyVariableLogic(object gumElementOrInstanceSaveAsObject, bool? forceRefresh = null)
+        {
+            string name = RootVariableName;
+
+            bool handledByExposedVariable = false;
+
+            bool effectiveRefresh = forceRefresh ?? IsCallingRefresh;
+
+            bool effectiveRecordUndo = IsCallingRefresh;
+
+            // This might be a tunneled variable, and we want to react to the 
+            // change using the underlying variable if so:
+            if (gumElementOrInstanceSaveAsObject is ElementSave)
+            {
+                var elementSave = gumElementOrInstanceSaveAsObject as ElementSave;
+                var variable = elementSave.DefaultState.Variables
+                    .FirstOrDefault(item => item.ExposedAsName == RootVariableName);
+                if (variable != null)
+                {
+                    var sourceObjectName = variable.SourceObject;
+
+                    name = variable.Name;
+                    var instanceInElement = elementSave.Instances
+                        .FirstOrDefault(item => item.Name == sourceObjectName);
+
+                    if (instanceInElement != null)
+                    {
+                        handledByExposedVariable = true;
+
+                        SetVariableLogic.Self.ReactToPropertyValueChanged(variable.GetRootName(), LastOldValue, elementSave, instanceInElement, this.StateSave, refresh: effectiveRefresh, recordUndo: effectiveRecordUndo);
+                    }
+
+                }
+            }
+
+            if (!handledByExposedVariable)
+            {
+                SetVariableLogic.Self.PropertyValueChanged(name, LastOldValue, gumElementOrInstanceSaveAsObject as InstanceSave, refresh: effectiveRefresh, recordUndo: effectiveRecordUndo);
+            }
         }
 
         private Type HandleCustomGetType(object instance)
@@ -599,14 +618,14 @@ namespace Gum.PropertyGridHelpers
         {
             VariableSave variableSave = null;
 
-            if (mInstanceSave != null)
+            if (InstanceSave != null)
             {
-                variableSave = mInstanceSave.GetVariableFromThisOrBase(
-                     new ElementWithState(mInstanceSave.ParentContainer), RootVariableName);
+                variableSave = InstanceSave.GetVariableFromThisOrBase(
+                     new ElementWithState(InstanceSave.ParentContainer), RootVariableName);
             }
             else
             {
-                variableSave = mElementSave.GetVariableFromThisOrBase(
+                variableSave = ElementSave.GetVariableFromThisOrBase(
                     RootVariableName);
             }
 
@@ -617,14 +636,14 @@ namespace Gum.PropertyGridHelpers
         {
             string typeName = null;
             
-            if(mInstanceSave != null)
+            if(InstanceSave != null)
             {
-                typeName = mInstanceSave?.GetVariableListFromThisOrBase(
-                    mInstanceSave.ParentContainer, RootVariableName)?.Type;
+                typeName = InstanceSave?.GetVariableListFromThisOrBase(
+                    InstanceSave.ParentContainer, RootVariableName)?.Type;
             }
             else
             {
-                typeName = mElementSave.GetVariableListFromThisOrBase(RootVariableName)?.Type;
+                typeName = ElementSave.GetVariableListFromThisOrBase(RootVariableName)?.Type;
             }
 
             if(!string.IsNullOrEmpty(typeName))

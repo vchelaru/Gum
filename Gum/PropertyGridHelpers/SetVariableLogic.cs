@@ -70,7 +70,7 @@ namespace Gum.PropertyGridHelpers
         }
 
         // added instance property so we can change values even if a tree view is selected
-        public void PropertyValueChanged(string unqualifiedMemberName, object oldValue, InstanceSave instance, bool refresh = true)
+        public void PropertyValueChanged(string unqualifiedMemberName, object oldValue, InstanceSave instance, bool refresh = true, bool recordUndo = true)
         {
             var selectedStateSave = SelectedState.Self.SelectedStateSave;
 
@@ -89,7 +89,7 @@ namespace Gum.PropertyGridHelpers
                     SelectedState.Self.SelectedVariableSave = SelectedState.Self.SelectedStateSave.GetVariableSave(unqualifiedMemberName);
                 }
             }
-            ReactToPropertyValueChanged(unqualifiedMemberName, oldValue, parentElement, instance, selectedStateSave, refresh);
+            ReactToPropertyValueChanged(unqualifiedMemberName, oldValue, parentElement, instance, selectedStateSave, refresh, recordUndo: recordUndo);
         }
 
         /// <summary>
@@ -100,7 +100,7 @@ namespace Gum.PropertyGridHelpers
         /// <param name="parentElement"></param>
         /// <param name="instance"></param>
         /// <param name="refresh"></param>
-        public void ReactToPropertyValueChanged(string unqualifiedMember, object oldValue, ElementSave parentElement, InstanceSave instance, StateSave stateSave, bool refresh)
+        public void ReactToPropertyValueChanged(string unqualifiedMember, object oldValue, ElementSave parentElement, InstanceSave instance, StateSave stateSave, bool refresh, bool recordUndo = true)
         {
             if (parentElement != null)
             {
@@ -115,107 +115,109 @@ namespace Gum.PropertyGridHelpers
                 VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(qualifiedName);
 
                 // Need to record undo before refreshing and reselecting the UI
-                Undo.UndoManager.Self.RecordUndo();
-
-                if (refresh)
+                if(recordUndo)
                 {
-                    // These properties may require some changes to the grid, so we refresh the tree view
-                    // and entire grid.
-                    // There's lots of work that can/should be done here:
-                    // 1. We should have the plugins that handle excluding variables also
-                    //    report whether a variable requires refreshing
-                    // 2. We could only refresh the grid for some variables like UseCustomFont
-                    // 3. We could have only certain variable refresh themselves instead of the entire 
-                    //    grid.
-                    var needsToRefreshEntireElement = 
-                        unqualifiedMember == "Parent" || 
-                        unqualifiedMember == "Name" ||
-                        unqualifiedMember == "UseCustomFont" ||
-                        unqualifiedMember == "Texture Address" ||
-                        unqualifiedMember == "Base Type"
-                        ;
-                    if(needsToRefreshEntireElement)
-                    {
-                        GumCommands.Self.GuiCommands.RefreshElementTreeView(parentElement);
-                        GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);
-                    }
+                    Undo.UndoManager.Self.RecordUndo();
                 }
 
-
                 if (refresh)
                 {
-                    var value = SelectedState.Self.SelectedStateSave.GetValue(qualifiedName);
-
-                    var areSame = value == null && oldValue == null;
-                    if (!areSame && value != null)
-                    {
-                        areSame = value.Equals(oldValue);
-                    }
-
-                    // If the values are the same they may have been set to be the same by a plugin that
-                    // didn't allow the assignment, so don't go through the work of saving and refreshing
-                    if (!areSame)
-                    {
-                        GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
-
-                        // Inefficient but let's do this for now - we can make it more efficient later
-                        // November 19, 2019
-                        // While this is inefficient
-                        // at runtime, it is *really*
-                        // inefficient for debugging. If
-                        // a set value fails, we have to trace
-                        // the entire variable assignment and that
-                        // can take forever. Therefore, we're going to
-                        // migrate towards setting the individual values
-                        // here. This can expand over time to just exclude
-                        // the RefreshAll call completely....but I don't know
-                        // if that will cause problems now, so instead I'm going
-                        // to do it one by one:
-                        var handledByDirectSet = false;
-                        if (PropertiesSupportingIncrementalChange.Contains(unqualifiedMember) && 
-                            (instance != null || SelectedState.Self.SelectedComponent != null || SelectedState.Self.SelectedStandardElement != null))
-                        {
-                            // this assumes that the object having its variable set is the selected instance. If we're setting
-                            // an exposed variable, this is not the case - the object having its variable set is actually the instance.
-                            //GraphicalUiElement gue = WireframeObjectManager.Self.GetSelectedRepresentation();
-                            GraphicalUiElement gue = null;
-                            if (instance != null)
-                            {
-                                gue = WireframeObjectManager.Self.GetRepresentation(instance);
-                            }
-                            else
-                            {
-                                gue = WireframeObjectManager.Self.GetSelectedRepresentation();
-                            }
-
-                            if (gue != null)
-                            {
-                                gue.SetProperty(unqualifiedMember, value);
-
-                                WireframeObjectManager.Self.RootGue?.ApplyVariableReferences(SelectedState.Self.SelectedStateSave);
-                                //gue.ApplyVariableReferences(SelectedState.Self.SelectedStateSave);
-
-                                handledByDirectSet = true;
-                            }
-                            if(unqualifiedMember == "Text" && LocalizationManager.HasDatabase)
-                            {
-                                WireframeObjectManager.Self.ApplyLocalization(gue, value as string);
-                            }
-                        }
-                        
-                        if(!handledByDirectSet)
-                        {
-                            WireframeObjectManager.Self.RefreshAll(true, forceReloadTextures:false);
-                        }
-
-
-                        SelectionManager.Self.Refresh();
-                    }
+                    RefreshInResponseToVariableChange(unqualifiedMember, oldValue, parentElement, instance, qualifiedName);
                 }
             }
         }
 
+        public void RefreshInResponseToVariableChange(string unqualifiedMember, object oldValue, ElementSave parentElement, InstanceSave instance, string qualifiedName)
+        {
+            // These properties may require some changes to the grid, so we refresh the tree view
+            // and entire grid.
+            // There's lots of work that can/should be done here:
+            // 1. We should have the plugins that handle excluding variables also
+            //    report whether a variable requires refreshing
+            // 2. We could only refresh the grid for some variables like UseCustomFont
+            // 3. We could have only certain variable refresh themselves instead of the entire 
+            //    grid.
+            var needsToRefreshEntireElement =
+                unqualifiedMember == "Parent" ||
+                unqualifiedMember == "Name" ||
+                unqualifiedMember == "UseCustomFont" ||
+                unqualifiedMember == "Texture Address" ||
+                unqualifiedMember == "Base Type"
+                ;
+            if (needsToRefreshEntireElement)
+            {
+                GumCommands.Self.GuiCommands.RefreshElementTreeView(parentElement);
+                GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);
+            }
 
+            var value = SelectedState.Self.SelectedStateSave.GetValue(qualifiedName);
+
+            var areSame = value == null && oldValue == null;
+            if (!areSame && value != null)
+            {
+                areSame = value.Equals(oldValue);
+            }
+
+            // If the values are the same they may have been set to be the same by a plugin that
+            // didn't allow the assignment, so don't go through the work of saving and refreshing
+            if (!areSame)
+            {
+                GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+
+                // Inefficient but let's do this for now - we can make it more efficient later
+                // November 19, 2019
+                // While this is inefficient
+                // at runtime, it is *really*
+                // inefficient for debugging. If
+                // a set value fails, we have to trace
+                // the entire variable assignment and that
+                // can take forever. Therefore, we're going to
+                // migrate towards setting the individual values
+                // here. This can expand over time to just exclude
+                // the RefreshAll call completely....but I don't know
+                // if that will cause problems now, so instead I'm going
+                // to do it one by one:
+                var handledByDirectSet = false;
+                if (PropertiesSupportingIncrementalChange.Contains(unqualifiedMember) &&
+                    (instance != null || SelectedState.Self.SelectedComponent != null || SelectedState.Self.SelectedStandardElement != null))
+                {
+                    // this assumes that the object having its variable set is the selected instance. If we're setting
+                    // an exposed variable, this is not the case - the object having its variable set is actually the instance.
+                    //GraphicalUiElement gue = WireframeObjectManager.Self.GetSelectedRepresentation();
+                    GraphicalUiElement gue = null;
+                    if (instance != null)
+                    {
+                        gue = WireframeObjectManager.Self.GetRepresentation(instance);
+                    }
+                    else
+                    {
+                        gue = WireframeObjectManager.Self.GetSelectedRepresentation();
+                    }
+
+                    if (gue != null)
+                    {
+                        gue.SetProperty(unqualifiedMember, value);
+
+                        WireframeObjectManager.Self.RootGue?.ApplyVariableReferences(SelectedState.Self.SelectedStateSave);
+                        //gue.ApplyVariableReferences(SelectedState.Self.SelectedStateSave);
+
+                        handledByDirectSet = true;
+                    }
+                    if (unqualifiedMember == "Text" && LocalizationManager.HasDatabase)
+                    {
+                        WireframeObjectManager.Self.ApplyLocalization(gue, value as string);
+                    }
+                }
+
+                if (!handledByDirectSet)
+                {
+                    WireframeObjectManager.Self.RefreshAll(true, forceReloadTextures: false);
+                }
+
+
+                SelectionManager.Self.Refresh();
+            }
+        }
 
         private void ReactToChangedMember(string rootVariableName, object oldValue, ElementSave parentElement, InstanceSave instance, StateSave stateSave)
         {
