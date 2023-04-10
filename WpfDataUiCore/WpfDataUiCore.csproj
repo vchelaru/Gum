@@ -49,6 +49,7 @@
     <Compile Include="..\WpfDataUi\DataTypes\InstanceMember.cs" Link="DataTypes\InstanceMember.cs" />
     <Compile Include="..\WpfDataUi\DataTypes\InstanceMemberDisplayProperties.cs" Link="DataTypes\InstanceMemberDisplayProperties.cs" />
     <Compile Include="..\WpfDataUi\DataTypes\MemberCategory.cs" Link="DataTypes\MemberCategory.cs" />
+    <Compile Include="..\WpfDataUi\DataTypes\MultiSelectInstanceMember.cs" Link="DataTypes\MultiSelectInstanceMember.cs" />
     <Compile Include="..\WpfDataUi\DataTypes\TypeMemberDisplayProperties.cs" Link="DataTypes\TypeMemberDisplayProperties.cs" />
     <Compile Include="..\WpfDataUi\DataUiGrid.xaml.cs" Link="DataUiGrid.xaml.cs" />
     <Compile Include="..\WpfDataUi\Decorators\NoSizeDecorator.cs" Link="Decorators\NoSizeDecorator.cs" />
