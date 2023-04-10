@@ -531,6 +531,62 @@ namespace WpfDataUi
             return originalString;
         }
 
+        public void SetMultipleCategoryLists(List<List<MemberCategory>> listOfCategoryLists)
+        {
+            HashSet<string> alreadyAddedMembers = new HashSet<string>();
+
+            List<MemberCategory> effectiveCategory = new List<MemberCategory>();
+
+            foreach(var instance in listOfCategoryLists)
+            {
+                foreach(var category in instance)
+                {
+                    var newCategory = new MemberCategory();
+                    newCategory.Name = category.Name;
+                    effectiveCategory.Add(newCategory);
+
+                    foreach(var member in category.Members)
+                    {
+                        if(alreadyAddedMembers.Contains(member.DisplayName) == false)
+                        {
+                            alreadyAddedMembers.Add(member.DisplayName);
+                            var multiSelectInstanceMember = CreateMultiGroup(listOfCategoryLists, member);
+                            newCategory.Members.Add(multiSelectInstanceMember);
+                        }
+                    }
+                }
+            }
+
+            this.Categories.Clear();
+
+            foreach(var category in effectiveCategory)
+            {
+                this.Categories.Add(category);
+
+            }
+        }
+
+        private MultiSelectInstanceMember CreateMultiGroup(List<List<MemberCategory>> source, InstanceMember templateMember)
+        {
+            List<InstanceMember> membersToAdd = new List<InstanceMember>();
+            foreach(var categoryList in source)
+            {
+                foreach(var category in categoryList)
+                {
+                    membersToAdd.AddRange(category.Members.Where(item => item.DisplayName == templateMember.DisplayName));
+                }
+            }
+
+            var multiSelectInstanceMember = new MultiSelectInstanceMember();
+            multiSelectInstanceMember.Name = templateMember.Name;
+            multiSelectInstanceMember.DisplayName = templateMember.DisplayName;
+            multiSelectInstanceMember.PreferredDisplayer = templateMember.PreferredDisplayer;
+            multiSelectInstanceMember.InstanceMembers = membersToAdd;
+
+
+            return multiSelectInstanceMember;
+        }
+
         #endregion
 
     }

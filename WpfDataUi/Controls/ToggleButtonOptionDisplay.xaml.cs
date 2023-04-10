@@ -67,6 +67,10 @@ namespace WpfDataUi.Controls
                 {
                     return Brushes.LightGreen;
                 }
+                else if(InstanceMember.IsIndeterminate)
+                {
+                    return Brushes.LightGray;
+                }
                 else
                 {
                     return mUnmodifiedBrush;

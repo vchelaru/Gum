@@ -380,6 +380,7 @@ namespace WpfDataUi.Controls
         }
 
         public SolidColorBrush DefaultValueBackground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(180, 255, 180));
+        public SolidColorBrush IndeterminateValueBackground = new SolidColorBrush(System.Windows.Media.Colors.LightGray);
         public SolidColorBrush CustomValueBackground = System.Windows.Media.Brushes.White;
 
         public void RefreshDisplay()
@@ -403,6 +404,10 @@ namespace WpfDataUi.Controls
             if (isDefault)
             {
                 mAssociatedTextBox.Background = DefaultValueBackground;
+            }
+            else if(InstanceMember.IsIndeterminate)
+            {
+                mAssociatedTextBox.Background = IndeterminateValueBackground;
             }
             else
             {

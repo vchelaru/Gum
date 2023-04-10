@@ -43,7 +43,7 @@ namespace Gum.PropertyGridHelpers
         private List<InstanceSavePropertyDescriptor> GetProperties()
         {
             // search terms: display properties, display variables, show variables, variable display, variable displayer
-            List<InstanceSavePropertyDescriptor> pdc = new List<InstanceSavePropertyDescriptor>();
+            List<InstanceSavePropertyDescriptor> popertyList = new List<InstanceSavePropertyDescriptor>();
 
 
             StateSave stateSave = SelectedState.Self.SelectedStateSave;
@@ -52,19 +52,19 @@ namespace Gum.PropertyGridHelpers
 
             if (instanceSave != null && stateSave != null)
             {
-                DisplayCurrentInstance(pdc, instanceSave);
+                DisplayCurrentInstance(popertyList, instanceSave);
 
             }
             else if (elementSave != null && stateSave != null)
             {
                 StateSave defaultState = GetRecursiveStateFor(elementSave);
 
-                DisplayCurrentElement(pdc, elementSave, null, defaultState);
+                DisplayCurrentElement(popertyList, elementSave, null, defaultState);
 
 
             }
 
-            return pdc;
+            return popertyList;
         }
 
         public void GetCategories(ElementSave element, InstanceSave instance, List<MemberCategory> categories, StateSave stateSave, StateSaveCategory stateSaveCategory)

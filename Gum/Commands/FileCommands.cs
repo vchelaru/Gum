@@ -95,7 +95,10 @@ namespace Gum.Commands
             {
                 bool succeeded = true;
 
-                UndoManager.Self.RecordUndo();
+                // April 10, 2023
+                // This is potentially slow, dishonest (SaveElement should only save the element), and prevents multi-select edit
+                // from properly creating a single undo state:
+                //UndoManager.Self.RecordUndo();
 
                 bool doesProjectNeedToSave = false;
                 bool shouldSave = ProjectManager.Self.AskUserForProjectNameIfNecessary(out doesProjectNeedToSave);

@@ -35,5 +35,16 @@ namespace System.Collections.ObjectModel
                 }
             }
         }
+
+        public static void RemoveAll<T>(this ObservableCollection<T> collection, Func<T, bool> removalPredicate)
+        {
+            for(var i = collection.Count-1;i > -1;i--)
+            {
+                if (removalPredicate(collection[i]))
+                {
+                    collection.RemoveAt(i);
+                }
+            }
+        }
     }
 }

@@ -158,7 +158,7 @@ namespace Gum.DataTypes.Variables
             set;
         }
 
-#if !WINDOWS_8 && !UWP
+#if !UWP
         [XmlIgnore]
         public TypeConverter CustomTypeConverter
         {

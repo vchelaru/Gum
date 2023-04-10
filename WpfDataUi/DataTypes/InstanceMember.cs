@@ -253,6 +253,8 @@ namespace WpfDataUi.DataTypes
             }
         }
 
+        public virtual bool IsIndeterminate { get; } = false;
+
         // Used to "new" this up, but doing so makes combo boxes
         // have no options. If this is null, combo box displayers
         // use the default full enum list.

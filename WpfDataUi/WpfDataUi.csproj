@@ -154,6 +154,7 @@
     <Compile Include="DataTypes\InstanceMember.cs" />
     <Compile Include="DataTypes\InstanceMemberDisplayProperties.cs" />
     <Compile Include="DataTypes\MemberCategory.cs" />
+    <Compile Include="DataTypes\MultiSelectInstanceMember.cs" />
     <Compile Include="DataTypes\TypeMemberDisplayProperties.cs" />
     <Compile Include="DataUiGrid.xaml.cs">
       <DependentUpon>DataUiGrid.xaml</DependentUpon>

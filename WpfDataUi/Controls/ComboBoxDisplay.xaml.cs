@@ -198,7 +198,8 @@ namespace WpfDataUi.Controls
 
         public void Refresh(bool forceRefreshEvenIfFocused = false)
         {
-            if (this.HasEnoughInformationToWork())
+            var hasEnoughInformationToWork = this.HasEnoughInformationToWork();
+            if (hasEnoughInformationToWork)
             {
                 Type type = this.GetPropertyType();
 
@@ -227,6 +228,7 @@ namespace WpfDataUi.Controls
 
 
             TextBlock.SetForeground(ComboBox, DesiredForegroundBrush);
+
 
             this.RefreshContextMenu(ComboBox.ContextMenu);
             this.RefreshContextMenu(TextBlock.ContextMenu);
@@ -293,7 +295,8 @@ namespace WpfDataUi.Controls
                 }
 
             }
-            else if (mInstancePropertyType.IsEnum)
+            // Multi-select could result in a null type, so let's do a null check:
+            else if (mInstancePropertyType?.IsEnum == true)
             {
                 foreach (var item in Enum.GetValues(mInstancePropertyType))
                 {

@@ -61,6 +61,10 @@ namespace WpfDataUi.Controls
                 {
                     return Brushes.Green;
                 }
+                else if(InstanceMember.IsIndeterminate)
+                {
+                    return Brushes.LightGray;
+                }
                 else
                 {
                     return Brushes.Black;
@@ -174,6 +178,8 @@ namespace WpfDataUi.Controls
 
 
                 CheckBox.Foreground = DesiredForegroundBrush;
+
+
 
             }
         }

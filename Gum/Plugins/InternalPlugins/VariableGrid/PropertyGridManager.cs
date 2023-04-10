@@ -48,7 +48,9 @@ namespace Gum.Managers
         //ToolStripMenuItem mUnExposeVariable;
 
         ElementSave mLastElement;
-        InstanceSave mLastInstance;
+
+        List<InstanceSave> mLastInstanceSaves = new List<InstanceSave>();
+        //InstanceSave mLastInstance;
         StateSave mLastState;
         StateSaveCategory mLastCategory;
         BehaviorSave mLastBehaviorSave;
@@ -173,13 +175,13 @@ namespace Gum.Managers
             variableViewModel.ShowVariableGrid = showVariableGrid ?
                 System.Windows.Visibility.Visible : System.Windows.Visibility.Hidden;
 
-            if (SelectedState.Self.SelectedInstances.GetCount() > 1)
-            {
+            //if (SelectedState.Self.SelectedInstances.GetCount() > 1)
+            //{
                 // I don't know if we want to eventually show these
                 // but for now we'll hide the PropertyGrid:
-                mainControl.Visibility = System.Windows.Visibility.Hidden;
-            }
-            else
+            //    mainControl.Visibility = System.Windows.Visibility.Hidden;
+            //}
+            //else
             {
                 mainControl.Visibility = System.Windows.Visibility.Visible;
 
@@ -188,7 +190,7 @@ namespace Gum.Managers
 
                 var element = SelectedState.Self.SelectedElement;
                 var state = SelectedState.Self.SelectedStateSave;
-                var instance = SelectedState.Self.SelectedInstance;
+                var instance = SelectedState.Self.SelectedInstances.ToList();
                 var behaviorSave = SelectedState.Self.SelectedBehavior;
                 var category = SelectedState.Self.SelectedStateCategorySave;
 
@@ -213,17 +215,35 @@ namespace Gum.Managers
         /// <param name="state">The state to display.</param>
         /// <param name="instance">The instance to display. May be null.</param>
         /// <param name="force">Whether to refresh even if the element, state, and instance have not changed.</param>
-        private void RefreshDataGrid(ElementSave element, StateSave state, StateSaveCategory category, InstanceSave instance, 
+        private void RefreshDataGrid(ElementSave element, StateSave state, StateSaveCategory category, List<InstanceSave> newInstances, 
             BehaviorSave behaviorSave, bool force = false)
         {
 
             bool hasChangedObjectShowing = 
                 element != mLastElement || 
-                instance != mLastInstance || 
                 state != mLastState ||
                 category != mLastCategory ||
                 behaviorSave != mLastBehaviorSave ||
                 force;
+
+            if(!hasChangedObjectShowing)
+            {
+                if(newInstances.Count != mLastInstanceSaves.Count)
+                {
+                    hasChangedObjectShowing= true;
+                }
+                else
+                {
+                    for(int i = 0; i < newInstances.Count; i++)
+                    {
+                        if (newInstances[i] != mLastInstanceSaves[i])
+                        {
+                            hasChangedObjectShowing = true;
+                            break;
+                        }
+                    }
+                }
+            }
 
             var hasCustomState = SelectedState.Self.CustomCurrentStateSave != null;
 
@@ -234,9 +254,33 @@ namespace Gum.Managers
 
             mVariablesDataGrid.IsInnerGridEnabled = !hasCustomState;
 
-            List<MemberCategory> categories = element == null
-                ? new List<MemberCategory>()
-                : GetMemberCategories(element, state, category, instance);
+            List<List<MemberCategory>> listOfCategories = new List<List<MemberCategory>>();
+
+            if(newInstances.Count > 0)
+            {
+                foreach(var instance in newInstances)
+                {
+                    List<MemberCategory> categories = element == null
+                        ? new List<MemberCategory>()
+                        : GetMemberCategories(element, state, category, instance);
+
+                    if(newInstances.Count > 1)
+                    {
+                        RemoveMembersNotAllowedInMultiEdit(categories);
+                    }
+
+
+                    listOfCategories.Add(categories);
+                }
+            }
+            else
+            {
+                List<MemberCategory> categories = element == null
+                    ? new List<MemberCategory>()
+                    : GetMemberCategories(element, state, category, null);
+                listOfCategories.Add(categories);
+
+            }
 
             mLastBehaviorSave = behaviorSave;
 
@@ -261,21 +305,27 @@ namespace Gum.Managers
                     // There's a bug here where drag+dropping a new instance will create 
                     // duplicate UI members.  I am going to deal with it now because it is
 
-
-                    foreach (var memberCategory in categories)
+                    if(listOfCategories.Count == 1)
                     {
-
-                        // We used to do this:
-                        // Application.DoEvents();
-                        // That made things go faster,
-                        // but it made the "lock" not work, which could make duplicate UI show up.
-                        mVariablesDataGrid.Categories.Add(memberCategory);
-                        if(SimultaneousCalls > 1)
+                        foreach (var memberCategory in listOfCategories[0])
                         {
-                            SimultaneousCalls--;
-                            // EARLY OUT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                            return;
+
+                            // We used to do this:
+                            // Application.DoEvents();
+                            // That made things go faster,
+                            // but it made the "lock" not work, which could make duplicate UI show up.
+                            mVariablesDataGrid.Categories.Add(memberCategory);
+                            if(SimultaneousCalls > 1)
+                            {
+                                SimultaneousCalls--;
+                                // EARLY OUT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                                return;
+                            }
                         }
+                    }
+                    else
+                    {
+                        mVariablesDataGrid.SetMultipleCategoryLists(listOfCategories);
                     }
 
                 }
@@ -284,7 +334,8 @@ namespace Gum.Managers
             }
             else
             {
-                foreach (var newCategory in categories)
+                // todo: handle multiselect
+                foreach (var newCategory in listOfCategories[0])
                 {
                     // let's see if any variables have changed
                     var oldCategory = mVariablesDataGrid.Categories.FirstOrDefault(item => item.Name == newCategory.Name);
@@ -307,6 +358,14 @@ namespace Gum.Managers
 
             mVariablesDataGrid.Refresh();
             
+        }
+
+        private void RemoveMembersNotAllowedInMultiEdit(List<MemberCategory> categories)
+        {
+            foreach(var category in categories)
+            {
+                category.Members.RemoveAll(item => item.DisplayName == "Name" || item.DisplayName == "Base Type");
+            }
         }
 
         private void RefreshStateLabel(ElementSave element, StateSaveCategory category, StateSave state)
@@ -442,7 +501,11 @@ namespace Gum.Managers
 
             mLastElement = element;
             mLastState = state;
-            mLastInstance = instance;
+            mLastInstanceSaves.Clear();
+            if(instance != null)
+            {
+                mLastInstanceSaves.Add(instance);
+            }
             mLastCategory = stateCategory;
 
             var stateSave = SelectedState.Self.SelectedStateSave;

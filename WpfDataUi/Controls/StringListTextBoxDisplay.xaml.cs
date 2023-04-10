@@ -53,6 +53,7 @@ namespace WpfDataUi.Controls
         public bool SuppressSettingProperty { get; set; }
 
         static SolidColorBrush DefaultValueBackground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(180, 255, 180));
+        static SolidColorBrush IndeterminateBackground = new SolidColorBrush(System.Windows.Media.Colors.LightGray);
         static SolidColorBrush CustomValueBackground = System.Windows.Media.Brushes.White;
 
         public void Refresh(bool forceRefreshEvenIfFocused = false)
@@ -69,7 +70,9 @@ namespace WpfDataUi.Controls
                 this.RefreshContextMenu(TextBox.ContextMenu);
                 //this.RefreshContextMenu(StackPanel.ContextMenu);
 
-                this.TextBox.Background = InstanceMember.IsDefault ? DefaultValueBackground : CustomValueBackground;
+                this.TextBox.Background = InstanceMember.IsDefault ? DefaultValueBackground : 
+                    InstanceMember.IsIndeterminate ? IndeterminateBackground 
+                    : CustomValueBackground;
 
                 //HintTextBlock.Visibility = !string.IsNullOrEmpty(InstanceMember?.DetailText) ? Visibility.Visible : Visibility.Collapsed;
                 //HintTextBlock.Text = InstanceMember?.DetailText;
