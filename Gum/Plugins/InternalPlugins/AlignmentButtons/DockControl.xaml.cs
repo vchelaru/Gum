@@ -117,6 +117,36 @@ namespace Gum.Plugins.AlignmentButtons
             }
         }
 
+        private void FillVerticallyButton_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            using (UndoManager.Self.RequestLock())
+            {
 
+                var state = SelectedState.Self.SelectedStateSave;
+
+                SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
+
+                SetAndCallReact("Height", 0.0f, "float");
+                SetAndCallReact("Height Units", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
+
+                RefreshAndSave();
+            }
+        }
+
+        private void FillHorizontallyButton_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            using (UndoManager.Self.RequestLock())
+            {
+
+                var state = SelectedState.Self.SelectedStateSave;
+
+                SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
+
+                SetAndCallReact("Width", 0.0f, "float");
+                SetAndCallReact("Width Units", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
+
+                RefreshAndSave();
+            }
+        }
     }
 }

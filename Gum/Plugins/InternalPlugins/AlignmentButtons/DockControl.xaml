@@ -10,8 +10,10 @@
                 <RowDefinition Height="Auto"></RowDefinition>
                 <RowDefinition Height="Auto"></RowDefinition>
                 <RowDefinition Height="Auto"></RowDefinition>
+                <RowDefinition Height="Auto"></RowDefinition>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"></ColumnDefinition>
                 <ColumnDefinition Width="Auto"></ColumnDefinition>
                 <ColumnDefinition Width="Auto"></ColumnDefinition>
                 <ColumnDefinition Width="Auto"></ColumnDefinition>
@@ -26,10 +28,18 @@
             <Button x:Name="FillButton" Click="FillButton_Click" Grid.Row="1" Grid.Column="1" Margin="3">
                 <Image Source="/Gum;component/Content/Icons/Sizing/Fill.png" Height="32" Width="32"/>
             </Button>
-            <Button x:Name="RightButton" Click="RightButton_Click" Grid.Row="1" Grid.Column="2" Margin="3">
+            <Button x:Name="FillVerticallyButton" Click="FillVerticallyButton_Click" Grid.Row="1" Grid.Column="2" Margin="3">
+                <Image Source="/Gum;component/Content/Icons/Sizing/FillVertically.png" Height="32" Width="32"/>
+            </Button>
+            <Button x:Name="RightButton" Click="RightButton_Click" Grid.Row="1" Grid.Column="3" Margin="3">
                 <Image Source="/Gum;component/Content/Icons/Sizing/RightSide.png" Height="32" Width="32"/>
             </Button>
-            <Button x:Name="BottomButton" Click="BottomButton_Click" Grid.Row="2" Grid.Column="1" Margin="3">
+
+            <Button x:Name="FillHorizontallyButton" Click="FillHorizontallyButton_Click" Grid.Row="2" Grid.Column="1" Margin="3">
+                <Image Source="/Gum;component/Content/Icons/Sizing/FillHorizontally.png" Height="32" Width="32"/>
+            </Button>
+
+            <Button x:Name="BottomButton" Click="BottomButton_Click" Grid.Row="3" Grid.Column="1" Margin="3">
                 <Image Source="/Gum;component/Content/Icons/Sizing/BottomSide.png" Height="32" Width="32"/>
             </Button>
         
