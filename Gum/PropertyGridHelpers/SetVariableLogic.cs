@@ -20,6 +20,7 @@ using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary.Graphics;
 using Gum.Logic;
 using GumRuntime;
+using System.Xml.Linq;
 
 namespace Gum.PropertyGridHelpers
 {
@@ -107,6 +108,8 @@ namespace Gum.PropertyGridHelpers
 
                 ReactToChangedMember(unqualifiedMember, oldValue, parentElement, instance, stateSave);
 
+                DoVariableReferenceReaction(parentElement, unqualifiedMember, stateSave);
+
                 string qualifiedName = unqualifiedMember;
                 if(instance != null)
                 {
@@ -125,6 +128,43 @@ namespace Gum.PropertyGridHelpers
                     RefreshInResponseToVariableChange(unqualifiedMember, oldValue, parentElement, instance, qualifiedName);
                 }
             }
+        }
+
+        private void DoVariableReferenceReaction(ElementSave elementSave, string unqualifiedName, StateSave stateSave)
+        {
+            // apply references on this element first, then apply the values to the other references:
+            ElementSaveExtensions.ApplyVariableReferences(elementSave, stateSave);
+
+            if (unqualifiedName == "VariableReferences")
+            {
+                GumCommands.Self.GuiCommands.RefreshPropertyGridValues();
+            }
+
+            // Oct 13, 2022
+            // This should set 
+            // values on all contained objects for this particular state
+            // Maybe this could be slow? not sure, but this covers all cases so if
+            // there are performance issues, will investigate later.
+            var references = ObjectFinder.Self.GetElementReferences(elementSave);
+            var filteredReferences = references
+                .Where(item => item.ReferenceType == ReferenceType.VariableReference);
+
+            HashSet<StateSave> statesAlreadyApplied = new HashSet<StateSave>();
+            HashSet<ElementSave> elementsToSave = new HashSet<ElementSave>();
+            foreach (var reference in filteredReferences)
+            {
+                if (statesAlreadyApplied.Contains(reference.StateSave) == false)
+                {
+                    ElementSaveExtensions.ApplyVariableReferences(reference.OwnerOfReferencingObject, reference.StateSave);
+                    statesAlreadyApplied.Add(reference.StateSave);
+                    elementsToSave.Add(reference.OwnerOfReferencingObject);
+                }
+            }
+            foreach (var elementToSave in elementsToSave)
+            {
+                GumCommands.Self.FileCommands.TryAutoSaveElement(elementToSave);
+            }
+
         }
 
         public void RefreshInResponseToVariableChange(string unqualifiedMember, object oldValue, ElementSave parentElement, InstanceSave instance, string qualifiedName)
@@ -688,39 +728,49 @@ namespace Gum.PropertyGridHelpers
 
                 if(split.Length == 1)
                 {
-                    // need to prepend the equality here
-
-                    var rightSide = split[0]; // there is no left side, just right side
-                    var afterDot = rightSide.Substring(rightSide.LastIndexOf('.') + 1);
-
-                    var withoutVariable = rightSide.Substring(0, rightSide.LastIndexOf('.'));
-
-                    asList[i] = $"{afterDot} = {rightSide}";
-
-                    split = asList[i]
-                        .Split(equalsArray, StringSplitOptions.RemoveEmptyEntries)
-                        .Select(stringItem => stringItem.Trim()).ToArray();
+                    split = AddImpliedLeftSide(asList, i, split);
                 }
 
-                if(split.Length == 2)
+                if (split.Length == 2)
                 {
                     var leftSide = split[0];
                     var rightSide = split[1];
                     if(leftSide == "Color" && rightSide.EndsWith(".Color"))
                     {
-                        // does this thing have a color value?
-                        // let's assume "no" for now, eventually may need to fix this up....
-                        var withoutVariable = rightSide.Substring(0, rightSide.Length - ".Color".Length);
-
-                        asList.RemoveAt(i);
-
-                        asList.Add($"Red = {withoutVariable}.Red");
-                        asList.Add($"Green = {withoutVariable}.Green");
-                        asList.Add($"Blue = {withoutVariable}.Blue");
-
+                        ExpandColorToRedGreenBlue(asList, i, rightSide);
                     }
                 }
             }   
+        }
+
+        private static void ExpandColorToRedGreenBlue(List<string> asList, int i, string rightSide)
+        {
+            // does this thing have a color value?
+            // let's assume "no" for now, eventually may need to fix this up....
+            var withoutVariable = rightSide.Substring(0, rightSide.Length - ".Color".Length);
+
+            asList.RemoveAt(i);
+
+            asList.Add($"Red = {withoutVariable}.Red");
+            asList.Add($"Green = {withoutVariable}.Green");
+            asList.Add($"Blue = {withoutVariable}.Blue");
+        }
+
+        private static string[] AddImpliedLeftSide(List<string> asList, int i, string[] split)
+        {
+            // need to prepend the equality here
+
+            var rightSide = split[0]; // there is no left side, just right side
+            var afterDot = rightSide.Substring(rightSide.LastIndexOf('.') + 1);
+
+            var withoutVariable = rightSide.Substring(0, rightSide.LastIndexOf('.'));
+
+            asList[i] = $"{afterDot} = {rightSide}";
+
+            split = asList[i]
+                .Split(equalsArray, StringSplitOptions.RemoveEmptyEntries)
+                .Select(stringItem => stringItem.Trim()).ToArray();
+            return split;
         }
 
         private List<InstanceSave> GetRecursiveChildrenOf(ElementSave parent, InstanceSave instance)
