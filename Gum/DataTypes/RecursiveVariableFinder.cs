@@ -291,5 +291,56 @@ namespace Gum.DataTypes
 
             return exposedVariables;
         }
+
+        /// <summary>
+        /// Returns the value of the variable from the bottom of the stack by climbing back up to find the most derived set
+        /// </summary>
+        internal object GetValueByBottomName(string variableName, int? currentStackIndex = null)
+        {
+            int stackIndex = currentStackIndex ?? this.ElementStack.Count - 1;
+
+            ElementWithState itemBefore = null;
+
+            if(stackIndex > 0)
+            {
+                itemBefore = this.ElementStack[stackIndex - 1];
+            }
+
+            string variableNameAbove = null;
+
+            if(itemBefore != null)
+            {
+                if(variableName.Contains("."))
+                {
+                    var element = ElementStack[stackIndex].Element;
+                    var exposed = element.DefaultState.Variables
+                        .FirstOrDefault(item => item.Name == variableName && !string.IsNullOrEmpty(item.ExposedAsName));
+
+                    if(exposed != null)
+                    {
+                        variableNameAbove = itemBefore.InstanceName + "." + exposed.ExposedAsName;
+                    }
+                }
+                else
+                {
+                    variableNameAbove = itemBefore.InstanceName + "." + variableName;
+                }
+            }
+
+            object fromAbove = null;
+            if(variableNameAbove != null)
+            {
+                fromAbove = GetValueByBottomName(variableNameAbove, stackIndex - 1);
+            }
+            if(fromAbove != null)
+            {
+                return fromAbove;
+            }
+            else
+            {
+                return ElementStack[stackIndex].StateSave.GetValue(variableName);
+            }
+
+        }
     }
 }

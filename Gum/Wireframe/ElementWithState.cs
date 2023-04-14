@@ -44,7 +44,16 @@ namespace Gum.Wireframe
         {
             if (Element != null)
             {
-                return Element.ToString() + " (" + StateName + ")";
+                var toReturn = Element.Name;
+                if(InstanceName != null)
+                {
+                    toReturn += $".{InstanceName}";
+                }
+
+                var effectiveStateName = StateName ?? "Default";
+
+                toReturn += $" ({effectiveStateName})";
+                return toReturn;
             }
             else
             {

@@ -85,17 +85,17 @@ namespace Gum.DataTypes
         }
 
         
-        public static VariableSave GetVariableFromThisOrBase(this InstanceSave instance,
-            List<ElementWithState> elementStack, string variable)
-        {
-            return GetVariableFromThisOrBase(instance,elementStack, new RecursiveVariableFinder(instance, elementStack), variable, false, false);
-        }
+        //public static VariableSave GetVariableFromThisOrBase(this InstanceSave instance,
+        //    List<ElementWithState> elementStack, string variable)
+        //{
+        //    return GetVariableFromThisOrBase(instance,elementStack, new RecursiveVariableFinder(instance, elementStack), variable, false, false);
+        //}
 
-        public static VariableSave GetVariableFromThisOrBase(this InstanceSave instance,
-            List<ElementWithState> elementStack, string variable, bool forceDefault)
-        {
-            return GetVariableFromThisOrBase(instance, elementStack, new RecursiveVariableFinder(instance, elementStack), variable, forceDefault, false);
-        }
+        //public static VariableSave GetVariableFromThisOrBase(this InstanceSave instance,
+        //    List<ElementWithState> elementStack, string variable, bool forceDefault)
+        //{
+        //    return GetVariableFromThisOrBase(instance, elementStack, new RecursiveVariableFinder(instance, elementStack), variable, forceDefault, false);
+        //}
 
         public static VariableSave GetVariableFromThisOrBase(this InstanceSave instance,
             List<ElementWithState> elementStack, RecursiveVariableFinder rvf, string variable, bool forceDefault, bool onlyIfSetsValue)

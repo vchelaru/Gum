@@ -21,6 +21,7 @@ using RenderingLibrary.Graphics;
 using Gum.Logic;
 using GumRuntime;
 using System.Xml.Linq;
+using ExCSS;
 
 namespace Gum.PropertyGridHelpers
 {
@@ -275,7 +276,9 @@ namespace Gum.PropertyGridHelpers
             var rfv = new RecursiveVariableFinder(stateSave);
             var value = rfv.GetValue(changedMemberWithPrefix);
 
-            ReactIfChangedMemberIsFont(parentElement, instance, rootVariableName, oldValue, value);
+            List<ElementWithState> elementStack = new List<ElementWithState>();
+            elementStack.Add(new ElementWithState(parentElement) { StateName = stateSave?.Name, InstanceName = instance?.Name  });
+            ReactIfChangedMemberIsFont(elementStack, instance, rootVariableName, oldValue, value);
 
             ReactIfChangedMemberIsCustomFont(parentElement, rootVariableName, oldValue);
 
@@ -302,7 +305,7 @@ namespace Gum.PropertyGridHelpers
             }
         }
 
-        private void ReactIfChangedMemberIsFont(ElementSave parentElement, InstanceSave instance, string changedMember, object oldValue, object newValue)
+        private void ReactIfChangedMemberIsFont(List<ElementWithState> elementStack, InstanceSave instance, string changedMember, object oldValue, object newValue)
         {
             var handledByInner = false;
             var instanceElement = instance != null ? ObjectFinder.Self.GetElementSave(instance) : null;
@@ -313,17 +316,41 @@ namespace Gum.PropertyGridHelpers
                 if(variable != null)
                 {
                     var innerInstance = instanceElement.GetInstance(variable.SourceObject);
-                    ReactIfChangedMemberIsFont(instanceElement, innerInstance, variable.GetRootName(), oldValue, newValue);
+
+                    elementStack.Add(new ElementWithState(instanceElement) { InstanceName= variable.SourceObject });
+
+                    ReactIfChangedMemberIsFont(elementStack, innerInstance, variable.GetRootName(), oldValue, newValue);
                     handledByInner = true;
                 }
             }
 
             if(!handledByInner)
             {
-                if (changedMember == "Font" || changedMember == "FontSize" || changedMember == "OutlineThickness" || changedMember == "UseFontSmoothing")
+                if (changedMember == "Font" || changedMember == "FontSize" || changedMember == "OutlineThickness" || changedMember == "UseFontSmoothing" || 
+                    changedMember == "IsItalic" || changedMember == "IsBold")
                 {
+                    elementStack.Add(new ElementWithState(instanceElement));
+                    var rfv = new RecursiveVariableFinder(elementStack);
+                    
+
                     var forcedValues = new StateSave();
-                    forcedValues.SetValue(changedMember, newValue);
+
+                    void TryAddForced(string variableName)
+                    {
+                        var value = rfv.GetValueByBottomName(variableName);
+                        if(value != null)
+                        {
+                            forcedValues.SetValue(variableName, value);
+                        }
+                    }
+
+                    TryAddForced("Font");
+                    TryAddForced("FontSize");
+                    TryAddForced("OutlineThickness");
+                    TryAddForced("UseFontSmoothing");
+                    TryAddForced("IsItalic");
+                    TryAddForced("IsBold");
+
 
                     FontManager.Self.ReactToFontValueSet(instance, forcedValues);
                 }

@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using ToolsUtilities;
 
@@ -130,21 +131,14 @@ namespace Gum.Managers
                 prefix = instance.Name + ".";
             }
 
-            int? fontSize = stateSave.GetValueRecursive(prefix + "FontSize") as int?;
-            var fontValue = (string)stateSave.GetValueRecursive(prefix + "Font");
-            int outlineValue = stateSave.GetValueRecursive(prefix + "OutlineThickness") as int? ?? 0;
+            int? fontSize = forcedValues?.GetValue("FontSize") as int? ?? stateSave.GetValueRecursive(prefix + "FontSize") as int?;
+            var fontValue = forcedValues?.GetValue("Font") as string ?? stateSave.GetValueRecursive(prefix + "Font") as string;
+            int outlineValue = forcedValues?.GetValue("OutlineThickness") as int? ?? stateSave.GetValueRecursive(prefix + "OutlineThickness") as int? ?? 0;
 
             // default to true to match how old behavior worked
-            bool fontSmoothing = stateSave.GetValueRecursive(prefix + "UseFontSmoothing") as bool? ?? true;
-            bool isItalic = stateSave.GetValueRecursive(prefix + "IsItalic") as bool? ?? false;
-            bool isBold = stateSave.GetValueRecursive(prefix + "IsBold") as bool? ?? false;
-
-            if(forcedValues?.GetVariableSave("FontSize") != null)
-            {
-                fontSize = forcedValues.GetValue("FontSize") as int?;
-            }
-            // 3/10/2023
-            // todo - add others here? I'm in a hurry so I'm only doing FontSize
+            bool fontSmoothing = forcedValues?.GetValue("UseFontSmoothing") as bool? ?? stateSave.GetValueRecursive(prefix + "UseFontSmoothing") as bool? ?? true;
+            bool isItalic = forcedValues?.GetValue("IsItalic") as bool? ?? stateSave.GetValueRecursive(prefix + "IsItalic") as bool? ?? false;
+            bool isBold = forcedValues?.GetValue("IsBold") as bool? ?? stateSave.GetValueRecursive(prefix + "IsBold") as bool? ?? false;
 
             if (fontValue != null && fontSize != null)
             {
