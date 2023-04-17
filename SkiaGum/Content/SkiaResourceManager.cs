@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Text;
-using SKSvg = Svg.Skia.SKSvg;
 using SkiaSharp;
-
+using SkiaSharp.Skottie;
 
 namespace SkiaGum.Content
 {
@@ -17,6 +16,8 @@ namespace SkiaGum.Content
         #region SVG caching
 
         private static Dictionary<string, SKSvg> svgCache;
+
+        public static bool ContainsSvg(string name) => svgCache.ContainsKey(name);
 
         public static SKSvg GetSvg(string resourceName)
         {
@@ -44,13 +45,90 @@ namespace SkiaGum.Content
                 svgCache.Add(resourceName, svg);
             }
         }
+
+        public static void CacheSvg(string resourceName, SKSvg svg)
+        {
+            // so that it can be replaced dynamically
+            svgCache[resourceName] = svg;
+        }
+        #endregion
+
+        #region Lottie Animation Caching
+
+        private static Dictionary<string, Animation> animationCache;
+
+        public static Animation GetLottieAnimation(string resourceName)
+        {
+            if (!animationCache.ContainsKey(resourceName))
+                CacheAnimation(resourceName);
+
+            return animationCache[resourceName];
+        }
+
+        private static void CacheAnimation(string resourceName)
+        {
+            using (Stream stream = GetManifestResourceStream(
+                resourceName, ResourceAssembly))
+            {
+                Animation animation = null;
+
+                try
+                {
+                    animation = Animation.Create(stream);
+                }
+                catch (Exception e)
+                {
+                    throw new Exception($"Error loading Animation {resourceName}\n{e}");
+                }
+                animationCache.Add(resourceName, animation);
+            }
+        }
+
         #endregion
 
         #region SKBitmap caching
 
         private static Dictionary<string, SKBitmap> skBitmapCache = new Dictionary<string, SKBitmap>();
 
-        public static SKBitmap GetSKBitmap(string resourceName)
+        public static bool IsCached(string resourceName) => skBitmapCache.ContainsKey(resourceName);
+
+        private static Stream GetUrlStream(string url)
+        {
+            byte[] imageData = null;
+
+            using (var wc = new System.Net.WebClient())
+                imageData = wc.DownloadData(url);
+
+            return new MemoryStream(imageData);
+        }
+
+        public static SKBitmap GetSKBitmapFromUrl(string url)
+        {
+            // Even though GetSKBitmap does a cache check internally, we want to do a cache check before getting the url
+            // so we'll wrap the check here:
+            if (!skBitmapCache.ContainsKey(url))
+            {
+                Stream urlStream = null;
+                try
+                {
+                    urlStream = GetUrlStream(url);
+                    return GetSKBitmap(url, urlStream);
+                }
+                catch
+                {
+                    // Vic says - I'm not sure which type of exception is being caught. Normally I'd catch specific exceptions
+                    // to indicate timeouts but I'm not sure what that is, so we'll just have to handle all and don't throw up:
+                }
+                return null;
+            }
+            else
+            {
+                return skBitmapCache[url];
+            }
+        }
+
+
+        public static SKBitmap GetSKBitmap(string resourceName, Stream stream = null)
         {
             if (!skBitmapCache.ContainsKey(resourceName))
                 CacheSKImage(resourceName);
