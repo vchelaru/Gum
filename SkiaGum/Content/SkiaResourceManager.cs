@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Text;
 using SkiaSharp;
 using SkiaSharp.Skottie;
+using Svg.Skia;
 
 namespace SkiaGum.Content
 {
