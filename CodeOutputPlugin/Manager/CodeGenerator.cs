@@ -1119,25 +1119,44 @@ namespace CodeOutputPlugin.Manager
             // not sure why these apply even though we're using values on the AbsoluteLayout
             if (!proportionalFlags.Contains(WidthProportionalFlag) && (widthUnits == DimensionUnitType.RelativeToContainer || widthUnits == DimensionUnitType.Absolute || widthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale))
             {
+                string rightSide;
+
                 if (widthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
                 {
-                    stringBuilder.AppendLine($"{context.CodePrefix}.WidthRequest = {width.ToString(CultureInfo.InvariantCulture)}f * RenderingLibrary.SystemManagers.GlobalFontScale;");
+                    rightSide = $"{width.ToString(CultureInfo.InvariantCulture)}f * RenderingLibrary.SystemManagers.GlobalFontScale";
                 }
                 else
                 {
-                    stringBuilder.AppendLine($"{context.CodePrefix}.WidthRequest = {width.ToString(CultureInfo.InvariantCulture)}f;");
+                    rightSide = $"{width.ToString(CultureInfo.InvariantCulture)}f";
                 }
+
+                if(AdjustPixelValuesForDensity)
+                {
+                    rightSide += "/Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density";
+                }
+
+                stringBuilder.AppendLine($"{context.CodePrefix}.WidthRequest = {rightSide};");
+
             }
             if (!proportionalFlags.Contains(HeightProportionalFlag) && (heightUnits == DimensionUnitType.RelativeToContainer || heightUnits == DimensionUnitType.Absolute || heightUnits == DimensionUnitType.AbsoluteMultipliedByFontScale))
             {
+                string rightSide;
+
                 if (heightUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
                 {
-                    stringBuilder.AppendLine($"{context.CodePrefix}.HeightRequest = {height.ToString(CultureInfo.InvariantCulture)}f * RenderingLibrary.SystemManagers.GlobalFontScale;");
+                    rightSide = $"{height.ToString(CultureInfo.InvariantCulture)}f * RenderingLibrary.SystemManagers.GlobalFontScale";
                 }
                 else
                 {
-                    stringBuilder.AppendLine($"{context.CodePrefix}.HeightRequest = {height.ToString(CultureInfo.InvariantCulture)}f;");
+                    rightSide = $"{height.ToString(CultureInfo.InvariantCulture)}f";
                 }
+
+                if (AdjustPixelValuesForDensity)
+                {
+                    rightSide += "/Xamarin.Essentials.DeviceDisplay.MainDisplayInfo.Density";
+                }
+
+                stringBuilder.AppendLine($"{context.CodePrefix}.HeightRequest = {rightSide};");
             }
 
             // If there are no margins, we should still explicitly set them. Otherwise, states that modify margins will not properly be set back
