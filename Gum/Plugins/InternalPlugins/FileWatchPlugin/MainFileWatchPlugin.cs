@@ -39,7 +39,12 @@ namespace Gum.Plugins.FileWatchPlugin
                 // stuff stuff
                 var fileWatchManager = FileWatchManager.Self;
 
-                var filePathsWatchingText = $"File paths watching ({fileWatchManager.CurrentFilePathsWatching.Count}):";
+                if(fileWatchManager.CurrentFilePathsWatching == null)
+                {
+                    return;
+                }
+
+                var filePathsWatchingText = $"File paths watching ({fileWatchManager.CurrentFilePathsWatching?.Count ?? 0}):";
                 foreach(var item in fileWatchManager.CurrentFilePathsWatching)
                 {
                     filePathsWatchingText += $"\n\t{item}";
