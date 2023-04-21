@@ -358,6 +358,8 @@ namespace Gum.Wireframe
                     if (representationOver != null && Cursor.PrimaryDown == false)
                     {
                         HighlightedIpso = representationOver;
+
+                        mGraphicalOutline.UpdateHighlightElements();
                     }
                     else
                     {

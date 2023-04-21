@@ -39,12 +39,13 @@ namespace Gum.Wireframe
                         mHighlightRectangles[i].Visible = false;
                     }
 
-                    if (mHighlightedIpso != null && mHighlightedIpso.Component != null && 
-                        // We don't want to show the rectangle around line polygons, they don't fit inside a rectangle
-                        (mHighlightedIpso.RenderableComponent) is LinePolygon == false)
-                    {
-                        UpdateHighlightElements();
-                    }
+                    // This is now called by the caller (SelectionManager) every frame so that it refreshes immediately on a nudge
+                    //if (mHighlightedIpso != null && mHighlightedIpso.Component != null && 
+                    //    // We don't want to show the rectangle around line polygons, they don't fit inside a rectangle
+                    //    (mHighlightedIpso.RenderableComponent) is LinePolygon == false)
+                    //{
+                    //    UpdateHighlightElements();
+                    //}
                 }
             }
         }
@@ -60,7 +61,7 @@ namespace Gum.Wireframe
             mUiLayer = uiLayer;
         }
 
-        private void UpdateHighlightElements()
+        public void UpdateHighlightElements()
         {
             SetLineRectangleAroundIpso(GetOrMakeRectangleAtIndex(0), mHighlightedIpso);
 
