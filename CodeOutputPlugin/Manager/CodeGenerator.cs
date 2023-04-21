@@ -3530,8 +3530,9 @@ namespace CodeOutputPlugin.Manager
         public static bool DoesTypeHaveContent(string type)
         {
             return type?.EndsWith("/ScrollView") == true ||
-                            type?.EndsWith("/StickyScrollView") == true ||
-                            type?.EndsWith("/Frame") == true;
+                    type?.EndsWith("/StickyScrollView") == true ||
+                    type?.EndsWith("/RefreshView") == true ||
+                    type?.EndsWith("/Frame") == true;
         }
 
         private static string GetLocaliedLine(InstanceSave instance, VariableSave variable, CodeGenerationContext context)

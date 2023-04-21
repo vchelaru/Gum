@@ -178,32 +178,53 @@ namespace SkiaGum
                 SKMatrix.Concat(
                     ref result, translateMatrix, result);
 
-                // Currently this supports "multiply". Other color operations could be supported...
-                if (Color.Red != 255 || Color.Green != 255 || Color.Blue != 255 || Color.Alpha != 255)
+
+                // This code can be used to draw an orange border around a SVG, for debugging purposes
+                //var placeholder = new SKRect(this.GetAbsoluteX(), this.GetAbsoluteY(), 
+                //    this.GetAbsoluteX() + textureBox.Width * scaleX,
+                //    this.GetAbsoluteY() + textureBox.Height * scaleY);
+
+                //canvas.DrawRect(placeholder, new SKPaint() { Color = SKColors.Orange });
+
+
+
+                // April 21, 2023
+                // SVGs like the google fit SVG do not render correctly. Not sure why...
+                // going to put a clip:
+                canvas.Save();
+                var clipRect = new SKRect(this.GetAbsoluteX(), this.GetAbsoluteY(),
+                    this.GetAbsoluteX() + textureBox.Width * scaleX,
+                    this.GetAbsoluteY() + textureBox.Height * scaleY);
+                canvas.ClipRect(clipRect);
                 {
-                    var paint = new SKPaint() { Color = Color };
-                    var redRatio = Color.Red / 255.0f;
-                    var greenRatio = Color.Green / 255.0f;
-                    var blueRatio = Color.Blue / 255.0f;
-
-                    paint.ColorFilter =
-                        SKColorFilter.CreateColorMatrix(new float[]
-                        {
-                        redRatio   , 0            , 0        , 0, 0,
-                        0,           greenRatio   , 0        , 0, 0,
-                        0,           0            , blueRatio, 0, 0,
-                        0,           0            , 0        , 1, 0
-                        });
-
-                    using (paint)
+                    // Currently this supports "multiply". Other color operations could be supported...
+                    if (Color.Red != 255 || Color.Green != 255 || Color.Blue != 255 || Color.Alpha != 255)
                     {
-                        canvas.DrawPicture(Texture.Picture, ref result, paint);
+                        var paint = new SKPaint() { Color = Color };
+                        var redRatio = Color.Red / 255.0f;
+                        var greenRatio = Color.Green / 255.0f;
+                        var blueRatio = Color.Blue / 255.0f;
+
+                        paint.ColorFilter =
+                            SKColorFilter.CreateColorMatrix(new float[]
+                            {
+                            redRatio   , 0            , 0        , 0, 0,
+                            0,           greenRatio   , 0        , 0, 0,
+                            0,           0            , blueRatio, 0, 0,
+                            0,           0            , 0        , 1, 0
+                            });
+
+                        using (paint)
+                        {
+                            canvas.DrawPicture(Texture.Picture, ref result, paint);
+                        }
+                    }
+                    else
+                    {
+                        canvas.DrawPicture(Texture.Picture, ref result);
                     }
                 }
-                else
-                {
-                    canvas.DrawPicture(Texture.Picture, ref result);
-                }
+                canvas.Restore();
             }
         }
 #else
