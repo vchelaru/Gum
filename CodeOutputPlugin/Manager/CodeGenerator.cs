@@ -2806,7 +2806,9 @@ namespace CodeOutputPlugin.Manager
 
         #region Variable Assignments
 
-
+        /// <summary>
+        /// Returns a no-tabbed line of code for the argument variable
+        /// </summary>
         private static string GetCodeLine(VariableSave variable, ElementSave container, VisualApi visualApi, StateSave state, CodeGenerationContext context)
         {
             if (visualApi == VisualApi.Gum)
@@ -3086,8 +3088,6 @@ namespace CodeOutputPlugin.Manager
             var defaultState = context.Element.DefaultState;
             VisualApi visualApi = GetVisualApiForInstance(context.Instance, context.Element);
 
-            var tabs = new String(' ', 4 * context.TabCount);
-
             var container = context.Element;
             var instance = context.Instance;
 
@@ -3132,13 +3132,13 @@ namespace CodeOutputPlugin.Manager
                 // But we also don't want a ton of spaces generated.
                 if (!string.IsNullOrWhiteSpace(codeLine))
                 {
-                    stringBuilder.AppendLine(codeLine);
+                    stringBuilder.AppendLine(context.Tabs + codeLine);
                 }
 
                 var suffixCodeLine = GetSuffixCodeLine(instance, variable, visualApi);
                 if (!string.IsNullOrEmpty(suffixCodeLine))
                 {
-                    stringBuilder.AppendLine(tabs + suffixCodeLine);
+                    stringBuilder.AppendLine(context.Tabs + suffixCodeLine);
                 }
             }
         }
@@ -3539,7 +3539,7 @@ namespace CodeOutputPlugin.Manager
         {
             var valueAsString = variable.Value as string;
             var formattedStringIdAssignment = string.Format(FormattedLocalizationCode, valueAsString);
-            var assignment = $"{context.CodePrefix}.{variable.GetRootName()} = {formattedStringIdAssignment};";
+            var assignment = $"{context.CodePrefixNoTabs}.{variable.GetRootName()} = {formattedStringIdAssignment};";
             return assignment;
         }
 
