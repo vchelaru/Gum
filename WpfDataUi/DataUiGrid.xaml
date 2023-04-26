@@ -29,7 +29,8 @@
                         Width="{Binding Width}"
                         BorderThickness="{Binding CategoryBorderThickness}"
                         VerticalAlignment="Stretch"  
-                        IsExpanded="True" Margin="1"
+                        IsExpanded="True" 
+                        Margin="1"
                         local:DataGridAttachedProperties.HideExpanderArrow="{Binding HideHeader}"
                               >
                     <ItemsControl x:Name="ItemsControlInstance" ItemsSource="{Binding Members}" Focusable="False">

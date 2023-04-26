@@ -2926,7 +2926,7 @@ namespace Gum.Wireframe
             }
         }
 
-        private void UpdateHeight(float parentHeight, bool considerWrappedStacked)
+        public void UpdateHeight(float parentHeight, bool considerWrappedStacked)
         {
             float heightToSet = mHeight;
 
@@ -3265,7 +3265,7 @@ namespace Gum.Wireframe
             mContainedObjectAsIpso.Height = heightToSet;
         }
 
-        private void UpdateWidth(float parentWidth, bool considerWrappedStacked)
+        public void UpdateWidth(float parentWidth, bool considerWrappedStacked)
         {
             float widthToSet = mWidth;
 

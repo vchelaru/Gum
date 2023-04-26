@@ -1,5 +1,6 @@
 ﻿using Gum.DataTypes;
 using Gum.Wireframe;
+using SkiaSharp;
 using Svg.Skia;
 using System;
 using System.Collections.Generic;
@@ -68,6 +69,12 @@ namespace SkiaGum.GueDeriving
         {
             get => ContainedSprite.Blue;
             set => ContainedSprite.Blue = value;
+        }
+
+        public SKColor Color
+        {
+            get => ContainedSprite.Color;
+            set => ContainedSprite.Color = value;
         }
 
         public SvgRuntime(bool fullInstantiation = true)
