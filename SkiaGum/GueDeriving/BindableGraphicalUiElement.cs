@@ -261,7 +261,14 @@ namespace SkiaGum.GueDeriving
             var updated = UpdateToVmProperty(vmPropertyName);
             if (updated)
             {
-                this.EffectiveManagers?.InvalidateSurface();
+                try
+                {
+                    this.EffectiveManagers?.InvalidateSurface();
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception($"Exception trying to handle vm property {vmPropertyName}", ex);
+                }
             }
         }
 

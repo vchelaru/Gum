@@ -5475,13 +5475,22 @@ namespace Gum.Wireframe
 
             var variablesWithoutStatesOnParent =
                 state.Variables.Where(item =>
-                    // We can set the variable if it's not setting a state (to prevent recursive setting).                   
-                    (item.IsState(state.ParentContainer) == false ||
-                    // If it is setting a state we'll allow it if it's on a child.
-                    !string.IsNullOrEmpty(item.SourceObject)) &&
-                    item.SetsValue
+                {
+                    if(item.SetsValue)
+                    {
+                        // We can set the variable if it's not setting a state (to prevent recursive setting).
+                        // Update May 4, 2023 - But if you have a base element that defines a state, and the derived
+                        // element sets that state, then we want to allow it.  But should we just allow all states?
+                        // Or should we check if it's defined by the base...
+                        //return (item.IsState(state.ParentContainer) == false ||
+                        //    // If it is setting a state we'll allow it if it's on a child.
+                        //    !string.IsNullOrEmpty(item.SourceObject));
+                        // let's test this out:
+                        return true;
 
-                    ).ToArray();
+                    }
+                    return false;
+                }).ToArray();
 
 
             var parentSettingVariables =

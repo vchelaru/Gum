@@ -139,7 +139,7 @@ namespace WpfDataUi.DataTypes
             {
 
                 return (Instance != null && string.IsNullOrEmpty(Name) == false) ||
-                    (CustomGetTypeEvent != null && CustomGetEvent != null && CustomSetEvent != null)
+                    (CustomGetTypeEvent != null && CustomGetEvent != null)
                     
                     ;
             }
@@ -168,7 +168,11 @@ namespace WpfDataUi.DataTypes
 
         }
 
-
+        /// <summary>
+        /// Gets whether the member is read-only. This is true if the member is undefined, 
+        /// if the property is readonly on the member (obtained through reflection), or if the 
+        /// CustomSetEvent is null
+        /// </summary>
         public virtual bool IsReadOnly 
         {
             get
@@ -177,7 +181,7 @@ namespace WpfDataUi.DataTypes
                 {
                     return false;
                 }
-                else if (Instance != null)
+                else if (Instance != null && CustomGetEvent == null)
                 {
                     return LateBinder.GetInstance(Instance.GetType()).IsReadOnly(Name);
                 }
