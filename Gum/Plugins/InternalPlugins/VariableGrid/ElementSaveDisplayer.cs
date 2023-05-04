@@ -408,26 +408,48 @@ namespace Gum.PropertyGridHelpers
             }
         }
 
-        private static void DisplayCurrentElement(List<InstanceSavePropertyDescriptor> pdc, ElementSave elementSave, 
+        private static void DisplayCurrentElement(List<InstanceSavePropertyDescriptor> pdc, ElementSave elementSave,
             InstanceSave instanceSave, StateSave defaultState, AmountToDisplay amountToDisplay = AmountToDisplay.AllVariables)
         {
             var currentState = SelectedState.Self.SelectedStateSave;
             bool isDefault = currentState == SelectedState.Self.SelectedElement.DefaultState;
-            if(instanceSave?.DefinedByBase == true)
+            if (instanceSave?.DefinedByBase == true)
             {
                 isDefault = false;
             }
 
             bool isCustomType = (elementSave is StandardElementSave) == false;
-            if ( isCustomType || instanceSave != null)
+            if (isCustomType || instanceSave != null)
             {
-                AddNameAndBaseTypeProperties(pdc, elementSave, instanceSave, isReadOnly:isDefault==false);
+                AddNameAndBaseTypeProperties(pdc, elementSave, instanceSave, isReadOnly: isDefault == false);
             }
 
             if (instanceSave != null)
             {
                 mHelper.AddProperty(pdc, "Locked", typeof(bool)).IsReadOnly = !isDefault;
             }
+
+            var recursiveVariableFinder = new RecursiveVariableFinder(currentState);
+            var variableListName = "VariableReferences";
+            if (instanceSave != null)
+            {
+                variableListName = instanceSave.Name + "." + variableListName;
+            }
+            var variableReference = recursiveVariableFinder.GetVariableList(variableListName);
+            List<string> variablesSetThroughReference = new List<string>();
+            if(variableReference?.ValueAsIList != null)
+            {
+                foreach(var item in variableReference.ValueAsIList)
+                {
+                    var assignment = item as string;
+                    if(assignment?.Contains("=") == true)
+                    {
+                        var variableName = assignment.Substring(0, assignment.IndexOf("=")).Trim();
+                        variablesSetThroughReference.Add(variableName);
+                    }
+                }
+            }
+
 
             // if component
             if (instanceSave == null && elementSave as ComponentSave != null)
@@ -437,9 +459,12 @@ namespace Gum.PropertyGridHelpers
                 foreach (var item in variables)
                 {
                     // Don't add states here, because they're handled below from this object's Default:
-                    if(item.IsState(elementSave) == false)
+                    if (item.IsState(elementSave) == false)
                     {
-                        TryDisplayVariableSave(pdc, elementSave, instanceSave, amountToDisplay, item, defaultElementState);
+                        string variableName = item.Name;
+                        var isReadonly = variablesSetThroughReference.Contains(variableName);
+
+                        TryDisplayVariableSave(pdc, elementSave, instanceSave, amountToDisplay, item, isReadonly);
                     }
                 }
             }
@@ -449,10 +474,13 @@ namespace Gum.PropertyGridHelpers
                 var screenDefaultState = StandardElementsManager.Self.GetDefaultStateFor("Screen");
                 foreach (var item in screenDefaultState.Variables)
                 {
-
-                    TryDisplayVariableSave(pdc, elementSave, instanceSave, amountToDisplay, item, screenDefaultState);
+                    string variableName = item.Name;
+                    var isReadonly = variablesSetThroughReference.Contains(variableName);
+                    TryDisplayVariableSave(pdc, elementSave, instanceSave, amountToDisplay, item, isReadonly);
                 }
             }
+
+
 
 
 
@@ -466,7 +494,10 @@ namespace Gum.PropertyGridHelpers
             {
                 VariableSave defaultVariable = defaultState.Variables[i];
 
-                TryDisplayVariableSave(pdc, elementSave, instanceSave, amountToDisplay, defaultVariable, defaultState);
+                string variableName = defaultVariable.Name;
+                var isReadonly = variablesSetThroughReference.Contains(variableName);
+
+                TryDisplayVariableSave(pdc, elementSave, instanceSave, amountToDisplay, defaultVariable, isReadonly);
             }
 
             #endregion
@@ -475,7 +506,7 @@ namespace Gum.PropertyGridHelpers
         }
 
         private static void TryDisplayVariableSave(List<InstanceSavePropertyDescriptor> pdc, ElementSave elementSave, InstanceSave instanceSave, 
-            AmountToDisplay amountToDisplay, VariableSave defaultVariable, StateSave stateOwner)
+            AmountToDisplay amountToDisplay, VariableSave defaultVariable, bool forceReadOnly)
         {
             ElementSave container = elementSave;
             if (instanceSave != null)
@@ -525,6 +556,8 @@ namespace Gum.PropertyGridHelpers
                 var alreadyContains = pdc.Any(item => item.Name == name);
 
                 InstanceSavePropertyDescriptor property = new InstanceSavePropertyDescriptor(name, type, customAttributes);
+
+                property.IsReadOnly = forceReadOnly;
 
                 if(typeConverter is AvailableStatesConverter asAvailableStatesConverter)
                 {

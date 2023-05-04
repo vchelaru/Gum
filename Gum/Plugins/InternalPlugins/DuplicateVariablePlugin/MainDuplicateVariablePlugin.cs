@@ -30,9 +30,9 @@ namespace Gum.Plugins.InternalPlugins.DuplicateVariablePlugin
             
             StringBuilder stringBuilder= new StringBuilder();
 
-            HashSet<string> AddStateDuplicatesToStringBuilder(StateSave state)
+            HashSet<string> GetStateVariableDuplicates(StateSave state)
             {
-                HashSet<string> foundDuplicates = new HashSet<string>();
+                HashSet<string> foundDuplicateVariabless = new HashSet<string>();
                 HashSet<string> variables = new HashSet<string>();
                 
                 foreach(var variable in state.Variables)
@@ -41,28 +41,68 @@ namespace Gum.Plugins.InternalPlugins.DuplicateVariablePlugin
 
                     if(variables.Contains(name))
                     {
-                        foundDuplicates.Add(name);
+                        foundDuplicateVariabless.Add(name);
                     }
                     else
                     {
                         variables.Add(name);
                     }
                 }
-                return foundDuplicates;
+                return foundDuplicateVariabless;
             }
 
-            var duplicates = AddStateDuplicatesToStringBuilder(element.DefaultState);
-
-            if(duplicates.Count > 0) 
+            HashSet<string> GetStateVariableListDuplicates(StateSave state)
             {
-                var message = $"The default state for {element} has the following duplicate variables. Open the XML file and correct these:";
-                foreach(var variable in duplicates)
+                HashSet<string> foundDuplicateVariabless = new HashSet<string>();
+                HashSet<string> variables = new HashSet<string>();
+
+                foreach (var variable in state.VariableLists)
+                {
+                    var name = variable.Name;
+
+                    if (variables.Contains(name))
+                    {
+                        foundDuplicateVariabless.Add(name);
+                    }
+                    else
+                    {
+                        variables.Add(name);
+                    }
+                }
+                return foundDuplicateVariabless;
+            }
+
+
+            var duplicateVariables = GetStateVariableDuplicates(element.DefaultState);
+
+            var duplicateVariableLists = GetStateVariableListDuplicates(element.DefaultState);
+
+            string message = string.Empty;
+            if (duplicateVariables.Count > 0) 
+            {
+                message += $"The default state for {element} has the following duplicate variables. Open the XML file and correct these:";
+                foreach(var variable in duplicateVariables)
                 {
                     message += "\n" + variable;
                 }
+                message += "\n";
+            }
 
+            if(duplicateVariableLists.Count > 0)
+            {
+                message += $"The default state for {element} has the following duplicate variable lists. Open the XML file and correct these:";
+                foreach (var variable in duplicateVariableLists)
+                {
+                    message += "\n" + variable;
+                }
+                message += "\n";
+
+            }
+
+
+            if(!string.IsNullOrEmpty(message))
+            {
                 GumCommands.Self.GuiCommands.ShowMessage(message);
-
             }
 
         }
