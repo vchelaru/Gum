@@ -8,6 +8,7 @@ using Gum.Plugins;
 using Gum.Reflection;
 using Gum.ToolStates;
 using Gum.Wireframe;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -16,6 +17,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Windows.Forms;
 using WpfDataUi.DataTypes;
+using Xceed.Wpf.Toolkit.Primitives;
 
 namespace Gum.PropertyGridHelpers
 {
@@ -79,7 +81,7 @@ namespace Gum.PropertyGridHelpers
         {
             get
             {
-                return mPropertyDescriptor.GetValue(InstanceSave) == null;
+                return GetValue(InstanceSave) == null;
             }
             set
             {
@@ -87,6 +89,19 @@ namespace Gum.PropertyGridHelpers
                 {
                     SetToDefault(DisplayName);
                 }
+            }
+        }
+
+        private object GetValue(object component)
+        {
+            StateSave stateSave = SelectedState.Self.SelectedStateSave;
+            if (stateSave != null)
+            {
+                return stateSave.GetValue(Name);
+            }
+            else
+            {
+                return null;
             }
         }
 
@@ -495,7 +510,7 @@ namespace Gum.PropertyGridHelpers
         {
             if (mPropertyDescriptor != null)
             {
-                var toReturn = mPropertyDescriptor.GetValue(instance);
+                var toReturn = GetValue(instance);
 
                 if (toReturn == null)
                 {
@@ -516,9 +531,56 @@ namespace Gum.PropertyGridHelpers
             {
                 object oldValue = base.Value;
                 LastOldValue = oldValue;
-                mPropertyDescriptor.SetValue(gumElementOrInstanceSaveAsObject, newValue);
 
-                
+
+                //mPropertyDescriptor.SetValue(gumElementOrInstanceSaveAsObject, newValue);
+                ElementSave elementSave = null;
+                StateSave stateSave = SelectedState.Self.SelectedStateSave;
+                //InstanceSave instanceSave = SelectedState.Self.SelectedInstance;
+
+                var instanceSave = gumElementOrInstanceSaveAsObject as InstanceSave;
+
+                if (instanceSave != null)
+                {
+                    elementSave = instanceSave.ParentContainer;
+                }
+                else // instance is null, so assign the element
+                {
+                    elementSave = gumElementOrInstanceSaveAsObject as ElementSave;
+                }
+
+                if (stateSave != null && elementSave != null)
+                {
+
+                    // <None> is a reserved 
+                    // value for when we want
+                    // to allow the user to reset
+                    // a value through a combo box.
+                    // If the value is "<None>" then 
+                    // let's set it to null
+                    if (newValue is string && ((string)newValue) == "<None>")
+                    {
+                        newValue = null;
+                    }
+
+                    string variableType = null;
+                    var existingVariable = elementSave.GetVariableFromThisOrBase(Name);
+                    if (existingVariable != null)
+                    {
+                        variableType = existingVariable.Type;
+                    }
+                    else
+                    {
+                        var listVariableType = elementSave.GetVariableListFromThisOrBase(Name)?.Type;
+                        if (!string.IsNullOrEmpty(listVariableType))
+                        {
+                            variableType = $"List<{listVariableType}>";
+                        }
+                    }
+
+                    stateSave.SetValue(Name, newValue, instanceSave, variableType);
+                }
+
                 NotifyVariableLogic(gumElementOrInstanceSaveAsObject);
             }
             else

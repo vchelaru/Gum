@@ -160,6 +160,8 @@ namespace WpfDataUi.Controls
             this.RefreshContextMenu(ButtonWrapPanel.ContextMenu);
             RefreshButtonAppearance();
 
+            RefreshIsEnabled();
+
             // todo: adjust the background to be either green or gray depending on defaults
 
             //if (this.HasEnoughInformationToWork())
@@ -186,10 +188,26 @@ namespace WpfDataUi.Controls
             //this.CheckBox.Content = InstanceMember.DisplayName;
             //this.RefreshContextMenu(CheckBox.ContextMenu);
 
-
             //CheckBox.Foreground = DesiredForegroundBrush;
 
             SuppressSettingProperty = false;
+        }
+
+        private void RefreshIsEnabled()
+        {
+            //if (lastApplyValueResult == ApplyValueResult.NotSupported)
+            //{
+            //    this.IsEnabled = false;
+            //}
+            //else 
+            if (InstanceMember?.IsReadOnly == true)
+            {
+                this.IsEnabled = false;
+            }
+            else
+            {
+                this.IsEnabled = true;
+            }
         }
 
         private void RefreshButtonAppearance()

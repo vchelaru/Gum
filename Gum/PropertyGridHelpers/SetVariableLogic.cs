@@ -735,39 +735,79 @@ namespace Gum.PropertyGridHelpers
                 changedMemberWithPrefix = instance.Name + "." + changedMember;
             }
 
-            var asList = stateSave.GetVariableListSave(changedMemberWithPrefix)?.ValueAsIList as List<string>;
+            var newValueAsList = stateSave.GetVariableListSave(changedMemberWithPrefix)?.ValueAsIList as List<string>;
 
-            if(asList == null) return;
             ///////////////////End Early Out/////////////////////////////////////
 
-            for (int i = asList.Count - 1; i >= 0; i--)
+            var oldValueAsList = oldValue as List<string>;
+
+
+            if(newValueAsList != null)
             {
-                var item = asList[i];
-
-                var split = item
-                    .Split(equalsArray, StringSplitOptions.RemoveEmptyEntries)
-                    .Select(stringItem => stringItem.Trim()).ToArray();
-
-                if(split.Length == 0)
+                for (int i = newValueAsList.Count - 1; i >= 0; i--)
                 {
-                    continue;
-                }
+                    var item = newValueAsList[i];
 
-                if(split.Length == 1)
-                {
-                    split = AddImpliedLeftSide(asList, i, split);
-                }
+                    var split = item
+                        .Split(equalsArray, StringSplitOptions.RemoveEmptyEntries)
+                        .Select(stringItem => stringItem.Trim()).ToArray();
 
-                if (split.Length == 2)
-                {
-                    var leftSide = split[0];
-                    var rightSide = split[1];
-                    if(leftSide == "Color" && rightSide.EndsWith(".Color"))
+                    if(split.Length == 0)
                     {
-                        ExpandColorToRedGreenBlue(asList, i, rightSide);
+                        continue;
+                    }
+
+                    if(split.Length == 1)
+                    {
+                        split = AddImpliedLeftSide(newValueAsList, i, split);
+                    }
+
+                    if (split.Length == 2)
+                    {
+                        var leftSide = split[0];
+                        var rightSide = split[1];
+                        if(leftSide == "Color" && rightSide.EndsWith(".Color"))
+                        {
+                            ExpandColorToRedGreenBlue(newValueAsList, i, rightSide);
+                        }
+                    }
+                }   
+            }
+
+            var didChange = false;
+            if(oldValueAsList == null && newValueAsList == null)
+            {
+                didChange = false;
+            }
+            else if(oldValueAsList == null && newValueAsList != null)
+            {
+                didChange = true;
+            }
+            else if(oldValueAsList != null && newValueAsList == null)
+            {
+                didChange = true;
+            }
+            else if(oldValueAsList.Count != newValueAsList.Count)
+            {
+                didChange = true;
+            }
+            else
+            {
+                // not null, same items, so let's loop
+                for(int i =0; i < oldValueAsList.Count; i++)
+                {
+                    if (oldValueAsList[i] != newValueAsList[i])
+                    {
+                        didChange = true;
+                        break;
                     }
                 }
-            }   
+            }
+
+            if(didChange)
+            {
+                GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);
+            }
         }
 
         private static void ExpandColorToRedGreenBlue(List<string> asList, int i, string rightSide)
