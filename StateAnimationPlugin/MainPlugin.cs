@@ -172,6 +172,7 @@ namespace StateAnimationPlugin
                 mMainWindow.FirstRowWidth = new GridLength((double)settings.FirstToSecondColumnRatio, GridUnitType.Star);
                 mMainWindow.SecondRowWidth = new GridLength(1, GridUnitType.Star);
                 mMainWindow.AddStateKeyframeClicked += HandleAddStateKeyframe;
+                mMainWindow.AnimationKeyframeAdded += HandleAnimationKeyrameAdded;
                 mMainWindow.AnimationColumnsResized += HandleAnimationColumnsResized;
             }
 
@@ -250,8 +251,6 @@ namespace StateAnimationPlugin
 
                     };
 
-                    newVm.AvailableStates = this.AvailableStates;
-                    newVm.PropertyChanged += HandleAnimatedKeyframePropertyChanged;
 
                     if (mCurrentViewModel.SelectedAnimation.SelectedKeyframe != null)
                     {
@@ -268,9 +267,16 @@ namespace StateAnimationPlugin
                     mCurrentViewModel.SelectedAnimation.Keyframes.BubbleSort();
 
                     mCurrentViewModel.SelectedAnimation.SelectedKeyframe = newVm;
+                    HandleAnimationKeyrameAdded(newVm);
 
                 }
             }
+        }
+
+        private void HandleAnimationKeyrameAdded(AnimatedKeyframeViewModel newVm)
+        {
+            newVm.AvailableStates = this.AvailableStates;
+            newVm.PropertyChanged += HandleAnimatedKeyframePropertyChanged;
         }
 
         private string GetWhyAddingTimedStateIsInvalid()

@@ -139,7 +139,7 @@
                 <!--State List Box-->
                 <ListBox ItemsSource="{Binding SelectedAnimation.Keyframes}" 
                        SelectedItem="{Binding SelectedAnimation.SelectedKeyframe}" 
-                       KeyDown="HandleDeleteAnimatedStatePressed">
+                       KeyDown="HandleAnimationKeyframeListBoxKey">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">

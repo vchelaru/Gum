@@ -250,6 +250,30 @@ namespace StateAnimationPlugin.ViewModels
 
         }
 
+        public AnimatedKeyframeViewModel Clone()
+        {
+            var newInstance = new AnimatedKeyframeViewModel();
+
+            newInstance.StateName = StateName;
+            newInstance.AnimationName = AnimationName;
+            newInstance.EventName = EventName;
+            newInstance.Time = Time;
+            newInstance.InterpolationType = InterpolationType;
+            newInstance.Easing = Easing;
+
+            newInstance.AvailableStates = new ObservableCollection<string>();
+            newInstance.AvailableStates.AddRange(AvailableStates);
+
+            newInstance.SubAnimationViewModel = SubAnimationViewModel;
+
+            newInstance.HasValidState = HasValidState;
+
+            // do we assign this?
+            newInstance.CachedCumulativeState = CachedCumulativeState;
+
+            return newInstance;
+        }
+
         public static AnimatedKeyframeViewModel FromSave(AnimatedStateSave save, ElementSave elementSave)
         {
             AnimatedKeyframeViewModel toReturn = new AnimatedKeyframeViewModel();

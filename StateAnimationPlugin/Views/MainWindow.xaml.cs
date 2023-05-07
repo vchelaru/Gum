@@ -53,6 +53,7 @@ namespace StateAnimationPlugin.Views
         #endregion
 
         public event EventHandler AddStateKeyframeClicked;
+        public event Action<AnimatedKeyframeViewModel> AnimationKeyframeAdded;
 
         public event Action AnimationColumnsResized;
 
@@ -368,12 +369,36 @@ namespace StateAnimationPlugin.Views
             }
         }
 
-        private void HandleDeleteAnimatedStatePressed(object sender, KeyEventArgs e)
+        AnimatedKeyframeViewModel copiedFrame;
+
+        private void HandleAnimationKeyframeListBoxKey(object sender, KeyEventArgs e)
         {
-            if (e.Key == Key.Delete && this.ViewModel.SelectedAnimation != null && this.ViewModel.SelectedAnimation.SelectedKeyframe != null)
+            if(this.ViewModel.SelectedAnimation != null && this.ViewModel.SelectedAnimation.SelectedKeyframe != null)
             {
-                this.ViewModel.SelectedAnimation.Keyframes.Remove(this.ViewModel.SelectedAnimation.SelectedKeyframe);
-                this.ViewModel.SelectedAnimation.SelectedKeyframe = null;
+                var isCtrlDown = e.KeyboardDevice.Modifiers.HasFlag(ModifierKeys.Control);
+                if (e.Key == Key.Delete)
+                {
+                    // delete the selected keyframe
+                    this.ViewModel.SelectedAnimation.Keyframes.Remove(this.ViewModel.SelectedAnimation.SelectedKeyframe);
+                    this.ViewModel.SelectedAnimation.SelectedKeyframe = null;
+                }
+                // check if the ctrl key is held down and the C key is pressed
+                else if (isCtrlDown && e.Key == Key.C)
+                {
+                    // copy the selected keyframe
+                    copiedFrame = this.ViewModel.SelectedAnimation.SelectedKeyframe.Clone();
+                }
+                else if (isCtrlDown && e.Key == Key.V && copiedFrame != null)
+                {
+                    // paste the selected keyframe
+                    var copiedKeyframe = copiedFrame.Clone();
+                    copiedKeyframe.Time += .1f;
+                    this.ViewModel.SelectedAnimation.Keyframes.Add(copiedKeyframe);
+                    this.ViewModel.SelectedAnimation.Keyframes.BubbleSort();
+                    this.ViewModel.SelectedAnimation.SelectedKeyframe = copiedKeyframe;
+
+                    AnimationKeyframeAdded?.Invoke(copiedFrame);
+                }
             }
         }
 
