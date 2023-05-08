@@ -951,8 +951,8 @@ namespace Gum.Wireframe
         public IPositionedSizedObject Component { get { return mContainedObjectAsIpso; } }
 
         /// <summary>
-        /// Returns the absolute X of the origin of the GraphicalUiElement. Note that
-        /// this considers the XOrigin, and will apply rotation
+        /// Returns the absolute (screen space) X of the origin of the GraphicalUiElement. Note that
+        /// this considers the XOrigin, and will apply rotation.
         /// </summary>
         public float AbsoluteX
         {
@@ -996,8 +996,10 @@ namespace Gum.Wireframe
             }
         }
 
+        public float AbsoluteLeft => this.GetAbsoluteX();
+
         /// <summary>
-        /// Returns the absolute Y of the origin of the GraphicalUiElement. Note that
+        /// Returns the absolute Y (screen space) of the origin of the GraphicalUiElement. Note that
         /// this considers the YOrigin, and will apply rotation
         /// </summary>
         public float AbsoluteY
@@ -1041,6 +1043,8 @@ namespace Gum.Wireframe
                 return toReturn + originOffset.Y;
             }
         }
+
+        public float AbsoluteTop => this.GetAbsoluteY();
 
         public IVisible ExplicitIVisibleParent
         {
@@ -5654,10 +5658,10 @@ namespace Gum.Wireframe
 #if MONOGAME || XNA4
         public bool Animate { get; set; } = true;
         int mCurrentChainIndex;
-        int mCurrentFrameIndex;
+        protected int mCurrentFrameIndex;
         AnimationChainList mAnimationChains;
-        float mAnimationSpeed = 1;
-        double mTimeIntoAnimation;
+        protected float mAnimationSpeed = 1;
+        protected double mTimeIntoAnimation;
         public AnimationChain CurrentChain
         {
             get
