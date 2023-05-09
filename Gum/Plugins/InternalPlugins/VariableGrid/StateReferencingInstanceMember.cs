@@ -81,6 +81,11 @@ namespace Gum.PropertyGridHelpers
         {
             get
             {
+                if(this.RootVariableName == "Name")
+                {
+                    return false; // this can never be default, and if it is that causes all kinds of weirdness in variable displays.
+                }
+
                 return GetValue(InstanceSave) == null;
             }
             set
@@ -508,7 +513,12 @@ namespace Gum.PropertyGridHelpers
 
         private object HandleCustomGet(object instance)
         {
-            if (mPropertyDescriptor != null)
+            if(RootVariableName == "Name" && instance is InstanceSave asInstanceSave)
+            {
+                return asInstanceSave.Name;
+            }
+
+            else if (mPropertyDescriptor != null)
             {
                 var toReturn = GetValue(instance);
 

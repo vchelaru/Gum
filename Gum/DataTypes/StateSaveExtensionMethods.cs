@@ -451,12 +451,6 @@ namespace Gum.DataTypes.Variables
             {
                 exposedVariableSourceName = coreVariableDefinition.Name;
             }
-            string rootName = variableName;
-            if (StringFunctions.ContainsNoAlloc(variableName, '.'))
-            {
-                var indexOfDot = variableName.IndexOf('.');
-                rootName = variableName.Substring(indexOfDot + 1);
-            }
 
             if (!isReservedName)
             {
