@@ -93,6 +93,8 @@ namespace WpfDataUi.Controls
             get;
             set;
         }
+        private TextBlock HintTextBlock;
+
 
         public bool IsEditable
         {
@@ -162,6 +164,9 @@ namespace WpfDataUi.Controls
             Grid.ColumnDefinitions.Add(firstColumnDefinition);
             Grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
 
+            Grid.RowDefinitions.Add(new RowDefinition());
+            Grid.RowDefinitions.Add(new RowDefinition());
+
             TextBlock = new TextBlock
             {
                 Name="Label",
@@ -169,6 +174,7 @@ namespace WpfDataUi.Controls
                 Text = "Property Label:"
             };
             TextBlock.TextWrapping = TextWrapping.Wrap;
+            TextBlock.Margin = new Thickness(4, 0, 0, 0);
             TextBlock.ContextMenu = new ContextMenu();
 
             Grid.Children.Add(TextBlock);
@@ -182,6 +188,7 @@ namespace WpfDataUi.Controls
                 MinWidth = 60
             };
             ComboBox.ContextMenu = new ContextMenu();
+            // 4 px margin matching the text block in a TextBoxDisplay
             //ComboBox.SetBinding(TextBlock.ForegroundProperty, "DesiredForegroundBrush");
 
             //TextBlock.SetForeground(ComboBox, asdf);
@@ -192,6 +199,19 @@ namespace WpfDataUi.Controls
 
             Grid.SetColumn(ComboBox, 1);
             Grid.Children.Add(ComboBox);
+
+            HintTextBlock = new TextBlock
+            {
+                Name="DetailTextBlock",
+                VerticalAlignment = VerticalAlignment.Center,
+                TextWrapping = TextWrapping.Wrap,
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                Margin = new Thickness(8, 0, 0, 4),
+                FontSize = 10
+            };
+            Grid.SetColumnSpan(HintTextBlock, 2);
+            Grid.SetRow(HintTextBlock, 1);
+            Grid.Children.Add(HintTextBlock);
 
             this.Content = Grid;
         }
@@ -226,6 +246,8 @@ namespace WpfDataUi.Controls
 
             }
 
+            HintTextBlock.Visibility = !string.IsNullOrEmpty(InstanceMember?.DetailText) ? Visibility.Visible : Visibility.Collapsed;
+            HintTextBlock.Text = InstanceMember?.DetailText;
 
             TextBlock.SetForeground(ComboBox, DesiredForegroundBrush);
 

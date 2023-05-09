@@ -19,6 +19,7 @@ using Newtonsoft.Json.Linq;
 using WpfDataUi.Controls;
 using static System.Resources.ResXFileRef;
 using GumRuntime;
+using Svg;
 
 namespace Gum.PropertyGridHelpers
 {
@@ -93,8 +94,7 @@ namespace Gum.PropertyGridHelpers
 
                 if (instance != null)
                 {
-                    srim =
-                    new StateReferencingInstanceMember(propertyDescriptor, stateSave, stateSaveCategory, instance.Name + "." + propertyDescriptor.Name, instance, element);
+                    srim = new StateReferencingInstanceMember(propertyDescriptor, stateSave, stateSaveCategory, instance.Name + "." + propertyDescriptor.Name, instance, element);
                 }
                 else
                 {
@@ -103,7 +103,7 @@ namespace Gum.PropertyGridHelpers
                 }
 
                 srim.SetToDefault += (memberName) => ResetVariableToDefault(srim);
-
+                srim.DetailText = propertyDescriptor.Subtext;
                 string category = propertyDescriptor.Category?.Trim();
 
                 var categoryToAddTo = categories.FirstOrDefault(item => item.Name == category);
@@ -436,7 +436,8 @@ namespace Gum.PropertyGridHelpers
                 variableListName = instanceSave.Name + "." + variableListName;
             }
             var variableReference = recursiveVariableFinder.GetVariableList(variableListName);
-            List<string> variablesSetThroughReference = new List<string>();
+            Dictionary<string, string> variablesSetThroughReference = new Dictionary<string, string>();
+
             if(variableReference?.ValueAsIList != null)
             {
                 foreach(var item in variableReference.ValueAsIList)
@@ -444,8 +445,10 @@ namespace Gum.PropertyGridHelpers
                     var assignment = item as string;
                     if(assignment?.Contains("=") == true)
                     {
-                        var variableName = assignment.Substring(0, assignment.IndexOf("=")).Trim();
-                        variablesSetThroughReference.Add(variableName);
+                        var indexOfEquals = assignment.IndexOf("=");
+                        var variableName = assignment.Substring(0, indexOfEquals).Trim();
+                        var rightSideEquals = assignment.Substring(indexOfEquals + 1).Trim();
+                        variablesSetThroughReference[variableName] = rightSideEquals;
                     }
                 }
             }
@@ -462,9 +465,14 @@ namespace Gum.PropertyGridHelpers
                     if (item.IsState(elementSave) == false)
                     {
                         string variableName = item.Name;
-                        var isReadonly = variablesSetThroughReference.Contains(variableName);
-
-                        TryDisplayVariableSave(pdc, elementSave, instanceSave, amountToDisplay, item, isReadonly);
+                        var isReadonly = false;
+                        string subtext = null;
+                        if(variablesSetThroughReference.ContainsKey(variableName))
+                        {
+                            isReadonly = true;
+                            subtext = variablesSetThroughReference[variableName];
+                        }
+                        TryDisplayVariableSave(pdc, elementSave, instanceSave, amountToDisplay, item, isReadonly, subtext);
                     }
                 }
             }
@@ -475,8 +483,14 @@ namespace Gum.PropertyGridHelpers
                 foreach (var item in screenDefaultState.Variables)
                 {
                     string variableName = item.Name;
-                    var isReadonly = variablesSetThroughReference.Contains(variableName);
-                    TryDisplayVariableSave(pdc, elementSave, instanceSave, amountToDisplay, item, isReadonly);
+                    var isReadonly = false;
+                    string subtext = null;
+                    if (variablesSetThroughReference.ContainsKey(variableName))
+                    {
+                        isReadonly = true;
+                        subtext = variablesSetThroughReference[variableName];
+                    }
+                    TryDisplayVariableSave(pdc, elementSave, instanceSave, amountToDisplay, item, isReadonly, subtext);
                 }
             }
 
@@ -495,9 +509,14 @@ namespace Gum.PropertyGridHelpers
                 VariableSave defaultVariable = defaultState.Variables[i];
 
                 string variableName = defaultVariable.Name;
-                var isReadonly = variablesSetThroughReference.Contains(variableName);
-
-                TryDisplayVariableSave(pdc, elementSave, instanceSave, amountToDisplay, defaultVariable, isReadonly);
+                var isReadonly = false;
+                string subtext = null;
+                if (variablesSetThroughReference.ContainsKey(variableName))
+                {
+                    isReadonly = true;
+                    subtext = variablesSetThroughReference[variableName];
+                }
+                TryDisplayVariableSave(pdc, elementSave, instanceSave, amountToDisplay, defaultVariable, isReadonly, subtext);
             }
 
             #endregion
@@ -506,7 +525,7 @@ namespace Gum.PropertyGridHelpers
         }
 
         private static void TryDisplayVariableSave(List<InstanceSavePropertyDescriptor> pdc, ElementSave elementSave, InstanceSave instanceSave, 
-            AmountToDisplay amountToDisplay, VariableSave defaultVariable, bool forceReadOnly)
+            AmountToDisplay amountToDisplay, VariableSave defaultVariable, bool forceReadOnly, string subtext)
         {
             ElementSave container = elementSave;
             if (instanceSave != null)
@@ -573,7 +592,7 @@ namespace Gum.PropertyGridHelpers
 
                 property.TypeConverter = typeConverter;
                 property.Category = category;
-
+                property.Subtext = subtext;
                 pdc.Add(property);
             }
         }

@@ -26,6 +26,7 @@ namespace Gum.DataTypes.ComponentModel
 
 		TypeConverter mTypeConverter;
 
+        public string Subtext { get; set; }
 
         #endregion
 
