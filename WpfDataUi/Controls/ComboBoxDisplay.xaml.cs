@@ -206,7 +206,7 @@ namespace WpfDataUi.Controls
                 VerticalAlignment = VerticalAlignment.Center,
                 TextWrapping = TextWrapping.Wrap,
                 HorizontalAlignment = HorizontalAlignment.Stretch,
-                Margin = new Thickness(8, 0, 0, 4),
+                Margin = new Thickness(8, 1, 0, 4),
                 FontSize = 10
             };
             Grid.SetColumnSpan(HintTextBlock, 2);

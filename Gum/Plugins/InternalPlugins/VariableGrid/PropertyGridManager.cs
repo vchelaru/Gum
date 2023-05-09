@@ -819,48 +819,59 @@ namespace Gum.Managers
 
         private void UpdateColorCategory(List<MemberCategory> categories)
         {
-            var category = categories.FirstOrDefault(item => item.Name == "Rendering");
-
-            if(category != null)
+            foreach(var category in categories)
             {
-                string redVariableName;
-                string greenVariableName;
-                string blueVariableName;
-                GetRedGreenBlueVarNames(out redVariableName, out greenVariableName, out blueVariableName);
-
-                var redVar = category.Members.FirstOrDefault(item => item.Name == redVariableName);
-                var greenVar = category.Members.FirstOrDefault(item => item.Name == greenVariableName);
-                var blueVar = category.Members.FirstOrDefault(item => item.Name == blueVariableName);
-
-                if (redVar != null && greenVar != null && blueVar != null)
+                if(category != null)
                 {
-                    InstanceMember instanceMember = new InstanceMember("Color", null);
-                    instanceMember.PreferredDisplayer = typeof(Gum.Controls.DataUi.ColorDisplay);
-                    instanceMember.CustomGetTypeEvent += (arg) => typeof(Microsoft.Xna.Framework.Color);
-                    instanceMember.CustomGetEvent += GetCurrentColor;
-                    instanceMember.CustomSetEvent += SetCurrentColor;
+                    var membersBefore = category.Members.ToArray();
 
-                    // so color updates
-                    redVar.PropertyChanged += delegate
-                    { 
-                        instanceMember.SimulateValueChanged();
-                    };
-                    greenVar.PropertyChanged += delegate { instanceMember.SimulateValueChanged(); };
-                    blueVar.PropertyChanged += delegate { instanceMember.SimulateValueChanged(); };
+                    foreach (var variable in membersBefore)
+                    {
+                        if(variable.Name.Contains("Red"))
+                        {
+                            var indexOfRed = variable.Name.IndexOf("Red");
+                            var before = variable.Name.Substring(0, indexOfRed);
+                            var after = variable.Name.Substring(indexOfRed + "Red".Length);
 
-                    category.Members.Add(instanceMember);
+                            var redVariableName = variable.Name;
+                            var greenVariableName = before + "Green" + after;
+                            var blueVariableName = before + "Blue" + after;
 
+                            var redVariable = variable;
+                            var greenVariable = category.Members.FirstOrDefault(item => item.Name == greenVariableName);
+                            var blueVariable = category.Members.FirstOrDefault(item => item.Name == blueVariableName);
+
+                            if(greenVariable != null && blueVariable != null) 
+                            {
+                                var beforeWithoutDot = before;
+                                if(beforeWithoutDot.Contains("."))
+                                {
+                                    beforeWithoutDot = before.Substring(beforeWithoutDot.IndexOf(".") + 1); 
+                                }
+                                InstanceMember instanceMember = new InstanceMember( $"{beforeWithoutDot}Color{after}", null);
+                                instanceMember.PreferredDisplayer = typeof(Gum.Controls.DataUi.ColorDisplay);
+                                instanceMember.CustomGetTypeEvent += (arg) => typeof(Microsoft.Xna.Framework.Color);
+                                instanceMember.CustomGetEvent += (notUsed) => GetCurrentColor(redVariableName, greenVariableName, blueVariableName);
+                                instanceMember.CustomSetEvent += (unused, colorAsObject) => SetCurrentColor(colorAsObject, redVariableName, greenVariableName, blueVariableName);
+
+                                // so color updates
+                                redVariable.PropertyChanged += (not, used) => instanceMember.SimulateValueChanged();
+                                greenVariable.PropertyChanged += (not, used) => instanceMember.SimulateValueChanged();
+                                blueVariable.PropertyChanged += (not, used) => instanceMember.SimulateValueChanged();
+
+                                var indexToInsertAfter = Math.Max(category.Members.IndexOf(redVariable), Math.Max(category.Members.IndexOf(greenVariable), category.Members.IndexOf(blueVariable)));
+                                category.Members.Insert(indexToInsertAfter+1, instanceMember);
+
+                            }
+
+                        }
+                    }
                 }
             }
         }
 
-        object GetCurrentColor(object arg)
+        object GetCurrentColor(string redVariableName, string greenVariableName, string blueVariableName)
         {
-            string redVariableName;
-            string greenVariableName;
-            string blueVariableName;
-            GetRedGreenBlueVarNames(out redVariableName, out greenVariableName, out blueVariableName);
-
             var selectedState = SelectedState.Self.SelectedStateSave;
 
             int red = 0;
@@ -890,30 +901,9 @@ namespace Gum.Managers
             return new Microsoft.Xna.Framework.Color(red, green, blue);
         }
 
-        private static void GetRedGreenBlueVarNames(out string redVariableName, out string greenVariableName, out string blueVariableName)
+        void SetCurrentColor(object colorAsObject, string redVariableName, string greenVariableName, string blueVariableName)
         {
-            string prefix = "";
-
-            if (SelectedState.Self.SelectedInstance != null)
-            {
-                prefix = SelectedState.Self.SelectedInstance.Name + ".";
-            }
-
-            redVariableName = prefix + "Red";
-            greenVariableName = prefix + "Green";
-            blueVariableName = prefix + "Blue";
-        }
-
-        void SetCurrentColor(object arg1, object colorAsObject)
-        {
-            var oldColor = (Microsoft.Xna.Framework.Color)GetCurrentColor(null);
-
-
-            string redVariableName;
-            string greenVariableName;
-            string blueVariableName;
-            GetRedGreenBlueVarNames(out redVariableName, out greenVariableName, out blueVariableName);
-
+            var oldColor = (Microsoft.Xna.Framework.Color)GetCurrentColor(redVariableName, greenVariableName, blueVariableName);
             var state = SelectedState.Self.SelectedStateSave;
 
             var color = (Microsoft.Xna.Framework.Color)colorAsObject;
@@ -932,9 +922,13 @@ namespace Gum.Managers
             var instance = SelectedState.Self.SelectedInstance;
             // These functions take unqualified:
 
-            SetVariableLogic.Self.PropertyValueChanged("Red", (int)oldColor.R, instance, true);
-            SetVariableLogic.Self.PropertyValueChanged("Green", (int)oldColor.G, instance, true);
-            SetVariableLogic.Self.PropertyValueChanged("Blue", (int)oldColor.B, instance, true);
+            var unqualifiedRed = redVariableName.Substring(redVariableName.IndexOf('.') + 1);
+            var unqualifiedGreen = greenVariableName.Substring(greenVariableName.IndexOf('.') + 1);
+            var unqualifiedBlue = blueVariableName.Substring(blueVariableName.IndexOf('.') + 1);
+
+            SetVariableLogic.Self.PropertyValueChanged(unqualifiedRed, (int)oldColor.R, instance, true);
+            SetVariableLogic.Self.PropertyValueChanged(unqualifiedGreen, (int)oldColor.G, instance, true);
+            SetVariableLogic.Self.PropertyValueChanged(unqualifiedBlue, (int)oldColor.B, instance, true);
 
             RefreshUI();
         }

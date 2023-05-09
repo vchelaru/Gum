@@ -298,20 +298,35 @@ namespace Gum.PropertyGridHelpers
             if (standardVariable != null)
             {
                 var defaultStates = StandardElementsManager.Self.DefaultStates;
-                if(defaultStates.ContainsKey(standardElement?.Name))
-                {
-                    var defaultState = defaultStates[standardElement.Name];
 
+                StateSave defaultState = null;
+                if (defaultStates.ContainsKey(standardElement?.Name))
+                {
+                    defaultState = defaultStates[standardElement.Name];
+                }
+                else
+                {
+                    // check plugin:
+                    defaultState = PluginManager.Self.GetDefaultStateFor(standardElement.Name);
+                }
+
+                if(defaultState != null)
+                {
                     var defaultStateVariable = defaultState.Variables.FirstOrDefault(item => item.Name == RootVariableName);
 
-                    if(defaultStateVariable != null)
+                    if (defaultStateVariable != null)
                     {
-                        foreach(var kvp in defaultStateVariable.PropertiesToSetOnDisplayer)
+                        if (defaultStateVariable.PreferredDisplayer != null)
+                        {
+                            this.PreferredDisplayer = defaultStateVariable.PreferredDisplayer;
+                        }
+                        foreach (var kvp in defaultStateVariable.PropertiesToSetOnDisplayer)
                         {
                             this.PropertiesToSetOnDisplayer[kvp.Key] = kvp.Value;
                         }
                     }
                 }
+
                 this.SortValue = standardVariable.DesiredOrder;
             }
 

@@ -9,6 +9,7 @@ using RenderingLibrary.Graphics;
 using Microsoft.Xna.Framework;
 using Gum.Wireframe;
 using Gum.RenderingLibrary;
+using WpfDataUi.Controls;
 
 #if GUM
 using System.Windows.Documents;
@@ -154,7 +155,7 @@ namespace Gum.Managers
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "CustomFontFile", Category = "Font", IsFile = true });
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 1.0f, Name = "Font Scale", Category = "Font" });
 
-                stateSave.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation" });
+                AddRotationVariable(stateSave);
 
                 AddEventVariables(stateSave);
 
@@ -187,7 +188,7 @@ namespace Gum.Managers
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = null, Category = "Animation", Name = "CurrentChainName" });
 
 
-                stateSave.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation" });
+                AddRotationVariable(stateSave);
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Category = "Flip and Rotation", Name = "FlipHorizontal" });
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Category = "Flip and Rotation", Name = "FlipVertical" });
 
@@ -254,7 +255,7 @@ namespace Gum.Managers
 
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
 
-                stateSave.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation" });
+                AddRotationVariable(stateSave);
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Category = "Flip and Rotation", Name = "FlipHorizontal" });
 
                 AddVariableReferenceList(stateSave);
@@ -279,7 +280,7 @@ namespace Gum.Managers
 
                 AddDimensionsVariables(stateSave, 50, 50, DimensionVariableAction.ExcludeFileOptions);
 
-                stateSave.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation" });
+                AddRotationVariable(stateSave);
 
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
 
@@ -319,7 +320,7 @@ namespace Gum.Managers
                 AddColorVariables(stateSave, true);
 
                 // Although rotating a circle about its center does nothing we add rotation because you can rotate it about a different origin
-                stateSave.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation" });
+                AddRotationVariable(stateSave);
 
 
                 AddEventVariables(stateSave);
@@ -348,7 +349,7 @@ namespace Gum.Managers
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
                 AddColorVariables(stateSave, true);
 
-                stateSave.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation" });
+                AddRotationVariable(stateSave);
 
 
                 AddEventVariables(stateSave);
@@ -376,7 +377,7 @@ namespace Gum.Managers
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
                 AddColorVariables(stateSave, true);
 
-                stateSave.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation" });
+                AddRotationVariable(stateSave);
 
                 var pointsVariable = new VariableListSave<Vector2>()
                 { Name = "Points", Category = "Points" };
@@ -427,7 +428,7 @@ namespace Gum.Managers
 
                 AddStateVariable(stateSave);
 
-                stateSave.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation" });
+                AddRotationVariable(stateSave);
 
 
                 ApplySortValuesFromOrderInState(stateSave);
@@ -491,6 +492,13 @@ namespace Gum.Managers
             //        variable.SetsValue = true;
             //    }
             //}
+        }
+
+        private void AddRotationVariable(StateSave stateSave)
+        {
+            var variable = new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation" };
+            MakeDegreesAngle(variable);
+            stateSave.Variables.Add(variable);
         }
 
         private void AddVariableReferenceList(StateSave stateSave)
@@ -656,6 +664,12 @@ namespace Gum.Managers
             stateSave.Variables.Add(variableSave);
 
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = nameof(GraphicalUiElement.IgnoredByParentSize), Category = "Parent" });
+        }
+
+        public static void MakeDegreesAngle(VariableSave variableSave)
+        {
+            variableSave.PreferredDisplayer = typeof(AngleSelectorDisplay);
+            variableSave.PropertiesToSetOnDisplayer[nameof(AngleSelectorDisplay.TypeToPushToInstance)] = AngleType.Degrees;
         }
 #endif
 

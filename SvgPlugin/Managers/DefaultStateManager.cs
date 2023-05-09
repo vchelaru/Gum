@@ -4,11 +4,13 @@ using Gum.DataTypes.Variables;
 using Gum.Managers;
 using RenderingLibrary.Graphics;
 using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using WpfDataUi.Controls;
 
 namespace SkiaPlugin.Managers
 {
@@ -110,6 +112,8 @@ namespace SkiaPlugin.Managers
         }
         #endregion
 
+        #region Rounded Rectangle State
+
         public static StateSave GetRoundedRectangleState()
         {
             if (roundedRectangleState == null)
@@ -138,6 +142,10 @@ namespace SkiaPlugin.Managers
             return roundedRectangleState;
         }
 
+        #endregion
+
+        #region Arc State
+
         public static StateSave GetArcState()
         {
             if(arcState == null)
@@ -145,8 +153,15 @@ namespace SkiaPlugin.Managers
                 arcState = new StateSave();
                 arcState.Name = "Default";
                 arcState.Variables.Add(new VariableSave { Type = "float", Value = 10, Category = "Arc", Name = "Thickness" });
-                arcState.Variables.Add(new VariableSave { Type = "float", Value = 0, Category = "Arc", Name = "StartAngle" });
-                arcState.Variables.Add(new VariableSave { Type = "float", Value = 90, Category = "Arc", Name = "SweepAngle" });
+
+                var startAngle = new VariableSave { Type = "float", Value = 0, Category = "Arc", Name = "StartAngle"};
+                StandardElementsManager.MakeDegreesAngle(startAngle);
+                arcState.Variables.Add(startAngle);
+
+                var sweepAngle = new VariableSave { Type = "float", Value = 90, Category = "Arc", Name = "SweepAngle"};
+                StandardElementsManager.MakeDegreesAngle(sweepAngle);
+                arcState.Variables.Add(sweepAngle);
+
                 arcState.Variables.Add(new VariableSave { Type = "bool", Value = false, Category = "Arc", Name = "IsEndRounded" });
 
                 AddVisibleVariable(arcState);
@@ -163,18 +178,22 @@ namespace SkiaPlugin.Managers
             return arcState;
         }
 
+        #endregion
+
         internal static void HandleVariableSet(ElementSave owner, InstanceSave instance, string variableName, object oldValue)
         {
             var rootName = VariableSave.GetRootName(variableName);
 
             var shouldRefresh = rootName == "UseGradient" ||
-                rootName == "GradientType";
+                rootName == "GradientType" ||
+                rootName == "HasDropshadow";
 
             if(shouldRefresh)
             {
                 GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);
             }
         }
+
 
 
         private static void AddGradientVariables(StateSave state)
@@ -270,6 +289,8 @@ namespace SkiaPlugin.Managers
 
             var rootName = variable.GetRootName();
 
+            #region Gradients and Colors
+
             if (rootName == "Red" || rootName == "Green" || rootName == "Blue")
             {
 
@@ -316,6 +337,21 @@ namespace SkiaPlugin.Managers
                 return hide;
 
             }
+
+            #endregion
+
+            #region Dropshadow
+
+            if(rootName == "DropshadowOffsetX" || rootName == "DropshadowOffsetY" || rootName == "DropshadowBlurX" || rootName == "DropshadowBlurY" ||
+                rootName == "DropshadowAlpha" || rootName == "DropshadowRed" || rootName == "DropshadowGreen" || rootName == "DropshadowBlue")
+            {
+                var hasDropshadow = recursiveVariableFinder.GetValue(prefix + "HasDropshadow");
+                var effectiveHasDropshadow = hasDropshadow is bool asBool && asBool;
+                return !effectiveHasDropshadow;
+            }
+
+            #endregion
+
             return false;
         }
 

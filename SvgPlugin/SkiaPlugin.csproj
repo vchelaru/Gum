@@ -151,6 +151,10 @@
       <Project>{cae35f4b-8a10-4a85-b2fb-7f4a8d7c7138}</Project>
       <Name>ToolsUtilitiesStandard</Name>
     </ProjectReference>
+    <ProjectReference Include="..\WpfDataUi\WpfDataUi.csproj">
+      <Project>{47241002-7eb5-433b-b931-a530bb6b84ee}</Project>
+      <Name>WpfDataUi</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
