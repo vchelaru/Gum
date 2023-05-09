@@ -282,6 +282,11 @@ namespace Gum.Managers
 
             }
 
+            if(element == null)
+            {
+                mLastElement = null;
+            }
+
             mLastBehaviorSave = behaviorSave;
 
             if (hasChangedObjectShowing)

@@ -119,6 +119,7 @@ namespace CodeOutputPlugin
         {
             codeOutputProjectSettings = CodeOutputProjectSettingsManager.CreateOrLoadSettingsForProject();
             viewModel.IsCodeGenPluginEnabled = codeOutputProjectSettings.IsCodeGenPluginEnabled;
+            viewModel.IsShowCodegenPreviewChecked = codeOutputProjectSettings.IsShowCodegenPreviewChecked;
             CustomVariableManager.ViewModel = viewModel;
             HandleElementSelected(null);
         }
@@ -231,6 +232,13 @@ namespace CodeOutputPlugin
 
         private void RefreshCodeDisplay()
         {
+            ///////////////////////early out////////////////////
+            if(!viewModel.IsShowCodegenPreviewChecked)
+            {
+                return;
+            }
+            /////////////////////end early out/////////////////
+
             var instance = SelectedState.Self.SelectedInstance;
             var selectedElement = SelectedState.Self.SelectedElement;
 
@@ -315,7 +323,10 @@ namespace CodeOutputPlugin
                 case nameof(viewModel.IsCodeGenPluginEnabled):
                     codeOutputProjectSettings.IsCodeGenPluginEnabled = viewModel.IsCodeGenPluginEnabled;
                     CodeOutputProjectSettingsManager.WriteSettingsForProject(codeOutputProjectSettings);
-
+                    break;
+                case nameof(viewModel.IsShowCodegenPreviewChecked):
+                    codeOutputProjectSettings.IsShowCodegenPreviewChecked = viewModel.IsShowCodegenPreviewChecked;
+                    CodeOutputProjectSettingsManager.WriteSettingsForProject(codeOutputProjectSettings);
                     break;
                 default:
                     RefreshCodeDisplay();

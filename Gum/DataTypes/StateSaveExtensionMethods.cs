@@ -89,24 +89,32 @@ namespace Gum.DataTypes.Variables
                     var instance = parent?.Instances.FirstOrDefault(item => item.Name == sourceObjectName);
                     if (instance != null)
                     {
-                        var statesSetOnThisInstance = stateSave.Variables.Where(item => item.IsState(parent) && item.SourceObject == sourceObjectName && item.SetsValue)
-                            .ToArray();
 
                         var instanceType = ObjectFinder.Self.GetElementSave(instance);
 
                         if (instanceType != null)
                         {
-                            foreach (var instanceStateVariable in statesSetOnThisInstance)
+                            // This is heavy code, so let's just do a for loop instead of a LINQ query
+                            //var statesSetOnThisInstance = stateSave.Variables.Where(item => item.IsState(parent) && item.SourceObject == sourceObjectName && item.SetsValue)
+                            //    .ToArray();
+                            for(int i = 0; i < stateSave.Variables.Count; i++)
+                            //foreach (var instanceStateVariable in statesSetOnThisInstance)
                             {
-                                var matchingState = instanceType.AllStates.FirstOrDefault(item => item.Name == (string)instanceStateVariable.Value);
-
-                                if (matchingState != null)
+                                var instanceStateVariable = stateSave.Variables[i];
+                                if (instanceStateVariable.SourceObject == sourceObjectName && instanceStateVariable.SetsValue &&
+                                    // check this last since it's the slowest:
+                                    instanceStateVariable.IsState(parent))
                                 {
-                                    value = matchingState.GetValueRecursive(nameInBase);
-                                    wasFound = value != null;
-                                    if (wasFound)
+                                    var matchingState = instanceType.AllStates.FirstOrDefault(item => item.Name == (string)instanceStateVariable.Value);
+
+                                    if (matchingState != null)
                                     {
-                                        break;
+                                        value = matchingState.GetValueRecursive(nameInBase);
+                                        wasFound = value != null;
+                                        if (wasFound)
+                                        {
+                                            break;
+                                        }
                                     }
                                 }
                             }

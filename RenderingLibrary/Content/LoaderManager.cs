@@ -96,6 +96,7 @@ namespace RenderingLibrary.Content
                 yield return "jpg";
                 yield return "tga";
                 yield return "gif";
+                yield return "svg";
             }
         }
 

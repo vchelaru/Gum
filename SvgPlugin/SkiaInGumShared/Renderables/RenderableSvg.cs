@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary;
+using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
 using SkiaSharp;
 using System;
@@ -102,16 +103,32 @@ namespace SkiaGum.Renderables
             {
                 try
                 {
-                    var sourceFileAbsolute =
-                        FileManager.MakeAbsolute(sourceFile);
-                    if (System.IO.File.Exists(sourceFileAbsolute))
+                    var disposable = LoaderManager.Self.GetDisposable(sourceFile) as
+                        Svg.Skia.SKSvg;
+
+                    if(disposable != null)
                     {
-                        using (var fileStream = System.IO.File.OpenRead(sourceFileAbsolute))
+                        skiaSvg = disposable;
+                    }
+                    else
+                    {
+                        var sourceFileAbsolute =
+                            FileManager.MakeAbsolute(sourceFile);
+                        if (System.IO.File.Exists(sourceFileAbsolute))
                         {
-                            skiaSvg = new Svg.Skia.SKSvg();
-                            skiaSvg.Load(fileStream);
+                            using (var fileStream = System.IO.File.OpenRead(sourceFileAbsolute))
+                            {
+                                skiaSvg = new Svg.Skia.SKSvg();
+                                skiaSvg.Load(fileStream);
+
+                                if(LoaderManager.Self.CacheTextures)
+                                {
+                                    LoaderManager.Self.AddDisposable(sourceFile, skiaSvg);
+                                }
+                            }
                         }
                     }
+
                 }
                 catch
                 {

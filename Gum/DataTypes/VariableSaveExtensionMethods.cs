@@ -264,7 +264,19 @@ namespace Gum.DataTypes
                         // this happens in a background so let's create a copy to prevent thread access bugs:
                         //var subVariable = element.DefaultState.Variables.FirstOrDefault(item => item.ExposedAsName == variableSave.GetRootName());
                         var rootName = variableSave.GetRootName();
-                        var subVariable = element.DefaultState.Variables.ToArray().FirstOrDefault(item => item.ExposedAsName == rootName);
+                        // why do we ToArray it? That's slow
+                        //var subVariable = element.DefaultState.Variables.ToArray().FirstOrDefault(item => item.ExposedAsName == rootName);
+                        VariableSave subVariable = null;
+                        var variables = element.DefaultState.Variables;
+                        for (int i = 0; i < variables.Count; i++)
+                        {
+                            var variableAtI = variables[i];
+                            if(variableAtI.ExposedAsName == rootName)
+                            {
+                                subVariable = variableAtI;
+                                break;
+                            }
+                        }
 
                         if (subVariable != null && recursive)
                         {

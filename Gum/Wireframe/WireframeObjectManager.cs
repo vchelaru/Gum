@@ -227,22 +227,26 @@ namespace Gum.Wireframe
             }
             else if (forceLayout || forceReloadTextures)
             {
-                ClearAll();
-
-                if(forceReloadTextures)
+                ObjectFinder.Self.EnableCache();
                 {
-                    ((ContentLoader)LoaderManager.Self.ContentLoader).DisposeAndClear();
-                    LoaderManager.Self.CacheTextures = false;
+                    ClearAll();
+
+                    if(forceReloadTextures)
+                    {
+                        ((ContentLoader)LoaderManager.Self.ContentLoader).DisposeAndClear();
+                        LoaderManager.Self.CacheTextures = false;
+                    }
+
+                    LoaderManager.Self.CacheTextures = true;
+
+                    RootGue = CreateIpsoForElement(elementSave);
+
+                    if(LocalizationManager.HasDatabase)
+                    {
+                        ApplyLocalization();
+                    }
                 }
-
-                LoaderManager.Self.CacheTextures = true;
-
-                RootGue = CreateIpsoForElement(elementSave);
-
-                if(LocalizationManager.HasDatabase)
-                {
-                    ApplyLocalization();
-                }
+                ObjectFinder.Self.DisableCache();
             }
             ElementShowing = elementSave;
 

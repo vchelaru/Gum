@@ -37,6 +37,8 @@ using SkiaGum.Renderables;
 
         public bool IsCodeGenPluginEnabled { get; set; }
 
+        public bool IsShowCodegenPreviewChecked { get; set; }
+
         /// <summary>
         /// For XamarinForms this would be the base screen type like
         /// MyProjectNamespace.Screens.MyBaseGumScreen. For other types
