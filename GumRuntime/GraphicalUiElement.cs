@@ -2181,11 +2181,26 @@ namespace Gum.Wireframe
                             // we can do only one axis:
                             if (CanDoFullUpdate(child.GetChildLayoutType(XOrY.X, this), child))
                             {
+                                // todo - maybe look at the code below to see if we need to do the same thing here for
+                                // width/height updates:
                                 child.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1, XOrY.X);
                             }
                             else if (CanDoFullUpdate(child.GetChildLayoutType(XOrY.Y, this), child))
                             {
-                                child.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1, XOrY.Y);
+                                // in this case, the child's Y is going to be updated, but the child's X may depend on 
+                                // the parent's width. If so, the parent's width should already be updated, so long as
+                                // the width doesn't depend on the children. So...let's see if that's the case:
+                                var widthDependencyType = this.WidthUnits.GetDependencyType();
+                                if(widthDependencyType != HierarchyDependencyType.DependsOnChildren && 
+                                    (child.HeightUnits == DimensionUnitType.PercentageOfOtherDimension) || (child.HeightUnits == DimensionUnitType.MaintainFileAspectRatio))
+                                {
+                                    child.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1);
+                                }
+                                else
+                                {
+                                    child.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1, XOrY.Y);
+
+                                }
                             }
                         }
                     }
@@ -2903,14 +2918,28 @@ namespace Gum.Wireframe
                 var doHeightFirst = mWidthUnit == DimensionUnitType.PercentageOfOtherDimension ||
                     mWidthUnit == DimensionUnitType.MaintainFileAspectRatio;
 
+                // Explanation on why we use this:
+                // Whenever an UpdateLayout happens,
+                // the parent may tell its children to
+                // update on only one axis. This allows
+                // the child to update its absolute dimension
+                // along that axis which the parent can then use
+                // to update its own dimensions. However, if the axis
+                // that the parent requested depends on the other axis on
+                // the child, then the child will not be able to properly update
+                // the requested axis until it updates the other axis. Therefore,
+                // we should attempt to update both, but ONLY if the other axis is
+                var widthUnitDependencyType = mWidthUnit.GetDependencyType();
+                var heightUnitDependencyType = mHeightUnit.GetDependencyType();
+
                 if (doHeightFirst)
                 {
                     // if width depends on height, do height first:
-                    if (xOrY == null || xOrY == XOrY.Y)
+                    if (xOrY == null || xOrY == XOrY.Y || heightUnitDependencyType == HierarchyDependencyType.NoDependency)
                     {
                         UpdateHeight(parentHeight, considerWrappedStacked);
                     }
-                    if (xOrY == null || xOrY == XOrY.X)
+                    if (xOrY == null || xOrY == XOrY.X || widthUnitDependencyType == HierarchyDependencyType.NoDependency)
                     {
                         UpdateWidth(parentWidth, considerWrappedStacked);
                     }
@@ -2918,11 +2947,11 @@ namespace Gum.Wireframe
                 else // either width needs to be first, or it doesn't matter so we just do width first arbitrarily
                 {
                     // If height depends on width, do width first
-                    if (xOrY == null || xOrY == XOrY.X)
+                    if (xOrY == null || xOrY == XOrY.X || widthUnitDependencyType == HierarchyDependencyType.NoDependency)
                     {
                         UpdateWidth(parentWidth, considerWrappedStacked);
                     }
-                    if (xOrY == null || xOrY == XOrY.Y)
+                    if (xOrY == null || xOrY == XOrY.Y || heightUnitDependencyType == HierarchyDependencyType.NoDependency)
                     {
                         UpdateHeight(parentHeight, considerWrappedStacked);
                     }
