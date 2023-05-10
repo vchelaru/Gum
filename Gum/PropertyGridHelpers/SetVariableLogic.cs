@@ -329,7 +329,11 @@ namespace Gum.PropertyGridHelpers
                 if (changedMember == "Font" || changedMember == "FontSize" || changedMember == "OutlineThickness" || changedMember == "UseFontSmoothing" || 
                     changedMember == "IsItalic" || changedMember == "IsBold")
                 {
-                    elementStack.Add(new ElementWithState(instanceElement));
+                    // This will be null if the user is editing the Text StandardElement
+                    if(instanceElement != null)
+                    {
+                        elementStack.Add(new ElementWithState(instanceElement));
+                    }
                     var rfv = new RecursiveVariableFinder(elementStack);
                     
 
