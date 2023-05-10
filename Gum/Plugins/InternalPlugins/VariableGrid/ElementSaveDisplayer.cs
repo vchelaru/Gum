@@ -44,23 +44,23 @@ namespace Gum.PropertyGridHelpers
         private List<InstanceSavePropertyDescriptor> GetProperties(ElementSave elementSave, InstanceSave instanceSave, StateSave stateSave)
         {
             // search terms: display properties, display variables, show variables, variable display, variable displayer
-            List<InstanceSavePropertyDescriptor> popertyList = new List<InstanceSavePropertyDescriptor>();
+            List<InstanceSavePropertyDescriptor> propertyList = new List<InstanceSavePropertyDescriptor>();
 
             if (instanceSave != null && stateSave != null)
             {
-                DisplayCurrentInstance(popertyList, instanceSave);
+                DisplayCurrentInstance(propertyList, instanceSave);
 
             }
             else if (elementSave != null && stateSave != null)
             {
                 StateSave defaultState = GetRecursiveStateFor(elementSave);
 
-                DisplayCurrentElement(popertyList, elementSave, null, defaultState);
+                DisplayCurrentElement(propertyList, elementSave, null, defaultState);
 
 
             }
 
-            return popertyList;
+            return propertyList;
         }
 
         public void GetCategories(ElementSave element, InstanceSave instance, List<MemberCategory> categories, StateSave stateSave, StateSaveCategory stateSaveCategory)
@@ -578,17 +578,21 @@ namespace Gum.PropertyGridHelpers
 
                 property.IsReadOnly = forceReadOnly;
 
-                if(typeConverter is AvailableStatesConverter asAvailableStatesConverter)
-                {
-                    // This type converter is the standard one for this element type/category, but it's not instance-specific.
-                    // We need it to be otherwise it pulls from CurrentInstance which is no good:
-                    var copy = new AvailableStatesConverter(asAvailableStatesConverter.CategoryName);
-                    if(instanceSave != null)
-                    {
-                        copy.InstanceSave = instanceSave;
-                    }
-                    typeConverter = copy;
-                }
+                // I think this is old code that screws up dropdowns because GetTypeConverter handles the proper assignment.
+                //if(typeConverter is AvailableStatesConverter asAvailableStatesConverter &&
+                //    // If the instance save is null, then the GetTypeConverter method above gets the right element/instance based on the
+                //    // variable's SourceObject property.
+                //    instanceSave != null)
+                //{
+                //    // This type converter is the standard one for this element type/category, but it's not instance-specific.
+                //    // We need it to be otherwise it pulls from CurrentInstance which is no good:
+                //    var copy = new AvailableStatesConverter(asAvailableStatesConverter.CategoryName);
+                //    if(instanceSave != null)
+                //    {
+                //        copy.InstanceSave = instanceSave;
+                //    }
+                //    typeConverter = copy;
+                //}
 
                 property.TypeConverter = typeConverter;
                 property.Category = category;
