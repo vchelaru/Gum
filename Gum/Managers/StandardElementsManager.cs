@@ -9,9 +9,9 @@ using RenderingLibrary.Graphics;
 using Microsoft.Xna.Framework;
 using Gum.Wireframe;
 using Gum.RenderingLibrary;
+#if GUM
 using WpfDataUi.Controls;
 
-#if GUM
 using System.Windows.Documents;
 using Gum.Plugins;
 using Gum.PropertyGridHelpers.Converters;
@@ -497,7 +497,9 @@ namespace Gum.Managers
         private void AddRotationVariable(StateSave stateSave)
         {
             var variable = new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation" };
+#if GUM
             MakeDegreesAngle(variable);
+#endif
             stateSave.Variables.Add(variable);
         }
 
