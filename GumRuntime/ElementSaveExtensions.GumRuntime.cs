@@ -392,11 +392,11 @@ namespace GumRuntime
                 var lastDot = right.LastIndexOf('.');
                 var firstDot = right.IndexOf('.');
 
-                var elementNameToFind = right.Substring(0, firstDot).Replace("/", ".");
+                var elementNameToFind = right.Substring(0, firstDot);
 
-                if (elementNameToFind.StartsWith("Components."))
+                if (elementNameToFind.StartsWith("Components/"))
                 {
-                    var stripped = elementNameToFind.Substring("Components.".Length);
+                    var stripped = elementNameToFind.Substring("Components/".Length);
 
                     var element = ObjectFinder.Self.GetComponent(stripped);
 
@@ -405,9 +405,9 @@ namespace GumRuntime
                         stateSave = GetRightSide(ref right, firstDot, element);
                     }
                 }
-                else if(elementNameToFind.StartsWith("Screens."))
+                else if(elementNameToFind.StartsWith("Screens/"))
                 {
-                    var stripped = elementNameToFind.Substring("Screens.".Length);
+                    var stripped = elementNameToFind.Substring("Screens/".Length);
 
                     var element = ObjectFinder.Self.GetScreen(stripped);
 
