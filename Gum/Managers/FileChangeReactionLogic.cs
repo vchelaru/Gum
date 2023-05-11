@@ -21,6 +21,10 @@ namespace Gum.Managers
             {
                 ReactToImageFileChanged(file);
             }
+            else if(extension == "achx")
+            {
+                ReactToAnimationChainChanged(file);
+            }
             else if(extension == "fnt")
             {
                 ReactToFontFileChanged(file);
@@ -94,7 +98,24 @@ namespace Gum.Managers
                     Wireframe.WireframeObjectManager.Self.RefreshAll(true, true);
                 }
             }
+        }
 
+        private void ReactToAnimationChainChanged(FilePath file)
+        {
+            var currentElement = SelectedState.Self.SelectedElement;
+            string relativeDirectory = ProjectState.Self.ProjectDirectory;
+            if (currentElement != null)
+            {
+                var referencedFiles = ObjectFinder.Self
+                    .GetFilesReferencedBy(currentElement)
+                    .Select(item => new FilePath(item))
+                    .ToList()
+                    ;
+                if (referencedFiles.Contains(file))
+                {
+                    Wireframe.WireframeObjectManager.Self.RefreshAll(true, true);
+                }
+            }
         }
 
         private void ReactToFontFileChanged(FilePath file)
