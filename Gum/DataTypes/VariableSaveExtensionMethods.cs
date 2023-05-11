@@ -147,6 +147,11 @@ namespace Gum.DataTypes
                 converter.ElementSave = categoryContainer;
                 return converter;
             }
+            else if(variableSave.GetRootName() == "CurrentChainName")
+            {
+                var availableChainsConverter = new AvailableAnimationNamesConverter(container);
+                return availableChainsConverter;
+            }
             else
             {
                 // We should see if it's an exposed variable, and if so, let's look to the source object's type converters
