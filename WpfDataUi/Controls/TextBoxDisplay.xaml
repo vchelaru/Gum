@@ -9,7 +9,7 @@
             <ContextMenu>
             </ContextMenu>
         </StackPanel.ContextMenu>
-        <Grid Margin="0,0,0,0">
+        <Grid Margin="0,0,0,0" x:Name="TopRowGrid">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Name="FirstColumn" Width="{Binding FirstGridLength}"></ColumnDefinition>
                 <ColumnDefinition Width="*"></ColumnDefinition>
@@ -50,10 +50,11 @@
                     Grid.Row="2" 
                     Grid.ColumnSpan="3"  
                     TextWrapping="Wrap"
-                    HorizontalAlignment="Stretch"
+                    HorizontalAlignment="Left"
                     VerticalAlignment="Top"
+                    Width="{Binding ElementName=TopRowGrid, Path=ActualWidth, Mode=OneWay}"
                     FontSize="10">
-            This is a property description.
+            This is a property description. But what if it is longer?   
         </TextBlock>
     </StackPanel>
 </UserControl>

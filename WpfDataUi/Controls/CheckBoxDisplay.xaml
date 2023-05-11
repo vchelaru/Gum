@@ -6,8 +6,8 @@
              mc:Ignorable="d" 
              d:DesignWidth="300">
     <StackPanel x:Name="StackPanel">
-            
-        <Grid>
+
+        <Grid x:Name="TopRowGrid">
             <CheckBox x:Name="CheckBox" VerticalAlignment="Center" 
                       VerticalContentAlignment="Center"
                       Margin="4,4" 
@@ -26,6 +26,7 @@
                     Padding="8,0,0,0" Grid.Row="1" 
                     TextWrapping="Wrap"
                     HorizontalAlignment="Stretch"
+                                       MaxWidth="{Binding ElementName=CheckBox, Path=ActualWidth}"
                     FontSize="10">
             This is a property description.
         </TextBlock>
