@@ -6,7 +6,7 @@ The properties window in Gum displays all available variables when editing an in
 
 The properties window shows properties for the selected instance or element.
 
-![](<../.gitbook/assets/image (1).png>)
+![](<../.gitbook/assets/image (1) (1).png>)
 
 ## Editing Properties
 

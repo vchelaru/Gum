@@ -47,3 +47,8 @@ This will produce a grid which looks like this:
 
 ![](<../../.gitbook/assets/WpfDataUiGrid (1).png>)
 
+Alternatively the Instance property can be data bound as shown in the following XAML:
+
+```
+<wpfdataui:DataUiGrid Instance="{Binding SelectedItem}"></wpfdataui:DataUiGrid>
+```
