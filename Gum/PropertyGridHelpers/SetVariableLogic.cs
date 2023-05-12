@@ -290,12 +290,26 @@ namespace Gum.PropertyGridHelpers
 
             ReactIfChangedMemberIsParent(parentElement, instance, rootVariableName, oldValue);
 
+            ReactIfChangedMemberIsDefaultChildContainer(parentElement, instance, rootVariableName, oldValue);
+
             ReactIfChangedMemberIsVariableReference(parentElement, instance, stateSave, rootVariableName, oldValue);
 
             PluginManager.Self.VariableSet(parentElement, instance, rootVariableName, oldValue);
         }
 
+        private void ReactIfChangedMemberIsDefaultChildContainer(ElementSave parentElement, InstanceSave instance, string rootVariableName, object oldValue)
+        {
+            VariableSave variable = SelectedState.Self.SelectedVariableSave;
 
+            if (variable != null && rootVariableName == nameof(ComponentSave.DefaultChildContainer))
+            {
+                if ((variable.Value as string) == "<NONE>")
+                {
+                    variable.Value = null;
+                }
+
+            }
+        }
 
         private static void ReactIfChangedMemberIsName(ElementSave container, InstanceSave instance, string changedMember, object oldValue)
         {

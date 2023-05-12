@@ -429,6 +429,13 @@ namespace Gum.PropertyGridHelpers
                 mHelper.AddProperty(pdc, "Locked", typeof(bool)).IsReadOnly = !isDefault;
             }
 
+            if(elementSave is ComponentSave && instanceSave == null)
+            {
+                var defaultChildContainerProperty = mHelper.AddProperty(pdc, nameof(ComponentSave.DefaultChildContainer), typeof(string));
+                defaultChildContainerProperty.IsReadOnly = !isDefault;
+                defaultChildContainerProperty.TypeConverter = new AvailableInstancesConverter();
+            }
+
             var recursiveVariableFinder = new RecursiveVariableFinder(currentState);
             var variableListName = "VariableReferences";
             if (instanceSave != null)
