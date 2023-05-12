@@ -1291,6 +1291,12 @@ namespace Gum.Managers
                 //var thisParentValue = defaultState.GetValueOrDefault<string>($"{instance.Name}.Parent");
                 var thisParentValue = defaultState.GetValueRecursive($"{instance.Name}.Parent") as string;
 
+                // If thisParentValue has a period, the instance is attached to an item inside the parent.
+                if(thisParentValue?.Contains(".") == true)
+                {
+                    thisParentValue = thisParentValue.Substring(0, thisParentValue.IndexOf('.'));
+                }
+
                 var desiredParentNode = node;
                 if(!string.IsNullOrEmpty(thisParentValue))
                 {
@@ -1419,6 +1425,14 @@ namespace Gum.Managers
                 if (variable != null && variable.SetsValue && variable.Value != null)
                 {
                     string parentName = (string) variable.Value;
+
+                    // This could be attached to a child inside the parent. Therefore, if ParentInstance contains a dot, return 
+                    // the instance with the name before the dot
+                    if (parentName.Contains('.'))
+                    {
+                        parentName = parentName.Substring(0, parentName.IndexOf('.'));
+                    }
+
                     return element.GetInstance(parentName);
                 }
             }

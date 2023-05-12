@@ -614,6 +614,19 @@ namespace Gum.Managers
                 {
                     // setting the parent:
                     parentName = targetInstance.Name;
+
+                    // check if the target instance is a ComponentSave. If so, use the RecursiveVariableFinder to get its DefaultChildContainer property
+                    var targetInstanceComponent = ObjectFinder.Self.GetComponent(targetInstance);
+                    if ( targetInstanceComponent != null)
+                    {
+                        var recursiveVariableFinder = new RecursiveVariableFinder(SelectedState.Self.SelectedStateSave);
+                        var defaultChild = recursiveVariableFinder.GetValue<string>($"{targetInstance.Name}.{nameof(ComponentSave.DefaultChildContainer)}");
+                        if (!string.IsNullOrEmpty(defaultChild))
+                        {
+                            parentName += "." + defaultChild;
+                        }
+                    }
+
                 }
                 else
                 {

@@ -9,6 +9,9 @@ namespace Gum.DataTypes
 {
     public class ComponentSave : ElementSave
     {
+        // should this be part of ElementSave? Not sure...
+        public string DefaultChildContainer { get; set; }
+
         public List<ElementBehaviorReference> Behaviors { get; set; } = new List<ElementBehaviorReference>();
 
 

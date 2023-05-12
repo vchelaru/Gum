@@ -201,6 +201,61 @@ namespace Gum.Logic
                         eventSave.Name = instance.Name + "." + eventSave.GetRootName();
                     }
                 }
+
+                var renamedDefaultChildContainer = false;
+                foreach(var state in SelectedState.Self.SelectedElement.AllStates)
+                {
+                    var variable = state.Variables.FirstOrDefault(item => item.Name == nameof(ComponentSave.DefaultChildContainer));
+
+                    if(variable?.Value as string != null)
+                    {
+                        var value = variable.Value as string;
+                        if(value == oldName)
+                        {
+                            variable.Value = newName;
+                            renamedDefaultChildContainer = true;
+                        }
+                    }
+                }
+
+                if(renamedDefaultChildContainer)
+                {
+                    var elementsToConsider = ObjectFinder.Self.GetElementsReferencing(elementSave);
+
+                    foreach(var elementToCheckParent in elementsToConsider)
+                    {
+                        var shouldSaveElement = false;
+
+                        foreach(var state in elementToCheckParent.AllStates)
+                        {
+                            foreach(var variable in state.Variables)
+                            {
+                                if(variable.GetRootName() == "Parent" && (variable.Value as string)?.Contains(".") == true)
+                                {
+                                    var value = variable.Value as string;
+                                    var valueBeforeDot = value.Substring(0, value.IndexOf("."));
+                                    var valueAfterDot = value.Substring(value.IndexOf(".") + 1);
+                                    if(valueAfterDot == oldName)
+                                    {
+                                        // let's be safe, see if the instance is of the type elementSave
+                                        var parentInstance = elementToCheckParent.GetInstance(valueBeforeDot);
+                                        var parentInstanceElement = ObjectFinder.Self.GetElementSave(parentInstance);
+                                        if(parentInstanceElement == elementSave)
+                                        {
+                                            variable.Value = parentInstance.Name + "." + newName;
+                                            shouldSaveElement = true;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        if(shouldSaveElement)
+                        {
+                            GumCommands.Self.FileCommands.TryAutoSaveElement(elementToCheckParent);
+                        }
+
+                    }
+                }
             }
         }
 
