@@ -293,7 +293,7 @@ namespace Gum.DataTypes
         }
 
         /// <summary>
-        /// Returns the value of the variable from the bottom of the stack by climbing back up to find the most derived set
+        /// Returns the value of the variable from the bottom of the stack by climbing back up to find the most derived assignment
         /// </summary>
         internal object GetValueByBottomName(string variableName, int? currentStackIndex = null)
         {

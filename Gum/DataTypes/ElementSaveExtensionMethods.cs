@@ -319,6 +319,14 @@ namespace Gum.DataTypes
         }
 #endif
 
+        /// <summary>
+        /// Returns the VariableSave from the argument element or its base element.  
+        /// If forceDefault is set to true, then only the element's default state will be checked.
+        /// </summary>
+        /// <param name="element"></param>
+        /// <param name="variable"></param>
+        /// <param name="forceDefault"></param>
+        /// <returns></returns>
         public static VariableSave GetVariableFromThisOrBase(this ElementSave element, string variable, bool forceDefault = false)
         {
             StateSave stateToPullFrom = element.DefaultState;

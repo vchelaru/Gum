@@ -24,6 +24,10 @@ namespace Gum.Managers
     {
         public ElementSave OwnerOfReferencingObject { get; set; }
         public StateSave StateSave { get; set; }
+
+        /// <summary>
+        /// The object that is doing the referencing. This could be an InstanceSave, a VariableSave, a VariableListSave, or a BehaviorReference.
+        /// </summary>
         public object ReferencingObject { get; set; }
         public ReferenceType ReferenceType { get; set; }
 

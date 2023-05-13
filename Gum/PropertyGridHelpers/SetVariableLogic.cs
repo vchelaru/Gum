@@ -109,26 +109,126 @@ namespace Gum.PropertyGridHelpers
 
                 ReactToChangedMember(unqualifiedMember, oldValue, parentElement, instance, stateSave);
 
-                DoVariableReferenceReaction(parentElement, unqualifiedMember, stateSave);
-
                 string qualifiedName = unqualifiedMember;
-                if(instance != null)
+                if (instance != null)
                 {
                     qualifiedName = $"{instance.Name}.{unqualifiedMember}";
                 }
+                DoVariableReferenceReaction(parentElement, unqualifiedMember, stateSave);
+
+                var newValue = stateSave.GetValueRecursive(qualifiedName);
+
+                // this could be a tunneled variable. If so, we may need to propagate the value to other instances one level deeper
+                var didSetDeepReference = DoVariableReferenceReactionOnInstanceVariableSet(parentElement, instance, stateSave, unqualifiedMember, newValue);
+
                 VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(qualifiedName);
 
                 // Need to record undo before refreshing and reselecting the UI
-                if(recordUndo)
+                if (recordUndo)
                 {
                     Undo.UndoManager.Self.RecordUndo();
                 }
 
                 if (refresh)
                 {
-                    RefreshInResponseToVariableChange(unqualifiedMember, oldValue, parentElement, instance, qualifiedName);
+                    RefreshInResponseToVariableChange(unqualifiedMember, oldValue, parentElement, instance, qualifiedName, 
+                        // if a deep reference is set, then this is more complicated than a single variable assignment, so we should
+                        // force everything. This makes debugging a little more difficult, but it keeps the wireframe accurate without having to track individual assignments.
+                        forceWireframeRefresh:didSetDeepReference);
                 }
             }
+        }
+
+        private static bool DoVariableReferenceReactionOnInstanceVariableSet(ElementSave container, InstanceSave instance, StateSave stateSave, string unqualifiedVariableName, object newValue)
+        {
+            var didAssignDeepReference = false;
+            ElementSave instanceElement = null;
+            if (instance != null)
+            {
+                instanceElement = ObjectFinder.Self.GetElementSave(instance.BaseType);
+            }
+            if (instanceElement != null)
+            {
+                var variableOnInstance = instanceElement.GetVariableFromThisOrBase(unqualifiedVariableName);
+
+                List<TypedElementReference> references = null;
+
+                references = ObjectFinder.Self.GetElementReferences(instanceElement);
+                var filteredReferences = references
+                    .Where(item => item.ReferenceType == ReferenceType.VariableReference)
+                    .ToArray();
+
+                if (references != null)
+                {
+                    foreach (var reference in filteredReferences)
+                    {
+                        var variableListSave = reference.ReferencingObject as VariableListSave;
+
+                        var stringList = variableListSave?.ValueAsIList as List<string>;
+
+                        if (stringList != null)
+                        {
+                            foreach (var assignment in stringList)
+                            {
+                                if (assignment.Contains("="))
+                                {
+                                    var leftSide = assignment.Substring(0, assignment.IndexOf("=")).Trim();
+                                    var rightSide = assignment.Substring(assignment.IndexOf("=") + 1).Trim();
+
+                                    var simplifiedRightSide = rightSide;
+
+                                    var instanceElementQualified = instanceElement.Name;
+                                    if (instanceElement is ComponentSave)
+                                    {
+                                        instanceElementQualified = "Components/" + instanceElementQualified;
+                                    }
+                                    else if (instanceElement is ScreenSave)
+                                    {
+                                        instanceElementQualified = "Screens/" + instanceElementQualified;
+                                    }
+                                    else if (instanceElement is StandardElementSave)
+                                    {
+                                        instanceElementQualified = "StandardElements/" + instanceElementQualified;
+                                    }
+
+                                    if (rightSide.StartsWith(instanceElementQualified))
+                                    {
+                                        simplifiedRightSide = rightSide.Substring(instanceElementQualified.Length
+                                            // +1 to take off the period before the variable name
+                                            + 1);
+                                    }
+
+                                    var didAssignReferencedVariable = simplifiedRightSide == variableOnInstance.Name || 
+                                        simplifiedRightSide == variableOnInstance.ExposedAsName;
+
+                                    if(didAssignReferencedVariable)
+                                    {
+                                        var ownerOfVariableReferenceName = variableListSave.SourceObject;
+
+                                        var ownerOfVariableReferenceInstanceSave = instanceElement.GetInstance(ownerOfVariableReferenceName);
+
+                                        if(ownerOfVariableReferenceInstanceSave != null)
+                                        {
+                                            // Setting this variable results in ownerOfVariableReferenceInstanceSave.leftSide also being assigned
+                                            // but ownerOfVariableReferenceInstanceSave is inside of instanceElement, so we need to find all instances
+                                            // of instanceElement in container, and assign those.
+                                            var qualifiedNameInInstanceElement = ownerOfVariableReferenceInstanceSave.Name + "." + leftSide;
+                                            //didAssignDeepReference = AssignInstanceValues(container, instanceElement, stateSave, qualifiedNameInInstanceElement, newValue) ||
+                                            //    didAssignDeepReference;
+
+                                            var deepQualifiedName = instance.Name + "." + qualifiedNameInInstanceElement;
+
+                                            stateSave.SetValue(deepQualifiedName, newValue);
+                                            didAssignDeepReference = true;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return didAssignDeepReference;
         }
 
         private void DoVariableReferenceReaction(ElementSave elementSave, string unqualifiedName, StateSave stateSave)
@@ -168,7 +268,7 @@ namespace Gum.PropertyGridHelpers
 
         }
 
-        public void RefreshInResponseToVariableChange(string unqualifiedMember, object oldValue, ElementSave parentElement, InstanceSave instance, string qualifiedName)
+        public void RefreshInResponseToVariableChange(string unqualifiedMember, object oldValue, ElementSave parentElement, InstanceSave instance, string qualifiedName, bool forceWireframeRefresh = false)
         {
             // These properties may require some changes to the grid, so we refresh the tree view
             // and entire grid.
@@ -219,7 +319,7 @@ namespace Gum.PropertyGridHelpers
                 // if that will cause problems now, so instead I'm going
                 // to do it one by one:
                 var handledByDirectSet = false;
-                if (PropertiesSupportingIncrementalChange.Contains(unqualifiedMember) &&
+                if (forceWireframeRefresh == false && PropertiesSupportingIncrementalChange.Contains(unqualifiedMember) &&
                     (instance != null || SelectedState.Self.SelectedComponent != null || SelectedState.Self.SelectedStandardElement != null))
                 {
                     // this assumes that the object having its variable set is the selected instance. If we're setting
@@ -269,7 +369,7 @@ namespace Gum.PropertyGridHelpers
 
             // todo - should this use current state?
             var changedMemberWithPrefix = rootVariableName;
-            if(instance != null)
+            if (instance != null)
             {
                 changedMemberWithPrefix = instance.Name + "." + rootVariableName;
             }
@@ -277,7 +377,7 @@ namespace Gum.PropertyGridHelpers
             var value = rfv.GetValue(changedMemberWithPrefix);
 
             List<ElementWithState> elementStack = new List<ElementWithState>();
-            elementStack.Add(new ElementWithState(parentElement) { StateName = stateSave?.Name, InstanceName = instance?.Name  });
+            elementStack.Add(new ElementWithState(parentElement) { StateName = stateSave?.Name, InstanceName = instance?.Name });
             ReactIfChangedMemberIsFont(elementStack, instance, rootVariableName, oldValue, value);
 
             ReactIfChangedMemberIsCustomFont(parentElement, rootVariableName, oldValue);
@@ -323,40 +423,40 @@ namespace Gum.PropertyGridHelpers
         {
             var handledByInner = false;
             var instanceElement = instance != null ? ObjectFinder.Self.GetElementSave(instance) : null;
-            if(instanceElement != null)
+            if (instanceElement != null)
             {
                 var variable = instanceElement.DefaultState.Variables.FirstOrDefault(item => item.ExposedAsName == changedMember);
 
-                if(variable != null)
+                if (variable != null)
                 {
                     var innerInstance = instanceElement.GetInstance(variable.SourceObject);
 
-                    elementStack.Add(new ElementWithState(instanceElement) { InstanceName= variable.SourceObject });
+                    elementStack.Add(new ElementWithState(instanceElement) { InstanceName = variable.SourceObject });
 
                     ReactIfChangedMemberIsFont(elementStack, innerInstance, variable.GetRootName(), oldValue, newValue);
                     handledByInner = true;
                 }
             }
 
-            if(!handledByInner)
+            if (!handledByInner)
             {
-                if (changedMember == "Font" || changedMember == "FontSize" || changedMember == "OutlineThickness" || changedMember == "UseFontSmoothing" || 
+                if (changedMember == "Font" || changedMember == "FontSize" || changedMember == "OutlineThickness" || changedMember == "UseFontSmoothing" ||
                     changedMember == "IsItalic" || changedMember == "IsBold")
                 {
                     // This will be null if the user is editing the Text StandardElement
-                    if(instanceElement != null)
+                    if (instanceElement != null)
                     {
                         elementStack.Add(new ElementWithState(instanceElement));
                     }
                     var rfv = new RecursiveVariableFinder(elementStack);
-                    
+
 
                     var forcedValues = new StateSave();
 
                     void TryAddForced(string variableName)
                     {
                         var value = rfv.GetValueByBottomName(variableName);
-                        if(value != null)
+                        if (value != null)
                         {
                             forcedValues.SetValue(variableName, value);
                         }
@@ -430,7 +530,7 @@ namespace Gum.PropertyGridHelpers
 
                     bool isWidthOrHeight = false;
 
-                    
+
                     object unitTypeAsObject = EditingManager.GetCurrentValueForVariable(changedMember, SelectedState.Self.SelectedInstance);
                     GeneralUnitType unitType = UnitConverter.ConvertToGeneralUnit(unitTypeAsObject);
 
@@ -528,7 +628,7 @@ namespace Gum.PropertyGridHelpers
 
             bool isSourcefile = variable?.GetRootName() == "SourceFile";
 
-            if (!isSourcefile || string.IsNullOrWhiteSpace( variable.Value as string))
+            if (!isSourcefile || string.IsNullOrWhiteSpace(variable.Value as string))
             {
                 return;
             }
@@ -537,7 +637,7 @@ namespace Gum.PropertyGridHelpers
 
             string errorMessage = GetWhySourcefileIsInvalid(variable.Value as string, parentElement, instance, changedMember);
 
-            if(!string.IsNullOrEmpty(errorMessage))
+            if (!string.IsNullOrEmpty(errorMessage))
             {
                 MessageBox.Show(errorMessage);
 
@@ -559,7 +659,7 @@ namespace Gum.PropertyGridHelpers
                         filePath.FullPath,
                         ProjectState.Self.ProjectDirectory);
 
-                    if (shouldAskToCopy && 
+                    if (shouldAskToCopy &&
                         !string.IsNullOrEmpty(ProjectState.Self.GumProjectSave?.ParentProjectRoot) &&
                          FileManager.IsRelativeTo(filePath.FullPath, ProjectState.Self.ProjectDirectory + ProjectState.Self.GumProjectSave.ParentProjectRoot))
                     {
@@ -569,13 +669,13 @@ namespace Gum.PropertyGridHelpers
                     if (shouldAskToCopy)
                     {
                         bool shouldCopy = AskIfShouldCopy(variable, value);
-                        if(shouldCopy)
+                        if (shouldCopy)
                         {
                             PerformCopy(variable, value);
                         }
                     }
 
-                    if(filePath.Extension == "achx")
+                    if (filePath.Extension == "achx")
                     {
                         stateSave.SetValue($"{instancePrefix}Texture Address", Gum.Managers.TextureAddress.Custom);
                         GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);
@@ -598,26 +698,26 @@ namespace Gum.PropertyGridHelpers
                 extension == "png" ||
                 extension == "achx";
 
-            if(!isValidExtension)
+            if (!isValidExtension)
             {
                 var fromPluginManager = PluginManager.Self.GetIfExtensionIsValid(extension, parentElement, instance, changedMember);
-                if(fromPluginManager == true)
+                if (fromPluginManager == true)
                 {
                     isValidExtension = true;
                 }
             }
 
-            if(!isValidExtension)
+            if (!isValidExtension)
             {
                 whyInvalid = "The extension " + extension + " is not supported for textures";
             }
 
-            if(string.IsNullOrEmpty(whyInvalid))
+            if (string.IsNullOrEmpty(whyInvalid))
             {
                 var gumProject = ProjectState.Self.GumProjectSave;
-                if(gumProject.RestrictFileNamesForAndroid)
+                if (gumProject.RestrictFileNamesForAndroid)
                 {
-                    var strippedName = 
+                    var strippedName =
                         FileManager.RemovePath(FileManager.RemoveExtension(value));
                     NameVerifier.Self.IsNameValidAndroidFile(strippedName, out whyInvalid);
                 }
@@ -676,7 +776,7 @@ namespace Gum.PropertyGridHelpers
             {
 
                 string sourceAbsoluteFile = value;
-                if(FileManager.IsRelative(sourceAbsoluteFile))
+                if (FileManager.IsRelative(sourceAbsoluteFile))
                 {
                     sourceAbsoluteFile = directory + value;
                 }
@@ -691,7 +791,7 @@ namespace Gum.PropertyGridHelpers
             {
                 MessageBox.Show("Error copying file:\n" + e.ToString());
             }
-            
+
         }
 
         private void ReactIfChangedMemberIsParent(ElementSave parentElement, InstanceSave instance, string changedMember, object oldValue)
@@ -707,7 +807,7 @@ namespace Gum.PropertyGridHelpers
                     variable.Value = null;
                 }
 
-                if(variable.Value != null)
+                if (variable.Value != null)
                 {
                     var newParent = parentElement.Instances.FirstOrDefault(item => item.Name == variable.Value as string);
                     var newValue = variable.Value;
@@ -715,7 +815,7 @@ namespace Gum.PropertyGridHelpers
                     variable.Value = null;
                     var childrenInstances = GetRecursiveChildrenOf(parentElement, instance);
 
-                    if(childrenInstances.Contains(newParent))
+                    if (childrenInstances.Contains(newParent))
                     {
                         // uh oh, circular referenced detected, don't allow it!
                         MessageBox.Show("This parent assignment would produce a circular reference, which is not allowed.");
@@ -729,7 +829,7 @@ namespace Gum.PropertyGridHelpers
                     }
                 }
 
-                if(isValidAssignment)
+                if (isValidAssignment)
                 {
                     GumCommands.Self.GuiCommands.RefreshElementTreeView(parentElement);
                 }
@@ -760,7 +860,7 @@ namespace Gum.PropertyGridHelpers
             var oldValueAsList = oldValue as List<string>;
 
 
-            if(newValueAsList != null)
+            if (newValueAsList != null)
             {
                 for (int i = newValueAsList.Count - 1; i >= 0; i--)
                 {
@@ -770,12 +870,12 @@ namespace Gum.PropertyGridHelpers
                         .Split(equalsArray, StringSplitOptions.RemoveEmptyEntries)
                         .Select(stringItem => stringItem.Trim()).ToArray();
 
-                    if(split.Length == 0)
+                    if (split.Length == 0)
                     {
                         continue;
                     }
 
-                    if(split.Length == 1)
+                    if (split.Length == 1)
                     {
                         split = AddImpliedLeftSide(newValueAsList, i, split);
                     }
@@ -784,35 +884,35 @@ namespace Gum.PropertyGridHelpers
                     {
                         var leftSide = split[0];
                         var rightSide = split[1];
-                        if(leftSide == "Color" && rightSide.EndsWith(".Color"))
+                        if (leftSide == "Color" && rightSide.EndsWith(".Color"))
                         {
                             ExpandColorToRedGreenBlue(newValueAsList, i, rightSide);
                         }
                     }
-                }   
+                }
             }
 
             var didChange = false;
-            if(oldValueAsList == null && newValueAsList == null)
+            if (oldValueAsList == null && newValueAsList == null)
             {
                 didChange = false;
             }
-            else if(oldValueAsList == null && newValueAsList != null)
+            else if (oldValueAsList == null && newValueAsList != null)
             {
                 didChange = true;
             }
-            else if(oldValueAsList != null && newValueAsList == null)
+            else if (oldValueAsList != null && newValueAsList == null)
             {
                 didChange = true;
             }
-            else if(oldValueAsList.Count != newValueAsList.Count)
+            else if (oldValueAsList.Count != newValueAsList.Count)
             {
                 didChange = true;
             }
             else
             {
                 // not null, same items, so let's loop
-                for(int i =0; i < oldValueAsList.Count; i++)
+                for (int i = 0; i < oldValueAsList.Count; i++)
                 {
                     if (oldValueAsList[i] != newValueAsList[i])
                     {
@@ -822,7 +922,7 @@ namespace Gum.PropertyGridHelpers
                 }
             }
 
-            if(didChange)
+            if (didChange)
             {
                 GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);
             }
@@ -863,12 +963,12 @@ namespace Gum.PropertyGridHelpers
             var defaultState = parent.DefaultState;
             List<InstanceSave> toReturn = new List<InstanceSave>();
             List<InstanceSave> directChildren = new List<InstanceSave>();
-            foreach(var potentialChild in parent.Instances)
+            foreach (var potentialChild in parent.Instances)
             {
                 var foundParentVariable = defaultState.Variables
                     .FirstOrDefault(item => item.Name == $"{potentialChild.Name}.Parent" && item.Value as string == instance.Name);
 
-                if(foundParentVariable != null)
+                if (foundParentVariable != null)
                 {
                     directChildren.Add(potentialChild);
                 }
@@ -876,7 +976,7 @@ namespace Gum.PropertyGridHelpers
 
             toReturn.AddRange(directChildren);
 
-            foreach(var child in directChildren)
+            foreach (var child in directChildren)
             {
                 var childrenOfChild = GetRecursiveChildrenOf(parent, child);
                 toReturn.AddRange(childrenOfChild);
@@ -913,7 +1013,7 @@ namespace Gum.PropertyGridHelpers
 
                         if (System.IO.File.Exists(absolute))
                         {
-                            if(absolute.ToLowerInvariant().EndsWith(".achx"))
+                            if (absolute.ToLowerInvariant().EndsWith(".achx"))
                             {
                                 // I think this is already loaded here, because when the GUE has
                                 // its ACXH set, the texture and texture coordinate values are set
