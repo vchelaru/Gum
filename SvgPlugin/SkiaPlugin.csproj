@@ -163,6 +163,7 @@
     <EmbeddedResource Include="Embedded\RoundedRectangle.gutx" />
     <EmbeddedResource Include="Embedded\Arc.gutx" />
     <EmbeddedResource Include="Embedded\LottieAnimation.gutx" />
+    <EmbeddedResource Include="Embedded\Canvas.gutx" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="SkiaInGumShared\SkiaInGumShared.projitems" Label="Shared" />

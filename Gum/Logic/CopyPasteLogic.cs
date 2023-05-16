@@ -431,13 +431,26 @@ namespace Gum.Logic
                                 var valueAsString = copiedVariable.Value as string;
 
                                 if (copiedVariable.GetRootName() == "Parent" && 
-                                    string.IsNullOrWhiteSpace(valueAsString) == false &&
-                                    oldNewNameDictionary.ContainsKey(valueAsString))
+                                    string.IsNullOrWhiteSpace(valueAsString) == false)
                                 {
-                                    // this is a parent and it may be attached to a copy, so update the value
-                                    var newValue = oldNewNameDictionary[valueAsString];
-                                    copiedVariable.Value = newValue;
-                                    shouldAttachToSelectedInstance = false;
+                                    var valueWithoutSubItem = valueAsString;
+                                    if(valueWithoutSubItem.Contains("."))
+                                    {
+                                        valueWithoutSubItem = valueWithoutSubItem.Substring(0, valueWithoutSubItem.IndexOf("."));
+                                    }
+                                    
+                                    if(oldNewNameDictionary.ContainsKey(valueWithoutSubItem))
+                                    {
+                                        // this is a parent and it may be attached to a copy, so update the value
+                                        var newValue = oldNewNameDictionary[valueWithoutSubItem];
+                                        if(valueAsString.Contains("."))
+                                        {
+                                            newValue += valueAsString.Substring(valueAsString.IndexOf("."));
+                                        }
+                                        copiedVariable.Value = newValue;
+                                        shouldAttachToSelectedInstance = false;
+
+                                    }
 
                                 }
                                 // Not sure why we are doing this. If the old contains the key, then attach to that every time (see above)
@@ -532,7 +545,7 @@ namespace Gum.Logic
                 {
                     var value = variable.Value as string;
 
-                    if(!string.IsNullOrEmpty(value) && value == instance.Name)
+                    if(!string.IsNullOrEmpty(value) && (value == instance.Name || value.StartsWith(instance.Name + ".") ))
                     {
                         var foundObject = container.GetInstance(variable.SourceObject);
 

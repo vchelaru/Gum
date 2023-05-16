@@ -103,11 +103,13 @@ namespace SkiaPlugin
         {
             switch (type)
             {
-                case "Svg": return new RenderableSvg();
-                case "ColoredCircle": return new RenderableCircle();
-                case "RoundedRectangle": return new RenderableRoundedRectangle();
                 case "Arc": return new RenderableArc();
+                case "Canvas": return new RenderableCanvas();
+
+                case "ColoredCircle": return new RenderableCircle();
                 case "LottieAnimation": return new RenderableLottieAnimation();
+                case "RoundedRectangle": return new RenderableRoundedRectangle();
+                case "Svg": return new RenderableSvg();
             }
 
             return null;
@@ -117,11 +119,12 @@ namespace SkiaPlugin
         {
             switch(type)
             {
-                case "Svg": return DefaultStateManager.GetSvgState();
-                case "ColoredCircle": return DefaultStateManager.GetColoredCircleState();
-                case "RoundedRectangle": return DefaultStateManager.GetRoundedRectangleState();
                 case "Arc": return DefaultStateManager.GetArcState();
+                case "Canvas": return DefaultStateManager.GetCanvasState();
+                case "ColoredCircle": return DefaultStateManager.GetColoredCircleState();
                 case "LottieAnimation": return DefaultStateManager.GetLottieAnimationState();
+                case "RoundedRectangle": return DefaultStateManager.GetRoundedRectangleState();
+                case "Svg": return DefaultStateManager.GetSvgState();
             }
             return null;
         }

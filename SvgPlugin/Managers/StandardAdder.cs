@@ -14,11 +14,13 @@ namespace SkiaPlugin.Managers
     {
         public static void AddAllStandards()
         {
-            AddStandard("Svg");
-            AddStandard("ColoredCircle");
-            AddStandard("RoundedRectangle");
             AddStandard("Arc");
+            AddStandard("Canvas");
+            AddStandard("ColoredCircle");
             AddStandard("LottieAnimation");
+            AddStandard("LottieAnimation");
+            AddStandard("RoundedRectangle");
+            AddStandard("Svg");
         }
 
         private static void AddStandard(string standardName)

@@ -896,12 +896,18 @@ namespace Gum.Managers
             var defaultState = container.DefaultState;
             var rfv = new RecursiveVariableFinder(defaultState);
 
-            var thisParentValue = rfv.GetValue($"{thisInstance.Name}.Parent") as string;
+            var thisParentValueIgnoringInnerParents = rfv.GetValue($"{thisInstance.Name}.Parent") as string;
+
+            if(thisParentValueIgnoringInnerParents?.Contains(".") == true)
+            {
+                thisParentValueIgnoringInnerParents = 
+                    thisParentValueIgnoringInnerParents.Substring(0, thisParentValueIgnoringInnerParents.IndexOf("."));
+            }
 
             // Need to only consider the parent if it actually exists (also done below)
-            if(container.GetInstance(thisParentValue) == null)
+            if(container.GetInstance(thisParentValueIgnoringInnerParents) == null)
             {
-                thisParentValue = null;
+                thisParentValueIgnoringInnerParents = null;
             }
 
             foreach (var instance in container.Instances)
@@ -909,12 +915,16 @@ namespace Gum.Managers
                 var parentVariableName = $"{instance.Name}.Parent";
                 //var instanceParentVariable = defaultState.GetValueOrDefault<string>(parentVariableName);
                 var instanceParentVariable = rfv.GetValue(parentVariableName) as string;
+                if(instanceParentVariable?.Contains(".") == true)
+                {
+                    instanceParentVariable = instanceParentVariable.Substring(0, instanceParentVariable.IndexOf("."));
+                }
                 if(container.GetInstance(instanceParentVariable) == null)
                 {
                     instanceParentVariable = null;
                 }
 
-                if (thisParentValue == instanceParentVariable)
+                if (thisParentValueIgnoringInnerParents == instanceParentVariable)
                 {
                     toReturn.Add(instance);
                 }

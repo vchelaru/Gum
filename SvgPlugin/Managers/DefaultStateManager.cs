@@ -18,10 +18,11 @@ namespace SkiaPlugin.Managers
     {
         #region Fields/Properties
 
+        static StateSave arcState;
+        static StateSave canvasState;
         static StateSave svgState;
         static StateSave filledCircleState;
         static StateSave roundedRectangleState;
-        static StateSave arcState;
         static StateSave lottieAnimationState;
 
         #endregion
@@ -55,6 +56,30 @@ namespace SkiaPlugin.Managers
             }
             return svgState;
         }
+        #endregion
+
+        #region Canvas State
+
+        public static StateSave GetCanvasState()
+        {
+            if(canvasState == null)
+            {
+                canvasState = new StateSave();
+                canvasState.Name = "Default";
+
+                AddVisibleVariable(canvasState);
+
+                StandardElementsManager.AddPositioningVariables(canvasState);
+
+                StandardElementsManager.AddDimensionsVariables(canvasState, 64, 64,
+                    StandardElementsManager.DimensionVariableAction.ExcludeFileOptions);
+
+                AddVariableReferenceList(canvasState);
+            }
+
+            return canvasState;
+        }
+
         #endregion
 
         #region Lottie Animation State
@@ -180,21 +205,8 @@ namespace SkiaPlugin.Managers
 
         #endregion
 
-        internal static void HandleVariableSet(ElementSave owner, InstanceSave instance, string variableName, object oldValue)
-        {
-            var rootName = VariableSave.GetRootName(variableName);
 
-            var shouldRefresh = rootName == "UseGradient" ||
-                rootName == "GradientType" ||
-                rootName == "HasDropshadow";
-
-            if(shouldRefresh)
-            {
-                GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);
-            }
-        }
-
-
+        #region Add Common Variables
 
         private static void AddGradientVariables(StateSave state)
         {
@@ -283,6 +295,23 @@ namespace SkiaPlugin.Managers
 
         }
 
+        #endregion
+
+        #region Property Grid Utilities
+
+        internal static void HandleVariableSet(ElementSave owner, InstanceSave instance, string variableName, object oldValue)
+        {
+            var rootName = VariableSave.GetRootName(variableName);
+
+            var shouldRefresh = rootName == "UseGradient" ||
+                rootName == "GradientType" ||
+                rootName == "HasDropshadow";
+
+            if(shouldRefresh)
+            {
+                GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);
+            }
+        }
         internal static bool GetIfVariableIsExcluded(VariableSave variable, RecursiveVariableFinder recursiveVariableFinder)
         {
             var prefix = string.IsNullOrEmpty(variable.SourceObject) ? "" : variable.SourceObject + '.';
@@ -354,6 +383,7 @@ namespace SkiaPlugin.Managers
 
             return false;
         }
+        #endregion
 
 
     }
