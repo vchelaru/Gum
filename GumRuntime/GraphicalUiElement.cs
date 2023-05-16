@@ -30,6 +30,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Diagnostics.CodeAnalysis;
+using System.ComponentModel;
 #if UWP
 using System.Reflection;
 #endif
@@ -51,7 +52,7 @@ namespace Gum.Wireframe
     /// setting variables, states, and perofrming layout. The GraphicalUiElement can
     /// wrap an underlying rendering object.
     /// </summary>
-    public partial class GraphicalUiElement : IRenderableIpso, IVisible
+    public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyPropertyChanged
     {
         #region Enums/Internal Classes
 
@@ -1228,6 +1229,16 @@ namespace Gum.Wireframe
         public event EventHandler SizeChanged;
         public event EventHandler PositionChanged;
         public event EventHandler ParentChanged;
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected virtual void NotifyPropertyChanged([System.Runtime.CompilerServices.CallerMemberName] string propertyName = null)
+        {
+            if (PropertyChanged != null)
+            {
+                var args = new PropertyChangedEventArgs(propertyName);
+                PropertyChanged(this, args);
+            }
+        }
 
         #endregion
 
