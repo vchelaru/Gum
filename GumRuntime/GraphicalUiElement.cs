@@ -5243,7 +5243,6 @@ namespace Gum.Wireframe
             return handled;
         }
 
-#if MONOGAME || XNA4
         bool useCustomFont;
         public bool UseCustomFont
         {
@@ -5257,7 +5256,6 @@ namespace Gum.Wireframe
             get { return customFontFile; }
             set { customFontFile = value; UpdateToFontValues(); }
         }
-#endif
 
         string font;
         public string Font

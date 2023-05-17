@@ -69,6 +69,8 @@ namespace SkiaPlugin.Managers
 
                 AddVisibleVariable(canvasState);
 
+                StandardElementsManager.AddClipsChildren(canvasState);
+
                 StandardElementsManager.AddPositioningVariables(canvasState);
 
                 StandardElementsManager.AddDimensionsVariables(canvasState, 64, 64,

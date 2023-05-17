@@ -254,7 +254,7 @@ namespace Gum.Managers
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Category = "Children", Type = "ChildrenLayout", Value = ChildrenLayout.Regular, Name = "Children Layout" });
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Category = "Children", Type = "float", Value = 0.0f, Name = "StackSpacing" });
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Category = "Children", Type = "bool", Value = false, Name = "Wraps Children" });
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Category = "Children", Type = "bool", Value = false, Name = "Clips Children" });
+                AddClipsChildren(stateSave);
 
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
 
@@ -495,6 +495,11 @@ namespace Gum.Managers
             //        variable.SetsValue = true;
             //    }
             //}
+        }
+
+        public static void AddClipsChildren(StateSave stateSave)
+        {
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Category = "Children", Type = "bool", Value = false, Name = "Clips Children" });
         }
 
         private void AddRotationVariable(StateSave stateSave)
