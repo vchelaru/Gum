@@ -278,38 +278,6 @@ namespace Gum.Managers
 
         }
 
-        #endregion
-
-        #region Get Elements by inheritance
-
-        public StandardElementSave GetRootStandardElementSave(ElementSave elementSave)
-        {
-            if (elementSave == null)
-            {
-                return null;
-            }
-
-            if (elementSave is ScreenSave)
-            {
-                // This will be null at the time of this writing, but may change in the future so we'll leave it here to do a proper check.
-
-                return ObjectFinder.Self.GetElementSave("Screen") as StandardElementSave;
-            }
-            while (!(elementSave is StandardElementSave) && !string.IsNullOrEmpty(elementSave.BaseType))
-            {
-                elementSave = GetElementSave(elementSave.BaseType);
-            }
-
-            return elementSave as StandardElementSave;
-        }
-
-        public StandardElementSave GetRootStandardElementSave(InstanceSave instanceSave)
-        {
-            return GetRootStandardElementSave(instanceSave.GetBaseElementSave());
-        }
-
-        #endregion
-
         /// <summary>
         /// Returns a list of Elements that include InstanceSaves that use the argument
         /// elementSave as their BaseType, or that use an ElementSave deriving from elementSave
@@ -458,53 +426,34 @@ namespace Gum.Managers
 
             return toReturn;
         }
+        #endregion
 
-        public List<ComponentSave> GetComponentsReferencing(BehaviorSave behavior)
+        #region Get Elements by inheritance
+
+        public StandardElementSave GetRootStandardElementSave(ElementSave elementSave)
         {
-            List<ComponentSave> referencingComponents = new List<ComponentSave>();
-            foreach(var component in GumProjectSave.Components)
+            if (elementSave == null)
             {
-                if(component.Behaviors.Any(item => item.BehaviorName == behavior.Name))
-                {
-                    referencingComponents.Add(component);
-                }
+                return null;
             }
-            
-            return referencingComponents;
+
+            if (elementSave is ScreenSave)
+            {
+                // This will be null at the time of this writing, but may change in the future so we'll leave it here to do a proper check.
+
+                return ObjectFinder.Self.GetElementSave("Screen") as StandardElementSave;
+            }
+            while (!(elementSave is StandardElementSave) && !string.IsNullOrEmpty(elementSave.BaseType))
+            {
+                elementSave = GetElementSave(elementSave.BaseType);
+            }
+
+            return elementSave as StandardElementSave;
         }
 
-        /// <summary>
-        /// Returns a list of ElementSaves inheriting from the argument elementSave, with the most derived first in the list, and the most base last in the list
-        /// </summary>
-        /// <param name="elementSave">The element for which to get the inheritance list.</param>
-        /// <returns>The list, with the most derived (direct inheritance) first.</returns>
-        public List<ElementSave> GetBaseElements(ElementSave elementSave)
+        public StandardElementSave GetRootStandardElementSave(InstanceSave instanceSave)
         {
-            var toReturn = new List<ElementSave>();
-
-            FillListWithBaseElements(elementSave, toReturn);
-
-            return toReturn;
-        }
-
-        public IEnumerable<string> GetAllFilesInProject()
-        {
-            List<string> toReturn = new List<string>();
-
-            FillListWithReferencedFiles(toReturn, GumProjectSave.Screens);
-            FillListWithReferencedFiles(toReturn, GumProjectSave.Components);
-            FillListWithReferencedFiles(toReturn, GumProjectSave.StandardElements);
-
-            return toReturn.Distinct();
-        }
-
-        public List<string> GetFilesReferencedBy(ElementSave element)
-        {
-            List<string> toReturn = new List<string>();
-
-            FillListWithReferencedFiles(toReturn, element);
-
-            return toReturn.Distinct().ToList();
+            return GetRootStandardElementSave(instanceSave.GetBaseElementSave());
         }
 
         public ICollection<ElementSave> GetElementsInheritingFrom(ElementSave element)
@@ -558,6 +507,59 @@ namespace Gum.Managers
                 FillListWithBaseElements(baseElement, listToAddTo);
             }
             
+        }
+
+        #endregion
+
+
+        public List<ComponentSave> GetComponentsReferencing(BehaviorSave behavior)
+        {
+            List<ComponentSave> referencingComponents = new List<ComponentSave>();
+            foreach(var component in GumProjectSave.Components)
+            {
+                if(component.Behaviors.Any(item => item.BehaviorName == behavior.Name))
+                {
+                    referencingComponents.Add(component);
+                }
+            }
+            
+            return referencingComponents;
+        }
+
+        /// <summary>
+        /// Returns a list of ElementSaves inheriting from the argument elementSave, with the most derived first in the list, and the most base last in the list
+        /// </summary>
+        /// <param name="elementSave">The element for which to get the inheritance list.</param>
+        /// <returns>The list, with the most derived (direct inheritance) first.</returns>
+        public List<ElementSave> GetBaseElements(ElementSave elementSave)
+        {
+            var toReturn = new List<ElementSave>();
+
+            FillListWithBaseElements(elementSave, toReturn);
+
+            return toReturn;
+        }
+
+        #region Get Files
+
+        public IEnumerable<string> GetAllFilesInProject()
+        {
+            List<string> toReturn = new List<string>();
+
+            FillListWithReferencedFiles(toReturn, GumProjectSave.Screens);
+            FillListWithReferencedFiles(toReturn, GumProjectSave.Components);
+            FillListWithReferencedFiles(toReturn, GumProjectSave.StandardElements);
+
+            return toReturn.Distinct();
+        }
+
+        public List<string> GetFilesReferencedBy(ElementSave element)
+        {
+            List<string> toReturn = new List<string>();
+
+            FillListWithReferencedFiles(toReturn, element);
+
+            return toReturn.Distinct().ToList();
         }
 
         private void FillListWithReferencedFiles<T>(List<string> files, IList<T> elements) where T : ElementSave
@@ -633,6 +635,34 @@ namespace Gum.Managers
                 }
             }
         }
+
+        #endregion
+
+        #region Get Instance
+
+        public InstanceSave GetInstanceRecursively(ElementSave element, string instanceName)
+        {
+            var strippedInstanceName = instanceName;
+            if(strippedInstanceName.Contains("."))
+            {
+                strippedInstanceName = strippedInstanceName.Substring(0, strippedInstanceName.LastIndexOf('.'));
+            }
+            InstanceSave instance = null;
+            instance = element.Instances.FirstOrDefault(item => item.Name == strippedInstanceName);
+            if (instance != null && instanceName.Contains("."))
+            {
+                var instanceElement = GetElementSave(instance);
+
+                if(instanceElement != null)
+                {
+                    var instanceNameAfterDot = instanceName.Substring(instanceName.LastIndexOf('.') + 1);
+                    instance = GetInstanceRecursively(instanceElement, instanceNameAfterDot);
+                }
+            }
+            return instance;
+        }
+
+        #endregion
 
         public ElementSave GetContainerOf(StateSaveCategory category)
         {

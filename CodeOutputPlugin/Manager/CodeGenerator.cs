@@ -1348,7 +1348,8 @@ namespace CodeOutputPlugin.Manager
 
             var parentValue = parentVariable?.Value as string;
             var hasParent = parentValue != null &&
-                container.GetInstance(parentValue) != null;
+                ObjectFinder.Self.GetInstanceRecursively(container, parentValue) != null;
+                //container.GetInstance(parentValue) != null;
 
             if (hasParent)
             {

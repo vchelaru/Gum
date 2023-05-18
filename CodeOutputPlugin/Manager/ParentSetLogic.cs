@@ -30,7 +30,17 @@ namespace CodeOutputPlugin.Manager
             InstanceSave newParent = null;
             if (!string.IsNullOrEmpty(newParentName))
             {
-                newParent = element.GetInstance(newParentName);
+                // 5/18/2023
+                // newParentName
+                // could have a dot
+                // which means instance
+                // is being attached to a
+                // subparent (default child
+                // container). Therefore, we
+                // need to find the instance recursively.
+
+                newParent = ObjectFinder.Self.GetInstanceRecursively(element, newParentName);
+                    //element.GetInstance(newParentName);
             }
 
             var response = CanInstanceRemainAsAChildOf(instance, newParent, element);
@@ -66,7 +76,8 @@ namespace CodeOutputPlugin.Manager
             InstanceSave newParent = null;
             if (!string.IsNullOrEmpty(newParentName))
             {
-                newParent = element.GetInstance(newParentName);
+                newParent = ObjectFinder.Self.GetInstanceRecursively(element, newParentName);
+                    //element.GetInstance(newParentName);
             }
             var childResponse = CanInstanceRemainAsAChildOf(instance, newParent, element);
 

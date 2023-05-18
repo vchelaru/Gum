@@ -414,59 +414,58 @@ namespace Gum.Logic
 
                         }
 
+                        var variablesOnSourceInstance = stateSave.Variables.Where(item => item.SourceObject == sourceInstance.Name).ToArray();
                         // why reverse loop?
-                        for (int i = stateSave.Variables.Count - 1; i > -1; i--)
+                        for (int i = variablesOnSourceInstance.Length - 1; i > -1; i--)
                         {
+
                             // We may have copied over a group of instances.  If so
                             // the copied state may have variables for multiple instances.
                             // We only want to apply the variables that work for the selected
                             // object.
-                            VariableSave sourceVariable = stateSave.Variables[i];
-                            if (sourceVariable.SourceObject == sourceInstance.Name)
+                            VariableSave sourceVariable = variablesOnSourceInstance[i];
+
+                            VariableSave copiedVariable = sourceVariable.Clone();
+                            copiedVariable.Name = newInstance.Name + "." + copiedVariable.GetRootName();
+
+                            var valueAsString = copiedVariable.Value as string;
+
+                            if (copiedVariable.GetRootName() == "Parent" && 
+                                string.IsNullOrWhiteSpace(valueAsString) == false)
                             {
-
-                                VariableSave copiedVariable = sourceVariable.Clone();
-                                copiedVariable.Name = newInstance.Name + "." + copiedVariable.GetRootName();
-
-                                var valueAsString = copiedVariable.Value as string;
-
-                                if (copiedVariable.GetRootName() == "Parent" && 
-                                    string.IsNullOrWhiteSpace(valueAsString) == false)
+                                var valueWithoutSubItem = valueAsString;
+                                if(valueWithoutSubItem.Contains("."))
                                 {
-                                    var valueWithoutSubItem = valueAsString;
-                                    if(valueWithoutSubItem.Contains("."))
-                                    {
-                                        valueWithoutSubItem = valueWithoutSubItem.Substring(0, valueWithoutSubItem.IndexOf("."));
-                                    }
+                                    valueWithoutSubItem = valueWithoutSubItem.Substring(0, valueWithoutSubItem.IndexOf("."));
+                                }
                                     
-                                    if(oldNewNameDictionary.ContainsKey(valueWithoutSubItem))
+                                if(oldNewNameDictionary.ContainsKey(valueWithoutSubItem))
+                                {
+                                    // this is a parent and it may be attached to a copy, so update the value
+                                    var newValue = oldNewNameDictionary[valueWithoutSubItem];
+                                    if(valueAsString.Contains("."))
                                     {
-                                        // this is a parent and it may be attached to a copy, so update the value
-                                        var newValue = oldNewNameDictionary[valueWithoutSubItem];
-                                        if(valueAsString.Contains("."))
-                                        {
-                                            newValue += valueAsString.Substring(valueAsString.IndexOf("."));
-                                        }
-                                        copiedVariable.Value = newValue;
-                                        shouldAttachToSelectedInstance = false;
-
+                                        newValue += valueAsString.Substring(valueAsString.IndexOf("."));
                                     }
+                                    copiedVariable.Value = newValue;
+                                    shouldAttachToSelectedInstance = false;
 
                                 }
-                                // Not sure why we are doing this. If the old contains the key, then attach to that every time (see above)
-                                //if(copiedVariable.GetRootName() == "Parent" && shouldAttachToSelectedInstance && selectedInstance == null)
-                                //{
-                                //    // don't assign it because we're not pasting onto a particular instance and
-                                //    // the copied instance already has a parent.
-                                //    shouldAttachToSelectedInstance = false;
-                                //}
 
-                                // We don't want to copy exposed variables.
-                                // If we did, the user would have 2 variables exposed with the same.
-                                copiedVariable.ExposedAsName = null;
-
-                                targetState.Variables.Add(copiedVariable);
                             }
+                            // Not sure why we are doing this. If the old contains the key, then attach to that every time (see above)
+                            //if(copiedVariable.GetRootName() == "Parent" && shouldAttachToSelectedInstance && selectedInstance == null)
+                            //{
+                            //    // don't assign it because we're not pasting onto a particular instance and
+                            //    // the copied instance already has a parent.
+                            //    shouldAttachToSelectedInstance = false;
+                            //}
+
+                            // We don't want to copy exposed variables.
+                            // If we did, the user would have 2 variables exposed with the same.
+                            copiedVariable.ExposedAsName = null;
+
+                            targetState.Variables.Add(copiedVariable);
                         }
                         // Copy over the VariableLists too
                         for (int i = stateSave.VariableLists.Count - 1; i > -1; i--)
