@@ -1081,7 +1081,15 @@ namespace Gum.Managers
             }
             else
             {
-                Select(GetTreeNodeFor(elementSave));
+                var treeNode = GetTreeNodeFor(elementSave);
+
+                if(treeNode == null && !string.IsNullOrEmpty(searchTextBox.Text))
+                {
+                    searchTextBox.Text = null;
+                    treeNode = GetTreeNodeFor(elementSave);
+                }
+
+                Select(treeNode);
             }
         }
 

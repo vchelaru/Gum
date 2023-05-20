@@ -76,21 +76,19 @@ namespace Gum.Managers
         {
             if (e.KeyCode == Keys.F12)
             {
+                DataTypes.ElementSave elementToGoTo = null;
                 if (SelectedState.Self.SelectedInstance != null)
                 {
-                    var element = ObjectFinder.Self.GetElementSave(SelectedState.Self.SelectedInstance.BaseType);
-                    if (element != null)
-                    {
-                        SelectedState.Self.SelectedElement = element;
-                    }
+                    elementToGoTo = ObjectFinder.Self.GetElementSave(SelectedState.Self.SelectedInstance.BaseType);
                 }
                 else if (!string.IsNullOrWhiteSpace(SelectedState.Self.SelectedElement?.BaseType))
                 {
-                    var element = ObjectFinder.Self.GetElementSave(SelectedState.Self.SelectedElement.BaseType);
-                    if (element != null)
-                    {
-                        SelectedState.Self.SelectedElement = element;
-                    }
+                    elementToGoTo = ObjectFinder.Self.GetElementSave(SelectedState.Self.SelectedElement.BaseType);
+                }
+
+                if (elementToGoTo != null)
+                {
+                    SelectedState.Self.SelectedElement = elementToGoTo;
                 }
             }
         }
