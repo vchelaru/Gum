@@ -83,6 +83,21 @@ namespace WpfDataUi.Controls
             }
         }
 
+        public string GetCurrentLineText()
+        {
+            // Get the current cursor position
+            int currentPosition = TextBox.SelectionStart;
+
+            // Get the line index of the current position
+            int currentLineIndex = TextBox.GetLineIndexFromCharacterIndex(currentPosition);
+
+            // Get the text of the current line
+            string currentLineText = TextBox.GetLineText(currentLineIndex);
+
+            return currentLineText;
+        }
+
+
         public ApplyValueResult TryGetValueOnUi(out object result)
         {
             // todo - need to make this more flexible, but for now let's just support strings:

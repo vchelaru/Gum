@@ -16,6 +16,7 @@ using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Windows.Forms;
+using WpfDataUi.Controls;
 using WpfDataUi.DataTypes;
 using Xceed.Wpf.Toolkit.Primitives;
 
@@ -248,7 +249,7 @@ namespace Gum.PropertyGridHelpers
             this.CustomGetEvent += HandleCustomGet;
             this.CustomGetTypeEvent += HandleCustomGetType;
 
-
+            this.UiCreated += HandleUiCreated;
 
             this.SortValue = int.MaxValue;
 
@@ -330,6 +331,69 @@ namespace Gum.PropertyGridHelpers
                 this.SortValue = standardVariable.DesiredOrder;
             }
 
+        }
+
+        private void HandleUiCreated(System.Windows.Controls.UserControl obj)
+        {
+            if (this.RootVariableName == "VariableReferences")
+            {
+                var asTextBox = obj as StringListTextBoxDisplay;
+
+                if(asTextBox != null)
+                {
+                    asTextBox.KeyDown += (s, e) =>
+                    {
+                        if (e.Key == System.Windows.Input.Key.F12)
+                        {
+                            var text = asTextBox.GetCurrentLineText();
+
+                            if(text?.Contains("=") == true)
+                            {
+                                var rightSideOfEquals = text.Substring(text.IndexOf("=") + 1).Trim();
+
+                                if(rightSideOfEquals.Contains("."))
+                                {
+                                    var beforeDot = rightSideOfEquals.Substring(0, rightSideOfEquals.IndexOf("."));
+
+                                    if(beforeDot.Contains("/"))
+                                    {
+                                        beforeDot = beforeDot.Substring(beforeDot.LastIndexOf("/") + 1);
+                                    }
+
+                                    var element = ObjectFinder.Self.GetElementSave(beforeDot);
+
+                                    if(element != null)
+                                    {
+                                        var afterDot = rightSideOfEquals.Substring(rightSideOfEquals.IndexOf(".") + 1);
+
+                                        var instanceName = afterDot;
+
+                                        if(afterDot.Contains("."))
+                                        {
+                                            instanceName = afterDot.Substring(0, afterDot.IndexOf("."));
+                                        }
+
+                                        InstanceSave instance = null;
+                                        if (!string.IsNullOrEmpty(instanceName))
+                                        {
+                                            instance = element.GetInstance(instanceName);
+                                        }
+                                        if(instance != null)
+                                        {
+                                            SelectedState.Self.SelectedInstance = instance;
+                                        }
+                                        else
+                                        {
+                                            SelectedState.Self.SelectedElement = element;
+                                        }
+                                    }
+                                }
+                            }
+
+                        }
+                    };
+                }
+            }
         }
 
         private void TryAddCopyVariableReferenceMenuOptions()
