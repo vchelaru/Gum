@@ -448,10 +448,17 @@ namespace Gum.DataTypes.Variables
                     variable.Name = newName + "." + variable.Name.Substring((oldName + ".").Length);
                 }
 
-                if (variable.GetRootName() == "Parent" && variable.SetsValue && variable.Value is string &&
-                    (string)(variable.Value) == oldName)
+                if (variable.GetRootName() == "Parent" && variable.SetsValue && variable.Value is string valueAsString && !string.IsNullOrEmpty(valueAsString))
                 {
-                    variable.Value = newName;
+                    if (valueAsString == oldName)
+                    {
+                        variable.Value = newName;
+                    }
+                    else if(valueAsString.StartsWith(oldName + "."))
+                    {
+                        var afterDot = valueAsString.Substring(oldName.Length + 1);
+                        variable.Value = newName + "." + afterDot;
+                    }
                 }
             }
 
