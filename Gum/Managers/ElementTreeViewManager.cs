@@ -1253,7 +1253,13 @@ namespace Gum.Managers
             var nodeText = FileManager.RemovePath(elementSave.Name);
             if(nodeText != node.Text)
             {
+                var hadTextBefore = !string.IsNullOrEmpty(node.Text);
                 node.Text = nodeText;
+
+                if(hadTextBefore && node.Parent != null)
+                {
+                    node.Parent.Nodes.SortByName();
+                }
             }
 
             var allTreeNodesRecursively = node.GetAllChildrenNodesRecursively();
