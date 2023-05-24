@@ -26,7 +26,11 @@ namespace Gum.Managers
         {
             mMenuStrip.Items.Clear();
 
-            AddMenuItem("Add State", GumCommands.Self.Edit.AddState);
+            if(SelectedState.Self.SelectedStateCategorySave != null)
+            {
+                // As of 5/24/2023, we no longer support uncategorized states
+                AddMenuItem("Add State", GumCommands.Self.Edit.AddState);
+            }
 
             AddMenuItem("Add Category", GumCommands.Self.Edit.AddCategory);
 

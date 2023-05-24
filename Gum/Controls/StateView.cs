@@ -49,7 +49,7 @@ namespace Gum.Controls
             this.TreeView.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.StateTreeView_AfterSelect);
             this.TreeView.KeyDown += new System.Windows.Forms.KeyEventHandler(this.StateTreeView_KeyDown);
             this.TreeView.MouseClick += new System.Windows.Forms.MouseEventHandler(this.StateTreeView_MouseClick);
-
+            this.TreeView.MouseDown += HandleMouseDown;
         }
 
         private void SingleStateRadio_CheckedChanged(object sender, EventArgs e)
@@ -92,7 +92,13 @@ namespace Gum.Controls
                 StateTreeViewManager.Self.PopulateMenuStrip();
             }
         }
-
+        private void HandleMouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Right)
+            {
+                StateTreeViewManager.Self.PopulateMenuStrip();
+            }
+        }
 
 
         private void StateTreeView_KeyDown(object sender, KeyEventArgs e)
