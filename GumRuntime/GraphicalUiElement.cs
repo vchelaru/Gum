@@ -31,6 +31,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Diagnostics.CodeAnalysis;
 using System.ComponentModel;
+using System.Xml.Linq;
 #if UWP
 using System.Reflection;
 #endif
@@ -622,6 +623,23 @@ namespace Gum.Wireframe
                 {
                     stackSpacing = value; 
                     if(ChildrenLayout != ChildrenLayout.Regular)
+                    {
+                        UpdateLayout();
+                    }
+                }
+            }
+        }
+
+        bool useFixedStackChildrenSize;
+        public bool UseFixedStackChildrenSize
+        {
+            get => useFixedStackChildrenSize;
+            set
+            {
+                if(useFixedStackChildrenSize != value)
+                {
+                    useFixedStackChildrenSize = value;
+                    if (ChildrenLayout != ChildrenLayout.Regular)
                     {
                         UpdateLayout();
                     }
@@ -1363,6 +1381,7 @@ namespace Gum.Wireframe
 
         public static bool AreUpdatesAppliedWhenInvisible { get; set; } = false;
 
+        HashSet<IRenderableIpso> fullyUpdatedChildren = new HashSet<IRenderableIpso>();
         public void UpdateLayout(ParentUpdateType parentUpdateType, int childrenUpdateDepth, XOrY? xOrY = null)
         {
             var updateParent =
@@ -1524,32 +1543,77 @@ namespace Gum.Wireframe
                 // any children), we should, since
                 // it can make the children update have
                 // the real width/height set properly
+                // May 26, 2023
+                // If a dimension doesn't depend on any children, then we are already
+                // in a state where we can update that dimension now before doing any children
+                // updates. Let's do that.
                 var widthDependencyType = this.WidthUnits.GetDependencyType();
                 var heightDependencyType = this.HeightUnits.GetDependencyType();
 
                 var hasChildDependency = widthDependencyType == HierarchyDependencyType.DependsOnChildren ||
                     heightDependencyType == HierarchyDependencyType.DependsOnChildren;
 
-                if (hasChildDependency && widthDependencyType != heightDependencyType)
+                if (widthDependencyType != HierarchyDependencyType.DependsOnChildren && heightDependencyType != HierarchyDependencyType.DependsOnChildren)
                 {
-                    // we can do one of them first
-                    if (widthDependencyType != HierarchyDependencyType.DependsOnChildren)
-                    {
-                        UpdateDimensions(parentWidth, parentHeight, XOrY.X, considerWrappedStacked: false);
-                    }
-                    else if (heightDependencyType != HierarchyDependencyType.DependsOnChildren)
-                    {
-                        UpdateDimensions(parentWidth, parentHeight, XOrY.Y, considerWrappedStacked: false);
-                    }
+                    UpdateDimensions(parentWidth, parentHeight, null, true);
                 }
+                else if(widthDependencyType != HierarchyDependencyType.DependsOnChildren)
+                {
+                    UpdateDimensions(parentWidth, parentHeight, XOrY.X, considerWrappedStacked: false);
+                }
+                if (heightDependencyType != HierarchyDependencyType.DependsOnChildren)
+                {
+                    UpdateDimensions(parentWidth, parentHeight, XOrY.Y, considerWrappedStacked: false);
+                }
+
+                fullyUpdatedChildren.Clear();
 
                 if (hasChildDependency && childrenUpdateDepth > 0)
                 {
-                    UpdateChildren(childrenUpdateDepth, ChildType.Absolute, skipIgnoreByParentSize:true);
+                    // This causes a double-update of children. For list boxes, this can be expensive.
+                    // We can special-case this IF
+                    // 1. This depends on children
+                    // 2. This stacks in the same axis as the children
+                    // 3. This is using FixedStackSpacing
+                    // 4. This has more than one child
+                    // for now, let's do this only on the vertical axis as a test:
+                    if(this.ChildrenLayout == Gum.Managers.ChildrenLayout.TopToBottomStack &&
+                        this.HeightUnits.GetDependencyType() == HierarchyDependencyType.DependsOnChildren &&
+                        this.UseFixedStackChildrenSize &&
+                        this.Children?.Count > 1)
+                    {
+
+                        //UpdateDimensions(parentWidth, parentHeight, XOrY.Y, considerWrappedStacked: false);
+                        var firstChild = this.Children[0] as GraphicalUiElement;
+                        var childLayout = firstChild.GetChildLayoutType(this);
+
+                        if(childLayout == ChildType.Absolute)
+                        {
+                            firstChild?.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1);
+                            fullyUpdatedChildren.Add(firstChild);
+                        }
+                        else
+                        {
+                            firstChild?.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1, XOrY.Y);
+                        }
+                    }
+                    else
+                    {
+                        UpdateChildren(childrenUpdateDepth, ChildType.Absolute, skipIgnoreByParentSize:true, newlyUpdated:fullyUpdatedChildren);
+                    }
                 }
 
                 // This will update according to all absolute children
-                UpdateDimensions(parentWidth, parentHeight, xOrY, considerWrappedStacked: false);
+                // Now that the children have been updated, we can do any dimensions that still need updating based on the children changes:
+
+                if (widthDependencyType == HierarchyDependencyType.DependsOnChildren)
+                {
+                    UpdateDimensions(parentWidth, parentHeight, XOrY.X, considerWrappedStacked: false);
+                }
+                if (heightDependencyType == HierarchyDependencyType.DependsOnChildren)
+                {
+                    UpdateDimensions(parentWidth, parentHeight, XOrY.Y, considerWrappedStacked: false);
+                }
 
                 if (this.WrapsChildren && (this.ChildrenLayout == ChildrenLayout.LeftToRightStack || this.ChildrenLayout == ChildrenLayout.TopToBottomStack))
                 {
@@ -1631,7 +1695,7 @@ namespace Gum.Wireframe
 
             if (childrenUpdateDepth > 0)
             {
-                UpdateChildren(childrenUpdateDepth, ChildType.All, skipIgnoreByParentSize:false);
+                UpdateChildren(childrenUpdateDepth, ChildType.All, skipIgnoreByParentSize:false, alreadyUpdated: fullyUpdatedChildren);
 
                 var sizeDependsOnChildren = this.WidthUnits == DimensionUnitType.RelativeToChildren ||
                     this.HeightUnits == DimensionUnitType.RelativeToChildren;
@@ -1718,17 +1782,27 @@ namespace Gum.Wireframe
         {
             var doesParentWrapStack = parent.WrapsChildren && (parent.ChildrenLayout == ChildrenLayout.LeftToRightStack || parent.ChildrenLayout == ChildrenLayout.TopToBottomStack);
 
+            var parentWidthDependencyType = parent.WidthUnits.GetDependencyType();
+            var parentHeightDependencyType = parent.HeightUnits.GetDependencyType();
 
-            var isAbsolute = mWidthUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent &&
-                            mHeightUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent &&
-                            mWidthUnit.GetDependencyType() != HierarchyDependencyType.DependsOnSiblings &&
-                            mHeightUnit.GetDependencyType() != HierarchyDependencyType.DependsOnSiblings &&
+            var isParentWidthNoDependencyOrOnParent = parentWidthDependencyType == HierarchyDependencyType.NoDependency || parentWidthDependencyType == HierarchyDependencyType.DependsOnParent;
+            var isParentHeightNoDependencyOrOnParent = parentHeightDependencyType == HierarchyDependencyType.NoDependency || parentHeightDependencyType == HierarchyDependencyType.DependsOnParent;
 
-                (mXUnits == GeneralUnitType.PixelsFromLarge || mXUnits == GeneralUnitType.PixelsFromMiddle ||
-                    mXUnits == GeneralUnitType.PixelsFromSmall || mXUnits == GeneralUnitType.PixelsFromMiddleInverted) &&
-                (mYUnits == GeneralUnitType.PixelsFromLarge || mYUnits == GeneralUnitType.PixelsFromMiddle ||
-                    mYUnits == GeneralUnitType.PixelsFromSmall || mYUnits == GeneralUnitType.PixelsFromMiddleInverted ||
-                    mYUnits == GeneralUnitType.PixelsFromBaseline);
+            var isAbsolute = (mWidthUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent || isParentWidthNoDependencyOrOnParent) &&
+                            (mHeightUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent || isParentHeightNoDependencyOrOnParent) &&
+                            (mWidthUnit.GetDependencyType() != HierarchyDependencyType.DependsOnSiblings) &&
+                            (mHeightUnit.GetDependencyType() != HierarchyDependencyType.DependsOnSiblings) &&
+
+                (mXUnits == GeneralUnitType.PixelsFromSmall || 
+                 (mXUnits == GeneralUnitType.PixelsFromMiddle && isParentWidthNoDependencyOrOnParent) ||
+                 (mXUnits == GeneralUnitType.PixelsFromLarge && isParentWidthNoDependencyOrOnParent) || 
+                 (mXUnits == GeneralUnitType.PixelsFromMiddleInverted && isParentWidthNoDependencyOrOnParent)) &&
+                
+                (mYUnits == GeneralUnitType.PixelsFromSmall || 
+                 (mYUnits == GeneralUnitType.PixelsFromMiddle && isParentHeightNoDependencyOrOnParent) ||
+                 (mYUnits == GeneralUnitType.PixelsFromLarge && isParentHeightNoDependencyOrOnParent) || 
+                 (mYUnits == GeneralUnitType.PixelsFromMiddleInverted && isParentHeightNoDependencyOrOnParent) ||
+                 mYUnits == GeneralUnitType.PixelsFromBaseline);
 
             if (doesParentWrapStack)
             {
@@ -1747,14 +1821,15 @@ namespace Gum.Wireframe
 
             if (xOrY == XOrY.X)
             {
-                isAbsolute = mWidthUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent &&
+                var widthUnitDependencyType = mWidthUnit.GetDependencyType();
+                isAbsolute = (widthUnitDependencyType != HierarchyDependencyType.DependsOnParent || this.WidthUnits.GetDependencyType() == HierarchyDependencyType.NoDependency ) &&
                     (mXUnits == GeneralUnitType.PixelsFromLarge || mXUnits == GeneralUnitType.PixelsFromMiddle ||
                         mXUnits == GeneralUnitType.PixelsFromSmall || mXUnits == GeneralUnitType.PixelsFromMiddleInverted);
 
             }
             else // Y
             {
-                isAbsolute = mHeightUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent &&
+                isAbsolute = (mHeightUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent || this.HeightUnits.GetDependencyType() == HierarchyDependencyType.NoDependency) &&
                     (mYUnits == GeneralUnitType.PixelsFromLarge || mYUnits == GeneralUnitType.PixelsFromMiddle ||
                         mYUnits == GeneralUnitType.PixelsFromSmall || mYUnits == GeneralUnitType.PixelsFromMiddleInverted &&
                         mYUnits == GeneralUnitType.PixelsFromBaseline);
@@ -2126,7 +2201,7 @@ namespace Gum.Wireframe
 
         }
 
-        private void UpdateChildren(int childrenUpdateDepth, ChildType childrenUpdateType, bool skipIgnoreByParentSize)
+        private void UpdateChildren(int childrenUpdateDepth, ChildType childrenUpdateType, bool skipIgnoreByParentSize, HashSet<IRenderableIpso> alreadyUpdated = null, HashSet<IRenderableIpso> newlyUpdated = null)
         {
             bool CanDoFullUpdate(ChildType thisChildUpdateType, GraphicalUiElement childGue)
             {
@@ -2180,11 +2255,16 @@ namespace Gum.Wireframe
                 {
                     var ipsoChild = this.Children[i];
 
-                    if (ipsoChild is GraphicalUiElement child)
+                    if ((alreadyUpdated == null || alreadyUpdated.Contains(ipsoChild) == false) && ipsoChild is GraphicalUiElement child)
                     {
-                        if (CanDoFullUpdate(child.GetChildLayoutType(this), child))
+                        var canDoFullUpdate =
+                            CanDoFullUpdate(child.GetChildLayoutType(this), child);
+
+
+                        if (canDoFullUpdate)
                         {
                             child.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1);
+                            newlyUpdated?.Add(child);
                         }
                         else
                         {
@@ -3024,29 +3104,41 @@ namespace Gum.Wireframe
 #endif
                     }
 
-                    for(int i = 0; i < Children.Count; i++)
+                    if(useFixedStackChildrenSize && this.ChildrenLayout == ChildrenLayout.TopToBottomStack && this.Children.Count > 1)
                     {
-                        var element = Children[i] as GraphicalUiElement;
-                        var childLayout = element.GetChildLayoutType(XOrY.Y, this);
-                        var considerChild = (childLayout == ChildType.Absolute || (considerWrappedStacked && childLayout == ChildType.StackedWrapped)) && element.IgnoredByParentSize == false;
-                        if (considerChild && element.Visible)
-                        {
-                            var elementHeight = element.GetRequiredParentHeight();
+                        var element = Children[0] as GraphicalUiElement;
 
-                            if (this.ChildrenLayout == ChildrenLayout.TopToBottomStack)
+                        maxHeight = element.GetRequiredParentHeight();
+                        var elementHeight = element.GetAbsoluteHeight();
+                        maxHeight += (StackSpacing + elementHeight) * (Children.Count - 1);
+                    }
+                    else
+                    {
+                        for(int i = 0; i < Children.Count; i++)
+                        {
+                            var element = Children[i] as GraphicalUiElement;
+                            var childLayout = element.GetChildLayoutType(XOrY.Y, this);
+                            var considerChild = (childLayout == ChildType.Absolute || (considerWrappedStacked && childLayout == ChildType.StackedWrapped)) && element.IgnoredByParentSize == false;
+                            if (considerChild && element.Visible)
                             {
-                                // The first item in the stack doesn't consider the stack spacing, but all subsequent ones do:
-                                if(i != 0)
+                                var elementHeight = element.GetRequiredParentHeight();
+
+                                if (this.ChildrenLayout == ChildrenLayout.TopToBottomStack)
                                 {
-                                    maxHeight += StackSpacing;
+                                    // The first item in the stack doesn't consider the stack spacing, but all subsequent ones do:
+                                    if(i != 0)
+                                    {
+                                        maxHeight += StackSpacing;
+                                    }
+                                    maxHeight += elementHeight;
                                 }
-                                maxHeight += elementHeight;
-                            }
-                            else
-                            {
-                                maxHeight = System.Math.Max(maxHeight, elementHeight);
+                                else
+                                {
+                                    maxHeight = System.Math.Max(maxHeight, elementHeight);
+                                }
                             }
                         }
+
                     }
                 }
                 else

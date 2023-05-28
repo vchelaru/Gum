@@ -241,15 +241,14 @@ namespace StateAnimationPlugin
                 {
                     var item = lbmb.SelectedItem;
 
-                    var newVm = new AnimatedKeyframeViewModel()
-                    {
-                        StateName = (string)item,
-                        // User just selected the state, so it better be valid!
-                        HasValidState = true,
-                        InterpolationType = FlatRedBall.Glue.StateInterpolation.InterpolationType.Linear,
-                        Easing = FlatRedBall.Glue.StateInterpolation.Easing.Out
+                    var newVm = new AnimatedKeyframeViewModel();
 
-                    };
+
+                    newVm.StateName = (string)item;
+                    // User just selected the state, so it better be valid!
+                    newVm.HasValidState = true;
+                    newVm.InterpolationType = FlatRedBall.Glue.StateInterpolation.InterpolationType.Linear;
+                    newVm.Easing = FlatRedBall.Glue.StateInterpolation.Easing.Out;
 
 
                     if (mCurrentViewModel.SelectedAnimation.SelectedKeyframe != null)
@@ -262,12 +261,15 @@ namespace StateAnimationPlugin
                         newVm.Time = mCurrentViewModel.SelectedAnimation.Keyframes.Last().Time + 1f;
                     }
 
-                    mCurrentViewModel.SelectedAnimation.Keyframes.Add(newVm);
 
                     mCurrentViewModel.SelectedAnimation.Keyframes.BubbleSort();
 
-                    mCurrentViewModel.SelectedAnimation.SelectedKeyframe = newVm;
+                    mCurrentViewModel.SelectedAnimation.Keyframes.Add(newVm);
+                    // Call this *before* setting SelectedKeyframe so the available states are assigned. Otherwise
+                    // StateName will be nulled out.
                     HandleAnimationKeyrameAdded(newVm);
+                    mCurrentViewModel.SelectedAnimation.SelectedKeyframe = newVm;
+
 
                 }
             }

@@ -214,6 +214,8 @@ namespace StateAnimationPlugin.ViewModels
         }
 
 
+        [DependsOn(nameof(StateName))]
+        [DependsOn(nameof(AnimationName))]
         public BitmapFrame IconBitmapFrame
         {
             get
