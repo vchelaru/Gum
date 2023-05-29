@@ -8,6 +8,7 @@ using Gum.Wireframe;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -319,9 +320,16 @@ namespace Gum.Logic
 
             #region Create the new instance and add it to the target element
 
+            List<string> sourceElementInstanceNames = null;
+
             foreach (var sourceInstance in instancesToCopy)
             {
                 ElementSave sourceElement = sourceInstance.ParentContainer;
+
+                if(sourceElementInstanceNames == null)
+                {
+                    sourceElementInstanceNames = sourceElement.Instances.Select(item => item.Name).ToList();
+                }
 
                 InstanceSave newInstance = sourceInstance.Clone();
 
@@ -340,27 +348,33 @@ namespace Gum.Logic
 
                     oldNewNameDictionary[oldName] = newName;
 
+
                     if(targetElement == sourceElement)
                     {
-                        var original = sourceElement.Instances.FirstOrDefault(item => item.Name == sourceInstance.Name);
                         int newIndex = -1;
-                        if(original != null)
+                        if(sourceElementInstanceNames.Contains(sourceInstance.Name))
                         {
-                            newIndex = sourceElement.Instances.IndexOf(original);
+                            newIndex = sourceElementInstanceNames.IndexOf(sourceInstance.Name);
                         }
 
                         // The user is pasting again, so let's use the index of that:
-                        if(LastPastedInstances?.Count > 0 && sourceElement.Instances.ContainsAny(LastPastedInstances))
+                        // This pastes the new instance after the last pasted instance.
+                        if(LastPastedInstances?.Count > 0 && sourceElement.Instances.ContainsAny(LastPastedInstances) && 
+                            // But if we are coyping multiple instances, so let's skip this if there's more than one object
+                            instancesToCopy.Count == 1)
                         {
                             newIndex = LastPastedInstances.Select(item => sourceElement.Instances.IndexOf(item)).Max();
                         }
                         if(newIndex != -1)
                         {
                             targetElement.Instances.Insert(newIndex+1, newInstance);
+                            sourceElementInstanceNames.Insert(newIndex + 1, newInstance.Name);
+
                         }
                         else
                         {
                             targetElement.Instances.Add(newInstance);
+                            sourceElementInstanceNames.Add(newInstance.Name);
                         }
                     }
                     else
