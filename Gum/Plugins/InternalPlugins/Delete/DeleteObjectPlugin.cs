@@ -140,9 +140,11 @@ namespace Gum.Gui.Plugins
             var defaultState = container?.DefaultState;
 
             var variablesUsingInstanceAsparent = defaultState.Variables
-                .Where(item => item.Value as string == instance.Name &&
-                                item.SetsValue &&
-                                item.GetRootName() == "Parent");
+                .Where(item => 
+                    item.Value is string asString &&
+                    (asString == instance.Name || asString.StartsWith(instance.Name + ".")) &&
+                    item.SetsValue &&
+                    item.GetRootName() == "Parent");
 
             var instanceNames = variablesUsingInstanceAsparent
                 .Select(item => item.SourceObject)
@@ -201,8 +203,8 @@ namespace Gum.Gui.Plugins
                 var anyVariableSetsParentToThis = allVariables.Any(item =>
                     item.SetsValue &&
                     item.Value != null &&
-                    item.Value is string &&
-                    (string)item.Value == instanceName &&
+                    item.Value is string asString &&
+                    (asString == instanceName || asString.StartsWith(instanceName + ".")  ) &&
                     item.GetRootName() == "Parent");
 
                 if(anyVariableSetsParentToThis)
