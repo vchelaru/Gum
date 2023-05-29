@@ -5845,6 +5845,14 @@ namespace Gum.Wireframe
         /// </summary>
         public void AnimateSelf()
         {
+            //////////////////Early Out/////////////////////
+            // Check mContainedObjectAsIVisible - if it's null, then this is a Screen and we should animate it
+            if (mContainedObjectAsIVisible != null && Visible == false)
+            {
+                return;
+            }
+            ////////////////End Early Out///////////////////
+
             var shouldAnimateSelf = true;
             //mJustChangedFrame = false;
             //mJustCycled = false;
