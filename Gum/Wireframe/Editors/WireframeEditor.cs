@@ -3,6 +3,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Plugins;
 using Gum.ToolStates;
+using Gum.Undo;
 using Microsoft.Xna.Framework;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
@@ -144,6 +145,8 @@ namespace Gum.Wireframe
             var selectedElement = SelectedState.Self.SelectedElement;
 
             GumCommands.Self.FileCommands.TryAutoSaveElement(selectedElement);
+
+            UndoManager.Self.RecordUndo();
 
             var stateSave = SelectedState.Self.SelectedStateSave;
 
