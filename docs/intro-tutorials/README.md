@@ -14,14 +14,13 @@ This is the root page for the usage guide. The usage guide will present how to u
 4. [Components](components.md)
 5. [Exposing Variables](exposing-variables.md)
 6. [Parent](parent.md)
-7. [States](states.md)
-8. [Categories](state-categories.md)
+7. [Categories](state-categories.md)
 
 ### Animation
 
-* [Introduction to Animation ](../animation-tutorials/introduction-to-animation.md)
+* [Introduction to Animation](../animation-tutorials/introduction-to-animation.md)
 * [Creating an Animation](../animation-tutorials/creating-an-animation.md)
-* [Playing Animations inside other Animations ](../animation-tutorials/playing-animations-inside-other-animations.md)
+* [Playing Animations inside other Animations](../animation-tutorials/playing-animations-inside-other-animations.md)
 
 ### Examples
 
@@ -46,9 +45,8 @@ This is the root page for the usage guide. The usage guide will present how to u
   * [Y Units](../gum-elements/general-properties/y-units.md)
 * Menu
   * Edit
-    * [Edit-&gt;Project Properties](../menu/project-properties.md)
+    * [Edit->Project Properties](../menu/project-properties.md)
 * Standard Elements
   * [NineSlice](../gum-elements/nineslice/)
   * [Sprite](../gum-elements/sprite/)
   * [Text](../gum-elements/text/)
-

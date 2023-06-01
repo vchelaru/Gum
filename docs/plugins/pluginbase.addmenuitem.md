@@ -23,4 +23,4 @@ secondMenuItem.Click += (args, sender) =>
     System.Windows.Forms.MessageBox.Show("You clicked second");
 ```
 
-![](<../.gitbook/assets/BeforeClickingFirstGum (1).png>)
+![](../.gitbook/assets/BeforeClickingFirstGum.png)

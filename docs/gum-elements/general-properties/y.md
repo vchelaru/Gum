@@ -8,4 +8,4 @@ The Y property controls the vertical position for an object. The Y value represe
 
 By default, an object's top-left corner is positioned relative to its parent's top-left corner.
 
-![](../../.gitbook/assets/YExample.gif)
+![](<../../.gitbook/assets/YExample (1).gif>)

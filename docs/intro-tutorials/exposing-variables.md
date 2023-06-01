@@ -25,7 +25,7 @@ To do this:
 
 You can verify that the Text value is exposed by clicking the "Button" component and seeing the "Text" variable under the "Exposed" category:
 
-![](../.gitbook/assets/GumExposedText.PNG)
+![](<../.gitbook/assets/GumExposedText (1).PNG>)
 
 ## Setting instance variables
 
@@ -36,4 +36,4 @@ Now that the Text variable is an exposed variable, it can be set per-instance. T
 
 Feel free to set different Text values on all of the buttons. Notice that the Text may word-wrap.
 
-![](../.gitbook/assets/GumInstanceVariables.PNG)
+![](<../.gitbook/assets/GumInstanceVariables (1).PNG>)
