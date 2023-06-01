@@ -10,7 +10,7 @@ Default Child Container is typically set on containers which are designed to hol
 
 Consider a Component named Frame which has two instances: OuterRectangle and InnerRectangle.
 
-<figure><img src="../../.gitbook/assets/image (1) (1).png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (1) (1) (3).png" alt=""><figcaption></figcaption></figure>
 
 This Component is designed to keep all of is children inside the InnerRectangle, so that any child automatically respects the margin specified by InnerRectangle.
 

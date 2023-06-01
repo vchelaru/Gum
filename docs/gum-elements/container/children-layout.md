@@ -22,7 +22,7 @@ Top to Bottom Stack results in each child being positioned after its previous si
 
 Left to Right Stack results in each child being positioned after its previous sibling horizontally. This can be used to create vertical stacks quickly.
 
-<figure><img src="../../.gitbook/assets/image (1).png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (1) (1).png" alt=""><figcaption></figcaption></figure>
 
 ### Stacking and Units
 
@@ -34,4 +34,12 @@ For example, the following image shows a Text object with a Y value of 20. Notic
 
 This effect is very easy to notice when dragging an object inside a stack, as shown in the following animation:
 
-![](<../../.gitbook/assets/01\_09 00 19.gif>)
+<figure><img src="../../.gitbook/assets/01_09 00 19.gif" alt=""><figcaption></figcaption></figure>
+
+### Stacking and Units
+
+If instances are stacked in a container, the stacking controls the instance values based on the direction of the stack. Containers with a **Top to Bottom Stack** control the Y value of their children. Similarly, Containers with a **Left to Right Stack** control the X value of their children. The position value which is not controlled by the stack can be changed freely without any impact on the stacking.
+
+For example, if a container stacks its children using a **Top to Bottom Stack**, the children in the stack are free to change their X values. The following animation shows how children can be left, center, or right anchored (which changes their **X Units** and **X Origin**) without affecting the other children in the stack.
+
+<figure><img src="../../.gitbook/assets/01_10 09 47.gif" alt=""><figcaption></figcaption></figure>
