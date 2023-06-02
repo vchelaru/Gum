@@ -6,7 +6,7 @@ The properties window in Gum displays all available variables when editing an in
 
 The properties window shows properties for the selected instance or element.
 
-![](<../.gitbook/assets/image (1) (1).png>)
+![](<../.gitbook/assets/image (1) (1) (2).png>)
 
 ## Editing Properties
 
@@ -36,7 +36,7 @@ Changing the X Origin value changes the origin of the selected instance; however
 
 We can change the origin that the Text is relative to by changing the X Units. By default the X Units property is set to **Pixels from Left** for X and **Pixels from Top** for Y.&#x20;
 
-![](<../.gitbook/assets/image (13).png>)
+![](<../.gitbook/assets/image (13) (1).png>)
 
 Changing the X Units to **Pixels from Right** will cause the Text to be positioned on the right-side of the screen.
 

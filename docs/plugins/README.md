@@ -100,7 +100,7 @@ To verify that your plugin is working correctly:
 1. Run Gum
 2. Click Plugins->"Manage Plugins"
 
-![](../.gitbook/assets/MyPluginName.png)
+![](<../.gitbook/assets/MyPluginName (1).png>)
 
 ## Troubleshooting
 

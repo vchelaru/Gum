@@ -45,7 +45,7 @@ this.DataGrid.Instance = memoryStream;
 
 This will produce a grid which looks like this:
 
-![](<../../.gitbook/assets/WpfDataUiGrid (1).png>)
+![](../../.gitbook/assets/WpfDataUiGrid.png)
 
 Alternatively the Instance property can be data bound as shown in the following XAML:
 

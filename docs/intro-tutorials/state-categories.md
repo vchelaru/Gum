@@ -2,7 +2,7 @@
 
 ## Introduction
 
-States are a powerful way to create expressive groups of variables. However, some UI elements may require a combination of states to be applied simultaneously.
+States are a powerful way to create expressive groups of variables. Some UI elements may require a combination of states to be applied simultaneously.
 
 For example, consider creating a CheckBox element. This CheckBox may have one set of states for whether it is checked:
 
@@ -14,7 +14,7 @@ But it may also need a second set of states for being enabled and disabled (whic
 * Enabled
 * Disabled
 
-In this case the states may need to coexist. Categories allow you to organize states so that multiple states can be set simultaneously.
+In this case multiple states need to coexist and may be combined. Categories allow you to organize states so that multiple states can be set simultaneously.
 
 ## Creating categorized states
 
@@ -26,9 +26,9 @@ For this tutorial we'll create a new component. This component will have state c
 4. Enter the name "Size" for the new category and click OK
 5. Repeat the above steps to create a "Color" category
 
-![](<../.gitbook/assets/GumAddCategoryCalledSize (1).PNG>)
+![](../.gitbook/assets/GumAddCategoryCalledSize.PNG)
 
-![](<../.gitbook/assets/GumAddCategory (1).png>)
+![](../.gitbook/assets/GumAddCategory.png)
 
 Now we can add states to the categories. To do this:
 
@@ -41,7 +41,7 @@ Now we can add states to the categories. To do this:
 7. Right-click on the "Color" category again and select "Add State
 8. Add a state called "Blue"
 
-![](<../.gitbook/assets/GumStatesInCategories (1).PNG>)
+![](../.gitbook/assets/GumStatesInCategories.PNG)
 
 ## Adding visuals
 
@@ -49,11 +49,11 @@ Now that we have states set up we need to add a visual element to the component 
 
 To do this, drag+drop a ColoredRectangle into your component
 
-![](../.gitbook/assets/GumColoredRectangleInComponent.PNG)
+![](<../.gitbook/assets/GumColoredRectangleInComponent (1).PNG>)
 
 ## Setting variables in states
 
-Just like with states which do not belong to categories, you can simply select a state and edit in the preview window or change properties in the Variables tab to modify what the state sets. Notice that normally for a component like this the ColoredRectangleInstance would have its width and height be relative to its container, but we're not doing this for the sake of keeping the tutorial shorter.
+To modify a state, you can select it and edit in the preview window or change properties in the Variables tab to modify what the state sets. Notice that normally for a component like this the ColoredRectangleInstance would have its width and height be relative to its container, but we're not doing this for the sake of keeping the tutorial shorter.
 
 First we'll set the Size states. To do this:
 
@@ -62,9 +62,9 @@ First we'll set the Size states. To do this:
 3. Select the "Small" state
 4. Resize the colored rectangle so it is smaller than the default
 
-![](<../.gitbook/assets/GumSmallState (1).PNG>)
+![](../.gitbook/assets/GumSmallState.PNG)
 
-![](<../.gitbook/assets/GumBigState (1).PNG>)
+![](../.gitbook/assets/GumBigState.PNG)
 
 Next we'll set the Color states. To do this:
 
@@ -73,9 +73,9 @@ Next we'll set the Color states. To do this:
 3. Select the "Blue" state
 4. Set the Red, Green, Blue values to: 0, 0, 255
 
-![](../.gitbook/assets/GumBlueState.PNG)
+![](<../.gitbook/assets/GumBlueState (1).PNG>)
 
-![](<../.gitbook/assets/GumRedState (1).PNG>)
+![](../.gitbook/assets/GumRedState.PNG)
 
 ## Viewing multiple states on an instance
 
@@ -87,6 +87,6 @@ Now that we have our CategoryDemo component set up with multiple categories, we 
 4. Scroll down in the Variables list and notice that the instance has drop-downs for each category.
 5. You can set each state independently and the states will combine
 
-![](<../.gitbook/assets/GumCombinedStates (1).PNG>)
+![](../.gitbook/assets/GumCombinedStates.PNG)
 
-![](<../.gitbook/assets/GumLookCategoriesOnInstance (1).PNG>)
+![](../.gitbook/assets/GumLookCategoriesOnInstance.PNG)

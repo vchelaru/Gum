@@ -4,7 +4,7 @@
 
 Sprites are objects which can draw an image (such as a .png) or a portion of a .png.
 
-![](<../../.gitbook/assets/GumSpriteFrbLogo (1).png>)
+![](../../.gitbook/assets/GumSpriteFrbLogo.png)
 
 ## Sprite Properties
 

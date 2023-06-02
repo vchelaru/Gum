@@ -18,14 +18,14 @@ Gum combines the power of programming concepts such as inheritance, instancing, 
 
 ## Screenshots
 
-![](.gitbook/assets/Home\_GumGifFast.gif)
+![](<.gitbook/assets/Home\_GumGifFast (1).gif>)
 
-![](.gitbook/assets/Home\_GumPromo1.PNG)
+![](<.gitbook/assets/Home\_GumPromo1 (1).PNG>)
 
-![](.gitbook/assets/Home\_GumPromo2.PNG)
+![](<.gitbook/assets/Home\_GumPromo2 (1).PNG>)
 
-![](<.gitbook/assets/Home\_GumPromo3 (1).PNG>)
+![](.gitbook/assets/Home\_GumPromo3.PNG)
 
-![](<.gitbook/assets/Home\_GumPromo4 (1).PNG>)
+![](.gitbook/assets/Home\_GumPromo4.PNG)
 
 These images were taken from the free sample project here: [http://download-codeplex.sec.s-msft.com/Download?ProjectName=gum\&DownloadId=1426617](http://download-codeplex.sec.s-msft.com/Download?ProjectName=gum\&DownloadId=1426617)

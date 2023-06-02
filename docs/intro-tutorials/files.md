@@ -8,7 +8,7 @@ Gum supports loading image files for Sprites and NineSlices. We'll discuss how t
 
 First we'll set up a workspace. To do this 1. Create a Screen. I'll call my Screen "SpriteScreen" 1. Drag+drop a Sprite into the newly-created Screen
 
-![](../.gitbook/assets/GumSpriteInstance.PNG)
+![](<../.gitbook/assets/GumSpriteInstance (1).PNG>)
 
 1.  Setting the Sprite SourceFile
 
@@ -20,7 +20,7 @@ First we'll set up a workspace. To do this 1. Create a Screen. I'll call my Scre
 6. Click "Open" in the file window
 7. Once the source file is set the image will appear in Gum
 
-![](../.gitbook/assets/GumSpriteSourceFile.PNG)
+![](<../.gitbook/assets/GumSpriteSourceFile (1).PNG>)
 
 ## Source file locations
 
