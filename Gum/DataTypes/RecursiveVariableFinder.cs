@@ -301,6 +301,12 @@ namespace Gum.DataTypes
 
             ElementWithState itemBefore = null;
 
+            // This assumes that the ElementStack has all of the instances leading down to the Text instance.
+            // For example, the element stack may have:
+            // [0]: MainMenu.StartGameButton
+            // [1]: Button.TexInstance
+            // [2]: Text
+
             if(stackIndex > 0)
             {
                 itemBefore = this.ElementStack[stackIndex - 1];

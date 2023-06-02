@@ -321,7 +321,33 @@ namespace Gum.Wireframe
                     (graphicalElement.RenderableComponent as Text).RenderBoundary = ProjectManager.Self.GeneralSettingsFile.ShowTextOutlines;
                     if(SelectedState.Self.SelectedStateSave != null)
                     {
-                        FontManager.Self.ReactToFontValueSet(instance);
+                        var instanceElement = ObjectFinder.Self.GetElementSave(instance);
+                        if (instanceElement != null)
+                        {
+                            elementStack.Add(new ElementWithState(instanceElement));
+                        }
+                        var rfv = new RecursiveVariableFinder(elementStack);
+
+
+                        var forcedValues = new StateSave();
+
+                        void TryAddForced(string variableName)
+                        {
+                            var value = rfv.GetValueByBottomName(variableName);
+                            if (value != null)
+                            {
+                                forcedValues.SetValue(variableName, value);
+                            }
+                        }
+
+                        TryAddForced("Font");
+                        TryAddForced("FontSize");
+                        TryAddForced("OutlineThickness");
+                        TryAddForced("UseFontSmoothing");
+                        TryAddForced("IsItalic");
+                        TryAddForced("IsBold");
+
+                        FontManager.Self.ReactToFontValueSet(instance, forcedValues);
                     }
                 }
 
@@ -458,27 +484,30 @@ namespace Gum.Wireframe
                 string guide = rvf.GetValue<string>("Guide");
                 SetGuideParent(parentIpso, rootIpso, guide);
 
-                ElementWithState elementWithState = new ElementWithState(baseComponentSave);
+                ElementWithState elementWithStateForNewInstance = new ElementWithState(baseComponentSave);
                 var tempRvf = new DataTypes.RecursiveVariableFinder(instance, elementStack);
                 var state = tempRvf.GetValue("State") as string;
-                elementWithState.StateName = state;
+                elementWithStateForNewInstance.StateName = state;
 
                 foreach (var category in baseComponentSave.Categories)
                 {
-                    elementWithState.CategorizedStates.Add(category.Name, tempRvf.GetValue<string>(category.Name + "State"));
+                    elementWithStateForNewInstance.CategorizedStates.Add(category.Name, tempRvf.GetValue<string>(category.Name + "State"));
                 }
 
-                elementWithState.InstanceName = instance.Name;
+                // This seems wrong - we shouldn't be setting the instance name on the elementState for the instance. It should be one above:
+                //elementWithStateForNewInstance.InstanceName = instance.Name;
+                elementStack.Last().InstanceName = instance.Name;
 
                 // Does this element already exist?
-                bool alreadyExists = elementStack.Any(item => item.Element == elementWithState.Element);
+                bool alreadyExists = elementStack.Any(item => item.Element == elementWithStateForNewInstance.Element);
                 if(!alreadyExists)
                 {
-                    elementStack.Add(elementWithState);
+                    elementStack.Add(elementWithStateForNewInstance);
 
                     foreach (InstanceSave internalInstance in baseComponentSave.Instances)
                     {
                         // let's make sure we don't recursively create the same instance causing a stack overflow:
+                        elementWithStateForNewInstance.InstanceName = internalInstance.Name;
 
                         GraphicalUiElement createdIpso = CreateRepresentationForInstance(internalInstance, instance, elementStack, rootIpso);
 

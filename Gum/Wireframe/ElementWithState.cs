@@ -6,6 +6,17 @@ using System.Text;
 
 namespace Gum.Wireframe
 {
+    /// <summary>
+    /// Represents an element with state and optional instance which can be used in a list to define the instance 
+    /// path from a screen down to the instance used to get variables recursively.
+    /// </summary>
+    /// <example>
+    /// A stack of elements may be as follows:
+    /// * MainPage.MainMenuInstance
+    /// * MainMenu.CancelButtonInstance
+    /// * StandardButton.TextInstance
+    /// * Text
+    /// </example>
     public class ElementWithState
     {
         public ElementSave Element
