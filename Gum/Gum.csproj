@@ -220,6 +220,15 @@
       <DependentUpon>ImportFileView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Plugins\InternalPlugins\Inheritance\MainInheritancePlugin.cs" />
+    <Compile Include="Plugins\InternalPlugins\LoadRecentFilesPlugin\MainRecentFilesPlugin.cs" />
+    <Compile Include="Plugins\InternalPlugins\LoadRecentFilesPlugin\ViewModels\LoadRecentViewModel.cs" />
+    <Compile Include="Plugins\InternalPlugins\LoadRecentFilesPlugin\ViewModels\RecentItemViewModel.cs" />
+    <Compile Include="Plugins\InternalPlugins\LoadRecentFilesPlugin\Views\LoadRecentWindow.xaml.cs">
+      <DependentUpon>LoadRecentWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Plugins\InternalPlugins\LoadRecentFilesPlugin\Views\RecentFileItem.xaml.cs">
+      <DependentUpon>RecentFileItem.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Plugins\InternalPlugins\Output\MainOutputPlugin.cs" />
     <Compile Include="Plugins\InternalPlugins\ParentPlugin\MainParentPlugin.cs" />
     <Compile Include="Plugins\InternalPlugins\ScreenshotPlugin\MainScreenshotPlugin.cs" />
@@ -646,6 +655,8 @@
     <Resource Include="Content\Icons\Sizing\FillVertically.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
+    <Resource Include="Content\Icons\RecentFiles\StarFilled.png" />
+    <Resource Include="Content\Icons\RecentFiles\StarOutline.png" />
     <Content Include="Content\Icons\Units\PixelsFromBaseline.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -702,6 +713,14 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Plugins\ImportPlugin\Views\ImportFileView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Plugins\InternalPlugins\LoadRecentFilesPlugin\Views\LoadRecentWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Plugins\InternalPlugins\LoadRecentFilesPlugin\Views\RecentFileItem.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

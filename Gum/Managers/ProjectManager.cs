@@ -68,12 +68,6 @@ namespace Gum
         }
         #endregion
 
-        #region Events
-
-        public event Action RecentFilesUpdated;
-
-        #endregion
-
         #region Methods
 
 
@@ -277,12 +271,6 @@ namespace Gum
             {
                 GeneralSettingsFile.Save();
             }
-
-            if (RecentFilesUpdated != null)
-            {
-                RecentFilesUpdated();
-            }
-
         }
 
         private void CopyLinkedComponents()

@@ -74,6 +74,9 @@ namespace CodeOutputPlugin.Manager
             var newParentName = rfv.GetValue<string>($"{instance.Name}.Parent");
 
             InstanceSave newParent = null;
+
+            // continue here:
+
             if (!string.IsNullOrEmpty(newParentName))
             {
                 newParent = ObjectFinder.Self.GetInstanceRecursively(element, newParentName);
@@ -156,7 +159,7 @@ namespace CodeOutputPlugin.Manager
             VisualApi childVisualApi = CodeGenerator.GetVisualApiForInstance(instance, element);
             if (newParent != null)
             {
-                parentVisualApi = CodeGenerator.GetVisualApiForInstance(newParent, element);
+                parentVisualApi = CodeGenerator.GetVisualApiForInstance(newParent, element, considerDefaultContainer:true);
             }
             else
             {

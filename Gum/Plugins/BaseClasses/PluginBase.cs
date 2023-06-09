@@ -206,6 +206,41 @@ namespace Gum.Plugins.BaseClasses
             return AddMenuItem((IEnumerable<string>)menuAndSubmenus);
         }
 
+        ToolStripMenuItem GetItem(string name)
+        {
+            foreach (ToolStripMenuItem item in MenuStrip.Items)
+            {
+                if (item.Text == name)
+                {
+                    return item;
+                }
+            }
+            return null;
+        }
+
+
+        protected ToolStripMenuItem AddMenuItemTo(string whatToAdd, EventHandler eventHandler, string container, int preferredIndex)
+        {
+            ToolStripMenuItem menuItem = new ToolStripMenuItem(whatToAdd, null, eventHandler);
+            ToolStripMenuItem itemToAddTo = GetItem(container);
+            //toolStripItemsAndParents.Add(menuItem, itemToAddTo);
+
+
+            if (preferredIndex == -1)
+            {
+                itemToAddTo.DropDownItems.Add(menuItem);
+            }
+            else
+            {
+                int indexToInsertAt = System.Math.Min(preferredIndex, itemToAddTo.DropDownItems.Count);
+
+                itemToAddTo.DropDownItems.Insert(indexToInsertAt, menuItem);
+            }
+
+            return menuItem;
+        }
+
+
         #region Event calling
 
         public void CallProjectLoad(GumProjectSave newlyLoadedProject)

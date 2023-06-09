@@ -331,7 +331,6 @@ namespace Gum
 
         private void MainWindow_Load(object sender, EventArgs e)
         {
-            ProjectManager.Self.RecentFilesUpdated += MenuStripManager.Self.RefreshRecentFilesMenuItems;
             ProjectManager.Self.Initialize();
 
             if(CommandLine.CommandLineManager.Self.ShouldExitImmediately == false)

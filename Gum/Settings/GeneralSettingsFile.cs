@@ -19,6 +19,8 @@ namespace Gum.Settings
         [XmlIgnore]
         [JsonIgnore]
         public FilePath FilePath => AbsoluteFileName;
+
+        public bool IsFavorite;
     }
 
     /// <summary>

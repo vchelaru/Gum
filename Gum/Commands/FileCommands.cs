@@ -295,5 +295,11 @@ namespace Gum.Commands
         {
             mainWindow.Close();
         }
+
+        internal void SaveGeneralSettings()
+        {
+            var settings = ProjectManager.Self.GeneralSettingsFile;
+            settings.Save();
+        }
     }
 }

@@ -2680,10 +2680,25 @@ namespace CodeOutputPlugin.Manager
             }
         }
 
-        public static VisualApi GetVisualApiForInstance(InstanceSave instance, ElementSave element)
+        public static VisualApi GetVisualApiForInstance(InstanceSave instance, ElementSave element, bool considerDefaultContainer = false)
         {
             var defaultState = element.DefaultState;
-            var isXamForms = (defaultState.GetValueRecursive($"{instance.Name}.IsXamarinFormsControl") as bool?) ?? false;
+
+            var isXamarinFormsControlVariable =
+                $"{instance.Name}.IsXamarinFormsControl";
+
+            if (considerDefaultContainer)
+            {
+                var instanceElement = ObjectFinder.Self.GetElementSave(instance);
+                var defaultParent = instanceElement.DefaultState.GetValueOrDefault<string>("DefaultChildContainer");
+
+                if(!string.IsNullOrEmpty(defaultParent))
+                {
+                    isXamarinFormsControlVariable = $"{instance.Name}.{defaultParent}.IsXamarinFormsControl";
+                }
+            }
+
+            var isXamForms = (defaultState.GetValueRecursive(isXamarinFormsControlVariable) as bool?) ?? false;
             var visualApi = VisualApi.Gum;
             if (isXamForms)
             {

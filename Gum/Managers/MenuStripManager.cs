@@ -32,7 +32,6 @@ namespace Gum.Managers
         private ToolStripMenuItem RemoveElementMenuItem;
         private ToolStripMenuItem RemoveVariableMenuItem;
         private ToolStripMenuItem aboutToolStripMenuItem;
-        private ToolStripMenuItem loadRecentToolStripMenuItem;
         private ToolStripMenuItem saveAllToolStripMenuItem;
         private ToolStripMenuItem newProjectToolStripMenuItem;
         private ToolStripMenuItem findFileReferencesToolStripMenuItem;
@@ -62,6 +61,8 @@ namespace Gum.Managers
 
         public void Initialize(Form mainWindow)
         {
+            // Load Recent handled in MainRecentFilesPlugin
+
             #region Local Functions
             ToolStripMenuItem Add(ToolStripMenuItem parent, string text, Action clickEvent)
             {
@@ -86,7 +87,6 @@ namespace Gum.Managers
             this.RemoveStateMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.RemoveVariableMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.loadRecentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.newProjectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.contentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -279,8 +279,6 @@ namespace Gum.Managers
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 
             Add(fileToolStripMenuItem, "Load Project...", () => ProjectManager.Self.LoadProject());
-            loadRecentToolStripMenuItem = Add(fileToolStripMenuItem, "Load Recent", null);
-
 
             Add(fileToolStripMenuItem, "Save Project", () =>
             {
@@ -401,24 +399,6 @@ namespace Gum.Managers
             {
                 GumCommands.Self.Edit.RemoveStateCategory(
                     SelectedState.Self.SelectedStateCategorySave, SelectedState.Self.SelectedStateContainer as IStateCategoryListContainer);
-            }
-        }
-        
-        public void RefreshRecentFilesMenuItems()
-        {
-            this.loadRecentToolStripMenuItem.DropDownItems.Clear();
-
-            foreach (var item in ProjectManager.Self.GeneralSettingsFile.RecentProjects.OrderByDescending(item => item.LastTimeOpened))
-            {
-                ToolStripMenuItem menuItem = new ToolStripMenuItem();
-                menuItem.Text = item.AbsoluteFileName;
-
-                this.loadRecentToolStripMenuItem.DropDownItems.Add(menuItem);
-
-                menuItem.Click += delegate
-                {
-                    GumCommands.Self.FileCommands.LoadProject(menuItem.Text);
-                };
             }
         }
     }
