@@ -188,8 +188,13 @@ namespace Gum.Wireframe.Editors
 
                 var angleInRadians = (float)System.Math.Atan2(cursorY - originY, cursorX - originX);
 
-                var rotationValue =
+                var rotationValueDegrees =
                     -Microsoft.Xna.Framework.MathHelper.ToDegrees(angleInRadians);
+
+                if(GetIsShiftDown())
+                {
+                    rotationValueDegrees = MathFunctions.RoundFloat(rotationValueDegrees, 15);
+                }
 
                 float parentRotation = 0;
                 if(gue.Parent != null)
@@ -197,7 +202,7 @@ namespace Gum.Wireframe.Editors
                     parentRotation = gue.Parent.GetAbsoluteRotation();
                 }
 
-                gue.Rotation = rotationValue - parentRotation;
+                gue.Rotation = rotationValueDegrees - parentRotation;
 
                 string nameWithInstance = "Rotation";
 
@@ -207,7 +212,7 @@ namespace Gum.Wireframe.Editors
                         "." + nameWithInstance;
                 }
 
-                SelectedState.Self.SelectedStateSave.SetValue(nameWithInstance, rotationValue - parentRotation, 
+                SelectedState.Self.SelectedStateSave.SetValue(nameWithInstance, rotationValueDegrees - parentRotation, 
                     SelectedState.Self.SelectedInstance, "float");
 
                 VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(nameWithInstance);
