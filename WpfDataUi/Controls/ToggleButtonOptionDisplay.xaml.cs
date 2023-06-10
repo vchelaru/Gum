@@ -216,9 +216,12 @@ namespace WpfDataUi.Controls
             {
                 button.Background = DesiredBackgroundBrush;
                 const double smallSize = 30;
-                const double largeSize = 35;
+                // 35 vs 30 is hard to tell when default, so let's
+                // increase it slightly...
+                //const double largeSize = 35;
+                const double largeSize = 38;
 
-                if(button.IsChecked == true)
+                if (button.IsChecked == true)
                 {
                     button.Width = largeSize;
                     button.Height = largeSize;

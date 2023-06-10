@@ -379,7 +379,9 @@ namespace Gum.Wireframe
                     fileWidth, fileHeight,
                     out outX, out outY);
 
-                if(generalUnitType == GeneralUnitType.PercentageOfFile)
+                if(generalUnitType == GeneralUnitType.PercentageOfFile && 
+                    // If using the entire texture, the TextureWidth and TextureHeight values are ignored
+                    ipso.TextureAddress != TextureAddress.EntireTexture)
                 {
                     // need to amplify the value based on the ratio of what is displayed to the file size
                     if(baseVariableName == "Width")
