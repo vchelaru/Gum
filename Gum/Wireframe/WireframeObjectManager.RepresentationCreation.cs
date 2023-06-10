@@ -190,7 +190,16 @@ namespace Gum.Wireframe
                 if (SelectedState.Self.SelectedStateSave != elementSave.DefaultState && SelectedState.Self.SelectedStateSave != null)
                 {
                     var state = SelectedState.Self.SelectedStateSave;
-                    rootIpso.ApplyState(state);
+                    bool isRecursive = GetIfSelectedStateIsSetRecursively();
+                    if (isRecursive)
+                    {
+                        var category = SelectedState.Self.SelectedStateCategorySave;
+                        rootIpso.ApplyStateRecursive(category.Name, SelectedState.Self.SelectedStateSave.Name);
+                    }
+                    else
+                    {
+                        rootIpso.ApplyState(state);
+                    }
                 }
 
                 var rootElementSave = ObjectFinder.Self.GetRootStandardElementSave(elementSave);
@@ -246,6 +255,25 @@ namespace Gum.Wireframe
             rootIpso.UpdateLayout();
 
             return rootIpso;
+        }
+
+        private static bool GetIfSelectedStateIsSetRecursively()
+        {
+            var category = SelectedState.Self.SelectedStateCategorySave;
+            if(category != null)
+            {
+                var selectedElement = SelectedState.Self.SelectedElement;
+                foreach(var behaviorReference in selectedElement.Behaviors)
+                {
+                    var behavior = ObjectFinder.Self.GetBehavior(behaviorReference);
+
+                    if(behavior != null && behavior.Categories.Any(item => item.Name == category.Name))
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
 
         bool IsRecursive(GraphicalUiElement item, HashSet<GraphicalUiElement> history)

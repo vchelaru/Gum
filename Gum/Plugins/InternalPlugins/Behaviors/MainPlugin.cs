@@ -9,6 +9,8 @@ using Gum.DataTypes;
 using Gum.ToolStates;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
+using WpfDataUi;
+using System.Windows.Forms;
 
 namespace Gum.Plugins.Behaviors
 {
@@ -17,6 +19,7 @@ namespace Gum.Plugins.Behaviors
     {
         BehaviorsControl control;
         BehaviorsViewModel viewModel = new BehaviorsViewModel();
+        DataUiGrid stateDataUiGrid;
 
         public override void StartUp()
         {
@@ -28,6 +31,47 @@ namespace Gum.Plugins.Behaviors
             GumCommands.Self.GuiCommands.AddControl(control, "Behaviors");
             GumCommands.Self.GuiCommands.RemoveControl(control);
             this.ElementSelected += HandleElementSelected;
+
+            stateDataUiGrid = new DataUiGrid();
+
+            this.BehaviorSelected += HandleBehaviorSelected;
+            this.StateWindowTreeNodeSelected += HandleStateSelected;
+        }
+
+        private void HandleStateSelected(TreeNode obj)
+        {
+            RefreshStateVariables();
+        }
+
+        bool isStateTabShown;
+        private void HandleBehaviorSelected(BehaviorSave obj)
+        {
+            RefreshStateVariables();
+        }
+
+        private void RefreshStateVariables()
+        {
+            //var shouldShow =
+            //    SelectedState.Self.SelectedBehavior != null &&
+            //    SelectedState.Self.SelectedStateSave != null;
+
+            //if (!shouldShow)
+            //{
+            //    if(isStateTabShown)
+            //    {
+            //        GumCommands.Self.GuiCommands.RemoveControl(stateDataUiGrid);
+            //        isStateTabShown = false;
+            //    }
+            //}
+            //else
+            //{
+            //    if(!isStateTabShown)
+            //    {
+            //        GumCommands.Self.GuiCommands.AddControl(stateDataUiGrid, "State Properties");
+            //        isStateTabShown = true;
+            //    }
+            //    stateDataUiGrid.Instance = SelectedState.Self.SelectedStateSave;
+            //}
         }
 
         private void HandleApplyBehaviorChanges(object sender, EventArgs e)
@@ -82,7 +126,7 @@ namespace Gum.Plugins.Behaviors
         }
 
 
-        bool hasBeenAdded = false;
+        bool hasBheaviorsControlBeenAdded = false;
         private void HandleElementSelected(ElementSave element)
         {
             var asComponent = element as ComponentSave;
@@ -95,17 +139,17 @@ namespace Gum.Plugins.Behaviors
             if(asComponent != null)
             {
                 UpdateViewModelTo(asComponent);
-                if(!hasBeenAdded)
+                if(!hasBheaviorsControlBeenAdded)
                 {
                     GumCommands.Self.GuiCommands.AddControl(control, "Behaviors");
-                    hasBeenAdded = true;
+                    hasBheaviorsControlBeenAdded = true;
                 }
 
             }
             else
             {
                 GumCommands.Self.GuiCommands.RemoveControl(control);
-                hasBeenAdded = false;
+                hasBheaviorsControlBeenAdded = false;
             }
         }
 

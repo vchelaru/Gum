@@ -232,6 +232,7 @@
     <Compile Include="Plugins\InternalPlugins\Output\MainOutputPlugin.cs" />
     <Compile Include="Plugins\InternalPlugins\ParentPlugin\MainParentPlugin.cs" />
     <Compile Include="Plugins\InternalPlugins\ScreenshotPlugin\MainScreenshotPlugin.cs" />
+    <Compile Include="Plugins\InternalPlugins\VariableGrid\StateSaveCategoryDisplayer.cs" />
     <Compile Include="Plugins\PluginTab.cs" />
     <Compile Include="Plugins\InternalPlugins\ProjectPropertiesWindowPlugin\MainPlugin.cs" />
     <Compile Include="Plugins\InternalPlugins\ProjectPropertiesWindowPlugin\ProjectPropertiesControl.xaml.cs">

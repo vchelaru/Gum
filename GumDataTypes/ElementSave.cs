@@ -5,6 +5,7 @@ using System.Text;
 using Gum.DataTypes.Variables;
 using System.Xml.Serialization;
 using ToolsUtilities;
+using Gum.DataTypes.Behaviors;
 
 namespace Gum.DataTypes
 {
@@ -120,6 +121,8 @@ namespace Gum.DataTypes
                 }
             }
         }
+
+        public List<ElementBehaviorReference> Behaviors { get; set; } = new List<ElementBehaviorReference>();
 
         #endregion
 

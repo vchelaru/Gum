@@ -240,7 +240,7 @@ namespace Gum.ToolCommands
             }
             else if(objectToAddTo is BehaviorSave behaviorSave)
             {
-                var componentsUsingBehavior = ObjectFinder.Self.GetComponentsReferencing(behaviorSave).ToHashSet();
+                var componentsUsingBehavior = ObjectFinder.Self.GetElementsReferencing(behaviorSave).ToHashSet();
 
                 foreach(var component in componentsUsingBehavior)
                 {
@@ -327,19 +327,19 @@ namespace Gum.ToolCommands
         }
 
 
-        public void AddCategoriesFromBehavior(BehaviorSave behaviorSave, ComponentSave component)
+        public void AddCategoriesFromBehavior(BehaviorSave behaviorSave, ElementSave element)
         {
             foreach (var behaviorCategory in behaviorSave.Categories)
             {
                 StateSaveCategory matchingComponentCategory =
-                    component.Categories.FirstOrDefault(item => item.Name == behaviorCategory.Name);
+                    element.Categories.FirstOrDefault(item => item.Name == behaviorCategory.Name);
 
                 if (matchingComponentCategory == null)
                 {
                     //category doesn't exist, so let's add a clone of it:
                     matchingComponentCategory = new StateSaveCategory();
                     matchingComponentCategory.Name = behaviorCategory.Name;
-                    component.Categories.Add(matchingComponentCategory);
+                    element.Categories.Add(matchingComponentCategory);
                 }
 
                 foreach (var behaviorState in behaviorCategory.States)
@@ -352,7 +352,7 @@ namespace Gum.ToolCommands
                         // state doesn't exist, so add it:
                         var newState = new StateSave();
                         newState.Name = behaviorState.Name;
-                        newState.ParentContainer = component;
+                        newState.ParentContainer = element;
                         matchingComponentCategory.States.Add(newState);
                     }
                 }

@@ -508,6 +508,10 @@ namespace WpfDataUi
             {
                 foreach (var member in category.Members)
                 {
+                    if(string.IsNullOrEmpty(member.DisplayName))
+                    {
+                        throw new Exception("This member does not have a display name, so it cannot have camel cases inserted");
+                    }
                     member.DisplayName = InsertSpacesInCamelCaseString(member.DisplayName);
                 }
             }

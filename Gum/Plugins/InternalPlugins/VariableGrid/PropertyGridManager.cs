@@ -29,6 +29,7 @@ using WpfDataUi.Controls;
 using System.ComponentModel;
 using System.Windows.Controls;
 using System.Windows.Media;
+using Gum.Plugins.InternalPlugins.VariableGrid;
 
 namespace Gum.Managers
 {
@@ -215,14 +216,14 @@ namespace Gum.Managers
         /// <param name="state">The state to display.</param>
         /// <param name="instance">The instance to display. May be null.</param>
         /// <param name="force">Whether to refresh even if the element, state, and instance have not changed.</param>
-        private void RefreshDataGrid(ElementSave element, StateSave state, StateSaveCategory category, List<InstanceSave> newInstances, 
+        private void RefreshDataGrid(ElementSave element, StateSave state, StateSaveCategory stateCategory, List<InstanceSave> newInstances, 
             BehaviorSave behaviorSave, bool force = false)
         {
 
             bool hasChangedObjectShowing = 
                 element != mLastElement || 
                 state != mLastState ||
-                category != mLastCategory ||
+                stateCategory != mLastCategory ||
                 behaviorSave != mLastBehaviorSave ||
                 force;
 
@@ -262,7 +263,7 @@ namespace Gum.Managers
                 {
                     List<MemberCategory> categories = element == null
                         ? new List<MemberCategory>()
-                        : GetMemberCategories(element, state, category, instance);
+                        : GetMemberCategories(element, state, stateCategory, instance);
 
                     if(newInstances.Count > 1)
                     {
@@ -275,9 +276,16 @@ namespace Gum.Managers
             }
             else
             {
-                List<MemberCategory> categories = element == null
-                    ? new List<MemberCategory>()
-                    : GetMemberCategories(element, state, category, null);
+                List<MemberCategory> categories = new List<MemberCategory>();
+                if (element == null)
+                {
+                    // do nothing....
+                }
+                else
+                {
+
+                    categories = GetMemberCategories(element, state, stateCategory, null);
+                }
                 listOfCategories.Add(categories);
 
             }
@@ -406,9 +414,9 @@ namespace Gum.Managers
 
             RefreshErrors(element);
 
-            RefreshStateLabel(element, category, state);
+            RefreshStateLabel(element, stateCategory, state);
 
-            RefreshBehaviorUi(behaviorSave);
+            RefreshBehaviorUi(behaviorSave, state, stateCategory);
 
             mVariablesDataGrid.Refresh();
             
@@ -456,7 +464,7 @@ namespace Gum.Managers
             mVariablesDataGrid.Refresh();
         }
 
-        private void RefreshBehaviorUi(BehaviorSave behaviorSave)
+        private void RefreshBehaviorUi(BehaviorSave behaviorSave, StateSave state, StateSaveCategory category)
         {
 
             this.variableViewModel.BehaviorVariables.Clear();
@@ -474,6 +482,16 @@ namespace Gum.Managers
                 mainControl.BehaviorDataGrid.Instance = behaviorSave;
                 mainControl.BehaviorDataGrid.Categories.Clear();
                 mainControl.BehaviorDataGrid.Categories.AddRange(BehaviorShowingLogic.GetCategoriesFor(behaviorSave));
+
+                if(category != null && 
+                    // For now let's require explicitly selecting the catgory:
+                    state == null)
+                {
+                    mainControl.BehaviorDataGrid.Categories.AddRange(
+                        StateSaveCategoryDisplayer.GetCategoriesFor(behaviorSave, category));
+                }
+
+
                 mainControl.BehaviorDataGrid.InsertSpacesInCamelCaseMemberNames();
             }
             else
@@ -569,67 +587,10 @@ namespace Gum.Managers
             }
             else if(stateCategory != null)
             {
-                GetMemberCategoriesForStateCategory(element, instance, categories, stateCategory);
+                StateSaveCategoryDisplayer.DisplayMembersForCategoryInElement( instance, categories, stateCategory);
             }
             return categories;
 
-        }
-
-        private void GetMemberCategoriesForStateCategory(ElementSave element, InstanceSave instance, List<MemberCategory> categories, StateSaveCategory stateCategory)
-        {
-            categories.Clear();
-
-            List<string> commonMembers = new List<string>();
-
-            var firstState = stateCategory.States.FirstOrDefault();
-
-            if(firstState != null)
-            {
-                foreach(var variable in firstState.Variables)
-                {
-                    bool canAdd = variable.ExcludeFromInstances == false || instance == null;
-
-                    if(canAdd)
-                    {
-                        commonMembers.Add(variable.Name);
-                    }
-                }
-
-                foreach(var variableList in firstState.VariableLists)
-                {
-                    bool canAdd = true;
-
-                    if(canAdd)
-                    {
-                        commonMembers.Add(variableList.Name);
-                    }
-                }
-            }
-
-            if(commonMembers.Any())
-            {
-                var memberCategory = new MemberCategory();
-                memberCategory.Name = $"{stateCategory.Name} Variables";
-                categories.Add(memberCategory);
-
-                foreach(var commonMember in commonMembers)
-                {
-                    var instanceMember = new InstanceMember();
-
-                    instanceMember.Name = commonMember;
-                    instanceMember.CustomGetTypeEvent += (member) => typeof(string);
-                    instanceMember.CustomGetEvent += (member) => commonMember;
-                    instanceMember.CustomSetEvent += (not, used) =>
-                    {
-                        VariableInCategoryPropagationLogic.Self
-                            .AskRemoveVariableFromAllStatesInCategory(commonMember, stateCategory);
-                    };
-
-                    instanceMember.PreferredDisplayer = typeof(VariableRemoveButton);
-
-                    memberCategory.Members.Add(instanceMember);
-                }
-            }
         }
 
         private void GetMemberCategoriesForState(ElementSave element, InstanceSave instance, List<MemberCategory> categories, StateSave stateSave, StateSaveCategory stateSaveCategory)

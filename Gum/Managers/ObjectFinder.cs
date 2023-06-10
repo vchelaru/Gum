@@ -20,6 +20,8 @@ namespace Gum.Managers
     }
     #endregion
 
+    #region TypedElementReference
+
     public class TypedElementReference
     {
         public ElementSave OwnerOfReferencingObject { get; set; }
@@ -50,6 +52,8 @@ namespace Gum.Managers
         }
     }
 
+    #endregion
+
     public class ObjectFinder
     {
         #region Fields/Properties
@@ -78,6 +82,7 @@ namespace Gum.Managers
 
         #endregion
 
+        #region Cache enable/disable
 
         public void EnableCache()
         {
@@ -120,6 +125,8 @@ namespace Gum.Managers
         {
             cachedDictionary = null;
         }
+
+        #endregion
 
         #region Get Element (Screen/Component/StandardElement)
 
@@ -426,6 +433,60 @@ namespace Gum.Managers
 
             return toReturn;
         }
+
+        public ElementSave GetContainerOf(StateSaveCategory category)
+        {
+            if(GumProjectSave != null)
+            {
+                foreach(var screen in GumProjectSave.Screens)
+                {
+                    if(screen.Categories.Contains(category))
+                    {
+                        return screen;
+                    }
+                }
+                foreach (var component in GumProjectSave.Components)
+                {
+                    if (component.Categories.Contains(category))
+                    {
+                        return component;
+                    }
+                }
+                foreach (var standardElement in GumProjectSave.StandardElements)
+                {
+                    if (standardElement.Categories.Contains(category))
+                    {
+                        return standardElement;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        public List<ElementSave> GetElementsReferencing(BehaviorSave behavior)
+        {
+            List<ElementSave> referencingElements = new List<ElementSave>();
+            foreach(var component in GumProjectSave.Components)
+            {
+                if(component.Behaviors.Any(item => item.BehaviorName == behavior.Name))
+                {
+                    referencingElements.Add(component);
+                }
+            }
+
+            foreach (var screen in GumProjectSave.Screens)
+            {
+                if (screen.Behaviors.Any(item => item.BehaviorName == behavior.Name))
+                {
+                    referencingElements.Add(screen);
+                }
+            }
+
+
+            return referencingElements;
+        }
+
         #endregion
 
         #region Get Elements by inheritance
@@ -511,20 +572,6 @@ namespace Gum.Managers
 
         #endregion
 
-
-        public List<ComponentSave> GetComponentsReferencing(BehaviorSave behavior)
-        {
-            List<ComponentSave> referencingComponents = new List<ComponentSave>();
-            foreach(var component in GumProjectSave.Components)
-            {
-                if(component.Behaviors.Any(item => item.BehaviorName == behavior.Name))
-                {
-                    referencingComponents.Add(component);
-                }
-            }
-            
-            return referencingComponents;
-        }
 
         /// <summary>
         /// Returns a list of ElementSaves inheriting from the argument elementSave, with the most derived first in the list, and the most base last in the list
@@ -664,35 +711,24 @@ namespace Gum.Managers
 
         #endregion
 
-        public ElementSave GetContainerOf(StateSaveCategory category)
+        #region Get BehaviorSave
+
+        public BehaviorSave GetBehavior(ElementBehaviorReference behaviorReference)
         {
-            if(GumProjectSave != null)
+            var behaviors = GumProjectSave.Behaviors;
+
+            foreach(var behavior in behaviors)
             {
-                foreach(var screen in GumProjectSave.Screens)
+                if(behavior.Name == behaviorReference.BehaviorName)
                 {
-                    if(screen.Categories.Contains(category))
-                    {
-                        return screen;
-                    }
-                }
-                foreach (var component in GumProjectSave.Components)
-                {
-                    if (component.Categories.Contains(category))
-                    {
-                        return component;
-                    }
-                }
-                foreach (var standardElement in GumProjectSave.StandardElements)
-                {
-                    if (standardElement.Categories.Contains(category))
-                    {
-                        return standardElement;
-                    }
+                    return behavior;
                 }
             }
 
             return null;
         }
+
+        #endregion
 
         public List<TypedElementReference> GetElementReferences(ElementSave element)
         {
@@ -888,6 +924,7 @@ namespace Gum.Managers
                 }
             }
         }
+
     }
 
 

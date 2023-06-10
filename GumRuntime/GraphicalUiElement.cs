@@ -4412,9 +4412,10 @@ namespace Gum.Wireframe
 
         /// <summary>
         /// Sets a variable on this object (such as "X") to the argument value
-        /// (such as 100.0f);
+        /// (such as 100.0f). This can be a primitive property like Height, or it can be
+        /// a state.
         /// </summary>
-        /// <param name="propertyName">The name of the variable on this object.</param>
+        /// <param name="propertyName">The name of the variable on this object such as X or Height. If the property is a state, then the name should be "{CategoryName}State".</param>
         /// <param name="value">The value, casted to the correct type.</param>
         public void SetProperty(string propertyName, object value)
         {
@@ -4648,6 +4649,36 @@ namespace Gum.Wireframe
                 // want to blow up if this happens
             }
             return toReturn;
+        }
+
+        public void ApplyStateRecursive(string categoryName, string stateName)
+        {
+            if(mCategories.ContainsKey(categoryName))
+            {
+                var category = mCategories[categoryName];
+
+                var state = category.States.FirstOrDefault(item => item.Name == stateName);
+                if (state != null)
+                {
+                    ApplyState(state);
+                }
+            }
+
+            if(Children != null)
+            {
+                foreach (GraphicalUiElement child in this.Children)
+                {
+                    child.ApplyStateRecursive(categoryName, stateName);
+                }
+
+            }
+            else
+            {
+                foreach(var item in this.mWhatThisContains)
+                {
+                    item.ApplyStateRecursive(categoryName, stateName);
+                }
+            }
         }
 
         private void SetPropertyOnRenderable(string propertyName, object value)
