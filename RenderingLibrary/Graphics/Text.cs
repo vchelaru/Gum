@@ -196,11 +196,14 @@ namespace RenderingLibrary.Graphics
                 if(maxNumberOfLines  != value)
                 {
                     maxNumberOfLines = value;
+                    UpdateWrappedText();
 
-                    mNeedsBitmapFontRefresh = true;
+                    UpdatePreRenderDimensions();
                 }
             }
         }
+
+        public bool AddEllipsisOnLastLine { get; set; }
 
         public string RawText
         {
@@ -571,9 +574,14 @@ namespace RenderingLibrary.Graphics
             {
                 return;
             }
-            /////////END EARLY OUT///////////
 
             mWrappedText.Clear();
+
+            if(MaxNumberOfLines == 0)
+            {
+                return;
+            }
+            /////////END EARLY OUT///////////
 
             float wrappingWidth = mWidth / mFontScale;
             if (mWidth == 0)
@@ -599,6 +607,11 @@ namespace RenderingLibrary.Graphics
                 wordArray.AddRange(stringToUse.Split(whatToSplitOn));
             }
 
+            float ellipsisWidth = 0;
+            if(MaxNumberOfLines > 0)
+            {
+                ellipsisWidth = MeasureString("...");
+            }
 
             while (wordArray.Count != 0)
             {
@@ -623,6 +636,10 @@ namespace RenderingLibrary.Graphics
                     if (!string.IsNullOrEmpty(line))
                     {
                         mWrappedText.Add(line);
+                        if (mWrappedText.Count == MaxNumberOfLines)
+                        {
+                            return;
+                        }
                     }
 
                     //returnString = returnString + line + '\n';
@@ -648,49 +665,21 @@ namespace RenderingLibrary.Graphics
                 if (containsNewline)
                 {
                     mWrappedText.Add(line);
+                    if(mWrappedText.Count == MaxNumberOfLines)
+                    {
+                        return;
+                    }
                     line = string.Empty;
                     int indexOfNewline = wordUnmodified.IndexOf('\n');
                     wordArray.Insert(0, wordUnmodified.Substring(indexOfNewline + 1, wordUnmodified.Length - (indexOfNewline + 1)));
                 }
             }
 
-            // We want to remove any trailing spaces on any lines except the last. On the last we allow
-            // the user to have as many spaces as they want
-            // count-1 to exclude the last line
-            // Update Dec 10 2019
-            // Why do we trim the ending
-            // spaces? This means lines won't
-            // have spaces at the end, but they 
-            // should for FRB.Forms to properly show
-            // ending spaces for character count.
-            //for(int i = 0; i < mWrappedText.Count - 1; i++)
-            //{
-            //    var lineToTrim = mWrappedText[i];
-            //    var reAssign = false;
-            //    while (lineToTrim.EndsWith(" "))
-            //    {
-            //        lineToTrim = lineToTrim.Substring(0, lineToTrim.Length - 1);
-            //        reAssign = true;
-            //    }
-
-            //    if(reAssign)
-            //    {
-            //        mWrappedText[i] = lineToTrim;
-            //    }
-            //}
-
-            // June 30, 2018
-            // We no longer want
-            // to trim the end of the
-            // lines, because those can
-            // be used to make an auto-sized
-            // font larger.
-            //while (line.EndsWith(" "))
-            //{
-            //    line = line.Substring(0, line.Length - 1);
-            //}
             mWrappedText.Add(line);
-
+            if (mWrappedText.Count == MaxNumberOfLines)
+            {
+                return;
+            }
 
             //if (mManagers == null || mManagers.IsCurrentThreadPrimary)
             //{
@@ -756,13 +745,7 @@ namespace RenderingLibrary.Graphics
                     //    mTextureToRender = null;
                     //}
 
-                    var lines = WrappedText;
-                    if(MaxNumberOfLines != null)
-                    {
-                        lines = WrappedText.Take(MaxNumberOfLines.Value).ToList();
-                    }
-
-                    var returnedRenderTarget = fontToUse.RenderToTexture2D(lines, this.HorizontalAlignment,
+                    var returnedRenderTarget = fontToUse.RenderToTexture2D(WrappedText, this.HorizontalAlignment,
                         mManagers, mTextureToRender, this, MaxLettersToShow);
                     bool isNewInstance = returnedRenderTarget != mTextureToRender;
 
@@ -870,7 +853,6 @@ namespace RenderingLibrary.Graphics
                 var absoluteLeft = mTempForRendering.GetAbsoluteLeft();
                 var absoluteTop = mTempForRendering.GetAbsoluteTop();
 
-                 draw here according to max lines:
 
                 fontToUse.DrawTextLines(WrappedText, HorizontalAlignment, 
                     this,
@@ -887,7 +869,7 @@ namespace RenderingLibrary.Graphics
 
             if (mBitmapFont?.AtlasedTexture != null)
             {
-                mBitmapFont.RenderAtlasedTextureToScreen(mWrappedText, this.HorizontalAlignment, mTextureToRender.Height,
+                mBitmapFont.RenderAtlasedTextureToScreen(WrappedText, this.HorizontalAlignment, mTextureToRender.Height,
                     new Color(mRed, mGreen, mBlue, mAlpha), Rotation, mFontScale, managers, spriteRenderer, this);
             }
             else
@@ -980,6 +962,7 @@ namespace RenderingLibrary.Graphics
             // Maybe this hasn't been loaded yet?
             if (font != null)
             {
+                var lineCount = mWrappedText.Count;
                 switch (this.VerticalAlignment)
                 {
                     case Graphics.VerticalAlignment.Top:
@@ -987,7 +970,7 @@ namespace RenderingLibrary.Graphics
                         break;
                     case Graphics.VerticalAlignment.Bottom:
                         {
-                            float requiredHeight = (this.mWrappedText.Count) * font.LineSpacing;
+                            float requiredHeight = (lineCount) * font.LineSpacing;
 
                             offset.Y = topSide + (this.Height - requiredHeight);
 
@@ -995,7 +978,7 @@ namespace RenderingLibrary.Graphics
                         }
                     case Graphics.VerticalAlignment.Center:
                         {
-                            float requiredHeight = (this.mWrappedText.Count) * font.LineSpacing;
+                            float requiredHeight = (lineCount) * font.LineSpacing;
 
                             offset.Y = topSide + (this.Height - requiredHeight) / 2.0f;
                             break;
@@ -1006,7 +989,7 @@ namespace RenderingLibrary.Graphics
 
                 float offsetY = offset.Y;
 
-                for (int i = 0; i < mWrappedText.Count; i++)
+                for (int i = 0; i < lineCount; i++)
                 {
                     offset.X = leftSide;
                     offset.Y = (int)offsetY;
@@ -1062,8 +1045,7 @@ namespace RenderingLibrary.Graphics
 
                 if (this.mRawText != null)
                 {
-                    
-                    mBitmapFont.GetRequiredWidthAndHeight(this.WrappedText, out requiredWidth, out requiredHeight);
+                    mBitmapFont.GetRequiredWidthAndHeight(WrappedText, out requiredWidth, out requiredHeight);
                 }
 
                 mPreRenderWidth = (int)(requiredWidth + .5f);

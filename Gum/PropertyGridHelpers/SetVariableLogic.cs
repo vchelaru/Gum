@@ -45,6 +45,7 @@ namespace Gum.PropertyGridHelpers
             "HorizontalAlignment",
             nameof(GraphicalUiElement.IgnoredByParentSize),
             "MaxLettersToShow",
+            nameof(Text.MaxNumberOfLines),
             "Red",
             "Rotation",
             "StackSpacing",

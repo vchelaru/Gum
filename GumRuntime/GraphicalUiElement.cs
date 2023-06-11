@@ -5362,6 +5362,19 @@ namespace Gum.Wireframe
                 handled = true;
 #endif
             }
+#if MONOGAME || XNA4
+            else if (propertyName == nameof(Text.MaxNumberOfLines))
+            {
+                ((Text)mContainedObjectAsIpso).MaxNumberOfLines = (int?)value;
+                if (this.WidthUnits == DimensionUnitType.RelativeToChildren ||
+                    // If height is relative to children, it could be in a stack
+                    this.HeightUnits == DimensionUnitType.RelativeToChildren)
+                {
+                    UpdateLayout();
+                }
+                handled = true;
+            }
+#endif
 
             return handled;
         }
