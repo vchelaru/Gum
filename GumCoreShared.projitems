@@ -83,6 +83,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\SpriteRenderer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\Text.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\TextManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\TextOverflowMode.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\TextureFlipAnimation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\TimedSpriteSheetAnimation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\VerticalAlignment.cs" />

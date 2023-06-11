@@ -370,6 +370,11 @@ namespace Gum.DataTypes
                     case "TextureAddress":
                     case "Gum.Managers.ChildrenLayout":
                     case "ChildrenLayout":
+                    case "TextOverflowHorizontalMode":
+                    case "TextOverflowVerticalMode":
+                    case "RenderingLibrary.Graphics.TextOverflowHorizontalMode":
+                    case "RenderingLibrary.Graphics.TextOverflowVerticalMode":
+
                         variableSave.Value = (int)variableSave.Value;
                         break;
                 }
@@ -442,10 +447,12 @@ namespace Gum.DataTypes
                     case "Gum.Converters.GeneralUnitType":
                         variableSave.Value = (Gum.Converters.GeneralUnitType)valueAsInt;
                         return true;
+
                     case "Gum.RenderingLibrary.Blend":
                     case "Blend":
                         variableSave.Value = (Gum.RenderingLibrary.Blend)valueAsInt;
                         return true;
+
                     case "Gum.Managers.TextureAddress":
                     case "TextureAddress":
                     
@@ -458,6 +465,17 @@ namespace Gum.DataTypes
                     case "GradientType":
                         variableSave.Value = (global::RenderingLibrary.Graphics.GradientType)valueAsInt;
                         return true;
+
+                    case "RenderingLibrary.Graphics.TextOverflowHorizontalMode":
+                    case "TextOverflowHorizontalMode":
+                        variableSave.Value = (global::RenderingLibrary.Graphics.TextOverflowHorizontalMode)valueAsInt;
+                        return true;
+
+                    case "RenderingLibrary.Graphics.TextOverflowVerticalMode":
+                    case "TextOverflowVerticalMode":
+                        variableSave.Value = (global::RenderingLibrary.Graphics.TextOverflowVerticalMode)valueAsInt;
+                        return true;
+
                     default:
                         return false;
                 }

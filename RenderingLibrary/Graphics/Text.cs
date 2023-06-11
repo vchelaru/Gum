@@ -8,7 +8,6 @@ using RenderingLibrary.Math.Geometry;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.ObjectModel;
 using System.Threading;
-using System.Runtime.Remoting.Messaging;
 
 namespace RenderingLibrary.Graphics
 {
@@ -32,19 +31,6 @@ namespace RenderingLibrary.Graphics
 
     #endregion
 
-    public enum TextOverflowHorizontalMode
-    {
-        TruncateWord,
-        EllipsisLetter,
-        // eventually?
-        //ScaleToFit
-    }
-
-    public enum TextOverflowVerticalMode
-    {
-        SpillOver,
-        TruncateLine
-    }
 
     public class Text : IRenderableIpso, IVisible
     {

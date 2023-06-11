@@ -115,6 +115,7 @@
     <Compile Include="Graphics\SortableLayer.cs" />
     <Compile Include="Graphics\SpriteBatchStack.cs" />
     <Compile Include="Graphics\SpriteRenderer.cs" />
+    <Compile Include="Graphics\TextOverflowMode.cs" />
     <Compile Include="Graphics\TimedSpriteSheetAnimation.cs" />
     <Compile Include="Graphics\VerticalAlignment.cs" />
     <Compile Include="Math\FloatRectangle.cs" />
