@@ -5374,6 +5374,19 @@ namespace Gum.Wireframe
                 }
                 handled = true;
             }
+            else if(propertyName == nameof(TextOverflowHorizontalMode))
+            {
+                var textOverflowMode = (TextOverflowHorizontalMode)value;
+
+                if(textOverflowMode == TextOverflowHorizontalMode.EllipsisLetter)
+                {
+                    ((Text)mContainedObjectAsIpso).IsTruncatingWithEllipsisOnLastLine = true;
+                }
+                else
+                {
+                    ((Text)mContainedObjectAsIpso).IsTruncatingWithEllipsisOnLastLine = false;
+                }
+            }
 #endif
 
             return handled;

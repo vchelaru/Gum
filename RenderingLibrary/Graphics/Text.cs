@@ -31,6 +31,20 @@ namespace RenderingLibrary.Graphics
 
     #endregion
 
+    public enum TextOverflowHorizontalMode
+    {
+        TruncateWord,
+        EllipsisLetter,
+        // eventually?
+        //ScaleToFit
+    }
+
+    public enum TextOverflowVerticalMode
+    {
+        SpillOver,
+        TruncateLine
+    }
+
     public class Text : IRenderableIpso, IVisible
     {
         #region Fields
@@ -204,7 +218,7 @@ namespace RenderingLibrary.Graphics
             }
         }
 
-        public bool AddEllipsisOnLastLine { get; set; } 
+        public bool IsTruncatingWithEllipsisOnLastLine { get; set; } 
             // temp:
             = true;
 
@@ -617,7 +631,7 @@ namespace RenderingLibrary.Graphics
 
             float ellipsisWidth = 0;
             const string ellipsis = "...";
-            if(MaxNumberOfLines > 0)
+            if(MaxNumberOfLines > 0 && IsTruncatingWithEllipsisOnLastLine)
             {
                 ellipsisWidth = MeasureString(ellipsis);
             }
@@ -643,7 +657,7 @@ namespace RenderingLibrary.Graphics
                 
                 float linePlusWordWidth = MeasureString(line + word);
 
-                if(!isLastWord && isLastLine && linePlusWordWidth + ellipsisWidth >= wrappingWidth )
+                if(IsTruncatingWithEllipsisOnLastLine && !isLastWord && isLastLine && linePlusWordWidth + ellipsisWidth >= wrappingWidth )
                 {
                     var addedEllipsis = false;
                     for(int i = 1; i < word.Length; i++)

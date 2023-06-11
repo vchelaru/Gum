@@ -156,6 +156,7 @@
       <DependentUpon>StateView.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\TextHorizontalAlignmentControl.cs" />
+    <Compile Include="Controls\TextOverflowModeControl.cs" />
     <Compile Include="Controls\TextVerticalAlignmentControl.cs" />
     <Compile Include="Controls\ToggleButtonOptionContainer.cs" />
     <Compile Include="Controls\WidthUnitsControl.cs" />
@@ -658,6 +659,15 @@
     </Resource>
     <Resource Include="Content\Icons\RecentFiles\StarFilled.png" />
     <Resource Include="Content\Icons\RecentFiles\StarOutline.png" />
+    <None Include="Content\Icons\TextOverflow\Ellipsis.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Icons\TextOverflow\Truncate.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Icons\TextOverflow\TruncateWord.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <Content Include="Content\Icons\Units\PixelsFromBaseline.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

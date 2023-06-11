@@ -30,6 +30,7 @@ using System.ComponentModel;
 using System.Windows.Controls;
 using System.Windows.Media;
 using Gum.Plugins.InternalPlugins.VariableGrid;
+using RenderingLibrary.Graphics;
 
 namespace Gum.Managers
 {
@@ -693,6 +694,10 @@ namespace Gum.Managers
                         member.Name == "Children Layout" || member.Name.EndsWith(".Children Layout"))
                     {
                         member.PreferredDisplayer = typeof(ChildrenLayoutControl);
+                    }
+                    else if(propertyType == typeof(TextOverflowHorizontalMode))
+                    {
+                        member.PreferredDisplayer = typeof(TextOverflowModeControl);
                     }
                     else if(propertyType == typeof(List<string>))
                     {
