@@ -187,6 +187,21 @@ namespace RenderingLibrary.Graphics
             }
         }
 
+        int? maxNumberOfLines;
+        public int? MaxNumberOfLines
+        {
+            get => maxNumberOfLines; 
+            set
+            {
+                if(maxNumberOfLines  != value)
+                {
+                    maxNumberOfLines = value;
+
+                    mNeedsBitmapFontRefresh = true;
+                }
+            }
+        }
+
         public string RawText
         {
             get
@@ -741,7 +756,13 @@ namespace RenderingLibrary.Graphics
                     //    mTextureToRender = null;
                     //}
 
-                    var returnedRenderTarget = fontToUse.RenderToTexture2D(WrappedText, this.HorizontalAlignment,
+                    var lines = WrappedText;
+                    if(MaxNumberOfLines != null)
+                    {
+                        lines = WrappedText.Take(MaxNumberOfLines.Value).ToList();
+                    }
+
+                    var returnedRenderTarget = fontToUse.RenderToTexture2D(lines, this.HorizontalAlignment,
                         mManagers, mTextureToRender, this, MaxLettersToShow);
                     bool isNewInstance = returnedRenderTarget != mTextureToRender;
 
@@ -848,6 +869,8 @@ namespace RenderingLibrary.Graphics
 
                 var absoluteLeft = mTempForRendering.GetAbsoluteLeft();
                 var absoluteTop = mTempForRendering.GetAbsoluteTop();
+
+                 draw here according to max lines:
 
                 fontToUse.DrawTextLines(WrappedText, HorizontalAlignment, 
                     this,
