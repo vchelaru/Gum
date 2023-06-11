@@ -7,6 +7,7 @@ using Microsoft.Xna.Framework;
 using RenderingLibrary.Math.Geometry;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.ObjectModel;
+using System.Threading;
 
 namespace RenderingLibrary.Graphics
 {
@@ -203,7 +204,9 @@ namespace RenderingLibrary.Graphics
             }
         }
 
-        public bool AddEllipsisOnLastLine { get; set; }
+        public bool AddEllipsisOnLastLine { get; set; } 
+            // temp:
+            = true;
 
         public string RawText
         {
@@ -463,11 +466,14 @@ namespace RenderingLibrary.Graphics
             get { return mFontScale; }
             set
             {
-                mFontScale = System.Math.Max(0, value);
-                UpdateWrappedText();
-                mNeedsBitmapFontRefresh = true;
-                UpdatePreRenderDimensions();
+                var newValue = System.Math.Max(0, value);
 
+                if(newValue != mFontScale)
+                {
+                    UpdateWrappedText();
+                    mNeedsBitmapFontRefresh = true;
+                    UpdatePreRenderDimensions();
+                }
             }
         }
 
@@ -583,6 +589,8 @@ namespace RenderingLibrary.Graphics
             }
             /////////END EARLY OUT///////////
 
+            bool didTruncate = false;
+
             float wrappingWidth = mWidth / mFontScale;
             if (mWidth == 0)
             {
@@ -608,16 +616,19 @@ namespace RenderingLibrary.Graphics
             }
 
             float ellipsisWidth = 0;
+            const string ellipsis = "...";
             if(MaxNumberOfLines > 0)
             {
-                ellipsisWidth = MeasureString("...");
+                ellipsisWidth = MeasureString(ellipsis);
             }
 
+            bool isLastLine = false;
             while (wordArray.Count != 0)
             {
-                string wordUnmodified = wordArray[0];
+                isLastLine = MaxNumberOfLines != null && mWrappedText.Count == MaxNumberOfLines - 1;
 
-                string word = wordUnmodified;
+                string word = wordArray[0];
+                var isLastWord = wordArray.Count == 1;
 
                 bool containsNewline = false;
 
@@ -627,18 +638,45 @@ namespace RenderingLibrary.Graphics
                     containsNewline = true;
                 }
 
-                string whatToMeasure = line + word;
+                // If it's not the last word, we show ellipsis, and the last word plus ellipsis won't fit, then we need
+                // to include part of the word:
+                
+                float linePlusWordWidth = MeasureString(line + word);
 
-                float lineWidth = MeasureString(whatToMeasure);
+                if(!isLastWord && isLastLine && linePlusWordWidth + ellipsisWidth >= wrappingWidth )
+                {
+                    var addedEllipsis = false;
+                    for(int i = 1; i < word.Length; i++)
+                    {
+                        var substringEnd = word.SubstringEnd(i);
 
-                if (lineWidth > wrappingWidth)
+                        float linePlusWordSub = MeasureString(line + substringEnd);
+
+                        if(linePlusWordSub + ellipsisWidth <= wrappingWidth)
+                        {
+                            mWrappedText.Add(line + substringEnd + ellipsis);
+                            addedEllipsis = true;
+                            break;
+                        }
+                    }
+
+                    if(!addedEllipsis && line.EndsWith(" "))
+                    {
+                        mWrappedText.Add(line.SubstringEnd(1) +  ellipsis);
+
+                    }
+                    break;
+                }
+
+                if (linePlusWordWidth > wrappingWidth)
                 {
                     if (!string.IsNullOrEmpty(line))
                     {
                         mWrappedText.Add(line);
                         if (mWrappedText.Count == MaxNumberOfLines)
                         {
-                            return;
+                            didTruncate = true;
+                            break;
                         }
                     }
 
@@ -667,20 +705,46 @@ namespace RenderingLibrary.Graphics
                     mWrappedText.Add(line);
                     if(mWrappedText.Count == MaxNumberOfLines)
                     {
-                        return;
+                        didTruncate = true;
+
+                        break;
                     }
                     line = string.Empty;
-                    int indexOfNewline = wordUnmodified.IndexOf('\n');
-                    wordArray.Insert(0, wordUnmodified.Substring(indexOfNewline + 1, wordUnmodified.Length - (indexOfNewline + 1)));
+                    int indexOfNewline = word.IndexOf('\n');
+                    wordArray.Insert(0, word.Substring(indexOfNewline + 1, word.Length - (indexOfNewline + 1)));
                 }
             }
 
-            mWrappedText.Add(line);
-            if (mWrappedText.Count == MaxNumberOfLines)
+            if(MaxNumberOfLines == null || mWrappedText.Count < MaxNumberOfLines)
             {
-                return;
+                mWrappedText.Add(line);
             }
 
+            //if(didTruncate && AddEllipsisOnLastLine && mWrappedText.Count > 0)
+            //{
+            //    var lastLine = mWrappedText[mWrappedText.Count-1];
+
+            //    int numberOfCharactersToRemove = 1;
+
+            //    while(numberOfCharactersToRemove < lastLine.Length)
+            //    {
+            //        var endSubstring = lastLine.Substring(lastLine.Length - numberOfCharactersToRemove);
+
+            //        var isLongEnough = MeasureString(endSubstring) > ellipsisWidth;
+
+            //        if(isLongEnough)
+            //        {
+            //            break;
+            //        }
+            //        else
+            //        {
+            //            numberOfCharactersToRemove++;
+            //        }
+            //    }
+
+            //    mWrappedText[mWrappedText.Count-1] = lastLine.Substring(0, lastLine.Length - numberOfCharactersToRemove) + "...";
+
+            //}
             //if (mManagers == null || mManagers.IsCurrentThreadPrimary)
             //{
             //    UpdateTextureToRender();
@@ -1092,4 +1156,20 @@ namespace RenderingLibrary.Graphics
 
         #endregion
     }
+
+    public static class StringExtensions
+    {
+        public static string SubstringEnd(this string value, int lettersToRemove)
+        {
+            if (value.Length <= lettersToRemove)
+            {
+                return string.Empty;
+            }
+            else
+            {
+                return value.Substring(0, value.Length - lettersToRemove);
+            }
+        }
+    }
+
 }
