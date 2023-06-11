@@ -8,6 +8,7 @@ using RenderingLibrary.Math.Geometry;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.ObjectModel;
 using System.Threading;
+using System.Runtime.Remoting.Messaging;
 
 namespace RenderingLibrary.Graphics
 {
@@ -306,7 +307,19 @@ namespace RenderingLibrary.Graphics
                 if(mHeight != value)
                 {
                     mHeight = value;
+
+                    if(TextOverflowVerticalMode != TextOverflowVerticalMode.SpillOver)
+                    {
+                        UpdateWrappedText();
+                    }
+
                     UpdateLinePrimitive();
+
+                    if (TextOverflowVerticalMode != TextOverflowVerticalMode.SpillOver)
+                    {
+                        UpdatePreRenderDimensions();
+                    }
+
                 }
             }
         }
@@ -418,6 +431,21 @@ namespace RenderingLibrary.Graphics
                     {
                         mParent.Children.Add(this);
                     }
+                }
+            }
+        }
+
+        TextOverflowVerticalMode textOverflowVerticalMode;
+        public TextOverflowVerticalMode TextOverflowVerticalMode
+        {
+            get => textOverflowVerticalMode;
+            set
+            {
+                if(textOverflowVerticalMode != value)
+                {
+                    textOverflowVerticalMode = value;
+                    UpdateWrappedText();
+                    UpdatePreRenderDimensions();
                 }
             }
         }
@@ -597,7 +625,19 @@ namespace RenderingLibrary.Graphics
 
             mWrappedText.Clear();
 
-            if(MaxNumberOfLines == 0)
+            var effectiveMaxNumberOfLines = MaxNumberOfLines;
+
+            if(TextOverflowVerticalMode == TextOverflowVerticalMode.TruncateLine)
+            {
+
+                var maxLinesFromHeight = (int)(Height / BitmapFont.LineHeightInPixels);
+                if(maxLinesFromHeight < effectiveMaxNumberOfLines || effectiveMaxNumberOfLines == null)
+                {
+                    effectiveMaxNumberOfLines = maxLinesFromHeight;
+                }
+            }
+
+            if (effectiveMaxNumberOfLines == 0)
             {
                 return;
             }
@@ -631,7 +671,7 @@ namespace RenderingLibrary.Graphics
 
             float ellipsisWidth = 0;
             const string ellipsis = "...";
-            if(MaxNumberOfLines > 0 && IsTruncatingWithEllipsisOnLastLine)
+            if(effectiveMaxNumberOfLines > 0 && IsTruncatingWithEllipsisOnLastLine)
             {
                 ellipsisWidth = MeasureString(ellipsis);
             }
@@ -639,7 +679,7 @@ namespace RenderingLibrary.Graphics
             bool isLastLine = false;
             while (wordArray.Count != 0)
             {
-                isLastLine = MaxNumberOfLines != null && mWrappedText.Count == MaxNumberOfLines - 1;
+                isLastLine = effectiveMaxNumberOfLines != null && mWrappedText.Count == effectiveMaxNumberOfLines - 1;
 
                 string word = wordArray[0];
                 var isLastWord = wordArray.Count == 1;
@@ -657,7 +697,14 @@ namespace RenderingLibrary.Graphics
                 
                 float linePlusWordWidth = MeasureString(line + word);
 
-                if(IsTruncatingWithEllipsisOnLastLine && !isLastWord && isLastLine && linePlusWordWidth + ellipsisWidth >= wrappingWidth )
+                var shouldAddEllipsis =
+                    IsTruncatingWithEllipsisOnLastLine && 
+                    isLastLine && 
+                    // If it's the last word, then we don't care if the ellipsis fit, we only want to see if the last word fits...
+                    ((isLastWord && linePlusWordWidth > wrappingWidth) ||
+                    // it's not the last word so we need to see if ellipsis fit
+                     (!isLastWord && linePlusWordWidth + ellipsisWidth >= wrappingWidth));
+                if (shouldAddEllipsis )
                 {
                     var addedEllipsis = false;
                     for(int i = 1; i < word.Length; i++)
@@ -687,7 +734,7 @@ namespace RenderingLibrary.Graphics
                     if (!string.IsNullOrEmpty(line))
                     {
                         mWrappedText.Add(line);
-                        if (mWrappedText.Count == MaxNumberOfLines)
+                        if (mWrappedText.Count == effectiveMaxNumberOfLines)
                         {
                             didTruncate = true;
                             break;
@@ -717,7 +764,7 @@ namespace RenderingLibrary.Graphics
                 if (containsNewline)
                 {
                     mWrappedText.Add(line);
-                    if(mWrappedText.Count == MaxNumberOfLines)
+                    if(mWrappedText.Count == effectiveMaxNumberOfLines)
                     {
                         didTruncate = true;
 
@@ -729,7 +776,7 @@ namespace RenderingLibrary.Graphics
                 }
             }
 
-            if(MaxNumberOfLines == null || mWrappedText.Count < MaxNumberOfLines)
+            if(effectiveMaxNumberOfLines == null || mWrappedText.Count < effectiveMaxNumberOfLines)
             {
                 mWrappedText.Add(line);
             }

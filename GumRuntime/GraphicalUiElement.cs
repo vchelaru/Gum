@@ -2232,6 +2232,7 @@ namespace Gum.Wireframe
                         if (CanDoFullUpdate(child.GetChildLayoutType(this), child))
                         {
                             child.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1);
+                            newlyUpdated?.Add(child);
                         }
                         else
                         {
@@ -5363,17 +5364,7 @@ namespace Gum.Wireframe
 #endif
             }
 #if MONOGAME || XNA4
-            else if (propertyName == nameof(Text.MaxNumberOfLines))
-            {
-                ((Text)mContainedObjectAsIpso).MaxNumberOfLines = (int?)value;
-                if (this.WidthUnits == DimensionUnitType.RelativeToChildren ||
-                    // If height is relative to children, it could be in a stack
-                    this.HeightUnits == DimensionUnitType.RelativeToChildren)
-                {
-                    UpdateLayout();
-                }
-                handled = true;
-            }
+
             else if(propertyName == nameof(TextOverflowHorizontalMode))
             {
                 var textOverflowMode = (TextOverflowHorizontalMode)value;
@@ -5386,6 +5377,12 @@ namespace Gum.Wireframe
                 {
                     ((Text)mContainedObjectAsIpso).IsTruncatingWithEllipsisOnLastLine = false;
                 }
+            }
+            else if (propertyName == nameof(TextOverflowVerticalMode))
+            {
+                var textOverflowMode = (TextOverflowVerticalMode)value;
+
+                ((Text)mContainedObjectAsIpso).TextOverflowVerticalMode = textOverflowMode;
             }
 #endif
 

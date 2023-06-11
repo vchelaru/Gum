@@ -156,9 +156,10 @@
       <DependentUpon>StateView.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\TextHorizontalAlignmentControl.cs" />
-    <Compile Include="Controls\TextOverflowModeControl.cs" />
+    <Compile Include="Controls\TextOverflowHorizontalModeControl.cs" />
     <Compile Include="Controls\TextVerticalAlignmentControl.cs" />
     <Compile Include="Controls\ToggleButtonOptionContainer.cs" />
+    <Compile Include="Controls\TextOverflowVerticalModeControl.cs" />
     <Compile Include="Controls\WidthUnitsControl.cs" />
     <Compile Include="Controls\XOriginControl.cs" />
     <Compile Include="Controls\XUnitsControl.cs" />
@@ -666,6 +667,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Content\Icons\TextOverflow\TruncateWord.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Icons\TextOverflow\SpillVertical.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Icons\TextOverflow\TruncateLine.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <Content Include="Content\Icons\Units\PixelsFromBaseline.png">

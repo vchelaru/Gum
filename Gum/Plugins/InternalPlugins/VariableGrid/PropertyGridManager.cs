@@ -697,7 +697,11 @@ namespace Gum.Managers
                     }
                     else if(propertyType == typeof(TextOverflowHorizontalMode))
                     {
-                        member.PreferredDisplayer = typeof(TextOverflowModeControl);
+                        member.PreferredDisplayer = typeof(TextOverflowHorizontalModeControl);
+                    }
+                    else if (propertyType == typeof(TextOverflowVerticalMode))
+                    {
+                        member.PreferredDisplayer = typeof(TextOverflowVerticalModeControl);
                     }
                     else if(propertyType == typeof(List<string>))
                     {

@@ -9,7 +9,7 @@ using static WpfDataUi.Controls.ToggleButtonOptionDisplay;
 
 namespace Gum.Controls
 {
-    class TextOverflowModeControl : ToggleButtonOptionContainer
+    class TextOverflowHorizontalModeControl : ToggleButtonOptionContainer
     {
         static Option[] cachedOptions;
 

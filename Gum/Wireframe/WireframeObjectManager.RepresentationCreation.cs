@@ -187,16 +187,17 @@ namespace Gum.Wireframe
                     GumCommands.Self.GuiCommands.PrintOutput($"Error loading {elementSave}:\n{e.ToString()}");
                 }
                 // then we override it with the current state if one is set:
+                var appliedRecursively = false;
+                var state = SelectedState.Self.SelectedStateSave;
                 if (SelectedState.Self.SelectedStateSave != elementSave.DefaultState && SelectedState.Self.SelectedStateSave != null)
                 {
-                    var state = SelectedState.Self.SelectedStateSave;
                     bool isRecursive = GetIfSelectedStateIsSetRecursively();
                     if (isRecursive)
                     {
                         var category = SelectedState.Self.SelectedStateCategorySave;
                         rootIpso.ApplyStateRecursive(category.Name, SelectedState.Self.SelectedStateSave.Name);
                     }
-                    else
+                    if(!appliedRecursively)
                     {
                         rootIpso.ApplyState(state);
                     }
