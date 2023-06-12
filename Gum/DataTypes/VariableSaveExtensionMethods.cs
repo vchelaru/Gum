@@ -414,70 +414,95 @@ namespace Gum.DataTypes
             if(variableSave.Value != null)
             {
                 int valueAsInt = 0;
+                var isInt = false;
                 if(variableSave.Value is int asInt)
                 {
+                    isInt = true;
                     valueAsInt = asInt;
                 }
                 else if(variableSave.Value is long asLong)
                 {
+                    isInt = true;
                     valueAsInt = (int)asLong;
                 }
 
-                switch (variableSave.Type)
+                if(isInt)
                 {
-                    case "DimensionUnitType":
-                    case "Gum.DataTypes.DimensionUnitType":
-                        variableSave.Value = (Gum.DataTypes.DimensionUnitType)valueAsInt;
+                    // The code above ultimately relies on Gum.Reflection.TypeManager which isn't
+                    // available here. variableSave types are not qualified, so this won't work
+                    //var type = typeof(VariableSaveExtensionMethods).Assembly.GetType(variableSave.Type);
+
+                    //if(type != null)
+                    //{
+                    //    Array array = Enum.GetValues(type);
+                    //    for (int i = 0; i < array.Length; i++)
+                    //    {
+                    //        if ((int)array.GetValue(i) == valueAsInt)
+                    //        {
+                    //            variableSave.Value = array.GetValue(i);
+                    //            return true;
+                    //        }
+                    //    }
+                    //}
+
+
+
+                    switch (variableSave.Type)
+                    {
+                        case "DimensionUnitType":
+                        case "Gum.DataTypes.DimensionUnitType":
+                            variableSave.Value = (Gum.DataTypes.DimensionUnitType)valueAsInt;
                         
-                        return true;
-                    case "VerticalAlignment":
-                    case "RenderingLibrary.Graphics.VerticalAlignment":
+                            return true;
+                        case "VerticalAlignment":
+                        case "RenderingLibrary.Graphics.VerticalAlignment":
 
-                        variableSave.Value = (global::RenderingLibrary.Graphics.VerticalAlignment)valueAsInt;
-                        return true;
-                    case "HorizontalAlignment":
-                    case "RenderingLibrary.Graphics.HorizontalAlignment":
-                        variableSave.Value = (global::RenderingLibrary.Graphics.HorizontalAlignment)valueAsInt;
-                        return true;
-                    case "PositionUnitType":
-                    case "Gum.Managers.PositionUnitType":
-                        variableSave.Value = (Gum.Managers.PositionUnitType)valueAsInt;
-                        return true;
-                    case "GeneralUnitType":
-                    case "Gum.Converters.GeneralUnitType":
-                        variableSave.Value = (Gum.Converters.GeneralUnitType)valueAsInt;
-                        return true;
+                            variableSave.Value = (global::RenderingLibrary.Graphics.VerticalAlignment)valueAsInt;
+                            return true;
+                        case "HorizontalAlignment":
+                        case "RenderingLibrary.Graphics.HorizontalAlignment":
+                            variableSave.Value = (global::RenderingLibrary.Graphics.HorizontalAlignment)valueAsInt;
+                            return true;
+                        case "PositionUnitType":
+                        case "Gum.Managers.PositionUnitType":
+                            variableSave.Value = (Gum.Managers.PositionUnitType)valueAsInt;
+                            return true;
+                        case "GeneralUnitType":
+                        case "Gum.Converters.GeneralUnitType":
+                            variableSave.Value = (Gum.Converters.GeneralUnitType)valueAsInt;
+                            return true;
 
-                    case "Gum.RenderingLibrary.Blend":
-                    case "Blend":
-                        variableSave.Value = (Gum.RenderingLibrary.Blend)valueAsInt;
-                        return true;
+                        case "Gum.RenderingLibrary.Blend":
+                        case "Blend":
+                            variableSave.Value = (Gum.RenderingLibrary.Blend)valueAsInt;
+                            return true;
 
-                    case "Gum.Managers.TextureAddress":
-                    case "TextureAddress":
+                        case "Gum.Managers.TextureAddress":
+                        case "TextureAddress":
                     
-                        variableSave.Value = (TextureAddress)valueAsInt;
-                        return true;
-                    case "Gum.Managers.ChildrenLayout":         
-                    case "ChildrenLayout":
-                        variableSave.Value = (ChildrenLayout)valueAsInt;
-                        return true;
-                    case "GradientType":
-                        variableSave.Value = (global::RenderingLibrary.Graphics.GradientType)valueAsInt;
-                        return true;
+                            variableSave.Value = (TextureAddress)valueAsInt;
+                            return true;
+                        case "Gum.Managers.ChildrenLayout":         
+                        case "ChildrenLayout":
+                            variableSave.Value = (ChildrenLayout)valueAsInt;
+                            return true;
+                        case "GradientType":
+                            variableSave.Value = (global::RenderingLibrary.Graphics.GradientType)valueAsInt;
+                            return true;
 
-                    case "RenderingLibrary.Graphics.TextOverflowHorizontalMode":
-                    case "TextOverflowHorizontalMode":
-                        variableSave.Value = (global::RenderingLibrary.Graphics.TextOverflowHorizontalMode)valueAsInt;
-                        return true;
+                        case "RenderingLibrary.Graphics.TextOverflowHorizontalMode":
+                        case "TextOverflowHorizontalMode":
+                            variableSave.Value = (global::RenderingLibrary.Graphics.TextOverflowHorizontalMode)valueAsInt;
+                            return true;
 
-                    case "RenderingLibrary.Graphics.TextOverflowVerticalMode":
-                    case "TextOverflowVerticalMode":
-                        variableSave.Value = (global::RenderingLibrary.Graphics.TextOverflowVerticalMode)valueAsInt;
-                        return true;
+                        case "RenderingLibrary.Graphics.TextOverflowVerticalMode":
+                        case "TextOverflowVerticalMode":
+                            variableSave.Value = (global::RenderingLibrary.Graphics.TextOverflowVerticalMode)valueAsInt;
+                            return true;
 
-                    default:
-                        return false;
+                        default:
+                            return false;
+                    }
                 }
             
             }
