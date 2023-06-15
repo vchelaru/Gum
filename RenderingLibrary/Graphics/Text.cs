@@ -668,6 +668,7 @@ namespace RenderingLibrary.Graphics
                 isLastLine = effectiveMaxNumberOfLines != null && mWrappedText.Count == effectiveMaxNumberOfLines - 1;
 
                 string word = wordArray[0];
+                var wordBeforeNewlineRemoval = word;
                 var isLastWord = wordArray.Count == 1;
 
                 bool containsNewline = false;
@@ -757,8 +758,8 @@ namespace RenderingLibrary.Graphics
                         break;
                     }
                     line = string.Empty;
-                    int indexOfNewline = word.IndexOf('\n');
-                    wordArray.Insert(0, word.Substring(indexOfNewline + 1, word.Length - (indexOfNewline + 1)));
+                    int indexOfNewline = wordBeforeNewlineRemoval.IndexOf('\n');
+                    wordArray.Insert(0, wordBeforeNewlineRemoval.Substring(indexOfNewline + 1, wordBeforeNewlineRemoval.Length - (indexOfNewline + 1)));
                 }
             }
 
