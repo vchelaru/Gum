@@ -152,6 +152,16 @@ namespace SkiaGum.GueDeriving
         //    set => ContainedText.Font = value;
         //}
 
+        // Vic asks - why do we duplicate the properties here instead of just relying on the underlying GraphicalUiElement?
+        // June 15, 2023 - because it seems like we go directly to the Text object through TextRuntime rather than the underling
+        // GUE. We could shift to using the underlying GUE but then we'd have to get rid of all properties like max number of lines, etc,
+        // and have it all go through the GUE. For now, going to remove that to fix the bug.
+        public int FontSize
+        {
+            get => ContainedText.FontSize;
+            set => ContainedText.FontSize = value;
+        }
+
         public TextRuntime (bool fullInstantiation = true)
         {
             if(fullInstantiation)
