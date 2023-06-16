@@ -21,6 +21,8 @@ using System.Runtime.CompilerServices;
 using Grid = System.Windows.Controls.Grid;
 using Gum.Mvvm;
 using Microsoft.Xna.Framework.Media;
+using Gum.Plugins.InternalPlugins.TreeView;
+using Gum.Plugins.InternalPlugins.TreeView.ViewModels;
 
 namespace Gum.Managers
 {
@@ -100,7 +102,7 @@ namespace Gum.Managers
         TreeNode mStandardElementsTreeNode;
         TreeNode mBehaviorsTreeNode;
 
-        System.Windows.Controls.ListBox FlatList;
+        FlatSearchListBox FlatList;
         System.Windows.Forms.Integration.WindowsFormsHost TreeViewHost;
 
 
@@ -191,32 +193,38 @@ namespace Gum.Managers
                 //SelectFirstElement();
             }
 
-            var filterTextLower = filterText.ToLower();
 
             if(shouldExpand)
             {
-                FlatList.Items.Clear();
+                var filterTextLower = filterText?.ToLower();
+                FlatList.FlatList.Items.Clear();
 
                 var project = GumState.Self.ProjectState.GumProjectSave;
                 foreach (var screen in project.Screens)
                 {
                     if(screen.Name.ToLower().Contains(filterTextLower))
                     {
-                        FlatList.Items.Add(screen);
+                        var vm = new SearchItemViewModel();
+                        vm.BackingObject = screen;
+                        FlatList.FlatList.Items.Add(vm);
                     }
                 }
                 foreach(var component in project.Components)
                 {
                     if(component.Name.ToLower().Contains(filterTextLower))
                     {
-                        FlatList.Items.Add(component);
+                        var vm = new SearchItemViewModel();
+                        vm.BackingObject = component;
+                        FlatList.FlatList.Items.Add(vm);
                     }
                 }
                 foreach(var standard in project.StandardElements)
                 {
                     if(standard.Name.ToLower().Contains(filterTextLower))
                     {
-                        FlatList.Items.Add(standard);
+                        var vm = new SearchItemViewModel();
+                        vm.BackingObject = standard;
+                        FlatList.FlatList.Items.Add(vm);
                     }
                 }
 
@@ -510,11 +518,26 @@ namespace Gum.Managers
             //GumCommands.Self.GuiCommands.AddControl(panel, "Project", TabLocation.Left);
         }
 
-        private System.Windows.Controls.ListBox CreateFlatSearchList()
+        private FlatSearchListBox CreateFlatSearchList()
         {
-            var list = new System.Windows.Controls.ListBox();
-
+            var list = new FlatSearchListBox();
+            list.SelectSearchNode += HandleSelectedSearchNode;
             return list;
+        }
+
+        private void HandleSelectedSearchNode(SearchItemViewModel vm)
+        {
+            var backingObject = vm.BackingObject;
+
+            if (backingObject is ScreenSave asScreen) 
+                GumState.Self.SelectedState.SelectedElement = asScreen;
+            else if (backingObject is ComponentSave asComponent)
+                GumState.Self.SelectedState.SelectedElement = asComponent;
+            else if (backingObject is StandardElementSave asStandard)
+                GumState.Self.SelectedState.SelectedElement = asStandard;
+
+            searchTextBox.Text = null;
+            FilterText = null;
         }
 
         internal void FocusSearch()

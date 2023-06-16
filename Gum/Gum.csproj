@@ -234,6 +234,10 @@
     <Compile Include="Plugins\InternalPlugins\Output\MainOutputPlugin.cs" />
     <Compile Include="Plugins\InternalPlugins\ParentPlugin\MainParentPlugin.cs" />
     <Compile Include="Plugins\InternalPlugins\ScreenshotPlugin\MainScreenshotPlugin.cs" />
+    <Compile Include="Plugins\InternalPlugins\TreeView\FlatSearchListBox.xaml.cs">
+      <DependentUpon>FlatSearchListBox.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Plugins\InternalPlugins\TreeView\ViewModels\SearchItemViewModel.cs" />
     <Compile Include="Plugins\InternalPlugins\VariableGrid\StateSaveCategoryDisplayer.cs" />
     <Compile Include="Plugins\PluginTab.cs" />
     <Compile Include="Plugins\InternalPlugins\ProjectPropertiesWindowPlugin\MainPlugin.cs" />
@@ -497,6 +501,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Resource Include="Plugins\InternalPlugins\TreeView\Content\Component.png" />
+    <Resource Include="Plugins\InternalPlugins\TreeView\Content\screen.png" />
+    <Resource Include="Plugins\InternalPlugins\TreeView\Content\StandardElement.png" />
     <None Include="Libraries\Xceed\Xceed.Wpf.AvalonDock.dll" />
     <None Include="Libraries\Xceed\Xceed.Wpf.AvalonDock.Themes.Aero.dll" />
     <None Include="Libraries\Xceed\Xceed.Wpf.AvalonDock.Themes.Metro.dll" />
@@ -759,6 +766,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Plugins\InternalPlugins\Behaviors\BehaviorsControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Plugins\InternalPlugins\TreeView\FlatSearchListBox.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
