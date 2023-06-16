@@ -43,7 +43,7 @@ namespace Gum.Commands
             PropertyGridManager.Self.RefreshVariablesDataGridValues();
         }
 
-        public PluginTab AddControl(System.Windows.Controls.UserControl control, string tabTitle, TabLocation tabLocation = TabLocation.CenterBottom)
+        public PluginTab AddControl(System.Windows.FrameworkElement control, string tabTitle, TabLocation tabLocation = TabLocation.CenterBottom)
         {
             CheckForInitialization();
             return mainPanelControl.AddWpfControl(control, tabTitle, tabLocation);

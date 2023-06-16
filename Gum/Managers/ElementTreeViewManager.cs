@@ -16,6 +16,10 @@ using Gum.DataTypes.Behaviors;
 using Gum.Plugins;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+//using System.Windows.Controls;
+//using System.Windows;
+using Grid = System.Windows.Controls.Grid;
+
 
 namespace Gum.Managers
 {
@@ -439,17 +443,38 @@ namespace Gum.Managers
 
             InitializeMenuItems();
 
-            var panel = new Panel();
+            //var panel = new Panel();
+
+            var grid = new Grid();
+            grid.RowDefinitions.Add(
+                new System.Windows.Controls.RowDefinition() 
+                { Height = new System.Windows.GridLength(22, System.Windows.GridUnitType.Pixel) });
+            grid.RowDefinitions.Add(
+                new System.Windows.Controls.RowDefinition() 
+                { Height = new System.Windows.GridLength(1, System.Windows.GridUnitType.Star) });
+
+            GumCommands.Self.GuiCommands.AddControl(grid, "Project", TabLocation.Left);
 
             ObjectTreeView.Dock = DockStyle.Fill;
-            panel.Controls.Add(ObjectTreeView);
+            //panel.Controls.Add(ObjectTreeView);
+            var treeViewHost = new System.Windows.Forms.Integration.WindowsFormsHost();
+            treeViewHost.Child = ObjectTreeView;
+            Grid.SetRow(treeViewHost, 1);
+            grid.Children.Add(treeViewHost);
+
 
             var searchBarUi = CreateSearchBoxUi();
-            panel.Controls.Add(searchBarUi);
+            var searchBarHost = new System.Windows.Forms.Integration.WindowsFormsHost();
+            searchBarHost.Child = searchBarUi;
+            Grid.SetRow(searchBarHost, 0);
+            grid.Children.Add(searchBarHost);
+
+            //var flatSearchList = CreateFlatSearchList();
+            //panel.Controls.Add(flatSearchList);
 
 
 
-            GumCommands.Self.GuiCommands.AddControl(panel, "Project", TabLocation.Left);
+            //GumCommands.Self.GuiCommands.AddControl(panel, "Project", TabLocation.Left);
         }
 
 
