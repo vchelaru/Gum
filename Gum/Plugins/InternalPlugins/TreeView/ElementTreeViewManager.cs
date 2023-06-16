@@ -174,84 +174,6 @@ namespace Gum.Managers
             }
         }
 
-        private void ReactToFilterTextChanged()
-        {
-            var shouldExpand = false;
-
-            if (!string.IsNullOrEmpty(filterText))
-            {
-                shouldExpand = true;
-            }
-
-            FlatList.Visibility = shouldExpand.ToVisibility();
-            TreeViewHost.Visibility = (!shouldExpand).ToVisibility();
-
-            //RefreshUi();
-
-            if (!string.IsNullOrEmpty(filterText) && SelectedNode?.Tag == null)
-            {
-                //SelectFirstElement();
-            }
-
-
-            if(shouldExpand)
-            {
-                var filterTextLower = filterText?.ToLower();
-                FlatList.FlatList.Items.Clear();
-
-                var project = GumState.Self.ProjectState.GumProjectSave;
-                foreach (var screen in project.Screens)
-                {
-                    if(screen.Name.ToLower().Contains(filterTextLower))
-                    {
-                        var vm = new SearchItemViewModel();
-                        vm.BackingObject = screen;
-                        FlatList.FlatList.Items.Add(vm);
-                    }
-                }
-                foreach(var component in project.Components)
-                {
-                    if(component.Name.ToLower().Contains(filterTextLower))
-                    {
-                        var vm = new SearchItemViewModel();
-                        vm.BackingObject = component;
-                        FlatList.FlatList.Items.Add(vm);
-                    }
-                }
-                foreach(var standard in project.StandardElements)
-                {
-                    if(standard.Name.ToLower().Contains(filterTextLower))
-                    {
-                        var vm = new SearchItemViewModel();
-                        vm.BackingObject = standard;
-                        FlatList.FlatList.Items.Add(vm);
-                    }
-                }
-
-            }
-            
-            //do this after refreshing the UI or else the tree nodes won't expand
-            //if (string.IsNullOrEmpty(filterText))
-            //{
-            //    List<TreeNode> nodesToKeepExpanded = new List<TreeNode>();
-
-            //    var node = SelectedNode;
-
-            //    while (node != null)
-            //    {
-            //        nodesToKeepExpanded.Add(node);
-            //        node = node.Parent;
-            //    }
-
-            //    if (expandedStateBeforeFilter != null)
-            //    {
-            //        expandedStateBeforeFilter.Apply();
-            //        expandedStateBeforeFilter = null;
-            //    }
-
-            //    SelectedNode?.EnsureVisible();
-            //}
-        }
 
         private void SelectFirstElement()
         {
@@ -518,106 +440,10 @@ namespace Gum.Managers
             //GumCommands.Self.GuiCommands.AddControl(panel, "Project", TabLocation.Left);
         }
 
-        private FlatSearchListBox CreateFlatSearchList()
-        {
-            var list = new FlatSearchListBox();
-            list.SelectSearchNode += HandleSelectedSearchNode;
-            return list;
-        }
-
-        private void HandleSelectedSearchNode(SearchItemViewModel vm)
-        {
-            var backingObject = vm.BackingObject;
-
-            if (backingObject is ScreenSave asScreen) 
-                GumState.Self.SelectedState.SelectedElement = asScreen;
-            else if (backingObject is ComponentSave asComponent)
-                GumState.Self.SelectedState.SelectedElement = asComponent;
-            else if (backingObject is StandardElementSave asStandard)
-                GumState.Self.SelectedState.SelectedElement = asStandard;
-
-            searchTextBox.Text = null;
-            FilterText = null;
-        }
 
         internal void FocusSearch()
         {
             searchTextBox.Focus();
-        }
-
-        private Control CreateSearchBoxUi()
-        {
-            var panel = new Panel();
-            panel.Dock = DockStyle.Top;
-
-            searchTextBox = new TextBox();
-            searchTextBox.TextChanged += (not, used) => FilterText = searchTextBox.Text;
-            searchTextBox.KeyDown += (sender, args) =>
-            {
-                if (args.KeyCode == Keys.Escape)
-                {
-                    searchTextBox.Text = null;
-                    args.Handled = true;
-                    args.SuppressKeyPress = true;
-                    ObjectTreeView.Focus();
-                }
-                else if(args.KeyCode == Keys.Back
-                 && (args.Modifiers & Keys.Control) == Keys.Control
-                )
-                {
-                    searchTextBox.Text = null;
-                    args.Handled = true;
-                    args.SuppressKeyPress = true;
-                }
-                else if(args.KeyCode == Keys.Down)
-                {
-                    if(SelectedNode == null)
-                    {
-                        Select(ObjectTreeView.Nodes.FirstOrDefault() as TreeNode);
-                    }
-                    else
-                    {
-                        if(SelectedNode.NextVisibleNode != null)
-                        {
-                            Select(SelectedNode.NextVisibleNode);
-                        }
-                    }
-                    args.Handled = true;
-                }
-                else if (args.KeyCode == Keys.Up)
-                {
-                    if (SelectedNode == null)
-                    {
-                        Select(ObjectTreeView.Nodes.FirstOrDefault() as TreeNode);
-                    }
-                    else
-                    {
-                        if (SelectedNode.PrevVisibleNode != null)
-                        {
-                            Select(SelectedNode.PrevVisibleNode);
-                        }
-                    }
-                    args.Handled = true;
-                }
-                else if(args.KeyCode == Keys.Enter)
-                {
-                    args.Handled = true;
-                    args.SuppressKeyPress = true;
-                    ObjectTreeView.Focus();
-                    searchTextBox.Text = null;
-                }
-            };
-            searchTextBox.Dock = DockStyle.Fill;
-            panel.Controls.Add(searchTextBox);
-
-            var xButton = new Button();
-            xButton.Text = "X";
-            xButton.Click += (not, used) => searchTextBox.Text = null;
-            xButton.Dock = DockStyle.Right;
-            xButton.Width = 24;
-            panel.Controls.Add(xButton);
-            panel.Height = 20;
-            return panel;
         }
 
         private void CreateContextMenuStrip(IContainer components)
@@ -1635,6 +1461,183 @@ namespace Gum.Managers
 
 
         #endregion
+
+        #region Searching
+
+        private FlatSearchListBox CreateFlatSearchList()
+        {
+            var list = new FlatSearchListBox();
+            list.SelectSearchNode += HandleSelectedSearchNode;
+            return list;
+        }
+
+
+        private void ReactToFilterTextChanged()
+        {
+            var shouldExpand = false;
+
+            if (!string.IsNullOrEmpty(filterText))
+            {
+                shouldExpand = true;
+            }
+
+            FlatList.Visibility = shouldExpand.ToVisibility();
+            TreeViewHost.Visibility = (!shouldExpand).ToVisibility();
+
+            //RefreshUi();
+
+            if (!string.IsNullOrEmpty(filterText) && SelectedNode?.Tag == null)
+            {
+                //SelectFirstElement();
+            }
+
+
+            if (shouldExpand)
+            {
+                var filterTextLower = filterText?.ToLower();
+                FlatList.FlatList.Items.Clear();
+
+                var project = GumState.Self.ProjectState.GumProjectSave;
+                foreach (var screen in project.Screens)
+                {
+                    if (screen.Name.ToLower().Contains(filterTextLower))
+                    {
+                        var vm = new SearchItemViewModel();
+                        vm.BackingObject = screen;
+                        FlatList.FlatList.Items.Add(vm);
+                    }
+                }
+                foreach (var component in project.Components)
+                {
+                    if (component.Name.ToLower().Contains(filterTextLower))
+                    {
+                        var vm = new SearchItemViewModel();
+                        vm.BackingObject = component;
+                        FlatList.FlatList.Items.Add(vm);
+                    }
+                }
+                foreach (var standard in project.StandardElements)
+                {
+                    if (standard.Name.ToLower().Contains(filterTextLower))
+                    {
+                        var vm = new SearchItemViewModel();
+                        vm.BackingObject = standard;
+                        FlatList.FlatList.Items.Add(vm);
+                    }
+                }
+
+                if(FlatList.FlatList.Items.Count > 0)
+                {
+                    FlatList.FlatList.SelectedIndex = 0;
+                }
+            }
+
+            //do this after refreshing the UI or else the tree nodes won't expand
+            //if (string.IsNullOrEmpty(filterText))
+            //{
+            //    List<TreeNode> nodesToKeepExpanded = new List<TreeNode>();
+
+            //    var node = SelectedNode;
+
+            //    while (node != null)
+            //    {
+            //        nodesToKeepExpanded.Add(node);
+            //        node = node.Parent;
+            //    }
+
+            //    if (expandedStateBeforeFilter != null)
+            //    {
+            //        expandedStateBeforeFilter.Apply();
+            //        expandedStateBeforeFilter = null;
+            //    }
+
+            //    SelectedNode?.EnsureVisible();
+            //}
+        }
+
+        private Control CreateSearchBoxUi()
+        {
+            var panel = new Panel();
+            panel.Dock = DockStyle.Top;
+
+            searchTextBox = new TextBox();
+            searchTextBox.TextChanged += (not, used) => FilterText = searchTextBox.Text;
+            searchTextBox.KeyDown += (sender, args) =>
+            {
+                if (args.KeyCode == Keys.Escape)
+                {
+                    searchTextBox.Text = null;
+                    args.Handled = true;
+                    args.SuppressKeyPress = true;
+                    ObjectTreeView.Focus();
+                }
+                else if (args.KeyCode == Keys.Back
+                 && (args.Modifiers & Keys.Control) == Keys.Control
+                )
+                {
+                    searchTextBox.Text = null;
+                    args.Handled = true;
+                    args.SuppressKeyPress = true;
+                }
+                else if (args.KeyCode == Keys.Down)
+                {
+                    if(FlatList.FlatList.SelectedIndex < FlatList.FlatList.Items.Count -1)
+                    {
+                        FlatList.FlatList.SelectedIndex++;
+                    }
+                    args.Handled = true;
+                }
+                else if (args.KeyCode == Keys.Up)
+                {
+                    if (FlatList.FlatList.SelectedIndex > 0)
+                    {
+                        FlatList.FlatList.SelectedIndex--;
+                    }
+                    args.Handled = true;
+                }
+                else if (args.KeyCode == Keys.Enter)
+                {
+                    args.Handled = true;
+                    args.SuppressKeyPress = true;
+                    ObjectTreeView.Focus();
+
+                    var selectedItem = FlatList.FlatList.SelectedItem as SearchItemViewModel;
+                    HandleSelectedSearchNode(selectedItem);
+
+                    searchTextBox.Text = null;
+                }
+            };
+            searchTextBox.Dock = DockStyle.Fill;
+            panel.Controls.Add(searchTextBox);
+
+            var xButton = new Button();
+            xButton.Text = "X";
+            xButton.Click += (not, used) => searchTextBox.Text = null;
+            xButton.Dock = DockStyle.Right;
+            xButton.Width = 24;
+            panel.Controls.Add(xButton);
+            panel.Height = 20;
+            return panel;
+        }
+
+        private void HandleSelectedSearchNode(SearchItemViewModel vm)
+        {
+            var backingObject = vm.BackingObject;
+
+            if (backingObject is ScreenSave asScreen)
+                GumState.Self.SelectedState.SelectedElement = asScreen;
+            else if (backingObject is ComponentSave asComponent)
+                GumState.Self.SelectedState.SelectedElement = asComponent;
+            else if (backingObject is StandardElementSave asStandard)
+                GumState.Self.SelectedState.SelectedElement = asStandard;
+
+            searchTextBox.Text = null;
+            FilterText = null;
+        }
+
+
+        #endregion
+
 
         internal void HandleMouseOver(int x, int y)
         {
