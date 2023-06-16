@@ -19,7 +19,8 @@ using System.Runtime.CompilerServices;
 //using System.Windows.Controls;
 //using System.Windows;
 using Grid = System.Windows.Controls.Grid;
-
+using Gum.Mvvm;
+using Microsoft.Xna.Framework.Media;
 
 namespace Gum.Managers
 {
@@ -99,6 +100,10 @@ namespace Gum.Managers
         TreeNode mStandardElementsTreeNode;
         TreeNode mBehaviorsTreeNode;
 
+        System.Windows.Controls.ListBox FlatList;
+        System.Windows.Forms.Integration.WindowsFormsHost TreeViewHost;
+
+
         /// <summary>
         /// Used to store off what was previously selected
         /// when the tree view refreshes itself - so the user
@@ -161,59 +166,83 @@ namespace Gum.Managers
                 if(value != filterText)
                 {
                     filterText = value;
-
-                    var shouldExpand = false;
-
-                    if(!string.IsNullOrEmpty(filterText))
-                    {
-                        if(expandedStateBeforeFilter == null)
-                        {
-                            expandedStateBeforeFilter = new ExpandedState();
-                            expandedStateBeforeFilter.Record(mScreensTreeNode);
-                            expandedStateBeforeFilter.Record(mComponentsTreeNode);
-                            expandedStateBeforeFilter.Record(mStandardElementsTreeNode);
-                            expandedStateBeforeFilter.Record(mBehaviorsTreeNode);
-
-                        }
-                        shouldExpand = true;
-                    }
-
-                    RefreshUi();
-
-                    if(!string.IsNullOrEmpty(filterText) && SelectedNode?.Tag == null)
-                    {
-                        SelectFirstElement();
-                    }
-
-                    if(shouldExpand)
-                    {
-                        expandedStateBeforeFilter.ExpandAll();
-                    }
-
-                    //do this after refreshing the UI or else the tree nodes won't expand
-                    if(string.IsNullOrEmpty(filterText))
-                    {
-                        List<TreeNode> nodesToKeepExpanded = new List<TreeNode>();
-
-                        var node = SelectedNode;
-
-                        while(node != null)
-                        {
-                            nodesToKeepExpanded.Add(node);
-                            node = node.Parent;
-                        }
-
-                        if(expandedStateBeforeFilter != null)
-                        {
-                            expandedStateBeforeFilter.Apply();
-                            expandedStateBeforeFilter = null;
-                        }
-
-                        SelectedNode?.EnsureVisible();
-                    }
+                    ReactToFilterTextChanged();
 
                 }
             }
+        }
+
+        private void ReactToFilterTextChanged()
+        {
+            var shouldExpand = false;
+
+            if (!string.IsNullOrEmpty(filterText))
+            {
+                shouldExpand = true;
+            }
+
+            FlatList.Visibility = shouldExpand.ToVisibility();
+            TreeViewHost.Visibility = (!shouldExpand).ToVisibility();
+
+            //RefreshUi();
+
+            if (!string.IsNullOrEmpty(filterText) && SelectedNode?.Tag == null)
+            {
+                //SelectFirstElement();
+            }
+
+            var filterTextLower = filterText.ToLower();
+
+            if(shouldExpand)
+            {
+                FlatList.Items.Clear();
+
+                var project = GumState.Self.ProjectState.GumProjectSave;
+                foreach (var screen in project.Screens)
+                {
+                    if(screen.Name.ToLower().Contains(filterTextLower))
+                    {
+                        FlatList.Items.Add(screen);
+                    }
+                }
+                foreach(var component in project.Components)
+                {
+                    if(component.Name.ToLower().Contains(filterTextLower))
+                    {
+                        FlatList.Items.Add(component);
+                    }
+                }
+                foreach(var standard in project.StandardElements)
+                {
+                    if(standard.Name.ToLower().Contains(filterTextLower))
+                    {
+                        FlatList.Items.Add(standard);
+                    }
+                }
+
+            }
+            
+            //do this after refreshing the UI or else the tree nodes won't expand
+            //if (string.IsNullOrEmpty(filterText))
+            //{
+            //    List<TreeNode> nodesToKeepExpanded = new List<TreeNode>();
+
+            //    var node = SelectedNode;
+
+            //    while (node != null)
+            //    {
+            //        nodesToKeepExpanded.Add(node);
+            //        node = node.Parent;
+            //    }
+
+            //    if (expandedStateBeforeFilter != null)
+            //    {
+            //        expandedStateBeforeFilter.Apply();
+            //        expandedStateBeforeFilter = null;
+            //    }
+
+            //    SelectedNode?.EnsureVisible();
+            //}
         }
 
         private void SelectFirstElement()
@@ -457,10 +486,10 @@ namespace Gum.Managers
 
             ObjectTreeView.Dock = DockStyle.Fill;
             //panel.Controls.Add(ObjectTreeView);
-            var treeViewHost = new System.Windows.Forms.Integration.WindowsFormsHost();
-            treeViewHost.Child = ObjectTreeView;
-            Grid.SetRow(treeViewHost, 1);
-            grid.Children.Add(treeViewHost);
+            TreeViewHost = new System.Windows.Forms.Integration.WindowsFormsHost();
+            TreeViewHost.Child = ObjectTreeView;
+            Grid.SetRow(TreeViewHost, 1);
+            grid.Children.Add(TreeViewHost);
 
 
             var searchBarUi = CreateSearchBoxUi();
@@ -469,14 +498,24 @@ namespace Gum.Managers
             Grid.SetRow(searchBarHost, 0);
             grid.Children.Add(searchBarHost);
 
-            //var flatSearchList = CreateFlatSearchList();
-            //panel.Controls.Add(flatSearchList);
+            FlatList = CreateFlatSearchList();
+            FlatList.HorizontalAlignment = System.Windows.HorizontalAlignment.Stretch;
+            FlatList.VerticalAlignment = System.Windows.VerticalAlignment.Stretch;
+
+            Grid.SetRow(FlatList, 1);
+            grid.Children.Add(FlatList);
 
 
 
             //GumCommands.Self.GuiCommands.AddControl(panel, "Project", TabLocation.Left);
         }
 
+        private System.Windows.Controls.ListBox CreateFlatSearchList()
+        {
+            var list = new System.Windows.Controls.ListBox();
+
+            return list;
+        }
 
         internal void FocusSearch()
         {

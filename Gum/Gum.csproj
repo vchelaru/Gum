@@ -320,8 +320,8 @@
     <Compile Include="PropertyGridHelpers\Converters\AvailableGuidesTypeConverter.cs" />
     <Compile Include="Input\CursorExtensionMethods.cs" />
     <Compile Include="Managers\DragDropManager.cs" />
-    <Compile Include="Managers\ElementTreeViewManager.cs" />
-    <Compile Include="Managers\ElementTreeViewManager.RightClick.cs" />
+    <Compile Include="Plugins\InternalPlugins\TreeView\ElementTreeViewManager.cs" />
+    <Compile Include="Plugins\InternalPlugins\TreeView\ElementTreeViewManager.RightClick.cs" />
     <Compile Include="Managers\MenuStripManager.cs" />
     <Compile Include="Managers\ObjectFinder.cs" />
     <Compile Include="Plugins\InternalPlugins\VariableGrid\PropertyGridManager.cs" />
