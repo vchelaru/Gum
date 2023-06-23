@@ -498,6 +498,7 @@ namespace RenderingLibrary.Graphics
 
                 if(newValue != mFontScale)
                 {
+                    mFontScale = newValue;
                     UpdateWrappedText();
                     mNeedsBitmapFontRefresh = true;
                     UpdatePreRenderDimensions();
