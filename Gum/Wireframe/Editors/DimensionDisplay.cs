@@ -84,6 +84,8 @@ namespace Gum.Wireframe.Editors
 
         }
 
+        #region Activity
+
         public void Activity(GraphicalUiElement objectToUpdateTo, WidthOrHeight widthOrHeight)
         {
             var asIpso = objectToUpdateTo as IRenderableIpso;
@@ -110,7 +112,7 @@ namespace Gum.Wireframe.Editors
             if(widthOrHeight == WidthOrHeight.Width)
             {
                 string suffix = null;
-                switch(objectToUpdateTo.WidthUnits)
+                switch (objectToUpdateTo.WidthUnits)
                 {
                     case DataTypes.DimensionUnitType.MaintainFileAspectRatio:
                         suffix = " File Aspect Ratio";
@@ -138,9 +140,9 @@ namespace Gum.Wireframe.Editors
                 middleLine.SetPosition(topLeft + rotatedUpDirection * fromBodyOffset);
                 middleLine.RelativePoint = rotatedRightDirection * absoluteWidth;
 
-                if(suffix != null)
+                if (suffix != null)
                 {
-                    dimensionDisplayText.RawText = $"{objectToUpdateTo.Width:0.0}{suffix}\n({absoluteWidth:0.0} px)"; 
+                    dimensionDisplayText.RawText = $"{objectToUpdateTo.Width:0.0}{suffix}\n({absoluteWidth:0.0} px)";
 
                 }
                 else
@@ -148,10 +150,14 @@ namespace Gum.Wireframe.Editors
                     dimensionDisplayText.RawText = absoluteWidth.ToString("0.0");
                 }
 
-                dimensionDisplayText.SetPosition(
-                    topLeft + 
-                    rotatedUpDirection * (fromBodyOffset + extraTextOffset + dimensionDisplayText.WrappedTextHeight) + 
-                    rotatedRightDirection * (-dimensionDisplayText.WrappedTextWidth/2 + absoluteWidth/2)  );
+                var desiredPosition =
+                    topLeft +
+                    rotatedUpDirection * (fromBodyOffset + extraTextOffset + dimensionDisplayText.WrappedTextHeight) +
+                    rotatedRightDirection * (-dimensionDisplayText.WrappedTextWidth / 2 + absoluteWidth / 2);
+
+                desiredPosition = ClampPositionToCamera(desiredPosition);
+
+                dimensionDisplayText.SetPosition(desiredPosition);
                 //dimensionDisplayText.X = middleLine.X + absoluteWidth / 2.0f - dimensionDisplayText.WrappedTextWidth / 2.0f;
                 //dimensionDisplayText.Y = top - fromBodyOffset - dimensionDisplayText.WrappedTextHeight;
                 dimensionDisplayText.HorizontalAlignment = HorizontalAlignment.Center;
@@ -208,10 +214,17 @@ namespace Gum.Wireframe.Editors
                     dimensionDisplayText.RawText = absoluteHeight.ToString("0.0");
                 }
 
-                var dimensionDisplayPosition = topLeft + rotatedDownDirection * .5f * absoluteHeight + rotatedLeftDirection * (fromBodyOffset + extraTextOffset);
+                var desiredPosition = topLeft + rotatedDownDirection * .5f * absoluteHeight + rotatedLeftDirection * (fromBodyOffset + extraTextOffset);
 
-                dimensionDisplayText.X = dimensionDisplayPosition.X - dimensionDisplayText.WrappedTextWidth;
-                dimensionDisplayText.Y = dimensionDisplayPosition.Y - dimensionDisplayText.WrappedTextHeight / 2.0f;
+                desiredPosition.X = desiredPosition.X - dimensionDisplayText.WrappedTextWidth;
+                desiredPosition.Y = desiredPosition.Y - dimensionDisplayText.WrappedTextHeight / 2.0f;
+
+                desiredPosition = ClampPositionToCamera(desiredPosition);
+
+
+
+                dimensionDisplayText.Position = desiredPosition;
+
                 dimensionDisplayText.VerticalAlignment = VerticalAlignment.Center;
 
                 endCap1.SetPosition(middleLine.GetPosition() + rotatedLeftDirection * endCapLength / 2.0f);
@@ -221,8 +234,36 @@ namespace Gum.Wireframe.Editors
                 endCap2.RelativePoint = rotatedRightDirection * endCapLength;
             }
 
+            Vector2 ClampPositionToCamera(Vector2 desiredPosition)
+            {
+                var camera = systemManagers.Renderer.Camera;
+
+                if (desiredPosition.X + dimensionDisplayText.WrappedTextWidth > camera.AbsoluteRight)
+                {
+                    desiredPosition.X = camera.AbsoluteRight - dimensionDisplayText.WrappedTextWidth;
+                }
+
+                const float rulerPadding = 12;
+
+                if (desiredPosition.X < camera.AbsoluteLeft + rulerPadding)
+                {
+                    desiredPosition.X = camera.AbsoluteLeft + rulerPadding;
+                }
+
+                if (desiredPosition.Y < camera.AbsoluteTop + rulerPadding)
+                {
+                    desiredPosition.Y = camera.AbsoluteTop + rulerPadding;
+                }
+                if (desiredPosition.Y + dimensionDisplayText.WrappedTextHeight > camera.AbsoluteBottom)
+                {
+                    desiredPosition.Y = camera.AbsoluteBottom - dimensionDisplayText.WrappedTextHeight;
+                }
+
+                return desiredPosition;
+            }
 
 
+            #endregion
 
         }
     }
