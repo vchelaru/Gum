@@ -629,7 +629,7 @@ namespace RenderingLibrary.Graphics
                     point.X = scaleX * (requiredWidth - widths[lineNumber]) / 2;
                 }
 
-
+                
                 foreach (char c in line)
                 {
                     FloatRectangle destRect;
@@ -656,8 +656,8 @@ namespace RenderingLibrary.Graphics
                     else
                     {
                         // position:
-                        destRect.X += xOffsetAsInt;
-                        destRect.Y += yOffsetAsInt;
+                        destRect.X += xOffsetAsInt + Camera.PixelPerfectOffsetX / spriteRenderer.CurrentZoom;
+                        destRect.Y += yOffsetAsInt + Camera.PixelPerfectOffsetY / spriteRenderer.CurrentZoom;
 
                         var position = new Vector2(destRect.X, destRect.Y);
 

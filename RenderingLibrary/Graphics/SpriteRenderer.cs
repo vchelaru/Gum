@@ -211,7 +211,13 @@ namespace RenderingLibrary.Graphics
                     // set this before setting the overriding zoom
                     CurrentZoom = zoom;
                     zoom = Renderer.UseBasicEffectRendering ? 1 : zoom;
-                    matrix = Camera.GetTransformationMatrix(camera.X, camera.Y, zoom, camera.ClientWidth, camera.ClientHeight, forRendering:true);
+                    matrix = Camera.GetTransformationMatrix(
+                        camera.X, 
+                        camera.Y, 
+                        zoom, 
+                        camera.ClientWidth, 
+                        camera.ClientHeight, 
+                        forRendering:true);
                 }
             }
             else

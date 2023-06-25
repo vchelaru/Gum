@@ -148,6 +148,9 @@ namespace RenderingLibrary
             }
         }
 
+        public static float PixelPerfectOffsetX = .5f;
+        public static float PixelPerfectOffsetY = .5f;
+
 
         public int ClientWidth
         {
@@ -203,8 +206,8 @@ namespace RenderingLibrary
             if (CameraCenterOnScreen == RenderingLibrary.CameraCenterOnScreen.Center)
             {
                 // make local vars to make stepping in faster if debugging
-                var x = X;
-                var y = Y;
+                var x = X + PixelPerfectOffsetX / Zoom;
+                var y = Y + PixelPerfectOffsetY / Zoom;
                 var zoom = Zoom;
                 var width = ClientWidth;
                 var height = ClientHeight;
@@ -212,7 +215,7 @@ namespace RenderingLibrary
             }
             else
             {
-                return Matrix.CreateTranslation(-X,-Y,0) *
+                return Matrix.CreateTranslation(-(X + PixelPerfectOffsetX / Zoom),-(Y + PixelPerfectOffsetY / Zoom),0) *
                                          Matrix.CreateScale(new Vector3(Zoom, Zoom, 1));
             }
         }
