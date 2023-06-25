@@ -656,8 +656,8 @@ namespace RenderingLibrary.Graphics
                     else
                     {
                         // position:
-                        destRect.X += xOffsetAsInt + Camera.PixelPerfectOffsetX / spriteRenderer.CurrentZoom;
-                        destRect.Y += yOffsetAsInt + Camera.PixelPerfectOffsetY / spriteRenderer.CurrentZoom;
+                        destRect.X += xOffsetAsInt;
+                        destRect.Y += yOffsetAsInt;
 
                         var position = new Vector2(destRect.X, destRect.Y);
 

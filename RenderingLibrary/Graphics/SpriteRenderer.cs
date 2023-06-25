@@ -312,6 +312,14 @@ namespace RenderingLibrary.Graphics
             {
                 basicEffect.FogColor = new Vector3(color.R/255, color.G/255, color.B/255f);
             }
+
+            // adjust offsets according to zoom
+            float x = ((int)(position.X * CurrentZoom) + Camera.PixelPerfectOffsetX)/CurrentZoom;
+            float y = ((int)(position.Y * CurrentZoom) + Camera.PixelPerfectOffsetY)/CurrentZoom;
+
+            position.X = x;
+            position.Y = y;
+
             mSpriteBatch.Draw(textureToUse, position, sourceRectangle, color, rotation, origin, scale, effects, depth, objectRequestingChange);
         }
 
