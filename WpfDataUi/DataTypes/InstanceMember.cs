@@ -168,16 +168,26 @@ namespace WpfDataUi.DataTypes
 
         }
 
+
+        bool forcedReadOnly;
         /// <summary>
-        /// Gets whether the member is read-only. This is true if the member is undefined, 
+        /// Whether the member is read-only. If not explicitly set, this is true if the member is undefined, 
         /// if the property is readonly on the member (obtained through reflection), or if the 
         /// CustomSetEvent is null
         /// </summary>
         public virtual bool IsReadOnly 
         {
+            set
+            {
+                forcedReadOnly = value;
+            }
             get
             {
-                if (!IsDefined)
+                if(forcedReadOnly)
+                {
+                    return true;
+                }
+                else if (!IsDefined)
                 {
                     return false;
                 }
