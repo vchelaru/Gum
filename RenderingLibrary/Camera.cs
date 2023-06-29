@@ -150,9 +150,13 @@ namespace RenderingLibrary
 
         // for open gl (desktop gl) this should be 0
         // for DirectX it should be 0.5 I believe....
+#if DIRECTX_RENDERING
+        public static float PixelPerfectOffsetX = .5f;
+        public static float PixelPerfectOffsetY = .5f;
+#else
         public static float PixelPerfectOffsetX = .0f;
         public static float PixelPerfectOffsetY = .0f;
-
+#endif
 
         public int ClientWidth
         {
@@ -191,7 +195,7 @@ namespace RenderingLibrary
             set;
         }
 
-        #endregion
+#endregion
 
         #region Methods
 
@@ -205,20 +209,45 @@ namespace RenderingLibrary
 
         public Matrix GetTransformationMatrix(bool forRendering = false)
         {
+
+            var x = X;
+            var y = Y;
+            var zoom = Zoom;
+            var width = ClientWidth;
+            var height = ClientHeight;
+
+            //var effectiveX = x;
+            //var effectiveY = y;
+            //if(CameraCenterOnScreen != RenderingLibrary.CameraCenterOnScreen.Center)
+            //{
+            //    effectiveX = x + width / (2.0f * zoom);
+            //    effectiveY = y + height / (2.0f * zoom);
+            //}
+
+            //effectiveX = ((int)(effectiveX * zoom)) / zoom;
+            //effectiveY = ((int)(effectiveY * zoom)) / zoom;
+
+            //return Camera.GetTransformationMatrix(effectiveX, effectiveY, zoom, width, height, forRendering);
+            x = ((int)(x * zoom)) / zoom;
+            y = ((int)(y * zoom)) / zoom;
+
             if (CameraCenterOnScreen == RenderingLibrary.CameraCenterOnScreen.Center)
             {
+                if(ClientWidth % 2 == 1)
+                {
+                    x += .5f / zoom;
+                }
+                if(ClientHeight % 2 == 1)
+                {
+                    y += .5f / zoom;
+                }
                 // make local vars to make stepping in faster if debugging
-                var x = X;
-                var y = Y;
-                var zoom = Zoom;
-                var width = ClientWidth;
-                var height = ClientHeight;
                 return Camera.GetTransformationMatrix(x, y, zoom, width, height, forRendering);
             }
             else
             {
-                return Matrix.CreateTranslation(-(X),-(Y),0) *
-                                         Matrix.CreateScale(new Vector3(Zoom, Zoom, 1));
+                return Matrix.CreateTranslation(-x, -y, 0) *
+                                         Matrix.CreateScale(new Vector3(zoom, zoom, 1));
             }
         }
 

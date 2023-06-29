@@ -245,6 +245,8 @@ namespace RenderingLibrary.Math.Geometry
                     textureToUse.Width * repetitions, 
                     textureToUse.Height);
 
+                var scale =
+                    new Vector2(distance / ((float)repetitions * textureToUse.Width), LinePixelWidth / renderer.CurrentZoom);
                 // stretch the pixel between the two vectors
                 spriteRenderer.Draw(textureToUse,
                     offset + Position + vector1,
@@ -252,7 +254,7 @@ namespace RenderingLibrary.Math.Geometry
                     Color,
                     angle,
                     Vector2.Zero,
-                    new Vector2(distance / ((float)repetitions * textureToUse.Width), LinePixelWidth / renderer.CurrentZoom),
+                    scale,
                     SpriteEffects.None,
                     Depth,
                     this);

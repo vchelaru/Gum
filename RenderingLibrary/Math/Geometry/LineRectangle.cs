@@ -286,7 +286,7 @@ namespace RenderingLibrary.Math.Geometry
                 textureToUse = renderer.DottedLineTexture;
             }
 
-            linePrimitive.Render(spriteRenderer, managers, textureToUse, .2f * renderer.Camera.Zoom);
+            linePrimitive.Render(spriteRenderer, managers, textureToUse, .25f * renderer.Camera.Zoom);
         }
 
         #endregion

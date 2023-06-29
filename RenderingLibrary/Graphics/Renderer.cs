@@ -233,6 +233,7 @@ namespace RenderingLibrary.Graphics
             mSinglePixelTexture.Name = "Rendering Library Single Pixel Texture";
 
             mDottedLineTexture = new Texture2D(mGraphicsDevice, 2, 1, false, SurfaceFormat.Color);
+            mDottedLineTexture.Name = "Renderer Dotted Line Texture";
             pixels = new Color[2];
             pixels[0] = Color.White;
             pixels[1] = Color.Transparent;

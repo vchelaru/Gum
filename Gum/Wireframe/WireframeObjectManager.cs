@@ -153,6 +153,7 @@ namespace Gum.Wireframe
             }
 
             Texture2D texture = imageData.ToTexture2D(false);
+            texture.Name = "Background Checkerboard";
             BackgroundSprite = new Sprite(texture);
             BackgroundSprite.Name = "Background checkerboard Sprite";
             BackgroundSprite.Wrap = true;
