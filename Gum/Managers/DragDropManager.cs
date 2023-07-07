@@ -279,7 +279,7 @@ namespace Gum.Managers
             }
             else if (targetTag is InstanceSave)
             {
-                // The user dropped it on an instance save, but he likely meant to drop
+                // The user dropped it on an instance save, but likely meant to drop
                 // it as an object under the current element.
 
                 InstanceSave targetInstance = targetTag as InstanceSave;
@@ -614,17 +614,11 @@ namespace Gum.Managers
                 {
                     // setting the parent:
                     parentName = targetInstance.Name;
+                    string defaultChild = GetDefaultChild(targetInstance);
 
-                    // check if the target instance is a ComponentSave. If so, use the RecursiveVariableFinder to get its DefaultChildContainer property
-                    var targetInstanceComponent = ObjectFinder.Self.GetComponent(targetInstance);
-                    if ( targetInstanceComponent != null)
+                    if (!string.IsNullOrEmpty(defaultChild))
                     {
-                        var recursiveVariableFinder = new RecursiveVariableFinder(SelectedState.Self.SelectedStateSave);
-                        var defaultChild = recursiveVariableFinder.GetValue<string>($"{targetInstance.Name}.{nameof(ComponentSave.DefaultChildContainer)}");
-                        if (!string.IsNullOrEmpty(defaultChild))
-                        {
-                            parentName += "." + defaultChild;
-                        }
+                        parentName += "." + defaultChild;
                     }
 
                 }
@@ -643,6 +637,37 @@ namespace Gum.Managers
                 SetVariableLogic.Self.PropertyValueChanged("Parent", oldValue, dragDroppedInstance);
                 targetTreeNode?.Expand();
             }
+        }
+
+        private static string GetDefaultChild(InstanceSave targetInstance, StateSave stateSave = null)
+        {
+            string defaultChild = null;
+            // check if the target instance is a ComponentSave. If so, use the RecursiveVariableFinder to get its DefaultChildContainer property
+            var targetInstanceComponent = ObjectFinder.Self.GetComponent(targetInstance);
+            if (targetInstanceComponent != null)
+            {
+                stateSave = stateSave ?? SelectedState.Self.SelectedStateSave;
+                var recursiveVariableFinder = new RecursiveVariableFinder(stateSave);
+                defaultChild = recursiveVariableFinder.GetValue<string>($"{targetInstance.Name}.{nameof(ComponentSave.DefaultChildContainer)}");
+
+                if(defaultChild != null)
+                {
+                    var instanceInComponent = targetInstanceComponent.GetInstance(defaultChild);
+
+                    if(instanceInComponent != null)
+                    {
+                        var innerChild = GetDefaultChild(instanceInComponent, targetInstanceComponent.DefaultState);
+
+                        if(!string.IsNullOrEmpty(innerChild))
+                        {
+                            defaultChild += "." + innerChild;
+                        }
+                    }
+                }
+
+            }
+
+            return defaultChild;
         }
 
         internal void ClearDraggedItem()
