@@ -159,7 +159,13 @@ namespace CodeOutputPlugin.Manager
             VisualApi childVisualApi = CodeGenerator.GetVisualApiForInstance(instance, element);
             if (newParent != null)
             {
-                parentVisualApi = CodeGenerator.GetVisualApiForInstance(newParent, element, considerDefaultContainer:true);
+                var elementContainingInstance = element;
+                if(element.Instances.Contains(newParent) == false)
+                {
+                    elementContainingInstance = newParent.ParentContainer;
+                }
+
+                parentVisualApi = CodeGenerator.GetVisualApiForInstance(newParent, elementContainingInstance, considerDefaultContainer:true);
             }
             else
             {

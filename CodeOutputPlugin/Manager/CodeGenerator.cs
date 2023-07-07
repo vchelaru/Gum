@@ -21,6 +21,7 @@ using System.Windows.Media.Animation;
 using System.Xml.Linq;
 using ToolsUtilities;
 using static System.Windows.Forms.AxHost;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace CodeOutputPlugin.Manager
 {
@@ -1347,8 +1348,10 @@ namespace CodeOutputPlugin.Manager
             context.Instance = instance;
 
             var parentValue = parentVariable?.Value as string;
-            var hasParent = parentValue != null &&
-                ObjectFinder.Self.GetInstanceRecursively(container, parentValue) != null;
+            var parentInstance = parentValue != null
+                ? ObjectFinder.Self.GetInstanceRecursively(container, parentValue)
+                : (InstanceSave)null;
+            var hasParent = parentInstance != null;
                 //container.GetInstance(parentValue) != null;
 
             if (hasParent)
@@ -2680,9 +2683,9 @@ namespace CodeOutputPlugin.Manager
             }
         }
 
-        public static VisualApi GetVisualApiForInstance(InstanceSave instance, ElementSave element, bool considerDefaultContainer = false)
+        public static VisualApi GetVisualApiForInstance(InstanceSave instance, ElementSave elementContainingInstance, bool considerDefaultContainer = false)
         {
-            var defaultState = element.DefaultState;
+            var defaultState = elementContainingInstance.DefaultState;
 
             var isXamarinFormsControlVariable =
                 $"{instance.Name}.IsXamarinFormsControl";
@@ -3418,7 +3421,14 @@ namespace CodeOutputPlugin.Manager
                 var parentName = variable.Value as string;
 
                 var hasContent = false;
+
+
                 var parentInstance = container.GetInstance(parentName);
+                if(parentName?.Contains(".") == true)
+                {
+                    var parentNameBeforeDot = parentName.Substring(0, parentName.IndexOf("."));
+                    parentInstance = container.GetInstance(parentNameBeforeDot);
+                }
 
                 if (parentInstance != null)
                 {
@@ -3454,7 +3464,22 @@ namespace CodeOutputPlugin.Manager
                     // a single content. In the future we may want to formalize the way we
                     // handle standard XamarinForms controls, but for now we'll hardcode some
                     // checks:
-                    if (hasContent)
+                    if(IsTabControl(parentInstance))
+                    {
+                        var stringBuilder = new StringBuilder();
+                        var tabs = "";
+                        stringBuilder.AppendLine($"{tabs}{{");
+                        tabs += new String(' ', 4);
+
+                        stringBuilder.AppendLine($"{tabs}var tabItem = new Xamarin.CommunityToolkit.UI.Views.TabViewItem();");
+                        stringBuilder.AppendLine($"{tabs}tabItem.Text = \"Tab Text\";");
+                        stringBuilder.AppendLine($"{tabs}tabItem.Content = {context.Instance.Name};");
+                        stringBuilder.AppendLine($"{tabs}{parentInstance.Name}.TabItems.Add(tabItem);");
+                        tabs = tabs.Substring(4);
+                        stringBuilder.AppendLine($"{tabs}}}");
+                        return stringBuilder.ToString();
+                    }
+                    else if (hasContent)
                     {
                         return $"{parentName}.Content = {context.Instance.Name};";
                     }
@@ -3694,6 +3719,13 @@ namespace CodeOutputPlugin.Manager
         }
 
         #region Utilities
+
+        private static bool IsTabControl(InstanceSave instance)
+        {
+            // for now we'll hardcode to StyledTabView, but it would be good to expand this for projects that don't use the "Styled" convention
+            var baseType = instance.BaseType;
+            return baseType?.EndsWith("/StyledTabView") == true;
+        }
 
         private static string ToTabs(int tabCount) => new string(' ', tabCount * 4);
 

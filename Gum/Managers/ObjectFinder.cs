@@ -464,6 +464,36 @@ namespace Gum.Managers
             return null;
         }
 
+        public ElementSave GetContainerOf(InstanceSave instance)
+        {
+            if(GumProjectSave != null)
+            {
+                foreach(var screen in GumProjectSave.Screens)
+                {
+                    if(screen.Instances.Contains(instance))
+                    {
+                        return screen;
+                    }
+                }
+                foreach (var component in GumProjectSave.Components)
+                {
+                    if (component.Instances.Contains(instance))
+                    {
+                        return component;
+                    }
+                }
+                // Standard elements don't have instances... for now?
+                //foreach (var standardElement in GumProjectSave.StandardElements)
+                //{
+                //    if (standardElement.Instances.Contains(instance))
+                //    {
+                //        return standardElement;
+                //    }
+                //}
+            }
+            return null;
+        }
+
         public List<ElementSave> GetElementsReferencing(BehaviorSave behavior)
         {
             List<ElementSave> referencingElements = new List<ElementSave>();
@@ -486,6 +516,7 @@ namespace Gum.Managers
 
             return referencingElements;
         }
+
 
         #endregion
 
