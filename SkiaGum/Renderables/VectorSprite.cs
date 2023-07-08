@@ -186,16 +186,23 @@ namespace SkiaGum
 
                 //canvas.DrawRect(placeholder, new SKPaint() { Color = SKColors.Orange });
 
-
-
                 // April 21, 2023
                 // SVGs like the google fit SVG do not render correctly. Not sure why...
                 // going to put a clip:
-                canvas.Save();
-                var clipRect = new SKRect(this.GetAbsoluteX(), this.GetAbsoluteY(),
-                    this.GetAbsoluteX() + textureBox.Width * scaleX,
-                    this.GetAbsoluteY() + textureBox.Height * scaleY);
-                canvas.ClipRect(clipRect);
+                // July 7, 2023
+                // If we clip, then rotation won't work. We'd have to do a rotated rectangle
+                // I think the SVG rendering in April 21 was using the old SVG rendering (maybe?)
+                // so going to check if rotation is not 0
+                var shouldClip = Rotation == 0;
+                if (shouldClip)
+                {
+                    canvas.Save();
+                    var clipRect = new SKRect(this.GetAbsoluteX(), this.GetAbsoluteY(),
+                        this.GetAbsoluteX() + textureBox.Width * scaleX,
+                        this.GetAbsoluteY() + textureBox.Height * scaleY);
+                    canvas.ClipRect(clipRect);
+
+                }
                 {
                     // Currently this supports "multiply". Other color operations could be supported...
                     if (Color.Red != 255 || Color.Green != 255 || Color.Blue != 255 || Color.Alpha != 255)
@@ -224,7 +231,10 @@ namespace SkiaGum
                         canvas.DrawPicture(Texture.Picture, ref result);
                     }
                 }
-                canvas.Restore();
+                if (shouldClip)
+                {
+                    canvas.Restore();
+                }
             }
         }
 #else
