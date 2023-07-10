@@ -66,6 +66,7 @@ namespace WpfDataUi
                 typeof(CheckBoxDisplay))
                 );
 
+
             mTypeDisplayerAssociation.Add(new KeyValuePair<Func<Type, bool>, Type>(
                 (item) => item == typeof(bool?),
                 typeof(NullableBoolDisplay))

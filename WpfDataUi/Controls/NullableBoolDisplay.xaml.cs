@@ -60,6 +60,8 @@ namespace WpfDataUi.Controls
         public NullableBoolDisplay()
         {
             InitializeComponent();
+
+            this.RefreshContextMenu(GroupBox.ContextMenu);
         }
 
 

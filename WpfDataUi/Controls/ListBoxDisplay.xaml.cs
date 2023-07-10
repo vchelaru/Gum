@@ -84,7 +84,8 @@ namespace WpfDataUi.Controls
         public ApplyValueResult TryGetValueOnUi(out object result)
         {
             // todo - need to make this more flexible, but for now let's just support strings:
-            if(InstanceMember?.PropertyType == typeof(List<string>))
+            var propertyType = InstanceMember?.PropertyType;
+            if(propertyType == typeof(List<string>))
             {
                 var value = new List<string>();
 
@@ -97,6 +98,36 @@ namespace WpfDataUi.Controls
 
                 return ApplyValueResult.Success;
 
+            }
+            else if(propertyType == typeof(List<int>))
+            {
+                var value = new List<int>();
+
+                foreach(var item in ListBox.Items)
+                {
+                    if(int.TryParse(item?.ToString(), out int intResult))
+                    {
+                        value.Add(intResult);
+                    }
+                }
+
+                result = value;
+
+                return ApplyValueResult.Success;
+            }
+            // do the same as above, but this time for List<float>
+            else if(propertyType == typeof(List<float>))
+            {
+                var value = new List<float>();
+                foreach(var item in ListBox.Items)
+                {
+                    if(float.TryParse(item?.ToString(), out float floatResult))
+                    {
+                        value.Add(floatResult);
+                    }
+                }
+                result = value;
+                return ApplyValueResult.Success;
             }
             else
             {
@@ -111,6 +142,18 @@ namespace WpfDataUi.Controls
             {
                 var newList = new List<string>();
                 newList.AddRange(valueAsList);
+                ListBox.ItemsSource = newList;
+            }
+            else if(value is List<int> valueAsIntList)
+            {
+                var newList = new List<int>();
+                newList.AddRange(valueAsIntList);
+                ListBox.ItemsSource = newList;
+            }
+            else if(value is List<float> valueAsFloatList)
+            {
+                var newList = new List<float>();
+                newList.AddRange(valueAsFloatList);
                 ListBox.ItemsSource = newList;
             }
             else
@@ -179,7 +222,27 @@ namespace WpfDataUi.Controls
             var listToAddTo = ListBox.ItemsSource as IList;
             if (listToAddTo != null)
             {
-                listToAddTo.Add(text);
+                if(listToAddTo is List<string>)
+                {
+                    var list = listToAddTo as List<string>;
+                    list.Add(text);
+                }
+                else if (listToAddTo is List<int>)
+                {
+                    var list = listToAddTo as List<int>;
+                    if (int.TryParse(text, out int intResult))
+                    {
+                        list.Add(intResult);
+                    }
+                }
+                else if (listToAddTo is List<float>)
+                {
+                    var list = listToAddTo as List<float>;
+                    if (float.TryParse(text, out float floatResult))
+                    {
+                        list.Add(floatResult);
+                    }
+                }
             }
             NewTextBox.Text = null;
             NewEntryGrid.Visibility = Visibility.Collapsed;

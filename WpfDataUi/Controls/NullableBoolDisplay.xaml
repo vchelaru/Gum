@@ -7,6 +7,9 @@
              mc:Ignorable="d" 
              d:DesignWidth="200">
     <GroupBox x:Name="GroupBox">
+        <GroupBox.ContextMenu>
+            <ContextMenu></ContextMenu>
+        </GroupBox.ContextMenu>
         <StackPanel>
             <RadioButton x:Name="TrueRadioButton" Checked="TrueRadioButton_Checked">True</RadioButton>
             <RadioButton x:Name="FalseRadioButton" Checked="FalseRadioButton_Checked">False</RadioButton>
