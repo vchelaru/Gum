@@ -156,10 +156,20 @@ namespace SkiaGum.GueDeriving
         // June 15, 2023 - because it seems like we go directly to the Text object through TextRuntime rather than the underling
         // GUE. We could shift to using the underlying GUE but then we'd have to get rid of all properties like max number of lines, etc,
         // and have it all go through the GUE. For now, going to remove that to fix the bug.
-        public int FontSize
+        public new int FontSize
         {
             get => ContainedText.FontSize;
-            set => ContainedText.FontSize = value;
+            // July 10, 2023 - This is causing problems
+            // because the FontSize is not making it to the
+            // underyling object. I'm going to do both for now
+            // as a half-step to removing the usage of the ContainedText...
+            // or maybe we always use both?
+            //set => ContainedText.FontSize = value;
+            set
+            {
+                ContainedText.FontSize = value;
+                base.FontSize = value;
+            }
         }
 
         public TextRuntime (bool fullInstantiation = true)
