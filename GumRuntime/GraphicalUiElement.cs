@@ -2251,51 +2251,76 @@ namespace Gum.Wireframe
             }
             else
             {
+                // ratio depend on non-ratios to be set first, so we do those first:
                 for (int i = 0; i < this.Children.Count; i++)
                 {
                     var ipsoChild = this.Children[i];
 
                     if ((alreadyUpdated == null || alreadyUpdated.Contains(ipsoChild) == false) && ipsoChild is GraphicalUiElement child)
                     {
-                        var canDoFullUpdate =
-                            CanDoFullUpdate(child.GetChildLayoutType(this), child);
-
-
-                        if (canDoFullUpdate)
+                        if(child.WidthUnits != DimensionUnitType.Ratio && child.WidthUnits != DimensionUnitType.Ratio)
                         {
-                            child.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1);
-                            newlyUpdated?.Add(child);
-                        }
-                        else
-                        {
-                            // only update absolute layout, and the child has some relative values, but let's see if 
-                            // we can do only one axis:
-                            if (CanDoFullUpdate(child.GetChildLayoutType(XOrY.X, this), child))
-                            {
-                                // todo - maybe look at the code below to see if we need to do the same thing here for
-                                // width/height updates:
-                                child.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1, XOrY.X);
-                            }
-                            else if (CanDoFullUpdate(child.GetChildLayoutType(XOrY.Y, this), child))
-                            {
-                                // in this case, the child's Y is going to be updated, but the child's X may depend on 
-                                // the parent's width. If so, the parent's width should already be updated, so long as
-                                // the width doesn't depend on the children. So...let's see if that's the case:
-                                var widthDependencyType = this.WidthUnits.GetDependencyType();
-                                if(widthDependencyType != HierarchyDependencyType.DependsOnChildren && 
-                                    (child.HeightUnits == DimensionUnitType.PercentageOfOtherDimension) || (child.HeightUnits == DimensionUnitType.MaintainFileAspectRatio))
-                                {
-                                    child.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1);
-                                }
-                                else
-                                {
-                                    child.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1, XOrY.Y);
-
-                                }
-                            }
+                            UpdateChild(child);
                         }
                     }
                 }
+
+                for (int i = 0; i < this.Children.Count; i++)
+                {
+                    var ipsoChild = this.Children[i];
+                    if ((alreadyUpdated == null || alreadyUpdated.Contains(ipsoChild) == false) && ipsoChild is GraphicalUiElement child)
+                    {
+                        // now do the ratios:
+                        if (child.WidthUnits == DimensionUnitType.Ratio || child.WidthUnits == DimensionUnitType.Ratio)
+                        {
+                            UpdateChild(child);
+                        }
+                    }
+                }
+
+                void UpdateChild(GraphicalUiElement child)
+                {
+                    
+                    var canDoFullUpdate =
+                        CanDoFullUpdate(child.GetChildLayoutType(this), child);
+
+
+                    if (canDoFullUpdate)
+                    {
+                        child.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1);
+                        newlyUpdated?.Add(child);
+                    }
+                    else
+                    {
+                        // only update absolute layout, and the child has some relative values, but let's see if 
+                        // we can do only one axis:
+                        if (CanDoFullUpdate(child.GetChildLayoutType(XOrY.X, this), child))
+                        {
+                            // todo - maybe look at the code below to see if we need to do the same thing here for
+                            // width/height updates:
+                            child.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1, XOrY.X);
+                        }
+                        else if (CanDoFullUpdate(child.GetChildLayoutType(XOrY.Y, this), child))
+                        {
+                            // in this case, the child's Y is going to be updated, but the child's X may depend on 
+                            // the parent's width. If so, the parent's width should already be updated, so long as
+                            // the width doesn't depend on the children. So...let's see if that's the case:
+                            var widthDependencyType = this.WidthUnits.GetDependencyType();
+                            if (widthDependencyType != HierarchyDependencyType.DependsOnChildren &&
+                                (child.HeightUnits == DimensionUnitType.PercentageOfOtherDimension) || (child.HeightUnits == DimensionUnitType.MaintainFileAspectRatio))
+                            {
+                                child.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1);
+                            }
+                            else
+                            {
+                                child.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1, XOrY.Y);
+
+                            }
+                        }
+                    }
+                    
+                }
+
             }
         }
 
@@ -3361,6 +3386,12 @@ namespace Gum.Wireframe
                                 var childAbsoluteWidth = parentHeight * gue.Height;
                                 heightToSplit -= childAbsoluteWidth;
                             }
+                            // this depends on the sibling being updated before this:
+                            else if (gue.HeightUnits == DimensionUnitType.RelativeToChildren)
+                            {
+                                var childAbsoluteWidth = gue.GetAbsoluteHeight();
+                                heightToSplit -= childAbsoluteWidth;
+                            }
                             if (gue.Visible)
                             {
                                 numberOfVisibleChildren++;
@@ -3717,6 +3748,12 @@ namespace Gum.Wireframe
                             else if (gue.WidthUnits == DimensionUnitType.Percentage)
                             {
                                 var childAbsoluteWidth = parentWidth * gue.Width;
+                                widthToSplit -= childAbsoluteWidth;
+                            }
+                            // this depends on the sibling being updated before this:
+                            else if(gue.WidthUnits == DimensionUnitType.RelativeToChildren)
+                            {
+                                var childAbsoluteWidth = gue.GetAbsoluteWidth();
                                 widthToSplit -= childAbsoluteWidth;
                             }
 
