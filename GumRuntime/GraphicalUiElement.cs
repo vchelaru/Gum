@@ -31,7 +31,6 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Diagnostics.CodeAnalysis;
 using System.ComponentModel;
-using System.Xml.Linq;
 #if UWP
 using System.Reflection;
 #endif
