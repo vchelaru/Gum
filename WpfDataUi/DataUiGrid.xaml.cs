@@ -613,7 +613,7 @@ namespace WpfDataUi
                 shouldExcludeFromCustomOptions = false;
             }
             // They all have 
-            else if (membersToAdd.All(item => item.CustomOptions.Count == 0))
+            else if (membersToAdd.All(item => item.CustomOptions?.Count == 0))
             {
                 shouldExcludeFromCustomOptions = false;
             }

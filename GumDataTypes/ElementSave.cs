@@ -157,7 +157,7 @@ namespace Gum.DataTypes
 
         public void Save(string fileName)
         {
-#if WINDOWS_8 || UWP
+#if UWP
             throw new NotImplementedException();
 #else
             FileManager.XmlSerialize(this.GetType(), this, fileName);
