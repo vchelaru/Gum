@@ -2251,34 +2251,80 @@ namespace Gum.Wireframe
             }
             else
             {
-                // ratio depend on non-ratios to be set first, so we do those first:
+                // 7/17/2023 - Long explanation about this code:
+                // Normally children updating can be done in index order. However, if a child uses Ratio width or height, then the 
+                // height of this child depends on its siblings. Since it depends on its siblings, any sibling needs to update first 
+                // if it is using a complex WidthUnit or HeightUnit. All other update types (such as absolute) can be determined on the
+                // spot when calculating the width of the ratio child.
+                // Therefore, we will need to do all RelativeToChildren first if:
+                // * Some children use WidthUnits with Ratio, and some children use WidthUnits with RelativeToChildren
+                //   --or--
+                // 2. Any children use HeightUnits with Ratios, and some children use HeightUnits with RelativeToChildren
+                // If either is the case, then we will first update all children that have the relative properties. Then we'll loop through all of them
+                // Note about optimization - if children using relative all come first, then a normal order will satisfy the dependencies.
+                // But that makes the code slightly more complex, so I'll bother with that performance optimization later.
+
+                bool useRatioWidth = false;
+                bool useRatioHeight = false;
+                bool useRelativeChildrenWidth = false;
+                bool useRelativeChildrenHeight = false;
+
                 for (int i = 0; i < this.Children.Count; i++)
                 {
-                    var ipsoChild = this.Children[i];
+                    var child = this.Children[i] as GraphicalUiElement;
 
-                    if ((alreadyUpdated == null || alreadyUpdated.Contains(ipsoChild) == false) && ipsoChild is GraphicalUiElement child)
+                    useRatioWidth |= child.WidthUnits == DimensionUnitType.Ratio;
+                    useRatioHeight |= child.HeightUnits == DimensionUnitType.Ratio;
+
+                    useRelativeChildrenWidth |= child.WidthUnits == DimensionUnitType.RelativeToChildren;
+                    useRelativeChildrenHeight |= child.HeightUnits == DimensionUnitType.RelativeToChildren;
+                }
+
+                var shouldUpdateRelativeFirst = (useRatioWidth && useRelativeChildrenWidth) || (useRatioHeight && useRelativeChildrenHeight);
+
+                if(shouldUpdateRelativeFirst)
+                {
+                    for (int i = 0; i < this.Children.Count; i++)
                     {
-                        if(child.WidthUnits != DimensionUnitType.Ratio && child.WidthUnits != DimensionUnitType.Ratio)
+                        var ipsoChild = this.Children[i];
+
+                        if ((alreadyUpdated == null || alreadyUpdated.Contains(ipsoChild) == false) && ipsoChild is GraphicalUiElement child)
                         {
-                            UpdateChild(child);
+                            if(child.WidthUnits == DimensionUnitType.RelativeToChildren || child.HeightUnits == DimensionUnitType.RelativeToChildren)
+                            {
+                                UpdateChild(child, flagAsUpdated:false);
+                            }
+                        }
+                    }
+
+                    for (int i = 0; i < this.Children.Count; i++)
+                    {
+                        var ipsoChild = this.Children[i];
+
+                        if ((alreadyUpdated == null || alreadyUpdated.Contains(ipsoChild) == false) && ipsoChild is GraphicalUiElement child)
+                        {
+                            // now do all:
+                            UpdateChild(child, flagAsUpdated:true);
+                        }
+                    }
+                }
+                else
+                {
+                    // do a normal one:
+                    for (int i = 0; i < this.Children.Count; i++)
+                    {
+                        var ipsoChild = this.Children[i];
+
+                        if ((alreadyUpdated == null || alreadyUpdated.Contains(ipsoChild) == false) && ipsoChild is GraphicalUiElement child)
+                        {
+                            // now do all:
+                            UpdateChild(child, flagAsUpdated: true);
                         }
                     }
                 }
 
-                for (int i = 0; i < this.Children.Count; i++)
-                {
-                    var ipsoChild = this.Children[i];
-                    if ((alreadyUpdated == null || alreadyUpdated.Contains(ipsoChild) == false) && ipsoChild is GraphicalUiElement child)
-                    {
-                        // now do the ratios:
-                        if (child.WidthUnits == DimensionUnitType.Ratio || child.WidthUnits == DimensionUnitType.Ratio)
-                        {
-                            UpdateChild(child);
-                        }
-                    }
-                }
 
-                void UpdateChild(GraphicalUiElement child)
+                void UpdateChild(GraphicalUiElement child, bool flagAsUpdated)
                 {
                     
                     var canDoFullUpdate =
@@ -2288,7 +2334,10 @@ namespace Gum.Wireframe
                     if (canDoFullUpdate)
                     {
                         child.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1);
-                        newlyUpdated?.Add(child);
+                        if(flagAsUpdated)
+                        {
+                            newlyUpdated?.Add(child);
+                        }
                     }
                     else
                     {
