@@ -24,6 +24,35 @@ namespace Gum.Managers
             //    ' ' 
             };
 
+
+        public static HashSet<string> InvalidFileNames = new HashSet<string>
+        {
+            "con",
+            "prn",
+            "aux",
+            "nul",
+            "com0",
+            "com1",
+            "com2",
+            "com3",
+            "com4",
+            "com5",
+            "com6",
+            "com7",
+            "com8",
+            "com9",
+            "lpt0",
+            "lpt1",
+            "lpt2",
+            "lpt3",
+            "lpt4",
+            "lpt5",
+            "lpt6",
+            "lpt7",
+            "lpt8",
+            "lpt9",
+        };
+
         
         static NameVerifier mSelf;
 
@@ -53,6 +82,11 @@ namespace Gum.Managers
         {
             IsNameValidCommon(screenName, out whyNotValid);
 
+            if(string.IsNullOrEmpty(whyNotValid))
+            {
+                IsFileNameWindowsReserved(screenName, out whyNotValid);
+            }
+
             //if (string.IsNullOrEmpty(whyNotValid))
             //{
             //    IsNameValidVariable(screenName, out whyNotValid);
@@ -64,13 +98,16 @@ namespace Gum.Managers
             }
 
             return string.IsNullOrEmpty(whyNotValid);
-
         }
 
         public bool IsComponentNameValid(string componentName, string folderName, ComponentSave component, out string whyNotValid)
         {
             IsNameValidCommon(componentName, out whyNotValid);
 
+            if (string.IsNullOrEmpty(whyNotValid))
+            {
+                IsFileNameWindowsReserved(componentName, out whyNotValid);
+            }
             //if (string.IsNullOrEmpty(whyNotValid))
             //{
             //    IsNameValidVariable(componentName, out whyNotValid);
@@ -138,7 +175,12 @@ namespace Gum.Managers
         {
             IsNameValidCommon(behaviorName, out whyNotValid);
 
-            if(string.IsNullOrEmpty(whyNotValid))
+            if (string.IsNullOrEmpty(whyNotValid))
+            {
+                IsFileNameWindowsReserved(behaviorName, out whyNotValid);
+            }
+
+            if (string.IsNullOrEmpty(whyNotValid))
             {
                 // need to check for duplicate names eventually
             }
@@ -184,6 +226,15 @@ namespace Gum.Managers
             if (provider.IsValidIdentifier(name) == false)
             {
                 whyNotValid = "The name uses an invalid character";
+            }
+        }
+
+        private void IsFileNameWindowsReserved(string name, out string whyNotValid)
+        {
+            whyNotValid = null;
+            if (InvalidFileNames.Contains(name?.ToLower()))
+            {
+                whyNotValid = $"The name {name} is a reserved file name in Windows";
             }
         }
 
