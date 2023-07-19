@@ -109,6 +109,15 @@ namespace RenderingLibrary.Content
             mCachedDisposables.Add(name, disposable);
         }
 
+        public void Dispose(string name)
+        {
+            if(mCachedDisposables.ContainsKey(name))
+            {
+                mCachedDisposables[name].Dispose();
+                mCachedDisposables.Remove(name);
+            }
+        }
+
         public IDisposable GetDisposable(string name)
         {
             if (mCachedDisposables.ContainsKey(name))

@@ -25,7 +25,7 @@ namespace Gum.Managers
             };
 
 
-        public static HashSet<string> InvalidFileNames = new HashSet<string>
+        public static HashSet<string> InvalidWindowsFileNames = new HashSet<string>
         {
             "con",
             "prn",
@@ -232,7 +232,7 @@ namespace Gum.Managers
         private void IsFileNameWindowsReserved(string name, out string whyNotValid)
         {
             whyNotValid = null;
-            if (InvalidFileNames.Contains(name?.ToLower()))
+            if (InvalidWindowsFileNames.Contains(name?.ToLower()))
             {
                 whyNotValid = $"The name {name} is a reserved file name in Windows";
             }

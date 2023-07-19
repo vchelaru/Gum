@@ -84,6 +84,7 @@ namespace Gum.Managers
                             foreach (var state in selectedElement.AllStates)
                             {
                                 state.Variables.RemoveAll(item => item.SourceObject == instanceName);
+                                state.VariableLists.RemoveAll(item => item.SourceObject == instanceName);
                             }
 
 
