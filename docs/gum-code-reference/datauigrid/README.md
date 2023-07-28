@@ -6,6 +6,8 @@ The DataUiGrid is similar to Winforms PropertyGrid - a reflection-based UI objec
 
 It is included in the WpfDataUi.dll file which is part of Gum, so this library can be pulled out and used in any other application.
 
+The DataUiGrid can be used with reflection or its Categories can be manually populated. Using reflection is easier to set up, but does not provide as much flexibility. Manually building up Categories takes more work, but provide the most flexibility.
+
 ## Adding References
 
 The following references are needed for displaying the DataUiGrid:
@@ -29,6 +31,15 @@ Add the following inside a layout container (like a Grid):
 
 ```
 <WpfDataUi:DataUiGrid Name="DataGrid"></WpfDataUi:DataUiGrid>
+```
+
+## Adding a DataUiGrid in Code
+
+You can construct a grid in code just like any other WPF control.
+
+```
+var grid = new DataUiGrid();
+// add the grid to some layout object like a Grid or StackLayout...
 ```
 
 ## Using the grid in code
