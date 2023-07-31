@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -188,39 +189,58 @@ namespace WpfDataUiCore.Controls
         {
             if( TryGetValueOnUi(out object value) == ApplyValueResult.Success)
             {
-                if(value is int asInt)
+                if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
                 {
-                    TrySetValueOnUi(asInt-1);
-                    lastApplyValueResult = mTextBoxLogic.TryApplyToInstance();
+                    // Your code when CTRL key is held down
+                    MoveInDirection(-5, value);
                 }
-                else if(value is long asLong)
+                else
                 {
-                    TrySetValueOnUi(asLong-1);
-                    lastApplyValueResult = mTextBoxLogic.TryApplyToInstance();
-                }
 
+                    MoveInDirection(-1, value);
+                }                
             }
-
         }
 
         private void PlusButtonClicked(object sender, RoutedEventArgs e)
         {
             if (TryGetValueOnUi(out object value) == ApplyValueResult.Success)
             {
-                if (value is int asInt)
+                if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
                 {
-                    TrySetValueOnUi(asInt+1);
-                    lastApplyValueResult = mTextBoxLogic.TryApplyToInstance();
-
+                    MoveInDirection(5, value);
                 }
-                else if (value is long asLong)
+                else
                 {
-                    TrySetValueOnUi(asLong+1);
-                    lastApplyValueResult = mTextBoxLogic.TryApplyToInstance();
-
+                    MoveInDirection(1, value);
                 }
-
             }
+        }
+
+        private void MoveInDirection(int direction, object value)
+        {
+            if (value is int asInt)
+            {
+                TrySetValueOnUi(asInt + direction);
+            }
+            else if (value is long asLong)
+            {
+                TrySetValueOnUi(asLong + direction);
+            }
+            else if(value is float asFloat)
+            {
+                TrySetValueOnUi(asFloat + direction);
+            }
+            else if(value is double asDouble)
+            {
+                TrySetValueOnUi(asDouble + direction);
+            }
+            else if(value is decimal asDecimal)
+            {
+                TrySetValueOnUi(asDecimal + direction);
+            }
+            lastApplyValueResult = mTextBoxLogic.TryApplyToInstance();
+
         }
     }
 }

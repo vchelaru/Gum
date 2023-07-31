@@ -4,14 +4,15 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:WpfDataUiCore.Controls"
-             mc:Ignorable="d" >
+             mc:Ignorable="d">
     <Grid>
         <Grid.ContextMenu>
             <ContextMenu></ContextMenu>
         </Grid.ContextMenu>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition></ColumnDefinition>
-            <ColumnDefinition></ColumnDefinition>
+            <ColumnDefinition Name="FirstColumn" Width="{Binding FirstGridLength}"></ColumnDefinition>
+            <ColumnDefinition Width="*"></ColumnDefinition>
+            <ColumnDefinition Width="Auto"></ColumnDefinition>
         </Grid.ColumnDefinitions>
         <TextBlock x:Name="Label" MinWidth="100" TextWrapping="Wrap"  VerticalAlignment="Center"
                        Padding="4,4,4,0"
