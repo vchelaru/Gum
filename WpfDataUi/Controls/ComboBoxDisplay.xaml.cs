@@ -288,6 +288,38 @@ namespace WpfDataUi.Controls
             return ApplyValueResult.Success;
         }
 
+        protected virtual IEnumerable<object> CustomOptions
+        {
+            get
+            {
+                // We want to check the CustomOptions first
+                // because we may have an enum that has been
+                // reduced by the converter.  In that case we 
+                // want to show the reduced set instead of the
+                // entire enum
+                if (InstanceMember.CustomOptions != null)
+                {
+                    foreach(var item in InstanceMember.CustomOptions)
+                    {
+                        yield return item;
+                    }
+                }
+                // Multi-select could result in a null type, so let's do a null check:
+                else if (mInstancePropertyType?.IsEnum == true)
+                {
+                    var values = Enum.GetValues(mInstancePropertyType);
+                    foreach(var item in values)
+                    {
+                        yield return item;
+                    }
+                }
+                else
+                {
+                    yield break;
+                }
+            }
+        }
+
         private void PopulateItems()
         {
             this.SuppressSettingProperty = true;
@@ -300,36 +332,11 @@ namespace WpfDataUi.Controls
             // removes individual items
             // which should be changed, rather
             // than a full refresh?
-
-            // We want to check the CustomOptions first
-            // because we may have an enum that has been
-            // reduced by the converter.  In that case we 
-            // want to show the reduced set instead of the
-            // entire enum
-            if (InstanceMember.CustomOptions != null)
+            foreach(var item in CustomOptions)
             {
-                // Used to check for this:
-                //  && InstanceMember.CustomOptions.Count != 0
-                // But I see no reason - if there's no option, we just don't show any in the combo box
-                foreach (var item in InstanceMember.CustomOptions)
-                {
-                    this.ComboBox.Items.Add(item);
-                }
-
+                this.ComboBox.Items.Add(item);
             }
-            // Multi-select could result in a null type, so let's do a null check:
-            else if (mInstancePropertyType?.IsEnum == true)
-            {
-                foreach (var item in Enum.GetValues(mInstancePropertyType))
-                {
-                    this.ComboBox.Items.Add(item);
-                }
 
-            }
-            //else
-            //{
-            //    throw new NotImplementedException();
-            //}
             this.SuppressSettingProperty = false;
         }
 

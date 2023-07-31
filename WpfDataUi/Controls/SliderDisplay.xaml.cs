@@ -260,8 +260,8 @@ namespace WpfDataUi.Controls
                 //HandleValueChanged();
                 //lastSliderTime = DateTime.Now;
                 // display the value, but don't push it until the drag is complete:
-                var value = Slider.Value;
-                this.TextBox.Text = value.ToString($"f{DecimalPointsFromSlider}");
+                ApplySliderValueToTextBox();
+
             }
         }
 
@@ -269,14 +269,29 @@ namespace WpfDataUi.Controls
         {
             if (!SuppressSettingProperty)
             {
-
-                var value = Slider.Value;
-                this.TextBox.Text = value.ToString($"f{DecimalPointsFromSlider}");
+                ApplySliderValueToTextBox();
 
                 // don't use this method, we want to control the decimals
                 //SetTextBoxValue(value);
 
                 mTextBoxLogic.TryApplyToInstance();
+            }
+        }
+
+        private void ApplySliderValueToTextBox()
+        {
+            var value = Slider.Value;
+
+            var propertyType = mInstanceMember?.PropertyType;
+            if (propertyType == typeof(int) || propertyType == typeof(long) || propertyType == typeof(uint) || propertyType == typeof(ulong) ||
+                propertyType == typeof(byte))
+            {
+                this.TextBox.Text = ((int)value).ToString();
+            }
+            else
+            {
+
+                this.TextBox.Text = value.ToString($"f{DecimalPointsFromSlider}");
             }
         }
 

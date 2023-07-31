@@ -201,6 +201,8 @@ namespace WpfDataUi
                     {
                         ((ISetDefaultable)dataUi).SetToDefault();
                     }
+
+                    dataUi.InstanceMember.CallAfterSetByUi();
                 };
 
 

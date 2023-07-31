@@ -386,17 +386,22 @@ namespace WpfDataUi
         {
             if (ShouldCreateUiFor(memberInfo.GetMemberType(), memberInfo.Name))
             {
-                
+
                 string categoryName = GetCategoryAttributeFor(memberInfo);
 
                 MemberCategory memberCategory = GetOrInstantiateAndAddMemberCategory(categoryName);
 
                 InstanceMember newMember = new InstanceMember(memberInfo.Name, Instance);
-                newMember.AfterSetByUi += HandleInstanceMemberSetByUi;
-                newMember.BeforeSetByUi += HandleInstanceMemberBeforeSetByUi;
+                AssignInstanceMemberEvents(newMember);
                 newMember.Category = memberCategory;
                 memberCategory.Members.Add(newMember);
             }
+        }
+
+        private void AssignInstanceMemberEvents(InstanceMember newMember)
+        {
+            newMember.AfterSetByUi += HandleInstanceMemberSetByUi;
+            newMember.BeforeSetByUi += HandleInstanceMemberBeforeSetByUi;
         }
 
         private void HandleInstanceMemberBeforeSetByUi(object sender, EventArgs e)

@@ -204,11 +204,11 @@ namespace WpfDataUi.DataTypes
 
         public virtual Type PreferredDisplayer
         {
-            get { return mPreferredDisplayer; }
+            get => mPreferredDisplayer; 
             set
             {
                 mPreferredDisplayer = value;
-                OnPropertyChanged("PreferredDisplayer");
+                OnPropertyChanged(nameof(PreferredDisplayer));
             }
 
         }
@@ -318,6 +318,7 @@ namespace WpfDataUi.DataTypes
         #region Events
         public EventHandler BeforeSetByUi;
         public EventHandler AfterSetByUi;
+
 
         public event Action<UserControl> UiCreated;
 
