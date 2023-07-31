@@ -68,6 +68,7 @@
   * [Running from Source](gum-code-reference/running-from-source.md)
   * [Gum Class Overview](gum-code-reference/gum-class-overview.md)
   * [DataUiGrid](gum-code-reference/datauigrid/README.md)
+    * [Reflection](gum-code-reference/datauigrid/reflection.md)
     * [Categories](gum-code-reference/datauigrid/categories.md)
   * [GetAbsoluteX](gum-code-reference/getabsolutex.md)
   * [GetAbsoluteY](gum-code-reference/getabsolutey.md)
