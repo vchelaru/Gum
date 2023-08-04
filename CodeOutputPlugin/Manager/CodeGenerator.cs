@@ -1571,7 +1571,9 @@ namespace CodeOutputPlugin.Manager
 
                 if (isThisAbsoluteLayout)
                 {
-                    stringBuilder.AppendLine(ToTabs(tabCount) + "var MainLayout = this;");
+                    // August 4, 2023 - why is it "var"? That seems like a mistake...
+                    //stringBuilder.AppendLine(ToTabs(tabCount) + "var MainLayout = this;");
+                    stringBuilder.AppendLine(ToTabs(tabCount) + "MainLayout = this;");
                 }
                 else if (!isSkiaCanvasView && !isStackLayout)
                 {
@@ -1651,8 +1653,16 @@ namespace CodeOutputPlugin.Manager
 
         private static bool GetIfShouldAddMainLayout(ElementSave element, CodeOutputProjectSettings projectSettings)
         {
-            var shouldAddMainLayout = true;
-            if (element is ScreenSave && !string.IsNullOrEmpty(element.BaseType) && !projectSettings.BaseTypesNotCodeGenerated.Contains(element.BaseType))
+            var elementBaseType = element?.BaseType;
+            var isThisAbsoluteLayout = elementBaseType?.EndsWith("/AbsoluteLayout") == true;
+            var isThisStackLayout = elementBaseType?.EndsWith("/StackLayout") == true;
+
+            var isSkiaCanvasView = elementBaseType?.EndsWith("/SkiaGumCanvasView") == true;
+
+            var isContainer = elementBaseType == "Container";
+
+            var shouldAddMainLayout = !isSkiaCanvasView && !isContainer && !isThisStackLayout && projectSettings.OutputLibrary == OutputLibrary.XamarinForms;
+            if (shouldAddMainLayout && element is ScreenSave && !string.IsNullOrEmpty(element.BaseType) && !projectSettings.BaseTypesNotCodeGenerated.Contains(element.BaseType))
             {
                 shouldAddMainLayout = false;
             }
@@ -2021,26 +2031,26 @@ namespace CodeOutputPlugin.Manager
 
         private static void AddAbsoluteLayoutIfNecessary(ElementSave element, int tabCount, StringBuilder stringBuilder, CodeOutputProjectSettings projectSettings)
         {
-            var elementBaseType = element?.BaseType;
-            var isThisAbsoluteLayout = elementBaseType?.EndsWith("/AbsoluteLayout") == true;
-            var isThisStackLayout = elementBaseType?.EndsWith("/StackLayout") == true;
+            
+            var shouldAddMainLayout =
+                GetIfShouldAddMainLayout(element, projectSettings);
 
-            var isSkiaCanvasView = elementBaseType?.EndsWith("/SkiaGumCanvasView") == true;
-
-            var isContainer = elementBaseType == "Container";
-
-            if (!isThisAbsoluteLayout && !isSkiaCanvasView && !isContainer && !isThisStackLayout && projectSettings.OutputLibrary == OutputLibrary.XamarinForms)
+            if (shouldAddMainLayout)
             {
-                var shouldAddMainLayout =
-                    GetIfShouldAddMainLayout(element, projectSettings);
-
-
-                if (shouldAddMainLayout)
+                ElementSave baseElement = null;
+                if (!string.IsNullOrEmpty(element.BaseType))
                 {
-                    stringBuilder.Append(ToTabs(tabCount) + "protected AbsoluteLayout MainLayout{get; private set;}");
+                    baseElement = ObjectFinder.Self.GetElementSave(element.BaseType);
+                }
+
+                var baseHasMain = baseElement != null && GetIfShouldAddMainLayout(baseElement, projectSettings);
+                if(!baseHasMain)
+                {
+                    stringBuilder.Append(ToTabs(tabCount) + "protected AbsoluteLayout MainLayout{get; set;}");
                 }
             }
         }
+
 
 
         private static void TryGenerateApplyLocalizationForInstance(CodeGenerationContext context, StringBuilder stringBuilder, InstanceSave instance)
