@@ -14,7 +14,7 @@ Regular layout positions each child independent of every other child. The positi
 
 ### Top to Bottom Stack
 
-Top to Bottom Stack results in each child being positioned after its previous sibling vertically. This can be used to create vertical stacks quickly.
+Top to Bottom Stack results in each child being positioned after its previous sibling vertically. This can be used to create horizontal stacks quickly.
 
 <figure><img src="../../.gitbook/assets/image (12).png" alt=""><figcaption></figcaption></figure>
 
