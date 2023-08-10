@@ -90,7 +90,7 @@ namespace RenderingLibrary.Graphics
 
             if (Renderer.UseCustomEffectRendering)
             {
-                var effectManager = FlatRedBall.Graphics.Renderer.ExternalEffectManager;
+                var effectManager = Renderer.CustomEffectManager;
 
                 var projection = Matrix.CreateOrthographic(width, -height, -1, 1);
                 var view = GetZoomAndMatrix(layer, camera);
@@ -105,18 +105,18 @@ namespace RenderingLibrary.Graphics
 
                 effectiveEffect = effectManager.Effect;
 
-                FlatRedBall.Graphics.ColorOperation colorOperationToUse;
+                ColorOperation colorOperationToUse;
 
                 switch (renderStates.ColorOperation)
                 {
                     case ColorOperation.ColorTextureAlpha:
-                        colorOperationToUse = FlatRedBall.Graphics.ColorOperation.ColorTextureAlpha;
+                        colorOperationToUse = ColorOperation.ColorTextureAlpha;
                         break;
                     case ColorOperation.Modulate:
-                        colorOperationToUse = FlatRedBall.Graphics.ColorOperation.Modulate;
+                        colorOperationToUse = ColorOperation.Modulate;
                         break;
                     default:
-                        colorOperationToUse = FlatRedBall.Graphics.ColorOperation.Modulate;
+                        colorOperationToUse = ColorOperation.Modulate;
                         break;
                 }
 
@@ -333,7 +333,7 @@ namespace RenderingLibrary.Graphics
 
         internal void Draw(Texture2D textureToUse, Vector2 position, Rectangle? sourceRectangle, Color color, float rotation, Vector2 origin, Vector2 scale, SpriteEffects effects, float depth, object objectRequestingChange)
         {
-            if (Renderer.UseBasicEffectRendering && basicEffect.FogEnabled)
+            if (!Renderer.UseCustomEffectRendering && Renderer.UseBasicEffectRendering && basicEffect.FogEnabled)
             {
                 basicEffect.FogColor = new Vector3(color.R/255, color.G/255, color.B/255f);
             }
