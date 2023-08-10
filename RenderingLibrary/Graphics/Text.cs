@@ -990,7 +990,7 @@ namespace RenderingLibrary.Graphics
                 Sprite.Render(managers, spriteRenderer, mTempForRendering, mTextureToRender,
                     new Color(mRed, mGreen, mBlue, mAlpha), null, false, Rotation, 
                     treat0AsFullDimensions: false,
-                    objectCausingRenering: this);
+                    objectCausingRendering: this);
 
             }
         }

@@ -585,12 +585,12 @@ namespace RenderingLibrary.Graphics
             float rotationInDegrees = 0,
             bool treat0AsFullDimensions = false,
             // In the case of Text objects, we send in a line rectangle, but we want the Text object to be the owner of any resulting render states
-            object objectCausingRenering = null
+            object objectCausingRendering = null
             )
         {
-            if (objectCausingRenering == null)
+            if (objectCausingRendering == null)
             {
-                objectCausingRenering = ipso;
+                objectCausingRendering = ipso;
             }
 
             Renderer renderer = null;
@@ -699,7 +699,7 @@ namespace RenderingLibrary.Graphics
                     scale,
                     effects,
                     0,
-                    objectCausingRenering);
+                    objectCausingRendering);
             }
             else
             {
@@ -727,7 +727,7 @@ namespace RenderingLibrary.Graphics
                     origin,
                     effects,
                     0,
-                    objectCausingRenering
+                    objectCausingRendering
                     );
             }
         }

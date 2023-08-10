@@ -246,6 +246,7 @@ namespace RenderingLibrary.Graphics
             mGraphicsDevice = graphicsDevice;
 
             spriteRenderer.Initialize(graphicsDevice);
+            CustomEffectManager.Initialize(graphicsDevice);
 
             mSinglePixelTexture = new Texture2D(mGraphicsDevice, 1, 1, false, SurfaceFormat.Color);
             Color[] pixels = new Color[1];
@@ -261,8 +262,6 @@ namespace RenderingLibrary.Graphics
             mDottedLineTexture.SetData<Color>(pixels);
 
             mCamera.UpdateClient();
-
-            CustomEffectManager.Initialize(graphicsDevice);
         }
 
         public Layer AddLayer()
