@@ -201,6 +201,11 @@ namespace RenderingLibrary.Graphics
             set;
         } = BlendState.NonPremultiplied;
 
+        /// <summary>
+        /// Use the custom effect for rendering. This setting takes priority if 
+        /// both UseCustomEffectRendering and UseBasicEffectRendering are enabled.
+        /// </summary>
+        public static bool UseCustomEffectRendering { get; set; } = false;
         public static bool UseBasicEffectRendering { get; set; } = true;
         // Vic says March 29 2020
         // For some reason the rendering

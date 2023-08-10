@@ -55,51 +55,77 @@ namespace RenderingLibrary.Graphics
 
         public void BeginSpriteBatch(RenderStateVariables renderStates, Layer layer, BeginType beginType, Camera camera)
         {
-
-            Matrix matrix = Renderer.UseBasicEffectRendering ?
+            var spriteBatchTransformMatrix = 
+                (Renderer.UseCustomEffectRendering || Renderer.UseBasicEffectRendering) ?
                 Matrix.Identity : GetZoomAndMatrix(layer, camera);
 
-            SamplerState samplerState = GetSamplerState(renderStates);
-
+            var samplerState = GetSamplerState(renderStates);
 
             bool isFullscreen = renderStates.ClipRectangle == null;
 
-            RasterizerState rasterizerState;
-            if (isFullscreen)
-            {
-                rasterizerState = scissorTestDisabled;
-            }
-            else
-            {
-                rasterizerState = scissorTestEnabled;
-            }
+            var rasterizerState = isFullscreen ? scissorTestDisabled : scissorTestEnabled;
 
-
-            Rectangle scissorRectangle = new Rectangle();
+            var scissorRectangle = new Rectangle();
             if (rasterizerState.ScissorTestEnable)
             {
                 scissorRectangle = renderStates.ClipRectangle.Value;
 
-                // make sure values of with and height are never less than 0:
-                if(scissorRectangle.Width <0)
+                // Make sure values of with and height are never less than 0:
+                if (scissorRectangle.Width < 0)
                 {
                     scissorRectangle.Width = 0;
                 }
-                if(scissorRectangle.Height < 0)
+                if (scissorRectangle.Height < 0)
                 {
                     scissorRectangle.Height = 0;
                 }
             }
 
+            var depthStencilState = DepthStencilState.DepthRead;
 
-            DepthStencilState depthStencilState = DepthStencilState.DepthRead;
+            int width = camera.ClientWidth;
+            int height = camera.ClientHeight;
 
-            var width = camera.ClientWidth;
-            var height = camera.ClientHeight;
+            Effect effectiveEffect = null;
 
-            BasicEffect effectiveEffect = null;
+            if (Renderer.UseCustomEffectRendering)
+            {
+                var effectManager = FlatRedBall.Graphics.Renderer.ExternalEffectManager;
 
-            if(Renderer.UseBasicEffectRendering)
+                var projection = Matrix.CreateOrthographic(width, -height, -1, 1);
+                var view = GetZoomAndMatrix(layer, camera);
+
+                if (Renderer.ApplyCameraZoomOnWorldTranslation ||
+                    layer.LayerCameraSettings?.IsInScreenSpace == true)
+                {
+                    view *= Matrix.CreateTranslation(-camera.ClientWidth / 2.0f, -camera.ClientHeight / 2.0f, 0);
+                }
+
+                effectManager.ParameterViewProj.SetValue(view * projection);
+
+                effectiveEffect = effectManager.Effect;
+
+                FlatRedBall.Graphics.ColorOperation colorOperationToUse;
+
+                switch (renderStates.ColorOperation)
+                {
+                    case ColorOperation.ColorTextureAlpha:
+                        colorOperationToUse = FlatRedBall.Graphics.ColorOperation.ColorTextureAlpha;
+                        break;
+                    case ColorOperation.Modulate:
+                        colorOperationToUse = FlatRedBall.Graphics.ColorOperation.Modulate;
+                        break;
+                    default:
+                        colorOperationToUse = FlatRedBall.Graphics.ColorOperation.Modulate;
+                        break;
+                }
+
+                var effectTechnique = effectManager.GetTechniqueVariantFromColorOperation(colorOperationToUse, useDefaultOrPointFilter: !renderStates.Filtering);
+
+                if (effectiveEffect.CurrentTechnique != effectTechnique)
+                    effectiveEffect.CurrentTechnique = effectTechnique;
+            }
+            else if (Renderer.UseBasicEffectRendering)
             {
                 //float zoom = 1;
                 //if(Renderer.ApplyCameraZoomOnWorldTranslation)
@@ -131,51 +157,52 @@ namespace RenderingLibrary.Graphics
 
                 effectiveEffect = basicEffect;
 
+                switch (renderStates.ColorOperation)
+                {
+                    case ColorOperation.ColorTextureAlpha:
+                        basicEffect.TextureEnabled = true;
+                        basicEffect.VertexColorEnabled = true;
+
+                        // Since MonoGame doesn't use custom shaders, we have to hack this
+                        // using Fog. It works...but it's slow and introduces a lot of render breaks. 
+                        // At some point in the future we should try to fix this.
+                        basicEffect.FogEnabled = true;
+                        basicEffect.FogStart = 0;
+                        basicEffect.FogEnd = 0;
+                        break;
+                    case ColorOperation.Modulate:
+
+                        basicEffect.VertexColorEnabled = true;
+
+                        basicEffect.FogEnabled = false;
+                        basicEffect.TextureEnabled = true;
+                        break;
+                }
             }
 
-            switch(renderStates.ColorOperation)
-            {
-                case ColorOperation.ColorTextureAlpha:
-                    basicEffect.TextureEnabled = true;
-                    basicEffect.VertexColorEnabled = true;
-
-                    // Since MonoGame doesn't use custom shaders, we have to hack this
-                    // using Fog. It works...but it's slow and introduces a lot of render breaks. 
-                    // At some point in the future we should try to fix this.
-                    basicEffect.FogEnabled = true;
-                    basicEffect.FogStart = 0;
-                    basicEffect.FogEnd = 0;
-                    break;
-                case ColorOperation.Modulate:
-
-                    basicEffect.VertexColorEnabled = true;
-
-                    basicEffect.FogEnabled = false;
-                    basicEffect.TextureEnabled = true;
-                    break;
-            }
-
-
+            // Miguel 2023/08/10
+            // Why use Immediate instead of Deferred if it's slower?
+            // I'll change it and let's see if it breaks anything.
             if (beginType == BeginType.Begin)
             {
-                mSpriteBatch.ReplaceRenderStates(SpriteSortMode.Immediate, 
+                mSpriteBatch.ReplaceRenderStates(SpriteSortMode.Deferred,
                     renderStates.BlendState,
                     samplerState,
                     depthStencilState,
                     rasterizerState,
-                    effectiveEffect, 
-                    matrix,
+                    effectiveEffect,
+                    spriteBatchTransformMatrix,
                     scissorRectangle);
             }
             else
             {
-                mSpriteBatch.PushRenderStates(SpriteSortMode.Immediate, 
+                mSpriteBatch.PushRenderStates(SpriteSortMode.Deferred,
                     renderStates.BlendState,
                     samplerState,
                     depthStencilState,
                     rasterizerState,
-                    effectiveEffect, 
-                    matrix,
+                    effectiveEffect,
+                    spriteBatchTransformMatrix,
                     scissorRectangle);
             }
         }
@@ -277,8 +304,6 @@ namespace RenderingLibrary.Graphics
             basicEffect.LightingEnabled = false;
             basicEffect.FogEnabled = false;
             basicEffect.VertexColorEnabled = true;
-
-
         }
 
         public void Begin()
@@ -308,12 +333,12 @@ namespace RenderingLibrary.Graphics
 
         internal void Draw(Texture2D textureToUse, Vector2 position, Rectangle? sourceRectangle, Color color, float rotation, Vector2 origin, Vector2 scale, SpriteEffects effects, float depth, object objectRequestingChange)
         {
-            if(basicEffect.FogEnabled)
+            if (Renderer.UseBasicEffectRendering && basicEffect.FogEnabled)
             {
                 basicEffect.FogColor = new Vector3(color.R/255, color.G/255, color.B/255f);
             }
 
-            // adjust offsets according to zoom
+            // Adjust offsets according to zoom
             float x = ((int)(position.X * CurrentZoom) + Camera.PixelPerfectOffsetX)/CurrentZoom;
             float y = ((int)(position.Y * CurrentZoom) + Camera.PixelPerfectOffsetY)/CurrentZoom;
 
