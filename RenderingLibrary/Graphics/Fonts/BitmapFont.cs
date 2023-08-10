@@ -587,7 +587,8 @@ namespace RenderingLibrary.Graphics
             int xOffsetAsInt = MathFunctions.RoundToInt(xOffset);
             int yOffsetAsInt = MathFunctions.RoundToInt(yOffset);
 
-            if (Renderer.NormalBlendState == BlendState.AlphaBlend)
+            // Custom effect already does multiply alpha on the shader so we skip that in this case
+            if (!Renderer.UseCustomEffectRendering && Renderer.NormalBlendState == BlendState.AlphaBlend)
             {
                 // this is premultiplied, so premulitply the color value
                 float multiple = color.A / 255.0f;

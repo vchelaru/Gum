@@ -651,7 +651,8 @@ namespace RenderingLibrary.Graphics
 
             var modifiedColor = color;
 
-            if (Renderer.NormalBlendState == BlendState.AlphaBlend)
+            // Custom effect already does multiply alpha on the shader so we skip that in this case
+            if (!Renderer.UseCustomEffectRendering && Renderer.NormalBlendState == BlendState.AlphaBlend)
             {
                 // we are using premult textures, so we need to premult the color:
                 var alphaRatio = color.A / 255.0f;
