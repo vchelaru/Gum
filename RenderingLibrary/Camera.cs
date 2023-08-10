@@ -253,7 +253,7 @@ namespace RenderingLibrary
 
         public static Matrix GetTransformationMatrix(float x, float y, float zoom, int clientWidth, int clientHeight, bool forRendering = false)
         {
-            if(Renderer.UseBasicEffectRendering && forRendering)
+            if (Renderer.UsingEffect && forRendering)
             {
                 return
                     Matrix.CreateTranslation(new Vector3(-x, -y, 0)) *

@@ -208,6 +208,8 @@ namespace RenderingLibrary.Graphics
         /// </summary>
         public static bool UseCustomEffectRendering { get; set; } = false;
         public static bool UseBasicEffectRendering { get; set; } = true;
+        public static bool UsingEffect { get { return UseCustomEffectRendering || UseBasicEffectRendering; } }
+
         public static CustomEffectManager CustomEffectManager { get; } = new CustomEffectManager();
 
         /// <summary>

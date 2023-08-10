@@ -55,9 +55,7 @@ namespace RenderingLibrary.Graphics
 
         public void BeginSpriteBatch(RenderStateVariables renderStates, Layer layer, BeginType beginType, Camera camera)
         {
-            var spriteBatchTransformMatrix = 
-                (Renderer.UseCustomEffectRendering || Renderer.UseBasicEffectRendering) ?
-                Matrix.Identity : GetZoomAndMatrix(layer, camera);
+            var spriteBatchTransformMatrix =  Renderer.UsingEffect ? Matrix.Identity : GetZoomAndMatrix(layer, camera);
 
             var samplerState = GetSamplerState(renderStates);
 
@@ -237,7 +235,7 @@ namespace RenderingLibrary.Graphics
                     }
                     // set this before setting the overriding zoom
                     CurrentZoom = zoom;
-                    zoom = Renderer.UseBasicEffectRendering ? 1 : zoom;
+                    zoom = Renderer.UsingEffect ? 1 : zoom;
                     matrix = Camera.GetTransformationMatrix(
                         camera.X, 
                         camera.Y, 
