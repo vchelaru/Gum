@@ -118,7 +118,7 @@ namespace RenderingLibrary.Graphics
                         break;
                 }
 
-                var effectTechnique = effectManager.GetTechniqueVariantFromColorOperation(colorOperationToUse, useDefaultOrPointFilter: !renderStates.Filtering);
+                var effectTechnique = effectManager.GetVertexColorTechniqueFromColorOperation(colorOperationToUse, useDefaultOrPointFilter: !renderStates.Filtering);
 
                 if (effectiveEffect.CurrentTechnique != effectTechnique)
                     effectiveEffect.CurrentTechnique = effectTechnique;
