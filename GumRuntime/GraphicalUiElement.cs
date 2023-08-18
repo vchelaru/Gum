@@ -266,7 +266,7 @@ namespace Gum.Wireframe
                     if(!didUpdate)
                     {
                         // This will make this dirty:
-                        this.UpdateLayout(ParentUpdateType.IfParentStacks, 
+                        this.UpdateLayout(ParentUpdateType.IfParentStacks | ParentUpdateType.IfParentWidthHeightDependOnChildren, 
                             // If something is made visible, that shouldn't update the children, right?
                             //int.MaxValue/2, 
                             0,
@@ -475,7 +475,8 @@ namespace Gum.Wireframe
 #if SKIA
         public virtual void Render(SKCanvas canvas)
         {
-            mContainedObjectAsIpso.Render(canvas);
+
+            var isOnScreen = true;
 
             if (ClipsChildren)
             {
@@ -483,19 +484,36 @@ namespace Gum.Wireframe
                 var absoluteY = this.GetAbsoluteY();
                 var rect = new SKRect(absoluteX, absoluteY, absoluteX + mContainedObjectAsIpso.Width, absoluteY + mContainedObjectAsIpso.Height);
 
-                canvas.Save();
-                canvas.ClipRect(rect);
+                isOnScreen = 
+                    rect.Bottom > canvas.LocalClipBounds.Top &&
+                    rect.Top < canvas.LocalClipBounds.Bottom &&
+                    rect.Right > canvas.LocalClipBounds.Left &&
+                    rect.Left < canvas.LocalClipBounds.Right;
+
+                if(isOnScreen)
+                {
+                    mContainedObjectAsIpso.Render(canvas);
+                    canvas.Save();
+                    canvas.ClipRect(rect);
+                }
+            }
+            else
+            {
+                mContainedObjectAsIpso.Render(canvas);
             }
 
-            // todo - this may allocate slightly due to foreach. Consider changing to a for loop
-            foreach (var child in this.Children)
+            if (isOnScreen)
             {
-                child.Render(canvas);
-            }
+                // todo - this may allocate slightly due to foreach. Consider changing to a for loop
+                foreach (var child in this.Children)
+                {
+                    child.Render(canvas);
+                }
 
-            if (ClipsChildren)
-            {
-                canvas.Restore();
+                if (ClipsChildren)
+                {
+                    canvas.Restore();
+                }
             }
         }
 #endif
@@ -5448,7 +5466,6 @@ namespace Gum.Wireframe
                 handled = true;
 #endif
             }
-#if MONOGAME || XNA4
 
             else if(propertyName == nameof(TextOverflowHorizontalMode))
             {
@@ -5466,10 +5483,12 @@ namespace Gum.Wireframe
             else if (propertyName == nameof(TextOverflowVerticalMode))
             {
                 var textOverflowMode = (TextOverflowVerticalMode)value;
+#if MONOGAME || XNA4
 
                 ((Text)mContainedObjectAsIpso).TextOverflowVerticalMode = textOverflowMode;
-            }
 #endif
+
+            }
 
             return handled;
         }

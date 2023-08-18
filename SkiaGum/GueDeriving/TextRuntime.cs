@@ -11,6 +11,11 @@ namespace SkiaGum.GueDeriving
 {
     public class TextRuntime : BindableGraphicalUiElement
     {
+        public static int DefaultRed { get; set; } = 69;
+        public static int DefaultGreen { get; set; } = 90;
+        public static int DefaultBlue { get; set; } = 100;
+
+
         public enum ColorCategory
         {
             White,
@@ -48,6 +53,24 @@ namespace SkiaGum.GueDeriving
                         this.Green = 226;
                         this.Red = 226;
                         break;
+                }
+            }
+        }
+
+        TextOverflowHorizontalMode textOverflowHorizontalMode;
+        public TextOverflowHorizontalMode TextOverflowHorizontalMode
+        {
+            get => textOverflowHorizontalMode;
+            set
+            {
+                textOverflowHorizontalMode = value;
+                if (textOverflowHorizontalMode == TextOverflowHorizontalMode.EllipsisLetter)
+                {
+                    ContainedText.IsTruncatingWithEllipsisOnLastLine = true;
+                }
+                else
+                {
+                    ContainedText.IsTruncatingWithEllipsisOnLastLine = false;
                 }
             }
         }

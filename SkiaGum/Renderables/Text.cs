@@ -76,6 +76,7 @@ namespace SkiaGum
             get; set;
         }
 
+        public bool IsTruncatingWithEllipsisOnLastLine { get; set; }
 
         public bool IsItalic { get; set; }
 
@@ -355,7 +356,7 @@ namespace SkiaGum
 
         public void PreRender() { }
 
-#region IVisible Implementation
+        #region IVisible Implementation
 
         public bool Visible
         {
@@ -386,6 +387,6 @@ namespace SkiaGum
             }
         }
 
-#endregion
+        #endregion
     }
 }
