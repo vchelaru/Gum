@@ -232,6 +232,11 @@ namespace CodeOutputPlugin
 
         private void RefreshCodeDisplay()
         {
+            control.CodeOutputProjectSettings = codeOutputProjectSettings;
+            if(control.CodeOutputElementSettings == null)
+            {
+                control.CodeOutputElementSettings = new Models.CodeOutputElementSettings();
+            }
             ///////////////////////early out////////////////////
             if(!viewModel.IsShowCodegenPreviewChecked)
             {
@@ -242,11 +247,6 @@ namespace CodeOutputPlugin
             var instance = SelectedState.Self.SelectedInstance;
             var selectedElement = SelectedState.Self.SelectedElement;
 
-            control.CodeOutputProjectSettings = codeOutputProjectSettings;
-            if(control.CodeOutputElementSettings == null)
-            {
-                control.CodeOutputElementSettings = new Models.CodeOutputElementSettings();
-            }
 
             var settings = control.CodeOutputElementSettings;
 

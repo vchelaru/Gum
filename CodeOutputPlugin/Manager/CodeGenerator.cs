@@ -240,7 +240,20 @@ namespace CodeOutputPlugin.Manager
             // categorized states may screw up the positioning of an object.
             if (setsAny || state == container.DefaultState)
             {
-                if (parentType?.EndsWith("/AbsoluteLayout") == true)
+                var isParentAbsoluteLayout =
+                    parentType?.EndsWith("/AbsoluteLayout") == true;
+
+                if(!isParentAbsoluteLayout && !string.IsNullOrEmpty(parentType))
+                {
+                    var parentElementSave = ObjectFinder.Self.GetElementSave(parentType);
+                    if(parentElementSave != null)
+                    {
+
+                        isParentAbsoluteLayout = IsOfXamarinFormsType(parentElementSave, "AbsoluteLayout");
+                    }
+                }
+
+                if (isParentAbsoluteLayout)
                 {
                     SetAbsoluteLayoutPosition(variablesToConsider, state, context, stringBuilder, parentType);
                 }
@@ -251,6 +264,8 @@ namespace CodeOutputPlugin.Manager
             }
 
         }
+
+
 
         private static void SetNonAbsoluteLayoutPosition(List<VariableSave> variablesToConsider, StateSave defaultState, CodeGenerationContext context,
             StringBuilder stringBuilder, string parentBaseType)
@@ -1672,6 +1687,8 @@ namespace CodeOutputPlugin.Manager
 
         #endregion
 
+        #region Top Level Methods
+
         public static string GetGeneratedCodeForElement(ElementSave element, CodeOutputElementSettings elementSettings, CodeOutputProjectSettings projectSettings)
         {
             #region Initial Values
@@ -1863,6 +1880,8 @@ namespace CodeOutputPlugin.Manager
 
         }
 
+        #endregion
+
         private static void GenerateApplyDefaultVariables(CodeGenerationContext context, StringBuilder stringBuilder)
         {
             var line = "private void ApplyDefaultVariables()";
@@ -2008,9 +2027,14 @@ namespace CodeOutputPlugin.Manager
 
         static bool IsOfXamarinFormsType(InstanceSave instance, string xamarinFormsType)
         {
-
             var element = ObjectFinder.Self.GetElementSave(instance);
+            return IsOfXamarinFormsType(element, xamarinFormsType);
+        }
 
+
+
+        private static bool IsOfXamarinFormsType(ElementSave element, string xamarinFormsType)
+        {
             bool isRightType = element.Name.EndsWith("/" + xamarinFormsType);
             if (!isRightType)
             {
@@ -2026,7 +2050,6 @@ namespace CodeOutputPlugin.Manager
             }
 
             return isRightType;
-
         }
 
         private static void AddAbsoluteLayoutIfNecessary(ElementSave element, int tabCount, StringBuilder stringBuilder, CodeOutputProjectSettings projectSettings)
@@ -2043,7 +2066,9 @@ namespace CodeOutputPlugin.Manager
                     baseElement = ObjectFinder.Self.GetElementSave(element.BaseType);
                 }
 
-                var baseHasMain = baseElement != null && GetIfShouldAddMainLayout(baseElement, projectSettings);
+                var baseHasMain = baseElement != null &&
+                    projectSettings?.BaseTypesNotCodeGenerated?.Contains(element.BaseType) != true && 
+                    GetIfShouldAddMainLayout(baseElement, projectSettings);
                 if(!baseHasMain)
                 {
                     stringBuilder.Append(ToTabs(tabCount) + "protected AbsoluteLayout MainLayout{get; set;}");
