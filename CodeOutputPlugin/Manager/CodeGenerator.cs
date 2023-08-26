@@ -1390,7 +1390,7 @@ namespace CodeOutputPlugin.Manager
             }
 
             // For scrollable GumContainers we need to have the parent assigned *after* the AbsoluteLayout rectangle:
-            #region Assign Parent
+            #region If no parent, add to "this"
 
 
             if (!hasParent)
@@ -1403,9 +1403,9 @@ namespace CodeOutputPlugin.Manager
                 else // forms
                 {
                     var instanceBaseType = instance.BaseType;
-                    var isContainerStackLayout = container.BaseType?.EndsWith("/StackLayout") == true;
+                    var isContainerStackLayout = IsOfXamarinFormsType(container, "StackLayout");
                     var isContainerScrollView = container.BaseType?.EndsWith("/ScrollView") == true;
-                    var isContainerAbsoluteLayout = container.BaseType?.EndsWith("/AbsoluteLayout") == true;
+                    var isContainerAbsoluteLayout = IsOfXamarinFormsType(container, "AbsoluteLayout") == true;
 
                     var instanceName = instance.Name;
 
@@ -3548,7 +3548,9 @@ namespace CodeOutputPlugin.Manager
 
             else if (rootVariableName == "Children Layout" && variable.Value is ChildrenLayout valueAsChildrenLayout)
             {
-                if (instance != null && instance?.BaseType.EndsWith("/StackLayout") == true)
+                var isInstanceStackLayout = instance != null && IsOfXamarinFormsType(instance, "StackLayout");
+
+                if (isInstanceStackLayout)
                 {
                     if (valueAsChildrenLayout == ChildrenLayout.LeftToRightStack)
                     {
@@ -3559,7 +3561,7 @@ namespace CodeOutputPlugin.Manager
                         return $"{context.CodePrefix}.Orientation = StackOrientation.Vertical;";
                     }
                 }
-                else if (instance == null && container.BaseType.EndsWith("/StackLayout"))
+                else if (instance == null && IsOfXamarinFormsType(container, "StackLayout"))
                 {
                     if (valueAsChildrenLayout == ChildrenLayout.LeftToRightStack)
                     {

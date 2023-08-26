@@ -63,7 +63,7 @@
                                     <RowDefinition Height="20"/>
                                 </Grid.RowDefinitions>
                                 <TickBar x:Name="TopTick" Visibility="Collapsed" Fill="{TemplateBinding Foreground}" Placement="Top" Height="4" Grid.Row="0"/>
-                                <TickBar x:Name="BottomTick" Visibility="Collapsed" Fill="{TemplateBinding Foreground}" Placement="Bottom" Height="4" Grid.Row="0"/>
+                                <TickBar x:Name="BottomTick" Fill="{TemplateBinding Foreground}" Placement="Bottom" Grid.Row="0"/>
                                 <Border x:Name="TrackBackground" BorderThickness="1" CornerRadius="1" Margin="5,0" VerticalAlignment="Center" Grid.Row="1" >
                                     <Canvas Margin="-6,-1">
                                         <Rectangle Visibility="Hidden" x:Name="PART_SelectionRange" 
@@ -100,9 +100,13 @@
             <ColumnDefinition Width="*"></ColumnDefinition>
             <ColumnDefinition Width="65"></ColumnDefinition>
         </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition></RowDefinition>
+            <RowDefinition Height="Auto"></RowDefinition>
+        </Grid.RowDefinitions>
 
-        <TextBlock x:Name="Label" MinWidth="100" TextWrapping="Wrap"  VerticalAlignment="Center"
-                   Padding="4"
+        <TextBlock x:Name="Label" MinWidth="100" TextWrapping="Wrap"  VerticalAlignment="Top"
+                   Padding="4" Grid.RowSpan="2"
                    >Property Label:</TextBlock>
         
         <Slider Grid.Column="1" x:Name="Slider" 
@@ -123,6 +127,11 @@
                 </ContextMenu>
             </TextBox.ContextMenu>
         </TextBox>
-        
+        <Grid Grid.Column="1" Grid.Row="1">
+            <!-- Negative Y margin to make the text show closer to the slider. The overlap looks bad 
+            here in the editor, but it's fine in my testing in the actual app.-->
+            <TextBlock x:Name="MinValueText" VerticalAlignment="Top" Margin="0,-13,0,0">0</TextBlock>
+            <TextBlock x:Name="MaxValueText" VerticalAlignment="Top" Margin="0,-13,0,0" HorizontalAlignment="Right">100</TextBlock>
+        </Grid>
     </Grid>
 </UserControl>

@@ -104,6 +104,12 @@ namespace CodeOutputPlugin.Manager
             // we changed the base type, so let's see if this changed the names
             // The easeist way to do this is to set the value back and compare with the new:
             var elementSettings = CodeOutputElementSettingsManager.LoadOrCreateSettingsFor(element);
+
+            if(elementSettings.GenerationBehavior == GenerationBehavior.NeverGenerate)
+            {
+                return;
+            }
+
             // Vic - tomorrow keep testing this swapping back adn forth
             var newValue = element.BaseType;
             var newCustomFileName = CodeGenerator.GetCustomCodeFileName(element, elementSettings, codeOutputProjectSettings);

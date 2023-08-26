@@ -100,6 +100,24 @@ namespace WpfDataUi.Controls
             }
         }
 
+        public bool IsShowingMinAndMax
+        {
+            get => MinValueText.Visibility == Visibility.Visible;
+            set
+            {
+                if(value)
+                {
+                    MinValueText.Visibility = Visibility.Visible;
+                    MaxValueText.Visibility = Visibility.Visible;
+                }
+                else
+                {
+                    MinValueText.Visibility = Visibility.Collapsed;
+                    MaxValueText.Visibility = Visibility.Collapsed;
+                }
+            }
+        }
+
         #endregion
 
         private void HandlePropertyChange(object sender, PropertyChangedEventArgs e)
@@ -147,6 +165,8 @@ namespace WpfDataUi.Controls
 
                 this.Label.Text = InstanceMember.DisplayName;
 
+                RefreshMinMaxAndTickDisplay();
+
                 SuppressSettingProperty = false;
 
 
@@ -154,6 +174,28 @@ namespace WpfDataUi.Controls
                 this.RefreshContextMenu(Slider.ContextMenu);
                 this.RefreshContextMenu(Label.ContextMenu);
             }
+        }
+
+        private void RefreshMinMaxAndTickDisplay()
+        {
+            MinValueText.Text = this.MinValue.ToString();
+            MaxValueText.Text = this.MaxValue.ToString();
+
+            // Ticks are hidden by styling (I believe) but I don't know enough
+            // about styling (or didn't spend enough time) to solve the problem
+            //this.Slider.TickPlacement = System.Windows.Controls.Primitives.TickPlacement.BottomRight;
+            //this.Slider.TickFrequency = (this.MaxValue - this.MinValue) / 4.0;
+
+            //this.Slider.Ticks.Clear();
+
+            //var range = this.MaxValue - this.MinValue;
+            //var quarterRange = range / 4.0;
+            //this.Slider.Ticks.Add(MinValue);
+            //this.Slider.Ticks.Add(MinValue + quarterRange);
+            //this.Slider.Ticks.Add(MinValue + 2 * quarterRange);
+            //this.Slider.Ticks.Add(MinValue + 3 * quarterRange);
+            //this.Slider.Ticks.Add(MaxValue);
+
         }
 
         public void SetToDefault()
@@ -313,6 +355,8 @@ namespace WpfDataUi.Controls
             mTextBoxLogic.MaxValue = (decimal)(this.maxValue * DisplayedValueMultiplier);
             Slider.Minimum = this.minValue * DisplayedValueMultiplier;
             mTextBoxLogic.MinValue = (decimal)(this.minValue * DisplayedValueMultiplier);
+
+            RefreshMinMaxAndTickDisplay();
         }
 
         private void Slider_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
