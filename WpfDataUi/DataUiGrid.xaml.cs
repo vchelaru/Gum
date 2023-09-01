@@ -1,7 +1,9 @@
 ﻿
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Linq.Expressions;
@@ -71,9 +73,9 @@ namespace WpfDataUi
             DependencyProperty.Register("Instance", 
                 typeof(object), 
                 typeof(DataUiGrid), 
-                new PropertyMetadata(null, HandlePropertyChanged));
+                new PropertyMetadata(null, HandleInstanceChanged));
 
-        private static void HandlePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        private static void HandleInstanceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var grid = d as DataUiGrid;
             var oldValue = e.OldValue;
@@ -178,7 +180,8 @@ namespace WpfDataUi
         public DataUiGrid()
         {
             Categories = new ObservableCollection<MemberCategory>();
-
+            Categories.CollectionChanged += HandleCategoriesChanged;
+            
             InitializeComponent();
             
             //TreeView.DataContext = mCategories;
@@ -191,6 +194,35 @@ namespace WpfDataUi
             MembersToIgnore.CollectionChanged += HandleMembersToIgnoreChanged;
 
             this.DataContext = this;
+        }
+
+        private void HandleCategoriesChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            Subscribe(e.NewItems);
+            Unsubscribe(e.OldItems);
+        }
+
+        private void Subscribe(IList newItems)
+        {
+            if (newItems == null) return;
+            foreach(MemberCategory category in newItems)
+            {
+                category.MemberValueChangedByUi += HandleCategoryMemberChanged;
+            }
+        }
+
+        private void Unsubscribe(IList oldItems)
+        {
+            if (oldItems == null) return;
+            foreach(MemberCategory category in oldItems)
+            {
+                category.MemberValueChangedByUi -= HandleCategoryMemberChanged;
+            }
+        }
+
+        private void HandleCategoryMemberChanged(InstanceMember member)
+        {
+            HandleInstanceMemberSetByUi(member, null);
         }
 
         #endregion
@@ -400,7 +432,9 @@ namespace WpfDataUi
 
         private void AssignInstanceMemberEvents(InstanceMember newMember)
         {
-            newMember.AfterSetByUi += HandleInstanceMemberSetByUi;
+            // don't do this here, because this can get called before custom properties are added.
+            // We're going to rely on the Memberategory to raise MemberValueChangedByUi
+            //newMember.AfterSetByUi += HandleInstanceMemberSetByUi;
             newMember.BeforeSetByUi += HandleInstanceMemberBeforeSetByUi;
         }
 

@@ -319,7 +319,6 @@ namespace WpfDataUi.DataTypes
         public EventHandler BeforeSetByUi;
         public EventHandler AfterSetByUi;
 
-
         public event Action<UserControl> UiCreated;
 
         /// <summary>
@@ -403,6 +402,10 @@ namespace WpfDataUi.DataTypes
 
         public void CallAfterSetByUi()
         {
+            if(Category != null)
+            {
+                Category.HandleValueSetByUi(this);
+            }
             if (AfterSetByUi != null)
             {
                 AfterSetByUi(this, null);

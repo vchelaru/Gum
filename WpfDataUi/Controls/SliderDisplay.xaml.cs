@@ -169,6 +169,8 @@ namespace WpfDataUi.Controls
 
                 SuppressSettingProperty = false;
 
+                HintTextBlock.Visibility = !string.IsNullOrEmpty(InstanceMember?.DetailText) ? Visibility.Visible : Visibility.Collapsed;
+                HintTextBlock.Text = InstanceMember?.DetailText;
 
                 this.RefreshContextMenu(TextBox.ContextMenu);
                 this.RefreshContextMenu(Slider.ContextMenu);
@@ -258,6 +260,8 @@ namespace WpfDataUi.Controls
                 SetTextBoxValue(multipliedValue);
 
                 SetSliderValue(multipliedValue);
+
+
                 return ApplyValueResult.Success;
             }
             else
@@ -339,6 +343,7 @@ namespace WpfDataUi.Controls
 
         private void TextBox_LostFocus_1(object sender, RoutedEventArgs e)
         {
+
             mTextBoxLogic.ClampTextBoxValuesToMinMax();
 
             mTextBoxLogic.TryApplyToInstance();

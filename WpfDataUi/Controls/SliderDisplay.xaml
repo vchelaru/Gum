@@ -95,21 +95,26 @@
 
 
     <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Name="FirstColumn" Width="{Binding FirstGridLength}"></ColumnDefinition>
-            <ColumnDefinition Width="*"></ColumnDefinition>
-            <ColumnDefinition Width="65"></ColumnDefinition>
-        </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition></RowDefinition>
             <RowDefinition Height="Auto"></RowDefinition>
         </Grid.RowDefinitions>
 
-        <TextBlock x:Name="Label" MinWidth="100" TextWrapping="Wrap"  VerticalAlignment="Top"
+        <Grid x:Name="TopRowGrid">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Name="FirstColumn" Width="{Binding FirstGridLength}"></ColumnDefinition>
+                <ColumnDefinition Width="*"></ColumnDefinition>
+                <ColumnDefinition Width="65"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition></RowDefinition>
+                <RowDefinition Height="Auto"></RowDefinition>
+            </Grid.RowDefinitions>
+            <TextBlock x:Name="Label" MinWidth="100" TextWrapping="Wrap"  VerticalAlignment="Top"
                    Padding="4" Grid.RowSpan="2"
                    >Property Label:</TextBlock>
-        
-        <Slider Grid.Column="1" x:Name="Slider" 
+
+            <Slider Grid.Column="1" x:Name="Slider" 
                 VerticalContentAlignment="Center" 
                 ValueChanged="Slider_ValueChanged"
                 PreviewMouseLeftButtonUp="Slider_MouseLeftButtonUp"
@@ -120,18 +125,26 @@
                 Style="{StaticResource MyCustomStyleForSlider}"
                 ></Slider>
 
-        <TextBox Grid.Column="2" x:Name="TextBox" Margin="1" Height="22"
+            <TextBox Grid.Column="2" x:Name="TextBox" Margin="1" Height="22"
                      LostFocus="TextBox_LostFocus_1">
-            <TextBox.ContextMenu>
-                <ContextMenu>
-                </ContextMenu>
-            </TextBox.ContextMenu>
-        </TextBox>
-        <Grid Grid.Column="1" Grid.Row="1">
-            <!-- Negative Y margin to make the text show closer to the slider. The overlap looks bad 
+                <TextBox.ContextMenu>
+                    <ContextMenu>
+                    </ContextMenu>
+                </TextBox.ContextMenu>
+            </TextBox>
+            <Grid Grid.Column="1" Grid.Row="1">
+                <!-- Negative Y margin to make the text show closer to the slider. The overlap looks bad 
             here in the editor, but it's fine in my testing in the actual app.-->
-            <TextBlock x:Name="MinValueText" VerticalAlignment="Top" Margin="0,-13,0,0">0</TextBlock>
-            <TextBlock x:Name="MaxValueText" VerticalAlignment="Top" Margin="0,-13,0,0" HorizontalAlignment="Right">100</TextBlock>
+                <TextBlock x:Name="MinValueText" VerticalAlignment="Top" Margin="0,-13,0,0">0</TextBlock>
+                <TextBlock x:Name="MaxValueText" VerticalAlignment="Top" Margin="0,-13,0,0" HorizontalAlignment="Right">100</TextBlock>
+            </Grid>
         </Grid>
+
+        <TextBlock  x:Name="HintTextBlock" Padding="8,1,0,4" Grid.Row="1"
+                    TextWrapping="Wrap"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    Width="{Binding ElementName=TopRowGrid, Path=ActualWidth, Mode=OneWay}"
+                    FontSize="10">This is the bottommost text</TextBlock>
     </Grid>
 </UserControl>

@@ -84,6 +84,8 @@ namespace WpfDataUi.DataTypes
 
         public event PropertyChangedEventHandler PropertyChanged;
 
+        public event Action<InstanceMember> MemberValueChangedByUi;
+
         #endregion
 
         #region Methods
@@ -113,6 +115,22 @@ namespace WpfDataUi.DataTypes
         void HandleMembersChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
             NotifyPropertyChanged("Visibility");
+
+            switch(e.Action)
+            {
+                case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
+                    foreach(InstanceMember newItem in e.NewItems)
+                    {
+                        newItem.Category = this;
+                    }
+                    break;
+                case System.Collections.Specialized.NotifyCollectionChangedAction.Replace:
+                    foreach(InstanceMember newItem in e.NewItems)
+                    {
+                        newItem.Category = this;
+                    }
+                    break;
+            }
         }
 
         void NotifyPropertyChanged(string propertyName)
@@ -121,6 +139,11 @@ namespace WpfDataUi.DataTypes
             {
                 PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
             }
+        }
+
+        internal void HandleValueSetByUi(InstanceMember instanceMember)
+        {
+            MemberValueChangedByUi?.Invoke(instanceMember);
         }
 
         public void SetAlternatingColors(Brush evenBrush, Brush oddBrush)
