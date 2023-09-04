@@ -47,7 +47,16 @@ namespace WpfDataUi.Controls
             }
             set
             {
+                bool instanceMemberChanged = mInstanceMember != value;
+                if (mInstanceMember != null && instanceMemberChanged)
+                {
+                    mInstanceMember.PropertyChanged -= HandlePropertyChange;
+                }
                 mInstanceMember = value;
+                if (mInstanceMember != null && instanceMemberChanged)
+                {
+                    mInstanceMember.PropertyChanged += HandlePropertyChange;
+                }
                 Refresh();
             }
         }
@@ -55,7 +64,14 @@ namespace WpfDataUi.Controls
 
         public event PropertyChangedEventHandler PropertyChanged;
 
+        private void HandlePropertyChange(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(InstanceMember.Value))
+            {
+                this.Refresh();
 
+            }
+        }
 
         public NullableBoolDisplay()
         {
