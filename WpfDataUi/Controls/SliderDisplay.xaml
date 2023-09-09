@@ -135,8 +135,8 @@
             <Grid Grid.Column="1" Grid.Row="1">
                 <!-- Negative Y margin to make the text show closer to the slider. The overlap looks bad 
             here in the editor, but it's fine in my testing in the actual app.-->
-                <TextBlock x:Name="MinValueText" VerticalAlignment="Top" Margin="0,-13,0,0">0</TextBlock>
-                <TextBlock x:Name="MaxValueText" VerticalAlignment="Top" Margin="0,-13,0,0" HorizontalAlignment="Right">100</TextBlock>
+                <TextBlock x:Name="MinValueText" VerticalAlignment="Top" Margin="0,-8,0,0" IsHitTestVisible="False">0</TextBlock>
+                <TextBlock x:Name="MaxValueText" VerticalAlignment="Top" Margin="0,-8,0,0" IsHitTestVisible="False" HorizontalAlignment="Right">100</TextBlock>
             </Grid>
         </Grid>
 
