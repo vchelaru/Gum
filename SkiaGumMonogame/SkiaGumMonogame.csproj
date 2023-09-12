@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+	  <TargetFramework>net6.0-windows</TargetFramework>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -49,8 +49,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\GumDataTypes\GumDataTypesStandard.csproj" />
-    <ProjectReference Include="..\GumRuntimeStandard\GumRuntimeStandard\GumRuntimeStandard.csproj" />
+    <ProjectReference Include="..\GumDataTypes\GumDataTypesNet6.csproj" />
+    <ProjectReference Include="..\GumRuntimeNet6\GumRuntimeNet6.csproj" />
     <ProjectReference Include="..\ToolsUtilities\ToolsUtilitiesStandard.csproj" />
   </ItemGroup>
 
