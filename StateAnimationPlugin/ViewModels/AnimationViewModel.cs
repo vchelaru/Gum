@@ -135,6 +135,23 @@ namespace StateAnimationPlugin.ViewModels
             mPlayOnceBitmap = BitmapLoader.Self.LoadImage("PlayOnceIcon.png");
         }
 
+        public AnimationViewModel Clone()
+        {
+            var clone = base.Clone<AnimationViewModel>();
+
+            clone.Keyframes = new ObservableCollection<AnimatedKeyframeViewModel>();
+
+            clone.FramePropertyChanged = null;
+            clone.ContainingInstance = this.ContainingInstance;
+            
+            foreach(var item in this.Keyframes)
+            {
+                clone.Keyframes.Add(item.Clone());
+            }
+
+            return clone;
+        }
+
         public static AnimationViewModel FromSave(AnimationSave save, ElementSave element, ElementAnimationsSave allAnimationSaves = null)
         {
             AnimationViewModel toReturn = new AnimationViewModel();

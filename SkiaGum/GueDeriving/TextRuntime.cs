@@ -130,6 +130,12 @@ namespace SkiaGum.GueDeriving
             set => ContainedText.FontScale = value;
         }
 
+        public float LineHeightMultiplier
+        {
+            get => ContainedText.LineHeightMultiplier;
+            set => ContainedText.LineHeightMultiplier = value;
+        }
+
         public int? MaximumNumberOfLines
         {
             get => ContainedText.MaximumNumberOfLines;

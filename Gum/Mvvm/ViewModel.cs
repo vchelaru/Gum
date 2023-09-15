@@ -145,9 +145,21 @@ namespace Gum.Mvvm
             }
         }
 
-
-
         public event PropertyChangedEventHandler PropertyChanged;
+
+        protected T Clone<T>()
+        {
+            var asObject = this.MemberwiseClone();
+            var asViewModel = (ViewModel)asObject;
+            asViewModel.propertyDictionary = new Dictionary<string, object>(this.propertyDictionary);
+            foreach(var kvp in propertyDictionary)
+            {
+                asViewModel.propertyDictionary[kvp.Key] = kvp.Value;
+            }
+            var asT = (T)asObject;
+
+            return asT;
+        }
 
     }
 

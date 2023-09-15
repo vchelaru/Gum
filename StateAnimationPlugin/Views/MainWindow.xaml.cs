@@ -25,6 +25,8 @@ using Gum;
 using SkiaSharp;
 using System.ComponentModel;
 using SkiaSharp.Views.WPF;
+using Gum.Logic;
+using ToolsUtilities;
 
 namespace StateAnimationPlugin.Views
 {
@@ -145,7 +147,7 @@ namespace StateAnimationPlugin.Views
 
             string whyIsntValid = null;
 
-            whyIsntValid = GetWhyAddingAnimationIsInvalid();
+            whyIsntValid = this.ViewModel.GetWhyAddingAnimationIsInvalid();
 
             if(!string.IsNullOrEmpty(whyIsntValid))
             {
@@ -178,16 +180,7 @@ namespace StateAnimationPlugin.Views
             }
         }
 
-        private string GetWhyAddingAnimationIsInvalid()
-        {
-            string whyIsntValid = null;
-            if (SelectedState.Self.SelectedScreen == null && SelectedState.Self.SelectedComponent == null)
-            {
-                whyIsntValid = "You must first select a Screen or Component";
-            }
 
-            return whyIsntValid;
-        }
 
         private void AddStateKeyframeButton_Click(object sender, RoutedEventArgs e)
         {
@@ -367,9 +360,56 @@ namespace StateAnimationPlugin.Views
                     this.ViewModel.SelectedAnimation = null;
                 }
             }
+
+            var isCtrlDown =
+                Keyboard.IsKeyDown(Key.LeftCtrl);
+
+            if (isCtrlDown )
+            {
+                if( e.Key == Key.C)
+                {
+                    var objectToCopy = ViewModel.SelectedAnimation;
+
+                    if(objectToCopy != null)
+                    {
+                        AnimationCopyPasteManager.Copy(objectToCopy);
+                    }
+                }
+                else if(e.Key == Key.V)
+                {
+                    AnimationCopyPasteManager.Paste(ViewModel);
+                }
+                else if(e.Key == Key.X)
+                {
+
+                }
+            }
+            
+
+            //if ((e. & Keys.Control) == Keys.Control)
+            //{
+            //    // copy, ctrl c, ctrl + c
+            //    if (e.KeyCode == Keys.C)
+            //    {
+            //        e.Handled = true;
+            //        e.SuppressKeyPress = true;
+            //    }
+            //    // paste, ctrl v, ctrl + v
+            //    else if (e.KeyCode == Keys.V)
+            //    {
+            //        e.Handled = true;
+            //        e.SuppressKeyPress = true;
+            //    }
+            //    // cut, ctrl x, ctrl + x
+            //    else if (e.KeyCode == Keys.X)
+            //    {
+            //        e.Handled = true;
+            //        e.SuppressKeyPress = true;
+            //    }
+            //}
         }
 
-        AnimatedKeyframeViewModel copiedFrame;
+                AnimatedKeyframeViewModel copiedFrame;
 
         private void HandleAnimationKeyframeListBoxKey(object sender, KeyEventArgs e)
         {

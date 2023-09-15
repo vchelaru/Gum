@@ -210,6 +210,8 @@ namespace SkiaGum
             set;
         }
 
+        public float LineHeightMultiplier { get; set; } = 1;
+
         #endregion
 
         public Text()
@@ -343,7 +345,8 @@ namespace SkiaGum
                 FontSize = FontSize * (float)ScreenDensity * FontScale,
                 TextColor = this.Color,
                 FontItalic = this.IsItalic,
-                FontWeight = (int)(400 * BoldWeight)
+                FontWeight = (int)(400 * BoldWeight),
+                LineHeight = LineHeightMultiplier
             };
 
             return style;

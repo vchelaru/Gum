@@ -470,6 +470,17 @@ namespace StateAnimationPlugin.ViewModels
             }
         }
 
+        public string GetWhyAddingAnimationIsInvalid()
+        {
+            string whyIsntValid = null;
+            if (SelectedState.Self.SelectedScreen == null && SelectedState.Self.SelectedComponent == null)
+            {
+                whyIsntValid = "You must first select a Screen or Component";
+            }
+
+            return whyIsntValid;
+        }
+
         #endregion
 
     }
