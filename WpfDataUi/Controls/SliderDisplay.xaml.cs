@@ -209,24 +209,33 @@ namespace WpfDataUi.Controls
         {
             var result = mTextBoxLogic.TryGetValueOnUi(out value);
 
-            if(displayedValueMultiplier != 1 && value != null)
+            if (displayedValueMultiplier != 1 && value != null)
             {
                 if (value is float asFloat)
                 {
                     value = (float)(asFloat / displayedValueMultiplier);
                 }
-                else if (value is int asInt)
-                {
-                    value = (int)(asInt / displayedValueMultiplier);
-                }
                 else if (value is double asDouble)
                 {
                     value = (double)(asDouble / displayedValueMultiplier);
+                }
+                else if (value is int asInt)
+                {
+                    value = (int)(asInt / displayedValueMultiplier);
                 }
                 else if (value is decimal asDecimal)
                 {
                     value = (decimal)(asDecimal / (decimal)displayedValueMultiplier);
                 }
+                else if (value is long asLong)
+                {
+                    value = (long)(asLong / displayedValueMultiplier);
+                }
+                else if (value is byte asByte)
+                {
+                    value = (byte)(asByte / displayedValueMultiplier);
+                }
+
             }
 
             return result;
@@ -239,21 +248,29 @@ namespace WpfDataUi.Controls
                 object multipliedValue = valueOnInstance;
                 if(displayedValueMultiplier != 1)
                 {
-                    if(valueOnInstance is float asFloat)
+                    if (valueOnInstance is float asFloat)
                     {
                         multipliedValue = asFloat * displayedValueMultiplier;
                     }
-                    else if(valueOnInstance is int asInt)
-                    {
-                        multipliedValue = asInt * displayedValueMultiplier;
-                    }
-                    else if(valueOnInstance is double asDouble)
+                    else if (valueOnInstance is double asDouble)
                     {
                         multipliedValue = asDouble * displayedValueMultiplier;
                     }
-                    else if(valueOnInstance is decimal asDecimal)
+                    else if (valueOnInstance is int asInt)
+                    {
+                        multipliedValue = asInt * displayedValueMultiplier;
+                    }
+                    else if (valueOnInstance is decimal asDecimal)
                     {
                         multipliedValue = asDecimal * (decimal)displayedValueMultiplier;
+                    }
+                    else if (valueOnInstance is long asLong)
+                    {
+                        multipliedValue = asLong * (long)displayedValueMultiplier;
+                    }
+                    else if(valueOnInstance is byte asByte)
+                    {
+                        multipliedValue = asByte * (byte)displayedValueMultiplier;
                     }
                 }
 
@@ -289,7 +306,18 @@ namespace WpfDataUi.Controls
             {
                 this.Slider.Value = (int)valueOnInstance;
             }
-            // todo: support int...
+            else if(valueOnInstance is decimal)
+            {
+                this.Slider.Value = (double)(decimal)valueOnInstance;
+            }
+            else if(valueOnInstance is long)
+            {
+                this.Slider.Value = (long)valueOnInstance;
+            }
+            else if(valueOnInstance is byte)
+            {
+                this.Slider.Value = (byte)valueOnInstance;
+            }
         }
 
         DateTime lastSliderTime = new DateTime();
@@ -329,8 +357,12 @@ namespace WpfDataUi.Controls
             var value = Slider.Value;
 
             var propertyType = mInstanceMember?.PropertyType;
-            if (propertyType == typeof(int) || propertyType == typeof(long) || propertyType == typeof(uint) || propertyType == typeof(ulong) ||
-                propertyType == typeof(byte))
+            if (propertyType == typeof(int) || 
+                propertyType == typeof(uint) || 
+                propertyType == typeof(long) || 
+                propertyType == typeof(ulong) ||
+                propertyType == typeof(byte) ||
+                propertyType == typeof(short))
             {
                 this.TextBox.Text = ((int)value).ToString();
             }
