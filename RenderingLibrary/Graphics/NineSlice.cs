@@ -736,8 +736,14 @@ namespace RenderingLibrary.Graphics
             var sourceRectangle = sprite.EffectiveRectangle;
             if (sprite.AtlasedTexture != null) texture = sprite.AtlasedTexture.Texture;
 
-            Sprite.Render(managers, spriteRenderer, sprite, texture, sprite.Color, 
-                sourceRectangle, sprite.FlipVertical, sprite.Rotation, treat0AsFullDimensions:false);
+            // broken up to make debugging easier. Should have no impact on performance
+            var color = sprite.Color;
+            var flipVertical = sprite.FlipVertical;
+            var rotation = sprite.Rotation;
+
+
+            Sprite.Render(managers, spriteRenderer, sprite, texture, color, 
+                sourceRectangle, flipVertical, rotation, treat0AsFullDimensions:false);
         }
 
         void IRenderableIpso.SetParentDirect(IRenderableIpso parent)

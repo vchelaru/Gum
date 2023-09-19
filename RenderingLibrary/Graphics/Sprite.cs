@@ -275,7 +275,9 @@ namespace RenderingLibrary.Graphics
         }
 
 
-
+        /// <summary>
+        /// Returns the effective source rectangle, which may be the same as the SourceRectangle unless an AtlasedTexture is used.
+        /// </summary>
         public Rectangle? EffectiveRectangle
         {
             get

@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using RenderingLibrary.Math;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -337,11 +338,16 @@ namespace RenderingLibrary.Graphics
             }
 
             // Adjust offsets according to zoom
-            float x = ((int)(position.X * CurrentZoom) + Camera.PixelPerfectOffsetX)/CurrentZoom;
-            float y = ((int)(position.Y * CurrentZoom) + Camera.PixelPerfectOffsetY)/CurrentZoom;
+            //float x = ((int)(position.X * CurrentZoom) + Camera.PixelPerfectOffsetX)/CurrentZoom;
+            //float y = ((int)(position.Y * CurrentZoom) + Camera.PixelPerfectOffsetY)/CurrentZoom;
 
-            position.X = x;
-            position.Y = y;
+
+                float x = ((int)( (position.X * CurrentZoom) + .5f)) / CurrentZoom + Camera.PixelPerfectOffsetX / CurrentZoom;
+                float y = ((int)( (position.Y * CurrentZoom) + .5f)) / CurrentZoom + Camera.PixelPerfectOffsetY / CurrentZoom;
+
+                position.X = x;
+                position.Y = y;
+
 
             mSpriteBatch.Draw(textureToUse, position, sourceRectangle, color, rotation, origin, scale, effects, depth, objectRequestingChange);
         }
