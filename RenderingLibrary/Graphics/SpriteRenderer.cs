@@ -340,11 +340,30 @@ namespace RenderingLibrary.Graphics
             // Adjust offsets according to zoom
             //float x = ((int)(position.X * CurrentZoom) + Camera.PixelPerfectOffsetX)/CurrentZoom;
             //float y = ((int)(position.Y * CurrentZoom) + Camera.PixelPerfectOffsetY)/CurrentZoom;
-
-
                 float x = ((int)( (position.X * CurrentZoom) + .5f)) / CurrentZoom + Camera.PixelPerfectOffsetX / CurrentZoom;
                 float y = ((int)( (position.Y * CurrentZoom) + .5f)) / CurrentZoom + Camera.PixelPerfectOffsetY / CurrentZoom;
 
+            // need to also adjust scale:
+            if(textureToUse != null)
+            {
+                int sourceWidth = sourceRectangle?.Width ?? textureToUse.Width;
+                int sourceHeight = sourceRectangle?.Height ?? textureToUse.Height;
+
+                var worldWidth = sourceWidth * scale.X;
+                var worldHeight = sourceHeight * scale.Y;
+
+                var worldRight = position.X + worldWidth;
+                var worldBottom = position.Y + worldHeight;
+
+                float worldRightRounded = ((int)((worldRight * CurrentZoom) + .5f)) / CurrentZoom + Camera.PixelPerfectOffsetX / CurrentZoom;
+                float worldBottomRounded = ((int)((worldBottom * CurrentZoom) + .5f)) / CurrentZoom + Camera.PixelPerfectOffsetY / CurrentZoom;
+
+                var roundedWidth = worldRightRounded - x;
+                var roundedHeight = worldBottomRounded - y;
+
+                scale.X = roundedWidth / sourceWidth;
+                scale.Y = roundedHeight / sourceHeight;
+            }
                 position.X = x;
                 position.Y = y;
 
