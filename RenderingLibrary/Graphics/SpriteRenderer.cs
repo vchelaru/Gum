@@ -330,43 +330,73 @@ namespace RenderingLibrary.Graphics
             mSpriteBatch.Draw(textureToUse, destinationRectangle, sourceRectangle, color, rotation, origin, effects, layerDepth, objectRequestingChange);
         }
 
-        internal void Draw(Texture2D textureToUse, Vector2 position, Rectangle? sourceRectangle, Color color, float rotation, Vector2 origin, Vector2 scale, SpriteEffects effects, float depth, object objectRequestingChange)
+        internal void Draw(Texture2D textureToUse, Vector2 position, Rectangle? sourceRectangle, Color color, float rotation, Vector2 origin, Vector2 scale, SpriteEffects effects, float depth, object objectRequestingChange, Renderer renderer = null)
         {
             if (!Renderer.UseCustomEffectRendering && Renderer.UseBasicEffectRendering && basicEffect.FogEnabled)
             {
                 basicEffect.FogColor = new Vector3(color.R/255, color.G/255, color.B/255f);
             }
 
-            // Adjust offsets according to zoom
-            //float x = ((int)(position.X * CurrentZoom) + Camera.PixelPerfectOffsetX)/CurrentZoom;
-            //float y = ((int)(position.Y * CurrentZoom) + Camera.PixelPerfectOffsetY)/CurrentZoom;
-                float x = ((int)( (position.X * CurrentZoom) + .5f)) / CurrentZoom + Camera.PixelPerfectOffsetX / CurrentZoom;
-                float y = ((int)( (position.Y * CurrentZoom) + .5f)) / CurrentZoom + Camera.PixelPerfectOffsetY / CurrentZoom;
+            var quarterRotations = System.Math.Abs(rotation / MathHelper.PiOver2);
+            var radiansFromPerfectRotation = System.Math.Abs(quarterRotations - MathFunctions.RoundToInt(quarterRotations));
 
-            // need to also adjust scale:
-            if(textureToUse != null)
+
+            // 1/90 would be 1 degree. Let's go 1/10th of a degree
+            const float errorToTolerate = .1f/90f;
+
+            // don't attempt to do adjustments unless the scale is integer scale
+            var isIntegerScale = System.Math.Abs(MathFunctions.RoundToInt(CurrentZoom) - CurrentZoom) < .01f;
+
+            if(radiansFromPerfectRotation < errorToTolerate && isIntegerScale)
             {
-                int sourceWidth = sourceRectangle?.Width ?? textureToUse.Width;
-                int sourceHeight = sourceRectangle?.Height ?? textureToUse.Height;
 
-                var worldWidth = sourceWidth * scale.X;
-                var worldHeight = sourceHeight * scale.Y;
+                // Adjust offsets according to zoom
+                //float x = ((int)(position.X * CurrentZoom) + Camera.PixelPerfectOffsetX)/CurrentZoom;
+                //float y = ((int)(position.Y * CurrentZoom) + Camera.PixelPerfectOffsetY)/CurrentZoom;
 
-                var worldRight = position.X + worldWidth;
-                var worldBottom = position.Y + worldHeight;
+                float cameraOffsetX = 0;
+                float cameraOffsetY = 0;
 
-                float worldRightRounded = ((int)((worldRight * CurrentZoom) + .5f)) / CurrentZoom + Camera.PixelPerfectOffsetX / CurrentZoom;
-                float worldBottomRounded = ((int)((worldBottom * CurrentZoom) + .5f)) / CurrentZoom + Camera.PixelPerfectOffsetY / CurrentZoom;
+                var effectivePixelOffsetX = Camera.PixelPerfectOffsetX;
+                var effectivePixelOffsetY = Camera.PixelPerfectOffsetY;
 
-                var roundedWidth = worldRightRounded - x;
-                var roundedHeight = worldBottomRounded - y;
+                if (renderer != null)
+                {
+                    cameraOffsetX = renderer.Camera.X * CurrentZoom;
+                    cameraOffsetY = renderer.Camera.Y * CurrentZoom;
+                    // todo - continue working here. This doesn't seem to solve the problem:
+                    //effectivePixelOffsetX -= ( (int)cameraOffsetX - cameraOffsetX);
+                    //effectivePixelOffsetY -= ( (int)cameraOffsetY - cameraOffsetY);
+                }
 
-                scale.X = roundedWidth / sourceWidth;
-                scale.Y = roundedHeight / sourceHeight;
-            }
+                float x = MathFunctions.RoundToInt(position.X * CurrentZoom) / CurrentZoom + effectivePixelOffsetX / CurrentZoom;
+                float y = MathFunctions.RoundToInt(position.Y * CurrentZoom) / CurrentZoom + effectivePixelOffsetY / CurrentZoom;
+
+                // need to also adjust scale:
+                if(textureToUse != null)
+                {
+                    int sourceWidth = sourceRectangle?.Width ?? textureToUse.Width;
+                    int sourceHeight = sourceRectangle?.Height ?? textureToUse.Height;
+
+                    var worldWidth = sourceWidth * scale.X;
+                    var worldHeight = sourceHeight * scale.Y;
+
+                    var worldRight = position.X + worldWidth;
+                    var worldBottom = position.Y + worldHeight;
+
+                    float worldRightRounded = MathFunctions.RoundToInt(worldRight * CurrentZoom) / CurrentZoom + effectivePixelOffsetX / CurrentZoom;
+                    float worldBottomRounded = MathFunctions.RoundToInt(worldBottom * CurrentZoom) / CurrentZoom + effectivePixelOffsetY / CurrentZoom;
+
+                    var roundedWidth = worldRightRounded - x;
+                    var roundedHeight = worldBottomRounded - y;
+
+                    scale.X = roundedWidth / sourceWidth;
+                    scale.Y = roundedHeight / sourceHeight;
+                }
+
                 position.X = x;
                 position.Y = y;
-
+            }
 
             mSpriteBatch.Draw(textureToUse, position, sourceRectangle, color, rotation, origin, scale, effects, depth, objectRequestingChange);
         }

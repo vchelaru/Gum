@@ -2624,18 +2624,15 @@ namespace Gum.Wireframe
             }
 #endif
 
-
-            Matrix matrix = Matrix.Identity;
-
-
             unitOffsetX += parentOriginOffsetX;
             unitOffsetY += parentOriginOffsetY;
 
             if (parentRotation != 0)
             {
-                matrix = Matrix.CreateRotationZ(-MathHelper.ToRadians(parentRotation));
+                GetRightAndUpFromRotation(parentRotation, out Vector3 right, out Vector3 up);
 
-                var rotatedOffset = unitOffsetX * matrix.Right + unitOffsetY * matrix.Up;
+
+                var rotatedOffset = unitOffsetX * right + unitOffsetY * up;
 
 
                 unitOffsetX = rotatedOffset.X;
@@ -2940,17 +2937,69 @@ namespace Gum.Wireframe
             {
                 var rotation = isParentFlippedHorizontally ? -mRotation : mRotation;
 
-                var matrix = Matrix.CreateRotationZ(-MathHelper.ToRadians(rotation));
+                GetRightAndUpFromRotation(rotation, out Vector3 right, out Vector3 up);
 
                 var unrotatedX = offsetX;
                 var unrotatedY = offsetY;
 
-                offsetX = matrix.Right.X * unrotatedX + matrix.Up.X * unrotatedY;
-                offsetY = matrix.Right.Y * unrotatedX + matrix.Up.Y * unrotatedY;
+                offsetX = right.X * unrotatedX + up.X * unrotatedY;
+                offsetY = right.Y * unrotatedX + up.Y * unrotatedY;
             }
 
             unitOffsetX += offsetX;
             unitOffsetY += offsetY;
+        }
+
+        static void GetRightAndUpFromRotation(float rotationInDegrees, out Vector3 right, out Vector3 up)
+        {
+
+            var quarterRotations = rotationInDegrees / 90;
+            var radiansFromPerfectRotation = System.Math.Abs(quarterRotations - MathFunctions.RoundToInt(quarterRotations));
+
+            const float errorToTolerate = .1f / 90f;
+
+            if(radiansFromPerfectRotation < errorToTolerate)
+            {
+                var quarterRotationsAsInt = MathFunctions.RoundToInt(quarterRotations) % 4;
+                if (quarterRotationsAsInt < 0)
+                {
+                    quarterRotationsAsInt += 4;
+                }
+
+                // invert it to match how rotation works with the CreateRotationZ method:
+                quarterRotationsAsInt = 4 - quarterRotationsAsInt;
+
+                right = Vector3.Right;
+                up = Vector3.Up;
+
+                switch (quarterRotationsAsInt)
+                {
+                    case 0:
+                        right = Vector3.Right;
+                        up = Vector3.Up;
+                        break;
+                    case 1:
+                        right = Vector3.Up;
+                        up = Vector3.Left;
+                        break;
+                    case 2:
+                        right = Vector3.Left;
+                        up = Vector3.Down;
+                        break;
+
+                    case 3:
+                        right = Vector3.Down;
+                        up = Vector3.Right;
+                        break;
+                }
+            }
+            else
+            {
+                var matrix = Matrix.CreateRotationZ(-MathHelper.ToRadians(rotationInDegrees));
+                right = matrix.Right;
+                up = matrix.Up;
+            }
+
         }
 
         private void AdjustParentOriginOffsetsByUnits(float parentWidth, float parentHeight, bool isParentFlippedHorizontally,

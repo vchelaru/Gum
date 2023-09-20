@@ -702,7 +702,7 @@ namespace RenderingLibrary.Graphics
                     scale,
                     effects,
                     0,
-                    objectCausingRendering);
+                    objectCausingRendering, renderer);
             }
             else
             {
