@@ -336,6 +336,26 @@ namespace WpfDataUi.Controls
 
                 toReturn = ApplyValueResult.Success;
             }
+            else if(value is int asInt)
+            {
+                var isOver = this.IsMouseOver && Mouse.LeftButton == MouseButtonState.Pressed;
+                if (!isOver)
+                {
+                    if (TypeToPushToInstance == AngleType.Radians)
+                    {
+                        this.Angle = 180 * (float)(asInt / Math.PI);
+
+                    }
+                    else
+                    {
+                        this.Angle = asInt;
+                    }
+
+
+                }
+
+                toReturn = ApplyValueResult.Success;
+            }
             else if(value is null)
             {
                 this.Angle = null;
