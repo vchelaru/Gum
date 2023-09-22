@@ -1,5 +1,6 @@
 ﻿using Gum;
 using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using Gum.ToolStates;
 using System;
 using System.Collections.Generic;
@@ -14,17 +15,19 @@ namespace SkiaPlugin.Managers
     {
         public static void AddAllStandards()
         {
-            AddStandard("Arc");
-            AddStandard("Canvas");
-            AddStandard("ColoredCircle");
-            AddStandard("LottieAnimation");
-            AddStandard("LottieAnimation");
-            AddStandard("RoundedRectangle");
-            AddStandard("Svg");
+            AddStandard("Arc", DefaultStateManager.GetArcState());
+            AddStandard("Canvas", DefaultStateManager.GetCanvasState());
+            AddStandard("ColoredCircle", DefaultStateManager.GetColoredCircleState());
+            AddStandard("LottieAnimation", DefaultStateManager.GetLottieAnimationState());
+            AddStandard("RoundedRectangle", DefaultStateManager.GetRoundedRectangleState());
+            AddStandard("Svg", DefaultStateManager.GetSvgState());
         }
 
-        private static void AddStandard(string standardName)
+
+        private static StandardElementSave AddStandard(string standardName, StateSave defaultState)
         {
+            StandardElementSave toReturn = null;
+
             var targetFile = ProjectState.Self.ProjectDirectory + $"Standards/{standardName}.gutx";
             FileManager.SaveEmbeddedResource(
                 typeof(StandardAdder).Assembly,
@@ -50,10 +53,14 @@ namespace SkiaPlugin.Managers
 
                     // load it:
                     gumProject.StandardElements.Add(loaded);
-                    loaded.Initialize(DefaultStateManager.GetSvgState());
+                    loaded.Initialize(defaultState);
+                    GumCommands.Self.FileCommands.TryAutoSaveElement(loaded);
+                    toReturn = loaded;
                 }
                 GumCommands.Self.FileCommands.TryAutoSaveProject();
             }
+
+            return toReturn;
         }
     }
 }
