@@ -176,7 +176,9 @@ namespace GumRuntime
 #if GUM
             if (!handled)
             {
-                string type = elementSave.BaseType;
+                string type = (elementSave is StandardElementSave) 
+                    ? elementSave.Name 
+                    : elementSave.BaseType;
 
                 containedObject =
                     Gum.Plugins.PluginManager.Self.CreateRenderableForType(type);
