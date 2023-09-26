@@ -1602,9 +1602,12 @@ namespace Gum.Managers
                     ObjectTreeView.Focus();
 
                     var selectedItem = FlatList.FlatList.SelectedItem as SearchItemViewModel;
-                    HandleSelectedSearchNode(selectedItem);
+                    if(selectedItem != null)
+                    {
+                        HandleSelectedSearchNode(selectedItem);
 
-                    searchTextBox.Text = null;
+                        searchTextBox.Text = null;
+                    }
                 }
             };
             searchTextBox.Dock = DockStyle.Fill;
