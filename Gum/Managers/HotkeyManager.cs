@@ -1,9 +1,12 @@
-﻿using Gum.Logic;
+﻿using Gum.DataTypes;
+using Gum.Logic;
+using Gum.Plugins;
 using Gum.ToolStates;
 using Gum.Wireframe;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Management.Instrumentation;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -191,8 +194,29 @@ namespace Gum.Managers
 
             if (nudgeX != 0 || nudgeY != 0)
             {
+                var instance = SelectedState.Self.SelectedInstance;
+
+                var element = SelectedState.Self.SelectedElement;
+
+                float oldX = 0;
+                float oldY = 0;
+                if(instance != null)
+                {
+                    oldX = (float)instance.GetValueFromThisOrBase(element, "X");
+                    oldY = (float)instance.GetValueFromThisOrBase(element, "Y");
+                }
+
                 EditingManager.Self.MoveSelectedObjectsBy(nudgeX, nudgeY);
                 handled = true;
+                if(nudgeX != 0)
+                {
+                    PluginManager.Self.VariableSet(element, instance, "X", oldX);
+                }
+                if(nudgeY != 0)
+                {
+                    PluginManager.Self.VariableSet(element, instance, "Y", oldY);
+                }
+
 
                 GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
             }
