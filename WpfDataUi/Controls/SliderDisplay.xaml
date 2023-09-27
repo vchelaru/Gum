@@ -17,7 +17,7 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type RepeatButton}">
                         <Border BorderThickness="1" Margin="0,3,-2,3"
-                            CornerRadius="3,0,0,3" BorderBrush="#dddddd" Background="#dddddd">
+                            CornerRadius="3,0,0,3" BorderBrush="#888888" Background="#dddddd">
                         </Border>
                     </ControlTemplate>
                 </Setter.Value>
@@ -32,7 +32,7 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type RepeatButton}">
                         <Border BorderThickness="1" Margin="-2,3,0,3"
-                            CornerRadius="0,3,3,0" BorderBrush="#dddddd" Background="#ffffff">
+                            CornerRadius="0,3,3,0" BorderBrush="#888888" Background="#ffffff">
                         </Border>
                     </ControlTemplate>
                 </Setter.Value>
@@ -125,7 +125,7 @@
                 Style="{StaticResource MyCustomStyleForSlider}"
                 ></Slider>
 
-            <TextBox Grid.Column="2" x:Name="TextBox" Margin="1" Height="22"
+            <TextBox Grid.Column="2" x:Name="TextBox" Margin="3,1,1,1" Height="22"
                      LostFocus="TextBox_LostFocus_1">
                 <TextBox.ContextMenu>
                     <ContextMenu>
