@@ -36,7 +36,7 @@
                     <ItemsControl x:Name="ItemsControlInstance" ItemsSource="{Binding Members}" Focusable="False">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <DataUi:SingleDataUiContainer FontSize="12" Margin="3,0,3,0" Background="{Binding BackgroundColor}"/>
+                                <DataUi:SingleDataUiContainer FontSize="12" Margin="3,0,3,3" Background="{Binding BackgroundColor}"/>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
