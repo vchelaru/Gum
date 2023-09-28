@@ -248,7 +248,6 @@ namespace Gum.Logic
 
         }
 
-
         private static void PasteCopiedInstanceSaves(TopOrRecursive topOrRecursive)
         {
             if(topOrRecursive == TopOrRecursive.Recursive)
@@ -306,7 +305,6 @@ namespace Gum.Logic
 
             GumCommands.Self.FileCommands.TryAutoSaveElement(container);
         }
-
 
         public static void PasteInstanceSaves(List<InstanceSave> instancesToCopy, List<StateSave> copiedStates, ElementSave targetElement, InstanceSave selectedInstance)
         {
@@ -399,6 +397,15 @@ namespace Gum.Logic
                 var shouldAttachToSelectedInstance = isPastingInNewElement || !isSelectedInstancePartOfCopied;
                 var newParentName = selectedInstance?.Name;
 
+                if(selectedInstance != null)
+                {
+                    var childName = ObjectFinder.Self.GetDefaultChildName(selectedInstance);
+
+                    if(!string.IsNullOrEmpty(childName))
+                    {
+                        newParentName += "." + childName;
+                    }
+                }
 
                 var newInstance = newInstances.First(item => item.Name == oldNewNameDictionary[sourceInstance.Name]);
 
