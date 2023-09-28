@@ -190,8 +190,6 @@ namespace Gum.Logic
 
         #endregion
 
-
-
         public static void OnCut(CopyType copyType)
         {
             StoreCopiedObject(copyType);
@@ -220,6 +218,8 @@ namespace Gum.Logic
 
 
         }
+
+        #region Paste
 
         public static void OnPaste(CopyType copyType, TopOrRecursive topOrRecursive = TopOrRecursive.Recursive)
         {
@@ -531,47 +531,6 @@ namespace Gum.Logic
             LastPastedInstances.AddRange(newInstances);
         }
 
-        private static List<InstanceSave> GetAllInstancesAndChildrenOf(List<InstanceSave> explicitlySelectedInstances, ElementSave container)
-        {
-            List<InstanceSave> listToFill = new List<InstanceSave>();
-
-            foreach(var instance in explicitlySelectedInstances)
-            {
-                if(listToFill.Any(item => item.Name == instance.Name) == false)
-                {
-                    listToFill.Add(instance);
-
-                    FillWithChildrenOf(instance, listToFill, container);
-                }
-            }
-
-            return listToFill;
-        }
-
-        private static void FillWithChildrenOf(InstanceSave instance, List<InstanceSave> listToFill, ElementSave container)
-        {
-            var defaultState = container.DefaultState;
-
-            foreach(var variable in defaultState.Variables)
-            {
-                if(variable.GetRootName() == "Parent")
-                {
-                    var value = variable.Value as string;
-
-                    if(!string.IsNullOrEmpty(value) && (value == instance.Name || value.StartsWith(instance.Name + ".") ))
-                    {
-                        var foundObject = container.GetInstance(variable.SourceObject);
-
-                        if(foundObject != null && listToFill.Any(item => item.Name == foundObject.Name) == false)
-                        {
-                            listToFill.Add(foundObject);
-                            FillWithChildrenOf(foundObject, listToFill, container);
-                        }
-                    }
-                }
-            }
-        }
-
         private static void PasteCopiedElement()
         {
             ElementSave toAdd;
@@ -618,6 +577,47 @@ namespace Gum.Logic
             GumCommands.Self.FileCommands.TryAutoSaveProject();
         }
 
+        #endregion
 
+        private static List<InstanceSave> GetAllInstancesAndChildrenOf(List<InstanceSave> explicitlySelectedInstances, ElementSave container)
+        {
+            List<InstanceSave> listToFill = new List<InstanceSave>();
+
+            foreach(var instance in explicitlySelectedInstances)
+            {
+                if(listToFill.Any(item => item.Name == instance.Name) == false)
+                {
+                    listToFill.Add(instance);
+
+                    FillWithChildrenOf(instance, listToFill, container);
+                }
+            }
+
+            return listToFill;
+        }
+
+        private static void FillWithChildrenOf(InstanceSave instance, List<InstanceSave> listToFill, ElementSave container)
+        {
+            var defaultState = container.DefaultState;
+
+            foreach(var variable in defaultState.Variables)
+            {
+                if(variable.GetRootName() == "Parent")
+                {
+                    var value = variable.Value as string;
+
+                    if(!string.IsNullOrEmpty(value) && (value == instance.Name || value.StartsWith(instance.Name + ".") ))
+                    {
+                        var foundObject = container.GetInstance(variable.SourceObject);
+
+                        if(foundObject != null && listToFill.Any(item => item.Name == foundObject.Name) == false)
+                        {
+                            listToFill.Add(foundObject);
+                            FillWithChildrenOf(foundObject, listToFill, container);
+                        }
+                    }
+                }
+            }
+        }
     }
 }
