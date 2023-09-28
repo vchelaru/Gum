@@ -614,7 +614,7 @@ namespace Gum.Managers
                 {
                     // setting the parent:
                     parentName = targetInstance.Name;
-                    string defaultChild = ObjectFinder.Self.GetDefaultChildName(targetInstance);
+                    string defaultChild = ObjectFinder.Self.GetDefaultChildName(targetInstance, SelectedState.Self.SelectedStateSave);
 
                     if (!string.IsNullOrEmpty(defaultChild))
                     {

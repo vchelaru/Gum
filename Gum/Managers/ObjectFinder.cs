@@ -6,7 +6,6 @@ using System.Text;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
-using Gum.ToolStates;
 using ToolsUtilities;
 
 namespace Gum.Managers
@@ -741,14 +740,13 @@ namespace Gum.Managers
             return instance;
         }
 
-        public string GetDefaultChildName(InstanceSave targetInstance, StateSave stateSave = null)
+        public string GetDefaultChildName(InstanceSave targetInstance, StateSave stateSave)
         {
             string defaultChild = null;
             // check if the target instance is a ComponentSave. If so, use the RecursiveVariableFinder to get its DefaultChildContainer property
             var targetInstanceComponent = ObjectFinder.Self.GetComponent(targetInstance);
             if (targetInstanceComponent != null)
             {
-                stateSave = stateSave ?? SelectedState.Self.SelectedStateSave;
                 var recursiveVariableFinder = new RecursiveVariableFinder(stateSave);
                 defaultChild = recursiveVariableFinder.GetValue<string>($"{targetInstance.Name}.{nameof(ComponentSave.DefaultChildContainer)}");
 

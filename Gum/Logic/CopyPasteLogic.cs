@@ -399,7 +399,7 @@ namespace Gum.Logic
 
                 if(selectedInstance != null)
                 {
-                    var childName = ObjectFinder.Self.GetDefaultChildName(selectedInstance);
+                    var childName = ObjectFinder.Self.GetDefaultChildName(selectedInstance, SelectedState.Self.SelectedStateSave);
 
                     if(!string.IsNullOrEmpty(childName))
                     {
