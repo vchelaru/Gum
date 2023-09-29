@@ -59,8 +59,15 @@ namespace SkiaGum.Renderables
                 canvas.RotateDegrees(-absoluteRotation);
             }
 
-
-            canvas.DrawBitmap(Texture, boundingRect);
+            if(EffectiveRectangle != null)
+            {
+                var skRect = new SKRect(EffectiveRectangle.Value.Left, EffectiveRectangle.Value.Top, EffectiveRectangle.Value.Right, EffectiveRectangle.Value.Bottom);
+                canvas.DrawBitmap(Texture, skRect, boundingRect);
+            }
+            else
+            {
+                canvas.DrawBitmap(Texture, boundingRect);
+            }
 
             if (applyRotation)
             {

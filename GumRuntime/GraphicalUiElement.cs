@@ -2487,18 +2487,18 @@ namespace Gum.Wireframe
                 switch (textureAddress)
                 {
                     case TextureAddress.EntireTexture:
-#if !SKIA
                         sprite.SourceRectangle = null;
+#if !SKIA
                         sprite.Wrap = false;
 #endif
                         break;
                     case TextureAddress.Custom:
-#if !SKIA
                         sprite.SourceRectangle = new Microsoft.Xna.Framework.Rectangle(
                             mTextureLeft,
                             mTextureTop,
                             mTextureWidth,
                             mTextureHeight);
+#if !SKIA
                         sprite.Wrap = mWrap;
 #endif
                         break;
