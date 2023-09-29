@@ -285,7 +285,7 @@ namespace Gum.Managers
                 InstanceSave targetInstance = targetTag as InstanceSave;
 
                 // When a parent is set, we normally raise an event for that. This is a tricky situation because
-                // we need to set the parent before adding the object, because the object is 
+                // we need to set the parent before adding the object.
 
                 var newInstance = HandleDroppedElementInElement(draggedAsElementSave, targetInstance.ParentContainer, targetInstance, out handled);
 
@@ -614,7 +614,7 @@ namespace Gum.Managers
                 {
                     // setting the parent:
                     parentName = targetInstance.Name;
-                    string defaultChild = GetDefaultChild(targetInstance);
+                    string defaultChild = ObjectFinder.Self.GetDefaultChildName(targetInstance, SelectedState.Self.SelectedStateSave);
 
                     if (!string.IsNullOrEmpty(defaultChild))
                     {
@@ -637,37 +637,6 @@ namespace Gum.Managers
                 SetVariableLogic.Self.PropertyValueChanged("Parent", oldValue, dragDroppedInstance);
                 targetTreeNode?.Expand();
             }
-        }
-
-        private static string GetDefaultChild(InstanceSave targetInstance, StateSave stateSave = null)
-        {
-            string defaultChild = null;
-            // check if the target instance is a ComponentSave. If so, use the RecursiveVariableFinder to get its DefaultChildContainer property
-            var targetInstanceComponent = ObjectFinder.Self.GetComponent(targetInstance);
-            if (targetInstanceComponent != null)
-            {
-                stateSave = stateSave ?? SelectedState.Self.SelectedStateSave;
-                var recursiveVariableFinder = new RecursiveVariableFinder(stateSave);
-                defaultChild = recursiveVariableFinder.GetValue<string>($"{targetInstance.Name}.{nameof(ComponentSave.DefaultChildContainer)}");
-
-                if(defaultChild != null)
-                {
-                    var instanceInComponent = targetInstanceComponent.GetInstance(defaultChild);
-
-                    if(instanceInComponent != null)
-                    {
-                        var innerChild = GetDefaultChild(instanceInComponent, targetInstanceComponent.DefaultState);
-
-                        if(!string.IsNullOrEmpty(innerChild))
-                        {
-                            defaultChild += "." + innerChild;
-                        }
-                    }
-                }
-
-            }
-
-            return defaultChild;
         }
 
         internal void ClearDraggedItem()
