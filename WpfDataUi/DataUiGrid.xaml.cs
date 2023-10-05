@@ -528,16 +528,58 @@ namespace WpfDataUi
 
         public void Refresh()
         {
-            foreach (var item in InternalControl.Items)
+
+            // might this be faster?
+            for (int i = 0; i < InternalControl.Items.Count; i++)
             {
-                MemberCategory memberCategory = item as MemberCategory;
+                var uiElement =
+                    InternalControl.ItemContainerGenerator.ContainerFromIndex(i);
 
-                foreach (var instanceMember in memberCategory.Members)
+                bool handledByRefresh = false;
+
+                if(uiElement is ContentPresenter contentPresenter && VisualTreeHelper.GetChildrenCount(contentPresenter) > 0 && VisualTreeHelper.GetChild(contentPresenter, 0) is Expander expander)
                 {
-                    instanceMember.SimulateValueChanged();
+                    var itemsInExpander = expander.Content as ItemsControl;
 
+                    if(itemsInExpander != null)
+                    {
+                        for(int j = 0; j < itemsInExpander.Items.Count; j++)
+                        {
+                            var innerUiElement =
+                                itemsInExpander.ItemContainerGenerator.ContainerFromIndex(j) as ContentPresenter;
+
+                            if(VisualTreeHelper.GetChildrenCount(innerUiElement) > 0 && VisualTreeHelper.GetChild(innerUiElement, 0) is SingleDataUiContainer singleDataUiContainer)
+                            {
+                                (singleDataUiContainer.UserControl as IDataUi)?.Refresh();
+                                handledByRefresh = true;
+                            }
+                        }
+                    }
                 }
+                
+                if(!handledByRefresh)
+                {
+                    MemberCategory memberCategory = InternalControl.Items[i] as MemberCategory;
+
+                    foreach (var instanceMember in memberCategory.Members)
+                    {
+                        instanceMember.SimulateValueChanged();
+
+                    }
+                }
+
             }
+
+            //foreach (var item in InternalControl.Items)
+            //{
+            //    MemberCategory memberCategory = item as MemberCategory;
+
+            //    foreach (var instanceMember in memberCategory.Members)
+            //    {
+            //        instanceMember.SimulateValueChanged();
+
+            //    }
+            //}
 
         }
 

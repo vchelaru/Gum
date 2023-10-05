@@ -593,11 +593,23 @@ namespace CodeOutputPlugin.Manager
                 {
                     stringBuilder.AppendLine(
                         $"{codePrefix}.AutoSizeHeightAccordingToContents = true;");
+
+                    if(context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.Maui)
+                    {
+                        // In maui if it's not at least 1 pixel height, it won't ever call its update call so it never gets resized
+                        // We may want to have some kind of explicit call that resizes it outside of rendering, but this hooks into the
+                        // existing system, so let's just do that:
+                        stringBuilder.AppendLine($"{codePrefix}.HeightRequest = 1;");
+                    }
                 }
                 if (widthUnits == DimensionUnitType.RelativeToChildren)
                 {
                     stringBuilder.AppendLine(
                         $"{codePrefix}.AutoSizeWidthAccordingToContents = true;");
+                    if(context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.Maui)
+                    {
+                        stringBuilder.Append($"{codePrefix}.WidthRequest = 1;");
+                    }
                 }
             }
         }
@@ -1091,10 +1103,12 @@ namespace CodeOutputPlugin.Manager
                 }
             }
 
-
+            string rectangleName = context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.XamarinForms
+                ? "Rectangle"
+                : "Rect";
 
             string boundsText =
-                $"{ToTabs(context.TabCount)}AbsoluteLayout.SetLayoutBounds({context.CodePrefixNoTabs}, new Rectangle({xString}, {yString}, {widthString}, {heightString} ));";
+                $"{ToTabs(context.TabCount)}AbsoluteLayout.SetLayoutBounds({context.CodePrefixNoTabs}, new {rectangleName}({xString}, {yString}, {widthString}, {heightString} ));";
             string flagsText = null;
 
             if (proportionalFlags.Count == 0)
@@ -1195,11 +1209,19 @@ namespace CodeOutputPlugin.Manager
                 {
                     stringBuilder.AppendLine(
                         $"{codePrefix}.AutoSizeHeightAccordingToContents = true;");
+                    if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.Maui)
+                    {
+                        stringBuilder.AppendLine($"{codePrefix}.HeightRequest = 1;");
+                    }
                 }
                 if (widthUnits == DimensionUnitType.RelativeToChildren)
                 {
                     stringBuilder.AppendLine(
                         $"{codePrefix}.AutoSizeWidthAccordingToContents = true;");
+                    if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.Maui)
+                    {
+                        stringBuilder.AppendLine($"{codePrefix}.HeightRequest = 1;");
+                    }
                 }
             }
         }
@@ -1549,6 +1571,9 @@ namespace CodeOutputPlugin.Manager
             else // xamarin forms
             {
                 #region Constructor Header
+
+                string baseCall = null;
+
                 stringBuilder.AppendLine(ToTabs(tabCount) + $"public {elementName}(bool fullInstantiation = true)");
 
                 stringBuilder.AppendLine(ToTabs(tabCount) + "{");
@@ -1676,7 +1701,8 @@ namespace CodeOutputPlugin.Manager
 
             var isContainer = elementBaseType == "Container";
 
-            var shouldAddMainLayout = !isSkiaCanvasView && !isContainer && !isThisStackLayout && projectSettings.OutputLibrary == OutputLibrary.XamarinForms;
+            var shouldAddMainLayout = !isSkiaCanvasView && !isContainer && !isThisStackLayout && 
+                (projectSettings.OutputLibrary == OutputLibrary.XamarinForms || projectSettings.OutputLibrary == OutputLibrary.Maui);
             if (shouldAddMainLayout && element is ScreenSave && !string.IsNullOrEmpty(element.BaseType) && !projectSettings.BaseTypesNotCodeGenerated.Contains(element.BaseType))
             {
                 shouldAddMainLayout = false;
@@ -1684,6 +1710,7 @@ namespace CodeOutputPlugin.Manager
 
             return shouldAddMainLayout;
         }
+
 
         #endregion
 
@@ -2892,7 +2919,7 @@ namespace CodeOutputPlugin.Manager
                 }
                 else
                 {
-                    return $"{context.CodePrefixNoTabs}.{GetXamarinFormsVariableName(variable)} = {VariableValueToXamarinFormsCodeValue(variable, container)};";
+                    return $"{context.CodePrefixNoTabs}.{GetXamarinFormsVariableName(variable)} = {VariableValueToXamarinFormsCodeValue(variable, container, context)};";
                 }
 
             }
@@ -2933,7 +2960,7 @@ namespace CodeOutputPlugin.Manager
                     //var variableName = GetXamarinFormsVariableName(variable);
                     var variableName = variable.Name;
 
-                    return $"{context.CodePrefix}.{variableName} = {VariableValueToXamarinFormsCodeValue(variable, context.Element)};";
+                    return $"{context.CodePrefix}.{variableName} = {VariableValueToXamarinFormsCodeValue(variable, context.Element, context)};";
                 }
 
             }
@@ -3004,7 +3031,7 @@ namespace CodeOutputPlugin.Manager
                 }
                 else
                 {
-                    return value.GetType().Name + "." + value.ToString();
+                    return value.GetType().FullName + "." + value.ToString();
                 }
             }
             else
@@ -3013,7 +3040,7 @@ namespace CodeOutputPlugin.Manager
             }
         }
 
-        private static string VariableValueToXamarinFormsCodeValue(object value, string rootName, bool isState, ElementSave categoryContainer, StateSaveCategory category)
+        private static string VariableValueToXamarinFormsCodeValue(object value, string rootName, bool isState, ElementSave categoryContainer, StateSaveCategory category, CodeGenerationContext context)
         {
             if (value is float asFloat)
             {
@@ -3093,6 +3120,13 @@ namespace CodeOutputPlugin.Manager
             }
             else if (value.GetType().IsEnum)
             {
+                var textAlignmentPrefix = "Xamarin.Forms";
+
+                if(context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.Maui)
+                {
+                    textAlignmentPrefix = "Microsoft.Maui";
+                }
+
                 var type = value.GetType();
                 if (type == typeof(PositionUnitType))
                 {
@@ -3104,11 +3138,11 @@ namespace CodeOutputPlugin.Manager
                     switch ((HorizontalAlignment)value)
                     {
                         case HorizontalAlignment.Left:
-                            return "Xamarin.Forms.TextAlignment.Start";
+                            return $"{textAlignmentPrefix}.TextAlignment.Start";
                         case HorizontalAlignment.Center:
-                            return "Xamarin.Forms.TextAlignment.Center";
+                            return $"{textAlignmentPrefix}.TextAlignment.Center";
                         case HorizontalAlignment.Right:
-                            return "Xamarin.Forms.TextAlignment.End";
+                            return $"{textAlignmentPrefix}.TextAlignment.End";
                         default:
                             return "";
                     }
@@ -3118,11 +3152,11 @@ namespace CodeOutputPlugin.Manager
                     switch ((VerticalAlignment)value)
                     {
                         case VerticalAlignment.Top:
-                            return "Xamarin.Forms.TextAlignment.Start";
+                            return $"{textAlignmentPrefix}.TextAlignment.Start";
                         case VerticalAlignment.Center:
-                            return "Xamarin.Forms.TextAlignment.Center";
+                            return $"{textAlignmentPrefix}.TextAlignment.Center";
                         case VerticalAlignment.Bottom:
-                            return "Xamarin.Forms.TextAlignment.End";
+                            return $"{textAlignmentPrefix}.TextAlignment.End";
                         default:
                             return "";
                     }
@@ -3667,20 +3701,20 @@ namespace CodeOutputPlugin.Manager
 
 
 
-        private static string VariableValueToXamarinFormsCodeValue(VariableSave variable, ElementSave container)
+        private static string VariableValueToXamarinFormsCodeValue(VariableSave variable, ElementSave container, CodeGenerationContext context)
         {
             var value = variable.Value;
             var rootName = variable.GetRootName();
             var isState = variable.IsState(container, out ElementSave categoryContainer, out StateSaveCategory category);
-            return VariableValueToXamarinFormsCodeValue(value, rootName, isState, categoryContainer, category);
+            return VariableValueToXamarinFormsCodeValue(value, rootName, isState, categoryContainer, category, context);
         }
 
-        private static string VariableValueToXamarinFormsCodeValue(VariableListSave variable, ElementSave container)
+        private static string VariableValueToXamarinFormsCodeValue(VariableListSave variable, ElementSave container, CodeGenerationContext context)
         {
             var value = variable.ValueAsIList;
             var rootName = variable.GetRootName();
             var isState = false;
-            return VariableValueToXamarinFormsCodeValue(value, rootName, isState, null, null);
+            return VariableValueToXamarinFormsCodeValue(value, rootName, isState, null, null, context);
         }
 
 

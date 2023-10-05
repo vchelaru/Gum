@@ -10,7 +10,8 @@ namespace CodeOutputPlugin.Models
     {
         XamarinForms,
         WPF,
-        RawSkia
+        RawSkia,
+        Maui
     }
 
     public class CodeOutputProjectSettings

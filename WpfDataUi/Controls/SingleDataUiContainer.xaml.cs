@@ -31,6 +31,8 @@ namespace WpfDataUi
 
         #region Properties
 
+        public UserControl UserControl { get; private set; }
+
         InstanceMember InstanceMember
         {
             get
@@ -94,7 +96,8 @@ namespace WpfDataUi
 
         private void HandleDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
-            Grid.Children.Add(CreateInternalControl());
+            UserControl = CreateInternalControl();
+            Grid.Children.Add(UserControl);
         }
 
         UserControl CreateInternalControl()
