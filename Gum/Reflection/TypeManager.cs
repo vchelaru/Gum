@@ -72,13 +72,19 @@ namespace Gum.Reflection
             else
             {
                 if (typeAsString == "bool") return typeof(bool);
+                if (typeAsString == "bool?") return typeof(bool?);
                 if (typeAsString == "float") return typeof(float);
+                if (typeAsString == "float?") return typeof(float?);
                 if (typeAsString == "int") return typeof(int);
                 if (typeAsString == "int?") return typeof(int?);
                 if (typeAsString == "double") return typeof(double);
+                if (typeAsString == "double?") return typeof(double?);
+                if (typeAsString == "decimal") return typeof(decimal);
+                if (typeAsString == "decimal?") return typeof(decimal?);
                 if (typeAsString == "string") return typeof(string);
                 if (typeAsString == "List<string>") return typeof(List<string>);
                 if (typeAsString == "long") return typeof(long);
+                if (typeAsString == "long?") return typeof(long?);
                 if (typeAsString == "char") return typeof(char);
 
 

@@ -684,9 +684,23 @@ namespace RenderingLibrary.Graphics
 
                     scale = new Vector2(ipso.Width / (ratioWidth * textureToUse.Width),
                         ipso.Height / (ratioHeight * textureToUse.Height));
+
+                    if(ratioWidth == 0)
+                    {
+                        scale.X = 0;
+                    }
+                    if(ratioHeight == 0)
+                    {
+                        scale.Y = 0;
+                    }
                 }
 
 #if DEBUG
+                if(float.IsPositiveInfinity( scale.X))
+                {
+                    throw new Exception("scale.X is positive infinity, it shouldn't be!");
+                }
+
                 if (textureToUse != null && textureToUse.IsDisposed)
                 {
                     throw new ObjectDisposedException($"Texture is disposed.  Texture name: {textureToUse.Name}, sprite scale: {scale}, Sprite name: {ipso.Name}");

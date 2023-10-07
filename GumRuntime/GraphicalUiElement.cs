@@ -5030,6 +5030,14 @@ namespace Gum.Wireframe
 
                     handled = true;
                 }
+                else if(propertyName == nameof(NineSlice.CustomFrameTextureCoordinateWidth))
+                {
+                    var asFloat = value as float?;
+
+                    nineSlice.CustomFrameTextureCoordinateWidth = asFloat;
+
+                    handled = true;
+                }
             }
 #endif
 

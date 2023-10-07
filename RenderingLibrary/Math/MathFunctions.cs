@@ -19,6 +19,12 @@ namespace RenderingLibrary.Math
 
         public static int RoundToInt(float floatToRound)
         {
+#if DEBUG
+            if(float.IsNaN(floatToRound))
+            {
+                throw new ArgumentException("floatToRound cannot be NaN");
+            }
+#endif
             // System.Math.Round should give us a number very close to the decimal
             // Of course, it may give us something like 3.99999, which would become
             // 3 when converted to an int.  We want that to be 4, so we add a small amount

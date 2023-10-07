@@ -332,6 +332,17 @@ namespace RenderingLibrary.Graphics
 
         internal void Draw(Texture2D textureToUse, Vector2 position, Rectangle? sourceRectangle, Color color, float rotation, Vector2 origin, Vector2 scale, SpriteEffects effects, float depth, object objectRequestingChange, Renderer renderer = null)
         {
+#if DEBUG
+            if(float.IsPositiveInfinity(scale.X))
+            {
+                throw new ArgumentException("scale.X cannot be positive infinity");
+            }
+            if (float.IsPositiveInfinity(scale.Y))
+            {
+                throw new ArgumentException("scale.Y cannot be positive infinity");
+            }
+#endif
+
             if (!Renderer.UseCustomEffectRendering && Renderer.UseBasicEffectRendering && basicEffect.FogEnabled)
             {
                 basicEffect.FogColor = new Vector3(color.R/255, color.G/255, color.B/255f);

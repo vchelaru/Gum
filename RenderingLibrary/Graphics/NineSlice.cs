@@ -185,6 +185,12 @@ namespace RenderingLibrary.Graphics
             }
         }
 
+        public float? CustomFrameTextureCoordinateWidth
+        {
+            get;
+            set;
+        }
+
         public Texture2D TopLeftTexture 
         {
             get { return mSprites[(int)NineSliceSections.TopLeft].Texture; }
@@ -669,10 +675,19 @@ namespace RenderingLibrary.Graphics
                 int usedWidth = rightCoordinate - leftCoordinate;
                 int usedHeight = bottomCoordinate - topCoordinate;
 
-                mFullOutsideWidth = (usedWidth + 1) / 3;
-                mFullInsideWidth = usedWidth - (mFullOutsideWidth * 2);
+                if(CustomFrameTextureCoordinateWidth != null)
+                {
+                    mFullOutsideWidth = MathFunctions.RoundToInt( CustomFrameTextureCoordinateWidth.Value);
+                    mFullOutsideHeight = mFullOutsideWidth;
 
-                mFullOutsideHeight = (usedHeight + 1) / 3;
+                }
+                else
+                {
+                    mFullOutsideWidth = (usedWidth + 1) / 3;
+                    mFullOutsideHeight = (usedHeight + 1) / 3;
+                }
+
+                mFullInsideWidth = usedWidth - (mFullOutsideWidth * 2);
                 mFullInsideHeight = usedHeight - (mFullOutsideHeight * 2);
 
                 int outsideWidth = System.Math.Min(mFullOutsideWidth, RenderingLibrary.Math.MathFunctions.RoundToInt(Width / 2)); ;

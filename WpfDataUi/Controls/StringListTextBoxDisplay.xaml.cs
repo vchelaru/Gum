@@ -104,9 +104,20 @@ namespace WpfDataUi.Controls
             if (InstanceMember?.PropertyType == typeof(List<string>))
             {
                 var value = new List<string>();
-
-                value = TextBox.Text.Split(new string[] { System.Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
-                    .ToList();
+                
+                // newlines could be \r\n or just \n, so we need to split on both
+                if (TextBox.Text.Contains("\r\n"))
+                {
+                    value = TextBox.Text.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries)
+                        .Select(s => s.Trim())
+                        .ToList();
+                }
+                else // if(TextBox.Text.Contains("\n")) this also captures there being no newlines
+                {
+                    value = TextBox.Text.Split(new string[] { "\n" }, StringSplitOptions.RemoveEmptyEntries)
+                        .Select(s => s.Trim())
+                        .ToList();
+                }
                 result = value;
 
                 return ApplyValueResult.Success;
