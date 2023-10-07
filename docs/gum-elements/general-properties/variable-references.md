@@ -105,7 +105,7 @@ Changing the BlueRectangle's X value automatically updates the RedRectangle's X,
 
 Typing a variable name can be tedious, especially when referencing a variable in a different Screen or Component. Qualified variable names can be obtained by right-clicking on the variable name in Gum and selecting the **Copy Qualified Variable Name** option. This can then be pasted in the Variable References box of any other object.
 
-
+<figure><img src="../../.gitbook/assets/07_08 35 17 (1).gif" alt=""><figcaption></figcaption></figure>
 
 ### Referencing Different Variables
 
