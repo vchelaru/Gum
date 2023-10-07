@@ -136,40 +136,70 @@ namespace Gum.Wireframe
                 if (SelectedState.Self.SelectedInstances.Count() == 0 && 
                     (SelectedState.Self.SelectedComponent != null || SelectedState.Self.SelectedStandardElement != null))
                 {
+                    var selfSelectedElement = SelectedState.Self.SelectedElement;
+                    var gue = SelectionManager.Self.SelectedGue;
+                    var restrictToUnitValues = SelectionManager.Self.RestrictToUnitValues;
+
                     if (xToMoveBy != 0)
                     {
                         hasChangeOccurred = true;
-                        ModifyVariable("X", xToMoveBy, SelectedState.Self.SelectedElement);
+                        ModifyVariable("X", xToMoveBy, selfSelectedElement);
+
+                        if (restrictToUnitValues && gue.XUnits.GetIsPixelBased()) {
+                            float x = gue.X;
+                            float desiredX = MathFunctions.RoundToInt(x);
+                            ModifyVariable("X", desiredX - x, selfSelectedElement);
+                        }
                     }
                     if (yToMoveBy != 0)
                     {
                         hasChangeOccurred = true;
-                        ModifyVariable("Y", yToMoveBy, SelectedState.Self.SelectedElement);
-                    }
+                        ModifyVariable("Y", yToMoveBy, selfSelectedElement);
 
+                        if (restrictToUnitValues && gue.YUnits.GetIsPixelBased()) {
+                            float y = gue.Y;
+                            float desiredY = MathFunctions.RoundToInt(y);
+                            ModifyVariable("Y", desiredY - y, selfSelectedElement);
+                        }
+                    }
                 }
                 else
                 {
                     var selectedInstances = SelectedState.Self.SelectedInstances;
+                    var gues = SelectionManager.Self.SelectedGues;
+                    var gueIdx = 0;
+                    var restrictToUnitValues = SelectionManager.Self.RestrictToUnitValues;
 
                     foreach (InstanceSave instance in selectedInstances)
                     {
                         bool shouldSkip = ShouldSkipDraggingMovementOn(instance);
 
-                        if (!shouldSkip)
-                        {
+                        if (!shouldSkip) {
+                            var gue = gues[gueIdx];
                             // This could prevent a double-layout by locking layout until all values have been set
                             if (xToMoveBy != 0)
                             {
                                 hasChangeOccurred = true;
                                 float value = ModifyVariable("X", xToMoveBy, instance);
+                                if (restrictToUnitValues && gue.XUnits.GetIsPixelBased()) {
+                                    float x = gue.X;
+                                    float desiredX = MathFunctions.RoundToInt(x);
+                                    ModifyVariable("X", desiredX - x, instance);
+                                }
                             }
                             if (yToMoveBy != 0)
                             {
                                 hasChangeOccurred = true;
                                 float value = ModifyVariable("Y", yToMoveBy, instance);
+                                if (restrictToUnitValues && gue.YUnits.GetIsPixelBased()) {
+                                    float y = gue.Y;
+                                    float desiredY = MathFunctions.RoundToInt(y);
+                                    ModifyVariable("Y", desiredY - y, instance);
+                                }
                             }
                         }
+
+                        gueIdx++;
                     }
                 }
 
