@@ -243,6 +243,10 @@ namespace RenderingLibrary.Math.Geometry
         {
             Matrix matrix = Matrix.CreateRotationZ(-MathHelper.ToRadians(ipso.GetAbsoluteRotation()));
 
+            // 0/4--1
+            // |    |
+            // 3----2
+
             linePrimitive.Replace(0, Vector2.Zero);
             linePrimitive.Replace(1, Vector2.Transform(new Vector2(ipso.Width, 0), matrix) );
             linePrimitive.Replace(2, Vector2.Transform(new Vector2(ipso.Width, ipso.Height), matrix) );

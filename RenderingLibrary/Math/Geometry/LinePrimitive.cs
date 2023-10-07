@@ -195,14 +195,25 @@ namespace RenderingLibrary.Math.Geometry
                 renderer = managers.Renderer;
             }
 
-            Vector2 offset = new Vector2(renderer.Camera.RenderingXOffset, renderer.Camera.RenderingYOffset);
+            //Vector2 offset = new Vector2(renderer.Camera.RenderingXOffset, renderer.Camera.RenderingYOffset);
 
             int extraStep = 0;
             if (BreakIntoSegments)
             {
                 extraStep = 1;
             }
-            for (int i = 1; i < mVectors.Count; i++)
+
+            int startIndex = 1;
+            int endIndex = mVectors.Count;
+
+            //////////////////TEMP TEMP, don't push this !!!
+            //if (mVectors.Count == 5)
+            //{
+            //    endIndex = 2;
+            //}
+
+
+            for (int i = startIndex; i < endIndex; i++)
             {
                 Vector2 vector1 = mVectors[i - 1];
                 Vector2 vector2 = mVectors[i];
@@ -248,8 +259,13 @@ namespace RenderingLibrary.Math.Geometry
                 var scale =
                     new Vector2(distance / ((float)repetitions * textureToUse.Width), LinePixelWidth / renderer.CurrentZoom);
                 // stretch the pixel between the two vectors
+
+
+                // using Scale here is a little inaccurate so let's use source/destination rectangles:
+
                 spriteRenderer.Draw(textureToUse,
-                    offset + Position + vector1,
+                    //offset + Position + vector1,
+                    Position + vector1,
                     sourceRectangle,
                     Color,
                     angle,
@@ -257,7 +273,20 @@ namespace RenderingLibrary.Math.Geometry
                     scale,
                     SpriteEffects.None,
                     Depth,
-                    this);
+                    this,
+                    renderer:null,
+                    offsetPixel:false);
+
+                // can't do this because of int position values...
+                //spriteRenderer.Draw(textureToUse,
+                //    new Rectangle(Position.X + vector1.X, Position.Y + vector1.Y, distance, 1),
+                //    new Rectangle(0, 0, repetitions * textureToUse.Width, textureToUse.Height),
+                //    Color,
+                //    angle,
+                //    Vector3.Zero,
+                //    SpriteEffects.None,
+                //    Depth,
+                //    this);
 
                 i += extraStep;
             }

@@ -330,7 +330,7 @@ namespace RenderingLibrary.Graphics
             mSpriteBatch.Draw(textureToUse, destinationRectangle, sourceRectangle, color, rotation, origin, effects, layerDepth, objectRequestingChange);
         }
 
-        internal void Draw(Texture2D textureToUse, Vector2 position, Rectangle? sourceRectangle, Color color, float rotation, Vector2 origin, Vector2 scale, SpriteEffects effects, float depth, object objectRequestingChange, Renderer renderer = null)
+        internal void Draw(Texture2D textureToUse, Vector2 position, Rectangle? sourceRectangle, Color color, float rotation, Vector2 origin, Vector2 scale, SpriteEffects effects, float depth, object objectRequestingChange, Renderer renderer = null, bool offsetPixel = true)
         {
 #if DEBUG
             if(float.IsPositiveInfinity(scale.X))
@@ -358,7 +358,7 @@ namespace RenderingLibrary.Graphics
             // don't attempt to do adjustments unless the scale is integer scale
             var isIntegerScale = System.Math.Abs(MathFunctions.RoundToInt(CurrentZoom) - CurrentZoom) < .01f;
 
-            if(radiansFromPerfectRotation < errorToTolerate && isIntegerScale)
+            if(radiansFromPerfectRotation < errorToTolerate && isIntegerScale && offsetPixel)
             {
 
                 // Adjust offsets according to zoom
@@ -395,14 +395,32 @@ namespace RenderingLibrary.Graphics
                     var worldRight = position.X + worldWidth;
                     var worldBottom = position.Y + worldHeight;
 
+                    var flipVerticalHorizontal =
+                        quarterRotations == 1 || quarterRotations == 3;
+                    if (flipVerticalHorizontal)
+                    {
+                        // invert X/Y width/Heights:
+                        worldRight = position.X + worldHeight;
+                        worldBottom = position.Y + worldWidth;
+                    }
+
                     float worldRightRounded = MathFunctions.RoundToInt(worldRight * CurrentZoom) / CurrentZoom + effectivePixelOffsetX / CurrentZoom;
                     float worldBottomRounded = MathFunctions.RoundToInt(worldBottom * CurrentZoom) / CurrentZoom + effectivePixelOffsetY / CurrentZoom;
 
                     var roundedWidth = worldRightRounded - x;
                     var roundedHeight = worldBottomRounded - y;
 
-                    scale.X = roundedWidth / sourceWidth;
-                    scale.Y = roundedHeight / sourceHeight;
+                    if(flipVerticalHorizontal)
+                    {
+                        scale.X = roundedHeight / sourceWidth;
+                        scale.Y = roundedWidth / sourceHeight;
+                    }
+                    else
+                    {
+                        scale.X = roundedWidth / sourceWidth;
+                        scale.Y = roundedHeight / sourceHeight;
+
+                    }
                 }
 
                 position.X = x;
