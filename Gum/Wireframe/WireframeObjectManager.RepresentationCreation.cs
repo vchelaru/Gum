@@ -413,20 +413,12 @@ namespace Gum.Wireframe
 
             if(graphicalElement != null)
             {
-
                 if (baseElement != null)
                 {
                     graphicalElement.ElementSave = baseElement;
-                    foreach (var exposedVariable in baseElement.DefaultState.Variables.Where(item => !string.IsNullOrEmpty(item.ExposedAsName)))
-                    {
-                        graphicalElement.AddExposedVariable(exposedVariable.ExposedAsName, exposedVariable.Name);
-                    }
-
-
-
                 }
 
-
+                graphicalElement.AddExposedVariablesRecursively(baseElement);
 
                 var selectedState = SelectedState.Self.SelectedStateSave;
                 if (selectedState == null)

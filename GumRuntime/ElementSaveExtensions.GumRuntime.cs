@@ -204,7 +204,7 @@ namespace GumRuntime
                 }
             }
         }
-        static void AddExposedVariablesRecursively(this GraphicalUiElement graphicalElement, ElementSave elementSave)
+        public static void AddExposedVariablesRecursively(this GraphicalUiElement graphicalElement, ElementSave elementSave)
         {
             if (!string.IsNullOrEmpty(elementSave.BaseType))
             {
