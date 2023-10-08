@@ -808,6 +808,9 @@
     <PackageReference Include="Newtonsoft.Json">
       <Version>13.0.1</Version>
     </PackageReference>
+    <PackageReference Include="PixiEditor.ColorPicker">
+      <Version>3.4.1</Version>
+    </PackageReference>
     <PackageReference Include="SkiaSharp">
       <Version>2.88.2</Version>
     </PackageReference>
