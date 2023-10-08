@@ -49,11 +49,12 @@ namespace Gum.DataTypes.Variables
             {
                 ElementSave elementContainingState = stateSave.ParentContainer;
 
+                var foundVariable = stateSave.GetVariableRecursive(variableName);
+                
                 bool wasFound = false;
                 if (elementContainingState != null && stateSave != elementContainingState.DefaultState)
                 {
                     // try to get it from the stateSave recursively since it's not set directly on the state...
-                    var foundVariable = stateSave.GetVariableRecursive(variableName);
                     if (foundVariable != null && foundVariable.SetsValue)
                     {
                         // Why do we early out here?
@@ -73,7 +74,12 @@ namespace Gum.DataTypes.Variables
                     }
                 }
 
+                // The variable could be "LabelVisible", but the rest of this method expects
+                // the name to include '.' and not have the exposed alias:
+                variableName = foundVariable?.Name ?? variableName;
+
                 string nameInBase = variableName;
+
                 if (StringFunctions.ContainsNoAlloc(variableName, '.'))
                 {
                     // this variable is set on an instance, but we're going into the

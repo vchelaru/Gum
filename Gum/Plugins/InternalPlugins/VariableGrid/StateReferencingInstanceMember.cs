@@ -603,14 +603,19 @@ namespace Gum.PropertyGridHelpers
 
                 if (toReturn == null)
                 {
-                    toReturn = mStateSave.GetValueRecursive(mVariableName);
+                    var effectiveVariableName = VariableSave?.Name ?? mVariableName;
+                    toReturn = mStateSave.GetValueRecursive(effectiveVariableName);
                 }
 
                 return toReturn;
             }
             else
             {
-                return mStateSave.GetValue(mVariableName);
+                // October 8, 2023 - why wasn't this recursive?
+                //return mStateSave.GetValue(mVariableName);
+                var effectiveVariableName = VariableSave?.Name ?? mVariableName;
+
+                return mStateSave.GetValueRecursive(effectiveVariableName);
             }
         }
 
