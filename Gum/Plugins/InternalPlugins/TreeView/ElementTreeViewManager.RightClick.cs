@@ -15,6 +15,7 @@ using ToolsUtilities;
 using Gum.Wireframe;
 using Gum.Logic;
 using Gum.DataTypes.Behaviors;
+using Gum.PropertyGridHelpers;
 
 namespace Gum.Managers
 {
@@ -33,6 +34,7 @@ namespace Gum.Managers
         ToolStripMenuItem mAddLinkedComponent;
 
         ToolStripMenuItem mAddInstance;
+        ToolStripMenuItem mAddParentInstance;
         ToolStripMenuItem mSaveObject;
         ToolStripMenuItem mGoToDefinition;
         ToolStripMenuItem mDeleteObject;
@@ -72,6 +74,10 @@ namespace Gum.Managers
             mAddInstance = new ToolStripMenuItem();
             mAddInstance.Text = "Add Instance";
             mAddInstance.Click += AddInstanceClick;
+
+            mAddParentInstance = new ToolStripMenuItem();
+            mAddParentInstance.Text = "Add Parent Instance";
+            mAddParentInstance.Click += AddParentInstanceClick;
 
             mSaveObject = new ToolStripMenuItem();
             mSaveObject.Text = "Force Save Object";
@@ -279,6 +285,11 @@ namespace Gum.Managers
                 if (SelectedState.Self.SelectedInstance != null)
                 {
                     mMenuStrip.Items.Add(mGoToDefinition);
+
+                    mAddInstance.Text = $"Add child object to '{SelectedState.Self.SelectedInstance.Name}'";
+                    mMenuStrip.Items.Add(mAddInstance);
+                    mAddParentInstance.Text = $"Add parent object to '{SelectedState.Self.SelectedInstance.Name}'";
+                    mMenuStrip.Items.Add(mAddParentInstance);
 
                     var container = SelectedState.Self.SelectedElement;
                     if(!string.IsNullOrEmpty(container.BaseType))
@@ -672,28 +683,81 @@ namespace Gum.Managers
             }
         }
 
-
-        public void AddInstanceClick(object sender, EventArgs e)
+        private bool ShowNewObjectDialog(out string name)
         {
-            TextInputWindow tiw = new TextInputWindow();
+            var tiw = new TextInputWindow();
             tiw.Message = "Enter new object name:";
 
-            if (tiw.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-            {
-                string name = tiw.Result;
+            var result = tiw.ShowDialog() == System.Windows.Forms.DialogResult.OK;
+            name = result ? tiw.Result : null;
+
+            if (result) {
                 string whyNotValid;
 
-                if (!NameVerifier.Self.IsInstanceNameValid(name, null, SelectedState.Self.SelectedElement, out whyNotValid))
-                {
+                if (!NameVerifier.Self.IsInstanceNameValid(name, null, SelectedState.Self.SelectedElement, out whyNotValid)) {
                     MessageBox.Show(whyNotValid);
-                }
-                else
-                {
-                    GumCommands.Self.ProjectCommands.ElementCommands.AddInstance(SelectedState.Self.SelectedElement, name, StandardElementsManager.Self.DefaultType);
+
+                    return false;
                 }
             }
+
+            return result;
         }
 
 
+        public void AddInstanceClick(object sender, EventArgs e)
+        {
+            if (!ShowNewObjectDialog(out var name)) return;
+
+            var focusedInstance = SelectedState.Self.SelectedInstance;
+            var newInstance = GumCommands.Self.ProjectCommands.ElementCommands.AddInstance(SelectedState.Self.SelectedElement, name, StandardElementsManager.Self.DefaultType);
+
+            if (focusedInstance != null) {
+                SetInstanceParent(SelectedState.Self.SelectedElement, newInstance, focusedInstance);
+            }
+        }
+
+        public void AddParentInstanceClick(object sender, EventArgs e)
+        {
+            if (!ShowNewObjectDialog(out var name)) return;
+
+            var focusedInstance = SelectedState.Self.SelectedInstance;
+            var newInstance = GumCommands.Self.ProjectCommands.ElementCommands.AddInstance(SelectedState.Self.SelectedElement, name, StandardElementsManager.Self.DefaultType);
+
+            System.Diagnostics.Debug.Assert(focusedInstance != null);
+
+            SetInstanceParentWrapper(SelectedState.Self.SelectedElement, newInstance, focusedInstance);
+        }
+
+        private static void SetInstanceParentWrapper(ElementSave targetElement, InstanceSave newInstance, InstanceSave existingInstance)
+        {
+            // From DragDropManager:
+            // "Since the Parent property can only be set in the default state, we will
+            // set the Parent variable on that instead of the SelectedState.Self.SelectedStateSave"
+            var stateToAssignOn = targetElement.DefaultState;
+
+            var variableName = newInstance.Name + ".Parent";
+            var existingInstanceVar = existingInstance.Name + ".Parent";
+            var oldValue = stateToAssignOn.GetValue(variableName) as string;        // This will always be empty anyway...
+            var oldParentValue = stateToAssignOn.GetValue(existingInstanceVar) as string;
+
+            stateToAssignOn.SetValue(variableName, oldParentValue, "string");
+            stateToAssignOn.SetValue(existingInstanceVar, newInstance.Name, "string");
+
+            SetVariableLogic.Self.PropertyValueChanged("Parent", oldValue, newInstance);
+            SetVariableLogic.Self.PropertyValueChanged("Parent", oldParentValue, existingInstance);
+        }
+
+        private static void SetInstanceParent(ElementSave targetElement, InstanceSave child, InstanceSave parent)
+        {
+            // From DragDropManager:
+            // "Since the Parent property can only be set in the default state, we will
+            // set the Parent variable on that instead of the SelectedState.Self.SelectedStateSave"
+            var stateToAssignOn = targetElement.DefaultState;
+            var variableName = child.Name + ".Parent";
+            var oldValue = stateToAssignOn.GetValue(variableName) as string;        // This will always be empty anyway...
+            stateToAssignOn.SetValue(variableName, parent.Name, "string");
+            SetVariableLogic.Self.PropertyValueChanged("Parent", oldValue, child);
+        }
     }
 }
