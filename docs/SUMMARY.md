@@ -44,6 +44,7 @@
     * [Y Origin](gum-elements/general-properties/y-origin.md)
     * [Y Units](gum-elements/general-properties/y-units.md)
   * [NineSlice](gum-elements/nineslice/README.md)
+    * [Custom Frame Texture Coordinate Width](gum-elements/nineslice/custom-frame-texture-coordinate-width.md)
     * [Texture Address](gum-elements/nineslice/nineslice.texture-address.md)
   * [Sprite](gum-elements/sprite/README.md)
     * [Color](gum-elements/sprite/color.md)
