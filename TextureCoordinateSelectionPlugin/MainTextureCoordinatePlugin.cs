@@ -73,9 +73,9 @@ namespace TextureCoordinateSelectionPlugin
 
         private void RefreshControl()
         {
-            Texture2D textureToAssign = GetTextureToAssign();
+            Texture2D textureToAssign = GetTextureToAssign(out bool isNineslice, out float? customFrameTextureCoordinateWidth);
 
-            Logic.ControlLogic.Self.Refresh(textureToAssign);
+            Logic.ControlLogic.Self.Refresh(textureToAssign, isNineslice, customFrameTextureCoordinateWidth);
         }
 
         private void HandleVariableSet(ElementSave element, InstanceSave instance, string variableName, object oldValue)
@@ -90,10 +90,11 @@ namespace TextureCoordinateSelectionPlugin
 
 
 
-        private static Texture2D GetTextureToAssign()
+        private static Texture2D GetTextureToAssign(out bool isNineslice, out float? customFrameTextureCoordinateWidth)
         {
             var graphicalUiElement = SelectedState.Self.SelectedIpso as GraphicalUiElement;
-
+            isNineslice = false;
+            customFrameTextureCoordinateWidth = null;
             Texture2D textureToAssign = null;
 
             if (graphicalUiElement != null)
@@ -109,7 +110,8 @@ namespace TextureCoordinateSelectionPlugin
                 else if (containedRenderable is NineSlice)
                 {
                     var nineSlice = containedRenderable as NineSlice;
-
+                    isNineslice = true;
+                    customFrameTextureCoordinateWidth = nineSlice.CustomFrameTextureCoordinateWidth;
                     var isUsingSameTextures =
                         nineSlice.TopLeftTexture == nineSlice.CenterTexture &&
                         nineSlice.TopTexture == nineSlice.CenterTexture &&

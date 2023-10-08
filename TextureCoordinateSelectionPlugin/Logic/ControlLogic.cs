@@ -33,6 +33,12 @@ namespace TextureCoordinateSelectionPlugin.Logic
 
         MainControlViewModel ViewModel;
 
+        // [0] - left vertical line
+        // [1] - right vertical line
+        // [2] - top horizontal line
+        // [3] - bottom horizontal line
+        Line[] nineSliceGuideLines = new Line[4];
+
         LineGrid lineGrid;
 
         object oldTextureLeftValue;
@@ -94,7 +100,28 @@ namespace TextureCoordinateSelectionPlugin.Logic
 
             CreateLineRectangle();
 
+            CreateNineSliceLines();
+
             RefreshLineGrid();
+        }
+
+        private void CreateNineSliceLines()
+        {
+            for(int i = 0; i < 4; i++)
+            {
+                nineSliceGuideLines[i] = new Line(mainControl.InnerControl.SystemManagers);
+                nineSliceGuideLines[i].Visible = false;
+                nineSliceGuideLines[i].Z = 1;
+                nineSliceGuideLines[i].Color = Microsoft.Xna.Framework.Color.White;
+                nineSliceGuideLines[i].IsDotted = true;
+
+                var alpha = 0.6f;
+
+                nineSliceGuideLines[i].Color = 
+                    new Microsoft.Xna.Framework.Color(alpha, alpha, alpha, alpha);
+
+                mainControl.InnerControl.SystemManagers.Renderer.MainLayer.Add(nineSliceGuideLines[i]);
+            }
         }
 
         private void CreateLineRectangle()
@@ -145,8 +172,12 @@ namespace TextureCoordinateSelectionPlugin.Logic
             }
         }
 
-        internal void Refresh(Texture2D textureToAssign)
+        bool showNineSliceGuides;
+        float? customFrameTextureCoordinateWidth;
+        internal void Refresh(Texture2D textureToAssign, bool showNineSliceGuides, float? customFrameTextureCoordinateWidth)
         {
+            this.showNineSliceGuides = showNineSliceGuides;
+            this.customFrameTextureCoordinateWidth = customFrameTextureCoordinateWidth;
             mainControl.InnerControl.CurrentTexture = textureToAssign;
 
             RefreshSelector(Logic.RefreshType.OnlyIfGrabbed);
@@ -154,6 +185,71 @@ namespace TextureCoordinateSelectionPlugin.Logic
             RefreshOutline(mainControl.InnerControl, ref textureOutlineRectangle);
 
             RefreshLineGrid();
+
+            RefreshNineSliceGuides();
+        }
+
+        private void RefreshNineSliceGuides()
+        {
+            for(int i = 0; i < 4; i++)
+            {
+                nineSliceGuideLines[i].Visible = showNineSliceGuides;
+            }
+
+            // todo - this hasn't been tested extensively to make sure it aligns
+            // pixel-perfect with how NineSlices work, but it's a good initial guess
+            if(showNineSliceGuides && CurrentTexture != null)
+            {
+                var texture = CurrentTexture;
+
+                var textureWidth = texture.Width;
+                var textureHeight = texture.Height;
+
+                var control = mainControl.InnerControl;
+                var selector = control.RectangleSelector;
+
+                var left = selector.Left;
+                var right = selector.Right;
+                var top = selector.Top;
+                var bottom = selector.Bottom;
+
+                var guideLeft = selector.Left + selector.Width / 3.0f;
+                var guideRight = selector.Left + selector.Width * 2.0f / 3.0f;
+                var guideTop = selector.Top + selector.Height / 3.0f;
+                var guideBottom = selector.Top + selector.Height * 2.0f / 3.0f;
+
+                if(customFrameTextureCoordinateWidth != null)
+                {
+                    guideLeft = left + customFrameTextureCoordinateWidth.Value;
+                    guideRight = right - customFrameTextureCoordinateWidth.Value;
+                    guideTop = top + customFrameTextureCoordinateWidth.Value;
+                    guideBottom = bottom - customFrameTextureCoordinateWidth.Value;
+                }
+
+                var leftLine = nineSliceGuideLines[0];
+                leftLine.X = guideLeft;
+                leftLine.Y = top;
+                leftLine.RelativePoint.X = 0;
+                leftLine.RelativePoint.Y = bottom - top;
+
+                var rightLine = nineSliceGuideLines[1];
+                rightLine.X = guideRight;
+                rightLine.Y = top;
+                rightLine.RelativePoint.X = 0;
+                rightLine.RelativePoint.Y = bottom - top;
+
+                var topLine = nineSliceGuideLines[2];
+                topLine.X = left;
+                topLine.Y = guideTop;
+                topLine.RelativePoint.X = right - left;
+                topLine.RelativePoint.Y = 0;
+
+                var bottomLine = nineSliceGuideLines[3];
+                bottomLine.X = left;
+                bottomLine.Y = guideBottom;
+                bottomLine.RelativePoint.X = right - left;
+                bottomLine.RelativePoint.Y = 0;
+            }
         }
 
         private void RefreshLineGrid()
@@ -289,6 +385,8 @@ namespace TextureCoordinateSelectionPlugin.Logic
                 
                 GumCommands.Self.GuiCommands.RefreshPropertyGridValues();
             }
+
+            RefreshNineSliceGuides();
         }
 
         private void HandleEndRegionChanged(object sender, EventArgs e)
