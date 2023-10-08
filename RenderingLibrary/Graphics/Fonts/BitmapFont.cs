@@ -487,7 +487,7 @@ namespace RenderingLibrary.Graphics
         /// <returns></returns>
         public Texture2D RenderToTexture2D(List<string> lines, HorizontalAlignment horizontalAlignment, 
             SystemManagers managers, Texture2D toReplace, object objectRequestingRender, 
-            int? numberOfLettersToRender = null)
+            int? numberOfLettersToRender = null, float lineHeightMultiplier = 1)
         {
             if (managers == null)
             {
@@ -554,7 +554,7 @@ namespace RenderingLibrary.Graphics
                 spriteRenderer.Begin();
 
                 DrawTextLines(lines, horizontalAlignment, objectRequestingRender, requiredWidth, widths, 
-                    spriteRenderer, Color.White, numberOfLettersToRender: numberOfLettersToRender);
+                    spriteRenderer, Color.White, numberOfLettersToRender: numberOfLettersToRender, lineHeightMultiplier:lineHeightMultiplier);
                 
                 spriteRenderer.End();
 
@@ -571,7 +571,7 @@ namespace RenderingLibrary.Graphics
             SpriteRenderer spriteRenderer, 
             Color color,
             float xOffset = 0, float yOffset = 0, float rotation = 0, float scaleX = 1, float scaleY = 1,
-            int? numberOfLettersToRender = null, TextRenderingPositionMode? overrideTextRenderingPositionMode = null)
+            int? numberOfLettersToRender = null, TextRenderingPositionMode? overrideTextRenderingPositionMode = null, float lineHeightMultiplier = 1)
         {
             ///////////Early Out////////////////
             if(numberOfLettersToRender == 0)
@@ -635,7 +635,7 @@ namespace RenderingLibrary.Graphics
                 {
                     FloatRectangle destRect;
                     int pageIndex;
-                    var sourceRect = GetCharacterRect(c, lineNumber, ref point, out destRect, out pageIndex, scaleX);
+                    var sourceRect = GetCharacterRect(c, lineNumber, ref point, out destRect, out pageIndex, scaleX, lineHeightMultiplier: lineHeightMultiplier);
 
                     var finalPosition = destRect.X * xAxis + destRect.Y * yAxis;
 
@@ -757,7 +757,7 @@ namespace RenderingLibrary.Graphics
         }
 
         public Rectangle GetCharacterRect(char c, int lineNumber, ref Vector2 point, out FloatRectangle destinationRectangle,
-            out int pageIndex, float fontScale = 1)
+            out int pageIndex, float fontScale = 1, float lineHeightMultiplier = 1)
         {
             BitmapCharacterInfo characterInfo = GetCharacterInfo(c);
 
@@ -772,7 +772,7 @@ namespace RenderingLibrary.Graphics
             int xOffset = characterInfo.GetPixelXOffset(LineHeightInPixels);
             point.X += xOffset * fontScale;
 
-            point.Y = (lineNumber * LineHeightInPixels + distanceFromTop) * fontScale;
+            point.Y = (lineNumber * LineHeightInPixels * lineHeightMultiplier + distanceFromTop) * fontScale;
 
             var sourceRectangle = new Microsoft.Xna.Framework.Rectangle(
                 sourceLeft, sourceTop, sourceWidth, sourceHeight);

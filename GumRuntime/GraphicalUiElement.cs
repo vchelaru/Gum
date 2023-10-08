@@ -5454,6 +5454,11 @@ namespace Gum.Wireframe
                 IsBold = (bool)value;
                 ReactToFontValueChange();
             }
+            else if(propertyName == "LineHeightMultiplier")
+            {
+                var asText = ((Text)mContainedObjectAsIpso);
+                asText.LineHeightMultiplier = (float)value;
+            }
             else if (propertyName == nameof(UseFontSmoothing))
             {
                 useFontSmoothing = (bool)value;

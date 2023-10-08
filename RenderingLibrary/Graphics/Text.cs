@@ -562,6 +562,9 @@ namespace RenderingLibrary.Graphics
 
         public float DescenderHeight => BitmapFont?.DescenderHeight ?? 0;
 
+        public float LineHeightMultiplier { get; set; } = 1;
+
+
         #endregion
 
         #region Methods
@@ -958,9 +961,7 @@ namespace RenderingLibrary.Graphics
             {
                 widths.Clear();
                 int requiredWidth;
-                int requiredHeight;
-                fontToUse.GetRequiredWidthAndHeight(WrappedText, out requiredWidth, out requiredHeight, widths);
-
+                fontToUse.GetRequiredWidthAndHeight(WrappedText, out requiredWidth, out int _, widths);
                 UpdateIpsoForRendering();
 
                 var absoluteLeft = mTempForRendering.GetAbsoluteLeft();
@@ -972,7 +973,7 @@ namespace RenderingLibrary.Graphics
                     requiredWidth, widths, spriteRenderer, Color,
                     absoluteLeft,
                     absoluteTop, 
-                    this.GetAbsoluteRotation(), FontScale, FontScale, MaxLettersToShow, OverrideTextRenderingPositionMode);
+                    this.GetAbsoluteRotation(), FontScale, FontScale, MaxLettersToShow, OverrideTextRenderingPositionMode, lineHeightMultiplier:LineHeightMultiplier);
             }
         }
 
@@ -1162,7 +1163,7 @@ namespace RenderingLibrary.Graphics
                 }
 
                 mPreRenderWidth = (int)(requiredWidth + .5f);
-                mPreRenderHeight = (int)(requiredHeight + .5f);
+                mPreRenderHeight = (int)(requiredHeight * LineHeightMultiplier + .5f);
             }
         }
         #endregion
