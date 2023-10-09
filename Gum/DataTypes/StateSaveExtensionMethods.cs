@@ -76,7 +76,10 @@ namespace Gum.DataTypes.Variables
 
                 // The variable could be "LabelVisible", but the rest of this method expects
                 // the name to include '.' and not have the exposed alias:
-                variableName = foundVariable?.Name ?? variableName;
+                if(variableName.Contains(".") == false && foundVariable?.ExposedAsName != null)
+                {
+                    variableName = foundVariable.Name;
+                }
 
                 string nameInBase = variableName;
 
