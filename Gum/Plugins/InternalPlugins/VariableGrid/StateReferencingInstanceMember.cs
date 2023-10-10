@@ -429,6 +429,20 @@ namespace Gum.PropertyGridHelpers
 
                 });
             }
+
+            if(this.VariableSave?.IsCustomVariable == true)
+            {
+                ContextMenuEvents.Add("Delete Variable", (sender, e) =>
+                {
+                    if(ElementSave?.DefaultState.Variables.Contains(this.VariableSave) == true)
+                    {
+                        ElementSave.DefaultState.Variables.Remove(this.VariableSave);
+
+                        GumCommands.Self.FileCommands.TryAutoSaveElement(ElementSave);
+                        GumCommands.Self.GuiCommands.RefreshPropertyGrid(force:true);
+                    }
+                });
+            }
         }
 
         private void TryAddExposeVariableMenuOptions(InstanceSave instance)

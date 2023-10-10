@@ -39,6 +39,13 @@ namespace Gum.Plugins.VariableGrid
         public AddVariableWindow()
         {
             InitializeComponent();
+
+            this.Loaded += AddVariableWindow_Loaded;
+        }
+
+        private void AddVariableWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            GumCommands.Self.GuiCommands.MoveToCursor(this);
         }
 
         private void HandleOkClicked(object sender, RoutedEventArgs e)
@@ -50,5 +57,6 @@ namespace Gum.Plugins.VariableGrid
         {
             this.DialogResult = false;
         }
+
     }
 }

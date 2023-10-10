@@ -17,7 +17,7 @@ namespace Gum
     /// <summary>
     /// Interaction logic for TestWpfControl.xaml
     /// </summary>
-    public partial class TestWpfControl : UserControl
+    public partial class MainPropertyGrid : UserControl
     {
         public event EventHandler AddVariableClicked;
 
@@ -30,7 +30,7 @@ namespace Gum
         }
 
 
-        public TestWpfControl()
+        public MainPropertyGrid()
         {
             InitializeComponent();
         }

@@ -151,6 +151,9 @@ namespace Gum.DataTypes.Variables
             return IsHiddenInPropertyGrid == true;
         }
 
+        public bool IsCustomVariable { get; set; }
+        public bool ShouldSerializeIsCustomVariable() => IsCustomVariable;
+
         [XmlIgnore]
         public List<object> ExcludedValuesForEnum
         {

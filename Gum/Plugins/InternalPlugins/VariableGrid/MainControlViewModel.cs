@@ -64,8 +64,14 @@ namespace Gum.Plugins.VariableGrid
 
         public VariableSave SelectedBehaviorVariable
         {
-            get { return Get<VariableSave>(); }
-            set { Set(value); }
+            get => Get<VariableSave>(); 
+            set => Set(value); 
+        }
+
+        public Visibility AddVariableButtonVisibility
+        {
+            get => Get<Visibility>();
+            set => Set(value);
         }
 
         public VariableSave EffectiveSelectedBehaviorVariable

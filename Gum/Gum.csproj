@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -238,6 +238,7 @@
       <DependentUpon>FlatSearchListBox.xaml</DependentUpon>
     </Compile>
     <Compile Include="Plugins\InternalPlugins\TreeView\ViewModels\SearchItemViewModel.cs" />
+    <Compile Include="Plugins\InternalPlugins\VariableGrid\MainVariableGridPlugin.cs" />
     <Compile Include="Plugins\InternalPlugins\VariableGrid\StateSaveCategoryDisplayer.cs" />
     <Compile Include="Plugins\PluginTab.cs" />
     <Compile Include="Plugins\InternalPlugins\ProjectPropertiesWindowPlugin\MainPlugin.cs" />
@@ -379,8 +380,8 @@
     <Compile Include="RenderingLibrary\IPositionedSizedObjectExtensionMethods.cs" />
     <Compile Include="Responses\DeleteResponse.cs" />
     <Compile Include="Settings\GeneralSettingsFile.cs" />
-    <Compile Include="Plugins\InternalPlugins\VariableGrid\TestWpfControl.xaml.cs">
-      <DependentUpon>TestWpfControl.xaml</DependentUpon>
+    <Compile Include="Plugins\InternalPlugins\VariableGrid\MainPropertyGrid.xaml.cs">
+      <DependentUpon>MainPropertyGrid.xaml</DependentUpon>
     </Compile>
     <Compile Include="ToolCommands\ElementCommands.cs" />
     <Compile Include="ToolCommands\GuiCommands.cs" />
@@ -789,7 +790,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Plugins\InternalPlugins\VariableGrid\TestWpfControl.xaml">
+    <Page Include="Plugins\InternalPlugins\VariableGrid\MainPropertyGrid.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

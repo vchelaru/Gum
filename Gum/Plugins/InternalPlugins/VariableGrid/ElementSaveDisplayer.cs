@@ -225,7 +225,7 @@ namespace Gum.PropertyGridHelpers
                     //bool shouldRemove = SelectedState.Self.SelectedInstance != null ||
                     //    SelectedState.Self.SelectedStateSave != SelectedState.Self.SelectedElement.DefaultState;
                     // Also, don't remove it if it's an exposed variable, this un-exposes things
-                    bool shouldRemove = string.IsNullOrEmpty(variable.ExposedAsName) && !isPartOfCategory;
+                    bool shouldRemove = string.IsNullOrEmpty(variable.ExposedAsName) && !isPartOfCategory && !variable.IsCustomVariable;
 
                     // Update October 7, 2019
                     // Actually, we can remove any variable so long as the current state isn't the "base definition" for it

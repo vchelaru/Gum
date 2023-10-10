@@ -54,7 +54,7 @@ namespace Gum.Logic
                     rootElementSave = ObjectFinder.Self.GetRootStandardElementSave(container);
                 }
 
-                shouldInclude = GetShouldIncludeBasedOnBaseType(defaultVariable, container, currentInstance, rootElementSave);
+                shouldInclude = defaultVariable.IsCustomVariable || GetShouldIncludeBasedOnBaseType(defaultVariable, container, currentInstance, rootElementSave);
             }
 
             if (shouldInclude)

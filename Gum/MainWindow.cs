@@ -101,7 +101,7 @@ namespace Gum
             // State Tree ViewManager needs init before MenuStripManager
             StateTreeViewManager.Self.Initialize(this.stateView.TreeView, this.stateView.StateContextMenuStrip);
             // ProperGridManager before MenuStripManager
-            PropertyGridManager.Self.Initialize();
+            PropertyGridManager.Self.InitializeEarly();
             // menu strip manager needs to be initialized before plugins:
             MenuStripManager.Self.Initialize(this);
 
