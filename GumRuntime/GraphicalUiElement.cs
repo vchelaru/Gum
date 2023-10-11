@@ -2718,7 +2718,7 @@ namespace Gum.Wireframe
             parentOriginOffsetX = 0;
             parentOriginOffsetY = 0;
 
-            TryAdjustOffsetsByParentLayoutType(canWrap, shouldWrap, ref parentOriginOffsetX, ref parentOriginOffsetY, out wasHandledX, out wasHandledY);
+            TryAdjustOffsetsByParentLayoutType(canWrap, shouldWrap, ref parentOriginOffsetX, ref parentOriginOffsetY);
 
             wasHandledX = false;
             wasHandledY = false;
@@ -2728,12 +2728,9 @@ namespace Gum.Wireframe
 
         }
 
-        private void TryAdjustOffsetsByParentLayoutType(bool canWrap, bool shouldWrap, ref float unitOffsetX, ref float unitOffsetY,
-            out bool wasHandledX, out bool wasHandledY)
+        private void TryAdjustOffsetsByParentLayoutType(bool canWrap, bool shouldWrap, ref float unitOffsetX, ref float unitOffsetY)
         {
 
-            wasHandledX = false;
-            wasHandledY = false;
 
             if (GetIfParentStacks())
             {
@@ -2757,23 +2754,18 @@ namespace Gum.Wireframe
                             if (canWrap)
                             {
                                 xRelativeTo = whatToStackAfterX;
-                                wasHandledX = true;
                             }
 
                             yRelativeTo = whatToStackAfterY;
-                            wasHandledY = true;
-
 
                             break;
                         case Gum.Managers.ChildrenLayout.LeftToRightStack:
 
                             xRelativeTo = whatToStackAfterX;
-                            wasHandledX = true;
 
                             if (canWrap)
                             {
                                 yRelativeTo = whatToStackAfterY;
-                                wasHandledY = true;
                             }
                             break;
                         default:
@@ -2786,28 +2778,31 @@ namespace Gum.Wireframe
             }
             else if(GetIfParentIsAutoGrid())
             {
-                var xRows = this.EffectiveParentGue.AutoGridHorizontalCells;
-                var yRows = this.EffectiveParentGue.AutoGridVerticalCells;
-                if (xRows < 1) xRows = 1;
-                if (yRows < 1) yRows = 1;
-
                 var indexInSiblingList = this.GetIndexInSiblings();
-
-                var xIndex = indexInSiblingList % xRows;
-                var yIndex = indexInSiblingList / xRows;
-
-                var parentWidth = this.EffectiveParentGue.GetAbsoluteWidth();
-                var parentHeight = this.EffectiveParentGue.GetAbsoluteHeight();
-
-                var cellWidth = parentWidth / xRows;
-                var cellHeight = parentHeight / yRows;
-
-                wasHandledX = true;
-                wasHandledY = true;
+                int xIndex, yIndex;
+                float cellWidth, cellHeight;
+                GetCellDimensions(indexInSiblingList, out xIndex, out yIndex, out cellWidth, out cellHeight);
 
                 unitOffsetX += cellWidth * xIndex;
                 unitOffsetY += cellHeight * yIndex;
             }
+        }
+
+        private void GetCellDimensions(int indexInSiblingList, out int xIndex, out int yIndex, out float cellWidth, out float cellHeight)
+        {
+            var xRows = this.EffectiveParentGue.AutoGridHorizontalCells;
+            var yRows = this.EffectiveParentGue.AutoGridVerticalCells;
+            if (xRows < 1) xRows = 1;
+            if (yRows < 1) yRows = 1;
+
+
+            xIndex = indexInSiblingList % xRows;
+            yIndex = indexInSiblingList / xRows;
+            var parentWidth = this.EffectiveParentGue.GetAbsoluteWidth();
+            var parentHeight = this.EffectiveParentGue.GetAbsoluteHeight();
+
+            cellWidth = parentWidth / xRows;
+            cellHeight = parentHeight / yRows;
         }
 
         private int GetIndexInSiblings()
@@ -3096,48 +3091,93 @@ namespace Gum.Wireframe
         {
             if (!wasHandledX)
             {
-                var units = isParentFlippedHorizontally ? mXUnits.Flip() : mXUnits;
+                var parentChildrenLayout = EffectiveParentGue?.ChildrenLayout;
 
-                if (units == GeneralUnitType.PixelsFromLarge)
+                var units = isParentFlippedHorizontally ? mXUnits.Flip() : mXUnits;
+                if(parentChildrenLayout == ChildrenLayout.AutoGridHorizontal || parentChildrenLayout == ChildrenLayout.AutoGridVertical)
                 {
-                    unitOffsetX = parentWidth;
-                    wasHandledX = true;
+                    var indexInSiblingList = this.GetIndexInSiblings();
+                    int xIndex, yIndex;
+                    float cellWidth, cellHeight;
+                    GetCellDimensions(indexInSiblingList, out xIndex, out yIndex, out cellWidth, out cellHeight);
+
+                    var leftOfGrid = (xIndex % EffectiveParentGue.autoGridHorizontalCells) * cellWidth;
+
+                    if (units == GeneralUnitType.PixelsFromLarge)
+                    {
+                        unitOffsetX = leftOfGrid + cellWidth;
+                        wasHandledX = true;
+                    }
+                    else if (units == GeneralUnitType.PixelsFromMiddle)
+                    {
+                        unitOffsetX = leftOfGrid + cellWidth / 2.0f;
+                        wasHandledX = true;
+                    }
+                    else if (units == GeneralUnitType.PixelsFromSmall)
+                    {
+                        unitOffsetX = leftOfGrid;
+                        wasHandledX = true;
+                    }
                 }
-                else if (units == GeneralUnitType.PixelsFromMiddle)
+                else
                 {
-                    unitOffsetX = parentWidth / 2.0f;
-                    wasHandledX = true;
-                }
-                else if (units == GeneralUnitType.PixelsFromSmall)
-                {
-                    // no need to do anything
+                    if (units == GeneralUnitType.PixelsFromLarge)
+                    {
+                        unitOffsetX = parentWidth;
+                        wasHandledX = true;
+                    }
+                    else if (units == GeneralUnitType.PixelsFromMiddle)
+                    {
+                        unitOffsetX = parentWidth / 2.0f;
+                        wasHandledX = true;
+                    }
+                    else if (units == GeneralUnitType.PixelsFromSmall)
+                    {
+                        // no need to do anything
+                    }
                 }
             }
 
             if (!wasHandledY)
             {
-                if (mYUnits == GeneralUnitType.PixelsFromLarge)
+                var parentChildrenLayout = EffectiveParentGue?.ChildrenLayout;
+
+                var units = isParentFlippedHorizontally ? mXUnits.Flip() : mXUnits;
+                if (parentChildrenLayout == ChildrenLayout.AutoGridHorizontal || parentChildrenLayout == ChildrenLayout.AutoGridVertical)
                 {
-                    unitOffsetY = parentHeight;
-                    wasHandledY = true;
+                    var indexInSiblingList = this.GetIndexInSiblings();
+                    int xIndex, yIndex;
+                    float cellWidth, cellHeight;
+                    GetCellDimensions(indexInSiblingList, out xIndex, out yIndex, out cellWidth, out cellHeight);
+
+                    var topOfGrid = yIndex / EffectiveParentGue.autoGridHorizontalCells) * cellHeight;
                 }
-                else if (mYUnits == GeneralUnitType.PixelsFromMiddle || mYUnits == GeneralUnitType.PixelsFromMiddleInverted)
+                else
                 {
-                    unitOffsetY = parentHeight / 2.0f;
-                    wasHandledY = true;
-                }
-                else if (mYUnits == GeneralUnitType.PixelsFromBaseline)
-                {
-                    if (Parent is GraphicalUiElement gue && gue.RenderableComponent is Text text)
+
+                    if (mYUnits == GeneralUnitType.PixelsFromLarge)
                     {
-                        unitOffsetY = parentHeight - text.DescenderHeight;
-                    }
-                    else
-                    {
-                        // use the bottom as baseline:
                         unitOffsetY = parentHeight;
+                        wasHandledY = true;
                     }
-                    wasHandledY = true;
+                    else if (mYUnits == GeneralUnitType.PixelsFromMiddle || mYUnits == GeneralUnitType.PixelsFromMiddleInverted)
+                    {
+                        unitOffsetY = parentHeight / 2.0f;
+                        wasHandledY = true;
+                    }
+                    else if (mYUnits == GeneralUnitType.PixelsFromBaseline)
+                    {
+                        if (Parent is GraphicalUiElement gue && gue.RenderableComponent is Text text)
+                        {
+                            unitOffsetY = parentHeight - text.DescenderHeight;
+                        }
+                        else
+                        {
+                            // use the bottom as baseline:
+                            unitOffsetY = parentHeight;
+                        }
+                        wasHandledY = true;
+                    }
                 }
             }
         }
