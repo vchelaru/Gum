@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Reflection;
+using DynamicExpresso;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 
@@ -322,7 +323,7 @@ namespace GumRuntime
         public static void ApplyVariableReferencesOnSpecificOwner(GraphicalUiElement referenceOwner, string referenceString, StateSave stateSave)
         {
             var split = referenceString
-                .Split(equalsArray, StringSplitOptions.RemoveEmptyEntries)
+                .Split(equalsArray, 2, StringSplitOptions.RemoveEmptyEntries)
                 .Select(item => item.Trim()).ToArray();
             object value = null;
             string left = "";
@@ -330,15 +331,50 @@ namespace GumRuntime
             if(split.Length > 1)
             {
                 left = split[0];
-                var right = split[1];
 
-                var ownerOfRightSideVariable = stateSave;
+                var instanceLeft = referenceOwner.Tag as InstanceSave;
+                var currentScreenOrComponent = ObjectFinder.Self.GetContainerOf(instanceLeft);
 
-                GetRightSideAndState(referenceOwner.Tag as InstanceSave, ref right, ref ownerOfRightSideVariable);
+                if (!(currentScreenOrComponent is ScreenSave screenLeft)) {
+                    // TODO?
+                    return;
+                }
 
-                var recursiveVariableFinder = new RecursiveVariableFinder(ownerOfRightSideVariable);
+                var interpreter = new Interpreter(InterpreterOptions.PrimitiveTypes | InterpreterOptions.SystemKeywords);
 
-                value = recursiveVariableFinder.GetValue(right);
+                foreach (var screen in ObjectFinder.Self.GumProjectSave.Screens) {
+                    var prefix = screen != screenLeft ? "Screens::" : "";
+                    var allVariables = screen.DefaultState.Variables;
+                    foreach(var variable in allVariables)
+                    {
+                        var vValue = variable.Value;
+                        var name = variable.Name; // this would be something like ColoredRectangleInstance.X
+                        interpreter.SetVariable(prefix + name.Replace('.', '\u1234'), vValue);
+                    }
+                }
+                // FIXME: Add all variables of current instance to interpreter as well, so "X" is also valid (instead of "FullInstanceName.X")
+
+                string expression = split[1].Replace('.', '\u1234');
+                var parsedExpression = interpreter.Parse(expression);
+                value = parsedExpression.Invoke();
+
+                var variableLeft = screenLeft.DefaultState.GetVariableRecursive(instanceLeft.Name + "." + left);
+                var variableLeftType = variableLeft.GetRuntimeType();
+
+                try {
+                    value = Convert.ChangeType(value, variableLeftType);
+                } catch (Exception ex) {
+                    // TODO: Show error
+                    return;
+                }
+
+                // var ownerOfRightSideVariable = stateSave;
+
+                // GetRightSideAndState(, ref right, ref ownerOfRightSideVariable);
+
+                // var recursiveVariableFinder = new RecursiveVariableFinder(ownerOfRightSideVariable);
+
+                // value = recursiveVariableFinder.GetValue(right);
             }
 
 
