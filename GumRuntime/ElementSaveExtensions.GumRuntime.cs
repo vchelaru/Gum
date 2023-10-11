@@ -320,6 +320,47 @@ namespace GumRuntime
         }
 
         static char[] equalsArray = new char[] { '=' };
+
+        private static bool ApplyExpression(InstanceSave instanceLeft, string left, string expression, out object result) {
+            var currentScreenOrComponent = ObjectFinder.Self.GetContainerOf(instanceLeft);
+
+            if (!(currentScreenOrComponent is ScreenSave screenLeft)) {
+                // TODO?
+                result = null;
+                return false;
+            }
+
+            var interpreter = new Interpreter(InterpreterOptions.PrimitiveTypes | InterpreterOptions.SystemKeywords);
+
+            foreach (var screen in ObjectFinder.Self.GumProjectSave.Screens) {
+                var prefix = screen != screenLeft ? "Screens::" : "";
+                var allVariables = screen.DefaultState.Variables;
+                foreach(var variable in allVariables)
+                {
+                    var vValue = variable.Value;
+                    var name = variable.Name; // this would be something like ColoredRectangleInstance.X
+                    interpreter.SetVariable(prefix + name.Replace('.', '\u1234'), vValue);
+                }
+            }
+            // FIXME: Add all variables of current instance to interpreter as well, so "X" is also valid (instead of "FullInstanceName.X")
+
+            expression = expression.Replace('.', '\u1234');
+            var parsedExpression = interpreter.Parse(expression);
+            result = parsedExpression.Invoke();
+
+            var variableLeft = screenLeft.DefaultState.GetVariableRecursive(instanceLeft.Name + "." + left);
+            var variableLeftType = variableLeft.GetRuntimeType();
+
+            try {
+                result = Convert.ChangeType(result, variableLeftType);
+            } catch (Exception ex) {
+                // TODO: Show error
+                return false;
+            }
+
+            return true;
+        }
+
         public static void ApplyVariableReferencesOnSpecificOwner(GraphicalUiElement referenceOwner, string referenceString, StateSave stateSave)
         {
             var split = referenceString
@@ -332,49 +373,9 @@ namespace GumRuntime
             {
                 left = split[0];
 
-                var instanceLeft = referenceOwner.Tag as InstanceSave;
-                var currentScreenOrComponent = ObjectFinder.Self.GetContainerOf(instanceLeft);
-
-                if (!(currentScreenOrComponent is ScreenSave screenLeft)) {
-                    // TODO?
+                if (!ApplyExpression(referenceOwner.Tag as InstanceSave, left, split[1], out value)) {
                     return;
                 }
-
-                var interpreter = new Interpreter(InterpreterOptions.PrimitiveTypes | InterpreterOptions.SystemKeywords);
-
-                foreach (var screen in ObjectFinder.Self.GumProjectSave.Screens) {
-                    var prefix = screen != screenLeft ? "Screens::" : "";
-                    var allVariables = screen.DefaultState.Variables;
-                    foreach(var variable in allVariables)
-                    {
-                        var vValue = variable.Value;
-                        var name = variable.Name; // this would be something like ColoredRectangleInstance.X
-                        interpreter.SetVariable(prefix + name.Replace('.', '\u1234'), vValue);
-                    }
-                }
-                // FIXME: Add all variables of current instance to interpreter as well, so "X" is also valid (instead of "FullInstanceName.X")
-
-                string expression = split[1].Replace('.', '\u1234');
-                var parsedExpression = interpreter.Parse(expression);
-                value = parsedExpression.Invoke();
-
-                var variableLeft = screenLeft.DefaultState.GetVariableRecursive(instanceLeft.Name + "." + left);
-                var variableLeftType = variableLeft.GetRuntimeType();
-
-                try {
-                    value = Convert.ChangeType(value, variableLeftType);
-                } catch (Exception ex) {
-                    // TODO: Show error
-                    return;
-                }
-
-                // var ownerOfRightSideVariable = stateSave;
-
-                // GetRightSideAndState(, ref right, ref ownerOfRightSideVariable);
-
-                // var recursiveVariableFinder = new RecursiveVariableFinder(ownerOfRightSideVariable);
-
-                // value = recursiveVariableFinder.GetValue(right);
             }
 
 
@@ -387,7 +388,7 @@ namespace GumRuntime
         private static void ApplyVariableReferencesOnSpecificOwner(InstanceSave instance, string referenceString, StateSave stateSave)
         {
             var split = referenceString
-                .Split(equalsArray, StringSplitOptions.RemoveEmptyEntries)
+                .Split(equalsArray, 2, StringSplitOptions.RemoveEmptyEntries)
                 .Select(item => item.Trim()).ToArray();
 
             if(split.Length != 2)
@@ -398,13 +399,9 @@ namespace GumRuntime
             var left = split[0];
             var right = split[1];
 
-            var ownerOfRightSideVariable = stateSave;
-
-            GetRightSideAndState(instance, ref right, ref ownerOfRightSideVariable);
-
-            var recursiveVariableFinder = new RecursiveVariableFinder(ownerOfRightSideVariable);
-
-            var value = recursiveVariableFinder.GetValue(right);
+            if (!ApplyExpression(instance, left, right, out var value)) {
+                return;
+            }
 
             if (value != null)
             {
