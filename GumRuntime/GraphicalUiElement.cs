@@ -626,6 +626,33 @@ namespace Gum.Wireframe
             }
         }
 
+        int autoGridHorizontalCells = 4;
+        public int AutoGridHorizontalCells
+        {
+            get => autoGridHorizontalCells;
+            set
+            {
+                if(autoGridHorizontalCells != value)
+                {
+                    autoGridHorizontalCells = value; UpdateLayout();
+                }
+            }
+        }
+
+        int autoGridVerticalCells = 4;
+        public int AutoGridVerticalCells
+        {
+            get => autoGridVerticalCells;
+            set
+            {
+                if (autoGridVerticalCells != value)
+                {
+                    autoGridVerticalCells = value; UpdateLayout();
+                }
+            }
+        }
+
+
         float stackSpacing;
         /// <summary>
         /// The number of pixels spacing between each child if this is has a ChildrenLayout of 
@@ -2757,11 +2784,73 @@ namespace Gum.Wireframe
                 unitOffsetX += xRelativeTo;
                 unitOffsetY += yRelativeTo;
             }
+            else if(GetIfParentIsAutoGrid())
+            {
+                var xRows = this.EffectiveParentGue.AutoGridHorizontalCells;
+                var yRows = this.EffectiveParentGue.AutoGridVerticalCells;
+                if (xRows < 1) xRows = 1;
+                if (yRows < 1) yRows = 1;
+
+                var indexInSiblingList = this.GetIndexInSiblings();
+
+                var xIndex = indexInSiblingList % xRows;
+                var yIndex = indexInSiblingList / xRows;
+
+                var parentWidth = this.EffectiveParentGue.GetAbsoluteWidth();
+                var parentHeight = this.EffectiveParentGue.GetAbsoluteHeight();
+
+                var cellWidth = parentWidth / xRows;
+                var cellHeight = parentHeight / yRows;
+
+                wasHandledX = true;
+                wasHandledY = true;
+
+                unitOffsetX += cellWidth * xIndex;
+                unitOffsetY += cellHeight * yIndex;
+            }
+        }
+
+        private int GetIndexInSiblings()
+        {
+            System.Collections.IList siblings = null;
+
+            if (this.Parent == null)
+            {
+                siblings = this.ElementGueContainingThis.mWhatThisContains;
+            }
+            else if (this.Parent is GraphicalUiElement)
+            {
+                siblings = ((GraphicalUiElement)Parent).Children as System.Collections.IList;
+            }
+
+            var thisIndex = 0;
+            for(int i = 0; i < siblings.Count; i++)
+            {
+                if (siblings[i] == this)
+                {
+                    break;
+                }
+                if ((siblings[i] as IVisible).Visible)
+                {
+                    thisIndex++;
+                }
+            }
+
+            return thisIndex;
         }
 
         private bool GetIfParentStacks()
         {
-            return this.EffectiveParentGue != null && this.EffectiveParentGue.ChildrenLayout != Gum.Managers.ChildrenLayout.Regular;
+            return this.EffectiveParentGue != null &&
+                (this.EffectiveParentGue.ChildrenLayout == ChildrenLayout.TopToBottomStack ||
+                this.EffectiveParentGue.ChildrenLayout == ChildrenLayout.LeftToRightStack);
+        }
+                
+        private bool GetIfParentIsAutoGrid()
+        {             
+            return this.EffectiveParentGue != null &&
+                (this.EffectiveParentGue.ChildrenLayout == ChildrenLayout.AutoGridHorizontal ||
+                this.EffectiveParentGue.ChildrenLayout == ChildrenLayout.AutoGridVertical);
         }
 
         private GraphicalUiElement GetWhatToStackAfter(bool canWrap, bool shouldWrap, out float whatToStackAfterX, out float whatToStackAfterY)

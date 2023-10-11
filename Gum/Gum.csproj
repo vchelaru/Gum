@@ -238,6 +238,7 @@
       <DependentUpon>FlatSearchListBox.xaml</DependentUpon>
     </Compile>
     <Compile Include="Plugins\InternalPlugins\TreeView\ViewModels\SearchItemViewModel.cs" />
+    <Compile Include="Plugins\InternalPlugins\VariableGrid\ExclusionsPlugin.cs" />
     <Compile Include="Plugins\InternalPlugins\VariableGrid\MainVariableGridPlugin.cs" />
     <Compile Include="Plugins\InternalPlugins\VariableGrid\StateSaveCategoryDisplayer.cs" />
     <Compile Include="Plugins\PluginTab.cs" />
@@ -655,6 +656,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Content\Icons\HeightUnits\AbsoluteHeightMulitpliedByFontScale.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Icons\ChildrenLayout\AutoGridVertical.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Icons\ChildrenLayout\AutoGridHorizontal.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <Content Include="Content\Icons\Origins\Baseline.png">
