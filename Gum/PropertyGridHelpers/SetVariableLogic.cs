@@ -949,6 +949,7 @@ namespace Gum.PropertyGridHelpers
             var rightSide = split[0]; // there is no left side, just right side
             var afterDot = rightSide.Substring(rightSide.LastIndexOf('.') + 1);
 
+            // TODO: This is unused?
             var withoutVariable = rightSide.Substring(0, rightSide.LastIndexOf('.'));
 
             asList[i] = $"{afterDot} = {rightSide}";
