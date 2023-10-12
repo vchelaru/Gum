@@ -355,13 +355,13 @@ namespace GumRuntime
                 // FIXME: Add all variables of current instance to interpreter as well, so "X" is also valid (instead of "FullInstanceName.X")
 
                 string expression = split[1].Replace('.', '\u1234');
-                var parsedExpression = interpreter.Parse(expression);
-                value = parsedExpression.Invoke();
-
-                var variableLeft = screenLeft.DefaultState.GetVariableRecursive(instanceLeft.Name + "." + left);
-                var variableLeftType = variableLeft.GetRuntimeType();
-
                 try {
+                    var parsedExpression = interpreter.Parse(expression);
+                    value = parsedExpression.Invoke();
+
+                    var variableLeft = screenLeft.DefaultState.GetVariableRecursive(instanceLeft.Name + "." + left);
+                    var variableLeftType = variableLeft.GetRuntimeType();
+
                     value = Convert.ChangeType(value, variableLeftType);
                 } catch (Exception ex) {
                     // TODO: Show error
