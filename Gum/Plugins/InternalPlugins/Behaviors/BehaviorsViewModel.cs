@@ -1,4 +1,5 @@
-﻿using Gum.Managers;
+﻿using Gum.DataTypes;
+using Gum.Managers;
 using Gum.Mvvm;
 using System;
 using System.Collections.Generic;
@@ -36,14 +37,7 @@ namespace Gum.Plugins.Behaviors
 
 
         [DependsOn(nameof(IsEditing))]
-        public Visibility EditListVisibility
-        {
-            get
-            {
-                if (IsEditing) return Visibility.Visible;
-                else return Visibility.Hidden;
-            }
-        }
+        public Visibility EditListVisibility => IsEditing.ToVisibility();
 
         public BehaviorsViewModel()
         {
@@ -52,6 +46,29 @@ namespace Gum.Plugins.Behaviors
         internal void HandleOkEditClick()
         {
             ApplyChangedValues?.Invoke(this, null);
+        }
+
+        public void UpdateTo(ComponentSave component)
+        {
+            AddedBehaviors.Clear();
+
+            foreach (var behavior in component.Behaviors)
+            {
+                AddedBehaviors.Add(behavior.BehaviorName);
+            }
+
+            AllBehaviors.Clear();
+            foreach (var behavior in ProjectManager.Self.GumProjectSave.Behaviors)
+            {
+                var newItem = new CheckListBehaviorItem();
+
+                newItem.Name = behavior.Name;
+                newItem.IsChecked = AddedBehaviors.Contains(behavior.Name);
+
+                AllBehaviors.Add(newItem);
+            }
+
+
         }
     }
 }
