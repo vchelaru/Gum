@@ -4928,6 +4928,15 @@ namespace Gum.Wireframe
                 // There could be some rogue value set to the incorrect type, or maybe
                 // a new type or plugin initialized the default to the wrong type. We don't
                 // want to blow up if this happens
+                // Update October 12, 2023
+                // This swallowed exception caused
+                // problems for myself and arcnor. I 
+                // am concerned there may be other exceptions
+                // being swallowed, but maybe we should push those
+                // errors up and let the callers handle it.
+#if DEBUG
+                throw new InvalidCastException($"Trying to set property {propertyName} to a value of {value} of type {value?.GetType()} on {Name}");
+#endif
             }
             return toReturn;
         }
