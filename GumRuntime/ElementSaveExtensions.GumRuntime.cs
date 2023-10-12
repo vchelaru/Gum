@@ -9,7 +9,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Reflection;
+#if !MONOGAME
 using DynamicExpresso;
+#endif
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 
