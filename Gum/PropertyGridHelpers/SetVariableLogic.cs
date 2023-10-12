@@ -34,6 +34,8 @@ namespace Gum.PropertyGridHelpers
         {
             "Animate",
             "Alpha",
+            "AutoGridHorizontalCells",
+            "AutoGridVerticalCells",
             "Blue",
             "CurrentChainName",
             "Children Layout",

@@ -261,8 +261,8 @@ namespace Gum.Managers
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Category = "Children", Type = "float", Value = 0.0f, Name = "StackSpacing" });
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Category = "Children", Type = "bool", Value = false, Name = "Wraps Children" });
 
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Category = "Children", Type = "float", Value = 4f, Name = "AutoGridHorizontalCells" });
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Category = "Children", Type = "float", Value = 4f, Name = "AutoGridVerticalCells" });
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Category = "Children", Type = "int", Value = 4, Name = "AutoGridHorizontalCells" });
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Category = "Children", Type = "int", Value = 4, Name = "AutoGridVerticalCells" });
 
 
                 AddClipsChildren(stateSave);
