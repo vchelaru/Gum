@@ -3131,7 +3131,7 @@ namespace Gum.Wireframe
                 {
                     unitOffsetX += value;
                 }
-                else
+                else if(mXUnits != GeneralUnitType.PixelsFromSmall)
                 {
                     unitOffsetX = value;
                 }
@@ -3168,7 +3168,7 @@ namespace Gum.Wireframe
                 {
                     unitOffsetY += value;
                 }
-                else
+                else if(mYUnits != GeneralUnitType.PixelsFromSmall)
                 {
                     unitOffsetY = value;
                 }
