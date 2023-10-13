@@ -731,6 +731,16 @@ namespace Gum.Managers
 
         private static void SetInstanceParentWrapper(ElementSave targetElement, InstanceSave newInstance, InstanceSave existingInstance)
         {
+            // Vic October 13, 2023
+            // Currently new parents can
+            // only be created as Containers,
+            // so they won't have Default Child 
+            // Containers. In the future we will
+            // probably add the ability to select
+            // the type of parent to add, and when
+            // that happens we'll want to add assignment
+            // of the parent's default child container.
+
             // From DragDropManager:
             // "Since the Parent property can only be set in the default state, we will
             // set the Parent variable on that instead of the SelectedState.Self.SelectedStateSave"
@@ -756,7 +766,15 @@ namespace Gum.Managers
             var stateToAssignOn = targetElement.DefaultState;
             var variableName = child.Name + ".Parent";
             var oldValue = stateToAssignOn.GetValue(variableName) as string;        // This will always be empty anyway...
-            stateToAssignOn.SetValue(variableName, parent.Name, "string");
+
+            string newParent = parent.Name;
+            var suffix = ObjectFinder.Self.GetDefaultChildName(parent);
+            if(!string.IsNullOrEmpty(suffix))
+            {
+                newParent = parent.Name + "." + suffix;
+            }
+
+            stateToAssignOn.SetValue(variableName, newParent, "string");
             SetVariableLogic.Self.PropertyValueChanged("Parent", oldValue, child);
         }
     }
