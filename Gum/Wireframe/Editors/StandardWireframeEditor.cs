@@ -375,7 +375,7 @@ namespace Gum.Wireframe.Editors
             {
                 SideGrabbed = SideOver;
             }
-            if (cursor.PrimaryDown && grabbedState.HasMovedEnough)
+            if (cursor.PrimaryDown && grabbedState.HasMovedEnough && SideGrabbed != ResizeSide.None)
             {
                 SideGrabbingActivity();
             }
