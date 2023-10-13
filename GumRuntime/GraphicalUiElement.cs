@@ -5484,7 +5484,7 @@ namespace Gum.Wireframe
                     {
                         sprite.Texture = loaderManager.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(value);
                     }
-                    catch (System.IO.FileNotFoundException)
+                    catch (Exception ex) when (ex is System.IO.FileNotFoundException || ex is System.IO.DirectoryNotFoundException)
                     {
                         if (MissingFileBehavior == MissingFileBehavior.ThrowException)
                         {
