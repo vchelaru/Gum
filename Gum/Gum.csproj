@@ -403,7 +403,7 @@
     <Compile Include="Wireframe\Editors\DimensionDisplay.cs" />
     <Compile Include="Wireframe\Editors\PolygonWireframeEditor.cs" />
     <Compile Include="Wireframe\ElementWithState.cs" />
-    <Compile Include="Wireframe\GrabbedInitialState.cs" />
+    <Compile Include="Wireframe\GrabbedState.cs" />
     <Compile Include="Wireframe\GraphicalOutline.cs" />
     <Compile Include="Wireframe\HighlightManager.cs" />
     <Compile Include="Wireframe\InterpolatingColor.cs" />

@@ -290,14 +290,14 @@ namespace Gum.Wireframe.Editors
                     // fall through to the next part, to grab the point automatically
 
 
-                    grabbedInitialState.HandlePush();
+                    grabbedState.HandlePush();
 
                     hasGrabbedBodyOrPoint = true;
                     grabbedIndex = newIndex;
                 }
                 else
                 {
-                    grabbedInitialState.HandlePush();
+                    grabbedState.HandlePush();
 
                     hasGrabbedBodyOrPoint = HasCursorOver;
                     grabbedIndex = GetIndexOver(x, y);
@@ -421,7 +421,7 @@ namespace Gum.Wireframe.Editors
         {
             var cursor = InputLibrary.Cursor.Self;
             if (cursor.PrimaryDown && hasGrabbedBodyOrPoint &&
-                grabbedInitialState.HasMovedEnough && grabbedIndex == null)
+                grabbedState.HasMovedEnough && grabbedIndex == null)
             {
                 ApplyCursorMovement(cursor);
             }
