@@ -12,6 +12,9 @@ using System.Reflection;
 using DynamicExpresso;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace GumRuntime
 {
@@ -279,6 +282,33 @@ namespace GumRuntime
             }
         }
 
+        private static LiteralExpressionSyntax GetExpressionSyntaxForVariable(StateSave state, string variableName) {
+            var idVar = state?.GetVariableRecursive(variableName);
+
+            if (idVar == null) return null;
+
+            var varType = idVar.GetRuntimeType();
+
+            switch (Type.GetTypeCode(varType)) {
+                case TypeCode.Boolean: return SyntaxFactory.LiteralExpression((bool)idVar.Value ? SyntaxKind.TrueLiteralExpression : SyntaxKind.FalseLiteralExpression);
+                case TypeCode.Empty: return SyntaxFactory.LiteralExpression(SyntaxKind.NullLiteralExpression);
+                case TypeCode.Byte: return SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal((byte)idVar.Value));
+                case TypeCode.SByte: return SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal((sbyte)idVar.Value));
+                case TypeCode.Char: return SyntaxFactory.LiteralExpression(SyntaxKind.CharacterLiteralExpression, SyntaxFactory.Literal((char)idVar.Value));
+                case TypeCode.Int16: return SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal((short)idVar.Value));
+                case TypeCode.UInt16: return SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal((ushort)idVar.Value));
+                case TypeCode.Int32: return SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal((int)idVar.Value));
+                case TypeCode.UInt32: return SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal((uint)idVar.Value));
+                case TypeCode.Int64: return SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal((long)idVar.Value));
+                case TypeCode.UInt64: return SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal((ulong)idVar.Value));
+                case TypeCode.Single: return SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal((float)idVar.Value));
+                case TypeCode.Double: return SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal((double)idVar.Value));
+                case TypeCode.Decimal: return SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal((decimal)idVar.Value));
+                case TypeCode.String: return SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression, SyntaxFactory.Literal((string)idVar.Value));
+                default: throw new Exception("Unknown type");
+            }
+        }
+
         public static void ApplyVariableReferences(this GraphicalUiElement graphicalElement, StateSave stateSave)
         {
             foreach (var variableList in stateSave.VariableLists)
@@ -321,6 +351,18 @@ namespace GumRuntime
 
         static char[] equalsArray = new char[] { '=' };
 
+        private static void FindReplacement(SyntaxNode sourceNode, ICollection<CSharpSyntaxNode> results) {
+            if (sourceNode is MemberAccessExpressionSyntax nodeMember) {
+                results.Add(nodeMember);
+            } else if (sourceNode is IdentifierNameSyntax nodeId) {
+                results.Add(nodeId);
+            } else {
+                foreach (var syntaxNode in sourceNode.ChildNodes()) {
+                    FindReplacement(syntaxNode, results);
+                }
+            }
+        }
+
         private static bool ApplyExpression(InstanceSave instanceLeft, string left, string expression, out object result) {
             var currentScreenOrComponent = ObjectFinder.Self.GetContainerOf(instanceLeft);
 
@@ -330,35 +372,92 @@ namespace GumRuntime
                 return false;
             }
 
-            var interpreter = new Interpreter(InterpreterOptions.PrimitiveTypes | InterpreterOptions.SystemKeywords);
+            var sourceNode = CSharpSyntaxTree.ParseText(expression).GetRoot() as CSharpSyntaxNode;
 
-            foreach (var screen in ObjectFinder.Self.GumProjectSave.Screens) {
-                var prefix = screen != screenLeft ? "Screens::" : "";
-                var allVariables = screen.DefaultState.Variables;
-                foreach(var variable in allVariables)
-                {
-                    var vValue = variable.Value;
-                    var name = variable.Name; // this would be something like ColoredRectangleInstance.X
-                    interpreter.SetVariable(prefix + name.Replace('.', '\u1234'), vValue);
+            var toReplace = new List<CSharpSyntaxNode>();
+            FindReplacement(sourceNode, toReplace);
+
+            sourceNode = sourceNode.ReplaceNodes(toReplace, (node, nodeWithSubst) => {
+                switch (node) {
+                    case IdentifierNameSyntax nodeId: {
+                        var variableName = instanceLeft.Name + "." + nodeId.Identifier.Text;
+
+                        return GetExpressionSyntaxForVariable(screenLeft.DefaultState, variableName);
+                    }
+
+                    case MemberAccessExpressionSyntax nodeMember: {
+                        var children = nodeMember.ChildNodes().ToArray();
+
+                        if (children.Length != 2) {
+                            // ERROR
+                            return node;
+                        }
+
+                        if (children[0] is IdentifierNameSyntax idLeft && children[1] is IdentifierNameSyntax idRight) {
+                            return GetExpressionSyntaxForVariable(screenLeft.DefaultState, idLeft + "." + idRight);
+                        } else if (children[0] is MemberAccessExpressionSyntax memberLeft && children[1] is IdentifierNameSyntax idRightMember) {
+                            var memberChildren = memberLeft.ChildNodes().ToArray();
+                            if (memberChildren.Length != 2) {
+                                // ERROR
+                                return node;
+                            }
+
+                            if (memberChildren[0] is AliasQualifiedNameSyntax aliasLeft && memberChildren[1] is IdentifierNameSyntax idAliasRight) {
+                                var variableName = idAliasRight.Identifier.Text.Trim() + "." + idRightMember.Identifier.Text.Trim();
+
+                                switch (aliasLeft.Alias.ToString()) {
+                                    case "Screens": {
+                                        var screen = ObjectFinder.Self.GetScreen(aliasLeft.Name.ToString());
+
+                                        return GetExpressionSyntaxForVariable(screen?.DefaultState, variableName);
+                                    }
+                                    case "Components": {
+                                        var comp = ObjectFinder.Self.GetComponent(aliasLeft.Name.ToString());
+
+                                        return GetExpressionSyntaxForVariable(comp?.DefaultState, variableName);
+                                    }
+                                }
+                            }
+                        } else {
+                            // Unsupported!
+                        }
+
+                        break;
+                    }
+
+                    default:
+                        // ERROR
+                        return node;
                 }
-            }
-            // FIXME: Add all variables of current instance to interpreter as well, so "X" is also valid (instead of "FullInstanceName.X")
-
-            expression = expression.Replace('.', '\u1234');
-            var parsedExpression = interpreter.Parse(expression);
-            result = parsedExpression.Invoke();
-
-            var variableLeft = screenLeft.DefaultState.GetVariableRecursive(instanceLeft.Name + "." + left);
-            var variableLeftType = variableLeft.GetRuntimeType();
+                return node;
+                // return SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(42));
+            });
 
             try {
-                result = Convert.ChangeType(result, variableLeftType);
-            } catch (Exception ex) {
-                // TODO: Show error
+                var interpreter = new Interpreter(InterpreterOptions.PrimitiveTypes | InterpreterOptions.SystemKeywords);
+                var parsedExpression = interpreter.Parse(sourceNode.ToString());
+                result = parsedExpression.Invoke();
+
+                var variableLeft = screenLeft.DefaultState.GetVariableRecursive(instanceLeft.Name + "." + left);
+                var variableLeftType = variableLeft.GetRuntimeType();
+
+                try {
+                    result = Convert.ChangeType(result, variableLeftType);
+                }
+                catch (Exception ex) {
+                    // TODO: Show error
+                    return false;
+                }
+
+                return true;
+            }
+            catch (Exception ex) {
+                // TODO: ERROR!!
+                Console.Error.Write(ex);
+                result = null;
+
                 return false;
             }
-
-            return true;
         }
 
         public static void ApplyVariableReferencesOnSpecificOwner(GraphicalUiElement referenceOwner, string referenceString, StateSave stateSave)
