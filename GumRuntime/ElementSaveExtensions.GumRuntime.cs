@@ -342,6 +342,7 @@ namespace GumRuntime
                     return;
                 }
 
+#if GUM
                 var interpreter = new Interpreter(InterpreterOptions.PrimitiveTypes | InterpreterOptions.SystemKeywords);
 
                 foreach (var screen in ObjectFinder.Self.GumProjectSave.Screens) {
@@ -369,7 +370,7 @@ namespace GumRuntime
                     // TODO: Show error
                     return;
                 }
-
+#endif
                 // var ownerOfRightSideVariable = stateSave;
 
                 // GetRightSideAndState(, ref right, ref ownerOfRightSideVariable);
@@ -502,5 +503,5 @@ namespace GumRuntime
 #endif
 
 
-    }
+            }
 }
