@@ -53,8 +53,8 @@ namespace Gum.PropertyGridHelpers
             "StackSpacing",
             "Text",
             "Texture Address",
+            "TextOverflowVerticalMode",
             "VerticalAlignment",
-
             "Visible",
             "Width",
             "Width Units",
