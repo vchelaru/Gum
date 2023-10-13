@@ -282,6 +282,7 @@ namespace GumRuntime
             }
         }
 
+        // TODO: If result is null, variable not found, so add to some error list
         private static LiteralExpressionSyntax GetExpressionSyntaxForVariable(StateSave state, string variableName) {
             var idVar = state?.GetVariableRecursive(variableName);
 
@@ -363,82 +364,87 @@ namespace GumRuntime
             }
         }
 
+        private static LiteralExpressionSyntax ParseExpressionAliasId(AliasQualifiedNameSyntax aliasLeft, IdentifierNameSyntax idAliasRight, string extraMembers) {
+            var varNameLeft = idAliasRight.Identifier.Text.Trim();
+            var variableName = extraMembers != null ? varNameLeft + "." + extraMembers : varNameLeft;
+
+            switch (aliasLeft.Alias.ToString()) {
+                case "Screens": {
+                    var screen = ObjectFinder.Self.GetScreen(aliasLeft.Name.ToString());
+
+                    return GetExpressionSyntaxForVariable(screen?.DefaultState, variableName);
+                }
+                case "Components": {
+                    var comp = ObjectFinder.Self.GetComponent(aliasLeft.Name.ToString());
+
+                    return GetExpressionSyntaxForVariable(comp?.DefaultState, variableName);
+                }
+            }
+
+            return null;
+        }
+
         private static bool ApplyExpression(InstanceSave instanceLeft, string left, string expression, out object result) {
             var currentScreenOrComponent = ObjectFinder.Self.GetContainerOf(instanceLeft);
-
-            if (!(currentScreenOrComponent is ScreenSave screenLeft)) {
-                // TODO?
-                result = null;
-                return false;
-            }
 
             var sourceNode = CSharpSyntaxTree.ParseText(expression).GetRoot() as CSharpSyntaxNode;
 
             var toReplace = new List<CSharpSyntaxNode>();
             FindReplacement(sourceNode, toReplace);
 
-            sourceNode = sourceNode.ReplaceNodes(toReplace, (node, nodeWithSubst) => {
-                switch (node) {
-                    case IdentifierNameSyntax nodeId: {
-                        var variableName = instanceLeft.Name + "." + nodeId.Identifier.Text;
+            try {
+                sourceNode = sourceNode.ReplaceNodes(toReplace, (node, nodeWithSubst) => {
+                    switch (node) {
+                        case IdentifierNameSyntax nodeId: {
+                            var variableName = instanceLeft.Name + "." + nodeId.Identifier.Text;
 
-                        return GetExpressionSyntaxForVariable(screenLeft.DefaultState, variableName);
-                    }
-
-                    case MemberAccessExpressionSyntax nodeMember: {
-                        var children = nodeMember.ChildNodes().ToArray();
-
-                        if (children.Length != 2) {
-                            // ERROR
-                            return node;
+                            return GetExpressionSyntaxForVariable(currentScreenOrComponent.DefaultState, variableName);
                         }
 
-                        if (children[0] is IdentifierNameSyntax idLeft && children[1] is IdentifierNameSyntax idRight) {
-                            return GetExpressionSyntaxForVariable(screenLeft.DefaultState, idLeft + "." + idRight);
-                        } else if (children[0] is MemberAccessExpressionSyntax memberLeft && children[1] is IdentifierNameSyntax idRightMember) {
-                            var memberChildren = memberLeft.ChildNodes().ToArray();
-                            if (memberChildren.Length != 2) {
+                        case MemberAccessExpressionSyntax nodeMember: {
+                            var children = nodeMember.ChildNodes().ToArray();
+
+                            if (children.Length != 2) {
                                 // ERROR
                                 return node;
                             }
 
-                            if (memberChildren[0] is AliasQualifiedNameSyntax aliasLeft && memberChildren[1] is IdentifierNameSyntax idAliasRight) {
-                                var variableName = idAliasRight.Identifier.Text.Trim() + "." + idRightMember.Identifier.Text.Trim();
-
-                                switch (aliasLeft.Alias.ToString()) {
-                                    case "Screens": {
-                                        var screen = ObjectFinder.Self.GetScreen(aliasLeft.Name.ToString());
-
-                                        return GetExpressionSyntaxForVariable(screen?.DefaultState, variableName);
-                                    }
-                                    case "Components": {
-                                        var comp = ObjectFinder.Self.GetComponent(aliasLeft.Name.ToString());
-
-                                        return GetExpressionSyntaxForVariable(comp?.DefaultState, variableName);
-                                    }
+                            if (children[0] is IdentifierNameSyntax idLeft && children[1] is IdentifierNameSyntax idRight) {
+                                return GetExpressionSyntaxForVariable(currentScreenOrComponent.DefaultState, idLeft + "." + idRight);
+                            } else if (children[0] is AliasQualifiedNameSyntax aliasLeft0 && children[1] is IdentifierNameSyntax idAliasRight0) {
+                                return ParseExpressionAliasId(aliasLeft0, idAliasRight0, null);
+                            } else if (children[0] is MemberAccessExpressionSyntax memberLeft && children[1] is IdentifierNameSyntax idRightMember) {
+                                var memberChildren = memberLeft.ChildNodes().ToArray();
+                                if (memberChildren.Length != 2) {
+                                    // ERROR
+                                    return node;
                                 }
+
+                                if (memberChildren[0] is AliasQualifiedNameSyntax aliasLeft && memberChildren[1] is IdentifierNameSyntax idAliasRight) {
+                                    return ParseExpressionAliasId(aliasLeft, idAliasRight, idRightMember.Identifier.Text.Trim());
+                                } else {
+                                    // Unsupported!
+                                }
+                            } else {
+                                // Unsupported!
                             }
-                        } else {
-                            // Unsupported!
+
+                            break;
                         }
 
-                        break;
+                        default:
+                            // ERROR
+                            return node;
                     }
+                    return node;
+                    // return SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(42));
+                });
 
-                    default:
-                        // ERROR
-                        return node;
-                }
-                return node;
-                // return SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(42));
-            });
-
-            try {
                 var interpreter = new Interpreter(InterpreterOptions.PrimitiveTypes | InterpreterOptions.SystemKeywords);
                 var parsedExpression = interpreter.Parse(sourceNode.ToString());
                 result = parsedExpression.Invoke();
 
-                var variableLeft = screenLeft.DefaultState.GetVariableRecursive(instanceLeft.Name + "." + left);
+                var variableLeft = currentScreenOrComponent.DefaultState.GetVariableRecursive(instanceLeft.Name + "." + left);
                 var variableLeftType = variableLeft.GetRuntimeType();
 
                 try {
