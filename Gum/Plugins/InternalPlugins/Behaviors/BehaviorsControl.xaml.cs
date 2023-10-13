@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Gum.ToolStates;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -34,6 +35,11 @@ namespace Gum.Plugins.Behaviors
 
         private void HandleEditClick(object sender, RoutedEventArgs e)
         {
+            var component = GumState.Self.SelectedState.SelectedComponent;
+            if(component != null)
+            {
+                ViewModel.UpdateTo(component);
+            }
             ViewModel.IsEditing = true;
         }
 

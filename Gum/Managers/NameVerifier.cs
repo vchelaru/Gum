@@ -244,25 +244,25 @@ namespace Gum.Managers
 
             if (objectToIgnore != elementSave && name == elementSave.Name)
             {
-                whyNotValid = "The element is named " + elementSave.Name;
+                whyNotValid = $"The element is named '{elementSave.Name}'";
             }
 
             var instance = elementSave.Instances.FirstOrDefault(item => item != objectToIgnore && item.Name == name);
             if (instance != null)
             {
-                whyNotValid = "There is already an instance named " + instance.ToString();
+                whyNotValid = $"There is already an instance named '{instance.Name}'";
             }
 
             var state = elementSave.States.FirstOrDefault(item => item != objectToIgnore && item.Name == name);
             if (state != null)
             {
-                whyNotValid = "There is already a state named " + state.ToString();
+                whyNotValid = $"There is already a state named '{state.Name}'";
             }
             
             var variable = elementSave.AllStates.SelectMany(item => item.Variables).FirstOrDefault(item => item != objectToIgnore && item.ExposedAsName == name);
             if (variable != null)
             {
-                whyNotValid = "There is already a variable named " + variable.ToString();
+                whyNotValid = $"There is already a variable named '{variable.Name}'";
             }
 
             //element = ObjectFinder.Self.GumProjectSave.StandardElements.FirstOrDefault(item=>item != objectToIgnore && item.Name == name)

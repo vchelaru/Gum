@@ -113,5 +113,6 @@ namespace Gum.DataTypes.ComponentModel
             }
         }
 
+        public override string ToString() => $"{Name} ({PropertyType})";
     }
 }

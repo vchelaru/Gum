@@ -9,12 +9,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Reflection;
+#if GUM
 using DynamicExpresso;
-using Gum.DataTypes.Variables;
-using Gum.Managers;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+#endif
+using Gum.DataTypes.Variables;
+using Gum.Managers;
 
 namespace GumRuntime
 {

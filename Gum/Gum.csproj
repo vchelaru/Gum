@@ -238,6 +238,7 @@
       <DependentUpon>FlatSearchListBox.xaml</DependentUpon>
     </Compile>
     <Compile Include="Plugins\InternalPlugins\TreeView\ViewModels\SearchItemViewModel.cs" />
+    <Compile Include="Plugins\InternalPlugins\VariableGrid\ExclusionsPlugin.cs" />
     <Compile Include="Plugins\InternalPlugins\VariableGrid\MainVariableGridPlugin.cs" />
     <Compile Include="Plugins\InternalPlugins\VariableGrid\StateSaveCategoryDisplayer.cs" />
     <Compile Include="Plugins\PluginTab.cs" />
@@ -402,7 +403,7 @@
     <Compile Include="Wireframe\Editors\DimensionDisplay.cs" />
     <Compile Include="Wireframe\Editors\PolygonWireframeEditor.cs" />
     <Compile Include="Wireframe\ElementWithState.cs" />
-    <Compile Include="Wireframe\GrabbedInitialState.cs" />
+    <Compile Include="Wireframe\GrabbedState.cs" />
     <Compile Include="Wireframe\GraphicalOutline.cs" />
     <Compile Include="Wireframe\HighlightManager.cs" />
     <Compile Include="Wireframe\InterpolatingColor.cs" />
@@ -655,6 +656,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Content\Icons\HeightUnits\AbsoluteHeightMulitpliedByFontScale.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Icons\ChildrenLayout\AutoGridVertical.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Icons\ChildrenLayout\AutoGridHorizontal.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <Content Include="Content\Icons\Origins\Baseline.png">

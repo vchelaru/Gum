@@ -116,7 +116,7 @@ namespace Gum.Plugins.Behaviors
                 GumCommands.Self.GuiCommands.RefreshStateTreeView();
                 GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
 
-                UpdateViewModelTo(component);
+                viewModel.UpdateTo(component);
 
                 if(removedBehaviors.Any() || addedBehaviors.Any())
                 {
@@ -138,7 +138,7 @@ namespace Gum.Plugins.Behaviors
 
             if(asComponent != null)
             {
-                UpdateViewModelTo(asComponent);
+                viewModel.UpdateTo(asComponent);
                 if(!hasBheaviorsControlBeenAdded)
                 {
                     GumCommands.Self.GuiCommands.AddControl(control, "Behaviors");
@@ -153,27 +153,6 @@ namespace Gum.Plugins.Behaviors
             }
         }
 
-        private void UpdateViewModelTo(ComponentSave asComponent)
-        {
-            viewModel.AddedBehaviors.Clear();
 
-            foreach(var behavior in asComponent.Behaviors)
-            {
-                viewModel.AddedBehaviors.Add(behavior.BehaviorName);
-            }
-
-            viewModel.AllBehaviors.Clear();
-            foreach(var behavior in ProjectManager.Self.GumProjectSave.Behaviors)
-            {
-                var newItem = new CheckListBehaviorItem();
-
-                newItem.Name = behavior.Name;
-                newItem.IsChecked = viewModel.AddedBehaviors.Contains(behavior.Name);
-
-                viewModel.AllBehaviors.Add(newItem);
-            }
-
-
-        }
     }
 }

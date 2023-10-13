@@ -326,7 +326,7 @@ namespace Gum.Wireframe.Editors
 
         private void ApplyShiftAxisLock()
         {
-            var axis = grabbedInitialState.AxisMovedFurthestAlong;
+            var axis = grabbedState.AxisMovedFurthestAlong;
 
             bool isElementSelected = SelectedState.Self.SelectedInstances.Count() == 0 &&
                      // check specifically for components or standard elements, since Screens can't be moved
@@ -338,13 +338,13 @@ namespace Gum.Wireframe.Editors
                 // If the X axis is the furthest-moved, set the Y values back to what they were.
                 if (isElementSelected)
                 {
-                    SelectedState.Self.SelectedStateSave.SetValue("Y", grabbedInitialState.ComponentPosition.Y, "float");
+                    SelectedState.Self.SelectedStateSave.SetValue("Y", grabbedState.ComponentPosition.Y, "float");
                 }
                 else
                 {
                     foreach (var instance in SelectedState.Self.SelectedInstances)
                     {
-                        SelectedState.Self.SelectedStateSave.SetValue(instance.Name + ".Y", grabbedInitialState.InstancePositions[instance].Y, "float");
+                        SelectedState.Self.SelectedStateSave.SetValue(instance.Name + ".Y", grabbedState.InstancePositions[instance].Y, "float");
                     }
                 }
             }
@@ -353,13 +353,13 @@ namespace Gum.Wireframe.Editors
                 // If the Y axis is the furthest-moved, set the X values back to what they were.
                 if (isElementSelected)
                 {
-                    SelectedState.Self.SelectedStateSave.SetValue("X", grabbedInitialState.ComponentPosition.X, "float");
+                    SelectedState.Self.SelectedStateSave.SetValue("X", grabbedState.ComponentPosition.X, "float");
                 }
                 else
                 {
                     foreach (var instance in SelectedState.Self.SelectedInstances)
                     {
-                        SelectedState.Self.SelectedStateSave.SetValue(instance.Name + ".X", grabbedInitialState.InstancePositions[instance].X, "float");
+                        SelectedState.Self.SelectedStateSave.SetValue(instance.Name + ".X", grabbedState.InstancePositions[instance].X, "float");
                     }
                 }
             }
@@ -375,7 +375,7 @@ namespace Gum.Wireframe.Editors
             {
                 SideGrabbed = SideOver;
             }
-            if (cursor.PrimaryDown && grabbedInitialState.HasMovedEnough)
+            if (cursor.PrimaryDown && grabbedState.HasMovedEnough && SideGrabbed != ResizeSide.None)
             {
                 SideGrabbingActivity();
             }
@@ -397,17 +397,48 @@ namespace Gum.Wireframe.Editors
             }
             //////////////////////////////END EARLY OUT////////////////////////////////////
 
+            grabbedState.AccumulatedXOffset += cursorXChange;
+            grabbedState.AccumulatedYOffset += cursorYChange;
+
+            var shouldSnapX = GumState.Self.SelectedState.SelectedIpsos.Any(item => item.WidthUnits.GetIsPixelBased());
+            var shouldSnapY = GumState.Self.SelectedState.SelectedIpsos.Any(item => item.HeightUnits.GetIsPixelBased());
+
+            var effectiveXToMoveBy = cursorXChange;
+            var effectiveYToMoveBy = cursorYChange;
+
+
+            if (shouldSnapX)
+            {
+                var accumulatedXAsInt = (int)grabbedState.AccumulatedXOffset;
+                effectiveXToMoveBy = 0;
+                if (accumulatedXAsInt != 0)
+                {
+                    effectiveXToMoveBy = accumulatedXAsInt;
+                    grabbedState.AccumulatedXOffset -= accumulatedXAsInt;
+                }
+            }
+            if (shouldSnapY)
+            {
+                var accumulatedYAsInt = (int)grabbedState.AccumulatedYOffset;
+                effectiveYToMoveBy = 0;
+                if (accumulatedYAsInt != 0)
+                {
+                    effectiveYToMoveBy = accumulatedYAsInt;
+                    grabbedState.AccumulatedYOffset -= accumulatedYAsInt;
+                }
+            }
+
             bool hasChangeOccurred = false;
             var elementStack = SelectedState.Self.GetTopLevelElementStack();
             if (SelectionManager.Self.HasSelection && SelectedState.Self.SelectedInstances.Count() == 0)
             {
                 // That means we have the entire component selected
-                hasChangeOccurred |= SideGrabbingActivityForInstanceSave(cursorXChange, cursorYChange, instanceSave: null, elementStack: elementStack);
+                hasChangeOccurred |= SideGrabbingActivityForInstanceSave(effectiveXToMoveBy, effectiveYToMoveBy, instanceSave: null, elementStack: elementStack);
             }
 
             foreach (InstanceSave save in SelectedState.Self.SelectedInstances)
             {
-                hasChangeOccurred |= SideGrabbingActivityForInstanceSave(cursorXChange, cursorYChange, instanceSave: save, elementStack: elementStack);
+                hasChangeOccurred |= SideGrabbingActivityForInstanceSave(effectiveXToMoveBy, effectiveYToMoveBy, instanceSave: save, elementStack: elementStack);
             }
 
             if (hasChangeOccurred)
@@ -437,7 +468,7 @@ namespace Gum.Wireframe.Editors
 
                 mHasChangedAnythingSinceLastPush = false;
 
-                grabbedInitialState.HandlePush();
+                grabbedState.HandlePush();
 
                 mHasGrabbed = SelectionManager.Self.HasSelection;
 
@@ -452,7 +483,7 @@ namespace Gum.Wireframe.Editors
         {
             var cursor = InputLibrary.Cursor.Self;
             if (SelectionManager.Self.IsOverBody && cursor.PrimaryDown && mHasGrabbed &&
-                grabbedInitialState.HasMovedEnough)
+                grabbedState.HasMovedEnough)
             {
                 ApplyCursorMovement(cursor);
             }

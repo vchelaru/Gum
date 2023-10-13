@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace Gum.Wireframe
 {
-    public class GrabbedInitialState
+    public class GrabbedState
     {
 
         public StateSave StateSave { get; private set; }
@@ -23,8 +23,8 @@ namespace Gum.Wireframe
             {
                 Cursor cursor = InputLibrary.Cursor.Self;
 
-                if (System.Math.Abs( cursor.X - CursorPushX) > 
-                    System.Math.Abs( cursor.Y - CursorPushY))
+                if (System.Math.Abs( cursor.X - CursorPushScreenX) > 
+                    System.Math.Abs( cursor.Y - CursorPushScreenY))
                 {
                     return XOrY.X;
                 }
@@ -35,17 +35,20 @@ namespace Gum.Wireframe
             }
         }
 
-        public float CursorPushX
+        public float CursorPushScreenX
         {
             get;
             set;
         }
 
-        public float CursorPushY
+        public float CursorPushScreenY
         {
             get;
             set;
         }
+
+        public float AccumulatedXOffset { get; set; }
+        public float AccumulatedYOffset { get; set; }
 
         /// <summary>
         /// The X and Y of the selected component when grabbed. This is the effective position as opposed to the value stored in the selected state
@@ -73,6 +76,10 @@ namespace Gum.Wireframe
             private set;
         } = new Dictionary<InstanceSave, Vector2>();
 
+        /// <summary>
+        /// Returns whether the cursor has moved enough from the initial grab point to start applying movement/sizing.
+        /// This is initially false to prevent accidental movement when clicking on an object.
+        /// </summary>
         public bool HasMovedEnough
         {
             get
@@ -85,8 +92,8 @@ namespace Gum.Wireframe
                 if (cursor.PrimaryDown)
                 {
                     toReturn |=
-                        Math.Abs(cursor.X - CursorPushX) > pixelsToMoveBeforeApplying ||
-                        Math.Abs(cursor.Y - CursorPushY) > pixelsToMoveBeforeApplying;
+                        Math.Abs(cursor.X - CursorPushScreenX) > pixelsToMoveBeforeApplying ||
+                        Math.Abs(cursor.Y - CursorPushScreenY) > pixelsToMoveBeforeApplying;
 
 
                 }
@@ -99,8 +106,11 @@ namespace Gum.Wireframe
         {
             Cursor cursor = InputLibrary.Cursor.Self;
 
-            CursorPushX = cursor.X;
-            CursorPushY = cursor.Y;
+            CursorPushScreenX = cursor.X;
+            CursorPushScreenY = cursor.Y;
+
+            AccumulatedXOffset = 0;
+            AccumulatedYOffset = 0;
 
             if(SelectedState.Self.SelectedStateSave != null)
             {

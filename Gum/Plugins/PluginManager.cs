@@ -880,12 +880,12 @@ namespace Gum.Plugins
             {
                 PluginContainer container = this.PluginContainers[plugin];
 
-                if (container.Plugin is PluginBase)
+                if (container.Plugin is PluginBase pluginBase)
                 {
 
                     try
                     {
-                        shouldExclude |= ((PluginBase)container.Plugin).GetIfVariableIsExcluded(defaultVariable, rvf);
+                        shouldExclude |= pluginBase.GetIfVariableIsExcluded(defaultVariable, rvf);
                     }
                     catch (Exception e)
                     {

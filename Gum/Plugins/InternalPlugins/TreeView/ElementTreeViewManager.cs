@@ -1383,6 +1383,7 @@ namespace Gum.Managers
             // so we don't want double-selections. Suppressing and explicitly calling 
             // RefreshUi
             PropertyGridManager.Self.ObjectsSuppressingRefresh.Add(this);
+            try
             {
                 if (selectedObject == null)
                 {
@@ -1407,7 +1408,10 @@ namespace Gum.Managers
                 PluginManager.Self.TreeNodeSelected(selectedTreeNode);
 
             }
-            PropertyGridManager.Self.ObjectsSuppressingRefresh.Remove(this);
+            finally
+            {
+                PropertyGridManager.Self.ObjectsSuppressingRefresh.Remove(this);
+            }
 
             PropertyGridManager.Self.RefreshUI();
         }
