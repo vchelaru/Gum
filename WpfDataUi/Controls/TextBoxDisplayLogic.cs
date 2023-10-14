@@ -29,6 +29,34 @@ namespace WpfDataUi.Controls
 
         public bool HandlesEnter { get; set; } = true;
 
+        public bool IsNumeric
+        {
+            get
+            {
+                var type = InstanceMember?.PropertyType;
+
+                return 
+                    type == typeof(float) || 
+                    type == typeof(double) || 
+                    type == typeof(decimal) ||
+                    type == typeof(int) ||
+                    type == typeof(long) ||
+                    type == typeof(byte) ||
+                    type == typeof(short) ||
+
+
+                    type == typeof(float?) ||
+                    type == typeof(double?) ||
+                    type == typeof(decimal?) ||
+                    type == typeof(int?) ||
+                    type == typeof(long?) ||
+                    type == typeof(byte?) ||
+                    type == typeof(short?)
+                    ;
+            }
+        }
+            
+
         #endregion
 
         public TextBoxDisplayLogic(IDataUi container, TextBox textBox)
@@ -101,11 +129,11 @@ namespace WpfDataUi.Controls
             HasUserChangedAnything = false;
         }
 
-        public ApplyValueResult TryApplyToInstance()
+        public ApplyValueResult TryApplyToInstance(SetPropertyCommitType commitType = SetPropertyCommitType.Full)
         {
             object newValue;
 
-            if (HasUserChangedAnything)
+            if (HasUserChangedAnything || commitType == SetPropertyCommitType.Full)
             {
                 var result = mContainer.TryGetValueOnUi(out newValue);
 
@@ -124,7 +152,7 @@ namespace WpfDataUi.Controls
                         newValue = (newValue as string).Replace("\r", "");
                     }
                     // get rid of \r
-                    return mContainer.TrySetValueOnInstance(newValue);
+                    return mContainer.TrySetValueOnInstance(newValue, commitType);
                 }
                 else
                 {
@@ -382,6 +410,64 @@ namespace WpfDataUi.Controls
         public SolidColorBrush DefaultValueBackground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(180, 255, 180));
         public SolidColorBrush IndeterminateValueBackground = new SolidColorBrush(System.Windows.Media.Colors.LightGray);
         public SolidColorBrush CustomValueBackground = System.Windows.Media.Brushes.White;
+
+
+        public object GetValueInDirection(int direction, object value)
+        {
+            if (value is int asInt)
+            {
+                return asInt + direction;
+            }
+            else if (value is long asLong)
+            {
+                return asLong + direction;
+            }
+            else if (value is float asFloat)
+            {
+                return asFloat + direction;
+            }
+            else if (value is double asDouble)
+            {
+                return asDouble + direction;
+            }
+            else if (value is decimal asDecimal)
+            {
+                return asDecimal + direction;
+            }
+            else
+            {
+                return value;
+            }
+        }
+
+        public object GetValueInDirection(double direction, object value)
+        {
+            if (value is int asInt)
+            {
+                return (int)(asInt + direction);
+            }
+            else if (value is long asLong)
+            {
+                return (long)(asLong + direction);
+            }
+            else if (value is float asFloat)
+            {
+                return (float)(asFloat + direction);
+            }
+            else if (value is double asDouble)
+            {
+                return asDouble + direction;
+            }
+            else if (value is decimal asDecimal)
+            {
+                return (double)asDecimal + direction;
+            }
+            else
+            {
+                return value;
+            }
+
+        }
 
         public void RefreshDisplay()
         {

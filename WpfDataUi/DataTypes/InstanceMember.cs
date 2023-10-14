@@ -11,6 +11,20 @@ using WpfDataUi.EventArguments;
 
 namespace WpfDataUi.DataTypes
 {
+    public enum SetPropertyCommitType
+    {
+        // A value is being set, but the user is continually editing the value, like sliding a slider
+        Intermediate,
+        // A value has been fully set, such as finishing sliding a slider, or a text box losing focus
+        Full
+    }
+
+    public class SetPropertyArgs
+    {
+        public SetPropertyCommitType CommitType { get; set; }
+        public object Value { get; set; }
+    }
+
     public class InstanceMember : DependencyObject
     {
         #region Fields
@@ -120,17 +134,31 @@ namespace WpfDataUi.DataTypes
             }
             set
             {
-                if (CustomSetEvent != null)
-                {
-                    CustomSetEvent(Instance, value);
-                }
-                else
-                {
-                    LateBinder.GetInstance(Instance.GetType()).SetValue(Instance, Name, value);
-                }
-                OnPropertyChanged("Value");
+                SetValue(value, SetPropertyCommitType.Full);
             }
 
+        }
+
+        public void SetValue(object value, SetPropertyCommitType commitType)
+        {
+            if (CustomSetPropertyEvent != null)
+            {
+                var args = new SetPropertyArgs
+                {
+                    CommitType = commitType,
+                    Value = value
+                };
+                CustomSetPropertyEvent(Instance, args);
+            }
+            else if (CustomSetEvent != null)
+            {
+                CustomSetEvent(Instance, value);
+            }
+            else
+            {
+                LateBinder.GetInstance(Instance.GetType()).SetValue(Instance, Name, value);
+            }
+            OnPropertyChanged("Value");
         }
 
         public bool IsDefined 
@@ -339,6 +367,14 @@ namespace WpfDataUi.DataTypes
         /// </summary>
         /// 
         public event Action<object, object> CustomSetEvent;
+
+        /// <summary>
+        /// Provides a custom set event which supports intermediate and full setting. 
+        /// This is required if the instance member is not part of the
+        /// Instance class as a field or property. The parameters are (owner, setPropertyArgs)
+        /// </summary>
+        public event Action<object, SetPropertyArgs> CustomSetPropertyEvent;
+
         /// <summary>
         /// Allows the InstanceMenber to define its own custom logic for getting a value.
         /// This requires a CustomSetEvent to be functional.

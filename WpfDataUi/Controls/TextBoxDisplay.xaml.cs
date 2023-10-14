@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.IO.Packaging;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -156,6 +157,16 @@ namespace WpfDataUi.Controls
                 RefreshIsEnabled();
 
                 SuppressSettingProperty = false;
+
+                if(mTextBoxLogic.IsNumeric)
+                {
+                    this.Label.Cursor = Cursors.ScrollWE;
+                }
+                else
+                {
+                    this.Label.Cursor = null;
+                }
+
             }
         }
 
@@ -258,5 +269,56 @@ namespace WpfDataUi.Controls
             RefreshPlaceholderText();
         }
 
+        double? currentDownX;
+        double? currentDownY;
+
+        [DllImport("User32.dll")]
+        private static extern bool SetCursorPos(int X, int Y);
+
+        private void Label_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if(mTextBoxLogic.IsNumeric)
+            {
+                currentDownX = e.GetPosition(this).X;
+                currentDownY = e.GetPosition(this).Y;
+
+                System.Windows.Input.Mouse.Capture(Label);
+            }
+        }
+
+        private void Label_MouseMove(object sender, MouseEventArgs e)
+        {
+            if(currentDownX != null)
+            {
+                var newX = e.GetPosition(this).X;
+                var difference = newX - currentDownX.Value;
+                currentDownX = newX;
+
+                if(difference != 0)
+                {
+                    var getValueStatus = TryGetValueOnUi(out object valueOnInstance);
+
+                    if(getValueStatus == ApplyValueResult.Success)
+                    {
+                        var newValue = mTextBoxLogic.GetValueInDirection(difference, valueOnInstance);
+                        TrySetValueOnUi(newValue);
+                        lastApplyValueResult = mTextBoxLogic.TryApplyToInstance(SetPropertyCommitType.Intermediate);
+                    }
+                }
+
+            }
+        }
+
+        private void Label_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            if (mTextBoxLogic.IsNumeric && currentDownX != 0)
+            {
+                lastApplyValueResult = mTextBoxLogic.TryApplyToInstance(SetPropertyCommitType.Full);
+
+                currentDownX = null;
+                currentDownY = null;
+                System.Windows.Input.Mouse.Capture(null);
+            }
+        }
     }
 }

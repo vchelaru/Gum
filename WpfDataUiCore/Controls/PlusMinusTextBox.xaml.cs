@@ -219,26 +219,8 @@ namespace WpfDataUiCore.Controls
 
         private void MoveInDirection(int direction, object value)
         {
-            if (value is int asInt)
-            {
-                TrySetValueOnUi(asInt + direction);
-            }
-            else if (value is long asLong)
-            {
-                TrySetValueOnUi(asLong + direction);
-            }
-            else if(value is float asFloat)
-            {
-                TrySetValueOnUi(asFloat + direction);
-            }
-            else if(value is double asDouble)
-            {
-                TrySetValueOnUi(asDouble + direction);
-            }
-            else if(value is decimal asDecimal)
-            {
-                TrySetValueOnUi(asDecimal + direction);
-            }
+            var newValue = mTextBoxLogic.GetValueInDirection(direction, value);
+            TrySetValueOnUi(newValue);
             lastApplyValueResult = mTextBoxLogic.TryApplyToInstance();
 
         }

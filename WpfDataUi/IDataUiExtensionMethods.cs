@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using WpfDataUi.DataTypes;
 
 namespace WpfDataUi
 {
@@ -48,7 +49,8 @@ namespace WpfDataUi
                     // Why not protect against spammed same-value assignments?
                     if(dataUi.InstanceMember.Value != valueOnUi)
                     {
-                        dataUi.InstanceMember.Value = valueOnUi;
+                        //dataUi.InstanceMember.Value = valueOnUi;
+                        dataUi.InstanceMember.SetValue(valueOnUi, SetPropertyCommitType.Full);
                         result = ApplyValueResult.Success;
                         dataUi.InstanceMember.CallAfterSetByUi();
                     }
@@ -62,7 +64,7 @@ namespace WpfDataUi
             return result;
         }
 
-        public static ApplyValueResult TrySetValueOnInstance(this IDataUi dataUi, object valueToSet)
+        public static ApplyValueResult TrySetValueOnInstance(this IDataUi dataUi, object valueToSet, SetPropertyCommitType commitType = SetPropertyCommitType.Full)
         {
             ApplyValueResult result;
             bool hasErrorOccurred;
@@ -70,9 +72,10 @@ namespace WpfDataUi
 
             if (!hasErrorOccurred)
             {
-                if (AreEqual(dataUi.InstanceMember.Value, valueToSet) == false)
+                if (AreEqual(dataUi.InstanceMember.Value, valueToSet) == false || commitType == SetPropertyCommitType.Full)
                 {
-                    dataUi.InstanceMember.Value = valueToSet;
+                    //dataUi.InstanceMember.Value = valueToSet;
+                    dataUi.InstanceMember.SetValue(valueToSet, commitType);
                     result = ApplyValueResult.Success;
                     dataUi.InstanceMember.CallAfterSetByUi();
                 }

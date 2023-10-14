@@ -244,7 +244,7 @@ namespace Gum.PropertyGridHelpers
             }
             else
             {
-                this.CustomSetEvent += HandleCustomSet;
+                this.CustomSetPropertyEvent += HandleCustomSet;
             }
             this.CustomGetEvent += HandleCustomGet;
             this.CustomGetTypeEvent += HandleCustomGetType;
@@ -647,8 +647,9 @@ namespace Gum.PropertyGridHelpers
             }
         }
 
-        private void HandleCustomSet(object gumElementOrInstanceSaveAsObject, object newValue)
+        private void HandleCustomSet(object gumElementOrInstanceSaveAsObject, SetPropertyArgs setPropertyArgs)
         {
+            object newValue = setPropertyArgs.Value;
             if (mPropertyDescriptor != null)
             {
                 object oldValue = base.Value;
@@ -703,7 +704,7 @@ namespace Gum.PropertyGridHelpers
                     stateSave.SetValue(Name, newValue, instanceSave, variableType);
                 }
 
-                NotifyVariableLogic(gumElementOrInstanceSaveAsObject);
+                NotifyVariableLogic(gumElementOrInstanceSaveAsObject, trySave:setPropertyArgs.CommitType == SetPropertyCommitType.Full);
             }
             else
             {
@@ -712,7 +713,7 @@ namespace Gum.PropertyGridHelpers
             // set the value
         }
 
-        public void NotifyVariableLogic(object gumElementOrInstanceSaveAsObject, bool? forceRefresh = null)
+        public void NotifyVariableLogic(object gumElementOrInstanceSaveAsObject, bool? forceRefresh = null, bool trySave = true)
         {
             string name = RootVariableName;
 
@@ -749,7 +750,8 @@ namespace Gum.PropertyGridHelpers
 
             if (!handledByExposedVariable)
             {
-                SetVariableLogic.Self.PropertyValueChanged(name, LastOldValue, gumElementOrInstanceSaveAsObject as InstanceSave, refresh: effectiveRefresh, recordUndo: effectiveRecordUndo);
+                SetVariableLogic.Self.PropertyValueChanged(name, LastOldValue, gumElementOrInstanceSaveAsObject as InstanceSave, refresh: effectiveRefresh, recordUndo: effectiveRecordUndo,
+                    trySave:trySave);
             }
         }
 

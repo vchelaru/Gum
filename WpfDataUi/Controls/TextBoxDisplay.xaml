@@ -23,7 +23,11 @@
 
             </Grid.RowDefinitions>
         
-            <TextBlock x:Name="Label" MinWidth="100" TextWrapping="Wrap"  VerticalAlignment="Center"
+            <TextBlock x:Name="Label" MinWidth="100" TextWrapping="Wrap"  
+                        MouseDown="Label_MouseDown"
+                       MouseMove="Label_MouseMove"
+                       MouseUp="Label_MouseUp"
+                       VerticalAlignment="Center"
                        Padding="4,4,4,0"
                        >Property Label:</TextBlock>
             <TextBox Grid.Column="1" 
