@@ -593,7 +593,14 @@ namespace Gum.Wireframe
             {
                 if (mHeightUnit != value)
                 {
-                    mHeightUnit = value; UpdateLayout();
+                    mHeightUnit = value; 
+
+                    if(mContainedObjectAsIpso is Text)
+                    {
+                        RefreshTextOverflowVerrticalMode();
+                    }
+
+                    UpdateLayout();
                 }
             }
         }
@@ -653,6 +660,8 @@ namespace Gum.Wireframe
             }
         }
 
+        // we have to store this locally because we are going to effectively assign the overflow mode based on the height units and this value
+        TextOverflowVerticalMode textOverflowVerticalMode = TextOverflowVerticalMode.SpillOver;
 
         float stackSpacing;
         /// <summary>
@@ -3599,70 +3608,77 @@ namespace Gum.Wireframe
             #region Ratio
             else if (mHeightUnit == DimensionUnitType.Ratio)
             {
-                var heightToSplit = parentHeight;
-
-                var numberOfVisibleChildren = 0;
-
-                if (mParent != null)
+                if(this.Height == 0)
                 {
-                    for(int i = 0; i < mParent.Children.Count; i++)
-                    {
-                        var child = mParent.Children[i];
-                        if (child != this && child is GraphicalUiElement gue)
-                        {
-                            if (gue.HeightUnits == DimensionUnitType.Absolute || gue.HeightUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
-                            {
-                                heightToSplit -= gue.Height;
-                            }
-                            else if (gue.HeightUnits == DimensionUnitType.RelativeToContainer)
-                            {
-                                var childAbsoluteWidth = parentHeight - gue.Height;
-                                heightToSplit -= childAbsoluteWidth;
-                            }
-                            else if (gue.HeightUnits == DimensionUnitType.Percentage)
-                            {
-                                var childAbsoluteWidth = parentHeight * gue.Height;
-                                heightToSplit -= childAbsoluteWidth;
-                            }
-                            // this depends on the sibling being updated before this:
-                            else if (gue.HeightUnits == DimensionUnitType.RelativeToChildren)
-                            {
-                                var childAbsoluteWidth = gue.GetAbsoluteHeight();
-                                heightToSplit -= childAbsoluteWidth;
-                            }
-                            if (gue.Visible)
-                            {
-                                numberOfVisibleChildren++;
-                            }
-                        }
-                    }
-                }
-
-                if(mParent is GraphicalUiElement parentGue && parentGue.ChildrenLayout == ChildrenLayout.TopToBottomStack && parentGue.StackSpacing != 0)
-                {
-                    var numberOfSpaces = numberOfVisibleChildren;
-                    heightToSplit -= numberOfSpaces * parentGue.StackSpacing;
-                }
-
-                float totalRatio = 0;
-                if (mParent != null)
-                {
-                    for(int i = 0; i < mParent.Children.Count; i++)
-                    {
-                        var child = mParent.Children[i];
-                        if (child is GraphicalUiElement gue && gue.HeightUnits == DimensionUnitType.Ratio && gue.Visible)
-                        {
-                            totalRatio += gue.Height;
-                        }
-                    }
-                }
-                if (totalRatio > 0)
-                {
-                    heightToSet = heightToSplit * (this.Height / totalRatio);
+                    heightToSet = 0;
                 }
                 else
                 {
-                    heightToSet = heightToSplit;
+                    var heightToSplit = parentHeight;
+
+                    var numberOfVisibleChildren = 0;
+
+                    if (mParent != null)
+                    {
+                        for(int i = 0; i < mParent.Children.Count; i++)
+                        {
+                            var child = mParent.Children[i];
+                            if (child != this && child is GraphicalUiElement gue)
+                            {
+                                if (gue.HeightUnits == DimensionUnitType.Absolute || gue.HeightUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
+                                {
+                                    heightToSplit -= gue.Height;
+                                }
+                                else if (gue.HeightUnits == DimensionUnitType.RelativeToContainer)
+                                {
+                                    var childAbsoluteWidth = parentHeight - gue.Height;
+                                    heightToSplit -= childAbsoluteWidth;
+                                }
+                                else if (gue.HeightUnits == DimensionUnitType.Percentage)
+                                {
+                                    var childAbsoluteWidth = parentHeight * gue.Height;
+                                    heightToSplit -= childAbsoluteWidth;
+                                }
+                                // this depends on the sibling being updated before this:
+                                else if (gue.HeightUnits == DimensionUnitType.RelativeToChildren)
+                                {
+                                    var childAbsoluteWidth = gue.GetAbsoluteHeight();
+                                    heightToSplit -= childAbsoluteWidth;
+                                }
+                                if (gue.Visible)
+                                {
+                                    numberOfVisibleChildren++;
+                                }
+                            }
+                        }
+                    }
+
+                    if(mParent is GraphicalUiElement parentGue && parentGue.ChildrenLayout == ChildrenLayout.TopToBottomStack && parentGue.StackSpacing != 0)
+                    {
+                        var numberOfSpaces = numberOfVisibleChildren;
+                        heightToSplit -= numberOfSpaces * parentGue.StackSpacing;
+                    }
+
+                    float totalRatio = 0;
+                    if (mParent != null)
+                    {
+                        for(int i = 0; i < mParent.Children.Count; i++)
+                        {
+                            var child = mParent.Children[i];
+                            if (child is GraphicalUiElement gue && gue.HeightUnits == DimensionUnitType.Ratio && gue.Visible)
+                            {
+                                totalRatio += gue.Height;
+                            }
+                        }
+                    }
+                    if (totalRatio > 0)
+                    {
+                        heightToSet = heightToSplit * (this.Height / totalRatio);
+                    }
+                    else
+                    {
+                        heightToSet = heightToSplit;
+                    }
                 }
             }
             #endregion
@@ -3963,73 +3979,80 @@ namespace Gum.Wireframe
 
             else if (mWidthUnit == DimensionUnitType.Ratio)
             {
-                var widthToSplit = parentWidth;
-
-                var numberOfVisibleChildren = 0;
-
-                if (mParent != null)
+                if(this.Width == 0)
                 {
-                    for(int i = 0; i < mParent.Children.Count; i++)
-                    {
-                        var child = mParent.Children[i];
-                        if (child != this && child is GraphicalUiElement gue)
-                        {
-                            if (gue.WidthUnits == DimensionUnitType.Absolute || gue.WidthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
-                            {
-                                widthToSplit -= gue.Width;
-                            }
-                            else if (gue.WidthUnits == DimensionUnitType.RelativeToContainer)
-                            {
-                                var childAbsoluteWidth = parentWidth - gue.Width;
-                                widthToSplit -= childAbsoluteWidth;
-                            }
-                            else if (gue.WidthUnits == DimensionUnitType.Percentage)
-                            {
-                                var childAbsoluteWidth = parentWidth * gue.Width;
-                                widthToSplit -= childAbsoluteWidth;
-                            }
-                            // this depends on the sibling being updated before this:
-                            else if(gue.WidthUnits == DimensionUnitType.RelativeToChildren)
-                            {
-                                var childAbsoluteWidth = gue.GetAbsoluteWidth();
-                                widthToSplit -= childAbsoluteWidth;
-                            }
-
-                            if(gue.Visible)
-                            {
-                                numberOfVisibleChildren++;
-                            }
-                        }
-                    }
-                }
-
-                if (mParent is GraphicalUiElement parentGue && parentGue.ChildrenLayout == ChildrenLayout.LeftToRightStack && parentGue.StackSpacing != 0)
-                {
-                    var numberOfSpaces = numberOfVisibleChildren;
-
-                    widthToSplit -= numberOfSpaces * parentGue.StackSpacing;
-                }
-
-                float totalRatio = 0;
-                if (mParent != null)
-                {
-                    for(int i = 0; i < mParent.Children.Count; i++)
-                    {
-                        var child = mParent.Children[i];
-                        if (child is GraphicalUiElement gue && gue.WidthUnits == DimensionUnitType.Ratio && gue.Visible)
-                        {
-                            totalRatio += gue.Width;
-                        }
-                    }
-                }
-                if (totalRatio > 0)
-                {
-                    widthToSet = widthToSplit * (this.Width / totalRatio);
-
+                    widthToSet = 0;
                 }
                 else
                 {
-                    widthToSet = widthToSplit;
+                    var widthToSplit = parentWidth;
+
+                    var numberOfVisibleChildren = 0;
+
+                    if (mParent != null)
+                    {
+                        for(int i = 0; i < mParent.Children.Count; i++)
+                        {
+                            var child = mParent.Children[i];
+                            if (child != this && child is GraphicalUiElement gue)
+                            {
+                                if (gue.WidthUnits == DimensionUnitType.Absolute || gue.WidthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
+                                {
+                                    widthToSplit -= gue.Width;
+                                }
+                                else if (gue.WidthUnits == DimensionUnitType.RelativeToContainer)
+                                {
+                                    var childAbsoluteWidth = parentWidth - gue.Width;
+                                    widthToSplit -= childAbsoluteWidth;
+                                }
+                                else if (gue.WidthUnits == DimensionUnitType.Percentage)
+                                {
+                                    var childAbsoluteWidth = parentWidth * gue.Width;
+                                    widthToSplit -= childAbsoluteWidth;
+                                }
+                                // this depends on the sibling being updated before this:
+                                else if(gue.WidthUnits == DimensionUnitType.RelativeToChildren)
+                                {
+                                    var childAbsoluteWidth = gue.GetAbsoluteWidth();
+                                    widthToSplit -= childAbsoluteWidth;
+                                }
+
+                                if(gue.Visible)
+                                {
+                                    numberOfVisibleChildren++;
+                                }
+                            }
+                        }
+                    }
+
+                    if (mParent is GraphicalUiElement parentGue && parentGue.ChildrenLayout == ChildrenLayout.LeftToRightStack && parentGue.StackSpacing != 0)
+                    {
+                        var numberOfSpaces = numberOfVisibleChildren;
+
+                        widthToSplit -= numberOfSpaces * parentGue.StackSpacing;
+                    }
+
+                    float totalRatio = 0;
+                    if (mParent != null)
+                    {
+                        for(int i = 0; i < mParent.Children.Count; i++)
+                        {
+                            var child = mParent.Children[i];
+                            if (child is GraphicalUiElement gue && gue.WidthUnits == DimensionUnitType.Ratio && gue.Visible)
+                            {
+                                totalRatio += gue.Width;
+                            }
+                        }
+                    }
+                    if (totalRatio > 0)
+                    {
+                        widthToSet = widthToSplit * (this.Width / totalRatio);
+
+                    }
+                    else
+                    {
+                        widthToSet = widthToSplit;
+                    }
                 }
             }
 
@@ -5681,15 +5704,27 @@ namespace Gum.Wireframe
             }
             else if (propertyName == nameof(TextOverflowVerticalMode))
             {
-                var textOverflowMode = (TextOverflowVerticalMode)value;
+                textOverflowVerticalMode = (TextOverflowVerticalMode)value;
 #if MONOGAME || XNA4
-
-                ((Text)mContainedObjectAsIpso).TextOverflowVerticalMode = textOverflowMode;
+                RefreshTextOverflowVerrticalMode();
 #endif
 
             }
 
             return handled;
+        }
+
+        private void RefreshTextOverflowVerrticalMode()
+        {
+            // we want to let it spill over if it is sized by its children:
+            if (this.HeightUnits == DimensionUnitType.RelativeToChildren)
+            {
+                ((Text)mContainedObjectAsIpso).TextOverflowVerticalMode = TextOverflowVerticalMode.SpillOver;
+            }
+            else
+            {
+                ((Text)mContainedObjectAsIpso).TextOverflowVerticalMode = textOverflowVerticalMode;
+            }
         }
 
         bool useCustomFont;
