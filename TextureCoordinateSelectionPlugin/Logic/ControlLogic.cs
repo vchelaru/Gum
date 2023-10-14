@@ -198,7 +198,7 @@ namespace TextureCoordinateSelectionPlugin.Logic
 
             // todo - this hasn't been tested extensively to make sure it aligns
             // pixel-perfect with how NineSlices work, but it's a good initial guess
-            if(showNineSliceGuides && CurrentTexture != null)
+            if(showNineSliceGuides && CurrentTexture != null && mainControl?.InnerControl?.RectangleSelector != null)
             {
                 var texture = CurrentTexture;
 
