@@ -276,6 +276,8 @@ namespace Gum.PropertyGridHelpers
 
             TryAddCopyVariableReferenceMenuOptions();
 
+            TryAddEditVariableOption();
+
             // This could be slow since we have to check it for every variable in an object.
             // Maybe we'll want to pass this in to the function?
             StandardElementSave standardElement = null;
@@ -393,6 +395,18 @@ namespace Gum.PropertyGridHelpers
                         }
                     };
                 }
+            }
+        }
+
+        private void TryAddEditVariableOption()
+        {
+            var variable = this.VariableSave;
+            if (variable != null)
+            {
+                ContextMenuEvents.Add("Edit Variable", (sender, e) =>
+                {
+                    GumCommands.Self.GuiCommands.ShowEditVariableWindow(variable);
+                });
             }
         }
 

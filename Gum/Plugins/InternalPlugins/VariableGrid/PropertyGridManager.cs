@@ -130,62 +130,7 @@ namespace Gum.Managers
 
         private void HandleAddVariable(object sender, EventArgs e)
         {
-            var canShow = SelectedState.Self.SelectedBehavior != null || SelectedState.Self.SelectedElement != null;
-
-            /////////////// Early Out///////////////
-            if(!canShow)
-            {
-                return;
-            }
-            //////////////End Early Out/////////////
-
-            var window = new AddVariableWindow();
-
-            var result = window.ShowDialog();
-
-            if(result == true)
-            {
-                var type = window.SelectedType;
-                var name = window.EnteredName;
-
-                string whyNotValid;
-                bool isValid = NameVerifier.Self.IsVariableNameValid(
-                    name, out whyNotValid);
-
-                if(!isValid)
-                {
-                    MessageBox.Show(whyNotValid);
-                }
-                else
-                {
-                    var behavior = SelectedState.Self.SelectedBehavior;
-
-                    if(behavior != null)
-                    {
-                        var newVariable = new VariableSave();
-                        newVariable.Name = name;
-                        newVariable.Type = type;
-
-                        behavior.RequiredVariables.Variables.Add(newVariable);
-                        GumCommands.Self.GuiCommands.RefreshPropertyGrid();
-                        GumCommands.Self.FileCommands.TryAutoSaveBehavior(behavior);
-                    }
-                    else if(SelectedState.Self.SelectedElement != null)
-                    {
-                        var element = SelectedState.Self.SelectedElement;
-                        var newVariable = new VariableSave();
-                        newVariable.IsCustomVariable = true;
-                        newVariable.Name = name;
-                        newVariable.Type = type;
-
-
-                        element.DefaultState.Variables.Add(newVariable);
-                        GumCommands.Self.GuiCommands.RefreshPropertyGrid();
-                        GumCommands.Self.FileCommands.TryAutoSaveElement(element);
-                    }
-
-                }
-            }
+            GumCommands.Self.GuiCommands.ShowAddVariableWindow();
         }
 
         bool isInRefresh = false;

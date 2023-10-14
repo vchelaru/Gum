@@ -23,10 +23,15 @@ namespace Gum.Plugins.InternalPlugins.VariableGrid
 
         private void HandleTreeNodeSelected(TreeNode node)
         {
-            PropertyGridManager.Self.VariableViewModel.AddVariableButtonVisibility = 
-                (GumState.Self.SelectedState.SelectedBehavior != null || 
+            var shouldShowButton = (GumState.Self.SelectedState.SelectedBehavior != null ||
                 GumState.Self.SelectedState.SelectedComponent != null ||
-                GumState.Self.SelectedState.SelectedScreen != null).ToVisibility();
+                GumState.Self.SelectedState.SelectedScreen != null);
+            if(shouldShowButton)
+            {
+                shouldShowButton = GumState.Self.SelectedState.SelectedInstance == null;
+            }
+            PropertyGridManager.Self.VariableViewModel.AddVariableButtonVisibility =
+                shouldShowButton.ToVisibility();
         }
     }
 }

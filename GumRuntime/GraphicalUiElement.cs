@@ -5716,6 +5716,8 @@ namespace Gum.Wireframe
 
         private void RefreshTextOverflowVerrticalMode()
         {
+#if MONOGAME || XNA4
+
             // we want to let it spill over if it is sized by its children:
             if (this.HeightUnits == DimensionUnitType.RelativeToChildren)
             {
@@ -5725,6 +5727,7 @@ namespace Gum.Wireframe
             {
                 ((Text)mContainedObjectAsIpso).TextOverflowVerticalMode = textOverflowVerticalMode;
             }
+#endif
         }
 
         bool useCustomFont;
@@ -6402,7 +6405,7 @@ namespace Gum.Wireframe
             }
         }
 #endif
-        #endregion
+#endregion
 
 
 #if SKIA
@@ -6421,7 +6424,7 @@ namespace Gum.Wireframe
         }
 #endif
 
-        #endregion
+#endregion
     }
 
     // additional interfaces, added here to make it easier to manage multiple projects.
