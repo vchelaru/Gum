@@ -22,7 +22,9 @@ namespace Gum.Managers
     {
         Regular,
         TopToBottomStack,
-        LeftToRightStack
+        LeftToRightStack,
+        AutoGridHorizontal,
+        AutoGridVertical
 
     }
 
