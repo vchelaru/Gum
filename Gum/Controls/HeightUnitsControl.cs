@@ -140,7 +140,7 @@ namespace Gum.Controls
                     },
                     new Option
                     {
-                        Name = "Absolute Mulitplied by Font Scale",
+                        Name = "Absolute Multiplied by Font Scale",
                         Value = DimensionUnitType.AbsoluteMultipliedByFontScale,
                         Image = absoluteMultipliedByFontScale
                     }
