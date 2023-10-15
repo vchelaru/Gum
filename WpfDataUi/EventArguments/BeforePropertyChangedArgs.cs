@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace WpfDataUi.EventArguments
+﻿namespace WpfDataUi.EventArguments
 {
     public class BeforePropertyChangedArgs : PropertyChangedArgs
     {
