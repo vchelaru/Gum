@@ -165,11 +165,11 @@ namespace RenderingLibrary.Content
             else
             {
                 ImageData imageData = new ImageData(16, 16, managers);
-                imageData.Fill(Color.White);
+                imageData.Fill(Microsoft.Xna.Framework.Color.White);
                 for (int i = 0; i < 16; i++)
                 {
-                    imageData.SetPixel(i, i, Color.Red);
-                    imageData.SetPixel(15 - i, i, Color.Red);
+                    imageData.SetPixel(i, i, Microsoft.Xna.Framework.Color.Red);
+                    imageData.SetPixel(15 - i, i, Microsoft.Xna.Framework.Color.Red);
 
                 }
                 mInvalidTexture = imageData.ToTexture2D(false);

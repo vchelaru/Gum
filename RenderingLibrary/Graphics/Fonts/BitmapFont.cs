@@ -475,7 +475,7 @@ namespace RenderingLibrary.Graphics
         }
 
         // To help out the GC, we're going to just use a Color that's 2048x2048
-        static Color[] mColorBuffer = new Color[2048 * 2048];
+        static Microsoft.Xna.Framework.Color[] mColorBuffer = new Microsoft.Xna.Framework.Color[2048 * 2048];
 
         /// <summary>
         /// 

@@ -205,9 +205,9 @@ namespace Gum.Plugins.PropertiesWindowPlugin
             else
             {
                 var texture = new Texture2D(renderer.GraphicsDevice, 1, 1, false, SurfaceFormat.Color);
-                Color[] pixels = new Color[1];
-                pixels[0] = Color.White;
-                texture.SetData<Color>(pixels);
+                Microsoft.Xna.Framework.Color[] pixels = new Microsoft.Xna.Framework.Color[1];
+                pixels[0] = Microsoft.Xna.Framework.Color.White;
+                texture.SetData(pixels);
 
                 renderer.SinglePixelTexture = texture;
                 renderer.SinglePixelSourceRectangle = null;

@@ -209,7 +209,7 @@ namespace FlatRedBall.SpecializedXnaControls
             {
                 if (maxAlphaImageData.Data[i].A > 0)
                 {
-                    maxAlphaImageData.Data[i] = maxAlphaImageData.Data[i].WithAlpha(255);
+                    maxAlphaImageData.Data[i].A = 255;
                 }
             }
         }

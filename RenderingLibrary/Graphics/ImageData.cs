@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using Microsoft.Xna.Framework.Graphics;
 using Point = System.Drawing.Point;
-using Color = System.Drawing.Color;
+using Color = Microsoft.Xna.Framework.Color;
 using Rectangle = System.Drawing.Rectangle;
 
 namespace RenderingLibrary.Graphics
@@ -16,7 +16,7 @@ namespace RenderingLibrary.Graphics
         
         // if SurfaceFormat.Color, use these
         private Color[] mData;
-        static Color[] mStaticData = new Color[128 * 128];
+        private static Color[] mStaticData = new Color[128 * 128];
 
         // if SurfaceFormat.DXT3, use these
         private byte[] mByteData;
@@ -58,12 +58,12 @@ namespace RenderingLibrary.Graphics
         #region Constructor
 
         public ImageData(int width, int height, SystemManagers managers)
-            : this(width, height, new Color[width * height], managers)
+            : this(width, height, new Microsoft.Xna.Framework.Color[width * height], managers)
         {
 
         }
 
-        public ImageData(int width, int height, Color[] data, SystemManagers managers)
+        public ImageData(int width, int height, Microsoft.Xna.Framework.Color[] data, SystemManagers managers)
         {
             this.width = width;
             this.height = height;
@@ -92,7 +92,7 @@ namespace RenderingLibrary.Graphics
 
         }
 
-        public static ImageData FromTexture2D(Texture2D texture2D, SystemManagers managers, Color[] colorBuffer)
+        public static ImageData FromTexture2D(Texture2D texture2D, SystemManagers managers, Microsoft.Xna.Framework.Color[] colorBuffer)
         {
             ImageData imageData = null;
         
@@ -103,14 +103,14 @@ namespace RenderingLibrary.Graphics
                     {
                         if (colorBuffer == null)
                         {
-                            colorBuffer = new Color[texture2D.Width * texture2D.Height];
+                            colorBuffer = new Microsoft.Xna.Framework.Color[texture2D.Width * texture2D.Height];
                         }
 
                         lock (colorBuffer)
                         {
 
 
-                            texture2D.GetData<Color>(colorBuffer, 0, texture2D.Width * texture2D.Height);
+                            texture2D.GetData(colorBuffer, 0, texture2D.Width * texture2D.Height);
 
                             imageData = new ImageData(
                                 texture2D.Width, texture2D.Height, colorBuffer, managers);
@@ -173,7 +173,7 @@ namespace RenderingLibrary.Graphics
 
         public void CopyFrom(Texture2D texture2D)
         {
-            texture2D.GetData<Color>(mData, 0, texture2D.Width * texture2D.Height);
+            texture2D.GetData(mData, 0, texture2D.Width * texture2D.Height);
         }
 
         public void CopyTo(ImageData destination, int xOffset, int yOffset)
@@ -443,13 +443,12 @@ namespace RenderingLibrary.Graphics
         {
             var existingData = Data[y * width + x];
 
-            if (Data[y * width + x].A != 0) {
-                Data[y * width + x] = Color.FromArgb(
-                    (byte)Math.MathFunctions.RoundToInt((existingData.A + (255 - existingData.A) * (color.A / 255.0f))),
-                    (byte)((existingData.R * (255 - color.A) / 255.0f) + color.R * color.A / 255.0f),
-                    (byte)((existingData.G * (255 - color.A) / 255.0f) + color.G * color.A / 255.0f),
-                    (byte)((existingData.B * (255 - color.A) / 255.0f) + color.B * color.A / 255.0f)
-                );
+            if (Data[y * width + x].A != 0)
+            {
+                Data[y * width + x].R = (byte)((existingData.R * (255 - color.A) / 255.0f) + color.R * color.A / 255.0f);
+                Data[y * width + x].G = (byte)((existingData.G * (255 - color.A) / 255.0f) + color.G * color.A / 255.0f);
+                Data[y * width + x].B = (byte)((existingData.B * (255 - color.A) / 255.0f) + color.B * color.A / 255.0f);
+                Data[y * width + x].A = (byte)Math.MathFunctions.RoundToInt((existingData.A + (255 - existingData.A) * (color.A / 255.0f)));
             }
             else
             {
@@ -537,12 +536,11 @@ namespace RenderingLibrary.Graphics
 
                 float multiplier = color.A / 255.0f;
 
-                mData[i] = Color.FromArgb(
-                    color.A,
-                    (byte)(color.R * multiplier),
-                    (byte)(color.G * multiplier),
-                    (byte)(color.B * multiplier)
-                );
+                color.R = (byte)(color.R * multiplier);
+                color.B = (byte)(color.B * multiplier);
+                color.G = (byte)(color.G * multiplier);
+
+                mData[i] = color;
             }
         }
 
@@ -574,7 +572,6 @@ namespace RenderingLibrary.Graphics
 
                 texture = new Texture2D(renderer.GraphicsDevice,
                     textureWidth, textureHeight, generateMipmaps, SurfaceFormat.Color);
-
 
 
                 texture.SetData<Color>(pixelData, startIndex, textureWidth * textureHeight - startIndex);

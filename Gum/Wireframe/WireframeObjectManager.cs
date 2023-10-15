@@ -128,8 +128,8 @@ namespace Gum.Wireframe
             // Create the Texture2D here
             ImageData imageData = new ImageData(2, 2, null);
 
-            Color opaqueColor = System.Drawing.Color.White;
-            Color transparent = System.Drawing.Color.Transparent;
+            Microsoft.Xna.Framework.Color opaqueColor = Microsoft.Xna.Framework.Color.White;
+            Microsoft.Xna.Framework.Color transparent = new Microsoft.Xna.Framework.Color(0,0,0,0);
 
             for (int y = 0; y < 2; y++)
             {
