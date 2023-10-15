@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using XnaAndWinforms;
-using System.Drawing;
 using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary.Graphics;
 using FlatRedBall.SpecializedXnaControls.RegionSelection;
-using RenderingLibrary.Math.Geometry;
 using RenderingLibrary;
 using FlatRedBall.SpecializedXnaControls.Input;
 using RenderingLibrary.Content;

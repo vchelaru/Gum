@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using RenderingLibrary.Graphics;
-using InputLibrary;
-using RenderingLibrary;
+﻿using RenderingLibrary;
 using Microsoft.Xna.Framework;
 
 namespace InputLibrary
