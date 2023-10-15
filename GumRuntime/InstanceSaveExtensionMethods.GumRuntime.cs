@@ -5,15 +5,10 @@ using Microsoft.Xna.Framework.Graphics;
 #if !NO_XNA
 
 using RenderingLibrary;
-using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Math.Geometry;
 #endif
 using System;
-
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace GumRuntime
 {

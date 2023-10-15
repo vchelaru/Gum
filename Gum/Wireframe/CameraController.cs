@@ -1,10 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using Gum.Input;
 using RenderingLibrary;
 using FlatRedBall.AnimationEditorForms.Controls;
 using RenderingLibrary.Graphics;

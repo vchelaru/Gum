@@ -3,11 +3,6 @@ using Gum.Mvvm;
 using Gum.Settings;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Gum.Plugins.PropertiesWindowPlugin
 {

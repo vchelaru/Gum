@@ -1,24 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using RenderingLibrary.Math.Geometry;
 using Gum.DataTypes;
 using Gum.ToolStates;
-using Gum.DataTypes.Variables;
 using Gum.Managers;
 using RenderingLibrary.Graphics;
 using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary.Content;
 using RenderingLibrary;
-using System.Collections;
 using Gum.RenderingLibrary;
 using Microsoft.Xna.Framework;
 using FlatRedBall.AnimationEditorForms.Controls;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 using Gum.Plugins;
-using System.Security.Policy;
 
 namespace Gum.Wireframe
 {

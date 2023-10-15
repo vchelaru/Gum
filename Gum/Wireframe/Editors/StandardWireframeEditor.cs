@@ -3,7 +3,6 @@ using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Input;
 using Gum.Managers;
-using Gum.Plugins;
 using Gum.PropertyGridHelpers;
 using Gum.ToolStates;
 using Microsoft.Xna.Framework;
@@ -11,11 +10,8 @@ using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Math;
 using RenderingLibrary.Math.Geometry;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Gum.Wireframe.Editors
 {

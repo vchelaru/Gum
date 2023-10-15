@@ -3,8 +3,6 @@ using Gum.ToolStates;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using WpfDataUi.DataTypes;
 
 namespace Gum.Plugins.VariableGrid

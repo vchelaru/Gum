@@ -1,16 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
-using InputLibrary;
 using Gum.DataTypes;
 using System.Windows.Forms;
 using Gum.Wireframe;
 using ToolsUtilities;
 using RenderingLibrary.Content;
 using RenderingLibrary;
-using Gum.Input;
 using CommonFormsAndControls.Forms;
 using Gum.ToolStates;
 using Gum.DataTypes.Variables;
@@ -20,7 +16,6 @@ using Gum.PropertyGridHelpers;
 using System.Drawing;
 using Gum.Converters;
 using Gum.Logic;
-using System.Windows.Input;
 using Gum.Plugins.ImportPlugin.Manager;
 using Gum.DataTypes.Behaviors;
 

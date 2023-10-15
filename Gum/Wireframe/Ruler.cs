@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using RenderingLibrary;
 using XnaAndWinforms;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Math.Geometry;
 using Microsoft.Xna.Framework;
 using InputLibrary;
-
-using Cursors = System.Windows.Forms.Cursors;
 using WinCursor = System.Windows.Forms.Cursor;
 using Sprite = RenderingLibrary.Graphics.Sprite;
 using Camera = RenderingLibrary.Camera;

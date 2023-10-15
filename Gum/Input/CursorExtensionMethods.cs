@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using InputLibrary;
+﻿using InputLibrary;
 using RenderingLibrary.Graphics;
 using RenderingLibrary;
-using Microsoft.Xna.Framework;
 
 namespace Gum.Input
 {

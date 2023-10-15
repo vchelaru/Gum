@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using RenderingLibrary.Graphics;
@@ -11,8 +9,6 @@ using Gum.Wireframe;
 using Gum.RenderingLibrary;
 #if GUM
 using WpfDataUi.Controls;
-
-using System.Windows.Documents;
 using Gum.Plugins;
 using Gum.PropertyGridHelpers.Converters;
 #endif

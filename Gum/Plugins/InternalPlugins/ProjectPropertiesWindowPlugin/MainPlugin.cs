@@ -1,9 +1,7 @@
-﻿using Gum.Commands;
-using Gum.DataTypes;
+﻿using Gum.DataTypes;
 using Gum.Gui.Controls;
 using Gum.Managers;
 using Gum.Plugins.BaseClasses;
-using Gum.Plugins.Behaviors;
 using Gum.ToolStates;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
@@ -13,11 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.Composition;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ToolsUtilities;
-using WpfDataUi.EventArguments;
 
 namespace Gum.Plugins.PropertiesWindowPlugin
 {

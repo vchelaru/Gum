@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using RenderingLibrary.Math.Geometry;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
-using Gum.Converters;
 using Microsoft.Xna.Framework;
 
 namespace Gum.Wireframe

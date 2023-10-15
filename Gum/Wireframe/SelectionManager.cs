@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using RenderingLibrary.Math.Geometry;
 using Gum.ToolStates;
 using Microsoft.Xna.Framework;
@@ -12,9 +11,7 @@ using Gum.DataTypes;
 using System.Windows.Forms;
 using WinCursor = System.Windows.Forms.Cursor;
 using System.Runtime.InteropServices;
-using Microsoft.Xna.Framework.Graphics;
 using Gum.Undo;
-using Gum.Debug;
 using Gum.Wireframe.Editors;
 
 namespace Gum.Wireframe

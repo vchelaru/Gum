@@ -29,9 +29,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
-using System.Diagnostics.CodeAnalysis;
 using System.ComponentModel;
-using System.Reflection;
 #if UWP
 using System.Reflection;
 #endif

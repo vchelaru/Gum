@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using Gum.Managers;
 using Gum.DataTypes.Variables;
 using Gum.ToolStates;
 using Gum.DataTypes;
-using Gum.ToolCommands;
 using Gum.Wireframe;
 using ToolsUtilities;
 using Gum.Logic;

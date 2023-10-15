@@ -1,15 +1,8 @@
-﻿using Gum.DataTypes;
-using Gum.Plugins.BaseClasses;
+﻿using Gum.Plugins.BaseClasses;
 using Gum.ToolStates;
-using Gum.Wireframe;
 using RenderingLibrary.Graphics;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ToolsUtilities;
 
 namespace Gum.Plugins.InternalPlugins.ScreenshotPlugin
 {

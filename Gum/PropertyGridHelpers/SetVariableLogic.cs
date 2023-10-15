@@ -4,12 +4,9 @@ using Gum.Managers;
 using Gum.Plugins;
 using Gum.ToolStates;
 using Gum.Wireframe;
-using RenderingLibrary;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using Gum.RenderingLibrary;
 using Gum.Converters;
@@ -20,8 +17,6 @@ using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary.Graphics;
 using Gum.Logic;
 using GumRuntime;
-using System.Xml.Linq;
-using ExCSS;
 
 namespace Gum.PropertyGridHelpers
 {

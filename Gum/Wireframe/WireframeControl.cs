@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using XnaAndWinforms;
 using Microsoft.Xna.Framework;
 using System.Windows.Forms;
@@ -9,15 +7,12 @@ using RenderingLibrary.Math.Geometry;
 using RenderingLibrary.Graphics;
 using RenderingLibrary;
 using Gum.DataTypes;
-using Gum.ToolStates;
-using Gum.Input;
 using RenderingLibrary.Content;
 using Gum.Managers;
 using Gum.Plugins.BaseClasses;
 using Gum.ToolCommands;
 using System.ComponentModel.Composition;
 using FlatRedBall.AnimationEditorForms.Controls;
-using Gum.Debug;
 using Microsoft.Xna.Framework.Graphics;
 
 using WinCursor = System.Windows.Forms.Cursor;

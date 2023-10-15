@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Xml.Serialization;
 using Gum.Graphics.Animation;
 using Microsoft.Xna.Framework.Graphics;
