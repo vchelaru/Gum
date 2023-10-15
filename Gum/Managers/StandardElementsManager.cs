@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using RenderingLibrary.Graphics;
-
 using Microsoft.Xna.Framework;
 using Gum.Wireframe;
 using Gum.RenderingLibrary;
+
 #if GUM
 using WpfDataUi.Controls;
 
