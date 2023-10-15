@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using XnaAndWinforms;
-using Microsoft.Xna.Framework;
 using System.Windows.Forms;
 using RenderingLibrary.Math.Geometry;
 using RenderingLibrary.Graphics;
@@ -17,6 +16,9 @@ using Microsoft.Xna.Framework.Graphics;
 
 using WinCursor = System.Windows.Forms.Cursor;
 using Gum.Plugins;
+
+using Color = System.Drawing.Color;
+using Matrix = System.Numerics.Matrix4x4;
 
 namespace Gum.Wireframe
 {
@@ -300,7 +302,7 @@ namespace Gum.Wireframe
         {
             if (mHasInitialized)
             {
-                Color backgroundColor = new Color();
+                var backgroundColor = new Microsoft.Xna.Framework.Color();
                 if(ProjectManager.Self.GeneralSettingsFile != null)
                 {
                     backgroundColor.R = ProjectManager.Self.GeneralSettingsFile.CheckerColor1R;

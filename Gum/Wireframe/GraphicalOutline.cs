@@ -1,8 +1,9 @@
-﻿using Microsoft.Xna.Framework;
-using RenderingLibrary;
+﻿using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Math.Geometry;
 using System.Collections.Generic;
+using Color = System.Drawing.Color;
+using Matrix = System.Numerics.Matrix4x4;
 
 namespace Gum.Wireframe
 {

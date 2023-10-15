@@ -1,5 +1,8 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System.Numerics;
 using RenderingLibrary.Graphics;
+using Vector2 = System.Numerics.Vector2;
+using Vector3 = System.Numerics.Vector3;
+using Matrix = System.Numerics.Matrix4x4;
 
 namespace RenderingLibrary
 {
@@ -253,7 +256,7 @@ namespace RenderingLibrary
                 return
                     Matrix.CreateTranslation(new Vector3(-x, -y, 0)) *
                     Matrix.CreateTranslation(new Vector3(0, 0, 0))*
-                    Matrix.CreateScale(new Vector3(zoom, zoom, 1)) 
+                    Matrix.CreateScale(new Vector3(zoom, zoom, 1))
                    ;
             }
             else
@@ -269,11 +272,10 @@ namespace RenderingLibrary
 
         public void ScreenToWorld(float screenX, float screenY, out float worldX, out float worldY)
         {
-            Matrix matrix = Matrix.Invert(GetTransformationMatrix());
+            Matrix.Invert(GetTransformationMatrix(), out var matrix);
 
             Vector3 position = new Vector3(screenX, screenY, 0);
-            Vector3 transformed;
-            Vector3.Transform(ref position, ref matrix, out transformed);
+            Vector3 transformed = Vector3.Transform(position, matrix);
 
             worldX = transformed.X;
             worldY = transformed.Y;
@@ -284,8 +286,7 @@ namespace RenderingLibrary
             Matrix matrix = GetTransformationMatrix();
 
             Vector3 position = new Vector3(worldX, worldY, 0);
-            Vector3 transformed;
-            Vector3.Transform(ref position, ref matrix, out transformed);
+            Vector3 transformed = Vector3.Transform(position, matrix);
 
             screenX = transformed.X;
             screenY = transformed.Y;

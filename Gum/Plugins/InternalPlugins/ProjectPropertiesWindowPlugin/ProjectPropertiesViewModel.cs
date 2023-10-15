@@ -2,7 +2,8 @@
 using Gum.Mvvm;
 using Gum.Settings;
 using Gum.Wireframe;
-using Microsoft.Xna.Framework;
+using Color = System.Drawing.Color;
+using Matrix = System.Numerics.Matrix4x4;
 
 namespace Gum.Plugins.PropertiesWindowPlugin
 {
@@ -154,7 +155,7 @@ namespace Gum.Plugins.PropertiesWindowPlugin
 
         public ProjectPropertiesViewModel()
         {
-            OutlineColor = Microsoft.Xna.Framework.Color.White;
+            OutlineColor = Color.White;
         }
 
         public void SetFrom(GeneralSettingsFile generalSettings, GumProjectSave gumProject)
@@ -176,14 +177,12 @@ namespace Gum.Plugins.PropertiesWindowPlugin
                 RenderTextCharacterByCharacter = global::RenderingLibrary.Graphics.Text.TextRenderingMode ==
                     global::RenderingLibrary.Graphics.TextRenderingMode.CharacterByCharacter;
 
-                CheckerboardColor1 = new Color(generalSettings.CheckerColor1R, generalSettings.CheckerColor1G, generalSettings.CheckerColor1B);
-                CheckerboardColor2 = new Color(generalSettings.CheckerColor2R, generalSettings.CheckerColor2G, generalSettings.CheckerColor2B);
+                CheckerboardColor1 = Color.FromArgb(255, generalSettings.CheckerColor1R, generalSettings.CheckerColor1G, generalSettings.CheckerColor1B);
+                CheckerboardColor2 = Color.FromArgb(255, generalSettings.CheckerColor2R, generalSettings.CheckerColor2G, generalSettings.CheckerColor2B);
 
-                OutlineColor = new Color(generalSettings.OutlineColorR, generalSettings.OutlineColorG, generalSettings.OutlineColorB);
-                GuideLineColor = new Color(
-                    generalSettings.GuideLineColorR, generalSettings.GuideLineColorG, generalSettings.GuideLineColorB);
-                GuideTextColor = new Color(
-                    generalSettings.GuideTextColorR, generalSettings.GuideTextColorG, generalSettings.GuideTextColorB);
+                OutlineColor = Color.FromArgb(255, generalSettings.OutlineColorR, generalSettings.OutlineColorG, generalSettings.OutlineColorB);
+                GuideLineColor = Color.FromArgb(255, generalSettings.GuideLineColorR, generalSettings.GuideLineColorG, generalSettings.GuideLineColorB);
+                GuideTextColor = Color.FromArgb(255, generalSettings.GuideTextColorR, generalSettings.GuideTextColorG, generalSettings.GuideTextColorB);
 
                 LocalizationFile = this.gumProject.LocalizationFile;
                 LanguageIndex = this.gumProject.CurrentLanguageIndex;

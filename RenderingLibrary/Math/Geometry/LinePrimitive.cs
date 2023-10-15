@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework;
 using RenderingLibrary.Graphics;
+using Vector2 = System.Numerics.Vector2;
+using Color = System.Drawing.Color;
+using Rectangle = System.Drawing.Rectangle;
 
 namespace RenderingLibrary.Math.Geometry
 {

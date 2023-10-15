@@ -1,8 +1,11 @@
-﻿using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
+﻿using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Vector2 = System.Numerics.Vector2;
+using Color = System.Drawing.Color;
+using Rectangle = System.Drawing.Rectangle;
+using Matrix = System.Numerics.Matrix4x4;
 
 namespace RenderingLibrary.Graphics
 {
@@ -35,7 +38,7 @@ namespace RenderingLibrary.Graphics
         public DepthStencilState DepthStencilState { get; set; }
         public RasterizerState RasterizerState { get; set; }
         public Effect Effect { get; set; }
-        public Matrix TransformMatrix { get; set; }
+        public Microsoft.Xna.Framework.Matrix TransformMatrix { get; set; }
         public Rectangle ScissorRectangle { get; set; }
 
 
@@ -149,7 +152,7 @@ namespace RenderingLibrary.Graphics
 
         public void PushRenderStates(SpriteSortMode sortMode, BlendState blendState, SamplerState samplerState,
             DepthStencilState depthStencilState, RasterizerState rasterizerState, Effect effect,
-            Matrix transformMatrix, Rectangle scissorRectangle)
+            Microsoft.Xna.Framework.Matrix transformMatrix, Rectangle scissorRectangle)
         {
 
 
@@ -161,7 +164,7 @@ namespace RenderingLibrary.Graphics
         }
 
         public void ReplaceRenderStates(SpriteSortMode sortMode, BlendState blendState, SamplerState samplerState,
-            DepthStencilState depthStencilState, RasterizerState rasterizerState, Effect effect, Matrix transformMatrix,
+            DepthStencilState depthStencilState, RasterizerState rasterizerState, Effect effect, Microsoft.Xna.Framework.Matrix transformMatrix,
             Rectangle scissorRectangle)
         {
             bool isNewRender = currentParameters.HasValue == false;
@@ -200,7 +203,7 @@ namespace RenderingLibrary.Graphics
 
             try
             {
-                SpriteBatch.GraphicsDevice.ScissorRectangle = scissorRectangle;
+                SpriteBatch.GraphicsDevice.ScissorRectangle = scissorRectangle.ToXNA();
             }
             catch (Exception e)
             {
@@ -217,7 +220,7 @@ namespace RenderingLibrary.Graphics
         {
             AdjustCurrentParametersDrawCall(texture2D, null, objectRequestingChange);
 
-            SpriteBatch.Draw(texture2D, destinationRectangle, sourceRectangle, color);
+            SpriteBatch.Draw(texture2D, destinationRectangle.ToXNA(), sourceRectangle.ToXNA(), color.ToXNA());
         }
 
         internal void Draw(Texture2D texture2D, Rectangle destinationRectangle, Rectangle? sourceRectangle, Color color, float rotationInRadians, Vector2 origin, SpriteEffects effects, int layerDepth, object objectRequestingChange)
@@ -225,21 +228,21 @@ namespace RenderingLibrary.Graphics
             AdjustCurrentParametersDrawCall(texture2D, null, objectRequestingChange);
 
 
-            SpriteBatch.Draw(texture2D, destinationRectangle, sourceRectangle, color, rotationInRadians, origin, effects, layerDepth);
+            SpriteBatch.Draw(texture2D, destinationRectangle.ToXNA(), sourceRectangle?.ToXNA(), color.ToXNA(), rotationInRadians, origin.ToXNA(), effects, layerDepth);
         }
 
         internal void Draw(Texture2D texture2D, Vector2 position, Rectangle? sourceRectangle, Color color, float rotationInRadians, Vector2 origin, Vector2 scale, SpriteEffects effects, float depth, object objectRequestingChange)
         {
             AdjustCurrentParametersDrawCall(texture2D, null, objectRequestingChange);
 
-            SpriteBatch.Draw(texture2D, position, sourceRectangle, color, rotationInRadians, origin, scale, effects, depth);
+            SpriteBatch.Draw(texture2D, position.ToXNA(), sourceRectangle?.ToXNA(), color.ToXNA(), rotationInRadians, origin.ToXNA(), scale.ToXNA(), effects, depth);
         }
 
         internal void DrawString(SpriteFont font, string line, Vector2 offset, Color color, object objectRequestingChange)
         {
             AdjustCurrentParametersDrawCall(null, font, objectRequestingChange);
 
-            SpriteBatch.DrawString(font, line, offset, color);
+            SpriteBatch.DrawString(font, line, offset.ToXNA(), color.ToXNA());
         }
 
         private void AdjustCurrentParametersDrawCall(Texture2D texture, SpriteFont spriteFont, object objectRequestingChange)

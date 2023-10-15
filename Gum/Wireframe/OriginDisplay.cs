@@ -1,7 +1,12 @@
-﻿using Microsoft.Xna.Framework;
-using RenderingLibrary;
+﻿using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Math.Geometry;
+using ToolsUtilitiesStandard.Helpers;
+using MathHelper = ToolsUtilitiesStandard.Helpers.MathHelper;
+using Vector2 = System.Numerics.Vector2;
+using Vector3 = System.Numerics.Vector3;
+using Color = System.Drawing.Color;
+using Matrix = System.Numerics.Matrix4x4;
 
 namespace Gum.Wireframe
 {
@@ -143,7 +148,7 @@ namespace Gum.Wireframe
             {
                 var matrix = Matrix.CreateRotationZ(-MathHelper.ToRadians(parentAbsoluteRotation));
 
-                var rotatedVector = parentOriginOffsetX * matrix.Right + parentOriginOffsetY * matrix.Up;
+                var rotatedVector = parentOriginOffsetX * matrix.Right() + parentOriginOffsetY * matrix.Up();
 
 
                 mOriginLine.X = rotatedVector.X + parentAbsoluteX;
@@ -206,8 +211,8 @@ namespace Gum.Wireframe
             mXLine2.X = selectedObjectX - offset;
             mXLine2.Y = selectedObjectY + offset;
 
-            mXLine1.RelativePoint = new Microsoft.Xna.Framework.Vector2(offset * 2, offset * 2);
-            mXLine2.RelativePoint = new Microsoft.Xna.Framework.Vector2(offset * 2, -offset * 2);
+            mXLine1.RelativePoint = new Vector2(offset * 2, offset * 2);
+            mXLine2.RelativePoint = new Vector2(offset * 2, -offset * 2);
         }
 
     }

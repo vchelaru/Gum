@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using RenderingLibrary.Math.Geometry;
 using Gum.ToolStates;
-using Microsoft.Xna.Framework;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using Gum.Input;
@@ -13,6 +12,8 @@ using WinCursor = System.Windows.Forms.Cursor;
 using System.Runtime.InteropServices;
 using Gum.Undo;
 using Gum.Wireframe.Editors;
+using Color = System.Drawing.Color;
+using Matrix = System.Numerics.Matrix4x4;
 
 namespace Gum.Wireframe
 {
@@ -617,7 +618,7 @@ namespace Gum.Wireframe
                         WireframeEditor.Destroy();
                     }
                     WireframeEditor = new StandardWireframeEditor(UiLayer, 
-                        new Color(GumState.Self.ProjectState.GeneralSettings.OutlineColorR,
+                        Color.FromArgb(255, GumState.Self.ProjectState.GeneralSettings.OutlineColorR,
                         GumState.Self.ProjectState.GeneralSettings.OutlineColorG,
                         GumState.Self.ProjectState.GeneralSettings.OutlineColorB));
                 }

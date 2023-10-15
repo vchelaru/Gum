@@ -1,5 +1,7 @@
 ﻿using RenderingLibrary;
-using Microsoft.Xna.Framework;
+using Vector2 = System.Numerics.Vector2;
+using Vector3 = System.Numerics.Vector3;
+using Matrix = System.Numerics.Matrix4x4;
 
 namespace InputLibrary
 {
@@ -58,7 +60,7 @@ namespace InputLibrary
 
             Vector3 transformed = new Vector3(cursor.X, cursor.Y, 0);
             Matrix matrix = managers.Renderer.Camera.GetTransformationMatrix();
-            matrix = Matrix.Invert(matrix);
+            Matrix.Invert(matrix, out matrix);
 
             TransformVector(ref transformed, ref matrix);
 
@@ -70,7 +72,7 @@ namespace InputLibrary
         {
             Vector3 transformed = new Vector3(cursor.X, cursor.Y, 0);
             Matrix matrix = managers.Renderer.Camera.GetTransformationMatrix();
-            matrix = Matrix.Invert(matrix);
+            Matrix.Invert(matrix, out matrix);
 
             TransformVector(ref transformed, ref matrix);
 

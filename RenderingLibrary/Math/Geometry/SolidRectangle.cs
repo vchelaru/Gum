@@ -1,6 +1,10 @@
 ﻿using System.Collections.ObjectModel;
-using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using ToolsUtilitiesStandard.Helpers;
+using Vector2 = System.Numerics.Vector2;
+using Color = System.Drawing.Color;
+using Rectangle = System.Drawing.Rectangle;
+
 
 namespace RenderingLibrary.Graphics
 {
@@ -121,7 +125,7 @@ namespace RenderingLibrary.Graphics
             }
             set
             {
-                Color.A = (byte)value;
+                Color = Color.WithAlpha((byte)value);
             }
         }
 
@@ -133,7 +137,7 @@ namespace RenderingLibrary.Graphics
             }
             set
             {
-                Color.R = (byte)value;
+                Color = Color.WithRed((byte)value);
             }
         }
 
@@ -145,7 +149,7 @@ namespace RenderingLibrary.Graphics
             }
             set
             {
-                Color.G = (byte)value;
+                Color = Color.WithGreen((byte)value);
             }
         }
 
@@ -157,7 +161,7 @@ namespace RenderingLibrary.Graphics
             }
             set
             {
-                Color.B = (byte)value;
+                Color = Color.WithBlue((byte)value);
             }
         }
 

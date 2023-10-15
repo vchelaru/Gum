@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Collections.ObjectModel;
-using Microsoft.Xna.Framework;
+using Vector3 = System.Numerics.Vector3;
+using Matrix = System.Numerics.Matrix4x4;
 
 namespace RenderingLibrary.Graphics
 {
@@ -216,11 +217,10 @@ namespace RenderingLibrary.Graphics
             }
 
 
-            Matrix matrix = Matrix.Invert(transformationMatrix);
+            Matrix.Invert(transformationMatrix, out var matrix);
 
             Vector3 position = new Vector3(screenX, screenY, 0);
-            Vector3 transformed;
-            Vector3.Transform(ref position, ref matrix, out transformed);
+            Vector3 transformed = Vector3.Transform(position, matrix);
 
             worldX = transformed.X;
             worldY = transformed.Y;

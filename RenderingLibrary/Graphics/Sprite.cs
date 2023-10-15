@@ -1,9 +1,13 @@
 ﻿
 using System;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework;
 using RenderingLibrary.Content;
 using System.Collections.ObjectModel;
+using ToolsUtilitiesStandard.Helpers;
+using MathHelper = ToolsUtilitiesStandard.Helpers.MathHelper;
+using Vector2 = System.Numerics.Vector2;
+using Color = System.Drawing.Color;
+using Rectangle = System.Drawing.Rectangle;
 
 namespace RenderingLibrary.Graphics
 {
@@ -40,7 +44,7 @@ namespace RenderingLibrary.Graphics
             }
             set
             {
-                Color.A = (byte)value;
+                Color = Color.WithAlpha((byte)value);
             }
         }
 
@@ -52,7 +56,7 @@ namespace RenderingLibrary.Graphics
             }
             set
             {
-                Color.R = (byte)value;
+                Color = Color.WithRed((byte)value);
             }
         }
 
@@ -64,7 +68,7 @@ namespace RenderingLibrary.Graphics
             }
             set
             {
-                Color.G = (byte)value;
+                Color = Color.WithGreen((byte)value);
             }
         }
 
@@ -76,7 +80,7 @@ namespace RenderingLibrary.Graphics
             }
             set
             {
-                Color.B = (byte)value;
+                Color = Color.WithBlue((byte)value);
             }
         }
 
@@ -491,8 +495,8 @@ namespace RenderingLibrary.Graphics
                         oldSourceX -= amountToAdd * fullTexelsWide;
                     }
 
-                    float currentX = -oldSourceX * (1 / texelsPerWorldUnitX) + y * eachHeight * matrix.Up.X;
-                    currentY = y * eachHeight * matrix.Up.Y;
+                    float currentX = -oldSourceX * (1 / texelsPerWorldUnitX) + y * eachHeight * matrix.Up().X;
+                    currentY = y * eachHeight * matrix.Up().Y;
 
                     for (int x = 0; x < xRepetitions; x++)
                     {
@@ -551,8 +555,8 @@ namespace RenderingLibrary.Graphics
                             Render(managers, spriteRenderer, this, Texture, Color, SourceRectangle, FlipVertical, rotationInDegrees: Rotation);
                         }
                         currentX = System.Math.Max(0, currentX);
-                        currentX += this.Width * matrix.Right.X;
-                        currentY += this.Width * matrix.Right.Y;
+                        currentX += this.Width * matrix.Right().X;
+                        currentY += this.Width * matrix.Right().Y;
 
                     }
                 }
@@ -571,7 +575,7 @@ namespace RenderingLibrary.Graphics
 
         public static void Render(SystemManagers managers, SpriteRenderer spriteRenderer, IRenderableIpso ipso, Texture2D texture)
         {
-            Color color = new Color(1.0f, 1.0f, 1.0f, 1.0f); // White
+            Color color = Color.White;
 
             Render(managers, spriteRenderer, ipso, texture, color);
         }
@@ -656,9 +660,10 @@ namespace RenderingLibrary.Graphics
                 // we are using premult textures, so we need to premult the color:
                 var alphaRatio = color.A / 255.0f;
 
-                modifiedColor.R = (byte)(color.R * alphaRatio);
-                modifiedColor.G = (byte)(color.G * alphaRatio);
-                modifiedColor.B = (byte)(color.B * alphaRatio);
+                modifiedColor = Color.FromArgb(modifiedColor.A,
+                    (byte)(color.R * alphaRatio),
+                    (byte)(color.G * alphaRatio),
+                    (byte)(color.B * alphaRatio));
             }
 
             if ((ipso.Width > 0 && ipso.Height > 0) || treat0AsFullDimensions == false)

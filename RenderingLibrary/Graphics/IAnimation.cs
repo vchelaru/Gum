@@ -1,5 +1,5 @@
 ﻿using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework;
+using Rectangle = System.Drawing.Rectangle;
 
 namespace RenderingLibrary.Graphics
 {

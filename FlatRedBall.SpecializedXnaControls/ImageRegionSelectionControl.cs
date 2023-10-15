@@ -13,6 +13,7 @@ using System.Reflection;
 using System.Windows.Forms;
 using RenderingLibrary.Math;
 using InputLibrary;
+using ToolsUtilitiesStandard.Helpers;
 
 namespace FlatRedBall.SpecializedXnaControls
 {
@@ -208,7 +209,7 @@ namespace FlatRedBall.SpecializedXnaControls
             {
                 if (maxAlphaImageData.Data[i].A > 0)
                 {
-                    maxAlphaImageData.Data[i].A = 255;
+                    maxAlphaImageData.Data[i] = maxAlphaImageData.Data[i].WithAlpha(255);
                 }
             }
         }

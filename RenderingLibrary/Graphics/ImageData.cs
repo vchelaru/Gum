@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Point = System.Drawing.Point;
+using Color = System.Drawing.Color;
+using Rectangle = System.Drawing.Rectangle;
 
 namespace RenderingLibrary.Graphics
 {
@@ -441,19 +443,17 @@ namespace RenderingLibrary.Graphics
         {
             var existingData = Data[y * width + x];
 
-            if (Data[y * width + x].A != 0)
-            {
-                Data[y * width + x].R = (byte)((existingData.R * (255 - color.A) / 255.0f) + color.R * color.A / 255.0f);
-                Data[y * width + x].G = (byte)((existingData.G * (255 - color.A) / 255.0f) + color.G * color.A / 255.0f);
-                Data[y * width + x].B = (byte)((existingData.B * (255 - color.A) / 255.0f) + color.B * color.A / 255.0f);
-                Data[y * width + x].A = (byte)Math.MathFunctions.RoundToInt((existingData.A + (255 - existingData.A) * (color.A / 255.0f)));
+            if (Data[y * width + x].A != 0) {
+                Data[y * width + x] = Color.FromArgb(
+                    (byte)Math.MathFunctions.RoundToInt((existingData.A + (255 - existingData.A) * (color.A / 255.0f))),
+                    (byte)((existingData.R * (255 - color.A) / 255.0f) + color.R * color.A / 255.0f),
+                    (byte)((existingData.G * (255 - color.A) / 255.0f) + color.G * color.A / 255.0f),
+                    (byte)((existingData.B * (255 - color.A) / 255.0f) + color.B * color.A / 255.0f)
+                );
             }
             else
             {
-                Data[y * width + x].R = color.R;
-                Data[y * width + x].G = color.G;
-                Data[y * width + x].B = color.B;
-                Data[y * width + x].A = color.A;
+                Data[y * width + x] = color;
             }
         }
 
@@ -537,11 +537,12 @@ namespace RenderingLibrary.Graphics
 
                 float multiplier = color.A / 255.0f;
 
-                color.R = (byte)(color.R * multiplier);
-                color.B = (byte)(color.B * multiplier);
-                color.G = (byte)(color.G * multiplier);
-
-                mData[i] = color;
+                mData[i] = Color.FromArgb(
+                    color.A,
+                    (byte)(color.R * multiplier),
+                    (byte)(color.G * multiplier),
+                    (byte)(color.B * multiplier)
+                );
             }
         }
 

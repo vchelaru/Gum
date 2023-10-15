@@ -4,7 +4,6 @@ using Gum.Managers;
 using Gum.Plugins.BaseClasses;
 using Gum.ToolStates;
 using Gum.Wireframe;
-using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary.Graphics.Fonts;
 using System;
@@ -12,6 +11,9 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.Composition;
 using ToolsUtilities;
+using Color = System.Drawing.Color;
+using Rectangle = System.Drawing.Rectangle;
+using Matrix = System.Numerics.Matrix4x4;
 
 namespace Gum.Plugins.PropertiesWindowPlugin
 {
@@ -194,7 +196,7 @@ namespace Gum.Plugins.PropertiesWindowPlugin
 
                 renderer.SinglePixelTexture = loaderManager.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(viewModel.SinglePixelTextureFile);
 
-                renderer.SinglePixelSourceRectangle = new Microsoft.Xna.Framework.Rectangle(
+                renderer.SinglePixelSourceRectangle = new Rectangle(
                     viewModel.SinglePixelTextureLeft.Value,
                     viewModel.SinglePixelTextureTop.Value,
                     width: viewModel.SinglePixelTextureRight.Value - viewModel.SinglePixelTextureLeft.Value,
