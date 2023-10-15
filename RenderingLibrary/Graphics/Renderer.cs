@@ -1,14 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Microsoft.Xna.Framework.Graphics;
-using RenderingLibrary.Math.Geometry;
 using Microsoft.Xna.Framework;
-using System.IO;
 using System.Collections.ObjectModel;
-using RenderingLibrary.Math;
-using RenderingLibrary;
 using Microsoft.Xna.Framework.Content;
 
 namespace RenderingLibrary.Graphics

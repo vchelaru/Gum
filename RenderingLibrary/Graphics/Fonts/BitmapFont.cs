@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary.Content;
 using Microsoft.Xna.Framework;
@@ -9,7 +8,6 @@ using System.Collections;
 using RenderingLibrary.Math;
 using RenderingLibrary.Math.Geometry;
 using ToolsUtilities;
-using System.Collections.ObjectModel;
 
 namespace RenderingLibrary.Graphics
 {

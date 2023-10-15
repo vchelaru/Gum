@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace RenderingLibrary.Graphics
+﻿namespace RenderingLibrary.Graphics
 {
     public class SortableLayer : Layer, IRenderable
     {

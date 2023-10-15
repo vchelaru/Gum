@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using RenderingLibrary.Content;
 using Microsoft.Xna.Framework;
 using RenderingLibrary.Math.Geometry;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.ObjectModel;
-using System.Threading;
 
 namespace RenderingLibrary.Graphics
 {
