@@ -1,5 +1,5 @@
 //	FlatRedBall.IO.CSV.CsvReader
-//	Copyright (c) 2005 Sébastien Lorion
+//	Copyright (c) 2005 SÃ©bastien Lorion
 //
 //	MIT license (http://en.wikipedia.org/wiki/MIT_License)
 //
@@ -24,23 +24,18 @@ using System.Collections;
 using System.Collections.Generic;
 
 #if !WINDOWS_PHONE && !XBOX360
-using System.Data;
-
 #endif
 #if !XBOX360
-using CommonFormsAndControls.IO.Csv.Resources;
 #endif
 
 //using System.Data.Common;
 using Debug = System.Diagnostics.Debug;
-using System.Globalization;
 using System.IO;
 
 
 #if SILVERLIGHT
 using FlatRedBall.Utilities.Extensions;
 #elif !WINDOWS_PHONE && !XBOX360
-using System.Data.Common;
 #endif
 
 namespace CsvLibrary
