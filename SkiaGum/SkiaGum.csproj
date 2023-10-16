@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -14,8 +14,62 @@
 
   <ItemGroup>
     <Compile Include="..\GumRuntime\GraphicalUiElement.cs" Link="GraphicalUiElement.cs" />
+    <Compile Include="..\Gum\DataTypes\BehaviorSaveExtensionMethods.cs">
+      <Link>DataTypes\BehaviorSaveExtensionMethods.cs</Link>
+    </Compile>
+    <Compile Include="..\Gum\DataTypes\ComponentSaveExtensionMethods.cs">
+      <Link>DataTypes\ComponentSaveExtensionMethods.cs</Link>
+    </Compile>
+    <Compile Include="..\Gum\DataTypes\ElementSaveExtensionMethods.cs">
+      <Link>DataTypes\ElementSaveExtensionMethods.cs</Link>
+    </Compile>
+    <Compile Include="..\Gum\DataTypes\GumProjectSaveExtensionMethods.cs">
+      <Link>DataTypes\GumProjectSaveExtensionMethods.cs</Link>
+    </Compile>
+    <Compile Include="..\Gum\DataTypes\InstanceSaveExtensionMethods.cs">
+      <Link>DataTypes\InstanceSaveExtensionMethods.cs</Link>
+    </Compile>
+    <Compile Include="..\Gum\DataTypes\PluginSettingsSave.cs">
+      <Link>DataTypes\PluginSettingsSave.cs</Link>
+    </Compile>
+    <Compile Include="..\Gum\DataTypes\RecursiveVariableFinder.cs">
+      <Link>DataTypes\RecursiveVariableFinder.cs</Link>
+    </Compile>
+    <Compile Include="..\Gum\DataTypes\StateSaveExtensionMethods.cs">
+      <Link>DataTypes\StateSaveExtensionMethods.cs</Link>
+    </Compile>
+    <Compile Include="..\Gum\DataTypes\VariableListSaveExtensionMethods.cs">
+      <Link>DataTypes\VariableListSaveExtensionMethods.cs</Link>
+    </Compile>
+    <Compile Include="..\Gum\DataTypes\VariableSaveExtensionMethods.cs">
+      <Link>DataTypes\VariableSaveExtensionMethods.cs</Link>
+    </Compile>
+    <Compile Include="..\Gum\Graphics\Animation\AnimationFrame.cs">
+      <Link>Graphics\Animation\AnimationFrame.cs</Link>
+    </Compile>
     <Compile Include="..\Gum\Managers\StandardElementsManager.cs" Link="Managers\StandardElementsManager.cs" />
+    <Compile Include="..\RenderingLibrary\Content\IContentLoader.cs">
+      <Link>Content\IContentLoader.cs</Link>
+    </Compile>
+    <Compile Include="..\RenderingLibrary\Graphics\GradientType.cs">
+      <Link>Graphics\GradientType.cs</Link>
+    </Compile>
+    <Compile Include="..\RenderingLibrary\Graphics\HorizontalAlignment.cs">
+      <Link>Graphics\HorizontalAlignment.cs</Link>
+    </Compile>
+    <Compile Include="..\RenderingLibrary\Graphics\IAspectRatio.cs">
+      <Link>Graphics\IAspectRatio.cs</Link>
+    </Compile>
+    <Compile Include="..\RenderingLibrary\Graphics\LayerCameraSettings.cs">
+      <Link>Graphics\LayerCameraSettings.cs</Link>
+    </Compile>
+    <Compile Include="..\RenderingLibrary\Graphics\SortableLayer.cs">
+      <Link>Graphics\SortableLayer.cs</Link>
+    </Compile>
     <Compile Include="..\RenderingLibrary\Graphics\TextOverflowMode.cs" Link="Graphics\TextOverflowMode.cs" />
+    <Compile Include="..\RenderingLibrary\Graphics\VerticalAlignment.cs">
+      <Link>Graphics\VerticalAlignment.cs</Link>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>
@@ -27,6 +81,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\GumDataTypes\GumDataTypesNet6.csproj" />
     <ProjectReference Include="..\ToolsUtilities\ToolsUtilitiesStandard.csproj" />
   </ItemGroup>
 

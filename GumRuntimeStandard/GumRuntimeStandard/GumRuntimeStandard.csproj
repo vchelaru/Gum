@@ -33,10 +33,6 @@
   </ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="MonoGame.Framework.DesktopGL.Core" Version="3.8.0.13" />
-	</ItemGroup>
-
-	<ItemGroup>
 	  <ProjectReference Include="..\..\GumDataTypes\GumDataTypesStandard.csproj" />
 	  <ProjectReference Include="..\..\ToolsUtilities\ToolsUtilitiesStandard.csproj" />
 	</ItemGroup>
