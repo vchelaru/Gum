@@ -1,13 +1,7 @@
 ﻿using Gum.DataTypes;
 using Gum.Managers;
-using Gum.ToolStates;
-using RenderingLibrary.Graphics;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Media.Imaging;
 using static WpfDataUi.Controls.ToggleButtonOptionDisplay;
 
 namespace Gum.Controls
@@ -140,7 +134,7 @@ namespace Gum.Controls
                     },
                     new Option
                     {
-                        Name = "Absolute Mulitplied by Font Scale",
+                        Name = "Absolute Multiplied by Font Scale",
                         Value = DimensionUnitType.AbsoluteMultipliedByFontScale,
                         Image = absoluteMultipliedByFontScale
                     }

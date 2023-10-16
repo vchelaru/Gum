@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using System.Windows.Forms;
-using System.Collections.ObjectModel;
 using RenderingLibrary;
 using Gum.Wireframe;
 using Gum.DataTypes.Behaviors;

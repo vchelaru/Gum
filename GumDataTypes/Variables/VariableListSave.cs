@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Xml.Serialization;
 using System.Collections;
 using ToolsUtilities;
-using Microsoft.Xna.Framework;
+using System.Numerics;
 
 namespace Gum.DataTypes.Variables
 {

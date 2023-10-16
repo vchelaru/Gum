@@ -1,18 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using Gum.ToolStates;
 using Gum.DataTypes;
 using Gum.Managers;
-using Gum.DataTypes.Variables;
-using Gum.Plugins;
 using Gum.ToolCommands;
-using ToolsUtilities;
-using Gum.Debug;
-using Gum.Gui.Forms;
-using Gum.DataTypes.Behaviors;
 using Gum.Logic;
 
 namespace Gum.Wireframe

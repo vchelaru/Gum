@@ -1,5 +1,5 @@
 //	FlatRedBall.IO.CSV.CsvReader.RecordEnumerator
-//	Copyright (c) 2005 Sébastien Lorion
+//	Copyright (c) 2005 SÃ©bastien Lorion
 //
 //	MIT license (http://en.wikipedia.org/wiki/MIT_License)
 //
@@ -24,7 +24,6 @@ using System.Collections;
 using System.Collections.Generic;
 
 #if !XBOX360
-using CommonFormsAndControls.IO.Csv.Resources;
 #endif
 
 namespace CsvLibrary

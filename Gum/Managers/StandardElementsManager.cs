@@ -3,17 +3,16 @@ using System.Collections.Generic;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using RenderingLibrary.Graphics;
-using Microsoft.Xna.Framework;
 using Gum.Wireframe;
 using Gum.RenderingLibrary;
 
 #if GUM
 using WpfDataUi.Controls;
-
-using System.Windows.Documents;
 using Gum.Plugins;
 using Gum.PropertyGridHelpers.Converters;
 #endif
+using Vector2 = System.Numerics.Vector2;
+using Matrix = System.Numerics.Matrix4x4;
 
 namespace Gum.Managers
 {

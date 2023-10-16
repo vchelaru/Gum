@@ -1,15 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.ComponentModel;
-using Gum.DataTypes.Variables;
-using Gum.ToolStates;
-using Gum.DataTypes;
-using Gum.DataTypes.ComponentModel;
-using Gum.Managers;
-using Gum.PropertyGridHelpers.Converters;
-using System.Drawing.Design;
 
 namespace Gum.PropertyGridHelpers
 {

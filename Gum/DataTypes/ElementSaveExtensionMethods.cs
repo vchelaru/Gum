@@ -1,14 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using ToolsUtilities;
 
 #if GUM
 using Gum.ToolStates;
-using System.Windows.Forms;
 #endif
 namespace Gum.DataTypes
 {

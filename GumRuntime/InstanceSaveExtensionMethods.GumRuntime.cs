@@ -3,17 +3,13 @@ using Gum.Managers;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework.Graphics;
 #if !NO_XNA
-
 using RenderingLibrary;
-using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Math.Geometry;
 #endif
 using System;
-
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using Color = System.Drawing.Color;
+using Matrix = System.Numerics.Matrix4x4;
 
 namespace GumRuntime
 {
@@ -92,13 +88,14 @@ namespace GumRuntime
                     if(GraphicalUiElement.ShowLineRectangles)
                     {
                         LineRectangle lineRectangle = new LineRectangle(systemManagers);
-                        lineRectangle.Color = new Microsoft.Xna.Framework.Color(
+                        lineRectangle.Color = Color.FromArgb(
+                            255,
 #if GUM
                             Gum.ToolStates.GumState.Self.ProjectState.GeneralSettings.OutlineColorR,
                             Gum.ToolStates.GumState.Self.ProjectState.GeneralSettings.OutlineColorG,
                             Gum.ToolStates.GumState.Self.ProjectState.GeneralSettings.OutlineColorB
 #else
-                        255,255,255
+                        255,255,255,255
 #endif
                             );
 
@@ -175,20 +172,20 @@ namespace GumRuntime
 
         private static void SetAlphaAndColorValues(Text text, RecursiveVariableFinder rvf)
         {
-            Microsoft.Xna.Framework.Color color = ColorFromRvf(rvf);
+            Color color = ColorFromRvf(rvf);
             text.Red = color.R;
             text.Green = color.G;
             text.Blue = color.B;
             text.Alpha = color.A;  //Is alpha supported?
         }
 
-        static Microsoft.Xna.Framework.Color ColorFromRvf(RecursiveVariableFinder rvf)
+        static Color ColorFromRvf(RecursiveVariableFinder rvf)
         {
-            Microsoft.Xna.Framework.Color color = new Microsoft.Xna.Framework.Color(
+            Color color = Color.FromArgb(
+                rvf.GetValue<int>("Alpha"),
                 rvf.GetValue<int>("Red"),
                 rvf.GetValue<int>("Green"),
-                rvf.GetValue<int>("Blue"),
-                rvf.GetValue<int>("Alpha")
+                rvf.GetValue<int>("Blue")
                 );
             return color;
         }

@@ -1,9 +1,4 @@
-﻿using Gum.DataTypes.Behaviors;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using ToolsUtilities;
+﻿using ToolsUtilities;
 
 namespace Gum.DataTypes
 {

@@ -1,15 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Microsoft.Xna.Framework.Graphics;
-using RenderingLibrary.Math.Geometry;
-using Microsoft.Xna.Framework;
-using System.IO;
 using System.Collections.ObjectModel;
-using RenderingLibrary.Math;
-using RenderingLibrary;
 using Microsoft.Xna.Framework.Content;
+using Color = System.Drawing.Color;
+using Rectangle = System.Drawing.Rectangle;
 
 namespace RenderingLibrary.Graphics
 {
@@ -249,17 +244,17 @@ namespace RenderingLibrary.Graphics
             CustomEffectManager.Initialize(graphicsDevice);
 
             mSinglePixelTexture = new Texture2D(mGraphicsDevice, 1, 1, false, SurfaceFormat.Color);
-            Color[] pixels = new Color[1];
-            pixels[0] = Color.White;
-            mSinglePixelTexture.SetData<Color>(pixels);
+            Microsoft.Xna.Framework.Color[] pixels = new Microsoft.Xna.Framework.Color[1];
+            pixels[0] = Microsoft.Xna.Framework.Color.White;
+            mSinglePixelTexture.SetData<Microsoft.Xna.Framework.Color>(pixels);
             mSinglePixelTexture.Name = "Rendering Library Single Pixel Texture";
 
             mDottedLineTexture = new Texture2D(mGraphicsDevice, 2, 1, false, SurfaceFormat.Color);
             mDottedLineTexture.Name = "Renderer Dotted Line Texture";
-            pixels = new Color[2];
-            pixels[0] = Color.White;
-            pixels[1] = Color.Transparent;
-            mDottedLineTexture.SetData<Color>(pixels);
+            pixels = new Microsoft.Xna.Framework.Color[2];
+            pixels[0] = Microsoft.Xna.Framework.Color.White;
+            pixels[1] = Microsoft.Xna.Framework.Color.Transparent;
+            mDottedLineTexture.SetData<Microsoft.Xna.Framework.Color>(pixels);
 
             mCamera.UpdateClient();
         }
@@ -422,11 +417,11 @@ namespace RenderingLibrary.Graphics
             }
         }
 
-        internal Microsoft.Xna.Framework.Rectangle GetScissorRectangleFor(Camera camera, IRenderableIpso ipso)
+        internal Rectangle GetScissorRectangleFor(Camera camera, IRenderableIpso ipso)
         {
             if (ipso == null)
             {
-                return new Microsoft.Xna.Framework.Rectangle(
+                return new Rectangle(
                     0, 0,
                     camera.ClientWidth,
                     camera.ClientHeight
@@ -477,7 +472,7 @@ namespace RenderingLibrary.Graphics
                 top += this.GraphicsDevice.Viewport.Y;
                 bottom += this.GraphicsDevice.Viewport.Y;
 
-                Microsoft.Xna.Framework.Rectangle thisRectangle = new Microsoft.Xna.Framework.Rectangle(
+                Rectangle thisRectangle = new Rectangle(
                     left,
                     top,
                     width,
@@ -523,7 +518,7 @@ namespace RenderingLibrary.Graphics
 
             if (renderable.ClipsChildren)
             {
-                Rectangle clipRectangle = GetScissorRectangleFor(Camera, renderable);
+                var clipRectangle = GetScissorRectangleFor(Camera, renderable);
 
                 if (renderState.ClipRectangle == null || clipRectangle != renderState.ClipRectangle.Value)
                 {
@@ -1035,22 +1030,6 @@ namespace RenderingLibrary.Graphics
 
             return technique;
         }
-
-        //public static Vector4 ProcessColorForColorOperation(ColorOperation colorOperation, Vector4 input)
-        //{
-        //    if (colorOperation == ColorOperation.Color)
-        //    {
-        //        return new Vector4(input.X * input.W, input.Y * input.W, input.Z * input.W, input.W);
-        //    }
-        //    else if (colorOperation == ColorOperation.Texture)
-        //    {
-        //        return new Vector4(input.W, input.W, input.W, input.W);
-        //    }
-        //    else
-        //    {
-        //        return new Vector4(input.X, input.Y, input.Z, input.W);
-        //    }
-        //}
     }
 
     public class DeviceManager : IGraphicsDeviceService

@@ -1,11 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Gum.Commands;
 using Gum.Controls;
-using Gum.DataTypes;
-using Gum.DataTypes.Variables;
 using Gum.Managers;
 
 namespace Gum

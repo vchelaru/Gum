@@ -406,7 +406,6 @@
     <Compile Include="Wireframe\GrabbedState.cs" />
     <Compile Include="Wireframe\GraphicalOutline.cs" />
     <Compile Include="Wireframe\HighlightManager.cs" />
-    <Compile Include="Wireframe\InterpolatingColor.cs" />
     <Compile Include="Wireframe\OriginDisplay.cs" />
     <Compile Include="Wireframe\PlatformDetails.cs" />
     <Compile Include="Wireframe\ResizeHandles.cs" />

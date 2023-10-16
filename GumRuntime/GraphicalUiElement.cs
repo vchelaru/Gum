@@ -11,7 +11,6 @@ using GumRuntime;
 using RenderingLibrary.Math.Geometry;
 #endif
 
-using Microsoft.Xna.Framework;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Math;
@@ -29,9 +28,14 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
-using System.Diagnostics.CodeAnalysis;
 using System.ComponentModel;
-using System.Reflection;
+using ToolsUtilitiesStandard.Helpers;
+using MathHelper = ToolsUtilitiesStandard.Helpers.MathHelper;
+using Vector2 = System.Numerics.Vector2;
+using Vector3 = System.Numerics.Vector3;
+using Color = System.Drawing.Color;
+using Rectangle = System.Drawing.Rectangle;
+using Matrix = System.Numerics.Matrix4x4;
 #if UWP
 using System.Reflection;
 #endif
@@ -2543,7 +2547,7 @@ namespace Gum.Wireframe
 #endif
                         break;
                     case TextureAddress.Custom:
-                        sprite.SourceRectangle = new Microsoft.Xna.Framework.Rectangle(
+                        sprite.SourceRectangle = new Rectangle(
                             mTextureLeft,
                             mTextureTop,
                             mTextureWidth,
@@ -2569,7 +2573,7 @@ namespace Gum.Wireframe
                         nineSlice.SourceRectangle = null;
                         break;
                     case TextureAddress.Custom:
-                        nineSlice.SourceRectangle = new Microsoft.Xna.Framework.Rectangle(
+                        nineSlice.SourceRectangle = new Rectangle(
                             mTextureLeft,
                             mTextureTop,
                             mTextureWidth,
@@ -3076,35 +3080,35 @@ namespace Gum.Wireframe
                 // invert it to match how rotation works with the CreateRotationZ method:
                 quarterRotationsAsInt = 4 - quarterRotationsAsInt;
 
-                right = Vector3.Right;
-                up = Vector3.Up;
+                right = Vector3Extensions.Right;
+                up = Vector3Extensions.Up;
 
                 switch (quarterRotationsAsInt)
                 {
                     case 0:
-                        right = Vector3.Right;
-                        up = Vector3.Up;
+                        right = Vector3Extensions.Right;
+                        up = Vector3Extensions.Up;
                         break;
                     case 1:
-                        right = Vector3.Up;
-                        up = Vector3.Left;
+                        right = Vector3Extensions.Up;
+                        up = Vector3Extensions.Left;
                         break;
                     case 2:
-                        right = Vector3.Left;
-                        up = Vector3.Down;
+                        right = Vector3Extensions.Left;
+                        up = Vector3Extensions.Down;
                         break;
 
                     case 3:
-                        right = Vector3.Down;
-                        up = Vector3.Right;
+                        right = Vector3Extensions.Down;
+                        up = Vector3Extensions.Right;
                         break;
                 }
             }
             else
             {
                 var matrix = Matrix.CreateRotationZ(-MathHelper.ToRadians(rotationInDegrees));
-                right = matrix.Right;
-                up = matrix.Up;
+                right = matrix.Right();
+                up = matrix.Up();
             }
 
         }
@@ -5238,7 +5242,7 @@ namespace Gum.Wireframe
 
                 var color =
                     ((LinePolygon)mContainedObjectAsIpso).Color;
-                color.A = (byte)valueAsInt;
+                color = color.WithAlpha((byte)valueAsInt);
 
                 ((LinePolygon)mContainedObjectAsIpso).Color = color;
                 handled = true;
@@ -5250,7 +5254,7 @@ namespace Gum.Wireframe
 
                 var color =
                     ((LinePolygon)mContainedObjectAsIpso).Color;
-                color.R = (byte)valueAsInt;
+                color = color.WithRed((byte)valueAsInt);
 
                 ((LinePolygon)mContainedObjectAsIpso).Color = color;
                 handled = true;
@@ -5262,7 +5266,7 @@ namespace Gum.Wireframe
 
                 var color =
                     ((LinePolygon)mContainedObjectAsIpso).Color;
-                color.G = (byte)valueAsInt;
+                color = color.WithGreen((byte)valueAsInt);
 
                 ((LinePolygon)mContainedObjectAsIpso).Color = color;
                 handled = true;
@@ -5274,7 +5278,7 @@ namespace Gum.Wireframe
 
                 var color =
                     ((LinePolygon)mContainedObjectAsIpso).Color;
-                color.B = (byte)valueAsInt;
+                color = color.WithBlue((byte)valueAsInt);
 
                 ((LinePolygon)mContainedObjectAsIpso).Color = color;
                 handled = true;
@@ -5309,7 +5313,7 @@ namespace Gum.Wireframe
 
                 var color =
                     ((LineRectangle)mContainedObjectAsIpso).Color;
-                color.A = (byte)valueAsInt;
+                color = color.WithAlpha((byte)valueAsInt);
 
                 ((LineRectangle)mContainedObjectAsIpso).Color = color;
                 handled = true;
@@ -5321,7 +5325,7 @@ namespace Gum.Wireframe
 
                 var color =
                     ((LineRectangle)mContainedObjectAsIpso).Color;
-                color.R = (byte)valueAsInt;
+                color = color.WithRed((byte)valueAsInt);
 
                 ((LineRectangle)mContainedObjectAsIpso).Color = color;
                 handled = true;
@@ -5333,7 +5337,7 @@ namespace Gum.Wireframe
 
                 var color =
                     ((LineRectangle)mContainedObjectAsIpso).Color;
-                color.G = (byte)valueAsInt;
+                color = color.WithGreen((byte)valueAsInt);
 
                 ((LineRectangle)mContainedObjectAsIpso).Color = color;
                 handled = true;
@@ -5345,7 +5349,7 @@ namespace Gum.Wireframe
 
                 var color =
                     ((LineRectangle)mContainedObjectAsIpso).Color;
-                color.B = (byte)valueAsInt;
+                color = color.WithBlue((byte)valueAsInt);
 
                 ((LineRectangle)mContainedObjectAsIpso).Color = color;
                 handled = true;
@@ -5370,7 +5374,7 @@ namespace Gum.Wireframe
 
                 var color =
                     ((LineCircle)mContainedObjectAsIpso).Color;
-                color.A = (byte)valueAsInt;
+                color = color.WithAlpha((byte)valueAsInt);
 
                 ((LineCircle)mContainedObjectAsIpso).Color = color;
                 handled = true;
@@ -5382,7 +5386,7 @@ namespace Gum.Wireframe
 
                 var color =
                     ((LineCircle)mContainedObjectAsIpso).Color;
-                color.R = (byte)valueAsInt;
+                color = color.WithRed((byte)valueAsInt);
 
                 ((LineCircle)mContainedObjectAsIpso).Color = color;
                 handled = true;
@@ -5394,7 +5398,7 @@ namespace Gum.Wireframe
 
                 var color =
                     ((LineCircle)mContainedObjectAsIpso).Color;
-                color.G = (byte)valueAsInt;
+                color = color.WithGreen((byte)valueAsInt);
 
                 ((LineCircle)mContainedObjectAsIpso).Color = color;
                 handled = true;
@@ -5406,7 +5410,7 @@ namespace Gum.Wireframe
 
                 var color =
                     ((LineCircle)mContainedObjectAsIpso).Color;
-                color.B = (byte)valueAsInt;
+                color = color.WithBlue((byte)valueAsInt);
 
                 ((LineCircle)mContainedObjectAsIpso).Color = color;
                 handled = true;

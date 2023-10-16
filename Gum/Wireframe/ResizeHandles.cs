@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using RenderingLibrary.Math.Geometry;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
-using Gum.Converters;
-using Microsoft.Xna.Framework;
+using ToolsUtilitiesStandard.Helpers;
+using MathHelper = ToolsUtilitiesStandard.Helpers.MathHelper;
+using Vector3 = System.Numerics.Vector3;
+using Color = System.Drawing.Color;
+using Matrix = System.Numerics.Matrix4x4;
 
 namespace Gum.Wireframe
 {
@@ -285,8 +287,8 @@ namespace Gum.Wireframe
             for(int i = 0; i < mHandles.Length; i++)
             {
                 var handle = mHandles[i];
-                var xComponent = handle.X * rotationMatrix.Right;
-                var yComponent = handle.Y * rotationMatrix.Up;
+                var xComponent = handle.X * rotationMatrix.Right();
+                var yComponent = handle.Y * rotationMatrix.Up();
 
                 handle.X = X + xComponent.X + yComponent.X;
                 handle.Y = Y + xComponent.Y + yComponent.Y;
@@ -298,8 +300,8 @@ namespace Gum.Wireframe
 
                 var innerHandlePosition = new Vector3( handle.Position, 0);
                 // shift 1 pixel
-                innerHandlePosition += rotationMatrix.Right / Renderer.Self.Camera.Zoom;
-                innerHandlePosition += rotationMatrix.Up / Renderer.Self.Camera.Zoom;
+                innerHandlePosition += rotationMatrix.Right() / Renderer.Self.Camera.Zoom;
+                innerHandlePosition += rotationMatrix.Up() / Renderer.Self.Camera.Zoom;
                 innerHandle.Position.X = innerHandlePosition.X;
                 innerHandle.Position.Y = innerHandlePosition.Y;
 

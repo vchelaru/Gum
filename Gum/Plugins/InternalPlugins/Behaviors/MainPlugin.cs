@@ -1,14 +1,10 @@
 ﻿using Gum.Plugins.BaseClasses;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Gum.DataTypes;
 using Gum.ToolStates;
 using Gum.DataTypes.Behaviors;
-using Gum.DataTypes.Variables;
 using WpfDataUi;
 using System.Windows.Forms;
 

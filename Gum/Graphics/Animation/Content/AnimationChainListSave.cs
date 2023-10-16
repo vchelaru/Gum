@@ -1,17 +1,6 @@
 using System;
-using System.IO;
-
 using System.Collections.Generic;
-using System.Text;
-
-using System.Runtime.Serialization;
-using Microsoft.Xna.Framework.Graphics;
-
-using System.Xml;
 using System.Xml.Serialization;
-
-using AnimationFrame = Gum.Graphics.Animation.AnimationFrame;
-
 using AnimationChainList = Gum.Graphics.Animation.AnimationChainList;
 using ToolsUtilities;
 using Gum.Graphics.Animation;

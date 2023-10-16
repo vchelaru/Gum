@@ -4,14 +4,13 @@ using Gum.DataTypes.Variables;
 using Gum.Plugins;
 using Gum.ToolStates;
 using Gum.Undo;
-using Microsoft.Xna.Framework;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using MathHelper = ToolsUtilitiesStandard.Helpers.MathHelper;
+using Vector2 = System.Numerics.Vector2;
+using Matrix = System.Numerics.Matrix4x4;
 
 namespace Gum.Wireframe
 {

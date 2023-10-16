@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Gum.DataTypes;
 using Gum.Managers;
 using Gum.DataTypes.Variables;
@@ -9,8 +8,6 @@ using System.Windows.Forms;
 using Gum.Wireframe;
 using Gum.Plugins;
 using Gum.Debug;
-using System.Collections.ObjectModel;
-using Gum.Events;
 using RenderingLibrary;
 using Gum.DataTypes.Behaviors;
 using Gum.Controls;

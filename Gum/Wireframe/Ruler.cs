@@ -1,21 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using RenderingLibrary;
 using XnaAndWinforms;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Math.Geometry;
-using Microsoft.Xna.Framework;
 using InputLibrary;
-
-using Cursors = System.Windows.Forms.Cursors;
 using WinCursor = System.Windows.Forms.Cursor;
 using Sprite = RenderingLibrary.Graphics.Sprite;
 using Camera = RenderingLibrary.Camera;
 using RenderingLibrary.Math;
 using Gum.ToolStates;
 using Gum.Input;
+using Vector2 = System.Numerics.Vector2;
+using Color = System.Drawing.Color;
 
 namespace Gum.Wireframe
 {
@@ -182,20 +180,20 @@ namespace Gum.Wireframe
             {
                 if (GumState.Self.ProjectState.GeneralSettings != null)
                 {
-                    return new Color(
+                    return Color.FromArgb(
+                        127,
                         GumState.Self.ProjectState.GeneralSettings.GuideLineColorR,
                         GumState.Self.ProjectState.GeneralSettings.GuideLineColorG,
-                        GumState.Self.ProjectState.GeneralSettings.GuideLineColorB,
-                        127
+                        GumState.Self.ProjectState.GeneralSettings.GuideLineColorB
                         );
                 }
                 else
                 {
-                    return new Color(
+                    return Color.FromArgb(
+                        127,
                         255,
                         255,
-                        255,
-                        127
+                        255
                         );
                 }
             }
@@ -206,20 +204,20 @@ namespace Gum.Wireframe
             {
                 if (GumState.Self.ProjectState.GeneralSettings != null)
                 {
-                    return new Color(
+                    return Color.FromArgb(
+                        255,
                         GumState.Self.ProjectState.GeneralSettings.GuideTextColorR,
                         GumState.Self.ProjectState.GeneralSettings.GuideTextColorG,
-                        GumState.Self.ProjectState.GeneralSettings.GuideTextColorB,
-                        255
+                        GumState.Self.ProjectState.GeneralSettings.GuideTextColorB
                         );
                 }
                 else
                 {
-                    return new Color(
+                    return Color.FromArgb(
+                        127,
                         255,
                         255,
-                        255,
-                        127
+                        255
                         );
                 }
             }
@@ -395,7 +393,7 @@ namespace Gum.Wireframe
                 line.Y = MathFunctions.RoundToInt(y) + .5f;
 
             
-            line.RelativePoint = new Microsoft.Xna.Framework.Vector2(length, 0);
+            line.RelativePoint = new Vector2(length, 0);
 
             line.Color = color;
             line.Z = 1;
@@ -729,13 +727,13 @@ namespace Gum.Wireframe
             {
                 line.X = 10;
                 line.Y = relevantValue;
-                line.RelativePoint = new Microsoft.Xna.Framework.Vector2(6000, 0);
+                line.RelativePoint = new Vector2(6000, 0);
             }
             else if (this.RulerSide == Wireframe.RulerSide.Top)
             {
                 line.Y = 10;
                 line.X = relevantValue;
-                line.RelativePoint = new Microsoft.Xna.Framework.Vector2(0, 6000);
+                line.RelativePoint = new Vector2(0, 6000);
             }
             line.Color = guideColor;
             line.Z = 2;
@@ -779,8 +777,7 @@ namespace Gum.Wireframe
 
                     mRulerLines[i].X = 10 - length;
 
-                    mRulerLines[i].RelativePoint = 
-                        new Microsoft.Xna.Framework.Vector2(length, 0);
+                    mRulerLines[i].RelativePoint = new Vector2(length, 0);
                 }
             }
             else if (this.RulerSide == Wireframe.RulerSide.Top)
@@ -796,8 +793,7 @@ namespace Gum.Wireframe
 
                     mRulerLines[i].Y = 10 - length;
 
-                    mRulerLines[i].RelativePoint =
-                        new Microsoft.Xna.Framework.Vector2(0, length);
+                    mRulerLines[i].RelativePoint = new Vector2(0, length);
                 }
             }
         }

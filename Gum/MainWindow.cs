@@ -1,27 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using Gum.Managers;
 using Gum.ToolStates;
-using Gum.ToolCommands;
 using Gum.Plugins;
 using Gum.Reflection;
 using Gum.Wireframe;
-using Gum.Gui.Forms;
-using Gum.Undo;
-using Gum.Debug;
 using Gum.PropertyGridHelpers;
 using System.Windows.Forms.Integration;
-using Gum.DataTypes;
 using Gum.Controls;
 using Gum.Logic.FileWatch;
-using Gum.Commands;
-using Microsoft.AppCenter;
 using Microsoft.AppCenter.Crashes;
 
 namespace Gum

@@ -4,15 +4,11 @@ using Gum.DataTypes.Variables;
 using Gum.Gui.Windows;
 using Gum.Plugins;
 using Gum.Responses;
-using Gum.ToolCommands;
 using Gum.ToolStates;
 using Gum.Undo;
 using Gum.Wireframe;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Gum.Managers

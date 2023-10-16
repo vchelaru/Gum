@@ -5,12 +5,8 @@ using Gum.Plugins;
 using Gum.ToolCommands;
 using Gum.ToolStates;
 using Gum.Wireframe;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using ToolsUtilities;
 

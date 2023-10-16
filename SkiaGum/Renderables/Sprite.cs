@@ -1,12 +1,7 @@
-﻿using Microsoft.Xna.Framework;
-using RenderingLibrary;
-using RenderingLibrary.Graphics;
-using SkiaGum.GueDeriving;
+﻿using RenderingLibrary.Graphics;
 using SkiaSharp;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Text;
+using Rectangle = System.Drawing.Rectangle;
+using Matrix = System.Numerics.Matrix4x4;
 
 namespace SkiaGum.Renderables
 {

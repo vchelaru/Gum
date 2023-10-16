@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.ComponentModel;
 using Gum.DataTypes.Variables;
 using Gum.DataTypes;
@@ -9,17 +8,12 @@ using Gum.ToolStates;
 using Gum.DataTypes.ComponentModel;
 using Gum.Managers;
 using Gum.PropertyGridHelpers.Converters;
-using System.Drawing.Design;
 using Gum.Plugins;
 using Gum.Logic;
-using System.Management.Instrumentation;
 using WpfDataUi.DataTypes;
 using Gum.Wireframe;
-using Newtonsoft.Json.Linq;
 using WpfDataUi.Controls;
-using static System.Resources.ResXFileRef;
 using GumRuntime;
-using Svg;
 
 namespace Gum.PropertyGridHelpers
 {

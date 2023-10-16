@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using RenderingLibrary.Graphics;
-using Microsoft.Xna.Framework;
+﻿using RenderingLibrary.Graphics;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.ObjectModel;
+using Vector2 = System.Numerics.Vector2;
+using Color = System.Drawing.Color;
 
 namespace RenderingLibrary.Math.Geometry
 {

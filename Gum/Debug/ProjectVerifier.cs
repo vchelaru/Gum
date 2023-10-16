@@ -1,13 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Gum.DataTypes;
 using Gum.Managers;
-using RenderingLibrary;
-using Gum.ToolStates;
-using Gum.Wireframe;
-using RenderingLibrary.Graphics;
 
 namespace Gum.Debug
 {

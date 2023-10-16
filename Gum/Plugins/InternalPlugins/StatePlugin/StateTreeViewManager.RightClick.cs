@@ -1,15 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using CommonFormsAndControls;
 using Gum.DataTypes.Variables;
 using Gum.ToolStates;
-using Gum.ToolCommands;
 using System.Windows.Forms;
-using Gum.Commands;
 using ToolsUtilities;
-using Gum.Plugins;
 using Gum.DataTypes;
 using Gum.PropertyGridHelpers;
 

@@ -11,13 +11,13 @@ using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary.Math;
 using RenderingLibrary.Math.Geometry;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using TextureCoordinateSelectionPlugin.ViewModels;
 using TextureCoordinateSelectionPlugin.Views;
+using Vector2 = System.Numerics.Vector2;
+using Vector3 = System.Numerics.Vector3;
+using Color = System.Drawing.Color;
+using Matrix = System.Numerics.Matrix4x4;
 
 namespace TextureCoordinateSelectionPlugin.Logic
 {
@@ -112,13 +112,13 @@ namespace TextureCoordinateSelectionPlugin.Logic
                 nineSliceGuideLines[i] = new Line(mainControl.InnerControl.SystemManagers);
                 nineSliceGuideLines[i].Visible = false;
                 nineSliceGuideLines[i].Z = 1;
-                nineSliceGuideLines[i].Color = Microsoft.Xna.Framework.Color.White;
+                nineSliceGuideLines[i].Color = Color.White;
                 nineSliceGuideLines[i].IsDotted = true;
 
-                var alpha = 0.6f;
+                var alpha = (int)(0.6f * 0xFF);
 
                 nineSliceGuideLines[i].Color = 
-                    new Microsoft.Xna.Framework.Color(alpha, alpha, alpha, alpha);
+                    Color.FromArgb(alpha, alpha, alpha, alpha);
 
                 mainControl.InnerControl.SystemManagers.Renderer.MainLayer.Add(nineSliceGuideLines[i]);
             }
@@ -136,10 +136,10 @@ namespace TextureCoordinateSelectionPlugin.Logic
             lineGrid.Visible = true;
             lineGrid.Z = 1;
 
-            var alpha = .2f;
+            var alpha = (int)(.2f * 0xFF);
 
             // premultiplied
-            lineGrid.Color = new Microsoft.Xna.Framework.Color(alpha, alpha, alpha, alpha);
+            lineGrid.Color = Color.FromArgb(alpha, alpha, alpha, alpha);
 
             mainControl.InnerControl.SystemManagers.Renderer.MainLayer.Add(lineGrid);
         }
@@ -423,7 +423,7 @@ namespace TextureCoordinateSelectionPlugin.Logic
                 {
                     textureOutlineRectangle = new LineRectangle(control.SystemManagers);
                     textureOutlineRectangle.IsDotted = false;
-                    textureOutlineRectangle.Color = new Microsoft.Xna.Framework.Color(255, 255, 255, 128);
+                    textureOutlineRectangle.Color = Color.FromArgb(128, 255, 255, 255);
                     control.SystemManagers.ShapeManager.Add(textureOutlineRectangle);
                 }
                 textureOutlineRectangle.Width = control.CurrentTexture.Width;

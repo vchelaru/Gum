@@ -1,16 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
-
-using System.Xml;
 using System.Xml.Serialization;
 
-using Texture2D = Microsoft.Xna.Framework.Graphics.Texture2D;
-
 //TODO: the AnimationChain namespace in the content assembly should probably be renamed to avoid this naming conflict
-using System.Globalization;
 using Gum.Graphics.Animation;
-using ToolsUtilities;
 
 namespace Gum.Content.AnimationChain
 {

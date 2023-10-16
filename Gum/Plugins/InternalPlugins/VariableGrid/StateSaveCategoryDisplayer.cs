@@ -3,12 +3,8 @@ using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Plugins.VariableGrid;
 using Gum.PropertyGridHelpers;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Management.Instrumentation;
-using System.Text;
-using System.Threading.Tasks;
 using WpfDataUi.DataTypes;
 
 namespace Gum.Plugins.InternalPlugins.VariableGrid

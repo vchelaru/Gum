@@ -1,15 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary.Content;
-using Microsoft.Xna.Framework;
 using System.Collections;
 using RenderingLibrary.Math;
 using RenderingLibrary.Math.Geometry;
 using ToolsUtilities;
-using System.Collections.ObjectModel;
+using MathHelper = ToolsUtilitiesStandard.Helpers.MathHelper;
+using Vector2 = System.Numerics.Vector2;
+using Point = System.Drawing.Point;
+using Color = System.Drawing.Color;
+using Rectangle = System.Drawing.Rectangle;
 
 namespace RenderingLibrary.Graphics
 {
@@ -473,7 +475,7 @@ namespace RenderingLibrary.Graphics
         }
 
         // To help out the GC, we're going to just use a Color that's 2048x2048
-        static Color[] mColorBuffer = new Color[2048 * 2048];
+        static Microsoft.Xna.Framework.Color[] mColorBuffer = new Microsoft.Xna.Framework.Color[2048 * 2048];
 
         /// <summary>
         /// 
@@ -550,7 +552,7 @@ namespace RenderingLibrary.Graphics
 
 
                 var spriteRenderer = managers.Renderer.SpriteRenderer;
-                managers.Renderer.GraphicsDevice.Clear(Color.Transparent);
+                managers.Renderer.GraphicsDevice.Clear(Microsoft.Xna.Framework.Color.Transparent);
                 spriteRenderer.Begin();
 
                 DrawTextLines(lines, horizontalAlignment, objectRequestingRender, requiredWidth, widths, 
@@ -593,9 +595,10 @@ namespace RenderingLibrary.Graphics
                 // this is premultiplied, so premulitply the color value
                 float multiple = color.A / 255.0f;
 
-                color.R = (byte)(color.R * multiple);
-                color.G = (byte)(color.G * multiple);
-                color.B = (byte)(color.B * multiple);
+                color = Color.FromArgb(color.A,
+                    (byte)(color.R * multiple),
+                    (byte)(color.G * multiple),
+                    (byte)(color.B * multiple));
             }
 
             var rotationRadians = MathHelper.ToRadians(rotation);
@@ -731,11 +734,11 @@ namespace RenderingLibrary.Graphics
                     int pageIndex;
                     var sourceRect = GetCharacterRect(c, lineNumber, ref point, out destRect, out pageIndex, textObject.FontScale);
 
-                    var origin = new Point((int)textObject.X, (int)(textObject.Y + yoffset));
+                    var origin = new Vector2((int)textObject.X, (int)(textObject.Y + yoffset));
                     var rotate = (float)-(textObject.Rotation * System.Math.PI / 180f);
 
-                    var rotatingPoint = new Point(origin.X + (int)destRect.X, origin.Y + (int)destRect.Y);
-                    MathFunctions.RotatePointAroundPoint(new Point(origin.X, origin.Y), ref rotatingPoint, rotate);
+                    var rotatingPoint = new Vector2(origin.X + (int)destRect.X, origin.Y + (int)destRect.Y);
+                    MathFunctions.RotatePointAroundPoint(origin, ref rotatingPoint, rotate);
 
                     mCharRect.X = rotatingPoint.X;
                     mCharRect.Y = rotatingPoint.Y;
@@ -774,8 +777,7 @@ namespace RenderingLibrary.Graphics
 
             point.Y = (lineNumber * LineHeightInPixels * lineHeightMultiplier + distanceFromTop) * fontScale;
 
-            var sourceRectangle = new Microsoft.Xna.Framework.Rectangle(
-                sourceLeft, sourceTop, sourceWidth, sourceHeight);
+            var sourceRectangle = new Rectangle(sourceLeft, sourceTop, sourceWidth, sourceHeight);
 
             pageIndex = characterInfo.PageNumber;
 
@@ -929,8 +931,7 @@ namespace RenderingLibrary.Graphics
 
                         point.Y = lineNumber * LineHeightInPixels + distanceFromTop;
 
-                        Microsoft.Xna.Framework.Rectangle sourceRectangle = new Microsoft.Xna.Framework.Rectangle(
-                            sourceLeft, sourceTop, sourceWidth, sourceHeight);
+                        Rectangle sourceRectangle = new Rectangle(sourceLeft, sourceTop, sourceWidth, sourceHeight);
 
                         int pageIndex = characterInfo.PageNumber;
 

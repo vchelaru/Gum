@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using Texture2D = Microsoft.Xna.Framework.Graphics.Texture2D;
 
 namespace Gum.Graphics.Animation

@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace Gum.Managers
+﻿namespace Gum.Managers
 {
     public class Singleton<T> where T : new()
     {

@@ -1,10 +1,7 @@
 ﻿using Gum.Managers;
 using Gum.ToolStates;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ToolsUtilities;
 
 namespace Gum.Logic.FileWatch

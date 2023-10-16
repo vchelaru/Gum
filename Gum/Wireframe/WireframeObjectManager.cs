@@ -1,24 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using RenderingLibrary.Math.Geometry;
 using Gum.DataTypes;
 using Gum.ToolStates;
-using Gum.DataTypes.Variables;
 using Gum.Managers;
 using RenderingLibrary.Graphics;
 using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary.Content;
 using RenderingLibrary;
-using System.Collections;
 using Gum.RenderingLibrary;
-using Microsoft.Xna.Framework;
 using FlatRedBall.AnimationEditorForms.Controls;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 using Gum.Plugins;
-using System.Security.Policy;
+using Color = System.Drawing.Color;
+using Rectangle = System.Drawing.Rectangle;
+using Matrix = System.Numerics.Matrix4x4;
 
 namespace Gum.Wireframe
 {
@@ -111,11 +106,12 @@ namespace Gum.Wireframe
         {
             gueManager.Activity();
 
-            if(ProjectManager.Self.GeneralSettingsFile != null)
-            {
-                BackgroundSprite.Color.R = ProjectManager.Self.GeneralSettingsFile.CheckerColor2R;
-                BackgroundSprite.Color.G = ProjectManager.Self.GeneralSettingsFile.CheckerColor2G;
-                BackgroundSprite.Color.B = ProjectManager.Self.GeneralSettingsFile.CheckerColor2B;
+            if(ProjectManager.Self.GeneralSettingsFile != null) {
+                BackgroundSprite.Color = System.Drawing.Color.FromArgb(255,
+                    ProjectManager.Self.GeneralSettingsFile.CheckerColor2R,
+                    ProjectManager.Self.GeneralSettingsFile.CheckerColor2G,
+                    ProjectManager.Self.GeneralSettingsFile.CheckerColor2B
+                );
 
             }
         }
@@ -132,8 +128,8 @@ namespace Gum.Wireframe
             // Create the Texture2D here
             ImageData imageData = new ImageData(2, 2, null);
 
-            Color opaqueColor = Microsoft.Xna.Framework.Color.White;
-            Color transparent = new Microsoft.Xna.Framework.Color(0,0,0,0);
+            Microsoft.Xna.Framework.Color opaqueColor = Microsoft.Xna.Framework.Color.White;
+            Microsoft.Xna.Framework.Color transparent = new Microsoft.Xna.Framework.Color(0,0,0,0);
 
             for (int y = 0; y < 2; y++)
             {
@@ -161,7 +157,7 @@ namespace Gum.Wireframe
             BackgroundSprite.Y = -4096;
             BackgroundSprite.Width = 8192;
             BackgroundSprite.Height = 8192;
-            BackgroundSprite.Color = new Color(150, 150, 150);
+            BackgroundSprite.Color = System.Drawing.Color.FromArgb(255, 150, 150, 150);
 
             BackgroundSprite.Wrap = true;
             int timesToRepeat = 256;

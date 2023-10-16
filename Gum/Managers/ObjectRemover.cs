@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using CommonFormsAndControls.Forms;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
-using Gum.Debug;
 using Gum.Plugins;
 using Gum.ToolCommands;
 using Gum.ToolStates;

@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Microsoft.Xna.Framework;
+using Vector2 = System.Numerics.Vector2;
+using Vector3 = System.Numerics.Vector3;
 
 namespace RenderingLibrary.Math
 {
@@ -48,7 +46,7 @@ namespace RenderingLibrary.Math
         /// <param name="basePoint">Point to rotate around.</param>
         /// <param name="pointToRotate">Point to rotate (changes position).</param>
         /// <param name="radiansToChangeBy">Radians to rotate by.</param>
-        public static void RotatePointAroundPoint(Point basePoint, ref Point pointToRotate, float radiansToChangeBy)
+        public static void RotatePointAroundPoint(Vector2 basePoint, ref Vector2 pointToRotate, float radiansToChangeBy)
         {
             double xDistance = pointToRotate.X - basePoint.X;
             double yDistance = pointToRotate.Y - basePoint.Y;

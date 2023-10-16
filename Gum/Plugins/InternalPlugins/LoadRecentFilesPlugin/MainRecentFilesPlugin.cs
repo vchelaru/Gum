@@ -2,16 +2,10 @@
 using Gum.Plugins.BaseClasses;
 using Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin.ViewModels;
 using Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin.Views;
-using Gum.ToolStates;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Controls;
 using System.Windows.Forms;
-using ToolsUtilities;
 
 namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin
 {

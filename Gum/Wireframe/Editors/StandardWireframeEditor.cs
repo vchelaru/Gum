@@ -3,19 +3,18 @@ using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Input;
 using Gum.Managers;
-using Gum.Plugins;
 using Gum.PropertyGridHelpers;
 using Gum.ToolStates;
-using Microsoft.Xna.Framework;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Math;
 using RenderingLibrary.Math.Geometry;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using MathHelper = ToolsUtilitiesStandard.Helpers.MathHelper;
+using Vector2 = System.Numerics.Vector2;
+using Color = System.Drawing.Color;
+using Matrix = System.Numerics.Matrix4x4;
 
 namespace Gum.Wireframe.Editors
 {
@@ -189,7 +188,7 @@ namespace Gum.Wireframe.Editors
                 var angleInRadians = (float)System.Math.Atan2(cursorY - originY, cursorX - originX);
 
                 var rotationValueDegrees =
-                    -Microsoft.Xna.Framework.MathHelper.ToDegrees(angleInRadians);
+                    -MathHelper.ToDegrees(angleInRadians);
 
                 if(GetIsShiftDown())
                 {

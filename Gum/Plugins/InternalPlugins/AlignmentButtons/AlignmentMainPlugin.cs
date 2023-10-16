@@ -1,12 +1,7 @@
 ﻿using Gum.Managers;
 using Gum.Plugins.BaseClasses;
 using Gum.ToolStates;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Gum.Plugins.AlignmentButtons
