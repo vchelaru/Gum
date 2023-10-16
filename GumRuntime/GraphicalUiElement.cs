@@ -1,7 +1,6 @@
 ﻿using Gum.Converters;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
-using Gum.Graphics.Animation;
 using Gum.Managers;
 using Gum.RenderingLibrary;
 using GumDataTypes.Variables;
@@ -18,7 +17,6 @@ using RenderingLibrary.Math;
 #if SKIA
 using SkiaGum;
 using SkiaGum.GueDeriving;
-using SkiaGum.Managers;
 using SkiaGum.Renderables;
 using SkiaSharp;
 #endif
@@ -33,7 +31,6 @@ using ToolsUtilitiesStandard.Helpers;
 using MathHelper = ToolsUtilitiesStandard.Helpers.MathHelper;
 using Vector2 = System.Numerics.Vector2;
 using Vector3 = System.Numerics.Vector3;
-using Color = System.Drawing.Color;
 using Rectangle = System.Drawing.Rectangle;
 using Matrix = System.Numerics.Matrix4x4;
 #if UWP

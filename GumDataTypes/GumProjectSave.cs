@@ -299,6 +299,10 @@ namespace Gum.DataTypes
 			{
 				GumProjectSave gps = FileManager.XmlDeserializeFromStream<GumProjectSave>(stream);
 
+				string projectRootDirectory = FileManager.GetDirectory(fileName);
+
+				gps.PopulateElementSavesFromReferences(projectRootDirectory, linkLoadingPreference, result);
+
 				gps.FullFileName = fileName;
 
 				return gps;

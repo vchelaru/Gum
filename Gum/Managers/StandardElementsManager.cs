@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using RenderingLibrary.Graphics;
-using Gum.Wireframe;
 using Gum.RenderingLibrary;
 
 #if GUM

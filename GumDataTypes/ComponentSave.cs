@@ -1,4 +1,6 @@
-﻿using ToolsUtilities;
+﻿using Gum.DataTypes.Behaviors;
+using System.Collections.Generic;
+using ToolsUtilities;
 
 namespace Gum.DataTypes
 {
@@ -7,6 +9,7 @@ namespace Gum.DataTypes
         // should this be part of ElementSave? Not sure...
         public string DefaultChildContainer { get; set; }
 
+        public List<ElementBehaviorReference> Behaviors { get; set; } = new List<ElementBehaviorReference>();
 
 
         public override string FileExtension

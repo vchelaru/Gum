@@ -12,16 +12,6 @@ using Matrix = System.Numerics.Matrix4x4;
 
 namespace SkiaGum.Renderables
 {
-    #region Gradient Type
-
-    public enum GradientType
-    {
-        Linear,
-        Radial
-    }
-
-    #endregion
-
     public class RenderableBase : IRenderableIpso, IVisible
     {
         #region Fields/Properties
