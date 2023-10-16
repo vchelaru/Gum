@@ -1,9 +1,6 @@
-﻿using Gum.Wireframe;
-using Microsoft.Xna.Framework;
-using RenderingLibrary.Graphics;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using RenderingLibrary.Graphics;
+using ToolsUtilitiesStandard.Helpers;
+using Matrix = System.Numerics.Matrix4x4;
 
 namespace RenderingLibrary
 {

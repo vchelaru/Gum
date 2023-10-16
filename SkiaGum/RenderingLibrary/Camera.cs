@@ -1,8 +1,7 @@
-﻿using Microsoft.Xna.Framework;
-using RenderingLibrary.Graphics;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using RenderingLibrary.Graphics;
+using Vector2 = System.Numerics.Vector2;
+using Vector3 = System.Numerics.Vector3;
+using Matrix = System.Numerics.Matrix4x4;
 
 namespace RenderingLibrary
 {

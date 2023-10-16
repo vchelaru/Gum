@@ -25,6 +25,8 @@ namespace WpfDataUi.Controls
 
         ApplyValueResult? lastApplyValueResult = null;
 
+        public decimal? LabelDragValueRounding { get; set; } = 1;
+
         #endregion
 
         #region Properties
@@ -261,19 +263,26 @@ namespace WpfDataUi.Controls
         }
 
         double? currentDownX;
-        double? currentDownY;
+        private double unroundedValue;
 
         [DllImport("User32.dll")]
         private static extern bool SetCursorPos(int X, int Y);
 
         private void Label_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            if(mTextBoxLogic.IsNumeric)
+            if (mTextBoxLogic.IsNumeric)
             {
                 currentDownX = e.GetPosition(this).X;
-                currentDownY = e.GetPosition(this).Y;
 
                 System.Windows.Input.Mouse.Capture(Label);
+
+                var getValueStatus = TryGetValueOnUi(out object valueOnInstance);
+
+                if (getValueStatus == ApplyValueResult.Success)
+                {
+                    var converter = TypeDescriptor.GetConverter(mTextBoxLogic.InstancePropertyType);
+                    unroundedValue = (double)converter.ConvertTo(valueOnInstance, typeof(double));
+                }
             }
         }
 
@@ -287,11 +296,25 @@ namespace WpfDataUi.Controls
 
                 if(difference != 0)
                 {
+                    unroundedValue += difference;
+                    var rounded = unroundedValue;
+                    if(LabelDragValueRounding != null)
+                    {
+                        var isInt = Math.Abs(LabelDragValueRounding.Value - (int)LabelDragValueRounding.Value) < .0001m;
+
+                        rounded = RoundDouble(unroundedValue, (double)LabelDragValueRounding.Value);
+
+                        if(isInt)
+                        {
+                            rounded = (int)(System.Math.Round(rounded) + (System.Math.Sign(rounded) * .5f));
+                        }
+                    }
+
                     var getValueStatus = TryGetValueOnUi(out object valueOnInstance);
 
                     if(getValueStatus == ApplyValueResult.Success)
                     {
-                        var newValue = mTextBoxLogic.GetValueInDirection(difference, valueOnInstance);
+                        var newValue = mTextBoxLogic.GetValueInDirection(difference, rounded);
                         TrySetValueOnUi(newValue);
                         lastApplyValueResult = mTextBoxLogic.TryApplyToInstance(SetPropertyCommitType.Intermediate);
                     }
@@ -307,9 +330,13 @@ namespace WpfDataUi.Controls
                 lastApplyValueResult = mTextBoxLogic.TryApplyToInstance(SetPropertyCommitType.Full);
 
                 currentDownX = null;
-                currentDownY = null;
                 System.Windows.Input.Mouse.Capture(null);
             }
+        }
+
+        public double RoundDouble(double valueToRound, double multipleOf)
+        {
+            return ((int)(System.Math.Sign(valueToRound) * .5f + valueToRound / multipleOf)) * multipleOf;
         }
     }
 }
