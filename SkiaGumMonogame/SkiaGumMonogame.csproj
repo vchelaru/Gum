@@ -19,6 +19,7 @@
   <ItemGroup>
     <Compile Remove="..\SkiaGum\Converters\**" />
     <Compile Remove="..\SkiaGum\DataTypes\**" />
+    <Compile Remove="..\SkiaGum\obj\Debug\net472\**" />
     <Compile Remove="..\SkiaGum\obj\Debug\netstandard2.0\**" />
     <Compile Remove="..\SkiaGum\Variables\**" />
     <Compile Remove="..\SkiaGum\Xna\**" />
