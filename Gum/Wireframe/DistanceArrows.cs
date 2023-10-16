@@ -216,8 +216,7 @@ namespace Gum.Wireframe
 
             endLine1.SetPosition(endAbsolute);
             endLine2.SetPosition(endAbsolute);
-            var normalizedBack = (startAbsolute - endAbsolute);
-            Vector2.Normalize(normalizedBack);
+            var normalizedBack = Vector2.Normalize(startAbsolute - endAbsolute);
 
             float arrowPointLineLength = 8 / zoom;
 
@@ -266,8 +265,7 @@ namespace Gum.Wireframe
         {
             if (vector.X != 0 || vector.Y != 0)
             {
-                Vector2.Normalize(vector);
-                return vector;
+                return Vector2.Normalize(vector);
             }
             else
             {
