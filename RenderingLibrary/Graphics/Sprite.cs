@@ -537,8 +537,8 @@ namespace RenderingLibrary.Graphics
                         if (AtlasedTexture != null)
                         {
                             var rectangle = new Rectangle(
-                                AtlasedTexture.SourceRectangle.X + RenderingLibrary.Math.MathFunctions.RoundToInt(texelsChoppedOffLeft),
-                                AtlasedTexture.SourceRectangle.Y + RenderingLibrary.Math.MathFunctions.RoundToInt(texelsChoppedOffTop),
+                                AtlasedTexture.SourceRectangle.X + texelsChoppedOffLeft,
+                                AtlasedTexture.SourceRectangle.Y + texelsChoppedOffTop,
                                 sourceWidth,
                                 sourceHeight);
 
@@ -547,8 +547,8 @@ namespace RenderingLibrary.Graphics
                         else
                         {
                             this.SourceRectangle = new Rectangle(
-                                RenderingLibrary.Math.MathFunctions.RoundToInt(texelsChoppedOffLeft),
-                                RenderingLibrary.Math.MathFunctions.RoundToInt(texelsChoppedOffTop),
+                                texelsChoppedOffLeft,
+                                texelsChoppedOffTop,
                                 sourceWidth,
                                 sourceHeight);
 

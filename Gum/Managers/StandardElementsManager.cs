@@ -4,6 +4,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using RenderingLibrary.Graphics;
 using Gum.RenderingLibrary;
+using Gum.Wireframe;
 
 #if GUM
 using WpfDataUi.Controls;

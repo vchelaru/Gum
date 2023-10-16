@@ -311,11 +311,11 @@ namespace TextureCoordinateSelectionPlugin.Logic
                 int width = right - left;
                 int height = bottom - top;
 
-                graphicalUiElement.TextureLeft = MathFunctions.RoundToInt(left);
-                graphicalUiElement.TextureTop = MathFunctions.RoundToInt(top);
+                graphicalUiElement.TextureLeft = left;
+                graphicalUiElement.TextureTop = top;
 
-                graphicalUiElement.TextureWidth = MathFunctions.RoundToInt(width);
-                graphicalUiElement.TextureHeight = MathFunctions.RoundToInt(height);
+                graphicalUiElement.TextureWidth = width;
+                graphicalUiElement.TextureHeight = height;
 
                 state.SetValue($"{instancePrefix}Texture Left", left, "int");
                 state.SetValue($"{instancePrefix}Texture Top", top, "int");

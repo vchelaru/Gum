@@ -301,8 +301,6 @@ namespace SkiaGum.Renderables
             }
         }
 #else
-        public bool ClipsChildren { get; set; }
-
         public Microsoft.Xna.Framework.Graphics.BlendState BlendState
         {
             get
@@ -317,6 +315,8 @@ namespace SkiaGum.Renderables
 
         }
 #endif
+        public bool ClipsChildren { get; set; }
+
         protected virtual SKPaint GetPaint(SKRect boundingRect, float absoluteRotation)
         {
             var effectiveColor = this.Color;

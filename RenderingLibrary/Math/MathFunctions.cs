@@ -1,6 +1,8 @@
 ﻿using System;
 using Vector2 = System.Numerics.Vector2;
 using Vector3 = System.Numerics.Vector3;
+using Point = System.Drawing.Point;
+using Matrix = System.Numerics.Matrix4x4;
 
 namespace RenderingLibrary.Math
 {
@@ -40,13 +42,19 @@ namespace RenderingLibrary.Math
 
         }
 
+        public static int RoundToInt(decimal decimalToRound)
+        {
+            // see the other RoundToInt for information on why we add .5
+            return (int)(System.Math.Round(decimalToRound) + (System.Math.Sign(decimalToRound) * .5m));
+        }
+
         /// <summary>
         /// Rotates a Point around another Point by a given number of radians.
         /// </summary>
         /// <param name="basePoint">Point to rotate around.</param>
         /// <param name="pointToRotate">Point to rotate (changes position).</param>
         /// <param name="radiansToChangeBy">Radians to rotate by.</param>
-        public static void RotatePointAroundPoint(Vector2 basePoint, ref Vector2 pointToRotate, float radiansToChangeBy)
+        public static void RotatePointAroundPoint(Point basePoint, ref Point pointToRotate, float radiansToChangeBy)
         {
             double xDistance = pointToRotate.X - basePoint.X;
             double yDistance = pointToRotate.Y - basePoint.Y;
@@ -83,9 +91,32 @@ namespace RenderingLibrary.Math
 
         }
 
+        public static void RotatePointAroundPoint(Vector2 basePoint, ref Vector2 pointToRotate, float radiansToChangeBy)
+        {
+            double xDistance = pointToRotate.X - basePoint.X;
+            double yDistance = pointToRotate.Y - basePoint.Y;
+            if (xDistance == 0 && yDistance == 0)
+                return;
+
+            double distance = xDistance * xDistance + yDistance * yDistance;
+            distance = (float)System.Math.Pow(distance, .5);
+
+            double angle = System.Math.Atan2(yDistance, xDistance);
+            angle += radiansToChangeBy;
+
+            pointToRotate.X = (float)(System.Math.Cos(angle) * distance + basePoint.X);
+            pointToRotate.Y = (float)(System.Math.Sin(angle) * distance + basePoint.Y);
+
+        }
+
         public static float RoundFloat(float valueToRound, float multipleOf)
         {
             return ((int)(System.Math.Sign(valueToRound) * .5f + valueToRound / multipleOf)) * multipleOf;
+        }
+
+        public static decimal RoundDecimal(decimal valueToRound, decimal multipleOf)
+        {
+            return ((int)(System.Math.Sign(valueToRound) * .5m + valueToRound / multipleOf)) * multipleOf;
         }
 
         /// <summary>

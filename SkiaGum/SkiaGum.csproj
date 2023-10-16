@@ -48,6 +48,18 @@
       <Link>Graphics\Animation\AnimationFrame.cs</Link>
     </Compile>
     <Compile Include="..\Gum\Managers\StandardElementsManager.cs" Link="Managers\StandardElementsManager.cs" />
+    <Compile Include="..\Gum\RenderingLibrary\Blend.cs">
+      <Link>RenderingLibrary\Blend.cs</Link>
+    </Compile>
+    <Compile Include="..\Gum\RenderingLibrary\IPositionedSizedObjectExtensionMethods.cs">
+      <Link>RenderingLibrary\IPositionedSizedObjectExtensionMethods.cs</Link>
+    </Compile>
+    <Compile Include="..\Gum\Wireframe\ElementWithState.cs">
+      <Link>Wireframe\ElementWithState.cs</Link>
+    </Compile>
+    <Compile Include="..\RenderingLibrary\Camera.cs">
+      <Link>RenderingLibrary\Camera.cs</Link>
+    </Compile>
     <Compile Include="..\RenderingLibrary\Content\IContentLoader.cs">
       <Link>Content\IContentLoader.cs</Link>
     </Compile>
@@ -60,6 +72,15 @@
     <Compile Include="..\RenderingLibrary\Graphics\IAspectRatio.cs">
       <Link>Graphics\IAspectRatio.cs</Link>
     </Compile>
+    <Compile Include="..\RenderingLibrary\Graphics\IRenderableIpso.cs">
+      <Link>IRenderableIpso.cs</Link>
+    </Compile>
+    <Compile Include="..\RenderingLibrary\Graphics\IVisible.cs">
+      <Link>IVisible.cs</Link>
+    </Compile>
+    <Compile Include="..\RenderingLibrary\Graphics\Layer.cs">
+      <Link>RenderingLibrary\Layer.cs</Link>
+    </Compile>
     <Compile Include="..\RenderingLibrary\Graphics\LayerCameraSettings.cs">
       <Link>Graphics\LayerCameraSettings.cs</Link>
     </Compile>
@@ -69,6 +90,12 @@
     <Compile Include="..\RenderingLibrary\Graphics\TextOverflowMode.cs" Link="Graphics\TextOverflowMode.cs" />
     <Compile Include="..\RenderingLibrary\Graphics\VerticalAlignment.cs">
       <Link>Graphics\VerticalAlignment.cs</Link>
+    </Compile>
+    <Compile Include="..\RenderingLibrary\IPositionedSizedObject.cs">
+      <Link>IPositionedSizedObject.cs</Link>
+    </Compile>
+    <Compile Include="..\RenderingLibrary\Math\MathFunctions.cs">
+      <Link>RenderingLibrary\MathFunctions.cs</Link>
     </Compile>
   </ItemGroup>
 
