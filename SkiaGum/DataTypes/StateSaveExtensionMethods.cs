@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using Gum.DataTypes.Variables;
 using Gum.Managers;
 using System.Collections;
 using ToolsUtilities;

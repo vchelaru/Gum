@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace Gum.DataTypes
+﻿namespace Gum.DataTypes
 {
     public class NamedRectangle
     {

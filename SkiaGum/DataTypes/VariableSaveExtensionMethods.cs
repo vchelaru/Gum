@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Gum.DataTypes.Variables;
-using System.ComponentModel;
-
 using Gum.Managers;
 using ToolsUtilities;
 

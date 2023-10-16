@@ -2,9 +2,6 @@
 using Gum.DataTypes;
 using SkiaGum.Renderables;
 using SkiaSharp;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace SkiaGum.GueDeriving
 {

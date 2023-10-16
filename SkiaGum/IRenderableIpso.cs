@@ -1,10 +1,7 @@
 ﻿using SkiaGum.GueDeriving;
 using SkiaGum.Renderables;
 using SkiaSharp;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Text;
 
 namespace RenderingLibrary.Graphics
 {

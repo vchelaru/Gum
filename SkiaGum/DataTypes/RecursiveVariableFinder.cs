@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Gum.DataTypes.Variables;
 using Gum.Wireframe;
 using GumDataTypes.Variables;
-using System.Collections.ObjectModel;
 
 namespace Gum.DataTypes
 {

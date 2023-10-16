@@ -1,11 +1,7 @@
 ﻿using Gum.Converters;
 using Gum.DataTypes;
-using Gum.Managers;
 using SkiaGum.Renderables;
 using SkiaSharp;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace SkiaGum.GueDeriving
 {

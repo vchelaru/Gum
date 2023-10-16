@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 #if MONOGAME
 using Texture2D = Microsoft.Xna.Framework.Graphics.Texture2D;
 #endif
-using System.Xml;
-using System.Xml.Serialization;
 
 namespace Gum.Graphics.Animation
 {

@@ -1,13 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using RenderingLibrary;
-using Gum.DataTypes;
-using Gum.Wireframe;
-using Gum.Managers;
-using Gum.Converters;
-using RenderingLibrary.Graphics;
+﻿using RenderingLibrary.Graphics;
 
 namespace Gum.RenderingLibrary
 {
