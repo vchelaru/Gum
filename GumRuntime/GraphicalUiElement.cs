@@ -5398,7 +5398,7 @@ namespace Gum.Wireframe
 
                 var color =
                     ((LineCircle)mContainedObjectAsIpso).Color;
-                color = color.WithRed((byte)valueAsInt);
+                color = color.WithGreen((byte)valueAsInt);
 
                 ((LineCircle)mContainedObjectAsIpso).Color = color;
                 handled = true;
