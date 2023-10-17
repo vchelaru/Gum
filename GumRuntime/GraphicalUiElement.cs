@@ -8,6 +8,7 @@ using GumRuntime;
 
 #if MONOGAME || XNA4
 using RenderingLibrary.Math.Geometry;
+using Gum.Graphics.Animation;
 #endif
 
 using RenderingLibrary;
@@ -27,7 +28,6 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
 using System.ComponentModel;
-using Gum.Graphics.Animation;
 using ToolsUtilitiesStandard.Helpers;
 using MathHelper = ToolsUtilitiesStandard.Helpers.MathHelper;
 using Vector2 = System.Numerics.Vector2;
