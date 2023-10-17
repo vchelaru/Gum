@@ -89,8 +89,8 @@ namespace GumRuntime
                     {
                         LineRectangle lineRectangle = new LineRectangle(systemManagers);
                         lineRectangle.Color = Color.FromArgb(
-                            255,
 #if GUM
+                            255,
                             Gum.ToolStates.GumState.Self.ProjectState.GeneralSettings.OutlineColorR,
                             Gum.ToolStates.GumState.Self.ProjectState.GeneralSettings.OutlineColorG,
                             Gum.ToolStates.GumState.Self.ProjectState.GeneralSettings.OutlineColorB

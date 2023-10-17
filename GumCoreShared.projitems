@@ -87,6 +87,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\TextureFlipAnimation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\TimedSpriteSheetAnimation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\VerticalAlignment.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\XNAExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\IPositionedSizedObject.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Math\FloatRectangle.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Math\Geometry\Line.cs" />
@@ -101,6 +102,10 @@
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\SystemManagers.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ToolsUtilities\FileManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ToolsUtilities\FilePath.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ToolsUtilities\Helpers\ColorExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ToolsUtilities\Helpers\MathHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ToolsUtilities\Helpers\Matrix4x4Extensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ToolsUtilities\Helpers\Vector3Extensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ToolsUtilities\ReflectionManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ToolsUtilities\StringFunctions.cs" />
   </ItemGroup>
