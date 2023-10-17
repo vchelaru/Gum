@@ -13,6 +13,7 @@ using Gum.PropertyGridHelpers.Converters;
 #endif
 using Vector2 = System.Numerics.Vector2;
 using Matrix = System.Numerics.Matrix4x4;
+using System.Linq;
 
 namespace Gum.Managers
 {
@@ -249,10 +250,6 @@ namespace Gum.Managers
                     Type = "string",
                     Value = null,
                     Name = "Contained Type"
-#if GUM
-                    ,
-                    CustomTypeConverter = new AvailableContainedTypeConverter()
-#endif
                 });
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Category = "Children", Type = "ChildrenLayout", Value = ChildrenLayout.Regular, Name = "Children Layout" });
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Category = "Children", Type = "float", Value = 0.0f, Name = "StackSpacing" });
@@ -277,6 +274,8 @@ namespace Gum.Managers
                 ApplySortValuesFromOrderInState(stateSave);
 
                 mDefaults.Add("Container", stateSave);
+
+
                 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             }
 
@@ -515,9 +514,6 @@ namespace Gum.Managers
         private void AddRotationVariable(StateSave stateSave)
         {
             var variable = new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation" };
-#if GUM
-            MakeDegreesAngle(variable);
-#endif
             stateSave.Variables.Add(variable);
         }
 
@@ -667,31 +663,6 @@ namespace Gum.Managers
             AddParentVariables(stateSave);
 #endif
         }
-
-#if GUM
-        private static void AddParentVariables(StateSave stateSave)
-        {
-            VariableSave variableSave = new VariableSave();
-            variableSave.SetsValue = true;
-            variableSave.Type = "string";
-            variableSave.Name = "Parent";
-            variableSave.Category = "Parent";
-            variableSave.CanOnlyBeSetInDefaultState = true;
-            variableSave.CustomTypeConverter = new AvailableInstancesConverter() { IncludeScreenBounds = true };
-
-            variableSave.PropertiesToSetOnDisplayer["IsEditable"] = true;
-
-            stateSave.Variables.Add(variableSave);
-
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = nameof(GraphicalUiElement.IgnoredByParentSize), Category = "Parent" });
-        }
-
-        public static void MakeDegreesAngle(VariableSave variableSave)
-        {
-            variableSave.PreferredDisplayer = typeof(AngleSelectorDisplay);
-            variableSave.PropertiesToSetOnDisplayer[nameof(AngleSelectorDisplay.TypeToPushToInstance)] = AngleType.Degrees;
-        }
-#endif
 
         public StateSave GetDefaultStateFor(string type, bool throwExceptionOnMissing = true)
         {

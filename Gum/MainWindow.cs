@@ -102,6 +102,7 @@ namespace Gum
 
 
             StandardElementsManager.Self.Initialize();
+            StandardElementsManagerGumTool.Self.Initialize();
 
 
             ToolCommands.GuiCommands.Self.Initialize(wireframeControl1);

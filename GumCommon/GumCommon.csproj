@@ -23,5 +23,8 @@
 		<Compile Include="..\Gum\DataTypes\BehaviorSaveExtensionMethods.cs">
 			<Link>DataTypes\BehaviorSaveExtensionMethods.cs</Link>
 		</Compile>
+		<Compile Include="..\Gum\DataTypes\GumProjectSaveExtensionMethods.cs">
+			<Link>DataTypes\GumProjectSaveExtensionMethods.cs</Link>
+		</Compile>
 	</ItemGroup>
 </Project>
