@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0-windows</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -31,10 +31,6 @@
     <Compile Include="..\RenderingLibrary\Graphics\TextOverflowMode.cs" Link="TextOverflowMode.cs" />
     <Compile Include="..\RenderingLibrary\Graphics\VerticalAlignment.cs" Link="VerticalAlignment.cs" />
   </ItemGroup>
-
-	<ItemGroup>
-		<PackageReference Include="MonoGame.Framework.DesktopGL.Core" Version="3.8.0.13" />
-	</ItemGroup>
 
 	<ItemGroup>
 	  <ProjectReference Include="..\GumDataTypes\GumDataTypesNet6.csproj" />

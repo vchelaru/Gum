@@ -1,4 +1,6 @@
-﻿namespace RenderingLibrary.Graphics
+﻿using System;
+
+namespace RenderingLibrary.Graphics
 {
     public class SortableLayer : Layer, IRenderable
     {
@@ -21,8 +23,9 @@
             }
             managers.Renderer.RenderLayer(managers, this);
         }
-        void IRenderable.PreRender() { }
 #endif
+        void IRenderable.PreRender() { }
+
         public float Z
         {
             get;

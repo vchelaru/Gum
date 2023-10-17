@@ -734,10 +734,10 @@ namespace RenderingLibrary.Graphics
                     int pageIndex;
                     var sourceRect = GetCharacterRect(c, lineNumber, ref point, out destRect, out pageIndex, textObject.FontScale);
 
-                    var origin = new Vector2((int)textObject.X, (int)(textObject.Y + yoffset));
+                    var origin = new Point((int)textObject.X, (int)(textObject.Y + yoffset));
                     var rotate = (float)-(textObject.Rotation * System.Math.PI / 180f);
 
-                    var rotatingPoint = new Vector2(origin.X + (int)destRect.X, origin.Y + (int)destRect.Y);
+                    var rotatingPoint = new Point(origin.X + (int)destRect.X, origin.Y + (int)destRect.Y);
                     MathFunctions.RotatePointAroundPoint(origin, ref rotatingPoint, rotate);
 
                     mCharRect.X = rotatingPoint.X;

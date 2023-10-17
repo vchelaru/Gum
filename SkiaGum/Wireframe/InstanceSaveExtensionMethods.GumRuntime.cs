@@ -8,17 +8,11 @@ using Microsoft.Xna.Framework.Graphics;
 #if !NO_XNA
 
 using RenderingLibrary;
-using RenderingLibrary.Content;
-using RenderingLibrary.Graphics;
 #if MONOGAME
 using RenderingLibrary.Math.Geometry;
 #endif
 #endif
 using System;
-
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace GumRuntime
 {

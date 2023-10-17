@@ -165,7 +165,6 @@ namespace SkiaGum.Renderables
             }
         }
 #else
-        public bool ClipsChildren { get; set; }
         public Microsoft.Xna.Framework.Graphics.BlendState BlendState
         {
             get
@@ -182,6 +181,7 @@ namespace SkiaGum.Renderables
 
 
 #endif
+        public bool ClipsChildren { get; set; }
 
 
         #region IVisible Implementation

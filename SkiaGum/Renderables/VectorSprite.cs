@@ -236,8 +236,6 @@ namespace SkiaGum
             }
         }
 #else
-        public bool ClipsChildren { get; set; }
-
         public Microsoft.Xna.Framework.Graphics.BlendState BlendState
         {
             get
@@ -252,6 +250,7 @@ namespace SkiaGum
 
         }
 #endif
+        public bool ClipsChildren { get; set; }
 
         public void PreRender() { }
 

@@ -1,7 +1,6 @@
 ﻿using Gum.Converters;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
-using Gum.Graphics.Animation;
 using Gum.Managers;
 using Gum.RenderingLibrary;
 using GumDataTypes.Variables;
@@ -9,6 +8,7 @@ using GumRuntime;
 
 #if MONOGAME || XNA4
 using RenderingLibrary.Math.Geometry;
+using Gum.Graphics.Animation;
 #endif
 
 using RenderingLibrary;
@@ -18,7 +18,6 @@ using RenderingLibrary.Math;
 #if SKIA
 using SkiaGum;
 using SkiaGum.GueDeriving;
-using SkiaGum.Managers;
 using SkiaGum.Renderables;
 using SkiaSharp;
 #endif

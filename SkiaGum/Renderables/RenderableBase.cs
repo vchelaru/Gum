@@ -12,16 +12,6 @@ using Matrix = System.Numerics.Matrix4x4;
 
 namespace SkiaGum.Renderables
 {
-    #region Gradient Type
-
-    public enum GradientType
-    {
-        Linear,
-        Radial
-    }
-
-    #endregion
-
     public class RenderableBase : IRenderableIpso, IVisible
     {
         #region Fields/Properties
@@ -311,8 +301,6 @@ namespace SkiaGum.Renderables
             }
         }
 #else
-        public bool ClipsChildren { get; set; }
-
         public Microsoft.Xna.Framework.Graphics.BlendState BlendState
         {
             get
@@ -327,6 +315,8 @@ namespace SkiaGum.Renderables
 
         }
 #endif
+        public bool ClipsChildren { get; set; }
+
         protected virtual SKPaint GetPaint(SKRect boundingRect, float absoluteRotation)
         {
             var effectiveColor = this.Color;
