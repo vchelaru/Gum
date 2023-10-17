@@ -37,25 +37,5 @@ namespace Gum.DataTypes
             }
         }
 
-#if GUM
-        public static FilePath GetFullPathXmlFile(this BehaviorSave behaviorSave)
-        {
-            return behaviorSave.GetFullPathXmlFile(behaviorSave.Name);
-        }
-
-        public static string GetFullPathXmlFile(this BehaviorSave behaviorSave, string behaviorName)
-        {
-            if (string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave.FullFileName))
-            {
-                return null;
-            }
-
-            string directory = FileManager.GetDirectory(ProjectManager.Self.GumProjectSave.FullFileName);
-
-            return directory + BehaviorReference.Subfolder + "\\" + behaviorName + "." + BehaviorReference.Extension;
-        }
-
-
-#endif
     }
 }

@@ -127,5 +127,9 @@ namespace SkiaGum.Wpf
             GraphicalUiElement.IsAllLayoutSuspended = wasSuspended;
         }
 
+        public void InvalidateSurface()
+        {
+            base.InvalidateVisual();
+        }
     }
 }

@@ -177,7 +177,8 @@ namespace Gum.Managers
                 }
                 else if(treeNode.Tag is BehaviorSave behaviorSave)
                 {
-                    fullFile = behaviorSave.GetFullPathXmlFile().FullPath;
+                    fullFile =
+                        GumCommands.Self.FileCommands.GetFullPathXmlFile(behaviorSave).FullPath;
                 }
                 else
                 {

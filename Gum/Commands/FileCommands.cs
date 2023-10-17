@@ -288,6 +288,23 @@ namespace Gum.Commands
 
         }
 
+        public FilePath GetFullPathXmlFile(BehaviorSave behaviorSave)
+        {
+            return GetFullPathXmlFile(behaviorSave, behaviorSave.Name);
+        }
+
+        static string GetFullPathXmlFile(BehaviorSave behaviorSave, string behaviorName)
+        {
+            if (string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave.FullFileName))
+            {
+                return null;
+            }
+
+            string directory = FileManager.GetDirectory(ProjectManager.Self.GumProjectSave.FullFileName);
+
+            return directory + BehaviorReference.Subfolder + "\\" + behaviorName + "." + BehaviorReference.Extension;
+        }
+
         public void Exit()
         {
             mainWindow.Close();

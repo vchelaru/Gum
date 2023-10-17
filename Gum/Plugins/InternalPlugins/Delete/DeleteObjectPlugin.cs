@@ -176,7 +176,7 @@ namespace Gum.Gui.Plugins
             {
                 var asBehaviorSave = deletedObject as BehaviorSave;
 
-                return asBehaviorSave.GetFullPathXmlFile();
+                return GumCommands.Self.FileCommands.GetFullPathXmlFile(asBehaviorSave);
             }
             else if (deletedObject is InstanceSave)
             {

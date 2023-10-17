@@ -13,10 +13,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Content\LoaderManager.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Include="..\GumRuntime\GraphicalUiElement.cs" Link="GraphicalUiElement.cs" />
-    <Compile Include="..\Gum\DataTypes\BehaviorSaveExtensionMethods.cs">
-      <Link>DataTypes\BehaviorSaveExtensionMethods.cs</Link>
-    </Compile>
     <Compile Include="..\Gum\DataTypes\ComponentSaveExtensionMethods.cs">
       <Link>DataTypes\ComponentSaveExtensionMethods.cs</Link>
     </Compile>
@@ -59,9 +60,6 @@
     </Compile>
     <Compile Include="..\RenderingLibrary\Camera.cs">
       <Link>RenderingLibrary\Camera.cs</Link>
-    </Compile>
-    <Compile Include="..\RenderingLibrary\Content\IContentLoader.cs">
-      <Link>Content\IContentLoader.cs</Link>
     </Compile>
     <Compile Include="..\RenderingLibrary\Graphics\GradientType.cs">
       <Link>Graphics\GradientType.cs</Link>
@@ -108,6 +106,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\GumCommon\GumCommon.csproj" />
     <ProjectReference Include="..\GumDataTypes\GumDataTypesNet6.csproj" />
     <ProjectReference Include="..\ToolsUtilities\ToolsUtilitiesStandard.csproj" />
   </ItemGroup>

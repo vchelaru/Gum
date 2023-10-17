@@ -1,6 +1,11 @@
 ﻿namespace SkiaGum.Managers
 {
-    public interface ISystemManagers
+    public interface ISurfaceInvalidatable
+    {
+        void InvalidateSurface();
+    }
+
+    public interface ISystemManagers : ISurfaceInvalidatable
     {
         void InvalidateSurface();
         bool EnableTouchEvents { get; set; }
