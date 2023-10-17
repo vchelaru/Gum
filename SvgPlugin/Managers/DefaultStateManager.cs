@@ -182,11 +182,11 @@ namespace SkiaPlugin.Managers
                 arcState.Variables.Add(new VariableSave { Type = "float", Value = 10f, Category = "Arc", Name = "Thickness", SetsValue = true });
 
                 var startAngle = new VariableSave { Type = "float", Value = 0f, Category = "Arc", Name = "StartAngle", SetsValue = true };
-                StandardElementsManager.MakeDegreesAngle(startAngle);
+                StandardElementsManagerGumTool.MakeDegreesAngle(startAngle);
                 arcState.Variables.Add(startAngle);
 
                 var sweepAngle = new VariableSave { Type = "float", Value = 90f, Category = "Arc", Name = "SweepAngle", SetsValue = true };
-                StandardElementsManager.MakeDegreesAngle(sweepAngle);
+                StandardElementsManagerGumTool.MakeDegreesAngle(sweepAngle);
                 arcState.Variables.Add(sweepAngle);
 
                 arcState.Variables.Add(new VariableSave { Type = "bool", Value = false, Category = "Arc", Name = "IsEndRounded", SetsValue = true });

@@ -1,4 +1,5 @@
 ﻿using Gum.DataTypes.Variables;
+using Gum.Plugins;
 using Gum.PropertyGridHelpers.Converters;
 using Gum.Wireframe;
 using System;
@@ -14,10 +15,15 @@ namespace Gum.Managers
     {
         public void Initialize()
         {
-            StandardElementsManager.Self.DefaultStates["Container"].Variables.First(item => item.Name == "Contained Type").CustomTypeConverter =
+            var defaultStates =
+                StandardElementsManager.Self.DefaultStates;
+            defaultStates["Container"].Variables.First(item => item.Name == "Contained Type").CustomTypeConverter =
                 new AvailableContainedTypeConverter();
 
-            foreach(var state in StandardElementsManager.Self.DefaultStates.Values)
+            defaultStates["Component"].Variables
+                .Add(new VariableSave { SetsValue = true, Type = "State", Value = null, Name = "State", CustomTypeConverter = new AvailableStatesConverter(null) });
+
+            foreach (var state in StandardElementsManager.Self.DefaultStates.Values)
             {
                 foreach(var variable in state.Variables)
                 {
@@ -25,31 +31,37 @@ namespace Gum.Managers
                     {
                         MakeDegreesAngle(variable);
                     }
+                    else if (variable.Type == "string" &&  variable.Name == "Parent")
+                    {
+                        variable.CustomTypeConverter = new AvailableInstancesConverter() { IncludeScreenBounds = true };
+                        variable.PropertiesToSetOnDisplayer["IsEditable"] = true;
+                    }
+                    else if(variable.Type == "State" && variable.Name == "State")
+                    {
+                        variable.CustomTypeConverter = new AvailableStatesConverter(null);
+                    }
                 }
             }
+
+            RefreshStateVariablesThroughPlugins();
+
         }
 
-        private static void AddParentVariables(StateSave stateSave)
-        {
-            VariableSave variableSave = new VariableSave();
-            variableSave.SetsValue = true;
-            variableSave.Type = "string";
-            variableSave.Name = "Parent";
-            variableSave.Category = "Parent";
-            variableSave.CanOnlyBeSetInDefaultState = true;
-            variableSave.CustomTypeConverter = new AvailableInstancesConverter() { IncludeScreenBounds = true };
-
-            variableSave.PropertiesToSetOnDisplayer["IsEditable"] = true;
-
-            stateSave.Variables.Add(variableSave);
-
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = nameof(GraphicalUiElement.IgnoredByParentSize), Category = "Parent" });
-        }
 
         public static void MakeDegreesAngle(VariableSave variableSave)
         {
             variableSave.PreferredDisplayer = typeof(AngleSelectorDisplay);
             variableSave.PropertiesToSetOnDisplayer[nameof(AngleSelectorDisplay.TypeToPushToInstance)] = AngleType.Degrees;
+        }
+
+        public void RefreshStateVariablesThroughPlugins()
+        {
+#if GUM
+            foreach (var kvp in StandardElementsManager.Self.DefaultStates)
+            {
+                PluginManager.Self.ModifyDefaultStandardState(kvp.Key, kvp.Value);
+            }
+#endif
         }
 
 

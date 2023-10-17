@@ -456,16 +456,6 @@ namespace Gum.Managers
                 var stateSave = new StateSave();
                 stateSave.Name = "Default";
 
-#if GUM
-                // Victor Chelaru
-                // August 21, 2014
-                // Not sure why we have
-                // this here.  Doing so would
-                // create an endless loop...
-                //stateSave.Variables.Add(new VariableSave { Type = "string", Value = "Default", Name = "State", CustomTypeConverter = new AvailableStatesConverter(null)});
-                // The type used to be "string" but we want to differentiate it from actual strings so we use "State"
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "State", Value = null, Name = "State", CustomTypeConverter = new AvailableStatesConverter(null) });
-#endif
 
                 ApplySortValuesFromOrderInState(stateSave);
 
@@ -494,7 +484,6 @@ namespace Gum.Managers
                 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             }
 
-            RefreshStateVariablesThroughPlugins();
             
             // We shouldn't do this because states above may explicitly not want to set values - like the variable for state
             //foreach (var defaultState in mDefaults.Values)
@@ -529,16 +518,6 @@ namespace Gum.Managers
             stateSave.VariableLists.Add(variableListSave);
         }
 
-        public void RefreshStateVariablesThroughPlugins()
-        {
-#if GUM
-            foreach (var kvp in DefaultStates)
-            {
-                PluginManager.Self.ModifyDefaultStandardState(kvp.Key, kvp.Value);
-            }
-#endif
-        }
-
         private void AddEventVariables(StateSave stateSave, bool defaultHasEvents = false)
         {
             stateSave.Variables.Add(
@@ -564,10 +543,6 @@ namespace Gum.Managers
                 Type = "State",
                 Value = "Default",
                 Name = "State"
-#if GUM
-,
-                CustomTypeConverter = new AvailableStatesConverter(null)
-#endif
             });
         }
 
@@ -659,9 +634,23 @@ namespace Gum.Managers
             }
 
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = null, Name = "Guide", Category = "Position" });
-#if GUM
             AddParentVariables(stateSave);
-#endif
+        }
+
+
+        private static void AddParentVariables(StateSave stateSave)
+        {
+            VariableSave variableSave = new VariableSave();
+            variableSave.SetsValue = true;
+            variableSave.Type = "string";
+            variableSave.Name = "Parent";
+            variableSave.Category = "Parent";
+            variableSave.CanOnlyBeSetInDefaultState = true;
+
+
+            stateSave.Variables.Add(variableSave);
+
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = nameof(GraphicalUiElement.IgnoredByParentSize), Category = "Parent" });
         }
 
         public StateSave GetDefaultStateFor(string type, bool throwExceptionOnMissing = true)
