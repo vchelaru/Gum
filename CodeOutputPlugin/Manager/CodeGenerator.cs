@@ -5,6 +5,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.ToolStates;
+using GumDataTypes.Variables;
 using Newtonsoft.Json.Linq;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Math;
@@ -45,6 +46,7 @@ namespace CodeOutputPlugin.Manager
         public string ThisPrefix { get; set; }
         public InstanceSave Instance { get; set; }
         public ElementSave Element { get; set; }
+        public StringBuilder StringBuilder { get; set; }
 
         public CodeOutputProjectSettings CodeOutputProjectSettings { get; set; }
 
@@ -286,11 +288,11 @@ namespace CodeOutputPlugin.Manager
             var isVariableOwnerAbsoluteLayout = false;
             if (context.Instance != null)
             {
-                isVariableOwnerAbsoluteLayout = context.Instance.BaseType?.EndsWith("/AbsoluteLayout") == true;
+                isVariableOwnerAbsoluteLayout = IsOfXamarinFormsType(context.Instance, "AbsoluteLayout");
             }
             else
             {
-                isVariableOwnerAbsoluteLayout = context.Element.BaseType?.EndsWith("/AbsoluteLayout") == true;
+                isVariableOwnerAbsoluteLayout = IsOfXamarinFormsType(context.Element, "AbsoluteLayout");
             }
             var isContainedInStackLayout = parentBaseType?.EndsWith("/StackLayout") == true;
 
@@ -666,11 +668,11 @@ namespace CodeOutputPlugin.Manager
             var isVariableOwnerAbsoluteLayout = false;
             if (context.Instance != null)
             {
-                isVariableOwnerAbsoluteLayout = context.Instance.BaseType?.EndsWith("/AbsoluteLayout") == true;
+                isVariableOwnerAbsoluteLayout = IsOfXamarinFormsType( context.Instance, "AbsoluteLayout");
             }
             else
             {
-                isVariableOwnerAbsoluteLayout = context.Element.BaseType?.EndsWith("/AbsoluteLayout") == true;
+                isVariableOwnerAbsoluteLayout = IsOfXamarinFormsType(context.Element, "AbsoluteLayout");
             }
 
             #region Get recursive values for position and size
@@ -1627,25 +1629,9 @@ namespace CodeOutputPlugin.Manager
                 var elementBaseType = element?.BaseType;
                 var baseElements = ObjectFinder.Self.GetBaseElements(element);
 
-                var isThisAbsoluteLayout = elementBaseType?.EndsWith("/AbsoluteLayout") == true;
-                if (!isThisAbsoluteLayout)
-                {
-                    isThisAbsoluteLayout = baseElements.Any(item => item.BaseType?.EndsWith("/AbsoluteLayout") == true);
-                }
-
-
-                var isStackLayout = elementBaseType?.EndsWith("/StackLayout") == true;
-                if (!isStackLayout)
-                {
-                    isStackLayout = baseElements.Any(item => item.BaseType?.EndsWith("/StackLayout") == true);
-                }
-
-                var isSkiaCanvasView = elementBaseType?.EndsWith("/SkiaGumCanvasView") == true;
-                if (!isSkiaCanvasView)
-                {
-                    // see if this inherits from a skia gum canvas view
-                    isSkiaCanvasView = baseElements.Any(item => item.BaseType?.EndsWith("/SkiaGumCanvasView") == true);
-                }
+                var isThisAbsoluteLayout = element != null && IsOfXamarinFormsType(element, "AbsoluteLayout");
+                var isStackLayout = element != null && IsOfXamarinFormsType(element, "StackLayout");
+                var isSkiaCanvasView = element != null && IsOfXamarinFormsType(element, "SkiaGumCanvasView");
 
                 if (isThisAbsoluteLayout)
                 {
@@ -1671,6 +1657,7 @@ namespace CodeOutputPlugin.Manager
             context.Element = element;
             context.TabCount = tabCount;
             context.CodeOutputProjectSettings = projectSettings;
+            context.StringBuilder = stringBuilder;
             FillWithVariableAssignments(visualApi, stringBuilder, context);
 
             stringBuilder.AppendLine();
@@ -1724,18 +1711,45 @@ namespace CodeOutputPlugin.Manager
 
             }
 
+            DoInitialSizeUpdates(context);
+
 
             tabCount--;
             stringBuilder.AppendLine(ToTabs(tabCount) + "}");
         }
 
+        private static void DoInitialSizeUpdates(CodeGenerationContext context)
+        {
+            var element = context.Element;
+
+            foreach(var instance in element.Instances)
+            {
+                var isSkiaSharpCanvasView = IsOfXamarinFormsType(instance, "SkiaGumCanvasView");
+
+                if(isSkiaSharpCanvasView)
+                {
+                    var variableFinder = new RecursiveVariableFinder(instance, element);
+
+                    // See if its width or height units depend on children:
+                    var heightUnits = variableFinder.GetValue<DimensionUnitType>("Height Units");
+                    var widthUnits = variableFinder.GetValue<DimensionUnitType>("Width Units");
+
+                    if (heightUnits == DimensionUnitType.RelativeToChildren || widthUnits == DimensionUnitType.RelativeToChildren)
+                    {
+                        context.StringBuilder.AppendLine("// This hurts performance a little but it's needed because of an iOS MAUI bug where these do not behave the same as in Android");
+                        context.StringBuilder.AppendLine(context.Tabs + instance.Name + ".ForceGumLayout();");
+                        context.StringBuilder.AppendLine(context.Tabs + instance.Name + ".UpdateDimensionsFromAutoSize();");
+                    }
+                }
+            }
+        }
+
         private static bool GetIfShouldAddMainLayout(ElementSave element, CodeOutputProjectSettings projectSettings)
         {
             var elementBaseType = element?.BaseType;
-            var isThisAbsoluteLayout = elementBaseType?.EndsWith("/AbsoluteLayout") == true;
-            var isThisStackLayout = elementBaseType?.EndsWith("/StackLayout") == true;
-
-            var isSkiaCanvasView = elementBaseType?.EndsWith("/SkiaGumCanvasView") == true;
+            var isThisAbsoluteLayout = IsOfXamarinFormsType(element, "AbsoluteLayout");
+            var isThisStackLayout =  IsOfXamarinFormsType(element, "StackLayout");
+            var isSkiaCanvasView = IsOfXamarinFormsType(element, "SkiaGumCanvasView");
 
             var isContainer = elementBaseType == "Container";
 
@@ -2062,7 +2076,7 @@ namespace CodeOutputPlugin.Manager
 
         private static bool IsOfXamarinFormsType(ElementSave element, string xamarinFormsType)
         {
-            bool isRightType = element.Name.EndsWith("/" + xamarinFormsType);
+            bool isRightType = element?.Name.EndsWith("/" + xamarinFormsType) == true;
             if (!isRightType)
             {
                 var elementBaseType = element?.BaseType;
