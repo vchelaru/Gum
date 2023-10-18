@@ -168,6 +168,7 @@
     <Compile Include="DataTypes\BehaviorSaveExtensionMethods.cs" />
     <Compile Include="DataTypes\ComponentSaveExtensionMethods.cs" />
     <Compile Include="DataTypes\ElementSaveExtensionMethods.cs" />
+    <Compile Include="DataTypes\ElementSaveExtensionMethods.GumTool.cs" />
     <Compile Include="DataTypes\GumProjectSaveExtensionMethods.cs" />
     <Compile Include="DataTypes\InstanceSaveExtensionMethods.cs" />
     <Compile Include="DataTypes\PluginSettingsSave.cs" />

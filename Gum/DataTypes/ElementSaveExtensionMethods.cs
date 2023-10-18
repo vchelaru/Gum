@@ -4,9 +4,6 @@ using Gum.DataTypes.Variables;
 using Gum.Managers;
 using ToolsUtilities;
 
-#if GUM
-using Gum.ToolStates;
-#endif
 namespace Gum.DataTypes
 {
     public class VariableSaveSorter : IComparer<VariableSave>
@@ -143,9 +140,7 @@ namespace Gum.DataTypes
                         // editor so we don't want to mark the object as modified
                         // when these properties are set.
                         existingVariable.Category = variableSave.Category;
-#if !WINDOWS_8 && !UWP
                         existingVariable.CustomTypeConverter = variableSave.CustomTypeConverter;
-#endif
                         existingVariable.ExcludedValuesForEnum.Clear();
                         existingVariable.ExcludedValuesForEnum.AddRange(variableSave.ExcludedValuesForEnum);
 
@@ -258,123 +253,7 @@ namespace Gum.DataTypes
 
 
         }
-#if GUM
-        public static FilePath GetFullPathXmlFile(this ElementSave elementSave)
-        {
-            return elementSave?.GetFullPathXmlFile(elementSave.Name);
-        }
 
-
-        public static FilePath GetFullPathXmlFile(this ElementSave elementSave, string elementSaveName)
-        {
-            var gumProject = ProjectManager.Self.GumProjectSave;
-            if (string.IsNullOrEmpty(gumProject.FullFileName))
-            {
-                return null;
-            }
-
-            var extension = elementSave.FileExtension;
-
-            var reference =
-                gumProject.ScreenReferences.FirstOrDefault(item => item.Name == elementSave.Name) ??
-                gumProject.ComponentReferences.FirstOrDefault(item => item.Name == elementSave.Name) ??
-                gumProject.StandardElementReferences.FirstOrDefault(item => item.Name == elementSave.Name);
-
-            FilePath gumDirectory = FileManager.GetDirectory(gumProject.FullFileName);
-            if(!string.IsNullOrWhiteSpace(reference?.Link))
-            {
-                return gumDirectory.Original + reference.Link;
-            }
-            else
-            {
-
-                return gumDirectory.Original + elementSave.Subfolder + "\\" + elementSaveName + "." + extension;
-            }
-        }
-
-
-        private static void FillWithDefaultRecursively(ElementSave element, StateSave stateSave)
-        {
-            foreach(var variable in element.DefaultState.Variables)
-            {
-                var alreadyExists = stateSave.Variables.Any(item => item.Name == variable.Name);
-
-                if(!alreadyExists)
-                {
-                    stateSave.Variables.Add(variable);
-                }
-            }
-
-            if(!string.IsNullOrEmpty(element.BaseType))
-            {
-                var baseElement = ObjectFinder.Self.GetElementSave(element.BaseType);
-                if (baseElement != null)
-                {
-                    FillWithDefaultRecursively(baseElement, stateSave);
-                }
-            }
-        }
-#endif
-
-        /// <summary>
-        /// Returns the VariableSave from the argument element or its base element.  
-        /// If forceDefault is set to true, then only the element's default state will be checked.
-        /// </summary>
-        /// <param name="element"></param>
-        /// <param name="variable"></param>
-        /// <param name="forceDefault"></param>
-        /// <returns></returns>
-        public static VariableSave GetVariableFromThisOrBase(this ElementSave element, string variable, bool forceDefault = false)
-        {
-            StateSave stateToPullFrom = element.DefaultState;
-#if GUM
-            if (element == SelectedState.Self.SelectedElement &&
-                SelectedState.Self.SelectedStateSave != null &&
-                !forceDefault)
-            {
-                stateToPullFrom = SelectedState.Self.SelectedStateSave;
-            }
-#endif
-            return stateToPullFrom.GetVariableRecursive(variable);
-        }
-
-        public static VariableListSave GetVariableListFromThisOrBase(this ElementSave element, string variable, bool forceDefault = false)
-        {
-            var stateToPullFrom = element.DefaultState;
-
-#if GUM
-            if (element == SelectedState.Self.SelectedElement &&
-                SelectedState.Self.SelectedStateSave != null &&
-                !forceDefault)
-            {
-                stateToPullFrom = SelectedState.Self.SelectedStateSave;
-            }
-#endif
-            return stateToPullFrom.GetVariableListRecursive(variable);
-        }
-
-        public static object GetValueFromThisOrBase(this ElementSave element, string variable, bool forceDefault = false)
-        {
-            StateSave stateToPullFrom = element.DefaultState;
-
-#if GUM
-            if (element == SelectedState.Self.SelectedElement &&
-                SelectedState.Self.SelectedStateSave != null &&
-                !forceDefault)
-            {
-                stateToPullFrom = SelectedState.Self.SelectedStateSave;
-            }
-#endif
-            VariableSave variableSave = stateToPullFrom.GetVariableRecursive(variable);
-            if (variableSave != null)
-            {
-                return variableSave.Value;
-            }
-            else
-            {
-                return null;
-            }
-        }
 
         public static StateSave GetStateSaveRecursively(this ElementSave element, string stateName)
         {

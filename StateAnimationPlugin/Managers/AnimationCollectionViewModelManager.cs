@@ -84,7 +84,7 @@ namespace StateAnimationPlugin.Managers
 
         public string GetAbsoluteAnimationFileNameFor(string elementName)
         {
-            var fullPathXmlForElement = ElementSaveExtensionMethods.GetFullPathXmlFile(SelectedState.Self.SelectedElement, elementName);
+            var fullPathXmlForElement = ElementSaveExtensionMethodsGumTool.GetFullPathXmlFile(SelectedState.Self.SelectedElement, elementName);
 
             if (fullPathXmlForElement == null)
             {

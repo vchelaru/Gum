@@ -26,5 +26,6 @@
 		<Compile Include="..\Gum\DataTypes\GumProjectSaveExtensionMethods.cs">
 			<Link>DataTypes\GumProjectSaveExtensionMethods.cs</Link>
 		</Compile>
+		<Compile Include="..\Gum\Managers\StandardElementsManager.cs" Link="Managers\StandardElementsManager.cs" />
 	</ItemGroup>
 </Project>

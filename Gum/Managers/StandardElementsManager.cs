@@ -6,11 +6,6 @@ using RenderingLibrary.Graphics;
 using Gum.RenderingLibrary;
 using Gum.Wireframe;
 
-#if GUM
-using WpfDataUi.Controls;
-using Gum.Plugins;
-using Gum.PropertyGridHelpers.Converters;
-#endif
 using Vector2 = System.Numerics.Vector2;
 using Matrix = System.Numerics.Matrix4x4;
 using System.Linq;
@@ -653,6 +648,8 @@ namespace Gum.Managers
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = nameof(GraphicalUiElement.IgnoredByParentSize), Category = "Parent" });
         }
 
+        public Func<string, StateSave> CustomGetDefaultState;
+
         public StateSave GetDefaultStateFor(string type, bool throwExceptionOnMissing = true)
         {
             if (mDefaults == null)
@@ -671,15 +668,15 @@ namespace Gum.Managers
             else
             {
 
-                StateSave customState = null;
-#if GUM
-                customState = PluginManager.Self.GetDefaultStateFor(type);
-#elif SKIA
-                // In Skia we will assume that any type that comes through has a default state:
-                customState = new StateSave();
-                AddPositioningVariables(customState, addOriginVariables: true);
-                mDefaults[type] = customState;
-#endif
+                StateSave customState = CustomGetDefaultState?.Invoke(type);
+                // Vic says - not sure if this is still used. If so, we need to create a 
+                // CustomGetDefaultState that returns a state as shown below.
+//#if SKIA
+//                // In Skia we will assume that any type that comes through has a default state:
+//                customState = new StateSave();
+//                AddPositioningVariables(customState, addOriginVariables: true);
+//                mDefaults[type] = customState;
+//#endif
 
                 if (customState == null && throwExceptionOnMissing)
                 {

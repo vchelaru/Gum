@@ -46,7 +46,7 @@
     <Compile Include="..\Gum\Graphics\Animation\AnimationFrame.cs">
       <Link>Graphics\Animation\AnimationFrame.cs</Link>
     </Compile>
-    <Compile Include="..\Gum\Managers\StandardElementsManager.cs" Link="Managers\StandardElementsManager.cs" />
+
     <Compile Include="..\Gum\RenderingLibrary\Blend.cs">
       <Link>RenderingLibrary\Blend.cs</Link>
     </Compile>

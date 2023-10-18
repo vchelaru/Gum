@@ -102,6 +102,9 @@ namespace Gum
 
 
             StandardElementsManager.Self.Initialize();
+            StandardElementsManager.Self.CustomGetDefaultState = 
+                PluginManager.Self.GetDefaultStateFor;
+
             StandardElementsManagerGumTool.Self.Initialize();
 
 
