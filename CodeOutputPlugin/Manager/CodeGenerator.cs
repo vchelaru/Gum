@@ -615,6 +615,7 @@ namespace CodeOutputPlugin.Manager
 
             if (isVariableOwnerSkiaGumCanvasView)
             {
+                var generateAfterAutoSizeChanged = false;
                 if (heightUnits == DimensionUnitType.RelativeToChildren)
                 {
                     stringBuilder.AppendLine(
@@ -626,6 +627,10 @@ namespace CodeOutputPlugin.Manager
                         // We may want to have some kind of explicit call that resizes it outside of rendering, but this hooks into the
                         // existing system, so let's just do that:
                         stringBuilder.AppendLine($"{codePrefix}.HeightRequest = 1;");
+
+                        // On IOS there's a bug where the page needs to be forcefully refreshed to handle the resize. This is a workaround. Not sure if we'll ever test this in the future to see  if it's fixed:
+                        // This is Tula-specific so this will have to be generalized if anyone else uses this:
+                        generateAfterAutoSizeChanged = true;
                     }
                 }
                 if (widthUnits == DimensionUnitType.RelativeToChildren)
@@ -635,7 +640,13 @@ namespace CodeOutputPlugin.Manager
                     if(context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.Maui)
                     {
                         stringBuilder.Append($"{codePrefix}.WidthRequest = 1;");
+                        generateAfterAutoSizeChanged = true;
+
                     }
+                }
+                if(generateAfterAutoSizeChanged)
+                {
+                    stringBuilder.AppendLine($"{codePrefix}.AfterAutoSizeChanged += () => (BioCheck.DependencyInjection.DiCommon.TryGet<BioCheck.Managers.BioCheckNavigation>().NavigationStack.LastOrDefault() as BioCheck.Pages.BioCheckPage).CallInvalidateMeasure();");
                 }
             }
         }
@@ -1231,6 +1242,7 @@ namespace CodeOutputPlugin.Manager
 
             if (isVariableOwnerSkiaGumCanvasView)
             {
+                var generateAfterAutoSizeChanged = false;
                 if (heightUnits == DimensionUnitType.RelativeToChildren)
                 {
                     stringBuilder.AppendLine(
@@ -1238,6 +1250,7 @@ namespace CodeOutputPlugin.Manager
                     if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.Maui)
                     {
                         stringBuilder.AppendLine($"{codePrefix}.HeightRequest = 1;");
+                        generateAfterAutoSizeChanged = true;
                     }
                 }
                 if (widthUnits == DimensionUnitType.RelativeToChildren)
@@ -1247,7 +1260,13 @@ namespace CodeOutputPlugin.Manager
                     if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.Maui)
                     {
                         stringBuilder.AppendLine($"{codePrefix}.HeightRequest = 1;");
+                        generateAfterAutoSizeChanged = true;
                     }
+                }
+
+                if (generateAfterAutoSizeChanged)
+                {
+                    stringBuilder.AppendLine($"{codePrefix}.AfterAutoSizeChanged += () => (BioCheck.DependencyInjection.DiCommon.TryGet<BioCheck.Managers.BioCheckNavigation>().NavigationStack.LastOrDefault() as BioCheck.Pages.BioCheckPage).CallInvalidateMeasure();");
                 }
             }
 
