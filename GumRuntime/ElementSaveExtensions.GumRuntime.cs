@@ -170,40 +170,28 @@ namespace GumRuntime
             graphicalElement.AddStates(elementSave.States);
         }
 
+        public static Func<string, SystemManagers, IRenderable> CustomCreateGraphicalComponentFunc { get; set; }
+
         public static void CreateGraphicalComponent(this GraphicalUiElement graphicalElement, ElementSave elementSave, SystemManagers systemManagers)
         {
-            IRenderable containedObject = null;
-
-            bool handled = InstanceSaveExtensionMethods.TryHandleAsBaseType(elementSave.Name, systemManagers, out containedObject);
-
-#if GUM
-            if (!handled)
+            if(CustomCreateGraphicalComponentFunc == null)
             {
-                string type = (elementSave is StandardElementSave) 
-                    ? elementSave.Name 
-                    : elementSave.BaseType;
-
-                containedObject =
-                    Gum.Plugins.PluginManager.Self.CreateRenderableForType(type);
-
-                handled = containedObject != null;
+                throw new InvalidOperationException("The CustomCreateGraphicalComponentFunc must be set before calling CreateGraphicalComponent");
             }
-#endif
 
-            if (handled)
+            var containedObject = CustomCreateGraphicalComponentFunc(elementSave.Name, systemManagers);
+
+            if(containedObject != null)
             {
                 graphicalElement.SetContainedObject(containedObject);
             }
-            else
+            else if(containedObject == null && !string.IsNullOrEmpty(elementSave.BaseType))
             {
-                if (elementSave != null && elementSave is ComponentSave)
-                {
-                    var baseElement = Gum.Managers.ObjectFinder.Self.GetElementSave(elementSave.BaseType);
+                var baseElement = ObjectFinder.Self.GetElementSave(elementSave.BaseType);
 
-                    if (baseElement != null)
-                    {
-                        graphicalElement.CreateGraphicalComponent(baseElement, systemManagers);
-                    }
+                if(baseElement != null)
+                {
+                    CreateGraphicalComponent(graphicalElement, baseElement, systemManagers);
                 }
             }
         }
