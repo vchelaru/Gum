@@ -194,19 +194,8 @@ namespace Gum.DataTypes
                             Name = stateSaveCategory.Name + "State",
                             Type = "string",
                             Value = null
-#if GUM
-,
-                            CustomTypeConverter = new Gum.PropertyGridHelpers.Converters.AvailableStatesConverter(stateSaveCategory.Name)
-#endif
 
                         });
-                    }
-                    else
-                    {
-#if GUM
-
-                        foundVariable.CustomTypeConverter = new Gum.PropertyGridHelpers.Converters.AvailableStatesConverter(stateSaveCategory.Name);
-#endif
                     }
                 }
 

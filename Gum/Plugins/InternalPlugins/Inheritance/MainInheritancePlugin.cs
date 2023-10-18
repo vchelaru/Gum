@@ -131,6 +131,7 @@ namespace Gum.Plugins.Inheritance
                     StateSave defaultStateSave = StandardElementsManager.Self.GetDefaultStateFor(newValue);
 
                     asElementSave.Initialize(defaultStateSave);
+                    StandardElementsManagerGumTool.Self.FixCustomTypeConverters(asElementSave);
                 }
                 else
                 {
@@ -158,6 +159,7 @@ namespace Gum.Plugins.Inheritance
                             }
                         }
                         asElementSave.Initialize(stateSave);
+                        StandardElementsManagerGumTool.Self.FixCustomTypeConverters(asElementSave);
                     }
                 }
             }

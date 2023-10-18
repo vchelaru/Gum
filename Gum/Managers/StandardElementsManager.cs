@@ -719,6 +719,7 @@ namespace Gum.Managers
         {
             StandardElementSave elementSave = new StandardElementSave();
             elementSave.Initialize(mDefaults[type]);
+            StandardElementsManagerGumTool.Self.FixCustomTypeConverters(elementSave);
             elementSave.Name = type;
 
             

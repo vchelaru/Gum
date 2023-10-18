@@ -21,9 +21,7 @@
     <Compile Include="..\Gum\DataTypes\ComponentSaveExtensionMethods.cs">
       <Link>DataTypes\ComponentSaveExtensionMethods.cs</Link>
     </Compile>
-    <Compile Include="..\Gum\DataTypes\ElementSaveExtensionMethods.cs">
-      <Link>DataTypes\ElementSaveExtensionMethods.cs</Link>
-    </Compile>
+
 
     <Compile Include="..\Gum\DataTypes\InstanceSaveExtensionMethods.cs">
       <Link>DataTypes\InstanceSaveExtensionMethods.cs</Link>
@@ -62,9 +60,6 @@
     <Compile Include="..\RenderingLibrary\Graphics\GradientType.cs">
       <Link>Graphics\GradientType.cs</Link>
     </Compile>
-    <Compile Include="..\RenderingLibrary\Graphics\HorizontalAlignment.cs">
-      <Link>Graphics\HorizontalAlignment.cs</Link>
-    </Compile>
     <Compile Include="..\RenderingLibrary\Graphics\IAspectRatio.cs">
       <Link>Graphics\IAspectRatio.cs</Link>
     </Compile>
@@ -82,10 +77,6 @@
     </Compile>
     <Compile Include="..\RenderingLibrary\Graphics\SortableLayer.cs">
       <Link>Graphics\SortableLayer.cs</Link>
-    </Compile>
-    <Compile Include="..\RenderingLibrary\Graphics\TextOverflowMode.cs" Link="Graphics\TextOverflowMode.cs" />
-    <Compile Include="..\RenderingLibrary\Graphics\VerticalAlignment.cs">
-      <Link>Graphics\VerticalAlignment.cs</Link>
     </Compile>
     <Compile Include="..\RenderingLibrary\IPositionedSizedObject.cs">
       <Link>IPositionedSizedObject.cs</Link>

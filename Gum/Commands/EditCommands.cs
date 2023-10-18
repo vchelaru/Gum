@@ -406,6 +406,7 @@ namespace Gum.Commands
                         var newScreen = (element as ScreenSave).Clone();
                         newScreen.Name = prefix + strippedName;
                         newScreen.Initialize(null);
+                        StandardElementsManagerGumTool.Self.FixCustomTypeConverters(newScreen);
 
                         ProjectCommands.Self.AddScreen(newScreen);
 
@@ -449,6 +450,7 @@ namespace Gum.Commands
                         }
                         newComponent.Name = folder + name;
                         newComponent.Initialize(null);
+                        StandardElementsManagerGumTool.Self.FixCustomTypeConverters(newComponent);
 
                         ProjectCommands.Self.AddComponent(newComponent);
 

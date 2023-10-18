@@ -50,7 +50,7 @@ namespace Gum.ToolCommands
         public void AddScreen(ScreenSave screenSave)
         {
             screenSave.Initialize(StandardElementsManager.Self.GetDefaultStateFor("Screen"));
-
+            StandardElementsManagerGumTool.Self.FixCustomTypeConverters(screenSave);
             ProjectManager.Self.GumProjectSave.ScreenReferences.Add(new ElementReference { Name = screenSave.Name, ElementType = ElementType.Screen });
             ProjectManager.Self.GumProjectSave.ScreenReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
             ProjectManager.Self.GumProjectSave.Screens.Add(screenSave);

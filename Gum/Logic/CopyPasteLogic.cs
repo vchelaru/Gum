@@ -542,6 +542,7 @@ namespace Gum.Logic
             {
                 toAdd = ((ScreenSave)CopiedData.CopiedElement).Clone();
                 toAdd.Initialize(null);
+                StandardElementsManagerGumTool.Self.FixCustomTypeConverters(toAdd);
             }
             else
             {

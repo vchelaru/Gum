@@ -58,6 +58,7 @@ namespace Gum.DataTypes
             {
                 var stateSave = StandardElementsManager.Self.GetDefaultStateFor("Screen");
                 wasModified = screenSave.Initialize(stateSave) || wasModified;
+                StandardElementsManagerGumTool.Self.FixCustomTypeConverters(screenSave);
             }
 
             
@@ -101,6 +102,8 @@ namespace Gum.DataTypes
                 {
                     wasModified = true;
                 }
+
+                StandardElementsManagerGumTool.Self.FixCustomTypeConverters(componentSave);
             }
 
             foreach (var behavior in gumProjectSave.Behaviors)

@@ -1,6 +1,7 @@
 ﻿using Gum;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
+using Gum.Managers;
 using Gum.ToolStates;
 using System;
 using System.Collections.Generic;
@@ -54,6 +55,7 @@ namespace SkiaPlugin.Managers
                     // load it:
                     gumProject.StandardElements.Add(loaded);
                     loaded.Initialize(defaultState);
+                    StandardElementsManagerGumTool.Self.FixCustomTypeConverters(loaded);
                     GumCommands.Self.FileCommands.TryAutoSaveElement(loaded);
                     toReturn = loaded;
                 }

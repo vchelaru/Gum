@@ -81,7 +81,7 @@ namespace Gum.Plugins.ImportPlugin.Manager
                     (first, second) => first.Name.CompareTo(second.Name));
 
                 screenSave.Initialize(null);
-
+                StandardElementsManagerGumTool.Self.FixCustomTypeConverters(screenSave);
                 GumCommands.Self.GuiCommands.RefreshElementTreeView();
 
                 SelectedState.Self.SelectedScreen = screenSave;

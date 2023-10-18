@@ -1,6 +1,8 @@
-﻿using Gum.DataTypes.Variables;
+﻿using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using Gum.Plugins;
 using Gum.PropertyGridHelpers.Converters;
+using Gum.ToolStates;
 using Gum.Wireframe;
 using System;
 using System.Collections.Generic;
@@ -47,6 +49,32 @@ namespace Gum.Managers
 
         }
 
+        public void FixCustomTypeConverters()
+        {
+            var project = ObjectFinder.Self.GumProjectSave;
+
+            foreach(var screen in project.Screens)
+            {
+                FixCustomTypeConverters(screen);
+            }
+            foreach(var component in project.Components)
+            {
+                FixCustomTypeConverters(component);
+            }
+        }
+
+        public void FixCustomTypeConverters(ElementSave elementSave)
+        {
+            foreach (var stateSaveCategory in elementSave.Categories)
+            {
+                VariableSave foundVariable = elementSave.DefaultState.Variables.FirstOrDefault(item => item.Name == stateSaveCategory.Name + "State");
+
+                if (foundVariable != null)
+                {
+                    foundVariable.CustomTypeConverter = new Gum.PropertyGridHelpers.Converters.AvailableStatesConverter(stateSaveCategory.Name);
+                }
+            }
+        }
 
         public static void MakeDegreesAngle(VariableSave variableSave)
         {
