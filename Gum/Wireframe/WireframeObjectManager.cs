@@ -245,7 +245,7 @@ namespace Gum.Wireframe
                         RootGue = elementSave.ToGraphicalUiElement(SystemManagers.Default, addToManagers: true);
                         RootGue.SetVariablesRecursively(elementSave, GumState.Self.SelectedState.SelectedStateSave);
 
-                        AddAllIpsosRecursively(RootGue);
+                        AddAllIpsos(RootGue);
                         HashSet<GraphicalUiElement> hashSet = new HashSet<GraphicalUiElement>();
                         var tempSorted = AllIpsos.OrderBy(item =>
                         {
@@ -256,12 +256,18 @@ namespace Gum.Wireframe
                         AllIpsos.Clear();
                         AllIpsos.AddRange(tempSorted);
 
+                        UpdateTextOutlines(RootGue);
+
                         GraphicalUiElement.IsAllLayoutSuspended = false;
 
                         RootGue.UpdateFontRecursive();
                         RootGue.UpdateLayout();
 
+
                         // what about fonts?
+                        // We recreate missing fonts on startup, so do we need to bother here?
+                        // I'm not sure, but if we do we would call:
+                        //FontManager.Self.CreateAllMissingFontFiles(ObjectFinder.Self.GumProjectSave);
                     }
                     else
                     {
@@ -280,29 +286,37 @@ namespace Gum.Wireframe
 
         }
 
-        private void AddAllIpsosRecursively(GraphicalUiElement rootGue)
+        private void UpdateTextOutlines(GraphicalUiElement rootGue)
         {
-            AllIpsos.Add(rootGue);
-            if(rootGue.Children == null)
+            if(rootGue.Component is Text text)
             {
-                // it's a screen:
-                foreach(var item in rootGue.ContainedElements)
+                text.RenderBoundary = ProjectManager.Self.GeneralSettingsFile.ShowTextOutlines;
+            }
+            if(rootGue.Children != null)
+            {
+                foreach(var child in rootGue.Children)
                 {
-                    if(item.Parent == null)
+                    if(child is GraphicalUiElement gue)
                     {
-                        AddAllIpsosRecursively(item);
+                        UpdateTextOutlines(gue);
                     }
                 }
             }
             else
             {
-                foreach(var item in rootGue.Children)
+                foreach(var child in rootGue.ContainedElements)
                 {
-                    if(item is GraphicalUiElement gue)
-                    {
-                        AddAllIpsosRecursively(gue);
-                    }
+                    UpdateTextOutlines(child);
                 }
+            }
+        }
+
+        private void AddAllIpsos(GraphicalUiElement rootGue)
+        {
+            AllIpsos.Add(rootGue);
+            foreach(var item in rootGue.ContainedElements)
+            {
+                AllIpsos.Add(item);
             }
         }
 
