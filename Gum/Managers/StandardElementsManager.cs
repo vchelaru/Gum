@@ -47,6 +47,8 @@ namespace Gum.Managers
 
         #region Fields
 
+        public const string ScreenBoundsName = "<SCREEN BOUNDS>";
+
         Dictionary<string, StateSave> mDefaults;
 
         static StandardElementsManager mSelf;

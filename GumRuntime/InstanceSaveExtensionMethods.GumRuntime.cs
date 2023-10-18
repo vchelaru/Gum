@@ -49,25 +49,8 @@ namespace GumRuntime
                     instanceElement.SetGraphicalUiElement(toReturn, systemManagers);
                 }
 
-
                 toReturn.Name = instanceSave.Name;
                 toReturn.Tag = instanceSave;
-
-
-                // November 9, 2020 - Vic asks - why do we set properties here, and ONLY exposed variables? That's weird...
-                // It also requires using instanceSave.ParentContainer, and maybe is duplicate setting values which hurts performance
-                // andn adds complexity. Not sure what to do here..., but going to try commenting it out to see if it makes a difference
-                //var instanceContainerDefaultState = instanceSave.ParentContainer.DefaultState;
-
-                //foreach (var variable in instanceContainerDefaultState.Variables.Where(item => item.SetsValue && item.SourceObject == instanceSave.Name))
-                //{
-                //    string propertyOnInstance = variable.Name.Substring(variable.Name.LastIndexOf('.') + 1);
-
-                //    if (toReturn.IsExposedVariable(propertyOnInstance))
-                //    {
-                //        toReturn.SetProperty(propertyOnInstance, variable.Value);
-                //    }
-                //}
             }
 
             return toReturn;

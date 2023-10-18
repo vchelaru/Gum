@@ -7,12 +7,14 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<Compile Include="..\Gum\Managers\ObjectFinder.cs" Link="Managers\ObjectFinder.cs" />
 		<Compile Include="..\RenderingLibrary\Content\IContentLoader.cs" Link="Content\IContentLoader.cs" />
 		<Compile Include="..\SkiaGum\Content\LoaderManager.cs" Link="Content\LoaderManager.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<Folder Include="Content\" />
+		<Folder Include="Managers\" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -29,10 +31,19 @@
 		<Compile Include="..\Gum\DataTypes\GumProjectSaveExtensionMethods.cs">
 			<Link>DataTypes\GumProjectSaveExtensionMethods.cs</Link>
 		</Compile>
+		<Compile Include="..\Gum\DataTypes\RecursiveVariableFinder.cs">
+			<Link>DataTypes\RecursiveVariableFinder.cs</Link>
+		</Compile>
+		<Compile Include="..\Gum\DataTypes\StateSaveExtensionMethods.cs">
+			<Link>DataTypes\StateSaveExtensionMethods.cs</Link>
+		</Compile>
 		<Compile Include="..\Gum\Managers\StandardElementsManager.cs" Link="Managers\StandardElementsManager.cs" />
 
 		<Compile Include="..\Gum\RenderingLibrary\Blend.cs">
 			<Link>RenderingLibrary\Blend.cs</Link>
+		</Compile>
+		<Compile Include="..\Gum\Wireframe\ElementWithState.cs">
+			<Link>Wireframe\ElementWithState.cs</Link>
 		</Compile>
 
 		<Compile Include="..\RenderingLibrary\Graphics\TextOverflowMode.cs" Link="Graphics\TextOverflowMode.cs" />

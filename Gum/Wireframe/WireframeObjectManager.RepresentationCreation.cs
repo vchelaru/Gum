@@ -546,7 +546,7 @@ namespace Gum.Wireframe
 
                     string parentName = rvf.GetValue<string>($"{childInstanceSave.Name}.Parent");
 
-                    if (!string.IsNullOrEmpty(parentName) && parentName != AvailableInstancesConverter.ScreenBoundsName)
+                    if (!string.IsNullOrEmpty(parentName) && parentName != StandardElementsManager.ScreenBoundsName)
                     {
                         IRenderableIpso newParent = elements.FirstOrDefault(item => item.Name == parentName);
 

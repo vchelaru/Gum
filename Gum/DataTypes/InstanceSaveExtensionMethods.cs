@@ -6,7 +6,6 @@ using Gum.Managers;
 using Gum.Wireframe;
 
 #if GUM
-using Gum.PropertyGridHelpers.Converters;
 using Gum.ToolStates;
 #endif
 
@@ -23,7 +22,6 @@ namespace Gum.DataTypes
         // To prevent infinite recursion we need to keep track of states that are being looked up
         static List<InstanceStatePair> mActiveInstanceStatePairs = new List<InstanceStatePair>();
 
-#if GUM
         public static bool IsParentASibling(this InstanceSave instanceSave, List<ElementWithState> elementStack)
         {
             if (instanceSave == null)
@@ -35,7 +33,7 @@ namespace Gum.DataTypes
 
             string parent = rvf.GetValue<string>("Parent");
             bool found = false;
-            if (!string.IsNullOrEmpty(parent) && parent != AvailableInstancesConverter.ScreenBoundsName)
+            if (!string.IsNullOrEmpty(parent) && parent != StandardElementsManager.ScreenBoundsName)
             {
                 ElementSave parentElement = instanceSave.ParentContainer;
 
@@ -44,7 +42,7 @@ namespace Gum.DataTypes
 
             return found;
         }
-#endif
+
         public static void Initialize(this InstanceSave instanceSave)
         {
             // nothing to do currently?

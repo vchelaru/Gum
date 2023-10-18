@@ -1,4 +1,5 @@
 ﻿using Gum.DataTypes;
+using Gum.Managers;
 using Gum.ToolStates;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -8,8 +9,6 @@ namespace Gum.PropertyGridHelpers.Converters
 {
     public class AvailableInstancesConverter : TypeConverter
     {
-        public const string ScreenBoundsName = "<SCREEN BOUNDS>";
-
         public bool ExcludeCurrentInstance
         {
             get;
@@ -63,7 +62,7 @@ namespace Gum.PropertyGridHelpers.Converters
             var isInstanceInComponent = element is ComponentSave && SelectedState.Self.SelectedInstance != null;
             if (IncludeScreenBounds && !isInstanceInComponent)
             {
-                values.Insert(1, ScreenBoundsName);
+                values.Insert(1, StandardElementsManager.ScreenBoundsName);
             }
 
             return new StandardValuesCollection(values);

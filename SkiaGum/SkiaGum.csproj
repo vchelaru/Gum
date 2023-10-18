@@ -29,12 +29,7 @@
     <Compile Include="..\Gum\DataTypes\PluginSettingsSave.cs">
       <Link>DataTypes\PluginSettingsSave.cs</Link>
     </Compile>
-    <Compile Include="..\Gum\DataTypes\RecursiveVariableFinder.cs">
-      <Link>DataTypes\RecursiveVariableFinder.cs</Link>
-    </Compile>
-    <Compile Include="..\Gum\DataTypes\StateSaveExtensionMethods.cs">
-      <Link>DataTypes\StateSaveExtensionMethods.cs</Link>
-    </Compile>
+
     <Compile Include="..\Gum\DataTypes\VariableListSaveExtensionMethods.cs">
       <Link>DataTypes\VariableListSaveExtensionMethods.cs</Link>
     </Compile>
@@ -48,9 +43,6 @@
 
     <Compile Include="..\Gum\RenderingLibrary\IPositionedSizedObjectExtensionMethods.cs">
       <Link>RenderingLibrary\IPositionedSizedObjectExtensionMethods.cs</Link>
-    </Compile>
-    <Compile Include="..\Gum\Wireframe\ElementWithState.cs">
-      <Link>Wireframe\ElementWithState.cs</Link>
     </Compile>
     <Compile Include="..\RenderingLibrary\Camera.cs">
       <Link>RenderingLibrary\Camera.cs</Link>
