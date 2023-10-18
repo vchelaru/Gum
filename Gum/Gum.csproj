@@ -381,6 +381,7 @@
     <Compile Include="Reflection\LateBinder.cs" />
     <Compile Include="Reflection\TypeManager.cs" />
     <Compile Include="RenderingLibrary\Blend.cs" />
+    <Compile Include="RenderingLibrary\BlendExtensions.cs" />
     <Compile Include="RenderingLibrary\IPositionedSizedObjectExtensionMethods.cs" />
     <Compile Include="Responses\DeleteResponse.cs" />
     <Compile Include="Settings\GeneralSettingsFile.cs" />

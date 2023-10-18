@@ -45,9 +45,7 @@
       <Link>Graphics\Animation\AnimationFrame.cs</Link>
     </Compile>
 
-    <Compile Include="..\Gum\RenderingLibrary\Blend.cs">
-      <Link>RenderingLibrary\Blend.cs</Link>
-    </Compile>
+
     <Compile Include="..\Gum\RenderingLibrary\IPositionedSizedObjectExtensionMethods.cs">
       <Link>RenderingLibrary\IPositionedSizedObjectExtensionMethods.cs</Link>
     </Compile>

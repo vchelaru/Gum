@@ -4,7 +4,6 @@ using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using RenderingLibrary.Graphics;
 using Gum.RenderingLibrary;
-using Gum.Wireframe;
 
 using Vector2 = System.Numerics.Vector2;
 using Matrix = System.Numerics.Matrix4x4;
@@ -645,7 +644,7 @@ namespace Gum.Managers
 
             stateSave.Variables.Add(variableSave);
 
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = nameof(GraphicalUiElement.IgnoredByParentSize), Category = "Parent" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "IgnoredByParentSize", Category = "Parent" });
         }
 
         public Func<string, StateSave> CustomGetDefaultState;
@@ -719,7 +718,6 @@ namespace Gum.Managers
         {
             StandardElementSave elementSave = new StandardElementSave();
             elementSave.Initialize(mDefaults[type]);
-            StandardElementsManagerGumTool.Self.FixCustomTypeConverters(elementSave);
             elementSave.Name = type;
 
             

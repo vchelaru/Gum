@@ -145,8 +145,10 @@ namespace Gum.Managers
             {
                 ProjectState.Self.GumProjectSave.ReloadElement(element);
                 ProjectState.Self.GumProjectSave.Initialize();
+                StandardElementsManagerGumTool.Self.FixCustomTypeConverters(ProjectState.Self.GumProjectSave);
 
-                if(refreshingSelected)
+
+                if (refreshingSelected)
                 {
                     ElementTreeViewManager.Self.Select((ElementSave)null);
                 }
@@ -202,8 +204,9 @@ namespace Gum.Managers
             {
                 ProjectState.Self.GumProjectSave.ReloadBehavior(behavior);
                 ProjectState.Self.GumProjectSave.Initialize();
+                StandardElementsManagerGumTool.Self.FixCustomTypeConverters(ProjectState.Self.GumProjectSave);
 
-                if(refreshingSelected)
+                if (refreshingSelected)
                 {
                     ElementTreeViewManager.Self.Select((BehaviorSave)null);
                 }

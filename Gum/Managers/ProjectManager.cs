@@ -182,7 +182,7 @@ namespace Gum
             if (mGumProjectSave != null)
             {
                 bool wasModified = mGumProjectSave.Initialize();
-
+                StandardElementsManagerGumTool.Self.FixCustomTypeConverters(mGumProjectSave);
                 RecreateMissingStandardElements();
 
                 if(RecreateMissingDefinedByBaseObjects())

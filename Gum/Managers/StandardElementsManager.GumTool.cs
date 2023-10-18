@@ -49,10 +49,8 @@ namespace Gum.Managers
 
         }
 
-        public void FixCustomTypeConverters()
+        public void FixCustomTypeConverters(GumProjectSave project)
         {
-            var project = ObjectFinder.Self.GumProjectSave;
-
             foreach(var screen in project.Screens)
             {
                 FixCustomTypeConverters(screen);
