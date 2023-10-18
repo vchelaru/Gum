@@ -14,6 +14,7 @@ using Gum.Plugins;
 using Color = System.Drawing.Color;
 using Rectangle = System.Drawing.Rectangle;
 using Matrix = System.Numerics.Matrix4x4;
+using GumRuntime;
 
 namespace Gum.Wireframe
 {
@@ -236,7 +237,37 @@ namespace Gum.Wireframe
 
                     LoaderManager.Self.CacheTextures = true;
 
-                    RootGue = CreateIpsoForElement(elementSave);
+                    var useNew = true;
+                    if(useNew)
+                    {
+                        GraphicalUiElement.IsAllLayoutSuspended = true;
+
+                        RootGue = elementSave.ToGraphicalUiElement(SystemManagers.Default, addToManagers: true);
+                        RootGue.SetVariablesRecursively(elementSave, GumState.Self.SelectedState.SelectedStateSave);
+
+                        AddAllIpsosRecursively(RootGue);
+                        HashSet<GraphicalUiElement> hashSet = new HashSet<GraphicalUiElement>();
+                        var tempSorted = AllIpsos.OrderBy(item =>
+                        {
+                            hashSet.Clear();
+                            return GetDepth(item, hashSet);
+                        }).ToArray();
+
+                        AllIpsos.Clear();
+                        AllIpsos.AddRange(tempSorted);
+
+                        GraphicalUiElement.IsAllLayoutSuspended = false;
+
+                        RootGue.UpdateFontRecursive();
+                        RootGue.UpdateLayout();
+
+                        // what about fonts?
+                    }
+                    else
+                    {
+                        RootGue = CreateIpsoForElement(elementSave);
+
+                    }
 
                     if(LocalizationManager.HasDatabase)
                     {
@@ -247,6 +278,32 @@ namespace Gum.Wireframe
             }
             ElementShowing = elementSave;
 
+        }
+
+        private void AddAllIpsosRecursively(GraphicalUiElement rootGue)
+        {
+            AllIpsos.Add(rootGue);
+            if(rootGue.Children == null)
+            {
+                // it's a screen:
+                foreach(var item in rootGue.ContainedElements)
+                {
+                    if(item.Parent == null)
+                    {
+                        AddAllIpsosRecursively(item);
+                    }
+                }
+            }
+            else
+            {
+                foreach(var item in rootGue.Children)
+                {
+                    if(item is GraphicalUiElement gue)
+                    {
+                        AddAllIpsosRecursively(gue);
+                    }
+                }
+            }
         }
 
         public void ApplyLocalization()

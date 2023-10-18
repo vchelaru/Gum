@@ -133,6 +133,8 @@ namespace GumRuntime
         {
             GraphicalUiElement toReturn = CreateGueForElement(elementSave);
 
+            toReturn.Name = elementSave.Name;
+
             elementSave.SetGraphicalUiElement(toReturn, systemManagers);
 
             //no layering support yet

@@ -52,9 +52,9 @@ namespace Gum.Wireframe
 
         private GraphicalUiElement CreateIpsoForElement(ElementSave elementSave)
         {
-            GraphicalUiElement rootIpso = null;
+            GraphicalUiElement rootGue = null;
             bool isScreen = elementSave is ScreenSave;
-            rootIpso = new GraphicalUiElement();
+            rootGue = new GraphicalUiElement();
 
             
             // If we don't turn off layouts, layouts can be called tens of thousands of times for
@@ -63,10 +63,10 @@ namespace Gum.Wireframe
             GraphicalUiElement.IsAllLayoutSuspended = true;
             {
 
-                rootIpso.Tag = elementSave;
-                AllIpsos.Add(rootIpso);
+                rootGue.Tag = elementSave;
+                AllIpsos.Add(rootGue);
 
-                rootIpso.ElementSave = elementSave;
+                rootGue.ElementSave = elementSave;
                 if (isScreen == false)
                 {
                     // We used to not add the IPSO for the root element to the list of graphical elements
@@ -79,20 +79,20 @@ namespace Gum.Wireframe
                     // be?
                     //AllIpsos.Add(rootIpso);
 
-                    rootIpso.CreateGraphicalComponent(elementSave, null);
+                    rootGue.CreateGraphicalComponent(elementSave, null);
 
                     // can be null if the element save references a bad file
-                    if(rootIpso.Component != null)
+                    if(rootGue.Component != null)
                     {
-                        rootIpso.Name = elementSave.Name;
-                        rootIpso.Component.Tag = elementSave;
+                        rootGue.Name = elementSave.Name;
+                        rootGue.Component.Tag = elementSave;
 
                     }
 
                     RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(SelectedState.Self.SelectedStateSaveOrDefault);
 
                     string guide = rvf.GetValue<string>("Guide");
-                    SetGuideParent(null, rootIpso, guide);
+                    SetGuideParent(null, rootGue, guide);
                 }
 
                 var exposedVariables = elementSave
@@ -110,7 +110,7 @@ namespace Gum.Wireframe
 
                 foreach (var exposedVariable in exposedVariables)
                 {
-                    rootIpso.AddExposedVariable(exposedVariable.ExposedAsName, exposedVariable.Name);
+                    rootGue.AddExposedVariable(exposedVariable.ExposedAsName, exposedVariable.Name);
                 }
 
                 List<GraphicalUiElement> newlyAdded = new List<GraphicalUiElement>();
@@ -142,7 +142,7 @@ namespace Gum.Wireframe
                 //Parallel.ForEach(elementSave.Instances, instance =>
                 foreach (var instance in elementSave.Instances)
                 {
-                    GraphicalUiElement child = CreateRepresentationForInstance(instance, null, elementStack, rootIpso);
+                    GraphicalUiElement child = CreateRepresentationForInstance(instance, null, elementStack, rootGue);
 
                     if (child == null)
                     {
@@ -163,12 +163,12 @@ namespace Gum.Wireframe
 
                 elementStack.Remove(elementStack.FirstOrDefault(item => item.Element == elementSave));
 
-                rootIpso.SetStatesAndCategoriesRecursively(elementSave);
+                rootGue.SetStatesAndCategoriesRecursively(elementSave);
 
                 // First we need to the default state (and do so recursively)
                 try
                 {
-                    rootIpso.SetVariablesRecursively(elementSave, elementSave.DefaultState);
+                    rootGue.SetVariablesRecursively(elementSave, elementSave.DefaultState);
                 }
                 catch(Exception e)
                 {
@@ -184,11 +184,11 @@ namespace Gum.Wireframe
                     if (isRecursive)
                     {
                         var category = SelectedState.Self.SelectedStateCategorySave;
-                        rootIpso.ApplyStateRecursive(category.Name, SelectedState.Self.SelectedStateSave.Name);
+                        rootGue.ApplyStateRecursive(category.Name, SelectedState.Self.SelectedStateSave.Name);
                     }
                     if(!appliedRecursively)
                     {
-                        rootIpso.ApplyState(state);
+                        rootGue.ApplyState(state);
                     }
                 }
 
@@ -201,11 +201,11 @@ namespace Gum.Wireframe
                 }
 
                 // I think this has to be *after* we set varaibles because that's where clipping gets set
-                if (rootIpso != null)
+                if (rootGue != null)
                 {
-                    gueManager.Add(rootIpso);
+                    gueManager.Add(rootGue);
 
-                    rootIpso.AddToManagers();
+                    rootGue.AddToManagers();
 
                 }
             }
@@ -241,10 +241,10 @@ namespace Gum.Wireframe
             AllIpsos.Clear();
             AllIpsos.AddRange(tempSorted);
 
-            rootIpso.UpdateFontRecursive();
-            rootIpso.UpdateLayout();
+            rootGue.UpdateFontRecursive();
+            rootGue.UpdateLayout();
 
-            return rootIpso;
+            return rootGue;
         }
 
         private static bool GetIfSelectedStateIsSetRecursively()
