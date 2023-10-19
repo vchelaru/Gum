@@ -5,11 +5,11 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DefineConstants>$(DefineConstants)TRACE; NO_XNA; MONOGAME</DefineConstants>
+    <DefineConstants>$(DefineConstants)TRACE; NO_XNA</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DefineConstants>$(DefineConstants)TRACE; NO_XNA; MONOGAME</DefineConstants>
+    <DefineConstants>$(DefineConstants)TRACE; NO_XNA</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
@@ -30,6 +30,7 @@
     <Compile Include="..\RenderingLibrary\Graphics\NineSliceExtensions.cs" Link="NineSliceExtensions.cs" />
     <Compile Include="..\RenderingLibrary\Graphics\TextOverflowMode.cs" Link="TextOverflowMode.cs" />
     <Compile Include="..\RenderingLibrary\Graphics\VerticalAlignment.cs" Link="VerticalAlignment.cs" />
+    <Compile Include="..\SkiaGum\Xna\BlendState.cs" Link="BlendState.cs" />
   </ItemGroup>
 
 	<ItemGroup>
