@@ -22,10 +22,6 @@
       <Link>DataTypes\ComponentSaveExtensionMethods.cs</Link>
     </Compile>
 
-
-    <Compile Include="..\Gum\DataTypes\InstanceSaveExtensionMethods.cs">
-      <Link>DataTypes\InstanceSaveExtensionMethods.cs</Link>
-    </Compile>
     <Compile Include="..\Gum\DataTypes\PluginSettingsSave.cs">
       <Link>DataTypes\PluginSettingsSave.cs</Link>
     </Compile>

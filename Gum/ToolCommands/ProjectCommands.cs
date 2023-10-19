@@ -208,6 +208,7 @@ namespace Gum.ToolCommands
             componentSave.BaseType = "Container";
 
             componentSave.InitializeDefaultAndComponentVariables();
+            StandardElementsManagerGumTool.Self.FixCustomTypeConverters(componentSave);
 
 
             // components shouldn't set their positions to 0 by default, so if the

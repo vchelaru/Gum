@@ -153,6 +153,7 @@ namespace Gum.Plugins.ImportPlugin.Manager
                     components.Sort((first, second) => first.Name.CompareTo(second.Name));
 
                     componentSave.InitializeDefaultAndComponentVariables();
+                    StandardElementsManagerGumTool.Self.FixCustomTypeConverters(componentSave);
 
                     GumCommands.Self.FileCommands.TryAutoSaveElement(componentSave);
 

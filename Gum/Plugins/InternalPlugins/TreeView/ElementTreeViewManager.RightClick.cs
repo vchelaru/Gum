@@ -668,6 +668,7 @@ namespace Gum.Managers
                 components.Sort((first, second) => first.Name.CompareTo(second.Name));
 
                 componentSave.InitializeDefaultAndComponentVariables();
+                StandardElementsManagerGumTool.Self.FixCustomTypeConverters(componentSave);
 
                 lastImportedComponent = componentSave;
             }
