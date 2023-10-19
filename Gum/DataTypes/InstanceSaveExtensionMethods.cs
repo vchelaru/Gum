@@ -65,23 +65,7 @@ namespace Gum.DataTypes
             var elementStack = new List<ElementWithState> { parent };
             return GetVariableFromThisOrBase(instance, elementStack, new RecursiveVariableFinder(instance, elementStack), variable, false, false);
         }
-
-        public static VariableSave GetVariableFromThisOrBase(this InstanceSave instance,
-            ElementWithState parent, string variable, bool forceDefault)
-        {
-            var elementStack = new List<ElementWithState> { parent };
-
-            return GetVariableFromThisOrBase(instance, elementStack, new RecursiveVariableFinder(instance, elementStack), variable, forceDefault, false);
-        }
-
-        public static VariableSave GetVariableFromThisOrBase(this InstanceSave instance,
-            ElementWithState parent, string variable, bool forceDefault, bool onlyIfSetsValue)
-        {
-            var elementStack = new List<ElementWithState> { parent };
-            return GetVariableFromThisOrBase(instance, elementStack, new RecursiveVariableFinder(instance, elementStack), variable, forceDefault, onlyIfSetsValue);
-        }
-
-        
+                
         //public static VariableSave GetVariableFromThisOrBase(this InstanceSave instance,
         //    List<ElementWithState> elementStack, string variable)
         //{
@@ -296,11 +280,13 @@ namespace Gum.DataTypes
             return GetValueFromThisOrBase(instance, new List<ElementWithState>() { new ElementWithState(parent) }, variable, forceDefault);
         }
 
-        public static object GetValueFromThisOrBase(this InstanceSave instance, List<ElementWithState> elementStack, string variable,
+        static object GetValueFromThisOrBase(this InstanceSave instance, List<ElementWithState> elementStack, string variable,
             bool forceDefault = false)
         {
             ElementWithState parentContainer = elementStack.Last();
-            VariableSave variableSave = instance.GetVariableFromThisOrBase(parentContainer, variable, forceDefault, true);
+            //VariableSave variableSave = instance.GetVariableFromThisOrBase(parentContainer, variable, forceDefault, true);
+            var tempElementStack = new List<ElementWithState> { parentContainer };
+            var variableSave = GetVariableFromThisOrBase(instance, tempElementStack, new RecursiveVariableFinder(instance, elementStack), variable, forceDefault, true);
 
 
             if (variableSave != null)

@@ -177,6 +177,7 @@
     <Compile Include="DataTypes\StateSaveExtensionMethods.GumTool.cs" />
     <Compile Include="DataTypes\VariableListSaveExtensionMethods.cs" />
     <Compile Include="DataTypes\VariableSaveExtensionMethods.cs" />
+    <Compile Include="DataTypes\VariableSaveExtensionMethods.GumTool.cs" />
     <Compile Include="Debug\ProjectVerifier.cs" />
     <Compile Include="Events\GumEvents.cs" />
     <Compile Include="Extensions\WpfExtensions.cs" />

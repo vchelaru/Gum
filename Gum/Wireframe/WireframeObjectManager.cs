@@ -337,7 +337,14 @@ namespace Gum.Wireframe
                         GraphicalUiElement.IsAllLayoutSuspended = true;
 
                         RootGue = elementSave.ToGraphicalUiElement(SystemManagers.Default, addToManagers: true);
-                        RootGue.SetVariablesRecursively(elementSave, GumState.Self.SelectedState.SelectedStateSave);
+                        // Always set default first, then if the selected state is not the default, then apply that after:
+                        RootGue.SetVariablesRecursively(elementSave, elementSave.DefaultState);
+                        var selectedState = GumState.Self.SelectedState.SelectedStateSave;
+                        if(selectedState != null && selectedState != elementSave.DefaultState)
+                        {
+                            RootGue.ApplyState(selectedState);
+                        }
+
 
                         AddAllIpsos(RootGue);
                         HashSet<GraphicalUiElement> hashSet = new HashSet<GraphicalUiElement>();

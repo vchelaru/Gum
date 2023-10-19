@@ -33,9 +33,7 @@
     <Compile Include="..\Gum\DataTypes\VariableListSaveExtensionMethods.cs">
       <Link>DataTypes\VariableListSaveExtensionMethods.cs</Link>
     </Compile>
-    <Compile Include="..\Gum\DataTypes\VariableSaveExtensionMethods.cs">
-      <Link>DataTypes\VariableSaveExtensionMethods.cs</Link>
-    </Compile>
+
     <Compile Include="..\Gum\Graphics\Animation\AnimationFrame.cs">
       <Link>Graphics\Animation\AnimationFrame.cs</Link>
     </Compile>
@@ -47,9 +45,7 @@
     <Compile Include="..\RenderingLibrary\Camera.cs">
       <Link>RenderingLibrary\Camera.cs</Link>
     </Compile>
-    <Compile Include="..\RenderingLibrary\Graphics\GradientType.cs">
-      <Link>Graphics\GradientType.cs</Link>
-    </Compile>
+
     <Compile Include="..\RenderingLibrary\Graphics\IAspectRatio.cs">
       <Link>Graphics\IAspectRatio.cs</Link>
     </Compile>

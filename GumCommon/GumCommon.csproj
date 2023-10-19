@@ -38,7 +38,9 @@
 			<Link>DataTypes\StateSaveExtensionMethods.cs</Link>
 		</Compile>
 		<Compile Include="..\Gum\Managers\StandardElementsManager.cs" Link="Managers\StandardElementsManager.cs" />
-
+		<Compile Include="..\Gum\DataTypes\VariableSaveExtensionMethods.cs">
+			<Link>DataTypes\VariableSaveExtensionMethods.cs</Link>
+		</Compile>
 		<Compile Include="..\Gum\RenderingLibrary\Blend.cs">
 			<Link>RenderingLibrary\Blend.cs</Link>
 		</Compile>
@@ -46,9 +48,11 @@
 			<Link>Wireframe\ElementWithState.cs</Link>
 		</Compile>
 
+		<Compile Include="..\RenderingLibrary\Graphics\GradientType.cs">
+			<Link>Graphics\GradientType.cs</Link>
+		</Compile>
+
 		<Compile Include="..\RenderingLibrary\Graphics\TextOverflowMode.cs" Link="Graphics\TextOverflowMode.cs" />
-
-
 		<Compile Include="..\RenderingLibrary\Graphics\VerticalAlignment.cs">
 			<Link>Graphics\VerticalAlignment.cs</Link>
 		</Compile>

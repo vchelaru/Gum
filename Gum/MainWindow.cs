@@ -12,6 +12,7 @@ using System.Windows.Forms.Integration;
 using Gum.Controls;
 using Gum.Logic.FileWatch;
 using Microsoft.AppCenter.Crashes;
+using Gum.DataTypes;
 
 namespace Gum
 {
@@ -112,6 +113,8 @@ namespace Gum
 
 
             Wireframe.WireframeObjectManager.Self.Initialize(WireframeEditControl, wireframeControl1, addCursor);
+
+            VariableSaveExtensionMethods.CustomFixEnumerations = VariableSaveExtensionMethodsGumTool.FixEnumerationsWithReflection;
 
             wireframeControl1.XnaUpdate += () =>
                 Wireframe.WireframeObjectManager.Self.Activity();

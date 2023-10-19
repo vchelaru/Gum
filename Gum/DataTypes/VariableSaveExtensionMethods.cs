@@ -16,68 +16,6 @@ namespace Gum.DataTypes
 {
     public static class VariableSaveExtensionMethods
     {
-#if GUM
-        public static bool GetIsEnumeration(this VariableSave variableSave)
-        {
-            if(variableSave.CustomTypeConverter is EnumConverter)
-            {
-                return true;
-            }
-            if (string.IsNullOrEmpty(variableSave.Type))
-            {
-                return false;
-            }
-
-            Type type = TypeManager.Self.GetTypeFromString(variableSave.Type);
-
-            if (type == null)
-            {
-                return false;
-            }
-            else
-            {
-                return type.IsEnum;
-            }
-        }
-
-        public static Type GetRuntimeType(this VariableSave variableSave)
-        {
-
-            string typeAsString = variableSave.Type;
-
-            Type foundType = GetPrimitiveType(typeAsString);
-
-            if (foundType != null)
-            {
-                return foundType;
-            }
-
-            if (variableSave.GetIsEnumeration())
-            {
-                if(variableSave.CustomTypeConverter is EnumConverter enumConverter)
-                {
-                    var values = enumConverter.GetStandardValues();
-
-                    if(values.Count > 0)
-                    {
-                        return values.FirstOrDefault().GetType();
-                    }
-                    else
-                    {
-                        return null;
-                    }
-                }
-                else
-                {
-                    return TypeManager.Self.GetTypeFromString(variableSave.Type);
-                }
-            }
-            else
-            {
-                return typeof(object);
-            }
-        }
-#endif
 
         public static Type GetPrimitiveType(string typeAsString)
         {
@@ -114,99 +52,6 @@ namespace Gum.DataTypes
             }
             return foundType;
         }
-
-#if GUM
-        public static TypeConverter GetTypeConverter(this VariableSave variableSave, ElementSave container = null)
-        {
-            ElementSave categoryContainer;
-            StateSaveCategory category;
-
-            if (variableSave.CustomTypeConverter != null)
-            {
-                return variableSave.CustomTypeConverter;
-            }
-            else if (variableSave.IsFont)
-            {
-                return new FontTypeConverter();
-            }
-            else if (variableSave.Name == "Guide")
-            {
-                AvailableGuidesTypeConverter availableGuidesTypeConverter = new AvailableGuidesTypeConverter();
-                availableGuidesTypeConverter.GumProjectSave = ObjectFinder.Self.GumProjectSave;
-                availableGuidesTypeConverter.ShowNewGuide = false;
-                return availableGuidesTypeConverter;
-            }
-            else if(variableSave.IsState(container, out categoryContainer, out category ))
-            {
-                string categoryName = null;
-
-                if(category != null)
-                {
-                    categoryName = category.Name;
-                }
-
-                AvailableStatesConverter converter = new AvailableStatesConverter(categoryName);
-                converter.ElementSave = categoryContainer;
-                return converter;
-            }
-            else if(variableSave.GetRootName() == "CurrentChainName")
-            {
-                var availableChainsConverter = new AvailableAnimationNamesConverter(container);
-                return availableChainsConverter;
-            }
-            else
-            {
-                // We should see if it's an exposed variable, and if so, let's look to the source object's type converters
-                bool foundInRoot = false;
-                if (!string.IsNullOrEmpty(variableSave.SourceObject) && container != null)
-                {
-                    InstanceSave instance = container.GetInstance(variableSave.SourceObject);
-
-                    if (instance != null)
-                    {
-                        // see if the instance has a variable
-                        var foundElementSave = ObjectFinder.Self.GetRootStandardElementSave(instance);
-
-                        if (foundElementSave != null)
-                        {
-                            VariableSave rootVariableSave = foundElementSave.DefaultState.GetVariableSave(variableSave.GetRootName());
-
-                            if (rootVariableSave != null)
-                            {
-                                return rootVariableSave.GetTypeConverter((ElementSave)foundElementSave);
-                            }
-                        }
-                    }
-                }
-
-            }
-            Type type = variableSave.GetRuntimeType();
-            return variableSave.GetTypeConverter(type);
-            
-        }
-
-        static TypeConverter GetTypeConverter(this VariableSave variableSave, Type type)
-        {
-            if (type.IsEnum)
-            {
-                RestrictiveEnumConverter rec = new RestrictiveEnumConverter(type);
-
-                rec.ValuesToExclude.AddRange(variableSave.ExcludedValuesForEnum);
-
-                return rec;
-
-                //return new EnumConverter(type);
-            }
-            else
-            {
-                return TypeDescriptor.GetConverter(type);
-            }
-        }
-#endif
-
-
-
-
 
         public static bool IsState(this VariableSave variableSave, ElementSave container)
         {
@@ -384,6 +229,8 @@ namespace Gum.DataTypes
             }
         }
 
+        public static Func<VariableSave, bool> CustomFixEnumerations;
+
         /// <summary>
         /// Converts integer values to their corresponding enumeration values. This should be called
         /// after variable saves are loaded from XML.
@@ -392,29 +239,13 @@ namespace Gum.DataTypes
         /// <returns>Whether any changes were made.</returns>
         public static bool FixEnumerations(this VariableSave variableSave)
         {
-
-#if GUM
-            if (variableSave.GetIsEnumeration() && variableSave.Value != null && variableSave.Value.GetType() == typeof(int))
+            bool toReturn = false;
+            if(CustomFixEnumerations != null)
             {
-                Array array = Enum.GetValues(variableSave.GetRuntimeType());
-
-                // GetValue returns the value at an index, which is bad if there are
-                // gaps in the index
-                // variableSave.Value = array.GetValue((int)variableSave.Value);
-                for(int i = 0; i < array.Length; i++)
-                {
-                    if((int)array.GetValue(i) == (int)variableSave.Value)
-                    {
-                        variableSave.Value = array.GetValue(i);
-                        return true;
-                    }
-                }
-
-                return false;
+                toReturn = CustomFixEnumerations(variableSave);
             }
-            return false;
-#else
-            if(variableSave.Value != null)
+
+            if(!toReturn && variableSave.Value != null)
             {
                 int valueAsInt = 0;
                 var isInt = false;
@@ -455,75 +286,75 @@ namespace Gum.DataTypes
                         case "DimensionUnitType":
                         case "Gum.DataTypes.DimensionUnitType":
                             variableSave.Value = (Gum.DataTypes.DimensionUnitType)valueAsInt;
-                        
-                            return true;
+
+                            toReturn = true;
+                            break;
                         case "VerticalAlignment":
                         case "RenderingLibrary.Graphics.VerticalAlignment":
 
                             variableSave.Value = (global::RenderingLibrary.Graphics.VerticalAlignment)valueAsInt;
-                            return true;
+                            toReturn = true;
+                            break;
                         case "HorizontalAlignment":
                         case "RenderingLibrary.Graphics.HorizontalAlignment":
                             variableSave.Value = (global::RenderingLibrary.Graphics.HorizontalAlignment)valueAsInt;
-                            return true;
+                            toReturn = true;
+                            break;
                         case "PositionUnitType":
                         case "Gum.Managers.PositionUnitType":
                             variableSave.Value = (Gum.Managers.PositionUnitType)valueAsInt;
-                            return true;
+                            toReturn = true;
+                            break;
                         case "GeneralUnitType":
                         case "Gum.Converters.GeneralUnitType":
                             variableSave.Value = (Gum.Converters.GeneralUnitType)valueAsInt;
-                            return true;
+                            toReturn = true;
+                            break;
 
                         case "Gum.RenderingLibrary.Blend":
                         case "Blend":
                             variableSave.Value = (Gum.RenderingLibrary.Blend)valueAsInt;
-                            return true;
+                            toReturn = true;
+                            break;
 
                         case "Gum.Managers.TextureAddress":
                         case "TextureAddress":
                     
                             variableSave.Value = (TextureAddress)valueAsInt;
-                            return true;
+                            toReturn = true;
+                            break;
                         case "Gum.Managers.ChildrenLayout":         
                         case "ChildrenLayout":
                             variableSave.Value = (ChildrenLayout)valueAsInt;
-                            return true;
+                            toReturn = true;
+                            break;
                         case "GradientType":
                             variableSave.Value = (global::RenderingLibrary.Graphics.GradientType)valueAsInt;
-                            return true;
+                            toReturn = true;
+                            break;
 
                         case "RenderingLibrary.Graphics.TextOverflowHorizontalMode":
                         case "TextOverflowHorizontalMode":
                             variableSave.Value = (global::RenderingLibrary.Graphics.TextOverflowHorizontalMode)valueAsInt;
-                            return true;
+                            toReturn = true;
+                            break;
 
                         case "RenderingLibrary.Graphics.TextOverflowVerticalMode":
                         case "TextOverflowVerticalMode":
                             variableSave.Value = (global::RenderingLibrary.Graphics.TextOverflowVerticalMode)valueAsInt;
-                            return true;
+                            toReturn = true;
+                            break;
 
                         default:
-                            return false;
+                            toReturn = false;
+                            break;
                     }
                 }
             
             }
 
-            return false;
-#endif
-
-        }
-
-        public static VariableSave Clone(this VariableSave whatToClone)
-        {
-            var toReturn = FileManager.CloneSaveObject<VariableSave>(whatToClone);
-
-            toReturn.ExcludedValuesForEnum.AddRange(whatToClone.ExcludedValuesForEnum);
-#if GUM
-            toReturn.FixEnumerations();
-#endif
             return toReturn;
+
         }
 
         public static bool GetIsFileFromRoot(this VariableSave variable, ElementSave element)

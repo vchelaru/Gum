@@ -226,6 +226,12 @@ namespace GumRuntime
 
         public static void SetVariablesRecursively(this GraphicalUiElement graphicalElement, ElementSave elementSave, Gum.DataTypes.Variables.StateSave stateSave)
         {
+#if DEBUG
+            if(stateSave == null)
+            {
+                throw new Exception("State cannot be null");
+            }
+#endif
             if (!string.IsNullOrEmpty(elementSave.BaseType))
             {
                 var baseElementSave = Gum.Managers.ObjectFinder.Self.GetElementSave(elementSave.BaseType);
