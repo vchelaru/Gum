@@ -25,6 +25,9 @@
 		<Compile Include="..\Gum\DataTypes\BehaviorSaveExtensionMethods.cs">
 			<Link>DataTypes\BehaviorSaveExtensionMethods.cs</Link>
 		</Compile>
+		<Compile Include="..\Gum\DataTypes\ComponentSaveExtensionMethods.cs">
+			<Link>DataTypes\ComponentSaveExtensionMethods.cs</Link>
+		</Compile>
 		<Compile Include="..\Gum\DataTypes\ElementSaveExtensionMethods.cs">
 			<Link>DataTypes\ElementSaveExtensionMethods.cs</Link>
 		</Compile>
@@ -36,6 +39,12 @@
 		<Compile Include="..\Gum\DataTypes\GumProjectSaveExtensionMethods.cs">
 			<Link>DataTypes\GumProjectSaveExtensionMethods.cs</Link>
 		</Compile>
+
+
+		<Compile Include="..\Gum\DataTypes\PluginSettingsSave.cs">
+			<Link>DataTypes\PluginSettingsSave.cs</Link>
+		</Compile>
+
 		<Compile Include="..\Gum\DataTypes\RecursiveVariableFinder.cs">
 			<Link>DataTypes\RecursiveVariableFinder.cs</Link>
 		</Compile>
@@ -46,6 +55,21 @@
 		<Compile Include="..\Gum\DataTypes\VariableSaveExtensionMethods.cs">
 			<Link>DataTypes\VariableSaveExtensionMethods.cs</Link>
 		</Compile>
+
+
+
+		<Compile Include="..\Gum\DataTypes\VariableListSaveExtensionMethods.cs">
+			<Link>DataTypes\VariableListSaveExtensionMethods.cs</Link>
+		</Compile>
+
+		<Compile Include="..\RenderingLibrary\Graphics\IAspectRatio.cs">
+			<Link>Graphics\IAspectRatio.cs</Link>
+		</Compile>
+
+		<Compile Include="..\RenderingLibrary\Graphics\LayerCameraSettings.cs">
+			<Link>Graphics\LayerCameraSettings.cs</Link>
+		</Compile>
+
 		<Compile Include="..\Gum\RenderingLibrary\Blend.cs">
 			<Link>RenderingLibrary\Blend.cs</Link>
 		</Compile>
@@ -57,6 +81,10 @@
 			<Link>Graphics\GradientType.cs</Link>
 		</Compile>
 
+		<Compile Include="..\RenderingLibrary\Math\MathFunctions.cs">
+			<Link>RenderingLibrary\MathFunctions.cs</Link>
+		</Compile>
+		
 		<Compile Include="..\RenderingLibrary\Graphics\TextOverflowMode.cs" Link="Graphics\TextOverflowMode.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\VerticalAlignment.cs">
 			<Link>Graphics\VerticalAlignment.cs</Link>

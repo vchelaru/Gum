@@ -18,17 +18,8 @@
 
   <ItemGroup>
     <Compile Include="..\GumRuntime\GraphicalUiElement.cs" Link="GraphicalUiElement.cs" />
-    <Compile Include="..\Gum\DataTypes\ComponentSaveExtensionMethods.cs">
-      <Link>DataTypes\ComponentSaveExtensionMethods.cs</Link>
-    </Compile>
 
-    <Compile Include="..\Gum\DataTypes\PluginSettingsSave.cs">
-      <Link>DataTypes\PluginSettingsSave.cs</Link>
-    </Compile>
 
-    <Compile Include="..\Gum\DataTypes\VariableListSaveExtensionMethods.cs">
-      <Link>DataTypes\VariableListSaveExtensionMethods.cs</Link>
-    </Compile>
 
     <Compile Include="..\Gum\Graphics\Animation\AnimationFrame.cs">
       <Link>Graphics\Animation\AnimationFrame.cs</Link>
@@ -42,9 +33,7 @@
       <Link>RenderingLibrary\Camera.cs</Link>
     </Compile>
 
-    <Compile Include="..\RenderingLibrary\Graphics\IAspectRatio.cs">
-      <Link>Graphics\IAspectRatio.cs</Link>
-    </Compile>
+
     <Compile Include="..\RenderingLibrary\Graphics\IRenderableIpso.cs">
       <Link>IRenderableIpso.cs</Link>
     </Compile>
@@ -54,18 +43,14 @@
     <Compile Include="..\RenderingLibrary\Graphics\Layer.cs">
       <Link>RenderingLibrary\Layer.cs</Link>
     </Compile>
-    <Compile Include="..\RenderingLibrary\Graphics\LayerCameraSettings.cs">
-      <Link>Graphics\LayerCameraSettings.cs</Link>
-    </Compile>
+
     <Compile Include="..\RenderingLibrary\Graphics\SortableLayer.cs">
       <Link>Graphics\SortableLayer.cs</Link>
     </Compile>
     <Compile Include="..\RenderingLibrary\IPositionedSizedObject.cs">
       <Link>IPositionedSizedObject.cs</Link>
     </Compile>
-    <Compile Include="..\RenderingLibrary\Math\MathFunctions.cs">
-      <Link>RenderingLibrary\MathFunctions.cs</Link>
-    </Compile>
+
   </ItemGroup>
 
   <ItemGroup>
