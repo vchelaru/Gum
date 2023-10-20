@@ -4,6 +4,7 @@ using RenderingLibrary.Content;
 using RenderingLibrary.Math.Geometry;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.ObjectModel;
+using BlendState = Gum.BlendState;
 using MathHelper = ToolsUtilitiesStandard.Helpers.MathHelper;
 using Vector2 = System.Numerics.Vector2;
 using Vector3 = System.Numerics.Vector3;

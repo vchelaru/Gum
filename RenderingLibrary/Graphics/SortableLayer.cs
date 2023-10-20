@@ -1,4 +1,7 @@
-﻿using System;
+﻿#if SKIA
+using System;
+#endif
+using BlendState = Gum.BlendState;
 
 namespace RenderingLibrary.Graphics
 {
@@ -10,9 +13,9 @@ namespace RenderingLibrary.Graphics
         }
 
 #if MONOGAME || XNA4
-        public Microsoft.Xna.Framework.Graphics.BlendState BlendState
+        public BlendState BlendState
         {
-            get { return Microsoft.Xna.Framework.Graphics.BlendState.NonPremultiplied; }
+            get { return BlendState.NonPremultiplied; }
         }
 
         public void Render(SpriteRenderer spriteRenderer, SystemManagers managers)

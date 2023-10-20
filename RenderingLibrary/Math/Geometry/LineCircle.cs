@@ -1,6 +1,6 @@
 ﻿using RenderingLibrary.Graphics;
-using Microsoft.Xna.Framework.Graphics;
 using System.Collections.ObjectModel;
+using BlendState = Gum.BlendState;
 using MathHelper = ToolsUtilitiesStandard.Helpers.MathHelper;
 using Color = System.Drawing.Color;
 using Matrix = System.Numerics.Matrix4x4;

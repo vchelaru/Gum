@@ -6,6 +6,7 @@ using RenderingLibrary.Content;
 using System.Collections.ObjectModel;
 using RenderingLibrary.Math;
 using ToolsUtilitiesStandard.Helpers;
+using BlendState = Gum.BlendState;
 using MathHelper = ToolsUtilitiesStandard.Helpers.MathHelper;
 using Vector2 = System.Numerics.Vector2;
 using Vector3 = System.Numerics.Vector3;

@@ -2,6 +2,7 @@
 using RenderingLibrary.Graphics;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using BlendState = Gum.BlendState;
 using Vector2 = System.Numerics.Vector2;
 using Color = System.Drawing.Color;
 

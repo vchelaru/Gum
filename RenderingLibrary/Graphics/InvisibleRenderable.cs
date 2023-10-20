@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.ObjectModel;
-using Microsoft.Xna.Framework.Graphics;
+using BlendState = Gum.BlendState;
 
 namespace RenderingLibrary.Graphics
 {

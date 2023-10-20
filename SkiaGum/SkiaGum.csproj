@@ -65,4 +65,8 @@
     <ProjectReference Include="..\ToolsUtilities\ToolsUtilitiesStandard.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Xna\" />
+  </ItemGroup>
+
 </Project>

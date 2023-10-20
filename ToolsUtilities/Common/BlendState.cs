@@ -1,4 +1,4 @@
-﻿namespace SkiaGum.Xna
+﻿namespace Gum
 {
     public class BlendState
     {

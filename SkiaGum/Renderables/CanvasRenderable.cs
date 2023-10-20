@@ -132,11 +132,11 @@ namespace SkiaGum.Renderables
             }
         }
 #else
-        public Microsoft.Xna.Framework.Graphics.BlendState BlendState
+        public BlendState BlendState
         {
             get
             {
-                return Microsoft.Xna.Framework.Graphics.BlendState.AlphaBlend; //?
+                return BlendState.AlphaBlend; //?
 
             }
 

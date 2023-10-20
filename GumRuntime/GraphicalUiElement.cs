@@ -29,6 +29,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.ComponentModel;
 using ToolsUtilitiesStandard.Helpers;
+using BlendState = Gum.BlendState;
 using MathHelper = ToolsUtilitiesStandard.Helpers.MathHelper;
 using Vector2 = System.Numerics.Vector2;
 using Vector3 = System.Numerics.Vector3;
@@ -449,7 +450,7 @@ namespace Gum.Wireframe
 
 
 #if MONOGAME || XNA4
-        Microsoft.Xna.Framework.Graphics.BlendState IRenderable.BlendState
+        BlendState IRenderable.BlendState
         {
             get
             {

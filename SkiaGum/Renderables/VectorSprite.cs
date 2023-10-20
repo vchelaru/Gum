@@ -4,6 +4,7 @@ using SkiaGum.GueDeriving;
 using SkiaSharp;
 using Svg.Skia;
 using System.Collections.ObjectModel;
+using BlendState = Gum.BlendState;
 using Vector2 = System.Numerics.Vector2;
 using Matrix = System.Numerics.Matrix4x4;
 
@@ -236,11 +237,11 @@ namespace SkiaGum
             }
         }
 #else
-        public Microsoft.Xna.Framework.Graphics.BlendState BlendState
+        public BlendState BlendState
         {
             get
             {
-                return Microsoft.Xna.Framework.Graphics.BlendState.AlphaBlend; //?
+                return BlendState.AlphaBlend; //?
             }
 
 

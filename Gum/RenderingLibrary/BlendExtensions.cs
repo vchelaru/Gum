@@ -1,5 +1,4 @@
-﻿using Microsoft.Xna.Framework.Graphics;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,7 +13,7 @@ namespace Gum.RenderingLibrary
     public static class BlendExtensions
     {
         #if !NO_XNA && !SKIA
-        public static Microsoft.Xna.Framework.Graphics.BlendState ToBlendState(this Blend blend)
+        public static BlendState ToBlendState(this Blend blend)
         {
             switch (blend)
             {

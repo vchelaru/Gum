@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using BlendState = Gum.BlendState;
 using Vector2 = System.Numerics.Vector2;
 using Color = System.Drawing.Color;
 using Rectangle = System.Drawing.Rectangle;
@@ -211,7 +212,7 @@ namespace RenderingLibrary.Graphics
             }
             beginEndState = SpriteBatchBeginEndState.Began;
             SpriteBatch.Begin(sortMode,
-                blendState,
+                blendState.ToXNA(),
                 samplerState, depthStencilState, rasterizerState, effect, transformMatrix);
 
         }
