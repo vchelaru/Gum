@@ -1,4 +1,6 @@
-﻿namespace SkiaGum.Managers
+﻿using RenderingLibrary.Graphics;
+
+namespace RenderingLibrary
 {
     public interface ISurfaceInvalidatable
     {
@@ -9,6 +11,6 @@
     {
         void InvalidateSurface();
         bool EnableTouchEvents { get; set; }
-        RenderingLibrary.Graphics.Renderer Renderer { get; }
+        IRenderer Renderer { get; }
     }
 }

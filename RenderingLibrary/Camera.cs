@@ -22,6 +22,8 @@ namespace RenderingLibrary
 
         public Vector2 Position;
 
+        ISystemManagers systemManagers
+
         #endregion
 
         #region Properties
@@ -167,9 +169,10 @@ namespace RenderingLibrary
         #region Methods
 
 
-        public Camera()
+        public Camera(ISystemManagers systemManagers)
         {
             Zoom = 1;
+            this.systemManagers = systemManagers;
         }
 
         public Matrix GetTransformationMatrix(bool forRendering = false)
@@ -218,7 +221,10 @@ namespace RenderingLibrary
 
         public static Matrix GetTransformationMatrix(float x, float y, float zoom, int clientWidth, int clientHeight, bool forRendering = false)
         {
-            if (Renderer.UsingEffect && forRendering)
+            // Vic says - I don't know exactly why this code is needed. I don't understand it 
+            // well enough to address it now, but I need to make this compile so I'm going to
+            // refactor out the Renderer usage.
+            if (systemManagers.Renderer.UsingEffect && forRendering)
             {
                 return
                     Matrix.CreateTranslation(new Vector3(-x, -y, 0)) *
