@@ -9,6 +9,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.Runtime.InteropServices;
 using ToolsUtilitiesStandard.Helpers;
+using BlendState = Gum.BlendState;
 using Point = System.Drawing.Point;
 using Color = System.Drawing.Color;
 using Rectangle = System.Drawing.Rectangle;

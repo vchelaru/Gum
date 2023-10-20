@@ -7,6 +7,7 @@ using System.Collections;
 using RenderingLibrary.Math;
 using RenderingLibrary.Math.Geometry;
 using ToolsUtilities;
+using BlendState = Gum.BlendState;
 using MathHelper = ToolsUtilitiesStandard.Helpers.MathHelper;
 using Vector2 = System.Numerics.Vector2;
 using Point = System.Drawing.Point;

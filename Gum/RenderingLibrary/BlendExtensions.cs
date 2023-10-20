@@ -14,7 +14,7 @@ namespace Gum.RenderingLibrary
     public static class BlendExtensions
     {
         #if !NO_XNA && !SKIA
-        public static Microsoft.Xna.Framework.Graphics.BlendState ToBlendState(this Blend blend)
+        public static BlendState ToBlendState(this Blend blend)
         {
             switch (blend)
             {

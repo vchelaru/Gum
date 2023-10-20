@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.ObjectModel;
 using Microsoft.Xna.Framework.Content;
+using BlendState = Gum.BlendState;
 using Color = System.Drawing.Color;
 using Rectangle = System.Drawing.Rectangle;
 

@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using Microsoft.Xna.Framework.Graphics;
 using ToolsUtilitiesStandard.Helpers;
+using BlendState = Gum.BlendState;
 using Vector2 = System.Numerics.Vector2;
 using Color = System.Drawing.Color;
 using Rectangle = System.Drawing.Rectangle;

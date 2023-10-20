@@ -1,7 +1,7 @@
 ﻿using System;
 using RenderingLibrary.Graphics;
-using Microsoft.Xna.Framework.Graphics;
 using System.Collections.ObjectModel;
+using BlendState = Gum.BlendState;
 using Color = System.Drawing.Color;
 
 namespace RenderingLibrary.Math.Geometry
@@ -87,7 +87,7 @@ namespace RenderingLibrary.Math.Geometry
             set;
         }
 
-        public Microsoft.Xna.Framework.Graphics.BlendState BlendState
+        public BlendState BlendState
         {
             get;
             set;

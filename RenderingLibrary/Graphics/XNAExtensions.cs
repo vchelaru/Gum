@@ -43,5 +43,12 @@
 				value.M41, value.M42, value.M43, value.M44
 			);
 		}
+
+		public static Microsoft.Xna.Framework.Graphics.BlendState ToXNA(this Gum.BlendState value) {
+			if (value == Gum.BlendState.Opaque) return Microsoft.Xna.Framework.Graphics.BlendState.Opaque;
+			if (value == Gum.BlendState.AlphaBlend) return Microsoft.Xna.Framework.Graphics.BlendState.AlphaBlend;
+			if (value == Gum.BlendState.Additive) return Microsoft.Xna.Framework.Graphics.BlendState.Additive;
+			return value == Gum.BlendState.NonPremultiplied ? Microsoft.Xna.Framework.Graphics.BlendState.NonPremultiplied : null;
+		}
 	}
 }
