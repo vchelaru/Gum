@@ -232,7 +232,24 @@ namespace RenderingLibrary.Graphics
         public void Initialize(GraphicsDevice graphicsDevice, SystemManagers managers)
         {
             SamplerState = SamplerState.LinearClamp;
-            mCamera = new RenderingLibrary.Camera(managers);
+            mCamera = new RenderingLibrary.Camera();
+
+            if (graphicsDevice != null)
+            {
+                mCamera.ClientWidth = graphicsDevice.Viewport.Width;
+                mCamera.ClientHeight = graphicsDevice.Viewport.Height;
+            }
+
+                    // for open gl (desktop gl) this should be 0
+                    // for DirectX it should be 0.5 I believe....
+#if DIRECTX_RENDERING
+            Camera.PixelPerfectOffsetX = .5f;
+            Camera.PixelPerfectOffsetY = .5f;
+#else
+            Camera.PixelPerfectOffsetX = .0f;
+            Camera.PixelPerfectOffsetY = .0f;
+#endif
+
             mLayersReadOnly = new ReadOnlyCollection<Layer>(mLayers);
 
             mLayers.Add(new Layer());
@@ -256,7 +273,11 @@ namespace RenderingLibrary.Graphics
             pixels[1] = Microsoft.Xna.Framework.Color.Transparent;
             mDottedLineTexture.SetData<Microsoft.Xna.Framework.Color>(pixels);
 
-            mCamera.UpdateClient();
+            if (GraphicsDevice != null)
+            {
+                mCamera.ClientWidth = GraphicsDevice.Viewport.Width;
+                mCamera.ClientHeight = GraphicsDevice.Viewport.Height;
+            }
         }
 
         public Layer AddLayer()
@@ -296,7 +317,11 @@ namespace RenderingLibrary.Graphics
             // So that 2 controls don't render at the same time.
             lock (LockObject)
             {
-                mCamera.UpdateClient();
+                if (GraphicsDevice != null)
+                {
+                    mCamera.ClientWidth = GraphicsDevice.Viewport.Width;
+                    mCamera.ClientHeight = GraphicsDevice.Viewport.Height;
+                }
 
                 var oldSampler = GraphicsDevice.SamplerStates[0];
 
@@ -317,7 +342,11 @@ namespace RenderingLibrary.Graphics
             // So that 2 controls don't render at the same time.
             lock (LockObject)
             {
-                mCamera.UpdateClient();
+                if (GraphicsDevice != null)
+                {
+                    mCamera.ClientWidth = GraphicsDevice.Viewport.Width;
+                    mCamera.ClientHeight = GraphicsDevice.Viewport.Height;
+                }
 
 
                 mRenderStateVariables.BlendState = Renderer.NormalBlendState;

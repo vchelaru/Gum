@@ -41,7 +41,7 @@ namespace RenderingLibrary.Graphics
 
         public void Initialize(SystemManagers managers)
         {
-            Camera = new Camera(managers);
+            Camera = new Camera();
         }
 
         //public void Draw(SystemManagers systemManagers)

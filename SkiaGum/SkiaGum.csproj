@@ -29,9 +29,7 @@
     <Compile Include="..\Gum\RenderingLibrary\IPositionedSizedObjectExtensionMethods.cs">
       <Link>RenderingLibrary\IPositionedSizedObjectExtensionMethods.cs</Link>
     </Compile>
-    <Compile Include="..\RenderingLibrary\Camera.cs">
-      <Link>RenderingLibrary\Camera.cs</Link>
-    </Compile>
+
 
 
     <Compile Include="..\RenderingLibrary\Graphics\IRenderableIpso.cs">

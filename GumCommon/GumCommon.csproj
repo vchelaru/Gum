@@ -62,6 +62,10 @@
 			<Link>DataTypes\VariableListSaveExtensionMethods.cs</Link>
 		</Compile>
 
+		<Compile Include="..\RenderingLibrary\Camera.cs">
+			<Link>RenderingLibrary\Camera.cs</Link>
+		</Compile>
+
 		<Compile Include="..\RenderingLibrary\Graphics\IAspectRatio.cs">
 			<Link>Graphics\IAspectRatio.cs</Link>
 		</Compile>

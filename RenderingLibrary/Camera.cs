@@ -21,7 +21,6 @@ namespace RenderingLibrary
         #region Fields
 
         public Vector2 Position;
-        SystemManagers mManagers;
 
         #endregion
 
@@ -131,50 +130,20 @@ namespace RenderingLibrary
             }
         }
 
-        Renderer Renderer
-        {
-            get
-            {
-                if (mManagers == null)
-                {
-                    return Renderer.Self;
-                }
-                else
-                {
-                    return mManagers.Renderer;
-                }
-            }
-        }
-
-        // for open gl (desktop gl) this should be 0
-        // for DirectX it should be 0.5 I believe....
-#if DIRECTX_RENDERING
-        public static float PixelPerfectOffsetX = .5f;
-        public static float PixelPerfectOffsetY = .5f;
-#else
         public static float PixelPerfectOffsetX = .0f;
         public static float PixelPerfectOffsetY = .0f;
-#endif
 
         public int ClientWidth
         {
-            //get
-            //{
-            //    return Renderer.GraphicsDevice.Viewport.Width;
-            //}
             get;
-            private set;
+            set;
 
         }
 
         public int ClientHeight
         {
-            //get
-            //{
-            //    return Renderer.GraphicsDevice.Viewport.Height;
-            //}
             get;
-            private set;
+            set;
         }
 
         /// <summary>
@@ -193,16 +162,14 @@ namespace RenderingLibrary
             set;
         }
 
-#endregion
+        #endregion
 
         #region Methods
 
 
-        public Camera(SystemManagers managers)
+        public Camera()
         {
             Zoom = 1;
-            mManagers = managers;
-            UpdateClient();
         }
 
         public Matrix GetTransformationMatrix(bool forRendering = false)
@@ -240,7 +207,7 @@ namespace RenderingLibrary
                     y += .5f / zoom;
                 }
                 // make local vars to make stepping in faster if debugging
-                return Camera.GetTransformationMatrix(x, y, zoom, width, height, forRendering);
+                return GetTransformationMatrix(x, y, zoom, width, height, forRendering);
             }
             else
             {
@@ -291,22 +258,6 @@ namespace RenderingLibrary
             screenX = transformed.X;
             screenY = transformed.Y;
         }
-
-        // Not sure why but for some reason the GraphicsDevice would
-        // return its viewport as different managers- perhaps there is
-        // only one graphics device and the viewport is switched when it
-        // renders?  Hard to say.
-        internal void UpdateClient()
-        {
-#if MONOGAME
-            if (Renderer.GraphicsDevice != null)
-            {
-                ClientWidth = Renderer.GraphicsDevice.Viewport.Width;
-                ClientHeight = Renderer.GraphicsDevice.Viewport.Height;
-            }
-#endif
-        }
-
         #endregion
     }
 }
