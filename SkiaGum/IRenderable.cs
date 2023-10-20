@@ -1,8 +1,9 @@
-﻿using SkiaSharp;
+﻿using Gum;
+using SkiaSharp;
 
 public interface IRenderable
 {
-    //BlendState BlendState { get; }
+    BlendState BlendState { get; }
 
     bool Wrap { get; }
 
