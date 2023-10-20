@@ -2,7 +2,6 @@
 using Gum.Managers;
 using Gum.Wireframe;
 #if !NO_XNA
-using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Math.Geometry;

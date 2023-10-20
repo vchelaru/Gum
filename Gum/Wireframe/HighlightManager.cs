@@ -1,5 +1,4 @@
-﻿using Microsoft.Xna.Framework.Graphics;
-using RenderingLibrary;
+﻿using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Math.Geometry;
 using System.Collections.Generic;
