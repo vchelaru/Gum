@@ -202,9 +202,17 @@ namespace RenderingLibrary.Graphics
         /// Use the custom effect for rendering. This setting takes priority if 
         /// both UseCustomEffectRendering and UseBasicEffectRendering are enabled.
         /// </summary>
-        public static bool UseCustomEffectRendering { get; set; } = false;
-        public static bool UseBasicEffectRendering { get; set; } = true;
-        public static bool UsingEffect { get { return UseCustomEffectRendering || UseBasicEffectRendering; } }
+        public static bool UseCustomEffectRendering 
+        {
+            get => RendererSettings.UseCustomEffectRendering;
+            set => RendererSettings.UseCustomEffectRendering = value;
+        }
+        public static bool UseBasicEffectRendering 
+        { 
+            get => RendererSettings.UseBasicEffectRendering;
+            set => RendererSettings.UseBasicEffectRendering = value;
+        }
+        public static bool UsingEffect => RendererSettings.UsingEffect;
 
         public static CustomEffectManager CustomEffectManager { get; } = new CustomEffectManager();
 

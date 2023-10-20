@@ -8,5 +8,6 @@ namespace RenderingLibrary.Graphics
 {
     public interface IRenderer
     {
+        Camera Camera { get; }
     }
 }

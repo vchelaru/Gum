@@ -121,6 +121,7 @@
     <Compile Include="Graphics\NineSlice.cs" />
     <Compile Include="Graphics\NineSliceExtensions.cs" />
     <Compile Include="Graphics\Renderer.cs" />
+    <Compile Include="Graphics\RendererSettings.cs" />
     <Compile Include="Graphics\SortableLayer.cs" />
     <Compile Include="Graphics\SpriteBatchStack.cs" />
     <Compile Include="Graphics\SpriteRenderer.cs" />
