@@ -97,6 +97,8 @@ namespace Gum
 
             PluginManager.Self.Initialize(this);
 
+            GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
+
             // do this after initializing the plugins. This is separate from where the initialize call is made, but it must
             // happen after plugins are created:
             PluginManager.Self.WireframeInitialized(wireframeControl1, gumEditorPanel);
