@@ -89,6 +89,10 @@
 			<Link>Graphics\GradientType.cs</Link>
 		</Compile>
 
+		<Compile Include="..\RenderingLibrary\Graphics\IVisible.cs">
+			<Link>IVisible.cs</Link>
+		</Compile>
+
 		<Compile Include="..\RenderingLibrary\Math\MathFunctions.cs">
 			<Link>RenderingLibrary\MathFunctions.cs</Link>
 		</Compile>

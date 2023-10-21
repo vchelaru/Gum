@@ -2,7 +2,6 @@
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using SkiaGum.GueDeriving;
-using SkiaGum.Managers;
 using SkiaSharp;
 using SkiaSharp.Views.Desktop;
 using SkiaSharp.Views.WPF;
@@ -31,7 +30,9 @@ namespace SkiaGum.Wpf
 
         public SystemManagers SystemManagers { get; private set; }
 
-        Renderer ISystemManagers.Renderer => SystemManagers.Renderer;
+        public IRenderer Renderer => SystemManagers.Renderer;
+
+        //Renderer ISystemManagers.Renderer => SystemManagers.Renderer;
         //public SemaphoreSlim ExclusiveUiInteractionSemaphor = new SemaphoreSlim(1, 1);
 
         //float yPushed;

@@ -5,7 +5,7 @@ using System.Collections.ObjectModel;
 
 namespace RenderingLibrary.Graphics
 {
-    public class Renderer
+    public class Renderer : IRenderer
     {
         /// <summary>
         /// Use the custom effect for rendering. This setting takes priority if

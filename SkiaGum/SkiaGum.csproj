@@ -35,9 +35,7 @@
     <Compile Include="..\RenderingLibrary\Graphics\IRenderableIpso.cs">
       <Link>IRenderableIpso.cs</Link>
     </Compile>
-    <Compile Include="..\RenderingLibrary\Graphics\IVisible.cs">
-      <Link>IVisible.cs</Link>
-    </Compile>
+
     <Compile Include="..\RenderingLibrary\Graphics\Layer.cs">
       <Link>RenderingLibrary\Layer.cs</Link>
     </Compile>

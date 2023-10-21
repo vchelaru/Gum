@@ -11,6 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\GumCommon\GumCommon.csproj" />
     <ProjectReference Include="..\SkiaGum\SkiaGum.csproj" />
   </ItemGroup>
 
