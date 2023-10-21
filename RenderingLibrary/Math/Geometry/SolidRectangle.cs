@@ -208,7 +208,7 @@ namespace RenderingLibrary.Graphics
             return texture;
         }
 
-        void IRenderable.Render(SystemManagers managers)
+        void IRenderable.Render(ISystemManagers managers)
         {
             if (this.AbsoluteVisible && this.Width > 0 && this.Height > 0)
             {
@@ -219,7 +219,7 @@ namespace RenderingLibrary.Graphics
                 }
                 else
                 {
-                    renderer = managers.Renderer;
+                    renderer = managers.Renderer as Renderer;
                 }
 
                 var texture = renderer.SinglePixelTexture;
@@ -230,7 +230,7 @@ namespace RenderingLibrary.Graphics
                     sourceRect = SinglePixelTextureSourceRectangle;
                 }
 
-                Sprite.Render(managers, managers.Renderer.SpriteRenderer, this, texture, Color, sourceRect, false, this.GetAbsoluteRotation());
+                Sprite.Render(managers as SystemManagers, renderer.SpriteRenderer, this, texture, Color, sourceRect, false, this.GetAbsoluteRotation());
             }
         }
 

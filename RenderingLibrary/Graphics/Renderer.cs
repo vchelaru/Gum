@@ -24,7 +24,7 @@ namespace RenderingLibrary.Graphics
 
     #endregion
 
-    public class Renderer
+    public class Renderer : IRenderer
     {
         /// <summary>
         /// Whether renderable objects should call Render
@@ -178,7 +178,7 @@ namespace RenderingLibrary.Graphics
             set;
         }
 
-        internal SpriteRenderer SpriteRenderer
+        public SpriteRenderer SpriteRenderer
         {
             get
             {
@@ -373,6 +373,11 @@ namespace RenderingLibrary.Graphics
                     RenderLayer(managers, layer, prerender:false);
                 }
             }
+        }
+
+        void IRenderer.RenderLayer(RenderingLibrary.ISystemManagers managers, RenderingLibrary.Graphics.Layer layer, bool prerender)
+        {
+            RenderLayer(managers as SystemManagers, layer, prerender);
         }
 
         internal void RenderLayer(SystemManagers managers, Layer layer, bool prerender = true)

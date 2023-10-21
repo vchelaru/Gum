@@ -470,9 +470,10 @@ namespace Gum.Wireframe
         }
 
 #if MONOGAME || XNA4
-        void IRenderable.Render(SystemManagers managers)
+        void IRenderable.Render(ISystemManagers managers)
         {
-            mContainedObjectAsIpso.Render(managers.Renderer.SpriteRenderer, managers);
+            var systemManagers = managers as SystemManagers;
+            mContainedObjectAsIpso.Render(managers);
         }
 #endif
 

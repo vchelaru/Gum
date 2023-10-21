@@ -93,7 +93,7 @@ namespace RenderingLibrary.Graphics
         {
         }
 
-        public void Render(SystemManagers managers)
+        public void Render(ISystemManagers managers)
         {
         }
 

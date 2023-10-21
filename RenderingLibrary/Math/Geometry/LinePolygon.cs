@@ -220,7 +220,7 @@ namespace RenderingLibrary.Math.Geometry
             mLinePrimitive.SetPointAt(point, index);
         }
 
-        void IRenderable.Render(SystemManagers managers)
+        void IRenderable.Render(ISystemManagers managers)
         {
             if (AbsoluteVisible)
             {
@@ -230,7 +230,7 @@ namespace RenderingLibrary.Math.Geometry
                 Renderer renderer;
                 if (managers != null)
                 {
-                    renderer = managers.Renderer;
+                    renderer = managers.Renderer as Renderer;
                 }
                 else
                 {
@@ -244,8 +244,10 @@ namespace RenderingLibrary.Math.Geometry
                     textureToUse = renderer.DottedLineTexture;
                 }
 
+                var systemManagers = managers as SystemManagers;
+
                 //mLinePrimitive.Render(spriteRenderer, managers, textureToUse, .2f * renderer.Camera.Zoom);
-                mLinePrimitive.Render(managers.Renderer.SpriteRenderer, managers, textureToUse, .1f * renderer.Camera.Zoom);
+                mLinePrimitive.Render(systemManagers.Renderer.SpriteRenderer, systemManagers, textureToUse, .1f * renderer.Camera.Zoom);
             }
         }
 

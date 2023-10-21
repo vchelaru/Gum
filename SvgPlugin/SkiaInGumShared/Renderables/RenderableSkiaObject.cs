@@ -663,7 +663,7 @@ namespace SkiaGum.Renderables
             mChildren = new ObservableCollection<IRenderableIpso>();
         }
 
-        public void Render(SystemManagers managers)
+        public void Render(ISystemManagers managers)
         {
             if (AbsoluteVisible)
             {
@@ -680,7 +680,9 @@ namespace SkiaGum.Renderables
 
                 var color = ShouldApplyColorOnSpriteRender ? Color : Color.White;
 
-                Sprite.Render(managers, spriteRenderer, this, texture, color, rotationInDegrees: Rotation);
+                var systemManagers = managers as SystemManagers;
+
+                Sprite.Render(systemManagers, systemManagers.Renderer.SpriteRenderer, this, texture, color, rotationInDegrees: Rotation);
 
                 this.X = oldX;
                 this.Y = oldY;

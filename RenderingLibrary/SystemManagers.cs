@@ -6,7 +6,7 @@ using RenderingLibrary.Math.Geometry;
 
 namespace RenderingLibrary
 {
-    public partial class SystemManagers
+    public partial class SystemManagers : ISystemManagers
     {
         #region Fields
 
@@ -27,6 +27,8 @@ namespace RenderingLibrary
             get;
             private set;
         }
+
+        IRenderer ISystemManagers.Renderer => Renderer;
 
         public SpriteManager SpriteManager
         {
@@ -70,6 +72,7 @@ namespace RenderingLibrary
         /// generally in response to a font scaling value like the Android font scale setting.
         /// </summary>
         public static float GlobalFontScale { get; set; } = 1.0f;
+        public bool EnableTouchEvents { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         #endregion
 
@@ -126,6 +129,11 @@ namespace RenderingLibrary
         public override string ToString()
         {
             return Name;
+        }
+
+        public void InvalidateSurface()
+        {
+            throw new NotImplementedException();
         }
     }
 }

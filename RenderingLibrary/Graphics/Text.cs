@@ -914,10 +914,12 @@ namespace RenderingLibrary.Graphics
         }
 
 
-        public void Render(SystemManagers managers)
+        public void Render(ISystemManagers managers)
         {
             if (AbsoluteVisible)
             {
+                var systemManagers = (SystemManagers)managers;
+                var spriteRenderer = systemManagers.Renderer.SpriteRenderer;
                 // Moved this out of here - it's manually called by the TextManager
                 // This is required because we can't update in the draw call now that
                 // we're using RenderTargets
@@ -927,22 +929,22 @@ namespace RenderingLibrary.Graphics
                 //}
                 if (RenderBoundary)
                 {
-                    LineRectangle.RenderLinePrimitive(mBounds, managers.Renderer.SpriteRenderer, this, managers, false);
+                    LineRectangle.RenderLinePrimitive(mBounds, spriteRenderer, this, systemManagers, false);
                 }
 
                 if(TextRenderingMode == TextRenderingMode.CharacterByCharacter)
                 {
-                    RenderCharacterByCharacter(managers.Renderer.SpriteRenderer);
+                    RenderCharacterByCharacter(spriteRenderer);
                 }
                 else // RenderTarget
                 {
                     if (mTextureToRender == null)
                     {
-                        RenderUsingSpriteFont(managers.Renderer.SpriteRenderer);
+                        RenderUsingSpriteFont(spriteRenderer);
                     }
                     else
                     {
-                        RenderUsingBitmapFont(managers.Renderer.SpriteRenderer, managers);
+                        RenderUsingBitmapFont(spriteRenderer, systemManagers);
                     }
                 }
             }

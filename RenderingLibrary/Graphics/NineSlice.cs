@@ -375,7 +375,7 @@ namespace RenderingLibrary.Graphics
             RefreshSpriteDimensions();
         }
 
-        void IRenderable.Render(SystemManagers managers)
+        void IRenderable.Render(ISystemManagers managers)
         {
             if (AbsoluteVisible && Width > 0 && Height > 0)
             {
@@ -509,29 +509,30 @@ namespace RenderingLibrary.Graphics
                 mSprites[(int)NineSliceSections.BottomRight].Y = y + offsetX * right.Y + offsetY * up.Y; 
                 mSprites[(int)NineSliceSections.BottomRight].Rotation = rotationInDegrees;
 
-                var spriteRenderer = managers.Renderer.SpriteRenderer;
+                var systemManagers = managers as SystemManagers;
+                var spriteRenderer = systemManagers.Renderer.SpriteRenderer;
 
-                Render(mSprites[(int)NineSliceSections.TopLeft], managers, spriteRenderer);
+                Render(mSprites[(int)NineSliceSections.TopLeft], systemManagers, spriteRenderer);
                 if (mSprites[(int)NineSliceSections.Center].Width > 0)
                 {
-                    Render(mSprites[(int)NineSliceSections.Top], managers, spriteRenderer);
-                    Render(mSprites[(int)NineSliceSections.Bottom], managers, spriteRenderer);
+                    Render(mSprites[(int)NineSliceSections.Top], systemManagers, spriteRenderer);
+                    Render(mSprites[(int)NineSliceSections.Bottom], systemManagers, spriteRenderer);
 
                     if (mSprites[(int)NineSliceSections.Center].Height > 0)
                     {
-                        Render(mSprites[(int)NineSliceSections.Center], managers, spriteRenderer);
+                        Render(mSprites[(int)NineSliceSections.Center], systemManagers, spriteRenderer);
                     }
 
                 }
                 if (mSprites[(int)NineSliceSections.Center].Height > 0)
                 {
-                    Render(mSprites[(int)NineSliceSections.Left], managers, spriteRenderer);
-                    Render(mSprites[(int)NineSliceSections.Right], managers, spriteRenderer);
+                    Render(mSprites[(int)NineSliceSections.Left], systemManagers, spriteRenderer);
+                    Render(mSprites[(int)NineSliceSections.Right], systemManagers, spriteRenderer);
                 }
 
-                Render(mSprites[(int)NineSliceSections.TopRight], managers, spriteRenderer);
-                Render(mSprites[(int)NineSliceSections.BottomLeft], managers, spriteRenderer);
-                Render(mSprites[(int)NineSliceSections.BottomRight], managers, spriteRenderer);
+                Render(mSprites[(int)NineSliceSections.TopRight], systemManagers, spriteRenderer);
+                Render(mSprites[(int)NineSliceSections.BottomLeft], systemManagers, spriteRenderer);
+                Render(mSprites[(int)NineSliceSections.BottomRight], systemManagers, spriteRenderer);
             }
         }
 

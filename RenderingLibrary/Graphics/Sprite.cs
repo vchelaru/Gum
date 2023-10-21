@@ -335,14 +335,16 @@ namespace RenderingLibrary.Graphics
             }
         }
 
-        void IRenderable.Render(SystemManagers managers)
+        void IRenderable.Render(ISystemManagers managers)
         {
             if (this.AbsoluteVisible && Width > 0 && Height > 0)
             {
+                var systemManagers = managers as SystemManagers;
+                var renderer = systemManagers.Renderer;
                 bool shouldTileByMultipleCalls = this.Wrap && (this as IRenderable).Wrap == false;
                 if (shouldTileByMultipleCalls && (this.Texture != null || this.AtlasedTexture != null))
                 {
-                    RenderTiledSprite(managers.Renderer.SpriteRenderer, managers);
+                    RenderTiledSprite(renderer.SpriteRenderer, systemManagers);
                 }
                 else
                 {
@@ -353,7 +355,7 @@ namespace RenderingLibrary.Graphics
                         texture = AtlasedTexture.Texture;
                     }
 
-                    Render(managers, managers.Renderer.SpriteRenderer, this, texture, Color, sourceRectangle, FlipVertical, this.GetAbsoluteRotation());
+                    Render(systemManagers, renderer.SpriteRenderer, this, texture, Color, sourceRectangle, FlipVertical, this.GetAbsoluteRotation());
                 }
             }
         }
