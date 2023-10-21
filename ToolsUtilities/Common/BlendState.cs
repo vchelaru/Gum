@@ -1,5 +1,6 @@
 ﻿namespace Gum
 {
+
     public class BlendState
     {
         //
@@ -24,4 +25,22 @@
         //     color data contains no alpha information.
         public static readonly BlendState NonPremultiplied = new BlendState();
     }
+}
+namespace RenderingLibrary.Graphics
+{
+    public enum ColorOperation
+    {
+        //Texture,
+        //Add,
+        //Subtract,
+        Modulate = 3,
+        //InverseTexture,
+        //Color,
+        ColorTextureAlpha = 6,
+        //Modulate2X,
+        //Modulate4X,
+        //InterpolateColor
+
+    }
+
 }

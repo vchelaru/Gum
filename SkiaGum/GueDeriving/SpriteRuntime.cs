@@ -4,22 +4,6 @@ using SkiaSharp;
 
 namespace SkiaGum.GueDeriving
 {
-#if !MONOGAME
-    public enum ColorOperation
-    {
-        //Texture,
-        //Add,
-        //Subtract,
-        Modulate = 3,
-        //InverseTexture,
-        //Color,
-        ColorTextureAlpha = 6,
-        //Modulate2X,
-        //Modulate4X,
-        //InterpolateColor
-
-    }
-#endif
     public class SpriteRuntime : BindableGraphicalUiElement
     {
         Sprite mContainedSprite;

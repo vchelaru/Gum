@@ -663,7 +663,7 @@ namespace SkiaGum.Renderables
             mChildren = new ObservableCollection<IRenderableIpso>();
         }
 
-        public void Render(SpriteRenderer spriteRenderer, SystemManagers managers)
+        public void Render(SystemManagers managers)
         {
             if (AbsoluteVisible)
             {

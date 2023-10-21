@@ -208,7 +208,7 @@ namespace RenderingLibrary.Graphics
             return texture;
         }
 
-        void IRenderable.Render(SpriteRenderer spriteRenderer, SystemManagers managers)
+        void IRenderable.Render(SystemManagers managers)
         {
             if (this.AbsoluteVisible && this.Width > 0 && this.Height > 0)
             {
@@ -230,7 +230,7 @@ namespace RenderingLibrary.Graphics
                     sourceRect = SinglePixelTextureSourceRectangle;
                 }
 
-                Sprite.Render(managers, spriteRenderer, this, texture, Color, sourceRect, false, this.GetAbsoluteRotation());
+                Sprite.Render(managers, managers.Renderer.SpriteRenderer, this, texture, Color, sourceRect, false, this.GetAbsoluteRotation());
             }
         }
 

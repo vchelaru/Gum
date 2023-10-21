@@ -18,33 +18,11 @@
 
   <ItemGroup>
     <Compile Include="..\GumRuntime\GraphicalUiElement.cs" Link="GraphicalUiElement.cs" />
-
-
-
     <Compile Include="..\Gum\Graphics\Animation\AnimationFrame.cs">
       <Link>Graphics\Animation\AnimationFrame.cs</Link>
     </Compile>
-
-
     <Compile Include="..\Gum\RenderingLibrary\IPositionedSizedObjectExtensionMethods.cs">
       <Link>RenderingLibrary\IPositionedSizedObjectExtensionMethods.cs</Link>
-    </Compile>
-
-
-
-    <Compile Include="..\RenderingLibrary\Graphics\IRenderableIpso.cs">
-      <Link>IRenderableIpso.cs</Link>
-    </Compile>
-
-    <Compile Include="..\RenderingLibrary\Graphics\Layer.cs">
-      <Link>RenderingLibrary\Layer.cs</Link>
-    </Compile>
-
-    <Compile Include="..\RenderingLibrary\Graphics\SortableLayer.cs">
-      <Link>Graphics\SortableLayer.cs</Link>
-    </Compile>
-    <Compile Include="..\RenderingLibrary\IPositionedSizedObject.cs">
-      <Link>IPositionedSizedObject.cs</Link>
     </Compile>
 
   </ItemGroup>

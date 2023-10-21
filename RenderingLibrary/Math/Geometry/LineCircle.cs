@@ -229,13 +229,13 @@ namespace RenderingLibrary.Math.Geometry
             return distanceSquared <= radiusSquared;
         }
 
-        void IRenderable.Render(SpriteRenderer spriteRenderer, SystemManagers managers)
+        void IRenderable.Render(SystemManagers managers)
         {
             if (AbsoluteVisible)
             {
                 mLinePrimitive.Position.X = this.GetAbsoluteLeft();
                 mLinePrimitive.Position.Y = this.GetAbsoluteTop();
-                mLinePrimitive.Render(spriteRenderer, managers);
+                mLinePrimitive.Render(managers.Renderer.SpriteRenderer, managers);
             }
         }
         #endregion

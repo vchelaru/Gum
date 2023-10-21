@@ -13,6 +13,7 @@ using Vector3 = System.Numerics.Vector3;
 using Rectangle = System.Drawing.Rectangle;
 using Color = System.Drawing.Color;
 using Matrix = System.Numerics.Matrix4x4;
+using Gum;
 
 namespace RenderingLibrary.Graphics
 {
@@ -374,7 +375,7 @@ namespace RenderingLibrary.Graphics
             RefreshSpriteDimensions();
         }
 
-        void IRenderable.Render(SpriteRenderer spriteRenderer, SystemManagers managers)
+        void IRenderable.Render(SystemManagers managers)
         {
             if (AbsoluteVisible && Width > 0 && Height > 0)
             {
@@ -507,6 +508,8 @@ namespace RenderingLibrary.Graphics
                 mSprites[(int)NineSliceSections.BottomRight].X = x + offsetX * right.X + offsetY * up.X;
                 mSprites[(int)NineSliceSections.BottomRight].Y = y + offsetX * right.Y + offsetY * up.Y; 
                 mSprites[(int)NineSliceSections.BottomRight].Rotation = rotationInDegrees;
+
+                var spriteRenderer = managers.Renderer.SpriteRenderer;
 
                 Render(mSprites[(int)NineSliceSections.TopLeft], managers, spriteRenderer);
                 if (mSprites[(int)NineSliceSections.Center].Width > 0)

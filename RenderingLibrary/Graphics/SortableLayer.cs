@@ -14,17 +14,16 @@ namespace RenderingLibrary.Graphics
 
         public BlendState BlendState => BlendState.NonPremultiplied; 
 
-#if MONOGAME || XNA4
-
-        public void Render(SpriteRenderer spriteRenderer, SystemManagers managers)
+        public void Render(ISystemManagers managers)
         {
-            if (managers == null)
-            {
-                managers = SystemManagers.Default;
-            }
+            // We can't have statics in interfaces in .NET 4.7 so need to crash
+            //if (managers == null)
+            //{
+            //    managers = ISystemManagers.Default;
+            //}
             managers.Renderer.RenderLayer(managers, this);
         }
-#endif
+
         void IRenderable.PreRender() { }
 
         public float Z

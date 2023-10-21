@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework.Content;
 using BlendState = Gum.BlendState;
 using Color = System.Drawing.Color;
 using Rectangle = System.Drawing.Rectangle;
+using Gum;
 
 namespace RenderingLibrary.Graphics
 {
@@ -438,7 +439,7 @@ namespace RenderingLibrary.Graphics
                     AdjustRenderStates(mRenderStateVariables, layer, renderable);
                     bool didClipChange = oldClip != mRenderStateVariables.ClipRectangle;
 
-                    renderable.Render(spriteRenderer, managers);
+                    renderable.Render(managers);
 
 
                     if (RenderUsingHierarchy)

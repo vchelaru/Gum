@@ -12,20 +12,7 @@ using Rectangle = System.Drawing.Rectangle;
 
 namespace RenderingLibrary.Graphics
 {
-    public enum ColorOperation
-    {
-        //Texture,
-        //Add,
-        //Subtract,
-        Modulate = 3,
-        //InverseTexture,
-        //Color,
-        ColorTextureAlpha = 6,
-        //Modulate2X,
-        //Modulate4X,
-        //InterpolateColor
 
-    }
     public class Sprite : IRenderableIpso, IVisible, IAspectRatio
     {
         #region Fields
@@ -348,14 +335,14 @@ namespace RenderingLibrary.Graphics
             }
         }
 
-        void IRenderable.Render(SpriteRenderer spriteRenderer, SystemManagers managers)
+        void IRenderable.Render(SystemManagers managers)
         {
             if (this.AbsoluteVisible && Width > 0 && Height > 0)
             {
                 bool shouldTileByMultipleCalls = this.Wrap && (this as IRenderable).Wrap == false;
                 if (shouldTileByMultipleCalls && (this.Texture != null || this.AtlasedTexture != null))
                 {
-                    RenderTiledSprite(spriteRenderer, managers);
+                    RenderTiledSprite(managers.Renderer.SpriteRenderer, managers);
                 }
                 else
                 {
@@ -366,7 +353,7 @@ namespace RenderingLibrary.Graphics
                         texture = AtlasedTexture.Texture;
                     }
 
-                    Render(managers, spriteRenderer, this, texture, Color, sourceRectangle, FlipVertical, this.GetAbsoluteRotation());
+                    Render(managers, managers.Renderer.SpriteRenderer, this, texture, Color, sourceRectangle, FlipVertical, this.GetAbsoluteRotation());
                 }
             }
         }

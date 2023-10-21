@@ -9,6 +9,7 @@
 	<ItemGroup>
 		<Compile Include="..\Gum\Managers\ObjectFinder.cs" Link="Managers\ObjectFinder.cs" />
 		<Compile Include="..\RenderingLibrary\Content\IContentLoader.cs" Link="Content\IContentLoader.cs" />
+		<Compile Include="..\RenderingLibrary\Graphics\IRenderable.cs" Link="RenderingLibrary\IRenderable.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\IRenderer.cs" Link="RenderingLibrary\IRenderer.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\RendererSettings.cs" Link="RenderingLibrary\RendererSettings.cs" />
 		<Compile Include="..\RenderingLibrary\ISystemManagers.cs" Link="RenderingLibrary\ISystemManagers.cs" />
@@ -74,8 +75,17 @@
 			<Link>Graphics\IAspectRatio.cs</Link>
 		</Compile>
 
+		<Compile Include="..\RenderingLibrary\Graphics\IRenderableIpso.cs">
+			<Link>IRenderableIpso.cs</Link>
+		</Compile>
+
 		<Compile Include="..\RenderingLibrary\Graphics\LayerCameraSettings.cs">
 			<Link>Graphics\LayerCameraSettings.cs</Link>
+		</Compile>
+
+
+		<Compile Include="..\RenderingLibrary\Graphics\Layer.cs">
+			<Link>RenderingLibrary\Layer.cs</Link>
 		</Compile>
 
 		<Compile Include="..\Gum\RenderingLibrary\Blend.cs">
@@ -92,11 +102,15 @@
 		<Compile Include="..\RenderingLibrary\Graphics\IVisible.cs">
 			<Link>IVisible.cs</Link>
 		</Compile>
-
+		<Compile Include="..\RenderingLibrary\Graphics\SortableLayer.cs">
+			<Link>Graphics\SortableLayer.cs</Link>
+		</Compile>
 		<Compile Include="..\RenderingLibrary\Math\MathFunctions.cs">
 			<Link>RenderingLibrary\MathFunctions.cs</Link>
 		</Compile>
-		
+		<Compile Include="..\RenderingLibrary\IPositionedSizedObject.cs">
+			<Link>IPositionedSizedObject.cs</Link>
+		</Compile>
 		<Compile Include="..\RenderingLibrary\Graphics\TextOverflowMode.cs" Link="Graphics\TextOverflowMode.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\VerticalAlignment.cs">
 			<Link>Graphics\VerticalAlignment.cs</Link>

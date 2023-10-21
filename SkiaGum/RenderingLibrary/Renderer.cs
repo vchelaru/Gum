@@ -72,7 +72,7 @@ namespace RenderingLibrary.Graphics
             {
                 if (element.Visible)
                 {
-                    ((IRenderable)element).Render(managers.Canvas);
+                    ((IRenderable)element).Render(managers);
                 }
             }
 
@@ -131,6 +131,11 @@ namespace RenderingLibrary.Graphics
                     }
                 }
             }
+        }
+
+        public void RenderLayer(ISystemManagers managers, Layer layer, bool prerender = true)
+        {
+            throw new NotImplementedException();
         }
     }
 }

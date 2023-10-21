@@ -255,12 +255,12 @@ namespace RenderingLibrary.Math.Geometry
         }
 
 
-        void IRenderable.Render(SpriteRenderer spriteRenderer, SystemManagers managers)
+        void IRenderable.Render(SystemManagers managers)
         {
             if (AbsoluteVisible && LocalVisible)
             {
                 // todo - add rotation
-                RenderLinePrimitive(mLinePrimitive, spriteRenderer, this, managers, IsDotted);
+                RenderLinePrimitive(mLinePrimitive, managers.Renderer.SpriteRenderer, this, managers, IsDotted);
 
             }
         }

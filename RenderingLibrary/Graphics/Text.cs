@@ -914,7 +914,7 @@ namespace RenderingLibrary.Graphics
         }
 
 
-        public void Render(SpriteRenderer spriteRenderer, SystemManagers managers)
+        public void Render(SystemManagers managers)
         {
             if (AbsoluteVisible)
             {
@@ -927,22 +927,22 @@ namespace RenderingLibrary.Graphics
                 //}
                 if (RenderBoundary)
                 {
-                    LineRectangle.RenderLinePrimitive(mBounds, spriteRenderer, this, managers, false);
+                    LineRectangle.RenderLinePrimitive(mBounds, managers.Renderer.SpriteRenderer, this, managers, false);
                 }
 
                 if(TextRenderingMode == TextRenderingMode.CharacterByCharacter)
                 {
-                    RenderCharacterByCharacter(spriteRenderer);
+                    RenderCharacterByCharacter(managers.Renderer.SpriteRenderer);
                 }
                 else // RenderTarget
                 {
                     if (mTextureToRender == null)
                     {
-                        RenderUsingSpriteFont(spriteRenderer);
+                        RenderUsingSpriteFont(managers.Renderer.SpriteRenderer);
                     }
                     else
                     {
-                        RenderUsingBitmapFont(spriteRenderer, managers);
+                        RenderUsingBitmapFont(managers.Renderer.SpriteRenderer, managers);
                     }
                 }
             }

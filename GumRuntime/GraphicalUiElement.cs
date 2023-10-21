@@ -470,15 +470,16 @@ namespace Gum.Wireframe
         }
 
 #if MONOGAME || XNA4
-        void IRenderable.Render(SpriteRenderer spriteRenderer, SystemManagers managers)
+        void IRenderable.Render(SystemManagers managers)
         {
-            mContainedObjectAsIpso.Render(spriteRenderer, managers);
+            mContainedObjectAsIpso.Render(managers.Renderer.SpriteRenderer, managers);
         }
 #endif
 
 #if SKIA
-        public virtual void Render(SKCanvas canvas)
+        public virtual void Render(ISystemManagers managers)
         {
+            var canvas = (managers as SystemManagers).Canvas;
 
             var isOnScreen = true;
 
@@ -496,14 +497,14 @@ namespace Gum.Wireframe
 
                 if(isOnScreen)
                 {
-                    mContainedObjectAsIpso.Render(canvas);
+                    mContainedObjectAsIpso.Render(managers);
                     canvas.Save();
                     canvas.ClipRect(rect);
                 }
             }
             else
             {
-                mContainedObjectAsIpso.Render(canvas);
+                mContainedObjectAsIpso.Render(managers);
             }
 
             if (isOnScreen)
@@ -511,7 +512,7 @@ namespace Gum.Wireframe
                 // todo - this may allocate slightly due to foreach. Consider changing to a for loop
                 foreach (var child in this.Children)
                 {
-                    child.Render(canvas);
+                    child.Render(managers);
                 }
 
                 if (ClipsChildren)

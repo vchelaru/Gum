@@ -2,7 +2,7 @@
 
 namespace RenderingLibrary
 {
-    public partial class SystemManagers
+    public partial class SystemManagers : ISystemManagers
     {
         /// <summary>
         /// The font scale value. This can be used to scale all fonts globally, 
@@ -20,6 +20,9 @@ namespace RenderingLibrary
 
 
         public RenderingLibrary.Graphics.Renderer Renderer { get; private set; }
+        public bool EnableTouchEvents { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
+
+        IRenderer ISystemManagers.Renderer => throw new System.NotImplementedException();
 
         public void Initialize()
         {
@@ -39,6 +42,9 @@ namespace RenderingLibrary
             //Tex
         }
 
-
+        public void InvalidateSurface()
+        {
+            
+        }
     }
 }

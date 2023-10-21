@@ -302,11 +302,11 @@ namespace RenderingLibrary.Math.Geometry
         void IRenderable.PreRender() { }
 
 
-        public void Render(SpriteRenderer spriteRenderer, SystemManagers managers)
+        public void Render(SystemManagers managers)
         {
             if (Visible)
             {
-                mLinePrimitive.Render(spriteRenderer, managers);
+                mLinePrimitive.Render(managers.Renderer.SpriteRenderer, managers);
             }
         }
 

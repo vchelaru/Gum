@@ -9,5 +9,8 @@ namespace RenderingLibrary.Graphics
     public interface IRenderer
     {
         Camera Camera { get; }
+
+        void RenderLayer(ISystemManagers managers, Layer layer, bool prerender = true);
+
     }
 }

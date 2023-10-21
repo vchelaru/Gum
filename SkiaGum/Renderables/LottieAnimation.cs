@@ -122,7 +122,7 @@ namespace SkiaGum.Renderables
         public void PreRender() { }
 
 #if SKIA
-        public void Render(SKCanvas canvas)
+        public void Render(ISystemManagers managers)
         {
             if (AbsoluteVisible && Animation != null)
             {
@@ -161,6 +161,8 @@ namespace SkiaGum.Renderables
                 var absoluteX = this.GetAbsoluteX();
                 var absoluteY = this.GetAbsoluteY();
                 var boundingRect = new SKRect(absoluteX, absoluteY, absoluteX + this.Width, absoluteY + this.Height);
+
+                var canvas = (managers as SystemManagers).Canvas;
 
                 Animation.Render(canvas, boundingRect);
             }

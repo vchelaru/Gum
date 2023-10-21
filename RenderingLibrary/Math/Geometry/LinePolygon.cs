@@ -220,7 +220,7 @@ namespace RenderingLibrary.Math.Geometry
             mLinePrimitive.SetPointAt(point, index);
         }
 
-        void IRenderable.Render(SpriteRenderer spriteRenderer, SystemManagers managers)
+        void IRenderable.Render(SystemManagers managers)
         {
             if (AbsoluteVisible)
             {
@@ -245,7 +245,7 @@ namespace RenderingLibrary.Math.Geometry
                 }
 
                 //mLinePrimitive.Render(spriteRenderer, managers, textureToUse, .2f * renderer.Camera.Zoom);
-                mLinePrimitive.Render(spriteRenderer, managers, textureToUse, .1f * renderer.Camera.Zoom);
+                mLinePrimitive.Render(managers.Renderer.SpriteRenderer, managers, textureToUse, .1f * renderer.Camera.Zoom);
             }
         }
 

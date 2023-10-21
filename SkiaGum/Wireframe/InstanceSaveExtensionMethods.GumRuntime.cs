@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework.Graphics;
 #if !NO_XNA
 
 using RenderingLibrary;
+using RenderingLibrary.Graphics;
 #if MONOGAME
 using RenderingLibrary.Math.Geometry;
 #endif

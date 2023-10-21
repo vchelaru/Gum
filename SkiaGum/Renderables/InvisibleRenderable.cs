@@ -1,4 +1,5 @@
 ﻿using Gum;
+using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using SkiaGum.GueDeriving;
 using SkiaSharp;
@@ -103,7 +104,7 @@ namespace SkiaGum.Renderables
         {
         }
 
-        public void Render(SKCanvas canvas)
+        public void Render(ISystemManagers managers)
         {
 
         }

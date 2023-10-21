@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Gum;
+using System;
 using System.Collections.ObjectModel;
 using BlendState = Gum.BlendState;
 
@@ -92,7 +93,7 @@ namespace RenderingLibrary.Graphics
         {
         }
 
-        public void Render(SpriteRenderer spriteRenderer, SystemManagers managers)
+        public void Render(SystemManagers managers)
         {
         }
 

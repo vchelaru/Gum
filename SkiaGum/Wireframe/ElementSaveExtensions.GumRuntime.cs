@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
+using RenderingLibrary.Graphics;
 
 namespace GumRuntime
 {

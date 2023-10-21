@@ -8,7 +8,7 @@ namespace RenderingLibrary.Graphics
 
         bool Wrap { get; }
 
-        void Render(SpriteRenderer spriteRenderer, SystemManagers managers);
+        void Render(ISystemManagers managers);
 
         /// <summary>
         /// Perform logic which needs to occur before a SpriteBatch has been started
