@@ -6,6 +6,7 @@ using System;
 using System.Collections.ObjectModel;
 using Vector2 = System.Numerics.Vector2;
 using Matrix = System.Numerics.Matrix4x4;
+using Gum;
 
 namespace SkiaGum.Renderables
 {
@@ -165,15 +166,6 @@ namespace SkiaGum.Renderables
             }
         }
 #else
-        public BlendState BlendState
-        {
-            get
-            {
-                return BlendState.AlphaBlend; //?
-
-            }
-
-        }
         public void Render(SpriteRenderer spriteRenderer, SystemManagers managers)
         {
             // todo
@@ -181,6 +173,9 @@ namespace SkiaGum.Renderables
 
 
 #endif
+        public BlendState BlendState => BlendState.AlphaBlend;
+
+
         public bool ClipsChildren { get; set; }
 
 

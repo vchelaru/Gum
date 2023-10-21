@@ -1,4 +1,5 @@
-﻿using RenderingLibrary.Graphics;
+﻿using Gum;
+using RenderingLibrary.Graphics;
 using SkiaGum.GueDeriving;
 using SkiaSharp;
 using System;
@@ -23,7 +24,7 @@ namespace SkiaGum.Renderables
             }
         }
 
-        //public BlendState BlendState => Renderer.NormalBlendState;
+        public BlendState BlendState => BlendState.AlphaBlend;
 
         ObservableCollection<IRenderableIpso> children = new ObservableCollection<IRenderableIpso>();
         public ObservableCollection<IRenderableIpso> Children => children;

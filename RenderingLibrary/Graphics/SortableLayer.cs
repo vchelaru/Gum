@@ -12,11 +12,9 @@ namespace RenderingLibrary.Graphics
             get { return false; }
         }
 
+        public BlendState BlendState => BlendState.NonPremultiplied; 
+
 #if MONOGAME || XNA4
-        public BlendState BlendState
-        {
-            get { return BlendState.NonPremultiplied; }
-        }
 
         public void Render(SpriteRenderer spriteRenderer, SystemManagers managers)
         {

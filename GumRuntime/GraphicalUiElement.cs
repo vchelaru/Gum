@@ -449,7 +449,6 @@ namespace Gum.Wireframe
         #region IRenderable properties
 
 
-#if MONOGAME || XNA4
         BlendState IRenderable.BlendState
         {
             get
@@ -463,7 +462,7 @@ namespace Gum.Wireframe
                 return mContainedObjectAsIpso.BlendState;
             }
         }
-#endif
+
 
         bool IRenderable.Wrap
         {

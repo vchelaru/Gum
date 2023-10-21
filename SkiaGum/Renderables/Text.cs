@@ -7,6 +7,7 @@ using System.Collections.ObjectModel;
 using Topten.RichTextKit;
 using Vector2 = System.Numerics.Vector2;
 using Matrix = System.Numerics.Matrix4x4;
+using Gum;
 
 namespace SkiaGum
 {
@@ -279,19 +280,14 @@ namespace SkiaGum
             }
         }
 #else
-        public BlendState BlendState
-        {
-            get
-            {
-                return BlendState.AlphaBlend; //?
-            }
-
-        }
         public void Render(SpriteRenderer spriteRenderer, SystemManagers managers)
         {
 
         }
 #endif
+        public BlendState BlendState => BlendState.AlphaBlend;
+
+
         public bool ClipsChildren { get; set; }
 
         public TextBlock GetTextBlock(float? forcedWidth = null)

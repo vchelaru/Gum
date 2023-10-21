@@ -237,20 +237,13 @@ namespace SkiaGum
             }
         }
 #else
-        public BlendState BlendState
-        {
-            get
-            {
-                return BlendState.AlphaBlend; //?
-            }
-
-
-        }
         public void Render(SpriteRenderer spriteRenderer, SystemManagers managers)
         {
 
         }
 #endif
+        public BlendState BlendState => BlendState.AlphaBlend; 
+
         public bool ClipsChildren { get; set; }
 
         public void PreRender() { }
@@ -287,6 +280,7 @@ namespace SkiaGum
                 return ((IRenderableIpso)this).Parent as IVisible;
             }
         }
+
 
         #endregion
     }
