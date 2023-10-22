@@ -9,7 +9,7 @@ using Matrix = System.Numerics.Matrix4x4;
 
 namespace RenderingLibrary.Math.Geometry
 {
-    public class LineRectangle : IVisible, IRenderableIpso
+    public class LineRectangle : IVisible, IRenderableIpso, ISetClipsChildren
     {
         #region Fields
 

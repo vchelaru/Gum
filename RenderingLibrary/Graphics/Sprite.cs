@@ -106,23 +106,6 @@ namespace RenderingLibrary.Graphics
             set;
         }
 
-        public float EffectiveWidth
-        {
-            get
-            {
-                return Width;
-            }
-        }
-
-        public float EffectiveHeight
-        {
-            get
-            {
-                // See comment in Width
-                return Height;
-            }
-        }
-
         public float Width
         {
             get;
@@ -160,30 +143,6 @@ namespace RenderingLibrary.Graphics
                         mParent.Children.Add(this);
                     }
                 }
-            }
-        }
-
-        float IPositionedSizedObject.Width
-        {
-            get
-            {
-                return EffectiveWidth;
-            }
-            set
-            {
-                Width = value;
-            }
-        }
-
-        float IPositionedSizedObject.Height
-        {
-            get
-            {
-                return EffectiveHeight;
-            }
-            set
-            {
-                Height = value;
             }
         }
 
@@ -397,11 +356,9 @@ namespace RenderingLibrary.Graphics
 
             if (xRepetitions > 0 && yRepetitions > 0)
             {
-                float eachWidth = this.EffectiveWidth / xRepetitions;
-                float eachHeight = this.EffectiveHeight / yRepetitions;
+                float eachWidth = this.Width / xRepetitions;
+                float eachHeight = this.Height / yRepetitions;
 
-                float oldEffectiveWidth = this.EffectiveWidth;
-                float oldEffectiveHeight = this.EffectiveHeight;
 
                 // We're going to change the width, height, X, and Y of "this" to make rendering code work
                 // by simply passing in the object. At the end of the drawing, we'll revert the values back

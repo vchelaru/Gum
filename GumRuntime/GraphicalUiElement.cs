@@ -1500,16 +1500,9 @@ namespace Gum.Wireframe
 
             if (mContainedObjectAsIpso != null)
             {
-#if MONOGAME || XNA4
-                if (mContainedObjectAsIpso is LineRectangle)
+                if (mContainedObjectAsIpso is ISetClipsChildren clipsChildrenChild)
                 {
-                    (mContainedObjectAsIpso as LineRectangle).ClipsChildren = ClipsChildren;
-                }
-                else
-#endif
-                if (mContainedObjectAsIpso is InvisibleRenderable)
-                {
-                    (mContainedObjectAsIpso as InvisibleRenderable).ClipsChildren = ClipsChildren;
+                    clipsChildrenChild.ClipsChildren = ClipsChildren;
                 }
 
                 if (this.mContainedObjectAsIpso != null)
@@ -2434,8 +2427,8 @@ namespace Gum.Wireframe
 #if !SKIA
                         int left = mTextureLeft;
                         int top = mTextureTop;
-                        int width = (int)(sprite.EffectiveWidth / mTextureWidthScale);
-                        int height = (int)(sprite.EffectiveHeight / mTextureHeightScale);
+                        int width = (int)(sprite.Width / mTextureWidthScale);
+                        int height = (int)(sprite.Height / mTextureHeightScale);
 
                         sprite.SourceRectangle = new Rectangle(
                             left,
@@ -2457,8 +2450,8 @@ namespace Gum.Wireframe
                     case TextureAddress.DimensionsBased:
                         int left = mTextureLeft;
                         int top = mTextureTop;
-                        int width = (int)(nineSlice.EffectiveWidth / mTextureWidthScale);
-                        int height = (int)(nineSlice.EffectiveHeight / mTextureHeightScale);
+                        int width = (int)(nineSlice.Width / mTextureWidthScale);
+                        int height = (int)(nineSlice.Height / mTextureHeightScale);
 
                         nineSlice.SourceRectangle = new Rectangle(
                             left,
@@ -2524,8 +2517,8 @@ namespace Gum.Wireframe
                     case TextureAddress.DimensionsBased:
                         int left = mTextureLeft;
                         int top = mTextureTop;
-                        int width = (int)(nineSlice.EffectiveWidth / mTextureWidthScale);
-                        int height = (int)(nineSlice.EffectiveHeight / mTextureHeightScale);
+                        int width = (int)(nineSlice.Width / mTextureWidthScale);
+                        int height = (int)(nineSlice.Height / mTextureHeightScale);
 
                         nineSlice.SourceRectangle = new Rectangle(
                             left,

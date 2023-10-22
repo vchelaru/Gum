@@ -139,26 +139,6 @@ namespace RenderingLibrary.Graphics
             set;
         }
 
-        public float EffectiveWidth
-        {
-            get
-            {
-                // I think we want to treat these individually so a 
-                // width could be set but height could be default
-
-                return Width;
-
-            }
-        }
-
-        public float EffectiveHeight
-        {
-            get
-            {
-                return Height;
-            }
-        }
-
         bool IRenderableIpso.ClipsChildren
         {
             get
@@ -171,7 +151,7 @@ namespace RenderingLibrary.Graphics
         {
             get
             {
-                return EffectiveWidth;
+                return Width;
             }
             set
             {
@@ -183,7 +163,7 @@ namespace RenderingLibrary.Graphics
         {
             get
             {
-                return EffectiveHeight;
+                return Height;
             }
             set
             {
@@ -356,12 +336,12 @@ namespace RenderingLibrary.Graphics
 
         public float OutsideSpriteWidth
         {
-            get { return mSprites[(int)NineSliceSections.TopLeft].EffectiveWidth; }
+            get { return mSprites[(int)NineSliceSections.TopLeft].Width; }
         }
 
         public float OutsideSpriteHeight
         {
-            get { return mSprites[(int)NineSliceSections.TopLeft].EffectiveHeight; }
+            get { return mSprites[(int)NineSliceSections.TopLeft].Height; }
         }
 
         #endregion
@@ -458,32 +438,32 @@ namespace RenderingLibrary.Graphics
                 mSprites[(int)NineSliceSections.TopLeft].Y = y + offsetX * right.Y + offsetY * up.Y; 
                 mSprites[(int)NineSliceSections.TopLeft].Rotation = rotationInDegrees;
 
-                offsetX = mSprites[(int)NineSliceSections.TopLeft].EffectiveWidth;
+                offsetX = mSprites[(int)NineSliceSections.TopLeft].Width;
 
                 mSprites[(int)NineSliceSections.Top].X = x + offsetX * right.X + offsetY * up.X;
                 mSprites[(int)NineSliceSections.Top].Y = y + offsetX * right.Y + offsetY * up.Y;
                 mSprites[(int)NineSliceSections.Top].Rotation = rotationInDegrees;
 
-                offsetX = mSprites[(int)NineSliceSections.TopLeft].EffectiveWidth + mSprites[(int)NineSliceSections.Top].Width;
+                offsetX = mSprites[(int)NineSliceSections.TopLeft].Width + mSprites[(int)NineSliceSections.Top].Width;
 
                 mSprites[(int)NineSliceSections.TopRight].X = x + offsetX * right.X + offsetY * up.X;
                 mSprites[(int)NineSliceSections.TopRight].Y = y + offsetX * right.Y + offsetY * up.Y; 
                 mSprites[(int)NineSliceSections.TopRight].Rotation = rotationInDegrees;
 
                 offsetX = 0;
-                offsetY = mSprites[(int)NineSliceSections.TopLeft].EffectiveHeight;
+                offsetY = mSprites[(int)NineSliceSections.TopLeft].Height;
 
                 mSprites[(int)NineSliceSections.Left].X = x + offsetX * right.X + offsetY * up.X;
                 mSprites[(int)NineSliceSections.Left].Y = y + offsetX * right.Y + offsetY * up.Y; 
                 mSprites[(int)NineSliceSections.Left].Rotation = rotationInDegrees;
 
-                offsetX = mSprites[(int)NineSliceSections.Left].EffectiveWidth;
+                offsetX = mSprites[(int)NineSliceSections.Left].Width;
 
                 mSprites[(int)NineSliceSections.Center].X = x + offsetX * right.X + offsetY * up.X;
                 mSprites[(int)NineSliceSections.Center].Y = y + offsetX * right.Y + offsetY * up.Y; 
                 mSprites[(int)NineSliceSections.Center].Rotation = rotationInDegrees;
 
-                offsetX = mSprites[(int)NineSliceSections.Left].EffectiveWidth + mSprites[(int)NineSliceSections.Center].Width;
+                offsetX = mSprites[(int)NineSliceSections.Left].Width + mSprites[(int)NineSliceSections.Center].Width;
 
                 mSprites[(int)NineSliceSections.Right].X = x + offsetX * right.X + offsetY * up.X;
                 mSprites[(int)NineSliceSections.Right].Y = y + offsetX * right.Y + offsetY * up.Y; 
@@ -491,19 +471,19 @@ namespace RenderingLibrary.Graphics
 
 
                 offsetX = 0;
-                offsetY = mSprites[(int)NineSliceSections.TopLeft].EffectiveHeight + mSprites[(int)NineSliceSections.Left].Height;
+                offsetY = mSprites[(int)NineSliceSections.TopLeft].Height + mSprites[(int)NineSliceSections.Left].Height;
 
                 mSprites[(int)NineSliceSections.BottomLeft].X = x + offsetX * right.X + offsetY * up.X;
                 mSprites[(int)NineSliceSections.BottomLeft].Y = y + offsetX * right.Y + offsetY * up.Y; 
                 mSprites[(int)NineSliceSections.BottomLeft].Rotation = rotationInDegrees;
 
-                offsetX = mSprites[(int)NineSliceSections.BottomLeft].EffectiveWidth;
+                offsetX = mSprites[(int)NineSliceSections.BottomLeft].Width;
 
                 mSprites[(int)NineSliceSections.Bottom].X = x + offsetX * right.X + offsetY * up.X;
                 mSprites[(int)NineSliceSections.Bottom].Y = y + offsetX * right.Y + offsetY * up.Y; 
                 mSprites[(int)NineSliceSections.Bottom].Rotation = rotationInDegrees;
 
-                offsetX = mSprites[(int)NineSliceSections.BottomLeft].EffectiveWidth + mSprites[(int)NineSliceSections.Bottom].Width;
+                offsetX = mSprites[(int)NineSliceSections.BottomLeft].Width + mSprites[(int)NineSliceSections.Bottom].Width;
 
                 mSprites[(int)NineSliceSections.BottomRight].X = x + offsetX * right.X + offsetY * up.X;
                 mSprites[(int)NineSliceSections.BottomRight].Y = y + offsetX * right.Y + offsetY * up.Y; 
@@ -548,7 +528,7 @@ namespace RenderingLibrary.Graphics
                 float fullWidth = mFullOutsideWidth * 2 + mFullInsideWidth;
                 if (Width >= fullWidth)
                 {
-                    desiredMiddleWidth = Width - mSprites[(int)NineSliceSections.TopLeft].EffectiveWidth - mSprites[(int)NineSliceSections.TopRight].EffectiveWidth;
+                    desiredMiddleWidth = Width - mSprites[(int)NineSliceSections.TopLeft].Width - mSprites[(int)NineSliceSections.TopRight].Width;
 
                     mSprites[(int)NineSliceSections.TopLeft].Width = mSprites[(int)NineSliceSections.TopRight].Width = mSprites[(int)NineSliceSections.Left].Width = mSprites[(int)NineSliceSections.Right].Width =
                         mSprites[(int)NineSliceSections.BottomLeft].Width = mSprites[(int)NineSliceSections.BottomRight].Width = mFullOutsideWidth;
@@ -571,7 +551,7 @@ namespace RenderingLibrary.Graphics
                 float fullHeight = mFullOutsideHeight * 2 + mFullInsideHeight;
                 if (Height >= fullHeight)
                 {
-                    desiredMiddleHeight = this.Height - mSprites[(int)NineSliceSections.TopLeft].EffectiveHeight - mSprites[(int)NineSliceSections.TopRight].EffectiveHeight;
+                    desiredMiddleHeight = this.Height - mSprites[(int)NineSliceSections.TopLeft].Height - mSprites[(int)NineSliceSections.TopRight].Height;
                 }
                 else if (Height >= mFullOutsideHeight * 2)
                 {
@@ -584,8 +564,8 @@ namespace RenderingLibrary.Graphics
             }
             else
             {
-                desiredMiddleWidth = Width - mSprites[(int)NineSliceSections.TopLeft].EffectiveWidth - mSprites[(int)NineSliceSections.TopRight].EffectiveWidth;
-                desiredMiddleHeight = Height - mSprites[(int)NineSliceSections.TopLeft].EffectiveHeight - this.mSprites[(int)NineSliceSections.BottomLeft].EffectiveHeight;
+                desiredMiddleWidth = Width - mSprites[(int)NineSliceSections.TopLeft].Width - mSprites[(int)NineSliceSections.TopRight].Width;
+                desiredMiddleHeight = Height - mSprites[(int)NineSliceSections.TopLeft].Height - this.mSprites[(int)NineSliceSections.BottomLeft].Height;
             }
 
             mSprites[(int)NineSliceSections.Top].Width = desiredMiddleWidth;

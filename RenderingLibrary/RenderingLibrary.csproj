@@ -115,6 +115,8 @@
     <Compile Include="Graphics\IRenderable.cs" />
     <Compile Include="Graphics\IRenderableIpso.cs" />
     <Compile Include="Graphics\IRenderer.cs" />
+    <Compile Include="Graphics\ISetClipsChildren.cs" />
+    <Compile Include="Graphics\ITexturable.cs" />
     <Compile Include="Graphics\IVisible.cs" />
     <Compile Include="Graphics\Layer.cs" />
     <Compile Include="Graphics\LayerCameraSettings.cs" />

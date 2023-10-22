@@ -5,7 +5,7 @@ using BlendState = Gum.BlendState;
 
 namespace RenderingLibrary.Graphics
 {
-    public class InvisibleRenderable : IVisible, IRenderableIpso
+    public class InvisibleRenderable : IVisible, IRenderableIpso, ISetClipsChildren
     {
         public bool AbsoluteVisible
         {
