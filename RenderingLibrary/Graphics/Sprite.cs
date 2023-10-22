@@ -166,11 +166,8 @@ namespace RenderingLibrary.Graphics
             }
         }
 
-        public AtlasedTexture AtlasedTexture
-        {
-            get;
-            set;
-        }
+        public float? TextureWidth => Texture?.Width;
+        public float? TextureHeight => Texture?.Height;
 
         public IAnimation Animation
         {
@@ -243,26 +240,6 @@ namespace RenderingLibrary.Graphics
             {
                 Rectangle? sourceRectangle = SourceRectangle;
 
-                if (AtlasedTexture != null)
-                {
-                    sourceRectangle = AtlasedTexture.SourceRectangle;
-
-                    // Consider this.SourceRectangle to support rendering parts of a texture from a texture atlas:
-                    if (this.SourceRectangle != null)
-                    {
-                        var toModify = sourceRectangle.Value;
-                        toModify.X += this.SourceRectangle.Value.Left;
-                        toModify.Y += this.SourceRectangle.Value.Top;
-
-                        // We won't support wrapping (yet)
-                        toModify.Width = System.Math.Min(toModify.Width, this.SourceRectangle.Value.Width);
-                        toModify.Height = System.Math.Min(toModify.Height, this.SourceRectangle.Value.Height);
-
-                        sourceRectangle = toModify;
-
-                    }
-                }
-
                 return sourceRectangle;
             }
         }
@@ -312,7 +289,7 @@ namespace RenderingLibrary.Graphics
                 var systemManagers = managers as SystemManagers;
                 var renderer = systemManagers.Renderer;
                 bool shouldTileByMultipleCalls = this.Wrap && (this as IRenderable).Wrap == false;
-                if (shouldTileByMultipleCalls && (this.Texture != null || this.AtlasedTexture != null))
+                if (shouldTileByMultipleCalls && (this.Texture != null))
                 {
                     RenderTiledSprite(renderer.SpriteRenderer, systemManagers);
                 }
@@ -320,10 +297,6 @@ namespace RenderingLibrary.Graphics
                 {
                     Rectangle? sourceRectangle = EffectiveRectangle;
                     Texture2D texture = Texture;
-                    if (AtlasedTexture != null)
-                    {
-                        texture = AtlasedTexture.Texture;
-                    }
 
                     Render(systemManagers, renderer.SpriteRenderer, this, texture, Color, sourceRectangle, FlipVertical, this.GetAbsoluteRotation());
                 }
@@ -338,16 +311,8 @@ namespace RenderingLibrary.Graphics
             int fullTexelsWide = 0;
             int fullTexelsTall = 0;
 
-            if (this.AtlasedTexture != null)
-            {
-                fullTexelsWide = this.AtlasedTexture.SourceRectangle.Width;
-                fullTexelsTall = this.AtlasedTexture.SourceRectangle.Height;
-            }
-            else
-            {
-                fullTexelsWide = this.Texture.Width;
-                fullTexelsTall = this.Texture.Height;
-            }
+            fullTexelsWide = this.Texture.Width;
+            fullTexelsTall = this.Texture.Height;
 
             texelsWide = fullTexelsWide;
             if (SourceRectangle.HasValue)
@@ -489,29 +454,14 @@ namespace RenderingLibrary.Graphics
 
                         this.Width = sourceWidth * 1 / texelsPerWorldUnitX;
 
+                        this.SourceRectangle = new Rectangle(
+                            texelsChoppedOffLeft,
+                            texelsChoppedOffTop,
+                            sourceWidth,
+                            sourceHeight);
 
+                        Render(managers, spriteRenderer, this, Texture, Color, SourceRectangle, FlipVertical, rotationInDegrees: Rotation);
 
-
-                        if (AtlasedTexture != null)
-                        {
-                            var rectangle = new Rectangle(
-                                AtlasedTexture.SourceRectangle.X + texelsChoppedOffLeft,
-                                AtlasedTexture.SourceRectangle.Y + texelsChoppedOffTop,
-                                sourceWidth,
-                                sourceHeight);
-
-                            Render(managers, spriteRenderer, this, AtlasedTexture.Texture, Color, rectangle, FlipVertical, rotationInDegrees: Rotation);
-                        }
-                        else
-                        {
-                            this.SourceRectangle = new Rectangle(
-                                texelsChoppedOffLeft,
-                                texelsChoppedOffTop,
-                                sourceWidth,
-                                sourceHeight);
-
-                            Render(managers, spriteRenderer, this, Texture, Color, SourceRectangle, FlipVertical, rotationInDegrees: Rotation);
-                        }
                         currentX = System.Math.Max(0, currentX);
                         currentX += this.Width * matrix.Right().X;
                         currentY += this.Width * matrix.Right().Y;

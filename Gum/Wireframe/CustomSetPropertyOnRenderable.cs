@@ -655,7 +655,6 @@ namespace Gum.Wireframe
             if (string.IsNullOrEmpty(value))
             {
                 sprite.Texture = null;
-                sprite.AtlasedTexture = null;
 
                 graphicalUiElement.UpdateLayout();
             }
@@ -708,7 +707,6 @@ namespace Gum.Wireframe
 
                 if (atlasedTexture != null)
                 {
-                    sprite.AtlasedTexture = atlasedTexture;
                     graphicalUiElement.UpdateLayout();
                 }
                 else

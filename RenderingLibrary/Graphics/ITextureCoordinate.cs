@@ -11,5 +11,8 @@ namespace RenderingLibrary.Graphics
     {
         Rectangle? SourceRectangle { get; set; }
         bool Wrap { get; set; }
+
+        float? TextureWidth { get; }
+        float? TextureHeight { get; }
     }
 }

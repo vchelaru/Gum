@@ -3231,20 +3231,13 @@ namespace Gum.Wireframe
                 {
                     if (mContainedObjectAsIpso is Text asText)
                     {
-#if MONOGAME || XNA4
-                        maxHeight = asText.WrappedTextHeight;
-#endif
-#if SKIA
                         var oldWidth = asText.Width;
                         if (WidthUnits == DimensionUnitType.RelativeToChildren)
                         {
                             asText.Width = float.PositiveInfinity;
                         }
-                        var textBlock = asText.GetTextBlock();
-                        maxHeight = textBlock.MeasuredHeight;
-
+                        maxHeight = asText.WrappedTextHeight;
                         asText.Width = oldWidth;
-#endif
                     }
 
                     if(useFixedStackChildrenSize && this.ChildrenLayout == ChildrenLayout.TopToBottomStack && this.Children.Count > 1)
@@ -3359,15 +3352,6 @@ namespace Gum.Wireframe
                 {
                     Sprite sprite = mContainedObjectAsIpso as Sprite;
 
-#if MONOGAME || XNA4
-                    if (sprite.AtlasedTexture != null)
-                    {
-                        var atlasedTexture = sprite.AtlasedTexture;
-                        heightToSet = atlasedTexture.SourceRectangle.Height * mHeight / 100.0f;
-                        wasSet = true;
-                    }
-                    else
-#endif
                     if (sprite.Texture != null)
                     {
                         heightToSet = sprite.Texture.Height * mHeight / 100.0f;
@@ -3736,18 +3720,7 @@ namespace Gum.Wireframe
                 if (mContainedObjectAsIpso is Sprite)
                 {
                     Sprite sprite = mContainedObjectAsIpso as Sprite;
-#if MONOGAME || XNA4
 
-                    if (sprite.AtlasedTexture != null)
-                    {
-                        var atlasedTexture = sprite.AtlasedTexture;
-                        widthToSet = atlasedTexture.SourceRectangle.Width * mWidth / 100.0f;
-                        wasSet = true;
-                    }
-
-                    else
-
-#endif
                     if (sprite.Texture != null)
                     {
                         widthToSet = sprite.Texture.Width * mWidth / 100.0f;

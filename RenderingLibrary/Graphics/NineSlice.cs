@@ -55,6 +55,9 @@ namespace RenderingLibrary.Graphics
             set { }// do nothing, wrapping is not supported yet
         }
 
+        public float? TextureWidth => this.mSprites[0].Texture?.Width;
+        public float? TextureHeight => this.mSprites[0].Texture?.Height;
+
         Rectangle? ITextureCoordinate.SourceRectangle
         {
             get
@@ -598,22 +601,12 @@ namespace RenderingLibrary.Graphics
         private void RefreshSourceRectangles()
         {
             bool useMulti;
-            var useAtlas = mSprites[(int) NineSliceSections.TopLeft].AtlasedTexture != null;
 
-            if (useAtlas)
-            {
-                useMulti = mSprites[(int) NineSliceSections.TopLeft].AtlasedTexture.Name !=
-                           mSprites[(int) NineSliceSections.Top].AtlasedTexture.Name;
-            }
-            else //not using atlas
-            {
-                useMulti = mSprites[(int)NineSliceSections.TopLeft].Texture != mSprites[(int)NineSliceSections.Top].Texture;
-            }
+            useMulti = mSprites[(int)NineSliceSections.TopLeft].Texture != mSprites[(int)NineSliceSections.Top].Texture;
 
             if (useMulti)
             {
-                if ((!useAtlas && mSprites[(int)NineSliceSections.TopLeft].Texture == null) ||
-                    (useAtlas && mSprites[(int)NineSliceSections.TopLeft].AtlasedTexture == null))
+                if (mSprites[(int)NineSliceSections.TopLeft].Texture == null)
                 {
                     for (var sprite = 0; sprite < mSprites.Count(); sprite++)
                     {
@@ -624,51 +617,28 @@ namespace RenderingLibrary.Graphics
                 {
                     for (var sprite = 0; sprite < mSprites.Count(); sprite++)
                     {
-                        if (useAtlas)
-                        {
-                            if (sprite == (int) NineSliceSections.TopLeft)
-                            {
-                                mFullOutsideWidth = mSprites[sprite].AtlasedTexture.SourceRectangle.Width;
-                                mFullInsideWidth = mSprites[sprite].AtlasedTexture.SourceRectangle.Width - (mFullOutsideWidth * 2);
-                            }
-                        }
-                        else
-                        {
-                            mFullOutsideWidth = mSprites[(int)NineSliceSections.TopLeft].Texture.Width;
-                            mFullInsideWidth = mSprites[(int)NineSliceSections.TopLeft].Texture.Width - (mFullOutsideWidth * 2);
 
-                            mSprites[sprite].SourceRectangle = new Rectangle(0, 0, mSprites[sprite].Texture.Width, mSprites[sprite].Texture.Height);
-                        }
+                        mFullOutsideWidth = mSprites[(int)NineSliceSections.TopLeft].Texture.Width;
+                        mFullInsideWidth = mSprites[(int)NineSliceSections.TopLeft].Texture.Width - (mFullOutsideWidth * 2);
+
+                        mSprites[sprite].SourceRectangle = new Rectangle(0, 0, mSprites[sprite].Texture.Width, mSprites[sprite].Texture.Height);
                     }
 
                 }
             }
-            else if ((!useAtlas && mSprites[(int) NineSliceSections.TopLeft].Texture != null) ||
-                     (useAtlas && mSprites[(int) NineSliceSections.TopLeft].AtlasedTexture != null))
+            else if ((mSprites[(int) NineSliceSections.TopLeft].Texture != null))
             {
                 int leftCoordinate;
                 int rightCoordinate;
                 int topCoordinate;
                 int bottomCoordinate;
 
-                if (useAtlas)
-                {
-                    var atlasedTexture = mSprites[(int) NineSliceSections.TopLeft].AtlasedTexture;
+                var texture = mSprites[(int)NineSliceSections.TopLeft].Texture;
 
-                    leftCoordinate = atlasedTexture.SourceRectangle.Left;
-                    rightCoordinate = atlasedTexture.SourceRectangle.Right;
-                    topCoordinate = atlasedTexture.SourceRectangle.Top;
-                    bottomCoordinate = atlasedTexture.SourceRectangle.Bottom;
-                }
-                else
-                {
-                    var texture = mSprites[(int)NineSliceSections.TopLeft].Texture;
-
-                    leftCoordinate = 0;
-                    rightCoordinate = texture.Width;
-                    topCoordinate = 0;
-                    bottomCoordinate = texture.Height;
-                }
+                leftCoordinate = 0;
+                rightCoordinate = texture.Width;
+                topCoordinate = 0;
+                bottomCoordinate = texture.Height;
 
 
                 if (SourceRectangle.HasValue)
@@ -753,9 +723,7 @@ namespace RenderingLibrary.Graphics
 
             //top
             var tempRect = mSprites[(int) NineSliceSections.Top].SourceRectangle;
-            if (!mSprites[(int)NineSliceSections.Top].SourceRectangle.HasValue && useAtlas)
-                tempRect = mSprites[(int) NineSliceSections.Top].AtlasedTexture.SourceRectangle;
-
+            
             if (tempRect.HasValue)
             {
                 mSprites[(int)NineSliceSections.Top].Height = tempRect.Value.Height;
@@ -765,9 +733,7 @@ namespace RenderingLibrary.Graphics
 
             //bottom
             tempRect = mSprites[(int)NineSliceSections.Bottom].SourceRectangle;
-            if (!mSprites[(int)NineSliceSections.Bottom].SourceRectangle.HasValue && useAtlas)
-                tempRect = mSprites[(int)NineSliceSections.Bottom].AtlasedTexture.SourceRectangle;
-
+            
             if (tempRect.HasValue)
             {
                 mSprites[(int)NineSliceSections.Bottom].Height = tempRect.Value.Height;
@@ -777,9 +743,7 @@ namespace RenderingLibrary.Graphics
 
             //left
             tempRect = mSprites[(int)NineSliceSections.Left].SourceRectangle;
-            if (!mSprites[(int)NineSliceSections.Left].SourceRectangle.HasValue && useAtlas)
-                tempRect = mSprites[(int)NineSliceSections.Left].AtlasedTexture.SourceRectangle;
-
+            
             if (tempRect.HasValue)
             {
                 mSprites[(int)NineSliceSections.Left].Width = tempRect.Value.Width;
@@ -789,8 +753,6 @@ namespace RenderingLibrary.Graphics
 
             //right
             tempRect = mSprites[(int)NineSliceSections.Right].SourceRectangle;
-            if (!mSprites[(int)NineSliceSections.Right].SourceRectangle.HasValue && useAtlas)
-                tempRect = mSprites[(int)NineSliceSections.Right].AtlasedTexture.SourceRectangle;
 
             if (tempRect.HasValue)
             {
@@ -805,7 +767,6 @@ namespace RenderingLibrary.Graphics
         {
             var texture = sprite.Texture;
             var sourceRectangle = sprite.EffectiveRectangle;
-            if (sprite.AtlasedTexture != null) texture = sprite.AtlasedTexture.Texture;
 
             // broken up to make debugging easier. Should have no impact on performance
             var color = sprite.Color;
@@ -888,10 +849,6 @@ namespace RenderingLibrary.Graphics
             }
             else //single texture
             {
-                foreach (var sprite in mSprites)
-                {
-                    sprite.AtlasedTexture = atlasedTexture;
-                }   
             }
         }
 
@@ -931,10 +888,7 @@ namespace RenderingLibrary.Graphics
                     //loop through all nine sprite names
                     for (var sprite = 0; sprite < NineSliceExtensions.PossibleNineSliceEndings.Count(); sprite++)
                     {
-                        var atlasedTexture = LoaderManager.Self.TryLoadContent<AtlasedTexture>
-                            (bareTexture + NineSliceExtensions.PossibleNineSliceEndings[sprite] + "." + extension);
 
-                        if (atlasedTexture != null) mSprites[sprite].AtlasedTexture = atlasedTexture;
                     }
                 }
                 else

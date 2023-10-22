@@ -9,6 +9,9 @@ namespace SkiaGum.Renderables
     {
         public SKBitmap Texture { get; set; }
 
+        public float? TextureWidth => Texture?.Width;
+        public float? TextureHeight => Texture?.Height;
+
         public Rectangle? SourceRectangle;
 
         public Rectangle? EffectiveRectangle => SourceRectangle;

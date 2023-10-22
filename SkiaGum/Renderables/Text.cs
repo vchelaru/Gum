@@ -8,6 +8,7 @@ using Topten.RichTextKit;
 using Vector2 = System.Numerics.Vector2;
 using Matrix = System.Numerics.Matrix4x4;
 using Gum;
+using Gum.DataTypes;
 
 namespace SkiaGum
 {
@@ -210,6 +211,15 @@ namespace SkiaGum
         }
 
         public float LineHeightMultiplier { get; set; } = 1;
+
+        public float WrappedTextHeight
+        {
+            get
+            {
+                var textBlock = GetTextBlock();
+                return textBlock.MeasuredHeight;
+            }
+        }
 
         #endregion
 

@@ -7,10 +7,11 @@ using System.Collections.ObjectModel;
 using BlendState = Gum.BlendState;
 using Vector2 = System.Numerics.Vector2;
 using Matrix = System.Numerics.Matrix4x4;
+using System.Drawing;
 
 namespace SkiaGum
 {
-    public class VectorSprite : IRenderableIpso, IVisible
+    public class VectorSprite : IRenderableIpso, IVisible, ITextureCoordinate
     {
         #region Fields/Properties
 
@@ -55,6 +56,21 @@ namespace SkiaGum
         {
             get { return mChildren; }
         }
+
+        bool ITextureCoordinate.Wrap
+        {
+            get => false;
+            set { } // not used currently
+        }
+
+        Rectangle? ITextureCoordinate.SourceRectangle
+        {
+            get => null;
+            set { } // not used currently
+        }
+
+        public float? TextureWidth => Texture?.Picture.CullRect.Width;
+        public float? TextureHeight => Texture?.Picture.CullRect.Height;
 
         public float X
         {
