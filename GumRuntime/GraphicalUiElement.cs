@@ -3698,32 +3698,12 @@ namespace Gum.Wireframe
             {
                 bool wasSet = false;
 
-#if SKIA
-                if (mContainedObjectAsIpso is VectorSprite vectorSprite)
+                if (mContainedObjectAsIpso is ITextureCoordinate iTextureCoordinate)
                 {
-                    if (vectorSprite.Texture != null)
+                    var width = iTextureCoordinate.TextureWidth;
+                    if (width != null)
                     {
-                        widthToSet = vectorSprite.Texture.Picture.CullRect.Width * mWidth / 100.0f;
-                    }
-                    if (wasSet)
-                    {
-                        //        // If the address is dimension based, then that means texture coords depend on dimension...but we
-                        //        // can't make dimension based on texture coords as that would cause a circular reference
-                        //        if (sprite.EffectiveRectangle.HasValue && mTextureAddress != TextureAddress.DimensionsBased)
-                        //        {
-                        //            widthToSet = sprite.EffectiveRectangle.Value.Width * mWidth / 100.0f;
-                        //        }
-                    }
-                }
-#endif
-
-                if (mContainedObjectAsIpso is Sprite)
-                {
-                    Sprite sprite = mContainedObjectAsIpso as Sprite;
-
-                    if (sprite.Texture != null)
-                    {
-                        widthToSet = sprite.Texture.Width * mWidth / 100.0f;
+                        widthToSet = width.Value * mWidth / 100.0f;
                         wasSet = true;
                     }
 
@@ -3731,9 +3711,9 @@ namespace Gum.Wireframe
                     {
                         // If the address is dimension based, then that means texture coords depend on dimension...but we
                         // can't make dimension based on texture coords as that would cause a circular reference
-                        if (sprite.EffectiveRectangle.HasValue && mTextureAddress != TextureAddress.DimensionsBased)
+                        if (iTextureCoordinate.SourceRectangle.HasValue && mTextureAddress != TextureAddress.DimensionsBased)
                         {
-                            widthToSet = sprite.EffectiveRectangle.Value.Width * mWidth / 100.0f;
+                            widthToSet = iTextureCoordinate.SourceRectangle.Value.Width * mWidth / 100.0f;
                         }
                     }
                 }
@@ -3752,44 +3732,18 @@ namespace Gum.Wireframe
             {
                 bool wasSet = false;
 
-#if SKIA
-                if (mContainedObjectAsIpso is VectorSprite vectorSprite)
-                {
-                    //if (sprite.AtlasedTexture != null)
-                    //{
-                    //    throw new NotImplementedException();
-                    //}
-                    //else 
-                    if (vectorSprite.Texture != null)
-                    {
-                        var scale = GetAbsoluteHeight() / vectorSprite.Texture.Picture.CullRect.Height;
-                        widthToSet = vectorSprite.Texture.Picture.CullRect.Width * scale * mWidth / 100.0f;
-                        wasSet = true;
-                    }
-
-                    //if (wasSet)
-                    //{
-                    //    if (sprite.EffectiveRectangle.HasValue && mTextureAddress != TextureAddress.DimensionsBased)
-                    //    {
-                    //        var scale = GetAbsoluteHeight() / sprite.EffectiveRectangle.Value.Height;
-                    //        widthToSet = sprite.EffectiveRectangle.Value.Width * scale * mWidth / 100.0f;
-                    //    }
-                    //}
-                }
-#endif
-
                 if (mContainedObjectAsIpso is IAspectRatio aspectRatioObject)
                 {
                     // mWidth is a percent where 100 means maintain aspect ratio
                     widthToSet = GetAbsoluteHeight() * aspectRatioObject.AspectRatio * (mWidth / 100.0f);
                     wasSet = true;
 
-                    if (wasSet && mContainedObjectAsIpso is Sprite sprite)
+                    if (wasSet && mContainedObjectAsIpso is ITextureCoordinate iTextureCoordinate)
                     {
-                        if (sprite.EffectiveRectangle.HasValue && mTextureAddress != TextureAddress.DimensionsBased)
+                        if (iTextureCoordinate.SourceRectangle.HasValue && mTextureAddress != TextureAddress.DimensionsBased)
                         {
-                            var scale = GetAbsoluteHeight() / sprite.EffectiveRectangle.Value.Height;
-                            widthToSet = sprite.EffectiveRectangle.Value.Width * scale * mWidth / 100.0f;
+                            var scale = GetAbsoluteHeight() / iTextureCoordinate.SourceRectangle.Value.Height;
+                            widthToSet = iTextureCoordinate.SourceRectangle.Value.Width * scale * mWidth / 100.0f;
                         }
                     }
                 }
