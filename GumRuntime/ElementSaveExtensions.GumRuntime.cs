@@ -488,14 +488,33 @@ namespace GumRuntime
 
             toReturn.AddExposedVariablesRecursively(elementSave);
 
-            toReturn.CreateChildrenRecursively(elementSave, systemManagers);
+            CreateChildrenRecursively(toReturn, elementSave, systemManagers);
 
             toReturn.Tag = elementSave;
 
             toReturn.SetInitialState();
         }
+
+        public static void CreateChildrenRecursively(GraphicalUiElement graphicalUiElement, ElementSave elementSave, SystemManagers systemManagers)
+        {
+            bool isScreen = elementSave is ScreenSave;
+
+            foreach (var instance in elementSave.Instances)
+            {
+                var childGue = instance.ToGraphicalUiElement(systemManagers);
+
+                if (childGue != null)
+                {
+                    if (!isScreen)
+                    {
+                        childGue.Parent = graphicalUiElement;
+                    }
+                    childGue.ElementGueContainingThis = graphicalUiElement;
+                }
+            }
+        }
 #endif
 
 
-            }
+    }
 }

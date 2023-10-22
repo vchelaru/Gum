@@ -1519,11 +1519,7 @@ namespace Gum.Wireframe
                 // However, if the texture coordinates depend on the dimensions
                 // (like for a tiling background) then this also needs to be set
                 // after UpdateDimensions. 
-                if (mContainedObjectAsIpso is Sprite
-#if MONOGAME || XNA4
-                    || mContainedObjectAsIpso is NineSlice
-#endif
-                    )
+                if (mContainedObjectAsIpso is ITextureCoordinate)
                 {
                     UpdateTextureCoordinatesNotDimensionBased();
                 }
@@ -1618,11 +1614,7 @@ namespace Gum.Wireframe
                     }
                 }
 
-                if (mContainedObjectAsIpso is Sprite
-#if MONOGAME || XNA4
-                    || mContainedObjectAsIpso is NineSlice
-#endif
-                    )
+                if (mContainedObjectAsIpso is ITextureCoordinate)
                 {
                     UpdateTextureCoordinatesDimensionBased();
                 }
@@ -1991,27 +1983,6 @@ namespace Gum.Wireframe
             if (mContainedObjectAsIpso != null)
             {
                 mContainedObjectAsIpso.PreRender();
-            }
-        }
-
-        public virtual void CreateChildrenRecursively(ElementSave elementSave, SystemManagers systemManagers)
-        {
-            bool isScreen = elementSave is ScreenSave;
-
-            foreach (var instance in elementSave.Instances)
-            {
-#if MONOGAME || XNA4
-                var childGue = instance.ToGraphicalUiElement(systemManagers);
-
-                if (childGue != null)
-                {
-                    if (!isScreen)
-                    {
-                        childGue.Parent = this;
-                    }
-                    childGue.ElementGueContainingThis = this;
-                }
-#endif
             }
         }
 
@@ -4571,12 +4542,10 @@ namespace Gum.Wireframe
             {
                 switch (propertyName)
                 {
-#if MONOGAME || XNA4
 
                     case nameof(Animate):
                         this.Animate = (bool)value;
                         break;
-#endif
                     case "AutoGridHorizontalCells":
                         this.AutoGridHorizontalCells = (int)value;
                         break;
@@ -5193,46 +5162,6 @@ namespace Gum.Wireframe
             }
         }
 
-#if MONOGAME || XNA4
-        public void GetUsedTextures(List<Microsoft.Xna.Framework.Graphics.Texture2D> listToFill)
-        {
-            var renderable = this.mContainedObjectAsIpso;
-
-            if (renderable is Sprite)
-            {
-                var texture = (renderable as Sprite).Texture;
-
-                if (texture != null && !listToFill.Contains(texture)) listToFill.Add(texture);
-            }
-            else if (renderable is NineSlice)
-            {
-                var nineSlice = renderable as NineSlice;
-
-                if (nineSlice.TopLeftTexture != null && !listToFill.Contains(nineSlice.TopLeftTexture)) listToFill.Add(nineSlice.TopLeftTexture);
-                if (nineSlice.TopTexture != null && !listToFill.Contains(nineSlice.TopTexture)) listToFill.Add(nineSlice.TopTexture);
-                if (nineSlice.TopRightTexture != null && !listToFill.Contains(nineSlice.TopRightTexture)) listToFill.Add(nineSlice.TopRightTexture);
-
-                if (nineSlice.LeftTexture != null && !listToFill.Contains(nineSlice.LeftTexture)) listToFill.Add(nineSlice.LeftTexture);
-                if (nineSlice.CenterTexture != null && !listToFill.Contains(nineSlice.CenterTexture)) listToFill.Add(nineSlice.CenterTexture);
-                if (nineSlice.RightTexture != null && !listToFill.Contains(nineSlice.RightTexture)) listToFill.Add(nineSlice.RightTexture);
-
-                if (nineSlice.BottomLeftTexture != null && !listToFill.Contains(nineSlice.BottomLeftTexture)) listToFill.Add(nineSlice.BottomLeftTexture);
-                if (nineSlice.BottomTexture != null && !listToFill.Contains(nineSlice.BottomTexture)) listToFill.Add(nineSlice.BottomTexture);
-                if (nineSlice.BottomRightTexture != null && !listToFill.Contains(nineSlice.BottomRightTexture)) listToFill.Add(nineSlice.BottomRightTexture);
-            }
-            else if (renderable is Text)
-            {
-                // what do we do here?  Texts could change so do we want to return them if used in a atlas?
-                // This is todo for later
-            }
-
-            foreach (var item in this.mWhatThisContains)
-            {
-                item.GetUsedTextures(listToFill);
-            }
-        }
-#endif
-
         // When interpolating between two states,
         // the code is goign to merge the values from
         // the two states to create a 3rd set of (merged)
@@ -5266,8 +5195,8 @@ namespace Gum.Wireframe
         }
 
         #region AnimationChain 
-#if MONOGAME || XNA4
         public bool Animate { get; set; } = true;
+#if MONOGAME || XNA4
         int mCurrentChainIndex;
         protected int mCurrentFrameIndex;
         AnimationChainList mAnimationChains;
@@ -5499,7 +5428,6 @@ namespace Gum.Wireframe
 #endregion
 
 
-#if SKIA
         public bool IsPointInside(float x, float y)
         {
             var asIpso = this as IRenderableIpso;
@@ -5513,7 +5441,6 @@ namespace Gum.Wireframe
                 x < absoluteX + this.GetAbsoluteWidth() &&
                 y < absoluteY + this.GetAbsoluteHeight();
         }
-#endif
 
 #endregion
     }
