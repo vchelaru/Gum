@@ -1,12 +1,21 @@
 ﻿using SkiaGum.GueDeriving;
+using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Reflection.Emit;
 
 namespace RenderingLibrary.Graphics
 {
     public class Renderer : IRenderer
     {
+        /// <summary>
+        /// Whether renderable objects should call Render
+        /// on contained children. This is true by default, 
+        /// results in a hierarchical rendering order.
+        /// </summary>
+        public static bool RenderUsingHierarchy = true;
+
         /// <summary>
         /// Use the custom effect for rendering. This setting takes priority if
         /// both UseCustomEffectRendering and UseBasicEffectRendering are enabled.
@@ -50,7 +59,7 @@ namespace RenderingLibrary.Graphics
         //}
 
         // This syntax is a little different than standard Gum, but we're moving in that direction incrementally:
-        public void Draw(IList<BindableGraphicalUiElement> whatToRender, SystemManagers managers)
+        public void Draw(IList<IRenderableIpso> whatToRender, SystemManagers managers)
         {
             if (ClearsCanvas)
             {
@@ -68,18 +77,65 @@ namespace RenderingLibrary.Graphics
 
             PreRender(whatToRender);
 
-            foreach (var element in whatToRender)
+            var count = whatToRender.Count;
+
+            for (int i = 0; i < count; i++)
             {
-                if (element.Visible)
+                var renderable = whatToRender[i];
+                if (renderable.Visible)
                 {
-                    ((IRenderable)element).Render(managers);
+
+                    var canvas = (managers as SystemManagers).Canvas;
+
+                    var isOnScreen = true;
+
+                    if (renderable.ClipsChildren)
+                    {
+                        var absoluteX = renderable.GetAbsoluteX();
+                        var absoluteY = renderable.GetAbsoluteY();
+
+                        var width = renderable.Width;
+                        var height = renderable.Height;
+
+                        var rect = new SKRect(absoluteX, absoluteY, absoluteX + width, absoluteY + height);
+
+                        isOnScreen =
+                            rect.Bottom > canvas.LocalClipBounds.Top &&
+                            rect.Top < canvas.LocalClipBounds.Bottom &&
+                            rect.Right > canvas.LocalClipBounds.Left &&
+                            rect.Left < canvas.LocalClipBounds.Right;
+
+                        if (isOnScreen)
+                        {
+                            canvas.Save();
+                            canvas.ClipRect(rect);
+                            renderable.Render(managers);
+                        }
+                    }
+                    else
+                    {
+                        renderable.Render(managers);
+                    }
+
+                    if (isOnScreen)
+                    {
+                        if (RenderUsingHierarchy)
+                        {
+                            Draw(renderable.Children, managers);
+                        }
+
+                        if (renderable.ClipsChildren)
+                        {
+                            canvas.Restore();
+                        }
+                    }
                 }
             }
 
             managers.Canvas.Restore();
         }
 
-        private void PreRender(IList<BindableGraphicalUiElement> renderables)
+        private void PreRender(IList<IRenderableIpso> renderables)
         {
 #if DEBUG
             if (renderables == null)

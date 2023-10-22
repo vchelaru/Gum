@@ -99,7 +99,7 @@ namespace Gum.Wireframe
         public static bool ShowLineRectangles = true;
 
         // to save on casting:
-        IRenderableIpso mContainedObjectAsIpso;
+        protected IRenderableIpso mContainedObjectAsIpso;
         IVisible mContainedObjectAsIVisible;
 
         GraphicalUiElement mWhatContainsThis;
@@ -471,54 +471,7 @@ namespace Gum.Wireframe
 
         public virtual void Render(ISystemManagers managers)
         {
-#if MONOGAME || XNA4
-            var systemManagers = managers as SystemManagers;
             mContainedObjectAsIpso.Render(managers);
-#endif
-
-#if SKIA
-            var canvas = (managers as SystemManagers).Canvas;
-
-            var isOnScreen = true;
-
-            if (ClipsChildren)
-            {
-                var absoluteX = this.GetAbsoluteX();
-                var absoluteY = this.GetAbsoluteY();
-                var rect = new SKRect(absoluteX, absoluteY, absoluteX + mContainedObjectAsIpso.Width, absoluteY + mContainedObjectAsIpso.Height);
-
-                isOnScreen = 
-                    rect.Bottom > canvas.LocalClipBounds.Top &&
-                    rect.Top < canvas.LocalClipBounds.Bottom &&
-                    rect.Right > canvas.LocalClipBounds.Left &&
-                    rect.Left < canvas.LocalClipBounds.Right;
-
-                if(isOnScreen)
-                {
-                    mContainedObjectAsIpso.Render(managers);
-                    canvas.Save();
-                    canvas.ClipRect(rect);
-                }
-            }
-            else
-            {
-                mContainedObjectAsIpso.Render(managers);
-            }
-
-            if (isOnScreen)
-            {
-                // todo - this may allocate slightly due to foreach. Consider changing to a for loop
-                foreach (var child in this.Children)
-                {
-                    child.Render(managers);
-                }
-
-                if (ClipsChildren)
-                {
-                    canvas.Restore();
-                }
-            }
-#endif
         }
 
 
