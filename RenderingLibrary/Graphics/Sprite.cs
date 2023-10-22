@@ -13,7 +13,7 @@ using Rectangle = System.Drawing.Rectangle;
 namespace RenderingLibrary.Graphics
 {
 
-    public class Sprite : IRenderableIpso, IVisible, IAspectRatio
+    public class Sprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoordinate
     {
         #region Fields
 
@@ -73,6 +73,17 @@ namespace RenderingLibrary.Graphics
         }
 
         public Rectangle? SourceRectangle;
+        Rectangle? ITextureCoordinate.SourceRectangle
+        {
+            get
+            {
+                return SourceRectangle;
+            }
+            set
+            {
+                SourceRectangle = value;
+            }
+        }
 
         Texture2D mTexture;
 

@@ -17,7 +17,7 @@ using Gum;
 
 namespace RenderingLibrary.Graphics
 {
-    public class NineSlice : IRenderableIpso, IVisible
+    public class NineSlice : IRenderableIpso, IVisible, ITextureCoordinate
     {
         #region Fields
 
@@ -48,6 +48,24 @@ namespace RenderingLibrary.Graphics
         int mFullInsideHeight;
 
         public Rectangle? SourceRectangle;
+
+        bool ITextureCoordinate.Wrap
+        {
+            get => false;
+            set { }// do nothing, wrapping is not supported yet
+        }
+
+        Rectangle? ITextureCoordinate.SourceRectangle
+        {
+            get
+            {
+                return SourceRectangle;
+            }
+            set
+            {
+                SourceRectangle = value;
+            }
+        }
 
         #endregion
 

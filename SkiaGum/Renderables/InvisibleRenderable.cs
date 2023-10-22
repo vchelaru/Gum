@@ -8,7 +8,7 @@ using System.Collections.ObjectModel;
 
 namespace SkiaGum.Renderables
 {
-    public class InvisibleRenderable : IVisible, IRenderableIpso
+    public class InvisibleRenderable : IVisible, IRenderableIpso, ISetClipsChildren
     {
         public bool AbsoluteVisible
         {

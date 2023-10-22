@@ -5,19 +5,24 @@ using Matrix = System.Numerics.Matrix4x4;
 
 namespace SkiaGum.Renderables
 {
-    public class Sprite : RenderableBase, IAspectRatio
+    public class Sprite : RenderableBase, IAspectRatio, ITextureCoordinate
     {
         public SKBitmap Texture { get; set; }
 
         public Rectangle? SourceRectangle;
 
-        public Rectangle? EffectiveRectangle
+        public Rectangle? EffectiveRectangle => SourceRectangle;
+
+        Rectangle? ITextureCoordinate.SourceRectangle
         {
-            get
-            {
-                Rectangle? sourceRectangle = SourceRectangle;
-                return sourceRectangle;
-            }
+            get => SourceRectangle;
+            set => SourceRectangle = value;
+        }
+
+        bool ITextureCoordinate.Wrap
+        {
+            get => false;
+            set { } // don't support this yet...
         }
 
         public float AspectRatio => Texture != null ? (Texture.Width / (float)Texture.Height) : 1.0f;

@@ -2417,118 +2417,51 @@ namespace Gum.Wireframe
 
         private void UpdateTextureCoordinatesDimensionBased()
         {
-            if (mContainedObjectAsIpso is Sprite)
+            int left = mTextureLeft;
+            int top = mTextureTop;
+            int width = (int)(mContainedObjectAsIpso.Width / mTextureWidthScale);
+            int height = (int)(mContainedObjectAsIpso.Height / mTextureHeightScale);
+
+            if (mContainedObjectAsIpso is ITextureCoordinate containedTextureCoordinateObject)
             {
-                var sprite = mContainedObjectAsIpso as Sprite;
-                var textureAddress = mTextureAddress;
-                switch (textureAddress)
+                switch (mTextureAddress)
                 {
                     case TextureAddress.DimensionsBased:
-#if !SKIA
-                        int left = mTextureLeft;
-                        int top = mTextureTop;
-                        int width = (int)(sprite.Width / mTextureWidthScale);
-                        int height = (int)(sprite.Height / mTextureHeightScale);
-
-                        sprite.SourceRectangle = new Rectangle(
+                        containedTextureCoordinateObject.SourceRectangle = new Rectangle(
                             left,
                             top,
                             width,
                             height);
-                        sprite.Wrap = mWrap;
-#endif
+                        containedTextureCoordinateObject.Wrap = mWrap;
                         break;
                 }
             }
-#if !SKIA
-            else if (mContainedObjectAsIpso is NineSlice)
-            {
-                var nineSlice = mContainedObjectAsIpso as NineSlice;
-                var textureAddress = mTextureAddress;
-                switch (textureAddress)
-                {
-                    case TextureAddress.DimensionsBased:
-                        int left = mTextureLeft;
-                        int top = mTextureTop;
-                        int width = (int)(nineSlice.Width / mTextureWidthScale);
-                        int height = (int)(nineSlice.Height / mTextureHeightScale);
-
-                        nineSlice.SourceRectangle = new Rectangle(
-                            left,
-                            top,
-                            width,
-                            height);
-
-                        break;
-                }
-            }
-#endif
-
         }
 
         private void UpdateTextureCoordinatesNotDimensionBased()
         {
-            if (mContainedObjectAsIpso is Sprite)
+            if (mContainedObjectAsIpso is ITextureCoordinate textureCoordinateObject)
             {
-                var sprite = mContainedObjectAsIpso as Sprite;
                 var textureAddress = mTextureAddress;
                 switch (textureAddress)
                 {
                     case TextureAddress.EntireTexture:
-                        sprite.SourceRectangle = null;
-#if !SKIA
-                        sprite.Wrap = false;
-#endif
+                        textureCoordinateObject.SourceRectangle = null;
+                        textureCoordinateObject.Wrap = false;
                         break;
                     case TextureAddress.Custom:
-                        sprite.SourceRectangle = new Rectangle(
+                        textureCoordinateObject.SourceRectangle = new Rectangle(
                             mTextureLeft,
                             mTextureTop,
                             mTextureWidth,
                             mTextureHeight);
-#if !SKIA
-                        sprite.Wrap = mWrap;
-#endif
+                        textureCoordinateObject.Wrap = mWrap;
                         break;
                     case TextureAddress.DimensionsBased:
                         // This is done *after* setting dimensions
 
                         break;
                 }
-            }
-            else if (mContainedObjectAsIpso is NineSlice)
-            {
-#if !SKIA
-                var nineSlice = mContainedObjectAsIpso as NineSlice;
-                var textureAddress = mTextureAddress;
-                switch (textureAddress)
-                {
-                    case TextureAddress.EntireTexture:
-                        nineSlice.SourceRectangle = null;
-                        break;
-                    case TextureAddress.Custom:
-                        nineSlice.SourceRectangle = new Rectangle(
-                            mTextureLeft,
-                            mTextureTop,
-                            mTextureWidth,
-                            mTextureHeight);
-
-                        break;
-                    case TextureAddress.DimensionsBased:
-                        int left = mTextureLeft;
-                        int top = mTextureTop;
-                        int width = (int)(nineSlice.Width / mTextureWidthScale);
-                        int height = (int)(nineSlice.Height / mTextureHeightScale);
-
-                        nineSlice.SourceRectangle = new Rectangle(
-                            left,
-                            top,
-                            width,
-                            height);
-
-                        break;
-                }
-#endif
             }
         }
 
