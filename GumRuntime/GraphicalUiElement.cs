@@ -3355,35 +3355,6 @@ namespace Gum.Wireframe
                 bool wasSet = false;
 
 
-#if SKIA
-                if (mContainedObjectAsIpso is VectorSprite vectorSprite)
-                {
-                    //if (sprite.AtlasedTexture != null)
-                    //{
-                    //    throw new NotImplementedException();
-                    //}
-                    //else 
-                    if (vectorSprite.Texture != null)
-                    {
-                        var scale = GetAbsoluteWidth() / vectorSprite.Texture.Picture.CullRect.Width;
-                        heightToSet = vectorSprite.Texture.Picture.CullRect.Height * scale * mHeight / 100.0f;
-                        wasSet = true;
-                    }
-
-                    //if (wasSet)
-                    //{
-                    //    // If the address is dimension based, then that means texture coords depend on dimension...but we
-                    //    // can't make dimension based on texture coords as that would cause a circular reference
-                    //    if (sprite.EffectiveRectangle.HasValue && mTextureAddress != TextureAddress.DimensionsBased)
-                    //    {
-                    //        var scale = GetAbsoluteWidth() / sprite.EffectiveRectangle.Value.Width;
-                    //        heightToSet = sprite.EffectiveRectangle.Value.Height * scale * mHeight / 100.0f;
-                    //    }
-                    //}
-                }
-
-#endif
-
                 if (mContainedObjectAsIpso is IAspectRatio aspectRatioObject)
                 {
                     //if(sprite.AtlasedTexture != null)
@@ -3394,14 +3365,14 @@ namespace Gum.Wireframe
                     heightToSet = GetAbsoluteWidth() * (mHeight / 100.0f) / aspectRatioObject.AspectRatio;
                     wasSet = true;
 
-                    if (wasSet && mContainedObjectAsIpso is Sprite sprite)
+                    if (wasSet && mContainedObjectAsIpso is ITextureCoordinate textureCoordinate)
                     {
                         // If the address is dimension based, then that means texture coords depend on dimension...but we
                         // can't make dimension based on texture coords as that would cause a circular reference
-                        if (sprite.EffectiveRectangle.HasValue && mTextureAddress != TextureAddress.DimensionsBased)
+                        if (textureCoordinate.SourceRectangle.HasValue && mTextureAddress != TextureAddress.DimensionsBased)
                         {
-                            var scale = GetAbsoluteWidth() / sprite.EffectiveRectangle.Value.Width;
-                            heightToSet = sprite.EffectiveRectangle.Value.Height * scale * mHeight / 100.0f;
+                            var scale = GetAbsoluteWidth() / textureCoordinate.SourceRectangle.Value.Width;
+                            heightToSet = textureCoordinate.SourceRectangle.Value.Height * scale * mHeight / 100.0f;
                         }
                     }
                 }
