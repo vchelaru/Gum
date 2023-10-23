@@ -7,7 +7,6 @@ using GumDataTypes.Variables;
 using GumRuntime;
 
 #if MONOGAME || XNA4
-using RenderingLibrary.Math.Geometry;
 using Gum.Graphics.Animation;
 #endif
 
@@ -15,12 +14,6 @@ using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Math;
 
-#if SKIA
-using SkiaGum;
-using SkiaGum.GueDeriving;
-using SkiaGum.Renderables;
-using SkiaSharp;
-#endif
 
 using System;
 using System.Collections.Generic;
@@ -557,7 +550,7 @@ namespace Gum.Wireframe
 
                     if(mContainedObjectAsIpso is IText)
                     {
-                        RefreshTextOverflowVerrticalMode();
+                        RefreshTextOverflowVerticalMode();
                     }
 
                     UpdateLayout();
@@ -3862,7 +3855,6 @@ namespace Gum.Wireframe
                 mLayer = layer;
                 mManagers = managers;
 
-#if MONOGAME || XNA4
                 AddContainedRenderableToManagers(managers, layer);
 
                 RecursivelyAddIManagedChildren(this);
@@ -3879,7 +3871,6 @@ namespace Gum.Wireframe
                 {
                     CustomAddChildren();
                 }
-#endif
             }
         }
 
@@ -4067,17 +4058,13 @@ namespace Gum.Wireframe
             var layerToRemoveFrom = mLayer;
             if (mLayer == null && mManagers != null)
             {
-#if MONOGAME || XNA4
                 layerToRemoveFrom = mManagers.Renderer.Layers[0];
-#endif
             }
 
             var layerToAddTo = layer;
             if (layerToAddTo == null)
             {
-#if MONOGAME || XNA4
                 layerToAddTo = mManagers.Renderer.Layers[0];
-#endif
             }
 
             bool isScreen = mContainedObjectAsIpso == null;
@@ -4626,7 +4613,7 @@ namespace Gum.Wireframe
             }
         }
 
-        public void RefreshTextOverflowVerrticalMode()
+        public void RefreshTextOverflowVerticalMode()
         {
 #if MONOGAME || XNA4
 

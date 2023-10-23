@@ -9,6 +9,17 @@ namespace RenderingLibrary.Graphics
 {
     public class Renderer : IRenderer
     {
+
+        List<Layer> mLayers = new List<Layer>();
+        ReadOnlyCollection<Layer> mLayersReadOnly;
+        public ReadOnlyCollection<Layer> Layers
+        {
+            get
+            {
+                return mLayersReadOnly;
+            }
+        }
+
         /// <summary>
         /// Whether renderable objects should call Render
         /// on contained children. This is true by default, 
@@ -51,6 +62,9 @@ namespace RenderingLibrary.Graphics
         public void Initialize(SystemManagers managers)
         {
             Camera = new Camera();
+
+            mLayersReadOnly = new ReadOnlyCollection<Layer>(mLayers);
+
         }
 
         //public void Draw(SystemManagers systemManagers)

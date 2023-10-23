@@ -433,7 +433,7 @@ namespace Gum.Wireframe
             {
                 graphicalUiElement.TextOverflowVerticalMode = (TextOverflowVerticalMode)value;
 #if MONOGAME || XNA4
-                graphicalUiElement.RefreshTextOverflowVerrticalMode();
+                graphicalUiElement.RefreshTextOverflowVerticalMode();
 #endif
 
             }
