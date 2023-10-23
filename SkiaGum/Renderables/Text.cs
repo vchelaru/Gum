@@ -12,7 +12,7 @@ using Gum.DataTypes;
 
 namespace SkiaGum
 {
-    public class Text : IRenderableIpso, IVisible
+    public class Text : IRenderableIpso, IVisible, IText
     {
         #region Fields/Properties
 
@@ -221,6 +221,12 @@ namespace SkiaGum
             }
         }
 
+        // do nothing, this doesn't render to a local render target
+        public void SetNeedsRefreshToTrue() { }
+
+        // This could cache the prerendered for speed, but we currently don't do that...
+        public void UpdatePreRenderDimensions() { }
+
         #endregion
 
         public Text()
@@ -234,7 +240,6 @@ namespace SkiaGum
             mChildren = new ObservableCollection<IRenderableIpso>();
         }
 
-#if SKIA
         public void Render(ISystemManagers managers)
         {
             var canvas = (managers as SystemManagers).Canvas;
@@ -291,12 +296,6 @@ namespace SkiaGum
                 canvas.Restore();
             }
         }
-#else
-        public void Render(SpriteRenderer spriteRenderer, SystemManagers managers)
-        {
-
-        }
-#endif
         public BlendState BlendState => BlendState.AlphaBlend;
 
 

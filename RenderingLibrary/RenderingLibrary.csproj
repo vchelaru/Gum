@@ -116,6 +116,7 @@
     <Compile Include="Graphics\IRenderableIpso.cs" />
     <Compile Include="Graphics\IRenderer.cs" />
     <Compile Include="Graphics\ISetClipsChildren.cs" />
+    <Compile Include="Graphics\IText.cs" />
     <Compile Include="Graphics\ITexturable.cs" />
     <Compile Include="Graphics\ITextureCoordinate.cs" />
     <Compile Include="Graphics\IVisible.cs" />

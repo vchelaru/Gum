@@ -34,7 +34,7 @@ namespace RenderingLibrary.Graphics
     #endregion
 
 
-    public class Text : IRenderableIpso, IVisible
+    public class Text : IRenderableIpso, IVisible, IText
     {
         #region Fields
 
