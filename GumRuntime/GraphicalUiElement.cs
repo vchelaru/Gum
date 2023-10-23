@@ -1647,7 +1647,7 @@ namespace Gum.Wireframe
 
                 // See the above call to UpdateTextureCoordiantes
                 // on why this is called both before and after UpdateDimensions
-                if (mContainedObjectAsIpso is Sprite)
+                if (mContainedObjectAsIpso is ITextureCoordinate)
                 {
                     UpdateTextureCoordinatesNotDimensionBased();
                 }
@@ -3044,13 +3044,11 @@ namespace Gum.Wireframe
                 {
                     bool wasSet = false;
 
-                    if (mContainedObjectAsIpso is Sprite)
+                    if (mContainedObjectAsIpso is ITextureCoordinate asITextureCoordinate)
                     {
-                        Sprite sprite = mContainedObjectAsIpso as Sprite;
-
-                        if (sprite.Texture != null)
+                        if (asITextureCoordinate.TextureWidth != null)
                         {
-                            unitOffsetX = sprite.Texture.Width * mX / 100.0f;
+                            unitOffsetX = asITextureCoordinate.TextureWidth.Value * mX / 100.0f;
                         }
                     }
 
@@ -3084,13 +3082,11 @@ namespace Gum.Wireframe
                     bool wasSet = false;
 
 
-                    if (mContainedObjectAsIpso is Sprite)
+                    if (mContainedObjectAsIpso is ITextureCoordinate asITextureCoordinate)
                     {
-                        Sprite sprite = mContainedObjectAsIpso as Sprite;
-
-                        if (sprite.Texture != null)
+                        if (asITextureCoordinate.TextureHeight != null)
                         {
-                            unitOffsetY = sprite.Texture.Height * mY / 100.0f;
+                            unitOffsetY = asITextureCoordinate.TextureHeight.Value * mY / 100.0f;
                         }
                     }
 
@@ -3299,12 +3295,11 @@ namespace Gum.Wireframe
             {
                 bool wasSet = false;
 
-#if SKIA
-                if (mContainedObjectAsIpso is VectorSprite vectorSprite)
+                if (mContainedObjectAsIpso is ITextureCoordinate iTextureCoordinate)
                 {
-                    if (vectorSprite.Texture != null)
+                    if (iTextureCoordinate.TextureHeight != null)
                     {
-                        heightToSet = vectorSprite.Texture.Picture.CullRect.Height * mHeight / 100.0f;
+                        heightToSet = iTextureCoordinate.TextureHeight.Value * mHeight / 100.0f;
                         wasSet = true;
                     }
 
@@ -3312,33 +3307,9 @@ namespace Gum.Wireframe
                     {
                         // If the address is dimension based, then that means texture coords depend on dimension...but we
                         // can't make dimension based on texture coords as that would cause a circular reference
-                        //if (sprite.EffectiveRectangle.HasValue && mTextureAddress != TextureAddress.DimensionsBased)
-                        //{
-                        //    heightToSet = sprite.EffectiveRectangle.Value.Height * mHeight / 100.0f;
-                        //}
-                    }
-                }
-
-
-#endif
-
-                if (mContainedObjectAsIpso is Sprite)
-                {
-                    Sprite sprite = mContainedObjectAsIpso as Sprite;
-
-                    if (sprite.Texture != null)
-                    {
-                        heightToSet = sprite.Texture.Height * mHeight / 100.0f;
-                        wasSet = true;
-                    }
-
-                    if (wasSet)
-                    {
-                        // If the address is dimension based, then that means texture coords depend on dimension...but we
-                        // can't make dimension based on texture coords as that would cause a circular reference
-                        if (sprite.EffectiveRectangle.HasValue && mTextureAddress != TextureAddress.DimensionsBased)
+                        if (iTextureCoordinate.SourceRectangle.HasValue && mTextureAddress != TextureAddress.DimensionsBased)
                         {
-                            heightToSet = sprite.EffectiveRectangle.Value.Height * mHeight / 100.0f;
+                            heightToSet = iTextureCoordinate.SourceRectangle.Value.Height * mHeight / 100.0f;
                         }
                     }
                 }
