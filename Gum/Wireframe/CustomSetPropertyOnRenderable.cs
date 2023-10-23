@@ -817,5 +817,101 @@ namespace Gum.Wireframe
             }
         }
 
+        public static void AddRenderableToManagers(IRenderableIpso renderable, ISystemManagers iSystemManagers, Layer layer)
+        {
+            var managers = iSystemManagers as SystemManagers;
+
+            if (renderable is Sprite)
+            {
+                managers.SpriteManager.Add(renderable as Sprite, layer);
+            }
+            else if (renderable is NineSlice)
+            {
+                managers.SpriteManager.Add(renderable as NineSlice, layer);
+            }
+            else if (renderable is LineRectangle)
+            {
+                managers.ShapeManager.Add(renderable as LineRectangle, layer);
+            }
+            else if (renderable is SolidRectangle)
+            {
+                managers.ShapeManager.Add(renderable as SolidRectangle, layer);
+            }
+            else if (renderable is Text)
+            {
+                managers.TextManager.Add(renderable as Text, layer);
+            }
+            else if (renderable is LineCircle)
+            {
+                managers.ShapeManager.Add(renderable as LineCircle, layer);
+            }
+            else if (renderable is LinePolygon)
+            {
+                managers.ShapeManager.Add(renderable as LinePolygon, layer);
+            }
+            else if (renderable is InvisibleRenderable)
+            {
+                managers.SpriteManager.Add(renderable as InvisibleRenderable, layer);
+            }
+            else
+            {
+                if (layer == null)
+                {
+                    managers.Renderer.Layers[0].Add(renderable);
+                }
+                else
+                {
+                    layer.Add(renderable);
+                }
+            }
+        }
+
+        public static void RemoveRenderableFromManagers(IRenderableIpso renderable, ISystemManagers iSystemManagers)
+        {
+            var managers = iSystemManagers as SystemManagers;
+
+            if (renderable is Sprite)
+            {
+                managers.SpriteManager.Remove(renderable as Sprite);
+            }
+            else if (renderable is NineSlice)
+            {
+                managers.SpriteManager.Remove(renderable as NineSlice);
+            }
+            else if (renderable is global::RenderingLibrary.Math.Geometry.LineRectangle)
+            {
+                managers.ShapeManager.Remove(renderable as global::RenderingLibrary.Math.Geometry.LineRectangle);
+            }
+            else if (renderable is global::RenderingLibrary.Math.Geometry.LinePolygon)
+            {
+                managers.ShapeManager.Remove(renderable as global::RenderingLibrary.Math.Geometry.LinePolygon);
+            }
+            else if (renderable is global::RenderingLibrary.Graphics.SolidRectangle)
+            {
+                managers.ShapeManager.Remove(renderable as global::RenderingLibrary.Graphics.SolidRectangle);
+            }
+            else if (renderable is Text)
+            {
+                managers.TextManager.Remove(renderable as Text);
+            }
+            else if (renderable is LineCircle)
+            {
+                managers.ShapeManager.Remove(renderable as LineCircle);
+            }
+            else if (renderable is InvisibleRenderable)
+            {
+                managers.SpriteManager.Remove(renderable as InvisibleRenderable);
+            }
+            else if (renderable != null)
+            {
+                // This could be a custom visual object, so don't do anything:
+                //throw new NotImplementedException();
+                managers.Renderer.RemoveRenderable(renderable);
+            }
+            if (renderable is IManagedObject asManagedObject)
+            {
+                asManagedObject.RemoveFromManagers();
+            }
+        }
     }
 }

@@ -100,6 +100,8 @@ namespace Gum
             GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
             GraphicalUiElement.UpdateFontFromProperties = CustomSetPropertyOnRenderable.UpdateToFontValues;
 
+            GraphicalUiElement.AddRenderableToManagers = CustomSetPropertyOnRenderable.AddRenderableToManagers;
+            GraphicalUiElement.RemoveRenderableFromManagers = CustomSetPropertyOnRenderable.RemoveRenderableFromManagers;
             // do this after initializing the plugins. This is separate from where the initialize call is made, but it must
             // happen after plugins are created:
             PluginManager.Self.WireframeInitialized(wireframeControl1, gumEditorPanel);

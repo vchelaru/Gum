@@ -4066,57 +4066,15 @@ namespace Gum.Wireframe
             }
         }
 
+        public static Action<IRenderableIpso, ISystemManagers> RemoveRenderableFromManagers;
+
         private void AddContainedRenderableToManagers(SystemManagers managers, Layer layer)
         {
             // This may be a Screen
             if (mContainedObjectAsIpso != null)
             {
-#if MONOGAME || XNA4
-                if (mContainedObjectAsIpso is Sprite)
-                {
-                    managers.SpriteManager.Add(mContainedObjectAsIpso as Sprite, layer);
-                }
-                else if (mContainedObjectAsIpso is NineSlice)
-                {
-                    managers.SpriteManager.Add(mContainedObjectAsIpso as NineSlice, layer);
-                }
-                else if (mContainedObjectAsIpso is LineRectangle)
-                {
-                    managers.ShapeManager.Add(mContainedObjectAsIpso as LineRectangle, layer);
-                }
-                else if (mContainedObjectAsIpso is SolidRectangle)
-                {
-                    managers.ShapeManager.Add(mContainedObjectAsIpso as SolidRectangle, layer);
-                }
-                else if (mContainedObjectAsIpso is Text)
-                {
-                    managers.TextManager.Add(mContainedObjectAsIpso as Text, layer);
-                }
-                else if (mContainedObjectAsIpso is LineCircle)
-                {
-                    managers.ShapeManager.Add(mContainedObjectAsIpso as LineCircle, layer);
-                }
-                else if (mContainedObjectAsIpso is LinePolygon)
-                {
-                    managers.ShapeManager.Add(mContainedObjectAsIpso as LinePolygon, layer);
-                }
-                else if (mContainedObjectAsIpso is InvisibleRenderable)
-                {
-                    managers.SpriteManager.Add(mContainedObjectAsIpso as InvisibleRenderable, layer);
-                }
+                AddRenderableToManagers?.Invoke(mContainedObjectAsIpso, Managers, layer);
 
-                else
-                {
-                    if (layer == null)
-                    {
-                        managers.Renderer.Layers[0].Add(mContainedObjectAsIpso);
-                    }
-                    else
-                    {
-                        layer.Add(mContainedObjectAsIpso);
-                    }
-                }
-#endif
             }
         }
 
@@ -4176,6 +4134,7 @@ namespace Gum.Wireframe
             }
         }
 
+        public static Action<IRenderableIpso, ISystemManagers, Layer> AddRenderableToManagers;
         public void RemoveFromManagers()
         {
             foreach (var child in this.mWhatThisContains)
@@ -4189,52 +4148,7 @@ namespace Gum.Wireframe
             // if mManagers is null, then it was never added to the managers
             if (mManagers != null)
             {
-#if MONOGAME || XNA4
-                if (mContainedObjectAsIpso is Sprite)
-                {
-                    mManagers.SpriteManager.Remove(mContainedObjectAsIpso as Sprite);
-                }
-                else if (mContainedObjectAsIpso is NineSlice)
-                {
-                    mManagers.SpriteManager.Remove(mContainedObjectAsIpso as NineSlice);
-                }
-                else if (mContainedObjectAsIpso is global::RenderingLibrary.Math.Geometry.LineRectangle)
-                {
-                    mManagers.ShapeManager.Remove(mContainedObjectAsIpso as global::RenderingLibrary.Math.Geometry.LineRectangle);
-                }
-                else if (mContainedObjectAsIpso is global::RenderingLibrary.Math.Geometry.LinePolygon)
-                {
-                    mManagers.ShapeManager.Remove(mContainedObjectAsIpso as global::RenderingLibrary.Math.Geometry.LinePolygon);
-                }
-                else if (mContainedObjectAsIpso is global::RenderingLibrary.Graphics.SolidRectangle)
-                {
-                    mManagers.ShapeManager.Remove(mContainedObjectAsIpso as global::RenderingLibrary.Graphics.SolidRectangle);
-                }
-                else if (mContainedObjectAsIpso is Text)
-                {
-                    mManagers.TextManager.Remove(mContainedObjectAsIpso as Text);
-                }
-                else if (mContainedObjectAsIpso is LineCircle)
-                {
-                    mManagers.ShapeManager.Remove(mContainedObjectAsIpso as LineCircle);
-                }
-                else if (mContainedObjectAsIpso is InvisibleRenderable)
-                {
-                    mManagers.SpriteManager.Remove(mContainedObjectAsIpso as InvisibleRenderable);
-                }
-                else if (mContainedObjectAsIpso != null)
-                {
-                    // This could be a custom visual object, so don't do anything:
-                    //throw new NotImplementedException();
-                    mManagers.Renderer.RemoveRenderable(mContainedObjectAsIpso);
-                }
-
-
-                if (mContainedObjectAsIpso is IManagedObject asManagedObject)
-                {
-                    asManagedObject.RemoveFromManagers();
-                }
-#endif
+                RemoveRenderableFromManagers?.Invoke(mContainedObjectAsIpso, mManagers);
 
                 CustomRemoveFromManagers();
 
