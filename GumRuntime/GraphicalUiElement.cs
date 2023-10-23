@@ -92,6 +92,11 @@ namespace Gum.Wireframe
 
         private DirtyState currentDirtyState;
         bool isFontDirty = false;
+        public bool IsFontDirty
+        {
+            get => isFontDirty;
+            set => isFontDirty = value;
+        }
 
         public static int UpdateLayoutCallCount;
         public static int ChildrenUpdatingParentLayoutCalls;
@@ -550,7 +555,7 @@ namespace Gum.Wireframe
                 {
                     mHeightUnit = value; 
 
-                    if(mContainedObjectAsIpso is Text)
+                    if(mContainedObjectAsIpso is IText)
                     {
                         RefreshTextOverflowVerrticalMode();
                     }
@@ -1005,7 +1010,7 @@ namespace Gum.Wireframe
                 {
                     case VerticalAlignment.TextBaseline:
                         originOffset.Y = ((IPositionedSizedObject)this).Height;
-                        if (mContainedObjectAsIpso is Text text)
+                        if (mContainedObjectAsIpso is IText text)
                         {
                             originOffset.Y -= text.DescenderHeight * text.FontScale;
                         }
@@ -1053,7 +1058,7 @@ namespace Gum.Wireframe
                 {
                     case VerticalAlignment.TextBaseline:
                         originOffset.Y = ((IPositionedSizedObject)this).Height;
-                        if (mContainedObjectAsIpso is Text text)
+                        if (mContainedObjectAsIpso is IText text)
                         {
                             originOffset.Y -= text.DescenderHeight * text.FontScale;
                         }
@@ -1629,16 +1634,14 @@ namespace Gum.Wireframe
                 // text from updating unnecessarily, so let's change this to prevent parents from updating
                 // all of their children:
                 //if (mContainedObjectAsIpso is Text asText && childrenUpdateDepth > 0)
-                if (mContainedObjectAsIpso is Text asText)
+                if (mContainedObjectAsIpso is IText asText)
                 {
                     // Only if the width or height have changed:
                     if (mContainedObjectAsIpso.Width != widthBeforeLayout ||
                         mContainedObjectAsIpso.Height != heightBeforeLayout)
                     {
-#if MONOGAME || XNA4
                         asText.SetNeedsRefreshToTrue();
                         asText.UpdatePreRenderDimensions();
-#endif
                     }
                 }
 
@@ -1908,7 +1911,7 @@ namespace Gum.Wireframe
                 }
                 else if (mYOrigin == VerticalAlignment.TextBaseline)
                 {
-                    if (mContainedObjectAsIpso is Text text)
+                    if (mContainedObjectAsIpso is IText text)
                     {
                         smallEdge = positionValue - ((IPositionedSizedObject)this).Height + text.DescenderHeight * text.FontScale;
                     }
@@ -2036,7 +2039,7 @@ namespace Gum.Wireframe
 
         private static bool GetIfOneDimensionCanChangeOtherDimension(GraphicalUiElement gue)
         {
-            var canOneDimensionChangeTheOtherOnChild = gue.RenderableComponent is Text ||
+            var canOneDimensionChangeTheOtherOnChild = gue.RenderableComponent is IText ||
                     gue.WidthUnits == DimensionUnitType.PercentageOfOtherDimension ||
                     gue.HeightUnits == DimensionUnitType.PercentageOfOtherDimension ||
                     gue.WidthUnits == DimensionUnitType.MaintainFileAspectRatio ||
@@ -2866,7 +2869,7 @@ namespace Gum.Wireframe
             }
             else if (mYOrigin == VerticalAlignment.TextBaseline)
             {
-                if (mContainedObjectAsIpso is Text text)
+                if (mContainedObjectAsIpso is IText text)
                 {
                     offsetY += -mContainedObjectAsIpso.Height + text.DescenderHeight * text.FontScale;
                 }
@@ -3003,7 +3006,7 @@ namespace Gum.Wireframe
                 }
                 else if (mYUnits == GeneralUnitType.PixelsFromBaseline)
                 {
-                    if (Parent is GraphicalUiElement gue && gue.RenderableComponent is Text text)
+                    if (Parent is GraphicalUiElement gue && gue.RenderableComponent is IText text)
                     {
                         value = parentHeight - text.DescenderHeight;
                     }
@@ -3200,15 +3203,15 @@ namespace Gum.Wireframe
 
                 if (this.mContainedObjectAsIpso != null)
                 {
-                    if (mContainedObjectAsIpso is Text asText)
+                    if (mContainedObjectAsIpso is IText asText)
                     {
-                        var oldWidth = asText.Width;
+                        var oldWidth = mContainedObjectAsIpso.Width;
                         if (WidthUnits == DimensionUnitType.RelativeToChildren)
                         {
-                            asText.Width = float.PositiveInfinity;
+                            mContainedObjectAsIpso.Width = float.PositiveInfinity;
                         }
                         maxHeight = asText.WrappedTextHeight;
-                        asText.Width = oldWidth;
+                        mContainedObjectAsIpso.Width = oldWidth;
                     }
 
                     if(useFixedStackChildrenSize && this.ChildrenLayout == ChildrenLayout.TopToBottomStack && this.Children.Count > 1)
@@ -3519,16 +3522,28 @@ namespace Gum.Wireframe
 
                 if (this.mContainedObjectAsIpso != null)
                 {
-                    if (mContainedObjectAsIpso is Text asText)
+                    if (mContainedObjectAsIpso is IText asText)
                     {
-#if SKIA
-                        // This is relative to children so no wrapping:
-                        var textBlock = asText.GetTextBlock(float.PositiveInfinity);
 
-                        // Sometimes this crashes, not sure why, but I think it is some kind of internal error. We can tolerate it instead of blow up:
+                        // Sometimes this crashes in Skia.
+                        // Not sure why, but I think it is some kind of internal error. We can tolerate it instead of blow up:
                         try
                         {
-                            maxWidth = textBlock.MeasuredWidth;
+                            // It's possible that the text has itself wrapped, but the dimensions changed.
+                            if (
+                                // Skia text doesn't have a wrapped text, but we can just check if the text itself is not null or empty
+                                //asText.WrappedText.Count > 0 &&
+                                !string.IsNullOrEmpty(asText.RawText) &&
+                                (mContainedObjectAsIpso.Width != 0 && float.IsPositiveInfinity(mContainedObjectAsIpso.Width) == false))
+                            {
+                                // this could be either because it wrapped, or because the raw text
+                                // actually has newlines. Vic says - this difference could maybe be tested
+                                // but I'm not sure it's worth the extra code for the minor savings here, so just
+                                // set the wrap width to positive infinity and refresh the text
+                                mContainedObjectAsIpso.Width = float.PositiveInfinity;
+                            }
+
+                            maxWidth = asText.WrappedTextWidth;
                         }
                         catch (BadImageFormatException)
                         {
@@ -3549,21 +3564,6 @@ namespace Gum.Wireframe
 
                             //        maxWidth = asText.WrappedTextWidth;
                         }
-#endif
-#if MONOGAME || XNA4
-                        // It's possible that the text has itself wrapped, but the dimensions changed.
-                        if (asText.WrappedText.Count > 0 &&
-                            (asText.Width != 0 && float.IsPositiveInfinity(asText.Width) == false))
-                        {
-                            // this could be either because it wrapped, or because the raw text
-                            // actually has newlines. Vic says - this difference could maybe be tested
-                            // but I'm not sure it's worth the extra code for the minor savings here, so just
-                            // set the wrap width to positive infinity and refresh the text
-                            asText.Width = float.PositiveInfinity;
-                        }
-
-                        maxWidth = asText.WrappedTextWidth;
-#endif
                     }
 
                     for(int i = 0; i < this.Children.Count; i++)
@@ -4450,6 +4450,7 @@ namespace Gum.Wireframe
 
 
         public static Action<IRenderableIpso, GraphicalUiElement, string, object> SetPropertyOnRenderable;
+        public static Action<IText, GraphicalUiElement> UpdateFontFromProperties;
 
         /// <summary>
         /// Sets a variable on this object (such as "X") to the argument value
@@ -4816,9 +4817,10 @@ namespace Gum.Wireframe
 
         public void UpdateFontRecursive()
         {
-            if (this.mContainedObjectAsIpso is Text && isFontDirty)
+            if (this.mContainedObjectAsIpso is IText asIText && isFontDirty)
             {
-                UpdateToFontValues();
+
+                UpdateFontFromProperties?.Invoke(asIText, this);
                 isFontDirty = false;
             }
 
@@ -4838,119 +4840,7 @@ namespace Gum.Wireframe
             }
         }
 
-#if SKIA
-        void UpdateToFontValues()
-        {
-            // BitmapFont font = null;
-
-            var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
-            var contentLoader = loaderManager.ContentLoader;
-
-            //if(UseCustomFont)
-            //{
-
-            //}
-            //else
-            {
-                if (/*FontSize > 0 &&*/ !string.IsNullOrEmpty(Font))
-                {
-                    //SKTypeface font = contentLoader.LoadContent<SKTypeface>(Font);
-                    if (font != null && mContainedObjectAsIpso is Text text)
-                    {
-                        text.FontName = font;
-                        text.FontSize = fontSize;
-                    }
-                }
-            }
-        }
-#endif
-
-#if MONOGAME || XNA4
-        public void UpdateToFontValues()
-        {
-            if (mIsLayoutSuspended || IsAllLayoutSuspended)
-            {
-                isFontDirty = true;
-            }
-            // todo: This could make things faster, but it will require
-            // extra calls in generated code, or an "UpdateAll" method
-            //if (!mIsLayoutSuspended && !IsAllLayoutSuspended)
-            else
-            {
-                BitmapFont font = null;
-
-                var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
-                var contentLoader = loaderManager.ContentLoader;
-
-                if (UseCustomFont)
-                {
-
-                    if (!string.IsNullOrEmpty(CustomFontFile))
-                    {
-                        font = contentLoader.TryGetCachedDisposable<BitmapFont>(CustomFontFile);
-                        if (font == null)
-                        {
-                            // so normally we would just let the content loader check if the file exists but since we're not going to
-                            // use the content loader for BitmapFont, we're going to protect this with a file.exists.
-                            if (ToolsUtilities.FileManager.FileExists(CustomFontFile))
-                            {
-                                font = new BitmapFont(CustomFontFile, SystemManagers.Default);
-                                contentLoader.AddDisposable(CustomFontFile, font);
-                            }
-                        }
-                    }
-
-
-                }
-                else
-                {
-                    if (FontSize > 0 && !string.IsNullOrEmpty(Font))
-                    {
-
-                        string fontName = global::RenderingLibrary.Graphics.Fonts.BmfcSave.GetFontCacheFileNameFor(
-                            FontSize,
-                            Font,
-                            OutlineThickness,
-                            useFontSmoothing,
-                            IsItalic,
-                            IsBold);
-
-                        string fullFileName = ToolsUtilities.FileManager.Standardize(fontName, false, true);
-
-#if ANDROID || IOS
-                        fullFileName = fullFileName.ToLowerInvariant();
-#endif
-
-
-                        font = contentLoader.TryGetCachedDisposable<BitmapFont>(fullFileName);
-                        if (font == null)
-                        {
-                            // so normally we would just let the content loader check if the file exists but since we're not going to
-                            // use the content loader for BitmapFont, we're going to protect this with a file.exists.
-                            if (ToolsUtilities.FileManager.FileExists(fullFileName))
-                            {
-                                font = new BitmapFont(fullFileName, SystemManagers.Default);
-
-                                contentLoader.AddDisposable(fullFileName, font);
-                            }
-                        }
-
-#if DEBUG
-                        if (font?.Textures.Any(item => item?.IsDisposed == true) == true)
-                        {
-                            throw new InvalidOperationException("The returned font has a disposed texture");
-                        }
-#endif
-                    }
-                }
-
-                var text = this.mContainedObjectAsIpso as Text;
-
-                text.BitmapFont = font ?? global::RenderingLibrary.Content.LoaderManager.Self.DefaultBitmapFont;
-            }
-        }
-
-#endif
+        public void UpdateToFontValues() => UpdateFontFromProperties?.Invoke(mContainedObjectAsIpso as IText, this);
 
         #region IVisible Implementation
 

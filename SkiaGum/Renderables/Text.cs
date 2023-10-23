@@ -221,6 +221,15 @@ namespace SkiaGum
             }
         }
 
+        public float WrappedTextWidth
+        {
+            get
+            {
+                var textBlock = GetTextBlock();
+                return textBlock.MeasuredWidth;
+            }
+        }
+
         // do nothing, this doesn't render to a local render target
         public void SetNeedsRefreshToTrue() { }
 

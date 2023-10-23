@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.Linq;
 using System.Text;
 using System.Windows;
 
@@ -110,7 +111,9 @@ namespace SkiaGum.Wpf
 
             ForceGumLayout();
 
-            SystemManagers.Renderer.Draw(this.GumElementsInternal, SystemManagers);
+            IList<IRenderableIpso> castedList = GumElementsInternal.Cast<IRenderableIpso>().ToList();
+
+            SystemManagers.Renderer.Draw(castedList, SystemManagers);
 
             base.OnPaintSurface(args);
         }

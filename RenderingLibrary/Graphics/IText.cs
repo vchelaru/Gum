@@ -11,5 +11,14 @@ namespace RenderingLibrary.Graphics
         void SetNeedsRefreshToTrue();
 
         void UpdatePreRenderDimensions();
+
+        float DescenderHeight { get; }
+        float FontScale { get; }
+
+        float WrappedTextWidth { get; }
+        float WrappedTextHeight { get; }
+
+        // The text that was assgined on this Text instance prior to any wrapping.
+        string RawText { get; }
     }
 }

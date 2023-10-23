@@ -98,6 +98,7 @@ namespace Gum
             PluginManager.Self.Initialize(this);
 
             GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
+            GraphicalUiElement.UpdateFontFromProperties = CustomSetPropertyOnRenderable.UpdateToFontValues;
 
             // do this after initializing the plugins. This is separate from where the initialize call is made, but it must
             // happen after plugins are created:
