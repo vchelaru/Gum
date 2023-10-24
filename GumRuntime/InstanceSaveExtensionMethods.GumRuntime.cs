@@ -16,7 +16,7 @@ namespace GumRuntime
     {
 
 #if !NO_XNA
-        public static GraphicalUiElement ToGraphicalUiElement(this InstanceSave instanceSave, SystemManagers systemManagers)
+        public static GraphicalUiElement ToGraphicalUiElement(this InstanceSave instanceSave, ISystemManagers systemManagers)
         {
 #if DEBUG
             if(ObjectFinder.Self.GumProjectSave == null)

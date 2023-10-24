@@ -102,12 +102,12 @@ namespace Gum.Wireframe
             ElementSaveExtensions.CustomCreateGraphicalComponentFunc = HandleCreateGraphicalComponent;
         }
 
-        private IRenderable HandleCreateGraphicalComponent(string type, SystemManagers systemManagers)
+        private IRenderable HandleCreateGraphicalComponent(string type, ISystemManagers systemManagers)
         {
 
             IRenderable containedObject = null;
 
-            TryHandleAsBaseType(type, systemManagers, out containedObject);
+            TryHandleAsBaseType(type, systemManagers as SystemManagers, out containedObject);
 
 #if GUM
             if (containedObject == null)

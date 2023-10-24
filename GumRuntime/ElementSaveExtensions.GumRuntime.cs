@@ -56,21 +56,8 @@ namespace GumRuntime
             toReturn.ElementSave = elementSave;
             return toReturn;
         }
-        public static GraphicalUiElement ToGraphicalUiElement(this ElementSave elementSave)
-        {
-            var toReturn = ToGraphicalUiElement(elementSave, SystemManagers.Default, addToManagers: true);
 
-#if DEBUG
-            if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
-            {
-                GraphicalUiElement.ThrowExceptionsForMissingFiles(toReturn);
-            }
-#endif
-
-            return toReturn;
-        }
-
-        public static GraphicalUiElement ToGraphicalUiElement(this ElementSave elementSave, SystemManagers systemManagers,
+        public static GraphicalUiElement ToGraphicalUiElement(this ElementSave elementSave, ISystemManagers systemManagers,
             bool addToManagers)
         {
             GraphicalUiElement toReturn = CreateGueForElement(elementSave);
@@ -112,9 +99,9 @@ namespace GumRuntime
             graphicalElement.AddStates(elementSave.States);
         }
 
-        public static Func<string, SystemManagers, IRenderable> CustomCreateGraphicalComponentFunc { get; set; }
+        public static Func<string, ISystemManagers, IRenderable> CustomCreateGraphicalComponentFunc { get; set; }
 
-        public static void CreateGraphicalComponent(this GraphicalUiElement graphicalElement, ElementSave elementSave, SystemManagers systemManagers)
+        public static void CreateGraphicalComponent(this GraphicalUiElement graphicalElement, ElementSave elementSave, ISystemManagers systemManagers)
         {
             if(CustomCreateGraphicalComponentFunc == null)
             {
@@ -414,7 +401,7 @@ namespace GumRuntime
             return stateSave;
         }
 
-        public static void SetGraphicalUiElement(this ElementSave elementSave, GraphicalUiElement toReturn, SystemManagers systemManagers)
+        public static void SetGraphicalUiElement(this ElementSave elementSave, GraphicalUiElement toReturn, ISystemManagers systemManagers)
         {
             // We need to set categories and states first since those are used below;
             toReturn.SetStatesAndCategoriesRecursively(elementSave);
@@ -430,7 +417,7 @@ namespace GumRuntime
             toReturn.SetInitialState();
         }
 
-        public static void CreateChildrenRecursively(GraphicalUiElement graphicalUiElement, ElementSave elementSave, SystemManagers systemManagers)
+        public static void CreateChildrenRecursively(GraphicalUiElement graphicalUiElement, ElementSave elementSave, ISystemManagers systemManagers)
         {
             bool isScreen = elementSave is ScreenSave;
 
