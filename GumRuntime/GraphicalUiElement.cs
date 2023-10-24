@@ -6,9 +6,6 @@ using Gum.RenderingLibrary;
 using GumDataTypes.Variables;
 using GumRuntime;
 
-#if MONOGAME || XNA4
-using Gum.Graphics.Animation;
-#endif
 
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
@@ -4605,18 +4602,16 @@ namespace Gum.Wireframe
 
         public void RefreshTextOverflowVerticalMode()
         {
-#if MONOGAME || XNA4
 
             // we want to let it spill over if it is sized by its children:
             if (this.HeightUnits == DimensionUnitType.RelativeToChildren)
             {
-                ((Text)mContainedObjectAsIpso).TextOverflowVerticalMode = TextOverflowVerticalMode.SpillOver;
+                ((IText)mContainedObjectAsIpso).TextOverflowVerticalMode = TextOverflowVerticalMode.SpillOver;
             }
             else
             {
-                ((Text)mContainedObjectAsIpso).TextOverflowVerticalMode = TextOverflowVerticalMode;
+                ((IText)mContainedObjectAsIpso).TextOverflowVerticalMode = TextOverflowVerticalMode;
             }
-#endif
         }
 
         bool useCustomFont;

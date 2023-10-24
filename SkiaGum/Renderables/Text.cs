@@ -236,6 +236,9 @@ namespace SkiaGum
         // This could cache the prerendered for speed, but we currently don't do that...
         public void UpdatePreRenderDimensions() { }
 
+        // todo - need to make this actually functional:
+        public TextOverflowVerticalMode TextOverflowVertical { get; set; } 
+
         #endregion
 
         public Text()

@@ -20,5 +20,7 @@ namespace RenderingLibrary.Graphics
 
         // The text that was assgined on this Text instance prior to any wrapping.
         string RawText { get; }
+
+        TextOverflowVerticalMode TextOverflowVerticalMode { get; set; }
     }
 }

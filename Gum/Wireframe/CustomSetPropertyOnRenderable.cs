@@ -442,9 +442,7 @@ namespace Gum.Wireframe
             else if (propertyName == nameof(TextOverflowVerticalMode))
             {
                 graphicalUiElement.TextOverflowVerticalMode = (TextOverflowVerticalMode)value;
-#if MONOGAME || XNA4
                 graphicalUiElement.RefreshTextOverflowVerticalMode();
-#endif
 
             }
 
