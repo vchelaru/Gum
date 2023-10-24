@@ -237,7 +237,7 @@ namespace SkiaGum
         public void UpdatePreRenderDimensions() { }
 
         // todo - need to make this actually functional:
-        public TextOverflowVerticalMode TextOverflowVertical { get; set; } 
+        public TextOverflowVerticalMode TextOverflowVerticalMode { get; set; } 
 
         #endregion
 

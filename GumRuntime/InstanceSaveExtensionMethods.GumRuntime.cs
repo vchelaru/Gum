@@ -1,21 +1,14 @@
 ﻿using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Wireframe;
-#if !NO_XNA
 using RenderingLibrary;
-using RenderingLibrary.Graphics;
-using RenderingLibrary.Math.Geometry;
-#endif
 using System;
-using Color = System.Drawing.Color;
-using Matrix = System.Numerics.Matrix4x4;
 
 namespace GumRuntime
 {
     public static class InstanceSaveExtensionMethods
     {
 
-#if !NO_XNA
         public static GraphicalUiElement ToGraphicalUiElement(this InstanceSave instanceSave, ISystemManagers systemManagers)
         {
 #if DEBUG
@@ -55,49 +48,5 @@ namespace GumRuntime
 
         }
 
-
-
-        private static void SetAlphaAndColorValues(SolidRectangle solidRectangle, RecursiveVariableFinder rvf)
-        {
-            solidRectangle.Color = ColorFromRvf(rvf);
-        }
-
-        private static void SetAlphaAndColorValues(Sprite sprite, RecursiveVariableFinder rvf)
-        {
-            sprite.Color = ColorFromRvf(rvf);
-        }
-
-        private static void SetAlphaAndColorValues(NineSlice nineSlice, RecursiveVariableFinder rvf)
-        {
-            nineSlice.Color = ColorFromRvf(rvf);
-        }
-
-        private static void SetAlphaAndColorValues(Text text, RecursiveVariableFinder rvf)
-        {
-            Color color = ColorFromRvf(rvf);
-            text.Red = color.R;
-            text.Green = color.G;
-            text.Blue = color.B;
-            text.Alpha = color.A;  //Is alpha supported?
-        }
-
-        static Color ColorFromRvf(RecursiveVariableFinder rvf)
-        {
-            Color color = Color.FromArgb(
-                rvf.GetValue<int>("Alpha"),
-                rvf.GetValue<int>("Red"),
-                rvf.GetValue<int>("Green"),
-                rvf.GetValue<int>("Blue")
-                );
-            return color;
-        }
-
-        private static void SetAlignmentValues(Text text, RecursiveVariableFinder rvf)
-        {
-            //Could these potentially be out of bounds?
-            text.HorizontalAlignment = rvf.GetValue<HorizontalAlignment>("HorizontalAlignment");
-            text.VerticalAlignment = rvf.GetValue<VerticalAlignment>("VerticalAlignment");
-        }
-#endif
     }
 }
