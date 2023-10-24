@@ -205,7 +205,7 @@ namespace Gum.Wireframe
                 {
                     gueManager.Add(rootGue);
 
-                    rootGue.AddToManagers();
+                    rootGue.AddToManagers(SystemManagers.Default, null);
 
                 }
             }

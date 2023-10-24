@@ -21,7 +21,6 @@ namespace GumRuntime
             mElementToGueTypes[elementName] = gueInheritingType;
         }
 
-#if !NO_XNA 
         public static GraphicalUiElement CreateGueForElement(ElementSave elementSave, bool fullInstantiation = false, string genericType = null)
         {
             GraphicalUiElement toReturn = null;
@@ -54,7 +53,6 @@ namespace GumRuntime
             toReturn.ElementSave = elementSave;
             return toReturn;
         }
-
         public static GraphicalUiElement ToGraphicalUiElement(this ElementSave elementSave)
         {
             var toReturn = ToGraphicalUiElement(elementSave, SystemManagers.Default, addToManagers: true);
@@ -67,62 +65,6 @@ namespace GumRuntime
 #endif
 
             return toReturn;
-        }
-
-        private static void ThrowMissingFileExceptionsRecursively(GraphicalUiElement graphicalUiElement)
-        {
-#if MONOGAME
-            // We can't throw exceptions when assigning values on fonts because the font values get set one-by-one
-            // and the end result of all values determines which file to load. For example, an object may set the following
-            // variables one-by-one:
-            // * FontSize
-            // * Font
-            // * OutlineThickness
-            // Let's say the Font gets set to Arial. The FontSize may not have been set yet, so whatever value happens
-            // to be there will be used to load the font (like 12). But the user may not have Arial12 in their project,
-            // and if we threw an exception on-the-spot, the user would see a message about missing Arial12, even though
-            // the project doesn't actually use Arial12.
-            // We need to wait until the graphical UI element is fully created before we try to throw an exception, so
-            // that's what we're going to do here:
-            if (graphicalUiElement != null && graphicalUiElement.RenderableComponent is Text)
-            {
-                // check it
-                var asText = graphicalUiElement.RenderableComponent as Text;
-                if (asText.BitmapFont == null)
-                {
-                    if (graphicalUiElement.UseCustomFont)
-                    {
-                        var fontName = ToolsUtilities.FileManager.Standardize(graphicalUiElement.CustomFontFile, preserveCase: true, makeAbsolute: true);
-
-                        throw new System.IO.FileNotFoundException($"Missing:{fontName}");
-                    }
-                    else
-                    {
-                        if (graphicalUiElement.FontSize > 0 && !string.IsNullOrEmpty(graphicalUiElement.Font))
-                        {
-                            string fontName = global::RenderingLibrary.Graphics.Fonts.BmfcSave.GetFontCacheFileNameFor(
-                                graphicalUiElement.FontSize,
-                                graphicalUiElement.Font,
-                                graphicalUiElement.OutlineThickness,
-                                graphicalUiElement.UseFontSmoothing,
-                                graphicalUiElement.IsItalic,
-                                graphicalUiElement.IsBold);
-
-                            var standardized = ToolsUtilities.FileManager.Standardize(fontName, preserveCase: true, makeAbsolute: true);
-
-                            throw new System.IO.FileNotFoundException($"Missing:{standardized}");
-                        }
-
-                    }
-
-                }
-            }
-#endif
-
-            foreach (var element in graphicalUiElement.ContainedElements)
-            {
-                ThrowMissingFileExceptionsRecursively(element);
-            }
         }
 
         public static GraphicalUiElement ToGraphicalUiElement(this ElementSave elementSave, SystemManagers systemManagers,
@@ -165,41 +107,32 @@ namespace GumRuntime
             graphicalElement.AddStates(elementSave.States);
         }
 
+        public static Func<string, SystemManagers, IRenderable> CustomCreateGraphicalComponentFunc { get; set; }
+
         public static void CreateGraphicalComponent(this GraphicalUiElement graphicalElement, ElementSave elementSave, SystemManagers systemManagers)
         {
-            IRenderable containedObject = null;
-
-            bool handled = InstanceSaveExtensionMethods.TryHandleAsBaseType(elementSave.Name, systemManagers, out containedObject);
-
-#if GUM
-            if (!handled)
+            if (CustomCreateGraphicalComponentFunc == null)
             {
-                string type = elementSave.BaseType;
-
-                containedObject =
-                    Gum.Plugins.PluginManager.Self.CreateRenderableForType(type);
-
-                handled = containedObject != null;
+                throw new InvalidOperationException("The CustomCreateGraphicalComponentFunc must be set before calling CreateGraphicalComponent");
             }
-#endif
 
-            if (handled)
+            var containedObject = CustomCreateGraphicalComponentFunc(elementSave.Name, systemManagers);
+
+            if (containedObject != null)
             {
                 graphicalElement.SetContainedObject(containedObject);
             }
-            else
+            else if (containedObject == null && !string.IsNullOrEmpty(elementSave.BaseType))
             {
-                if (elementSave != null && elementSave is ComponentSave)
-                {
-                    var baseElement = Gum.Managers.ObjectFinder.Self.GetElementSave(elementSave.BaseType);
+                var baseElement = ObjectFinder.Self.GetElementSave(elementSave.BaseType);
 
-                    if (baseElement != null)
-                    {
-                        graphicalElement.CreateGraphicalComponent(baseElement, systemManagers);
-                    }
+                if (baseElement != null)
+                {
+                    CreateGraphicalComponent(graphicalElement, baseElement, systemManagers);
                 }
             }
         }
+
         static void AddExposedVariablesRecursively(this GraphicalUiElement graphicalElement, ElementSave elementSave)
         {
             if (!string.IsNullOrEmpty(elementSave.BaseType))
@@ -222,15 +155,14 @@ namespace GumRuntime
 
         }
 
-
-        // Replaced with ApplyDefaultState
-        //static void SetVariablesRecursively(this GraphicalUiElement graphicalElement, ElementSave elementSave)
-        //{
-        //    graphicalElement.SetVariablesRecursively(elementSave, elementSave.DefaultState);
-        //}
-
         public static void SetVariablesRecursively(this GraphicalUiElement graphicalElement, ElementSave elementSave, Gum.DataTypes.Variables.StateSave stateSave)
         {
+#if DEBUG
+            if (stateSave == null)
+            {
+                throw new Exception("State cannot be null");
+            }
+#endif
             if (!string.IsNullOrEmpty(elementSave.BaseType))
             {
                 var baseElementSave = Gum.Managers.ObjectFinder.Self.GetElementSave(elementSave.BaseType);
@@ -315,6 +247,7 @@ namespace GumRuntime
         }
 
         static char[] equalsArray = new char[] { '=' };
+
         public static void ApplyVariableReferencesOnSpecificOwner(GraphicalUiElement referenceOwner, string referenceString, StateSave stateSave)
         {
             var split = referenceString
@@ -378,8 +311,6 @@ namespace GumRuntime
                 }
             }
         }
-
-
 
         private static void GetRightSideAndState(InstanceSave instanceSave, ref string right, ref StateSave stateSave)
         {
@@ -476,10 +407,6 @@ namespace GumRuntime
                 }
             }
         }
-
-
-#endif
-
 
     }
 }

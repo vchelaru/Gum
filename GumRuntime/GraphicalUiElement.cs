@@ -4,8 +4,6 @@ using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.RenderingLibrary;
 using GumDataTypes.Variables;
-using GumRuntime;
-
 
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
@@ -26,6 +24,7 @@ using Vector3 = System.Numerics.Vector3;
 using Color = System.Drawing.Color;
 using Rectangle = System.Drawing.Rectangle;
 using Matrix = System.Numerics.Matrix4x4;
+using GumRuntime;
 #if UWP
 using System.Reflection;
 #endif
@@ -80,6 +79,8 @@ namespace Gum.Wireframe
 
         #region Fields
 
+        public static float GlobalFontScale = 1;
+
         private DirtyState currentDirtyState;
         bool isFontDirty = false;
         public bool IsFontDirty
@@ -114,7 +115,7 @@ namespace Gum.Wireframe
         DimensionUnitType mWidthUnit;
         DimensionUnitType mHeightUnit;
 
-        SystemManagers mManagers;
+        ISystemManagers mManagers;
 
         int mTextureTop;
         int mTextureLeft;
@@ -173,7 +174,7 @@ namespace Gum.Wireframe
             set;
         }
 
-        public SystemManagers Managers
+        public ISystemManagers Managers
         {
             get
             {
@@ -185,7 +186,7 @@ namespace Gum.Wireframe
         /// Returns this instance's SystemManagers, or climbs up the parent/child relationship
         /// until a non-null SystemsManager is found. Otherwise, returns null.
         /// </summary>
-        public SystemManagers EffectiveManagers
+        public ISystemManagers EffectiveManagers
         {
             get
             {
@@ -3162,7 +3163,7 @@ namespace Gum.Wireframe
 
             if (mHeightUnit == DimensionUnitType.AbsoluteMultipliedByFontScale)
             {
-                heightToSet *= SystemManagers.GlobalFontScale;
+                heightToSet *= GlobalFontScale;
             }
 
             #endregion
@@ -3455,7 +3456,7 @@ namespace Gum.Wireframe
 
             if (mWidthUnit == DimensionUnitType.AbsoluteMultipliedByFontScale)
             {
-                widthToSet *= SystemManagers.GlobalFontScale;
+                widthToSet *= GlobalFontScale;
             }
 
             #endregion
@@ -3825,12 +3826,12 @@ namespace Gum.Wireframe
         /// Adds this as a renderable to the SystemManagers if not already added. If already added
         /// this does not perform any operations - it can be safely called multiple times.
         /// </summary>
-        public virtual void AddToManagers()
-        {
+        //public virtual void AddToManagers()
+        //{
 
-            AddToManagers(SystemManagers.Default, null);
+        //    AddToManagers(ISystemManagers.Default, null);
 
-        }
+        //}
 
         /// <summary>
         /// Adds this as a renderable to the SystemManagers on the argument layer if not already added
@@ -3838,7 +3839,7 @@ namespace Gum.Wireframe
         /// this does not perform any operations - it can be safely called multiple times, but
         /// calling it multiple times will not move this to a different layer.
         /// </summary>
-        public virtual void AddToManagers(SystemManagers managers, Layer layer)
+        public virtual void AddToManagers(ISystemManagers managers, Layer layer)
         {
 #if DEBUG
             if (managers == null)
@@ -3938,7 +3939,7 @@ namespace Gum.Wireframe
             }
         }
 
-        private void AddChildren(SystemManagers managers, Layer layer)
+        private void AddChildren(ISystemManagers managers, Layer layer)
         {
             // In a simple situation we'd just loop through the
             // ContainedElements and add them to the manager.  However,
@@ -4027,7 +4028,7 @@ namespace Gum.Wireframe
 
         public static Action<IRenderableIpso, ISystemManagers> RemoveRenderableFromManagers;
 
-        private void AddContainedRenderableToManagers(SystemManagers managers, Layer layer)
+        private void AddContainedRenderableToManagers(ISystemManagers managers, Layer layer)
         {
             // This may be a Screen
             if (mContainedObjectAsIpso != null)
@@ -4320,6 +4321,7 @@ namespace Gum.Wireframe
 
         public static Action<IRenderableIpso, GraphicalUiElement, string, object> SetPropertyOnRenderable;
         public static Action<IText, GraphicalUiElement> UpdateFontFromProperties;
+        public static Action<GraphicalUiElement> ThrowExceptionsForMissingFiles;
 
         /// <summary>
         /// Sets a variable on this object (such as "X") to the argument value
