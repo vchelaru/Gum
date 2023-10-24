@@ -4386,10 +4386,6 @@ namespace Gum.Wireframe
             {
                 switch (propertyName)
                 {
-
-                    case nameof(Animate):
-                        this.Animate = (bool)value;
-                        break;
                     case "AutoGridHorizontalCells":
                         this.AutoGridHorizontalCells = (int)value;
                         break;
@@ -4404,12 +4400,6 @@ namespace Gum.Wireframe
                         this.ClipsChildren = (bool)value;
                         toReturn = true;
                         break;
-#if MONOGAME || XNA4
-                    case "CurrentChainName":
-                        this.CurrentChainName = (string)value;
-                        toReturn = true;
-                        break;
-#endif
                     case "FlipHorizontal":
                         this.FlipHorizontal = (bool)value;
                         toReturn = true;
@@ -4928,111 +4918,39 @@ namespace Gum.Wireframe
         }
 
         #region AnimationChain 
-        public bool Animate { get; set; } = true;
-#if MONOGAME || XNA4
-        int mCurrentChainIndex;
-        protected int mCurrentFrameIndex;
-        AnimationChainList mAnimationChains;
-        public AnimationChainList AnimationChains
-        {
-            get => mAnimationChains;
-            set => mAnimationChains = value;
-        }
-        protected float mAnimationSpeed = 1;
-        protected double mTimeIntoAnimation;
-        public AnimationChain CurrentChain
-        {
-            get
-            {
-                if (mCurrentChainIndex != -1 && mAnimationChains.Count > 0 && mCurrentChainIndex < mAnimationChains.Count)
-                {
-                    return mAnimationChains[mCurrentChainIndex];
-                }
-                else
-                    return null;
-            }
-        }
 
-        string desiredCurrentChainName;
-        public string CurrentChainName
-        {
-            get => CurrentChain?.Name;
-            set
-            {
-                desiredCurrentChainName = value;
-                mCurrentChainIndex = -1;
-                if (mAnimationChains?.Count > 0)
-                {
-                    RefreshCurrentChainToDesiredName();
-
-                    UpdateToCurrentAnimationFrame();
-
-                }
-            }
-        }
-
-        public void RefreshCurrentChainToDesiredName()
-        {
-            for (int i = 0; i < mAnimationChains.Count; i++)
-            {
-                if (mAnimationChains[i].Name == desiredCurrentChainName)
-                {
-                    mCurrentChainIndex = i;
-                    break;
-                }
-            }
-        }
-
-        bool mJustChangedFrame;
-        bool mJustCycled;
 
         /// <summary>
         /// Performs AnimationChain (.achx) animation on this and all children recurisvely.
         /// This is typically called on the top-level object (usually Screen) when Gum is running
         /// in a game.
         /// </summary>
-        public void AnimateSelf()
+        public void AnimateSelf(double secondDifference)
         {
+            var asSprite = mContainedObjectAsIpso as ITextureCoordinate;
+            var asAnimatable = mContainedObjectAsIpso as IAnimatable;
             //////////////////Early Out/////////////////////
             // Check mContainedObjectAsIVisible - if it's null, then this is a Screen and we should animate it
+            if(asSprite== null || asAnimatable == null)
+            {
+                return;
+            }
             if (mContainedObjectAsIVisible != null && Visible == false)
             {
                 return;
             }
             ////////////////End Early Out///////////////////
 
-            var shouldAnimateSelf = true;
-            //mJustChangedFrame = false;
-            //mJustCycled = false;
-            if (Animate == false || mCurrentChainIndex == -1 || mAnimationChains == null || mAnimationChains.Count == 0 || mAnimationChains[mCurrentChainIndex].Count == 0)
+
+            var didSpriteUpdate = asAnimatable.AnimateSelf(secondDifference);
+
+            if(didSpriteUpdate)
             {
-                shouldAnimateSelf = false;
+                // update this texture coordinates:
+
+                UpdateTextureValuesFrom(asSprite);
             }
 
-            if (shouldAnimateSelf)
-            {
-                int frameBefore = mCurrentFrameIndex;
-
-                // June 10, 2011
-                // A negative animation speed should cause the animation to play in reverse
-                //Removed the System.Math.Abs on the mAnimationSpeed variable to restore the correct behaviour.
-                //double modifiedTimePassed = TimeManager.SecondDifference * System.Math.Abs(mAnimationSpeed);
-                double modifiedTimePassed = TimeManager.Self.SecondDifference * mAnimationSpeed;
-
-                mTimeIntoAnimation += modifiedTimePassed;
-
-                AnimationChain animationChain = mAnimationChains[mCurrentChainIndex];
-
-                mTimeIntoAnimation = MathFunctions.Loop(mTimeIntoAnimation, animationChain.TotalLength, out mJustCycled);
-
-                UpdateFrameBasedOffOfTimeIntoAnimation();
-
-                if (mCurrentFrameIndex != frameBefore)
-                {
-                    UpdateToCurrentAnimationFrame();
-                    mJustChangedFrame = true;
-                }
-            }
             if (Children != null)
             {
                 for(int i = 0; i < this.Children.Count; i++)
@@ -5040,7 +4958,7 @@ namespace Gum.Wireframe
                     var child = this.Children[i];
                     if (child is GraphicalUiElement childGue)
                     {
-                        childGue.AnimateSelf();
+                        childGue.AnimateSelf(secondDifference);
                     }
                 }
             }
@@ -5051,114 +4969,28 @@ namespace Gum.Wireframe
                     var child = mWhatThisContains[i];
                     if (child is GraphicalUiElement childGue)
                     {
-                        childGue.AnimateSelf();
+                        childGue.AnimateSelf(secondDifference);
                     }
                 }
             }
         }
 
-        void UpdateFrameBasedOffOfTimeIntoAnimation()
+        public void UpdateTextureValuesFrom(ITextureCoordinate asSprite)
         {
-            double timeIntoAnimation = mTimeIntoAnimation;
+            this.TextureLeft = asSprite.SourceRectangle.Value.Left;
+            this.TextureWidth = asSprite.SourceRectangle.Value.Width;
 
-            if (timeIntoAnimation < 0)
+            this.TextureTop = asSprite.SourceRectangle.Value.Top;
+            this.TextureHeight = asSprite.SourceRectangle.Value.Height;
+            this.FlipHorizontal = asSprite.FlipHorizontal;
+
+            if (this.TextureAddress == TextureAddress.EntireTexture)
             {
-                throw new ArgumentException("The timeIntoAnimation argument must be 0 or positive");
-            }
-            else if (CurrentChain != null && CurrentChain.Count > 1)
-            {
-                int frameIndex = 0;
-                while (timeIntoAnimation >= 0)
-                {
-                    double frameTime = CurrentChain[frameIndex].FrameLength;
-
-                    if (timeIntoAnimation < frameTime)
-                    {
-                        mCurrentFrameIndex = frameIndex;
-
-                        break;
-                    }
-                    else
-                    {
-                        timeIntoAnimation -= frameTime;
-
-                        frameIndex = (frameIndex + 1) % CurrentChain.Count;
-                    }
-                }
+                this.TextureAddress = TextureAddress.Custom; // If it's not custom, then the animation chain won't apply. I think we should force this.
             }
         }
 
-        public void UpdateToCurrentAnimationFrame()
-        {
-            if (mAnimationChains != null && 
-                mAnimationChains.Count > mCurrentChainIndex && 
-                mCurrentChainIndex != -1 &&
-                mCurrentFrameIndex > -1 &&
-                mAnimationChains[mCurrentChainIndex].Count > 0
-                // If we switch animations, we still want it to apply right away
-                // so do a frame check:
-                //mCurrentFrameIndex < mAnimationChains[mCurrentChainIndex].Count
-                )
-            {
-                var index = mCurrentFrameIndex;
-                if(index >= mAnimationChains[mCurrentChainIndex].Count)
-                {
-                    index = 0;
-                }
-                var frame = mAnimationChains[mCurrentChainIndex][index];
-                // Set the property so that any necessary values change:
-                //				mTexture = mAnimationChains[mCurrentChainIndex][mCurrentFrameIndex].Texture;
-                //this.Vertices[0].TextureCoordinate.X = frame.LeftCoordinate;
-                //this.Vertices[1].TextureCoordinate.X = frame.RightCoordinate;
-                //this.Vertices[2].TextureCoordinate.X = frame.RightCoordinate;
-                //this.Vertices[3].TextureCoordinate.X = frame.LeftCoordinate;
-
-                //this.Vertices[0].TextureCoordinate.Y = frame.TopCoordinate;
-                //this.Vertices[1].TextureCoordinate.Y = frame.TopCoordinate;
-                //this.Vertices[2].TextureCoordinate.Y = frame.BottomCoordinate;
-                //this.Vertices[3].TextureCoordinate.Y = frame.BottomCoordinate;
-                if (mContainedObjectAsIpso is Sprite sprite)
-                {
-                    sprite.Texture = frame.Texture;
-                }
-                this.TextureLeft = MathFunctions.RoundToInt(frame.LeftCoordinate * frame.Texture.Width);
-                this.TextureWidth = MathFunctions.RoundToInt(frame.RightCoordinate * frame.Texture.Width) - this.TextureLeft;
-
-                this.TextureTop = MathFunctions.RoundToInt(frame.TopCoordinate * frame.Texture.Height);
-                this.TextureHeight = MathFunctions.RoundToInt(frame.BottomCoordinate * frame.Texture.Height) - this.TextureTop;
-
-                this.FlipHorizontal = frame.FlipHorizontal;
-
-                if(this.TextureAddress == TextureAddress.EntireTexture)
-                {
-                    this.TextureAddress = TextureAddress.Custom; // If it's not custom, then the animation chain won't apply. I think we should force this.
-                }
-                //frame.FlipVertical
-
-                //if (mIgnoreAnimationChainTextureFlip == false)
-                //{
-                //    mFlipHorizontal = frame.FlipHorizontal;
-                //    mFlipVertical = frame.FlipVertical;
-                //}
-
-                //if (mUseAnimationRelativePosition)
-                //{
-
-                //    RelativePosition.X = frame.RelativeX;
-                //    RelativePosition.Y = frame.RelativeY;
-                //}
-
-                //foreach (var instruction in frame.Instructions)
-                //{
-                //    instruction.Execute();
-                //}
-
-                //UpdateScale();
-
-            }
-        }
-#endif
-#endregion
+        #endregion
 
 
         public bool IsPointInside(float x, float y)

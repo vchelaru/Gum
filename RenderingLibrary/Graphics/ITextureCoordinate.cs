@@ -14,5 +14,7 @@ namespace RenderingLibrary.Graphics
 
         float? TextureWidth { get; }
         float? TextureHeight { get; }
+
+        bool FlipHorizontal { get; set; }
     }
 }

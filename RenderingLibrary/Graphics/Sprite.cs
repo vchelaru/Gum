@@ -9,13 +9,57 @@ using MathHelper = ToolsUtilitiesStandard.Helpers.MathHelper;
 using Vector2 = System.Numerics.Vector2;
 using Color = System.Drawing.Color;
 using Rectangle = System.Drawing.Rectangle;
+using Gum.Graphics.Animation;
+using RenderingLibrary.Math;
 
 namespace RenderingLibrary.Graphics
 {
 
-    public class Sprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoordinate
+    public class Sprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoordinate, IAnimatable
     {
         #region Fields
+
+        int mCurrentChainIndex;
+        protected int mCurrentFrameIndex;
+        protected float mAnimationSpeed = 1;
+        protected double mTimeIntoAnimation;
+
+        AnimationChainList mAnimationChains;
+        public AnimationChainList AnimationChains
+        {
+            get => mAnimationChains;
+            set => mAnimationChains = value;
+        }
+        public AnimationChain CurrentChain
+        {
+            get
+            {
+                if (mCurrentChainIndex != -1 && mAnimationChains.Count > 0 && mCurrentChainIndex < mAnimationChains.Count)
+                {
+                    return mAnimationChains[mCurrentChainIndex];
+                }
+                else
+                    return null;
+            }
+        }
+        bool mJustChangedFrame;
+        bool mJustCycled;
+
+        string desiredCurrentChainName;
+        public string CurrentChainName
+        {
+            get => CurrentChain?.Name;
+            set
+            {
+                desiredCurrentChainName = value;
+                mCurrentChainIndex = -1;
+                if (mAnimationChains?.Count > 0)
+                {
+                    RefreshCurrentChainToDesiredName();
+                    UpdateToCurrentAnimationFrame();
+                }
+            }
+        }
 
         Vector2 Position;
         IRenderableIpso mParent;
@@ -659,6 +703,8 @@ namespace RenderingLibrary.Graphics
             }
         }
 
+
+
         public override string ToString()
         {
             return Name + " (Sprite)";
@@ -672,6 +718,132 @@ namespace RenderingLibrary.Graphics
         }
 
         void IRenderable.PreRender() { }
+
+        public bool AnimateSelf(double secondDifference)
+        {
+            //////////////////Early Out/////////////////////
+            // Check mContainedObjectAsIVisible - if it's null, then this is a Screen and we should animate it
+            if (Visible == false)
+            {
+                return false;
+            }
+            ////////////////End Early Out///////////////////
+
+            var didChange = false;
+            var shouldAnimateSelf = true;
+
+            if (Animate == false || mCurrentChainIndex == -1 || mAnimationChains == null || mAnimationChains.Count == 0 || mAnimationChains[mCurrentChainIndex].Count == 0)
+            {
+                shouldAnimateSelf = false;
+            }
+
+            if (shouldAnimateSelf)
+            {
+                int frameBefore = mCurrentFrameIndex;
+
+                // June 10, 2011
+                // A negative animation speed should cause the animation to play in reverse
+                //Removed the System.Math.Abs on the mAnimationSpeed variable to restore the correct behaviour.
+                //double modifiedTimePassed = TimeManager.SecondDifference * System.Math.Abs(mAnimationSpeed);
+                double modifiedTimePassed = secondDifference * mAnimationSpeed;
+
+                mTimeIntoAnimation += modifiedTimePassed;
+
+                AnimationChain animationChain = mAnimationChains[mCurrentChainIndex];
+
+                mTimeIntoAnimation = MathFunctions.Loop(mTimeIntoAnimation, animationChain.TotalLength, out mJustCycled);
+
+                UpdateFrameBasedOffOfTimeIntoAnimation();
+
+                if (mCurrentFrameIndex != frameBefore)
+                {
+                    didChange = UpdateToCurrentAnimationFrame();
+                    mJustChangedFrame = true;
+                }
+            }
+
+            return didChange;
+        }
+
+        public bool UpdateToCurrentAnimationFrame()
+        {
+            var didChange = false;
+            if (mAnimationChains != null &&
+                mAnimationChains.Count > mCurrentChainIndex &&
+                mCurrentChainIndex != -1 &&
+                mCurrentFrameIndex > -1 &&
+                mAnimationChains[mCurrentChainIndex].Count > 0
+                // If we switch animations, we still want it to apply right away
+                // so do a frame check:
+                //mCurrentFrameIndex < mAnimationChains[mCurrentChainIndex].Count
+                )
+            {
+                var index = mCurrentFrameIndex;
+                if (index >= mAnimationChains[mCurrentChainIndex].Count)
+                {
+                    index = 0;
+                }
+                var frame = mAnimationChains[mCurrentChainIndex][index];
+
+                Texture = frame.Texture;
+
+
+                var left = MathFunctions.RoundToInt(frame.LeftCoordinate * frame.Texture.Width);
+                var width = MathFunctions.RoundToInt(frame.RightCoordinate * frame.Texture.Width) - left;
+
+                var top = MathFunctions.RoundToInt(frame.TopCoordinate * frame.Texture.Height);
+                var height = MathFunctions.RoundToInt(frame.BottomCoordinate * frame.Texture.Height) - top;
+
+                SourceRectangle = new Rectangle(left, top, width, height);
+
+                this.FlipHorizontal = frame.FlipHorizontal;
+                didChange = true;
+            }
+            return didChange;
+        }
+
+        void UpdateFrameBasedOffOfTimeIntoAnimation()
+        {
+            double timeIntoAnimation = mTimeIntoAnimation;
+
+            if (timeIntoAnimation < 0)
+            {
+                throw new ArgumentException("The timeIntoAnimation argument must be 0 or positive");
+            }
+            else if (CurrentChain != null && CurrentChain.Count > 1)
+            {
+                int frameIndex = 0;
+                while (timeIntoAnimation >= 0)
+                {
+                    double frameTime = CurrentChain[frameIndex].FrameLength;
+
+                    if (timeIntoAnimation < frameTime)
+                    {
+                        mCurrentFrameIndex = frameIndex;
+
+                        break;
+                    }
+                    else
+                    {
+                        timeIntoAnimation -= frameTime;
+
+                        frameIndex = (frameIndex + 1) % CurrentChain.Count;
+                    }
+                }
+            }
+        }
+
+        public void RefreshCurrentChainToDesiredName()
+        {
+            for (int i = 0; i < mAnimationChains.Count; i++)
+            {
+                if (mAnimationChains[i].Name == desiredCurrentChainName)
+                {
+                    mCurrentChainIndex = i;
+                    break;
+                }
+            }
+        }
 
         #region IVisible Implementation
 

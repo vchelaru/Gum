@@ -9,6 +9,7 @@
 	<ItemGroup>
 		<Compile Include="..\Gum\Managers\ObjectFinder.cs" Link="Managers\ObjectFinder.cs" />
 		<Compile Include="..\RenderingLibrary\Content\IContentLoader.cs" Link="Content\IContentLoader.cs" />
+		<Compile Include="..\RenderingLibrary\Graphics\IAnimatable.cs" Link="RenderingLibrary\IAnimatable.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\IRenderable.cs" Link="RenderingLibrary\IRenderable.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\IRenderer.cs" Link="RenderingLibrary\IRenderer.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\ISetClipsChildren.cs" Link="RenderingLibrary\ISetClipsChildren.cs" />

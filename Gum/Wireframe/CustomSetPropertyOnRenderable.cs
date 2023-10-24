@@ -139,6 +139,16 @@ namespace Gum.Wireframe
 
                     handled = true;
                 }
+                else if(propertyName == "Animate")
+                {
+                    sprite.Animate = (bool)value;
+                    handled = true;
+                }
+                else if(propertyName == "CurrentChainName")
+                {
+                    sprite.CurrentChainName = (string)value;
+                    handled = true;
+                }
                 if (!handled)
                 {
                     int m = 3;
@@ -687,11 +697,13 @@ namespace Gum.Wireframe
                     }
                 }
 
-                graphicalUiElement.AnimationChains = animationChainList;
+                sprite.AnimationChains = animationChainList;
 
-                graphicalUiElement.RefreshCurrentChainToDesiredName();
+                sprite.RefreshCurrentChainToDesiredName();
 
-                graphicalUiElement.UpdateToCurrentAnimationFrame();
+                sprite.UpdateToCurrentAnimationFrame();
+
+                graphicalUiElement.UpdateTextureValuesFrom(sprite);
                 handled = true;
             }
             else

@@ -18,7 +18,7 @@ namespace Gum.Graphics.Animation
         private string mName;
 
         //private string mParentFileName;
-        internal int mIndexInLoadedAchx = -1;
+        public int IndexInLoadedAchx = -1;
 
         #endregion
 
@@ -37,10 +37,6 @@ namespace Gum.Graphics.Animation
         }
 
 
-        public int IndexInLoadedAchx
-        {
-            get { return mIndexInLoadedAchx; }
-        }
 
         #region XML Docs
         /// <summary>
@@ -148,7 +144,7 @@ namespace Gum.Graphics.Animation
             animationChain.ParentGifFileName = ParentGifFileName;
             animationChain.ParentAchxFileName = ParentAchxFileName;
 
-            animationChain.mIndexInLoadedAchx = mIndexInLoadedAchx;
+            animationChain.IndexInLoadedAchx = IndexInLoadedAchx;
 
             animationChain.mName = this.mName;
 

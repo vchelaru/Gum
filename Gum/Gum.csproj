@@ -181,9 +181,6 @@
     <Compile Include="Debug\ProjectVerifier.cs" />
     <Compile Include="Events\GumEvents.cs" />
     <Compile Include="Extensions\WpfExtensions.cs" />
-    <Compile Include="Graphics\Animation\AnimationChain.cs" />
-    <Compile Include="Graphics\Animation\AnimationChainList.cs" />
-    <Compile Include="Graphics\Animation\AnimationFrame.cs" />
     <Compile Include="Graphics\Animation\Content\AnimationChainListSave.cs" />
     <Compile Include="Graphics\Animation\Content\AnimationChainSave.cs" />
     <Compile Include="Graphics\Animation\Content\AnimationFrameSave.cs" />

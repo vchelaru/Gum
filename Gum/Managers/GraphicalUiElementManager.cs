@@ -28,7 +28,7 @@ namespace Gum.Managers
 
             for(int i = 0; i < count; i++)
             {
-                GraphicalUiElements[i].AnimateSelf();
+                GraphicalUiElements[i].AnimateSelf(TimeManager.Self.SecondDifference);
             }
         }
     }

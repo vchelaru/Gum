@@ -210,7 +210,7 @@ namespace Gum.Content.AnimationChain
 
                         newChain = animationChain.ToAnimationChain(contentManagerName, this.TimeMeasurementUnit, this.CoordinateType);
 
-                        newChain.mIndexInLoadedAchx = list.Count;
+                        newChain.IndexInLoadedAchx = list.Count;
 
                         newChain.ParentAchxFileName = mFileName;
 

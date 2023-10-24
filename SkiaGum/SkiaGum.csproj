@@ -18,9 +18,6 @@
 
   <ItemGroup>
     <Compile Include="..\GumRuntime\GraphicalUiElement.cs" Link="GraphicalUiElement.cs" />
-    <Compile Include="..\Gum\Graphics\Animation\AnimationFrame.cs">
-      <Link>Graphics\Animation\AnimationFrame.cs</Link>
-    </Compile>
     <Compile Include="..\Gum\RenderingLibrary\IPositionedSizedObjectExtensionMethods.cs">
       <Link>RenderingLibrary\IPositionedSizedObjectExtensionMethods.cs</Link>
     </Compile>
