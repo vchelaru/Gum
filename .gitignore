@@ -79,3 +79,5 @@ GumRuntimeNet6/bin/*
 GumRuntimeNet6/obj/*
 GumCommon/bin/*
 GumCommon/obj/*
+Samples/SkiaGumWpfSample/SkiaGumWpfSample/bin/*
+Samples/SkiaGumWpfSample/SkiaGumWpfSample/obj/*

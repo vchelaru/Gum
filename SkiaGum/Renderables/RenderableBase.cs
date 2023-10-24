@@ -252,7 +252,6 @@ namespace SkiaGum.Renderables
 
         public void PreRender() {}
 
-#if SKIA
         public void Render(ISystemManagers managers)
         {
             var canvas = (managers as SystemManagers).Canvas;
@@ -303,13 +302,7 @@ namespace SkiaGum.Renderables
                 }
             }
         }
-#else
 
-        public void Render(SpriteRenderer spriteRenderer, SystemManagers managers)
-        {
-
-        }
-#endif
         public BlendState BlendState => BlendState.AlphaBlend;
 
         public bool ClipsChildren { get; set; }

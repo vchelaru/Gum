@@ -75,7 +75,12 @@ namespace RenderingLibrary.Graphics
         // This syntax is a little different than standard Gum, but we're moving in that direction incrementally:
         public void Draw(IList<IRenderableIpso> whatToRender, SystemManagers managers)
         {
-            if (ClearsCanvas)
+            Draw(whatToRender, managers, true);
+        }
+
+        void Draw(IList<IRenderableIpso> whatToRender, SystemManagers managers, bool clear = false)
+        { 
+            if (ClearsCanvas && clear)
             {
                 managers.Canvas.Clear();
             }
@@ -135,7 +140,7 @@ namespace RenderingLibrary.Graphics
                     {
                         if (RenderUsingHierarchy)
                         {
-                            Draw(renderable.Children, managers);
+                            Draw(renderable.Children, managers, false);
                         }
 
                         if (renderable.ClipsChildren)
